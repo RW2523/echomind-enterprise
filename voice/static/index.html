@@ -233,7 +233,9 @@ function sendContext(clear=false) {
 
 async function start() {
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  const basePath = (location.pathname || "/").replace(/\/+$/, "") || "/voice";
+  const wsPath = basePath.indexOf("/voice") !== -1 ? "/voice/ws" : "/ws";
+  ws = new WebSocket(`${proto}://${location.host}${wsPath}`);
   statusEl.textContent = "connecting...";
 
   ws.onopen = async () => {

@@ -34,13 +34,16 @@ export interface ChatMessage {
 
 export interface TranscriptEntry {
   id: string;
-  raw: string;
+  /** Raw transcript text (live transcription uses this) */
+  raw?: string;
+  /** Same as raw; LiveTranscription uses rawText for new entries */
+  rawText?: string;
   polished?: string;
   tags?: string[];
   timestamp: number;
-  metadata: {
-    date: string;
-    time: string;
+  metadata?: {
+    date?: string;
+    time?: string;
     topic?: string;
   };
 }

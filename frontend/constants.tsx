@@ -29,5 +29,8 @@ export const ICONS = {
   ),
   Zap: (props: any) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+  ),
+  Wave: (props: any) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 12c.5 2 2 4 4 4s3.5-2 4-4"/><path d="M10 12c.5 2 2 4 4 4s3.5-2 4-4"/><path d="M18 12c.5 2 2 4 4 4"/></svg>
   )
 };
