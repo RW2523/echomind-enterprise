@@ -23,7 +23,6 @@ class PiperTTS:
             self.voice.synthesize(
                 text=text,
                 wav_file=wf,
-                speaker_id=self.speaker_id,
                 noise_scale=self.noise_scale,
                 length_scale=self.length_scale,
             )
