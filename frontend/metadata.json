@@ -1,0 +1,7 @@
+{
+  "name": "EchoMind Enterprise Intelligence",
+  "description": "An enterprise intelligence platform by Ajace AI that converts documents and voice into searchable, actionable knowledge using RAG and real-time AI.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

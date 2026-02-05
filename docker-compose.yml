@@ -1,0 +1,51 @@
+services:
+  backend:
+    build: ./backend
+    container_name: echomind-backend
+    expose: ["8000"]
+    environment:
+      - LLM_BASE_URL=http://ollama:11434/v1
+      - LLM_MODEL=qwen2.5:7b-instruct
+      - OLLAMA_EMBED_URL=http://ollama:11434/api/embeddings
+      - OLLAMA_EMBED_MODEL=nomic-embed-text
+      - WHISPER_MODEL=base
+    volumes:
+      - echomind_data:/data
+    depends_on: [ollama]
+
+  voice:
+    build: ./voice
+    container_name: echomind-voice
+    ports: ["8001:8000"]
+    environment:
+      - LLM_URL=http://ollama:11434/v1/chat/completions
+      - LLM_MODEL=qwen2.5:7b-instruct
+      - WHISPER_MODEL=base
+    depends_on: [ollama]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_BASE=
+    container_name: echomind-frontend
+    ports: ["3000:80"]
+    depends_on: [backend, voice]
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: echomind-ollama
+    ports: ["11434:11434"]
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  echomind_data:
+  ollama_data:

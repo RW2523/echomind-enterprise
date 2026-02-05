@@ -1,0 +1,319 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Unmute v5.1 (Context + Memory)</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 18px; max-width: 980px; }
+    button { padding: 10px 14px; margin-right: 10px; }
+    textarea { width: 100%; height: 90px; padding: 10px; }
+    #log { white-space: pre-wrap; border: 1px solid #ddd; padding: 12px; height: 320px; overflow: auto; margin-top: 10px; }
+    .row { margin-top: 10px; }
+    code { background: #f6f6f6; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h2>Unmute-like realtime bot — v5.1 (Context box + Memory)</h2>
+
+  <div class="row">
+    <label><b>Context / Role (System Prompt)</b></label>
+    <textarea id="ctx" placeholder="Example: You are a car dealership sales agent. Ask 1-2 questions, then recommend a car."></textarea>
+    <div class="row">
+      <button id="apply">Apply Context</button>
+      <button id="clear">Clear Memory</button>
+      <small>Context is applied per browser session. Memory persists until you Clear Memory or refresh server.</small>
+    </div>
+  </div>
+
+  <div class="row">
+    <button id="start">Start</button>
+    <button id="stop" disabled>Stop</button>
+    <span id="status">idle</span>
+  </div>
+
+  <div class="row">
+    <div><b>ASR:</b> <span id="asr"></span></div>
+    <div><b>Assistant:</b> <span id="assistant"></span></div>
+  </div>
+
+  <div id="log"></div>
+
+<script>
+const logEl = document.getElementById("log");
+const statusEl = document.getElementById("status");
+const asrEl = document.getElementById("asr");
+const assistantEl = document.getElementById("assistant");
+const ctxEl = document.getElementById("ctx");
+
+function log(...args) {
+  logEl.textContent += args.join(" ") + "\n";
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+let ws=null;
+let micStream=null;
+let audioCtx=null;
+let workletNode=null;
+
+// Playback with smoothing
+let playCtx=null, gainNode=null;
+let playQueue=[], playing=false;
+let currentSource=null;
+let currentGen=0;
+
+function bytesToB64(bytes) {
+  let bin="";
+  for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+function pcm16ToFloat32(pcmBytes) {
+  const dv = new DataView(pcmBytes.buffer, pcmBytes.byteOffset, pcmBytes.byteLength);
+  const out = new Float32Array(pcmBytes.byteLength / 2);
+  for (let i=0;i<out.length;i++) out[i] = dv.getInt16(i*2,true)/32768;
+  return out;
+}
+function resampleLinear(input, srcSr, dstSr) {
+  if (srcSr === dstSr) return input;
+  const ratio = dstSr / srcSr;
+  const n = Math.floor(input.length * ratio);
+  const out = new Float32Array(n);
+  for (let i=0;i<n;i++) {
+    const x = i / ratio;
+    const i0 = Math.floor(x);
+    const i1 = Math.min(i0 + 1, input.length - 1);
+    const w = x - i0;
+    out[i] = (1-w)*input[i0] + w*input[i1];
+  }
+  return out;
+}
+
+async function startPlayback() {
+  playCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+  gainNode = playCtx.createGain();
+  gainNode.gain.value = 1.0;
+  gainNode.connect(playCtx.destination);
+  playQueue = [];
+  playing = false;
+  currentSource = null;
+}
+
+function smoothStop(ms=60) {
+  if (!playCtx || !gainNode) return;
+  const now = playCtx.currentTime;
+  try {
+    gainNode.gain.cancelScheduledValues(now);
+    gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+    gainNode.gain.linearRampToValueAtTime(0.0, now + ms/1000);
+  } catch(e) {}
+  if (currentSource) {
+    try { currentSource.stop(now + ms/1000 + 0.01); } catch(e) {}
+  }
+  setTimeout(() => {
+    if (!playCtx) return;
+    try { gainNode.gain.setValueAtTime(1.0, playCtx.currentTime); } catch(e) {}
+  }, ms + 30);
+}
+
+async function stopPlaybackNow() {
+  playQueue = [];
+  playing = false;
+  smoothStop(50);
+  if (playCtx) { try { await playCtx.close(); } catch(e){} }
+  playCtx=null; gainNode=null; currentSource=null;
+}
+
+async function enqueuePcmChunk(pcmF32, sr, playbackRate=1.0) {
+  if (!playCtx) await startPlayback();
+  const targetSr = playCtx.sampleRate;
+  const f32 = resampleLinear(pcmF32, sr, targetSr);
+  playQueue.push({f32, rate: playbackRate});
+  if (!playing) pumpPlayback();
+}
+
+function pumpPlayback() {
+  if (!playCtx || !gainNode) return;
+  if (playQueue.length===0) { playing=false; return; }
+  playing=true;
+
+  const item = playQueue.shift();
+  const chunk = item.f32;
+  const rate = item.rate || 1.0;
+
+  const buf = playCtx.createBuffer(1, chunk.length, playCtx.sampleRate);
+  buf.copyToChannel(chunk, 0);
+
+  const src = playCtx.createBufferSource();
+  src.buffer = buf;
+  src.playbackRate.value = rate;
+  src.connect(gainNode);
+
+  currentSource = src;
+  src.onended = () => pumpPlayback();
+  src.start();
+}
+
+async function startMic16kFrames() {
+  const workletCode = `
+    class Framer16k extends AudioWorkletProcessor {
+      constructor() {
+        super();
+        this.ratio = 16000 / sampleRate;
+        this.acc = 0;
+        this.buf = [];
+        this.frameSamples = 320; // 20ms @ 16k
+      }
+      _pushResampled(input) {
+        let out = [];
+        for (let i=0;i<input.length;i++) {
+          const x = input[i];
+          this.acc += this.ratio;
+          while (this.acc >= 1.0) { out.push(x); this.acc -= 1.0; }
+        }
+        return out;
+      }
+      process(inputs) {
+        const input = inputs[0];
+        if (!input || !input[0]) return true;
+        const ch0 = input[0];
+        const res = this._pushResampled(ch0);
+        for (let i=0;i<res.length;i++) this.buf.push(res[i]);
+        while (this.buf.length >= this.frameSamples) {
+          const frame = this.buf.splice(0, this.frameSamples);
+          const pcm16 = new Int16Array(this.frameSamples);
+          for (let i=0;i<this.frameSamples;i++) {
+            let v = Math.max(-1, Math.min(1, frame[i]));
+            pcm16[i] = (v * 32767) | 0;
+          }
+          this.port.postMessage(pcm16.buffer, [pcm16.buffer]);
+        }
+        return true;
+      }
+    }
+    registerProcessor('framer16k', Framer16k);
+  `;
+
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const blob = new Blob([workletCode], {type: "application/javascript"});
+  const url = URL.createObjectURL(blob);
+  await audioCtx.audioWorklet.addModule(url);
+  URL.revokeObjectURL(url);
+
+  micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const src = audioCtx.createMediaStreamSource(micStream);
+  workletNode = new AudioWorkletNode(audioCtx, "framer16k");
+
+  workletNode.port.onmessage = (ev) => {
+    if (!ws || ws.readyState !== 1) return;
+    const u8 = new Uint8Array(ev.data);
+    ws.send(JSON.stringify({
+      type: "audio_frame",
+      ts: performance.now()/1000,
+      pcm16_b64: bytesToB64(u8)
+    }));
+  };
+
+  src.connect(workletNode);
+}
+
+function sendContext(clear=false) {
+  if (!ws || ws.readyState !== 1) return;
+  ws.send(JSON.stringify({
+    type: "set_context",
+    system_prompt: ctxEl.value || "",
+    clear_memory: clear
+  }));
+  log(clear ? "sent: set_context + clear_memory" : "sent: set_context");
+}
+
+async function start() {
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  statusEl.textContent = "connecting...";
+
+  ws.onopen = async () => {
+    statusEl.textContent = "connected";
+    log("connected");
+    await startMic16kFrames();
+    await startPlayback();
+    // send current context once connected
+    sendContext(false);
+  };
+
+  ws.onmessage = async (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (msg.type === "hello") {
+      log("session:", msg.session_id);
+      log(msg.note || "");
+      return;
+    }
+    if (msg.type === "context_ack") {
+      if (msg.system_prompt && !ctxEl.value) ctxEl.value = msg.system_prompt;
+      log("context applied", msg.cleared ? "(memory cleared)" : "");
+      return;
+    }
+    if (msg.type === "event") {
+      if (msg.event === "BARGE_IN") {
+        await smoothStop();
+        clearPlayQueue();
+      }
+ log("EVENT:", msg.event, "gen:", msg.generation_id ?? ""); return; }
+    if (msg.type === "error") { log("ERROR:", msg.where, msg.message); return; }
+
+    if (msg.type === "cancel") {
+      currentGen = msg.generation_id;
+      log("CANCEL gen", currentGen);
+      assistantEl.textContent = "";
+      playQueue = [];
+      smoothStop(70);
+      return;
+    }
+    if (msg.type === "asr_final") { asrEl.textContent = msg.text; return; }
+    if (msg.type === "assistant_text_partial") { assistantEl.textContent = msg.text; return; }
+    if (msg.type === "assistant_text") { assistantEl.textContent = msg.text; return; }
+
+    if (msg.type === "audio_out") {
+      const bytes = b64ToBytes(msg.pcm16_b64);
+      const f32 = pcm16ToFloat32(bytes);
+      await enqueuePcmChunk(f32, msg.sample_rate, msg.playback_rate || 1.0);
+      return;
+    }
+  };
+
+  ws.onclose = () => { statusEl.textContent="closed"; log("closed"); };
+  ws.onerror  = (e) => { statusEl.textContent="error"; log("ws error", e); };
+}
+
+async function stopAll() {
+  if (workletNode) { try { workletNode.disconnect(); } catch(e){} }
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+  if (audioCtx) { try { await audioCtx.close(); } catch(e){} }
+  workletNode=null; micStream=null; audioCtx=null;
+
+  await stopPlaybackNow();
+  if (ws) ws.close();
+  ws=null;
+  statusEl.textContent="stopped";
+}
+
+document.getElementById("start").onclick = async () => {
+  document.getElementById("start").disabled = true;
+  document.getElementById("stop").disabled = false;
+  await start();
+};
+document.getElementById("stop").onclick = async () => {
+  document.getElementById("start").disabled = false;
+  document.getElementById("stop").disabled = true;
+  await stopAll();
+};
+
+document.getElementById("apply").onclick = () => sendContext(false);
+document.getElementById("clear").onclick = () => sendContext(true);
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+*.egg-info/
+.eggs/
+
+# Node
+node_modules/
+dist/
+*.local
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.log
+
+# Local / secrets (do not commit)
+.env
+.env.local
+*.sqlite
+/data/
+
+# Optional: uncomment if you don't want to track these
+# echomind_data/
+# ollama_data/
