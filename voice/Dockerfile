@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/pytorch:25.01-py3
+FROM nvcr.io/nvidia/pytorch:24.10-py3
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg wget libsndfile1 && rm -rf /var/lib/apt/lists/*
 WORKDIR /workspace
 COPY . /workspace
