@@ -46,6 +46,14 @@ class Settings(BaseSettings):
     # Deduplicate overlapping sentences in context (simple overlap threshold). 0 = off.
     RAG_DEDUPE_SENTENCES: bool = os.getenv("ECHOMIND_RAG_DEDUPE_SENTENCES", "1").lower() in ("1", "true", "yes")
     RAG_DEDUPE_OVERLAP_RATIO: float = float(os.getenv("ECHOMIND_RAG_DEDUPE_OVERLAP_RATIO", "0.6"))
+    # Book/long-form retrieval: higher recall for TOC and concept queries (e.g. "Matthew Effect" in books).
+    RAG_BOOK_K_PER_QUERY: int = int(os.getenv("ECHOMIND_RAG_BOOK_K_PER_QUERY", "20"))
+    RAG_BOOK_SPARSE_WEIGHT: float = float(os.getenv("ECHOMIND_RAG_BOOK_SPARSE_WEIGHT", "0.5"))
+    # TOC/chapters guardrail: when user asks for chapters/contents, require TOC signals in context or refuse.
+    RAG_TOC_GUARDRAIL: bool = os.getenv("ECHOMIND_RAG_TOC_GUARDRAIL", "1").lower() in ("1", "true", "yes")
+    # Bypass compression for chunks that contain key query terms (improves grounding for named concepts).
+    RAG_VERBATIM_QUERY_TERMS: bool = os.getenv("ECHOMIND_RAG_VERBATIM_QUERY_TERMS", "1").lower() in ("1", "true", "yes")
+    RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1200"))
 
     WHISPER_MODEL: str = "base"
 

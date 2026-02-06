@@ -218,6 +218,63 @@ def _prefer_authoritative_sort(hits: List[Dict]) -> List[Dict]:
     return sorted(hits, key=lambda h: (-h["score"], 0 if _is_authoritative(h.get("source") or {}) else 1))
 
 
+# --- Deterministic query expansion (pre-LLM): typos, quoted phrases, TOC variants ---
+_COMMON_TYPOS = {"mathew": "matthew", "matthew": "matthew", "meriton": "merton", "outler": "outlier", "outlers": "outliers"}
+
+
+def get_deterministic_query_variants(question: str) -> List[str]:
+    """Pre-LLM query variants: fix typos, add quoted phrase for named concepts, add TOC/structure terms when relevant. Return list to prepend to LLM-generated queries."""
+    if not (question or "").strip():
+        return []
+    q = question.strip()
+    q_lower = q.lower()
+    out: List[str] = []
+    # Typo fixes: produce corrected query
+    for wrong, right in _COMMON_TYPOS.items():
+        if wrong in q_lower:
+            out.append(q_lower.replace(wrong, right))
+    # Quoted phrase for named concepts (e.g. "matthew effect" -> exact phrase search helps BM25)
+    if "matthew" in q_lower and "effect" in q_lower:
+        out.append('"matthew effect"')
+    if "table of contents" in q_lower or "toc" in q_lower or "contents" in q_lower or "chapters" in q_lower or "chapter list" in q_lower:
+        out.extend(["table of contents", "contents", "chapter"])
+    return out
+
+
+def is_toc_chapters_query(question: str) -> bool:
+    """True if the user is asking for chapters, table of contents, or section list. Used for TOC guardrail and book retrieval tuning."""
+    if not (question or "").strip():
+        return False
+    t = question.strip().lower()
+    toc_phrases = (
+        "table of contents", "toc", "list of chapters", "chapter list", "list the chapters",
+        "what are the chapters", "chapters in", "contents of the book", "book structure",
+        "section list", "list sections", "list of sections", "chapter titles", "section titles",
+    )
+    if any(p in t for p in toc_phrases):
+        return True
+    words = set(re.findall(r"[a-z0-9]+", t))
+    if "chapters" in words and ("list" in words or "what" in words or "name" in words or "which" in words):
+        return True
+    if "contents" in words and ("list" in words or "table" in words):
+        return True
+    return False
+
+
+def has_toc_signals_in_context(blocks: List[str]) -> bool:
+    """True if the combined context blocks contain TOC-like signals (Contents, CHAPTER N, roman numerals list, etc.). Used to avoid hallucinating chapter lists."""
+    combined = " ".join((b or "" for b in blocks)).lower()
+    if "table of contents" in combined or "contents" in combined and ("chapter" in combined or "part " in combined):
+        return True
+    if re.search(r"chapter\s+[0-9]+", combined, re.I) or re.search(r"chapter\s+one|two|three|four|five|six|seven|eight|nine|ten", combined, re.I):
+        return True
+    if re.search(r"\b(i{1,3}|iv|v|vi{0,3}|ix|x|xi|xiv|xv)\s+[a-z]", combined):
+        return True
+    if "part i" in combined or "part ii" in combined or "part 1" in combined or "part 2" in combined:
+        return True
+    return False
+
+
 # Intent classification for query rewriting: reduces noisy expansions by tailoring rewrite to query type.
 QUERY_INTENT_SYSTEM = """Classify the user's question into exactly one intent:
 - factual: asking for a specific fact, definition, number, or "what is X"
@@ -311,17 +368,34 @@ async def _rerank_hits(question: str, hits: List[Dict], top_n: int) -> List[Dict
 
 
 async def retrieve(question: str, k: int, context_window: str = "all") -> List[Dict]:
-    """Hybrid retrieve: dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. context_window still applied as hard filter when not 'all'."""
-    qs = await generate_queries(question)
-    k_per_query = max(k, 4)
+    """Hybrid retrieve: deterministic + LLM query expansion, dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. context_window still applied as hard filter when not 'all'."""
+    llm_qs = await generate_queries(question)
+    det_qs = get_deterministic_query_variants(question)
+    seen_lower: set = set()
+    qs: List[str] = []
+    for q in det_qs + llm_qs:
+        key = (q or "").strip().lower()
+        if key and key not in seen_lower:
+            seen_lower.add(key)
+            qs.append(q.strip())
+    if not qs:
+        qs = [question.strip() or " "]
+
+    is_toc = is_toc_chapters_query(question)
+    if is_toc:
+        k_per_query = getattr(settings, "RAG_BOOK_K_PER_QUERY", 20)
+        sparse_w = getattr(settings, "RAG_BOOK_SPARSE_WEIGHT", 0.5)
+        dense_w = 1.0 - sparse_w
+    else:
+        k_per_query = max(k, 4)
+        dense_w = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.5)
+        sparse_w = getattr(settings, "RAG_SPARSE_RRF_WEIGHT", 0.5)
+
     dense_hits_per_query: List[List[Dict]] = []
     sparse_hits_per_query: List[List[Dict]] = []
     for q in qs:
         dense_hits_per_query.append(await index.search(q, k_per_query))
         sparse_hits_per_query.append(index.sparse.search(q, k_per_query))
-    # Weighted RRF when configured; else equal weight
-    dense_w = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.5)
-    sparse_w = getattr(settings, "RAG_SPARSE_RRF_WEIGHT", 0.5)
     candidates_k = max(k, getattr(settings, "RAG_RERANK_CANDIDATES", k)) if getattr(settings, "RAG_RERANK_ENABLED", False) else k
     hits = _weighted_rrf(dense_hits_per_query, sparse_hits_per_query, candidates_k, dense_weight=dense_w, sparse_weight=sparse_w)
     # Hard filter by context_window when not 'all'
@@ -367,6 +441,21 @@ def _sentences(text: str) -> List[str]:
 def _word_set(s: str) -> set:
     """Normalized word set for overlap check."""
     return set(re.findall(r"[a-z0-9]{2,}", (s or "").lower()))
+
+
+# Stopwords to exclude when deciding "chunk contains key query terms" for verbatim inclusion.
+_QUERY_TERM_STOP = frozenset({
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "from",
+    "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+    "will", "would", "could", "should", "may", "might", "must", "can", "about", "into", "through",
+    "what", "which", "when", "where", "who", "how", "why", "does", "say", "said", "anything", "something",
+})
+
+
+def _key_query_terms(question: str, min_len: int = 3) -> set:
+    """Extract significant query terms (e.g. 'matthew', 'effect') for verbatim-chunk bypass and evidence grounding."""
+    words = set(re.findall(r"[a-z0-9]+", (question or "").lower()))
+    return {w for w in words if len(w) >= min_len and w not in _QUERY_TERM_STOP}
 
 
 def _dedupe_overlapping_sentences(blocks: List[str], overlap_ratio: float) -> List[str]:
@@ -423,9 +512,10 @@ def _rag_system_prompt(persona: Optional[str] = None) -> str:
 Rules:
 - Answer in a clear, confident, human way. Do not cite sources, mention file names, chunk numbers, or say "according to the document" or "the document says" unless the context explicitly contains that wording.
 - Do not add facts not stated in the context. Do not use "likely", "might", or "inferred" for factual claims — either state what the context says or say the information is not in the materials.
+- Do not introduce names, examples, or facts that are not in the provided context blocks. Only use named entities (people, places, terms, chapter titles) that appear explicitly in the context.
 - If different parts of the context contradict each other, say so instead of picking one silently.
 - Do not introduce concepts, terms, or section names that do not appear in the context.
-- If the information is not in the context, say so plainly; do not guess or infer.
+- If the information is not in the context, say so plainly; do not guess or infer. Do not infer or invent a table of contents or chapter list from general knowledge.
 - If the context is insufficient to answer the question, say clearly: "The provided context does not contain enough information to answer this." Do not fabricate an answer."""
     if persona:
         base = f"You are EchoMind in the role of: {persona}. Adapt your reasoning style, vocabulary, and tone to this role.\n\n" + base
@@ -468,11 +558,15 @@ async def update_conversation_summary(
 
 async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str], List[Dict], List[str]]:
     """Build numbered context blocks [1], [2], ... with parent expansion. No SOURCE lines (internal grounding only).
-    Returns (block_texts, enriched_ctx_list for citations/audit, chunk_ids_used for audit)."""
+    Returns (block_texts, enriched_ctx_list for citations/audit, chunk_ids_used for audit).
+    When RAG_VERBATIM_QUERY_TERMS is on, chunks that contain key query terms are included verbatim (truncated) instead of compressed."""
     seen_parent_ids: set = set()
     blocks: List[str] = []
     enriched: List[Dict] = []
     chunk_ids_used: List[str] = []
+    key_terms = _key_query_terms(question)
+    use_verbatim = getattr(settings, "RAG_VERBATIM_QUERY_TERMS", True)
+    verbatim_max = getattr(settings, "RAG_VERBATIM_MAX_CHARS", 1200)
 
     for h in hits:
         src = h.get("source") or {}
@@ -487,7 +581,14 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
                 blocks.append(truncated)
                 chunk_ids_used.append(parent_chunk_id)
 
-        compressed = (await compress(question, h["text"], src)).strip()
+        chunk_text = h.get("text") or ""
+        chunk_lower = chunk_text.lower()
+        use_verbatim_this = use_verbatim and key_terms and any(term in chunk_lower for term in key_terms)
+        if use_verbatim_this:
+            compressed = chunk_text if len(chunk_text) <= verbatim_max else chunk_text[:verbatim_max].rsplit(" ", 1)[0] + "…"
+            compressed = compressed.strip()
+        else:
+            compressed = (await compress(question, chunk_text, src)).strip()
         blocks.append(compressed)
         enriched.append({**h, "compressed": compressed})
         chunk_ids_used.append(h["chunk_id"])
@@ -545,6 +646,9 @@ async def answer(
         return await _answer_general(question, history, persona, conversation_summary)
 
     blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
+    if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(blocks):
+        return {"answer": "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", "citations": []}
+
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
     logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids})
@@ -605,6 +709,11 @@ async def answer_stream(
         return
 
     blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
+    if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(blocks):
+        yield ("chunk", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", None)
+        yield ("done", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", [])
+        return
+
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
     logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids})

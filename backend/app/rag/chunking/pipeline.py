@@ -6,6 +6,7 @@ from typing import List
 
 from ...utils.ids import new_id
 
+from ..normalize import normalize_extracted_text
 from .models import Chunk, DocType
 from .detect import detect_document_type
 from .sanitize import sanitize_text
@@ -25,6 +26,7 @@ def chunk_document(text: str, doc_id: str) -> List[Chunk]:
     if not (text or "").strip():
         return []
 
+    text = normalize_extracted_text(text or "")
     doc_type = detect_document_type(text)
     clean_text, redacted, sensitivity_level = sanitize_text(text)
 
