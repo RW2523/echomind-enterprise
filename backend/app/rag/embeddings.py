@@ -5,6 +5,8 @@ from ..core.config import settings
 def _truncate_for_embed(text: str, max_chars: int | None = None) -> str:
     """Truncate at word boundary so embedding API never exceeds context length."""
     limit = max_chars if max_chars is not None else settings.EMBED_MAX_CHARS
+    if limit <= 0:
+        limit = 2000
     if not text or len(text) <= limit:
         return text or ""
     truncated = text[:limit]

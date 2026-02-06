@@ -14,8 +14,9 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = 512
     OLLAMA_EMBED_URL: str = "http://ollama:11434/api/embeddings"
     OLLAMA_EMBED_MODEL: str = os.getenv("ECHOMIND_EMBED_MODEL", "nomic-embed-text")
-    # Max characters per chunk sent to embedding API (avoids "input length exceeds context length")
-    EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "8000"))
+    # Max characters per chunk sent to embedding API (avoids "input length exceeds context length").
+    # Conservative default (2000) works with 512-token models; set ECHOMIND_EMBED_MAX_CHARS=8000 for nomic-embed-text.
+    EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "2000"))
     CHUNK_SIZE: int = 900
     CHUNK_OVERLAP: int = 140
     TOP_K: int = 8
