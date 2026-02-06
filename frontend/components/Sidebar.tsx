@@ -1,7 +1,14 @@
-
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppView } from '../types';
 import { ICONS } from '../constants';
+import { getStorageUsage, StorageUsage } from '../services/backend';
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
+  if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(1)} MB`;
+  if (bytes >= 1e3) return `${(bytes / 1e3).toFixed(1)} KB`;
+  return `${bytes} B`;
+}
 
 interface SidebarProps {
   activeView: AppView;
@@ -9,6 +16,29 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
+  const [storage, setStorage] = useState<StorageUsage>({ usage_bytes: 0, capacity_bytes: null });
+
+  const refreshUsage = useCallback(async () => {
+    try {
+      const u = await getStorageUsage();
+      setStorage(u);
+    } catch {
+      setStorage({ usage_bytes: 0, capacity_bytes: null });
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUsage();
+    const interval = setInterval(refreshUsage, 30000);
+    return () => clearInterval(interval);
+  }, [refreshUsage]);
+
+  const usageBytes = storage.usage_bytes;
+  const capacityBytes = storage.capacity_bytes ?? 0;
+  const ratio = capacityBytes > 0 ? Math.min(1, usageBytes / capacityBytes) : 0;
+  const usageStr = formatBytes(usageBytes);
+  const capacityStr = capacityBytes > 0 ? formatBytes(capacityBytes) : null;
+
   const navItems = [
     { id: AppView.KNOWLEDGE_CHAT, label: 'Knowledge Chat', icon: ICONS.Chat },
     { id: AppView.TRANSCRIPTION, label: 'Live Transcript', icon: ICONS.Transcript },
@@ -49,9 +79,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
         <div className="glass rounded-2xl p-4 border-white/5 bg-white/5">
           <p className="text-xs text-slate-500 mb-2">Usage</p>
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-cyan-400 h-full w-2/3 shadow-[0_0_10px_rgba(34,211,238,0.5)]"></div>
+            <div
+              className="bg-cyan-400 h-full shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-500"
+              style={{ width: `${ratio * 100}%` }}
+            />
           </div>
-          <p className="text-[10px] text-slate-400 mt-2">1.2 GB of 2.0 GB Vector DB</p>
+          <p className="text-[10px] text-slate-400 mt-2">
+            {capacityStr ? `${usageStr} of ${capacityStr} Vector DB` : `${usageStr} Vector DB`}
+          </p>
         </div>
       </div>
     </aside>

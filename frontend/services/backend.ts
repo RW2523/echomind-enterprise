@@ -31,6 +31,18 @@ export async function deleteDocument(docId: string): Promise<{ ok: boolean; dele
   return await r.json();
 }
 
+/** Vector DB storage usage (for sidebar). */
+export interface StorageUsage {
+  usage_bytes: number;
+  capacity_bytes: number | null;
+}
+
+export async function getStorageUsage(): Promise<StorageUsage> {
+  const r = await fetch(`${API_BASE}/api/docs/usage`);
+  if (!r.ok) return { usage_bytes: 0, capacity_bytes: null };
+  return await r.json();
+}
+
 /** chat */
 export async function createChat(title: string): Promise<{chat_id: string}> {
   const r = await fetch(`${API_BASE}/api/chat/create`, {

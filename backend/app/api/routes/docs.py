@@ -1,10 +1,39 @@
+from __future__ import annotations
+import os
+import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
+from ...core.config import settings
 from ...core.db import get_conn
 from ...rag.parse import parse_any
 from ...rag.index import index
 
 router = APIRouter(prefix="/docs", tags=["docs"])
+
+
+def _vector_db_usage_bytes() -> int:
+    """Total size of vector DB files: FAISS index, meta JSON, sparse meta, SQLite DB."""
+    total = 0
+    for path in (settings.FAISS_PATH, settings.META_PATH, settings.SPARSE_META_PATH, settings.DB_PATH):
+        if path and os.path.exists(path):
+            try:
+                total += os.path.getsize(path)
+            except OSError:
+                pass
+    return total
+
+
+@router.get("/usage")
+def storage_usage():
+    """Return vector DB storage usage and disk capacity (for sidebar usage bar)."""
+    usage_bytes = _vector_db_usage_bytes()
+    capacity_bytes = None
+    try:
+        disk = shutil.disk_usage(settings.DATA_DIR)
+        capacity_bytes = disk.total
+    except OSError:
+        pass
+    return {"usage_bytes": usage_bytes, "capacity_bytes": capacity_bytes}
 
 
 @router.get("/list")
