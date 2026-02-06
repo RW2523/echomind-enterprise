@@ -9,11 +9,20 @@ from ..core.config import settings
 from ..core.db import get_conn
 from .index import index
 from .llm import OpenAICompatChat
+from .intent import classify_query_intent, get_retrieval_profile, STRUCTURE
+from .structure import get_headings_verbatim_list, get_doc_headings_for_docs
 
 logger = logging.getLogger(__name__)
 chat = OpenAICompatChat(settings.LLM_BASE_URL, settings.LLM_MODEL)
 
 CONTEXT_WINDOW_VALUES = ("24h", "48h", "1w", "all")
+
+# Answer mode for observability and safe fallback behavior
+RAG_GROUNDED = "RAG_GROUNDED"
+RAG_INSUFFICIENT_EVIDENCE = "RAG_INSUFFICIENT_EVIDENCE"
+
+REFUSAL_MESSAGE = "I couldn't find this in the retrieved excerpts. Try rephrasing or ask for a different detail."
+NO_HEADINGS_MESSAGE = "I can't find headings or a table of contents in the extracted text."
 
 def _parse_iso_date(created_at: Optional[str]) -> Optional[datetime]:
     if not created_at:
@@ -54,6 +63,39 @@ def _filter_hits_by_context_window(hits: List[Dict], context_window: str) -> Lis
             if dt >= cutoff:
                 filtered.append(h)
     return filtered
+
+
+def _get_doc_ids_in_context_window(context_window: str) -> List[str]:
+    """Return document IDs that fall within the context window (for structure fallback when retrieval returns no hits)."""
+    if not context_window or context_window == "all":
+        with get_conn() as conn:
+            rows = conn.execute("SELECT id FROM documents ORDER BY created_at DESC").fetchall()
+        return [r[0] for r in rows]
+    now = datetime.now(timezone.utc)
+    if context_window == "24h":
+        cutoff = now - timedelta(hours=24)
+    elif context_window == "48h":
+        cutoff = now - timedelta(hours=48)
+    elif context_window == "1w":
+        cutoff = now - timedelta(days=7)
+    else:
+        with get_conn() as conn:
+            rows = conn.execute("SELECT id FROM documents ORDER BY created_at DESC").fetchall()
+        return [r[0] for r in rows]
+    with get_conn() as conn:
+        rows = conn.execute("SELECT id, created_at FROM documents ORDER BY created_at DESC").fetchall()
+    out = []
+    for r in rows:
+        dt = _parse_iso_date(r[1])
+        if dt is None:
+            out.append(r[0])
+            continue
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        if dt >= cutoff:
+            out.append(r[0])
+    return out
+
 
 # Max chars for parent chunk expansion; config overrides to limit context domination (RAG_PARENT_CONTEXT_MAX_CHARS).
 def _parent_context_max_chars() -> int:
@@ -367,8 +409,15 @@ async def _rerank_hits(question: str, hits: List[Dict], top_n: int) -> List[Dict
     return hits[:top_n]
 
 
-async def retrieve(question: str, k: int, context_window: str = "all") -> List[Dict]:
-    """Hybrid retrieve: deterministic + LLM query expansion, dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. context_window still applied as hard filter when not 'all'."""
+async def retrieve(
+    question: str,
+    k: int,
+    context_window: str = "all",
+) -> Tuple[List[Dict], str, List[str]]:
+    """
+    Hybrid retrieve with optional intent-based profiles.
+    Returns (hits, intent, expanded_queries) for observability and downstream logic.
+    """
     llm_qs = await generate_queries(question)
     det_qs = get_deterministic_query_variants(question)
     seen_lower: set = set()
@@ -381,44 +430,62 @@ async def retrieve(question: str, k: int, context_window: str = "all") -> List[D
     if not qs:
         qs = [question.strip() or " "]
 
-    is_toc = is_toc_chapters_query(question)
-    if is_toc:
-        k_per_query = getattr(settings, "RAG_BOOK_K_PER_QUERY", 20)
-        sparse_w = getattr(settings, "RAG_BOOK_SPARSE_WEIGHT", 0.5)
-        dense_w = 1.0 - sparse_w
+    intent = classify_query_intent(question)
+    use_profiles = getattr(settings, "RAG_USE_INTENT_PROFILES", True)
+    if use_profiles:
+        profile = get_retrieval_profile(intent, k)
+        k_per_query = profile["k_per_query"]
+        dense_w = profile["dense_weight"]
+        sparse_w = profile["sparse_weight"]
+        top_k = profile["top_k"]
+        candidates_k = profile["rerank_candidates"] if getattr(settings, "RAG_RERANK_ENABLED", False) else top_k
+        rerank_top_n = profile["rerank_top_n"]
     else:
-        k_per_query = max(k, 4)
-        dense_w = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.5)
-        sparse_w = getattr(settings, "RAG_SPARSE_RRF_WEIGHT", 0.5)
+        is_toc = is_toc_chapters_query(question)
+        if is_toc:
+            k_per_query = getattr(settings, "RAG_BOOK_K_PER_QUERY", 20)
+            sparse_w = getattr(settings, "RAG_BOOK_SPARSE_WEIGHT", 0.5)
+            dense_w = 1.0 - sparse_w
+        else:
+            k_per_query = max(k, 4)
+            dense_w = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.5)
+            sparse_w = getattr(settings, "RAG_SPARSE_RRF_WEIGHT", 0.5)
+        top_k = k
+        candidates_k = max(k, getattr(settings, "RAG_RERANK_CANDIDATES", k)) if getattr(settings, "RAG_RERANK_ENABLED", False) else k
+        rerank_top_n = getattr(settings, "RAG_RERANK_TOP_N", k)
 
     dense_hits_per_query: List[List[Dict]] = []
     sparse_hits_per_query: List[List[Dict]] = []
     for q in qs:
         dense_hits_per_query.append(await index.search(q, k_per_query))
         sparse_hits_per_query.append(index.sparse.search(q, k_per_query))
-    candidates_k = max(k, getattr(settings, "RAG_RERANK_CANDIDATES", k)) if getattr(settings, "RAG_RERANK_ENABLED", False) else k
     hits = _weighted_rrf(dense_hits_per_query, sparse_hits_per_query, candidates_k, dense_weight=dense_w, sparse_weight=sparse_w)
-    # Hard filter by context_window when not 'all'
     hits = _filter_hits_by_context_window(hits, context_window or "all")
-    # Time-decay scoring (soft; keeps older docs but down-weights)
     doc_created, doc_meta = _get_doc_info_for_hits(hits)
     halflife = getattr(settings, "RAG_TIME_DECAY_HALFLIFE_DAYS", 0) or 0
     if halflife > 0:
         hits = _apply_time_decay(hits, doc_created, halflife)
-    # Tag boost for transcripts
     if getattr(settings, "RAG_TAG_BOOST_ENABLED", False):
         tag_factor = getattr(settings, "RAG_TAG_BOOST_FACTOR", 0.08)
         hits = _apply_tag_boost(hits, question, doc_meta, tag_factor)
-    # Prefer authoritative docs when scores are close
     if getattr(settings, "RAG_PREFER_AUTHORITATIVE", False):
         hits = _prefer_authoritative_sort(hits)
-    # Optional rerank
     if getattr(settings, "RAG_RERANK_ENABLED", False):
-        rerank_n = getattr(settings, "RAG_RERANK_TOP_N", k)
-        hits = await _rerank_hits(question, hits[: getattr(settings, "RAG_RERANK_CANDIDATES", 12)], rerank_n)
+        hits = await _rerank_hits(question, hits[: getattr(settings, "RAG_RERANK_CANDIDATES", 12)], rerank_top_n)
     else:
-        hits = hits[:k]
-    return hits
+        hits = hits[:top_k]
+
+    logger.info(
+        "RAG retrieve",
+        extra={
+            "intent": intent,
+            "expanded_queries": qs[:10],
+            "dense_queries": len(qs),
+            "rrf_candidates": len(hits),
+            "top_k": top_k,
+        },
+    )
+    return (hits, intent, qs)
 
 
 def _get_chunk_text(chunk_id: str) -> str | None:
@@ -428,6 +495,50 @@ def _get_chunk_text(chunk_id: str) -> str | None:
     with get_conn() as conn:
         row = conn.execute("SELECT text FROM chunks WHERE id=?", (chunk_id,)).fetchone()
         return row[0] if row else None
+
+
+def _get_chunk_by_doc_index(doc_id: str, chunk_index: int) -> Optional[Dict]:
+    """Fetch chunk by doc_id and chunk_index for adjacent expansion. Returns hit-like dict or None."""
+    if not doc_id:
+        return None
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, text, source_json FROM chunks WHERE doc_id = ? AND chunk_index = ?",
+            (doc_id, chunk_index),
+        ).fetchone()
+    if not row:
+        return None
+    src = json.loads(row[2]) if isinstance(row[2], str) else (row[2] or {})
+    return {"chunk_id": row[0], "score": 0.0, "text": row[1], "source": src}
+
+
+def _is_table_like(text: str) -> bool:
+    """Heuristic: chunk looks like a table (many columns, repeated spaces, numbers). Skip compression."""
+    if not text or len(text) < 100:
+        return False
+    lines = [l for l in text.split("\n") if l.strip()]
+    if len(lines) < 3:
+        return False
+    # Multiple lines with many spaces (column alignment) or tab-like
+    multi_space = sum(1 for l in lines if re.search(r" {3,}", l))
+    digit_lines = sum(1 for l in lines if re.search(r"\d{2,}", l))
+    if multi_space >= len(lines) * 0.5 or (digit_lines >= len(lines) * 0.4 and multi_space >= 2):
+        return True
+    return False
+
+
+def _is_heading_toc_chunk(text: str) -> bool:
+    """True if chunk strongly suggests TOC/headings (Contents, CHAPTER, section list). Skip compression."""
+    if not text or len(text) > 2000:
+        return False
+    t = text.strip().lower()
+    if "table of contents" in t or "contents" == t[:20].strip().lower():
+        return True
+    if re.search(r"chapter\s+[0-9ivxlc]+", t) or re.search(r"part\s+[0-9ivxlc]+", t):
+        return True
+    if re.search(r"^\s*\d+\.\s+[A-Za-z]", t, re.M) and t.count("\n") >= 2:
+        return True
+    return False
 
 
 def _sentences(text: str) -> List[str]:
@@ -556,10 +667,38 @@ async def update_conversation_summary(
         logger.warning("Conversation summary update failed: %s", e)
         return prev
 
+def _expand_hits_with_adjacent(hits: List[Dict]) -> List[Dict]:
+    """When RAG_ADJACENT_CHUNK_EXPANSION is on, add chunk_index +/- 1 for hits that look like TOC/Contents/Chapter."""
+    if not getattr(settings, "RAG_ADJACENT_CHUNK_EXPANSION", True) or not hits:
+        return hits
+    expanded: List[Dict] = []
+    seen: set = set()
+    for h in hits:
+        cid = h.get("chunk_id")
+        if cid and cid not in seen:
+            expanded.append(h)
+            seen.add(cid)
+        text = (h.get("text") or "").lower()
+        if "contents" not in text and "chapter" not in text and "table of contents" not in text and "section" not in text[:500]:
+            continue
+        src = h.get("source") or {}
+        doc_id = src.get("doc_id")
+        ci = src.get("chunk_index")
+        if doc_id is None or ci is None:
+            continue
+        for delta in (-1, 1):
+            adj = _get_chunk_by_doc_index(doc_id, ci + delta)
+            if adj and adj.get("chunk_id") and adj["chunk_id"] not in seen:
+                expanded.append(adj)
+                seen.add(adj["chunk_id"])
+    return expanded
+
+
 async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str], List[Dict], List[str]]:
     """Build numbered context blocks [1], [2], ... with parent expansion. No SOURCE lines (internal grounding only).
     Returns (block_texts, enriched_ctx_list for citations/audit, chunk_ids_used for audit).
-    When RAG_VERBATIM_QUERY_TERMS is on, chunks that contain key query terms are included verbatim (truncated) instead of compressed."""
+    Skips compression for table-like and heading/TOC chunks; uses verbatim for key-query-term chunks when configured."""
+    hits = _expand_hits_with_adjacent(hits)
     seen_parent_ids: set = set()
     blocks: List[str] = []
     enriched: List[Dict] = []
@@ -567,6 +706,7 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
     key_terms = _key_query_terms(question)
     use_verbatim = getattr(settings, "RAG_VERBATIM_QUERY_TERMS", True)
     verbatim_max = getattr(settings, "RAG_VERBATIM_MAX_CHARS", 1200)
+    skip_compress_tables = getattr(settings, "RAG_SKIP_COMPRESS_TABLES_HEADINGS", True)
 
     for h in hits:
         src = h.get("source") or {}
@@ -583,7 +723,10 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
 
         chunk_text = h.get("text") or ""
         chunk_lower = chunk_text.lower()
-        use_verbatim_this = use_verbatim and key_terms and any(term in chunk_lower for term in key_terms)
+        use_verbatim_this = (
+            (use_verbatim and key_terms and any(term in chunk_lower for term in key_terms))
+            or (skip_compress_tables and (_is_table_like(chunk_text) or _is_heading_toc_chunk(chunk_text)))
+        )
         if use_verbatim_this:
             compressed = chunk_text if len(chunk_text) <= verbatim_max else chunk_text[:verbatim_max].rsplit(" ", 1)[0] + "…"
             compressed = compressed.strip()
@@ -602,6 +745,50 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
 def _rag_context_block(blocks: List[str]) -> str:
     """Format blocks as [1] ... [2] ... (no SOURCE lines)."""
     return "\n\n".join([f"[{i+1}] {b}" for i, b in enumerate(blocks)])
+
+
+def _answer_evidence_check(
+    question: str,
+    answer: str,
+    blocks: List[str],
+    intent: str,
+    structure_headings: List[str],
+) -> Tuple[bool, str]:
+    """
+    Lightweight post-check: if question asks for numbers/dates/lists and answer contains content not in context, return (False, revised).
+    For STRUCTURE: disallow list items unless each appears verbatim in blocks or structure_headings.
+    """
+    if not getattr(settings, "RAG_EVIDENCE_POSTCHECK", True):
+        return (True, answer)
+    combined_ctx = " ".join(blocks).lower()
+    allowed_headings_lower = set((h or "").strip().lower() for h in structure_headings)
+    q_lower = (question or "").lower()
+    ans = (answer or "").strip()
+
+    if intent == STRUCTURE:
+        # Check for list-like lines in answer (numbered, bulleted). Each substantive line should appear in context or structure index.
+        list_lines = re.findall(r"^(?:\s*\d+[.)]\s*|\s*[-*•]\s*)(.+)$", ans, re.M)
+        for line in list_lines:
+            line = line.strip()
+            if len(line) < 3:
+                continue
+            line_lower = line.lower()
+            if line_lower in allowed_headings_lower:
+                continue
+            if line_lower in combined_ctx:
+                continue
+            # Allow if it's a substring of a context line (e.g. "Chapter 1" in "Chapter 1 Introduction")
+            if any(line_lower in blk.lower() for blk in blocks):
+                continue
+            # Unverified list item
+            return (False, NO_HEADINGS_MESSAGE)
+    # Optional: numbers/dates not in context (simplified: if question asks for "exact number/date" and answer has digits, check)
+    if "exact number" in q_lower or "exact date" in q_lower:
+        nums_ans = set(re.findall(r"\b\d{1,5}\b", ans))
+        nums_ctx = set(re.findall(r"\b\d{1,5}\b", combined_ctx))
+        if nums_ans and not (nums_ans & nums_ctx):
+            return (False, "The provided context does not contain enough information to give that number or date.")
+    return (True, answer)
 
 def _build_user_content_with_summary(conversation_summary: Optional[str], question: str, context_block: Optional[str] = None) -> str:
     """Single user message: conversation summary (if any) + current question + optional RAG context."""
@@ -630,6 +817,13 @@ async def _answer_general(
     return {"answer": ans, "citations": []}
 
 
+def _format_headings_response(headings: List[str]) -> str:
+    """Format verbatim headings as a simple list for the user."""
+    if not headings:
+        return NO_HEADINGS_MESSAGE
+    return "Headings found in the extracted text:\n\n" + "\n".join(f"• {h}" for h in headings)
+
+
 async def answer(
     question: str,
     history: List[Dict],
@@ -638,20 +832,54 @@ async def answer(
     conversation_summary: Optional[str] = None,
 ) -> Dict:
     if _is_general_conversation(question):
-        return await _answer_general(question, history, persona, conversation_summary)
+        out = await _answer_general(question, history, persona, conversation_summary)
+        out["answer_mode"] = "general"
+        return out
 
-    hits = await retrieve(question, settings.TOP_K, context_window=context_window or "all")
+    hits, intent, expanded_queries = await retrieve(question, settings.TOP_K, context_window=context_window or "all")
+    use_profiles = getattr(settings, "RAG_USE_INTENT_PROFILES", True)
+    threshold = (
+        get_retrieval_profile(intent, settings.TOP_K)["relevance_threshold"]
+        if use_profiles
+        else settings.RAG_RELEVANCE_THRESHOLD
+    )
     best_score = hits[0]["score"] if hits else 0.0
-    if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
-        return await _answer_general(question, history, persona, conversation_summary)
 
-    blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
-    if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(blocks):
-        return {"answer": "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", "citations": []}
+    # Retrieval failure: never fall back to general knowledge; try structure fallback for STRUCTURE intent, then refuse
+    if not hits or best_score < threshold:
+        if getattr(settings, "RAG_STRUCTURE_FALLBACK", True) and intent == STRUCTURE:
+            doc_ids = _get_doc_ids_in_context_window(context_window or "all")
+            headings = get_headings_verbatim_list(doc_ids)
+            if headings:
+                logger.info("RAG answer", extra={"answer_mode": RAG_GROUNDED, "structure_fallback_used": True, "source": "doc_headings"})
+                return {"answer": _format_headings_response(headings), "citations": [], "answer_mode": RAG_GROUNDED}
+        if getattr(settings, "RAG_REFUSAL_ON_NO_EVIDENCE", True):
+            logger.info("RAG answer", extra={"answer_mode": RAG_INSUFFICIENT_EVIDENCE, "intent": intent, "expanded_queries": expanded_queries[:5]})
+            return {"answer": REFUSAL_MESSAGE, "citations": [], "answer_mode": RAG_INSUFFICIENT_EVIDENCE}
+        out = await _answer_general(question, history, persona, conversation_summary)
+        out["answer_mode"] = "general_fallback"
+        return out
 
+    doc_ids_from_hits = list({(h.get("source") or {}).get("doc_id") for h in hits if (h.get("source") or {}).get("doc_id")})
+    structure_headings = get_headings_verbatim_list(doc_ids_from_hits) if doc_ids_from_hits else []
+
+    # STRUCTURE intent: prefer verbatim list from structure index; if none, require TOC signals in context
+    if intent == STRUCTURE and getattr(settings, "RAG_TOC_GUARDRAIL", True):
+        if structure_headings:
+            logger.info("RAG answer", extra={"answer_mode": RAG_GROUNDED, "structure_from_index": True, "chunk_ids": []})
+            return {"answer": _format_headings_response(structure_headings), "citations": [], "answer_mode": RAG_GROUNDED}
+        blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
+        if not has_toc_signals_in_context(blocks):
+            logger.info("RAG answer", extra={"answer_mode": RAG_INSUFFICIENT_EVIDENCE, "reason": "no_toc_signals"})
+            return {"answer": NO_HEADINGS_MESSAGE, "citations": [], "answer_mode": RAG_INSUFFICIENT_EVIDENCE}
+    else:
+        blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids})
+    logger.info(
+        "RAG answer",
+        extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids, "intent": intent, "answer_mode": RAG_GROUNDED, "structure_fallback_used": False},
+    )
 
     if conversation_summary and conversation_summary.strip():
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)
@@ -660,10 +888,15 @@ async def answer(
         msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
     ans = await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
 
+    ok, final_ans = _answer_evidence_check(question, ans, blocks, intent, structure_headings)
+    if not ok:
+        logger.info("RAG answer", extra={"answer_mode": RAG_INSUFFICIENT_EVIDENCE, "evidence_postcheck": "revised"})
+        return {"answer": final_ans, "citations": [], "answer_mode": RAG_INSUFFICIENT_EVIDENCE}
+
     citations = []
     if getattr(settings, "RAG_EXPOSE_SOURCES", False):
         citations = [{"filename": c["source"].get("filename"), "chunk_index": c["source"].get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]
-    return {"answer": ans, "citations": citations}
+    return {"answer": final_ans, "citations": citations, "answer_mode": RAG_GROUNDED}
 
 
 async def _answer_general_stream(
@@ -694,29 +927,61 @@ async def answer_stream(
 ) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
     """
     Same RAG as answer(), but stream the final LLM response. Yields ("chunk", delta, None) then ("done", full_answer, citations).
-    Uses conversation summary when provided (goals, constraints, decisions, key facts) instead of raw last 10 messages.
+    Uses refusal/structure fallback when retrieval fails; never streams general knowledge as RAG answer.
     """
     if _is_general_conversation(question):
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev
         return
 
-    hits = await retrieve(question, settings.TOP_K, context_window=context_window or "all")
+    hits, intent, expanded_queries = await retrieve(question, settings.TOP_K, context_window=context_window or "all")
+    use_profiles = getattr(settings, "RAG_USE_INTENT_PROFILES", True)
+    threshold = (
+        get_retrieval_profile(intent, settings.TOP_K)["relevance_threshold"]
+        if use_profiles
+        else settings.RAG_RELEVANCE_THRESHOLD
+    )
     best_score = hits[0]["score"] if hits else 0.0
-    if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+
+    if not hits or best_score < threshold:
+        if getattr(settings, "RAG_STRUCTURE_FALLBACK", True) and intent == STRUCTURE:
+            doc_ids = _get_doc_ids_in_context_window(context_window or "all")
+            headings = get_headings_verbatim_list(doc_ids)
+            if headings:
+                msg = _format_headings_response(headings)
+                yield ("chunk", msg, None)
+                yield ("done", msg, [])
+                logger.info("RAG answer", extra={"answer_mode": RAG_GROUNDED, "structure_fallback_used": True})
+                return
+        if getattr(settings, "RAG_REFUSAL_ON_NO_EVIDENCE", True):
+            yield ("chunk", REFUSAL_MESSAGE, None)
+            yield ("done", REFUSAL_MESSAGE, [])
+            logger.info("RAG answer", extra={"answer_mode": RAG_INSUFFICIENT_EVIDENCE})
+            return
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev
         return
 
-    blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
-    if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(blocks):
-        yield ("chunk", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", None)
-        yield ("done", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", [])
-        return
+    doc_ids_from_hits = list({(h.get("source") or {}).get("doc_id") for h in hits if (h.get("source") or {}).get("doc_id")})
+    structure_headings = get_headings_verbatim_list(doc_ids_from_hits) if doc_ids_from_hits else []
+
+    if intent == STRUCTURE and getattr(settings, "RAG_TOC_GUARDRAIL", True):
+        if structure_headings:
+            msg = _format_headings_response(structure_headings)
+            yield ("chunk", msg, None)
+            yield ("done", msg, [])
+            return
+        blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
+        if not has_toc_signals_in_context(blocks):
+            yield ("chunk", NO_HEADINGS_MESSAGE, None)
+            yield ("done", NO_HEADINGS_MESSAGE, [])
+            return
+    else:
+        blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
 
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids})
+    logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids, "intent": intent, "answer_mode": RAG_GROUNDED})
 
     if conversation_summary and conversation_summary.strip():
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)
@@ -731,4 +996,8 @@ async def answer_stream(
         full.append(delta)
         yield ("chunk", delta, None)
     answer = "".join(full).strip()
-    yield ("done", answer, citations)
+    ok, final_ans = _answer_evidence_check(question, answer, blocks, intent, structure_headings)
+    if not ok:
+        yield ("done", final_ans, [])
+        return
+    yield ("done", final_ans, citations)
