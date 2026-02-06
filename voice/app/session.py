@@ -47,6 +47,27 @@ def approx_token_count(text: str) -> int:
     # crude but safe: ~4 chars per token in English
     return max(1, int(len(text) / 4))
 
+
+def strip_markdown_for_speech(text: str) -> str:
+    """Remove markdown (###, **, *, `, etc.) so TTS and LLM see plain English only."""
+    if not (text or "").strip():
+        return (text or "").strip()
+    s = (text or "").strip()
+    # Links: [link text](url) -> link text
+    s = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", s)
+    # Bold/italic/underline markers (remove the delimiters, keep the text)
+    s = re.sub(r"\*\*", "", s)
+    s = re.sub(r"__", "", s)
+    s = re.sub(r"\*", "", s)
+    s = re.sub(r"_", " ", s)  # single _ often used as italic, replace with space to avoid glue
+    # Inline code backticks
+    s = re.sub(r"`", "", s)
+    # Headers: leading # or ## or ### etc. at start of line
+    s = re.sub(r"^#+\s*", "", s, flags=re.MULTILINE)
+    # Collapse whitespace and newlines to single space
+    s = re.sub(r"\s+", " ", s)
+    return s.strip()
+
 @dataclass
 class Frame:
     ts: float
@@ -158,6 +179,9 @@ class OmniSessionA:
 
     async def _play_intro(self, phrase: str):
         """Play intro TTS once after start; respects barge-in (generation_id)."""
+        phrase = strip_markdown_for_speech(phrase or "")
+        if not phrase:
+            return
         my_gen = self.generation_id
         self._assistant_is_speaking = True
         try:
@@ -369,6 +393,9 @@ class OmniSessionA:
         user_text = (user_text or "").strip()
         if not user_text:
             return
+        user_text = strip_markdown_for_speech(user_text)
+        if not user_text:
+            return
 
         self.turn_id += 1
         await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
@@ -418,7 +445,7 @@ class OmniSessionA:
                 last_emit = time.time()
                 assistant_text += tok
                 phrase_buf += tok
-                await self.send({"type": "assistant_text_partial", "generation_id": my_gen, "text": assistant_text})
+                await self.send({"type": "assistant_text_partial", "generation_id": my_gen, "text": strip_markdown_for_speech(assistant_text)})
 
                 if commit_needed(phrase_buf):
                     await self._commit_phrase(my_gen, phrase_buf)
@@ -432,11 +459,13 @@ class OmniSessionA:
                 await self.send({"type": "error", "where": "llm", "message": str(e2), "generation_id": my_gen})
                 self._assistant_active_gen = None
                 return
-            await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply})
+            reply_clean = strip_markdown_for_speech(reply)
+            if reply_clean:
+                await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
             await self._speak_phrase(my_gen, reply)
-            # save memory
+            # save memory (store cleaned so next turn context is plain English)
             self.history.append({"role": "user", "content": user_text})
-            self.history.append({"role": "assistant", "content": reply})
+            self.history.append({"role": "assistant", "content": reply_clean or reply})
             self._trim_history()
         await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
         self._assistant_active_gen = None
@@ -447,9 +476,10 @@ class OmniSessionA:
         if phrase_buf.strip():
             await self._commit_phrase(my_gen, phrase_buf)
 
-        final = assistant_text.strip()
-        await self.send({"type": "assistant_text", "generation_id": my_gen, "text": final})
-        # save memory
+        final = strip_markdown_for_speech(assistant_text.strip())
+        if final:
+            await self.send({"type": "assistant_text", "generation_id": my_gen, "text": final})
+        # save memory (store cleaned so next turn context is plain English)
         self.history.append({"role": "user", "content": user_text})
         self.history.append({"role": "assistant", "content": final})
         self._trim_history()
@@ -469,6 +499,9 @@ class OmniSessionA:
 
     async def _speak_phrase(self, my_gen: int, phrase: str, is_filler: bool = False):
         if my_gen != self.generation_id:
+            return
+        phrase = strip_markdown_for_speech(phrase or "")
+        if not phrase:
             return
         self._assistant_is_speaking = True
         try:

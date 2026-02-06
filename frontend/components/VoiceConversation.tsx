@@ -19,9 +19,6 @@ const VoiceConversation: React.FC<VoiceConversationProps> = () => {
     connect,
     disconnect,
     connecting,
-    setUserOrbState,
-    setAssistantOrbState,
-    triggerInterrupt,
   } = useVoiceConnection();
 
   return (
@@ -47,16 +44,6 @@ const VoiceConversation: React.FC<VoiceConversationProps> = () => {
         onConnect={connect}
         onDisconnect={disconnect}
         connecting={connecting}
-        showDemoControls={!state.isConnected}
-        onDemoUserSpeak={() => {
-          setUserOrbState("listening");
-          setAssistantOrbState("idle");
-        }}
-        onDemoAssistantSpeak={() => {
-          setAssistantOrbState("speaking");
-          setUserOrbState("idle");
-        }}
-        onDemoInterrupt={triggerInterrupt}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { voiceWsUrl } from "../services/backend";
-import type { ConversationState, OrbState } from "../components/Conversation/ChatState";
+import type { ConversationState } from "../components/Conversation/ChatState";
 
 const LISTENING_THRESHOLD = 18;
 const MIC_CHECK_MS = 150;
@@ -84,12 +84,6 @@ export interface UseVoiceConnectionReturn {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   connecting: boolean;
-  /** For demo: set user orb state */
-  setUserOrbState: (s: OrbState) => void;
-  /** For demo: set assistant orb state */
-  setAssistantOrbState: (s: OrbState) => void;
-  /** For demo: trigger interrupt */
-  triggerInterrupt: () => void;
 }
 
 export function useVoiceConnection(): UseVoiceConnectionReturn {
@@ -116,16 +110,6 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const micAboveCountRef = useRef(0);
   const micBelowCountRef = useRef(0);
-
-  const setUserOrbState = useCallback((s: OrbState) => {
-    setState((prev) => ({ ...prev, userOrb: s }));
-  }, []);
-  const setAssistantOrbState = useCallback((s: OrbState) => {
-    setState((prev) => ({ ...prev, assistantOrb: s }));
-  }, []);
-  const triggerInterrupt = useCallback(() => {
-    setState((prev) => ({ ...prev, interruptedAt: Date.now(), assistantOrb: "idle" }));
-  }, []);
 
   const pumpPlayback = useCallback(() => {
     const ctx = playbackCtxRef.current;
@@ -370,8 +354,5 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
     connect,
     disconnect,
     connecting,
-    setUserOrbState,
-    setAssistantOrbState,
-    triggerInterrupt,
   };
 }
