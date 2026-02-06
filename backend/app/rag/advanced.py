@@ -88,7 +88,7 @@ async def retrieve(question: str, k: int) -> List[Dict]:
     sparse_hits_per_query: List[List[Dict]] = []
     for q in qs:
         dense_hits_per_query.append(await index.search(q, k_per_query))
-        sparse_hits = await index.sparse.search(q, k_per_query)
+        sparse_hits = index.sparse.search(q, k_per_query)
         sparse_hits_per_query.append(sparse_hits)
     return _reciprocal_rank_fusion(dense_hits_per_query, sparse_hits_per_query, k)
 
