@@ -37,6 +37,39 @@ def _dedupe_best(items: List[Dict]) -> List[Dict]:
             best[cid]=it
     return sorted(best.values(), key=lambda x: x["score"], reverse=True)
 
+RRF_K = 60  # reciprocal rank fusion constant
+
+def _reciprocal_rank_fusion(
+    dense_hits_per_query: List[List[Dict]],
+    sparse_hits_per_query: List[List[Dict]],
+    k: int,
+) -> List[Dict]:
+    """Merge dense + sparse results with RRF. Each list contributes 1/(RRF_K+rank) per chunk. Returns top-k."""
+    fused: Dict[str, Dict] = {}
+    for hit_list in dense_hits_per_query:
+        for rank, h in enumerate(hit_list):
+            cid = h["chunk_id"]
+            rrf = 1.0 / (RRF_K + rank)
+            if cid not in fused:
+                fused[cid] = {"chunk_id": cid, "rrf": 0.0, "dense_score": 0.0, "text": h["text"], "source": h["source"]}
+            fused[cid]["rrf"] += rrf
+            fused[cid]["dense_score"] = max(fused[cid]["dense_score"], h["score"])
+    for hit_list in sparse_hits_per_query:
+        for rank, h in enumerate(hit_list):
+            cid = h["chunk_id"]
+            rrf = 1.0 / (RRF_K + rank)
+            if cid not in fused:
+                fused[cid] = {"chunk_id": cid, "rrf": 0.0, "dense_score": 0.0, "text": h["text"], "source": h["source"]}
+            fused[cid]["rrf"] += rrf
+    sorted_ids = sorted(fused.keys(), key=lambda cid: fused[cid]["rrf"], reverse=True)[:k]
+    out = []
+    max_rrf = fused[sorted_ids[0]]["rrf"] if sorted_ids else 1.0
+    for cid in sorted_ids:
+        f = fused[cid]
+        score = f["dense_score"] if f["dense_score"] > 0 else min(1.0, 0.3 + 0.7 * (f["rrf"] / max_rrf))
+        out.append({"chunk_id": cid, "score": score, "text": f["text"], "source": f["source"]})
+    return out
+
 async def generate_queries(q: str) -> List[str]:
     sys="Rewrite the question into 3 alternative search queries (synonyms/acronyms/sore thumb keywords). Return only the list."
     txt=await chat.chat([{"role":"system","content":sys},{"role":"user","content":q}], temperature=0.2, max_tokens=180)
@@ -47,12 +80,17 @@ async def generate_queries(q: str) -> List[str]:
     out=[q] + [v for v in variants if v.lower()!=q.lower()]
     return out[:4]
 
-async def retrieve(question: str, k:int) -> List[Dict]:
+async def retrieve(question: str, k: int) -> List[Dict]:
+    """Hybrid retrieve: dense (FAISS) + sparse (BM25), merged with RRF."""
     qs = await generate_queries(question)
-    hits=[]
+    k_per_query = max(k, 4)
+    dense_hits_per_query: List[List[Dict]] = []
+    sparse_hits_per_query: List[List[Dict]] = []
     for q in qs:
-        hits.extend(await index.search(q, k))
-    return _dedupe_best(hits)[:k]
+        dense_hits_per_query.append(await index.search(q, k_per_query))
+        sparse_hits = await index.sparse.search(q, k_per_query)
+        sparse_hits_per_query.append(sparse_hits)
+    return _reciprocal_rank_fusion(dense_hits_per_query, sparse_hits_per_query, k)
 
 async def compress(question:str, chunk_text:str, src:dict) -> str:
     sys="Extract only sentences that directly help answer the question. Keep it short."

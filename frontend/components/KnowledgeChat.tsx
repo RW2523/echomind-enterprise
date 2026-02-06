@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, DocumentChunk } from '../types';
 import { ICONS } from '../constants';
 import Uploader from './Uploader';
-import { createChat, askChatStream, listDocuments, DocListItem } from '../services/backend';
+import { createChat, askChatStream, listDocuments, deleteDocument, DocListItem } from '../services/backend';
 
 function mapCitations(citations: any[]): DocumentChunk[] {
   return (citations || []).map((c: any, i: number) => ({
@@ -25,6 +25,7 @@ const KnowledgeChat: React.FC = () => {
   const [chatId, setChatId] = useState<string>('');
   const [documents, setDocuments] = useState<DocListItem[]>([]);
   const [docSearch, setDocSearch] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [resourcesOpenForId, setResourcesOpenForId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -96,6 +97,20 @@ const KnowledgeChat: React.FC = () => {
   const filteredDocs = docSearch.trim()
     ? documents.filter(d => d.filename.toLowerCase().includes(docSearch.trim().toLowerCase()))
     : documents;
+
+  const handleDeleteDoc = async (doc: DocListItem) => {
+    if (!window.confirm(`Remove "${doc.filename}" from the knowledge base? This cannot be undone.`)) return;
+    setDeletingId(doc.id);
+    try {
+      await deleteDocument(doc.id);
+      await loadDocs();
+    } catch (e) {
+      console.error(e);
+      alert((e as Error)?.message || 'Failed to delete');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="flex h-full min-h-0 gap-4 md:gap-5">
@@ -187,8 +202,21 @@ const KnowledgeChat: React.FC = () => {
           )}
           <ul className="space-y-1">
             {filteredDocs.map(doc => (
-              <li key={doc.id} className="text-xs py-2 px-2 rounded-lg hover:bg-white/5 truncate" title={doc.filename}>
-                {doc.filename}
+              <li
+                key={doc.id}
+                className="group flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-white/5"
+                title={doc.filename}
+              >
+                <span className="flex-1 text-xs truncate min-w-0">{doc.filename}</span>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteDoc(doc)}
+                  disabled={deletingId === doc.id}
+                  className="shrink-0 p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+                  title="Remove from knowledge base"
+                >
+                  <ICONS.Trash className="w-4 h-4" />
+                </button>
               </li>
             ))}
           </ul>

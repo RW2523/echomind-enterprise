@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     DB_PATH: str = "/data/echomind.sqlite"
     FAISS_PATH: str = "/data/faiss.index"
     META_PATH: str = "/data/faiss_meta.json"
+    SPARSE_META_PATH: str = os.getenv("ECHOMIND_SPARSE_META_PATH", "/data/sparse_meta.json")
     LLM_BASE_URL: str = "http://ollama:11434/v1"
     LLM_MODEL: str = "qwen2.5:7b-instruct"
     LLM_TEMPERATURE: float = 0.2

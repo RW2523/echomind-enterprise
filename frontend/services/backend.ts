@@ -22,6 +22,15 @@ export async function listDocuments(): Promise<{ documents: DocListItem[] }> {
   return await r.json();
 }
 
+export async function deleteDocument(docId: string): Promise<{ ok: boolean; deleted: string }> {
+  const r = await fetch(`${API_BASE}/api/docs/${docId}`, { method: "DELETE" });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.detail || `delete failed: ${r.status}`);
+  }
+  return await r.json();
+}
+
 /** chat */
 export async function createChat(title: string): Promise<{chat_id: string}> {
   const r = await fetch(`${API_BASE}/api/chat/create`, {
