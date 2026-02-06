@@ -5,7 +5,7 @@ Uses existing RAG index (Ollama/Nomic) for add_text and search.
 """
 from __future__ import annotations
 from typing import Dict, List, Any, Optional
-from ..utils.ids import new_id, now_iso
+from .utils.ids import new_id, now_iso
 from .rag.index import index as faiss_index
 
 
