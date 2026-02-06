@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, AsyncIterator, Tuple
 import re
 from ..core.config import settings
 from .index import index
@@ -55,3 +55,27 @@ async def answer(question: str, history: List[Dict]) -> Dict:
     ans=await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
     citations=[{"filename":c["source"]["filename"],"chunk_index":c["source"]["chunk_index"],"score":c["score"],"snippet":c["compressed"][:360]} for c in ctx]
     return {"answer": ans, "citations": citations}
+
+
+async def answer_stream(question: str, history: List[Dict]) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
+    """
+    Same RAG as answer(), but stream the final LLM response. Yields ("chunk", delta, None) then ("done", full_answer, citations).
+    """
+    hits = await retrieve(question, settings.TOP_K)
+    ctx = []
+    for h in hits:
+        c = (await compress(question, h["text"], h["source"])).strip()
+        ctx.append({**h, "compressed": c})
+    ctx_block = "\n\n".join([f"[{i+1}] {c['compressed']}\nSOURCE: {c['source']['filename']}#chunk{c['source']['chunk_index']}" for i, c in enumerate(ctx)])
+    sys = (
+        "You are EchoMind, an enterprise assistant. Use ONLY the provided context for factual claims. "
+        "If context is insufficient, say what's missing. Provide the answer, then a Sources list referencing [1],[2]…."
+    )
+    msgs = [{"role": "system", "content": sys}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
+    citations = [{"filename": c["source"]["filename"], "chunk_index": c["source"]["chunk_index"], "score": c["score"], "snippet": c["compressed"][:360]} for c in ctx]
+    full = []
+    async for delta in chat.chat_stream(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS):
+        full.append(delta)
+        yield ("chunk", delta, None)
+    answer = "".join(full).strip()
+    yield ("done", answer, citations)

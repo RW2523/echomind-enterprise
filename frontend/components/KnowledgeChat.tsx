@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, DocumentChunk } from '../types';
 import { ICONS } from '../constants';
 import Uploader from './Uploader';
-import { createChat, askChat } from '../services/backend';
+import { createChat, askChatStream } from '../services/backend';
 
 function mapCitations(citations: any[]): DocumentChunk[] {
   return (citations || []).map((c: any, i: number) => ({
@@ -40,18 +40,23 @@ const KnowledgeChat: React.FC = () => {
     const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', content: q, timestamp: Date.now() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
+    const assistantId = `a_${Date.now()}`;
+    const assistantMsg: ChatMessage = { id: assistantId, role: 'assistant', content: '', citations: undefined, timestamp: Date.now() };
+    setMessages(prev => [...prev, assistantMsg]);
     try {
-      const out = await askChat(chatId, q);
-      const assistantMsg: ChatMessage = {
-        id: `a_${Date.now()}`,
-        role: 'assistant',
-        content: out.answer,
-        citations: mapCitations(out.citations),
-        timestamp: Date.now()
-      };
-      setMessages(prev => [...prev, assistantMsg]);
+      await askChatStream(chatId, q, {
+        onChunk: (text) => {
+          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + text } : m));
+        },
+        onDone: (result) => {
+          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: result.answer, citations: mapCitations(result.citations) } : m));
+        },
+        onError: (err) => {
+          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
+        }
+      });
     } catch (err: any) {
-      setMessages(prev => [...prev, { id: `e_${Date.now()}`, role: 'assistant', content: err?.message || 'Request failed', timestamp: Date.now() }]);
+      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
     } finally {
       setBusy(false);
     }

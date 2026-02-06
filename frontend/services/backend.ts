@@ -30,6 +30,67 @@ export async function askChat(chatId: string, message: string): Promise<{answer:
   return await r.json();
 }
 
+export type AskChatStreamCallbacks = {
+  onChunk: (text: string) => void;
+  onDone: (result: { answer: string; citations: any[] }) => void;
+  onError?: (err: Error) => void;
+};
+
+export async function askChatStream(
+  chatId: string,
+  message: string,
+  callbacks: AskChatStreamCallbacks
+): Promise<void> {
+  const r = await fetch(`${API_BASE}/api/chat/ask-stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, message }),
+  });
+  if (!r.ok) {
+    const err = new Error(`ask stream failed: ${r.status}`);
+    callbacks.onError?.(err);
+    throw err;
+  }
+  const reader = r.body?.getReader();
+  if (!reader) {
+    const err = new Error("No response body");
+    callbacks.onError?.(err);
+    throw err;
+  }
+  const dec = new TextDecoder();
+  let buf = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() ?? "";
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t) continue;
+        try {
+          const obj = JSON.parse(t);
+          if (obj.type === "chunk" && obj.text != null) callbacks.onChunk(obj.text);
+          else if (obj.type === "done") callbacks.onDone({ answer: obj.answer ?? "", citations: obj.citations ?? [] });
+          else if (obj.type === "error") {
+            callbacks.onError?.(new Error(obj.message ?? "Stream error"));
+          }
+        } catch (_) {}
+      }
+    }
+    if (buf.trim()) {
+      try {
+        const obj = JSON.parse(buf.trim());
+        if (obj.type === "chunk" && obj.text != null) callbacks.onChunk(obj.text);
+        else if (obj.type === "done") callbacks.onDone({ answer: obj.answer ?? "", citations: obj.citations ?? [] });
+      } catch (_) {}
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 /** transcription */
 export async function polishTranscript(rawText: string): Promise<{polished: string}> {
   const r = await fetch(`${API_BASE}/api/transcribe/polish`, {
