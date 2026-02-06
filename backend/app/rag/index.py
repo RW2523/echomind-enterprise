@@ -81,12 +81,14 @@ class FaissIndex:
             rows = conn.execute("SELECT id, text, source_json FROM chunks ORDER BY doc_id, chunk_index").fetchall()
         remaining_ids = []
         remaining_texts = []
+        source_by_chunk = {}
         for r in rows:
             src = json.loads(r[2]) if isinstance(r[2], str) else r[2]
             if src.get("is_parent"):
                 continue
             remaining_ids.append(r[0])
             remaining_texts.append(r[1])
+            source_by_chunk[r[0]] = src
         if not remaining_ids:
             self.meta = {"chunk_ids": [], "source_by_chunk": {}}
             self.index = None
@@ -104,7 +106,7 @@ class FaissIndex:
         self.index = faiss.IndexFlatIP(dim)
         self.index.add(vecs.astype(np.float32))
         self.meta["chunk_ids"] = remaining_ids
-        self.meta["source_by_chunk"] = {r[0]: json.loads(r[2]) for r in rows}
+        self.meta["source_by_chunk"] = source_by_chunk
         self._save()
         self.sparse.rebuild_from_chunk_ids(remaining_ids)
 
