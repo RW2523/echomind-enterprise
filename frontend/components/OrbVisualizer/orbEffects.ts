@@ -80,29 +80,28 @@ export function drawWaveRing(
   timeDomainData: Float32Array,
   amplitude: number,
   color: string,
-  smoothing: number = 0.3
+  _smoothing: number = 0.3
 ): void {
   if (amplitude <= 0 || timeDomainData.length < 2) return;
   const [r, g, b] = hexToRgb(color);
-  const step = Math.max(1, Math.floor(timeDomainData.length / 120));
-  let avg = 0;
-  for (let i = 0; i < timeDomainData.length; i += step) avg += Math.abs(timeDomainData[i]);
-  avg = (avg / (timeDomainData.length / step)) * amplitude;
-  const waveRadius = radius + avg * radius * 0.5;
+  const segments = 80;
+  const waveScale = 0.22;
 
   ctx.save();
-  ctx.strokeStyle = `rgba(${r},${g},${b},0.7)`;
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = `rgba(${r},${g},${b},0.45)`;
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  const segments = 64;
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     const sampleIdx = Math.floor(t * (timeDomainData.length - 1));
     const sample = timeDomainData[sampleIdx] ?? 0;
-    const rOff = radius * amplitude * sample * 0.4;
+    const prevIdx = Math.max(0, sampleIdx - 8);
+    const nextIdx = Math.min(timeDomainData.length - 1, sampleIdx + 8);
+    const smooth = (timeDomainData[prevIdx] + sample * 2 + timeDomainData[nextIdx]) / 4;
+    const rOff = radius * amplitude * smooth * waveScale;
     const angle = t * Math.PI * 2 - Math.PI / 2;
-    const x = centerX + (waveRadius + rOff) * Math.cos(angle);
-    const y = centerY + (waveRadius + rOff) * Math.sin(angle);
+    const x = centerX + (radius + rOff) * Math.cos(angle);
+    const y = centerY + (radius + rOff) * Math.sin(angle);
     if (i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   }
@@ -123,15 +122,16 @@ export function drawOrbitingParticles(
 ): void {
   if (count <= 0) return;
   const [r, g, b] = hexToRgb(color);
-  const orbitRadius = radius * 1.15;
-  const particleRadius = Math.max(1, radius * 0.04);
-  const speed = state === "speaking" ? 1.5 : state === "listening" ? 1.2 : 0.6;
+  const orbitRadius = radius * 1.08;
+  const particleRadius = Math.max(1, radius * 0.025);
+  const isActive = state === "speaking" || state === "listening";
+  const speed = isActive ? (state === "speaking" ? 0.5 : 0.4) : 0;
 
   for (let i = 0; i < count; i++) {
     const baseAngle = (i / count) * Math.PI * 2 + time * speed;
     const x = centerX + orbitRadius * Math.cos(baseAngle);
     const y = centerY + orbitRadius * Math.sin(baseAngle);
-    const alpha = 0.4 + 0.3 * Math.sin(time * 2 + i);
+    const alpha = isActive ? 0.35 + 0.15 * Math.sin(time * 1.2 + i) : 0.25;
     ctx.save();
     ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
     ctx.beginPath();

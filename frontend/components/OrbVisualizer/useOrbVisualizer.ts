@@ -97,8 +97,9 @@ export function useOrbVisualizer(
       ctx.save();
       ctx.clearRect(0, 0, size, size);
 
-      const glowIntensity = stateParams.glowIntensity * (isActive ? 1.2 : 0.7);
-      const pulse = 1 + 0.04 * Math.sin(time * 0.002 * stateParams.pulseSpeed * 60);
+      const glowIntensity = stateParams.glowIntensity * (isActive ? 1.15 : 0.85);
+      const hasPulse = stateParams.pulseSpeed > 0 && (orbState === "listening" || orbState === "speaking" || orbState === "thinking");
+      const pulse = hasPulse ? 1 + 0.02 * Math.sin(time * 0.002 * stateParams.pulseSpeed * 60) : 1;
       const r = radius * pulse;
 
       drawGlowRing(ctx, centerX, centerY, r, glowIntensity, color, stateParams.ringThickness);

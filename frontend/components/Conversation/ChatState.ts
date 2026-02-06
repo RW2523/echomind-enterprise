@@ -37,17 +37,17 @@ export function getOrbStateParams(state: OrbState): {
 } {
   switch (state) {
     case "idle":
-      return { glowIntensity: 0.15, ringThickness: 2, waveAmplitude: 0.02, particleCount: 8, pulseSpeed: 0.8, rotationSpeed: 0 };
+      return { glowIntensity: 0.18, ringThickness: 2, waveAmplitude: 0, particleCount: 6, pulseSpeed: 0, rotationSpeed: 0 };
     case "listening":
-      return { glowIntensity: 0.5, ringThickness: 3, waveAmplitude: 0.12, particleCount: 16, pulseSpeed: 2, rotationSpeed: 0 };
+      return { glowIntensity: 0.4, ringThickness: 2.5, waveAmplitude: 0.06, particleCount: 10, pulseSpeed: 0.5, rotationSpeed: 0 };
     case "thinking":
-      return { glowIntensity: 0.35, ringThickness: 2.5, waveAmplitude: 0.04, particleCount: 12, pulseSpeed: 1.2, rotationSpeed: 0.15 };
+      return { glowIntensity: 0.3, ringThickness: 2, waveAmplitude: 0.02, particleCount: 8, pulseSpeed: 0.3, rotationSpeed: 0.08 };
     case "speaking":
-      return { glowIntensity: 0.55, ringThickness: 3.5, waveAmplitude: 0.18, particleCount: 20, pulseSpeed: 2.5, rotationSpeed: 0.05 };
+      return { glowIntensity: 0.45, ringThickness: 2.5, waveAmplitude: 0.08, particleCount: 12, pulseSpeed: 0.6, rotationSpeed: 0 };
     case "interrupted":
-      return { glowIntensity: 0.6, ringThickness: 4, waveAmplitude: 0.2, particleCount: 14, pulseSpeed: 3, rotationSpeed: 0 };
+      return { glowIntensity: 0.5, ringThickness: 3, waveAmplitude: 0.05, particleCount: 8, pulseSpeed: 0.5, rotationSpeed: 0 };
     case "disconnected":
-      return { glowIntensity: 0.08, ringThickness: 1.5, waveAmplitude: 0, particleCount: 4, pulseSpeed: 0.3, rotationSpeed: 0 };
+      return { glowIntensity: 0.08, ringThickness: 1.5, waveAmplitude: 0, particleCount: 4, pulseSpeed: 0, rotationSpeed: 0 };
     default:
       return getOrbStateParams("idle");
   }
