@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     CHUNK_SIZE: int = 900
     CHUNK_OVERLAP: int = 140
     TOP_K: int = 8
+    RAG_RELEVANCE_THRESHOLD: float = float(os.getenv("ECHOMIND_RAG_RELEVANCE_THRESHOLD", "0.45"))
     WHISPER_MODEL: str = "base"
 
     # Real-time transcription & knowledge capture

@@ -9,6 +9,19 @@ export async function uploadDocument(file: File): Promise<{ok:boolean; doc_id?:s
   return await r.json();
 }
 
+export interface DocListItem {
+  id: string;
+  filename: string;
+  filetype: string;
+  created_at: string;
+}
+
+export async function listDocuments(): Promise<{ documents: DocListItem[] }> {
+  const r = await fetch(`${API_BASE}/api/docs/list`);
+  if (!r.ok) throw new Error(`list docs failed: ${r.status}`);
+  return await r.json();
+}
+
 /** chat */
 export async function createChat(title: string): Promise<{chat_id: string}> {
   const r = await fetch(`${API_BASE}/api/chat/create`, {

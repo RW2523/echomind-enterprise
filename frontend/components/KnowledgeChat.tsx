@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, DocumentChunk } from '../types';
 import { ICONS } from '../constants';
 import Uploader from './Uploader';
-import { createChat, askChatStream } from '../services/backend';
+import { createChat, askChatStream, listDocuments, DocListItem } from '../services/backend';
 
 function mapCitations(citations: any[]): DocumentChunk[] {
   return (citations || []).map((c: any, i: number) => ({
@@ -13,14 +13,36 @@ function mapCitations(citations: any[]): DocumentChunk[] {
   }));
 }
 
+function uniqueFileNames(citations: DocumentChunk[]): string[] {
+  const seen = new Set<string>();
+  return (citations || []).map(c => c.docName).filter(name => { if (seen.has(name)) return false; seen.add(name); return true; });
+}
+
 const KnowledgeChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [chatId, setChatId] = useState<string>('');
+  const [documents, setDocuments] = useState<DocListItem[]>([]);
+  const [docSearch, setDocSearch] = useState('');
+  const [resourcesOpenForId, setResourcesOpenForId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  const loadDocs = async () => {
+    try {
+      const res = await listDocuments();
+      setDocuments(res.documents || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    loadDocs();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -32,6 +54,15 @@ const KnowledgeChat: React.FC = () => {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (!resourcesOpenForId) return;
+    const close = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) setResourcesOpenForId(null);
+    };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [resourcesOpenForId]);
 
   const send = async () => {
     const q = input.trim();
@@ -62,39 +93,44 @@ const KnowledgeChat: React.FC = () => {
     }
   };
 
-  return (
-    <div className="grid grid-cols-12 gap-4">
-      <div className="col-span-12 lg:col-span-4 space-y-4">
-        <Uploader onComplete={() => {}} />
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm">
-          <div className="font-semibold mb-2">How this works</div>
-          <div className="opacity-75">Upload docs → FAISS index + embeddings → RAG answers with citations.</div>
-        </div>
-      </div>
+  const filteredDocs = docSearch.trim()
+    ? documents.filter(d => d.filename.toLowerCase().includes(docSearch.trim().toLowerCase()))
+    : documents;
 
-      <div className="col-span-12 lg:col-span-8 rounded-2xl border border-white/10 bg-white/5 flex flex-col h-[78vh]">
-        <div className="px-5 py-4 border-b border-white/10 flex items-center gap-2">
-          <div className="opacity-80">{ICONS.chat}</div>
-          <div className="font-semibold">Intelligent Knowledge Chat</div>
+  return (
+    <div className="flex h-[78vh] min-h-0">
+      {/* Center: Chat */}
+      <div className="flex-1 flex flex-col min-w-0 rounded-2xl border border-white/10 bg-white/5">
+        <div className="px-5 py-4 border-b border-white/10 flex items-center gap-2 shrink-0">
+          <div className="opacity-80"><ICONS.Chat className="w-5 h-5" /></div>
+          <div className="font-semibold">Knowledge Chat</div>
           <div className="ml-auto text-xs opacity-60">{chatId ? 'Connected' : 'Connecting...'}</div>
         </div>
 
         <div className="flex-1 overflow-auto p-5 space-y-4">
           {messages.length === 0 && (
-            <div className="text-sm opacity-70">Ask questions about uploaded documents. EchoMind will cite relevant chunks.</div>
+            <div className="text-sm opacity-70 text-center py-8">Ask questions about your resources. I’ll use them when relevant.</div>
           )}
           {messages.map(m => (
             <div key={m.id} className={`rounded-2xl p-4 border ${m.role === 'user' ? 'bg-white/10 border-white/10 ml-8' : 'bg-black/20 border-white/10 mr-8'}`}>
               <div className="text-xs opacity-60 mb-2">{m.role === 'user' ? 'You' : 'EchoMind'}</div>
               <div className="text-sm whitespace-pre-wrap">{m.content}</div>
               {m.citations && m.citations.length > 0 && (
-                <div className="mt-3 text-xs opacity-80">
-                  <div className="font-semibold mb-1">Sources</div>
-                  <ul className="list-disc ml-5 space-y-1">
-                    {m.citations.slice(0, 6).map(c => (
-                      <li key={c.id}><span className="font-semibold">{c.docName}</span> — {c.metadata.section}</li>
-                    ))}
-                  </ul>
+                <div className="mt-3 relative" ref={m.id === resourcesOpenForId ? popoverRef : undefined}>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setResourcesOpenForId(resourcesOpenForId === m.id ? null : m.id); }}
+                    className="text-xs font-medium text-cyan-400 hover:text-cyan-300 border border-white/20 hover:border-white/30 rounded-lg px-3 py-1.5 transition-colors"
+                  >
+                    Resources
+                  </button>
+                  {resourcesOpenForId === m.id && (
+                    <div className="absolute top-full left-0 mt-1 z-20 rounded-lg border border-white/20 bg-slate-900/98 shadow-xl py-2 min-w-[200px] max-w-[320px]">
+                      {uniqueFileNames(m.citations).map((name, i) => (
+                        <div key={i} className="px-3 py-1.5 text-xs truncate" title={name}>{name}</div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -102,16 +138,16 @@ const KnowledgeChat: React.FC = () => {
           <div ref={endRef} />
         </div>
 
-        <div className="p-4 border-t border-white/10 flex gap-3">
+        <div className="p-4 border-t border-white/10 flex gap-3 shrink-0">
           <input
-            className="flex-1 rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-sm outline-none"
+            className="flex-1 rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-sm outline-none focus:border-white/30"
             placeholder="Ask something..."
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') send(); }}
           />
           <button
-            className="rounded-xl px-5 py-3 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50"
+            className="rounded-xl px-5 py-3 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50 transition-colors"
             onClick={send}
             disabled={busy || !chatId}
           >
@@ -119,6 +155,45 @@ const KnowledgeChat: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Right: Resources sidebar */}
+      <aside className="w-72 shrink-0 border-l border-white/10 bg-black/20 flex flex-col rounded-r-2xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/10">
+          <div className="font-semibold text-sm flex items-center gap-2">
+            <ICONS.File className="w-4 h-4 opacity-80" />
+            Resources
+          </div>
+        </div>
+        <div className="p-3 border-b border-white/10">
+          <Uploader onComplete={loadDocs} />
+        </div>
+        <div className="p-3 border-b border-white/10">
+          <div className="relative">
+            <ICONS.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search resources..."
+              value={docSearch}
+              onChange={e => setDocSearch(e.target.value)}
+              className="w-full rounded-lg bg-black/30 border border-white/10 pl-9 pr-3 py-2 text-sm outline-none focus:border-white/30"
+            />
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto p-3">
+          {filteredDocs.length === 0 && (
+            <div className="text-xs opacity-60 py-4 text-center">
+              {documents.length === 0 ? 'No resources yet. Upload a document above.' : 'No matches.'}
+            </div>
+          )}
+          <ul className="space-y-1">
+            {filteredDocs.map(doc => (
+              <li key={doc.id} className="text-xs py-2 px-2 rounded-lg hover:bg-white/5 truncate" title={doc.filename}>
+                {doc.filename}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
     </div>
   );
 };
