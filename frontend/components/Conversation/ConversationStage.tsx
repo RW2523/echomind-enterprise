@@ -123,13 +123,6 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         </div>
       </div>
 
-      {/* Intro tip: unmute and speak (below orbs, cleared on first audio or timeout) */}
-      {state.showIntroTip && state.isConnected && (
-        <div className="shrink-0 text-center py-1 text-sm text-[var(--voice-text,#f1f5f9)] opacity-75">
-          Unmute and say something to start.
-        </div>
-      )}
-
       {/* Controls */}
       <div className="shrink-0 border-t border-white/10 p-4 flex flex-wrap items-center justify-center gap-3">
         {!state.isConnected ? (

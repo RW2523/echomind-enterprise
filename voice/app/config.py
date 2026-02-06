@@ -42,7 +42,7 @@ class Settings:
     USE_MOSHI_CORE: bool = os.getenv("USE_MOSHI_CORE", "0") == "1"
     MOSHI_SUPPORTS_TEXT_INJECT: bool = os.getenv("MOSHI_SUPPORTS_TEXT_INJECT", "0") == "1"
 
-    # Intro phrase spoken by TTS when session starts (unmute prompt)
-    INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "You're connected. Please unmute your microphone and say something to start.")
+    # Greeting spoken by TTS when session starts (agent starts the conversation)
+    INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "Hello! I'm here. How can I help you today?")
 
 SETTINGS = Settings()

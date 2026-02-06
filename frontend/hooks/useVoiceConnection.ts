@@ -226,9 +226,8 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
         setState((prev) => ({
           ...prev,
           isConnected: true,
-          userOrb: "listening",
+          userOrb: "idle",
           assistantOrb: "idle",
-          showIntroTip: true,
         }));
         ws.send(JSON.stringify({ type: "set_context", system_prompt: contextValue, clear_memory: false }));
       } catch (e) {
@@ -244,35 +243,26 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
       if (msg.type === "event" && (msg.event === "BARGE_IN" || msg.event === "USER_SPEECH_START")) {
         playQueueRef.current = [];
         smoothStop();
-        setState((prev) => ({ ...prev, interruptedAt: Date.now(), assistantOrb: "idle", showIntroTip: false }));
+        setState((prev) => ({ ...prev, interruptedAt: Date.now(), assistantOrb: "idle" }));
         return;
       }
       if (msg.type === "event" && msg.event === "SPEAKING") {
-        setState((prev) => ({
-          ...prev,
-          assistantOrb: "speaking",
-          ...(prev.showIntroTip ? { showIntroTip: false } : {}),
-        }));
+        setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
         return;
       }
       if (msg.type === "event" && msg.event === "BACK_TO_LISTENING") {
-        setState((prev) => ({
-          ...prev,
-          assistantOrb: "idle",
-          ...(prev.showIntroTip ? { showIntroTip: false } : {}),
-        }));
+        setState((prev) => ({ ...prev, assistantOrb: "idle" }));
         return;
       }
       if (msg.type === "asr_final" && msg.text) {
-        setState((prev) => ({ ...prev, userOrb: "idle", assistantOrb: "thinking", showIntroTip: false }));
+        setState((prev) => ({ ...prev, userOrb: "idle", assistantOrb: "thinking" }));
         return;
       }
       if (msg.type === "assistant_text_partial" || msg.type === "assistant_text") {
-        setState((prev) => ({ ...prev, assistantOrb: "speaking", showIntroTip: false }));
+        setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
         return;
       }
       if (msg.type === "audio_out") {
-        setState((prev) => (prev.showIntroTip ? { ...prev, showIntroTip: false } : prev));
         const bytes = b64ToBytes(msg.pcm16_b64);
         const f32 = pcm16ToFloat32(bytes);
         enqueuePlayback(f32, msg.sample_rate || 24000, msg.playback_rate || 1);
@@ -281,7 +271,7 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
     };
 
     ws.onclose = () => {
-      setState((prev) => ({ ...prev, isConnected: false, userOrb: "disconnected", assistantOrb: "disconnected", showIntroTip: false }));
+      setState((prev) => ({ ...prev, isConnected: false, userOrb: "disconnected", assistantOrb: "disconnected" }));
       setUserAnalyser(null);
       setAssistantAnalyser(null);
       setConnecting(false);
@@ -323,7 +313,6 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
       isConnected: false,
       userOrb: "disconnected",
       assistantOrb: "disconnected",
-      showIntroTip: false,
     }));
   }, []);
 
@@ -342,14 +331,6 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
     }, MIC_CHECK_MS);
     return () => clearInterval(interval);
   }, [state.isConnected, userAnalyser]);
-
-  useEffect(() => {
-    if (!state.isConnected || !state.showIntroTip) return;
-    const t = setTimeout(() => {
-      setState((prev) => (prev.showIntroTip ? { ...prev, showIntroTip: false } : prev));
-    }, 8000);
-    return () => clearTimeout(t);
-  }, [state.isConnected, state.showIntroTip]);
 
   const applyContext = useCallback(() => {
     if (wsRef.current?.readyState !== 1) return;
