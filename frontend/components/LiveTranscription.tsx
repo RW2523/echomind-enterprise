@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TranscriptEntry } from '../types';
 import { ICONS } from '../constants';
 import { polishTranscript, storeTranscript, transcribeWsUrl } from '../services/backend';
 
@@ -24,9 +23,9 @@ function b64FromBytes(bytes: Uint8Array) {
 }
 
 const LiveTranscription: React.FC = () => {
-  const [entries, setEntries] = useState<TranscriptEntry[]>([]);
-  const [listening, setListening] = useState(false);
+  const [fullTranscript, setFullTranscript] = useState('');
   const [partial, setPartial] = useState('');
+  const [listening, setListening] = useState(false);
   const [polished, setPolished] = useState<string>('');
   const wsRef = useRef<WebSocket | null>(null);
   const recRef = useRef<MediaStream | null>(null);
@@ -35,18 +34,21 @@ const LiveTranscription: React.FC = () => {
 
   const start = async () => {
     if (listening) return;
-    setEntries([]); setPartial(''); setPolished('');
+    setFullTranscript(''); setPartial(''); setPolished('');
     const ws = new WebSocket(transcribeWsUrl());
     wsRef.current = ws;
 
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
-      if (msg.type === 'partial') setPartial(msg.text);
+      if (msg.type === 'partial') setPartial(msg.text || '');
+      if (msg.type === 'segment') {
+        const t = (msg.text || '').trim();
+        if (t) setFullTranscript(prev => (prev ? `${prev} ${t}` : t));
+      }
       if (msg.type === 'final') {
-        const t = msg.text || '';
-        if (t.trim()) setEntries(prev => [...prev, { id: `t_${Date.now()}`, rawText: t, timestamp: Date.now() }]);
+        const t = (msg.text || '').trim();
+        if (t) setFullTranscript(t);
         setPartial('');
-        stopMic(false);
       }
       if (msg.type === 'error') console.error(msg.message);
     };
@@ -89,15 +91,15 @@ const LiveTranscription: React.FC = () => {
   };
 
   const polish = async () => {
-    const raw = entries.map(e => e.rawText).join('\n');
-    if (!raw.trim()) return;
+    const raw = (fullTranscript || '').trim();
+    if (!raw) return;
     const out = await polishTranscript(raw);
     setPolished(out.polished);
   };
 
   const store = async () => {
-    const raw = entries.map(e => e.rawText).join('\n');
-    if (!raw.trim()) return;
+    const raw = (fullTranscript || '').trim();
+    if (!raw) return;
     await storeTranscript(raw, polished || null);
     alert('Stored into EchoMind knowledge base.');
   };
@@ -122,10 +124,9 @@ const LiveTranscription: React.FC = () => {
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 lg:col-span-6 rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[55vh]">
-          <div className="text-xs font-semibold opacity-70 mb-3">Live transcript</div>
+          <div className="text-xs font-semibold opacity-70 mb-3">Live transcript (discussion / lecture — updates as you speak)</div>
           <div className="text-sm whitespace-pre-wrap opacity-90">
-            {entries.map(e => e.rawText).join('\n')}
-            {partial ? `\n${partial}` : ''}
+            {[fullTranscript, partial].filter(Boolean).join(' ')}
           </div>
         </div>
 

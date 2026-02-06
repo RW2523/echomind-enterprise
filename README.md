@@ -22,3 +22,14 @@ docker exec -it echomind-ollama ollama pull nomic-embed-text
 If you still see Gemini calls in the browser console:
 1) Hard refresh (Ctrl+Shift+R) / clear site data
 2) Ensure you rebuilt images: `docker compose up --build`
+
+## FAISS GPU (faster RAG search)
+
+By default the backend uses **faiss-cpu**. For faster vector search you can use **faiss-gpu** (requires an NVIDIA GPU and CUDA).
+
+1. In `docker-compose.yml`, set the backend build arg: `USE_FAISS_GPU: "1"`.
+2. Rebuild: `docker compose build --no-cache backend && docker compose up -d backend`.
+
+The backend service already has GPU access in `docker-compose.yml`. No code changes are needed—the same `faiss` API is used; the GPU build just runs the index on the GPU.
+
+**Note:** The PyPI `faiss-gpu` package (1.7.2) is archived and only provides wheels for Python ≤3.10. If the backend image uses Python 3.11+, the GPU build may fail; in that case keep `faiss-cpu` or use a conda base image with `faiss-gpu`.

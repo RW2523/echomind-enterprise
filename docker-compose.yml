@@ -1,6 +1,9 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        USE_FAISS_GPU: "0"   # set to "1" for FAISS GPU (faster RAG search; needs GPU)
     container_name: echomind-backend
     expose: ["8000"]
     environment:
@@ -12,6 +15,13 @@ services:
     volumes:
       - echomind_data:/data
     depends_on: [ollama]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   voice:
     build: ./voice
