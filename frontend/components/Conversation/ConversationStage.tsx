@@ -84,11 +84,11 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         </div>
       </div>
 
-      {/* Orbs row: AI left (larger), You right - main focus */}
-      <div className="flex-1 flex items-center justify-center gap-12 md:gap-20 min-h-0 py-8">
-        {/* Assistant orb (left, larger) */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="relative">
+      {/* Orbs row: fixed min-height so layout never jumps; same structure in all states */}
+      <div className="flex-1 flex items-center justify-center gap-12 md:gap-20 min-h-[320px] py-8">
+        {/* Assistant orb (left) - fixed width so no reflow */}
+        <div className="flex flex-col items-center gap-3 shrink-0 w-[260px]">
+          <div className="relative w-[260px] h-[260px] flex items-center justify-center">
             <OrbCanvas
               role="assistant"
               analyserNode={assistantAnalyser}
@@ -104,9 +104,9 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
           <span className="text-xs opacity-60">EchoMind</span>
         </div>
 
-        {/* User orb (right, smaller) */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="relative">
+        {/* User orb (right) - fixed width so no reflow */}
+        <div className="flex flex-col items-center gap-3 shrink-0 w-[200px]">
+          <div className="relative w-[200px] h-[200px] flex items-center justify-center">
             <OrbCanvas
               role="user"
               analyserNode={userAnalyser}

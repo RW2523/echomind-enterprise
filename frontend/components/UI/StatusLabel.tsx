@@ -20,7 +20,7 @@ export const StatusLabel: React.FC<StatusLabelProps> = ({ state, role, className
   const label = STATE_LABELS[state];
   return (
     <span
-      className={`text-xs font-medium opacity-80 ${className}`}
+      className={`inline-block text-xs font-medium opacity-80 min-w-[5.5rem] text-center ${className}`}
       data-state={state}
     >
       {label}

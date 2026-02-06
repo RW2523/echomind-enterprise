@@ -24,12 +24,9 @@ export interface OrbVisualizerParams {
 }
 
 const SMOOTHING = 0.25;
-const CONNECTION_DURATION_MS = 600;
 const INTERRUPTION_RIPPLE_MS = 400;
-
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
+/** Fixed orb scale in all states so layout never shifts */
+const ORB_SCALE = 0.92;
 
 export function useOrbVisualizer(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
@@ -49,9 +46,7 @@ export function useOrbVisualizer(
 
   const timeDomainRef = useRef(new Float32Array(2048));
   const animRef = useRef<number>(0);
-  const connectStartRef = useRef<number>(0);
   const interruptStartRef = useRef<number>(0);
-  const prevConnectedRef = useRef<boolean>(false);
 
   const draw = useCallback(
     (time: number) => {
@@ -71,21 +66,7 @@ export function useOrbVisualizer(
       }
 
       const stateParams = getOrbStateParams(orbState);
-
-      let scale = 1;
-      if (isConnected && !prevConnectedRef.current) {
-        connectStartRef.current = time;
-      }
-      prevConnectedRef.current = isConnected;
-      if (isConnected) {
-        const elapsed = time - connectStartRef.current;
-        const t = Math.min(1, elapsed / CONNECTION_DURATION_MS);
-        scale = 0.8 + 0.2 * easeOutCubic(t);
-      } else {
-        scale = 0.8;
-      }
-
-      const radius = baseRadius * scale;
+      const radius = baseRadius * ORB_SCALE;
 
       let rippleProgress = 1;
       if (interruptedAt > 0) {

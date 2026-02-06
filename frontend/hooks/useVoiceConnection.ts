@@ -2,8 +2,10 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { voiceWsUrl } from "../services/backend";
 import type { ConversationState, OrbState } from "../components/Conversation/ChatState";
 
-const LISTENING_THRESHOLD = 15;
-const MIC_CHECK_MS = 120;
+const LISTENING_THRESHOLD = 18;
+const MIC_CHECK_MS = 150;
+/** Consecutive samples above/below threshold before changing state (stops orb flicker) */
+const MIC_HYSTERESIS = 4;
 
 function b64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64);
@@ -112,7 +114,8 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
   const playQueueRef = useRef<{ f32: Float32Array; rate: number }[]>([]);
   const playingRef = useRef(false);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
-  const micCheckRef = useRef<number>(0);
+  const micAboveCountRef = useRef(0);
+  const micBelowCountRef = useRef(0);
 
   const setUserOrbState = useCallback((s: OrbState) => {
     setState((prev) => ({ ...prev, userOrb: s }));
@@ -225,9 +228,11 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
         setState((prev) => ({
           ...prev,
           isConnected: true,
-          userOrb: "listening",
+          userOrb: "idle",
           assistantOrb: "idle",
         }));
+        micAboveCountRef.current = 0;
+        micBelowCountRef.current = 0;
         ws.send(JSON.stringify({ type: "set_context", system_prompt: contextValue, clear_memory: false }));
       } catch (e) {
         console.error(e);
@@ -323,23 +328,36 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
       let sum = 0;
       for (let i = 0; i < data.length; i++) sum += data[i];
       const avg = sum / data.length;
+      const above = avg > LISTENING_THRESHOLD;
       setState((prev) => {
         if (prev.assistantOrb === "speaking" || prev.assistantOrb === "thinking") return prev;
-        return { ...prev, userOrb: avg > LISTENING_THRESHOLD ? "listening" : "idle" };
+        if (above) {
+          micBelowCountRef.current = 0;
+          micAboveCountRef.current += 1;
+          if (micAboveCountRef.current >= MIC_HYSTERESIS) return { ...prev, userOrb: "listening" as const };
+        } else {
+          micAboveCountRef.current = 0;
+          micBelowCountRef.current += 1;
+          if (micBelowCountRef.current >= MIC_HYSTERESIS) return { ...prev, userOrb: "idle" as const };
+        }
+        return prev;
       });
     }, MIC_CHECK_MS);
     return () => clearInterval(interval);
   }, [state.isConnected, userAnalyser]);
 
   const applyContext = useCallback(() => {
-    if (wsRef.current?.readyState !== 1) return;
-    wsRef.current.send(JSON.stringify({ type: "set_context", system_prompt: contextValue, clear_memory: false }));
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    const prompt = typeof contextValue === "string" ? contextValue : "";
+    ws.send(JSON.stringify({ type: "set_context", system_prompt: prompt, clear_memory: false }));
   }, [contextValue]);
 
   const clearMemory = useCallback(() => {
-    if (wsRef.current?.readyState !== 1) return;
-    wsRef.current.send(JSON.stringify({ type: "set_context", system_prompt: contextValue, clear_memory: true }));
-  }, [contextValue]);
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({ type: "clear_memory" }));
+  }, []);
 
   return {
     state,
