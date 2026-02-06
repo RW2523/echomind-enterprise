@@ -1,0 +1,5 @@
+# Optional: for Live Transcript with Kyutai STT (kyutai/stt-1b-en_fr).
+# Install with: pip install -r requirements.txt -r requirements-kyutai.txt
+# Uses: huggingface_hub.snapshot_download, moshi (Mimi + LMGen + tokenizer), PyTorch.
+moshi>=0.2.9
+huggingface-hub>=0.23.0
