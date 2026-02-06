@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 140
     TOP_K: int = 8
     RAG_RELEVANCE_THRESHOLD: float = float(os.getenv("ECHOMIND_RAG_RELEVANCE_THRESHOLD", "0.45"))
+    # When False (default), do not expose citations/filenames to client (audit: internal grounding only).
+    RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "0").lower() in ("1", "true", "yes")
     WHISPER_MODEL: str = "base"
 
     # Real-time transcription & knowledge capture
