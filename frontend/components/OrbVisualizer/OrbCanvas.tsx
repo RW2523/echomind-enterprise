@@ -12,11 +12,13 @@ export interface OrbCanvasProps {
   interruptedAt?: number;
   color?: string;
   className?: string;
+  /** Canvas diameter in px. Default 220. Use larger for primary (e.g. AI) orb. */
+  size?: number;
 }
 
 const DEFAULT_COLORS = {
-  user: "#e2e8f0",
-  assistant: "#00ff9c",
+  user: "#94a3b8",
+  assistant: "#14b8a6",
 };
 
 export const OrbCanvas: React.FC<OrbCanvasProps> = ({
@@ -29,9 +31,10 @@ export const OrbCanvas: React.FC<OrbCanvasProps> = ({
   interruptedAt = 0,
   color,
   className = "",
+  size: sizeProp,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const size = 220;
+  const size = sizeProp ?? 220;
   const fillColor = color ?? DEFAULT_COLORS[role];
 
   useOrbVisualizer(canvasRef, {

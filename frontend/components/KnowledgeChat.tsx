@@ -98,16 +98,16 @@ const KnowledgeChat: React.FC = () => {
     : documents;
 
   return (
-    <div className="flex h-[78vh] min-h-0">
+    <div className="flex h-full min-h-0 gap-4 md:gap-5">
       {/* Center: Chat */}
-      <div className="flex-1 flex flex-col min-w-0 rounded-2xl border border-white/10 bg-white/5">
-        <div className="px-5 py-4 border-b border-white/10 flex items-center gap-2 shrink-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
+        <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-white/10 flex items-center gap-2 shrink-0">
           <div className="opacity-80"><ICONS.Chat className="w-5 h-5" /></div>
           <div className="font-semibold">Knowledge Chat</div>
           <div className="ml-auto text-xs opacity-60">{chatId ? 'Connected' : 'Connecting...'}</div>
         </div>
 
-        <div className="flex-1 overflow-auto p-5 space-y-4">
+        <div className="flex-1 min-h-0 overflow-auto p-4 sm:p-5 space-y-4">
           {messages.length === 0 && (
             <div className="text-sm opacity-70 text-center py-8">Ask questions about your resources. I’ll use them when relevant.</div>
           )}
@@ -138,7 +138,7 @@ const KnowledgeChat: React.FC = () => {
           <div ref={endRef} />
         </div>
 
-        <div className="p-4 border-t border-white/10 flex gap-3 shrink-0">
+        <div className="px-4 py-3 sm:px-5 sm:py-4 border-t border-white/10 flex gap-3 shrink-0">
           <input
             className="flex-1 rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-sm outline-none focus:border-white/30"
             placeholder="Ask something..."
@@ -157,17 +157,17 @@ const KnowledgeChat: React.FC = () => {
       </div>
 
       {/* Right: Resources sidebar */}
-      <aside className="w-72 shrink-0 border-l border-white/10 bg-black/20 flex flex-col rounded-r-2xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10">
+      <aside className="w-64 lg:w-72 shrink-0 flex flex-col min-h-0 rounded-2xl border border-white/10 bg-black/20 overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/10 shrink-0">
           <div className="font-semibold text-sm flex items-center gap-2">
             <ICONS.File className="w-4 h-4 opacity-80" />
             Resources
           </div>
         </div>
-        <div className="p-3 border-b border-white/10">
+        <div className="p-3 border-b border-white/10 shrink-0">
           <Uploader onComplete={loadDocs} />
         </div>
-        <div className="p-3 border-b border-white/10">
+        <div className="p-3 border-b border-white/10 shrink-0">
           <div className="relative">
             <ICONS.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
             <input
@@ -179,7 +179,7 @@ const KnowledgeChat: React.FC = () => {
             />
           </div>
         </div>
-        <div className="flex-1 overflow-auto p-3">
+        <div className="flex-1 min-h-0 overflow-auto p-3">
           {filteredDocs.length === 0 && (
             <div className="text-xs opacity-60 py-4 text-center">
               {documents.length === 0 ? 'No resources yet. Upload a document above.' : 'No matches.'}

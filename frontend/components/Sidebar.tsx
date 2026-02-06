@@ -17,23 +17,23 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
   ];
 
   return (
-    <aside className="w-16 md:w-64 flex flex-col bg-[#080b14] border-r border-white/5 transition-all duration-300 h-full overflow-y-auto overflow-x-hidden">
-      <div className="p-4 md:p-6 flex items-center gap-3">
-        <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
-          <ICONS.Zap className="text-white w-5 h-5 md:w-6 md:h-6" />
+    <aside className="w-16 md:w-60 lg:w-64 flex flex-col bg-[#080b14] border-r border-white/5 transition-all duration-300 h-full overflow-y-auto overflow-x-hidden shrink-0">
+      <div className="px-3 py-4 md:px-4 md:py-5 flex items-center gap-3">
+        <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
+          <ICONS.Zap className="text-white w-5 h-5 md:w-5 md:h-5" />
         </div>
-        <div className="hidden md:block">
-          <h1 className="text-lg font-bold tracking-tight text-white leading-none">EchoMind</h1>
-          <p className="text-[10px] text-cyan-400/80 uppercase tracking-widest font-semibold mt-1">by Ajace AI</p>
+        <div className="hidden md:block min-w-0">
+          <h1 className="text-base font-bold tracking-tight text-white leading-none truncate">EchoMind</h1>
+          <p className="text-[10px] text-cyan-400/80 uppercase tracking-widest font-semibold mt-0.5">by Ajace AI</p>
         </div>
       </div>
 
-      <nav className="flex-1 px-2 md:px-3 mt-4 space-y-1 md:space-y-2">
+      <nav className="flex-1 px-2 md:px-3 pt-2 md:pt-4 space-y-1">
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveView(item.id)}
-            className={`w-full flex items-center justify-center md:justify-start gap-4 p-3 md:px-4 md:py-3 rounded-xl transition-all duration-200 group ${
+            className={`w-full flex items-center justify-center md:justify-start gap-3 px-2 py-2.5 md:px-3 md:py-3 rounded-xl transition-all duration-200 group ${
               activeView === item.id 
                 ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_20px_rgba(34,211,238,0.05)]' 
                 : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
         ))}
       </nav>
 
-      <div className="p-4 mt-auto hidden md:block">
+      <div className="px-3 py-4 md:px-4 md:py-4 mt-auto hidden md:block border-t border-white/5">
         <div className="glass rounded-2xl p-4 border-white/5 bg-white/5">
           <p className="text-xs text-slate-500 mb-2">Usage</p>
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">

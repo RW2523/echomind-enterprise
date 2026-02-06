@@ -19,7 +19,7 @@ const Header: React.FC<HeaderProps> = ({ activeView, settings }) => {
   };
 
   return (
-    <header className="h-16 border-b border-white/5 px-8 flex items-center justify-between bg-[#05070a]/50 backdrop-blur-md">
+    <header className="h-14 sm:h-16 shrink-0 border-b border-white/5 px-4 sm:px-5 md:px-6 lg:px-8 flex items-center justify-between bg-[#05070a]/50 backdrop-blur-md">
       <div>
         <h2 className="text-lg font-semibold text-white">{getTitle()}</h2>
       </div>

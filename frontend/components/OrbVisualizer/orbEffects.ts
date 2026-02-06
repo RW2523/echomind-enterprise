@@ -25,11 +25,6 @@ export function drawCenterAvatar(
   } else {
     ctx.fillStyle = fallbackColor;
     ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.4)";
-    ctx.font = `bold ${r * 0.8}px system-ui`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(role === "user" ? "You" : "AI", centerX, centerY);
   }
   ctx.restore();
 }

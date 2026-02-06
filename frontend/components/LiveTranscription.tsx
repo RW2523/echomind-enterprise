@@ -107,9 +107,9 @@ const LiveTranscription: React.FC = () => {
   useEffect(() => () => { stopMic(false); wsRef.current?.close(); }, []);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="opacity-80">{ICONS.mic}</div>
+    <div className="h-full min-h-0 flex flex-col rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 border-b border-white/10">
+        <div className="opacity-80"><ICONS.Mic className="w-5 h-5" /></div>
         <div className="font-semibold">Real-Time Transcription</div>
         <div className="ml-auto flex gap-2">
           {!listening ? (
@@ -122,17 +122,17 @@ const LiveTranscription: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 lg:col-span-6 rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[55vh]">
-          <div className="text-xs font-semibold opacity-70 mb-3">Live transcript (discussion / lecture — updates as you speak)</div>
-          <div className="text-sm whitespace-pre-wrap opacity-90">
-            {[fullTranscript, partial].filter(Boolean).join(' ')}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 sm:p-5 overflow-auto">
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[280px] flex flex-col">
+          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Live transcript (updates as you speak)</div>
+          <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">
+            {[fullTranscript, partial].filter(Boolean).join(' ') || '—'}
           </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-6 rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[55vh]">
-          <div className="text-xs font-semibold opacity-70 mb-3">Polished</div>
-          <div className="text-sm whitespace-pre-wrap opacity-90">{polished || 'Click “Polish” after transcription.'}</div>
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[280px] flex flex-col">
+          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Polished</div>
+          <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">{polished || 'Click “Polish” after transcription.'}</div>
         </div>
       </div>
     </div>

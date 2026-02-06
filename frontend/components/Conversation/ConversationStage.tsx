@@ -84,26 +84,9 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         </div>
       </div>
 
-      {/* Orbs row */}
-      <div className="flex-1 flex items-center justify-center gap-16 md:gap-24 min-h-0 py-8">
-        {/* User orb (left) */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="relative">
-            <OrbCanvas
-              role="user"
-              analyserNode={userAnalyser}
-              isActive={userActive}
-              isConnected={state.isConnected}
-              orbState={state.userOrb}
-              interruptedAt={state.interruptedAt}
-              color="var(--user-color, #e2e8f0)"
-            />
-          </div>
-          <StatusLabel state={state.userOrb} role="user" />
-          <span className="text-xs opacity-60">You</span>
-        </div>
-
-        {/* Assistant orb (right) */}
+      {/* Orbs row: AI left (larger), You right */}
+      <div className="flex-1 flex items-center justify-center gap-12 md:gap-20 min-h-0 py-8">
+        {/* Assistant orb (left, larger) */}
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
             <OrbCanvas
@@ -113,11 +96,30 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
               isConnected={state.isConnected}
               orbState={state.assistantOrb}
               interruptedAt={state.interruptedAt}
-              color="var(--assistant-color, #00ff9c)"
+              color="var(--assistant-color, #14b8a6)"
+              size={260}
             />
           </div>
           <StatusLabel state={state.assistantOrb} role="assistant" />
           <span className="text-xs opacity-60">EchoMind</span>
+        </div>
+
+        {/* User orb (right, smaller) */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative">
+            <OrbCanvas
+              role="user"
+              analyserNode={userAnalyser}
+              isActive={userActive}
+              isConnected={state.isConnected}
+              orbState={state.userOrb}
+              interruptedAt={state.interruptedAt}
+              color="var(--user-color, #94a3b8)"
+              size={200}
+            />
+          </div>
+          <StatusLabel state={state.userOrb} role="user" />
+          <span className="text-xs opacity-60">You</span>
         </div>
       </div>
 

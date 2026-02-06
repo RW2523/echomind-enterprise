@@ -17,11 +17,11 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
   };
 
   return (
-    <div className="h-full bg-[#0a0c1a]/30 p-8 overflow-y-auto">
-      <div className="max-w-4xl mx-auto space-y-12 pb-20">
+    <div className="h-full min-h-0 bg-[#0a0c1a]/20 overflow-y-auto">
+      <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 py-2 pb-16">
         <section>
-          <h3 className="text-xl font-bold text-white mb-6">Persona Configuration</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Persona Configuration</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {personas.map((p) => (
               <button
                 key={p}
@@ -47,8 +47,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
         </section>
 
         <section>
-          <h3 className="text-xl font-bold text-white mb-6">Voice & Audio</h3>
-          <div className="glass rounded-3xl p-8 space-y-8">
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Voice & Audio</h3>
+          <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 space-y-6">
             <div className="flex flex-col gap-4">
               <label className="text-sm font-bold text-slate-300">Active Voice Profile</label>
               <div className="flex flex-wrap gap-3">
@@ -71,8 +71,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
         </section>
 
         <section>
-          <h3 className="text-xl font-bold text-white mb-6">Knowledge Base Context</h3>
-          <div className="glass rounded-3xl p-8">
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Knowledge Base Context</h3>
+          <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8">
             <div className="flex flex-col gap-4">
               <label className="text-sm font-bold text-slate-300">Retrieval Window</label>
               <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-white/5">
@@ -97,8 +97,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
           </div>
         </section>
 
-        <section className="pt-8 border-t border-white/5">
-          <div className="flex items-center justify-between p-6 rounded-3xl bg-red-500/5 border border-red-500/10">
+        <section className="pt-6 sm:pt-8 border-t border-white/5">
+          <div className="flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-red-500/5 border border-red-500/10">
             <div>
               <h4 className="text-sm font-bold text-red-400">Developer Mode</h4>
               <p className="text-xs text-slate-500 mt-1">Access raw model parameters and debug tools.</p>

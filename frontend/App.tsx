@@ -42,10 +42,12 @@ const App: React.FC = () => {
 
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
       
-      <main className="flex-1 flex flex-col relative z-10 border-l border-white/5 min-w-0">
+      <main className="flex-1 flex flex-col relative z-10 border-l border-white/5 min-w-0 min-h-0">
         <Header activeView={activeView} settings={settings} />
-        <div className="flex-1 overflow-hidden relative">
-          {renderView()}
+        <div className="flex-1 min-h-0 overflow-auto flex flex-col">
+          <div className="flex-1 min-h-0 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-5 lg:px-8 lg:py-6 flex flex-col">
+            {renderView()}
+          </div>
         </div>
       </main>
     </div>

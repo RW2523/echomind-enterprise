@@ -97,6 +97,12 @@ export function useOrbVisualizer(
       ctx.save();
       ctx.clearRect(0, 0, size, size);
 
+      if (isConnected && stateParams.rotationSpeed > 0) {
+        ctx.translate(centerX, centerY);
+        ctx.rotate((time * 0.001) * stateParams.rotationSpeed);
+        ctx.translate(-centerX, -centerY);
+      }
+
       const glowIntensity = stateParams.glowIntensity * (isActive ? 1.15 : 0.85);
       const hasPulse = stateParams.pulseSpeed > 0 && (orbState === "listening" || orbState === "speaking" || orbState === "thinking");
       const pulse = hasPulse ? 1 + 0.02 * Math.sin(time * 0.002 * stateParams.pulseSpeed * 60) : 1;
