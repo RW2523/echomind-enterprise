@@ -1,8 +1,34 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ChatMessage, DocumentChunk } from '../types';
 import { ICONS } from '../constants';
 import Uploader from './Uploader';
 import { createChat, askChatStream, listDocuments, deleteDocument, DocListItem } from '../services/backend';
+
+/** Styled Markdown renderer for assistant messages: headings, lists, bold, code, blockquotes. */
+const markdownComponents: React.ComponentProps<typeof ReactMarkdown>['components'] = {
+  h1: ({ children }) => <h1 className="text-lg font-bold mt-4 mb-2 first:mt-0 text-white">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-1.5 text-white/95">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-sm font-semibold mt-2.5 mb-1 text-white/90">{children}</h3>,
+  h4: ({ children }) => <h4 className="text-sm font-semibold mt-2 mb-1 text-white/85">{children}</h4>,
+  p: ({ children }) => <p className="text-sm mb-2 last:mb-0 leading-relaxed text-white/90">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm text-white/90">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-sm text-white/90">{children}</ol>,
+  li: ({ children }) => <li className="ml-2">{children}</li>,
+  strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+  em: ({ children }) => <em className="italic text-white/95">{children}</em>,
+  code: ({ className, children, ...props }) => {
+    const isBlock = className?.includes('language-');
+    if (isBlock) {
+      return <code className="block font-mono text-white/90" {...props}>{children}</code>;
+    }
+    return <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-mono text-cyan-200" {...props}>{children}</code>;
+  },
+  pre: ({ children }) => <pre className="rounded-lg bg-black/40 border border-white/10 p-3 my-2 overflow-x-auto text-xs">{children}</pre>,
+  blockquote: ({ children }) => <blockquote className="border-l-2 border-cyan-500/60 pl-3 my-2 text-white/80 italic">{children}</blockquote>,
+  hr: () => <hr className="border-white/10 my-3" />,
+};
 
 function mapCitations(citations: any[]): DocumentChunk[] {
   return (citations || []).map((c: any, i: number) => ({
@@ -129,7 +155,22 @@ const KnowledgeChat: React.FC = () => {
           {messages.map(m => (
             <div key={m.id} className={`rounded-2xl p-4 border ${m.role === 'user' ? 'bg-white/10 border-white/10 ml-8' : 'bg-black/20 border-white/10 mr-8'}`}>
               <div className="text-xs opacity-60 mb-2">{m.role === 'user' ? 'You' : 'EchoMind'}</div>
-              <div className="text-sm whitespace-pre-wrap">{m.content}</div>
+              {m.role === 'assistant' && !m.content && busy && messages[messages.length - 1]?.id === m.id ? (
+                <div className="text-sm text-white/60 flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse [animation-delay:0.2s]" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse [animation-delay:0.4s]" />
+                  <span className="ml-1">Thinking...</span>
+                </div>
+              ) : m.role === 'assistant' && m.content ? (
+                <div className="text-sm markdown-response">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                    {m.content}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <div className="text-sm whitespace-pre-wrap">{m.content}</div>
+              )}
               {m.citations && m.citations.length > 0 && (
                 <div className="mt-3 relative" ref={m.id === resourcesOpenForId ? popoverRef : undefined}>
                   <button
