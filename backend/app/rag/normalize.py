@@ -39,32 +39,6 @@ def collapse_spaced_letters(text: str) -> str:
     return re.sub(r"(?<!\w)(?:\w\s+)+\w(?!\w)", replace_spaced, text)
 
 
-def remove_repeated_headers_footers(text: str, min_repeats: int = 3, max_line_len: int = 80) -> str:
-    """
-    Heuristic: remove lines that repeat many times (likely headers/footers).
-    Only considers lines with length <= max_line_len. Requires min_repeats occurrences.
-    """
-    if not text or min_repeats < 2:
-        return text or ""
-    lines = text.split("\n")
-    from collections import Counter
-    line_counts = Counter()
-    for line in lines:
-        s = line.strip()
-        if 0 < len(s) <= max_line_len:
-            line_counts[s] += 1
-    repeated = {s for s, c in line_counts.items() if c >= min_repeats}
-    if not repeated:
-        return text
-    out = []
-    for line in lines:
-        s = line.strip()
-        if s in repeated:
-            continue
-        out.append(line)
-    return "\n".join(out)
-
-
 def normalize_whitespace_preserve_paragraphs(text: str) -> str:
     """
     Normalize whitespace: collapse runs of spaces/tabs to single space, preserve paragraph breaks (\n\n).
@@ -79,16 +53,14 @@ def normalize_whitespace_preserve_paragraphs(text: str) -> str:
     return t.strip()
 
 
-def normalize_extracted_text(text: str, remove_headers_footers: bool = False) -> str:
+def normalize_extracted_text(text: str) -> str:
     """
     Full normalization pipeline for PDF/extracted text. Apply after parse, before chunking.
-    Order: dehyphenate -> collapse spaced letters -> [optional] remove repeated headers/footers -> normalize whitespace.
+    Order: dehyphenate -> collapse spaced letters -> normalize whitespace.
     """
     if not (text or "").strip():
         return text or ""
     t = dehyphenate(text)
     t = collapse_spaced_letters(t)
-    if remove_headers_footers:
-        t = remove_repeated_headers_footers(t)
     t = normalize_whitespace_preserve_paragraphs(t)
     return t

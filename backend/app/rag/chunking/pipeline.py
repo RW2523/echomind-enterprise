@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import List
 
 from ...utils.ids import new_id
-from ...core.config import settings
 
 from ..normalize import normalize_extracted_text
 from .models import Chunk, DocType
@@ -27,7 +26,7 @@ def chunk_document(text: str, doc_id: str) -> List[Chunk]:
     if not (text or "").strip():
         return []
 
-    text = normalize_extracted_text(text or "", remove_headers_footers=getattr(settings, "RAG_NORMALIZE_STRIP_HEADERS_FOOTERS", False))
+    text = normalize_extracted_text(text or "")
     doc_type = detect_document_type(text)
     clean_text, redacted, sensitivity_level = sanitize_text(text)
 

@@ -38,7 +38,7 @@ class Chunk:
     chunk_index: int = 0
 
     def to_source_dict(self, filename: str, filetype: str) -> dict:
-        """Serialize for source_json in DB (backward-compatible + extended metadata). doc_id and chunk_index used for structure fallback and adjacent expansion."""
+        """Serialize for source_json in DB (backward-compatible + extended metadata)."""
         d = {
             "doc_id": self.doc_id,
             "filename": filename,

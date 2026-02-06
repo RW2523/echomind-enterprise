@@ -54,14 +54,6 @@ class Settings(BaseSettings):
     # Bypass compression for chunks that contain key query terms (improves grounding for named concepts).
     RAG_VERBATIM_QUERY_TERMS: bool = os.getenv("ECHOMIND_RAG_VERBATIM_QUERY_TERMS", "1").lower() in ("1", "true", "yes")
     RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1200"))
-    # Generic RAG reliability: intent-based retrieval profiles, refusal when no evidence, structure fallback.
-    RAG_USE_INTENT_PROFILES: bool = os.getenv("ECHOMIND_RAG_USE_INTENT_PROFILES", "1").lower() in ("1", "true", "yes")
-    RAG_REFUSAL_ON_NO_EVIDENCE: bool = os.getenv("ECHOMIND_RAG_REFUSAL_ON_NO_EVIDENCE", "1").lower() in ("1", "true", "yes")
-    RAG_STRUCTURE_FALLBACK: bool = os.getenv("ECHOMIND_RAG_STRUCTURE_FALLBACK", "1").lower() in ("1", "true", "yes")
-    RAG_NORMALIZE_STRIP_HEADERS_FOOTERS: bool = os.getenv("ECHOMIND_RAG_NORMALIZE_STRIP_HEADERS_FOOTERS", "0").lower() in ("1", "true", "yes")
-    RAG_SKIP_COMPRESS_TABLES_HEADINGS: bool = os.getenv("ECHOMIND_RAG_SKIP_COMPRESS_TABLES_HEADINGS", "1").lower() in ("1", "true", "yes")
-    RAG_ADJACENT_CHUNK_EXPANSION: bool = os.getenv("ECHOMIND_RAG_ADJACENT_CHUNK_EXPANSION", "1").lower() in ("1", "true", "yes")
-    RAG_EVIDENCE_POSTCHECK: bool = os.getenv("ECHOMIND_RAG_EVIDENCE_POSTCHECK", "1").lower() in ("1", "true", "yes")
 
     WHISPER_MODEL: str = "base"
 

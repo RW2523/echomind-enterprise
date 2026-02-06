@@ -9,7 +9,6 @@ from ..utils.ids import new_id, now_iso
 from .embeddings import OllamaEmbeddings
 from .sparse import Bm25Index
 from .chunking import chunk_document
-from .structure import extract_headings_from_chunks, store_doc_headings
 
 class FaissIndex:
     def __init__(self):
@@ -61,11 +60,6 @@ class FaissIndex:
                     (c.chunk_id, doc_id, c.chunk_index, c.text, json.dumps(src)),
                 )
             conn.commit()
-            # Structure index: extract headings from all chunks for TOC/structure fallback
-            chunks_for_structure = [(c.chunk_id, c.chunk_index, c.text) for c in all_chunks]
-            heading_rows = extract_headings_from_chunks(doc_id, chunks_for_structure)
-            if heading_rows:
-                store_doc_headings(doc_id, heading_rows)
 
         for c in embed_chunks:
             self.meta["chunk_ids"].append(c.chunk_id)
@@ -81,7 +75,6 @@ class FaissIndex:
     async def delete_document(self, doc_id: str) -> None:
         """Remove document and its chunks from DB, FAISS, and sparse index. Rebuilds both indexes from remaining chunks."""
         with get_conn() as conn:
-            conn.execute("DELETE FROM doc_headings WHERE doc_id=?", (doc_id,))
             conn.execute("DELETE FROM chunks WHERE doc_id=?", (doc_id,))
             conn.execute("DELETE FROM documents WHERE id=?", (doc_id,))
             conn.commit()
