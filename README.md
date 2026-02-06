@@ -3,10 +3,16 @@
 This build removes ALL Gemini code and connects the UI to your backend APIs.
 
 ## Services
-- Frontend: http://<DGX_IP>:3000
+- Frontend: http://<DGX_IP>:3000 (HTTP) or https://<DGX_IP>:3443 (HTTPS)
 - Backend API: proxied under /api
 - Voice bot: proxied under /voice (direct: http://<DGX_IP>:8001)
 - Ollama: http://<DGX_IP>:11434
+
+## HTTPS without a domain
+The frontend image includes a **self-signed certificate** so you can use HTTPS with no domain:
+- **HTTPS:** https://localhost:3443 (or https://\<your-ip\>:3443)
+- Your browser will show a certificate warning (e.g. "Your connection is not private"); choose **Advanced** → **Proceed** to continue. This is expected when using a self-signed cert.
+- The app and Voice WebSocket (wss) work over this HTTPS port. HTTP remains on port 3000 if you prefer.
 
 ## Run
 ```bash
