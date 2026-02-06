@@ -19,8 +19,8 @@ _SENSITIVE_OVERLAP = 40
 # Unstructured (user): medium, sentence-aware
 _USER_SIZE = 800
 _USER_OVERLAP = 120
-# FAQ: whole Q+A per chunk
-# No fixed size; one chunk per Q&A pair
+# FAQ: whole Q+A per chunk; cap size so embedding API context is not exceeded
+MAX_FAQ_CHARS = 8000
 
 
 def _sentences(text: str) -> List[str]:
@@ -87,7 +87,7 @@ def chunk_faq(
             Chunk(
                 doc_id="",
                 chunk_id="",
-                text=block[:12000],
+                text=block[:MAX_FAQ_CHARS],
                 doc_type=DocType.FAQ,
                 sensitivity_level=sensitivity_level,
                 redacted=redacted,
@@ -103,7 +103,7 @@ def chunk_faq(
             Chunk(
                 doc_id="",
                 chunk_id="",
-                text=text[:12000],
+                text=text[:MAX_FAQ_CHARS],
                 doc_type=DocType.FAQ,
                 sensitivity_level=sensitivity_level,
                 redacted=redacted,
