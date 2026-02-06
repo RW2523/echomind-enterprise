@@ -49,9 +49,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
   return (
     <aside className="w-16 md:w-60 lg:w-64 flex flex-col bg-[#080b14] border-r border-white/5 transition-all duration-300 h-full overflow-y-auto overflow-x-hidden shrink-0">
       <div className="px-3 py-4 md:px-4 md:py-5 flex items-center gap-3">
-        <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
-          <ICONS.Zap className="text-white w-5 h-5 md:w-5 md:h-5" />
-        </div>
+        <img
+          src="https://www.ajace.com/wp-content/uploads/2016/12/cropped-logo-32x32.png"
+          alt="Ajace"
+          className="w-8 h-8 md:w-9 md:h-9 rounded-xl object-contain shrink-0"
+        />
         <div className="hidden md:block min-w-0">
           <h1 className="text-base font-bold tracking-tight text-white leading-none truncate">EchoMind</h1>
           <p className="text-[10px] text-cyan-400/80 uppercase tracking-widest font-semibold mt-0.5">by Ajace AI</p>
