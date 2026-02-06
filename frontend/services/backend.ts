@@ -127,6 +127,11 @@ export async function storeTranscript(rawText: string, polishedText?: string|nul
 
 export function transcribeWsUrl(): string {
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  // same-origin; nginx will proxy /api to backend if configured
   return `${proto}://${location.host}${API_BASE}/api/transcribe/ws`;
+}
+
+/** Voice conversation WebSocket (proxied to voice service at /voice/ws). */
+export function voiceWsUrl(): string {
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  return `${proto}://${location.host}/voice/ws`;
 }

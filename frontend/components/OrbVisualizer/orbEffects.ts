@@ -1,0 +1,183 @@
+/**
+ * Reusable canvas drawing helpers for the orb visualizer.
+ * All coordinates in canvas pixel space; center and radius passed in.
+ */
+
+export function drawCenterAvatar(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  avatarImage: HTMLImageElement | null,
+  role: "user" | "assistant",
+  fallbackColor: string
+): void {
+  const r = radius * 0.72;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+
+  if (avatarImage && avatarImage.complete && avatarImage.naturalWidth > 0) {
+    const size = r * 2;
+    ctx.drawImage(avatarImage, centerX - r, centerY - r, size, size);
+  } else {
+    ctx.fillStyle = fallbackColor;
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.4)";
+    ctx.font = `bold ${r * 0.8}px system-ui`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(role === "user" ? "You" : "AI", centerX, centerY);
+  }
+  ctx.restore();
+}
+
+export function drawGlowRing(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  intensity: number,
+  color: string,
+  thickness: number = 4
+): void {
+  const gradient = ctx.createRadialGradient(
+    centerX, centerY, radius * 0.6,
+    centerX, centerY, radius * 1.4
+  );
+  const [r, g, b] = hexToRgb(color);
+  gradient.addColorStop(0, `rgba(${r},${g},${b},${intensity * 0.3})`);
+  gradient.addColorStop(0.5, `rgba(${r},${g},${b},${intensity * 0.15})`);
+  gradient.addColorStop(1, "transparent");
+  ctx.save();
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius * 1.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(${r},${g},${b},${intensity * 0.6})`;
+  ctx.lineWidth = thickness;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [255, 255, 255];
+}
+
+export function drawWaveRing(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  timeDomainData: Float32Array,
+  amplitude: number,
+  color: string,
+  smoothing: number = 0.3
+): void {
+  if (amplitude <= 0 || timeDomainData.length < 2) return;
+  const [r, g, b] = hexToRgb(color);
+  const step = Math.max(1, Math.floor(timeDomainData.length / 120));
+  let avg = 0;
+  for (let i = 0; i < timeDomainData.length; i += step) avg += Math.abs(timeDomainData[i]);
+  avg = (avg / (timeDomainData.length / step)) * amplitude;
+  const waveRadius = radius + avg * radius * 0.5;
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(${r},${g},${b},0.7)`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  const segments = 64;
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const sampleIdx = Math.floor(t * (timeDomainData.length - 1));
+    const sample = timeDomainData[sampleIdx] ?? 0;
+    const rOff = radius * amplitude * sample * 0.4;
+    const angle = t * Math.PI * 2 - Math.PI / 2;
+    const x = centerX + (waveRadius + rOff) * Math.cos(angle);
+    const y = centerY + (waveRadius + rOff) * Math.sin(angle);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+}
+
+export function drawOrbitingParticles(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  count: number,
+  time: number,
+  color: string,
+  state: string
+): void {
+  if (count <= 0) return;
+  const [r, g, b] = hexToRgb(color);
+  const orbitRadius = radius * 1.15;
+  const particleRadius = Math.max(1, radius * 0.04);
+  const speed = state === "speaking" ? 1.5 : state === "listening" ? 1.2 : 0.6;
+
+  for (let i = 0; i < count; i++) {
+    const baseAngle = (i / count) * Math.PI * 2 + time * speed;
+    const x = centerX + orbitRadius * Math.cos(baseAngle);
+    const y = centerY + orbitRadius * Math.sin(baseAngle);
+    const alpha = 0.4 + 0.3 * Math.sin(time * 2 + i);
+    ctx.save();
+    ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+    ctx.beginPath();
+    ctx.arc(x, y, particleRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+export function drawPlayIcon(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  size: number,
+  color: string
+): void {
+  const [r, g, b] = hexToRgb(color);
+  ctx.save();
+  ctx.fillStyle = `rgba(${r},${g},${b},0.8)`;
+  ctx.beginPath();
+  const s = size * 0.5;
+  ctx.moveTo(centerX - s * 0.6, centerY - s);
+  ctx.lineTo(centerX - s * 0.6, centerY + s);
+  ctx.lineTo(centerX + s * 0.8, centerY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+export function drawInterruptionRipple(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  progress: number,
+  color: string
+): void {
+  if (progress >= 1) return;
+  const [r, g, b] = hexToRgb(color);
+  const ease = 1 - Math.pow(1 - progress, 2);
+  const r2 = radius * (1 + ease * 0.25);
+  ctx.save();
+  ctx.strokeStyle = `rgba(${r},${g},${b},${0.6 * (1 - progress)})`;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, r2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
