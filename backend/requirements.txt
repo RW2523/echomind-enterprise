@@ -4,7 +4,8 @@ python-multipart==0.0.12
 pydantic==2.9.2
 pydantic-settings==2.6.1
 numpy==1.26.4
-scipy==1.13.1
+# Use flexible version so pip can choose a wheel (avoids building from source / gfortran on aarch64)
+scipy>=1.11,<2
 soundfile==0.12.1
 # FAISS: use faiss-cpu (default). For GPU, replace with faiss-gpu==1.7.2 and ensure backend has GPU (see README).
 faiss-cpu==1.8.0.post1
