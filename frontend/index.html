@@ -52,6 +52,14 @@
     .animate-pulse-cyan {
       animation: pulse-cyan 3s infinite ease-in-out;
     }
+    @keyframes listening-bar {
+      0%, 100% { transform: scaleY(0.4); opacity: 0.6; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+    .animate-listening-bar {
+      animation: listening-bar 0.8s ease-in-out infinite;
+      transform-origin: bottom;
+    }
   </style>
 <script type="importmap">
 {

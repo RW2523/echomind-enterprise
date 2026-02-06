@@ -136,7 +136,7 @@ export function useOrbVisualizer(
         orbState
       );
 
-      drawCenterAvatar(ctx, centerX, centerY, r, avatarImage, role, color + "40");
+      drawCenterAvatar(ctx, centerX, centerY, r, avatarImage, role, color + "40", time);
 
       ctx.restore();
     },

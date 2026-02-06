@@ -195,17 +195,58 @@ const LiveTranscription: React.FC = () => {
 
   return (
     <div className="h-full min-h-0 flex flex-col rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-      <div className="shrink-0 flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 border-b border-white/10">
-        <div className="opacity-80"><ICONS.Mic className="w-5 h-5" /></div>
-        <div className="font-semibold">Real-Time Transcription</div>
+      <div
+        className={`shrink-0 flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 border-b transition-all duration-300 ${
+          listening ? 'border-cyan-500/30 bg-cyan-500/5' : 'border-white/10'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <div className={`relative flex items-center justify-center w-10 h-10 rounded-xl ${listening ? 'bg-cyan-500/20' : 'bg-white/5'}`}>
+            <ICONS.Mic className={`w-5 h-5 ${listening ? 'text-cyan-400' : 'text-slate-400'}`} />
+            {listening && (
+              <span className="absolute inset-0 rounded-xl bg-cyan-400/20 animate-ping" style={{ animationDuration: '1.5s' }} />
+            )}
+          </div>
+          <div>
+            <div className="font-semibold">Real-Time Transcription</div>
+            <div className="flex items-center gap-2 mt-0.5">
+              {listening ? (
+                <>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 text-[10px] font-medium text-red-400 uppercase tracking-wider">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 animate-ping" style={{ animationDuration: '1.2s' }} />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500" />
+                    </span>
+                    Live
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <span
+                        key={i}
+                        className="w-1 rounded-full bg-cyan-400/80 animate-listening-bar"
+                        style={{ height: 8, animationDelay: `${i * 0.12}s` }}
+                      />
+                    ))}
+                  </span>
+                  <span className="text-[10px] text-cyan-400/90">Listening…</span>
+                </>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/10 px-2.5 py-0.5 text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+                  Stopped
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
         <div className="ml-auto flex items-center gap-2 flex-wrap">
           {wsStatus === 'connecting' && <span className="text-xs text-slate-400">Connecting…</span>}
           {wsStatus === 'loading' && <span className="text-xs text-slate-400">Loading STT…</span>}
           {wsError && <span className="text-xs text-red-400 max-w-[200px] truncate" title={wsError}>{wsError}</span>}
           {!listening ? (
-            <button onClick={start} disabled={wsStatus === 'connecting' || wsStatus === 'loading'} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">Start</button>
+            <button onClick={start} disabled={wsStatus === 'connecting' || wsStatus === 'loading'} className="rounded-xl px-4 py-2 text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-50 transition-colors">Start</button>
           ) : (
-            <button onClick={() => stopMic(true)} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15">Stop</button>
+            <button onClick={() => stopMic(true)} className="rounded-xl px-4 py-2 text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors">Stop</button>
           )}
           <button onClick={polish} disabled={!fullTranscript.trim()} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">Polish</button>
           <button onClick={store} disabled={!fullTranscript.trim()} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">Store</button>

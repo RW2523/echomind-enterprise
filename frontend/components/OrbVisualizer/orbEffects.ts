@@ -3,6 +3,66 @@
  * All coordinates in canvas pixel space; center and radius passed in.
  */
 
+/**
+ * Draw a moving gradient for orb center (no avatar). Time in ms for animation.
+ * Uses conic gradient when available (rotating), else radial with moving focus.
+ */
+function drawMovingGradient(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  role: "user" | "assistant",
+  time: number
+): void {
+  const t = time * 0.0002;
+  const angleOffset = (t * Math.PI * 2) % (Math.PI * 2);
+
+  const createGradient = (): CanvasGradient | null => {
+    if (typeof ctx.createConicGradient === "function") {
+      const g = ctx.createConicGradient(angleOffset, centerX, centerY);
+      if (role === "assistant") {
+        g.addColorStop(0, "rgba(34, 211, 238, 0.55)");
+        g.addColorStop(0.35, "rgba(56, 189, 248, 0.45)");
+        g.addColorStop(0.5, "rgba(20, 184, 166, 0.6)");
+        g.addColorStop(0.7, "rgba(139, 92, 246, 0.4)");
+        g.addColorStop(1, "rgba(34, 211, 238, 0.55)");
+      } else {
+        g.addColorStop(0, "rgba(148, 163, 184, 0.55)");
+        g.addColorStop(0.33, "rgba(100, 116, 139, 0.5)");
+        g.addColorStop(0.5, "rgba(71, 85, 105, 0.55)");
+        g.addColorStop(0.7, "rgba(59, 130, 246, 0.4)");
+        g.addColorStop(1, "rgba(148, 163, 184, 0.55)");
+      }
+      return g;
+    }
+    const dx = radius * 0.25 * Math.cos(t * 0.8);
+    const dy = radius * 0.25 * Math.sin(t * 0.6);
+    const g = ctx.createRadialGradient(
+      centerX + dx, centerY + dy, 0,
+      centerX, centerY, radius
+    );
+    if (role === "assistant") {
+      g.addColorStop(0, "rgba(34, 211, 238, 0.6)");
+      g.addColorStop(0.5, "rgba(20, 184, 166, 0.45)");
+      g.addColorStop(1, "rgba(139, 92, 246, 0.25)");
+    } else {
+      g.addColorStop(0, "rgba(148, 163, 184, 0.6)");
+      g.addColorStop(0.5, "rgba(71, 85, 105, 0.45)");
+      g.addColorStop(1, "rgba(59, 130, 246, 0.25)");
+    }
+    return g;
+  };
+
+  const gradient = createGradient();
+  if (gradient) {
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 export function drawCenterAvatar(
   ctx: CanvasRenderingContext2D,
   centerX: number,
@@ -10,7 +70,8 @@ export function drawCenterAvatar(
   radius: number,
   avatarImage: HTMLImageElement | null,
   role: "user" | "assistant",
-  fallbackColor: string
+  fallbackColor: string,
+  time?: number
 ): void {
   const r = radius * 0.72;
   ctx.save();
@@ -22,6 +83,8 @@ export function drawCenterAvatar(
   if (avatarImage && avatarImage.complete && avatarImage.naturalWidth > 0) {
     const size = r * 2;
     ctx.drawImage(avatarImage, centerX - r, centerY - r, size, size);
+  } else if (time !== undefined) {
+    drawMovingGradient(ctx, centerX, centerY, r, role, time);
   } else {
     ctx.fillStyle = fallbackColor;
     ctx.fill();
