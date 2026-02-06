@@ -147,14 +147,17 @@ async def handler(ws: WebSocket):
     try:
         while True:
             msg = await ws.receive()
-            if msg.get("type") != "websocket.receive":
+            if not isinstance(msg, dict) or msg.get("type") != "websocket.receive":
+                if msg.get("type") == "websocket.disconnect":
+                    break
                 continue
             # Binary: PCM16 audio (client sends at ready.sample_rate: 24kHz for Kyutai, 16kHz for Whisper)
-            if "bytes" in msg and msg["bytes"]:
+            raw_bytes = msg.get("bytes")
+            if raw_bytes and len(raw_bytes) > 0:
                 _ensure_session()
                 if session and session._paused:
                     continue
-                pcm16 = bytes(msg["bytes"])
+                pcm16 = bytes(raw_bytes)
                 f32 = _pcm16_to_float32(pcm16)
                 sr = client_sample_rate if client_sample_rate is not None else 16000
                 if use_kyutai and kyutai_stt is not None:

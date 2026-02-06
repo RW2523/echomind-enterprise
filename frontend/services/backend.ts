@@ -136,6 +136,17 @@ export async function polishTranscript(rawText: string): Promise<{polished: stri
   return await r.json();
 }
 
+/** Preview possible tags and conversation type for transcript text. */
+export async function getTranscriptTags(rawText: string): Promise<{ tags: string[]; conversation_type: string }> {
+  const r = await fetch(`${API_BASE}/api/transcribe/tags`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ raw_text: rawText }),
+  });
+  if (!r.ok) throw new Error(`tags failed: ${r.status}`);
+  return await r.json();
+}
+
 export async function storeTranscript(rawText: string, polishedText?: string|null): Promise<any> {
   const r = await fetch(`${API_BASE}/api/transcribe/store`, {
     method: "POST",

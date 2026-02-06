@@ -107,8 +107,12 @@ class SessionState:
         piece = _normalize_whitespace(piece)
         if not piece:
             return
-        # Anti-duplication: max suffix/prefix overlap between existing tail and incoming
         tail = (self.raw_text + self.recent_buffer).strip()
+        # Skip exact duplicate: if incoming piece is identical to end of tail, do not append
+        if tail and len(piece) <= len(tail) and tail.endswith(piece):
+            self.last_piece_ts_ms = ts_ms
+            return
+        # Anti-duplication: max suffix/prefix overlap between existing tail and incoming
         overlap = _max_suffix_prefix_overlap(tail, piece, self.overlap_k)
         if overlap > 0:
             piece = piece[overlap:]

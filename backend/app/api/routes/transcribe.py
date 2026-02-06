@@ -6,6 +6,7 @@ from ...utils.ids import new_id, now_iso
 from ...core.db import get_conn
 from ...rag.index import index
 from ...transcribe.ws import handler as ws_handler
+from ...tagging import get_metadata
 import json
 
 router = APIRouter(prefix="/transcribe", tags=["transcribe"])
@@ -14,6 +15,18 @@ chat = OpenAICompatChat(settings.LLM_BASE_URL, settings.LLM_MODEL)
 @router.websocket("/ws")
 async def ws(ws: WebSocket):
     await ws_handler(ws)
+
+class TagsIn(BaseModel):
+    raw_text: str
+
+@router.post("/tags")
+def preview_tags(inp: TagsIn):
+    """Preview possible tags and conversation type for the given transcript text."""
+    text = (inp.raw_text or "").strip()
+    if not text:
+        return {"tags": [], "conversation_type": "casual"}
+    conv_type, tags = get_metadata(text)
+    return {"tags": tags, "conversation_type": conv_type}
 
 class PolishIn(BaseModel):
     raw_text: str
