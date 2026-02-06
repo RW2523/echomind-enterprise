@@ -1,7 +1,19 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useLayoutEffect } from "react";
 import { OrbCanvas } from "../OrbVisualizer/OrbCanvas";
 import { StatusLabel } from "../UI/StatusLabel";
 import type { ConversationState, OrbState } from "./ChatState";
+
+/** Resolve CSS variable (e.g. "var(--assistant-color, #14b8a6)") to hex for canvas. */
+function resolveOrbColor(element: HTMLElement | null, cssVar: string, fallbackHex: string): string {
+  if (!element) return fallbackHex;
+  const match = cssVar.match(/var\s*\(\s*(--[^,]+)\s*,\s*([^)]+)\s*\)/);
+  if (!match) return fallbackHex;
+  const [, varName, fallback] = match;
+  const value = getComputedStyle(element).getPropertyValue(varName).trim();
+  if (value && /^#?[0-9A-Fa-f]{6}$/.test(value)) return value.startsWith("#") ? value : `#${value}`;
+  const hex = (fallback ?? fallbackHex).trim();
+  return /^#?[0-9A-Fa-f]{6}$/.test(hex) ? (hex.startsWith("#") ? hex : `#${hex}`) : fallbackHex;
+}
 
 export interface ConversationStageProps {
   /** Current conversation/orb state */
@@ -21,6 +33,9 @@ export interface ConversationStageProps {
   connecting?: boolean;
 }
 
+const ASSISTANT_COLOR_VAR = "var(--assistant-color, #14b8a6)";
+const USER_COLOR_VAR = "var(--user-color, #94a3b8)";
+
 export const ConversationStage: React.FC<ConversationStageProps> = ({
   state,
   userAnalyser,
@@ -33,11 +48,25 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
   onDisconnect,
   connecting = false,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [resolvedAssistantColor, setResolvedAssistantColor] = useState("#14b8a6");
+  const [resolvedUserColor, setResolvedUserColor] = useState("#94a3b8");
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    setResolvedAssistantColor(resolveOrbColor(el, ASSISTANT_COLOR_VAR, "#14b8a6"));
+    setResolvedUserColor(resolveOrbColor(el, USER_COLOR_VAR, "#94a3b8"));
+  }, []);
+
   const userActive = state.userOrb === "listening";
   const assistantActive = state.assistantOrb === "speaking" || state.assistantOrb === "thinking";
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-[var(--voice-bg,#0b0e14)] text-[var(--voice-text,#f1f5f9)]">
+    <div
+      ref={containerRef}
+      className="flex flex-col h-full min-h-0 bg-[var(--voice-bg,#0b0e14)] text-[var(--voice-text,#f1f5f9)]"
+    >
       {/* Context box */}
       <div className="shrink-0 border-b border-white/10 p-4">
         <label className="block text-sm font-semibold mb-2 opacity-90">
@@ -84,7 +113,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
               isConnected={state.isConnected}
               orbState={state.assistantOrb}
               interruptedAt={state.interruptedAt}
-              color="var(--assistant-color, #14b8a6)"
+              color={resolvedAssistantColor}
               size={260}
             />
           </div>
@@ -102,7 +131,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
               isConnected={state.isConnected}
               orbState={state.userOrb}
               interruptedAt={state.interruptedAt}
-              color="var(--user-color, #94a3b8)"
+              color={resolvedUserColor}
               size={200}
             />
           </div>
