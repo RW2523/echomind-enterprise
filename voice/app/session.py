@@ -152,7 +152,7 @@ class OmniSessionA:
         })
         await self.send({"type": "context_ack", "system_prompt": self.system_prompt})
         # Intro TTS: ask user to unmute and speak (plays immediately after connect)
-        intro_phrase = getattr(SETTINGS, "INTRO_PHRASE", "You're connected. Please unmute your microphone and say something to start.")
+        intro_phrase = getattr(SETTINGS, "INTRO_PHRASE", "Hi! I'm here. What would you like to talk about?")
         if intro_phrase and intro_phrase.strip():
             asyncio.create_task(self._play_intro(intro_phrase.strip()))
 

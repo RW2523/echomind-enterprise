@@ -18,8 +18,6 @@ export interface ConversationState {
   isConnected: boolean;
   /** Last interruption timestamp for ripple effect */
   interruptedAt: number;
-  /** Show "Unmute and speak to start" briefly after connect (cleared on first audio or timeout) */
-  showIntroTip: boolean;
 }
 
 export const initialConversationState: ConversationState = {
@@ -27,7 +25,6 @@ export const initialConversationState: ConversationState = {
   assistantOrb: "disconnected",
   isConnected: false,
   interruptedAt: 0,
-  showIntroTip: false,
 };
 
 export function getOrbStateParams(state: OrbState): {

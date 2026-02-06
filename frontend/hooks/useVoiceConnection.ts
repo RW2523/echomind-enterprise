@@ -96,7 +96,6 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
     assistantOrb: "disconnected",
     isConnected: false,
     interruptedAt: 0,
-    showIntroTip: false,
   });
   const [contextValue, setContextValue] = useState("");
   const [connecting, setConnecting] = useState(false);
@@ -226,7 +225,7 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
         setState((prev) => ({
           ...prev,
           isConnected: true,
-          userOrb: "idle",
+          userOrb: "listening",
           assistantOrb: "idle",
         }));
         ws.send(JSON.stringify({ type: "set_context", system_prompt: contextValue, clear_memory: false }));
