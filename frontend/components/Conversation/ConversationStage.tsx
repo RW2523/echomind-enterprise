@@ -84,14 +84,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         </div>
       </div>
 
-      {/* Intro tip: unmute and speak (cleared on first audio or timeout) */}
-      {state.showIntroTip && state.isConnected && (
-        <div className="shrink-0 text-center py-2 text-sm text-[var(--voice-text,#f1f5f9)] opacity-80">
-          Unmute and say something to start.
-        </div>
-      )}
-
-      {/* Orbs row: AI left (larger), You right */}
+      {/* Orbs row: AI left (larger), You right - main focus */}
       <div className="flex-1 flex items-center justify-center gap-12 md:gap-20 min-h-0 py-8">
         {/* Assistant orb (left, larger) */}
         <div className="flex flex-col items-center gap-3">
@@ -130,6 +123,13 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         </div>
       </div>
 
+      {/* Intro tip: unmute and speak (below orbs, cleared on first audio or timeout) */}
+      {state.showIntroTip && state.isConnected && (
+        <div className="shrink-0 text-center py-1 text-sm text-[var(--voice-text,#f1f5f9)] opacity-75">
+          Unmute and say something to start.
+        </div>
+      )}
+
       {/* Controls */}
       <div className="shrink-0 border-t border-white/10 p-4 flex flex-wrap items-center justify-center gap-3">
         {!state.isConnected ? (
@@ -139,7 +139,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
             disabled={connecting}
             className="rounded-xl px-6 py-3 text-sm font-semibold bg-[var(--assistant-color,#00ff9c)] text-black hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
-            {connecting ? "Connecting…" : "Connect"}
+            {connecting ? "Starting…" : "Start"}
           </button>
         ) : (
           <button

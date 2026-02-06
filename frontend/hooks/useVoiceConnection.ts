@@ -226,7 +226,7 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
         setState((prev) => ({
           ...prev,
           isConnected: true,
-          userOrb: "idle",
+          userOrb: "listening",
           assistantOrb: "idle",
           showIntroTip: true,
         }));
@@ -247,8 +247,21 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
         setState((prev) => ({ ...prev, interruptedAt: Date.now(), assistantOrb: "idle", showIntroTip: false }));
         return;
       }
-      if (msg.type === "event" && (msg.event === "SPEAKING" || msg.event === "BACK_TO_LISTENING")) {
-        setState((prev) => (prev.showIntroTip ? { ...prev, showIntroTip: false } : prev));
+      if (msg.type === "event" && msg.event === "SPEAKING") {
+        setState((prev) => ({
+          ...prev,
+          assistantOrb: "speaking",
+          ...(prev.showIntroTip ? { showIntroTip: false } : {}),
+        }));
+        return;
+      }
+      if (msg.type === "event" && msg.event === "BACK_TO_LISTENING") {
+        setState((prev) => ({
+          ...prev,
+          assistantOrb: "idle",
+          ...(prev.showIntroTip ? { showIntroTip: false } : {}),
+        }));
+        return;
       }
       if (msg.type === "asr_final" && msg.text) {
         setState((prev) => ({ ...prev, userOrb: "idle", assistantOrb: "thinking", showIntroTip: false }));
