@@ -7,7 +7,7 @@ interface VoiceConversationProps {
   settings?: AppSettings;
 }
 
-const VoiceConversation: React.FC<VoiceConversationProps> = () => {
+const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings }) => {
   const {
     state,
     userAnalyser,
@@ -19,7 +19,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = () => {
     connect,
     disconnect,
     connecting,
-  } = useVoiceConnection();
+  } = useVoiceConnection({ settings });
 
   return (
     <div

@@ -9,7 +9,17 @@ def init_db():
         conn.execute("CREATE TABLE IF NOT EXISTS chunks(id TEXT PRIMARY KEY, doc_id TEXT, chunk_index INTEGER, text TEXT, source_json TEXT)")
         conn.execute("CREATE TABLE IF NOT EXISTS chats(id TEXT PRIMARY KEY, title TEXT, created_at TEXT)")
         conn.execute("CREATE TABLE IF NOT EXISTS messages(id TEXT PRIMARY KEY, chat_id TEXT, role TEXT, content TEXT, created_at TEXT)")
-        conn.execute("CREATE TABLE IF NOT EXISTS transcripts(id TEXT PRIMARY KEY, raw_text TEXT, polished_text TEXT, tags_json TEXT, created_at TEXT)")
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS transcripts(id TEXT PRIMARY KEY, raw_text TEXT, polished_text TEXT, tags_json TEXT, echotag TEXT, echodate TEXT, created_at TEXT)"
+        )
+        try:
+            conn.execute("ALTER TABLE transcripts ADD COLUMN echotag TEXT")
+        except Exception:
+            pass
+        try:
+            conn.execute("ALTER TABLE transcripts ADD COLUMN echodate TEXT")
+        except Exception:
+            pass
         conn.commit()
 
 @contextmanager

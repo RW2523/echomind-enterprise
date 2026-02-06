@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import json
+import os
 import re
 import time
 from dataclasses import dataclass
@@ -285,6 +286,20 @@ class OmniSessionA:
             # If user checks "clear memory"
             if bool(data.get("clear_memory")):
                 self.history = []
+            # Optional: switch Piper TTS voice if client sent piper_voice (e.g. en_US-lessac-medium)
+            piper_voice = (data.get("piper_voice") or "").strip()
+            if piper_voice:
+                model_path = f"/voices/{piper_voice}.onnx"
+                if os.path.exists(model_path):
+                    try:
+                        self.tts = PiperTTS(
+                            model_path,
+                            speaker_id=SETTINGS.PIPER_SPEAKER,
+                            noise_scale=SETTINGS.PIPER_NOISE_SCALE,
+                            length_scale=SETTINGS.PIPER_LENGTH_SCALE,
+                        )
+                    except Exception:
+                        pass
             await self.send({"type": "context_ack", "system_prompt": self.system_prompt, "cleared": bool(data.get('clear_memory'))})
 
         if t == "clear_memory":

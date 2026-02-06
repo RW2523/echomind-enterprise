@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { AppSettings, PersonaType } from '../types';
+import { AppSettings, PersonaType, PIPER_VOICES } from '../types';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -8,11 +7,10 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
-  const voices: AppSettings['voiceName'][] = ['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'];
   const contextWindows: AppSettings['contextWindow'][] = ['24h', '48h', '1w', 'all'];
   const personas = Object.values(PersonaType);
 
-  const update = (key: keyof AppSettings, val: any) => {
+  const update = (key: keyof AppSettings, val: AppSettings[keyof AppSettings]) => {
     setSettings({ ...settings, [key]: val });
   };
 
@@ -27,8 +25,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
                 key={p}
                 onClick={() => update('persona', p)}
                 className={`p-6 rounded-3xl border transition-all text-left group ${
-                  settings.persona === p 
-                    ? 'bg-cyan-500/10 border-cyan-500/40' 
+                  settings.persona === p
+                    ? 'bg-cyan-500/10 border-cyan-500/40'
                     : 'bg-white/5 border-white/5 hover:border-white/10'
                 }`}
               >
@@ -39,7 +37,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
                   {settings.persona === p && <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>}
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Tailors reasoning style, vocabulary, and response tone for specialized workflows.
+                  Tailors reasoning style, vocabulary, and response tone for specialized workflows. Used in Knowledge Chat and Voice.
                 </p>
               </button>
             ))}
@@ -47,22 +45,23 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
         </section>
 
         <section>
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Voice & Audio</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Voice & Audio (Piper TTS)</h3>
           <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 space-y-6">
             <div className="flex flex-col gap-4">
-              <label className="text-sm font-bold text-slate-300">Active Voice Profile</label>
-              <div className="flex flex-wrap gap-3">
-                {voices.map((v) => (
+              <label className="text-sm font-bold text-slate-300">Piper Voice (en_US)</label>
+              <p className="text-xs text-slate-500 -mt-2">Select the TTS voice for Voice Conversation. Ensure the chosen model is installed on the voice server.</p>
+              <div className="flex flex-wrap gap-3 max-h-48 overflow-y-auto">
+                {PIPER_VOICES.map((v) => (
                   <button
-                    key={v}
-                    onClick={() => update('voiceName', v)}
-                    className={`px-6 py-3 rounded-2xl border text-sm font-semibold transition-all ${
-                      settings.voiceName === v
+                    key={v.id}
+                    onClick={() => update('voiceName', v.id)}
+                    className={`px-4 py-2 rounded-2xl border text-sm font-semibold transition-all shrink-0 ${
+                      settings.voiceName === v.id
                         ? 'bg-violet-600 border-violet-500 text-white shadow-lg'
                         : 'bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    {v}
+                    {v.label}
                   </button>
                 ))}
               </div>

@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import List, Dict, AsyncIterator, Tuple
+from typing import List, Dict, AsyncIterator, Tuple, Optional
 import re
 import logging
+from datetime import datetime, timezone, timedelta
 from ..core.config import settings
 from ..core.db import get_conn
 from .index import index
@@ -9,6 +10,48 @@ from .llm import OpenAICompatChat
 
 logger = logging.getLogger(__name__)
 chat = OpenAICompatChat(settings.LLM_BASE_URL, settings.LLM_MODEL)
+
+CONTEXT_WINDOW_VALUES = ("24h", "48h", "1w", "all")
+
+def _parse_iso_date(created_at: Optional[str]) -> Optional[datetime]:
+    if not created_at:
+        return None
+    try:
+        return datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+def _filter_hits_by_context_window(hits: List[Dict], context_window: str) -> List[Dict]:
+    """Keep only hits whose document created_at falls within context_window (24h, 48h, 1w). 'all' = no filter."""
+    if not context_window or context_window == "all" or not hits:
+        return hits
+    now = datetime.now(timezone.utc)
+    if context_window == "24h":
+        cutoff = now - timedelta(hours=24)
+    elif context_window == "48h":
+        cutoff = now - timedelta(hours=48)
+    elif context_window == "1w":
+        cutoff = now - timedelta(days=7)
+    else:
+        return hits
+    filtered = []
+    with get_conn() as conn:
+        for h in hits:
+            doc_id = (h.get("source") or {}).get("doc_id")
+            if not doc_id:
+                filtered.append(h)
+                continue
+            row = conn.execute("SELECT created_at FROM documents WHERE id = ?", (doc_id,)).fetchone()
+            created_at = row[0] if row else None
+            dt = _parse_iso_date(created_at)
+            if dt is None:
+                filtered.append(h)
+                continue
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if dt >= cutoff:
+                filtered.append(h)
+    return filtered
 
 # Max chars of parent chunk to include when expanding context (avoid blowing context window)
 _PARENT_CONTEXT_MAX_CHARS = 2400
@@ -86,8 +129,8 @@ async def generate_queries(q: str) -> List[str]:
     out=[q] + [v for v in variants if v.lower()!=q.lower()]
     return out[:4]
 
-async def retrieve(question: str, k: int) -> List[Dict]:
-    """Hybrid retrieve: dense (FAISS) + sparse (BM25), merged with RRF."""
+async def retrieve(question: str, k: int, context_window: str = "all") -> List[Dict]:
+    """Hybrid retrieve: dense (FAISS) + sparse (BM25), merged with RRF. Optionally filter by context_window (24h, 48h, 1w, all)."""
     qs = await generate_queries(question)
     k_per_query = max(k, 4)
     dense_hits_per_query: List[List[Dict]] = []
@@ -96,7 +139,8 @@ async def retrieve(question: str, k: int) -> List[Dict]:
         dense_hits_per_query.append(await index.search(q, k_per_query))
         sparse_hits = index.sparse.search(q, k_per_query)
         sparse_hits_per_query.append(sparse_hits)
-    return _reciprocal_rank_fusion(dense_hits_per_query, sparse_hits_per_query, k)
+    hits = _reciprocal_rank_fusion(dense_hits_per_query, sparse_hits_per_query, k)
+    return _filter_hits_by_context_window(hits, context_window or "all")
 
 
 def _get_chunk_text(chunk_id: str) -> str | None:
@@ -121,7 +165,8 @@ async def compress(question: str, chunk_text: str, src: dict) -> str:
         return chunk_text
 
 # RAG generation rules (audit: conversational, grounded, no source exposure)
-_RAG_SYSTEM_PROMPT = """You are EchoMind, a knowledgeable enterprise assistant. Use ONLY the provided context for factual claims.
+def _rag_system_prompt(persona: Optional[str] = None) -> str:
+    base = """You are EchoMind, a knowledgeable enterprise assistant. Use ONLY the provided context for factual claims.
 
 Rules:
 - Answer in a clear, confident, human way. Do not cite sources, mention file names, chunk numbers, or say "according to the document" or "the document says" unless the context explicitly contains that wording.
@@ -129,6 +174,16 @@ Rules:
 - If different parts of the context contradict each other, say so instead of picking one silently.
 - Do not introduce concepts, terms, or section names that do not appear in the context.
 - If the information is not in the context, say so plainly; do not guess or infer."""
+    if persona:
+        base = f"You are EchoMind in the role of: {persona}. Adapt your reasoning style, vocabulary, and tone to this role.\n\n" + base
+    return base
+
+_GENERAL_SYSTEM = "You are EchoMind, a friendly enterprise assistant. The user is greeting you or making small talk. Reply briefly and warmly in one or two sentences. Do not mention documents or sources."
+
+def _general_system_prompt(persona: Optional[str] = None) -> str:
+    if persona:
+        return f"You are EchoMind in the role of: {persona}. The user is greeting you or making small talk. Reply briefly and warmly in one or two sentences, in character. Do not mention documents or sources."
+    return _GENERAL_SYSTEM
 
 async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str], List[Dict], List[str]]:
     """Build numbered context blocks [1], [2], ... with parent expansion. No SOURCE lines (internal grounding only).
@@ -161,30 +216,27 @@ def _rag_context_block(blocks: List[str]) -> str:
     """Format blocks as [1] ... [2] ... (no SOURCE lines)."""
     return "\n\n".join([f"[{i+1}] {b}" for i, b in enumerate(blocks)])
 
-async def _answer_general(question: str, history: List[Dict]) -> Dict:
-    sys = (
-        "You are EchoMind, a friendly enterprise assistant. The user is greeting you or making small talk. "
-        "Reply briefly and warmly in one or two sentences. Do not mention documents or sources."
-    )
+async def _answer_general(question: str, history: List[Dict], persona: Optional[str] = None) -> Dict:
+    sys = _general_system_prompt(persona)
     msgs = [{"role": "system", "content": sys}] + history[-10:] + [{"role": "user", "content": question}]
     ans = await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
     return {"answer": ans, "citations": []}
 
-async def answer(question: str, history: List[Dict]) -> Dict:
+async def answer(question: str, history: List[Dict], persona: Optional[str] = None, context_window: str = "all") -> Dict:
     if _is_general_conversation(question):
-        return await _answer_general(question, history)
+        return await _answer_general(question, history, persona)
 
-    hits = await retrieve(question, settings.TOP_K)
+    hits = await retrieve(question, settings.TOP_K, context_window=context_window or "all")
     best_score = hits[0]["score"] if hits else 0.0
     if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
-        return await _answer_general(question, history)
+        return await _answer_general(question, history, persona)
 
     blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
     logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids})
 
-    msgs = [{"role": "system", "content": _RAG_SYSTEM_PROMPT}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
+    msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
     ans = await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
 
     citations = []
@@ -193,11 +245,8 @@ async def answer(question: str, history: List[Dict]) -> Dict:
     return {"answer": ans, "citations": citations}
 
 
-async def _answer_general_stream(question: str, history: List[Dict]) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
-    sys = (
-        "You are EchoMind, a friendly enterprise assistant. The user is greeting you or making small talk. "
-        "Reply briefly and warmly in one or two sentences. Do not mention documents or sources."
-    )
+async def _answer_general_stream(question: str, history: List[Dict], persona: Optional[str] = None) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
+    sys = _general_system_prompt(persona)
     msgs = [{"role": "system", "content": sys}] + history[-10:] + [{"role": "user", "content": question}]
     full = []
     async for delta in chat.chat_stream(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS):
@@ -205,20 +254,20 @@ async def _answer_general_stream(question: str, history: List[Dict]) -> AsyncIte
         yield ("chunk", delta, None)
     yield ("done", "".join(full).strip(), [])
 
-async def answer_stream(question: str, history: List[Dict]) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
+async def answer_stream(question: str, history: List[Dict], persona: Optional[str] = None, context_window: str = "all") -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
     """
     Same RAG as answer(), but stream the final LLM response. Yields ("chunk", delta, None) then ("done", full_answer, citations).
     General conversation or low-relevance → no RAG, no citations. Citations only returned when RAG_EXPOSE_SOURCES.
     """
     if _is_general_conversation(question):
-        async for ev in _answer_general_stream(question, history):
+        async for ev in _answer_general_stream(question, history, persona):
             yield ev
         return
 
-    hits = await retrieve(question, settings.TOP_K)
+    hits = await retrieve(question, settings.TOP_K, context_window=context_window or "all")
     best_score = hits[0]["score"] if hits else 0.0
     if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
-        async for ev in _answer_general_stream(question, history):
+        async for ev in _answer_general_stream(question, history, persona):
             yield ev
         return
 
@@ -227,7 +276,7 @@ async def answer_stream(question: str, history: List[Dict]) -> AsyncIterator[Tup
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
     logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids})
 
-    msgs = [{"role": "system", "content": _RAG_SYSTEM_PROMPT}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
+    msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
     citations = []
     if getattr(settings, "RAG_EXPOSE_SOURCES", False):
         citations = [{"filename": c["source"].get("filename"), "chunk_index": c["source"].get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]

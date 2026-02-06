@@ -40,26 +40,35 @@ async def polish(inp: PolishIn):
 class StoreIn(BaseModel):
     raw_text: str
     polished_text: str | None = None
+    echotag: str | None = None  # Optional tag/category; if not set, derived from tags
 
 @router.post("/store")
 async def store(inp: StoreIn):
     tid = new_id("trn")
-    tags=[]
+    echodate = now_iso()
+    tags = []
     try:
         tag_txt = await chat.chat(
             [{"role":"system","content":"Extract 3-6 short topic tags. Return comma-separated tags only."},
              {"role":"user","content":inp.raw_text[:3500]}],
             temperature=0.0, max_tokens=60
         )
-        tags=[t.strip() for t in tag_txt.split(",") if t.strip()][:8]
+        tags = [t.strip() for t in tag_txt.split(",") if t.strip()][:8]
     except Exception:
-        tags=[]
+        tags = []
+    echotag = (inp.echotag or "").strip() or (",".join(tags) if tags else "transcript")
     with get_conn() as conn:
-        conn.execute("INSERT INTO transcripts (id, raw_text, polished_text, tags_json, created_at) VALUES (?,?,?,?,?)",
-                     (tid, inp.raw_text, inp.polished_text, json.dumps(tags), now_iso()))
+        conn.execute(
+            "INSERT INTO transcripts (id, raw_text, polished_text, tags_json, echotag, echodate, created_at) VALUES (?,?,?,?,?,?,?)",
+            (tid, inp.raw_text, inp.polished_text, json.dumps(tags), echotag, echodate, echodate),
+        )
         conn.commit()
     try:
-        await index.add_text(f"transcript_{tid}", inp.raw_text + ("\n\n"+inp.polished_text if inp.polished_text else ""), {"type":"transcript","tags":tags,"created_at":now_iso()})
+        await index.add_text(
+            f"transcript_{tid}",
+            inp.raw_text + ("\n\n" + inp.polished_text if inp.polished_text else ""),
+            {"type": "transcript", "tags": tags, "echotag": echotag, "echodate": echodate, "created_at": echodate},
+        )
     except Exception:
         pass
-    return {"transcript_id": tid, "tags": tags, "created_at": now_iso()}
+    return {"transcript_id": tid, "tags": tags, "echotag": echotag, "echodate": echodate, "created_at": echodate}

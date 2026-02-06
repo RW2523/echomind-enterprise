@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { voiceWsUrl } from "../services/backend";
 import type { ConversationState } from "../components/Conversation/ChatState";
+import type { AppSettings } from "../types";
 
 const LISTENING_THRESHOLD = 18;
 const MIC_CHECK_MS = 150;
@@ -86,7 +87,12 @@ export interface UseVoiceConnectionReturn {
   connecting: boolean;
 }
 
-export function useVoiceConnection(): UseVoiceConnectionReturn {
+export interface UseVoiceConnectionOptions {
+  settings?: AppSettings | null;
+}
+
+export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoiceConnectionReturn {
+  const settings = options?.settings;
   const [state, setState] = useState<ConversationState>({
     userOrb: "disconnected",
     assistantOrb: "disconnected",
@@ -122,7 +128,7 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
     playingRef.current = true;
     const item = playQueueRef.current.shift()!;
     const buf = ctx.createBuffer(1, item.f32.length, ctx.sampleRate);
-    buf.copyToChannel(item.f32, 0);
+    buf.copyToChannel(item.f32 as Float32Array, 0);
     const analyser = playbackAnalyserRef.current!;
     const src = ctx.createBufferSource();
     src.buffer = buf;
@@ -217,7 +223,14 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
         }));
         micAboveCountRef.current = 0;
         micBelowCountRef.current = 0;
-        ws.send(JSON.stringify({ type: "set_context", system_prompt: contextValue, clear_memory: false }));
+        const personaPrefix = settings?.persona ? `You are EchoMind in the role of: ${settings.persona}. Be concise, helpful, and conversational. ` : "";
+        const systemPrompt = personaPrefix + (contextValue || "").trim() || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
+        ws.send(JSON.stringify({
+          type: "set_context",
+          system_prompt: systemPrompt,
+          clear_memory: false,
+          piper_voice: settings?.voiceName ?? undefined,
+        }));
       } catch (e) {
         console.error(e);
         setState((prev) => ({ ...prev, userOrb: "disconnected", assistantOrb: "disconnected" }));
@@ -265,7 +278,7 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
       setConnecting(false);
     };
     ws.onerror = () => setConnecting(false);
-  }, [contextValue, enqueuePlayback, smoothStop]);
+  }, [contextValue, settings?.persona, settings?.voiceName, enqueuePlayback, smoothStop]);
 
   const disconnect = useCallback(async () => {
     if (workletRef.current) {
@@ -333,9 +346,10 @@ export function useVoiceConnection(): UseVoiceConnectionReturn {
   const applyContext = useCallback(() => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    const prompt = typeof contextValue === "string" ? contextValue : "";
-    ws.send(JSON.stringify({ type: "set_context", system_prompt: prompt, clear_memory: false }));
-  }, [contextValue]);
+    const personaPrefix = settings?.persona ? `You are EchoMind in the role of: ${settings.persona}. Be concise, helpful, and conversational. ` : "";
+    const systemPrompt = personaPrefix + (typeof contextValue === "string" ? contextValue : "").trim() || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
+    ws.send(JSON.stringify({ type: "set_context", system_prompt: systemPrompt, clear_memory: false, piper_voice: settings?.voiceName ?? undefined }));
+  }, [contextValue, settings?.persona, settings?.voiceName]);
 
   const clearMemory = useCallback(() => {
     const ws = wsRef.current;

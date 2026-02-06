@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ChatMessage, DocumentChunk } from '../types';
+import { ChatMessage, DocumentChunk, AppSettings } from '../types';
 import { ICONS } from '../constants';
 import Uploader from './Uploader';
 import { createChat, askChatStream, listDocuments, deleteDocument, DocListItem } from '../services/backend';
+
+interface KnowledgeChatProps {
+  settings?: AppSettings | null;
+}
 
 /** Styled Markdown renderer for assistant messages: headings, lists, bold, code, blockquotes. */
 const markdownComponents: React.ComponentProps<typeof ReactMarkdown>['components'] = {
@@ -44,7 +48,7 @@ function uniqueFileNames(citations: DocumentChunk[]): string[] {
   return (citations || []).map(c => c.docName).filter(name => { if (seen.has(name)) return false; seen.add(name); return true; });
 }
 
-const KnowledgeChat: React.FC = () => {
+const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -112,6 +116,9 @@ const KnowledgeChat: React.FC = () => {
         onError: (err) => {
           setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
         }
+      }, {
+        persona: settings?.persona ?? undefined,
+        context_window: settings?.contextWindow ?? undefined,
       });
     } catch (err: any) {
       setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));

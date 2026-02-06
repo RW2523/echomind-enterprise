@@ -73,12 +73,18 @@ export type AskChatStreamCallbacks = {
 export async function askChatStream(
   chatId: string,
   message: string,
-  callbacks: AskChatStreamCallbacks
+  callbacks: AskChatStreamCallbacks,
+  options?: { persona?: string | null; context_window?: string | null }
 ): Promise<void> {
   const r = await fetch(`${API_BASE}/api/chat/ask-stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, message }),
+    body: JSON.stringify({
+      chat_id: chatId,
+      message,
+      persona: options?.persona ?? undefined,
+      context_window: options?.context_window ?? undefined,
+    }),
   });
   if (!r.ok) {
     const err = new Error(`ask stream failed: ${r.status}`);
@@ -147,11 +153,19 @@ export async function getTranscriptTags(rawText: string): Promise<{ tags: string
   return await r.json();
 }
 
-export async function storeTranscript(rawText: string, polishedText?: string|null): Promise<any> {
+export async function storeTranscript(
+  rawText: string,
+  polishedText?: string | null,
+  echotag?: string | null
+): Promise<{ transcript_id: string; tags: string[]; echotag: string; echodate: string; created_at: string }> {
   const r = await fetch(`${API_BASE}/api/transcribe/store`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ raw_text: rawText, polished_text: polishedText ?? null }),
+    body: JSON.stringify({
+      raw_text: rawText,
+      polished_text: polishedText ?? null,
+      echotag: echotag ?? null,
+    }),
   });
   if (!r.ok) throw new Error(`store failed: ${r.status}`);
   return await r.json();

@@ -22,13 +22,19 @@ async def create_chat(inp: CreateChatIn):
 class AskIn(BaseModel):
     chat_id: str
     message: str
+    persona: str | None = None
+    context_window: str | None = None
 
 @router.post("/ask")
 async def ask(inp: AskIn):
     with get_conn() as conn:
         rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
-    history=[{"role":r[0], "content":r[1]} for r in rows]
-    out = await answer_with_citations(inp.message, history)
+    history = [{"role": r[0], "content": r[1]} for r in rows]
+    out = await answer_with_citations(
+        inp.message, history,
+        persona=inp.persona,
+        context_window=inp.context_window or "all",
+    )
 
     with get_conn() as conn:
         conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
@@ -53,7 +59,11 @@ async def ask_stream(inp: AskIn):
             conn.commit()
 
         try:
-            async for kind, text, citations in answer_stream(inp.message, history):
+            async for kind, text, citations in answer_stream(
+                inp.message, history,
+                persona=inp.persona,
+                context_window=inp.context_window or "all",
+            ):
                 if kind == "chunk":
                     yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"
                 elif kind == "done":

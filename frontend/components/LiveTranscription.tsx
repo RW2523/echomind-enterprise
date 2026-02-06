@@ -163,9 +163,10 @@ const LiveTranscription: React.FC = () => {
   const store = async () => {
     const raw = (fullTranscript || '').trim();
     if (!raw) return;
+    const echotag = previewTags?.tags?.length ? previewTags.tags.join(', ') : undefined;
     try {
-      await storeTranscript(raw, polished || null);
-      alert('Stored into EchoMind knowledge base.');
+      const result = await storeTranscript(raw, polished || null, echotag);
+      alert(`Stored into EchoMind knowledge base. (echotag: ${result.echotag ?? '—'}, echodate: ${result.echodate ?? result.created_at ?? '—'})`);
     } catch (e) {
       console.error(e);
       alert((e as Error)?.message || 'Store failed');

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { AppView, AppSettings, PersonaType } from './types';
 import { ICONS, COLORS } from './constants';
 import Sidebar from './components/Sidebar';
@@ -9,20 +8,52 @@ import LiveTranscription from './components/LiveTranscription';
 import VoiceConversation from './components/VoiceConversation';
 import Settings from './components/Settings';
 
+const SETTINGS_KEY = "echomind_settings";
+
+const defaultSettings: AppSettings = {
+  voiceName: 'en_US-lessac-medium',
+  contextWindow: 'all',
+  persona: PersonaType.GENERAL,
+  model: '-3-pro-preview',
+  developerMode: false,
+};
+
+function loadSettings(): AppSettings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AppSettings>;
+      return {
+        voiceName: parsed.voiceName ?? defaultSettings.voiceName,
+        contextWindow: parsed.contextWindow ?? defaultSettings.contextWindow,
+        persona: parsed.persona ?? defaultSettings.persona,
+        model: parsed.model ?? defaultSettings.model,
+        developerMode: parsed.developerMode ?? defaultSettings.developerMode,
+      };
+    }
+  } catch (_) {}
+  return defaultSettings;
+}
+
+function saveSettings(s: AppSettings) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  } catch (_) {}
+}
+
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<AppView>(AppView.KNOWLEDGE_CHAT);
-  const [settings, setSettings] = useState<AppSettings>({
-    voiceName: 'Zephyr',
-    contextWindow: 'all',
-    persona: PersonaType.GENERAL,
-    model: '-3-pro-preview',
-    developerMode: false
-  });
+  const [settings, setSettingsState] = useState<AppSettings>(() => loadSettings());
+
+  const setSettings = useCallback((s: AppSettings) => {
+    setSettingsState(s);
+    saveSettings(s);
+  }, []);
 
   const renderView = () => {
     switch (activeView) {
       case AppView.KNOWLEDGE_CHAT:
-        return <KnowledgeChat />;
+        return <KnowledgeChat settings={settings} />;
       case AppView.TRANSCRIPTION:
         return <LiveTranscription />;
       case AppView.VOICE_CONVERSATION:
@@ -30,7 +61,7 @@ const App: React.FC = () => {
       case AppView.SETTINGS:
         return <Settings settings={settings} setSettings={setSettings} />;
       default:
-        return <KnowledgeChat />;
+        return <KnowledgeChat settings={settings} />;
     }
   };
 
