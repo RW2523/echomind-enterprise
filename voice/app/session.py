@@ -109,6 +109,9 @@ class OmniSessionA:
         self.silence_count = 0
         self.speech_count = 0
         self.utt = UtteranceBuffer(max_ms=15000)
+        self._speech_lead_count = 0  # consecutive speech frames before we treat as user speech (barge-in robustness)
+        self._assistant_is_speaking = False
+        self._assistant_active_gen: Optional[int] = None
 
         self.stt = WhisperSTT(SETTINGS.WHISPER_MODEL)
         self.llm = OpenAICompatLLMStream(
@@ -148,6 +151,42 @@ class OmniSessionA:
             "note": "v5.1: adds Context box + conversation memory. Set context then speak; it remembers prior turns."
         })
         await self.send({"type": "context_ack", "system_prompt": self.system_prompt})
+        # Intro TTS: ask user to unmute and speak (plays immediately after connect)
+        intro_phrase = getattr(SETTINGS, "INTRO_PHRASE", "You're connected. Please unmute your microphone and say something to start.")
+        if intro_phrase and intro_phrase.strip():
+            asyncio.create_task(self._play_intro(intro_phrase.strip()))
+
+    async def _play_intro(self, phrase: str):
+        """Play intro TTS once after start; respects barge-in (generation_id)."""
+        my_gen = self.generation_id
+        self._assistant_is_speaking = True
+        try:
+            await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
+            try:
+                y = self.tts.synth(phrase)
+                sr = self.tts.sr
+            except Exception as e:
+                await self.send({"type": "error", "where": "tts_intro", "message": str(e), "generation_id": my_gen})
+                return
+            chunk = int(sr * 0.22)
+            i = 0
+            while i < y.size:
+                if my_gen != self.generation_id:
+                    return
+                part = y[i:i+chunk]
+                i += chunk
+                await self.send({
+                    "type": "audio_out",
+                    "generation_id": my_gen,
+                    "sample_rate": sr,
+                    "playback_rate": 1.0,
+                    "pcm16_raw": float32_to_pcm16_bytes(part.astype(np.float32))
+                })
+                await asyncio.sleep(0.0)
+        finally:
+            if self._assistant_is_speaking and self.generation_id == my_gen:
+                self._assistant_is_speaking = False
+            await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": self.generation_id})
 
     async def close(self):
         self._closed = True
@@ -274,19 +313,25 @@ class OmniSessionA:
             if is_speech:
                 self.silence_count = 0
                 self.speech_count += 1
+                self._speech_lead_count += 1
 
-                if not self.in_speech:
+                lead_idle = max(1, getattr(SETTINGS, "BARGE_IN_SPEECH_LEAD_IDLE", 2))
+                lead_active = max(1, getattr(SETTINGS, "BARGE_IN_SPEECH_LEAD_ACTIVE", 6))
+                need_lead = lead_active if self._assistant_active() else lead_idle
+
+                if not self.in_speech and self._speech_lead_count >= need_lead:
                     self.in_speech = True
                     self.utt.reset()
-                    self._barge_in()
-                    await self.send({"type": "cancel", "generation_id": self.generation_id})
+                    await self._cancel_assistant_pipeline(keep_listening=True, send_cancel=True)
                     await self.send({"type": "event", "event": "USER_SPEECH_START", "generation_id": self.generation_id})
                     if self.moshi:
                         asyncio.create_task(self.moshi.cancel(self.generation_id))
 
-                self.utt.push(fr)
+                if self.in_speech:
+                    self.utt.push(fr)
 
             else:
+                self._speech_lead_count = 0
                 if self.in_speech:
                     self.silence_count += 1
                     if self.tail_frames > 0:
@@ -328,6 +373,7 @@ class OmniSessionA:
         self.turn_id += 1
         await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
         await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
+        self._assistant_active_gen = my_gen
 
         # Build messages with memory
         messages = self._build_messages(user_text)
@@ -384,6 +430,7 @@ class OmniSessionA:
                 reply = self.llm.complete_messages(messages)
             except Exception as e2:
                 await self.send({"type": "error", "where": "llm", "message": str(e2), "generation_id": my_gen})
+                self._assistant_active_gen = None
                 return
             await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply})
             await self._speak_phrase(my_gen, reply)
@@ -391,8 +438,9 @@ class OmniSessionA:
             self.history.append({"role": "user", "content": user_text})
             self.history.append({"role": "assistant", "content": reply})
             self._trim_history()
-            await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
-            return
+        await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
+        self._assistant_active_gen = None
+        return
 
         if my_gen != self.generation_id:
             return
@@ -407,6 +455,7 @@ class OmniSessionA:
         self._trim_history()
 
         await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
+        self._assistant_active_gen = None
 
     async def _commit_phrase(self, my_gen: int, phrase: str):
         phrase = (phrase or "").strip()
@@ -421,33 +470,37 @@ class OmniSessionA:
     async def _speak_phrase(self, my_gen: int, phrase: str, is_filler: bool = False):
         if my_gen != self.generation_id:
             return
-
-        rate = 1.0
-        if SETTINGS.EMOTION_MODE and not is_filler:
-            rate = detect_emotion_playback_rate(phrase)
-
+        self._assistant_is_speaking = True
         try:
-            y = self.tts.synth(phrase)
-            sr = self.tts.sr
-        except Exception as e:
-            await self.send({"type": "error", "where": "tts", "message": str(e), "generation_id": my_gen})
-            return
+            rate = 1.0
+            if SETTINGS.EMOTION_MODE and not is_filler:
+                rate = detect_emotion_playback_rate(phrase)
 
-        chunk = int(sr * 0.22)
-        i = 0
-        while i < y.size:
-            if my_gen != self.generation_id:
+            try:
+                y = self.tts.synth(phrase)
+                sr = self.tts.sr
+            except Exception as e:
+                await self.send({"type": "error", "where": "tts", "message": str(e), "generation_id": my_gen})
                 return
-            part = y[i:i+chunk]
-            i += chunk
-            await self.send({
-                "type": "audio_out",
-                "generation_id": my_gen,
-                "sample_rate": sr,
-                "playback_rate": rate,
-                "pcm16_raw": float32_to_pcm16_bytes(part.astype(np.float32))
-            })
-            await asyncio.sleep(0.0)
+
+            chunk = int(sr * 0.22)
+            i = 0
+            while i < y.size:
+                if my_gen != self.generation_id:
+                    return
+                part = y[i:i+chunk]
+                i += chunk
+                await self.send({
+                    "type": "audio_out",
+                    "generation_id": my_gen,
+                    "sample_rate": sr,
+                    "playback_rate": rate,
+                    "pcm16_raw": float32_to_pcm16_bytes(part.astype(np.float32))
+                })
+                await asyncio.sleep(0.0)
+        finally:
+            if self.generation_id == my_gen:
+                self._assistant_is_speaking = False
 
     async def _moshi_recv_loop(self):
         while not self._closed and self.moshi:

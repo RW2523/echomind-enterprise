@@ -84,6 +84,13 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         </div>
       </div>
 
+      {/* Intro tip: unmute and speak (cleared on first audio or timeout) */}
+      {state.showIntroTip && state.isConnected && (
+        <div className="shrink-0 text-center py-2 text-sm text-[var(--voice-text,#f1f5f9)] opacity-80">
+          Unmute and say something to start.
+        </div>
+      )}
+
       {/* Orbs row: AI left (larger), You right */}
       <div className="flex-1 flex items-center justify-center gap-12 md:gap-20 min-h-0 py-8">
         {/* Assistant orb (left, larger) */}

@@ -10,6 +10,9 @@ class Settings:
     ENDPOINT_SILENCE_MS: int = int(os.getenv("ENDPOINT_SILENCE_MS", "450"))
     MIN_SPEECH_MS: int = int(os.getenv("MIN_SPEECH_MS", "250"))
     END_TAIL_MS: int = int(os.getenv("END_TAIL_MS", "120"))
+    # Barge-in: require this many consecutive speech frames before treating as user speech (reduces false triggers from noise)
+    BARGE_IN_SPEECH_LEAD_IDLE: int = int(os.getenv("BARGE_IN_SPEECH_LEAD_IDLE", "2"))   # when assistant idle
+    BARGE_IN_SPEECH_LEAD_ACTIVE: int = int(os.getenv("BARGE_IN_SPEECH_LEAD_ACTIVE", "6"))  # when assistant speaking (stricter)
 
     WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "base")
 
@@ -38,5 +41,8 @@ class Settings:
     MOSHI_URL: str = os.getenv("MOSHI_URL", "ws://127.0.0.1:8080/ws")
     USE_MOSHI_CORE: bool = os.getenv("USE_MOSHI_CORE", "0") == "1"
     MOSHI_SUPPORTS_TEXT_INJECT: bool = os.getenv("MOSHI_SUPPORTS_TEXT_INJECT", "0") == "1"
+
+    # Intro phrase spoken by TTS when session starts (unmute prompt)
+    INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "You're connected. Please unmute your microphone and say something to start.")
 
 SETTINGS = Settings()
