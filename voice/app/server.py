@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .session import OmniSessionA
 
-app = FastAPI(title="Unmute Path A v5.1 (Context + Memory)")
+app = FastAPI(title="(Context + Memory)")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")

@@ -93,7 +93,7 @@ class UtteranceBuffer:
         return pcm16_bytes_to_float32(pcm)
 
 class OmniSessionA:
-    """Unmute-like session:
+    """Convo-like session:
     - VAD endpointing -> Whisper final ASR
     - LLM streaming with conversation memory
     - Phrase commit -> Piper TTS streaming
@@ -172,7 +172,7 @@ class OmniSessionA:
             "note": "v5.1: adds Context box + conversation memory. Set context then speak; it remembers prior turns."
         })
         await self.send({"type": "context_ack", "system_prompt": self.system_prompt})
-        # Intro TTS: ask user to unmute and speak (plays immediately after connect)
+        # Intro TTS: ask user to  and speak (plays immediately after connect)
         intro_phrase = getattr(SETTINGS, "INTRO_PHRASE", "Hi! I'm here. What would you like to talk about?")
         if intro_phrase and intro_phrase.strip():
             asyncio.create_task(self._play_intro(intro_phrase.strip()))
