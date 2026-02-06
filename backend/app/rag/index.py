@@ -3,12 +3,12 @@ import os, json
 import numpy as np
 import faiss
 from typing import Dict, List
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from ..core.config import settings
 from ..core.db import get_conn
 from ..utils.ids import new_id, now_iso
 from .embeddings import OllamaEmbeddings
 from .sparse import Bm25Index
+from .chunking import chunk_document
 
 class FaissIndex:
     def __init__(self):
@@ -37,32 +37,37 @@ class FaissIndex:
         if self.index is None:
             self.index = faiss.IndexFlatIP(dim)
 
-    async def add_document(self, filename:str, filetype:str, text:str, meta:dict) -> dict:
-        splitter = RecursiveCharacterTextSplitter(chunk_size=settings.CHUNK_SIZE, chunk_overlap=settings.CHUNK_OVERLAP)
-        chunks=[c.strip() for c in splitter.split_text(text or "") if c.strip()]
-        if not chunks: raise ValueError("No text extracted")
-        vecs = await self.emb.embed(chunks)
+    async def add_document(self, filename: str, filetype: str, text: str, meta: dict) -> dict:
+        doc_id = new_id("doc")
+        all_chunks = chunk_document(text or "", doc_id)
+        if not all_chunks:
+            raise ValueError("No text extracted")
+        embed_chunks = [c for c in all_chunks if not c.is_parent]
+        texts_to_embed = [c.text for c in embed_chunks]
+        vecs = await self.emb.embed(texts_to_embed)
         faiss.normalize_L2(vecs)
         await self._ensure_index(int(vecs.shape[1]))
 
-        doc_id = new_id("doc")
         with get_conn() as conn:
-            conn.execute("INSERT INTO documents (id, filename, filetype, created_at, meta_json) VALUES (?,?,?,?,?)",
-                         (doc_id, filename, filetype, now_iso(), json.dumps(meta)))
-            for i, chunk_text in enumerate(chunks):
-                chunk_id = new_id("chk")
-                src={"doc_id":doc_id,"filename":filename,"chunk_index":i,"filetype":filetype}
-                conn.execute("INSERT INTO chunks (id, doc_id, chunk_index, text, source_json) VALUES (?,?,?,?,?)",
-                             (chunk_id, doc_id, i, chunk_text, json.dumps(src)))
-                self.meta["chunk_ids"].append(chunk_id)
-                self.meta["source_by_chunk"][chunk_id]=src
+            conn.execute(
+                "INSERT INTO documents (id, filename, filetype, created_at, meta_json) VALUES (?,?,?,?,?)",
+                (doc_id, filename, filetype, now_iso(), json.dumps(meta)),
+            )
+            for c in all_chunks:
+                src = c.to_source_dict(filename, filetype)
+                conn.execute(
+                    "INSERT INTO chunks (id, doc_id, chunk_index, text, source_json) VALUES (?,?,?,?,?)",
+                    (c.chunk_id, doc_id, c.chunk_index, c.text, json.dumps(src)),
+                )
             conn.commit()
 
+        for c in embed_chunks:
+            self.meta["chunk_ids"].append(c.chunk_id)
+            self.meta["source_by_chunk"][c.chunk_id] = c.to_source_dict(filename, filetype)
         self.index.add(vecs.astype(np.float32))
         self._save()
-        new_ids = self.meta["chunk_ids"][-len(chunks):]
-        self.sparse.add_chunks(new_ids, chunks)
-        return {"doc_id": doc_id, "chunks": len(chunks)}
+        self.sparse.add_chunks([c.chunk_id for c in embed_chunks], texts_to_embed)
+        return {"doc_id": doc_id, "chunks": len(embed_chunks)}
 
     async def add_text(self, title:str, text:str, meta:dict) -> dict:
         return await self.add_document(title, "text", text, meta)
@@ -74,8 +79,14 @@ class FaissIndex:
             conn.execute("DELETE FROM documents WHERE id=?", (doc_id,))
             conn.commit()
             rows = conn.execute("SELECT id, text, source_json FROM chunks ORDER BY doc_id, chunk_index").fetchall()
-        remaining_ids = [r[0] for r in rows]
-        remaining_texts = [r[1] for r in rows]
+        remaining_ids = []
+        remaining_texts = []
+        for r in rows:
+            src = json.loads(r[2]) if isinstance(r[2], str) else r[2]
+            if src.get("is_parent"):
+                continue
+            remaining_ids.append(r[0])
+            remaining_texts.append(r[1])
         if not remaining_ids:
             self.meta = {"chunk_ids": [], "source_by_chunk": {}}
             self.index = None
