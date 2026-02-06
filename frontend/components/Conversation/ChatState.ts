@@ -37,9 +37,9 @@ export function getOrbStateParams(state: OrbState): {
 } {
   switch (state) {
     case "idle":
-      return { glowIntensity: 0.18, ringThickness: 2, waveAmplitude: 0, particleCount: 6, pulseSpeed: 0, rotationSpeed: 0.08 };
     case "listening":
-      return { glowIntensity: 0.4, ringThickness: 2.5, waveAmplitude: 0.06, particleCount: 10, pulseSpeed: 0.5, rotationSpeed: 0.12 };
+      // Same visual for idle and listening so the orb doesn't change when user starts speaking
+      return { glowIntensity: 0.24, ringThickness: 2, waveAmplitude: 0.03, particleCount: 7, pulseSpeed: 0.15, rotationSpeed: 0.08 };
     case "thinking":
       return { glowIntensity: 0.3, ringThickness: 2, waveAmplitude: 0.02, particleCount: 8, pulseSpeed: 0.3, rotationSpeed: 0.1 };
     case "speaking":

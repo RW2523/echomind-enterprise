@@ -84,7 +84,9 @@ export function useOrbVisualizer(
         ctx.translate(-centerX, -centerY);
       }
 
-      const glowIntensity = stateParams.glowIntensity * (isActive ? 1.15 : 0.85);
+      // Keep same glow for idle/listening so orb doesn't change when user starts speaking
+      const stableUserVisual = orbState === "idle" || orbState === "listening";
+      const glowIntensity = stateParams.glowIntensity * (stableUserVisual ? 1 : isActive ? 1.15 : 0.85);
       const hasPulse = stateParams.pulseSpeed > 0 && (orbState === "listening" || orbState === "speaking" || orbState === "thinking");
       const pulse = hasPulse ? 1 + 0.02 * Math.sin(time * 0.002 * stateParams.pulseSpeed * 60) : 1;
       const r = radius * pulse;

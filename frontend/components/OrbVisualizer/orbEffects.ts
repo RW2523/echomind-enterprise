@@ -182,14 +182,16 @@ export function drawOrbitingParticles(
   const [r, g, b] = hexToRgb(color);
   const orbitRadius = radius * 1.08;
   const particleRadius = Math.max(1, radius * 0.025);
-  const isActive = state === "speaking" || state === "listening";
-  const speed = isActive ? (state === "speaking" ? 0.5 : 0.4) : 0;
+  // Same motion for idle and listening so orb doesn't change when user starts speaking
+  const isSpeaking = state === "speaking";
+  const isListeningOrIdle = state === "listening" || state === "idle";
+  const speed = isSpeaking ? 0.5 : isListeningOrIdle ? 0.2 : 0;
 
   for (let i = 0; i < count; i++) {
     const baseAngle = (i / count) * Math.PI * 2 + time * speed;
     const x = centerX + orbitRadius * Math.cos(baseAngle);
     const y = centerY + orbitRadius * Math.sin(baseAngle);
-    const alpha = isActive ? 0.35 + 0.15 * Math.sin(time * 1.2 + i) : 0.25;
+    const alpha = isSpeaking ? 0.35 + 0.15 * Math.sin(time * 1.2 + i) : isListeningOrIdle ? 0.28 : 0.25;
     ctx.save();
     ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
     ctx.beginPath();
