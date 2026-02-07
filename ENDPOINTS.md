@@ -11,8 +11,8 @@ Quick reference to confirm all endpoints and frontend calls are connected.
 | POST | `/api/chat/create` | `{title}` | `{chat_id}` | `createChat()` in KnowledgeChat |
 | POST | `/api/chat/ask` | `{chat_id, message}` | `{answer, citations[]}` | `askChat()` in KnowledgeChat |
 | WS | `/api/transcribe/ws` | `{type:"audio", pcm16_b64}` / `{type:"stop"}` | `ready` / `partial` / `final` / `error` | `transcribeWsUrl()` + LiveTranscription |
-| POST | `/api/transcribe/polish` | `{raw_text}` | `{polished}` | `polishTranscript()` in LiveTranscription |
-| POST | `/api/transcribe/store` | `{raw_text, polished_text?}` | `{transcript_id, tags, created_at}` | `storeTranscript()` in LiveTranscription |
+| POST | `/api/transcribe/refine` | `{raw_text}` | `{refined}` | `refineTranscript()` in LiveTranscription |
+| POST | `/api/transcribe/store` | `{raw_text, refined_text?}` | `{transcript_id, tags, created_at}` | `storeTranscript()` in LiveTranscription |
 
 ## Voice app (served at `voice:8000` in Docker; nginx proxies `/voice/` → voice)
 

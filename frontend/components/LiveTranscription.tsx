@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ICONS } from '../constants';
-import { polishTranscript, storeTranscript, getTranscriptTags, transcribeWsUrl } from '../services/backend';
+import { refineTranscript, storeTranscript, getTranscriptTags, transcribeWsUrl } from '../services/backend';
 
 const SR = 16000;
 
@@ -29,7 +29,7 @@ const LiveTranscription: React.FC = () => {
   const [fullTranscript, setFullTranscript] = useState('');
   const [partial, setPartial] = useState('');
   const [listening, setListening] = useState(false);
-  const [polished, setPolished] = useState<string>('');
+  const [refined, setRefined] = useState<string>('');
   const [wsStatus, setWsStatus] = useState<'idle' | 'connecting' | 'loading' | 'ready' | 'error'>('idle');
   const [wsError, setWsError] = useState<string | null>(null);
   const [previewTags, setPreviewTags] = useState<{ tags: string[]; conversation_type: string } | null>(null);
@@ -41,7 +41,7 @@ const LiveTranscription: React.FC = () => {
 
   const start = async () => {
     if (listening) return;
-    setFullTranscript(''); setPartial(''); setPolished(''); setWsError(null);
+    setFullTranscript(''); setPartial(''); setRefined(''); setWsError(null);
     setWsStatus('connecting');
     const ws = new WebSocket(transcribeWsUrl());
     wsRef.current = ws;
@@ -68,6 +68,10 @@ const LiveTranscription: React.FC = () => {
         if (msg.type === 'final') {
           setFullTranscript((msg.text ?? '').trim());
           setPartial('');
+        }
+        if (msg.type === 'stored') {
+          // Auto-store completed when user stopped; optional brief feedback
+          setWsError(null);
         }
         if (msg.type === 'error') {
           console.error(msg.message);
@@ -113,6 +117,9 @@ const LiveTranscription: React.FC = () => {
       return;
     }
 
+    // Start session with auto_store so the live transcript is stored to the knowledge base when user stops.
+    ws.send(JSON.stringify({ type: 'start', auto_store: true, sample_rate: SR }));
+
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     recRef.current = stream;
 
@@ -148,15 +155,15 @@ const LiveTranscription: React.FC = () => {
     setListening(false);
   };
 
-  const polish = async () => {
+  const refine = async () => {
     const raw = (fullTranscript || '').trim();
     if (!raw) return;
     try {
-      const out = await polishTranscript(raw);
-      setPolished(out.polished ?? '');
+      const out = await refineTranscript(raw);
+      setRefined(out.refined ?? '');
     } catch (e) {
       console.error(e);
-      alert((e as Error)?.message || 'Polish failed');
+      alert((e as Error)?.message || 'Refine failed');
     }
   };
 
@@ -165,7 +172,7 @@ const LiveTranscription: React.FC = () => {
     if (!raw) return;
     const echotag = previewTags?.tags?.length ? previewTags.tags.join(', ') : undefined;
     try {
-      const result = await storeTranscript(raw, polished || null, echotag);
+      const result = await storeTranscript(raw, refined || null, echotag);
       alert(`Stored into EchoMind knowledge base. (echotag: ${result.echotag ?? '—'}, echodate: ${result.echodate ?? result.created_at ?? '—'})`);
     } catch (e) {
       console.error(e);
@@ -249,7 +256,7 @@ const LiveTranscription: React.FC = () => {
           ) : (
             <button onClick={() => stopMic(true)} className="rounded-xl px-4 py-2 text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors">Stop</button>
           )}
-          <button onClick={polish} disabled={!fullTranscript.trim()} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">Polish</button>
+          <button onClick={refine} disabled={!fullTranscript.trim()} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">Refine</button>
           <button onClick={store} disabled={!fullTranscript.trim()} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">Store</button>
           <button onClick={checkTags} disabled={!fullTranscript.trim() || tagsLoading} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">
             {tagsLoading ? '…' : 'Check tags'}
@@ -277,15 +284,15 @@ const LiveTranscription: React.FC = () => {
 
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 sm:p-5 overflow-auto">
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[280px] flex flex-col">
-          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Live transcript (updates as you speak)</div>
+          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Live transcript (updates as you speak, auto-stored every minute and when you stop)</div>
           <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">
             {[fullTranscript, partial].filter(Boolean).join(' ') || '—'}
           </div>
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[280px] flex flex-col">
-          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Polished</div>
-          <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">{polished || 'Click “Polish” after transcription.'}</div>
+          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Refined</div>
+          <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">{refined || 'Click “Refine” after transcription.'}</div>
         </div>
       </div>
     </div>

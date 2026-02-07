@@ -42,13 +42,13 @@ So: **file → parse → chunk_document → embed (embed chunks only) → FAISS 
 
 **Flow:**
 
-1. **Route** (`backend/app/api/routes/transcribe.py`): Receives `raw_text`, optional `polished_text`, optional `echotag`.
+1. **Route** (`backend/app/api/routes/transcribe.py`): Receives `raw_text`, optional `refined_text` (or legacy `polished_text`), optional `echotag`.
 
 2. **Tags**: Optional LLM call to get 3–6 comma-separated topic tags from `raw_text`. `echotag` is set from request or from these tags.
 
-3. **DB**: One row in `transcripts` (id, raw_text, polished_text, tags_json, echotag, echodate, created_at). `echodate` = current time (ISO).
+3. **DB**: One row in `transcripts` (id, raw_text, polished_text, tags_json, echotag, echodate, created_at). The refined/structured notes are stored in the `polished_text` column; API accepts `refined_text`. `echodate` = current time (ISO).
 
-4. **Index**: `index.add_text("transcript_{tid}", raw_text + "\n\n" + polished_text, meta)` with `meta = { type: "transcript", tags, echotag, echodate, created_at }`.  
+4. **Index**: `index.add_text("transcript_{tid}", raw_text + "\n\n" + refined_text, meta)` with `meta = { type: "transcript", tags, echotag, echodate, created_at }` (refined text is the value stored in `polished_text` column).  
    **`add_text`** simply calls **`add_document(title, "text", text, meta)`**. So the transcript is treated as one “document” with:
    - `filename` = `"transcript_{tid}"`
    - `filetype` = `"text"`

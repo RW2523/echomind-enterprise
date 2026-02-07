@@ -38,7 +38,7 @@ export interface TranscriptEntry {
   raw?: string;
   /** Same as raw; LiveTranscription uses rawText for new entries */
   rawText?: string;
-  polished?: string;
+  refined?: string;
   tags?: string[];
   timestamp: number;
   metadata?: {

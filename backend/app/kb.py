@@ -12,7 +12,7 @@ from .rag.index import index as faiss_index
 async def kb_add_text(text: str, metadata: Dict[str, Any]) -> str:
     """
     Add a text chunk to the knowledge base. Returns item_id.
-    Metadata typically includes: session_id, paragraph_id, kind (raw|polished), tags, ts, conversation_type.
+    Metadata typically includes: session_id, paragraph_id, kind (raw|refined), tags, ts, conversation_type.
     """
     if not text or not text.strip():
         raise ValueError("Cannot add empty text to KB")

@@ -131,14 +131,14 @@ export async function askChatStream(
   }
 }
 
-/** transcription */
-export async function polishTranscript(rawText: string): Promise<{polished: string}> {
-  const r = await fetch(`${API_BASE}/api/transcribe/polish`, {
+/** Refine transcript into clear, structured notes. */
+export async function refineTranscript(rawText: string): Promise<{ refined: string }> {
+  const r = await fetch(`${API_BASE}/api/transcribe/refine`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ raw_text: rawText }),
   });
-  if (!r.ok) throw new Error(`polish failed: ${r.status}`);
+  if (!r.ok) throw new Error(`refine failed: ${r.status}`);
   return await r.json();
 }
 
@@ -155,7 +155,7 @@ export async function getTranscriptTags(rawText: string): Promise<{ tags: string
 
 export async function storeTranscript(
   rawText: string,
-  polishedText?: string | null,
+  refinedText?: string | null,
   echotag?: string | null
 ): Promise<{ transcript_id: string; tags: string[]; echotag: string; echodate: string; created_at: string }> {
   const r = await fetch(`${API_BASE}/api/transcribe/store`, {
@@ -163,7 +163,7 @@ export async function storeTranscript(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       raw_text: rawText,
-      polished_text: polishedText ?? null,
+      refined_text: refinedText ?? null,
       echotag: echotag ?? null,
     }),
   });

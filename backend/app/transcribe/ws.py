@@ -1,7 +1,7 @@
 """
 WebSocket handler for real-time transcription & knowledge capture.
-Protocol: binary PCM16 chunks, text JSON (start/pause/resume/eos/polish/store).
-Uses SessionState for stabilization and segmentation, Polisher/Tagger/KB for polish and store.
+Protocol: binary PCM16 chunks, text JSON (start/pause/resume/eos/refine/store).
+Uses SessionState for stabilization and segmentation; refine and store for KB.
 """
 from __future__ import annotations
 import asyncio
@@ -23,7 +23,7 @@ from .stt_streaming import (
     KYUTAI_AVAILABLE,
     _resample_linear,
 )
-from ..polish import polish_text
+from ..refine import refine_text
 from ..tagging import get_metadata
 from .. import kb
 
@@ -68,6 +68,45 @@ async def handler(ws: WebSocket):
     last_emit_time = 0.0
     last_whisper_time = 0.0
     client_sample_rate: Optional[int] = None
+    last_auto_stored_length: list = [0]  # mutable for closure
+    periodic_auto_store_task: Optional[asyncio.Task] = None
+    auto_store_interval_sec = max(0, getattr(settings, "AUTO_STORE_INTERVAL_SEC", 60))
+
+    async def _periodic_auto_store_fn() -> None:
+        """Every auto_store_interval_sec, store new transcript content since last store."""
+        while True:
+            await asyncio.sleep(auto_store_interval_sec)
+            if session is None:
+                break
+            try:
+                full_text = session.get_display_text()
+                to_store = full_text[last_auto_stored_length[0] :].strip()
+                if to_store:
+                    conv_type, tags = get_metadata(to_store)
+                    meta = {"session_id": session_id, "kind": "raw", "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
+                    kid = await kb.kb_add_text(to_store, meta)
+                    await _send(ws, {"type": "stored", "session_id": session_id, "items": [{"id": kid, "kind": "raw", "tags": tags, "ts": now_iso()}]})
+                    last_auto_stored_length[0] = len(full_text)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                try:
+                    await _send(ws, {"type": "error", "message": str(e)})
+                except Exception:
+                    pass
+
+    def _start_periodic_auto_store() -> None:
+        nonlocal periodic_auto_store_task
+        if not auto_store or auto_store_interval_sec <= 0:
+            return
+        if periodic_auto_store_task is not None and not periodic_auto_store_task.done():
+            periodic_auto_store_task.cancel()
+        periodic_auto_store_task = asyncio.create_task(_periodic_auto_store_fn())
+
+    def _cancel_periodic_auto_store() -> None:
+        nonlocal periodic_auto_store_task
+        if periodic_auto_store_task is not None and not periodic_auto_store_task.done():
+            periodic_auto_store_task.cancel()
 
     def _ensure_session():
         nonlocal session_id, session, started_at
@@ -75,6 +114,8 @@ async def handler(ws: WebSocket):
             session_id = str(uuid.uuid4())
             session = SessionState(session_id)
             started_at = time.time()
+            last_auto_stored_length[0] = 0
+            _start_periodic_auto_store()
 
     async def _maybe_emit_partial(ts_ms: int):
         nonlocal last_emit_time
@@ -204,6 +245,8 @@ async def handler(ws: WebSocket):
                 language = data.get("language", "en")
                 auto_store = data.get("auto_store", settings.ECHOMIND_AUTO_STORE_DEFAULT)
                 client_sample_rate = data.get("sample_rate")
+                last_auto_stored_length[0] = 0
+                _start_periodic_auto_store()
                 if use_kyutai and kyutai_stt is not None:
                     kyutai_stt.reset_streaming()
                 await _send(ws, {"type": "ready", "session_id": session_id, "sample_rate": sample_rate})
@@ -217,6 +260,7 @@ async def handler(ws: WebSocket):
                     session.resume()
                 continue
             if t == "eos":
+                _cancel_periodic_auto_store()
                 _ensure_session()
                 if use_kyutai and kyutai_stt is not None:
                     # Flush Kyutai: pad with silence and collect final pieces
@@ -253,39 +297,42 @@ async def handler(ws: WebSocket):
                 })
                 if auto_store and final_text.strip():
                     try:
-                        conv_type, tags = get_metadata(final_text)
-                        meta = {"session_id": session_id, "kind": "raw", "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
-                        await kb.kb_add_text(final_text, meta)
-                        await _send(ws, {"type": "stored", "session_id": session_id, "items": [{"id": meta.get("kb_id", ""), "kind": "raw", "tags": tags, "ts": now_iso()}]})
+                        # Store only the remainder since last periodic store to avoid duplicating content
+                        to_store = final_text[last_auto_stored_length[0] :].strip() if last_auto_stored_length[0] > 0 else final_text
+                        if to_store:
+                            conv_type, tags = get_metadata(to_store)
+                            meta = {"session_id": session_id, "kind": "raw", "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
+                            kid = await kb.kb_add_text(to_store, meta)
+                            await _send(ws, {"type": "stored", "session_id": session_id, "items": [{"id": kid, "kind": "raw", "tags": tags, "ts": now_iso()}]})
                     except Exception as e:
                         await _send(ws, {"type": "error", "message": str(e)})
                 break
-            if t == "polish":
+            if t == "refine":
                 scope = data.get("scope", "all")
                 paragraph_id = data.get("paragraph_id")
                 _ensure_session()
                 if scope == "all":
-                    text_to_polish = session.get_display_text()
-                    if not text_to_polish.strip():
-                        await _send(ws, {"type": "error", "message": "No transcript to polish"})
+                    text_to_refine = session.get_display_text()
+                    if not text_to_refine.strip():
+                        await _send(ws, {"type": "error", "message": "No transcript to refine"})
                         continue
-                    polished = await polish_text(text_to_polish)
-                    await _send(ws, {"type": "polished", "session_id": session_id, "scope": scope, "text": polished})
+                    refined = await refine_text(text_to_refine)
+                    await _send(ws, {"type": "refined", "session_id": session_id, "scope": scope, "text": refined})
                 elif scope == "last_paragraph" and session.segments:
                     p = session.segments[-1]
-                    polished = await polish_text(p.raw_text)
-                    p.polished_text = polished
-                    await _send(ws, {"type": "polished", "session_id": session_id, "scope": scope, "paragraph_id": p.paragraph_id, "text": polished})
+                    refined = await refine_text(p.raw_text)
+                    p.polished_text = refined
+                    await _send(ws, {"type": "refined", "session_id": session_id, "scope": scope, "paragraph_id": p.paragraph_id, "text": refined})
                 elif scope == "paragraph" and paragraph_id:
                     p = next((x for x in session.segments if x.paragraph_id == paragraph_id), None)
                     if not p:
                         await _send(ws, {"type": "error", "message": f"Paragraph {paragraph_id} not found"})
                         continue
-                    polished = await polish_text(p.raw_text)
-                    p.polished_text = polished
-                    await _send(ws, {"type": "polished", "session_id": session_id, "scope": scope, "paragraph_id": p.paragraph_id, "text": polished})
+                    refined = await refine_text(p.raw_text)
+                    p.polished_text = refined
+                    await _send(ws, {"type": "refined", "session_id": session_id, "scope": scope, "paragraph_id": p.paragraph_id, "text": refined})
                 else:
-                    await _send(ws, {"type": "error", "message": "Invalid polish scope"})
+                    await _send(ws, {"type": "error", "message": "Invalid refine scope"})
                 continue
             if t == "store":
                 scope = data.get("scope", "all")
@@ -299,18 +346,18 @@ async def handler(ws: WebSocket):
                         meta = {"session_id": session_id, "kind": "raw", "paragraph_id": None, "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
                         kid = await kb.kb_add_text(full, meta)
                         items.append({"id": kid, "kind": "raw", "paragraph_id": None, "tags": tags, "ts": now_iso()})
-                        full_polished = await polish_text(full)
-                        if full_polished.strip():
-                            conv_type2, tags2 = get_metadata(full_polished)
-                            meta2 = {"session_id": session_id, "kind": "polished", "paragraph_id": None, "tags": tags2, "conversation_type": conv_type2, "ts": now_iso()}
-                            kid2 = await kb.kb_add_text(full_polished, meta2)
-                            items.append({"id": kid2, "kind": "polished", "paragraph_id": None, "tags": tags2, "ts": now_iso()})
+                        full_refined = await refine_text(full)
+                        if full_refined.strip():
+                            conv_type2, tags2 = get_metadata(full_refined)
+                            meta2 = {"session_id": session_id, "kind": "refined", "paragraph_id": None, "tags": tags2, "conversation_type": conv_type2, "ts": now_iso()}
+                            kid2 = await kb.kb_add_text(full_refined, meta2)
+                            items.append({"id": kid2, "kind": "refined", "paragraph_id": None, "tags": tags2, "ts": now_iso()})
                     for p in session.segments:
                         if p.polished_text:
                             conv_type, tags = get_metadata(p.polished_text)
-                            meta = {"session_id": session_id, "kind": "polished", "paragraph_id": p.paragraph_id, "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
+                            meta = {"session_id": session_id, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
                             kid = await kb.kb_add_text(p.polished_text, meta)
-                            items.append({"id": kid, "kind": "polished", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
+                            items.append({"id": kid, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                         conv_type, tags = get_metadata(p.raw_text)
                         meta = {"session_id": session_id, "kind": "raw", "paragraph_id": p.paragraph_id, "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
                         kid = await kb.kb_add_text(p.raw_text, meta)
@@ -322,8 +369,8 @@ async def handler(ws: WebSocket):
                     kid = await kb.kb_add_text(p.raw_text, meta)
                     items.append({"id": kid, "kind": "raw", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                     if p.polished_text:
-                        kid2 = await kb.kb_add_text(p.polished_text, {**meta, "kind": "polished"})
-                        items.append({"id": kid2, "kind": "polished", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
+                        kid2 = await kb.kb_add_text(p.polished_text, {**meta, "kind": "refined"})
+                        items.append({"id": kid2, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                 elif scope == "paragraph" and paragraph_id:
                     p = next((x for x in session.segments if x.paragraph_id == paragraph_id), None)
                     if not p:
@@ -334,8 +381,8 @@ async def handler(ws: WebSocket):
                     kid = await kb.kb_add_text(p.raw_text, meta)
                     items.append({"id": kid, "kind": "raw", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                     if p.polished_text:
-                        kid2 = await kb.kb_add_text(p.polished_text, {**meta, "kind": "polished"})
-                        items.append({"id": kid2, "kind": "polished", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
+                        kid2 = await kb.kb_add_text(p.polished_text, {**meta, "kind": "refined"})
+                        items.append({"id": kid2, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                 await _send(ws, {"type": "stored", "session_id": session_id, "items": items})
     except Exception as e:
         try:
