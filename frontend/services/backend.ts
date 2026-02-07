@@ -181,3 +181,24 @@ export function voiceWsUrl(): string {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   return `${proto}://${location.host}/voice/ws`;
 }
+
+/** List Piper voice ids already installed on the voice server. */
+export async function getInstalledVoices(): Promise<{ voice_ids: string[] }> {
+  const r = await fetch(`${location.origin}/voice/voices/installed`);
+  if (!r.ok) throw new Error(`voices/installed failed: ${r.status}`);
+  return r.json();
+}
+
+/** Download a Piper voice by id (e.g. en_US-lessac-medium) on the voice server. */
+export async function downloadVoice(voiceId: string): Promise<{ ok: boolean; voice_id: string }> {
+  const r = await fetch(`${location.origin}/voice/voices/download`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ voice_id: voiceId }),
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ detail: r.statusText }));
+    throw new Error((err as { detail?: string }).detail || `download failed: ${r.status}`);
+  }
+  return r.json();
+}

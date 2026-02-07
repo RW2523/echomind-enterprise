@@ -28,7 +28,7 @@ class Settings:
     PHRASE_MAX_CHARS: int = int(os.getenv("PHRASE_MAX_CHARS", "120"))
     PHRASE_COMMIT_PAUSE_MS: int = int(os.getenv("PHRASE_COMMIT_PAUSE_MS", "180"))
 
-    # Piper TTS
+    # Piper TTS (model path; voices dir for download is VOICES_DIR, default /voices)
     PIPER_MODEL: str = os.getenv("PIPER_MODEL", "/voices/en_US-lessac-medium.onnx")
     PIPER_SPEAKER: int = int(os.getenv("PIPER_SPEAKER", "0"))
     PIPER_NOISE_SCALE: float = float(os.getenv("PIPER_NOISE_SCALE", "0.667"))

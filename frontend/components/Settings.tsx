@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppSettings, PersonaType, PIPER_VOICES } from '../types';
+import { getInstalledVoices, downloadVoice } from '../services/backend';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -9,9 +10,46 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
   const contextWindows: AppSettings['contextWindow'][] = ['24h', '48h', '1w', 'all'];
   const personas = Object.values(PersonaType);
+  const [installedVoiceIds, setInstalledVoiceIds] = useState<Set<string>>(new Set());
+  const [downloadingVoiceId, setDownloadingVoiceId] = useState<string | null>(null);
+  const [voicesLoadError, setVoicesLoadError] = useState<string | null>(null);
+
+  const loadInstalledVoices = useCallback(async () => {
+    try {
+      setVoicesLoadError(null);
+      const { voice_ids } = await getInstalledVoices();
+      setInstalledVoiceIds(new Set(voice_ids || []));
+    } catch (e) {
+      setVoicesLoadError((e as Error)?.message || 'Could not load voice list');
+      setInstalledVoiceIds(new Set());
+    }
+  }, []);
+
+  useEffect(() => {
+    loadInstalledVoices();
+  }, [loadInstalledVoices]);
 
   const update = (key: keyof AppSettings, val: AppSettings[keyof AppSettings]) => {
     setSettings({ ...settings, [key]: val });
+  };
+
+  const selectVoice = async (voiceId: string) => {
+    if (downloadingVoiceId) return;
+    const installed = installedVoiceIds.has(voiceId);
+    if (installed) {
+      update('voiceName', voiceId);
+      return;
+    }
+    setDownloadingVoiceId(voiceId);
+    try {
+      await downloadVoice(voiceId);
+      setInstalledVoiceIds((prev) => new Set([...prev, voiceId]));
+      update('voiceName', voiceId);
+    } catch (e) {
+      alert((e as Error)?.message || 'Voice download failed');
+    } finally {
+      setDownloadingVoiceId(null);
+    }
   };
 
   return (
@@ -49,21 +87,36 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
           <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 space-y-6">
             <div className="flex flex-col gap-4">
               <label className="text-sm font-bold text-slate-300">Piper Voice (en_US)</label>
-              <p className="text-xs text-slate-500 -mt-2">Select the TTS voice for Voice Conversation. Ensure the chosen model is installed on the voice server.</p>
+              <p className="text-xs text-slate-500 -mt-2">Select the TTS voice for Voice Conversation. The chosen voice is downloaded automatically when selected.</p>
+              {voicesLoadError && (
+                <p className="text-xs text-amber-400">Voice server: {voicesLoadError}. You can still select a voice; it will be downloaded when the server is available.</p>
+              )}
+              {downloadingVoiceId && (
+                <p className="text-xs text-cyan-400">Downloading voice…</p>
+              )}
               <div className="flex flex-wrap gap-3 max-h-48 overflow-y-auto">
-                {PIPER_VOICES.map((v) => (
-                  <button
-                    key={v.id}
-                    onClick={() => update('voiceName', v.id)}
-                    className={`px-4 py-2 rounded-2xl border text-sm font-semibold transition-all shrink-0 ${
-                      settings.voiceName === v.id
-                        ? 'bg-violet-600 border-violet-500 text-white shadow-lg'
-                        : 'bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    {v.label}
-                  </button>
-                ))}
+                {PIPER_VOICES.map((v) => {
+                  const isInstalled = installedVoiceIds.has(v.id);
+                  const isDownloading = downloadingVoiceId === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={() => selectVoice(v.id)}
+                      disabled={isDownloading}
+                      className={`px-4 py-2 rounded-2xl border text-sm font-semibold transition-all shrink-0 ${
+                        settings.voiceName === v.id
+                          ? 'bg-violet-600 border-violet-500 text-white shadow-lg'
+                          : isInstalled
+                            ? 'bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                            : 'bg-white/5 border-amber-500/30 text-slate-500 hover:text-amber-400 hover:border-amber-500/50'
+                      }`}
+                    >
+                      {v.label}
+                      {isInstalled && settings.voiceName !== v.id && <span className="ml-1.5 text-[10px] text-slate-500">✓</span>}
+                      {isDownloading && ' …'}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>

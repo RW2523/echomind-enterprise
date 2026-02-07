@@ -12,7 +12,7 @@ export default defineConfig(() => ({
     ...(useHttps ? { https: true } : {}),
     proxy: {
       '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true, ws: true },
-      '/voice': { target: 'http://127.0.0.1:8001', changeOrigin: true, ws: true },
+      '/voice': { target: 'http://127.0.0.1:8001', changeOrigin: true, ws: true, rewrite: (p) => p.replace(/^\/voice/, '') },
     },
   },
   plugins: useHttps ? [react(), basicSsl()] : [react()],
