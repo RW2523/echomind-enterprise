@@ -8,7 +8,8 @@ import re
 import urllib.request
 from typing import List, Tuple
 
-HF_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/main"
+# Official Piper voices; see https://github.com/rhasspy/piper/blob/master/VOICES.md
+HF_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0"
 
 
 def get_voices_dir() -> str:
@@ -32,20 +33,26 @@ def list_installed_voices() -> List[str]:
 
 def voice_id_to_hf_path(voice_id: str) -> Tuple[str, str]:
     """
-    Map Piper voice id (e.g. en_US-lessac-medium) to Hugging Face path components.
-    Returns (onnx_path, json_path) relative to repo root, e.g.
-    en/en_US/lessac/medium/en_US-lessac-medium.onnx
+    Map Piper voice id (e.g. en_US-amy-medium, en_US-libritts_r-medium) to Hugging Face path.
+    Format: locale-speaker-quality where locale has underscore (en_US). See VOICES.md.
+    Returns (onnx_path, json_path) relative to repo root.
     """
     voice_id = (voice_id or "").strip()
-    if not voice_id or not re.match(r"^[a-z]{2}_[A-Z]{2}-[a-z0-9_]+-(?:low|medium|high)$", voice_id, re.IGNORECASE):
-        raise ValueError(f"Invalid Piper voice id: {voice_id}")
+    if not voice_id:
+        raise ValueError("Voice id is empty")
     parts = voice_id.split("-")
-    if len(parts) < 4:
+    if len(parts) < 3:
         raise ValueError(f"Invalid Piper voice id: {voice_id}")
-    locale = f"{parts[0]}_{parts[1]}"
-    speaker = parts[2]
-    quality = parts[3]
-    subpath = f"en/{locale}/{speaker}/{quality}/{voice_id}"
+    locale = parts[0]  # e.g. en_US
+    quality = parts[-1]  # e.g. medium, low, high, x_low
+    speaker = "-".join(parts[1:-1])  # e.g. amy, libritts_r
+    if not locale or "_" not in locale or not speaker or not quality:
+        raise ValueError(f"Invalid Piper voice id: {voice_id}")
+    if quality not in ("low", "medium", "high", "x_low"):
+        raise ValueError(f"Invalid quality in voice id: {voice_id}")
+    # Path: lang/locale/speaker/quality/voice_id.onnx (lang = first part of locale)
+    lang = locale.split("_")[0].lower()
+    subpath = f"{lang}/{locale}/{speaker}/{quality}/{voice_id}"
     return f"{subpath}.onnx", f"{subpath}.onnx.json"
 
 

@@ -10,12 +10,14 @@ VOICES_DIR="${VOICES_DIR:-$SCRIPT_DIR/../voices}"
 mkdir -p "$VOICES_DIR"
 cd "$VOICES_DIR"
 
-# Parse voice_id (e.g. en_US-lessac-medium or en_US-libritts_r-medium) -> en_US, speaker, quality
+# Parse voice_id: locale-speaker-quality (locale e.g. en_US). See https://github.com/rhasspy/piper/blob/master/VOICES.md
 IFS='-' read -ra PARTS <<< "$VOICE_ID"
-LOCALE="${PARTS[0]}_${PARTS[1]}"
+LOCALE="${PARTS[0]}"
 QUALITY="${PARTS[-1]}"
-SPEAKER="${PARTS[2]}"
-BASE="https://huggingface.co/rhasspy/piper-voices/resolve/main/en/${LOCALE}/${SPEAKER}/${QUALITY}"
+SPEAKER="${PARTS[1]}"
+for i in $(seq 2 $((${#PARTS[@]} - 2))); do SPEAKER="${SPEAKER}-${PARTS[$i]}"; done
+LANG="${LOCALE%%_*}"
+BASE="https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/${LANG}/${LOCALE}/${SPEAKER}/${QUALITY}"
 echo "Downloading Piper voice: $VOICE_ID"
 wget -q -O "${VOICE_ID}.onnx" "${BASE}/${VOICE_ID}.onnx"
 wget -q -O "${VOICE_ID}.onnx.json" "${BASE}/${VOICE_ID}.onnx.json"
