@@ -25,6 +25,8 @@ services:
 
   voice:
     build: ./voice
+    volumes:
+       - ./voice/voices:/voices
     container_name: echomind-voice
     ports: ["8001:8000"]
     environment:

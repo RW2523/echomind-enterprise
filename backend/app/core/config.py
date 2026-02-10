@@ -17,9 +17,9 @@ class Settings(BaseSettings):
     # Max characters per chunk sent to embedding API (avoids "input length exceeds context length").
     # Conservative default (2000) works with 512-token models; set ECHOMIND_EMBED_MAX_CHARS=8000 for nomic-embed-text.
     EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "2000"))
-    CHUNK_SIZE: int = 900
-    CHUNK_OVERLAP: int = 140
-    TOP_K: int = 8
+    CHUNK_SIZE: int = int(os.getenv("ECHOMIND_CHUNK_SIZE", "800"))
+    CHUNK_OVERLAP: int = int(os.getenv("ECHOMIND_CHUNK_OVERLAP", "120"))
+    TOP_K: int = int(os.getenv("ECHOMIND_TOP_K", "15"))
     RAG_RELEVANCE_THRESHOLD: float = float(os.getenv("ECHOMIND_RAG_RELEVANCE_THRESHOLD", "0.45"))
     # When False (default), do not expose citations/filenames to client (audit: internal grounding only).
     RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "0").lower() in ("1", "true", "yes")
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     # Boost chunks whose transcript tags overlap query terms (when doc is transcript). Small additive boost.
     RAG_TAG_BOOST_ENABLED: bool = os.getenv("ECHOMIND_RAG_TAG_BOOST", "1").lower() in ("1", "true", "yes")
     RAG_TAG_BOOST_FACTOR: float = float(os.getenv("ECHOMIND_RAG_TAG_BOOST_FACTOR", "0.08"))
-    # Optional LLM rerank: score top RAG_RERANK_CANDIDATES and reorder. 0 = disabled (saves latency).
+    # Optional LLM rerank: score top RAG_RERANK_CANDIDATES and reorder. Kept false by default for faster responses.
     RAG_RERANK_ENABLED: bool = os.getenv("ECHOMIND_RAG_RERANK", "0").lower() in ("1", "true", "yes")
     RAG_RERANK_CANDIDATES: int = int(os.getenv("ECHOMIND_RAG_RERANK_CANDIDATES", "12"))
     RAG_RERANK_TOP_N: int = int(os.getenv("ECHOMIND_RAG_RERANK_TOP_N", "8"))

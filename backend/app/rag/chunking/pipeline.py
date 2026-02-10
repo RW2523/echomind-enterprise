@@ -15,6 +15,7 @@ from .chunkers import (
     chunk_long_form,
     chunk_sensitive,
     chunk_unstructured,
+    _split_book_into_sections,
 )
 
 
@@ -33,18 +34,20 @@ def chunk_document(text: str, doc_id: str) -> List[Chunk]:
     if doc_type == DocType.FAQ:
         chunks = chunk_faq(clean_text, sensitivity_level, redacted)
     elif doc_type == DocType.BOOK:
-        pc_list = chunk_long_form(clean_text, sensitivity_level, redacted)
+        sections = _split_book_into_sections(clean_text)
         chunks = []
-        for pc in pc_list:
-            parent = pc.parent
-            parent.chunk_id = new_id("chk")
-            parent.doc_id = doc_id
-            chunks.append(parent)
-            for c in pc.children:
-                c.parent_chunk_id = parent.chunk_id
-                c.doc_id = doc_id
-                c.chunk_id = new_id("chk")
-                chunks.append(c)
+        for section_title, section_text in sections:
+            pc_list = chunk_long_form(section_text, sensitivity_level, redacted, section=section_title)
+            for pc in pc_list:
+                parent = pc.parent
+                parent.chunk_id = new_id("chk")
+                parent.doc_id = doc_id
+                chunks.append(parent)
+                for c in pc.children:
+                    c.parent_chunk_id = parent.chunk_id
+                    c.doc_id = doc_id
+                    c.chunk_id = new_id("chk")
+                    chunks.append(c)
         _assign_indices(chunks)
         return chunks
     elif doc_type == DocType.SENSITIVE:
