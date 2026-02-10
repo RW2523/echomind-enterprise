@@ -1,16 +1,99 @@
+import json
 from fastapi import APIRouter, WebSocket
 from pydantic import BaseModel
-from ...rag.llm import OpenAICompatChat
-from ...core.config import settings
-from ...utils.ids import new_id, now_iso
 from ...core.db import get_conn
-from ...rag.index import index
+from ...refine import refine_text
 from ...transcribe.ws import handler as ws_handler
+from ...transcribe.store_to_db import store_transcript_to_db
 from ...tagging import get_metadata
-import json
 
 router = APIRouter(prefix="/transcribe", tags=["transcribe"])
-chat = OpenAICompatChat(settings.LLM_BASE_URL, settings.LLM_MODEL)
+
+
+def _list_transcripts_impl(conn, since_iso: str | None = None, last_hours: float | None = None):
+    """Shared logic: list transcripts, optionally filtered by time (since_iso or last_hours)."""
+    extra = ""
+    params = []
+    if since_iso or last_hours is not None:
+        if last_hours is not None:
+            try:
+                from datetime import datetime, timezone, timedelta
+                since_dt = datetime.now(timezone.utc) - timedelta(hours=float(last_hours))
+                since_iso = since_dt.isoformat()
+            except Exception:
+                pass
+        if since_iso:
+            extra = " AND created_at >= ?"
+            params.append(since_iso)
+    try:
+        rows = conn.execute(
+            "SELECT id, title, tags_json, echotag, created_at, raw_text, polished_text FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
+            params,
+        ).fetchall()
+        has_title = True
+        has_content = True
+    except Exception:
+        try:
+            rows = conn.execute(
+                "SELECT id, title, tags_json, echotag, created_at FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
+                params,
+            ).fetchall()
+            has_title = True
+            has_content = False
+        except Exception:
+            rows = conn.execute(
+                "SELECT id, raw_text, tags_json, created_at FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
+                params,
+            ).fetchall()
+            has_title = False
+            has_content = True
+    return rows, has_title, has_content
+
+
+@router.get("/list")
+def list_transcripts(since: str | None = None, last_hours: float | None = None):
+    """List transcripts with optional time filter. Query params: since (ISO datetime), last_hours (e.g. 2)."""
+    with get_conn() as conn:
+        rows, has_title, has_content = _list_transcripts_impl(conn, since_iso=since, last_hours=last_hours)
+    out = []
+    for r in rows:
+        if has_title and has_content and len(r) >= 7:
+            tid, title, tags_json, echotag, created_at, raw_text, polished_text = r[0], r[1], r[2], r[3], r[4], r[5], r[6]
+        elif has_title and len(r) >= 5:
+            tid, title, tags_json, echotag, created_at = r[0], r[1], r[2], r[3], r[4]
+            raw_text = polished_text = None
+        else:
+            tid, _raw, tags_json, created_at = r[0], r[1], r[2], r[3]
+            title = None
+            echotag = ""
+            raw_text = _raw
+            polished_text = None
+        tags = []
+        if tags_json:
+            try:
+                tags = json.loads(tags_json) if isinstance(tags_json, str) else (tags_json or [])
+            except Exception:
+                pass
+        created_at = created_at or ""
+        if not title and created_at:
+            date_part = created_at[:16].replace("T", " ") if len(created_at) >= 16 else created_at
+            short_id = (tid or "").replace("trn_", "")[:8]
+            title = f"{date_part}_{short_id}" if short_id else date_part
+        if not title:
+            title = tid or ""
+        item = {
+            "id": tid,
+            "title": title,
+            "tags": tags,
+            "echotag": (echotag or ""),
+            "created_at": created_at,
+        }
+        if raw_text is not None:
+            item["raw_text"] = raw_text
+        if polished_text is not None:
+            item["polished_text"] = polished_text
+        out.append(item)
+    return {"transcripts": out}
 
 @router.websocket("/ws")
 async def ws(ws: WebSocket):
@@ -33,8 +116,7 @@ class RefineIn(BaseModel):
 
 @router.post("/refine")
 async def refine(inp: RefineIn):
-    sys = "Refine the transcript into clear, well-structured notes with headings and bullet points. Keep meaning."
-    refined = await chat.chat([{"role": "system", "content": sys}, {"role": "user", "content": inp.raw_text}], temperature=0.2, max_tokens=700)
+    refined = await refine_text(inp.raw_text)
     return {"refined": refined}
 
 class StoreIn(BaseModel):
@@ -45,32 +127,10 @@ class StoreIn(BaseModel):
 
 @router.post("/store")
 async def store(inp: StoreIn):
-    tid = new_id("trn")
-    echodate = now_iso()
-    tags = []
-    try:
-        tag_txt = await chat.chat(
-            [{"role":"system","content":"Extract 3-6 short topic tags. Return comma-separated tags only."},
-             {"role":"user","content":inp.raw_text[:3500]}],
-            temperature=0.0, max_tokens=60
-        )
-        tags = [t.strip() for t in tag_txt.split(",") if t.strip()][:8]
-    except Exception:
-        tags = []
-    echotag = (inp.echotag or "").strip() or (",".join(tags) if tags else "transcript")
     refined_value = inp.refined_text if inp.refined_text is not None else inp.polished_text
-    with get_conn() as conn:
-        conn.execute(
-            "INSERT INTO transcripts (id, raw_text, polished_text, tags_json, echotag, echodate, created_at) VALUES (?,?,?,?,?,?,?)",
-            (tid, inp.raw_text, refined_value, json.dumps(tags), echotag, echodate, echodate),
-        )
-        conn.commit()
-    try:
-        await index.add_text(
-            f"transcript_{tid}",
-            inp.raw_text + ("\n\n" + refined_value if refined_value else ""),
-            {"type": "transcript", "tags": tags, "echotag": echotag, "echodate": echodate, "created_at": echodate},
-        )
-    except Exception:
-        pass
-    return {"transcript_id": tid, "tags": tags, "echotag": echotag, "echodate": echodate, "created_at": echodate}
+    result = await store_transcript_to_db(
+        raw_text=inp.raw_text,
+        refined_text=refined_value,
+        echotag=inp.echotag,
+    )
+    return result

@@ -26,6 +26,7 @@ from .stt_streaming import (
 from ..refine import refine_text
 from ..tagging import get_metadata
 from .. import kb
+from .store_to_db import store_transcript_to_db
 
 SAMPLE_RATE_WHISPER = getattr(settings, "SAMPLE_RATE", 16000)
 # Emit partial every this many seconds of audio (Whisper chunk)
@@ -69,11 +70,12 @@ async def handler(ws: WebSocket):
     last_whisper_time = 0.0
     client_sample_rate: Optional[int] = None
     last_auto_stored_length: list = [0]  # mutable for closure
+    interval_buffer: list = []  # (text, ts) for each interval; combined + LLM before saving to DB
     periodic_auto_store_task: Optional[asyncio.Task] = None
     auto_store_interval_sec = max(0, getattr(settings, "AUTO_STORE_INTERVAL_SEC", 60))
 
     async def _periodic_auto_store_fn() -> None:
-        """Every auto_store_interval_sec, store new transcript content since last store."""
+        """Every auto_store_interval_sec, store new transcript content since last store; also append to interval_buffer for combine→LLM→DB flow."""
         while True:
             await asyncio.sleep(auto_store_interval_sec)
             if session is None:
@@ -85,6 +87,7 @@ async def handler(ws: WebSocket):
                     conv_type, tags = get_metadata(to_store)
                     meta = {"session_id": session_id, "kind": "raw", "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
                     kid = await kb.kb_add_text(to_store, meta)
+                    interval_buffer.append((to_store, now_iso()))
                     await _send(ws, {"type": "stored", "session_id": session_id, "items": [{"id": kid, "kind": "raw", "tags": tags, "ts": now_iso()}]})
                     last_auto_stored_length[0] = len(full_text)
             except asyncio.CancelledError:
@@ -115,6 +118,7 @@ async def handler(ws: WebSocket):
             session = SessionState(session_id)
             started_at = time.time()
             last_auto_stored_length[0] = 0
+            interval_buffer.clear()
             _start_periodic_auto_store()
 
     async def _maybe_emit_partial(ts_ms: int):
@@ -333,6 +337,33 @@ async def handler(ws: WebSocket):
                     await _send(ws, {"type": "refined", "session_id": session_id, "scope": scope, "paragraph_id": p.paragraph_id, "text": refined})
                 else:
                     await _send(ws, {"type": "error", "message": "Invalid refine scope"})
+                continue
+            if t == "store_combined":
+                _ensure_session()
+                parts = [text for (text, _) in interval_buffer]
+                remainder = session.get_display_text()[last_auto_stored_length[0] :].strip()
+                if remainder:
+                    parts.append(remainder)
+                combined_raw = "\n\n".join(p for p in parts if p).strip()
+                if not combined_raw:
+                    await _send(ws, {"type": "error", "message": "No transcript to combine"})
+                    continue
+                try:
+                    refined = await refine_text(combined_raw)
+                    result = await store_transcript_to_db(raw_text=combined_raw, refined_text=refined or None)
+                    interval_buffer.clear()
+                    last_auto_stored_length[0] = len(session.get_display_text())
+                    await _send(ws, {
+                        "type": "stored_combined",
+                        "session_id": session_id,
+                        "transcript_id": result["transcript_id"],
+                        "tags": result["tags"],
+                        "echotag": result["echotag"],
+                        "echodate": result["echodate"],
+                        "created_at": result["created_at"],
+                    })
+                except Exception as e:
+                    await _send(ws, {"type": "error", "message": str(e)})
                 continue
             if t == "store":
                 scope = data.get("scope", "all")

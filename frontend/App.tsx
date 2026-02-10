@@ -16,6 +16,10 @@ const defaultSettings: AppSettings = {
   persona: PersonaType.GENERAL,
   model: '-3-pro-preview',
   developerMode: false,
+  advancedRag: false,
+  voiceUseKnowledgeBase: false,
+  voiceBotName: '',
+  voiceUserName: '',
 };
 
 function loadSettings(): AppSettings {
@@ -29,6 +33,10 @@ function loadSettings(): AppSettings {
         persona: parsed.persona ?? defaultSettings.persona,
         model: parsed.model ?? defaultSettings.model,
         developerMode: parsed.developerMode ?? defaultSettings.developerMode,
+        advancedRag: parsed.advancedRag ?? defaultSettings.advancedRag,
+        voiceUseKnowledgeBase: parsed.voiceUseKnowledgeBase ?? defaultSettings.voiceUseKnowledgeBase,
+        voiceBotName: parsed.voiceBotName ?? defaultSettings.voiceBotName,
+        voiceUserName: parsed.voiceUserName ?? defaultSettings.voiceUserName,
       };
     }
   } catch (_) {}
@@ -57,7 +65,7 @@ const App: React.FC = () => {
       case AppView.TRANSCRIPTION:
         return <LiveTranscription />;
       case AppView.VOICE_CONVERSATION:
-        return <VoiceConversation settings={settings} />;
+        return <VoiceConversation settings={settings} onUpdateSetting={(key, val) => setSettings({ ...settings, [key]: val })} />;
       case AppView.SETTINGS:
         return <Settings settings={settings} setSettings={setSettings} />;
       default:

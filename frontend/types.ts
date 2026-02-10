@@ -58,6 +58,14 @@ export interface AppSettings {
   persona: PersonaType;
   model: string;
   developerMode: boolean;
+  /** When true: fast RAG (no query rewriting; single embedding + LLM). When false: full RAG (intent + query rewrite). */
+  advancedRag: boolean;
+  /** Voice only: when true use knowledge base (RAG); when false answer generally. */
+  voiceUseKnowledgeBase: boolean;
+  /** Voice: bot name used as wake word (e.g. "Watson"); when set, only respond when user says this name. */
+  voiceBotName: string;
+  /** Voice: user's name (optional); bot can remember and use it. */
+  voiceUserName: string;
 }
 
 /** Piper English (en_US) voices available for TTS. Format: voiceKey -> label. Quality variants in id. */

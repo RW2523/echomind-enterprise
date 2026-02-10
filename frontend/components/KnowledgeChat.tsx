@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { ChatMessage, DocumentChunk, AppSettings } from '../types';
 import { ICONS } from '../constants';
 import Uploader from './Uploader';
-import { createChat, askChatStream, listDocuments, deleteDocument, DocListItem } from '../services/backend';
+import { createChat, askChatStream, listDocuments, deleteDocument, listTranscripts, DocListItem, TranscriptListItem } from '../services/backend';
 
 interface KnowledgeChatProps {
   settings?: AppSettings | null;
@@ -54,9 +54,14 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings }) => {
   const [busy, setBusy] = useState(false);
   const [chatId, setChatId] = useState<string>('');
   const [documents, setDocuments] = useState<DocListItem[]>([]);
+  const [transcripts, setTranscripts] = useState<TranscriptListItem[]>([]);
+  const [transcriptsLoading, setTranscriptsLoading] = useState(false);
+  const [transcriptsError, setTranscriptsError] = useState<string | null>(null);
+  const [resourceTab, setResourceTab] = useState<'resources' | 'transcripts'>('resources');
   const [docSearch, setDocSearch] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [resourcesOpenForId, setResourcesOpenForId] = useState<string | null>(null);
+  const [expandedTranscriptId, setExpandedTranscriptId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -71,9 +76,28 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings }) => {
     }
   };
 
+  const loadTranscripts = async () => {
+    setTranscriptsError(null);
+    setTranscriptsLoading(true);
+    try {
+      const res = await listTranscripts();
+      setTranscripts(res.transcripts || []);
+    } catch (e) {
+      console.error(e);
+      setTranscriptsError((e as Error)?.message || 'Failed to load transcripts');
+      setTranscripts([]);
+    } finally {
+      setTranscriptsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadDocs();
   }, []);
+
+  useEffect(() => {
+    if (resourceTab === 'transcripts') loadTranscripts();
+  }, [resourceTab]);
 
   useEffect(() => {
     (async () => {
@@ -119,6 +143,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings }) => {
       }, {
         persona: settings?.persona ?? undefined,
         context_window: settings?.contextWindow ?? undefined,
+        advanced_rag: settings?.advancedRag ?? undefined,
       });
     } catch (err: any) {
       setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
@@ -219,56 +244,130 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings }) => {
         </div>
       </div>
 
-      {/* Right: Resources sidebar */}
+      {/* Right: Resources / Transcripts sidebar */}
       <aside className="w-64 lg:w-72 shrink-0 flex flex-col min-h-0 rounded-2xl border border-white/10 bg-black/20 overflow-hidden">
         <div className="px-4 py-3 border-b border-white/10 shrink-0">
-          <div className="font-semibold text-sm flex items-center gap-2">
+          <div className="font-semibold text-sm flex items-center gap-2 mb-2">
             <ICONS.File className="w-4 h-4 opacity-80" />
             Resources
           </div>
-        </div>
-        <div className="p-3 border-b border-white/10 shrink-0">
-          <Uploader onComplete={loadDocs} />
-        </div>
-        <div className="p-3 border-b border-white/10 shrink-0">
-          <div className="relative">
-            <ICONS.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search resources..."
-              value={docSearch}
-              onChange={e => setDocSearch(e.target.value)}
-              className="w-full rounded-lg bg-black/30 border border-white/10 pl-9 pr-3 py-2 text-sm outline-none focus:border-white/30"
-            />
+          <div className="flex rounded-lg bg-white/5 p-0.5 border border-white/10">
+            <button
+              type="button"
+              onClick={() => setResourceTab('resources')}
+              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${resourceTab === 'resources' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-400 hover:text-white'}`}
+            >
+              Resources
+            </button>
+            <button
+              type="button"
+              onClick={() => setResourceTab('transcripts')}
+              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${resourceTab === 'transcripts' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-400 hover:text-white'}`}
+            >
+              Transcripts
+            </button>
           </div>
         </div>
-        <div className="flex-1 min-h-0 overflow-auto p-3">
-          {filteredDocs.length === 0 && (
-            <div className="text-xs opacity-60 py-4 text-center">
-              {documents.length === 0 ? 'No resources yet. Upload a document above.' : 'No matches.'}
+        {resourceTab === 'resources' && (
+          <>
+            <div className="p-3 border-b border-white/10 shrink-0">
+              <Uploader onComplete={loadDocs} />
             </div>
-          )}
-          <ul className="space-y-1">
-            {filteredDocs.map(doc => (
-              <li
-                key={doc.id}
-                className="group flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-white/5"
-                title={doc.filename}
-              >
-                <span className="flex-1 text-xs truncate min-w-0">{doc.filename}</span>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteDoc(doc)}
-                  disabled={deletingId === doc.id}
-                  className="shrink-0 p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
-                  title="Remove from knowledge base"
-                >
-                  <ICONS.Trash className="w-4 h-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+            <div className="p-3 border-b border-white/10 shrink-0">
+              <div className="relative">
+                <ICONS.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search resources..."
+                  value={docSearch}
+                  onChange={e => setDocSearch(e.target.value)}
+                  className="w-full rounded-lg bg-black/30 border border-white/10 pl-9 pr-3 py-2 text-sm outline-none focus:border-white/30"
+                />
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 overflow-auto p-3">
+              {filteredDocs.length === 0 && (
+                <div className="text-xs opacity-60 py-4 text-center">
+                  {documents.length === 0 ? 'No resources yet. Upload a document above.' : 'No matches.'}
+                </div>
+              )}
+              <ul className="space-y-1">
+                {filteredDocs.map(doc => (
+                  <li
+                    key={doc.id}
+                    className="group flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-white/5"
+                    title={doc.filename}
+                  >
+                    <span className="flex-1 text-xs truncate min-w-0">{doc.filename}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDoc(doc)}
+                      disabled={deletingId === doc.id}
+                      className="shrink-0 p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+                      title="Remove from knowledge base"
+                    >
+                      <ICONS.Trash className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        )}
+        {resourceTab === 'transcripts' && (
+          <div className="flex-1 min-h-0 flex flex-col p-3">
+            <div className="shrink-0 flex items-center justify-between gap-2 mb-2">
+              <span className="text-xs text-slate-500">From Live Transcript</span>
+              <button type="button" onClick={loadTranscripts} disabled={transcriptsLoading} className="text-xs text-cyan-400 hover:text-cyan-300 disabled:opacity-50">
+                {transcriptsLoading ? 'Loading…' : 'Refresh'}
+              </button>
+            </div>
+            {transcriptsError && (
+              <div className="shrink-0 text-xs text-red-400 mb-2 py-1">{transcriptsError}</div>
+            )}
+            <div className="flex-1 min-h-0 overflow-auto">
+            {transcriptsLoading && transcripts.length === 0 && (
+              <div className="text-xs opacity-60 py-4 text-center">Loading transcripts…</div>
+            )}
+            {!transcriptsLoading && transcripts.length === 0 && !transcriptsError && (
+              <div className="text-xs opacity-60 py-4 text-center">No transcripts yet. Save from Live Transcript.</div>
+            )}
+            {transcripts.length > 0 && (
+            <ul className="space-y-1">
+              {transcripts.map(t => (
+                <li key={t.id} className="rounded-lg border border-white/10 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedTranscriptId(expandedTranscriptId === t.id ? null : t.id)}
+                    className="w-full text-left py-2 px-2 hover:bg-white/5 flex items-center gap-2"
+                  >
+                    <span className="flex-1 text-xs truncate min-w-0" title={t.title}>{t.title}</span>
+                    <span className="text-slate-500 text-[10px] shrink-0">{t.created_at?.slice(0, 10)}</span>
+                    <span className={`shrink-0 transition-transform ${expandedTranscriptId === t.id ? 'rotate-180' : ''}`}>▼</span>
+                  </button>
+                  {expandedTranscriptId === t.id && (
+                    <div className="px-3 py-2 bg-black/30 border-t border-white/10">
+                      <p className="text-[10px] text-slate-500 mb-1">Tags</p>
+                      <div className="flex flex-wrap gap-1">
+                        {(t.tags || []).length === 0 ? (
+                          <span className="text-xs text-slate-500">No tags</span>
+                        ) : (
+                          (t.tags || []).map((tag, i) => (
+                            <span key={i} className="inline-block px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-xs">
+                              {tag}
+                            </span>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+            )}
+            </div>
+          </div>
+        )}
       </aside>
     </div>
   );

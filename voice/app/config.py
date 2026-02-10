@@ -45,4 +45,8 @@ class Settings:
     # Greeting spoken by TTS when session starts (natural conversation opener)
     INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "Hi! I'm here. What would you like to talk about?")
 
+    # Backend RAG: when set, voice can call this URL for knowledge-base answers (use_knowledge_base=true).
+    # Example: http://backend:8000 (no trailing slash; /api/chat/ask-voice is appended).
+    BACKEND_CHAT_URL: str = os.getenv("BACKEND_CHAT_URL", "")
+
 SETTINGS = Settings()

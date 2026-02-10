@@ -43,6 +43,41 @@ export async function getStorageUsage(): Promise<StorageUsage> {
   return await r.json();
 }
 
+/** Full data preview (documents, chunks, transcripts) for Usage popover. */
+export interface DataPreview {
+  documents: { id: string; filename: string; filetype: string; created_at: string; meta_json: string | null }[];
+  chunks: { id: string; doc_id: string; chunk_index: number; text_preview: string }[];
+  transcripts: { id: string; title: string; tags: string[]; echotag: string; created_at: string; raw_length: number; polished_length: number }[];
+}
+
+export async function getDataPreview(): Promise<DataPreview> {
+  const r = await fetch(`${API_BASE}/api/docs/data-preview`);
+  if (!r.ok) throw new Error(`data preview failed: ${r.status}`);
+  return await r.json();
+}
+
+/** Delete all data (documents, chunks, transcripts, chats, messages). */
+export async function deleteAllData(): Promise<{ ok: boolean; message: string }> {
+  const r = await fetch(`${API_BASE}/api/docs/delete-all`, { method: "POST" });
+  if (!r.ok) throw new Error(`delete all failed: ${r.status}`);
+  return await r.json();
+}
+
+/** Transcripts list (for Knowledge Chat Transcripts panel). */
+export interface TranscriptListItem {
+  id: string;
+  title: string;
+  tags: string[];
+  echotag: string;
+  created_at: string;
+}
+
+export async function listTranscripts(): Promise<{ transcripts: TranscriptListItem[] }> {
+  const r = await fetch(`${API_BASE}/api/transcribe/list`);
+  if (!r.ok) throw new Error(`list transcripts failed: ${r.status}`);
+  return await r.json();
+}
+
 /** chat */
 export async function createChat(title: string): Promise<{chat_id: string}> {
   const r = await fetch(`${API_BASE}/api/chat/create`, {
@@ -74,7 +109,7 @@ export async function askChatStream(
   chatId: string,
   message: string,
   callbacks: AskChatStreamCallbacks,
-  options?: { persona?: string | null; context_window?: string | null }
+  options?: { persona?: string | null; context_window?: string | null; advanced_rag?: boolean; use_knowledge_base?: boolean }
 ): Promise<void> {
   const r = await fetch(`${API_BASE}/api/chat/ask-stream`, {
     method: "POST",
@@ -84,6 +119,8 @@ export async function askChatStream(
       message,
       persona: options?.persona ?? undefined,
       context_window: options?.context_window ?? undefined,
+      advanced_rag: options?.advanced_rag ?? undefined,
+      use_knowledge_base: options?.use_knowledge_base ?? undefined,
     }),
   });
   if (!r.ok) {

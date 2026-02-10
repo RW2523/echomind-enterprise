@@ -15,6 +15,9 @@ chat = OpenAICompatChat(settings.LLM_BASE_URL, settings.LLM_MODEL)
 
 CONTEXT_WINDOW_VALUES = ("24h", "48h", "1w", "all")
 
+# Deterministic message when document/transcript intent but retrieval is insufficient (no hallucination fallback to general chat).
+INSUFFICIENT_CONTEXT_MSG = "The provided documents do not contain this information."
+
 def _parse_iso_date(created_at: Optional[str]) -> Optional[datetime]:
     if not created_at:
         return None
@@ -24,7 +27,11 @@ def _parse_iso_date(created_at: Optional[str]) -> Optional[datetime]:
         return None
 
 def _filter_hits_by_context_window(hits: List[Dict], context_window: str) -> List[Dict]:
-    """Keep only hits whose document created_at falls within context_window (24h, 48h, 1w). 'all' = no filter."""
+    """
+    Keep only hits whose document created_at falls within context_window (24h, 48h, 1w). 'all' = no filter.
+    Policy: when context_window != 'all', batch-fetch created_at via _get_doc_info_for_hits; hits without
+    doc_id or without created_at are excluded (treated as out-of-window) to avoid incorrect inclusion.
+    """
     if not context_window or context_window == "all" or not hits:
         return hits
     now = datetime.now(timezone.utc)
@@ -36,23 +43,22 @@ def _filter_hits_by_context_window(hits: List[Dict], context_window: str) -> Lis
         cutoff = now - timedelta(days=7)
     else:
         return hits
+    doc_created, _ = _get_doc_info_for_hits(hits)
     filtered = []
-    with get_conn() as conn:
-        for h in hits:
-            doc_id = (h.get("source") or {}).get("doc_id")
-            if not doc_id:
-                filtered.append(h)
-                continue
-            row = conn.execute("SELECT created_at FROM documents WHERE id = ?", (doc_id,)).fetchone()
-            created_at = row[0] if row else None
-            dt = _parse_iso_date(created_at)
-            if dt is None:
-                filtered.append(h)
-                continue
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            if dt >= cutoff:
-                filtered.append(h)
+    for h in hits:
+        doc_id = (h.get("source") or {}).get("doc_id")
+        if not doc_id:
+            continue
+        created_at = doc_created.get(doc_id)
+        if created_at is None:
+            continue
+        dt = _parse_iso_date(created_at)
+        if dt is None:
+            continue
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        if dt >= cutoff:
+            filtered.append(h)
     return filtered
 
 # Max chars for parent chunk expansion; config overrides to limit context domination (RAG_PARENT_CONTEXT_MAX_CHARS).
@@ -69,14 +75,24 @@ _GENERAL_PHRASES = frozenset({
     "good", "great", "cool", "nice", "perfect",
 })
 
+# Short 1–2 word inputs that are likely real queries, not small talk (do not skip RAG).
+_SHORT_QUERY_WORDS = frozenset({
+    "pricing", "price", "cost", "errors", "setup", "status", "help", "login", "docs", "guide",
+    "tutorial", "api", "support", "summary", "overview", "list", "find", "search", "export",
+})
+
+
 def _is_general_conversation(question: str) -> bool:
+    """True only for empty, explicit greetings/thanks/bye, or clear small talk. Short real queries (e.g. 'pricing', 'setup') are not general."""
     t = question.strip().lower()
     if not t:
         return True
     if t in _GENERAL_PHRASES:
         return True
     words = t.split()
-    if len(words) <= 2 and t not in _GENERAL_PHRASES:
+    if len(words) <= 2:
+        if t in _SHORT_QUERY_WORDS or any(w in _SHORT_QUERY_WORDS for w in words):
+            return False
         if "?" not in t and not any(w in t for w in ("what", "which", "when", "where", "who", "how", "why", "can", "does", "is", "are", "do")):
             return True
     return False
@@ -158,10 +174,11 @@ def _get_doc_info_for_hits(hits: List[Dict]) -> Tuple[Dict[str, Optional[str]], 
 
 
 def _apply_time_decay(hits: List[Dict], doc_created: Dict[str, Optional[str]], halflife_days: float) -> List[Dict]:
-    """Multiply score by exp(-age_days/halflife). Recent docs rank higher; no hard cutoff. halflife_days=0 means no decay."""
+    """True half-life decay: decay = exp(-ln(2) * age_days / halflife_days). At age_days = halflife_days, score is halved. halflife_days=0 means no decay."""
     if halflife_days <= 0 or not hits:
         return hits
     now = datetime.now(timezone.utc)
+    ln2 = math.log(2)
     out = []
     for h in hits:
         doc_id = (h.get("source") or {}).get("doc_id")
@@ -173,7 +190,7 @@ def _apply_time_decay(hits: List[Dict], doc_created: Dict[str, Optional[str]], h
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         age_days = (now - dt).total_seconds() / 86400
-        decay = 1.0 if age_days <= 0 else max(0.1, math.exp(-age_days / halflife_days))
+        decay = 1.0 if age_days <= 0 else max(0.1, math.exp(-ln2 * age_days / halflife_days))
         out.append({**h, "score": h["score"] * decay})
     return out
 
@@ -261,8 +278,24 @@ def is_toc_chapters_query(question: str) -> bool:
     return False
 
 
+def _get_original_blocks_for_toc(hits: List[Dict]) -> List[str]:
+    """Build list of original (uncompressed) chunk texts in display order for TOC guardrail. Avoids false negatives when compression strips TOC signals."""
+    out: List[str] = []
+    seen_parent: set = set()
+    for h in hits:
+        src = h.get("source") or {}
+        parent_chunk_id = src.get("parent_chunk_id") if isinstance(src.get("parent_chunk_id"), str) else None
+        if parent_chunk_id and parent_chunk_id not in seen_parent:
+            seen_parent.add(parent_chunk_id)
+            parent_text = _get_chunk_text(parent_chunk_id)
+            if parent_text:
+                out.append(parent_text)
+        out.append((h.get("text") or "").strip())
+    return out
+
+
 def has_toc_signals_in_context(blocks: List[str]) -> bool:
-    """True if the combined context blocks contain TOC-like signals (Contents, CHAPTER N, roman numerals list, etc.). Used to avoid hallucinating chapter lists."""
+    """True if the combined context blocks contain TOC-like signals (Contents, CHAPTER N, roman numerals list, etc.). Use original (uncompressed) blocks for guardrail to avoid false negatives."""
     combined = " ".join((b or "" for b in blocks)).lower()
     if "table of contents" in combined or "contents" in combined and ("chapter" in combined or "part " in combined):
         return True
@@ -275,56 +308,139 @@ def has_toc_signals_in_context(blocks: List[str]) -> bool:
     return False
 
 
-# Intent classification for query rewriting: reduces noisy expansions by tailoring rewrite to query type.
-QUERY_INTENT_SYSTEM = """Classify the user's question into exactly one intent:
-- factual: asking for a specific fact, definition, number, or "what is X"
-- procedural: how-to, steps, process, "how do I"
-- exploratory: broad comparison, list, "what are the options", "tell me about"
-- temporal: time-sensitive, "recent", "latest", "when did", "current"
-Reply with only one word: factual, procedural, exploratory, or temporal."""
+# --- Source-based intent: where the user is asking from (general / document / transcript) ---
 
+def _get_document_titles() -> Tuple[List[str], bool, List[str]]:
+    """Return (uploaded_doc_titles, has_transcripts, transcript_echotags). Used for intent classification and query rewrite."""
+    doc_titles: List[str] = []
+    has_transcripts = False
+    transcript_echotags: List[str] = []
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT filename, filetype FROM documents ORDER BY created_at DESC"
+        ).fetchall()
+        for fn, ft in rows or []:
+            if (fn or "").startswith("transcript_"):
+                has_transcripts = True
+            else:
+                doc_titles.append((fn or "").strip())
+        if has_transcripts:
+            tags = conn.execute(
+                "SELECT DISTINCT echotag FROM transcripts WHERE echotag IS NOT NULL AND echotag != '' LIMIT 30"
+            ).fetchall()
+            transcript_echotags = [r[0].strip() for r in tags if r and r[0]]
+    return (doc_titles[:50], has_transcripts, transcript_echotags)
+
+
+def _build_intent_system_prompt(document_titles: List[str], has_transcripts: bool, transcript_echotags: List[str]) -> str:
+    """Build intent classifier prompt. General comes from this LLM step. Document = embedding-first content search. Transcript = only when user clearly refers to recordings/conversations."""
+    base = """You classify the user's intent so we can route correctly. Reply with only one word: general, document, or transcript.
+
+PRIORITY: We use semantic search (embeddings) as the main way to find content. Document titles below are only to help you decide intent—not for exact matching.
+
+- general: Only when the user is clearly greeting, doing small talk, or off-topic (e.g. "hi", "thanks", "what's the weather?", "tell me a joke"). Any factual or content-related question is NOT general.
+- document: Default for content questions. The user is asking about something that could be in the knowledge base (uploaded files, books, PDFs). Use document if they ask about content by any wording: partial document name, "the book", "the report", "that file", or just a topic (e.g. "what is the Matthew effect?"). We will use embeddings to find the right chunks—no need for exact title match.
+- transcript: ONLY when the user clearly refers to recordings, transcripts, or their own conversation. Examples: "what was the latest conversation", "what was I talking about", "what were we discussing", "last 15 minutes", "last N transcripts", "summary of my recordings", "what did I say in the last meeting", "recent conversation". If they just ask a factual question without mentioning conversation/recording/transcript, use document (embeddings will still search transcript chunks if relevant)."""
+    if document_titles:
+        base += f"\n\nDocument titles in the knowledge base (for context only; user may refer to part of a title or say 'the book'):\n" + "\n".join(f"- {t}" for t in document_titles[:40])
+    if has_transcripts:
+        base += "\n\nTranscripts (recordings) exist. Use intent 'transcript' only when the user explicitly asks about conversation/recording/transcript or time-bound speech (e.g. last 15 minutes, latest conversation)."
+        if transcript_echotags:
+            base += " Tags: " + ", ".join(transcript_echotags[:15]) + "."
+    return base
+
+
+# Intent-based query rewrite: tailor expansion to source (document vs transcript). Retrieval uses embeddings, so queries need not match titles exactly.
 QUERY_REWRITE_BY_INTENT = {
-    "factual": "Rewrite into 2 concise search queries that keep the same fact or definition focus. No extra topics. Return only the queries, one per line.",
-    "procedural": "Rewrite into 2 search queries that capture steps or process (how-to). Return only the queries, one per line.",
-    "exploratory": "Rewrite into 2 search queries that broaden to related concepts or options. Return only the queries, one per line.",
-    "temporal": "Rewrite into 2 search queries that keep time/recent/latest focus. Return only the queries, one per line.",
+    "general": "Return only the user's question as a single search query, no alternatives. (One line only.)",
+    "document": "Rewrite into 2 concise search queries that capture the main concepts, key terms, and what the user is looking for. These will be used for semantic search (embeddings); include topic words, names, or phrases from the question so the right passages are retrieved. Partial or generic references (e.g. 'the book', 'the report') are fine—focus on the underlying content ask. Return only the queries, one per line.",
+    "transcript": "Rewrite into 2 search queries for finding content in recorded transcripts. Preserve time-related intent: 'last N transcripts', 'recent', 'summary of last 15', 'what was said in the last meeting', 'last 10 minutes'. Use terms like transcript, meeting, recording, recent, summary where relevant. Return only the queries, one per line.",
 }
 
 
-async def _classify_intent(question: str) -> str:
-    """Classify question intent for intent-aware rewriting. Falls back to 'exploratory' on failure."""
+async def _classify_intent(
+    question: str,
+    document_titles: Optional[List[str]] = None,
+    has_transcripts: bool = False,
+    transcript_echotags: Optional[List[str]] = None,
+) -> str:
+    """
+    Classify where the user is asking from by sending the question to the LLM with the intent system prompt.
+    Flow: build system prompt (with doc titles / transcript hints) → send question as user message → LLM replies with one word → we use that as intent.
+    """
+    if document_titles is None and not has_transcripts:
+        doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
+    else:
+        doc_titles = document_titles or []
+        transcript_echotags = transcript_echotags or []
+    sys = _build_intent_system_prompt(doc_titles, has_transcripts, transcript_echotags)
+    user_msg = (question or "").strip()[:600]
     try:
         out = await chat.chat(
-            [{"role": "system", "content": QUERY_INTENT_SYSTEM}, {"role": "user", "content": question[:500]}],
+            [
+                {"role": "system", "content": sys},
+                {"role": "user", "content": f"Question to classify:\n{user_msg}" if user_msg else "Question to classify: (empty)"},
+            ],
             temperature=0.0,
             max_tokens=20,
         )
         intent = (out or "").strip().lower()
-        if intent in QUERY_REWRITE_BY_INTENT:
+        if intent in ("general", "document", "transcript"):
             return intent
     except Exception:
         pass
-    return "exploratory"
+    return "document" if doc_titles or has_transcripts else "general"
 
 
-async def generate_queries(q: str) -> List[str]:
-    """Produce 1–3 alternative search queries. When RAG_INTENT_REWRITE is on, use intent-specific rewrite to reduce noisy expansions."""
-    use_intent = getattr(settings, "RAG_INTENT_REWRITE", False)
+def _parse_last_n_transcripts(question: str) -> Optional[int]:
+    """If question asks for 'last N transcripts' or 'summary of last N', return N. Otherwise None."""
+    if not (question or "").strip():
+        return None
+    t = question.lower()
+    # "last 15 transcripts", "last 15 transcript", "summary of last 15", "past 10 transcripts"
+    m = re.search(r"(?:last|past|recent)\s+(\d+)\s*(?:transcript|recording|meeting)s?", t)
+    if m:
+        return min(100, max(1, int(m.group(1))))
+    m = re.search(r"(?:summary|recap)\s+(?:of\s+)?(?:the\s+)?last\s+(\d+)", t)
+    if m:
+        return min(100, max(1, int(m.group(1))))
+    return None
+
+
+def _get_recent_transcript_doc_ids(n: int) -> set:
+    """Return set of document ids for the N most recent transcript documents (filename like 'transcript_%')."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT id FROM documents WHERE filename LIKE 'transcript_%' ORDER BY created_at DESC LIMIT ?",
+            (n,),
+        ).fetchall()
+    return {r[0] for r in rows if r}
+
+
+async def generate_queries(
+    q: str,
+    intent: Optional[str] = None,
+    document_titles: Optional[List[str]] = None,
+    has_transcripts: bool = False,
+    transcript_echotags: Optional[List[str]] = None,
+) -> List[str]:
+    """Produce 1–3 alternative search queries. When RAG_INTENT_REWRITE is on, use source-based intent (general/document/transcript) to tailor rewrite."""
+    use_intent = getattr(settings, "RAG_INTENT_REWRITE", True)
     if use_intent:
-        intent = await _classify_intent(q)
-        sys = QUERY_REWRITE_BY_INTENT.get(intent, QUERY_REWRITE_BY_INTENT["exploratory"])
+        if intent is None:
+            intent = await _classify_intent(q, document_titles, has_transcripts, transcript_echotags)
+        sys = QUERY_REWRITE_BY_INTENT.get(intent, QUERY_REWRITE_BY_INTENT["document"])
         try:
-            txt = await chat.chat([{"role": "system", "content": sys}, {"role": "user", "content": q[:600]}], temperature=0.2, max_tokens=120)
+            txt = await chat.chat([{"role": "system", "content": sys}, {"role": "user", "content": (q or "")[:600]}], temperature=0.2, max_tokens=120)
             variants = []
             for line in txt.splitlines():
                 line = re.sub(r"^\s*[-\d\).]+\s*", "", line).strip()
-                if line and line.lower() != q.lower():
+                if line and line.lower() != (q or "").strip().lower():
                     variants.append(line)
-            out = [q] + variants[:3]
+            out = [q.strip() or " "] + variants[:3]
             return out[:4]
         except Exception:
             pass
-    # Fallback: original behavior (fewer variants to reduce noise).
     sys = "Rewrite the question into 2 alternative search queries (synonyms or key terms only). Return only the list, one per line."
     txt = await chat.chat([{"role": "system", "content": sys}, {"role": "user", "content": q}], temperature=0.2, max_tokens=120)
     variants = []
@@ -332,7 +448,7 @@ async def generate_queries(q: str) -> List[str]:
         line = re.sub(r"^\s*[-\d\).]+\s*", "", line).strip()
         if line:
             variants.append(line)
-    out = [q] + [v for v in variants if v.lower() != q.lower()]
+    out = [q.strip() or " "] + [v for v in variants if v.lower() != (q or "").strip().lower()]
     return out[:4]
 
 
@@ -367,9 +483,29 @@ async def _rerank_hits(question: str, hits: List[Dict], top_n: int) -> List[Dict
     return hits[:top_n]
 
 
-async def retrieve(question: str, k: int, context_window: str = "all") -> List[Dict]:
-    """Hybrid retrieve: deterministic + LLM query expansion, dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. context_window still applied as hard filter when not 'all'."""
-    llm_qs = await generate_queries(question)
+async def retrieve_single_query(question: str, k: int, context_window: str = "all") -> List[Dict]:
+    if not (question or "").strip():
+        return []
+    hits = await index.search(question.strip(), max(k, 4))
+    hits = _filter_hits_by_context_window(hits, context_window or "all")
+    doc_created, doc_meta = _get_doc_info_for_hits(hits)
+    halflife = getattr(settings, "RAG_TIME_DECAY_HALFLIFE_DAYS", 0) or 0
+    if halflife > 0:
+        hits = _apply_time_decay(hits, doc_created, halflife)
+    return hits[:k]
+
+
+async def retrieve(
+    question: str,
+    k: int,
+    context_window: str = "all",
+    intent: Optional[str] = None,
+    document_titles: Optional[List[str]] = None,
+    has_transcripts: bool = False,
+    transcript_echotags: Optional[List[str]] = None,
+) -> List[Dict]:
+    """Hybrid retrieve: deterministic + LLM query expansion (source-based intent), dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. When intent is transcript and question asks for 'last N transcripts', filters to N most recent transcript docs."""
+    llm_qs = await generate_queries(question, intent=intent, document_titles=document_titles, has_transcripts=has_transcripts, transcript_echotags=transcript_echotags)
     det_qs = get_deterministic_query_variants(question)
     seen_lower: set = set()
     qs: List[str] = []
@@ -418,6 +554,14 @@ async def retrieve(question: str, k: int, context_window: str = "all") -> List[D
         hits = await _rerank_hits(question, hits[: getattr(settings, "RAG_RERANK_CANDIDATES", 12)], rerank_n)
     else:
         hits = hits[:k]
+
+    # When intent is transcript and user asked for "last N transcripts", keep only hits from N most recent transcript docs
+    if intent == "transcript":
+        n = _parse_last_n_transcripts(question)
+        if n is not None and n > 0:
+            recent_ids = _get_recent_transcript_doc_ids(n)
+            if recent_ids:
+                hits = [h for h in hits if ((h.get("source") or {}).get("doc_id")) in recent_ids]
     return hits
 
 
@@ -430,8 +574,8 @@ def _get_chunk_text(chunk_id: str) -> str | None:
         return row[0] if row else None
 
 
-def _sentences(text: str) -> List[str]:
-    """Split text into sentences (simple: by ., !, ?)."""
+def _rag_sentences(text: str) -> List[str]:
+    """Split text into sentences for RAG dedupe only (simple: by ., !, ?). Distinct from chunking._sentences to avoid collision."""
     if not (text or "").strip():
         return []
     s = re.sub(r"[.!?]+\s*", "\n", text)
@@ -465,7 +609,7 @@ def _dedupe_overlapping_sentences(blocks: List[str], overlap_ratio: float) -> Li
     seen_word_sets: List[set] = []
     out = []
     for block in blocks:
-        sentences = _sentences(block)
+        sentences = _rag_sentences(block)
         kept = []
         for sent in sentences:
             ws = _word_set(sent)
@@ -505,20 +649,53 @@ async def compress(question: str, chunk_text: str, src: dict) -> str:
         return chunk_text
 
 
+# Document-type-aware response rules: adapt style and certainty to doc_type (BOOK, FAQ, GOVERNMENT, RECORDS).
+_RAG_DOC_TYPE_RULES = """
+DOCUMENT TYPE AWARENESS
+Each context block may be labeled with (doc_type: ..., section: ...). Adapt your response style and level of certainty accordingly.
+
+📘 BOOK (doc_type: book)
+- Treat as explanatory/conceptual. Paraphrase when appropriate; combine chunks if they agree.
+- Style: natural language, explanatory, structured paragraphs or bullets. Cite chapter/section when available.
+- Do NOT claim legal or factual authority. If interpretive, acknowledge uncertainty. Do NOT quote large blocks unless asked.
+
+❓ FAQ (doc_type: faq)
+- Treat each chunk as authoritative Q&A. Prefer exact matches over paraphrasing.
+- Style: direct, concise, one clear answer per question.
+- Never merge unrelated FAQ answers. If multiple FAQs conflict, state the conflict clearly.
+
+🏛️ GOVERNMENT / FORMS (doc_type: government or forms, e.g. IRS, W-4)
+- Treat as legal/procedural. Precision over fluency; exact wording matters.
+- Style: step-by-step, section-referenced, neutral. Always reference form name and section.
+- Do NOT infer or extrapolate. Do NOT merge sections across different forms or years. If information is missing, say so explicitly.
+
+📊 RECORDS / STRUCTURED DATA (doc_type: records; CSV, logs)
+- Treat as data, not prose. Prefer filtering/aggregation over summarization.
+- Style: factual, tabular or list when useful. State date range or filter used.
+- Do NOT invent trends. If the question requires analysis not in the data, say so.
+
+MULTI-SOURCE: If multiple types appear, GOVERNMENT overrides BOOK; FAQ overrides BOOK; RECORDS handled independently. If sources conflict, report the conflict.
+
+HALLUCINATION GUARDRAILS (MANDATORY)
+- If no retrieved block answers the question: say "The provided documents do not contain this information."
+- Never rely on general knowledge; never guess missing values; never mix content across incompatible document types.
+- All claims must be traceable to the provided context. Include metadata references (section, form) when available.
+"""
+
+
 # RAG generation rules: faithfulness, grounding, and explicit "insufficient context" when needed.
 def _rag_system_prompt(persona: Optional[str] = None) -> str:
-    base = """You are EchoMind, a knowledgeable enterprise assistant. Use ONLY the provided context for factual claims.
+    base = """You are EchoMind, a retrieval-augmented assistant. Answer ONLY from the provided context. Adapt your response style and structure to the document type(s) of the retrieved blocks.
 
-Rules:
-- Answer in a clear, confident, human way. Do not cite sources, mention file names, chunk numbers, or say "according to the document" or "the document says" unless the context explicitly contains that wording.
-- Do not add facts not stated in the context. Do not use "likely", "might", or "inferred" for factual claims — either state what the context says or say the information is not in the materials.
-- Do not introduce names, examples, or facts that are not in the provided context blocks. Only use named entities (people, places, terms, chapter titles) that appear explicitly in the context.
-- If different parts of the context contradict each other, say so instead of picking one silently.
-- Do not introduce concepts, terms, or section names that do not appear in the context.
-- If the information is not in the context, say so plainly; do not guess or infer. Do not infer or invent a table of contents or chapter list from general knowledge.
-- If the context is insufficient to answer the question, say clearly: "The provided context does not contain enough information to answer this." Do not fabricate an answer."""
+""" + _RAG_DOC_TYPE_RULES.strip() + """
+
+ADDITIONAL RULES:
+- Do not add facts not stated in the context. Do not use "likely", "might", or "inferred" for factual claims — state what the context says or say the information is not in the materials.
+- Do not introduce names, examples, or terms that are not in the context blocks.
+- If parts of the context contradict each other, say so instead of picking one silently.
+- If the context is insufficient to answer, say clearly: "The provided context does not contain enough information to answer this." Do not fabricate an answer."""
     if persona:
-        base = f"You are EchoMind in the role of: {persona}. Adapt your reasoning style, vocabulary, and tone to this role.\n\n" + base
+        base = f"You are EchoMind in the role of: {persona}. Adapt your reasoning style and tone to this role.\n\n" + base
     return base
 
 _GENERAL_SYSTEM = "You are EchoMind, a friendly enterprise assistant. The user is greeting you or making small talk. Reply briefly and warmly in one or two sentences. Do not mention documents or sources."
@@ -578,7 +755,7 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
             if parent_text:
                 max_chars = _parent_context_max_chars()
                 truncated = parent_text if len(parent_text) <= max_chars else parent_text[:max_chars].rsplit(" ", 1)[0] + "…"
-                blocks.append(truncated)
+                blocks.append(_format_block_with_metadata(truncated, src))
                 chunk_ids_used.append(parent_chunk_id)
 
         chunk_text = h.get("text") or ""
@@ -589,7 +766,7 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
             compressed = compressed.strip()
         else:
             compressed = (await compress(question, chunk_text, src)).strip()
-        blocks.append(compressed)
+        blocks.append(_format_block_with_metadata(compressed, src))
         enriched.append({**h, "compressed": compressed})
         chunk_ids_used.append(h["chunk_id"])
 
@@ -599,9 +776,43 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
         blocks = _dedupe_overlapping_sentences(blocks, ratio)
     return blocks, enriched, chunk_ids_used
 
+
+def _format_block_with_metadata(block_text: str, source: dict) -> str:
+    """Prepend (doc_type, section) to the block when present so the model can adapt by document type."""
+    src = source or {}
+    doc_type = src.get("doc_type")
+    section = src.get("section")
+    if not doc_type and not section:
+        return block_text
+    parts = []
+    if doc_type:
+        parts.append(f"doc_type: {doc_type}")
+    if section:
+        parts.append(f"section: {section}")
+    label = "(" + ", ".join(parts) + ")"
+    return f"{label}\n{block_text}"
+
+
 def _rag_context_block(blocks: List[str]) -> str:
     """Format blocks as [1] ... [2] ... (no SOURCE lines)."""
     return "\n\n".join([f"[{i+1}] {b}" for i, b in enumerate(blocks)])
+
+
+async def _build_rag_context_fast(question: str, hits: List[Dict], max_chars_per_chunk: int = 1200) -> Tuple[List[str], List[Dict], List[str]]:
+    """Fast context builder: no LLM compress, just truncated chunk text. Used for advanced_rag (single-query retrieval) path."""
+    blocks: List[str] = []
+    enriched: List[Dict] = []
+    chunk_ids_used: List[str] = []
+    for h in hits:
+        src = h.get("source") or {}
+        chunk_text = (h.get("text") or "").strip()
+        if not chunk_text:
+            continue
+        truncated = chunk_text if len(chunk_text) <= max_chars_per_chunk else chunk_text[:max_chars_per_chunk].rsplit(" ", 1)[0] + "…"
+        blocks.append(_format_block_with_metadata(truncated, src))
+        enriched.append({**h, "compressed": truncated})
+        chunk_ids_used.append(h["chunk_id"])
+    return blocks, enriched, chunk_ids_used
 
 def _build_user_content_with_summary(conversation_summary: Optional[str], question: str, context_block: Optional[str] = None) -> str:
     """Single user message: conversation summary (if any) + current question + optional RAG context."""
@@ -630,28 +841,63 @@ async def _answer_general(
     return {"answer": ans, "citations": []}
 
 
+# --- End-to-end RAG flow (embedding-first, intent from LLM) ---
+# 1. Fast path: obvious greeting/small talk → _answer_general (no retrieval).
+# 2. Load doc titles + transcript availability (for intent prompt only; no exact title matching).
+# 3. Intent classification (LLM): question + system prompt with titles/hints → general | document | transcript.
+#    General comes from this step when LLM says so. Document = content question (embedding-first). Transcript = only when user clearly says conversation/recording/transcript/last N minutes/latest conversation.
+# 4. If general → _answer_general.
+# 5. If document or transcript → retrieve(): query expansion (intent-aware), then embedding-first search (dense + sparse), time filter, optional "last N transcripts" for transcript intent.
+# 6. Build context from hits, answer with LLM. Embedding is the priority for finding the right chunks.
+
+
 async def answer(
     question: str,
     history: List[Dict],
     persona: Optional[str] = None,
     context_window: str = "all",
     conversation_summary: Optional[str] = None,
+    use_knowledge_base: bool = True,
+    advanced_rag: bool = False,
 ) -> Dict:
+    if not use_knowledge_base:
+        return await _answer_general(question, history, persona, conversation_summary)
     if _is_general_conversation(question):
         return await _answer_general(question, history, persona, conversation_summary)
 
-    hits = await retrieve(question, settings.TOP_K, context_window=context_window or "all")
-    best_score = hits[0]["score"] if hits else 0.0
-    if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
-        return await _answer_general(question, history, persona, conversation_summary)
+    if advanced_rag:
+        hits = await retrieve_single_query(question, settings.TOP_K, context_window=context_window or "all")
+        best_score = hits[0]["score"] if hits else 0.0
+        if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+            return {"answer": INSUFFICIENT_CONTEXT_MSG, "citations": []}
+        blocks, enriched, chunk_ids_used = await _build_rag_context_fast(question, hits)
+    else:
+        doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
+        intent = await _classify_intent(question, doc_titles, has_transcripts, transcript_echotags)
+        if intent == "general":
+            return await _answer_general(question, history, persona, conversation_summary)
 
-    blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
-    if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(blocks):
-        return {"answer": "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", "citations": []}
+        hits = await retrieve(
+            question,
+            settings.TOP_K,
+            context_window=context_window or "all",
+            intent=intent,
+            document_titles=doc_titles,
+            has_transcripts=has_transcripts,
+            transcript_echotags=transcript_echotags,
+        )
+        best_score = hits[0]["score"] if hits else 0.0
+        if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+            return {"answer": INSUFFICIENT_CONTEXT_MSG, "citations": []}
+
+        blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
+        original_blocks = _get_original_blocks_for_toc(hits)
+        if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(original_blocks):
+            return {"answer": "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", "citations": []}
 
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids})
+    logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids, "advanced_rag": advanced_rag})
 
     if conversation_summary and conversation_summary.strip():
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)
@@ -691,32 +937,63 @@ async def answer_stream(
     persona: Optional[str] = None,
     context_window: str = "all",
     conversation_summary: Optional[str] = None,
+    use_knowledge_base: bool = True,
+    advanced_rag: bool = False,
 ) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
     """
     Same RAG as answer(), but stream the final LLM response. Yields ("chunk", delta, None) then ("done", full_answer, citations).
-    Uses conversation summary when provided (goals, constraints, decisions, key facts) instead of raw last 10 messages.
+    use_knowledge_base=False forces general answer. advanced_rag=True uses single-query retrieval (no intent/rewrite).
     """
+    if not use_knowledge_base:
+        async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+            yield ev
+        return
     if _is_general_conversation(question):
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev
         return
 
-    hits = await retrieve(question, settings.TOP_K, context_window=context_window or "all")
-    best_score = hits[0]["score"] if hits else 0.0
-    if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
-        async for ev in _answer_general_stream(question, history, persona, conversation_summary):
-            yield ev
-        return
+    if advanced_rag:
+        hits = await retrieve_single_query(question, settings.TOP_K, context_window=context_window or "all")
+        best_score = hits[0]["score"] if hits else 0.0
+        if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+            yield ("chunk", INSUFFICIENT_CONTEXT_MSG, None)
+            yield ("done", INSUFFICIENT_CONTEXT_MSG, [])
+            return
+        blocks, enriched, chunk_ids_used = await _build_rag_context_fast(question, hits)
+    else:
+        doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
+        intent = await _classify_intent(question, doc_titles, has_transcripts, transcript_echotags)
+        if intent == "general":
+            async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+                yield ev
+            return
 
-    blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
-    if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(blocks):
-        yield ("chunk", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", None)
-        yield ("done", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", [])
-        return
+        hits = await retrieve(
+            question,
+            settings.TOP_K,
+            context_window=context_window or "all",
+            intent=intent,
+            document_titles=doc_titles,
+            has_transcripts=has_transcripts,
+            transcript_echotags=transcript_echotags,
+        )
+        best_score = hits[0]["score"] if hits else 0.0
+        if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+            yield ("chunk", INSUFFICIENT_CONTEXT_MSG, None)
+            yield ("done", INSUFFICIENT_CONTEXT_MSG, [])
+            return
+
+        blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
+        original_blocks = _get_original_blocks_for_toc(hits)
+        if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(original_blocks):
+            yield ("chunk", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", None)
+            yield ("done", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", [])
+            return
 
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids})
+    logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids, "advanced_rag": advanced_rag})
 
     if conversation_summary and conversation_summary.strip():
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)

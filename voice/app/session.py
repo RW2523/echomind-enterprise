@@ -9,6 +9,7 @@ from typing import Optional, Deque, List, Dict
 from collections import deque
 
 import numpy as np
+import requests
 import webrtcvad
 
 from .config import SETTINGS
@@ -156,8 +157,21 @@ class OmniSessionA:
         self.history: List[Dict] = []  # [{"role":"user"/"assistant","content":...}, ...]
         self.max_history_turns: int = 12
         self.max_history_tokens: int = 1400  # keep prompt reasonable
+        self.use_knowledge_base: bool = False
+        self.persona: str = ""
+        self.context_window: str = "all"
+        self.voice_bot_name: str = ""
+        self.voice_user_name: str = ""
+        # Listen-only mode: accumulate user speech until a trigger phrase, then process
+        self.listen_only: bool = False
+        self.listen_buffer: List[str] = []
+        self.trigger_phrases: List[str] = [
+            "now you can speak", "now you can process", "fact check", "fact check it",
+            "process that", "speak now", "you can speak",
+        ]
 
     async def start(self, session_id: str):
+        self.listen_buffer = []
         if self.moshi:
             await self.moshi.connect()
             self._tasks.append(asyncio.create_task(self._moshi_recv_loop()))
@@ -283,9 +297,19 @@ class OmniSessionA:
         t = data.get("type")
         if t == "set_context":
             self.system_prompt = (data.get("system_prompt") or "").strip() or self.system_prompt
+            self.use_knowledge_base = bool(data.get("use_knowledge_base", False))
+            self.persona = (data.get("persona") or "").strip()
+            self.context_window = (data.get("context_window") or "all").strip() or "all"
+            self.voice_bot_name = (data.get("voice_bot_name") or "").strip()
+            self.voice_user_name = (data.get("voice_user_name") or "").strip()
+            self.listen_only = bool(data.get("listen_only", False))
+            triggers = data.get("trigger_phrases")
+            if isinstance(triggers, list):
+                self.trigger_phrases = [str(x).strip().lower() for x in triggers if str(x).strip()]
             # If user checks "clear memory"
             if bool(data.get("clear_memory")):
                 self.history = []
+                self.listen_buffer = []
             # Optional: switch Piper TTS voice if client sent piper_voice (e.g. en_US-lessac-medium)
             piper_voice = (data.get("piper_voice") or "").strip()
             if piper_voice:
@@ -412,10 +436,79 @@ class OmniSessionA:
         if not user_text:
             return
 
+        ut_lower = user_text.lower()
+
+        # "Listen to conversation" / "start listening" -> enter listen-only mode
+        if any(x in ut_lower for x in ("listen to conversation", "start listening", "just listen", "keep listening")):
+            self.listen_only = True
+            self.listen_buffer = []
+            self.turn_id += 1
+            await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
+            await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
+            self._assistant_active_gen = None
+            return
+
+        if self.listen_only:
+            # Check for trigger: "now you can speak", "process", "fact check", etc.
+            triggered = any(trig in ut_lower for trig in self.trigger_phrases)
+            if triggered:
+                self.listen_only = False
+                combined = " ".join(self.listen_buffer) if self.listen_buffer else ""
+                self.listen_buffer = []
+                if combined.strip():
+                    user_text = (combined + " " + user_text).strip()
+                # fall through to normal LLM/RAG with user_text
+            else:
+                self.listen_buffer.append(user_text)
+                self.turn_id += 1
+                await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
+                await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
+                self._assistant_active_gen = None
+                return
+
         self.turn_id += 1
         await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
         await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
         self._assistant_active_gen = my_gen
+
+        # Resource Knowledge Base: call backend RAG (fast path) and speak the answer
+        backend_url = (getattr(SETTINGS, "BACKEND_CHAT_URL", None) or "").strip().rstrip("/")
+        if self.use_knowledge_base and backend_url:
+            try:
+                payload = {
+                    "message": user_text,
+                    "persona": self.persona or None,
+                    "context_window": self.context_window or "all",
+                    "use_knowledge_base": True,
+                    "advanced_rag": True,
+                }
+                loop = asyncio.get_running_loop()
+                r = await loop.run_in_executor(
+                    None,
+                    lambda: requests.post(
+                        f"{backend_url}/api/chat/ask-voice",
+                        json=payload,
+                        timeout=60,
+                        headers={"Content-Type": "application/json"},
+                    ),
+                )
+                r.raise_for_status()
+                data = r.json()
+                answer = (data.get("answer") or "").strip()
+                if my_gen != self.generation_id:
+                    return
+                reply_clean = strip_markdown_for_speech(answer)
+                if reply_clean:
+                    await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
+                await self._speak_phrase(my_gen, answer)
+                self.history.append({"role": "user", "content": user_text})
+                self.history.append({"role": "assistant", "content": reply_clean or answer})
+                self._trim_history()
+            except Exception as e:
+                await self.send({"type": "error", "where": "backend_rag", "message": str(e), "generation_id": my_gen})
+            await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
+            self._assistant_active_gen = None
+            return
 
         # Build messages with memory
         messages = self._build_messages(user_text)

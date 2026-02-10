@@ -34,6 +34,7 @@ const LiveTranscription: React.FC = () => {
   const [wsError, setWsError] = useState<string | null>(null);
   const [previewTags, setPreviewTags] = useState<{ tags: string[]; conversation_type: string } | null>(null);
   const [tagsLoading, setTagsLoading] = useState(false);
+  const [refining, setRefining] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const recRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
@@ -158,12 +159,15 @@ const LiveTranscription: React.FC = () => {
   const refine = async () => {
     const raw = (fullTranscript || '').trim();
     if (!raw) return;
+    setRefining(true);
     try {
       const out = await refineTranscript(raw);
       setRefined(out.refined ?? '');
     } catch (e) {
       console.error(e);
       alert((e as Error)?.message || 'Refine failed');
+    } finally {
+      setRefining(false);
     }
   };
 
@@ -256,7 +260,16 @@ const LiveTranscription: React.FC = () => {
           ) : (
             <button onClick={() => stopMic(true)} className="rounded-xl px-4 py-2 text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors">Stop</button>
           )}
-          <button onClick={refine} disabled={!fullTranscript.trim()} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">Refine</button>
+          <button onClick={refine} disabled={!fullTranscript.trim() || refining} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50 flex items-center gap-2 min-w-[100px] justify-center">
+            {refining ? (
+              <>
+                <span className="inline-block w-4 h-4 border-2 border-cyan-400/50 border-t-cyan-400 rounded-full animate-spin" />
+                <span>Refining…</span>
+              </>
+            ) : (
+              'Refine'
+            )}
+          </button>
           <button onClick={store} disabled={!fullTranscript.trim()} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">Store</button>
           <button onClick={checkTags} disabled={!fullTranscript.trim() || tagsLoading} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">
             {tagsLoading ? '…' : 'Check tags'}
@@ -291,8 +304,20 @@ const LiveTranscription: React.FC = () => {
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[280px] flex flex-col">
-          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Refined</div>
-          <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">{refined || 'Click “Refine” after transcription.'}</div>
+          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0 flex items-center gap-2">
+            Refined
+            {refining && <span className="inline-block w-3 h-3 border-2 border-cyan-400/50 border-t-cyan-400 rounded-full animate-spin" />}
+          </div>
+          <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">
+            {refining ? (
+              <span className="text-slate-500 flex items-center gap-2">
+                <span className="inline-block w-4 h-4 border-2 border-cyan-400/50 border-t-cyan-400 rounded-full animate-spin" />
+                Refining transcript…
+              </span>
+            ) : (
+              refined || 'Click “Refine” after transcription.'
+            )}
+          </div>
         </div>
       </div>
     </div>

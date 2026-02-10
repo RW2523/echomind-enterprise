@@ -5,9 +5,10 @@ import type { AppSettings } from "../types";
 
 interface VoiceConversationProps {
   settings?: AppSettings;
+  onUpdateSetting?: (key: keyof AppSettings, val: AppSettings[keyof AppSettings]) => void;
 }
 
-const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings }) => {
+const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdateSetting }) => {
   const {
     state,
     userAnalyser,
@@ -19,6 +20,8 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings }) => {
     connect,
     disconnect,
     connecting,
+    micMuted,
+    setMicMuted,
   } = useVoiceConnection({ settings });
 
   return (
@@ -44,6 +47,10 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings }) => {
         onConnect={connect}
         onDisconnect={disconnect}
         connecting={connecting}
+        micMuted={micMuted}
+        onMicMutedToggle={() => setMicMuted(!micMuted)}
+        voiceUseKnowledgeBase={settings?.voiceUseKnowledgeBase ?? false}
+        onVoiceUseKnowledgeBaseToggle={() => onUpdateSetting?.("voiceUseKnowledgeBase", !(settings?.voiceUseKnowledgeBase ?? false))}
       />
     </div>
   );

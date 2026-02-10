@@ -85,6 +85,9 @@ export interface UseVoiceConnectionReturn {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   connecting: boolean;
+  /** When true, mic is muted so the assistant can finish without interruption */
+  micMuted: boolean;
+  setMicMuted: (muted: boolean) => void;
 }
 
 export interface UseVoiceConnectionOptions {
@@ -116,6 +119,9 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const micAboveCountRef = useRef(0);
   const micBelowCountRef = useRef(0);
+  const [micMuted, setMicMuted] = useState(false);
+  const micMutedRef = useRef(false);
+  micMutedRef.current = micMuted;
 
   const pumpPlayback = useCallback(() => {
     const ctx = playbackCtxRef.current;
@@ -195,7 +201,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         const worklet = new AudioWorkletNode(ctx, "framer16k");
         workletRef.current = worklet;
         worklet.port.onmessage = (ev: MessageEvent) => {
-          if (wsRef.current?.readyState !== 1) return;
+          if (wsRef.current?.readyState !== 1 || micMutedRef.current) return;
           const u8 = new Uint8Array(ev.data);
           const b64 = btoa(String.fromCharCode(...u8));
           wsRef.current?.send(JSON.stringify({ type: "audio_frame", ts: performance.now() / 1000, pcm16_b64: b64 }));
@@ -223,13 +229,23 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         }));
         micAboveCountRef.current = 0;
         micBelowCountRef.current = 0;
+        const botName = (settings?.voiceBotName ?? "").trim();
+        const userName = (settings?.voiceUserName ?? "").trim();
         const personaPrefix = settings?.persona ? `You are EchoMind in the role of: ${settings.persona}. Be concise, helpful, and conversational. ` : "";
-        const systemPrompt = personaPrefix + (contextValue || "").trim() || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
+        let systemPrompt = personaPrefix + (contextValue || "").trim() || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
+        if (botName) {
+          systemPrompt = `You are ${botName}. Only respond when the user addresses you as "${botName}" (wake word). When they say "stop", stop speaking; when they say "start" or your name again, resume. ${userName ? `The user's name is ${userName}; use it when appropriate. ` : ""}` + systemPrompt;
+        }
         ws.send(JSON.stringify({
           type: "set_context",
           system_prompt: systemPrompt,
           clear_memory: false,
           piper_voice: settings?.voiceName ?? undefined,
+          use_knowledge_base: settings?.voiceUseKnowledgeBase ?? false,
+          persona: settings?.persona ?? undefined,
+          context_window: settings?.contextWindow ?? undefined,
+          voice_bot_name: botName || undefined,
+          voice_user_name: userName || undefined,
         }));
       } catch (e) {
         console.error(e);
@@ -278,7 +294,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       setConnecting(false);
     };
     ws.onerror = () => setConnecting(false);
-  }, [contextValue, settings?.persona, settings?.voiceName, enqueuePlayback, smoothStop]);
+  }, [contextValue, settings?.persona, settings?.voiceName, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceUseKnowledgeBase, settings?.contextWindow, enqueuePlayback, smoothStop]);
 
   const disconnect = useCallback(async () => {
     if (workletRef.current) {
@@ -348,8 +364,24 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const personaPrefix = settings?.persona ? `You are EchoMind in the role of: ${settings.persona}. Be concise, helpful, and conversational. ` : "";
     const systemPrompt = personaPrefix + (typeof contextValue === "string" ? contextValue : "").trim() || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
-    ws.send(JSON.stringify({ type: "set_context", system_prompt: systemPrompt, clear_memory: false, piper_voice: settings?.voiceName ?? undefined }));
-  }, [contextValue, settings?.persona, settings?.voiceName]);
+    const botName = (settings?.voiceBotName ?? "").trim();
+    const userName = (settings?.voiceUserName ?? "").trim();
+    let sysPrompt = systemPrompt;
+    if (botName) {
+      sysPrompt = `You are ${botName}. Only respond when the user addresses you as "${botName}" (wake word). When they say "stop", stop speaking; when they say "start" or your name again, resume. ${userName ? `The user's name is ${userName}. ` : ""}` + systemPrompt;
+    }
+    ws.send(JSON.stringify({
+      type: "set_context",
+      system_prompt: sysPrompt,
+      clear_memory: false,
+      piper_voice: settings?.voiceName ?? undefined,
+      use_knowledge_base: settings?.voiceUseKnowledgeBase ?? false,
+      persona: settings?.persona ?? undefined,
+      context_window: settings?.contextWindow ?? undefined,
+      voice_bot_name: botName || undefined,
+      voice_user_name: userName || undefined,
+    }));
+  }, [contextValue, settings?.persona, settings?.voiceName, settings?.voiceUseKnowledgeBase, settings?.contextWindow, settings?.voiceBotName, settings?.voiceUserName]);
 
   const clearMemory = useCallback(() => {
     const ws = wsRef.current;
@@ -368,5 +400,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     connect,
     disconnect,
     connecting,
+    micMuted,
+    setMicMuted,
   };
 }

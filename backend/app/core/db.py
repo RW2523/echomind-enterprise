@@ -14,8 +14,12 @@ def init_db():
             pass
         conn.execute("CREATE TABLE IF NOT EXISTS messages(id TEXT PRIMARY KEY, chat_id TEXT, role TEXT, content TEXT, created_at TEXT)")
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS transcripts(id TEXT PRIMARY KEY, raw_text TEXT, polished_text TEXT, tags_json TEXT, echotag TEXT, echodate TEXT, created_at TEXT)"
+            "CREATE TABLE IF NOT EXISTS transcripts(id TEXT PRIMARY KEY, title TEXT, raw_text TEXT, polished_text TEXT, tags_json TEXT, echotag TEXT, echodate TEXT, created_at TEXT)"
         )
+        try:
+            conn.execute("ALTER TABLE transcripts ADD COLUMN title TEXT")
+        except Exception:
+            pass
         try:
             conn.execute("ALTER TABLE transcripts ADD COLUMN echotag TEXT")
         except Exception:
