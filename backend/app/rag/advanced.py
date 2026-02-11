@@ -340,7 +340,7 @@ PRIORITY: We use semantic search (embeddings) as the main way to find content. D
 
 - general: Only when the user is clearly greeting, doing small talk, or off-topic (e.g. "hi", "thanks", "what's the weather?", "tell me a joke"). Any factual or content-related question is NOT general.
 - document: Default for content questions. The user is asking about something that could be in the knowledge base (uploaded files, books, PDFs). Use document if they ask about content by any wording: partial document name, "the book", "the report", "that file", or just a topic (e.g. "what is the Matthew effect?"). We will use embeddings to find the right chunks—no need for exact title match.
-- transcript: ONLY when the user clearly refers to recordings, transcripts, or their own conversation. Examples: "what was the latest conversation", "what was I talking about", "what were we discussing", "last 15 minutes", "last N transcripts", "summary of my recordings", "what did I say in the last meeting", "recent conversation". If they just ask a factual question without mentioning conversation/recording/transcript, use document (embeddings will still search transcript chunks if relevant)."""
+- transcript: When the user clearly refers to recordings, transcripts, or their own conversation. Examples: "summary of the recent transcript", "transcript for last 15 hours", "summarize my transcript", "give me a summary of the conversation/recording", "key points from my last meeting", "what was the latest conversation", "last 15 minutes", "last N transcripts", "last N hours/days", "summary of my recordings", "what did I say in the last meeting", "recent conversation". Any mention of transcript/recording/conversation together with a time (last X hours/days/minutes) or "recent" or "summary of" → use transcript. If they only ask a factual topic question with no mention of conversation/recording/transcript, use document."""
     if document_titles:
         base += f"\n\nDocument titles in the knowledge base (for context only; user may refer to part of a title or say 'the book'):\n" + "\n".join(f"- {t}" for t in document_titles[:40])
     if has_transcripts:
@@ -374,11 +374,7 @@ async def _classify_intent(
         doc_titles = document_titles or []
         transcript_echotags = transcript_echotags or []
     sys = _build_intent_system_prompt(doc_titles, has_transcripts, transcript_echotags)
-    print("------------------TYPERW--------------",flush=True)
-    print(sys,flush=True)
     user_msg = (question or "").strip()[:600]
-    print(user_msg,flush=True)
-    print("------------------TYPERW--------------",flush=True)
     try:
         out = await chat.chat(
             [
@@ -396,6 +392,24 @@ async def _classify_intent(
     return "document" if doc_titles or has_transcripts else "general"
 
 
+def _question_clearly_asks_for_transcript(question: str, has_transcripts: bool) -> bool:
+    """True when the user clearly asks for transcript/recording/conversation content (e.g. summary of recent transcript, last N hours).
+    Used to override LLM intent so we always search the transcript-only index in these cases."""
+    if not has_transcripts or not (question or "").strip():
+        return False
+    q = question.strip().lower()
+    time_or_recent = (
+        "recent" in q or "last" in q or "past" in q or "summary" in q
+        or "hour" in q or "hours" in q or "day" in q or "days" in q or "minute" in q or "minutes" in q
+        or "for last" in q
+    )
+    transcript_related = (
+        "transcript" in q or "recording" in q or "recordings" in q
+        or "conversation" in q or "conversations" in q or "meeting" in q or "meetings" in q
+    )
+    return bool(transcript_related and time_or_recent)
+
+
 def _parse_last_n_transcripts(question: str) -> Optional[int]:
     """If question asks for 'last N transcripts' or 'summary of last N', return N. Otherwise None."""
     if not (question or "").strip():
@@ -408,6 +422,21 @@ def _parse_last_n_transcripts(question: str) -> Optional[int]:
     m = re.search(r"(?:summary|recap)\s+(?:of\s+)?(?:the\s+)?last\s+(\d+)", t)
     if m:
         return min(100, max(1, int(m.group(1))))
+    return None
+
+
+def _parse_last_time_window(question: str) -> Optional[timedelta]:
+    """If question asks for 'last N hours' or 'last N days', return timedelta. Used to filter transcript hits by time."""
+    if not (question or "").strip():
+        return None
+    t = question.lower()
+    # "last 15 hours", "for last 15 hours", "past 2 hours", "last 3 days"
+    m = re.search(r"(?:last|past|for\s+last)\s+(\d+)\s*(hour|hours?)", t)
+    if m:
+        return timedelta(hours=min(720, max(1, int(m.group(1)))))
+    m = re.search(r"(?:last|past|for\s+last)\s+(\d+)\s*(day|days?)", t)
+    if m:
+        return timedelta(days=min(365, max(1, int(m.group(1)))))
     return None
 
 
@@ -533,9 +562,16 @@ async def retrieve(
 
     dense_hits_per_query: List[List[Dict]] = []
     sparse_hits_per_query: List[List[Dict]] = []
+    use_transcript_index = intent == "transcript"
+    if use_transcript_index:
+        logger.info("RAG retrieve: intent=transcript, using transcript-only index")
     for q in qs:
-        dense_hits_per_query.append(await index.search(q, k_per_query))
-        sparse_hits_per_query.append(index.sparse.search(q, k_per_query))
+        if use_transcript_index:
+            dense_hits_per_query.append(await index.search_transcript_only(q, k_per_query))
+            sparse_hits_per_query.append(index.transcript_sparse.search(q, k_per_query))
+        else:
+            dense_hits_per_query.append(await index.search(q, k_per_query))
+            sparse_hits_per_query.append(index.sparse.search(q, k_per_query))
     candidates_k = max(k, getattr(settings, "RAG_RERANK_CANDIDATES", k)) if getattr(settings, "RAG_RERANK_ENABLED", False) else k
     hits = _weighted_rrf(dense_hits_per_query, sparse_hits_per_query, candidates_k, dense_weight=dense_w, sparse_weight=sparse_w)
     # Hard filter by context_window when not 'all'
@@ -549,8 +585,8 @@ async def retrieve(
     if getattr(settings, "RAG_TAG_BOOST_ENABLED", False):
         tag_factor = getattr(settings, "RAG_TAG_BOOST_FACTOR", 0.08)
         hits = _apply_tag_boost(hits, question, doc_meta, tag_factor)
-    # Prefer authoritative docs when scores are close
-    if getattr(settings, "RAG_PREFER_AUTHORITATIVE", False):
+    # Prefer authoritative docs when scores are close (skip when intent=transcript; all hits are from transcript index)
+    if intent != "transcript" and getattr(settings, "RAG_PREFER_AUTHORITATIVE", False):
         hits = _prefer_authoritative_sort(hits)
     # Optional rerank
     if getattr(settings, "RAG_RERANK_ENABLED", False):
@@ -559,13 +595,34 @@ async def retrieve(
     else:
         hits = hits[:k]
 
-    # When intent is transcript and user asked for "last N transcripts", keep only hits from N most recent transcript docs
+    # When intent is transcript: optional filters by "last N transcripts" or "last N hours/days"
     if intent == "transcript":
         n = _parse_last_n_transcripts(question)
         if n is not None and n > 0:
             recent_ids = _get_recent_transcript_doc_ids(n)
             if recent_ids:
                 hits = [h for h in hits if ((h.get("source") or {}).get("doc_id")) in recent_ids]
+        else:
+            window = _parse_last_time_window(question)
+            if window is not None:
+                cutoff = datetime.now(timezone.utc) - window
+                doc_created, _ = _get_doc_info_for_hits(hits)
+                filtered = []
+                for h in hits:
+                    doc_id = (h.get("source") or {}).get("doc_id")
+                    if not doc_id:
+                        continue
+                    created_at = doc_created.get(doc_id)
+                    if created_at is None:
+                        continue
+                    dt = _parse_iso_date(created_at)
+                    if dt is None:
+                        continue
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    if dt >= cutoff:
+                        filtered.append(h)
+                hits = filtered
     return hits
 
 
@@ -680,6 +737,10 @@ Each context block may be labeled with (doc_type: ..., section: ...). Adapt your
 
 MULTI-SOURCE: If multiple types appear, GOVERNMENT overrides BOOK; FAQ overrides BOOK; RECORDS handled independently. If sources conflict, report the conflict.
 
+SYNTHESIS (summary / extraction requests)
+- When the user asks for a *summary*, *key points*, *takeaways*, *recap*, or *extraction* of the provided context: produce that by synthesizing from the context blocks. Do not refuse on the grounds that no block literally contains the word "summary" or a pre-written summary—your job is to create the summary (or list, recap) from the content given.
+- Only say "The provided documents do not contain this information" when the context genuinely lacks the *subject matter* (e.g. no transcript content when they asked about transcripts, or no relevant passages). Not when they ask for a synthesized form (summary, bullets, takeaways) of content that *is* present.
+
 HALLUCINATION GUARDRAILS (MANDATORY)
 - If no retrieved block answers the question: say "The provided documents do not contain this information."
 - Never rely on general knowledge; never guess missing values; never mix content across incompatible document types.
@@ -696,8 +757,9 @@ def _rag_system_prompt(persona: Optional[str] = None) -> str:
 ADDITIONAL RULES:
 - Do not add facts not stated in the context. Do not use "likely", "might", or "inferred" for factual claims — state what the context says or say the information is not in the materials.
 - Do not introduce names, examples, or terms that are not in the context blocks.
+- If the user asks for a summary, recap, key points, or takeaways: produce that by condensing/synthesizing the provided context; do not refuse because the context does not literally contain a pre-written "summary" sentence.
 - If parts of the context contradict each other, say so instead of picking one silently.
-- If the context is insufficient to answer, say clearly: "The provided context does not contain enough information to answer this." Do not fabricate an answer."""
+- If the context is insufficient to answer (e.g. no relevant content at all), say clearly: "The provided context does not contain enough information to answer this." Do not fabricate an answer."""
     if persona:
         base = f"You are EchoMind in the role of: {persona}. Adapt your reasoning style and tone to this role.\n\n" + base
     return base
@@ -870,6 +932,7 @@ async def answer(
         return await _answer_general(question, history, persona, conversation_summary)
 
     if advanced_rag:
+        logger.info("RAG intent: (advanced_rag, no intent classification) question=%s", (question[:80] + "…") if len(question) > 80 else question)
         hits = await retrieve_single_query(question, settings.TOP_K, context_window=context_window or "all")
         best_score = hits[0]["score"] if hits else 0.0
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
@@ -878,6 +941,9 @@ async def answer(
     else:
         doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
         intent = await _classify_intent(question, doc_titles, has_transcripts, transcript_echotags)
+        if has_transcripts and _question_clearly_asks_for_transcript(question, has_transcripts):
+            intent = "transcript"
+        logger.info("RAG intent: classified=%s question=%s", intent, (question[:80] + "…") if len(question) > 80 else question)
         if intent == "general":
             return await _answer_general(question, history, persona, conversation_summary)
 
@@ -901,7 +967,7 @@ async def answer(
 
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids, "advanced_rag": advanced_rag})
+    logger.info("RAG answer intent=%s hits=%d", intent if not advanced_rag else "advanced_rag", len(doc_ids))
 
     if conversation_summary and conversation_summary.strip():
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)
@@ -958,6 +1024,7 @@ async def answer_stream(
         return
 
     if advanced_rag:
+        logger.info("RAG intent (stream): (advanced_rag, no intent classification) question=%s", (question[:80] + "…") if len(question) > 80 else question)
         hits = await retrieve_single_query(question, settings.TOP_K, context_window=context_window or "all")
         best_score = hits[0]["score"] if hits else 0.0
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
@@ -968,6 +1035,9 @@ async def answer_stream(
     else:
         doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
         intent = await _classify_intent(question, doc_titles, has_transcripts, transcript_echotags)
+        if has_transcripts and _question_clearly_asks_for_transcript(question, has_transcripts):
+            intent = "transcript"
+        logger.info("RAG intent (stream): classified=%s question=%s", intent, (question[:80] + "…") if len(question) > 80 else question)
         if intent == "general":
             async for ev in _answer_general_stream(question, history, persona, conversation_summary):
                 yield ev
@@ -997,7 +1067,7 @@ async def answer_stream(
 
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    logger.info("RAG answer", extra={"chunk_ids": chunk_ids_used, "doc_ids": doc_ids, "advanced_rag": advanced_rag})
+    logger.info("RAG answer (stream) intent=%s hits=%d", intent if not advanced_rag else "advanced_rag", len(doc_ids))
 
     if conversation_summary and conversation_summary.strip():
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)
