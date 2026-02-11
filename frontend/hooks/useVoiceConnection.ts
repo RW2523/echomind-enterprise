@@ -37,6 +37,17 @@ function resampleLinear(input: Float32Array, srcSr: number, dstSr: number): Floa
   return out;
 }
 
+/** Apply short fade-in/fade-out to reduce clicks at chunk boundaries. Modifies in place. */
+function fadeBufferEdges(f32: Float32Array, sampleRate: number, fadeMs: number = 3): void {
+  const n = Math.min(Math.floor((sampleRate * fadeMs) / 1000), Math.floor(f32.length / 2));
+  if (n <= 0) return;
+  for (let i = 0; i < n; i++) {
+    const t = (i + 1) / (n + 1);
+    f32[i] *= t;
+    f32[f32.length - 1 - i] *= t;
+  }
+}
+
 const WORKLET_CODE = `
   class Framer16k extends AudioWorkletProcessor {
     constructor() {
@@ -151,6 +162,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       if (!ctx) return;
       const targetSr = ctx.sampleRate;
       const f32 = resampleLinear(pcmF32, sr, targetSr);
+      fadeBufferEdges(f32, targetSr, 3);
       playQueueRef.current.push({ f32, rate });
       if (!playingRef.current) {
         setState((prev) => ({ ...prev, assistantOrb: "speaking" }));

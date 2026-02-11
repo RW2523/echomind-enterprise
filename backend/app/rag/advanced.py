@@ -374,7 +374,11 @@ async def _classify_intent(
         doc_titles = document_titles or []
         transcript_echotags = transcript_echotags or []
     sys = _build_intent_system_prompt(doc_titles, has_transcripts, transcript_echotags)
+    print("------------------TYPERW--------------",flush=True)
+    print(sys,flush=True)
     user_msg = (question or "").strip()[:600]
+    print(user_msg,flush=True)
+    print("------------------TYPERW--------------",flush=True)
     try:
         out = await chat.chat(
             [

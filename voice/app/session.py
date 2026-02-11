@@ -26,6 +26,23 @@ def float32_to_pcm16_bytes(x: np.ndarray) -> bytes:
     x = np.clip(x, -1.0, 1.0)
     return (x * 32767.0).astype(np.int16).tobytes()
 
+
+def _fade_chunk_edges(a: np.ndarray, sr: int, fade_ms: float = 4.0) -> np.ndarray:
+    """Apply short fade-in and fade-out to avoid clicks at chunk boundaries. Modifies in place, returns a."""
+    if a.size == 0:
+        return a
+    n = int(sr * (fade_ms / 1000.0))
+    n = min(n, a.size // 2)
+    if n <= 0:
+        return a
+    # fade-in: linear 0 -> 1 over first n samples
+    for i in range(n):
+        a[i] *= (i + 1) / (n + 1)
+    # fade-out: linear 1 -> 0 over last n samples
+    for i in range(n):
+        a[-(i + 1)] *= (i + 1) / (n + 1)
+    return a
+
 def rms_energy(pcm16: bytes) -> float:
     x = np.frombuffer(pcm16, dtype=np.int16).astype(np.float32)
     if x.size == 0:
@@ -624,19 +641,23 @@ class OmniSessionA:
                 await self.send({"type": "error", "where": "tts", "message": str(e), "generation_id": my_gen})
                 return
 
-            chunk = int(sr * 0.22)
+            # Larger chunks = fewer boundaries = fewer clicks; 0.35s at 22kHz ~= 7700 samples
+            chunk_samples = int(sr * 0.35)
+            chunk_samples = max(chunk_samples, 256)
             i = 0
             while i < y.size:
                 if my_gen != self.generation_id:
                     return
-                part = y[i:i+chunk]
-                i += chunk
+                part = y[i : i + chunk_samples].astype(np.float32)
+                i += chunk_samples
+                # Short fade at edges to avoid crackling at chunk boundaries
+                _fade_chunk_edges(part, sr, fade_ms=4.0)
                 await self.send({
                     "type": "audio_out",
                     "generation_id": my_gen,
                     "sample_rate": sr,
                     "playback_rate": rate,
-                    "pcm16_raw": float32_to_pcm16_bytes(part.astype(np.float32))
+                    "pcm16_raw": float32_to_pcm16_bytes(part),
                 })
                 await asyncio.sleep(0.0)
         finally:

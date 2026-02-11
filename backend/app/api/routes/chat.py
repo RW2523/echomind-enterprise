@@ -67,15 +67,22 @@ class AskVoiceIn(BaseModel):
 
 
 def _parse_transcript_time_query(message: str) -> float | None:
-    """If the message asks for transcripts in a time range (e.g. 'last 2 hours'), return hours as float; else None."""
+    """If the message asks for transcripts in a time range (e.g. 'last 2 hours', 'summarise my transcript last hour'), return hours as float; else None."""
     m = (message or "").strip().lower()
-    if not m or "transcript" not in m and "speak" not in m and "say" not in m and "talk" not in m:
+    # Must look like a transcript/time request: transcript, recent, summarise, or speak/say/talk + time
+    transcript_related = any(
+        x in m for x in ("transcript", "recent transcript", "summarise", "summarize", "speak", "say", "talk")
+    )
+    if not m or not transcript_related:
         return None
-    # e.g. "last 2 hours", "last 1 hour", "in the last 3 hours", "past 2 hours"
+    # "last 2 hours", "last 1 hour", "in the last 3 hours", "past 2 hours"
     match = re.search(r"(?:last|past|in the last)\s+(\d+(?:\.\d+)?)\s*(hour|hours?)", m, re.I)
     if match:
         n = float(match.group(1))
         return n if n > 0 else None
+    # "last hour", "past hour", "last one hour" (no digit or word "one") -> 1 hour
+    if re.search(r"(?:last|past|in the last)\s+(?:one\s+)?hour(?:s)?\b", m, re.I):
+        return 1.0
     return None
 
 
@@ -118,7 +125,13 @@ async def ask_voice(inp: AskVoiceIn):
         if not parts:
             return {"answer": "I couldn't find any transcripts in that time range."}
         transcript_block = "\n\n---\n\n".join(parts)
-        user_content = f"Question: {msg}\n\nTranscripts from the last {int(last_hours)} hour(s):\n\n{transcript_block}\n\nAnswer based on these transcripts only."
+        user_content = (
+            f"The user asked: {msg}\n\n"
+            "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
+            "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
+            f"Transcripts from the last {int(last_hours)} hour(s):\n\n{transcript_block}\n\n"
+            "Provide a direct answer or summary based only on the above transcript text."
+        )
         out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
         return {"answer": out["answer"]}
 
@@ -136,6 +149,34 @@ async def ask_voice(inp: AskVoiceIn):
 
 @router.post("/ask")
 async def ask(inp: AskIn, background_tasks: BackgroundTasks):
+    msg = (inp.message or "").strip()
+    last_hours = _parse_transcript_time_query(msg)
+    if last_hours is not None:
+        transcripts = _fetch_transcripts_since_hours(last_hours)
+        parts = [((t.get("polished_text") or t.get("raw_text")) or "").strip() for t in transcripts]
+        parts = [p for p in parts if p]
+        if not parts:
+            out = {"answer": "I couldn't find any transcripts in that time range.", "citations": []}
+        else:
+            transcript_block = "\n\n---\n\n".join(parts)
+            user_content = (
+                f"The user asked: {msg}\n\n"
+                "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
+                "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
+                f"Transcripts from the last {int(last_hours)} hour(s):\n\n{transcript_block}\n\n"
+                "Provide a direct answer or summary based only on the above transcript text."
+            )
+            out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
+        with get_conn() as conn:
+            conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
+                         (new_id("msg"), inp.chat_id, "user", inp.message, now_iso()))
+            conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
+                         (new_id("msg"), inp.chat_id, "assistant", out["answer"], now_iso()))
+            conn.commit()
+        conversation_summary = _get_conversation_summary(inp.chat_id)
+        background_tasks.add_task(_update_summary_background, conversation_summary, inp.message, out["answer"], inp.chat_id)
+        return out
+
     with get_conn() as conn:
         rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
     history = [{"role": r[0], "content": r[1]} for r in rows]
