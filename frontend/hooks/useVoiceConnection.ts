@@ -246,7 +246,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         const personaPrefix = settings?.persona ? `You are EchoMind in the role of: ${settings.persona}. Be concise, helpful, and conversational. ` : "";
         let systemPrompt = personaPrefix + (contextValue || "").trim() || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
         if (botName) {
-          systemPrompt = `You are ${botName}. Only respond when the user addresses you as "${botName}" (wake word). When they say "stop", stop speaking; when they say "start" or your name again, resume. ${userName ? `The user's name is ${userName}; use it when appropriate. ` : ""}` + systemPrompt;
+          systemPrompt = `You are ${botName}. Talk in a natural, conversational way—like a friendly voice assistant. When the user says your name or speaks to you, respond naturally. If they say "stop", pause speaking; if they say "start" or your name, continue. ${userName ? `The user's name is ${userName}; use it when it fits naturally. ` : ""}` + systemPrompt;
         }
         ws.send(JSON.stringify({
           type: "set_context",
@@ -268,7 +268,12 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     };
 
     ws.onmessage = async (ev: MessageEvent) => {
-      const msg = JSON.parse(ev.data as string);
+      let msg: Record<string, unknown>;
+      try {
+        msg = JSON.parse(ev.data as string) as Record<string, unknown>;
+      } catch {
+        return;
+      }
       if (msg.type === "event" && (msg.event === "BARGE_IN" || msg.event === "USER_SPEECH_START")) {
         playQueueRef.current = [];
         smoothStop();
@@ -291,19 +296,51 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
         return;
       }
-      if (msg.type === "audio_out") {
-        const bytes = b64ToBytes(msg.pcm16_b64);
-        const f32 = pcm16ToFloat32(bytes);
-        enqueuePlayback(f32, msg.sample_rate || 24000, msg.playback_rate || 1);
+      if (msg.type === "audio_out" && typeof msg.pcm16_b64 === "string") {
+        try {
+          const bytes = b64ToBytes(msg.pcm16_b64);
+          const f32 = pcm16ToFloat32(bytes);
+          enqueuePlayback(f32, (msg.sample_rate as number) || 24000, (msg.playback_rate as number) || 1);
+        } catch (_) {
+          // skip malformed audio chunk
+        }
         return;
       }
     };
 
-    ws.onclose = () => {
-      setState((prev) => ({ ...prev, isConnected: false, userOrb: "disconnected", assistantOrb: "disconnected" }));
+    const cleanupOnClose = () => {
+      playQueueRef.current = [];
+      playingRef.current = false;
+      if (workletRef.current) {
+        try {
+          workletRef.current.disconnect();
+        } catch (_) {}
+        workletRef.current = null;
+      }
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach((t) => t.stop());
+        micStreamRef.current = null;
+      }
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
+      if (playbackCtxRef.current) {
+        playbackCtxRef.current.close().catch(() => {});
+        playbackCtxRef.current = null;
+      }
+      playbackGainRef.current = null;
+      playbackAnalyserRef.current = null;
+      currentSourceRef.current = null;
+      wsRef.current = null;
       setUserAnalyser(null);
       setAssistantAnalyser(null);
+      setState((prev) => ({ ...prev, isConnected: false, userOrb: "disconnected", assistantOrb: "disconnected" }));
       setConnecting(false);
+    };
+
+    ws.onclose = () => {
+      cleanupOnClose();
     };
     ws.onerror = () => setConnecting(false);
   }, [contextValue, settings?.persona, settings?.voiceName, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceUseKnowledgeBase, settings?.contextWindow, enqueuePlayback, smoothStop]);
@@ -380,7 +417,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     const userName = (settings?.voiceUserName ?? "").trim();
     let sysPrompt = systemPrompt;
     if (botName) {
-      sysPrompt = `You are ${botName}. Only respond when the user addresses you as "${botName}" (wake word). When they say "stop", stop speaking; when they say "start" or your name again, resume. ${userName ? `The user's name is ${userName}. ` : ""}` + systemPrompt;
+      sysPrompt = `You are ${botName}. Talk in a natural, conversational way—like a friendly voice assistant. When the user says your name or speaks to you, respond naturally. If they say "stop", pause speaking; if they say "start" or your name, continue. ${userName ? `The user's name is ${userName}; use it when it fits naturally. ` : ""}` + systemPrompt;
     }
     ws.send(JSON.stringify({
       type: "set_context",

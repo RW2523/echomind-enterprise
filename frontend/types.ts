@@ -62,9 +62,9 @@ export interface AppSettings {
   advancedRag: boolean;
   /** Voice only: when true use knowledge base (RAG); when false answer generally. */
   voiceUseKnowledgeBase: boolean;
-  /** Voice: bot name used as wake word (e.g. "Watson"); when set, only respond when user says this name. */
+  /** Voice: assistant name (e.g. Alex); conversation is natural, like a voice assistant. */
   voiceBotName: string;
-  /** Voice: user's name (optional); bot can remember and use it. */
+  /** Voice: user's name (optional); assistant uses it when it fits naturally. */
   voiceUserName: string;
 }
 

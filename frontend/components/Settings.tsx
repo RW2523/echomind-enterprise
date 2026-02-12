@@ -86,13 +86,13 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
           <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Voice Assistant Identity</h3>
           <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 space-y-4 mb-8">
             <div>
-              <label className="text-sm font-bold text-slate-300">Bot name (wake word)</label>
-              <p className="text-xs text-slate-500 mt-0.5">When set, the assistant only responds when you say this name (e.g. &quot;Watson&quot;). Say &quot;stop&quot; to pause, &quot;start&quot; or the name to resume.</p>
+              <label className="text-sm font-bold text-slate-300">Assistant name</label>
+              <p className="text-xs text-slate-500 mt-0.5">Give your assistant a name (e.g. Alex). Talk naturally—say the name or just speak; say &quot;stop&quot; to pause, &quot;start&quot; or the name to continue.</p>
               <input
                 type="text"
                 value={settings.voiceBotName ?? ''}
                 onChange={(e) => update('voiceBotName', e.target.value)}
-                placeholder="e.g. Watson"
+                placeholder="e.g. Alex"
                 className="mt-2 w-full max-w-xs rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-cyan-500/50"
               />
             </div>
@@ -178,10 +178,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
         </section>
 
         <section>
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Advanced RAG</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Advanced RAG Settings</h3>
           <div className="flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-cyan-500/5 border border-cyan-500/10">
             <div>
-              <h4 className="text-sm font-bold text-cyan-400">Advanced RAG (fast retrieval)</h4>
+              <h4 className="text-sm font-bold text-cyan-400"> RAG (fast retrieval)</h4>
               <p className="text-xs text-slate-500 mt-1">When on: single-query embedding retrieval only (no query rewriting). Faster. When off: full RAG with intent and query expansion.</p>
             </div>
             <button 

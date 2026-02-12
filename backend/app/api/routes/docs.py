@@ -15,7 +15,15 @@ router = APIRouter(prefix="/docs", tags=["docs"])
 def _vector_db_usage_bytes() -> int:
     """Total size of vector DB files: FAISS index, meta JSON, sparse meta, SQLite DB."""
     total = 0
-    for path in (settings.FAISS_PATH, settings.META_PATH, settings.SPARSE_META_PATH, settings.DB_PATH):
+    for path in (
+        settings.FAISS_PATH,
+        settings.META_PATH,
+        settings.SPARSE_META_PATH,
+        settings.FAISS_TRANSCRIPT_PATH,
+        settings.META_TRANSCRIPT_PATH,
+        settings.SPARSE_TRANSCRIPT_META_PATH,
+        settings.DB_PATH,
+    ):
         if path and os.path.exists(path):
             try:
                 total += os.path.getsize(path)

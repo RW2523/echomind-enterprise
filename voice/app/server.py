@@ -52,10 +52,17 @@ async def ws_endpoint(ws: WebSocket):
         while True:
             msg = await ws.receive()
             if "text" in msg and msg["text"]:
-                data = json.loads(msg["text"])
-
+                try:
+                    data = json.loads(msg["text"])
+                except (json.JSONDecodeError, TypeError):
+                    continue
+                if not isinstance(data, dict):
+                    continue
                 if data.get("type") == "audio_frame":
-                    pcm = base64.b64decode(data.get("pcm16_b64", ""))
+                    try:
+                        pcm = base64.b64decode(data.get("pcm16_b64") or b"")
+                    except Exception:
+                        continue
                     await sess.on_audio_frame(float(data.get("ts", 0.0)), pcm)
                 else:
                     await sess.on_control(data)

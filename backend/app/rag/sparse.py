@@ -19,14 +19,15 @@ def _tokenize(text: str) -> List[str]:
 
 
 class Bm25Index:
-    def __init__(self):
+    def __init__(self, meta_path: str | None = None):
+        self._meta_path = meta_path if meta_path is not None else settings.SPARSE_META_PATH
         self.chunk_ids: List[str] = []
         self.corpus_tokens: List[List[str]] = []
         self._bm25 = None
         self._load()
 
     def _load(self) -> None:
-        path = settings.SPARSE_META_PATH
+        path = self._meta_path
         if not os.path.exists(path):
             return
         try:
@@ -47,7 +48,7 @@ class Bm25Index:
             self._bm25 = None
 
     def _save(self) -> None:
-        path = settings.SPARSE_META_PATH
+        path = self._meta_path
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             json.dump({"chunk_ids": self.chunk_ids, "corpus_tokens": self.corpus_tokens}, f, ensure_ascii=False)

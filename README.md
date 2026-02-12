@@ -19,6 +19,17 @@ The frontend image includes a **self-signed certificate** so you can use HTTPS w
 docker compose up --build
 ```
 
+### Build fails with "failed to execute bake: read |0: file already closed"
+This can happen at the end of a Buildx build when writing provenance metadata. Disable provenance and rebuild:
+
+```bash
+BUILDX_METADATA_PROVENANCE=disabled docker compose build
+docker compose up -d
+```
+
+Or in one go: `BUILDX_METADATA_PROVENANCE=disabled docker compose up --build`.  
+If you use `docker buildx bake` instead of `docker compose build`, run it with the same env var: `BUILDX_METADATA_PROVENANCE=disabled docker buildx bake`.
+
 ## Pull models (once)
 ```bash
 docker exec -it echomind-ollama ollama pull qwen2.5:7b-instruct

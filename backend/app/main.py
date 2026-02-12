@@ -1,3 +1,5 @@
+import logging
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
@@ -5,6 +7,15 @@ from .core.db import init_db
 from .api.routes.docs import router as docs_router
 from .api.routes.chat import router as chat_router
 from .api.routes.transcribe import router as transcribe_router
+
+# So Docker logs (stdout) show app logs including RAG intent debug
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    stream=sys.stdout,
+    force=True,
+)
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 init_db()
 app = FastAPI(title=settings.APP_NAME)
