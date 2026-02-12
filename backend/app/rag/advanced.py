@@ -465,24 +465,30 @@ async def generate_queries(
         sys = QUERY_REWRITE_BY_INTENT.get(intent, QUERY_REWRITE_BY_INTENT["document"])
         try:
             txt = await chat.chat([{"role": "system", "content": sys}, {"role": "user", "content": (q or "")[:600]}], temperature=0.2, max_tokens=120)
+            logger.info("RAG query rewrite (intent=%s) raw LLM response: %s", intent, (txt or "").strip()[:500])
             variants = []
             for line in txt.splitlines():
                 line = re.sub(r"^\s*[-\d\).]+\s*", "", line).strip()
                 if line and line.lower() != (q or "").strip().lower():
                     variants.append(line)
             out = [q.strip() or " "] + variants[:3]
-            return out[:4]
+            out = out[:4]
+            logger.info("RAG query rewrite (intent=%s) final queries: %s", intent, out)
+            return out
         except Exception:
             pass
     sys = "Rewrite the question into 2 alternative search queries (synonyms or key terms only). Return only the list, one per line."
     txt = await chat.chat([{"role": "system", "content": sys}, {"role": "user", "content": q}], temperature=0.2, max_tokens=120)
+    logger.info("RAG query rewrite (fallback) raw LLM response: %s", (txt or "").strip()[:500])
     variants = []
     for line in txt.splitlines():
         line = re.sub(r"^\s*[-\d\).]+\s*", "", line).strip()
         if line:
             variants.append(line)
     out = [q.strip() or " "] + [v for v in variants if v.lower() != (q or "").strip().lower()]
-    return out[:4]
+    out = out[:4]
+    logger.info("RAG query rewrite (fallback) final queries: %s", out)
+    return out
 
 
 async def _rerank_hits(question: str, hits: List[Dict], top_n: int) -> List[Dict]:
@@ -549,6 +555,7 @@ async def retrieve(
             qs.append(q.strip())
     if not qs:
         qs = [question.strip() or " "]
+    logger.info("RAG retrieve: intent=%s combined search queries (det + llm deduped): %s", intent, qs)
 
     is_toc = is_toc_chapters_query(question)
     if is_toc:
@@ -711,58 +718,55 @@ async def compress(question: str, chunk_text: str, src: dict) -> str:
 
 
 # Document-type-aware response rules: adapt style and certainty to doc_type (BOOK, FAQ, GOVERNMENT, RECORDS).
-_RAG_DOC_TYPE_RULES = """
-DOCUMENT TYPE AWARENESS
-Each context block may be labeled with (doc_type: ..., section: ...). Adapt your response style and level of certainty accordingly.
-
-📘 BOOK (doc_type: book)
-- Treat as explanatory/conceptual. Paraphrase when appropriate; combine chunks if they agree.
-- Style: natural language, explanatory, structured paragraphs or bullets. Cite chapter/section when available.
-- Do NOT claim legal or factual authority. If interpretive, acknowledge uncertainty. Do NOT quote large blocks unless asked.
-
-❓ FAQ (doc_type: faq)
-- Treat each chunk as authoritative Q&A. Prefer exact matches over paraphrasing.
-- Style: direct, concise, one clear answer per question.
-- Never merge unrelated FAQ answers. If multiple FAQs conflict, state the conflict clearly.
-
-🏛️ GOVERNMENT / FORMS (doc_type: government or forms, e.g. IRS, W-4)
-- Treat as legal/procedural. Precision over fluency; exact wording matters.
-- Style: step-by-step, section-referenced, neutral. Always reference form name and section.
-- Do NOT infer or extrapolate. Do NOT merge sections across different forms or years. If information is missing, say so explicitly.
-
-📊 RECORDS / STRUCTURED DATA (doc_type: records; CSV, logs)
-- Treat as data, not prose. Prefer filtering/aggregation over summarization.
-- Style: factual, tabular or list when useful. State date range or filter used.
-- Do NOT invent trends. If the question requires analysis not in the data, say so.
-
-MULTI-SOURCE: If multiple types appear, GOVERNMENT overrides BOOK; FAQ overrides BOOK; RECORDS handled independently. If sources conflict, report the conflict.
-
-SYNTHESIS (summary / extraction requests)
-- When the user asks for a *summary*, *key points*, *takeaways*, *recap*, or *extraction* of the provided context: produce that by synthesizing from the context blocks. Do not refuse on the grounds that no block literally contains the word "summary" or a pre-written summary—your job is to create the summary (or list, recap) from the content given.
-- Only say "The provided documents do not contain this information" when the context genuinely lacks the *subject matter* (e.g. no transcript content when they asked about transcripts, or no relevant passages). Not when they ask for a synthesized form (summary, bullets, takeaways) of content that *is* present.
-
-HALLUCINATION GUARDRAILS (MANDATORY)
-- If no retrieved block answers the question: say "The provided documents do not contain this information."
-- Never rely on general knowledge; never guess missing values; never mix content across incompatible document types.
-- All claims must be traceable to the provided context. Include metadata references (section, form) when available.
-"""
 
 
 # RAG generation rules: faithfulness, grounding, and explicit "insufficient context" when needed.
 def _rag_system_prompt(persona: Optional[str] = None) -> str:
-    base = """You are EchoMind, a retrieval-augmented assistant. Answer ONLY from the provided context. Adapt your response style and structure to the document type(s) of the retrieved blocks.
+    rag_doc_type_rules = """
+    DOCUMENT TYPES & STYLES:
 
-""" + _RAG_DOC_TYPE_RULES.strip() + """
+    1. 📘 Books (doc_type: book)
+    - Treat as conceptual and explanatory.
+    - Paraphrase when appropriate; combine chunks if they align.
+    - Style: natural language, structured paragraphs or bullets.
+    - Cite chapter/section when available.
+    - Do not quote large blocks unless requested.
 
-ADDITIONAL RULES:
-- Do not add facts not stated in the context. Do not use "likely", "might", or "inferred" for factual claims — state what the context says or say the information is not in the materials.
-- Do not introduce names, examples, or terms that are not in the context blocks.
-- If the user asks for a summary, recap, key points, or takeaways: produce that by condensing/synthesizing the provided context; do not refuse because the context does not literally contain a pre-written "summary" sentence.
-- If parts of the context contradict each other, say so instead of picking one silently.
-- If the context is insufficient to answer (e.g. no relevant content at all), say clearly: "The provided context does not contain enough information to answer this." Do not fabricate an answer."""
+    2. ❓ FAQ Documents (doc_type: faq)
+    - Treat each entry as authoritative Q&A.
+    - Prefer exact answers over paraphrasing.
+    - Style: direct, concise, one clear answer per question.
+    - Do not merge unrelated FAQs. Note conflicts if they exist.
+
+    3. 🏛️ Government Documents / Forms (doc_type: government/forms)
+    - Treat as procedural/legal content.
+    - Style: precise, step-by-step, neutral.
+    - Reference form and section when possible.
+    - Do not infer or extrapolate.
+
+    4. 📊 Records / Structured Data (CSV, logs, spreadsheets) (doc_type: records)
+    - Treat as factual data.
+    - Prefer filtering, aggregation, or listing.
+    - Include date ranges or filters when applicable.
+    - Do not invent trends or values.
+
+    5. 🎤 Live Transcripts (lectures, discussions, meetings) (doc_type: transcript)
+    - Treat as ongoing speech content.
+    - Summarize, extract key points, or answer questions using only the transcript.
+    - Maintain speaker distinctions if provided.
+    - Do not infer content beyond what was spoken.
+
+    GENERAL GUIDELINES:
+    - Only answer from the provided context. Do not invent information.
+
+    """
+
+    base_prompt = f"You are EchoMind, a retrieval-augmented assistant. Adapt your reasoning style and tone to the document type(s) of the provided context.\n\n{rag_doc_type_rules.strip()}"
+
     if persona:
-        base = f"You are EchoMind in the role of: {persona}. Adapt your reasoning style and tone to this role.\n\n" + base
-    return base
+        base_prompt = f"You are EchoMind in the role of: {persona}. Adapt your reasoning style and tone to this role.\n\n" + base_prompt
+
+    return base_prompt
 
 _GENERAL_SYSTEM = "You are EchoMind, a friendly enterprise assistant. The user is greeting you or making small talk. Reply briefly and warmly in one or two sentences. Do not mention documents or sources."
 
@@ -802,11 +806,12 @@ async def update_conversation_summary(
 async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str], List[Dict], List[str]]:
     """Build numbered context blocks [1], [2], ... with parent expansion. No SOURCE lines (internal grounding only).
     Returns (block_texts, enriched_ctx_list for citations/audit, chunk_ids_used for audit).
-    When RAG_VERBATIM_QUERY_TERMS is on, chunks that contain key query terms are included verbatim (truncated) instead of compressed."""
+    When RAG_COMPRESS_CONTEXT is False, chunks are not LLM-compressed (truncated only). When True, RAG_VERBATIM_QUERY_TERMS can still bypass compression for chunks with key query terms."""
     seen_parent_ids: set = set()
     blocks: List[str] = []
     enriched: List[Dict] = []
     chunk_ids_used: List[str] = []
+    use_compression = False
     key_terms = _key_query_terms(question)
     use_verbatim = getattr(settings, "RAG_VERBATIM_QUERY_TERMS", True)
     verbatim_max = getattr(settings, "RAG_VERBATIM_MAX_CHARS", 1200)
@@ -826,8 +831,9 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
 
         chunk_text = h.get("text") or ""
         chunk_lower = chunk_text.lower()
-        use_verbatim_this = use_verbatim and key_terms and any(term in chunk_lower for term in key_terms)
-        if use_verbatim_this:
+        use_verbatim_this = use_compression and use_verbatim and key_terms and any(term in chunk_lower for term in key_terms)
+        if not use_compression or use_verbatim_this:
+            # No compression: use chunk as-is, truncated to verbatim_max
             compressed = chunk_text if len(chunk_text) <= verbatim_max else chunk_text[:verbatim_max].rsplit(" ", 1)[0] + "…"
             compressed = compressed.strip()
         else:
@@ -975,7 +981,6 @@ async def answer(
     else:
         msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
     ans = await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
-
     citations = []
     if getattr(settings, "RAG_EXPOSE_SOURCES", False):
         citations = [{"filename": c["source"].get("filename"), "chunk_index": c["source"].get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]

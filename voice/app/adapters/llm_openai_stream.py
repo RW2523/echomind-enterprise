@@ -1,6 +1,20 @@
 import json
+import logging
 import requests
 from typing import Iterator, List, Dict
+
+logger = logging.getLogger(__name__)
+
+
+def _log_chat_request(url: str, payload: dict, stream: bool) -> None:
+    """Log full prompt (no content cut)."""
+    logger.info(
+        "LLM request %s -> %s full_payload=%s",
+        "stream" if stream else "sync",
+        url,
+        json.dumps(payload, ensure_ascii=False),
+    )
+
 
 class OpenAICompatLLMStream:
     def __init__(self, url: str, model: str, temperature: float = 0.7, max_tokens: int = 220):
@@ -17,6 +31,7 @@ class OpenAICompatLLMStream:
             "max_tokens": self.max_tokens,
             "stream": True,
         }
+        _log_chat_request(self.url, payload, stream=True)
         with requests.post(self.url, json=payload, stream=True, timeout=request_timeout) as r:
             r.raise_for_status()
             for raw in r.iter_lines(decode_unicode=True):
@@ -51,6 +66,7 @@ class OpenAICompatLLMStream:
             "max_tokens": self.max_tokens,
             "stream": False,
         }
+        _log_chat_request(self.url, payload, stream=False)
         r = requests.post(self.url, json=payload, timeout=90)
         r.raise_for_status()
         data = r.json()

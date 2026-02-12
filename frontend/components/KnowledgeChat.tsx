@@ -10,16 +10,16 @@ interface KnowledgeChatProps {
   settings?: AppSettings | null;
 }
 
-/** Styled Markdown renderer for assistant messages: headings, lists, bold, code, blockquotes. */
+/** Styled Markdown renderer for assistant messages: headings, lists, bold, code, blockquotes. Lists use list-outside + pl to avoid layout break with bullets. */
 const markdownComponents: React.ComponentProps<typeof ReactMarkdown>['components'] = {
   h1: ({ children }) => <h1 className="text-lg font-bold mt-4 mb-2 first:mt-0 text-white">{children}</h1>,
   h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-1.5 text-white/95">{children}</h2>,
   h3: ({ children }) => <h3 className="text-sm font-semibold mt-2.5 mb-1 text-white/90">{children}</h3>,
   h4: ({ children }) => <h4 className="text-sm font-semibold mt-2 mb-1 text-white/85">{children}</h4>,
   p: ({ children }) => <p className="text-sm mb-2 last:mb-0 leading-relaxed text-white/90">{children}</p>,
-  ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm text-white/90">{children}</ul>,
-  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-sm text-white/90">{children}</ol>,
-  li: ({ children }) => <li className="ml-2">{children}</li>,
+  ul: ({ children }) => <ul className="list-disc list-outside pl-5 mb-2 space-y-1 text-sm text-white/90 [&_ul]:pl-5 [&_ul]:mt-1 [&_ol]:pl-5 [&_ol]:mt-1">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal list-outside pl-5 mb-2 space-y-1 text-sm text-white/90 [&_ul]:pl-5 [&_ul]:mt-1 [&_ol]:pl-5 [&_ol]:mt-1">{children}</ol>,
+  li: ({ children }) => <li className="pl-1 [&>p]:my-0 first:[&>p]:mt-0 last:[&>p]:mb-0">{children}</li>,
   strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
   em: ({ children }) => <em className="italic text-white/95">{children}</em>,
   code: ({ className, children, ...props }) => {
@@ -195,7 +195,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings }) => {
                   <span className="ml-1">Thinking...</span>
                 </div>
               ) : m.role === 'assistant' && m.content ? (
-                <div className="text-sm markdown-response">
+                <div className="text-sm markdown-response break-words overflow-hidden min-w-0">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                     {m.content}
                   </ReactMarkdown>

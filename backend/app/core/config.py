@@ -1,13 +1,21 @@
 from pydantic_settings import BaseSettings
 import os
 
+# Base dir for all persistence; env ECHOMIND_DATA_DIR overrides. Used so DB_PATH, FAISS_*, etc. stay under one root.
+_DEFAULT_DATA_DIR = os.getenv("ECHOMIND_DATA_DIR", "/data")
+
+
 class Settings(BaseSettings):
     APP_NAME: str = "EchoMind Backend"
-    DATA_DIR: str = os.getenv("ECHOMIND_DATA_DIR", "/data")
-    DB_PATH: str = "/data/echomind.sqlite"
-    FAISS_PATH: str = "/data/faiss.index"
-    META_PATH: str = "/data/faiss_meta.json"
-    SPARSE_META_PATH: str = os.getenv("ECHOMIND_SPARSE_META_PATH", "/data/sparse_meta.json")
+    DATA_DIR: str = _DEFAULT_DATA_DIR
+    DB_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "echomind.sqlite")
+    FAISS_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss.index")
+    META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_meta.json")
+    SPARSE_META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "sparse_meta.json")
+    # Transcript-only index: used when intent=transcript so retrieval runs only over transcripts.
+    FAISS_TRANSCRIPT_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_transcript.index")
+    META_TRANSCRIPT_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_transcript_meta.json")
+    SPARSE_TRANSCRIPT_META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "sparse_transcript_meta.json")
     LLM_BASE_URL: str = "http://ollama:11434/v1"
     LLM_MODEL: str = "qwen2.5:7b-instruct"
     LLM_TEMPERATURE: float = 0.2
@@ -51,6 +59,8 @@ class Settings(BaseSettings):
     RAG_BOOK_SPARSE_WEIGHT: float = float(os.getenv("ECHOMIND_RAG_BOOK_SPARSE_WEIGHT", "0.5"))
     # TOC/chapters guardrail: when user asks for chapters/contents, require TOC signals in context or refuse.
     RAG_TOC_GUARDRAIL: bool = os.getenv("ECHOMIND_RAG_TOC_GUARDRAIL", "1").lower() in ("1", "true", "yes")
+    # When True (default), compress each chunk with LLM before sending to answer; when False, use chunk text as-is (truncated only). Set ECHOMIND_RAG_COMPRESS_CONTEXT=0 to disable.
+    RAG_COMPRESS_CONTEXT: bool = os.getenv("ECHOMIND_RAG_COMPRESS_CONTEXT", "1").lower() in ("1", "true", "yes")
     # Bypass compression for chunks that contain key query terms (improves grounding for named concepts).
     RAG_VERBATIM_QUERY_TERMS: bool = os.getenv("ECHOMIND_RAG_VERBATIM_QUERY_TERMS", "1").lower() in ("1", "true", "yes")
     RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1200"))
