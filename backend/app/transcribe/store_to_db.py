@@ -4,6 +4,7 @@ Used by POST /api/transcribe/store and by WebSocket combine→LLM→save flow.
 """
 from __future__ import annotations
 import json
+import logging
 import re
 from ..utils.ids import new_id, now_iso
 from ..core.db import get_conn
@@ -11,6 +12,7 @@ from ..rag.index import index
 from ..rag.llm import OpenAICompatChat
 from ..core.config import settings
 
+logger = logging.getLogger(__name__)
 _chat = None
 
 
@@ -77,6 +79,6 @@ async def store_transcript_to_db(
             index_text,
             {"type": "transcript", "tags": tags, "echotag": echotag, "echodate": echodate, "created_at": echodate},
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to index transcript %s in RAG: %s", tid, e)
     return {"transcript_id": tid, "title": title, "tags": tags, "echotag": echotag, "echodate": echodate, "created_at": echodate}
