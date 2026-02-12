@@ -13,7 +13,12 @@
   </style>
 </head>
 <body>
-  <h2>realtime bot — v5.1 (Context box + Memory)</h2>
+  <h2>EchoMind — Voice AI + Conversation Intelligence</h2>
+
+  <div class="row profile-row">
+    <small><b>Profile</b> (updatable by voice)</small>
+    <div><span id="profileAssistant">—</span> · <span id="profileUser">—</span> · <span id="profileTz">—</span> · <span id="profileLocation">—</span></div>
+  </div>
 
   <div class="row">
     <label><b>Context / Role (System Prompt)</b></label>
@@ -118,6 +123,10 @@ function smoothStop(ms=60) {
     if (!playCtx) return;
     try { gainNode.gain.setValueAtTime(1.0, playCtx.currentTime); } catch(e) {}
   }, ms + 30);
+}
+
+function clearPlayQueue() {
+  playQueue = [];
 }
 
 async function stopPlaybackNow() {
@@ -257,6 +266,21 @@ async function start() {
     if (msg.type === "context_ack") {
       if (msg.system_prompt && !ctxEl.value) ctxEl.value = msg.system_prompt;
       log("context applied", msg.cleared ? "(memory cleared)" : "");
+      return;
+    }
+    if (msg.type === "profile_update") {
+      document.getElementById("profileAssistant").textContent = msg.assistant_name || msg.wake_word || "—";
+      document.getElementById("profileUser").textContent = msg.user_name || "—";
+      document.getElementById("profileTz").textContent = msg.timezone || "—";
+      document.getElementById("profileLocation").textContent = msg.location || "—";
+      return;
+    }
+    if (msg.type === "memory_event") {
+      log("Memory:", msg.event || "");
+      return;
+    }
+    if (msg.type === "memory_info") {
+      if (msg.summary) log("Memory info:", msg.summary.substring(0, 200) + (msg.summary.length > 200 ? "…" : ""));
       return;
     }
     if (msg.type === "event") {

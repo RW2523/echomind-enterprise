@@ -49,4 +49,12 @@ class Settings:
     # Example: http://backend:8000 (no trailing slash; /api/chat/ask-voice is appended).
     BACKEND_CHAT_URL: str = os.getenv("BACKEND_CHAT_URL", "")
 
+    # EchoMind Conversation Intelligence
+    MEMORY_WINDOW_MINUTES: float = float(os.getenv("MEMORY_WINDOW_MINUTES", "30"))
+    DEFAULT_ASSISTANT_NAME: str = os.getenv("DEFAULT_ASSISTANT_NAME", "EchoMind")
+    DEFAULT_USER_NAME: str = os.getenv("DEFAULT_USER_NAME", "")
+    DEFAULT_TIMEZONE: str = os.getenv("DEFAULT_TIMEZONE", "America/New_York")
+    DEFAULT_LOCATION: str = os.getenv("DEFAULT_LOCATION", "")
+    ECHO_DEBUG: bool = os.getenv("ECHO_DEBUG", "0") == "1"
+
 SETTINGS = Settings()
