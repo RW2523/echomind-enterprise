@@ -1,7 +1,24 @@
-import React, { useState, useRef, useCallback, useLayoutEffect } from "react";
+import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { OrbCanvas } from "../OrbVisualizer/OrbCanvas";
 import { StatusLabel } from "../UI/StatusLabel";
-import type { ConversationState, OrbState } from "./ChatState";
+import { ICONS } from "../../constants";
+import type { ConversationState } from "./ChatState";
+
+function useOrbSizes(): { assistant: number; user: number } {
+  const [sizes, setSizes] = useState({ assistant: 180, user: 150 });
+  useEffect(() => {
+    const update = () => {
+      const w = typeof window !== "undefined" ? window.innerWidth : 768;
+      if (w >= 768) setSizes({ assistant: 260, user: 200 });
+      else if (w >= 640) setSizes({ assistant: 180, user: 150 });
+      else setSizes({ assistant: 140, user: 120 });
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return sizes;
+}
 
 /** Resolve CSS variable (e.g. "var(--assistant-color, #14b8a6)") to hex for canvas. */
 function resolveOrbColor(element: HTMLElement | null, cssVar: string, fallbackHex: string): string {
@@ -15,6 +32,11 @@ function resolveOrbColor(element: HTMLElement | null, cssVar: string, fallbackHe
   return /^#?[0-9A-Fa-f]{6}$/.test(hex) ? (hex.startsWith("#") ? hex : `#${hex}`) : fallbackHex;
 }
 
+export interface VoiceMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
 export interface ConversationStageProps {
   /** Current conversation/orb state */
   state: ConversationState;
@@ -22,10 +44,12 @@ export interface ConversationStageProps {
   userAnalyser: AnalyserNode | null;
   /** Assistant playback analyser (for wave ring when assistant is speaking) */
   assistantAnalyser: AnalyserNode | null;
-  /** Context / system prompt */
-  contextValue: string;
-  onContextChange: (value: string) => void;
-  onApplyContext: () => void;
+  /** Live transcript: what you said and what the assistant replied */
+  voiceMessages?: VoiceMessage[];
+  /** Current assistant reply while streaming */
+  pendingAssistantText?: string;
+  /** Error starting mic or connection; shown near Start button */
+  connectionError?: string | null;
   onClearMemory: () => void;
   onConnect: () => void;
   onDisconnect: () => void;
@@ -34,9 +58,6 @@ export interface ConversationStageProps {
   /** When true, mic is muted so assistant can finish without interruption */
   micMuted?: boolean;
   onMicMutedToggle?: () => void;
-  /** When true, voice uses knowledge base (RAG); when false, answers generally */
-  voiceUseKnowledgeBase?: boolean;
-  onVoiceUseKnowledgeBaseToggle?: () => void;
 }
 
 const ASSISTANT_COLOR_VAR = "var(--assistant-color, #14b8a6)";
@@ -46,17 +67,15 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
   state,
   userAnalyser,
   assistantAnalyser,
-  contextValue,
-  onContextChange,
-  onApplyContext,
+  voiceMessages = [],
+  pendingAssistantText = "",
+  connectionError = null,
   onClearMemory,
   onConnect,
   onDisconnect,
   connecting = false,
   micMuted = false,
   onMicMutedToggle,
-  voiceUseKnowledgeBase = false,
-  onVoiceUseKnowledgeBaseToggle,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [resolvedAssistantColor, setResolvedAssistantColor] = useState("#14b8a6");
@@ -71,62 +90,23 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
 
   const userActive = state.userOrb === "listening";
   const assistantActive = state.assistantOrb === "speaking" || state.assistantOrb === "thinking";
+  const orbSizes = useOrbSizes();
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [voiceMessages, pendingAssistantText]);
 
   return (
     <div
       ref={containerRef}
       className="flex flex-col h-full min-h-0 bg-[var(--voice-bg,#0b0e14)] text-[var(--voice-text,#f1f5f9)] overflow-y-auto"
     >
-      {/* Context box: compact so Start button stays visible */}
-      <div className="shrink-0 border-b border-white/10 p-3 space-y-2">
-        <div className="flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10 px-3 py-2">
-          <div className="min-w-0">
-            <span className="text-sm font-semibold opacity-90">Resource Knowledge Base</span>
-            <p className="text-xs opacity-60 mt-0.5 truncate">When on, answers from your documents. When off, answers generally.</p>
-          </div>
-          {onVoiceUseKnowledgeBaseToggle && (
-            <button
-              type="button"
-              onClick={onVoiceUseKnowledgeBaseToggle}
-              className={`w-12 h-7 rounded-full relative transition-colors shrink-0 ${voiceUseKnowledgeBase ? "bg-teal-500" : "bg-slate-700"}`}
-            >
-              <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all ${voiceUseKnowledgeBase ? "left-6" : "left-1"}`} />
-            </button>
-          )}
-        </div>
-        <label className="block text-sm font-semibold opacity-90">Context / Role (System Prompt)</label>
-        <textarea
-          value={contextValue}
-          onChange={(e) => onContextChange(e.target.value)}
-          placeholder="Example: You are a car dealership sales agent. Ask 1-2 questions, then recommend a car."
-          className="w-full h-20 min-h-[4rem] rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm resize-y outline-none focus:border-white/30 placeholder:opacity-50"
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={onApplyContext}
-            disabled={!state.isConnected}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium bg-white/10 hover:bg-white/15 disabled:opacity-50 disabled:pointer-events-none transition-colors"
-          >
-            Apply Context
-          </button>
-          <button
-            type="button"
-            onClick={onClearMemory}
-            disabled={!state.isConnected}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium bg-white/10 hover:bg-white/15 disabled:opacity-50 disabled:pointer-events-none transition-colors"
-          >
-            Clear Memory
-          </button>
-          <span className="text-xs opacity-60">Context per session. Memory until Clear. Say &quot;listen to conversation&quot; to accumulate; then &quot;now you can speak&quot; or &quot;fact check&quot; to process.</span>
-        </div>
-      </div>
-
-      {/* Orbs row: min-h-0 so this section shrinks and bottom controls stay visible */}
-      <div className="flex-1 min-h-0 flex items-center justify-center gap-8 md:gap-16 py-4">
-        {/* Assistant orb (left) - fixed width so no reflow */}
-        <div className="flex flex-col items-center gap-3 shrink-0 w-[260px]">
-          <div className="relative w-[260px] h-[260px] flex items-center justify-center">
+      {/* Orbs: stacked on small screens, side-by-side on larger; responsive sizes */}
+      <div className="flex-1 min-h-0 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-12 py-3 sm:py-4 overflow-auto">
+        {/* Assistant orb */}
+        <div className="flex flex-col items-center gap-2 sm:gap-3 shrink-0" style={{ width: orbSizes.assistant }}>
+          <div className="relative flex items-center justify-center" style={{ width: orbSizes.assistant, height: orbSizes.assistant }}>
             <OrbCanvas
               role="assistant"
               analyserNode={assistantAnalyser}
@@ -135,16 +115,16 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
               orbState={state.assistantOrb}
               interruptedAt={state.interruptedAt}
               color={resolvedAssistantColor}
-              size={260}
+              size={orbSizes.assistant}
             />
           </div>
           <StatusLabel state={state.assistantOrb} role="assistant" />
           <span className="text-xs opacity-60">EchoMind</span>
         </div>
 
-        {/* User orb (right) - fixed width so no reflow */}
-        <div className="flex flex-col items-center gap-3 shrink-0 w-[200px]">
-          <div className="relative w-[200px] h-[200px] flex items-center justify-center">
+        {/* User orb */}
+        <div className="flex flex-col items-center gap-2 sm:gap-3 shrink-0" style={{ width: orbSizes.user }}>
+          <div className="relative flex items-center justify-center" style={{ width: orbSizes.user, height: orbSizes.user }}>
             <OrbCanvas
               role="user"
               analyserNode={userAnalyser}
@@ -153,7 +133,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
               orbState={state.userOrb}
               interruptedAt={state.interruptedAt}
               color={resolvedUserColor}
-              size={200}
+              size={orbSizes.user}
             />
           </div>
           <StatusLabel state={state.userOrb} role="user" />
@@ -161,14 +141,50 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="shrink-0 border-t border-white/10 p-4 flex flex-wrap items-center justify-center gap-3">
+      {/* Live transcript: what you said and what the assistant replied */}
+      {(voiceMessages.length > 0 || pendingAssistantText) && (
+        <div className="shrink-0 flex flex-col max-h-[40vh] min-h-0 border-t border-white/10">
+          <div className="px-3 py-2 text-xs font-medium text-white/60 uppercase tracking-wider">
+            Live transcript
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3 space-y-2">
+            {voiceMessages.map((msg, i) => (
+              <div
+                key={i}
+                className={`rounded-lg px-3 py-2 text-sm max-w-[85%] ${
+                  msg.role === "user"
+                    ? "ml-auto bg-[var(--user-color,#3b82f6)]/20 text-[var(--user-color,#93c5fd)]"
+                    : "mr-auto bg-[var(--assistant-color,#00ff9c)]/10 text-[var(--assistant-color,#5eead4)]"
+                }`}
+              >
+                {msg.text}
+              </div>
+            ))}
+            {pendingAssistantText && (
+              <div className="mr-auto rounded-lg px-3 py-2 text-sm max-w-[85%] bg-[var(--assistant-color,#00ff9c)]/10 text-[var(--assistant-color,#5eead4)] border border-[var(--assistant-color,#00ff9c)]/30">
+                {pendingAssistantText}
+                <span className="inline-block w-2 h-4 ml-0.5 bg-current animate-pulse" aria-hidden />
+              </div>
+            )}
+            <div ref={transcriptEndRef} />
+          </div>
+        </div>
+      )}
+
+      {/* Controls - touch-friendly on mobile */}
+      <div className="shrink-0 border-t border-white/10 p-3 sm:p-4 flex flex-col items-center gap-2 sm:gap-3">
+        {connectionError && (
+          <p className="text-sm text-amber-400/95 text-center max-w-md" role="alert">
+            {connectionError}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
         {!state.isConnected ? (
           <button
             type="button"
             onClick={onConnect}
             disabled={connecting}
-            className="rounded-xl px-6 py-3 text-sm font-semibold bg-[var(--assistant-color,#00ff9c)] text-black hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="rounded-xl px-6 py-3 min-h-[44px] text-sm font-semibold bg-[var(--assistant-color,#00ff9c)] text-black hover:opacity-90 disabled:opacity-50 transition-opacity touch-manipulation"
           >
             {connecting ? "Starting…" : "Start"}
           </button>
@@ -178,23 +194,42 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
               type="button"
               onClick={onMicMutedToggle}
               title={micMuted ? "Unmute mic" : "Mute mic (let assistant finish without interruption)"}
-              className={`rounded-xl px-5 py-3 text-sm font-semibold border transition-colors ${
+              className={`rounded-xl p-3 min-h-[44px] min-w-[44px] border transition-colors flex items-center justify-center touch-manipulation ${
                 micMuted
-                  ? "bg-amber-500/30 text-amber-300 border-amber-500/40 hover:bg-amber-500/40"
-                  : "bg-white/10 text-slate-300 border-white/20 hover:bg-white/15"
+                  ? "bg-red-500/90 text-white border-red-400 hover:bg-red-500"
+                  : "bg-emerald-500/90 text-white border-emerald-400 hover:bg-emerald-500"
               }`}
             >
-              {micMuted ? "Unmute" : "Mute"}
+              <span className="relative inline-flex items-center justify-center w-8 h-8">
+                <ICONS.Mic className="w-6 h-6 stroke-[2.5]" stroke="currentColor" />
+                {micMuted && (
+                  <span
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    aria-hidden
+                  >
+                    <span className="block w-10 h-0.5 bg-white rounded-full origin-center rotate-45" />
+                  </span>
+                )}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={onClearMemory}
+              disabled={!state.isConnected}
+              className="rounded-xl px-4 py-3 min-h-[44px] text-sm font-medium bg-white/10 text-slate-300 border border-white/20 hover:bg-white/15 transition-colors touch-manipulation"
+            >
+              Clear Memory
             </button>
             <button
               type="button"
               onClick={onDisconnect}
-              className="rounded-xl px-6 py-3 text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors"
+              className="rounded-xl px-5 py-3 min-h-[44px] text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors touch-manipulation"
             >
               Disconnect
             </button>
           </>
         )}
+        </div>
       </div>
     </div>
   );

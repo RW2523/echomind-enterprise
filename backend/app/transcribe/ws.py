@@ -26,7 +26,7 @@ from .stt_streaming import (
 from ..refine import refine_text
 from ..tagging import get_metadata
 from .. import kb
-from .store_to_db import store_transcript_to_db
+from .store_to_db import store_transcript_to_db, create_transcript_for_session, append_transcript_chunk, update_transcript_tags_and_echotag
 
 SAMPLE_RATE_WHISPER = getattr(settings, "SAMPLE_RATE", 16000)
 # Emit partial every this many seconds of audio (Whisper chunk)
@@ -65,6 +65,10 @@ async def handler(ws: WebSocket):
     language = "en"
     auto_store = settings.ECHOMIND_AUTO_STORE_DEFAULT
     started_at: Optional[float] = None
+    started_at_iso: list = [None]  # mutable: ISO string for transcript echodate
+    session_name: list = [""]  # mutable: from start payload
+    session_location: list = [""]  # mutable: from start payload
+    transcript_id_ref: list = [None]  # mutable: transcript id once created (groups 1-min chunks)
     audio_buffer: list = []
     last_emit_time = 0.0
     last_whisper_time = 0.0
@@ -75,7 +79,7 @@ async def handler(ws: WebSocket):
     auto_store_interval_sec = max(0, getattr(settings, "AUTO_STORE_INTERVAL_SEC", 60))
 
     async def _periodic_auto_store_fn() -> None:
-        """Every auto_store_interval_sec, store new transcript content since last store; also append to interval_buffer for combine→LLM→DB flow."""
+        """Every auto_store_interval_sec: create or append transcript row, then add chunk to RAG with name/location/time meta."""
         while True:
             await asyncio.sleep(auto_store_interval_sec)
             if session is None:
@@ -83,13 +87,41 @@ async def handler(ws: WebSocket):
             try:
                 full_text = session.get_display_text()
                 to_store = full_text[last_auto_stored_length[0] :].strip()
-                if to_store:
-                    conv_type, tags = get_metadata(to_store)
-                    meta = {"session_id": session_id, "kind": "raw", "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
-                    kid = await kb.kb_add_text(to_store, meta)
-                    interval_buffer.append((to_store, now_iso()))
-                    await _send(ws, {"type": "stored", "session_id": session_id, "items": [{"id": kid, "kind": "raw", "tags": tags, "ts": now_iso()}]})
-                    last_auto_stored_length[0] = len(full_text)
+                if not to_store:
+                    continue
+                name = (session_name[0] or "").strip() or None
+                location = (session_location[0] or "").strip() or "default"
+                echodate_iso = started_at_iso[0] or now_iso()
+                tid = transcript_id_ref[0]
+                if tid is None:
+                    tid = create_transcript_for_session(
+                        name=name,
+                        location=location,
+                        started_at_iso=echodate_iso,
+                        initial_text=to_store,
+                    )
+                    transcript_id_ref[0] = tid
+                else:
+                    append_transcript_chunk(tid, to_store)
+                conv_type, tags = get_metadata(full_text)
+                echotag_val = ",".join(tags) if tags else (name or "transcript")
+                update_transcript_tags_and_echotag(tid, tags, echotag_val)
+                meta = {
+                    "session_id": session_id,
+                    "kind": "raw",
+                    "tags": tags,
+                    "conversation_type": conv_type,
+                    "ts": now_iso(),
+                    "type": "transcript",
+                    "transcript_id": tid,
+                    "name": name,
+                    "location": location,
+                    "echodate": echodate_iso,
+                }
+                kid = await kb.kb_add_text(to_store, meta)
+                interval_buffer.append((to_store, now_iso()))
+                await _send(ws, {"type": "stored", "session_id": session_id, "transcript_id": tid, "items": [{"id": kid, "kind": "raw", "tags": tags, "ts": now_iso()}]})
+                last_auto_stored_length[0] = len(full_text)
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -245,6 +277,10 @@ async def handler(ws: WebSocket):
                 session_id = data.get("session_id") or str(uuid.uuid4())
                 session = SessionState(session_id)
                 started_at = time.time()
+                started_at_iso[0] = now_iso()
+                session_name[0] = (data.get("name") or "").strip() or ""
+                session_location[0] = (data.get("location") or "").strip() or "default"
+                transcript_id_ref[0] = None
                 mode = data.get("mode", "transcribe")
                 language = data.get("language", "en")
                 auto_store = data.get("auto_store", settings.ECHOMIND_AUTO_STORE_DEFAULT)
@@ -301,13 +337,39 @@ async def handler(ws: WebSocket):
                 })
                 if auto_store and final_text.strip():
                     try:
-                        # Store only the remainder since last periodic store to avoid duplicating content
                         to_store = final_text[last_auto_stored_length[0] :].strip() if last_auto_stored_length[0] > 0 else final_text
                         if to_store:
-                            conv_type, tags = get_metadata(to_store)
-                            meta = {"session_id": session_id, "kind": "raw", "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
+                            name = (session_name[0] or "").strip() or None
+                            location = (session_location[0] or "").strip() or "default"
+                            echodate_iso = started_at_iso[0] or now_iso()
+                            tid = transcript_id_ref[0]
+                            if tid is None:
+                                tid = create_transcript_for_session(
+                                    name=name,
+                                    location=location,
+                                    started_at_iso=echodate_iso,
+                                    initial_text=to_store,
+                                )
+                                transcript_id_ref[0] = tid
+                            else:
+                                append_transcript_chunk(tid, to_store)
+                            conv_type, tags = get_metadata(final_text)
+                            echotag_val = ",".join(tags) if tags else (name or "transcript")
+                            update_transcript_tags_and_echotag(tid, tags, echotag_val)
+                            meta = {
+                                "session_id": session_id,
+                                "kind": "raw",
+                                "tags": tags,
+                                "conversation_type": conv_type,
+                                "ts": now_iso(),
+                                "type": "transcript",
+                                "transcript_id": tid,
+                                "name": name,
+                                "location": location,
+                                "echodate": echodate_iso,
+                            }
                             kid = await kb.kb_add_text(to_store, meta)
-                            await _send(ws, {"type": "stored", "session_id": session_id, "items": [{"id": kid, "kind": "raw", "tags": tags, "ts": now_iso()}]})
+                            await _send(ws, {"type": "stored", "session_id": session_id, "transcript_id": tid, "items": [{"id": kid, "kind": "raw", "tags": tags, "ts": now_iso()}]})
                     except Exception as e:
                         await _send(ws, {"type": "error", "message": str(e)})
                 break

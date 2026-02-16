@@ -1,5 +1,5 @@
 import json
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, HTTPException
 from pydantic import BaseModel
 from ...core.db import get_conn
 from ...refine import refine_text
@@ -25,39 +25,53 @@ def _list_transcripts_impl(conn, since_iso: str | None = None, last_hours: float
         if since_iso:
             extra = " AND created_at >= ?"
             params.append(since_iso)
+    has_name_location = False
     try:
         rows = conn.execute(
-            "SELECT id, title, tags_json, echotag, created_at, raw_text, polished_text FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
+            "SELECT id, title, tags_json, echotag, created_at, raw_text, polished_text, name, location FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
             params,
         ).fetchall()
         has_title = True
         has_content = True
+        has_name_location = True
     except Exception:
         try:
             rows = conn.execute(
-                "SELECT id, title, tags_json, echotag, created_at FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
+                "SELECT id, title, tags_json, echotag, created_at, raw_text, polished_text FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
                 params,
             ).fetchall()
             has_title = True
-            has_content = False
-        except Exception:
-            rows = conn.execute(
-                "SELECT id, raw_text, tags_json, created_at FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
-                params,
-            ).fetchall()
-            has_title = False
             has_content = True
-    return rows, has_title, has_content
+        except Exception:
+            try:
+                rows = conn.execute(
+                    "SELECT id, title, tags_json, echotag, created_at FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
+                    params,
+                ).fetchall()
+                has_title = True
+                has_content = False
+            except Exception:
+                rows = conn.execute(
+                    "SELECT id, raw_text, tags_json, created_at FROM transcripts WHERE 1=1" + extra + " ORDER BY created_at DESC",
+                    params,
+                ).fetchall()
+                has_title = False
+                has_content = True
+    return rows, has_title, has_content, has_name_location
 
 
 @router.get("/list")
 def list_transcripts(since: str | None = None, last_hours: float | None = None):
     """List transcripts with optional time filter. Query params: since (ISO datetime), last_hours (e.g. 2)."""
     with get_conn() as conn:
-        rows, has_title, has_content = _list_transcripts_impl(conn, since_iso=since, last_hours=last_hours)
+        rows, has_title, has_content, has_name_location = _list_transcripts_impl(conn, since_iso=since, last_hours=last_hours)
     out = []
     for r in rows:
-        if has_title and has_content and len(r) >= 7:
+        name_val = None
+        location_val = None
+        if has_title and has_content and has_name_location and len(r) >= 9:
+            tid, title, tags_json, echotag, created_at, raw_text, polished_text, name_val, location_val = r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]
+        elif has_title and has_content and len(r) >= 7:
             tid, title, tags_json, echotag, created_at, raw_text, polished_text = r[0], r[1], r[2], r[3], r[4], r[5], r[6]
         elif has_title and len(r) >= 5:
             tid, title, tags_json, echotag, created_at = r[0], r[1], r[2], r[3], r[4]
@@ -88,6 +102,10 @@ def list_transcripts(since: str | None = None, last_hours: float | None = None):
             "echotag": (echotag or ""),
             "created_at": created_at,
         }
+        if name_val is not None:
+            item["name"] = name_val
+        if location_val is not None:
+            item["location"] = location_val
         if raw_text is not None:
             item["raw_text"] = raw_text
         if polished_text is not None:
@@ -124,6 +142,9 @@ class StoreIn(BaseModel):
     refined_text: str | None = None  # Refined/structured notes (API name); stored in polished_text column
     polished_text: str | None = None  # Legacy alias for refined_text
     echotag: str | None = None  # Optional tag/category; if not set, derived from tags
+    name: str | None = None  # Display name (from Start popup or default)
+    location: str | None = None  # Location; default "default" if not set
+    tags: list[str] | None = None  # Manual tags (overrides LLM extraction when provided)
 
 @router.post("/store")
 async def store(inp: StoreIn):
@@ -132,5 +153,60 @@ async def store(inp: StoreIn):
         raw_text=inp.raw_text,
         refined_text=refined_value,
         echotag=inp.echotag,
+        name=inp.name,
+        location=inp.location,
+        tags=inp.tags,
     )
     return result
+
+
+class UpdateTranscriptIn(BaseModel):
+    name: str | None = None
+    location: str | None = None
+    tags: list[str] | None = None
+
+
+@router.patch("/transcripts/{transcript_id}")
+async def update_transcript(transcript_id: str, inp: UpdateTranscriptIn):
+    """Update transcript metadata (name, location, tags). Editable bar uses this."""
+    with get_conn() as conn:
+        row = conn.execute("SELECT id FROM transcripts WHERE id = ?", (transcript_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found")
+        updates = []
+        params = []
+        if inp.name is not None:
+            updates.append("name = ?")
+            params.append((inp.name or "").strip() or None)
+        if inp.location is not None:
+            updates.append("location = ?")
+            params.append((inp.location or "").strip() or "default")
+        if inp.tags is not None:
+            updates.append("tags_json = ?")
+            tags_list = [t.strip() for t in inp.tags if (t or "").strip()][:16]
+            params.append(json.dumps(tags_list))
+        if not updates:
+            row = conn.execute(
+                "SELECT id, title, name, location, tags_json, echotag, created_at FROM transcripts WHERE id = ?",
+                (transcript_id,),
+            ).fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Transcript not found")
+            _, title, name, location, tags_json, echotag, created_at = row
+            tags = json.loads(tags_json) if tags_json else []
+            return {"transcript_id": transcript_id, "title": title, "name": name, "location": location, "tags": tags, "echotag": echotag, "created_at": created_at}
+        params.append(transcript_id)
+        conn.execute(
+            "UPDATE transcripts SET " + ", ".join(updates) + " WHERE id = ?",
+            params,
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT id, title, name, location, tags_json, echotag, created_at FROM transcripts WHERE id = ?",
+            (transcript_id,),
+        ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Transcript not found")
+    _, title, name, location, tags_json, echotag, created_at = row
+    tags = json.loads(tags_json) if tags_json else []
+    return {"transcript_id": transcript_id, "title": title, "name": name, "location": location, "tags": tags, "echotag": echotag, "created_at": created_at}

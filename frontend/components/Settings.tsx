@@ -53,16 +53,17 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
   };
 
   return (
-    <div className="h-full min-h-0 bg-[#0a0c1a]/20 overflow-y-auto">
-      <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 py-2 pb-16">
+    <div className="h-full min-h-0 bg-[#0a0c1a]/20 overflow-y-auto overflow-x-hidden">
+      <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 py-2 px-1 sm:px-0 pb-16">
         <section>
           <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Persona Configuration</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {personas.map((p) => (
               <button
                 key={p}
+                type="button"
                 onClick={() => update('persona', p)}
-                className={`p-6 rounded-3xl border transition-all text-left group ${
+                className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all text-left group touch-manipulation ${
                   settings.persona === p
                     ? 'bg-cyan-500/10 border-cyan-500/40'
                     : 'bg-white/5 border-white/5 hover:border-white/10'
@@ -79,6 +80,26 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
                 </p>
               </button>
             ))}
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Voice Context / Role (System Prompt)</h3>
+          <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 space-y-4">
+            <p className="text-xs text-slate-500 -mt-2">Set the assistant&apos;s role and context for Voice AI Conversation. This is saved and retained until you clear it.</p>
+            <textarea
+              value={settings.voiceContext ?? ''}
+              onChange={(e) => update('voiceContext', e.target.value)}
+              placeholder="Example: You are a car dealership sales agent. Ask 1-2 questions, then recommend a car."
+              className="w-full h-28 min-h-[6rem] rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm text-white placeholder-slate-500 resize-y outline-none focus:border-cyan-500/50"
+            />
+            <button
+              type="button"
+              onClick={() => update('voiceContext', '')}
+              className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors touch-manipulation"
+            >
+              Clear context
+            </button>
           </div>
         </section>
 
@@ -184,11 +205,13 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
               <h4 className="text-sm font-bold text-cyan-400"> RAG (fast retrieval)</h4>
               <p className="text-xs text-slate-500 mt-1">When on: single-query embedding retrieval only (no query rewriting). Faster. When off: full RAG with intent and query expansion.</p>
             </div>
-            <button 
+            <button
+              type="button"
               onClick={() => update('advancedRag', !settings.advancedRag)}
-              className={`w-14 h-8 rounded-full relative transition-colors ${settings.advancedRag ? 'bg-cyan-500' : 'bg-slate-800'}`}
+              className={`w-14 h-8 rounded-full relative transition-colors touch-manipulation min-h-[44px] ${settings.advancedRag ? 'bg-cyan-500' : 'bg-slate-800'}`}
+              aria-label={settings.advancedRag ? 'Disable advanced RAG' : 'Enable advanced RAG'}
             >
-              <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg transition-all ${settings.advancedRag ? 'left-7' : 'left-1'}`}></div>
+              <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg transition-all ${settings.advancedRag ? 'left-7' : 'left-1'}`} />
             </button>
           </div>
         </section>
@@ -199,11 +222,13 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
               <h4 className="text-sm font-bold text-red-400">Developer Mode</h4>
               <p className="text-xs text-slate-500 mt-1">Access raw model parameters and debug tools.</p>
             </div>
-            <button 
+            <button
+              type="button"
               onClick={() => update('developerMode', !settings.developerMode)}
-              className={`w-14 h-8 rounded-full relative transition-colors ${settings.developerMode ? 'bg-red-500' : 'bg-slate-800'}`}
+              className={`w-14 h-8 rounded-full relative transition-colors touch-manipulation min-h-[44px] ${settings.developerMode ? 'bg-red-500' : 'bg-slate-800'}`}
+              aria-label={settings.developerMode ? 'Disable developer mode' : 'Enable developer mode'}
             >
-              <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg transition-all ${settings.developerMode ? 'left-7' : 'left-1'}`}></div>
+              <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg transition-all ${settings.developerMode ? 'left-7' : 'left-1'}`} />
             </button>
           </div>
         </section>

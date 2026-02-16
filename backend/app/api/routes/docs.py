@@ -111,17 +111,13 @@ def data_preview():
 
 @router.post("/delete-all")
 async def delete_all_data():
-    """Delete all data: documents (and index), chunks, transcripts, chats, messages."""
+    """Delete all data: documents, chunks, transcripts, chats, messages. Uses bulk clear for speed."""
     with get_conn() as conn:
-        doc_ids = [r[0] for r in conn.execute("SELECT id FROM documents").fetchall()]
-    for doc_id in doc_ids:
-        try:
-            await index.delete_document(doc_id)
-        except Exception:
-            pass
-    with get_conn() as conn:
+        conn.execute("DELETE FROM chunks")
+        conn.execute("DELETE FROM documents")
         conn.execute("DELETE FROM transcripts")
         conn.execute("DELETE FROM messages")
         conn.execute("DELETE FROM chats")
         conn.commit()
+    index.clear_all()
     return {"ok": True, "message": "All data deleted."}

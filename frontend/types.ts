@@ -66,6 +66,8 @@ export interface AppSettings {
   voiceBotName: string;
   /** Voice: user's name (optional); assistant uses it when it fits naturally. */
   voiceUserName: string;
+  /** Voice: context/role (system prompt); persisted until user clears context. */
+  voiceContext: string;
 }
 
 /** Piper English (en_US) voices available for TTS. Format: voiceKey -> label. Quality variants in id. */

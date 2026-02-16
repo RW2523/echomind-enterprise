@@ -85,12 +85,19 @@ const WORKLET_CODE = `
   registerProcessor('framer16k', Framer16k);
 `;
 
+export interface VoiceMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
 export interface UseVoiceConnectionReturn {
   state: ConversationState;
   userAnalyser: AnalyserNode | null;
   assistantAnalyser: AnalyserNode | null;
-  contextValue: string;
-  setContextValue: (v: string) => void;
+  /** Live transcript: what you said and what the assistant replied */
+  voiceMessages: VoiceMessage[];
+  /** Current assistant reply while streaming (partial text) */
+  pendingAssistantText: string;
   applyContext: () => void;
   clearMemory: () => void;
   connect: () => Promise<void>;
@@ -99,6 +106,8 @@ export interface UseVoiceConnectionReturn {
   /** When true, mic is muted so the assistant can finish without interruption */
   micMuted: boolean;
   setMicMuted: (muted: boolean) => void;
+  /** Error starting mic or connection (e.g. permission denied); cleared when user retries or disconnects */
+  connectionError: string | null;
 }
 
 export interface UseVoiceConnectionOptions {
@@ -113,10 +122,12 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     isConnected: false,
     interruptedAt: 0,
   });
-  const [contextValue, setContextValue] = useState("");
   const [connecting, setConnecting] = useState(false);
   const [userAnalyser, setUserAnalyser] = useState<AnalyserNode | null>(null);
   const [assistantAnalyser, setAssistantAnalyser] = useState<AnalyserNode | null>(null);
+  const [voiceMessages, setVoiceMessages] = useState<VoiceMessage[]>([]);
+  const [pendingAssistantText, setPendingAssistantText] = useState("");
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -192,6 +203,27 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
 
   const connect = useCallback(async () => {
     setConnecting(true);
+    setConnectionError(null);
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setConnectionError("Microphone not available. Use HTTPS and a supported browser.");
+      setConnecting(false);
+      return;
+    }
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e: any) {
+      const msg = e?.name === "NotAllowedError" || e?.message?.toLowerCase().includes("permission")
+        ? "Microphone access denied. Allow mic in browser settings and try again."
+        : e?.message || "Could not access microphone.";
+      setConnectionError(msg);
+      setConnecting(false);
+      return;
+    }
+
+    micStreamRef.current = stream;
     const ws = new WebSocket(voiceWsUrl());
     wsRef.current = ws;
 
@@ -199,10 +231,11 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       try {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
         audioCtxRef.current = ctx;
+        if (ctx.state === "suspended") {
+          await ctx.resume();
+        }
         const blob = new Blob([WORKLET_CODE], { type: "application/javascript" });
         await ctx.audioWorklet.addModule(URL.createObjectURL(blob));
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        micStreamRef.current = stream;
         const src = ctx.createMediaStreamSource(stream);
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 2048;
@@ -222,6 +255,9 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
 
         const playCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
         playbackCtxRef.current = playCtx;
+        if (playCtx.state === "suspended") {
+          await playCtx.resume();
+        }
         const gain = playCtx.createGain();
         gain.gain.value = 1;
         playbackGainRef.current = gain;
@@ -244,7 +280,8 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         const botName = (settings?.voiceBotName ?? "").trim();
         const userName = (settings?.voiceUserName ?? "").trim();
         const personaPrefix = settings?.persona ? `You are EchoMind in the role of: ${settings.persona}. Be concise, helpful, and conversational. ` : "";
-        let systemPrompt = personaPrefix + (contextValue || "").trim() || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
+        const savedContext = (settings?.voiceContext ?? "").trim();
+        let systemPrompt = personaPrefix + savedContext || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
         if (botName) {
           systemPrompt = `You are ${botName}. Talk in a natural, conversational way—like a friendly voice assistant. When the user says your name or speaks to you, respond naturally. If they say "stop", pause speaking; if they say "start" or your name, continue. ${userName ? `The user's name is ${userName}; use it when it fits naturally. ` : ""}` + systemPrompt;
         }
@@ -253,14 +290,20 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
           system_prompt: systemPrompt,
           clear_memory: false,
           piper_voice: settings?.voiceName ?? undefined,
-          use_knowledge_base: settings?.voiceUseKnowledgeBase ?? false,
+          use_knowledge_base: true,
           persona: settings?.persona ?? undefined,
           context_window: settings?.contextWindow ?? undefined,
           voice_bot_name: botName || undefined,
           voice_user_name: userName || undefined,
         }));
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
+        const msg = e?.message || "Could not start voice. Try again.";
+        setConnectionError(msg);
+        if (micStreamRef.current) {
+          micStreamRef.current.getTracks().forEach((t) => t.stop());
+          micStreamRef.current = null;
+        }
         setState((prev) => ({ ...prev, userOrb: "disconnected", assistantOrb: "disconnected" }));
       } finally {
         setConnecting(false);
@@ -289,10 +332,25 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         return;
       }
       if (msg.type === "asr_final" && msg.text) {
+        const userText = String(msg.text).trim();
+        if (userText) {
+          setVoiceMessages((prev) => [...prev, { role: "user", text: userText }]);
+        }
         setState((prev) => ({ ...prev, userOrb: "idle", assistantOrb: "thinking" }));
         return;
       }
-      if (msg.type === "assistant_text_partial" || msg.type === "assistant_text") {
+      if (msg.type === "assistant_text_partial") {
+        const text = typeof msg.text === "string" ? msg.text : "";
+        setPendingAssistantText(text);
+        setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
+        return;
+      }
+      if (msg.type === "assistant_text") {
+        const text = typeof msg.text === "string" ? String(msg.text).trim() : "";
+        if (text) {
+          setVoiceMessages((prev) => [...prev, { role: "assistant", text }]);
+        }
+        setPendingAssistantText("");
         setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
         return;
       }
@@ -336,6 +394,9 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       setUserAnalyser(null);
       setAssistantAnalyser(null);
       setState((prev) => ({ ...prev, isConnected: false, userOrb: "disconnected", assistantOrb: "disconnected" }));
+      setVoiceMessages([]);
+      setPendingAssistantText("");
+      setConnectionError(null);
       setConnecting(false);
     };
 
@@ -343,9 +404,10 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       cleanupOnClose();
     };
     ws.onerror = () => setConnecting(false);
-  }, [contextValue, settings?.persona, settings?.voiceName, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceUseKnowledgeBase, settings?.contextWindow, enqueuePlayback, smoothStop]);
+  }, [settings?.persona, settings?.voiceName, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceContext, settings?.contextWindow, enqueuePlayback, smoothStop]);
 
   const disconnect = useCallback(async () => {
+    setConnectionError(null);
     if (workletRef.current) {
       try {
         workletRef.current.disconnect();
@@ -412,7 +474,8 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const personaPrefix = settings?.persona ? `You are EchoMind in the role of: ${settings.persona}. Be concise, helpful, and conversational. ` : "";
-    const systemPrompt = personaPrefix + (typeof contextValue === "string" ? contextValue : "").trim() || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
+    const savedContext = (settings?.voiceContext ?? "").trim();
+    const systemPrompt = personaPrefix + savedContext || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
     const botName = (settings?.voiceBotName ?? "").trim();
     const userName = (settings?.voiceUserName ?? "").trim();
     let sysPrompt = systemPrompt;
@@ -424,26 +487,28 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       system_prompt: sysPrompt,
       clear_memory: false,
       piper_voice: settings?.voiceName ?? undefined,
-      use_knowledge_base: settings?.voiceUseKnowledgeBase ?? false,
+      use_knowledge_base: true,
       persona: settings?.persona ?? undefined,
       context_window: settings?.contextWindow ?? undefined,
       voice_bot_name: botName || undefined,
       voice_user_name: userName || undefined,
     }));
-  }, [contextValue, settings?.persona, settings?.voiceName, settings?.voiceUseKnowledgeBase, settings?.contextWindow, settings?.voiceBotName, settings?.voiceUserName]);
+  }, [settings?.persona, settings?.voiceName, settings?.voiceContext, settings?.contextWindow, settings?.voiceBotName, settings?.voiceUserName]);
 
   const clearMemory = useCallback(() => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(JSON.stringify({ type: "clear_memory" }));
+    setVoiceMessages([]);
+    setPendingAssistantText("");
   }, []);
 
   return {
     state,
     userAnalyser,
     assistantAnalyser,
-    contextValue,
-    setContextValue,
+    voiceMessages,
+    pendingAssistantText,
     applyContext,
     clearMemory,
     connect,
@@ -451,5 +516,6 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     connecting,
     micMuted,
     setMicMuted,
+    connectionError,
   };
 }

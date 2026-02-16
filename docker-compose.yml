@@ -33,7 +33,9 @@ services:
       - LLM_URL=http://ollama:11434/v1/chat/completions
       - LLM_MODEL=qwen2.5:7b-instruct
       - WHISPER_MODEL=base
-    depends_on: [ollama]
+      # RAG: voice bot calls backend for answers from documents + transcripts
+      - BACKEND_CHAT_URL=http://backend:8000
+    depends_on: [ollama, backend]
 
   frontend:
     build:

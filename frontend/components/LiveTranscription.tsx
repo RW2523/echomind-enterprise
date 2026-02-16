@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ICONS } from '../constants';
-import { refineTranscript, storeTranscript, getTranscriptTags, transcribeWsUrl } from '../services/backend';
+import { defaultTranscriptName, transcribeWsUrl, getTranscriptTags, updateTranscript } from '../services/backend';
 
 const SR = 16000;
 
@@ -22,6 +22,15 @@ function b64FromBytes(bytes: Uint8Array) {
   return btoa(binary);
 }
 
+function formatSessionDateTime(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${y}-${m}-${day} ${h}:${min}`;
+}
+
 const OPEN_TIMEOUT_MS = 15000;
 const READY_TIMEOUT_MS = 60000;
 
@@ -29,20 +38,59 @@ const LiveTranscription: React.FC = () => {
   const [fullTranscript, setFullTranscript] = useState('');
   const [partial, setPartial] = useState('');
   const [listening, setListening] = useState(false);
-  const [refined, setRefined] = useState<string>('');
   const [wsStatus, setWsStatus] = useState<'idle' | 'connecting' | 'loading' | 'ready' | 'error'>('idle');
   const [wsError, setWsError] = useState<string | null>(null);
-  const [previewTags, setPreviewTags] = useState<{ tags: string[]; conversation_type: string } | null>(null);
-  const [tagsLoading, setTagsLoading] = useState(false);
-  const [refining, setRefining] = useState(false);
+
+  // Start popup
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [modalName, setModalName] = useState('');
+  const [modalLocation, setModalLocation] = useState('');
+
+  // Session metadata (editable bar) – set when user clicks Start
+  const [sessionName, setSessionName] = useState('');
+  const [sessionLocation, setSessionLocation] = useState('');
+  const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null);
+  const [customTags, setCustomTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState('');
+
   const wsRef = useRef<WebSocket | null>(null);
   const recRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const transcriptForTagsRef = useRef('');
+  const lastStoredTranscriptIdRef = useRef<string | null>(null);
+  const pendingTagsRef = useRef<string[] | null>(null);
 
-  const start = async () => {
+  const openStartModal = () => {
+    setModalName('');
+    setModalLocation('');
+    setShowStartModal(true);
+  };
+
+  const applyDefault = () => {
+    setModalName(defaultTranscriptName());
+    setModalLocation('default');
+  };
+
+  const startSession = async () => {
+    const name = (modalName || '').trim() || defaultTranscriptName();
+    const location = (modalLocation || '').trim() || 'default';
+    setSessionName(name);
+    setSessionLocation(location);
+    setSessionStartedAt(new Date());
+    setCustomTags([]);
+    transcriptForTagsRef.current = '';
+    lastStoredTranscriptIdRef.current = null;
+    pendingTagsRef.current = null;
+    setShowStartModal(false);
+    await doStart(name, location);
+  };
+
+  const doStart = async (_name: string, _location: string) => {
     if (listening) return;
-    setFullTranscript(''); setPartial(''); setRefined(''); setWsError(null);
+    setFullTranscript('');
+    setPartial('');
+    setWsError(null);
     setWsStatus('connecting');
     const ws = new WebSocket(transcribeWsUrl());
     wsRef.current = ws;
@@ -58,29 +106,35 @@ const LiveTranscription: React.FC = () => {
         const msg = JSON.parse(ev.data);
         if (msg.type === 'loading') setWsStatus('loading');
         if (msg.type === 'ready') setWsStatus('ready');
-        // Partial and final carry the full transcript from the server — use as single source of truth to avoid duplication
         if (msg.type === 'partial') {
-          setFullTranscript(msg.text ?? '');
+          const t = msg.text ?? '';
+          setFullTranscript(t);
+          transcriptForTagsRef.current = t;
           setPartial('');
         }
-        if (msg.type === 'segment') {
-          // Do not append: segment text is already included in the next/previous partial
-        }
+        if (msg.type === 'segment') {}
         if (msg.type === 'final') {
-          setFullTranscript((msg.text ?? '').trim());
+          const t = (msg.text ?? '').trim();
+          setFullTranscript(t);
+          transcriptForTagsRef.current = t;
           setPartial('');
         }
         if (msg.type === 'stored') {
-          // Auto-store completed when user stopped; optional brief feedback
           setWsError(null);
+          const tid = msg.transcript_id;
+          if (tid) {
+            lastStoredTranscriptIdRef.current = tid;
+            if (pendingTagsRef.current?.length) {
+              updateTranscript(tid, { tags: pendingTagsRef.current }).catch(() => {});
+              pendingTagsRef.current = null;
+            }
+          }
         }
         if (msg.type === 'error') {
           console.error(msg.message);
           handleError(msg.message || 'Server error');
         }
-      } catch {
-        // ignore parse errors
-      }
+      } catch {}
     };
 
     ws.onerror = () => handleError('WebSocket error');
@@ -106,7 +160,7 @@ const LiveTranscription: React.FC = () => {
           const msg = JSON.parse(ev.data);
           if (msg.type === 'ready') { clearTimeout(t); ws.removeEventListener('message', check); resolve(); }
           if (msg.type === 'error') { clearTimeout(t); ws.removeEventListener('message', check); reject(new Error(msg.message || 'STT failed')); }
-        } catch { /* ignore */ }
+        } catch {}
       };
       ws.addEventListener('message', check);
     });
@@ -118,8 +172,7 @@ const LiveTranscription: React.FC = () => {
       return;
     }
 
-    // Start session with auto_store so the live transcript is stored to the knowledge base when user stops.
-    ws.send(JSON.stringify({ type: 'start', auto_store: true, sample_rate: SR }));
+    ws.send(JSON.stringify({ type: 'start', auto_store: true, sample_rate: SR, name: _name || undefined, location: _location || undefined }));
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     recRef.current = stream;
@@ -156,57 +209,84 @@ const LiveTranscription: React.FC = () => {
     setListening(false);
   };
 
-  const refine = async () => {
-    const raw = (fullTranscript || '').trim();
-    if (!raw) return;
-    setRefining(true);
-    try {
-      const out = await refineTranscript(raw);
-      setRefined(out.refined ?? '');
-    } catch (e) {
-      console.error(e);
-      alert((e as Error)?.message || 'Refine failed');
-    } finally {
-      setRefining(false);
+  const handleStopAndExtractTags = async () => {
+    const text = (transcriptForTagsRef.current || fullTranscript || '').trim();
+    stopMic(true);
+    if (text) {
+      try {
+        const { tags } = await getTranscriptTags(text);
+        if (tags?.length) {
+          setCustomTags(tags);
+          pendingTagsRef.current = tags;
+          const tid = lastStoredTranscriptIdRef.current;
+          if (tid) {
+            await updateTranscript(tid, { tags });
+            pendingTagsRef.current = null;
+          }
+        }
+      } catch {
+        // ignore tag extraction failure
+      }
     }
   };
 
-  const store = async () => {
-    const raw = (fullTranscript || '').trim();
-    if (!raw) return;
-    const echotag = previewTags?.tags?.length ? previewTags.tags.join(', ') : undefined;
-    try {
-      const result = await storeTranscript(raw, refined || null, echotag);
-      alert(`Stored into EchoMind knowledge base. (echotag: ${result.echotag ?? '—'}, echodate: ${result.echodate ?? result.created_at ?? '—'})`);
-    } catch (e) {
-      console.error(e);
-      alert((e as Error)?.message || 'Store failed');
+  const addTag = () => {
+    const t = (newTagInput || '').trim();
+    if (t && !customTags.includes(t)) {
+      setCustomTags((prev) => [...prev, t].slice(0, 20));
+      setNewTagInput('');
     }
   };
 
-  const checkTags = async () => {
-    const raw = (fullTranscript || '').trim();
-    if (!raw) {
-      setPreviewTags(null);
-      return;
-    }
-    setTagsLoading(true);
-    setPreviewTags(null);
-    try {
-      const out = await getTranscriptTags(raw);
-      setPreviewTags({ tags: out.tags || [], conversation_type: out.conversation_type || 'casual' });
-    } catch (e) {
-      console.error(e);
-      setPreviewTags({ tags: [], conversation_type: 'casual' });
-    } finally {
-      setTagsLoading(false);
-    }
+  const removeTag = (tag: string) => {
+    setCustomTags((prev) => prev.filter((x) => x !== tag));
   };
 
   useEffect(() => () => { stopMic(false); wsRef.current?.close(); }, []);
 
   return (
     <div className="h-full min-h-0 flex flex-col rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
+      {/* Start modal */}
+      {showStartModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowStartModal(false)}>
+          <div className="rounded-2xl border border-white/20 bg-slate-900 shadow-xl max-w-md w-full p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="font-semibold text-white">Start transcription</div>
+            <p className="text-sm text-slate-400">Name and location are saved with the transcript every 1 min and used in RAG (e.g. &quot;summary of last 5 mins in office&quot;).</p>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Name</label>
+              <input
+                type="text"
+                value={modalName}
+                onChange={(e) => setModalName(e.target.value)}
+                placeholder="e.g. transcript_2025-02-12_14-30"
+                className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Location</label>
+              <input
+                type="text"
+                value={modalLocation}
+                onChange={(e) => setModalLocation(e.target.value)}
+                placeholder="e.g. default or Office"
+                className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2">
+              <button type="button" onClick={applyDefault} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 text-slate-300 hover:bg-white/15">
+                Default
+              </button>
+              <button type="button" onClick={() => setShowStartModal(false)} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 text-slate-400 hover:bg-white/15">
+                Cancel
+              </button>
+              <button type="button" onClick={startSession} className="rounded-xl px-4 py-2 text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30">
+                Start
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         className={`shrink-0 flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 border-b transition-all duration-300 ${
           listening ? 'border-cyan-500/30 bg-cyan-500/5' : 'border-white/10'
@@ -224,29 +304,16 @@ const LiveTranscription: React.FC = () => {
             <div className="flex items-center gap-2 mt-0.5">
               {listening ? (
                 <>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 text-[10px] font-medium text-red-400 uppercase tracking-wider">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 animate-ping" style={{ animationDuration: '1.2s' }} />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500" />
-                    </span>
-                    Live
-                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 text-[10px] font-medium text-red-400 uppercase tracking-wider">Live</span>
                   <span className="flex items-center gap-1">
                     {[0, 1, 2, 3, 4].map((i) => (
-                      <span
-                        key={i}
-                        className="w-1 rounded-full bg-cyan-400/80 animate-listening-bar"
-                        style={{ height: 8, animationDelay: `${i * 0.12}s` }}
-                      />
+                      <span key={i} className="w-1 rounded-full bg-cyan-400/80 animate-listening-bar" style={{ height: 8, animationDelay: `${i * 0.12}s` }} />
                     ))}
                   </span>
                   <span className="text-[10px] text-cyan-400/90">Listening…</span>
                 </>
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/10 px-2.5 py-0.5 text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                  <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
-                  Stopped
-                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/10 px-2.5 py-0.5 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Stopped</span>
               )}
             </div>
           </div>
@@ -254,69 +321,52 @@ const LiveTranscription: React.FC = () => {
         <div className="ml-auto flex items-center gap-2 flex-wrap">
           {wsStatus === 'connecting' && <span className="text-xs text-slate-400">Connecting…</span>}
           {wsStatus === 'loading' && <span className="text-xs text-slate-400">Loading STT…</span>}
-          {wsError && <span className="text-xs text-red-400 max-w-[200px] truncate" title={wsError}>{wsError}</span>}
+          {wsError && <span className="text-xs text-red-400 max-w-[120px] sm:max-w-[200px] truncate" title={wsError}>{wsError}</span>}
           {!listening ? (
-            <button onClick={start} disabled={wsStatus === 'connecting' || wsStatus === 'loading'} className="rounded-xl px-4 py-2 text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-50 transition-colors">Start</button>
+            <button type="button" onClick={openStartModal} disabled={wsStatus === 'connecting' || wsStatus === 'loading'} className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-50 transition-colors touch-manipulation">Start</button>
           ) : (
-            <button onClick={() => stopMic(true)} className="rounded-xl px-4 py-2 text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors">Stop</button>
+            <button type="button" onClick={handleStopAndExtractTags} className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors touch-manipulation">Stop</button>
           )}
-          <button onClick={refine} disabled={!fullTranscript.trim() || refining} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50 flex items-center gap-2 min-w-[100px] justify-center">
-            {refining ? (
-              <>
-                <span className="inline-block w-4 h-4 border-2 border-cyan-400/50 border-t-cyan-400 rounded-full animate-spin" />
-                <span>Refining…</span>
-              </>
-            ) : (
-              'Refine'
-            )}
-          </button>
-          <button onClick={store} disabled={!fullTranscript.trim()} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">Store</button>
-          <button onClick={checkTags} disabled={!fullTranscript.trim() || tagsLoading} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50">
-            {tagsLoading ? '…' : 'Check tags'}
-          </button>
         </div>
       </div>
 
-      {previewTags && (
-        <div className="shrink-0 px-4 sm:px-5 py-2 border-b border-white/10 bg-black/10 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-400">Type:</span>
-          <span className="text-xs font-medium text-cyan-400 capitalize">{previewTags.conversation_type}</span>
-          <span className="text-xs text-slate-500 mx-1">|</span>
-          <span className="text-xs text-slate-400">Tags:</span>
-          {previewTags.tags.length === 0 ? (
-            <span className="text-xs text-slate-500">none</span>
-          ) : (
-            previewTags.tags.map((t, i) => (
-              <span key={i} className="rounded-lg bg-white/10 border border-white/10 px-2 py-1 text-xs text-white/90">
-                {t}
+      {/* Editable bar: name, location, date/time, custom tags - wraps on mobile */}
+      {(listening || sessionName || sessionLocation || sessionStartedAt) && (
+        <div className="shrink-0 px-3 sm:px-5 py-3 border-b border-white/10 bg-black/10 flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="text-xs text-slate-500 shrink-0">Name</span>
+            <input type="text" value={sessionName} onChange={(e) => setSessionName(e.target.value)} placeholder="Transcript name" className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-sm text-white placeholder-slate-500 w-36 sm:w-48 max-w-full focus:border-cyan-500/40 focus:outline-none min-h-[40px]" />
+          </div>
+          <span className="text-slate-600 hidden sm:inline">|</span>
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="text-xs text-slate-500 shrink-0">Location</span>
+            <input type="text" value={sessionLocation} onChange={(e) => setSessionLocation(e.target.value)} placeholder="Location" className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-sm text-white placeholder-slate-500 w-24 sm:w-32 max-w-full focus:border-cyan-500/40 focus:outline-none min-h-[40px]" />
+          </div>
+          <span className="text-slate-600 hidden sm:inline">|</span>
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="text-xs text-slate-500 shrink-0">Date & time</span>
+            <span className="text-sm text-slate-300">{sessionStartedAt ? formatSessionDateTime(sessionStartedAt) : '—'}</span>
+          </div>
+          <span className="text-slate-600 hidden sm:inline">|</span>
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="text-xs text-slate-500 shrink-0">Tags</span>
+            {customTags.map((tag) => (
+              <span key={tag} className="inline-flex items-center gap-1 rounded-lg bg-white/10 border border-white/10 px-2 py-1.5 text-xs text-white/90">
+                {tag}
+                <button type="button" onClick={() => removeTag(tag)} className="text-slate-400 hover:text-white leading-none p-0.5 touch-manipulation min-w-[28px]" aria-label={`Remove ${tag}`}>×</button>
               </span>
-            ))
-          )}
+            ))}
+            <input type="text" value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())} placeholder="+ Add tag" className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-sm text-white placeholder-slate-500 w-20 sm:w-24 min-w-0 max-w-full focus:border-cyan-500/40 focus:outline-none min-h-[40px]" />
+            <button type="button" onClick={addTag} className="rounded-lg px-3 py-2 text-xs font-medium bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 touch-manipulation min-h-[40px]">Add</button>
+          </div>
         </div>
       )}
 
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 sm:p-5 overflow-auto">
+      <div className="flex-1 min-h-0 p-4 sm:p-5 overflow-auto">
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[280px] flex flex-col">
-          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Live transcript (updates as you speak, auto-stored every minute and when you stop)</div>
+          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Live transcript (auto-saved every 1 min to transcripts table + RAG; name, location &amp; time used for chat queries)</div>
           <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">
             {[fullTranscript, partial].filter(Boolean).join(' ') || '—'}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[280px] flex flex-col">
-          <div className="text-xs font-semibold opacity-70 mb-3 shrink-0 flex items-center gap-2">
-            Refined
-            {refining && <span className="inline-block w-3 h-3 border-2 border-cyan-400/50 border-t-cyan-400 rounded-full animate-spin" />}
-          </div>
-          <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">
-            {refining ? (
-              <span className="text-slate-500 flex items-center gap-2">
-                <span className="inline-block w-4 h-4 border-2 border-cyan-400/50 border-t-cyan-400 rounded-full animate-spin" />
-                Refining transcript…
-              </span>
-            ) : (
-              refined || 'Click “Refine” after transcription.'
-            )}
           </div>
         </div>
       </div>

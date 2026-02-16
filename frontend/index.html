@@ -3,7 +3,8 @@
 <html lang="en" style="height: 100%;">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover">
+  <meta name="theme-color" content="#05070a">
   <title>EchoMind | Ajace AI</title>
   <link rel="icon" href="https://www.ajace.com/wp-content/uploads/2016/12/cropped-logo-32x32.png" type="image/png">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -27,9 +28,10 @@
     .font-mono {
       font-family: 'JetBrains Mono', monospace;
     }
-    /* Custom Scrollbar */
+    /* Scrollbar: WebKit (Chrome, Safari, Edge) + standard (Firefox) */
     ::-webkit-scrollbar {
       width: 6px;
+      height: 6px;
     }
     ::-webkit-scrollbar-track {
       background: rgba(255, 255, 255, 0.02);
@@ -41,8 +43,13 @@
     ::-webkit-scrollbar-thumb:hover {
       background: rgba(255, 255, 255, 0.2);
     }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.02);
+    }
     .glass {
       background: rgba(15, 23, 42, 0.6);
+      -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }

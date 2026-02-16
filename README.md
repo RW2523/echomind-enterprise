@@ -5,14 +5,22 @@ This build removes ALL Gemini code and connects the UI to your backend APIs.
 ## Services
 - Frontend: http://<DGX_IP>:3000 (HTTP) or https://<DGX_IP>:3443 (HTTPS)
 - Backend API: proxied under /api
-- Voice bot: proxied under /voice (direct: http://<DGX_IP>:8001)
+- Voice bot: proxied under /voice (direct: http://<DGX_IP>:8001). **Voice AI is connected to RAG** (via `BACKEND_CHAT_URL`): questions about your transcripts or uploaded PDFs are answered from the knowledge base.
 - Ollama: http://<DGX_IP>:11434
 
-## HTTPS without a domain
-The frontend image includes a **self-signed certificate** so you can use HTTPS with no domain:
+## HTTPS
+
+**Recommended: Option B – Trusted certificate (no browser warning)**  
+Use a free domain and Let's Encrypt so the browser trusts the certificate:
+- Free subdomain: [DuckDNS](https://www.duckdns.org/) → **echomind.duckdns.org**
+- Trusted cert: **`sudo certbot --nginx -d echomind.duckdns.org`**
+- **HTTPS:** https://echomind.duckdns.org — no warning, fully trusted. Free.
+- Full steps: **[docs/HTTPS_TRUSTED_CERTIFICATE.md](docs/HTTPS_TRUSTED_CERTIFICATE.md)**
+
+**Option A – Self-signed (quick local HTTPS)**  
+If you don't need a domain, the image includes a self-signed cert:
 - **HTTPS:** https://localhost:3443 (or https://\<your-ip\>:3443)
-- Your browser will show a certificate warning (e.g. "Your connection is not private"); choose **Advanced** → **Proceed** to continue. This is expected when using a self-signed cert.
-- The app and Voice WebSocket (wss) work over this HTTPS port. HTTP remains on port 3000 if you prefer.
+- Browser will show a certificate warning; choose **Advanced** → **Proceed**. Use Option B above for no warning.
 
 ## Run
 ```bash

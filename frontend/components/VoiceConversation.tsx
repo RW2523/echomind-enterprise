@@ -13,15 +13,15 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdat
     state,
     userAnalyser,
     assistantAnalyser,
-    contextValue,
-    setContextValue,
-    applyContext,
+    voiceMessages,
+    pendingAssistantText,
     clearMemory,
     connect,
     disconnect,
     connecting,
     micMuted,
     setMicMuted,
+    connectionError,
   } = useVoiceConnection({ settings });
 
   return (
@@ -40,17 +40,15 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdat
         state={state}
         userAnalyser={userAnalyser}
         assistantAnalyser={assistantAnalyser}
-        contextValue={contextValue}
-        onContextChange={setContextValue}
-        onApplyContext={applyContext}
+        voiceMessages={voiceMessages}
+        pendingAssistantText={pendingAssistantText}
+        connectionError={connectionError}
         onClearMemory={clearMemory}
         onConnect={connect}
         onDisconnect={disconnect}
         connecting={connecting}
         micMuted={micMuted}
         onMicMutedToggle={() => setMicMuted(!micMuted)}
-        voiceUseKnowledgeBase={settings?.voiceUseKnowledgeBase ?? false}
-        onVoiceUseKnowledgeBaseToggle={() => onUpdateSetting?.("voiceUseKnowledgeBase", !(settings?.voiceUseKnowledgeBase ?? false))}
       />
     </div>
   );

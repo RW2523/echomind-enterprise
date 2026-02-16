@@ -28,6 +28,18 @@ def init_db():
             conn.execute("ALTER TABLE transcripts ADD COLUMN echodate TEXT")
         except Exception:
             pass
+        try:
+            conn.execute("ALTER TABLE transcripts ADD COLUMN name TEXT")
+        except Exception:
+            pass
+        try:
+            conn.execute("ALTER TABLE transcripts ADD COLUMN location TEXT")
+        except Exception:
+            pass
+        try:
+            conn.execute("ALTER TABLE transcripts ADD COLUMN updated_at TEXT")
+        except Exception:
+            pass
         conn.commit()
 
 @contextmanager

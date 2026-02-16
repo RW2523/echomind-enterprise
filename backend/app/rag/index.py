@@ -147,6 +147,33 @@ class FaissIndex:
     async def add_text(self, title:str, text:str, meta:dict) -> dict:
         return await self.add_document(title, "text", text, meta)
 
+    def clear_all(self) -> None:
+        """Clear all indexes and persisted files in one shot (no re-embedding). Call after DB tables are cleared."""
+        self.index = None
+        self.meta = {"chunk_ids": [], "source_by_chunk": {}}
+        self.sparse.chunk_ids = []
+        self.sparse.corpus_tokens = []
+        self.sparse._bm25 = None
+        self.sparse._save()
+        for path in (settings.FAISS_PATH, settings.META_PATH, settings.SPARSE_META_PATH):
+            if path and os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+        self.transcript_index = None
+        self.transcript_meta = {"chunk_ids": [], "source_by_chunk": {}}
+        self.transcript_sparse.chunk_ids = []
+        self.transcript_sparse.corpus_tokens = []
+        self.transcript_sparse._bm25 = None
+        self.transcript_sparse._save()
+        for path in (settings.FAISS_TRANSCRIPT_PATH, settings.META_TRANSCRIPT_PATH, settings.SPARSE_TRANSCRIPT_META_PATH):
+            if path and os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+
     async def delete_document(self, doc_id: str) -> None:
         """Remove document and its chunks from DB, FAISS, and sparse index. Rebuilds both indexes from remaining chunks."""
         with get_conn() as conn:

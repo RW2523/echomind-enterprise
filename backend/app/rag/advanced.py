@@ -426,10 +426,14 @@ def _parse_last_n_transcripts(question: str) -> Optional[int]:
 
 
 def _parse_last_time_window(question: str) -> Optional[timedelta]:
-    """If question asks for 'last N hours' or 'last N days', return timedelta. Used to filter transcript hits by time."""
+    """If question asks for 'last N hours', 'last N days', or 'last N minutes', return timedelta. Used to filter transcript hits by time."""
     if not (question or "").strip():
         return None
     t = question.lower()
+    # "last 5 minutes", "last 5 mins", "past 10 minutes"
+    m = re.search(r"(?:last|past|for\s+last)\s+(\d+)\s*(minute|minutes?|mins?)", t)
+    if m:
+        return timedelta(minutes=min(10080, max(1, int(m.group(1)))))  # cap 7 days
     # "last 15 hours", "for last 15 hours", "past 2 hours", "last 3 days"
     m = re.search(r"(?:last|past|for\s+last)\s+(\d+)\s*(hour|hours?)", t)
     if m:
@@ -438,6 +442,55 @@ def _parse_last_time_window(question: str) -> Optional[timedelta]:
     if m:
         return timedelta(days=min(365, max(1, int(m.group(1)))))
     return None
+
+
+def _parse_location_from_question(question: str) -> Optional[str]:
+    """If question mentions a location (e.g. 'in office', 'at home', 'in the meeting room'), return it for transcript filtering."""
+    if not (question or "").strip():
+        return None
+    t = question.lower()
+    # "in office", "at office", "from office", "in the office", "in office"
+    m = re.search(r"(?:in|at|from)\s+(?:the\s+)?([a-z0-9][a-z0-9\s\-]{1,40}?)(?:\s+transcript|\s+recording|\s+meeting|$|\.|\?)", t)
+    if m:
+        loc = m.group(1).strip()
+        if len(loc) >= 2 and loc not in ("a", "an", "the", "my", "last"):
+            return loc
+    # "office" alone when nearby "transcript" or "last"
+    if re.search(r"\b(office|home|meeting\s*room|conference)\b", t):
+        for word in ("office", "home", "meeting room", "meeting room", "conference"):
+            if word in t:
+                return word
+    return None
+
+
+def _parse_latest_or_recent_transcript(question: str) -> bool:
+    """True when user asks for 'latest transcript', 'most recent transcript', 'recent transcript' without a number (no time/location required)."""
+    if not (question or "").strip():
+        return False
+    t = question.lower()
+    if not re.search(r"\b(transcript|recording|meeting|conversation)\b", t):
+        return False
+    return bool(
+        re.search(r"\b(latest|most\s+recent|recent)\s+(?:transcript|recording|meeting|conversation)", t)
+        or re.search(r"(?:summary|recap|give)\s+(?:me\s+)?(?:the\s+)?(?:latest|most\s+recent|recent)\b", t)
+        or re.search(r"(?:the\s+)?(latest|most\s+recent)\b", t)
+    )
+
+
+def _get_most_recent_transcript_id() -> Optional[str]:
+    """Return transcript id of the most recently updated transcript (one row per session)."""
+    with get_conn() as conn:
+        try:
+            row = conn.execute(
+                "SELECT id FROM transcripts ORDER BY updated_at DESC LIMIT 1",
+                ()
+            ).fetchone()
+        except Exception:
+            row = conn.execute(
+                "SELECT id FROM transcripts ORDER BY created_at DESC LIMIT 1",
+                ()
+            ).fetchone()
+    return row[0] if row else None
 
 
 def _get_recent_transcript_doc_ids(n: int) -> set:
@@ -602,34 +655,55 @@ async def retrieve(
     else:
         hits = hits[:k]
 
-    # When intent is transcript: optional filters by "last N transcripts" or "last N hours/days"
+    # When intent is transcript: optional filters by "last N transcripts", time window, location, or "latest transcript"
     if intent == "transcript":
         n = _parse_last_n_transcripts(question)
         if n is not None and n > 0:
             recent_ids = _get_recent_transcript_doc_ids(n)
             if recent_ids:
                 hits = [h for h in hits if ((h.get("source") or {}).get("doc_id")) in recent_ids]
-        else:
-            window = _parse_last_time_window(question)
-            if window is not None:
-                cutoff = datetime.now(timezone.utc) - window
-                doc_created, _ = _get_doc_info_for_hits(hits)
-                filtered = []
-                for h in hits:
-                    doc_id = (h.get("source") or {}).get("doc_id")
-                    if not doc_id:
+        time_window = _parse_last_time_window(question)
+        location_filter = _parse_location_from_question(question)
+        latest_only = _parse_latest_or_recent_transcript(question)
+
+        if time_window is not None or location_filter:
+            # Filter by time and/or location when user specified them
+            cutoff = (datetime.now(timezone.utc) - time_window) if time_window else None
+            filtered = []
+            for h in hits:
+                doc_id = (h.get("source") or {}).get("doc_id")
+                if not doc_id:
+                    continue
+                meta = doc_meta.get(doc_id) or {}
+                if cutoff is not None:
+                    ts_at = meta.get("echodate") or doc_created.get(doc_id)
+                    if ts_at is None:
                         continue
-                    created_at = doc_created.get(doc_id)
-                    if created_at is None:
-                        continue
-                    dt = _parse_iso_date(created_at)
+                    dt = _parse_iso_date(ts_at)
                     if dt is None:
                         continue
                     if dt.tzinfo is None:
                         dt = dt.replace(tzinfo=timezone.utc)
-                    if dt >= cutoff:
-                        filtered.append(h)
-                hits = filtered
+                    if dt < cutoff:
+                        continue
+                if location_filter:
+                    doc_location = (meta.get("location") or "").strip().lower()
+                    loc_lower = location_filter.strip().lower()
+                    if not doc_location or (loc_lower not in doc_location and doc_location not in loc_lower):
+                        continue
+                filtered.append(h)
+            hits = filtered
+        elif latest_only:
+            # "Latest transcript" / "most recent transcript" with no time/location: use most recent session only
+            recent_tid = _get_most_recent_transcript_id()
+            if recent_tid:
+                filtered = [
+                    h for h in hits
+                    if (doc_meta.get((h.get("source") or {}).get("doc_id")) or {}).get("transcript_id") == recent_tid
+                ]
+                if filtered:
+                    hits = filtered
+            # else: no transcript row yet (e.g. no sessions stored), keep hits by relevance
     return hits
 
 

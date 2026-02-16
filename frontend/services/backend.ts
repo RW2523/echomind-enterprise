@@ -70,6 +70,19 @@ export interface TranscriptListItem {
   tags: string[];
   echotag: string;
   created_at: string;
+  name?: string | null;
+  location?: string | null;
+}
+
+/** Default transcript name: transcript_YYYY-MM-DD_HH-MM (local time). */
+export function defaultTranscriptName(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const h = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  return `transcript_${y}-${m}-${d}_${h}-${min}`;
 }
 
 export async function listTranscripts(): Promise<{ transcripts: TranscriptListItem[] }> {
@@ -192,19 +205,40 @@ export async function getTranscriptTags(rawText: string): Promise<{ tags: string
 
 export async function storeTranscript(
   rawText: string,
-  refinedText?: string | null,
-  echotag?: string | null
-): Promise<{ transcript_id: string; tags: string[]; echotag: string; echodate: string; created_at: string }> {
+  options?: {
+    refinedText?: string | null;
+    echotag?: string | null;
+    name?: string | null;
+    location?: string | null;
+    tags?: string[] | null;
+  }
+): Promise<{ transcript_id: string; title: string; name?: string | null; location?: string | null; tags: string[]; echotag: string; echodate: string; created_at: string }> {
   const r = await fetch(`${API_BASE}/api/transcribe/store`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       raw_text: rawText,
-      refined_text: refinedText ?? null,
-      echotag: echotag ?? null,
+      refined_text: options?.refinedText ?? null,
+      echotag: options?.echotag ?? null,
+      name: options?.name ?? null,
+      location: options?.location ?? null,
+      tags: options?.tags ?? null,
     }),
   });
   if (!r.ok) throw new Error(`store failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function updateTranscript(
+  transcriptId: string,
+  updates: { name?: string | null; location?: string | null; tags?: string[] | null }
+): Promise<{ transcript_id: string; title: string; name?: string | null; location?: string | null; tags: string[]; echotag: string; created_at: string }> {
+  const r = await fetch(`${API_BASE}/api/transcribe/transcripts/${encodeURIComponent(transcriptId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  if (!r.ok) throw new Error(`update transcript failed: ${r.status}`);
   return await r.json();
 }
 

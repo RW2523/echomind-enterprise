@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppView } from '../types';
 import { ICONS } from '../constants';
-import { getStorageUsage, StorageUsage, getDataPreview, deleteAllData, DataPreview } from '../services/backend';
+import { getStorageUsage, StorageUsage } from '../services/backend';
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
@@ -13,14 +13,16 @@ function formatBytes(bytes: number): string {
 interface SidebarProps {
   activeView: AppView;
   setActiveView: (view: AppView) => void;
+  sidebarOpen?: boolean;
+  onCloseSidebar?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpen = false, onCloseSidebar }) => {
+  const handleNav = (view: AppView) => {
+    setActiveView(view);
+    onCloseSidebar?.();
+  };
   const [storage, setStorage] = useState<StorageUsage>({ usage_bytes: 0, capacity_bytes: null });
-  const [usageOpen, setUsageOpen] = useState(false);
-  const [dataPreview, setDataPreview] = useState<DataPreview | null>(null);
-  const [deletingAll, setDeletingAll] = useState(false);
-  const usageRef = useRef<HTMLDivElement>(null);
 
   const refreshUsage = useCallback(async () => {
     try {
@@ -38,34 +40,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
   }, [refreshUsage]);
 
   useEffect(() => {
-    if (!usageOpen) return;
-    let cancelled = false;
-    getDataPreview().then((d) => { if (!cancelled) setDataPreview(d); }).catch(() => { if (!cancelled) setDataPreview(null); });
-    return () => { cancelled = true; };
-  }, [usageOpen]);
-
-  useEffect(() => {
-    if (!usageOpen) return;
-    const close = (e: MouseEvent) => {
-      if (usageRef.current && !usageRef.current.contains(e.target as Node)) setUsageOpen(false);
-    };
-    document.addEventListener('click', close);
-    return () => document.removeEventListener('click', close);
-  }, [usageOpen]);
-
-  const handleDeleteAll = useCallback(async () => {
-    if (!window.confirm('Delete ALL data (documents, chunks, transcripts, chats)? This cannot be undone.')) return;
-    setDeletingAll(true);
-    try {
-      await deleteAllData();
-      setUsageOpen(false);
-      await refreshUsage();
-      setDataPreview(null);
-    } catch (e) {
-      alert((e as Error)?.message || 'Failed to delete all data');
-    } finally {
-      setDeletingAll(false);
-    }
+    const onCleared = () => { refreshUsage(); };
+    window.addEventListener('echomind-data-cleared', onCleared);
+    return () => window.removeEventListener('echomind-data-cleared', onCleared);
   }, [refreshUsage]);
 
   const usageBytes = storage.usage_bytes;
@@ -81,8 +58,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
     { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings },
   ];
 
-  return (
-    <aside className="w-16 md:w-60 lg:w-64 flex flex-col bg-[#080b14] border-r border-white/5 transition-all duration-300 h-full overflow-y-auto overflow-x-hidden shrink-0">
+  const sidebarContent = (
+    <>
       <div className="px-3 py-4 md:px-4 md:py-5 flex items-center gap-3">
         <img
           src="https://www.ajace.com/wp-content/uploads/2016/12/cropped-logo-32x32.png"
@@ -93,14 +70,21 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
           <h1 className="text-base font-bold tracking-tight text-white leading-none truncate">EchoMind</h1>
           <p className="text-[10px] text-cyan-400/80 uppercase tracking-widest font-semibold mt-0.5">by Ajace AI</p>
         </div>
+        <div className="flex-1 md:hidden" />
+        {onCloseSidebar && (
+          <button type="button" onClick={onCloseSidebar} className="md:hidden p-2 -m-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation" aria-label="Close menu">
+            <ICONS.Close className="w-6 h-6" />
+          </button>
+        )}
       </div>
 
-      <nav className="flex-1 px-2 md:px-3 pt-2 md:pt-4 space-y-1">
+      <nav className="flex-1 px-2 md:px-3 pt-2 md:pt-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setActiveView(item.id)}
-            className={`w-full flex items-center justify-center md:justify-start gap-3 px-2 py-2.5 md:px-3 md:py-3 rounded-xl transition-all duration-200 group ${
+            type="button"
+            onClick={() => handleNav(item.id)}
+            className={`w-full flex items-center justify-center md:justify-start gap-3 px-2 py-3 md:px-3 md:py-3 rounded-xl transition-all duration-200 group min-h-[44px] touch-manipulation ${
               activeView === item.id 
                 ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_20px_rgba(34,211,238,0.05)]' 
                 : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'
@@ -112,12 +96,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
         ))}
       </nav>
 
-      <div className="px-3 py-4 md:px-4 md:py-4 mt-auto hidden md:block border-t border-white/5 relative" ref={usageRef}>
-        <button
-          type="button"
-          onClick={() => setUsageOpen((o) => !o)}
-          className="w-full glass rounded-2xl p-4 border border-white/5 bg-white/5 text-left hover:bg-white/10 transition-colors"
-        >
+      <div className="px-3 py-4 md:px-4 md:py-4 mt-auto hidden md:block border-t border-white/5 shrink-0">
+        <div className="w-full glass rounded-2xl p-4 border border-white/5 bg-white/5 text-left">
           <p className="text-xs text-slate-500 mb-2">Usage</p>
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div
@@ -128,71 +108,40 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
           <p className="text-[10px] text-slate-400 mt-2">
             {capacityStr ? `${usageStr} of ${capacityStr} Vector DB` : `${usageStr} Vector DB`}
           </p>
-        </button>
-        {usageOpen && (
-          <div className="absolute bottom-full left-2 right-2 mb-2 z-50 rounded-xl border border-white/20 bg-slate-900/98 shadow-2xl overflow-hidden max-h-[70vh] flex flex-col">
-            <div className="p-3 border-b border-white/10 flex items-center justify-between shrink-0">
-              <span className="text-sm font-semibold text-white">Data preview</span>
-              <button type="button" onClick={() => setUsageOpen(false)} className="text-slate-400 hover:text-white p-1">✕</button>
-            </div>
-            <div className="overflow-auto p-3 space-y-4 text-xs">
-              {dataPreview == null ? (
-                <p className="text-slate-500">Loading…</p>
-              ) : (
-                <>
-                  <div>
-                    <p className="text-slate-400 font-medium mb-1">Documents ({dataPreview.documents.length})</p>
-                    <div className="rounded-lg border border-white/10 overflow-hidden">
-                      <table className="w-full text-left">
-                        <thead><tr className="bg-white/5"><th className="px-2 py-1.5">id</th><th className="px-2 py-1.5">filename</th><th className="px-2 py-1.5">created_at</th></tr></thead>
-                        <tbody>
-                          {dataPreview.documents.slice(0, 50).map((d) => (
-                            <tr key={d.id} className="border-t border-white/5"><td className="px-2 py-1 truncate max-w-[80px]">{d.id}</td><td className="px-2 py-1 truncate max-w-[120px]" title={d.filename}>{d.filename}</td><td className="px-2 py-1">{d.created_at?.slice(0, 19)}</td></tr>
-                          ))}
-                          {dataPreview.documents.length > 50 && <tr className="border-t border-white/5"><td colSpan={3} className="px-2 py-1 text-slate-500">+ {dataPreview.documents.length - 50} more</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-slate-400 font-medium mb-1">Chunks ({dataPreview.chunks.length})</p>
-                    <div className="rounded-lg border border-white/10 overflow-hidden">
-                      <table className="w-full text-left">
-                        <thead><tr className="bg-white/5"><th className="px-2 py-1.5">id</th><th className="px-2 py-1.5">doc_id</th><th className="px-2 py-1.5">preview</th></tr></thead>
-                        <tbody>
-                          {dataPreview.chunks.slice(0, 30).map((c) => (
-                            <tr key={c.id} className="border-t border-white/5"><td className="px-2 py-1 truncate max-w-[70px]">{c.id}</td><td className="px-2 py-1 truncate max-w-[80px]">{c.doc_id}</td><td className="px-2 py-1 truncate max-w-[180px]" title={c.text_preview}>{c.text_preview}</td></tr>
-                          ))}
-                          {dataPreview.chunks.length > 30 && <tr className="border-t border-white/5"><td colSpan={3} className="px-2 py-1 text-slate-500">+ {dataPreview.chunks.length - 30} more</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-slate-400 font-medium mb-1">Transcripts ({dataPreview.transcripts.length})</p>
-                    <div className="rounded-lg border border-white/10 overflow-hidden">
-                      <table className="w-full text-left">
-                        <thead><tr className="bg-white/5"><th className="px-2 py-1.5">id</th><th className="px-2 py-1.5">title</th><th className="px-2 py-1.5">tags</th><th className="px-2 py-1.5">created_at</th></tr></thead>
-                        <tbody>
-                          {dataPreview.transcripts.slice(0, 30).map((t) => (
-                            <tr key={t.id} className="border-t border-white/5"><td className="px-2 py-1 truncate max-w-[70px]">{t.id}</td><td className="px-2 py-1 truncate max-w-[100px]" title={t.title}>{t.title}</td><td className="px-2 py-1 truncate max-w-[120px]">{(t.tags || []).join(', ')}</td><td className="px-2 py-1">{t.created_at?.slice(0, 19)}</td></tr>
-                          ))}
-                          {dataPreview.transcripts.length > 30 && <tr className="border-t border-white/5"><td colSpan={4} className="px-2 py-1 text-slate-500">+ {dataPreview.transcripts.length - 30} more</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="p-3 border-t border-white/10 shrink-0 flex justify-end gap-2">
-              <button type="button" onClick={() => setUsageOpen(false)} className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-sm">Close</button>
-              <button type="button" onClick={handleDeleteAll} disabled={deletingAll} className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 text-sm disabled:opacity-50">Delete all data</button>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile overlay backdrop */}
+      {onCloseSidebar && (
+        <div
+          className={`fixed inset-0 z-20 bg-black/60 backdrop-blur-sm md:hidden transition-opacity duration-200 ${sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          onClick={onCloseSidebar}
+          onKeyDown={(e) => e.key === 'Escape' && onCloseSidebar()}
+          aria-hidden
+        />
+      )}
+      {/* Sidebar: drawer on mobile, inline on desktop */}
+      <aside
+        className={`
+          flex flex-col bg-[#080b14] border-r border-white/5 transition-all duration-300 h-full overflow-y-auto overflow-x-hidden shrink-0
+          w-[min(280px,85vw)] md:w-60 lg:w-64
+          fixed md:relative inset-y-0 left-0 z-30 md:z-auto
+          transform md:transform-none
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          shadow-xl md:shadow-none
+        `}
+        role="navigation"
+        aria-label="Main navigation"
+      >
+        <div className="flex-1 flex flex-col min-h-0 md:min-h-full">
+          {sidebarContent}
+        </div>
+      </aside>
+    </>
   );
 };
 

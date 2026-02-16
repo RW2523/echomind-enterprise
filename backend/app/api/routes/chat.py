@@ -54,7 +54,7 @@ class AskIn(BaseModel):
     message: str
     persona: str | None = None
     context_window: str | None = None
-    use_knowledge_base: bool = True
+    use_knowledge_base: bool = True  # When True, RAG retrieves from uploaded documents + saved transcripts
     advanced_rag: bool = False
 
 

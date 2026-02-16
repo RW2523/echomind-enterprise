@@ -20,6 +20,7 @@ const defaultSettings: AppSettings = {
   voiceUseKnowledgeBase: false,
   voiceBotName: '',
   voiceUserName: '',
+  voiceContext: '',
 };
 
 function loadSettings(): AppSettings {
@@ -37,6 +38,7 @@ function loadSettings(): AppSettings {
         voiceUseKnowledgeBase: parsed.voiceUseKnowledgeBase ?? defaultSettings.voiceUseKnowledgeBase,
         voiceBotName: parsed.voiceBotName ?? defaultSettings.voiceBotName,
         voiceUserName: parsed.voiceUserName ?? defaultSettings.voiceUserName,
+        voiceContext: parsed.voiceContext ?? defaultSettings.voiceContext,
       };
     }
   } catch (_) {}
@@ -52,6 +54,7 @@ function saveSettings(s: AppSettings) {
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<AppView>(AppView.KNOWLEDGE_CHAT);
   const [settings, setSettingsState] = useState<AppSettings>(() => loadSettings());
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const setSettings = useCallback((s: AppSettings) => {
     setSettingsState(s);
@@ -74,17 +77,17 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full w-full bg-[#05070a] text-slate-200 overflow-hidden" style={{ height: '100dvh' }}>
+    <div className="flex h-full w-full bg-[#05070a] text-slate-200 overflow-hidden" style={{ height: '100dvh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
       {/* Dynamic Background Glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none z-0"></div>
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none z-0"></div>
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none z-0" aria-hidden />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none z-0" aria-hidden />
 
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
+      <Sidebar activeView={activeView} setActiveView={setActiveView} sidebarOpen={sidebarOpen} onCloseSidebar={() => setSidebarOpen(false)} />
       
-      <main className="flex-1 flex flex-col relative z-10 border-l border-white/5 min-w-0 min-h-0">
-        <Header activeView={activeView} settings={settings} />
-        <div className="flex-1 min-h-0 overflow-auto flex flex-col">
-          <div className="flex-1 min-h-0 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-5 lg:px-8 lg:py-6 flex flex-col">
+      <main className="flex-1 flex flex-col relative z-10 border-l border-white/5 min-w-0 min-h-0 overflow-hidden">
+        <Header activeView={activeView} settings={settings} onMenuClick={() => setSidebarOpen(true)} />
+        <div className="flex-1 min-h-0 overflow-auto flex flex-col overscroll-contain">
+          <div className="flex-1 min-h-0 px-3 py-3 sm:px-5 sm:py-5 md:px-6 md:py-5 lg:px-8 lg:py-6 flex flex-col min-w-0">
             {renderView()}
           </div>
         </div>
