@@ -8,19 +8,21 @@ This build removes ALL Gemini code and connects the UI to your backend APIs.
 - Voice bot: proxied under /voice (direct: http://<DGX_IP>:8001). **Voice AI is connected to RAG** (via `BACKEND_CHAT_URL`): questions about your transcripts or uploaded PDFs are answered from the knowledge base.
 - Ollama: http://<DGX_IP>:11434
 
-## HTTPS
+## HTTPS (no browser warning)
 
-**Recommended: Option B – Trusted certificate (no browser warning)**  
-Use a free domain and Let's Encrypt so the browser trusts the certificate:
-- Free subdomain: [DuckDNS](https://www.duckdns.org/) → **echomind.duckdns.org**
+**Production (server with a hostname)**  
+Trusted HTTPS with a free domain and Let's Encrypt:
+- Free subdomain: [DuckDNS](https://www.duckdns.org/) → e.g. **echomind.duckdns.org**
 - Trusted cert: **`sudo certbot --nginx -d echomind.duckdns.org`**
-- **HTTPS:** https://echomind.duckdns.org — no warning, fully trusted. Free.
-- Full steps: **[docs/HTTPS_TRUSTED_CERTIFICATE.md](docs/HTTPS_TRUSTED_CERTIFICATE.md)**
+- **HTTPS:** https://echomind.duckdns.org — no warning. Full steps: **[docs/HTTPS_TRUSTED_CERTIFICATE.md](docs/HTTPS_TRUSTED_CERTIFICATE.md)**
 
-**Option A – Self-signed (quick local HTTPS)**  
-If you don't need a domain, the image includes a self-signed cert:
-- **HTTPS:** https://localhost:3443 (or https://\<your-ip\>:3443)
-- Browser will show a certificate warning; choose **Advanced** → **Proceed**. Use Option B above for no warning.
+**Local development**  
+Trusted HTTPS on localhost with [mkcert](https://github.com/FiloSottile/mkcert):
+- Install mkcert, run `mkcert -install`, create certs for localhost, then run the frontend with `VITE_DEV_HTTPS=1` and `VITE_SSL_CERT` / `VITE_SSL_KEY`.
+- **HTTPS:** https://localhost:3000 — no warning. Steps: **[docs/HTTPS_LOCAL_TRUSTED.md](docs/HTTPS_LOCAL_TRUSTED.md)**
+
+**Fallback – self-signed**  
+The image also serves HTTPS with a self-signed cert (browser will show a warning; use **Advanced** → **Proceed**).
 
 ## Run
 ```bash

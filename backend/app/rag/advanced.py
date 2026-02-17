@@ -596,8 +596,11 @@ async def retrieve(
     has_transcripts: bool = False,
     transcript_echotags: Optional[List[str]] = None,
 ) -> List[Dict]:
-    """Hybrid retrieve: deterministic + LLM query expansion (source-based intent), dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. When intent is transcript and question asks for 'last N transcripts', filters to N most recent transcript docs."""
-    llm_qs = await generate_queries(question, intent=intent, document_titles=document_titles, has_transcripts=has_transcripts, transcript_echotags=transcript_echotags)
+    """Hybrid retrieve: deterministic + optional LLM query expansion, dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. When intent is transcript and question asks for 'last N transcripts', filters to N most recent transcript docs."""
+    if getattr(settings, "RAG_QUERY_REWRITE_ENABLED", False):
+        llm_qs = await generate_queries(question, intent=intent, document_titles=document_titles, has_transcripts=has_transcripts, transcript_echotags=transcript_echotags)
+    else:
+        llm_qs = [question.strip() or " "]
     det_qs = get_deterministic_query_variants(question)
     seen_lower: set = set()
     qs: List[str] = []

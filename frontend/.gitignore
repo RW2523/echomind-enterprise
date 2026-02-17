@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local HTTPS certs (mkcert) – do not commit private keys
+.cert/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

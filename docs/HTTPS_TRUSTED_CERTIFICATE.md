@@ -2,10 +2,9 @@
 
 This flow removes the browser warning **"This certificate is not trusted"** by using a free subdomain and a **Let's Encrypt** certificate. No need to buy a domain.
 
-**Result:**
-- Works fully on HTTPS  
-- Free  
-- No browser warnings (trusted certificate)
+**Result:** HTTPS with a trusted certificate, no browser warning, no cost.
+
+**Quick setup:** DuckDNS subdomain → Nginx on host (proxy to app) → `certbot --nginx -d yourname.duckdns.org` → open https://yourname.duckdns.org.
 
 ---
 
@@ -55,6 +54,7 @@ server {
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
+    # WebSocket support (Voice AI, live features)
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
     proxy_read_timeout 86400;

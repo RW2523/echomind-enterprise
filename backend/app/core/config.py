@@ -33,7 +33,9 @@ class Settings(BaseSettings):
     RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "0").lower() in ("1", "true", "yes")
 
     # --- RAG quality improvements (all optional, no breaking changes) ---
-    # Intent-aware query rewriting: classify (factual/procedural/exploratory/temporal) and rewrite for precision.
+    # When False (default), skip LLM query rewrite and use only the user question + deterministic variants for search. Set ECHOMIND_RAG_QUERY_REWRITE=1 for intent-aware expansion (adds 1 LLM call).
+    RAG_QUERY_REWRITE_ENABLED: bool = os.getenv("ECHOMIND_RAG_QUERY_REWRITE", "0").lower() in ("1", "true", "yes")
+    # When query rewrite is enabled: use intent-based rewrite (document/transcript) vs generic. Set ECHOMIND_RAG_INTENT_REWRITE=0 to use generic rewrite only.
     RAG_INTENT_REWRITE: bool = os.getenv("ECHOMIND_RAG_INTENT_REWRITE", "1").lower() in ("1", "true", "yes")
     # Weighted RRF: dense_weight + sparse_weight (default 0.6 + 0.4) instead of equal. Improves recall/precision balance.
     RAG_DENSE_RRF_WEIGHT: float = float(os.getenv("ECHOMIND_RAG_DENSE_RRF_WEIGHT", "0.6"))
