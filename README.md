@@ -60,3 +60,13 @@ By default the backend uses **faiss-cpu**. For faster vector search you can use 
 The backend service already has GPU access in `docker-compose.yml`. No code changes are needed—the same `faiss` API is used; the GPU build just runs the index on the GPU.
 
 **Note:** The PyPI `faiss-gpu` package (1.7.2) is archived and only provides wheels for Python ≤3.10. If the backend image uses Python 3.11+, the GPU build may fail; in that case keep `faiss-cpu` or use a conda base image with `faiss-gpu`.
+
+## Live Transcript (Kyutai STT)
+
+The **Real-Time Transcription** tab uses **Kyutai STT** (`kyutai/stt-1b-en_fr`) for streaming speech-to-text. No Whisper—Kyutai only.
+
+- **Sample rate:** 24 kHz (Kyutai)
+- **Works on:** x86_64 and ARM64 (e.g. DGX Spark)
+- **Deps:** `moshi`, `huggingface-hub` (included in `backend/requirements.txt`). On ARM64: `libopus-dev` required for sphn.
+
+On first use, the model (~1B params) is downloaded from Hugging Face. Requires PyTorch (provided by the NVIDIA PyTorch base image). For DGX Spark (ARM64), ensure the backend Dockerfile uses an ARM64-compatible base image; the dependencies support both architectures.

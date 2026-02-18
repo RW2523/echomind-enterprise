@@ -32,10 +32,20 @@ def _normalize_whitespace(text: str) -> str:
     """Collapse multiple spaces, no space before punctuation."""
     if not text:
         return ""
-    # SentencePiece "▁" already converted upstream to space if needed
     t = re.sub(r"\s+", " ", text).strip()
     t = NO_SPACE_BEFORE.sub(r"\1", t)
     return t
+
+
+def _normalize_piece(piece: str) -> str:
+    """Normalize STT piece but preserve leading space (SentencePiece ▁ word boundary)."""
+    if not piece:
+        return ""
+    # Collapse internal multiple spaces, fix no-space-before-punct
+    t = re.sub(r"\s+", " ", piece)
+    t = NO_SPACE_BEFORE.sub(r"\1", t)
+    # Strip trailing but preserve leading (word boundary)
+    return t.rstrip() if t.startswith(" ") else t.strip()
 
 
 def _max_suffix_prefix_overlap(tail: str, incoming: str, k: int) -> int:
@@ -83,7 +93,8 @@ class SessionState:
 
     def _close_current_paragraph(self, end_ts: float) -> Optional[Paragraph]:
         """Close current paragraph if any text; return it."""
-        current_text = (self.raw_text + " " + self.recent_buffer).strip()
+        sep = " " if self.raw_text and self.recent_buffer and not self.raw_text.endswith(" ") and not self.recent_buffer.startswith(" ") else ""
+        current_text = (self.raw_text + sep + self.recent_buffer).strip()
         segment_text = current_text[self._current_paragraph_start_index:].strip()
         if not segment_text:
             return None
@@ -104,7 +115,7 @@ class SessionState:
         """Append a text piece from STT with anti-duplication and whitespace normalization."""
         if self._paused or not piece:
             return
-        piece = _normalize_whitespace(piece)
+        piece = _normalize_piece(piece)
         if not piece:
             return
         tail = (self.raw_text + self.recent_buffer).strip()
@@ -119,7 +130,8 @@ class SessionState:
         if not piece:
             self.last_piece_ts_ms = ts_ms
             return
-        self.recent_buffer += (" " if self.recent_buffer and not self.recent_buffer.endswith(" ") else "") + piece
+        # Pieces from STT already include word-boundary spaces (▁→" "); concatenate directly.
+        self.recent_buffer += piece
         self.last_piece_ts_ms = ts_ms
 
     def get_display_text(self) -> str:
@@ -128,7 +140,8 @@ class SessionState:
             return self.raw_text.strip()
         r = self.raw_text.strip()
         if r:
-            return r + " " + self.recent_buffer
+            sep = " " if not r.endswith(" ") and not self.recent_buffer.startswith(" ") else ""
+            return r + sep + self.recent_buffer
         return self.recent_buffer
 
     def maybe_commit(self, ts_ms: int) -> bool:
@@ -147,8 +160,11 @@ class SessionState:
         )
         if not should_commit:
             return False
-        # Commit
-        self.raw_text += (" " if self.raw_text and not self.raw_text.endswith(" ") else "") + self.recent_buffer
+        # Commit (recent_buffer may already start with space from ▁)
+        sep = ""
+        if self.raw_text and not self.raw_text.endswith(" ") and self.recent_buffer and not self.recent_buffer.startswith(" "):
+            sep = " "
+        self.raw_text += sep + self.recent_buffer
         self.recent_buffer = ""
         return True
 
@@ -157,7 +173,8 @@ class SessionState:
         If we have committed text and (strong punct + silence) or paragraph too long, close paragraph and start new.
         Returns new Paragraph if one was closed.
         """
-        current_full = (self.raw_text + " " + self.recent_buffer).strip()
+        sep = " " if self.raw_text and self.recent_buffer and not self.raw_text.endswith(" ") and not self.recent_buffer.startswith(" ") else ""
+        current_full = (self.raw_text + sep + self.recent_buffer).strip()
         segment_so_far = current_full[self._current_paragraph_start_index:].strip()
         if not segment_so_far:
             return None
@@ -174,10 +191,14 @@ class SessionState:
     def finalize(self) -> None:
         """Flush buffer into raw_text and close last paragraph."""
         if self.recent_buffer.strip():
-            self.raw_text += (" " if self.raw_text and not self.raw_text.endswith(" ") else "") + self.recent_buffer
+            sep = ""
+            if self.raw_text and not self.raw_text.endswith(" ") and self.recent_buffer and not self.recent_buffer.startswith(" "):
+                sep = " "
+            self.raw_text += sep + self.recent_buffer
             self.recent_buffer = ""
         end_ts = time.time()
-        current_full = (self.raw_text + " " + self.recent_buffer).strip()
+        sep = " " if self.raw_text and self.recent_buffer and not self.raw_text.endswith(" ") and not self.recent_buffer.startswith(" ") else ""
+        current_full = (self.raw_text + sep + self.recent_buffer).strip()
         segment_so_far = current_full[self._current_paragraph_start_index:].strip()
         if segment_so_far:
             self._close_current_paragraph(end_ts)

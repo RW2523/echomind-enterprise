@@ -2,6 +2,7 @@
 WebSocket handler for real-time transcription & knowledge capture.
 Protocol: binary PCM16 chunks, text JSON (start/pause/resume/eos/refine/store).
 Uses SessionState for stabilization and segmentation; refine and store for KB.
+Kyutai STT only (24kHz). No Whisper fallback.
 """
 from __future__ import annotations
 import asyncio
@@ -15,24 +16,47 @@ from typing import Optional
 
 from ..core.config import settings
 from ..utils.ids import now_iso
-from .session_state import SessionState, Paragraph
+from .session_state import SessionState
 from .stt_streaming import (
     _pcm16_to_float32,
-    _load_whisper,
+    _audio_rms,
     get_kyutai_stt,
     KYUTAI_AVAILABLE,
     _resample_linear,
+    KYUTAI_SAMPLE_RATE,
 )
 from ..refine import refine_text
 from ..tagging import get_metadata
 from .. import kb
 from .store_to_db import store_transcript_to_db, create_transcript_for_session, append_transcript_chunk, update_transcript_tags_and_echotag
 
-SAMPLE_RATE_WHISPER = getattr(settings, "SAMPLE_RATE", 16000)
-# Emit partial every this many seconds of audio (Whisper chunk)
-WHISPER_CHUNK_SEC = 2.5
+# Kyutai sample rate (24kHz)
+SAMPLE_RATE = KYUTAI_SAMPLE_RATE
 # Rate limit partials to client
 EMIT_MIN_INTERVAL = 1.0 / max(0.1, getattr(settings, "TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC", 15))
+# VAD: skip feeding audio to STT when RMS below this (0 = disabled)
+VAD_RMS_THRESHOLD = max(0.0, getattr(settings, "TRANSCRIPT_VAD_RMS_THRESHOLD", 0.008))
+
+
+def _is_valid_english_piece(piece: str) -> bool:
+    """Filter out noise and non-English: digits-only, single chars, or mostly non-ASCII."""
+    if not piece or not piece.strip():
+        return False
+    s = piece.strip()
+    alnum = "".join(c for c in s if c.isalnum())
+    # Reject digits-only or digits + punctuation (e.g. "42", "1, 2", "1 2 3")
+    if not alnum or alnum.isdigit():
+        return False
+    # Reject single character unless it's a valid word
+    if len(s) == 1 and s.upper() not in ("I", "A"):
+        return False
+    # Reject if majority of letters are non-ASCII (non-English)
+    letters = [c for c in s if c.isalpha()]
+    if letters:
+        non_ascii = sum(1 for c in letters if ord(c) > 127)
+        if non_ascii / len(letters) > 0.4:
+            return False
+    return True
 
 
 async def handler(ws: WebSocket):
@@ -40,23 +64,24 @@ async def handler(ws: WebSocket):
     await _send(ws, {"type": "loading"})
 
     loop = asyncio.get_running_loop()
-    use_kyutai = False
-    sample_rate = SAMPLE_RATE_WHISPER
     kyutai_stt = None
     if KYUTAI_AVAILABLE:
         try:
             kyutai_stt = await loop.run_in_executor(None, get_kyutai_stt)
-            if kyutai_stt is not None:
-                use_kyutai = True
-                sample_rate = kyutai_stt.sample_rate
-        except Exception:
-            pass
-    if not use_kyutai:
-        try:
-            await loop.run_in_executor(None, _load_whisper)
         except Exception as e:
-            await _send(ws, {"type": "error", "message": f"STT load failed: {e}"})
+            await _send(ws, {"type": "error", "message": f"Kyutai STT load failed: {e}"})
             return
+
+    if kyutai_stt is None:
+        from .stt_streaming import _kyutai_import_error
+        hint = f" ({_kyutai_import_error})" if _kyutai_import_error else ""
+        await _send(ws, {
+            "type": "error",
+            "message": f"Kyutai STT not available. Install: pip install moshi huggingface-hub. Live transcript requires Kyutai STT.{hint}"
+        })
+        return
+
+    sample_rate = kyutai_stt.sample_rate
     await _send(ws, {"type": "ready", "sample_rate": sample_rate})
 
     session_id: Optional[str] = None
@@ -69,9 +94,7 @@ async def handler(ws: WebSocket):
     session_name: list = [""]  # mutable: from start payload
     session_location: list = [""]  # mutable: from start payload
     transcript_id_ref: list = [None]  # mutable: transcript id once created (groups 1-min chunks)
-    audio_buffer: list = []
     last_emit_time = 0.0
-    last_whisper_time = 0.0
     client_sample_rate: Optional[int] = None
     last_auto_stored_length: list = [0]  # mutable for closure
     interval_buffer: list = []  # (text, ts) for each interval; combined + LLM before saving to DB
@@ -175,6 +198,9 @@ async def handler(ws: WebSocket):
         """Feed PCM to Kyutai frame-by-frame; emit pieces into session."""
         if kyutai_stt is None:
             return
+        # VAD: skip low-energy (silence/noise) to avoid transcribing background noise
+        if VAD_RMS_THRESHOLD > 0 and _audio_rms(pcm_float32) < VAD_RMS_THRESHOLD:
+            return
         if sr != kyutai_stt.sample_rate:
             pcm_float32 = _resample_linear(pcm_float32, sr, kyutai_stt.sample_rate)
         ts_ms = int(time.time() * 1000)
@@ -182,7 +208,7 @@ async def handler(ws: WebSocket):
             return kyutai_stt.add_audio(pcm_float32)
         pieces = await loop.run_in_executor(None, run)
         for piece in pieces:
-            if not piece.strip():
+            if not piece.strip() or not _is_valid_english_piece(piece):
                 continue
             _ensure_session()
             session.append_piece(piece, ts_ms)
@@ -193,34 +219,6 @@ async def handler(ws: WebSocket):
         if pieces:
             await _maybe_emit_partial(ts_ms)
 
-    async def _run_whisper_chunk():
-        nonlocal last_whisper_time, audio_buffer
-        if not audio_buffer:
-            return
-        total = sum(b.shape[0] for b in audio_buffer)
-        if total < int(WHISPER_CHUNK_SEC * SAMPLE_RATE_WHISPER):
-            return
-        audio = np.concatenate(audio_buffer)
-        audio_buffer.clear()
-        last_whisper_time = time.time()
-        ts_ms = int(last_whisper_time * 1000)
-        try:
-            def run():
-                model = _load_whisper()
-                return (model.transcribe(audio, fp16=False).get("text", "") or "").strip()
-            text = await loop.run_in_executor(None, run)
-        except Exception:
-            text = ""
-        if not text:
-            return
-        _ensure_session()
-        session.append_piece(text, ts_ms)
-        if session.maybe_commit(ts_ms):
-            new_p = session.maybe_new_paragraph(ts_ms)
-            if new_p:
-                await _send(ws, {"type": "segment", "session_id": session_id, "paragraph_id": new_p.paragraph_id, "text": new_p.raw_text})
-        await _maybe_emit_partial(ts_ms)
-
     try:
         while True:
             msg = await ws.receive()
@@ -228,7 +226,7 @@ async def handler(ws: WebSocket):
                 if msg.get("type") == "websocket.disconnect":
                     break
                 continue
-            # Binary: PCM16 audio (client sends at ready.sample_rate: 24kHz for Kyutai, 16kHz for Whisper)
+            # Binary: PCM16 audio (client sends at ready.sample_rate: 24kHz for Kyutai)
             raw_bytes = msg.get("bytes")
             if raw_bytes and len(raw_bytes) > 0:
                 _ensure_session()
@@ -236,12 +234,8 @@ async def handler(ws: WebSocket):
                     continue
                 pcm16 = bytes(raw_bytes)
                 f32 = _pcm16_to_float32(pcm16)
-                sr = client_sample_rate if client_sample_rate is not None else 16000
-                if use_kyutai and kyutai_stt is not None:
-                    await _run_kyutai_frames(f32, sr)
-                else:
-                    audio_buffer.append(f32)
-                    await _run_whisper_chunk()
+                sr = client_sample_rate if client_sample_rate is not None else sample_rate
+                await _run_kyutai_frames(f32, sr)
                 continue
             # Text: JSON or "EOS"
             text_msg = msg.get("text")
@@ -263,12 +257,8 @@ async def handler(ws: WebSocket):
                     _ensure_session()
                     if session and not session._paused:
                         f32 = _pcm16_to_float32(pcm16)
-                        sr = client_sample_rate if client_sample_rate is not None else 16000
-                        if use_kyutai and kyutai_stt is not None:
-                            await _run_kyutai_frames(f32, sr)
-                        else:
-                            audio_buffer.append(f32)
-                            await _run_whisper_chunk()
+                        sr = client_sample_rate if client_sample_rate is not None else sample_rate
+                        await _run_kyutai_frames(f32, sr)
                 continue
             if t == "stop":
                 data = {"type": "eos"}
@@ -287,8 +277,7 @@ async def handler(ws: WebSocket):
                 client_sample_rate = data.get("sample_rate")
                 last_auto_stored_length[0] = 0
                 _start_periodic_auto_store()
-                if use_kyutai and kyutai_stt is not None:
-                    kyutai_stt.reset_streaming()
+                kyutai_stt.reset_streaming()
                 await _send(ws, {"type": "ready", "session_id": session_id, "sample_rate": sample_rate})
                 continue
             if t == "pause":
@@ -302,30 +291,14 @@ async def handler(ws: WebSocket):
             if t == "eos":
                 _cancel_periodic_auto_store()
                 _ensure_session()
-                if use_kyutai and kyutai_stt is not None:
-                    # Flush Kyutai: pad with silence and collect final pieces
-                    def run_flush():
-                        return kyutai_stt.flush()
-                    pieces = await loop.run_in_executor(None, run_flush)
-                    ts_ms = int(time.time() * 1000)
-                    for piece in pieces:
-                        if piece.strip():
-                            session.append_piece(piece, ts_ms)
-                else:
-                    # Flush remaining audio through Whisper
-                    if audio_buffer:
-                        audio = np.concatenate(audio_buffer)
-                        audio_buffer.clear()
-                        if audio.size >= int(0.25 * SAMPLE_RATE_WHISPER):
-                            try:
-                                def run():
-                                    model = _load_whisper()
-                                    return (model.transcribe(audio, fp16=False).get("text", "") or "").strip()
-                                text = await loop.run_in_executor(None, run)
-                                if text:
-                                    session.append_piece(text, int(time.time() * 1000))
-                            except Exception:
-                                pass
+                # Flush Kyutai: pad with silence and collect final pieces
+                def run_flush():
+                    return kyutai_stt.flush()
+                pieces = await loop.run_in_executor(None, run_flush)
+                ts_ms = int(time.time() * 1000)
+                for piece in pieces:
+                    if piece.strip() and _is_valid_english_piece(piece):
+                        session.append_piece(piece, ts_ms)
                 session.finalize()
                 final_text = session.get_display_text()
                 segments_payload = [{"paragraph_id": p.paragraph_id, "text": p.raw_text} for p in session.segments]

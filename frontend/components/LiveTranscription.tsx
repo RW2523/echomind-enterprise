@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ICONS } from '../constants';
 import { defaultTranscriptName, transcribeWsUrl, getTranscriptTags, updateTranscript } from '../services/backend';
 
-const SR = 16000;
+/** Kyutai STT sample rate (24kHz). Backend sends this in ready message; we use it for AudioContext and start payload. */
+const KYUTAI_SAMPLE_RATE = 24000;
 
 function floatTo16BitPCM(input: Float32Array) {
   const output = new Int16Array(input.length);
@@ -32,7 +33,8 @@ function formatSessionDateTime(d: Date): string {
 }
 
 const OPEN_TIMEOUT_MS = 15000;
-const READY_TIMEOUT_MS = 60000;
+// Kyutai model load can take 2–5 min on first run (download ~1GB + GPU load)
+const READY_TIMEOUT_MS = 300000;
 
 const LiveTranscription: React.FC = () => {
   const [fullTranscript, setFullTranscript] = useState('');
@@ -153,31 +155,40 @@ const LiveTranscription: React.FC = () => {
       throw e;
     });
 
-    const readyPromise = new Promise<void>((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error('STT loading timeout')), READY_TIMEOUT_MS);
+    const readyPromise = new Promise<number>((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('Kyutai STT loading timeout (model may still be downloading)')), READY_TIMEOUT_MS);
       const check = (ev: MessageEvent) => {
         try {
           const msg = JSON.parse(ev.data);
-          if (msg.type === 'ready') { clearTimeout(t); ws.removeEventListener('message', check); resolve(); }
-          if (msg.type === 'error') { clearTimeout(t); ws.removeEventListener('message', check); reject(new Error(msg.message || 'STT failed')); }
+          if (msg.type === 'ready') {
+            clearTimeout(t);
+            ws.removeEventListener('message', check);
+            resolve(msg.sample_rate ?? KYUTAI_SAMPLE_RATE);
+          }
+          if (msg.type === 'error') {
+            clearTimeout(t);
+            ws.removeEventListener('message', check);
+            reject(new Error(msg.message || 'STT failed'));
+          }
         } catch {}
       };
       ws.addEventListener('message', check);
     });
 
+    let sampleRate: number;
     try {
-      await readyPromise;
+      sampleRate = await readyPromise;
     } catch (e) {
-      handleError(e?.message || 'STT not ready');
+      handleError(e?.message || 'Kyutai STT not ready');
       return;
     }
 
-    ws.send(JSON.stringify({ type: 'start', auto_store: true, sample_rate: SR, name: _name || undefined, location: _location || undefined }));
+    ws.send(JSON.stringify({ type: 'start', auto_store: true, sample_rate: sampleRate, language: 'en', name: _name || undefined, location: _location || undefined }));
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     recRef.current = stream;
 
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: SR });
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate });
     audioCtxRef.current = audioCtx;
     const src = audioCtx.createMediaStreamSource(stream);
     const processor = audioCtx.createScriptProcessor(4096, 1, 1);
@@ -320,7 +331,7 @@ const LiveTranscription: React.FC = () => {
         </div>
         <div className="ml-auto flex items-center gap-2 flex-wrap">
           {wsStatus === 'connecting' && <span className="text-xs text-slate-400">Connecting…</span>}
-          {wsStatus === 'loading' && <span className="text-xs text-slate-400">Loading STT…</span>}
+          {wsStatus === 'loading' && <span className="text-xs text-slate-400">Loading Kyutai STT… (first run may take 2–5 min)</span>}
           {wsError && <span className="text-xs text-red-400 max-w-[120px] sm:max-w-[200px] truncate" title={wsError}>{wsError}</span>}
           {!listening ? (
             <button type="button" onClick={openStartModal} disabled={wsStatus === 'connecting' || wsStatus === 'loading'} className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-50 transition-colors touch-manipulation">Start</button>
