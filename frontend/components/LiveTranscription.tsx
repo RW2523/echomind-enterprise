@@ -34,8 +34,11 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
     openStartModal,
     startSession,
     handleStopAndExtractTags,
+    clearAndReset,
     addTag,
     removeTag,
+    micMuted,
+    setMicMuted,
     showStartModal,
     modalName,
     modalLocation,
@@ -100,12 +103,21 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
         }`}
       >
         <div className="flex items-center gap-2">
-          <div className={`relative flex items-center justify-center w-10 h-10 rounded-xl ${listening ? 'bg-cyan-500/20' : 'bg-white/5'}`}>
-            <ICONS.Mic className={`w-5 h-5 ${listening ? 'text-cyan-400' : 'text-slate-400'}`} />
-            {listening && (
-              <span className="absolute inset-0 rounded-xl bg-cyan-400/20 animate-ping" style={{ animationDuration: '1.5s' }} />
+          <button
+            type="button"
+            onClick={() => listening && setMicMuted(!micMuted)}
+            disabled={!listening}
+            className={`relative flex items-center justify-center w-10 h-10 rounded-xl touch-manipulation transition-colors ${
+              !listening ? 'bg-white/5 cursor-default' : micMuted ? 'bg-red-500/20 hover:bg-red-500/30' : 'bg-emerald-500/20 hover:bg-emerald-500/30'
+            }`}
+            aria-label={listening ? (micMuted ? 'Unmute mic' : 'Mute mic') : 'Mic'}
+            title={listening ? (micMuted ? 'Unmute' : 'Mute') : undefined}
+          >
+            <ICONS.Mic className={`w-5 h-5 ${!listening ? 'text-slate-400' : micMuted ? 'text-red-400' : 'text-emerald-400'}`} />
+            {listening && !micMuted && (
+              <span className="absolute inset-0 rounded-xl bg-emerald-400/20 animate-ping" style={{ animationDuration: '1.5s' }} />
             )}
-          </div>
+          </button>
           <div>
             <div className="font-semibold">Real-Time Transcription</div>
             <div className="flex items-center gap-2 mt-0.5">
@@ -114,10 +126,10 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 text-[10px] font-medium text-red-400 uppercase tracking-wider">Live</span>
                   <span className="flex items-center gap-1">
                     {[0, 1, 2, 3, 4].map((i) => (
-                      <span key={i} className="w-1 rounded-full bg-cyan-400/80 animate-listening-bar" style={{ height: 8, animationDelay: `${i * 0.12}s` }} />
+                      <span key={i} className="w-1 rounded-full bg-emerald-400/80 animate-listening-bar" style={{ height: 8, animationDelay: `${i * 0.12}s` }} />
                     ))}
                   </span>
-                  <span className="text-[10px] text-cyan-400/90">Listening…</span>
+                  <span className="text-[10px] text-slate-400/90">{micMuted ? 'Muted' : 'Listening…'}</span>
                 </>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/10 px-2.5 py-0.5 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Stopped</span>
@@ -126,6 +138,15 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={clearAndReset}
+            className="shrink-0 p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Clear transcript and start new session"
+            title="Clear"
+          >
+            <ICONS.Trash className="w-5 h-5" />
+          </button>
           {wsStatus === 'connecting' && <span className="text-xs text-slate-400">Connecting…</span>}
           {wsStatus === 'loading' && <span className="text-xs text-slate-400">Loading Kyutai STT… (first run may take 2–5 min)</span>}
           {wsError && <span className="text-xs text-red-400 max-w-[120px] sm:max-w-[200px] truncate" title={wsError}>{wsError}</span>}

@@ -40,11 +40,13 @@ docker compose up -d
 Or in one go: `BUILDX_METADATA_PROVENANCE=disabled docker compose up --build`.  
 If you use `docker buildx bake` instead of `docker compose build`, run it with the same env var: `BUILDX_METADATA_PROVENANCE=disabled docker buildx bake`.
 
-## Pull models (once)
-```bash
-docker exec -it echomind-ollama ollama pull qwen2.5:7b-instruct
-docker exec -it echomind-ollama ollama pull nomic-embed-text
-```
+## Model setup (included in build/start)
+
+- **Kyutai STT** (Live Transcript): Pre-downloaded during backend Docker build.
+- **Ollama** (LLM + embeddings): Models (`qwen2.5:7b-instruct`, `nomic-embed-text`) are pulled automatically when Ollama starts.
+- **Whisper** (Voice): Base model pre-downloaded during voice Docker build.
+
+On first `docker compose up --build`, Ollama will pull its models (2–5 min). Backend and voice wait until models are ready. No manual `ollama pull` needed.
 
 If you still see Gemini calls in the browser console:
 1) Hard refresh (Ctrl+Shift+R) / clear site data

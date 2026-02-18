@@ -16,5 +16,9 @@ COPY . /workspace
 RUN python -m pip install --upgrade pip && pip install "setuptools>=70,<82" wheel
 RUN pip install fastapi==0.115.6 "uvicorn[standard]==0.32.1" numpy==1.26.4 webrtcvad==2.0.10 websockets==12.0 requests==2.32.3 soundfile==0.12.1 piper-tts==1.2.0
 RUN pip install --no-build-isolation openai-whisper==20240930
+
+# Pre-download Whisper base model during build (avoids load on first Voice use)
+RUN python -c "import whisper; whisper.load_model('base')"
+
 EXPOSE 8000
 CMD ["uvicorn","app.server:app","--host","0.0.0.0","--port","8000"]

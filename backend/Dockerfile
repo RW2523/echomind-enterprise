@@ -19,6 +19,9 @@ RUN pip install -r requirements.txt
 RUN pip install --no-cache-dir "bitsandbytes==0.46.0" sentencepiece \
  && pip install --no-cache-dir --no-deps "moshi==0.2.9"
 
+# Pre-download Kyutai STT model during build (avoids 2–5 min load at first Live Transcript use)
+RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('kyutai/stt-1b-en_fr')"
+
 COPY app /app/app
 EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
