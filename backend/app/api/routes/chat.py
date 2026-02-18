@@ -66,8 +66,12 @@ class AskVoiceIn(BaseModel):
     advanced_rag: bool = True
 
 
+# Default hours when user asks for "recent summary of the transcript" with no explicit time (voice/conversation bot).
+DEFAULT_RECENT_TRANSCRIPT_HOURS = 24.0
+
+
 def _parse_transcript_time_query(message: str) -> float | None:
-    """If the message asks for transcripts in a time range (e.g. 'last 2 hours', 'summarise my transcript last hour'), return hours as float; else None."""
+    """If the message asks for transcripts in a time range (e.g. 'last 2 hours', 'summarise my transcript last hour', 'recent summary of the transcript'), return hours as float; else None."""
     m = (message or "").strip().lower()
     # Must look like a transcript/time request: transcript, recent, summarise, or speak/say/talk + time
     transcript_related = any(
@@ -83,6 +87,9 @@ def _parse_transcript_time_query(message: str) -> float | None:
     # "last hour", "past hour", "last one hour" (no digit or word "one") -> 1 hour
     if re.search(r"(?:last|past|in the last)\s+(?:one\s+)?hour(?:s)?\b", m, re.I):
         return 1.0
+    # "recent summary of the transcript", "summary of the transcript", "give me a recent summary of the transcript" (no explicit time) -> use default window
+    if "transcript" in m and ("recent" in m or "summary" in m or "summarize" in m):
+        return DEFAULT_RECENT_TRANSCRIPT_HOURS
     return None
 
 

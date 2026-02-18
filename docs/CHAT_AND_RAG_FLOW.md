@@ -61,6 +61,9 @@ High-level branches:
 - **B. General/small talk** (`_is_general_conversation(question)` is True)  
   → **Fast path:** no retrieval, one LLM for reply (+ 1 for summary).
 
+- **B2. No RAG indicators** (`_requires_rag_context(question)` is False)  
+  → **General path:** use RAG only when the user message indicates document, resources, live transcript, transcript, discussion, book, pdf, or file. Otherwise one LLM for reply (+ 1 for summary).
+
 - **C. Advanced RAG** (`advanced_rag=True`)  
   → Single-query retrieval (embedding only), no intent/rewrite; one LLM for answer (+ 1 for summary).
 

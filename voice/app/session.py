@@ -92,6 +92,65 @@ def strip_markdown_for_speech(text: str) -> str:
     s = re.sub(r"\s+", " ", s)
     return s.strip()
 
+
+# Minimum cleaned length to treat as real speech (avoid noise).
+_MIN_ENGLISH_INPUT_LEN = 2
+# Minimum word count to avoid single-word noise triggering full flow.
+_MIN_ENGLISH_WORDS = 1
+
+# Phrases that indicate the user is asking about knowledge-base content. Only then use RAG backend (same as backend/app/rag/advanced.py).
+_RAG_INDICATOR_PHRASES = (
+    "document", "documents", "resource", "resources",
+    "live transcript", "live transcription", "transcript", "transcripts",
+    "discussion", "discussions", "book", "books", "pdf", "pdfs",
+    "file", "files", "uploaded", "saved transcript",
+)
+
+
+def preprocess_english_only(raw: str) -> Optional[str]:
+    """
+    Preprocess STT output for English-only flow: retain only English letters, apostrophe, and basic punctuation.
+    Returns None if the result is empty, too short, or looks like noise (so we do not send to LLM).
+    """
+    if not (raw or "").strip():
+        return None
+    s = (raw or "").strip()
+    # Keep only a-z, A-Z, apostrophe (for "don't"), space, and basic punctuation
+    cleaned = re.sub(r"[^a-zA-Z\s'.,?!\-]", " ", s)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if not cleaned or len(cleaned) < _MIN_ENGLISH_INPUT_LEN:
+        return None
+    words = [w.strip("'.,?!") for w in cleaned.split() if w.strip("'.,?!")]
+    if len(words) < _MIN_ENGLISH_WORDS:
+        return None
+    # Reject obvious noise: same character repeated (e.g. "aaaa", "ssss")
+    if len(cleaned) <= 6 and len(set(cleaned.replace(" ", "").replace("'", "").replace(".", "").replace(",", ""))) <= 1:
+        return None
+    # Reject consonant-only short strings (common STT noise)
+    letters = re.sub(r"[^a-zA-Z]", "", cleaned)
+    if len(letters) <= 4 and letters and not re.search(r"[aeiouAEIOU]", letters):
+        return None
+    return cleaned
+
+
+def _user_asks_about_knowledge(user_text: str) -> bool:
+    """
+    True when the user's message indicates document/transcript/resources (RAG context).
+    Uses substring check: any phrase in _RAG_INDICATOR_PHRASES contained in the message → hit backend RAG flow.
+    Backend will classify intent (transcript vs document) from context.
+    """
+    t = (user_text or "").strip().lower()
+    if not t:
+        logger.info("RAG check: input=%r intent=none (empty)", user_text)
+        return False
+    matched = next((phrase for phrase in _RAG_INDICATOR_PHRASES if phrase in t), None)
+    if matched:
+        logger.info("RAG check: input=%r intent=%s", user_text[:200], matched)
+        return True
+    logger.info("RAG check: input=%r intent=none", user_text[:200])
+    return False
+
+
 @dataclass
 class Frame:
     ts: float
@@ -510,6 +569,10 @@ class OmniSessionA:
         user_text = strip_markdown_for_speech(user_text)
         if not user_text:
             return
+        # English-only preprocessing: retain only English words, reject noise (do not send garbage to LLM)
+        user_text = preprocess_english_only(user_text)
+        if not user_text:
+            return
 
         # Always store user utterance in EchoMind conversation memory
         try:
@@ -614,7 +677,7 @@ class OmniSessionA:
             )
             messages_fc = self._build_messages(user_text, system_override=fc_prompt)
             backend_url = (getattr(SETTINGS, "BACKEND_CHAT_URL", None) or "").strip().rstrip("/")
-            if self.use_knowledge_base and backend_url:
+            if self.use_knowledge_base and backend_url and _user_asks_about_knowledge(user_text):
                 try:
                     payload = {
                         "message": f"Fact-check the following. User request: {user_text}\n\nContext:\n{fc_context}",
@@ -733,9 +796,9 @@ class OmniSessionA:
             self._assistant_active_gen = None
             return
 
-        # RAG path (unchanged behavior, add assistant to conversation_memory)
+        # RAG path: only when user message indicates document/transcript/resources/book/pdf/file (otherwise general conversation)
         backend_url = (getattr(SETTINGS, "BACKEND_CHAT_URL", None) or "").strip().rstrip("/")
-        if self.use_knowledge_base and backend_url:
+        if self.use_knowledge_base and backend_url and _user_asks_about_knowledge(user_text):
             try:
                 payload = {
                     "message": user_text,

@@ -1,14 +1,15 @@
 import React from "react";
 import { ConversationStage } from "./Conversation/ConversationStage";
-import { useVoiceConnection } from "../hooks/useVoiceConnection";
+import type { UseVoiceConnectionReturn } from "../hooks/useVoiceConnection";
 import type { AppSettings } from "../types";
 
 interface VoiceConversationProps {
   settings?: AppSettings;
   onUpdateSetting?: (key: keyof AppSettings, val: AppSettings[keyof AppSettings]) => void;
+  voiceConnection: UseVoiceConnectionReturn;
 }
 
-const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdateSetting }) => {
+const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdateSetting, voiceConnection }) => {
   const {
     state,
     userAnalyser,
@@ -22,11 +23,12 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdat
     micMuted,
     setMicMuted,
     connectionError,
-  } = useVoiceConnection({ settings });
+  } = voiceConnection;
 
   return (
     <div
-      className="rounded-2xl border border-white/10 overflow-hidden h-full min-h-0 flex flex-col"
+      className="rounded-[20px] border border-white/[0.05] overflow-hidden h-full min-h-0 flex flex-col"
+      style={{ boxShadow: "0 8px 40px -8px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.03)" }}
       style={
         {
           "--user-color": "#94a3b8",

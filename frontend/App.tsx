@@ -7,6 +7,7 @@ import KnowledgeChat from './components/KnowledgeChat';
 import LiveTranscription from './components/LiveTranscription';
 import VoiceConversation from './components/VoiceConversation';
 import Settings from './components/Settings';
+import { useVoiceConnection } from './hooks/useVoiceConnection';
 
 const SETTINGS_KEY = "echomind_settings";
 
@@ -61,6 +62,10 @@ const App: React.FC = () => {
     saveSettings(s);
   }, []);
 
+  // Voice connection lives in App so it stays alive when switching tabs (Chat / Transcription).
+  // Conversation continues in the background and resumes when user returns to Voice tab.
+  const voiceConnection = useVoiceConnection({ settings });
+
   const renderView = () => {
     switch (activeView) {
       case AppView.KNOWLEDGE_CHAT:
@@ -68,7 +73,13 @@ const App: React.FC = () => {
       case AppView.TRANSCRIPTION:
         return <LiveTranscription />;
       case AppView.VOICE_CONVERSATION:
-        return <VoiceConversation settings={settings} onUpdateSetting={(key, val) => setSettings({ ...settings, [key]: val })} />;
+        return (
+          <VoiceConversation
+            settings={settings}
+            onUpdateSetting={(key, val) => setSettings({ ...settings, [key]: val })}
+            voiceConnection={voiceConnection}
+          />
+        );
       case AppView.SETTINGS:
         return <Settings settings={settings} setSettings={setSettings} />;
       default:

@@ -97,6 +97,23 @@ def _is_general_conversation(question: str) -> bool:
             return True
     return False
 
+
+# Phrases that indicate the user is asking about knowledge-base content (documents, transcripts, etc.). Only then use RAG.
+_RAG_INDICATOR_PHRASES = (
+    "document", "documents", "resource", "resources",
+    "live transcript", "live transcription", "transcript", "transcripts",
+    "discussion", "discussions", "book", "books", "pdf", "pdfs",
+    "file", "files", "uploaded", "saved transcript",
+)
+
+
+def _requires_rag_context(question: str) -> bool:
+    """True when the user's message indicates they are asking about documents, resources, transcripts, discussion, book, pdf, or file. Only then use RAG backend flow."""
+    t = (question or "").strip().lower()
+    if not t:
+        return False
+    return any(phrase in t for phrase in _RAG_INDICATOR_PHRASES)
+
 def _dedupe_best(items: List[Dict]) -> List[Dict]:
     best={}
     for it in items:
@@ -1013,6 +1030,8 @@ async def answer(
         return await _answer_general(question, history, persona, conversation_summary)
     if _is_general_conversation(question):
         return await _answer_general(question, history, persona, conversation_summary)
+    if not _requires_rag_context(question):
+        return await _answer_general(question, history, persona, conversation_summary)
 
     if advanced_rag:
         logger.info("RAG intent: (advanced_rag, no intent classification) question=%s", (question[:80] + "…") if len(question) > 80 else question)
@@ -1101,6 +1120,10 @@ async def answer_stream(
             yield ev
         return
     if _is_general_conversation(question):
+        async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+            yield ev
+        return
+    if not _requires_rag_context(question):
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev
         return
