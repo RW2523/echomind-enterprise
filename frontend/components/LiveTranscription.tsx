@@ -1,27 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { ICONS } from '../constants';
-import { defaultTranscriptName, transcribeWsUrl, getTranscriptTags, updateTranscript } from '../services/backend';
-
-/** Kyutai STT sample rate (24kHz). Backend sends this in ready message; we use it for AudioContext and start payload. */
-const KYUTAI_SAMPLE_RATE = 24000;
-
-function floatTo16BitPCM(input: Float32Array) {
-  const output = new Int16Array(input.length);
-  for (let i = 0; i < input.length; i++) {
-    let s = Math.max(-1, Math.min(1, input[i]));
-    output[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-  }
-  return output;
-}
-
-function b64FromBytes(bytes: Uint8Array) {
-  let binary = '';
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)) as any);
-  }
-  return btoa(binary);
-}
+import { defaultTranscriptName } from '../services/backend';
+import type { UseLiveTranscriptionReturn } from '../hooks/useLiveTranscription';
 
 function formatSessionDateTime(d: Date): string {
   const y = d.getFullYear();
@@ -32,228 +12,44 @@ function formatSessionDateTime(d: Date): string {
   return `${y}-${m}-${day} ${h}:${min}`;
 }
 
-const OPEN_TIMEOUT_MS = 15000;
-// Kyutai model load can take 2–5 min on first run (download ~1GB + GPU load)
-const READY_TIMEOUT_MS = 300000;
+interface LiveTranscriptionProps {
+  liveTranscription: UseLiveTranscriptionReturn;
+}
 
-const LiveTranscription: React.FC = () => {
-  const [fullTranscript, setFullTranscript] = useState('');
-  const [partial, setPartial] = useState('');
-  const [listening, setListening] = useState(false);
-  const [wsStatus, setWsStatus] = useState<'idle' | 'connecting' | 'loading' | 'ready' | 'error'>('idle');
-  const [wsError, setWsError] = useState<string | null>(null);
+const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription }) => {
+  const {
+    fullTranscript,
+    partial,
+    listening,
+    wsStatus,
+    wsError,
+    sessionName,
+    sessionLocation,
+    sessionStartedAt,
+    customTags,
+    newTagInput,
+    setSessionName,
+    setSessionLocation,
+    setNewTagInput,
+    openStartModal,
+    startSession,
+    handleStopAndExtractTags,
+    addTag,
+    removeTag,
+    showStartModal,
+    modalName,
+    modalLocation,
+    setModalName,
+    setModalLocation,
+    setShowStartModal,
+    applyDefault,
+  } = liveTranscription;
 
-  // Start popup
-  const [showStartModal, setShowStartModal] = useState(false);
-  const [modalName, setModalName] = useState('');
-  const [modalLocation, setModalLocation] = useState('');
-
-  // Session metadata (editable bar) – set when user clicks Start
-  const [sessionName, setSessionName] = useState('');
-  const [sessionLocation, setSessionLocation] = useState('');
-  const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null);
-  const [customTags, setCustomTags] = useState<string[]>([]);
-  const [newTagInput, setNewTagInput] = useState('');
-
-  const wsRef = useRef<WebSocket | null>(null);
-  const recRef = useRef<MediaStream | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const transcriptForTagsRef = useRef('');
-  const lastStoredTranscriptIdRef = useRef<string | null>(null);
-  const pendingTagsRef = useRef<string[] | null>(null);
-
-  const openStartModal = () => {
-    setModalName('');
-    setModalLocation('');
-    setShowStartModal(true);
-  };
-
-  const applyDefault = () => {
-    setModalName(defaultTranscriptName());
-    setModalLocation('default');
-  };
-
-  const startSession = async () => {
+  const onStartFromModal = () => {
     const name = (modalName || '').trim() || defaultTranscriptName();
     const location = (modalLocation || '').trim() || 'default';
-    setSessionName(name);
-    setSessionLocation(location);
-    setSessionStartedAt(new Date());
-    setCustomTags([]);
-    transcriptForTagsRef.current = '';
-    lastStoredTranscriptIdRef.current = null;
-    pendingTagsRef.current = null;
-    setShowStartModal(false);
-    await doStart(name, location);
+    startSession(name, location);
   };
-
-  const doStart = async (_name: string, _location: string) => {
-    if (listening) return;
-    setFullTranscript('');
-    setPartial('');
-    setWsError(null);
-    setWsStatus('connecting');
-    const ws = new WebSocket(transcribeWsUrl());
-    wsRef.current = ws;
-
-    const handleError = (err: string) => {
-      setWsError(err);
-      setWsStatus('error');
-      stopMic(false);
-    };
-
-    ws.onmessage = (ev) => {
-      try {
-        const msg = JSON.parse(ev.data);
-        if (msg.type === 'loading') setWsStatus('loading');
-        if (msg.type === 'ready') setWsStatus('ready');
-        if (msg.type === 'partial') {
-          const t = msg.text ?? '';
-          setFullTranscript(t);
-          transcriptForTagsRef.current = t;
-          setPartial('');
-        }
-        if (msg.type === 'segment') {}
-        if (msg.type === 'final') {
-          const t = (msg.text ?? '').trim();
-          setFullTranscript(t);
-          transcriptForTagsRef.current = t;
-          setPartial('');
-        }
-        if (msg.type === 'stored') {
-          setWsError(null);
-          const tid = msg.transcript_id;
-          if (tid) {
-            lastStoredTranscriptIdRef.current = tid;
-            if (pendingTagsRef.current?.length) {
-              updateTranscript(tid, { tags: pendingTagsRef.current }).catch(() => {});
-              pendingTagsRef.current = null;
-            }
-          }
-        }
-        if (msg.type === 'error') {
-          console.error(msg.message);
-          handleError(msg.message || 'Server error');
-        }
-      } catch {}
-    };
-
-    ws.onerror = () => handleError('WebSocket error');
-    ws.onclose = () => {
-      setWsStatus((s) => (s === 'error' ? s : 'idle'));
-      stopMic(false);
-    };
-
-    await new Promise<void>((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error('Connection timeout')), OPEN_TIMEOUT_MS);
-      ws.addEventListener('open', () => { clearTimeout(t); resolve(); }, { once: true });
-      ws.addEventListener('error', () => { clearTimeout(t); reject(new Error('WebSocket failed')); }, { once: true });
-    }).catch((e) => {
-      setWsError(e?.message || 'Connection failed');
-      setWsStatus('error');
-      throw e;
-    });
-
-    const readyPromise = new Promise<number>((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error('Kyutai STT loading timeout (model may still be downloading)')), READY_TIMEOUT_MS);
-      const check = (ev: MessageEvent) => {
-        try {
-          const msg = JSON.parse(ev.data);
-          if (msg.type === 'ready') {
-            clearTimeout(t);
-            ws.removeEventListener('message', check);
-            resolve(msg.sample_rate ?? KYUTAI_SAMPLE_RATE);
-          }
-          if (msg.type === 'error') {
-            clearTimeout(t);
-            ws.removeEventListener('message', check);
-            reject(new Error(msg.message || 'STT failed'));
-          }
-        } catch {}
-      };
-      ws.addEventListener('message', check);
-    });
-
-    let sampleRate: number;
-    try {
-      sampleRate = await readyPromise;
-    } catch (e) {
-      handleError(e?.message || 'Kyutai STT not ready');
-      return;
-    }
-
-    ws.send(JSON.stringify({ type: 'start', auto_store: true, sample_rate: sampleRate, language: 'en', name: _name || undefined, location: _location || undefined }));
-
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    recRef.current = stream;
-
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate });
-    audioCtxRef.current = audioCtx;
-    const src = audioCtx.createMediaStreamSource(stream);
-    const processor = audioCtx.createScriptProcessor(4096, 1, 1);
-    processorRef.current = processor;
-
-    processor.onaudioprocess = (e) => {
-      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-      const input = e.inputBuffer.getChannelData(0);
-      const pcm16 = floatTo16BitPCM(input);
-      const b64 = b64FromBytes(new Uint8Array(pcm16.buffer));
-      wsRef.current.send(JSON.stringify({ type: 'audio', pcm16_b64: b64 }));
-    };
-
-    src.connect(processor);
-    processor.connect(audioCtx.destination);
-    setListening(true);
-  };
-
-  const stopMic = (sendStop: boolean) => {
-    if (sendStop && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: 'stop' }));
-    }
-    processorRef.current?.disconnect();
-    processorRef.current = null;
-    audioCtxRef.current?.close();
-    audioCtxRef.current = null;
-    recRef.current?.getTracks().forEach(t => t.stop());
-    recRef.current = null;
-    setListening(false);
-  };
-
-  const handleStopAndExtractTags = async () => {
-    const text = (transcriptForTagsRef.current || fullTranscript || '').trim();
-    stopMic(true);
-    if (text) {
-      try {
-        const { tags } = await getTranscriptTags(text);
-        if (tags?.length) {
-          setCustomTags(tags);
-          pendingTagsRef.current = tags;
-          const tid = lastStoredTranscriptIdRef.current;
-          if (tid) {
-            await updateTranscript(tid, { tags });
-            pendingTagsRef.current = null;
-          }
-        }
-      } catch {
-        // ignore tag extraction failure
-      }
-    }
-  };
-
-  const addTag = () => {
-    const t = (newTagInput || '').trim();
-    if (t && !customTags.includes(t)) {
-      setCustomTags((prev) => [...prev, t].slice(0, 20));
-      setNewTagInput('');
-    }
-  };
-
-  const removeTag = (tag: string) => {
-    setCustomTags((prev) => prev.filter((x) => x !== tag));
-  };
-
-  useEffect(() => () => { stopMic(false); wsRef.current?.close(); }, []);
 
   return (
     <div className="h-full min-h-0 flex flex-col rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
@@ -290,7 +86,7 @@ const LiveTranscription: React.FC = () => {
               <button type="button" onClick={() => setShowStartModal(false)} className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 text-slate-400 hover:bg-white/15">
                 Cancel
               </button>
-              <button type="button" onClick={startSession} className="rounded-xl px-4 py-2 text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30">
+              <button type="button" onClick={onStartFromModal} className="rounded-xl px-4 py-2 text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30">
                 Start
               </button>
             </div>

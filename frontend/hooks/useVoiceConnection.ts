@@ -444,6 +444,17 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     }));
   }, []);
 
+  // Disconnect when user switches browser tabs (document becomes hidden)
+  useEffect(() => {
+    const handler = () => {
+      if (document.hidden && state.isConnected) {
+        disconnect();
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, [state.isConnected, disconnect]);
+
   useEffect(() => {
     if (!state.isConnected || !userAnalyser) return;
     const data = new Uint8Array(userAnalyser.frequencyBinCount);

@@ -4,10 +4,12 @@ import remarkGfm from 'remark-gfm';
 import { ChatMessage, DocumentChunk, AppSettings } from '../types';
 import { ICONS } from '../constants';
 import Uploader from './Uploader';
-import { createChat, askChatStream, listDocuments, deleteDocument, listTranscripts, DocListItem, TranscriptListItem } from '../services/backend';
+import { askChatStream, listDocuments, deleteDocument, listTranscripts, DocListItem, TranscriptListItem } from '../services/backend';
+import type { UseKnowledgeChatReturn } from '../hooks/useKnowledgeChat';
 
 interface KnowledgeChatProps {
   settings?: AppSettings | null;
+  knowledgeChat: UseKnowledgeChatReturn;
 }
 
 /** Styled Markdown renderer for assistant messages: headings, lists, bold, code, blockquotes. Lists use list-outside + pl to avoid layout break with bullets. */
@@ -48,11 +50,10 @@ function uniqueFileNames(citations: DocumentChunk[]): string[] {
   return (citations || []).map(c => c.docName).filter(name => { if (seen.has(name)) return false; seen.add(name); return true; });
 }
 
-const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }) => {
+  const { messages, setMessages, chatId, clearChat } = knowledgeChat;
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [chatId, setChatId] = useState<string>('');
   const [documents, setDocuments] = useState<DocListItem[]>([]);
   const [transcripts, setTranscripts] = useState<TranscriptListItem[]>([]);
   const [transcriptsLoading, setTranscriptsLoading] = useState(false);
@@ -99,17 +100,6 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings }) => {
   useEffect(() => {
     if (resourceTab === 'transcripts') loadTranscripts();
   }, [resourceTab]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const { chat_id } = await createChat('EchoMind Chat');
-        setChatId(chat_id);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-  }, []);
 
   useEffect(() => {
     if (!resourcesOpenForId) return;
@@ -272,9 +262,12 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings }) => {
       <div className="flex-1 flex flex-col min-w-0 min-h-0 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
         <div className="px-3 sm:px-4 py-3 sm:py-4 border-b border-white/10 flex items-center gap-2 shrink-0">
           <div className="opacity-80 shrink-0"><ICONS.Chat className="w-5 h-5" /></div>
-          <div className="font-semibold truncate min-w-0">Knowledge Chat</div>
-          <button type="button" onClick={() => setResourcesPanelOpen(true)} className="md:hidden ml-auto shrink-0 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Open resources">
+          <div className="font-semibold truncate min-w-0 flex-1">Knowledge Chat</div>
+          <button type="button" onClick={() => setResourcesPanelOpen(true)} className="md:hidden shrink-0 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Open resources">
             <ICONS.File className="w-5 h-5" />
+          </button>
+          <button type="button" onClick={() => clearChat()} className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Clear chat" title="Clear chat">
+            <ICONS.Trash className="w-5 h-5" />
           </button>
         </div>
 
