@@ -2,13 +2,11 @@ import React from "react";
 import { ICONS } from "../../constants";
 
 export interface TopBarProps {
-  isConnected: boolean;
   onSettingsClick?: () => void;
   className?: string;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
-  isConnected,
   onSettingsClick,
   className = "",
 }) => {
@@ -21,17 +19,6 @@ export const TopBar: React.FC<TopBarProps> = ({
         <span className="text-[19px] font-medium text-white/95 tracking-tight truncate">
           EchoMind
         </span>
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span
-            className={`inline-flex h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-400 ${
-              isConnected ? "bg-emerald-500/90" : "bg-slate-500/80"
-            }`}
-            aria-hidden
-          />
-          <span className="text-[13px] text-slate-500 truncate">
-            {isConnected ? "Connected" : "Tap to speak"}
-          </span>
-        </div>
       </div>
       {onSettingsClick && (
         <button

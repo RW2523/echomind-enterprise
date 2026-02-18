@@ -94,7 +94,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
       ref={containerRef}
       className="flex flex-col h-full min-h-0 bg-[var(--voice-bg,#0f172a)] text-[var(--voice-text,#f1f5f9)] overflow-hidden"
     >
-      <TopBar isConnected={state.isConnected} onSettingsClick={onSettingsClick} />
+      <TopBar onSettingsClick={onSettingsClick} />
 
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <VoiceOrb

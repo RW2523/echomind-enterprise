@@ -28,9 +28,9 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdat
   return (
     <div
       className="rounded-[20px] border border-white/[0.05] overflow-hidden h-full min-h-0 flex flex-col"
-      style={{ boxShadow: "0 8px 40px -8px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.03)" }}
       style={
         {
+          boxShadow: "0 8px 40px -8px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.03)",
           "--user-color": "#94a3b8",
           "--assistant-color": "#14b8a6",
           "--voice-bg": "#0f172a",

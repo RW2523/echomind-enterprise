@@ -1,20 +1,8 @@
-import React, { useRef, useState, useEffect } from "react";
+import React from "react";
 import { OrbCanvas } from "../OrbVisualizer/OrbCanvas";
 import type { OrbState } from "./ChatState";
 
-const STATUS_DELAY_MS = 320;
 const ORB_CENTER_GIF = "/EchoMind_Animation.gif";
-/** Apple-style ease: smooth, subtle */
-const EASE_SMOOTH = "cubic-bezier(0.25, 0.1, 0.25, 1)";
-
-const STATUS_COPY: Record<OrbState, string> = {
-  idle: "Tap to speak",
-  listening: "Listening…",
-  thinking: "EchoMind is thinking…",
-  speaking: "Speaking…",
-  interrupted: "Listening…",
-  disconnected: "Tap to speak",
-};
 
 export interface VoiceOrbProps {
   orbState: OrbState;
@@ -39,26 +27,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({
   userColor,
   size: sizeProp,
 }) => {
-  const [displayStatus, setDisplayStatus] = useState<string>(STATUS_COPY.disconnected);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const size = sizeProp ?? 220;
-
-  useEffect(() => {
-    const target = isConnected
-      ? orbState === "listening" || orbState === "interrupted"
-        ? STATUS_COPY.listening
-        : STATUS_COPY[orbState]
-      : STATUS_COPY.disconnected;
-    if (displayStatus === target) return;
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      setDisplayStatus(target);
-      timeoutRef.current = null;
-    }, STATUS_DELAY_MS);
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [orbState, isConnected, displayStatus]);
 
   const stateForOrb = orbState === "disconnected" ? "idle" : orbState;
   const isListening = userOrb === "listening";
@@ -163,13 +132,6 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({
             </div>
           </div>
         </div>
-        <p
-          className="text-[15px] font-medium text-slate-500 text-center min-h-[1.5em] transition-opacity duration-300 ease-out"
-          style={{ transitionTimingFunction: EASE_SMOOTH }}
-          data-status={displayStatus}
-        >
-          {displayStatus}
-        </p>
       </div>
     </>
   );
