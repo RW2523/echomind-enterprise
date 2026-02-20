@@ -93,6 +93,20 @@ def strip_markdown_for_speech(text: str) -> str:
     return s.strip()
 
 
+def postprocess_english_only_for_tts(text: str) -> str:
+    """
+    Post-process LLM/response text before TTS: keep only English letters, digits, apostrophe,
+    and basic punctuation (.,?!- and space). Ensures only English-speakable content is sent to TTS.
+    """
+    if not (text or "").strip():
+        return (text or "").strip()
+    s = (text or "").strip()
+    # Allow: a-z, A-Z, 0-9, apostrophe, space, . , ? ! -
+    cleaned = re.sub(r"[^a-zA-Z0-9\s'.,?!\-]", " ", s)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned
+
+
 # Minimum cleaned length to treat as real speech (avoid noise).
 _MIN_ENGLISH_INPUT_LEN = 2
 # Minimum word count to avoid single-word noise triggering full flow.
@@ -234,7 +248,7 @@ class OmniSessionA:
         self.moshi = MoshiWsAdapter(SETTINGS.MOSHI_URL) if SETTINGS.USE_MOSHI_CORE else None
 
         # ---- Conversation memory (LLM turn history) ----
-        self.system_prompt: str = "You are a realtime voice assistant. Be concise, helpful, and conversational."
+        self.system_prompt: str = "You are a realtime voice assistant. Be concise, helpful, and conversational. Speak and respond only in English."
         self.history: List[Dict] = []  # [{"role":"user"/"assistant","content":...}, ...]
         self.max_history_turns: int = 12
         self.max_history_tokens: int = 1400  # keep prompt reasonable
@@ -291,6 +305,7 @@ class OmniSessionA:
     async def _play_intro(self, phrase: str):
         """Play intro TTS once after start; respects barge-in (generation_id)."""
         phrase = strip_markdown_for_speech(phrase or "")
+        phrase = postprocess_english_only_for_tts(phrase)
         if not phrase:
             return
         my_gen = self.generation_id
@@ -472,6 +487,9 @@ class OmniSessionA:
         base = self.system_prompt.strip()
         if compiled_context:
             base = base + "\n\nRecent conversation context (for reference):\n" + compiled_context
+        # Ensure LLM is always instructed to respond in English (voice TTS is English-only)
+        if "english" not in base.lower():
+            base = base + " Speak and respond only in English."
         return profile_line + " " + base
 
     async def _emit_profile_update(self) -> None:
@@ -944,6 +962,7 @@ class OmniSessionA:
         if my_gen != self.generation_id:
             return
         phrase = strip_markdown_for_speech(phrase or "")
+        phrase = postprocess_english_only_for_tts(phrase)
         if not phrase:
             return
         self._assistant_is_speaking = True

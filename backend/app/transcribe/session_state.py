@@ -130,8 +130,19 @@ class SessionState:
         if not piece:
             self.last_piece_ts_ms = ts_ms
             return
-        # Pieces from STT already include word-boundary spaces (▁→" "); concatenate directly.
-        self.recent_buffer += piece
+        # Kyutai tokenizer can emit ▁ on subword segments (e.g. "ous", "consci"), not only whole-word starts.
+        # Adding a space for every ▁ produces mid-word splits ("sub consci ous"). If buffer ends with a letter and
+        # piece is space + short alphabetic segment (2–6 chars, suffix/mid-word), treat as same word: strip leading space.
+        if piece.startswith(" ") and self.recent_buffer and self.recent_buffer[-1].isalnum():
+            rest = piece[1:].lstrip()
+            if rest and 2 <= len(rest) <= 6 and rest.isalpha():
+                piece = rest
+            # else: keep leading space (new word or longer segment)
+        # Ensure space between words when a piece has no leading space and buffer doesn't end with one.
+        if self.recent_buffer and not self.recent_buffer.endswith(" ") and piece and not piece.startswith(" "):
+            self.recent_buffer += " " + piece
+        else:
+            self.recent_buffer += piece
         self.last_piece_ts_ms = ts_ms
 
     def get_display_text(self) -> str:

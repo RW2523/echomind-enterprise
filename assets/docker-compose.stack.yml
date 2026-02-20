@@ -1,0 +1,116 @@
+#
+# Stack-only compose: backend + infra (no frontend). Use this to run the
+# multi-agent RAG backend as a service your own app can call (e.g. replace
+# your existing RAG with this stack).
+#
+# Usage:
+#   docker compose -f docker-compose.stack.yml -f docker-compose-models.yml up -d
+# Or without models (if you attach models elsewhere):
+#   docker compose -f docker-compose.stack.yml up -d
+#
+# Your app (frontend/backend) should call: http://<backend-host>:8000
+# Set CORS_ORIGINS so your frontend origin is allowed.
+#
+
+services:
+  backend:
+    container_name: chatbot-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres: { condition: service_healthy }
+      milvus: { condition: service_healthy }
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB:-chatbot}
+      - POSTGRES_USER=${POSTGRES_USER:-chatbot_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-chatbot_password}
+      - MILVUS_ADDRESS=milvus:19530
+      - EMBEDDING_SERVICE_URL=http://qwen3-embedding:8000
+      - MODELS=${MODELS:-gpt-oss-20b}
+      - CONFIG_PATH=/app/config.json
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+  postgres:
+    container_name: chatbot-postgres
+    image: postgres:15-alpine
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-chatbot}
+      - POSTGRES_USER=${POSTGRES_USER:-chatbot_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-chatbot_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-chatbot_user} -d ${POSTGRES_DB:-chatbot}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  etcd:
+    container_name: chatbot-etcd
+    image: quay.io/coreos/etcd:v3.5.5
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/etcd:/etcd
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio:
+    container_name: chatbot-minio
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/minio:/minio_data
+    command: minio server /minio_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  milvus:
+    container_name: chatbot-milvus
+    image: milvusdb/milvus:v2.5.15-20250718-3a3b374f-gpu-arm64
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      start_period: 90s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    depends_on:
+      etcd: { condition: service_healthy }
+      minio: { condition: service_healthy }
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: chatbot-net
