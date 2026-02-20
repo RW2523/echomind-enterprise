@@ -1,0 +1,88 @@
+# Override to run EchoMind frontend + voice with the assets backend (Milvus RAG).
+# Usage from repo root:
+#   docker compose -f assets/docker-compose.yml -f docker-compose.echomind-assets.yml up -d --build
+# Optional: add assets model containers for LLM/embedding:
+#   docker compose -f assets/docker-compose.yml -f assets/docker-compose-models.yml -f docker-compose.echomind-assets.yml up -d --build
+#
+# Note: When the first -f is assets/docker-compose.yml, Compose uses assets/ as project dir,
+# so frontend and voice build context use ../ to reach repo root (../frontend, ../voice).
+#
+# Frontend: http://localhost:3001  (proxies /api to assets backend; 3001 avoids conflict with main stack on 3000)
+# Voice:    http://localhost:8001
+# Backend: assets backend with EchoMind API at /api/* and transcripts in Milvus
+
+services:
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: echomind-frontend
+    ports: ["3001:80", "3444:443"]
+    depends_on:
+      backend: { condition: service_healthy }
+
+  voice:
+    build:
+      context: ../voice
+      dockerfile: Dockerfile
+    container_name: echomind-voice
+    ports: ["8001:8000"]
+    volumes:
+      - ../voice/voices:/voices
+    environment:
+      - LLM_URL=http://ollama:11434/v1/chat/completions
+      - LLM_MODEL=qwen2.5:7b-instruct
+      - WHISPER_MODEL=base
+      - BACKEND_CHAT_URL=http://backend:8000
+    depends_on:
+      backend: { condition: service_healthy }
+
+  # Use Ollama as LLM (backend and voice); CORS for frontend
+  backend:
+    environment:
+      - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001
+      - OPENAI_BASE_URL=http://ollama:11434/v1
+      - MODELS=qwen2.5:7b-instruct
+      - EMBEDDING_SERVICE_URL=http://ollama:11434
+      - OLLAMA_EMBED_MODEL=nomic-embed-text
+    depends_on:
+      postgres: { condition: service_started }
+      etcd: { condition: service_started }
+      minio: { condition: service_started }
+      milvus: { condition: service_healthy }   # backend needs Milvus for vector_store._initialize_store()
+      ollama: { condition: service_started }  # don't wait for healthy (avoids long delay while models pull)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+
+  ollama:
+    build:
+      context: ../docker/ollama
+      dockerfile: Dockerfile
+    image: echomind-ollama:setup
+    container_name: echomind-ollama
+    ports: ["11434:11434"]
+    environment:
+      - OLLAMA_LLM_MODEL=qwen2.5:7b-instruct
+      - OLLAMA_EMBED_MODEL=nomic-embed-text
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ollama list | grep -q qwen2.5:7b-instruct && ollama list | grep -q nomic-embed-text"]
+      interval: 15s
+      timeout: 10s
+      retries: 80
+      start_period: 300s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  ollama_data:
