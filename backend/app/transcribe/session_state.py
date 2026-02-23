@@ -118,7 +118,8 @@ class SessionState:
         piece = _normalize_piece(piece)
         if not piece:
             return
-        tail = (self.raw_text + self.recent_buffer).strip()
+        #tail = (self.raw_text + self.recent_buffer).strip()
+        tail = (self.raw_text + self.recent_buffer)
         # Skip exact duplicate: if incoming piece is identical to end of tail, do not append
         if tail and len(piece) <= len(tail) and tail.endswith(piece):
             self.last_piece_ts_ms = ts_ms
