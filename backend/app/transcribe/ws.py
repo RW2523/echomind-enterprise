@@ -20,7 +20,8 @@ from .session_state import SessionState
 from .stt_streaming import (
     _pcm16_to_float32,
     _sliding_window_rms,
-    create_kyutai_stt,
+    get_or_create_kyutai_stt,
+    release_kyutai_stt,
     KYUTAI_AVAILABLE,
     _resample_fast,
     KYUTAI_SAMPLE_RATE,
@@ -83,7 +84,7 @@ async def handler(ws: WebSocket):
     kyutai_stt = None
     if KYUTAI_AVAILABLE:
         try:
-            kyutai_stt = await loop.run_in_executor(None, create_kyutai_stt)
+            kyutai_stt = await loop.run_in_executor(None, get_or_create_kyutai_stt)
         except Exception as e:
             await _send(ws, {"type": "error", "message": f"Kyutai STT load failed: {e}"})
             return
@@ -521,7 +522,7 @@ async def handler(ws: WebSocket):
             pass
     finally:
         if kyutai_stt is not None:
-            kyutai_stt.reset_streaming()
+            await loop.run_in_executor(None, lambda: release_kyutai_stt(kyutai_stt))
         if consumer_task is not None and not consumer_task.done():
             try:
                 pcm_queue.put_nowait(None)

@@ -9,6 +9,7 @@ gets its own instance. Audio-relative timestamps; deque buffer; efficient resamp
 from __future__ import annotations
 import asyncio
 import os
+import threading
 from collections import deque
 from typing import Callable, List, Optional, Tuple
 
@@ -191,8 +192,71 @@ class KyutaiStreamingSTT:
         return pieces
 
 
+# Pre-loaded instance for fast first connection (set by startup task)
+_warm_stt: Optional[KyutaiStreamingSTT] = None
+_warm_in_use = False
+_warm_lock = threading.Lock()
+
+
+def download_kyutai_model() -> bool:
+    """Download Kyutai model to Hugging Face cache (idempotent). Call at startup. Returns True if successful."""
+    if not KYUTAI_AVAILABLE:
+        return False
+    try:
+        snapshot_download(KYUTAI_MODEL_NAME)
+        return True
+    except Exception:
+        return False
+
+
+def preload_kyutai_stt() -> bool:
+    """Create one KyutaiStreamingSTT and store as warm instance. Call after download at startup. Returns True if successful."""
+    global _warm_stt, _warm_in_use
+    if not KYUTAI_AVAILABLE:
+        return False
+    try:
+        with _warm_lock:
+            if _warm_stt is not None:
+                return True
+            _warm_stt = KyutaiStreamingSTT()
+            _warm_in_use = False
+        return True
+    except Exception:
+        with _warm_lock:
+            _warm_stt = None
+            _warm_in_use = False
+        return False
+
+
+def get_or_create_kyutai_stt() -> Optional[KyutaiStreamingSTT]:
+    """Return the warm instance if available (and mark in use), else create a new instance. One per WebSocket session."""
+    global _warm_in_use
+    if not KYUTAI_AVAILABLE:
+        return None
+    with _warm_lock:
+        if _warm_stt is not None and not _warm_in_use:
+            _warm_in_use = True
+            _warm_stt.reset_streaming()
+            return _warm_stt
+    try:
+        return KyutaiStreamingSTT()
+    except Exception:
+        return None
+
+
+def release_kyutai_stt(stt: Optional[KyutaiStreamingSTT]) -> None:
+    """If stt is the warm instance, reset and mark available. Otherwise no-op (caller may drop reference)."""
+    global _warm_in_use
+    if stt is None:
+        return
+    with _warm_lock:
+        if stt is _warm_stt:
+            stt.reset_streaming()
+            _warm_in_use = False
+
+
 def create_kyutai_stt() -> Optional[KyutaiStreamingSTT]:
-    """Create a new KyutaiStreamingSTT instance. One per WebSocket session; do not share."""
+    """Create a new KyutaiStreamingSTT instance. Prefer get_or_create_kyutai_stt() for WebSocket handler."""
     if not KYUTAI_AVAILABLE:
         return None
     try:
