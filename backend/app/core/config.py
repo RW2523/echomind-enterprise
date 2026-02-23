@@ -68,6 +68,10 @@ class Settings(BaseSettings):
     RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1200"))
 
     # Real-time transcription & knowledge capture (Kyutai STT only, 24kHz)
+    # When set, Kyutai STT loads from this local dir (no HuggingFace download at runtime). Run scripts/download_kyutai_stt.sh once to populate.
+    KYUTAI_MODEL_DIR: str | None = os.getenv("ECHOMIND_KYUTAI_MODEL_DIR") or None
+    # Force Kyutai STT device: "cpu" or "cuda". If "cpu", avoids CUDA graph capture errors on some GPUs. Unset = auto (CUDA if available, with CPU fallback on error).
+    KYUTAI_DEVICE: str | None = os.getenv("ECHOMIND_KYUTAI_DEVICE") or None
     ECHOMIND_AUTO_STORE_DEFAULT: bool = os.getenv("ECHOMIND_AUTO_STORE_DEFAULT", "1").lower() in ("1", "true", "yes")
     # When auto_store is on: store new transcript content to the KB every N seconds (0 = only on stop).
     AUTO_STORE_INTERVAL_SEC: int = int(os.getenv("ECHOMIND_AUTO_STORE_INTERVAL_SEC", "60"))

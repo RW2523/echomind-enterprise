@@ -1,8 +1,7 @@
 FROM nvcr.io/nvidia/pytorch:24.10-py3
-# Use MIT mirror if ports.ubuntu.com returns 403; retry once on failure
+# Use MIT mirror if ports.ubuntu.com returns 403; retry up to 4 times for mirror sync / transient failures
 RUN for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do [ -f "$f" ] && sed -i 's|http://ports.ubuntu.com/ubuntu-ports|http://mirrors.mit.edu/ubuntu-ports|g' "$f"; done; \
-  apt-get update && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1 \
-  || (sleep 15 && apt-get update && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1) \
+  (for i in 1 2 3 4; do apt-get update -qq && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1 && exit 0; sleep 45; done; exit 1) \
   && rm -rf /var/lib/apt/lists/*
 
 # Piper TTS model (expected at /voices/en_US-lessac-medium.onnx by config)

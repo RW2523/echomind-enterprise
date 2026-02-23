@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ICONS } from '../constants';
 import { defaultTranscriptName } from '../services/backend';
 import type { UseLiveTranscriptionReturn } from '../hooks/useLiveTranscription';
@@ -17,6 +17,18 @@ interface LiveTranscriptionProps {
 }
 
 const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription }) => {
+  const [loadingSlowHint, setLoadingSlowHint] = useState(false);
+
+  // Only show "first run may take 2–5 min" after 15s in loading state (model from disk is usually fast)
+  useEffect(() => {
+    if (liveTranscription.wsStatus !== 'loading') {
+      setLoadingSlowHint(false);
+      return;
+    }
+    const t = setTimeout(() => setLoadingSlowHint(true), 15000);
+    return () => clearTimeout(t);
+  }, [liveTranscription.wsStatus]);
+
   const {
     fullTranscript,
     partial,
@@ -148,8 +160,13 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
             <ICONS.Trash className="w-5 h-5" />
           </button>
           {wsStatus === 'connecting' && <span className="text-xs text-slate-400">Connecting…</span>}
-          {wsStatus === 'loading' && <span className="text-xs text-slate-400">Loading Kyutai STT… (first run may take 2–5 min)</span>}
-          {wsError && <span className="text-xs text-red-400 max-w-[120px] sm:max-w-[200px] truncate" title={wsError}>{wsError}</span>}
+          {wsStatus === 'loading' && (
+            <span className="text-xs text-slate-400">
+              Loading…
+              {loadingSlowHint && ' (first run may take 2–5 min)'}
+            </span>
+          )}
+          {wsError && <span className="text-xs text-red-400 max-w-[280px] sm:max-w-md truncate" title={wsError}>{wsError}</span>}
           {!listening ? (
             <button type="button" onClick={openStartModal} disabled={wsStatus === 'connecting' || wsStatus === 'loading'} className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-50 transition-colors touch-manipulation">Start</button>
           ) : (

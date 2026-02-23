@@ -1,5 +1,6 @@
 import json
 from fastapi import APIRouter, WebSocket, HTTPException
+from starlette.websockets import WebSocketDisconnect
 from pydantic import BaseModel
 from ...core.db import get_conn
 from ...refine import refine_text
@@ -115,7 +116,10 @@ def list_transcripts(since: str | None = None, last_hours: float | None = None):
 
 @router.websocket("/ws")
 async def ws(ws: WebSocket):
-    await ws_handler(ws)
+    try:
+        await ws_handler(ws)
+    except WebSocketDisconnect:
+        pass
 
 class TagsIn(BaseModel):
     raw_text: str

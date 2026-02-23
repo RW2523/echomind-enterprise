@@ -20,6 +20,28 @@ logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 init_db()
 app = FastAPI(title=settings.APP_NAME)
 
+
+@app.on_event("startup")
+def _startup_warm_kyutai():
+    """Preload Kyutai STT in the background so the first Live Transcript connection is instant."""
+    import logging
+    log = logging.getLogger(__name__)
+    try:
+        from .transcribe.stt_streaming import (
+            KYUTAI_AVAILABLE,
+            _kyutai_import_error,
+            warm_kyutai_stt,
+        )
+        model_dir = getattr(settings, "KYUTAI_MODEL_DIR", None)
+        if KYUTAI_AVAILABLE:
+            log.info("Kyutai STT: available, ECHOMIND_KYUTAI_MODEL_DIR=%s", model_dir or "(not set)")
+            warm_kyutai_stt()
+        else:
+            log.warning("Kyutai STT: not available (%s). Live Transcript will show an error.", _kyutai_import_error or "import failed")
+    except Exception as e:
+        log.warning("Kyutai STT startup: %s", e)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

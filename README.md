@@ -30,15 +30,19 @@ docker compose up --build
 ```
 
 ### Build fails with "failed to execute bake: read |0: file already closed"
-This can happen at the end of a Buildx build when writing provenance metadata. Disable provenance and rebuild:
+This can happen at the end of a Buildx build when writing provenance metadata. Disable attestations and rebuild:
 
 ```bash
-BUILDX_METADATA_PROVENANCE=disabled docker compose build
+# Try one of these (behavior depends on Docker/Compose version):
+BUILDX_METADATA_PROVENANCE=disabled docker compose build --no-cache
+# or
+BUILDX_NO_DEFAULT_ATTESTATIONS=1 docker compose build --no-cache
+
 docker compose up -d
 ```
 
-Or in one go: `BUILDX_METADATA_PROVENANCE=disabled docker compose up --build`.  
-If you use `docker buildx bake` instead of `docker compose build`, run it with the same env var: `BUILDX_METADATA_PROVENANCE=disabled docker buildx bake`.
+Or in one go: `BUILDX_NO_DEFAULT_ATTESTATIONS=1 docker compose up --build`.  
+If you use `docker buildx bake`, add: `BUILDX_NO_DEFAULT_ATTESTATIONS=1 docker buildx bake`.
 
 ## Model setup (included in build/start)
 
@@ -71,4 +75,21 @@ The **Real-Time Transcription** tab uses **Kyutai STT** (`kyutai/stt-1b-en_fr`) 
 - **Works on:** x86_64 and ARM64 (e.g. DGX Spark)
 - **Deps:** `moshi`, `huggingface-hub` (included in `backend/requirements.txt`). On ARM64: `libopus-dev` required for sphn.
 
-On first use, the model (~1B params) is downloaded from Hugging Face. Requires PyTorch (provided by the NVIDIA PyTorch base image). For DGX Spark (ARM64), ensure the backend Dockerfile uses an ARM64-compatible base image; the dependencies support both architectures.
+### Install and connect flow (no double install)
+
+| Step | What | Where |
+|------|------|--------|
+| **1. Package** | `moshi` + `huggingface-hub` installed **once** | `backend/requirements.txt`; Dockerfile uses that (no duplicate pip install) |
+| **2. Model** | Model files downloaded **once** | Docker: build downloads to `/app/kyutai-stt` (not under `/data`, so the data volume does not hide it). Local: run `backend/scripts/download_kyutai_stt.sh` once |
+| **3. Runtime** | Backend loads STT **from disk only** when `ECHOMIND_KYUTAI_MODEL_DIR` is set | `app/transcribe/stt_streaming.py`: if dir set → local only; else Hub cache. Never downloads twice. **Startup** preloads one instance so the first Live Transcript connection is instant. |
+
+**Docker:** Image sets `ECHOMIND_KYUTAI_MODEL_DIR=/app/kyutai-stt` and pre-downloads the model at build time; docker-compose passes the same env. The `/data` volume is for DB/RAG only, so the model in `/app/kyutai-stt` is always available. No download at runtime.
+
+**Local / non-Docker:** run the download script once, then set the env so the backend uses the local copy:
+
+```bash
+cd backend && ./scripts/download_kyutai_stt.sh
+# Then set ECHOMIND_KYUTAI_MODEL_DIR to the printed path (e.g. export ECHOMIND_KYUTAI_MODEL_DIR=/path/to/backend/kyutai-stt)
+```
+
+Requires PyTorch (Docker uses the NVIDIA PyTorch base image). For DGX Spark (ARM64), use an ARM64-compatible base image; dependencies support both architectures.

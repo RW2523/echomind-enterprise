@@ -8,12 +8,18 @@ gets its own instance. Audio-relative timestamps; deque buffer; efficient resamp
 """
 from __future__ import annotations
 import asyncio
+import json
+import logging
 import os
+import threading
+from pathlib import Path
 from collections import deque
 from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 from ..core.config import settings
+
+logger = logging.getLogger(__name__)
 
 # Optional: disable torch compile (e.g. DGX Spark / Blackwell workaround)
 for _k in ("TORCHDYNAMO_DISABLE", "TORCHINDUCTOR_DISABLE", "TORCH_COMPILE_DISABLE"):
@@ -34,6 +40,7 @@ try:
 except ImportError as e:
     _kyutai_import_error = str(e)
     F = None  # type: ignore
+    logger.warning("Kyutai STT unavailable (import failed): %s", e)
 
 # Kyutai model (moshi format)
 KYUTAI_MODEL_NAME = "kyutai/stt-1b-en_fr"
@@ -90,10 +97,35 @@ class KyutaiStreamingSTT:
     Use add_audio(pcm_float32) per chunk and consume returned (pieces, ts_ms); call flush() only on EOS.
     Caller must call reset_streaming() when starting a new session (flush() does not reset).
     """
-    def __init__(self):
-        self.device = "cuda" if (KYUTAI_AVAILABLE and getattr(torch, "cuda", None) and torch.cuda.is_available()) else "cpu"
-        snapshot_download(KYUTAI_MODEL_NAME)
-        checkpoint_info = loaders.CheckpointInfo.from_hf_repo(KYUTAI_MODEL_NAME)
+    def __init__(self, device: Optional[str] = None):
+        forced = getattr(settings, "KYUTAI_DEVICE", None)
+        if device is not None:
+            self.device = device
+        elif forced and forced.lower() in ("cpu", "cuda"):
+            self.device = forced.lower()
+        else:
+            self.device = "cuda" if (KYUTAI_AVAILABLE and getattr(torch, "cuda", None) and torch.cuda.is_available()) else "cpu"
+        # Single path: either load from local dir (no download) or from Hub (snapshot_download once, then cache).
+        model_dir = getattr(settings, "KYUTAI_MODEL_DIR", None)
+        if model_dir and Path(model_dir).is_dir():
+            config_path = Path(model_dir) / "config.json"
+            if not config_path.is_file():
+                raise FileNotFoundError(f"KYUTAI_MODEL_DIR missing config.json: {config_path}")
+            raw = json.loads(config_path.read_text())
+            moshi_name = raw.get("moshi_name", "model.safetensors")
+            mimi_name = raw.get("mimi_name", "mimi-pytorch-e351c8d8@125.safetensors")
+            tokenizer_name = raw.get("tokenizer_name", "tokenizer_en_fr_audio_8000.model")
+            root = Path(model_dir)
+            checkpoint_info = loaders.CheckpointInfo.from_hf_repo(
+                KYUTAI_MODEL_NAME,
+                config_path=config_path,
+                moshi_weights=str(root / moshi_name),
+                mimi_weights=str(root / mimi_name),
+                tokenizer=str(root / tokenizer_name),
+            )
+        else:
+            snapshot_download(KYUTAI_MODEL_NAME)
+            checkpoint_info = loaders.CheckpointInfo.from_hf_repo(KYUTAI_MODEL_NAME)
         self.mimi = checkpoint_info.get_mimi(device=self.device)
         self.frame_size = int(self.mimi.sample_rate / self.mimi.frame_rate)
         moshi_lm = checkpoint_info.get_moshi(device=self.device)
@@ -191,14 +223,77 @@ class KyutaiStreamingSTT:
         return pieces
 
 
+def _is_cuda_graph_error(e: RuntimeError) -> bool:
+    """True if error looks like CUDA/graph capture (retry on CPU)."""
+    msg = str(e).lower()
+    return (
+        ("cuda" in msg and "error" in msg)
+        or "graph capture" in msg
+        or "offset increment" in msg
+    )
+
+
 def create_kyutai_stt() -> Optional[KyutaiStreamingSTT]:
-    """Create a new KyutaiStreamingSTT instance. One per WebSocket session; do not share."""
+    """Create a new KyutaiStreamingSTT instance. One per WebSocket session; do not share.
+    Uses a preloaded instance from warm_kyutai_stt() if available, so first connection can be instant."""
+    global _stt_cache
     if not KYUTAI_AVAILABLE:
         return None
+    with _stt_cache_lock:
+        if _stt_cache is not None:
+            stt = _stt_cache
+            _stt_cache = None
+            stt.reset_streaming()
+            return stt
     try:
         return KyutaiStreamingSTT()
-    except Exception:
-        return None
+    except RuntimeError as e:
+        if _is_cuda_graph_error(e):
+            logger.warning("Kyutai STT CUDA/graph failed (%s), falling back to CPU", e)
+            try:
+                return KyutaiStreamingSTT(device="cpu")
+            except Exception as e2:
+                logger.exception("Kyutai STT CPU fallback failed")
+                raise RuntimeError(f"Kyutai STT load failed (CUDA and CPU): {e2}") from e2
+        logger.exception("Kyutai STT load failed")
+        raise RuntimeError(f"Kyutai STT load failed: {e}") from e
+    except Exception as e:
+        logger.exception("Kyutai STT load failed")
+        raise RuntimeError(f"Kyutai STT load failed: {e}") from e
+
+
+# One preloaded instance for the first WebSocket (set by warm_kyutai_stt at startup)
+_stt_cache: Optional[KyutaiStreamingSTT] = None
+_stt_cache_lock = threading.Lock()
+
+
+def warm_kyutai_stt() -> None:
+    """Load the STT model once in the background so the first Live Transcript connection is instant.
+    Call at app startup (e.g. from main.py lifespan)."""
+    global _stt_cache
+    if not KYUTAI_AVAILABLE:
+        return
+    def _warm():
+        global _stt_cache
+        with _stt_cache_lock:
+            if _stt_cache is not None:
+                return
+        try:
+            stt = KyutaiStreamingSTT()
+            with _stt_cache_lock:
+                _stt_cache = stt
+        except RuntimeError as e:
+            if _is_cuda_graph_error(e):
+                try:
+                    stt = KyutaiStreamingSTT(device="cpu")
+                    with _stt_cache_lock:
+                        _stt_cache = stt
+                except Exception:
+                    pass
+        except Exception:
+            pass
+    t = threading.Thread(target=_warm, daemon=True)
+    t.start()
 
 
 def kyutai_sample_rate() -> int:

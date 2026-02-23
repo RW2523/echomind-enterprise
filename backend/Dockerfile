@@ -16,11 +16,12 @@ COPY requirements.txt /app/
 # Kyutai STT via moshi (libopus-dev required for sphn build on ARM64)
 RUN pip install -r requirements.txt
 
-RUN pip install --no-cache-dir "bitsandbytes==0.46.0" sentencepiece \
- && pip install --no-cache-dir --no-deps "moshi==0.2.9"
+# moshi + huggingface-hub from requirements.txt (Kyutai STT). Extra deps for RAG/moshi.
+RUN pip install --no-cache-dir "bitsandbytes==0.46.0" sentencepiece
 
-# Pre-download Kyutai STT model during build (avoids 2–5 min load at first Live Transcript use)
-RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('kyutai/stt-1b-en_fr')"
+# Pre-download Kyutai STT under /app so the /data volume mount does not hide it at runtime
+ENV ECHOMIND_KYUTAI_MODEL_DIR=/app/kyutai-stt
+RUN mkdir -p /app/kyutai-stt && python -c "from huggingface_hub import snapshot_download; snapshot_download('kyutai/stt-1b-en_fr', local_dir='/app/kyutai-stt')"
 
 COPY app /app/app
 EXPOSE 8000
