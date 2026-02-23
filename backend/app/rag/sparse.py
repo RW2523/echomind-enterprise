@@ -89,21 +89,32 @@ class Bm25Index:
             return []
         scores = self._bm25.get_scores(q_tokens)
         # argsort descending
-        top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[: k]
-        out = []
+        top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:k]
+        # Chunk ids in rank order, skip zero scores
+        chunk_ids_ordered = [self.chunk_ids[idx] for idx in top_indices if scores[idx] > 0]
+        if not chunk_ids_ordered:
+            return []
+        # One query for all chunks; build id -> (text, source_json)
         with get_conn() as conn:
-            for idx in top_indices:
-                if scores[idx] <= 0:
-                    continue
-                cid = self.chunk_ids[idx]
-                row = conn.execute("SELECT text, source_json FROM chunks WHERE id=?", (cid,)).fetchone()
-                if not row:
-                    continue
-                text, src_json = row
-                out.append({
-                    "chunk_id": cid,
-                    "score": float(scores[idx]),
-                    "text": text,
-                    "source": json.loads(src_json),
-                })
+            placeholders = ",".join("?" * len(chunk_ids_ordered))
+            rows = conn.execute(
+                "SELECT id, text, source_json FROM chunks WHERE id IN (" + placeholders + ")",
+                chunk_ids_ordered,
+            ).fetchall()
+        id_to_row = {row[0]: (row[1], row[2]) for row in rows}
+        # Return in same rank order as top_indices; same json parsing as before
+        out = []
+        for idx in top_indices:
+            if scores[idx] <= 0:
+                continue
+            cid = self.chunk_ids[idx]
+            if cid not in id_to_row:
+                continue
+            text, src_json = id_to_row[cid]
+            out.append({
+                "chunk_id": cid,
+                "score": float(scores[idx]),
+                "text": text,
+                "source": json.loads(src_json),
+            })
         return out

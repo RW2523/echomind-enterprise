@@ -17,6 +17,58 @@ CONTEXT_WINDOW_VALUES = ("24h", "48h", "1w", "all")
 
 # Deterministic message when document/transcript intent but retrieval is insufficient (no hallucination fallback to general chat).
 INSUFFICIENT_CONTEXT_MSG = "The provided documents do not contain this information."
+# Document mode: do not allow LLM to answer without grounded context.
+INSUFFICIENT_CONTEXT_MSG_DOCUMENT = "The provided documents do not contain enough information to answer this."
+
+
+def _significant_query_keywords(question: str) -> List[str]:
+    """Tokenize query into significant keywords (length >= 2, alphanumeric) for grounding check. No stopwords."""
+    if not (question or "").strip():
+        return []
+    words = re.findall(r"[a-zA-Z0-9]+", (question or "").strip())
+    return [w.lower() for w in words if len(w) >= 2]
+
+
+def _any_hit_contains_keyword(hits: List[Dict], keywords: List[str]) -> bool:
+    """True if at least one hit's text contains at least one of the given keywords (case-insensitive)."""
+    if not keywords or not hits:
+        return False
+    kw_set = set(keywords)
+    for h in hits:
+        text = (h.get("text") or "").lower()
+        if any(kw in text for kw in kw_set):
+            return True
+    return False
+
+
+def is_retrieval_weak(hits: List[Dict], question: Optional[str] = None) -> bool:
+    """True if top score too low, gap too small, or no retrieved chunk contains a significant query keyword. Disabled when RAG_SANITY_MODE."""
+    if getattr(settings, "RAG_SANITY_MODE", False):
+        return False
+    if not hits:
+        return True
+    min_top = getattr(settings, "RAG_MIN_TOP_SCORE", 0.25)
+    min_gap = getattr(settings, "RAG_MIN_SCORE_GAP", 0.05)
+    top_score = float(hits[0].get("score") or 0.0)
+    gap = top_score - float(hits[1].get("score") or 0.0) if len(hits) > 1 else top_score
+    weak = top_score < min_top or gap < min_gap
+    if question:
+        keywords = _significant_query_keywords(question)
+        if keywords and not _any_hit_contains_keyword(hits, keywords):
+            weak = True
+    logger.info(
+        "RAG retrieval strength: top_score=%.3f gap=%.3f weak=%s",
+        top_score,
+        gap,
+        weak,
+    )
+    if weak:
+        logger.info(
+            "RAG weak-retrieval gate (min_top=%.2f min_gap=%.2f); returning INSUFFICIENT_CONTEXT_MSG",
+            min_top,
+            min_gap,
+        )
+    return weak
 
 def _parse_iso_date(created_at: Optional[str]) -> Optional[datetime]:
     if not created_at:
@@ -256,13 +308,61 @@ def _prefer_authoritative_sort(hits: List[Dict]) -> List[Dict]:
 _COMMON_TYPOS = {"mathew": "matthew", "matthew": "matthew", "meriton": "merton", "outler": "outlier", "outlers": "outliers"}
 
 
+# Document-structure terms: query refers to document structure (chapter, section, etc.) so we may scope to active doc.
+_DOC_STRUCTURED_PATTERNS = re.compile(
+    r"\b(chapter|section|part|introduction|intro|appendix|summary|page|figure|table|contents|toc|preface|foreword|bibliography|index)\b",
+    re.I,
+)
+
+
+def is_document_structured_query(question: str) -> bool:
+    """True if query clearly refers to document structure (chapter, section, introduction, appendix, etc.). Used for conversational document scoping."""
+    if not (question or "").strip():
+        return False
+    return bool(_DOC_STRUCTURED_PATTERNS.search((question or "").strip()))
+
+
+def _filter_hits_by_doc_id(hits: List[Dict], doc_id: str) -> List[Dict]:
+    """Return only hits whose source.doc_id equals doc_id."""
+    if not doc_id:
+        return hits
+    return [h for h in hits if (h.get("source") or {}).get("doc_id") == doc_id]
+
+
+def _infer_active_document_from_hits(hits: List[Dict], top_n: int = 3, min_top_score: float = 0.3) -> Optional[Tuple[str, str]]:
+    """If top top_n hits are from the same doc_id with scores >= min_top_score, return (doc_id, filename); else None. No hardcoded titles."""
+    if not hits or len(hits) < top_n:
+        return None
+    top = hits[:top_n]
+    doc_ids = [(h.get("source") or {}).get("doc_id") for h in top]
+    filenames = [(h.get("source") or {}).get("filename") or "" for h in top]
+    scores = [float(h.get("score") or 0) for h in top]
+    if any(s < min_top_score for s in scores):
+        return None
+    if len(set(doc_ids)) != 1 or not doc_ids[0]:
+        return None
+    return (doc_ids[0], filenames[0] or doc_ids[0])
+
+
 def get_deterministic_query_variants(question: str) -> List[str]:
-    """Pre-LLM query variants: fix typos, add quoted phrase for named concepts, add TOC/structure terms when relevant. Return list to prepend to LLM-generated queries."""
+    """Pre-LLM query variants: fix typos, add quoted phrase for named concepts, add TOC/structure terms, chapter/section/part variants. Return list to prepend to LLM-generated queries."""
     if not (question or "").strip():
         return []
     q = question.strip()
     q_lower = q.lower()
     out: List[str] = []
+    # Chapter/section/part variants (e.g. "chapter 5" -> "Chapter 5", "CHAPTER 5", "Chapter 5:") for better matching.
+    for pattern, title_case in [
+        (r"\b(chapter)\s+(\d+[a-z]?)\b", "Chapter"),
+        (r"\b(section)\s+(\d+(?:\.\d+)*)\b", "Section"),
+        (r"\b(part)\s+(\d+[a-z]?)\b", "Part"),
+    ]:
+        m = re.search(pattern, q, re.I)
+        if m:
+            num = m.group(2)
+            out.append(f"{title_case} {num}")
+            out.append(m.group(0).upper())
+            out.append(f"{title_case} {num}:")
     # Typo fixes: produce corrected query
     for wrong, right in _COMMON_TYPOS.items():
         if wrong in q_lower:
@@ -293,6 +393,46 @@ def is_toc_chapters_query(question: str) -> bool:
     if "contents" in words and ("list" in words or "table" in words):
         return True
     return False
+
+
+def choose_rrf_weights(question: str) -> Tuple[float, float]:
+    """Lightweight heuristic to choose dense vs sparse RRF weights. Returns (dense_w, sparse_w). No LLM calls."""
+    q = (question or "").strip()
+    default_dense = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.6)
+    default_sparse = getattr(settings, "RAG_SPARSE_RRF_WEIGHT", 0.4)
+    # Normalize so they sum to 1 if settings are inconsistent
+    total = default_dense + default_sparse
+    if total <= 0:
+        default_dense, default_sparse = 0.6, 0.4
+    else:
+        default_dense, default_sparse = default_dense / total, default_sparse / total
+
+    # Sparse-heavy: quoted strings, many digits, or error/ID-like tokens (verbatim match helps)
+    has_quotes = '"' in q or '"' in q or '"' in q or "'" in q
+    many_digits = len(re.findall(r"\d", q)) >= 4 or bool(re.search(r"\d{4,}", q))
+    error_or_id = bool(
+        re.search(
+            r"\b[A-Z]{2,5}[-_]?\d{3,}\b|\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b|\b\d{5,}\b",
+            q,
+        )
+    )
+    if has_quotes or many_digits or error_or_id:
+        dense_w, sparse_w = 0.35, 0.65
+        reason = "quotes_or_verbatim"
+        logger.info("RAG RRF weights: dense=%.2f sparse=%.2f (reason=%s)", dense_w, sparse_w, reason)
+        return (dense_w, sparse_w)
+
+    # Dense-heavy: long/explanatory query (>10 words)
+    words = re.findall(r"[a-zA-Z0-9]+", q)
+    if len(words) > 10:
+        dense_w, sparse_w = 0.65, 0.35
+        reason = "long_explanatory"
+        logger.info("RAG RRF weights: dense=%.2f sparse=%.2f (reason=%s)", dense_w, sparse_w, reason)
+        return (dense_w, sparse_w)
+
+    dense_w, sparse_w = default_dense, default_sparse
+    logger.info("RAG RRF weights: dense=%.2f sparse=%.2f (reason=settings_default)", dense_w, sparse_w)
+    return (dense_w, sparse_w)
 
 
 def _get_original_blocks_for_toc(hits: List[Dict]) -> List[str]:
@@ -598,7 +738,7 @@ async def retrieve_single_query(question: str, k: int, context_window: str = "al
     hits = await index.search(question.strip(), max(k, 4))
     hits = _filter_hits_by_context_window(hits, context_window or "all")
     doc_created, doc_meta = _get_doc_info_for_hits(hits)
-    halflife = getattr(settings, "RAG_TIME_DECAY_HALFLIFE_DAYS", 0) or 0
+    halflife = 0 if getattr(settings, "RAG_SANITY_MODE", False) else (getattr(settings, "RAG_TIME_DECAY_HALFLIFE_DAYS", 0) or 0)
     if halflife > 0:
         hits = _apply_time_decay(hits, doc_created, halflife)
     return hits[:k]
@@ -613,8 +753,9 @@ async def retrieve(
     has_transcripts: bool = False,
     transcript_echotags: Optional[List[str]] = None,
 ) -> List[Dict]:
-    """Hybrid retrieve: deterministic + optional LLM query expansion, dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. When intent is transcript and question asks for 'last N transcripts', filters to N most recent transcript docs."""
-    if getattr(settings, "RAG_QUERY_REWRITE_ENABLED", False):
+    """Hybrid retrieve: deterministic + optional LLM query expansion, dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. When intent is transcript and question asks for 'last N transcripts', filters to N most recent transcript docs. RAG_SANITY_MODE forces single-query, no decay, no rerank, no tag boost."""
+    use_rewrite = getattr(settings, "RAG_QUERY_REWRITE_ENABLED", False) and not getattr(settings, "RAG_SANITY_MODE", False)
+    if use_rewrite:
         llm_qs = await generate_queries(question, intent=intent, document_titles=document_titles, has_transcripts=has_transcripts, transcript_echotags=transcript_echotags)
     else:
         llm_qs = [question.strip() or " "]
@@ -637,8 +778,7 @@ async def retrieve(
         dense_w = 1.0 - sparse_w
     else:
         k_per_query = max(k, 4)
-        dense_w = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.5)
-        sparse_w = getattr(settings, "RAG_SPARSE_RRF_WEIGHT", 0.5)
+        dense_w, sparse_w = choose_rrf_weights(question)
 
     dense_hits_per_query: List[List[Dict]] = []
     sparse_hits_per_query: List[List[Dict]] = []
@@ -656,22 +796,33 @@ async def retrieve(
     hits = _weighted_rrf(dense_hits_per_query, sparse_hits_per_query, candidates_k, dense_weight=dense_w, sparse_weight=sparse_w)
     # Hard filter by context_window when not 'all'
     hits = _filter_hits_by_context_window(hits, context_window or "all")
-    # Time-decay scoring (soft; keeps older docs but down-weights)
+    # Time-decay scoring (soft; keeps older docs but down-weights). Disabled when RAG_SANITY_MODE.
     doc_created, doc_meta = _get_doc_info_for_hits(hits)
-    halflife = getattr(settings, "RAG_TIME_DECAY_HALFLIFE_DAYS", 0) or 0
+    halflife = 0 if getattr(settings, "RAG_SANITY_MODE", False) else (getattr(settings, "RAG_TIME_DECAY_HALFLIFE_DAYS", 0) or 0)
     if halflife > 0:
         hits = _apply_time_decay(hits, doc_created, halflife)
-    # Tag boost for transcripts
-    if getattr(settings, "RAG_TAG_BOOST_ENABLED", False):
+    # Tag boost for transcripts. Disabled when RAG_SANITY_MODE.
+    if not getattr(settings, "RAG_SANITY_MODE", False) and getattr(settings, "RAG_TAG_BOOST_ENABLED", False):
         tag_factor = getattr(settings, "RAG_TAG_BOOST_FACTOR", 0.08)
         hits = _apply_tag_boost(hits, question, doc_meta, tag_factor)
     # Prefer authoritative docs when scores are close (skip when intent=transcript; all hits are from transcript index)
     if intent != "transcript" and getattr(settings, "RAG_PREFER_AUTHORITATIVE", False):
         hits = _prefer_authoritative_sort(hits)
-    # Optional rerank
-    if getattr(settings, "RAG_RERANK_ENABLED", False):
+    # Optional rerank: cross_encoder (local) or llm backend. Disabled when RAG_SANITY_MODE.
+    if not getattr(settings, "RAG_SANITY_MODE", False) and getattr(settings, "RAG_RERANK_ENABLED", False):
         rerank_n = getattr(settings, "RAG_RERANK_TOP_N", k)
-        hits = await _rerank_hits(question, hits[: getattr(settings, "RAG_RERANK_CANDIDATES", 12)], rerank_n)
+        candidates = getattr(settings, "RAG_RERANK_CANDIDATES", 12)
+        hits_slice = hits[:candidates]
+        backend = (getattr(settings, "RAG_RERANK_BACKEND", "cross_encoder") or "cross_encoder").lower().strip()
+        if backend == "cross_encoder":
+            try:
+                from .reranker import rerank as rerank_cross
+                hits = await rerank_cross(question, hits_slice, rerank_n)
+            except Exception as e:
+                logger.warning("RAG cross-encoder rerank failed, falling back to LLM: %s", e)
+                hits = await _rerank_hits(question, hits_slice, rerank_n)
+        else:
+            hits = await _rerank_hits(question, hits_slice, rerank_n)
     else:
         hits = hits[:k]
 
@@ -687,7 +838,6 @@ async def retrieve(
         latest_only = _parse_latest_or_recent_transcript(question)
 
         if time_window is not None or location_filter:
-            # Filter by time and/or location when user specified them
             cutoff = (datetime.now(timezone.utc) - time_window) if time_window else None
             filtered = []
             for h in hits:
@@ -714,7 +864,6 @@ async def retrieve(
                 filtered.append(h)
             hits = filtered
         elif latest_only:
-            # "Latest transcript" / "most recent transcript" with no time/location: use most recent session only
             recent_tid = _get_most_recent_transcript_id()
             if recent_tid:
                 filtered = [
@@ -723,8 +872,53 @@ async def retrieve(
                 ]
                 if filtered:
                     hits = filtered
-            # else: no transcript row yet (e.g. no sessions stored), keep hits by relevance
     return hits
+
+
+async def retrieve_with_document_scope(
+    question: str,
+    k: int,
+    context_window: str = "all",
+    intent: Optional[str] = None,
+    document_titles: Optional[List[str]] = None,
+    has_transcripts: bool = False,
+    transcript_echotags: Optional[List[str]] = None,
+    active_document_context: Optional[Dict[str, str]] = None,
+) -> Tuple[List[Dict], Optional[Dict]]:
+    """Run hybrid retrieve; when intent is document and query is document-structured and active_document_context is set, restrict to that doc first and fall back to global if weak. Returns (hits, suggested_active_document_context)."""
+    # Fetch more candidates when we may filter by doc_id so fallback has full list.
+    fetch_k = max(k, 30) if (intent == "document" and is_document_structured_query(question) and active_document_context) else k
+    hits = await retrieve(
+        question,
+        fetch_k,
+        context_window=context_window or "all",
+        intent=intent,
+        document_titles=document_titles,
+        has_transcripts=has_transcripts,
+        transcript_echotags=transcript_echotags,
+    )
+    chosen = hits
+    if intent == "document" and is_document_structured_query(question) and active_document_context and active_document_context.get("doc_id"):
+        doc_id = active_document_context["doc_id"]
+        filtered = _filter_hits_by_doc_id(hits, doc_id)
+        threshold = getattr(settings, "RAG_RELEVANCE_THRESHOLD", 0.45)
+        if filtered and float((filtered[0].get("score") or 0)) >= threshold:
+            chosen = filtered[:k]
+            logger.info("RAG document scoping applied: restricted to doc_id=%s filename=%s", doc_id, active_document_context.get("filename"))
+        else:
+            chosen = hits[:k]
+            logger.info("RAG document scoping: no strong hits in active doc; fallback to global retrieval")
+    else:
+        chosen = hits[:k]
+        if active_document_context and (intent != "document" or not is_document_structured_query(question)):
+            logger.info("RAG active_document_context=%s (query not document-structured or intent=%s); no scoping", active_document_context, intent)
+
+    inferred = _infer_active_document_from_hits(chosen, top_n=3, min_top_score=0.3)
+    suggested: Optional[Dict] = None
+    if inferred:
+        suggested = {"doc_id": inferred[0], "filename": inferred[1]}
+        logger.info("RAG active_document_context suggested: doc_id=%s filename=%s", inferred[0], inferred[1])
+    return (chosen, suggested)
 
 
 def _get_chunk_text(chunk_id: str) -> str | None:
@@ -900,11 +1094,12 @@ async def update_conversation_summary(
 async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str], List[Dict], List[str]]:
     """Build numbered context blocks [1], [2], ... with parent expansion. No SOURCE lines (internal grounding only).
     Returns (block_texts, enriched_ctx_list for citations/audit, chunk_ids_used for audit).
-    When RAG_COMPRESS_CONTEXT is False, chunks are not LLM-compressed (truncated only). When True, RAG_VERBATIM_QUERY_TERMS can still bypass compression for chunks with key query terms."""
+    When RAG_COMPRESS_CONTEXT is False, chunks are not LLM-compressed (truncated only). When True, RAG_VERBATIM_QUERY_TERMS can still bypass compression for chunks with key query terms. RAG_SANITY_MODE forces no compression."""
     seen_parent_ids: set = set()
     blocks: List[str] = []
     enriched: List[Dict] = []
     chunk_ids_used: List[str] = []
+    use_compression = getattr(settings, "RAG_COMPRESS_CONTEXT", False) and not getattr(settings, "RAG_SANITY_MODE", False)
     use_compression = False
     key_terms = _key_query_terms(question)
     use_verbatim = getattr(settings, "RAG_VERBATIM_QUERY_TERMS", True)
@@ -1025,6 +1220,7 @@ async def answer(
     conversation_summary: Optional[str] = None,
     use_knowledge_base: bool = True,
     advanced_rag: bool = False,
+    active_document_context: Optional[Dict[str, str]] = None,
 ) -> Dict:
     if not use_knowledge_base:
         return await _answer_general(question, history, persona, conversation_summary)
@@ -1036,20 +1232,24 @@ async def answer(
     if advanced_rag:
         logger.info("RAG intent: (advanced_rag, no intent classification) question=%s", (question[:80] + "…") if len(question) > 80 else question)
         hits = await retrieve_single_query(question, settings.TOP_K, context_window=context_window or "all")
+        suggested_active = None
         best_score = hits[0]["score"] if hits else 0.0
+        insufficient_msg = INSUFFICIENT_CONTEXT_MSG
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
-            return {"answer": INSUFFICIENT_CONTEXT_MSG, "citations": []}
+            return {"answer": insufficient_msg, "citations": [], "active_document_context": None}
+        if is_retrieval_weak(hits, question):
+            return {"answer": insufficient_msg, "citations": [], "active_document_context": None}
         blocks, enriched, chunk_ids_used = await _build_rag_context_fast(question, hits)
     else:
         doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
         intent = await _classify_intent(question, doc_titles, has_transcripts, transcript_echotags)
         if has_transcripts and _question_clearly_asks_for_transcript(question, has_transcripts):
             intent = "transcript"
-        logger.info("RAG intent: classified=%s question=%s", intent, (question[:80] + "…") if len(question) > 80 else question)
+        logger.info("RAG intent: classified=%s question=%s active_document_context=%s", intent, (question[:80] + "…") if len(question) > 80 else question, active_document_context)
         if intent == "general":
             return await _answer_general(question, history, persona, conversation_summary)
 
-        hits = await retrieve(
+        hits, suggested_active = await retrieve_with_document_scope(
             question,
             settings.TOP_K,
             context_window=context_window or "all",
@@ -1057,15 +1257,19 @@ async def answer(
             document_titles=doc_titles,
             has_transcripts=has_transcripts,
             transcript_echotags=transcript_echotags,
+            active_document_context=active_document_context,
         )
         best_score = hits[0]["score"] if hits else 0.0
+        insufficient_msg = INSUFFICIENT_CONTEXT_MSG_DOCUMENT if intent == "document" else INSUFFICIENT_CONTEXT_MSG
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
-            return {"answer": INSUFFICIENT_CONTEXT_MSG, "citations": []}
+            return {"answer": insufficient_msg, "citations": [], "active_document_context": suggested_active}
+        if is_retrieval_weak(hits, question):
+            return {"answer": insufficient_msg, "citations": [], "active_document_context": suggested_active}
 
         blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
         original_blocks = _get_original_blocks_for_toc(hits)
         if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(original_blocks):
-            return {"answer": "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", "citations": []}
+            return {"answer": "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", "citations": [], "active_document_context": suggested_active if not advanced_rag else None}
 
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
@@ -1080,7 +1284,8 @@ async def answer(
     citations = []
     if getattr(settings, "RAG_EXPOSE_SOURCES", False):
         citations = [{"filename": c["source"].get("filename"), "chunk_index": c["source"].get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]
-    return {"answer": ans, "citations": citations}
+    out_active = suggested_active if not advanced_rag else None
+    return {"answer": ans, "citations": citations, "active_document_context": out_active}
 
 
 async def _answer_general_stream(
@@ -1110,6 +1315,7 @@ async def answer_stream(
     conversation_summary: Optional[str] = None,
     use_knowledge_base: bool = True,
     advanced_rag: bool = False,
+    active_document_context: Optional[Dict[str, str]] = None,
 ) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
     """
     Same RAG as answer(), but stream the final LLM response. Yields ("chunk", delta, None) then ("done", full_answer, citations).
@@ -1132,23 +1338,29 @@ async def answer_stream(
         logger.info("RAG intent (stream): (advanced_rag, no intent classification) question=%s", (question[:80] + "…") if len(question) > 80 else question)
         hits = await retrieve_single_query(question, settings.TOP_K, context_window=context_window or "all")
         best_score = hits[0]["score"] if hits else 0.0
+        insufficient_msg = INSUFFICIENT_CONTEXT_MSG
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
-            yield ("chunk", INSUFFICIENT_CONTEXT_MSG, None)
-            yield ("done", INSUFFICIENT_CONTEXT_MSG, [])
+            yield ("chunk", insufficient_msg, None)
+            yield ("done", insufficient_msg, [])
+            return
+        if is_retrieval_weak(hits, question):
+            yield ("chunk", insufficient_msg, None)
+            yield ("done", insufficient_msg, [])
             return
         blocks, enriched, chunk_ids_used = await _build_rag_context_fast(question, hits)
+        suggested_active = None
     else:
         doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
         intent = await _classify_intent(question, doc_titles, has_transcripts, transcript_echotags)
         if has_transcripts and _question_clearly_asks_for_transcript(question, has_transcripts):
             intent = "transcript"
-        logger.info("RAG intent (stream): classified=%s question=%s", intent, (question[:80] + "…") if len(question) > 80 else question)
+        logger.info("RAG intent (stream): classified=%s question=%s active_document_context=%s", intent, (question[:80] + "…") if len(question) > 80 else question, active_document_context)
         if intent == "general":
             async for ev in _answer_general_stream(question, history, persona, conversation_summary):
                 yield ev
             return
 
-        hits = await retrieve(
+        hits, suggested_active = await retrieve_with_document_scope(
             question,
             settings.TOP_K,
             context_window=context_window or "all",
@@ -1156,11 +1368,21 @@ async def answer_stream(
             document_titles=doc_titles,
             has_transcripts=has_transcripts,
             transcript_echotags=transcript_echotags,
+            active_document_context=active_document_context,
         )
         best_score = hits[0]["score"] if hits else 0.0
+        insufficient_msg = INSUFFICIENT_CONTEXT_MSG_DOCUMENT if intent == "document" else INSUFFICIENT_CONTEXT_MSG
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
-            yield ("chunk", INSUFFICIENT_CONTEXT_MSG, None)
-            yield ("done", INSUFFICIENT_CONTEXT_MSG, [])
+            yield ("chunk", insufficient_msg, None)
+            yield ("done", insufficient_msg, [])
+            if suggested_active:
+                yield ("active_document_context", suggested_active, None)
+            return
+        if is_retrieval_weak(hits, question):
+            yield ("chunk", insufficient_msg, None)
+            yield ("done", insufficient_msg, [])
+            if suggested_active:
+                yield ("active_document_context", suggested_active, None)
             return
 
         blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
@@ -1168,6 +1390,8 @@ async def answer_stream(
         if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(original_blocks):
             yield ("chunk", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", None)
             yield ("done", "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", [])
+            if suggested_active:
+                yield ("active_document_context", suggested_active, None)
             return
 
     ctx_block = _rag_context_block(blocks)
@@ -1187,4 +1411,6 @@ async def answer_stream(
         full.append(delta)
         yield ("chunk", delta, None)
     answer = "".join(full).strip()
+    if not advanced_rag and suggested_active:
+        yield ("active_document_context", suggested_active, None)
     yield ("done", answer, citations)

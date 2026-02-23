@@ -35,6 +35,32 @@ def _set_conversation_summary(chat_id: str, summary: str) -> None:
         conn.commit()
 
 
+def _get_active_document_context(chat_id: str) -> dict | None:
+    """Return active_document_context for chat: {doc_id, filename} or None."""
+    with get_conn() as conn:
+        row = conn.execute("SELECT active_document_context FROM chats WHERE id = ?", (chat_id,)).fetchone()
+    if not row or not row[0]:
+        return None
+    try:
+        out = json.loads(row[0])
+        return out if isinstance(out, dict) and out.get("doc_id") else None
+    except Exception:
+        return None
+
+
+def _set_active_document_context(chat_id: str, doc_id: str | None, filename: str | None) -> None:
+    """Set active_document_context for chat. Pass None, None to clear."""
+    with get_conn() as conn:
+        if doc_id and filename:
+            conn.execute(
+                "UPDATE chats SET active_document_context = ? WHERE id = ?",
+                (json.dumps({"doc_id": doc_id, "filename": filename}), chat_id),
+            )
+        else:
+            conn.execute("UPDATE chats SET active_document_context = NULL WHERE id = ?", (chat_id,))
+        conn.commit()
+
+
 class CreateChatIn(BaseModel):
     title: str = "EchoMind Chat"
 
@@ -188,6 +214,7 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
         rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
     history = [{"role": r[0], "content": r[1]} for r in rows]
     conversation_summary = _get_conversation_summary(inp.chat_id)
+    active_document_context = _get_active_document_context(inp.chat_id)
 
     out = await answer_with_citations(
         inp.message,
@@ -197,7 +224,14 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
         conversation_summary=conversation_summary,
         use_knowledge_base=inp.use_knowledge_base,
         advanced_rag=inp.advanced_rag,
+        active_document_context=active_document_context,
     )
+
+    suggested = out.get("active_document_context")
+    if suggested and suggested.get("doc_id"):
+        _set_active_document_context(inp.chat_id, suggested["doc_id"], suggested.get("filename"))
+    else:
+        _set_active_document_context(inp.chat_id, None, None)
 
     with get_conn() as conn:
         conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
@@ -207,7 +241,7 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
         conn.commit()
 
     background_tasks.add_task(_update_summary_background, conversation_summary, inp.message, out["answer"], inp.chat_id)
-    return out
+    return {"answer": out["answer"], "citations": out.get("citations", [])}
 
 
 @router.post("/ask-stream")
@@ -217,6 +251,7 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
             rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
         history = [{"role": r[0], "content": r[1]} for r in rows]
         conversation_summary = _get_conversation_summary(inp.chat_id)
+        active_document_context = _get_active_document_context(inp.chat_id)
 
         with get_conn() as conn:
             conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
@@ -233,9 +268,15 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
                 conversation_summary=conversation_summary,
                 use_knowledge_base=inp.use_knowledge_base,
                 advanced_rag=inp.advanced_rag,
+                active_document_context=active_document_context,
             ):
                 if kind == "chunk":
                     yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"
+                elif kind == "active_document_context" and isinstance(text, dict):
+                    if text.get("doc_id"):
+                        _set_active_document_context(inp.chat_id, text["doc_id"], text.get("filename"))
+                    else:
+                        _set_active_document_context(inp.chat_id, None, None)
                 elif kind == "done":
                     full_answer = text or ""
                     with get_conn() as conn:

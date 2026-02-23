@@ -12,6 +12,18 @@ class Settings(BaseSettings):
     FAISS_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss.index")
     META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_meta.json")
     SPARSE_META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "sparse_meta.json")
+    # Dense index type: "flat" (exact, default) or "hnsw" (faster approximate, cosine via inner product on normalized vectors).
+    FAISS_INDEX_TYPE: str = os.getenv("ECHOMIND_FAISS_INDEX_TYPE", "flat").lower().strip() or "flat"
+    # HNSW only: graph connectivity (default 32); higher = more accurate, more memory.
+    FAISS_HNSW_M: int = int(os.getenv("ECHOMIND_FAISS_HNSW_M", "32"))
+    # HNSW only: construction time quality (default 200); higher = better index, slower build.
+    FAISS_HNSW_EF_CONSTRUCTION: int = int(os.getenv("ECHOMIND_FAISS_HNSW_EF_CONSTRUCTION", "200"))
+    # HNSW only: search time quality (default 64); higher = more accurate, slower search.
+    FAISS_HNSW_EF_SEARCH: int = int(os.getenv("ECHOMIND_FAISS_HNSW_EF_SEARCH", "64"))
+    # Use GPU for FAISS search when available (faiss-gpu + CUDA). CPU index kept for persistence; search uses GPU clone.
+    FAISS_USE_GPU: bool = os.getenv("ECHOMIND_FAISS_USE_GPU", "1").lower() in ("1", "true", "yes")
+    # GPU device id for FAISS (0-based). Ignored if FAISS_USE_GPU is False or no GPU.
+    FAISS_GPU_DEVICE: int = int(os.getenv("ECHOMIND_FAISS_GPU_DEVICE", "0"))
     # Transcript-only index: used when intent=transcript so retrieval runs only over transcripts.
     FAISS_TRANSCRIPT_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_transcript.index")
     META_TRANSCRIPT_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_transcript_meta.json")
@@ -20,17 +32,32 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "qwen2.5:7b-instruct"
     LLM_TEMPERATURE: float = 0.2
     LLM_MAX_TOKENS: int = 512
-    OLLAMA_EMBED_URL: str = "http://ollama:11434/api/embeddings"
+    # Default /api/embed (batch-capable); legacy /api/embeddings uses "prompt" and single-embed only.
+    OLLAMA_EMBED_URL: str = "http://ollama:11434/api/embed"
     OLLAMA_EMBED_MODEL: str = os.getenv("ECHOMIND_EMBED_MODEL", "nomic-embed-text")
     # Max characters per chunk sent to embedding API (avoids "input length exceeds context length").
     # Conservative default (2000) works with 512-token models; set ECHOMIND_EMBED_MAX_CHARS=8000 for nomic-embed-text.
     EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "2000"))
+    # In-memory LRU cache size for query embeddings only (reduces latency; chunk embeddings not cached). 0 = disabled.
+    EMBED_QUERY_CACHE_SIZE: int = int(os.getenv("ECHOMIND_EMBED_QUERY_CACHE_SIZE", "2048"))
+    # Batch embedding for ingestion: max texts per batch (memory cap). Used when embedding many chunks.
+    EMBED_BATCH_SIZE: int = int(os.getenv("ECHOMIND_EMBED_BATCH_SIZE", "64"))
+    # Max concurrent HTTP requests per batch when server does not support batch input (concurrency cap).
+    EMBED_CONCURRENCY: int = int(os.getenv("ECHOMIND_EMBED_CONCURRENCY", "4"))
+    # Ollama embeddings are already unit-normalized; skipping extra normalization for speed. Set to False if using a provider that does not normalize.
+    EMBEDDINGS_ALREADY_NORMALIZED: bool = os.getenv("ECHOMIND_EMBEDDINGS_ALREADY_NORMALIZED", "1").lower() in ("1", "true", "yes")
     CHUNK_SIZE: int = int(os.getenv("ECHOMIND_CHUNK_SIZE", "800"))
     CHUNK_OVERLAP: int = int(os.getenv("ECHOMIND_CHUNK_OVERLAP", "120"))
-    TOP_K: int = int(os.getenv("ECHOMIND_TOP_K", "15"))
+    TOP_K: int = int(os.getenv("ECHOMIND_TOP_K", "20"))
     RAG_RELEVANCE_THRESHOLD: float = float(os.getenv("ECHOMIND_RAG_RELEVANCE_THRESHOLD", "0.45"))
+    # Weak-retrieval gate: if top hit score < this or gap to second < RAG_MIN_SCORE_GAP, return INSUFFICIENT_CONTEXT_MSG (no hallucination).
+    RAG_MIN_TOP_SCORE: float = float(os.getenv("ECHOMIND_RAG_MIN_TOP_SCORE", "0.25"))
+    RAG_MIN_SCORE_GAP: float = float(os.getenv("ECHOMIND_RAG_MIN_SCORE_GAP", "0.05"))
     # When False (default), do not expose citations/filenames to client (audit: internal grounding only).
     RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "0").lower() in ("1", "true", "yes")
+
+    # RAG sanity mode: when True (default), force-disable query rewrite, compression, rerank, time decay, and weak-retrieval gating so core retrieval can be verified. Set ECHOMIND_RAG_SANITY_MODE=0 to re-enable optimizations.
+    RAG_SANITY_MODE: bool = os.getenv("ECHOMIND_RAG_SANITY_MODE", "1").lower() in ("1", "true", "yes")
 
     # --- RAG quality improvements (all optional, no breaking changes) ---
     # When False (default), skip LLM query rewrite and use only the user question + deterministic variants for search. Set ECHOMIND_RAG_QUERY_REWRITE=1 for intent-aware expansion (adds 1 LLM call).
@@ -45,10 +72,15 @@ class Settings(BaseSettings):
     # Boost chunks whose transcript tags overlap query terms (when doc is transcript). Small additive boost.
     RAG_TAG_BOOST_ENABLED: bool = os.getenv("ECHOMIND_RAG_TAG_BOOST", "1").lower() in ("1", "true", "yes")
     RAG_TAG_BOOST_FACTOR: float = float(os.getenv("ECHOMIND_RAG_TAG_BOOST_FACTOR", "0.08"))
-    # Optional LLM rerank: score top RAG_RERANK_CANDIDATES and reorder. Kept false by default for faster responses.
+    # Optional rerank: score top RAG_RERANK_CANDIDATES and reorder. RAG_RERANK_BACKEND=cross_encoder (local) or llm.
     RAG_RERANK_ENABLED: bool = os.getenv("ECHOMIND_RAG_RERANK", "0").lower() in ("1", "true", "yes")
+    RAG_RERANK_BACKEND: str = (os.getenv("ECHOMIND_RAG_RERANK_BACKEND", "cross_encoder") or "cross_encoder").lower().strip()
     RAG_RERANK_CANDIDATES: int = int(os.getenv("ECHOMIND_RAG_RERANK_CANDIDATES", "12"))
     RAG_RERANK_TOP_N: int = int(os.getenv("ECHOMIND_RAG_RERANK_TOP_N", "8"))
+    # Cross-encoder reranker (when RAG_RERANK_BACKEND=cross_encoder). Strong default; requires sentence-transformers.
+    RERANK_MODEL_NAME: str = os.getenv("ECHOMIND_RERANK_MODEL", "BAAI/bge-reranker-base")
+    # Empty = auto (cuda if available else cpu). Set to "cpu" to force CPU.
+    RERANK_DEVICE: str = (os.getenv("ECHOMIND_RERANK_DEVICE", "") or "").strip()
     # Prefer authoritative documents (PDF/DOCX/PPTX) over transcripts when scores are close (tie-break).
     RAG_PREFER_AUTHORITATIVE: bool = os.getenv("ECHOMIND_RAG_PREFER_AUTHORITATIVE", "1").lower() in ("1", "true", "yes")
     # Max chars for parent chunk expansion; lower reduces context domination (default 1600).

@@ -1,6 +1,5 @@
-# Same as requirements.txt but with FAISS GPU for faster vector search.
-# Use when building with: docker compose build --build-arg USE_FAISS_GPU=1 backend
-# Requires backend container to have GPU (already set in docker-compose.yml when using this).
+# GPU build: same as requirements.txt but with faiss-gpu. Use with: docker build --build-arg USE_FAISS_GPU=1 .
+# faiss-gpu may fail on ARM64 / DGX Spark; use CPU build (default) there.
 fastapi==0.115.6
 uvicorn[standard]==0.32.1
 python-multipart==0.0.12
@@ -15,7 +14,6 @@ python-docx==1.1.2
 python-pptx==0.6.23
 langchain-text-splitters==0.3.2
 rank-bm25==0.2.2
-# Kyutai STT for live transcript (moshi; requires libopus-dev on ARM64 for sphn)
-moshi>=0.2.9
-huggingface-hub>=0.23.0
+huggingface-hub==0.33.5
+sentence-transformers>=3.0.0
 httpx==0.27.2

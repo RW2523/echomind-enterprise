@@ -7,7 +7,7 @@ numpy==1.26.4
 # Use flexible version so pip can choose a wheel (avoids building from source / gfortran on aarch64)
 scipy>=1.11,<2
 soundfile==0.12.1
-# FAISS: use faiss-cpu (default). For GPU, replace with faiss-gpu==1.7.2 and ensure backend has GPU (see README).
+# FAISS CPU (default). For GPU build use: docker build --build-arg USE_FAISS_GPU=1 (installs requirements-gpu.txt).
 faiss-cpu==1.8.0.post1
 pypdf==5.1.0
 python-docx==1.1.2
@@ -15,4 +15,6 @@ python-pptx==0.6.23
 langchain-text-splitters==0.3.2
 rank-bm25==0.2.2
 huggingface-hub==0.33.5
+# Optional: for RAG cross-encoder reranker (RAG_RERANK_BACKEND=cross_encoder). GPU supported.
+sentence-transformers>=3.0.0
 httpx==0.27.2
