@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import List, Dict, AsyncIterator, Tuple, Optional
+import asyncio
 import json
 import logging
 import math
@@ -169,24 +170,33 @@ def _reciprocal_rank_fusion(
 
 
 def _get_doc_info_for_hits(hits: List[Dict]) -> Tuple[Dict[str, Optional[str]], Dict[str, dict]]:
-    """Fetch created_at and meta_json for each unique doc_id in hits. Returns (doc_id -> created_at, doc_id -> meta)."""
+    """Fetch created_at and meta_json for each unique doc_id in hits using a single batched query."""
     doc_ids = list({(h.get("source") or {}).get("doc_id") for h in hits if (h.get("source") or {}).get("doc_id")})
     created_map: Dict[str, Optional[str]] = {}
     meta_map: Dict[str, dict] = {}
     if not doc_ids:
         return created_map, meta_map
+    # Single batched query instead of N individual queries
+    placeholders = ",".join("?" * len(doc_ids))
     with get_conn() as conn:
-        for doc_id in doc_ids:
-            row = conn.execute("SELECT created_at, meta_json FROM documents WHERE id = ?", (doc_id,)).fetchone()
-            if row:
-                created_map[doc_id] = row[0]
-                try:
-                    meta_map[doc_id] = json.loads(row[1]) if isinstance(row[1], str) else (row[1] or {})
-                except Exception:
-                    meta_map[doc_id] = {}
-            else:
-                created_map[doc_id] = None
-                meta_map[doc_id] = {}
+        rows = conn.execute(
+            f"SELECT id, created_at, meta_json FROM documents WHERE id IN ({placeholders})",
+            doc_ids,
+        ).fetchall()
+    found_ids = set()
+    for row in rows:
+        did, created_at, meta_json = row[0], row[1], row[2]
+        found_ids.add(did)
+        created_map[did] = created_at
+        try:
+            meta_map[did] = json.loads(meta_json) if isinstance(meta_json, str) else (meta_json or {})
+        except Exception:
+            meta_map[did] = {}
+    # Fill in missing doc_ids (not found in DB)
+    for did in doc_ids:
+        if did not in found_ids:
+            created_map[did] = None
+            meta_map[did] = {}
     return created_map, meta_map
 
 
@@ -640,18 +650,25 @@ async def retrieve(
         dense_w = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.5)
         sparse_w = getattr(settings, "RAG_SPARSE_RRF_WEIGHT", 0.5)
 
-    dense_hits_per_query: List[List[Dict]] = []
-    sparse_hits_per_query: List[List[Dict]] = []
     use_transcript_index = intent == "transcript"
     if use_transcript_index:
         logger.info("RAG retrieve: intent=transcript, using transcript-only index")
+
+    # Run all dense searches concurrently (one per query variant)
+    if use_transcript_index:
+        dense_tasks = [index.search_transcript_only(q, k_per_query) for q in qs]
+    else:
+        dense_tasks = [index.search(q, k_per_query) for q in qs]
+    dense_hits_per_query: List[List[Dict]] = list(await asyncio.gather(*dense_tasks))
+
+    # Sparse search is synchronous/CPU-bound — run sequentially (BM25 is already fast)
+    sparse_hits_per_query: List[List[Dict]] = []
     for q in qs:
         if use_transcript_index:
-            dense_hits_per_query.append(await index.search_transcript_only(q, k_per_query))
             sparse_hits_per_query.append(index.transcript_sparse.search(q, k_per_query))
         else:
-            dense_hits_per_query.append(await index.search(q, k_per_query))
             sparse_hits_per_query.append(index.sparse.search(q, k_per_query))
+
     candidates_k = max(k, getattr(settings, "RAG_RERANK_CANDIDATES", k)) if getattr(settings, "RAG_RERANK_ENABLED", False) else k
     hits = _weighted_rrf(dense_hits_per_query, sparse_hits_per_query, candidates_k, dense_weight=dense_w, sparse_weight=sparse_w)
     # Hard filter by context_window when not 'all'
@@ -734,6 +751,19 @@ def _get_chunk_text(chunk_id: str) -> str | None:
     with get_conn() as conn:
         row = conn.execute("SELECT text FROM chunks WHERE id=?", (chunk_id,)).fetchone()
         return row[0] if row else None
+
+
+def _get_chunk_texts_batch(chunk_ids: List[str]) -> Dict[str, str]:
+    """Fetch multiple chunk texts in a single DB query. Returns dict of chunk_id -> text."""
+    if not chunk_ids:
+        return {}
+    placeholders = ",".join("?" * len(chunk_ids))
+    with get_conn() as conn:
+        rows = conn.execute(
+            f"SELECT id, text FROM chunks WHERE id IN ({placeholders})",
+            chunk_ids,
+        ).fetchall()
+    return {r[0]: r[1] for r in rows}
 
 
 def _rag_sentences(text: str) -> List[str]:
@@ -905,10 +935,23 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
     blocks: List[str] = []
     enriched: List[Dict] = []
     chunk_ids_used: List[str] = []
-    use_compression = False
+    # Read from config (was hardcoded to False — causing _compress_ to never run and config to be ignored)
+    use_compression = getattr(settings, "RAG_COMPRESS_CONTEXT", False)
     key_terms = _key_query_terms(question)
     use_verbatim = getattr(settings, "RAG_VERBATIM_QUERY_TERMS", True)
     verbatim_max = getattr(settings, "RAG_VERBATIM_MAX_CHARS", 1200)
+    max_chars = _parent_context_max_chars()
+
+    # Batch-prefetch all parent chunk texts in a single DB query
+    parent_ids_needed = []
+    for h in hits:
+        src = h.get("source") or {}
+        pid = src.get("parent_chunk_id") if isinstance(src.get("parent_chunk_id"), str) else None
+        if pid and pid not in seen_parent_ids:
+            parent_ids_needed.append(pid)
+            seen_parent_ids.add(pid)
+    parent_texts = _get_chunk_texts_batch(parent_ids_needed)
+    seen_parent_ids.clear()  # reset so we track insertion order below
 
     for h in hits:
         src = h.get("source") or {}
@@ -916,16 +959,15 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
 
         if parent_chunk_id and parent_chunk_id not in seen_parent_ids:
             seen_parent_ids.add(parent_chunk_id)
-            parent_text = _get_chunk_text(parent_chunk_id)
+            parent_text = parent_texts.get(parent_chunk_id)
             if parent_text:
-                max_chars = _parent_context_max_chars()
                 truncated = parent_text if len(parent_text) <= max_chars else parent_text[:max_chars].rsplit(" ", 1)[0] + "…"
                 blocks.append(_format_block_with_metadata(truncated, src))
                 chunk_ids_used.append(parent_chunk_id)
 
         chunk_text = h.get("text") or ""
         chunk_lower = chunk_text.lower()
-        use_verbatim_this = use_compression and use_verbatim and key_terms and any(term in chunk_lower for term in key_terms)
+        use_verbatim_this = use_verbatim and key_terms and any(term in chunk_lower for term in key_terms)
         if not use_compression or use_verbatim_this:
             # No compression: use chunk as-is, truncated to verbatim_max
             compressed = chunk_text if len(chunk_text) <= verbatim_max else chunk_text[:verbatim_max].rsplit(" ", 1)[0] + "…"

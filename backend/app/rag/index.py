@@ -17,6 +17,18 @@ def _is_transcript_doc(filename: str, meta: dict) -> bool:
     return (meta or {}).get("type") == "transcript"
 
 
+def _batch_fetch_chunks(conn, chunk_ids: List[str]) -> Dict[str, tuple]:
+    """Fetch (text, source_json) for multiple chunk IDs in a single query. Returns dict keyed by id."""
+    if not chunk_ids:
+        return {}
+    placeholders = ",".join("?" * len(chunk_ids))
+    rows = conn.execute(
+        f"SELECT id, text, source_json FROM chunks WHERE id IN ({placeholders})",
+        chunk_ids,
+    ).fetchall()
+    return {r[0]: (r[1], r[2]) for r in rows}
+
+
 class FaissIndex:
     def __init__(self):
         self.emb = OllamaEmbeddings()
@@ -217,27 +229,41 @@ class FaissIndex:
         if was_transcript:
             await self._rebuild_transcript_index()
 
-    async def search(self, query:str, k:int) -> List[Dict]:
-        if self.index is None or self.index.ntotal==0:
+    async def search(self, query: str, k: int) -> List[Dict]:
+        """Search FAISS index; fetches all hit chunks in a single batched DB query."""
+        if self.index is None or self.index.ntotal == 0:
             return []
         qv = await self.emb.embed([query])
         faiss.normalize_L2(qv)
-        D,I = self.index.search(qv.astype(np.float32), k)
-        out=[]
-        chunk_ids=self.meta["chunk_ids"]
+        D, I = self.index.search(qv.astype(np.float32), k)
+        chunk_ids = self.meta["chunk_ids"]
+
+        # Collect valid (rank, chunk_id, score) pairs
+        hits = []
+        for rank, idx in enumerate(I[0].tolist()):
+            if idx < 0 or idx >= len(chunk_ids):
+                continue
+            hits.append((rank, chunk_ids[idx], float(D[0][rank])))
+
+        if not hits:
+            return []
+
+        # Single batched DB query instead of N individual queries
+        ids_to_fetch = [cid for _, cid, _ in hits]
         with get_conn() as conn:
-            for rank, idx in enumerate(I[0].tolist()):
-                if idx<0 or idx>=len(chunk_ids): 
-                    continue
-                cid=chunk_ids[idx]
-                row=conn.execute("SELECT text, source_json FROM chunks WHERE id=?", (cid,)).fetchone()
-                if not row: continue
-                text, src_json = row
-                out.append({"chunk_id":cid,"score":float(D[0][rank]),"text":text,"source":json.loads(src_json)})
+            row_by_id = _batch_fetch_chunks(conn, ids_to_fetch)
+
+        out = []
+        for _, cid, score in hits:
+            row = row_by_id.get(cid)
+            if not row:
+                continue
+            text, src_json = row
+            out.append({"chunk_id": cid, "score": score, "text": text, "source": json.loads(src_json)})
         return out
 
     async def search_transcript_only(self, query: str, k: int) -> List[Dict]:
-        """Search only over the transcript-only index. Returns same shape as search(). Empty if no transcripts."""
+        """Search only over the transcript-only index using a single batched DB query."""
         if self.transcript_index is None:
             await self._rebuild_transcript_index()
         if self.transcript_index is None or self.transcript_index.ntotal == 0:
@@ -245,18 +271,30 @@ class FaissIndex:
         qv = await self.emb.embed([query])
         faiss.normalize_L2(qv)
         D, I = self.transcript_index.search(qv.astype(np.float32), k)
-        out = []
         chunk_ids = self.transcript_meta["chunk_ids"]
+
+        # Collect valid (rank, chunk_id, score) pairs
+        hits = []
+        for rank, idx in enumerate(I[0].tolist()):
+            if idx < 0 or idx >= len(chunk_ids):
+                continue
+            hits.append((rank, chunk_ids[idx], float(D[0][rank])))
+
+        if not hits:
+            return []
+
+        # Single batched DB query instead of N individual queries
+        ids_to_fetch = [cid for _, cid, _ in hits]
         with get_conn() as conn:
-            for rank, idx in enumerate(I[0].tolist()):
-                if idx < 0 or idx >= len(chunk_ids):
-                    continue
-                cid = chunk_ids[idx]
-                row = conn.execute("SELECT text, source_json FROM chunks WHERE id=?", (cid,)).fetchone()
-                if not row:
-                    continue
-                text, src_json = row
-                out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": json.loads(src_json)})
+            row_by_id = _batch_fetch_chunks(conn, ids_to_fetch)
+
+        out = []
+        for _, cid, score in hits:
+            row = row_by_id.get(cid)
+            if not row:
+                continue
+            text, src_json = row
+            out.append({"chunk_id": cid, "score": score, "text": text, "source": json.loads(src_json)})
         return out
 
 index = FaissIndex()
