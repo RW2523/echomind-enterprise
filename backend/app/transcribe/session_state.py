@@ -142,10 +142,6 @@ class SessionState:
             self.last_piece_ts_ms = ts_ms
             return
         # Pieces from STT already include word-boundary spaces (▁→" "); concatenate directly.
-        # self.recent_buffer += piece
-        prev = (self.recent_buffer or self.raw_text)
-        if prev and not prev.endswith(" ") and piece and not piece.startswith(" "):
-            self.recent_buffer += " "
         self.recent_buffer += piece
         self.last_piece_ts_ms = ts_ms
 
