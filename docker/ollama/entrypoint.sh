@@ -22,5 +22,15 @@ ollama pull "$OLLAMA_LLM_MODEL"
 echo "[ollama-setup] Pre-pulling embed model: $OLLAMA_EMBED_MODEL"
 ollama pull "$OLLAMA_EMBED_MODEL"
 
-echo "[ollama-setup] Models ready. Keeping Ollama running."
+echo "[ollama-setup] Warming LLM model (load into memory)..."
+curl -s -X POST http://127.0.0.1:11434/api/chat \
+  -H "Content-Type: application/json" \
+  -d "{\"model\":\"$OLLAMA_LLM_MODEL\",\"messages\":[]}" >/dev/null || true
+
+echo "[ollama-setup] Warming embed model (load into memory)..."
+curl -s -X POST http://127.0.0.1:11434/api/embeddings \
+  -H "Content-Type: application/json" \
+  -d "{\"model\":\"$OLLAMA_EMBED_MODEL\",\"prompt\":\".\"}" >/dev/null || true
+
+echo "[ollama-setup] Models ready and warmed. Keeping Ollama running."
 wait $OLLAMA_PID

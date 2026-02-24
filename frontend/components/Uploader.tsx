@@ -20,7 +20,7 @@ const Uploader: React.FC<UploaderProps> = ({ onComplete, compact = false }) => {
     setError('');
     try {
       const res = await uploadDocument(f);
-      setStatus(res.ok ? `Indexed ${res.chunks ?? 0} chunks.` : 'Upload failed.');
+      setStatus(res.ok ? `Uploaded successfully` : 'Upload failed.');
       onComplete();
     } catch (err: any) {
       setError(err?.message || 'Upload failed.');
