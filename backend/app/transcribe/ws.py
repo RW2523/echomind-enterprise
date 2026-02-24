@@ -240,6 +240,7 @@ async def handler(ws: WebSocket):
             if not piece.strip() or not _is_valid_english_piece(piece):
                 continue
             _ensure_session()
+            print("KYUTAI PIECE:", repr(piece))
             session.append_piece(piece, ts_ms)
             if session.maybe_commit(ts_ms):
                 new_p = session.maybe_new_paragraph(ts_ms)
