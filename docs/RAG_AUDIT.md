@@ -24,7 +24,7 @@
 
 ### Current setup
 
-- **TOP_K = 8** (config). So effective k is already 8.
+- **TOP_K = 20** (config). So effective k is already 8.
 - **Per-query fetch:** `k_per_query = max(k, 4)` → 8 hits per query; 4 query variants → up to 32 candidates before RRF.
 - **RRF** fuses dense + sparse per variant, then takes top-k=8. No MMR, no re-ranking.
 
@@ -158,7 +158,7 @@
 
 | Parameter | Recommendation |
 |-----------|----------------|
-| **TOP_K** | 8 (default); consider 6 for FAQ-heavy workloads, 8–10 for book-heavy with parent expansion. |
+| **TOP_K** | 20 (default); consider 6 for FAQ-heavy workloads, 8–10 for book-heavy with parent expansion. |
 | **Re-ranking** | Optional: re-rank top-12 → top-8 by question–chunk relevance; or MMR on top-16 → 8. |
 | **Chunk size / overlap** | Leave to adaptive chunking (child 400–700, parent 2k–3.5k, FAQ one Q&A, etc.); ensure no chunk exceeds EMBED_MAX_CHARS before embed. |
 | **Max context** | Reserve space for 8 chunks + compress (or 8 × ~300 tokens) + history; keep LLM_MAX_TOKENS (512) so answers stay concise. |

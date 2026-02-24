@@ -1,14 +1,30 @@
 from __future__ import annotations
-import os, json
+import os
+import json
 import numpy as np
 import faiss
-from typing import Dict, List
+from typing import Dict, List, Any
 from ..core.config import settings
 from ..core.db import get_conn
 from ..utils.ids import new_id, now_iso
 from .embeddings import OllamaEmbeddings
 from .sparse import Bm25Index
 from .chunking import chunk_document
+
+
+def _parse_source_json(src_json: Any) -> dict:
+    """Parse source_json from DB (string or dict) to dict. Never raises."""
+    if src_json is None:
+        return {}
+    if isinstance(src_json, dict):
+        return src_json
+    if not isinstance(src_json, str) or not src_json.strip():
+        return {}
+    try:
+        return json.loads(src_json)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
 
 def _is_transcript_doc(filename: str, meta: dict) -> bool:
     """True if this document is a transcript (stored via add_text with transcript_ prefix or type)."""
@@ -33,7 +49,7 @@ class FaissIndex:
         os.makedirs(settings.DATA_DIR, exist_ok=True)
         if os.path.exists(settings.FAISS_PATH) and os.path.exists(settings.META_PATH):
             self.index = faiss.read_index(settings.FAISS_PATH)
-            with open(settings.META_PATH,"r",encoding="utf-8") as f:
+            with open(settings.META_PATH, "r", encoding="utf-8") as f:
                 self.meta = json.load(f)
             if self.meta.get("chunk_ids") and not self.sparse.chunk_ids:
                 self.sparse.rebuild_from_chunk_ids(self.meta["chunk_ids"])
@@ -65,7 +81,7 @@ class FaissIndex:
         transcript_texts = []
         source_by_chunk = {}
         for r in rows:
-            src = json.loads(r[2]) if isinstance(r[2], str) else r[2]
+            src = _parse_source_json(r[2])
             if src.get("is_parent"):
                 continue
             transcript_ids.append(r[0])
@@ -93,11 +109,11 @@ class FaissIndex:
     def _save(self):
         if self.index is not None:
             faiss.write_index(self.index, settings.FAISS_PATH)
-        with open(settings.META_PATH,"w",encoding="utf-8") as f:
-            json.dump(self.meta,f)
+        with open(settings.META_PATH, "w", encoding="utf-8") as f:
+            json.dump(self.meta, f)
         self._save_transcript()
 
-    async def _ensure_index(self, dim:int):
+    async def _ensure_index(self, dim: int):
         if self.index is None:
             self.index = faiss.IndexFlatIP(dim)
 
@@ -187,7 +203,7 @@ class FaissIndex:
         remaining_texts = []
         source_by_chunk = {}
         for r in rows:
-            src = json.loads(r[2]) if isinstance(r[2], str) else r[2]
+            src = _parse_source_json(r[2])
             if src.get("is_parent"):
                 continue
             remaining_ids.append(r[0])
@@ -217,23 +233,24 @@ class FaissIndex:
         if was_transcript:
             await self._rebuild_transcript_index()
 
-    async def search(self, query:str, k:int) -> List[Dict]:
-        if self.index is None or self.index.ntotal==0:
+    async def search(self, query: str, k: int) -> List[Dict]:
+        if self.index is None or self.index.ntotal == 0:
             return []
         qv = await self.emb.embed([query])
         faiss.normalize_L2(qv)
-        D,I = self.index.search(qv.astype(np.float32), k)
-        out=[]
-        chunk_ids=self.meta["chunk_ids"]
+        D, I = self.index.search(qv.astype(np.float32), k)
+        out = []
+        chunk_ids = self.meta["chunk_ids"]
         with get_conn() as conn:
             for rank, idx in enumerate(I[0].tolist()):
-                if idx<0 or idx>=len(chunk_ids): 
+                if idx < 0 or idx >= len(chunk_ids):
                     continue
-                cid=chunk_ids[idx]
-                row=conn.execute("SELECT text, source_json FROM chunks WHERE id=?", (cid,)).fetchone()
-                if not row: continue
+                cid = chunk_ids[idx]
+                row = conn.execute("SELECT text, source_json FROM chunks WHERE id = ?", (cid,)).fetchone()
+                if not row:
+                    continue
                 text, src_json = row
-                out.append({"chunk_id":cid,"score":float(D[0][rank]),"text":text,"source":json.loads(src_json)})
+                out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": _parse_source_json(src_json)})
         return out
 
     async def search_transcript_only(self, query: str, k: int) -> List[Dict]:
@@ -252,11 +269,12 @@ class FaissIndex:
                 if idx < 0 or idx >= len(chunk_ids):
                     continue
                 cid = chunk_ids[idx]
-                row = conn.execute("SELECT text, source_json FROM chunks WHERE id=?", (cid,)).fetchone()
+                row = conn.execute("SELECT text, source_json FROM chunks WHERE id = ?", (cid,)).fetchone()
                 if not row:
                     continue
                 text, src_json = row
-                out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": json.loads(src_json)})
+                out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": _parse_source_json(src_json)})
         return out
+
 
 index = FaissIndex()

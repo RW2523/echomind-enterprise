@@ -19,3 +19,5 @@ rank-bm25==0.2.2
 moshi>=0.2.9
 huggingface-hub>=0.23.0
 httpx==0.27.2
+# Optional: Qdrant vector DB when QDRANT_URL and ECHOMIND_VECTOR_BACKEND=qdrant
+qdrant-client>=1.7.0

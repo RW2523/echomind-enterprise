@@ -145,6 +145,7 @@ class StoreIn(BaseModel):
     name: str | None = None  # Display name (from Start popup or default)
     location: str | None = None  # Location; default "default" if not set
     tags: list[str] | None = None  # Manual tags (overrides LLM extraction when provided)
+    echodate: str | None = None  # Optional ISO datetime for transcript date (e.g. for E2E test data)
 
 @router.post("/store")
 async def store(inp: StoreIn):
@@ -156,6 +157,7 @@ async def store(inp: StoreIn):
         name=inp.name,
         location=inp.location,
         tags=inp.tags,
+        echodate=inp.echodate,
     )
     return result
 

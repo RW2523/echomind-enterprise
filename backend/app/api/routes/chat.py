@@ -3,7 +3,7 @@ import logging
 import re
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from ...utils.ids import new_id, now_iso
@@ -27,6 +27,19 @@ def _get_conversation_summary(chat_id: str) -> str | None:
     with get_conn() as conn:
         row = conn.execute("SELECT conversation_summary FROM chats WHERE id = ?", (chat_id,)).fetchone()
     return row[0] if row and row[0] else None
+
+
+def _ensure_chat_and_get_context(chat_id: str) -> tuple[list[dict], str | None]:
+    """Load history and conversation_summary for the given chat_id. Raises HTTPException 404 if chat does not exist."""
+    with get_conn() as conn:
+        chat_row = conn.execute("SELECT id FROM chats WHERE id = ?", (chat_id,)).fetchone()
+        if not chat_row:
+            raise HTTPException(status_code=404, detail="Chat not found")
+        rows = conn.execute("SELECT role, content FROM messages WHERE chat_id = ? ORDER BY created_at ASC", (chat_id,)).fetchall()
+        summary_row = conn.execute("SELECT conversation_summary FROM chats WHERE id = ?", (chat_id,)).fetchone()
+    history = [{"role": r[0], "content": r[1]} for r in rows]
+    summary = summary_row[0] if summary_row and summary_row[0] else None
+    return history, summary
 
 
 def _set_conversation_summary(chat_id: str, summary: str) -> None:
@@ -159,6 +172,7 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
     msg = (inp.message or "").strip()
     last_hours = _parse_transcript_time_query(msg)
     if last_hours is not None:
+        history, conversation_summary = _ensure_chat_and_get_context(inp.chat_id)
         transcripts = _fetch_transcripts_since_hours(last_hours)
         parts = [((t.get("polished_text") or t.get("raw_text")) or "").strip() for t in transcripts]
         parts = [p for p in parts if p]
@@ -180,14 +194,13 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
             conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
                          (new_id("msg"), inp.chat_id, "assistant", out["answer"], now_iso()))
             conn.commit()
-        conversation_summary = _get_conversation_summary(inp.chat_id)
         background_tasks.add_task(_update_summary_background, conversation_summary, inp.message, out["answer"], inp.chat_id)
         return out
 
-    with get_conn() as conn:
-        rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
-    history = [{"role": r[0], "content": r[1]} for r in rows]
-    conversation_summary = _get_conversation_summary(inp.chat_id)
+    history, conversation_summary = _ensure_chat_and_get_context(inp.chat_id)
+    # First message in chat: do not pass summary so the model answers from current question + RAG only (avoids wrong context).
+    if not history:
+        conversation_summary = None
 
     out = await answer_with_citations(
         inp.message,
@@ -213,10 +226,9 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
 @router.post("/ask-stream")
 async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
     async def gen():
-        with get_conn() as conn:
-            rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
-        history = [{"role": r[0], "content": r[1]} for r in rows]
-        conversation_summary = _get_conversation_summary(inp.chat_id)
+        history, conversation_summary = _ensure_chat_and_get_context(inp.chat_id)
+        # First message in chat: do not pass summary (avoids wrong context).
+        summary_for_this_turn = None if not history else conversation_summary
 
         with get_conn() as conn:
             conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
@@ -230,7 +242,7 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
                 history,
                 persona=inp.persona,
                 context_window=inp.context_window or "all",
-                conversation_summary=conversation_summary,
+                conversation_summary=summary_for_this_turn,
                 use_knowledge_base=inp.use_knowledge_base,
                 advanced_rag=inp.advanced_rag,
             ):
@@ -246,6 +258,17 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
                     if full_answer:
                         background_tasks.add_task(_update_summary_background, conversation_summary, inp.message, full_answer, inp.chat_id)
         except Exception as e:
-            yield json.dumps({"type": "error", "message": str(e)}) + "\n"
+            err_msg = str(e)
+            yield json.dumps({"type": "error", "message": err_msg}) + "\n"
+            # Persist assistant message so the conversation is not left with an orphan user message.
+            try:
+                with get_conn() as conn:
+                    conn.execute(
+                        "INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
+                        (new_id("msg"), inp.chat_id, "assistant", f"Sorry, something went wrong: {err_msg}", now_iso()),
+                    )
+                    conn.commit()
+            except Exception:
+                pass
 
     return StreamingResponse(gen(), media_type="application/x-ndjson")

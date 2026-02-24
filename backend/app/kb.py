@@ -22,7 +22,7 @@ async def kb_add_text(text: str, metadata: Dict[str, Any]) -> str:
     return item_id
 
 
-async def kb_search(query: str, top_k: int = 8) -> List[tuple]:
+async def kb_search(query: str, top_k: int = 20) -> List[tuple]:
     """
     Search the knowledge base. Returns list of (text, metadata, score).
     For later RAG use (citations).

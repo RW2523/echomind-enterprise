@@ -40,6 +40,22 @@ def init_db():
             conn.execute("ALTER TABLE transcripts ADD COLUMN updated_at TEXT")
         except Exception:
             pass
+        # RAG platform: documents catalog for metadata and clarification
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS documents_catalog (
+                doc_id TEXT PRIMARY KEY,
+                title TEXT,
+                doc_type TEXT,
+                file_type TEXT,
+                uploaded_at TEXT,
+                tags_json TEXT,
+                num_pages INTEGER,
+                num_chunks INTEGER,
+                source_path TEXT,
+                summary_short TEXT,
+                summary_chapters_json TEXT
+            )
+        """)
         conn.commit()
 
 @contextmanager

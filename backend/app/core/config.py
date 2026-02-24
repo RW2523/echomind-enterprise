@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "2000"))
     CHUNK_SIZE: int = int(os.getenv("ECHOMIND_CHUNK_SIZE", "800"))
     CHUNK_OVERLAP: int = int(os.getenv("ECHOMIND_CHUNK_OVERLAP", "120"))
-    TOP_K: int = int(os.getenv("ECHOMIND_TOP_K", "15"))
+    TOP_K: int = int(os.getenv("ECHOMIND_TOP_K", "20"))
     RAG_RELEVANCE_THRESHOLD: float = float(os.getenv("ECHOMIND_RAG_RELEVANCE_THRESHOLD", "0.45"))
     # When False (default), do not expose citations/filenames to client (audit: internal grounding only).
     RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "0").lower() in ("1", "true", "yes")
@@ -66,6 +66,12 @@ class Settings(BaseSettings):
     # Bypass compression for chunks that contain key query terms (improves grounding for named concepts).
     RAG_VERBATIM_QUERY_TERMS: bool = os.getenv("ECHOMIND_RAG_VERBATIM_QUERY_TERMS", "1").lower() in ("1", "true", "yes")
     RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1200"))
+    # When True (default), if retrieval finds nothing or low relevance, answer conversationally instead of a fixed "no info" message. Set ECHOMIND_RAG_INSUFFICIENT_FALLBACK_TO_GENERAL=0 for strict behavior.
+    RAG_INSUFFICIENT_FALLBACK_TO_GENERAL: bool = os.getenv("ECHOMIND_RAG_INSUFFICIENT_FALLBACK_TO_GENERAL", "1").lower() in ("1", "true", "yes")
+    # When True (default), use RAG for any non-greeting question so the bot answers from the knowledge base. When False, use RAG only when the user mentions document/transcript/book/file etc.
+    RAG_ALWAYS_TRY_FOR_CONTENT_QUESTIONS: bool = os.getenv("ECHOMIND_RAG_ALWAYS_TRY_FOR_CONTENT_QUESTIONS", "1").lower() in ("1", "true", "yes")
+    # Temperature for RAG answer generation (default 0.15 for more accurate, grounded replies). Uses LLM_TEMPERATURE if not set.
+    RAG_LLM_TEMPERATURE: float = float(os.getenv("ECHOMIND_RAG_LLM_TEMPERATURE", "0.15"))
 
     # Real-time transcription & knowledge capture (Kyutai STT only, 24kHz)
     ECHOMIND_AUTO_STORE_DEFAULT: bool = os.getenv("ECHOMIND_AUTO_STORE_DEFAULT", "1").lower() in ("1", "true", "yes")
@@ -91,5 +97,15 @@ class Settings(BaseSettings):
     TRANSCRIPT_GPU_CONCURRENCY: int = int(os.getenv("TRANSCRIPT_GPU_CONCURRENCY", "2"))
     # STT warmup: number of frames to run on model load (CUDA kernels).
     TRANSCRIPT_STT_WARMUP_FRAMES: int = int(os.getenv("TRANSCRIPT_STT_WARMUP_FRAMES", "8"))
+    # Timezone for interpreting transcript time in questions (e.g. "at 2pm" → 2pm in this zone, then convert to UTC). Use "UTC" or e.g. "America/New_York".
+    TRANSCRIPT_QUERY_TZ: str = os.getenv("ECHOMIND_TRANSCRIPT_QUERY_TZ", "UTC")
+
+    # --- RAG platform: Qdrant (optional) and vector backend ---
+    # When set, use Qdrant for vectors; else use existing FAISS+BM25.
+    QDRANT_URL: str = os.getenv("QDRANT_URL", "")
+    QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")
+    VECTOR_BACKEND: str = os.getenv("ECHOMIND_VECTOR_BACKEND", "faiss")  # "faiss" | "qdrant"
+    # Transcript chunk size in seconds for ingestion pipeline.
+    TRANSCRIPT_CHUNK_SECONDS: int = int(os.getenv("ECHOMIND_TRANSCRIPT_CHUNK_SECONDS", "60"))
 
 settings = Settings()

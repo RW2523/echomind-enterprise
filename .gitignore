@@ -30,3 +30,5 @@ dist/
 # Optional: uncomment if you don't want to track these
 # echomind_data/
 # ollama_data/
+
+/backend/kyutai-stt

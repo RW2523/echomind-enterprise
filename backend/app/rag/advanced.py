@@ -4,7 +4,7 @@ import json
 import logging
 import math
 import re
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from ..core.config import settings
 from ..core.db import get_conn
 from .index import index
@@ -13,10 +13,8 @@ from .llm import OpenAICompatChat
 logger = logging.getLogger(__name__)
 chat = OpenAICompatChat(settings.LLM_BASE_URL, settings.LLM_MODEL)
 
-CONTEXT_WINDOW_VALUES = ("24h", "48h", "1w", "all")
-
-# Deterministic message when document/transcript intent but retrieval is insufficient (no hallucination fallback to general chat).
-INSUFFICIENT_CONTEXT_MSG = "The provided documents do not contain this information."
+# Message when retrieval is insufficient and fallback-to-general is disabled.
+INSUFFICIENT_CONTEXT_MSG = "I couldn't find relevant information to answer that."
 
 def _parse_iso_date(created_at: Optional[str]) -> Optional[datetime]:
     if not created_at:
@@ -26,21 +24,20 @@ def _parse_iso_date(created_at: Optional[str]) -> Optional[datetime]:
     except Exception:
         return None
 
-def _filter_hits_by_context_window(hits: List[Dict], context_window: str) -> List[Dict]:
+def _filter_hits_by_context_window(hits: List[Dict], context_window: str, now_utc: Optional[datetime] = None) -> List[Dict]:
     """
     Keep only hits whose document created_at falls within context_window (24h, 48h, 1w). 'all' = no filter.
-    Policy: when context_window != 'all', batch-fetch created_at via _get_doc_info_for_hits; hits without
-    doc_id or without created_at are excluded (treated as out-of-window) to avoid incorrect inclusion.
+    Uses now_utc as single reference time so all time calculations are consistent within a request.
     """
     if not context_window or context_window == "all" or not hits:
         return hits
-    now = datetime.now(timezone.utc)
+    ref = now_utc if now_utc is not None else datetime.now(timezone.utc)
     if context_window == "24h":
-        cutoff = now - timedelta(hours=24)
+        cutoff = ref - timedelta(hours=24)
     elif context_window == "48h":
-        cutoff = now - timedelta(hours=48)
+        cutoff = ref - timedelta(hours=48)
     elif context_window == "1w":
-        cutoff = now - timedelta(days=7)
+        cutoff = ref - timedelta(days=7)
     else:
         return hits
     doc_created, _ = _get_doc_info_for_hits(hits)
@@ -114,13 +111,6 @@ def _requires_rag_context(question: str) -> bool:
         return False
     return any(phrase in t for phrase in _RAG_INDICATOR_PHRASES)
 
-def _dedupe_best(items: List[Dict]) -> List[Dict]:
-    best={}
-    for it in items:
-        cid=it["chunk_id"]
-        if cid not in best or it["score"]>best[cid]["score"]:
-            best[cid]=it
-    return sorted(best.values(), key=lambda x: x["score"], reverse=True)
 
 RRF_K = 60  # reciprocal rank fusion constant
 
@@ -159,15 +149,6 @@ def _weighted_rrf(
     return out
 
 
-def _reciprocal_rank_fusion(
-    dense_hits_per_query: List[List[Dict]],
-    sparse_hits_per_query: List[List[Dict]],
-    k: int,
-) -> List[Dict]:
-    """Legacy equal-weight RRF (used when weighted RRF weights not configured)."""
-    return _weighted_rrf(dense_hits_per_query, sparse_hits_per_query, k, dense_weight=0.5, sparse_weight=0.5)
-
-
 def _get_doc_info_for_hits(hits: List[Dict]) -> Tuple[Dict[str, Optional[str]], Dict[str, dict]]:
     """Fetch created_at and meta_json for each unique doc_id in hits. Returns (doc_id -> created_at, doc_id -> meta)."""
     doc_ids = list({(h.get("source") or {}).get("doc_id") for h in hits if (h.get("source") or {}).get("doc_id")})
@@ -190,11 +171,11 @@ def _get_doc_info_for_hits(hits: List[Dict]) -> Tuple[Dict[str, Optional[str]], 
     return created_map, meta_map
 
 
-def _apply_time_decay(hits: List[Dict], doc_created: Dict[str, Optional[str]], halflife_days: float) -> List[Dict]:
-    """True half-life decay: decay = exp(-ln(2) * age_days / halflife_days). At age_days = halflife_days, score is halved. halflife_days=0 means no decay."""
+def _apply_time_decay(hits: List[Dict], doc_created: Dict[str, Optional[str]], halflife_days: float, now_utc: Optional[datetime] = None) -> List[Dict]:
+    """True half-life decay: decay = exp(-ln(2) * age_days / halflife_days). Uses now_utc as reference when provided."""
     if halflife_days <= 0 or not hits:
         return hits
-    now = datetime.now(timezone.utc)
+    now = now_utc if now_utc is not None else datetime.now(timezone.utc)
     ln2 = math.log(2)
     out = []
     for h in hits:
@@ -404,8 +385,8 @@ async def _classify_intent(
         intent = (out or "").strip().lower()
         if intent in ("general", "document", "transcript"):
             return intent
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Intent classification failed, using fallback: %s", e)
     return "document" if doc_titles or has_transcripts else "general"
 
 
@@ -428,13 +409,20 @@ def _question_clearly_asks_for_transcript(question: str, has_transcripts: bool) 
 
 
 def _parse_last_n_transcripts(question: str) -> Optional[int]:
-    """If question asks for 'last N transcripts' or 'summary of last N', return N. Otherwise None."""
+    """If question asks for 'last N transcripts' or 'summary of last N' or 'pick last N', return N. Otherwise None."""
     if not (question or "").strip():
         return None
     t = question.lower()
     # "last 15 transcripts", "last 15 transcript", "summary of last 15", "past 10 transcripts"
     m = re.search(r"(?:last|past|recent)\s+(\d+)\s*(?:transcript|recording|meeting)s?", t)
     if m:
+        return min(100, max(1, int(m.group(1))))
+    # "pick last 2", "last 2" (when transcript context), "recent 2 transcripts"
+    m = re.search(r"(?:pick|get|give|summarize?|recap)\s+(?:the\s+)?(?:last|recent)\s+(\d+)\b", t)
+    if m:
+        return min(100, max(1, int(m.group(1))))
+    m = re.search(r"\b(?:last|recent)\s+(\d+)\b", t)
+    if m and re.search(r"\b(transcript|recording|meeting|conversation)\b", t):
         return min(100, max(1, int(m.group(1))))
     m = re.search(r"(?:summary|recap)\s+(?:of\s+)?(?:the\s+)?last\s+(\d+)", t)
     if m:
@@ -443,21 +431,192 @@ def _parse_last_n_transcripts(question: str) -> Optional[int]:
 
 
 def _parse_last_time_window(question: str) -> Optional[timedelta]:
-    """If question asks for 'last N hours', 'last N days', or 'last N minutes', return timedelta. Used to filter transcript hits by time."""
+    """If question asks for 'last N hours/mins' or 'Nhrs' / 'N mins', return timedelta. Single reference time used by caller."""
     if not (question or "").strip():
         return None
     t = question.lower()
-    # "last 5 minutes", "last 5 mins", "past 10 minutes"
-    m = re.search(r"(?:last|past|for\s+last)\s+(\d+)\s*(minute|minutes?|mins?)", t)
+    # "last 5 minutes", "last 5 mins", "past 10 minutes", "summarise last 5 mins"
+    m = re.search(r"(?:last|past|for\s+last|summarise?|summarize)\s+(?:the\s+)?(\d+)\s*(minute|minutes?|mins?)", t)
     if m:
         return timedelta(minutes=min(10080, max(1, int(m.group(1)))))  # cap 7 days
-    # "last 15 hours", "for last 15 hours", "past 2 hours", "last 3 days"
+    # "last 5 mins" without "last" before number (e.g. "summary last 5 mins" already above)
+    m = re.search(r"\b(\d+)\s*(?:minute|minutes?|mins?)\b", t)
+    if m and re.search(r"\b(transcript|recording|meeting|last|recent)\b", t):
+        return timedelta(minutes=min(10080, max(1, int(m.group(1)))))
+    # "last 15 hours", "for last 15 hours", "past 2 hours"
     m = re.search(r"(?:last|past|for\s+last)\s+(\d+)\s*(hour|hours?)", t)
+    if m:
+        return timedelta(hours=min(720, max(1, int(m.group(1)))))
+    # "24hrs", "48hrs", "36hrs", "24 hrs", "last 24hrs", "past 48hrs"
+    m = re.search(r"(?:last|past|in\s+)?(\d+)\s*hrs?\b", t)
+    if m:
+        return timedelta(hours=min(720, max(1, int(m.group(1)))))
+    m = re.search(r"\b(\d+)\s*(?:hour|hours?)\b", t)
     if m:
         return timedelta(hours=min(720, max(1, int(m.group(1)))))
     m = re.search(r"(?:last|past|for\s+last)\s+(\d+)\s*(day|days?)", t)
     if m:
         return timedelta(days=min(365, max(1, int(m.group(1)))))
+    return None
+
+
+def _parse_specific_date(question: str, now_utc: datetime) -> Optional[date]:
+    """If question mentions a specific date (today, yesterday, or calendar date), return that date for transcript filtering."""
+    if not (question or "").strip():
+        return None
+    t = question.lower().strip()
+    # Must look like transcript/date context (avoid matching dates inside document content)
+    if not re.search(r"\b(transcript|recording|meeting|conversation|discuss|said|on|from|for)\b", t):
+        return None
+    # today
+    if re.search(r"\btoday\b", t):
+        return now_utc.date()
+    # yesterday
+    if re.search(r"\byesterday\b", t):
+        return (now_utc - timedelta(days=1)).date()
+    # ISO: 2025-02-20 or 2025/02/20
+    m = re.search(r"\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b", t)
+    if m:
+        try:
+            y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            if 1 <= mo <= 12 and 1 <= d <= 31:
+                return date(y, mo, d)
+        except (ValueError, TypeError):
+            pass
+    # Month name: Feb 20, February 20, 20 Feb, 20th February (current year if not given)
+    year = now_utc.year
+    months = "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec"
+    months_full = "january|february|march|april|may|june|july|august|september|october|november|december"
+    m = re.search(rf"\b({months}|{months_full})\s*\.?\s*(\d{{1,2}})(?:st|nd|rd|th)?(?:\s*,?\s*(20\d{{2}}))?\b", t)
+    if m:
+        try:
+            from calendar import month_abbr, month_name
+            month_str = m.group(1).lower()[:3]
+            d = int(m.group(2))
+            if m.lastindex >= 3 and m.group(3):
+                year = int(m.group(3))
+            for i in range(1, 13):
+                if month_abbr[i].lower() == month_str or month_name[i].lower().startswith(month_str):
+                    if 1 <= d <= 31:
+                        return date(year, i, d)
+                    break
+        except (ValueError, TypeError, ImportError):
+            pass
+    m = re.search(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s*(?:of\s+)?({months}|{months_full})(?:\s*,?\s*(20\d{{2}}))?\b", t)
+    if m:
+        try:
+            from calendar import month_abbr, month_name
+            d = int(m.group(1))
+            month_str = m.group(2).lower()[:3]
+            if m.lastindex >= 3 and m.group(3):
+                year = int(m.group(3))
+            for i in range(1, 13):
+                if month_abbr[i].lower() == month_str or month_name[i].lower().startswith(month_str):
+                    if 1 <= d <= 31:
+                        return date(year, i, d)
+                    break
+        except (ValueError, TypeError, ImportError):
+            pass
+    return None
+
+
+# Default window for "at 2pm" style queries (1 hour)
+_SPECIFIC_TIME_WINDOW_MINUTES = 60
+
+
+def _parse_time_range_from_question(question: str, reference_ts: datetime, tz_str: str = "UTC") -> Optional[Tuple[datetime, datetime]]:
+    """
+    Parse a specific time or time range from the question (e.g. "at 2pm", "between 14:00 and 15:00 on Feb 20").
+    Returns (start_utc, end_utc) for filtering transcript chunks by echodate. Times in the question are
+    interpreted in the given timezone (TRANSCRIPT_QUERY_TZ) then converted to UTC.
+    """
+    if not (question or "").strip():
+        return None
+    t = question.lower()
+    if not re.search(r"\b(transcript|recording|meeting|conversation|discuss|said|at|between|from)\b", t):
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo(tz_str)
+    except Exception:
+        tz = timezone.utc
+
+    ref_local = reference_ts.astimezone(tz)
+    year, month, day = ref_local.year, ref_local.month, ref_local.day
+
+    def parse_time_only(s: str) -> Optional[Tuple[int, int]]:
+        s = s.strip()
+        m = re.match(r"(\d{1,2}):(\d{2})\s*(?:am|pm)?", s, re.I)
+        if m:
+            h, mi = int(m.group(1)), int(m.group(2))
+            if "pm" in s.lower() and h < 12:
+                h += 12
+            if "am" in s.lower() and h == 12:
+                h = 0
+            return (h, mi) if 0 <= h <= 23 and 0 <= mi <= 59 else None
+        m = re.match(r"(\d{1,2})\s*(?:am|pm)\b", s, re.I)
+        if m:
+            h = int(m.group(1))
+            if "pm" in s.lower() and h < 12:
+                h += 12
+            if "am" in s.lower() and h == 12:
+                h = 0
+            return (h, 0) if 0 <= h <= 23 else None
+        return None
+
+    def parse_date_part(s: str) -> Optional[Tuple[int, int, int]]:
+        s = s.strip().lower()
+        m = re.search(r"\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b", s)
+        if m:
+            y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            return (y, mo, d) if 1 <= mo <= 12 and 1 <= d <= 31 else None
+        months = "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec"
+        m = re.search(rf"\b({months})\s*\.?\s*(\d{{1,2}})(?:st|nd|rd|th)?(?:\s*,?\s*(20\d{{2}}))?\b", s)
+        if m:
+            from calendar import month_abbr
+            mon_abbr = m.group(1).lower()[:3]
+            d = int(m.group(2))
+            y = int(m.group(3)) if m.lastindex >= 3 and m.group(3) else ref_local.year
+            for i in range(1, 13):
+                if month_abbr[i].lower() == mon_abbr:
+                    return (y, i, d) if 1 <= d <= 31 else None
+            return None
+        if "yesterday" in s:
+            rd = ref_local.date() - timedelta(days=1)
+            return (rd.year, rd.month, rd.day)
+        if "today" in s:
+            return (ref_local.year, ref_local.month, ref_local.day)
+        return None
+
+    # "between 14:00 and 15:00" / "from 2pm to 3pm" / "from 14:00 to 15:00 on Feb 20"
+    m = re.search(r"(?:between|from)\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s+(?:and|to)\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)(?:\s+on\s+([^.?]+))?", t, re.I)
+    if m:
+        t1 = parse_time_only(m.group(1))
+        t2 = parse_time_only(m.group(2))
+        date_part = parse_date_part(m.group(3) or "") if m.group(3) else (year, month, day)
+        if t1 and t2 and date_part:
+            y, mo, d = date_part
+            start_local = datetime(y, mo, d, t1[0], t1[1], 0, tzinfo=tz)
+            end_local = datetime(y, mo, d, t2[0], t2[1], 0, tzinfo=tz)
+            if end_local <= start_local:
+                end_local += timedelta(days=1)
+            return (start_local.astimezone(timezone.utc), end_local.astimezone(timezone.utc))
+
+    # "at 14:00" / "at 2pm" / "at 2:30pm on Feb 20" / "Feb 20 at 2pm"
+    m = re.search(r"at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)(?:\s+on\s+([^.?]+)|\s+(?:on\s+)?([^.?]+))?", t, re.I)
+    if not m:
+        m = re.search(r"(?:Feb|Jan|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}(?:st|nd|rd|th)?\s+at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)", t, re.I)
+    if m:
+        time_part = parse_time_only(m.group(1))
+        date_str = (m.group(2) or m.group(3) or "").strip() if m.lastindex >= 3 else ""
+        date_part = parse_date_part(date_str) if date_str else (year, month, day)
+        if time_part and date_part:
+            y, mo, d = date_part
+            h, mi = time_part
+            start_local = datetime(y, mo, d, h, mi, 0, tzinfo=tz)
+            end_local = start_local + timedelta(minutes=_SPECIFIC_TIME_WINDOW_MINUTES)
+            return (start_local.astimezone(timezone.utc), end_local.astimezone(timezone.utc))
+
     return None
 
 
@@ -613,7 +772,8 @@ async def retrieve(
     has_transcripts: bool = False,
     transcript_echotags: Optional[List[str]] = None,
 ) -> List[Dict]:
-    """Hybrid retrieve: deterministic + optional LLM query expansion, dense + sparse, weighted RRF, optional time-decay and tag boost, optional rerank. When intent is transcript and question asks for 'last N transcripts', filters to N most recent transcript docs."""
+    """Hybrid retrieve: deterministic + optional LLM query expansion, dense + sparse, weighted RRF. Uses a single reference timestamp (now_utc) for all time/date filtering so context is consistent. When intent is transcript, filters by date (today/yesterday/specific), last N transcripts, or time window (24hrs, 48hrs, last 5 mins)."""
+    reference_ts = datetime.now(timezone.utc)
     if getattr(settings, "RAG_QUERY_REWRITE_ENABLED", False):
         llm_qs = await generate_queries(question, intent=intent, document_titles=document_titles, has_transcripts=has_transcripts, transcript_echotags=transcript_echotags)
     else:
@@ -654,13 +814,13 @@ async def retrieve(
             sparse_hits_per_query.append(index.sparse.search(q, k_per_query))
     candidates_k = max(k, getattr(settings, "RAG_RERANK_CANDIDATES", k)) if getattr(settings, "RAG_RERANK_ENABLED", False) else k
     hits = _weighted_rrf(dense_hits_per_query, sparse_hits_per_query, candidates_k, dense_weight=dense_w, sparse_weight=sparse_w)
-    # Hard filter by context_window when not 'all'
-    hits = _filter_hits_by_context_window(hits, context_window or "all")
+    # Hard filter by context_window when not 'all' (single reference time)
+    hits = _filter_hits_by_context_window(hits, context_window or "all", reference_ts)
     # Time-decay scoring (soft; keeps older docs but down-weights)
     doc_created, doc_meta = _get_doc_info_for_hits(hits)
     halflife = getattr(settings, "RAG_TIME_DECAY_HALFLIFE_DAYS", 0) or 0
     if halflife > 0:
-        hits = _apply_time_decay(hits, doc_created, halflife)
+        hits = _apply_time_decay(hits, doc_created, halflife, reference_ts)
     # Tag boost for transcripts
     if getattr(settings, "RAG_TAG_BOOST_ENABLED", False):
         tag_factor = getattr(settings, "RAG_TAG_BOOST_FACTOR", 0.08)
@@ -675,27 +835,41 @@ async def retrieve(
     else:
         hits = hits[:k]
 
-    # When intent is transcript: optional filters by "last N transcripts", time window, location, or "latest transcript"
+    # When intent is transcript: filter by specific time range (UTC), then date, last N, time window, location, or latest
     if intent == "transcript":
-        n = _parse_last_n_transcripts(question)
-        if n is not None and n > 0:
-            recent_ids = _get_recent_transcript_doc_ids(n)
-            if recent_ids:
-                hits = [h for h in hits if ((h.get("source") or {}).get("doc_id")) in recent_ids]
-        time_window = _parse_last_time_window(question)
-        location_filter = _parse_location_from_question(question)
-        latest_only = _parse_latest_or_recent_transcript(question)
-
-        if time_window is not None or location_filter:
-            # Filter by time and/or location when user specified them
-            cutoff = (datetime.now(timezone.utc) - time_window) if time_window else None
+        tz_str = getattr(settings, "TRANSCRIPT_QUERY_TZ", "UTC") or "UTC"
+        time_range = _parse_time_range_from_question(question, reference_ts, tz_str)
+        if time_range is not None:
+            start_utc, end_utc = time_range
             filtered = []
             for h in hits:
                 doc_id = (h.get("source") or {}).get("doc_id")
                 if not doc_id:
                     continue
                 meta = doc_meta.get(doc_id) or {}
-                if cutoff is not None:
+                ts_at = meta.get("echodate") or doc_created.get(doc_id)
+                if ts_at is None:
+                    continue
+                dt = _parse_iso_date(ts_at)
+                if dt is None:
+                    continue
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                if start_utc <= dt < end_utc:
+                    filtered.append(h)
+            if filtered:
+                hits = filtered
+            # else: no chunks in that exact window; keep hits for answer to say "nothing in that time"
+        else:
+            # 1) Specific date (today, yesterday, or calendar date): keep only hits on that day
+            specific_date = _parse_specific_date(question, reference_ts)
+            if specific_date is not None:
+                filtered = []
+                for h in hits:
+                    doc_id = (h.get("source") or {}).get("doc_id")
+                    if not doc_id:
+                        continue
+                    meta = doc_meta.get(doc_id) or {}
                     ts_at = meta.get("echodate") or doc_created.get(doc_id)
                     if ts_at is None:
                         continue
@@ -704,26 +878,57 @@ async def retrieve(
                         continue
                     if dt.tzinfo is None:
                         dt = dt.replace(tzinfo=timezone.utc)
-                    if dt < cutoff:
-                        continue
-                if location_filter:
-                    doc_location = (meta.get("location") or "").strip().lower()
-                    loc_lower = location_filter.strip().lower()
-                    if not doc_location or (loc_lower not in doc_location and doc_location not in loc_lower):
-                        continue
-                filtered.append(h)
-            hits = filtered
-        elif latest_only:
-            # "Latest transcript" / "most recent transcript" with no time/location: use most recent session only
-            recent_tid = _get_most_recent_transcript_id()
-            if recent_tid:
-                filtered = [
-                    h for h in hits
-                    if (doc_meta.get((h.get("source") or {}).get("doc_id")) or {}).get("transcript_id") == recent_tid
-                ]
+                    if dt.date() == specific_date:
+                        filtered.append(h)
                 if filtered:
                     hits = filtered
-            # else: no transcript row yet (e.g. no sessions stored), keep hits by relevance
+            else:
+                # 2) Last N transcripts
+                n = _parse_last_n_transcripts(question)
+                if n is not None and n > 0:
+                    recent_ids = _get_recent_transcript_doc_ids(n)
+                    if recent_ids:
+                        hits = [h for h in hits if ((h.get("source") or {}).get("doc_id")) in recent_ids]
+
+                time_window = _parse_last_time_window(question)
+                location_filter = _parse_location_from_question(question)
+                latest_only = _parse_latest_or_recent_transcript(question)
+
+                if time_window is not None or location_filter:
+                    cutoff = (reference_ts - time_window) if time_window else None
+                    filtered = []
+                    for h in hits:
+                        doc_id = (h.get("source") or {}).get("doc_id")
+                        if not doc_id:
+                            continue
+                        meta = doc_meta.get(doc_id) or {}
+                        if cutoff is not None:
+                            ts_at = meta.get("echodate") or doc_created.get(doc_id)
+                            if ts_at is None:
+                                continue
+                            dt = _parse_iso_date(ts_at)
+                            if dt is None:
+                                continue
+                            if dt.tzinfo is None:
+                                dt = dt.replace(tzinfo=timezone.utc)
+                            if dt < cutoff:
+                                continue
+                        if location_filter:
+                            doc_location = (meta.get("location") or "").strip().lower()
+                            loc_lower = location_filter.strip().lower()
+                            if not doc_location or (loc_lower not in doc_location and doc_location not in loc_lower):
+                                continue
+                        filtered.append(h)
+                    hits = filtered
+                elif latest_only:
+                    recent_tid = _get_most_recent_transcript_id()
+                    if recent_tid:
+                        filtered = [
+                            h for h in hits
+                            if (doc_meta.get((h.get("source") or {}).get("doc_id")) or {}).get("transcript_id") == recent_tid
+                        ]
+                        if filtered:
+                            hits = filtered
     return hits
 
 
@@ -851,7 +1056,10 @@ def _rag_system_prompt(persona: Optional[str] = None) -> str:
     - Do not infer content beyond what was spoken.
 
     GENERAL GUIDELINES:
-    - Only answer from the provided context. Do not invent information.
+    - Only answer from the provided Context block. Do not invent information or use other sources.
+    - Be precise and concise. Base every factual claim only on the Context; if the Context does not support an answer, say so briefly.
+    - Do not let prior conversation or summaries steer you to a different topic—answer only from the Context and the current question (use recent messages only to resolve pronouns like "it" or "that").
+    - Answer in natural language. Do not mention "documents", "resources", or "sources" unless the user explicitly asks where the information came from.
 
     """
 
@@ -981,13 +1189,17 @@ async def _build_rag_context_fast(question: str, hits: List[Dict], max_chars_per
     return blocks, enriched, chunk_ids_used
 
 def _build_user_content_with_summary(conversation_summary: Optional[str], question: str, context_block: Optional[str] = None) -> str:
-    """Single user message: conversation summary (if any) + current question + optional RAG context."""
+    """Single user message: conversation summary (if any) + current question + optional RAG context. When context_block is present, it is the primary source; summary is for continuity only."""
     parts = []
-    if conversation_summary and conversation_summary.strip():
-        parts.append(f"Conversation summary (goals, constraints, decisions, key facts):\n{conversation_summary.strip()}")
-    parts.append(f"Current question: {question}")
     if context_block and context_block.strip():
-        parts.append(f"Context (use only for factual claims):\n{context_block.strip()}")
+        parts.append(
+            "Context (primary source—base your factual answer only on this):\n" + context_block.strip()
+        )
+    parts.append(f"Current question: {question}")
+    if conversation_summary and conversation_summary.strip():
+        parts.append(
+            f"Conversation summary (for continuity only; do not let it override the Context above):\n{conversation_summary.strip()}"
+        )
     return "\n\n".join(parts)
 
 
@@ -1030,7 +1242,8 @@ async def answer(
         return await _answer_general(question, history, persona, conversation_summary)
     if _is_general_conversation(question):
         return await _answer_general(question, history, persona, conversation_summary)
-    if not _requires_rag_context(question):
+    # When RAG_ALWAYS_TRY_FOR_CONTENT_QUESTIONS is False, use RAG only if user mentions document/transcript/etc.
+    if not getattr(settings, "RAG_ALWAYS_TRY_FOR_CONTENT_QUESTIONS", True) and not _requires_rag_context(question):
         return await _answer_general(question, history, persona, conversation_summary)
 
     if advanced_rag:
@@ -1038,10 +1251,15 @@ async def answer(
         hits = await retrieve_single_query(question, settings.TOP_K, context_window=context_window or "all")
         best_score = hits[0]["score"] if hits else 0.0
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+            if getattr(settings, "RAG_INSUFFICIENT_FALLBACK_TO_GENERAL", True):
+                return await _answer_general(question, history, persona, conversation_summary)
             return {"answer": INSUFFICIENT_CONTEXT_MSG, "citations": []}
         blocks, enriched, chunk_ids_used = await _build_rag_context_fast(question, hits)
     else:
         doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
+        # Skip intent when KB is empty: go straight to general (faster).
+        if not doc_titles and not has_transcripts:
+            return await _answer_general(question, history, persona, conversation_summary)
         intent = await _classify_intent(question, doc_titles, has_transcripts, transcript_echotags)
         if has_transcripts and _question_clearly_asks_for_transcript(question, has_transcripts):
             intent = "transcript"
@@ -1060,6 +1278,8 @@ async def answer(
         )
         best_score = hits[0]["score"] if hits else 0.0
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+            if getattr(settings, "RAG_INSUFFICIENT_FALLBACK_TO_GENERAL", True):
+                return await _answer_general(question, history, persona, conversation_summary)
             return {"answer": INSUFFICIENT_CONTEXT_MSG, "citations": []}
 
         blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
@@ -1071,16 +1291,95 @@ async def answer(
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
     logger.info("RAG answer intent=%s hits=%d", intent if not advanced_rag else "advanced_rag", len(doc_ids))
 
-    if conversation_summary and conversation_summary.strip():
-        user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)
-        msgs = [{"role": "system", "content": _rag_system_prompt(persona)}, {"role": "user", "content": user_content}]
-    else:
-        msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
-    ans = await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
+    # When answering from RAG context, do not inject conversation summary—it can steer the model to the wrong context and mislead. Use only history + Context + question.
+    msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
+    rag_temp = getattr(settings, "RAG_LLM_TEMPERATURE", None)
+    if rag_temp is None or rag_temp < 0:
+        rag_temp = settings.LLM_TEMPERATURE
+    ans = await chat.chat(msgs, temperature=rag_temp, max_tokens=settings.LLM_MAX_TOKENS)
     citations = []
     if getattr(settings, "RAG_EXPOSE_SOURCES", False):
-        citations = [{"filename": c["source"].get("filename"), "chunk_index": c["source"].get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]
+        src = lambda c: c.get("source") or {}
+        citations = [{"filename": src(c).get("filename"), "chunk_index": src(c).get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]
     return {"answer": ans, "citations": citations}
+
+
+# --- RAG debug: run full flow and return intent, retrieved chunks, and answer (for test/debug UI) ---
+CHUNK_PREVIEW_CHARS = 400
+
+
+async def rag_debug_run(question: str, advanced_rag: bool = False) -> Dict:
+    """
+    Run the full RAG flow and return debug info: intent, retrieved chunks (with score and text preview), and answer.
+    Used by the RAG Test page to show how context is retrieved from embeddings and how the answer is produced.
+    """
+    q = (question or "").strip()
+    if not q:
+        return {"intent": "general", "chunks": [], "answer": "", "message": "No question provided."}
+
+    # Same fast paths as answer()
+    if _is_general_conversation(q):
+        out = await _answer_general(q, [], None, None)
+        return {"intent": "general", "chunks": [], "answer": out["answer"], "message": "Treated as general conversation (no retrieval)."}
+
+    intent: Optional[str] = None
+    hits: List[Dict] = []
+
+    if advanced_rag:
+        intent = "advanced_rag"
+        hits = await retrieve_single_query(q, settings.TOP_K, context_window="all")
+    else:
+        doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
+        if not doc_titles and not has_transcripts:
+            out = await _answer_general(q, [], None, None)
+            return {"intent": "general", "chunks": [], "answer": out["answer"], "message": "No documents or transcripts in the knowledge base."}
+        intent = await _classify_intent(q, doc_titles, has_transcripts, transcript_echotags)
+        if has_transcripts and _question_clearly_asks_for_transcript(q, has_transcripts):
+            intent = "transcript"
+        if intent == "general":
+            out = await _answer_general(q, [], None, None)
+            return {"intent": "general", "chunks": [], "answer": out["answer"], "message": "Intent classified as general (no retrieval)."}
+        hits = await retrieve(q, settings.TOP_K, context_window="all", intent=intent,
+            document_titles=doc_titles, has_transcripts=has_transcripts, transcript_echotags=transcript_echotags)
+
+    best_score = hits[0]["score"] if hits else 0.0
+    if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+        if getattr(settings, "RAG_INSUFFICIENT_FALLBACK_TO_GENERAL", True):
+            out = await _answer_general(q, [], None, None)
+            return {"intent": intent or "document", "chunks": [], "answer": out["answer"], "message": "No relevant chunks found; answered from general knowledge."}
+        return {"intent": intent or "document", "chunks": [], "answer": INSUFFICIENT_CONTEXT_MSG, "message": "No relevant chunks found."}
+
+    # Build chunks for debug (score + text preview + source)
+    chunks_out = []
+    for h in hits:
+        src = h.get("source") or {}
+        text = (h.get("text") or "")[:CHUNK_PREVIEW_CHARS]
+        if len(h.get("text") or "") > CHUNK_PREVIEW_CHARS:
+            text += "…"
+        chunks_out.append({
+            "score": round(h["score"], 4),
+            "text_preview": text,
+            "filename": src.get("filename"),
+            "doc_id": src.get("doc_id"),
+            "chunk_index": src.get("chunk_index"),
+            "filetype": src.get("filetype"),
+        })
+
+    # Run full answer so we return the same answer the user would get
+    if advanced_rag:
+        blocks, enriched, _ = await _build_rag_context_fast(q, hits)
+    else:
+        blocks, enriched, _ = await _build_rag_context(q, hits)
+        original_blocks = _get_original_blocks_for_toc(hits)
+        if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(q) and not has_toc_signals_in_context(original_blocks):
+            return {"intent": intent, "chunks": chunks_out, "answer": "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", "message": "TOC guardrail: no chapter list in context."}
+
+    ctx_block = _rag_context_block(blocks)
+    msgs = [{"role": "system", "content": _rag_system_prompt(None)}, {"role": "user", "content": f"Question: {q}\n\nContext:\n{ctx_block}"}]
+    rag_temp = getattr(settings, "RAG_LLM_TEMPERATURE", None) or settings.LLM_TEMPERATURE
+    ans = await chat.chat(msgs, temperature=rag_temp, max_tokens=settings.LLM_MAX_TOKENS)
+
+    return {"intent": intent or "document", "chunks": chunks_out, "answer": ans, "message": None}
 
 
 async def _answer_general_stream(
@@ -1123,7 +1422,7 @@ async def answer_stream(
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev
         return
-    if not _requires_rag_context(question):
+    if not getattr(settings, "RAG_ALWAYS_TRY_FOR_CONTENT_QUESTIONS", True) and not _requires_rag_context(question):
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev
         return
@@ -1133,12 +1432,20 @@ async def answer_stream(
         hits = await retrieve_single_query(question, settings.TOP_K, context_window=context_window or "all")
         best_score = hits[0]["score"] if hits else 0.0
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+            if getattr(settings, "RAG_INSUFFICIENT_FALLBACK_TO_GENERAL", True):
+                async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+                    yield ev
+                return
             yield ("chunk", INSUFFICIENT_CONTEXT_MSG, None)
             yield ("done", INSUFFICIENT_CONTEXT_MSG, [])
             return
         blocks, enriched, chunk_ids_used = await _build_rag_context_fast(question, hits)
     else:
         doc_titles, has_transcripts, transcript_echotags = _get_document_titles()
+        if not doc_titles and not has_transcripts:
+            async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+                yield ev
+            return
         intent = await _classify_intent(question, doc_titles, has_transcripts, transcript_echotags)
         if has_transcripts and _question_clearly_asks_for_transcript(question, has_transcripts):
             intent = "transcript"
@@ -1159,6 +1466,10 @@ async def answer_stream(
         )
         best_score = hits[0]["score"] if hits else 0.0
         if not hits or best_score < settings.RAG_RELEVANCE_THRESHOLD:
+            if getattr(settings, "RAG_INSUFFICIENT_FALLBACK_TO_GENERAL", True):
+                async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+                    yield ev
+                return
             yield ("chunk", INSUFFICIENT_CONTEXT_MSG, None)
             yield ("done", INSUFFICIENT_CONTEXT_MSG, [])
             return
@@ -1174,16 +1485,17 @@ async def answer_stream(
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
     logger.info("RAG answer (stream) intent=%s hits=%d", intent if not advanced_rag else "advanced_rag", len(doc_ids))
 
-    if conversation_summary and conversation_summary.strip():
-        user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)
-        msgs = [{"role": "system", "content": _rag_system_prompt(persona)}, {"role": "user", "content": user_content}]
-    else:
-        msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
+    # When answering from RAG context, do not inject conversation summary—it can steer the model to the wrong context and mislead. Use only history + Context + question.
+    msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
     citations = []
     if getattr(settings, "RAG_EXPOSE_SOURCES", False):
-        citations = [{"filename": c["source"].get("filename"), "chunk_index": c["source"].get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]
+        src = lambda c: c.get("source") or {}
+        citations = [{"filename": src(c).get("filename"), "chunk_index": src(c).get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]
+    rag_temp = getattr(settings, "RAG_LLM_TEMPERATURE", None)
+    if rag_temp is None or rag_temp < 0:
+        rag_temp = settings.LLM_TEMPERATURE
     full = []
-    async for delta in chat.chat_stream(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS):
+    async for delta in chat.chat_stream(msgs, temperature=rag_temp, max_tokens=settings.LLM_MAX_TOKENS):
         full.append(delta)
         yield ("chunk", delta, None)
     answer = "".join(full).strip()

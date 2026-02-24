@@ -11,7 +11,8 @@ from .sanitize import _pii_density
 def detect_document_type(text: str) -> DocType:
     """
     Detect document type from content for adaptive chunking.
-    Order: sensitive (PII-heavy) -> faq -> book (long-form) -> user (default).
+    Order: sensitive (PII-heavy) -> then, if long enough, book before faq to avoid
+    books with many question-shaped headings being misclassified as FAQ -> else faq -> book -> user (default).
     """
     if not (text or "").strip():
         return DocType.USER
@@ -22,6 +23,11 @@ def detect_document_type(text: str) -> DocType:
 
     if _pii_density(t) >= 0.015:
         return DocType.SENSITIVE
+
+    # For long documents, check long-form (book) before FAQ so books with many "Question?"-style
+    # lines (e.g. section headings) are not mistaken for FAQ.
+    if length >= 8000 and _looks_like_long_form(t, lines, length):
+        return DocType.BOOK
 
     if _looks_like_faq(t, lines):
         return DocType.FAQ

@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from ..utils.ids import new_id, now_iso
+from ..utils.ids import new_id, now_iso, normalize_echodate_to_utc_iso
 from ..core.db import get_conn
 from ..rag.index import index
 from ..rag.llm import OpenAICompatChat
@@ -48,6 +48,7 @@ async def store_transcript_to_db(
     name: str | None = None,
     location: str | None = None,
     tags: list[str] | None = None,
+    echodate: str | None = None,
 ) -> dict:
     """
     Save a transcript to the transcripts table and RAG index.
@@ -57,12 +58,13 @@ async def store_transcript_to_db(
     - name: optional display name (e.g. from Start popup or default transcript_YYYY-MM-DD_HH-MM).
     - location: optional; default "default" if not provided.
     - tags: optional list of manual tags; if provided, used instead of LLM-extracted tags.
+    - echodate: optional ISO datetime; if provided, used as transcript date (for testing or backfill).
     Returns: { transcript_id, title, name, location, tags, echotag, echodate, created_at }.
     """
     if not raw_text or not raw_text.strip():
         raise ValueError("raw_text is required")
     tid = new_id("trn")
-    echodate = now_iso()
+    echodate = normalize_echodate_to_utc_iso((echodate or "").strip() or now_iso())
     name_val = (name or "").strip() or None
     location_val = (location or "").strip() or "default"
     title = name_val or _title_for_transcript(tid, echodate)
@@ -94,7 +96,7 @@ async def store_transcript_to_db(
         await index.add_text(
             f"transcript_{tid}",
             index_text,
-            {"type": "transcript", "tags": tags_list, "echotag": echotag, "echodate": echodate, "created_at": echodate},
+            {"type": "transcript", "transcript_id": tid, "tags": tags_list, "echotag": echotag, "echodate": echodate, "created_at": echodate},
         )
     except Exception as e:
         logger.warning("Failed to index transcript %s in RAG: %s", tid, e)

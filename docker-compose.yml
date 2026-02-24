@@ -3,9 +3,10 @@ services:
     build:
       context: ./backend
       args:
-        USE_FAISS_GPU: "0"   # set to "1" for FAISS GPU (faster RAG search; needs GPU)
+        USE_FAISS_GPU: "1"   # set to "1" for FAISS GPU (faster RAG search; needs GPU)
     container_name: echomind-backend
     expose: ["8000"]
+    ports: ["8000:8000"]   # optional: expose for debugging; frontend proxies via nginx
     environment:
       - LLM_BASE_URL=http://ollama:11434/v1
       - LLM_MODEL=qwen2.5:7b-instruct
@@ -16,6 +17,7 @@ services:
     depends_on:
       ollama:
         condition: service_healthy
+    # GPU optional: backend runs with FAISS CPU by default. Uncomment below to pin backend to a GPU.
     deploy:
       resources:
         reservations:

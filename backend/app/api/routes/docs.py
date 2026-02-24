@@ -7,7 +7,9 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from ...core.config import settings
 from ...core.db import get_conn
 from ...rag.parse import parse_any
+from ...rag.chunking import chunk_document
 from ...rag.index import index
+from ...qdrant.client import is_qdrant_enabled
 
 router = APIRouter(prefix="/docs", tags=["docs"])
 
@@ -58,9 +60,86 @@ def list_docs():
 @router.post("/upload")
 async def upload(file: UploadFile = File(...)):
     data = await file.read()
-    filetype, text = parse_any(file.filename, data)
-    res = await index.add_document(file.filename, filetype, text, {"filename": file.filename, "filetype": filetype})
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty file")
+    filename = (file.filename or "").strip() or "document"
+    if is_qdrant_enabled():
+        try:
+            from ...ingestion.pipeline_docs import run_pipeline_docs
+            res = await run_pipeline_docs(filename, data, doc_title=filename)
+            if res.get("error"):
+                raise HTTPException(status_code=400, detail=res["error"])
+            return {"ok": True, "doc_id": res["doc_id"], "chunks": res.get("chunks_count", 0)}
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Indexing failed: {e!s}")
+    try:
+        filetype, text = parse_any(filename, data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not parse file: {e!s}")
+    if not (text or "").strip():
+        raise HTTPException(status_code=400, detail="No text extracted from file")
+    try:
+        res = await index.add_document(filename, filetype, text, {"filename": filename, "filetype": filetype})
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Indexing failed: {e!s}")
+    try:
+        from ...catalog.dao import insert_document
+        insert_document(
+            res.get("doc_id", ""),
+            title=filename,
+            file_type=filetype,
+            num_chunks=res.get("chunks", 0),
+        )
+    except Exception:
+        pass
     return {"ok": True, **res}
+
+
+@router.post("/chunk-preview")
+async def chunk_preview(file: UploadFile = File(...)):
+    """
+    Preview how a document would be chunked without adding it to the index.
+    Returns extracted text length, detected doc type, and list of chunks (with is_parent: true = section header, false = embed chunk).
+    """
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty file")
+    filename = (file.filename or "").strip() or "document"
+    try:
+        filetype, text = parse_any(filename, data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not parse file: {e!s}")
+    if not (text or "").strip():
+        raise HTTPException(status_code=400, detail="No text extracted from file")
+    try:
+        chunks = chunk_document(text, "preview")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chunking failed: {e!s}")
+    doc_type = chunks[0].doc_type.value if chunks else "user"
+    embed_count = sum(1 for c in chunks if not c.is_parent)
+    out = []
+    for c in chunks:
+        out.append({
+            "chunk_index": c.chunk_index,
+            "text": c.text,
+            "doc_type": c.doc_type.value,
+            "is_parent": c.is_parent,
+            "section": c.section,
+            "char_count": len(c.text),
+        })
+    return {
+        "filename": filename,
+        "filetype": filetype,
+        "extracted_length": len(text),
+        "doc_type": doc_type,
+        "total_chunks": len(chunks),
+        "embed_count": embed_count,
+        "chunks": out,
+    }
 
 
 @router.delete("/{doc_id}")
@@ -115,6 +194,7 @@ async def delete_all_data():
     with get_conn() as conn:
         conn.execute("DELETE FROM chunks")
         conn.execute("DELETE FROM documents")
+        conn.execute("DELETE FROM documents_catalog")
         conn.execute("DELETE FROM transcripts")
         conn.execute("DELETE FROM messages")
         conn.execute("DELETE FROM chats")

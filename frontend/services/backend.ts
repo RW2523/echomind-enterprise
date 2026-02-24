@@ -31,7 +31,37 @@ export async function deleteDocument(docId: string): Promise<{ ok: boolean; dele
   return await r.json();
 }
 
-/** Vector DB storage usage (for sidebar). */
+/** Chunking preview: upload a file and see how it would be chunked (no indexing). */
+export interface ChunkPreviewChunk {
+  chunk_index: number;
+  text: string;
+  doc_type: string;
+  is_parent: boolean;
+  section?: string | null;
+  char_count: number;
+}
+
+export interface ChunkPreviewResult {
+  filename: string;
+  filetype: string;
+  extracted_length: number;
+  doc_type: string;
+  total_chunks: number;
+  embed_count: number;
+  chunks: ChunkPreviewChunk[];
+}
+
+export async function chunkPreview(file: File): Promise<ChunkPreviewResult> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const r = await fetch(`${API_BASE}/api/docs/chunk-preview`, { method: "POST", body: fd });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `chunk preview failed: ${r.status}`);
+  }
+  return await r.json();
+}
+
 export interface StorageUsage {
   usage_bytes: number;
   capacity_bytes: number | null;
@@ -53,6 +83,33 @@ export interface DataPreview {
 export async function getDataPreview(): Promise<DataPreview> {
   const r = await fetch(`${API_BASE}/api/docs/data-preview`);
   if (!r.ok) throw new Error(`data preview failed: ${r.status}`);
+  return await r.json();
+}
+
+/** RAG debug: run full RAG flow and return intent, retrieved chunks, and answer (for RAG Test page). */
+export interface RagDebugChunk {
+  score: number;
+  text_preview: string;
+  filename?: string | null;
+  doc_id?: string | null;
+  chunk_index?: number | null;
+  filetype?: string | null;
+}
+
+export interface RagDebugResult {
+  intent: string;
+  chunks: RagDebugChunk[];
+  answer: string;
+  message?: string | null;
+}
+
+export async function ragDebug(question: string, advancedRag: boolean = false): Promise<RagDebugResult> {
+  const r = await fetch(`${API_BASE}/api/rag/debug`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question: question.trim(), advanced_rag: advancedRag }),
+  });
+  if (!r.ok) throw new Error(`RAG debug failed: ${r.status}`);
   return await r.json();
 }
 
@@ -211,6 +268,7 @@ export async function storeTranscript(
     name?: string | null;
     location?: string | null;
     tags?: string[] | null;
+    echodate?: string | null;
   }
 ): Promise<{ transcript_id: string; title: string; name?: string | null; location?: string | null; tags: string[]; echotag: string; echodate: string; created_at: string }> {
   const r = await fetch(`${API_BASE}/api/transcribe/store`, {
@@ -223,6 +281,7 @@ export async function storeTranscript(
       name: options?.name ?? null,
       location: options?.location ?? null,
       tags: options?.tags ?? null,
+      echodate: options?.echodate ?? null,
     }),
   });
   if (!r.ok) throw new Error(`store failed: ${r.status}`);

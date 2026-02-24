@@ -21,9 +21,13 @@ def parse_pptx(data: bytes) -> str:
                 parts.append(sh.text)
     return "\n".join(parts)
 
-def parse_any(filename: str, data: bytes) -> tuple[str,str]:
-    f = filename.lower()
-    if f.endswith(".pdf"): return "pdf", parse_pdf(data)
-    if f.endswith(".docx"): return "docx", parse_docx(data)
-    if f.endswith(".pptx"): return "pptx", parse_pptx(data)
-    return "txt", data.decode("utf-8", errors="ignore")
+def parse_any(filename: str | None, data: bytes) -> tuple[str, str]:
+    """Parse file by extension. Returns (filetype, extracted_text). Safe for None/empty filename (treats as txt)."""
+    f = (filename or "").strip().lower() or "file.txt"
+    if f.endswith(".pdf"):
+        return "pdf", parse_pdf(data)
+    if f.endswith(".docx"):
+        return "docx", parse_docx(data)
+    if f.endswith(".pptx"):
+        return "pptx", parse_pptx(data)
+    return "txt", (data or b"").decode("utf-8", errors="ignore")

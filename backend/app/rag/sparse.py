@@ -96,14 +96,18 @@ class Bm25Index:
                 if scores[idx] <= 0:
                     continue
                 cid = self.chunk_ids[idx]
-                row = conn.execute("SELECT text, source_json FROM chunks WHERE id=?", (cid,)).fetchone()
+                row = conn.execute("SELECT text, source_json FROM chunks WHERE id = ?", (cid,)).fetchone()
                 if not row:
                     continue
                 text, src_json = row
+                try:
+                    source = json.loads(src_json) if isinstance(src_json, str) and src_json.strip() else (src_json if isinstance(src_json, dict) else {})
+                except (json.JSONDecodeError, TypeError):
+                    source = {}
                 out.append({
                     "chunk_id": cid,
                     "score": float(scores[idx]),
                     "text": text,
-                    "source": json.loads(src_json),
+                    "source": source,
                 })
         return out

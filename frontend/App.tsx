@@ -6,6 +6,7 @@ import Header from './components/Header';
 import KnowledgeChat from './components/KnowledgeChat';
 import LiveTranscription from './components/LiveTranscription';
 import VoiceConversation from './components/VoiceConversation';
+import RagTestPage from './components/RagTestPage';
 import Settings from './components/Settings';
 import { useVoiceConnection } from './hooks/useVoiceConnection';
 import { useLiveTranscription } from './hooks/useLiveTranscription';
@@ -96,6 +97,8 @@ const App: React.FC = () => {
             voiceConnection={voiceConnection}
           />
         );
+      case AppView.RAG_TEST:
+        return <RagTestPage settings={settings} />;
       case AppView.SETTINGS:
         return <Settings settings={settings} setSettings={setSettings} />;
       default:
