@@ -96,6 +96,8 @@ class SessionState:
         self.max_paragraph_chars = settings.TRANSCRIPT_MAX_PARAGRAPH_CHARS
         self.buffer_max_chars = settings.TRANSCRIPT_RECENT_BUFFER_MAX_CHARS
         self.overlap_k = settings.TRANSCRIPT_OVERLAP_K
+        self._continuation_expected = False
+        self._last_piece_norm = ""
 
     def _next_paragraph_id(self) -> str:
         self._paragraph_counter += 1
