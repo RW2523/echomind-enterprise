@@ -37,16 +37,26 @@ def _normalize_whitespace(text: str) -> str:
     return t
 
 
+# def _normalize_piece(piece: str) -> str:
+#     """Normalize STT piece but preserve leading space (SentencePiece ▁ word boundary)."""
+#     if not piece:
+#         return ""
+#     # Collapse internal multiple spaces, fix no-space-before-punct
+#     t = re.sub(r"\s+", " ", piece)
+#     t = NO_SPACE_BEFORE.sub(r"\1", t)
+#     # Strip trailing but preserve leading (word boundary)
+#     return t.rstrip() if t.startswith(" ") else t.strip()
+
 def _normalize_piece(piece: str) -> str:
-    """Normalize STT piece but preserve leading space (SentencePiece ▁ word boundary)."""
     if not piece:
         return ""
-    # Collapse internal multiple spaces, fix no-space-before-punct
+    # convert SentencePiece marker if it appears
+    piece = piece.replace("▁", " ")
+    # normalize internal whitespace and punctuation spacing
     t = re.sub(r"\s+", " ", piece)
     t = NO_SPACE_BEFORE.sub(r"\1", t)
-    # Strip trailing but preserve leading (word boundary)
-    return t.rstrip() if t.startswith(" ") else t.strip()
-
+    # only remove trailing whitespace; keep leading if present
+    return t.rstrip()
 
 def _max_suffix_prefix_overlap(tail: str, incoming: str, k: int) -> int:
     """Return length of maximum overlap (suffix of tail == prefix of incoming) up to k chars."""
@@ -132,6 +142,10 @@ class SessionState:
             self.last_piece_ts_ms = ts_ms
             return
         # Pieces from STT already include word-boundary spaces (▁→" "); concatenate directly.
+        # self.recent_buffer += piece
+        prev = (self.recent_buffer or self.raw_text)
+        if prev and not prev.endswith(" ") and piece and not piece.startswith(" "):
+            self.recent_buffer += " "
         self.recent_buffer += piece
         self.last_piece_ts_ms = ts_ms
 
