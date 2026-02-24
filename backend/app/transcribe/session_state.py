@@ -142,7 +142,55 @@ class SessionState:
             self.last_piece_ts_ms = ts_ms
             return
         # Pieces from STT already include word-boundary spaces (▁→" "); concatenate directly.
+        # self.recent_buffer += piece
+        # self.last_piece_ts_ms = ts_ms
+        
+        # --- boundary-aware merge for Kyutai subword streaming ---
+
+        prev_text = self.recent_buffer if self.recent_buffer else self.raw_text
+        prev_last = prev_text[-1] if prev_text else ""
+
+        starts_new_word = piece.startswith(" ")
+        is_punct = bool(re.match(r"^[.,?!:;)]+", piece.strip()))
+
+        # Heuristic: very short alphabetic tokens often indicate we are mid-word ("te"+"rrible", "Ja"+"ke", "Le"+"a"+"ve")
+        # This helps us avoid inserting spaces inside words.
+        def looks_like_prefix(tok: str) -> bool:
+            t = tok.strip()
+            return t.isalpha() and len(t) <= 2  # keep conservative: 1–2 letters
+
+        # Decide whether to insert a missing space:
+        # Insert space when:
+        # - previous ends with alnum
+        # - incoming starts with alnum
+        # - incoming does NOT start with space
+        # - we are NOT expecting a continuation
+        should_insert_space = (
+            prev_text
+            and prev_last.isalnum()
+            and piece
+            and piece[0].isalnum()
+            and not starts_new_word
+            and not self._continuation_expected
+            and not is_punct
+        )
+
+        if should_insert_space:
+            self.recent_buffer += " "
+
+        # Append token
         self.recent_buffer += piece
+
+        # Update continuation state for next token
+        # If token explicitly starts a new word, next token is NOT automatically a continuation.
+        if starts_new_word or is_punct:
+            self._continuation_expected = False
+        else:
+            # If this token looks like a prefix (1–2 letters), expect continuation next.
+            # Otherwise, default to not expecting continuation.
+            self._continuation_expected = looks_like_prefix(piece)
+
+        self._last_piece_norm = piece
         self.last_piece_ts_ms = ts_ms
 
     def get_display_text(self) -> str:
