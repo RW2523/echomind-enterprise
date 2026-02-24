@@ -33,7 +33,9 @@ class Settings(BaseSettings):
     RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "0").lower() in ("1", "true", "yes")
 
     # --- RAG quality improvements (all optional, no breaking changes) ---
-    # Intent-aware query rewriting: classify (factual/procedural/exploratory/temporal) and rewrite for precision.
+    # When False (default), skip LLM query rewrite and use only the user question + deterministic variants for search. Set ECHOMIND_RAG_QUERY_REWRITE=1 for intent-aware expansion (adds 1 LLM call).
+    RAG_QUERY_REWRITE_ENABLED: bool = os.getenv("ECHOMIND_RAG_QUERY_REWRITE", "0").lower() in ("1", "true", "yes")
+    # When query rewrite is enabled: use intent-based rewrite (document/transcript) vs generic. Set ECHOMIND_RAG_INTENT_REWRITE=0 to use generic rewrite only.
     RAG_INTENT_REWRITE: bool = os.getenv("ECHOMIND_RAG_INTENT_REWRITE", "1").lower() in ("1", "true", "yes")
     # Weighted RRF: dense_weight + sparse_weight (default 0.6 + 0.4) instead of equal. Improves recall/precision balance.
     RAG_DENSE_RRF_WEIGHT: float = float(os.getenv("ECHOMIND_RAG_DENSE_RRF_WEIGHT", "0.6"))
@@ -65,9 +67,7 @@ class Settings(BaseSettings):
     RAG_VERBATIM_QUERY_TERMS: bool = os.getenv("ECHOMIND_RAG_VERBATIM_QUERY_TERMS", "1").lower() in ("1", "true", "yes")
     RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1200"))
 
-    WHISPER_MODEL: str = "base"
-
-    # Real-time transcription & knowledge capture
+    # Real-time transcription & knowledge capture (Kyutai STT only, 24kHz)
     ECHOMIND_AUTO_STORE_DEFAULT: bool = os.getenv("ECHOMIND_AUTO_STORE_DEFAULT", "1").lower() in ("1", "true", "yes")
     # When auto_store is on: store new transcript content to the KB every N seconds (0 = only on stop).
     AUTO_STORE_INTERVAL_SEC: int = int(os.getenv("ECHOMIND_AUTO_STORE_INTERVAL_SEC", "60"))
@@ -77,6 +77,19 @@ class Settings(BaseSettings):
     TRANSCRIPT_RECENT_BUFFER_MAX_CHARS: int = int(os.getenv("TRANSCRIPT_RECENT_BUFFER_MAX_CHARS", "120"))
     TRANSCRIPT_OVERLAP_K: int = int(os.getenv("TRANSCRIPT_OVERLAP_K", "200"))
     TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC: float = float(os.getenv("TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC", "15"))
-    SAMPLE_RATE: int = 16000
+    SAMPLE_RATE: int = 24000  # Kyutai STT (kyutai/stt-1b-en_fr)
+    # Voice activity: skip feeding audio to STT when RMS below this (0 = disabled). Reduces noise/silence transcribed as text.
+    TRANSCRIPT_VAD_RMS_THRESHOLD: float = float(os.getenv("TRANSCRIPT_VAD_RMS_THRESHOLD", "0.008"))
+    # VAD sliding window: window size and step in samples (e.g. 1024/512). Only used when VAD threshold > 0; chunk passes if any window exceeds threshold.
+    TRANSCRIPT_VAD_WINDOW_SAMPLES: int = int(os.getenv("TRANSCRIPT_VAD_WINDOW_SAMPLES", "1024"))
+    TRANSCRIPT_VAD_STEP_SAMPLES: int = int(os.getenv("TRANSCRIPT_VAD_STEP_SAMPLES", "512"))
+    # Backpressure: max PCM frames in queue per session; excess dropped (0 = unbounded, not recommended).
+    TRANSCRIPT_PCM_QUEUE_MAX_SIZE: int = int(os.getenv("TRANSCRIPT_PCM_QUEUE_MAX_SIZE", "256"))
+    # Max interval_buffer entries per session (prevents memory leak).
+    TRANSCRIPT_INTERVAL_BUFFER_MAX: int = int(os.getenv("TRANSCRIPT_INTERVAL_BUFFER_MAX", "2048"))
+    # GPU concurrency: max concurrent STT inference when device is CUDA (1 = serial).
+    TRANSCRIPT_GPU_CONCURRENCY: int = int(os.getenv("TRANSCRIPT_GPU_CONCURRENCY", "2"))
+    # STT warmup: number of frames to run on model load (CUDA kernels).
+    TRANSCRIPT_STT_WARMUP_FRAMES: int = int(os.getenv("TRANSCRIPT_STT_WARMUP_FRAMES", "8"))
 
 settings = Settings()

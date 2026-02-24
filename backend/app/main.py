@@ -1,7 +1,11 @@
+import asyncio
 import logging
 import sys
+import threading
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import httpx
 from .core.config import settings
 from .core.db import init_db
 from .api.routes.docs import router as docs_router
@@ -16,9 +20,72 @@ logging.basicConfig(
     force=True,
 )
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
+
+
+def _warm_kyutai_stt():
+    """Run in background: download Kyutai model then pre-load one STT instance (cache for first Live Transcript)."""
+    try:
+        from .transcribe.stt_streaming import KYUTAI_AVAILABLE, download_kyutai_model, preload_kyutai_stt
+        if not KYUTAI_AVAILABLE:
+            return
+        logger.info("Kyutai STT: pre-downloading model (first run may take 2–5 min)...")
+        if download_kyutai_model():
+            logger.info("Kyutai STT: model cached.")
+        logger.info("Kyutai STT: pre-loading model...")
+        if preload_kyutai_stt():
+            logger.info("Kyutai STT: ready (Live Transcript will connect instantly).")
+        else:
+            logger.warning("Kyutai STT: pre-load failed (Live Transcript will load on first use).")
+    except Exception as e:
+        logger.warning("Kyutai STT: warmup failed: %s", e)
+
+
+async def _warm_ollama():
+    """Load Ollama LLM and embed models into memory so first chat/RAG request is fast."""
+    # Derive Ollama base URL from LLM_BASE_URL (e.g. http://ollama:11434/v1 -> http://ollama:11434)
+    base = (settings.LLM_BASE_URL or "").rstrip("/")
+    if base.endswith("/v1"):
+        base = base[:-3]
+    if not base:
+        return
+    try:
+        async with httpx.AsyncClient(timeout=300) as client:
+            logger.info("Ollama: warming LLM model %s...", settings.LLM_MODEL)
+            r = await client.post(
+                f"{base}/api/chat",
+                json={"model": settings.LLM_MODEL, "messages": []},
+            )
+            if r.is_success:
+                logger.info("Ollama: LLM model loaded.")
+            else:
+                logger.warning("Ollama: LLM warmup returned %s", r.status_code)
+            logger.info("Ollama: warming embed model %s...", settings.OLLAMA_EMBED_MODEL)
+            r2 = await client.post(
+                settings.OLLAMA_EMBED_URL,
+                json={"model": settings.OLLAMA_EMBED_MODEL, "prompt": "."},
+            )
+            if r2.is_success:
+                logger.info("Ollama: embed model loaded.")
+            else:
+                logger.warning("Ollama: embed warmup returned %s", r2.status_code)
+    except Exception as e:
+        logger.warning("Ollama warmup failed (first request may be slow): %s", e)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pre-download and pre-load Kyutai STT in background so first Live Transcript connection is fast
+    t = threading.Thread(target=_warm_kyutai_stt, daemon=True)
+    t.start()
+    # Warm Ollama so first chat/RAG request doesn't wait for model load
+    asyncio.create_task(_warm_ollama())
+    yield
+    # shutdown: nothing to clean up (daemon thread exits with process)
+
 
 init_db()
-app = FastAPI(title=settings.APP_NAME)
+app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

@@ -50,77 +50,90 @@ export function useOrbVisualizer(
 
   const draw = useCallback(
     (time: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
+      try {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
 
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
 
-      const centerX = size / 2;
-      const centerY = size / 2;
-      const baseRadius = (size / 2) * 0.9;
+        const rawSize = Number(size);
+        if (typeof rawSize !== "number" || !Number.isFinite(rawSize) || rawSize <= 0) return;
+        const safeSize = Math.max(1, Math.min(rawSize, 10000));
 
-      if (analyserNode) {
-        analyserNode.smoothingTimeConstant = SMOOTHING;
-        analyserNode.getFloatTimeDomainData(timeDomainRef.current);
+        const centerX = safeSize / 2;
+        const centerY = safeSize / 2;
+        const baseRadius = (safeSize / 2) * 0.9;
+
+        if (analyserNode) {
+          analyserNode.smoothingTimeConstant = SMOOTHING;
+          analyserNode.getFloatTimeDomainData(timeDomainRef.current);
+        }
+
+        const stateParams = getOrbStateParams(orbState);
+        const radius = baseRadius * ORB_SCALE;
+
+        let rippleProgress = 1;
+        if (interruptedAt > 0) {
+          if (interruptStartRef.current === 0) interruptStartRef.current = interruptedAt;
+          rippleProgress = (time - interruptStartRef.current) / INTERRUPTION_RIPPLE_MS;
+          if (rippleProgress >= 1) interruptStartRef.current = 0;
+        }
+
+        ctx.save();
+        ctx.clearRect(0, 0, safeSize, safeSize);
+
+        if (isConnected && stateParams.rotationSpeed > 0) {
+          ctx.translate(centerX, centerY);
+          ctx.rotate((time * 0.001) * stateParams.rotationSpeed);
+          ctx.translate(-centerX, -centerY);
+        }
+
+        // Use state params for glow; slight boost when active, never dim the inactive orb (keep vivid)
+        const glowIntensity = stateParams.glowIntensity * (isActive ? 1.1 : 1);
+        const hasPulse = stateParams.pulseSpeed > 0 && (orbState === "listening" || orbState === "speaking" || orbState === "thinking");
+        const pulse = hasPulse ? 1 + 0.02 * Math.sin(time * 0.002 * stateParams.pulseSpeed * 60) : 1;
+        const rawR = radius * pulse;
+        // Clamp to valid range so canvas arc never receives negative or non-finite radius
+        const r =
+          typeof rawR === "number" && Number.isFinite(rawR) && rawR >= 0 && rawR <= 1e5
+            ? rawR
+            : baseRadius;
+
+        drawGlowRing(ctx, centerX, centerY, r, glowIntensity, color, stateParams.ringThickness);
+
+        if (rippleProgress < 1) {
+          drawInterruptionRipple(ctx, centerX, centerY, r, rippleProgress, color);
+        }
+
+        drawWaveRing(
+          ctx,
+          centerX,
+          centerY,
+          r,
+          timeDomainRef.current,
+          stateParams.waveAmplitude,
+          color,
+          SMOOTHING
+        );
+
+        drawOrbitingParticles(
+          ctx,
+          centerX,
+          centerY,
+          r,
+          stateParams.particleCount,
+          time / 1000,
+          color,
+          orbState
+        );
+
+        drawCenterAvatar(ctx, centerX, centerY, r, avatarImage, role, color + "40", time);
+
+        ctx.restore();
+      } catch {
+        // Swallow canvas errors (e.g. invalid radius) so one bad frame does not break the loop
       }
-
-      const stateParams = getOrbStateParams(orbState);
-      const radius = baseRadius * ORB_SCALE;
-
-      let rippleProgress = 1;
-      if (interruptedAt > 0) {
-        if (interruptStartRef.current === 0) interruptStartRef.current = interruptedAt;
-        rippleProgress = (time - interruptStartRef.current) / INTERRUPTION_RIPPLE_MS;
-        if (rippleProgress >= 1) interruptStartRef.current = 0;
-      }
-
-      ctx.save();
-      ctx.clearRect(0, 0, size, size);
-
-      if (isConnected && stateParams.rotationSpeed > 0) {
-        ctx.translate(centerX, centerY);
-        ctx.rotate((time * 0.001) * stateParams.rotationSpeed);
-        ctx.translate(-centerX, -centerY);
-      }
-
-      // Use state params for glow; slight boost when active, never dim the inactive orb (keep vivid)
-      const glowIntensity = stateParams.glowIntensity * (isActive ? 1.1 : 1);
-      const hasPulse = stateParams.pulseSpeed > 0 && (orbState === "listening" || orbState === "speaking" || orbState === "thinking");
-      const pulse = hasPulse ? 1 + 0.02 * Math.sin(time * 0.002 * stateParams.pulseSpeed * 60) : 1;
-      const r = radius * pulse;
-
-      drawGlowRing(ctx, centerX, centerY, r, glowIntensity, color, stateParams.ringThickness);
-
-      if (rippleProgress < 1) {
-        drawInterruptionRipple(ctx, centerX, centerY, r, rippleProgress, color);
-      }
-
-      drawWaveRing(
-        ctx,
-        centerX,
-        centerY,
-        r,
-        timeDomainRef.current,
-        stateParams.waveAmplitude,
-        color,
-        SMOOTHING
-      );
-
-      drawOrbitingParticles(
-        ctx,
-        centerX,
-        centerY,
-        r,
-        stateParams.particleCount,
-        time / 1000,
-        color,
-        orbState
-      );
-
-      drawCenterAvatar(ctx, centerX, centerY, r, avatarImage, role, color + "40", time);
-
-      ctx.restore();
     },
     [
       canvasRef,

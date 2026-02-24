@@ -25,17 +25,17 @@ This doc explains how live transcription content gets into storage: **one flow**
 
 1. **Frontend** (LiveTranscription): user fills **Name** and **Location** in the popup (or **Default**), then clicks **Start**.  
    - Opens WebSocket to `GET /api/transcribe/ws`.  
-   - Sends JSON: `{ type: "start", auto_store: true, sample_rate: 16000, name: "...", location: "..." }`.
+   - Sends JSON: `{ type: "start", auto_store: true, sample_rate: 24000, name: "...", location: "..." }` (sample_rate from backend ready).
 
 2. **Backend** (`transcribe/ws.py`):  
-   - On `type: "start"`: stores **name**, **location**, **started_at_iso** (now), resets **transcript_id**; creates/resets session (`SessionState`), starts **periodic auto-store task**.  
+   - Loads Kyutai STT, sends `{ type: "ready", sample_rate: 24000 }`. On `type: "start"`: stores **name**, **location**, **started_at_iso** (now), resets **transcript_id**; creates/resets session (`SessionState`), starts **periodic auto-store task**.  
    - Sends `{ type: "ready", session_id, sample_rate }`.
 
-3. **Frontend**: starts sending binary PCM16 (or JSON `{ type: "audio", pcm16_b64 }`) at 16 kHz.
+3. **Frontend**: starts sending binary PCM16 (or JSON `{ type: "audio", pcm16_b64 }`) at 24 kHz (Kyutai).
 
 ### 2.2 Audio → text (in memory)
 
-- **Backend** buffers audio; every ~2.5 s of audio (or on Kyutai frame) it runs **Whisper** (or Kyutai) and appends text to **SessionState** (paragraphs/segments).  
+- **Backend** uses **Kyutai STT** (frame-by-frame); emits text pieces into **SessionState** (paragraphs/segments).  
 - No DB write yet; this is all in-memory.  
 - Client gets `partial` / `segment` / `final` messages with the live text.
 
@@ -149,7 +149,7 @@ So: **1‑min (and on-stop) auto-store** = **transcripts** table (one row per se
 [Frontend: Start with name, location] ──► WebSocket start (auto_store: true, name, location)
        │
        ▼
-[Audio] ──► Whisper/Kyutai ──► SessionState (in-memory transcript)
+[Audio] ──► Kyutai STT ──► SessionState (in-memory transcript)
        │
        ├── Every AUTO_STORE_INTERVAL_SEC (e.g. 60 s):
        │     new text ──► create_transcript_for_session (if first) OR append_transcript_chunk

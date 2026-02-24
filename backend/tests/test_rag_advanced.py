@@ -14,6 +14,7 @@ try:
     from app.rag.advanced import (
         INSUFFICIENT_CONTEXT_MSG,
         _is_general_conversation,
+        _requires_rag_context,
         _apply_time_decay,
         _filter_hits_by_context_window,
     )
@@ -49,6 +50,27 @@ def test_is_general_conversation_two_word_queries():
     assert _is_general_conversation("setup guide") is False
     assert _is_general_conversation("what is") is False  # "what" is a question word -> not general
     assert _is_general_conversation("ok thanks") is True  # 2 words, not query-like, no ? -> general
+
+
+# --- _requires_rag_context: only use RAG when user mentions document/transcript/resources/etc. ---
+def test_requires_rag_context_empty_or_general():
+    assert _requires_rag_context("") is False
+    assert _requires_rag_context("   ") is False
+    assert _requires_rag_context("hi") is False
+    assert _requires_rag_context("tell me a joke") is False
+    assert _requires_rag_context("what's the weather?") is False
+
+
+def test_requires_rag_context_document_transcript_file():
+    assert _requires_rag_context("what's in the document?") is True
+    assert _requires_rag_context("summarize the transcript") is True
+    assert _requires_rag_context("from my saved transcript") is True
+    assert _requires_rag_context("search the uploaded file") is True
+    assert _requires_rag_context("in the pdf") is True
+    assert _requires_rag_context("resources about pricing") is True
+    assert _requires_rag_context("our discussion yesterday") is True
+    assert _requires_rag_context("the book says") is True
+    assert _requires_rag_context("live transcription") is True
 
 
 # --- Time decay: true half-life math ---

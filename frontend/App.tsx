@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { AppView, AppSettings, PersonaType } from './types';
 import { ICONS, COLORS } from './constants';
 import Sidebar from './components/Sidebar';
@@ -7,6 +7,10 @@ import KnowledgeChat from './components/KnowledgeChat';
 import LiveTranscription from './components/LiveTranscription';
 import VoiceConversation from './components/VoiceConversation';
 import Settings from './components/Settings';
+import { useVoiceConnection } from './hooks/useVoiceConnection';
+import { useLiveTranscription } from './hooks/useLiveTranscription';
+import { useKnowledgeChat } from './hooks/useKnowledgeChat';
+import { defaultTranscriptName } from './services/backend';
 
 const SETTINGS_KEY = "echomind_settings";
 
@@ -61,18 +65,41 @@ const App: React.FC = () => {
     saveSettings(s);
   }, []);
 
+  // Voice connection disconnects when user switches browser tabs or navigates away from Voice.
+  const voiceConnection = useVoiceConnection({ settings });
+
+  // Live Transcription lives in App so it keeps running when switching tabs (Chat / Voice).
+  // It only stops when the user clicks Stop.
+  const liveTranscription = useLiveTranscription(defaultTranscriptName);
+
+  // Knowledge Chat lives in App so conversation persists when switching tabs.
+  const knowledgeChat = useKnowledgeChat();
+
+  // Disconnect when user navigates away from Voice AI tab within the app
+  useEffect(() => {
+    if (activeView !== AppView.VOICE_CONVERSATION && voiceConnection.state.isConnected) {
+      voiceConnection.disconnect();
+    }
+  }, [activeView, voiceConnection]);
+
   const renderView = () => {
     switch (activeView) {
       case AppView.KNOWLEDGE_CHAT:
-        return <KnowledgeChat settings={settings} />;
+        return <KnowledgeChat settings={settings} knowledgeChat={knowledgeChat} />;
       case AppView.TRANSCRIPTION:
-        return <LiveTranscription />;
+        return <LiveTranscription liveTranscription={liveTranscription} />;
       case AppView.VOICE_CONVERSATION:
-        return <VoiceConversation settings={settings} onUpdateSetting={(key, val) => setSettings({ ...settings, [key]: val })} />;
+        return (
+          <VoiceConversation
+            settings={settings}
+            onUpdateSetting={(key, val) => setSettings({ ...settings, [key]: val })}
+            voiceConnection={voiceConnection}
+          />
+        );
       case AppView.SETTINGS:
         return <Settings settings={settings} setSettings={setSettings} />;
       default:
-        return <KnowledgeChat settings={settings} />;
+        return <KnowledgeChat settings={settings} knowledgeChat={knowledgeChat} />;
     }
   };
 

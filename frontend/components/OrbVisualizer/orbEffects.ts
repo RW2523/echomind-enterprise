@@ -3,6 +3,13 @@
  * All coordinates in canvas pixel space; center and radius passed in.
  */
 
+/** Clamp radius to a valid positive finite value to avoid canvas arc errors. Never returns 0, NaN, or Infinity. */
+function safeRadius(r: number, max: number = 10000): number {
+  const n = Number(r);
+  if (typeof n !== "number" || !Number.isFinite(n) || n < 0) return 1;
+  return Math.max(1, Math.min(n, max));
+}
+
 /**
  * Draw a moving gradient for orb center (no avatar). Time in ms for animation.
  * Uses conic gradient when available (rotating), else radial with moving focus.
@@ -15,6 +22,7 @@ function drawMovingGradient(
   role: "user" | "assistant",
   time: number
 ): void {
+  const rad = safeRadius(radius);
   const t = time * 0.0002;
   const angleOffset = (t * Math.PI * 2) % (Math.PI * 2);
 
@@ -36,11 +44,11 @@ function drawMovingGradient(
       }
       return g;
     }
-    const dx = radius * 0.25 * Math.cos(t * 0.8);
-    const dy = radius * 0.25 * Math.sin(t * 0.6);
+    const dx = rad * 0.25 * Math.cos(t * 0.8);
+    const dy = rad * 0.25 * Math.sin(t * 0.6);
     const g = ctx.createRadialGradient(
       centerX + dx, centerY + dy, 0,
-      centerX, centerY, radius
+      centerX, centerY, safeRadius(rad)
     );
     if (role === "assistant") {
       g.addColorStop(0, "rgba(34, 211, 238, 0.6)");
@@ -58,7 +66,7 @@ function drawMovingGradient(
   if (gradient) {
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, safeRadius(rad), 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -73,10 +81,10 @@ export function drawCenterAvatar(
   fallbackColor: string,
   time?: number
 ): void {
-  const r = radius * 0.72;
+  const r = safeRadius(radius * 0.72);
   ctx.save();
   ctx.beginPath();
-  ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, safeRadius(r), 0, Math.PI * 2);
   ctx.closePath();
   ctx.clip();
 
@@ -101,9 +109,10 @@ export function drawGlowRing(
   color: string,
   thickness: number = 4
 ): void {
+  const rad = safeRadius(radius);
   const gradient = ctx.createRadialGradient(
-    centerX, centerY, radius * 0.6,
-    centerX, centerY, radius * 1.4
+    centerX, centerY, safeRadius(rad * 0.6),
+    centerX, centerY, safeRadius(rad * 1.4)
   );
   const [r, g, b] = hexToRgb(color);
   gradient.addColorStop(0, `rgba(${r},${g},${b},${intensity * 0.3})`);
@@ -112,7 +121,7 @@ export function drawGlowRing(
   ctx.save();
   ctx.fillStyle = gradient;
   ctx.beginPath();
-  ctx.arc(centerX, centerY, radius * 1.4, 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, safeRadius(rad * 1.4), 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
@@ -120,7 +129,7 @@ export function drawGlowRing(
   ctx.strokeStyle = `rgba(${r},${g},${b},${intensity * 0.6})`;
   ctx.lineWidth = thickness;
   ctx.beginPath();
-  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, safeRadius(rad), 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 }
@@ -140,6 +149,7 @@ export function drawWaveRing(
   color: string,
   _smoothing: number = 0.3
 ): void {
+  const rad = safeRadius(radius);
   if (amplitude <= 0 || timeDomainData.length < 2) return;
   const [r, g, b] = hexToRgb(color);
   const segments = 80;
@@ -156,10 +166,10 @@ export function drawWaveRing(
     const prevIdx = Math.max(0, sampleIdx - 8);
     const nextIdx = Math.min(timeDomainData.length - 1, sampleIdx + 8);
     const smooth = (timeDomainData[prevIdx] + sample * 2 + timeDomainData[nextIdx]) / 4;
-    const rOff = radius * amplitude * smooth * waveScale;
+    const rOff = rad * amplitude * smooth * waveScale;
     const angle = t * Math.PI * 2 - Math.PI / 2;
-    const x = centerX + (radius + rOff) * Math.cos(angle);
-    const y = centerY + (radius + rOff) * Math.sin(angle);
+    const x = centerX + (rad + rOff) * Math.cos(angle);
+    const y = centerY + (rad + rOff) * Math.sin(angle);
     if (i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   }
@@ -178,10 +188,11 @@ export function drawOrbitingParticles(
   color: string,
   state: string
 ): void {
+  const rad = safeRadius(radius);
   if (count <= 0) return;
   const [r, g, b] = hexToRgb(color);
-  const orbitRadius = radius * 1.08;
-  const particleRadius = Math.max(1, radius * 0.025);
+  const orbitRadius = rad * 1.08;
+  const particleRadius = Math.max(1, rad * 0.025);
   // Same motion for idle and listening so orb doesn't change when user starts speaking
   const isSpeaking = state === "speaking";
   const isListeningOrIdle = state === "listening" || state === "idle";
@@ -195,7 +206,7 @@ export function drawOrbitingParticles(
     ctx.save();
     ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
     ctx.beginPath();
-    ctx.arc(x, y, particleRadius, 0, Math.PI * 2);
+    ctx.arc(x, y, safeRadius(particleRadius), 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -230,14 +241,15 @@ export function drawInterruptionRipple(
   color: string
 ): void {
   if (progress >= 1) return;
+  const rad = safeRadius(radius);
   const [r, g, b] = hexToRgb(color);
   const ease = 1 - Math.pow(1 - progress, 2);
-  const r2 = radius * (1 + ease * 0.25);
+  const r2 = rad * (1 + ease * 0.25);
   ctx.save();
   ctx.strokeStyle = `rgba(${r},${g},${b},${0.6 * (1 - progress)})`;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(centerX, centerY, r2, 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, safeRadius(r2), 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 }

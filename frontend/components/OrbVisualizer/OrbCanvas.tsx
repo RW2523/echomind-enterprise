@@ -34,7 +34,7 @@ export const OrbCanvas: React.FC<OrbCanvasProps> = ({
   size: sizeProp,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const size = sizeProp ?? 220;
+  const size = Math.max(1, Number(sizeProp) || 220);
   const fillColor = color ?? DEFAULT_COLORS[role];
 
   useOrbVisualizer(canvasRef, {
