@@ -18,6 +18,8 @@ export interface ConversationState {
   isConnected: boolean;
   /** Last interruption timestamp for ripple effect */
   interruptedAt: number;
+  /** Continuous listening mode: assistant only responds after wake word ("EchoMind") or trigger phrase */
+  listenOnly: boolean;
 }
 
 export const initialConversationState: ConversationState = {
@@ -25,6 +27,7 @@ export const initialConversationState: ConversationState = {
   assistantOrb: "disconnected",
   isConnected: false,
   interruptedAt: 0,
+  listenOnly: false,
 };
 
 export function getOrbStateParams(state: OrbState): {

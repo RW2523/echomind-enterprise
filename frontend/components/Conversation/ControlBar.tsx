@@ -7,6 +7,9 @@ export interface ControlBarProps {
   connectionError: string | null;
   micMuted: boolean;
   assistantOrb: string;
+  /** Continuous listening: only respond after wake word "EchoMind" */
+  listenOnly?: boolean;
+  onListenOnlyToggle?: () => void;
   onConnect: () => void;
   onDisconnect: () => void;
   onMicMutedToggle: () => void;
@@ -20,6 +23,8 @@ export const ControlBar: React.FC<ControlBarProps> = ({
   connectionError,
   micMuted,
   assistantOrb,
+  listenOnly = false,
+  onListenOnlyToggle,
   onConnect,
   onDisconnect,
   onMicMutedToggle,
@@ -39,6 +44,11 @@ export const ControlBar: React.FC<ControlBarProps> = ({
           {connectionError}
         </p>
       )}
+      {isConnected && listenOnly && (
+        <p className="text-[12px] text-teal-400/90 font-medium uppercase tracking-wider">
+          Listening mode — say &quot;EchoMind&quot; or &quot;now you can speak&quot; to respond
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-center gap-2.5">
         {!isConnected ? (
           <button
@@ -52,6 +62,21 @@ export const ControlBar: React.FC<ControlBarProps> = ({
           </button>
         ) : (
           <>
+            {onListenOnlyToggle && (
+              <button
+                type="button"
+                onClick={onListenOnlyToggle}
+                title={listenOnly ? "Stop listening (respond to every utterance)" : "Start listening (only respond after wake word)"}
+                className={`rounded-2xl px-4 py-3.5 min-h-[48px] text-[15px] font-medium transition-all duration-300 touch-manipulation active:scale-[0.97] ${
+                  listenOnly
+                    ? "bg-teal-500/25 text-teal-300 border border-teal-500/40 hover:bg-teal-500/30"
+                    : "bg-white/[0.04] text-slate-500 border border-white/[0.06] hover:bg-white/[0.08] hover:text-slate-400"
+                }`}
+                style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)" }}
+              >
+                {listenOnly ? "Stop listening" : "Start listening"}
+              </button>
+            )}
             <button
               type="button"
               onClick={onMicMutedToggle}

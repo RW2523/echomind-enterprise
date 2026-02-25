@@ -100,6 +100,11 @@ export interface UseVoiceConnectionReturn {
   pendingAssistantText: string;
   applyContext: () => void;
   clearMemory: () => void;
+  /** Continuous listening mode: only respond after wake word. */
+  listenOnly: boolean;
+  setListenOnly: (on: boolean) => void;
+  /** Accumulated transcript while in listen-only (live updating until wake word). */
+  listenBufferText: string;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   connecting: boolean;
@@ -121,12 +126,14 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     assistantOrb: "disconnected",
     isConnected: false,
     interruptedAt: 0,
+    listenOnly: false,
   });
   const [connecting, setConnecting] = useState(false);
   const [userAnalyser, setUserAnalyser] = useState<AnalyserNode | null>(null);
   const [assistantAnalyser, setAssistantAnalyser] = useState<AnalyserNode | null>(null);
   const [voiceMessages, setVoiceMessages] = useState<VoiceMessage[]>([]);
   const [pendingAssistantText, setPendingAssistantText] = useState("");
+  const [listenBufferText, setListenBufferText] = useState("");
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -144,6 +151,8 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   const [micMuted, setMicMuted] = useState(false);
   const micMutedRef = useRef(false);
   micMutedRef.current = micMuted;
+  const listenOnlyRef = useRef(false);
+  listenOnlyRef.current = state.listenOnly;
 
   const pumpPlayback = useCallback(() => {
     const ctx = playbackCtxRef.current;
@@ -289,6 +298,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
           type: "set_context",
           system_prompt: systemPrompt,
           clear_memory: false,
+          listen_only: false,
           piper_voice: settings?.voiceName ?? undefined,
           use_knowledge_base: true,
           persona: settings?.persona ?? undefined,
@@ -331,12 +341,28 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         setState((prev) => ({ ...prev, assistantOrb: "idle" }));
         return;
       }
+      if (msg.type === "memory_event" && msg.event === "listening_mode_on") {
+        listenOnlyRef.current = true;
+        setListenBufferText("");
+        setState((prev) => ({ ...prev, listenOnly: true }));
+        return;
+      }
+      if (msg.type === "memory_event" && msg.event === "listening_mode_off") {
+        listenOnlyRef.current = false;
+        setListenBufferText("");
+        setState((prev) => ({ ...prev, listenOnly: false }));
+        return;
+      }
+      if (msg.type === "listen_buffer" && typeof msg.text === "string") {
+        setListenBufferText(String(msg.text).trim());
+        return;
+      }
       if (msg.type === "asr_final" && msg.text) {
         const userText = String(msg.text).trim();
-        if (userText) {
+        if (userText && !listenOnlyRef.current) {
           setVoiceMessages((prev) => [...prev, { role: "user", text: userText }]);
         }
-        setState((prev) => ({ ...prev, userOrb: "idle", assistantOrb: "thinking" }));
+        setState((prev) => ({ ...prev, userOrb: "idle", assistantOrb: listenOnlyRef.current ? "idle" : "thinking" }));
         return;
       }
       if (msg.type === "assistant_text_partial") {
@@ -393,9 +419,11 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       wsRef.current = null;
       setUserAnalyser(null);
       setAssistantAnalyser(null);
-      setState((prev) => ({ ...prev, isConnected: false, userOrb: "disconnected", assistantOrb: "disconnected" }));
+      setState((prev) => ({ ...prev, isConnected: false, userOrb: "disconnected", assistantOrb: "disconnected", listenOnly: false }));
       setVoiceMessages([]);
       setPendingAssistantText("");
+      setListenBufferText("");
+      listenOnlyRef.current = false;
       setConnectionError(null);
       setConnecting(false);
     };
@@ -441,6 +469,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       isConnected: false,
       userOrb: "disconnected",
       assistantOrb: "disconnected",
+      listenOnly: false,
     }));
   }, []);
 
@@ -497,6 +526,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       type: "set_context",
       system_prompt: sysPrompt,
       clear_memory: false,
+      listen_only: state.listenOnly,
       piper_voice: settings?.voiceName ?? undefined,
       use_knowledge_base: true,
       persona: settings?.persona ?? undefined,
@@ -504,7 +534,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       voice_bot_name: botName || undefined,
       voice_user_name: userName || undefined,
     }));
-  }, [settings?.persona, settings?.voiceName, settings?.voiceContext, settings?.contextWindow, settings?.voiceBotName, settings?.voiceUserName]);
+  }, [state.listenOnly, settings?.persona, settings?.voiceName, settings?.voiceContext, settings?.contextWindow, settings?.voiceBotName, settings?.voiceUserName]);
 
   const clearMemory = useCallback(() => {
     const ws = wsRef.current;
@@ -514,14 +544,25 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     setPendingAssistantText("");
   }, []);
 
+  const setListenOnly = useCallback((on: boolean) => {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "set_context", listen_only: on }));
+    }
+    setState((prev) => ({ ...prev, listenOnly: on }));
+  }, []);
+
   return {
     state,
     userAnalyser,
     assistantAnalyser,
     voiceMessages,
     pendingAssistantText,
+    listenBufferText,
     applyContext,
     clearMemory,
+    listenOnly: state.listenOnly,
+    setListenOnly,
     connect,
     disconnect,
     connecting,

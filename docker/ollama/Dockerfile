@@ -2,7 +2,10 @@
 FROM ollama/ollama:latest
 
 # curl needed by entrypoint to warm LLM and embed models via API
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+# Use MIT mirror + retry to avoid transient "mirror sync in progress" failures from ports.ubuntu.com
+RUN for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do [ -f "$f" ] && sed -i 's|http://ports.ubuntu.com/ubuntu-ports|http://mirrors.mit.edu/ubuntu-ports|g' "$f"; done; \
+  apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+  || (sleep 20 && apt-get update && apt-get install -y --no-install-recommends curl ca-certificates) \
   && rm -rf /var/lib/apt/lists/*
 
 # Models to pre-pull (match backend/voice env)

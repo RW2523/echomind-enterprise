@@ -1,8 +1,12 @@
 import asyncio
 import base64
 import json
+import logging
 import uuid
 from fastapi import FastAPI, WebSocket, HTTPException
+
+# Ensure listen-mode logs ([LISTEN_MODE_OFF/ON]) show in docker logs
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel

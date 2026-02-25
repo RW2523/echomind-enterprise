@@ -42,8 +42,13 @@ export interface ConversationStageProps {
   assistantAnalyser: AnalyserNode | null;
   voiceMessages?: VoiceMessage[];
   pendingAssistantText?: string;
+  /** Accumulated transcript in listen-only mode (live updates until wake word) */
+  listenBufferText?: string;
   connectionError?: string | null;
   onClearMemory: () => void;
+  /** Continuous listening: only respond after wake word "EchoMind" */
+  listenOnly?: boolean;
+  onListenOnlyToggle?: () => void;
   onConnect: () => void;
   onDisconnect: () => void;
   connecting?: boolean;
@@ -61,8 +66,11 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
   assistantAnalyser,
   voiceMessages = [],
   pendingAssistantText = "",
+  listenBufferText = "",
   connectionError = null,
   onClearMemory,
+  listenOnly = false,
+  onListenOnlyToggle,
   onConnect,
   onDisconnect,
   connecting = false,
@@ -87,7 +95,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [voiceMessages, pendingAssistantText]);
 
-  const showTranscript = voiceMessages.length > 0 || !!pendingAssistantText;
+  const showTranscript = voiceMessages.length > 0 || !!pendingAssistantText || listenOnly;
 
   return (
     <div
@@ -112,21 +120,28 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         {showTranscript && (
           <div className="shrink-0 flex flex-col max-h-[36vh] min-h-0 border-t border-white/[0.04]">
             <div className="px-4 py-2.5 text-[13px] font-medium text-slate-500 uppercase tracking-wider">
-              Live transcript
+              {listenOnly ? "Listening — say EchoMind when done" : "Live transcript"}
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-3 space-y-1.5">
-              {voiceMessages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`rounded-2xl px-4 py-2.5 text-[15px] max-w-[85%] animate-[fadeIn_0.4s_cubic-bezier(0.25,0.1,0.25,1)] ${
-                    msg.role === "user"
-                      ? "ml-auto bg-white/[0.06] text-slate-400"
-                      : "mr-auto bg-teal-500/[0.08] text-teal-200/90"
-                  }`}
-                >
-                  {msg.text}
+              {listenOnly && listenBufferText ? (
+                <div className="rounded-2xl px-4 py-3 text-[15px] bg-white/[0.06] text-slate-300 border border-white/10 whitespace-pre-wrap break-words">
+                  {listenBufferText}
+                  <span className="inline-block w-2 h-4 ml-1 bg-teal-400/80 rounded-sm animate-pulse align-middle" aria-hidden />
                 </div>
-              ))}
+              ) : null}
+              {!listenOnly &&
+                voiceMessages.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={`rounded-2xl px-4 py-2.5 text-[15px] max-w-[85%] animate-[fadeIn_0.4s_cubic-bezier(0.25,0.1,0.25,1)] ${
+                      msg.role === "user"
+                        ? "ml-auto bg-white/[0.06] text-slate-400"
+                        : "mr-auto bg-teal-500/[0.08] text-teal-200/90"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                ))}
               {pendingAssistantText && (
                 <div className="mr-auto rounded-2xl px-4 py-2.5 text-[15px] max-w-[85%] bg-teal-500/[0.08] text-teal-200/90 border border-teal-500/15 animate-[fadeIn_0.4s_cubic-bezier(0.25,0.1,0.25,1)]">
                   {pendingAssistantText}
@@ -145,6 +160,8 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         connectionError={connectionError}
         micMuted={micMuted}
         assistantOrb={state.assistantOrb}
+        listenOnly={listenOnly}
+        onListenOnlyToggle={onListenOnlyToggle}
         onConnect={onConnect}
         onDisconnect={onDisconnect}
         onMicMutedToggle={onMicMutedToggle ?? (() => {})}
