@@ -18,7 +18,7 @@ class Settings:
 
     # OpenAI-compatible endpoint (Ollama: http://127.0.0.1:11434/v1/chat/completions)
     LLM_URL: str = os.getenv("LLM_URL", "http://127.0.0.1:11434/v1/chat/completions")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "qwen2.5:7b-instruct")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "qwen2.5:7b-instruct-q4_K_M")
 
     # LLM streaming / phrase commit knobs (unmute-like)
     LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.7"))

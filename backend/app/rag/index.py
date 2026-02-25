@@ -2,7 +2,7 @@ from __future__ import annotations
 import os, json
 import numpy as np
 import faiss
-from typing import Dict, List
+from typing import Dict, List, Optional
 from ..core.config import settings
 from ..core.db import get_conn
 from ..utils.ids import new_id, now_iso
@@ -236,15 +236,20 @@ class FaissIndex:
                 out.append({"chunk_id":cid,"score":float(D[0][rank]),"text":text,"source":json.loads(src_json)})
         return out
 
-    async def search_transcript_only(self, query: str, k: int) -> List[Dict]:
-        """Search only over the transcript-only index. Returns same shape as search(). Empty if no transcripts."""
+    async def search_transcript_only(self, query: str, k: int, query_vector: Optional[np.ndarray] = None) -> List[Dict]:
+        """Search only over the transcript-only index. Returns same shape as search(). Empty if no transcripts.
+        If query_vector is provided (shape 1,dim, L2-normalized), skips embedding for speed."""
         if self.transcript_index is None:
             await self._rebuild_transcript_index()
         if self.transcript_index is None or self.transcript_index.ntotal == 0:
             return []
-        qv = await self.emb.embed([query])
-        faiss.normalize_L2(qv)
-        D, I = self.transcript_index.search(qv.astype(np.float32), k)
+        if query_vector is not None:
+            qv = query_vector.astype(np.float32) if query_vector.ndim == 2 else query_vector.reshape(1, -1).astype(np.float32)
+        else:
+            qv = await self.emb.embed([query])
+            qv = np.array(qv, dtype=np.float32) if not isinstance(qv, np.ndarray) else qv.astype(np.float32)
+            faiss.normalize_L2(qv)
+        D, I = self.transcript_index.search(qv, k)
         out = []
         chunk_ids = self.transcript_meta["chunk_ids"]
         with get_conn() as conn:
@@ -258,5 +263,48 @@ class FaissIndex:
                 text, src_json = row
                 out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": json.loads(src_json)})
         return out
+
+    def _is_transcript_chunk(self, source: dict) -> bool:
+        """True if chunk is from a transcript document."""
+        fn = (source or {}).get("filename") or ""
+        return (fn or "").startswith("transcript_")
+
+    async def search_document_only(self, query: str, k: int, query_vector: Optional[np.ndarray] = None) -> List[Dict]:
+        """Search only over uploaded documents (exclude transcripts). Returns same shape as search().
+        If query_vector is provided (shape 1,dim, L2-normalized), skips embedding for speed."""
+        if self.index is None or self.index.ntotal == 0:
+            return []
+        if query_vector is not None:
+            qv = query_vector.astype(np.float32) if query_vector.ndim == 2 else query_vector.reshape(1, -1).astype(np.float32)
+        else:
+            qv = await self.emb.embed([query])
+            qv = np.array(qv, dtype=np.float32) if not isinstance(qv, np.ndarray) else qv.astype(np.float32)
+            faiss.normalize_L2(qv)
+        fetch_k = min(k * 4, self.index.ntotal)
+        D, I = self.index.search(qv, fetch_k)
+        out = []
+        chunk_ids = self.meta["chunk_ids"]
+        with get_conn() as conn:
+            for rank, idx in enumerate(I[0].tolist()):
+                if idx < 0 or idx >= len(chunk_ids) or len(out) >= k:
+                    continue
+                cid = chunk_ids[idx]
+                row = conn.execute("SELECT text, source_json FROM chunks WHERE id=?", (cid,)).fetchone()
+                if not row:
+                    continue
+                text, src_json = row
+                src = json.loads(src_json)
+                if self._is_transcript_chunk(src):
+                    continue
+                out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": src})
+        return out
+
+    def search_document_only_sparse(self, query: str, k: int) -> List[Dict]:
+        """Sparse (BM25) search over documents only (exclude transcripts). Same shape as sparse.search()."""
+        if not self.sparse._bm25 or not self.sparse.chunk_ids:
+            return []
+        raw = self.sparse.search(query, min(k * 4, len(self.sparse.chunk_ids)))
+        out = [h for h in raw if not self._is_transcript_chunk(h.get("source") or {})]
+        return out[:k]
 
 index = FaissIndex()

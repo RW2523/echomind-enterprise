@@ -44,7 +44,7 @@ Or build and start in one go: `./scripts/build.sh --up`.
 ## Model setup (included in build/start)
 
 - **Kyutai STT** (Live Transcript): Pre-downloaded during backend Docker build.
-- **Ollama** (LLM + embeddings): Models (`qwen2.5:7b-instruct`, `nomic-embed-text`) are pulled automatically when Ollama starts.
+- **Ollama** (LLM + embeddings): Models (`qwen2.5:7b-instruct-q4_K_M`, `nomic-embed-text`) are pulled automatically when Ollama starts.
 - **Whisper** (Voice): Base model pre-downloaded during voice Docker build.
 
 On first `docker compose up --build`, Ollama will pull its models (2–5 min). Backend and voice wait until models are ready. No manual `ollama pull` needed.

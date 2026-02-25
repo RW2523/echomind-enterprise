@@ -9,7 +9,7 @@ RUN for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do [ -f "$f" 
   && rm -rf /var/lib/apt/lists/*
 
 # Models to pre-pull (match backend/voice env)
-ENV OLLAMA_LLM_MODEL=qwen2.5:7b-instruct
+ENV OLLAMA_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
 ENV OLLAMA_EMBED_MODEL=nomic-embed-text
 
 COPY entrypoint.sh /entrypoint.sh

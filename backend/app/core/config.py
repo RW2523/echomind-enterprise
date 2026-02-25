@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     META_TRANSCRIPT_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_transcript_meta.json")
     SPARSE_TRANSCRIPT_META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "sparse_transcript_meta.json")
     LLM_BASE_URL: str = "http://ollama:11434/v1"
-    LLM_MODEL: str = "qwen2.5:7b-instruct"
+    LLM_MODEL: str = "qwen2.5:7b-instruct-q4_K_M"
     LLM_TEMPERATURE: float = 0.2
     LLM_MAX_TOKENS: int = 512
     OLLAMA_EMBED_URL: str = "http://ollama:11434/api/embeddings"

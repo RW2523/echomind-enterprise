@@ -4,7 +4,7 @@
 
 set -e
 
-OLLAMA_LLM_MODEL="${OLLAMA_LLM_MODEL:-qwen2.5:7b-instruct}"
+OLLAMA_LLM_MODEL="${OLLAMA_LLM_MODEL:-qwen2.5:7b-instruct-q4_K_M}"
 OLLAMA_EMBED_MODEL="${OLLAMA_EMBED_MODEL:-nomic-embed-text}"
 
 echo "[ollama-setup] Starting Ollama server in background..."

@@ -14,7 +14,7 @@ docker build -t echomind-voice .
 docker run --rm -it --gpus all --network host \
   -v $PWD/voices:/voices \
   -e LLM_URL=http://127.0.0.1:11434/v1/chat/completions \
-  -e LLM_MODEL=qwen2.5:7b-instruct \
+  -e LLM_MODEL=qwen2.5:7b-instruct-q4_K_M \
   -e PIPER_MODEL=/voices/en_US-lessac-medium.onnx \
   echomind-voice
 ```
