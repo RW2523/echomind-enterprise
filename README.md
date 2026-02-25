@@ -3,10 +3,20 @@
 This build removes ALL Gemini code and connects the UI to your backend APIs.
 
 ## Services
-- Frontend: http://<DGX_IP>:3000 (HTTP) or https://<DGX_IP>:3443 (HTTPS)
-- Backend API: proxied under /api
-- Voice bot: proxied under /voice (direct: http://<DGX_IP>:8001). **Voice AI is connected to RAG** (via `BACKEND_CHAT_URL`): questions about your transcripts or uploaded PDFs are answered from the knowledge base.
-- Ollama: http://<DGX_IP>:11434
+
+| Service        | Port (host)     | Role |
+|----------------|------------------|------|
+| Frontend       | 3000 (HTTP), 3443 (HTTPS) | UI; proxies `/api` → backend, `/voice` → voice |
+| Backend        | (internal 8000)  | EchoMind API; uses RAG Platform for docs/query/transcript ingest |
+| RAG Platform   | (internal 8000)  | Main RAG: Qwen embedder + generator, Qdrant |
+| Voice          | 8001             | Voice bot + Whisper; calls backend for RAG answers |
+| Qdrant         | 6333             | Vector DB for RAG Platform |
+| Ollama         | 11434            | LLM + embeddings (used by backend/voice when not using RAG platform for generation) |
+
+- **Open the app:** http://\<host\>:3000 or https://\<host\>:3443
+- **Backend API** is reached via the frontend at `/api` (no need to expose backend port)
+- **Voice** is at `/voice` through the frontend, or directly at http://\<host\>:8001
+- **Voice AI is connected to RAG** (via `BACKEND_CHAT_URL`): questions about transcripts or uploaded PDFs are answered from the knowledge base (RAG Platform when `RAG_PLATFORM_URL` is set)
 
 ## HTTPS (no browser warning)
 
@@ -24,10 +34,71 @@ Trusted HTTPS on localhost with [mkcert](https://github.com/FiloSottile/mkcert):
 **Fallback – self-signed**  
 The image also serves HTTPS with a self-signed cert (browser will show a warning; use **Advanced** → **Proceed**).
 
-## Run
+## Build and run the entire application
+
+### Prerequisites
+
+- **Docker** and **Docker Compose** (v2)
+- **NVIDIA GPU** and **NVIDIA Container Toolkit** (`nvidia-docker2` or Docker with `nvidia` runtime) for:
+  - Ollama (LLM + embeddings)
+  - Backend (optional FAISS GPU)
+  - RAG Platform (embedder + generator)
+  - Voice (Whisper)
+
+### One-command run
+
+From the **repository root**:
+
 ```bash
 docker compose up --build
 ```
+
+This builds and starts (in order):
+
+1. **Qdrant** – vector DB (port 6333)
+2. **Ollama** – LLM + embeddings (port 11434); pulls models on first start (2–5 min)
+3. **RAG Platform** – main RAG (embedder + generator, uses Qdrant)
+4. **Backend** – EchoMind API (proxies docs/chat/transcript to RAG platform)
+5. **Voice** – voice bot + Whisper (port 8001)
+6. **Frontend** – UI with nginx (ports 3000 HTTP, 3443 HTTPS)
+
+### Where to open the app
+
+- **HTTP:** http://\<host\>:3000  
+- **HTTPS (self-signed):** https://\<host\>:3443 (accept browser warning or use **Advanced** → **Proceed**)
+
+Replace \<host\> with your machine’s IP or `localhost` if running on the same machine.
+
+The frontend is served by nginx, which proxies:
+
+- `/api/*` → backend (Knowledge Chat, docs, transcripts, Live Transcript WebSocket)
+- `/voice/*` → voice service (Voice Conversation WebSocket)
+
+So you only need to open the frontend URL; no need to expose the backend port.
+
+### Run in the background
+
+```bash
+docker compose up --build -d
+```
+
+Logs: `docker compose logs -f` (or `docker compose logs -f backend rag-platform` for RAG/backend only).
+
+### RAG Platform: "no kernel image is available for execution on the device"
+
+The RAG platform defaults to **CPU** (`DEVICE=cpu`) so it runs on all hosts. If you see a 500 error and `RuntimeError: CUDA error: no kernel image is available for execution on the device`, the PyTorch build does not support your GPU (common on some ARM/NVIDIA setups). Keep `DEVICE=cpu` or fix your PyTorch/CUDA stack.
+
+For a **supported** NVIDIA GPU (e.g. many x86_64 datacenter GPUs), you can speed up the RAG platform by setting in `docker-compose.yml` under `rag-platform` → `environment`: `DEVICE=cuda`.
+
+### Optional: run without GPU
+
+For a **CPU-only** run (slower, for testing):
+
+1. In `docker-compose.yml`, remove or comment out the `deploy.resources.reservations` block under `ollama`, `rag-platform`, `backend`, and `voice`.
+2. RAG Platform already uses `DEVICE=cpu` by default.
+3. Run: `docker compose up --build`.
+
+Ollama and the backend can still run; the RAG platform will be slower on CPU.
 
 ### Build fails with "failed to execute bake: read |0: file already closed"
 This can happen at the end of a Buildx build when writing provenance metadata. Disable provenance and rebuild:

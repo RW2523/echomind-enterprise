@@ -7,8 +7,10 @@ from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from ...utils.ids import new_id, now_iso
+from ...core.config import settings
 from ...core.db import get_conn
 from ...rag.advanced import answer as answer_with_citations, answer_stream, update_conversation_summary, _answer_general
+from ...rag_platform_client import is_configured as rag_platform_configured, query as rag_query
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -142,6 +144,15 @@ async def ask_voice(inp: AskVoiceIn):
         out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
         return {"answer": out["answer"]}
 
+    if rag_platform_configured():
+        mode = "general" if not inp.use_knowledge_base else None
+        try:
+            out_rag = await rag_query(inp.message, mode=mode)
+            return {"answer": out_rag.get("answer", "")}
+        except Exception as e:
+            logger.exception("RAG platform query failed (voice): %s", e)
+            return {"answer": "Sorry, the knowledge service is temporarily unavailable."}
+
     out = await answer_with_citations(
         inp.message,
         history=[],
@@ -189,6 +200,24 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
     history = [{"role": r[0], "content": r[1]} for r in rows]
     conversation_summary = _get_conversation_summary(inp.chat_id)
 
+    if rag_platform_configured():
+        mode = "general" if not inp.use_knowledge_base else None
+        try:
+            out_rag = await rag_query(inp.message, mode=mode)
+        except Exception as e:
+            logger.exception("RAG platform query failed: %s", e)
+            out_rag = {"answer": "Sorry, the knowledge service is temporarily unavailable.", "evidence": []}
+        answer_text = out_rag.get("answer", "")
+        citations = out_rag.get("evidence", [])
+        with get_conn() as conn:
+            conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
+                         (new_id("msg"), inp.chat_id, "user", inp.message, now_iso()))
+            conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
+                         (new_id("msg"), inp.chat_id, "assistant", answer_text, now_iso()))
+            conn.commit()
+        background_tasks.add_task(_update_summary_background, conversation_summary, inp.message, answer_text, inp.chat_id)
+        return {"answer": answer_text, "citations": citations}
+
     out = await answer_with_citations(
         inp.message,
         history,
@@ -213,15 +242,36 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
 @router.post("/ask-stream")
 async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
     async def gen():
-        with get_conn() as conn:
-            rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
-        history = [{"role": r[0], "content": r[1]} for r in rows]
         conversation_summary = _get_conversation_summary(inp.chat_id)
 
         with get_conn() as conn:
             conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
                          (new_id("msg"), inp.chat_id, "user", inp.message, now_iso()))
             conn.commit()
+
+        if rag_platform_configured():
+            mode = "general" if not inp.use_knowledge_base else None
+            try:
+                out_rag = await rag_query(inp.message, mode=mode)
+            except Exception as e:
+                logger.exception("RAG platform query failed: %s", e)
+                yield json.dumps({"type": "error", "message": str(e)}) + "\n"
+                return
+            full_answer = out_rag.get("answer", "")
+            citations = out_rag.get("evidence", [])
+            yield json.dumps({"type": "chunk", "text": full_answer}) + "\n"
+            with get_conn() as conn:
+                conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
+                             (new_id("msg"), inp.chat_id, "assistant", full_answer, now_iso()))
+                conn.commit()
+            yield json.dumps({"type": "done", "answer": full_answer, "citations": citations}) + "\n"
+            if full_answer:
+                background_tasks.add_task(_update_summary_background, conversation_summary, inp.message, full_answer, inp.chat_id)
+            return
+
+        with get_conn() as conn:
+            rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
+        history = [{"role": r[0], "content": r[1]} for r in rows]
 
         full_answer: str | None = None
         try:

@@ -8,9 +8,10 @@ import logging
 import re
 from ..utils.ids import new_id, now_iso
 from ..core.db import get_conn
+from ..core.config import settings
 from ..rag.index import index
 from ..rag.llm import OpenAICompatChat
-from ..core.config import settings
+from ..rag_platform_client import is_configured as rag_platform_configured, ingest_transcript_batch as rag_ingest_transcript_batch
 
 logger = logging.getLogger(__name__)
 _chat = None
@@ -89,15 +90,25 @@ async def store_transcript_to_db(
             (tid, title, raw_text, refined_text, json.dumps(tags_list), echotag, echodate, echodate, echodate, name_val, location_val),
         )
         conn.commit()
-    try:
-        index_text = raw_text + ("\n\n" + refined_text if refined_text else "")
-        await index.add_text(
-            f"transcript_{tid}",
-            index_text,
-            {"type": "transcript", "tags": tags_list, "echotag": echotag, "echodate": echodate, "created_at": echodate},
-        )
-    except Exception as e:
-        logger.warning("Failed to index transcript %s in RAG: %s", tid, e)
+    index_text = raw_text + ("\n\n" + refined_text if refined_text else "")
+    if rag_platform_configured():
+        try:
+            await rag_ingest_transcript_batch(
+                transcript_id=tid,
+                lines=[{"text": index_text, "ts": 0}],
+                location=location_val,
+            )
+        except Exception as e:
+            logger.warning("Failed to ingest transcript %s to RAG platform: %s", tid, e)
+    else:
+        try:
+            await index.add_text(
+                f"transcript_{tid}",
+                index_text,
+                {"type": "transcript", "tags": tags_list, "echotag": echotag, "echodate": echodate, "created_at": echodate},
+            )
+        except Exception as e:
+            logger.warning("Failed to index transcript %s in RAG: %s", tid, e)
     return {
         "transcript_id": tid,
         "title": title,

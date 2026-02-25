@@ -92,4 +92,7 @@ class Settings(BaseSettings):
     # STT warmup: number of frames to run on model load (CUDA kernels).
     TRANSCRIPT_STT_WARMUP_FRAMES: int = int(os.getenv("TRANSCRIPT_STT_WARMUP_FRAMES", "8"))
 
+    # RAG Platform: when set, backend proxies docs/query/transcript ingest to this URL (e.g. http://rag-platform:8000).
+    RAG_PLATFORM_URL: str = os.getenv("RAG_PLATFORM_URL", "")
+
 settings = Settings()

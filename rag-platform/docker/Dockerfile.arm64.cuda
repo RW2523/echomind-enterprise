@@ -1,0 +1,28 @@
+# RAG Platform: DGX Spark ARM64 + CUDA
+# Build: docker build -f docker/Dockerfile.arm64.cuda -t rag-platform .
+# Use a tag that exists for both amd64 and arm64 (12.4 not found; 12.6.3+ are available)
+FROM nvidia/cuda:12.6.3-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 python3-pip python3.11-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install PyTorch with CUDA first (pip default is CPU-only). cu124 matches CUDA 12.6 runtime.
+RUN pip3 install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cu124
+
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+COPY app/ ./app/
+
+# Pre-download models (optional; can do at runtime)
+# ENV HF_HOME=/data/hf
+# RUN python3 -c "from transformers import AutoModel, AutoTokenizer; AutoTokenizer.from_pretrained('Qwen/Qwen3-Embedding-0.6B'); AutoModel.from_pretrained('Qwen/Qwen3-Embedding-0.6B')"
+
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

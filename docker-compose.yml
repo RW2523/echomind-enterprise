@@ -1,4 +1,44 @@
 services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: echomind-qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+
+  rag-platform:
+    build:
+      context: ./rag-platform
+      dockerfile: docker/Dockerfile.arm64.cuda
+    container_name: echomind-rag-platform
+    expose: ["8000"]
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      # Use cpu to avoid "no kernel image is available for execution on the device" on some GPUs (e.g. ARM/DGX Spark). Set to cuda if your GPU is supported by the PyTorch cu124 wheel.
+      - DEVICE=cpu
+      - USE_BF16=1
+    volumes:
+      - rag_platform_data:/data
+    depends_on:
+      - qdrant
+    healthcheck:
+      # Only passes after lifespan completes (embedder + generator loaded); first run can take 10+ min
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 900s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
   backend:
     build:
       context: ./backend
@@ -11,10 +51,13 @@ services:
       - LLM_MODEL=qwen2.5:7b-instruct
       - OLLAMA_EMBED_URL=http://ollama:11434/api/embeddings
       - OLLAMA_EMBED_MODEL=nomic-embed-text
+      - RAG_PLATFORM_URL=http://rag-platform:8000
     volumes:
       - echomind_data:/data
     depends_on:
       ollama:
+        condition: service_healthy
+      rag-platform:
         condition: service_healthy
     deploy:
       resources:
@@ -81,3 +124,5 @@ services:
 volumes:
   echomind_data:
   ollama_data:
+  qdrant_data:
+  rag_platform_data:
