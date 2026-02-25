@@ -30,15 +30,16 @@ docker compose up --build
 ```
 
 ### Build fails with "failed to execute bake: read |0: file already closed"
-This can happen at the end of a Buildx build when writing provenance metadata. Disable provenance and rebuild:
+This Docker BuildKit bug occurs when the backend's long Hugging Face download runs in parallel with other services. Use the build script (builds backend first, then the rest):
 
 ```bash
-BUILDX_METADATA_PROVENANCE=disabled docker compose build
+./scripts/build.sh
 docker compose up -d
 ```
 
-Or in one go: `BUILDX_METADATA_PROVENANCE=disabled docker compose up --build`.  
-If you use `docker buildx bake` instead of `docker compose build`, run it with the same env var: `BUILDX_METADATA_PROVENANCE=disabled docker buildx bake`.
+Or build and start in one go: `./scripts/build.sh --up`.
+
+**Alternative:** Disable provenance: `BUILDX_METADATA_PROVENANCE=disabled docker compose build`
 
 ## Model setup (included in build/start)
 

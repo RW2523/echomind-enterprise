@@ -16,12 +16,23 @@ import webrtcvad
 from .config import SETTINGS
 from .conversation_memory import ConversationMemory
 from .echo_commands import parse_and_route, strip_wake_word
+from .wake_word_storage import load_wake_word, save_wake_word
 from .adapters.stt_whisper import WhisperSTT
 from .adapters.llm_openai_stream import OpenAICompatLLMStream
 from .adapters.tts_piper import PiperTTS
 from .adapters.moshi_ws import MoshiWsAdapter
 
 logger = logging.getLogger(__name__)
+
+
+def _log_llm_response(user_text: str, reply: str):
+    """Log user input and LLM response for debugging."""
+    logger.info(
+        "[LLM_RESPONSE] user_text=%r reply=%r",
+        (user_text or "")[:200],
+        (reply or "")[:400],
+    )
+
 
 def pcm16_bytes_to_float32(pcm16: bytes) -> np.ndarray:
     x = np.frombuffer(pcm16, dtype=np.int16).astype(np.float32)
@@ -243,13 +254,10 @@ class OmniSessionA:
         self.context_window: str = "all"
         self.voice_bot_name: str = ""
         self.voice_user_name: str = ""
-        # Listen-only mode: accumulate user speech until trigger or wake word
+        # Listen-only mode: accumulate user speech until trigger or wake word (single string, not split by utterance)
         self.listen_only: bool = False
-        self.listen_buffer: List[str] = []
-        self.trigger_phrases: List[str] = [
-            "now you can speak", "now you can process", "fact check", "fact check it",
-            "process that", "speak now", "you can speak",
-        ]
+        self.listen_buffer: str = ""
+        self.trigger_phrases: List[str] = []  # Only wake word triggers; no phrases (avoids false exits on pauses)
         # EchoMind: rolling conversation memory (rolling window)
         self.conversation_memory = ConversationMemory(
             window_minutes=getattr(SETTINGS, "MEMORY_WINDOW_MINUTES", 30.0),
@@ -257,16 +265,19 @@ class OmniSessionA:
         if getattr(SETTINGS, "ECHO_DEBUG", False):
             self.conversation_memory.set_debug_log(lambda msg: logger.info(msg))
         # Global profile (session-level; voice commands and set_context can update)
+        default_wake = load_wake_word(getattr(SETTINGS, "DEFAULT_ASSISTANT_NAME", "EchoMind"))
         self.global_profile: Dict[str, str] = {
-            "assistant_name": getattr(SETTINGS, "DEFAULT_ASSISTANT_NAME", "EchoMind"),
-            "wake_word": getattr(SETTINGS, "DEFAULT_ASSISTANT_NAME", "EchoMind"),
+            "assistant_name": default_wake,
+            "wake_word": default_wake,
             "user_name": getattr(SETTINGS, "DEFAULT_USER_NAME", "") or "",
             "timezone": getattr(SETTINGS, "DEFAULT_TIMEZONE", "America/New_York"),
             "location": getattr(SETTINGS, "DEFAULT_LOCATION", "") or "",
         }
+        self.pending_wake_word_change: Optional[str] = None
+        self._last_user_utterance: Optional[str] = None
 
     async def start(self, session_id: str):
-        self.listen_buffer = []
+        self.listen_buffer = ""
         if self.moshi:
             await self.moshi.connect()
             self._tasks.append(asyncio.create_task(self._moshi_recv_loop()))
@@ -410,14 +421,17 @@ class OmniSessionA:
                 self.global_profile["timezone"] = str(data.get("timezone", "")).strip() or "America/New_York"
             if data.get("location") is not None:
                 self.global_profile["location"] = str(data.get("location", "")).strip()
+            prev_listen = self.listen_only
             self.listen_only = bool(data.get("listen_only", False))
+            if prev_listen and not self.listen_only:
+                logger.warning("[LISTEN_MODE_OFF] Reason: client set_context listen_only=False (UI or API)")
             triggers = data.get("trigger_phrases")
             if isinstance(triggers, list):
                 self.trigger_phrases = [str(x).strip().lower() for x in triggers if str(x).strip()]
             # If user checks "clear memory"
             if bool(data.get("clear_memory")):
                 self.history = []
-                self.listen_buffer = []
+                self.listen_buffer = ""
             # Optional: switch Piper TTS voice if client sent piper_voice (e.g. en_US-lessac-medium)
             piper_voice = (data.get("piper_voice") or "").strip()
             if piper_voice:
@@ -574,6 +588,13 @@ class OmniSessionA:
         if not user_text:
             return
 
+        try:
+            return await self._finalize_and_reply_impl(my_gen, user_text)
+        finally:
+            self._last_user_utterance = user_text
+
+    async def _finalize_and_reply_impl(self, my_gen: int, user_text: str):
+        """Inner implementation; _last_user_utterance is set by caller after return."""
         # Always store user utterance in EchoMind conversation memory
         try:
             self.conversation_memory.add_text(user_text, speaker="user")
@@ -581,26 +602,47 @@ class OmniSessionA:
             pass
 
         ut_lower = user_text.lower()
-        wake_word = (self.global_profile.get("wake_word") or "").strip().lower()
-        # Trigger = wake word at start (e.g. "EchoMind, what did I say") OR trigger_phrases
-        stripped_for_wake = strip_wake_word(user_text, self.global_profile.get("wake_word") or "")
-        wake_word_triggered = wake_word and (stripped_for_wake != ut_lower)
-        triggered = wake_word_triggered or any(trig in ut_lower for trig in self.trigger_phrases)
+        wake_word = (self.global_profile.get("wake_word") or "echomind").strip().lower()
+        # In listen-only: switch when we see "EchoMind", "Echo Mind", or "Stop listening"
+        if self.listen_only:
+            wake_patterns = [ r"\b" + re.escape(wake_word) + r"\b", r"\becho\s+mind\b", r"\bstop\s+listening\b", r"\bstoplistening\b"]
+            triggered = any(re.search(p, ut_lower) for p in wake_patterns)
+            # "Stop listening" is handled by intent router (runs first)
+        else:
+            stripped_for_wake = strip_wake_word(user_text, self.global_profile.get("wake_word") or "")
+            wake_word_triggered = wake_word and (stripped_for_wake != ut_lower)
+            triggered = wake_word_triggered
 
         # Intent router (EchoMind commands)
         memory_summary = self.conversation_memory.get_entries_for_context(5, max_chars=500)
+        last_utterance = (self.listen_buffer if self.listen_only else None) or self._last_user_utterance
         handled, response_text, extra = parse_and_route(
             user_text,
             self.global_profile,
             memory_summary,
             self.listen_only,
             self.trigger_phrases,
+            pending_wake_word_change=self.pending_wake_word_change,
+            last_utterance=last_utterance,
         )
 
         # Apply profile / listen / clear from intent
+        if extra.get("pending_wake_word_change"):
+            self.pending_wake_word_change = extra["pending_wake_word_change"]
+        if extra.get("clear_pending_wake_word_change"):
+            self.pending_wake_word_change = None
+        if extra.get("confirm_wake_word_change") and self.pending_wake_word_change:
+            new_wake = self.pending_wake_word_change
+            self.global_profile["assistant_name"] = new_wake
+            self.global_profile["wake_word"] = new_wake
+            self.pending_wake_word_change = None
+            save_wake_word(new_wake)
+            logger.info("[WAKE_WORD_CHANGED] new=%r", new_wake)
+            await self._emit_profile_update()
         if extra.get("set_assistant_name"):
             self.global_profile["assistant_name"] = extra["set_assistant_name"]
             self.global_profile["wake_word"] = extra["set_assistant_name"]
+            save_wake_word(extra["set_assistant_name"])
             await self._emit_profile_update()
         if extra.get("set_user_name"):
             self.global_profile["user_name"] = extra["set_user_name"]
@@ -612,15 +654,21 @@ class OmniSessionA:
             self.global_profile["location"] = extra["set_location"]
             await self._emit_profile_update()
         if "set_listen_only" in extra:
+            prev_listen = self.listen_only
             self.listen_only = bool(extra["set_listen_only"])
+            if prev_listen and not self.listen_only:
+                logger.warning("[LISTEN_MODE_OFF] Reason: voice command (e.g. 'Stop listening'). user_text=%r", user_text[:120])
+            elif not prev_listen and self.listen_only:
+                logger.warning("[LISTEN_MODE_ON] Reason: voice command (e.g. 'Start listening'). user_text=%r", user_text[:120])
             if getattr(SETTINGS, "ECHO_DEBUG", False):
                 logger.info("EchoMind listen_only=%s", self.listen_only)
             await self.send({"type": "memory_event", "event": "listening_mode_on" if self.listen_only else "listening_mode_off"})
         if extra.get("clear_memory"):
             self.history = []
-            self.listen_buffer = []
+            self.listen_buffer = ""
 
-        # Handled command with direct response (e.g. "Your name is X", "Start listening")
+        # Handled command with direct response (e.g. "Your name is X", "Start listening", "Stop listening")
+        # Must run BEFORE listen-only accumulate so "Start listening" / "Stop listening" get spoken
         if handled and response_text and not extra.get("fact_check") and not extra.get("memory_query_type"):
             self.turn_id += 1
             await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
@@ -636,28 +684,32 @@ class OmniSessionA:
             self._assistant_active_gen = None
             return
 
-        # Listen-only and NOT trigger: accumulate and stay in listen mode
+        # Listen-only and NOT trigger: only accumulate, do NOT send to LLM or speak (hold until wake word)
         if self.listen_only and not triggered:
-            self.listen_buffer.append(user_text)
+            self.listen_buffer = (self.listen_buffer + " " + user_text).strip() if self.listen_buffer else user_text
             self.turn_id += 1
             await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
+            await self.send({"type": "listen_buffer", "text": self.listen_buffer})
             await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
             self._assistant_active_gen = None
             return
 
-        # Trigger: exit listen-only and build compiled context
+        # Wake word seen: switch mode; send combined content to LLM; LLM responds to that message (no special trigger)
+        reenter_listen_only = False
         if self.listen_only and triggered:
             self.listen_only = False
-            if getattr(SETTINGS, "ECHO_DEBUG", False):
-                logger.info("EchoMind listen_only -> False (trigger)")
+            reenter_listen_only = True
+            combined = self.listen_buffer.strip()
+            self.listen_buffer = ""
+            # Combined content = prior buffer + current utterance; send as single user message to LLM
+            user_text = (combined + " " + user_text).strip() if combined else user_text
+            logger.warning(
+                "[LISTEN_MODE_OFF] Wake word seen. buffer_len=%d combined_len=%d user_text=%r",
+                len(combined),
+                len(user_text),
+                user_text,
+            )
             await self.send({"type": "memory_event", "event": "listening_mode_off"})
-            combined = " ".join(self.listen_buffer) if self.listen_buffer else ""
-            self.listen_buffer = []
-            if combined.strip():
-                user_text = (combined + " " + user_text).strip()
-            # Use wake-word-stripped version for the actual query if it was a wake word trigger
-            if wake_word_triggered and stripped_for_wake:
-                user_text = stripped_for_wake
 
         self.turn_id += 1
         await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
@@ -701,6 +753,7 @@ class OmniSessionA:
                     if my_gen != self.generation_id:
                         return
                     reply_clean = strip_markdown_for_speech(answer)
+                    _log_llm_response(user_text, reply_clean or answer)
                     await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
                     await self._speak_phrase(my_gen, answer)
                     self.history.append({"role": "user", "content": user_text})
@@ -716,6 +769,7 @@ class OmniSessionA:
                 try:
                     reply = self.llm.complete_messages(messages_fc)
                     reply_clean = strip_markdown_for_speech(reply)
+                    _log_llm_response(user_text, reply_clean or reply)
                     if reply_clean:
                         await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
                     await self._speak_phrase(my_gen, reply)
@@ -728,6 +782,9 @@ class OmniSessionA:
                         pass
                 except Exception as e:
                     await self.send({"type": "error", "where": "llm", "message": str(e), "generation_id": my_gen})
+            if reenter_listen_only:
+                self.listen_only = True
+                await self.send({"type": "memory_event", "event": "listening_mode_on"})
             await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
             self._assistant_active_gen = None
             return
@@ -743,6 +800,7 @@ class OmniSessionA:
                     reply = f"In the last {int(minutes)} minutes, here's what was said:\n\n{recap}" if len(recap) < 1500 else recap[:1500] + "..."
                 else:
                     reply = f"I don't have anything in the last {int(minutes)} minutes."
+                _log_llm_response(user_text, reply)
                 await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply})
                 await self._speak_phrase(my_gen, reply[:500] if len(reply) > 500 else reply)
             elif query_type == "summarize":
@@ -755,6 +813,7 @@ class OmniSessionA:
                     try:
                         reply = self.llm.complete_messages(messages_sum)
                         reply_clean = strip_markdown_for_speech(reply)
+                        _log_llm_response(user_text, reply_clean or reply)
                         await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
                         await self._speak_phrase(my_gen, reply_clean)
                     except Exception as e:
@@ -769,6 +828,7 @@ class OmniSessionA:
                     ts_str = time.strftime("%H:%M", time.localtime(e.ts_start))
                     lines.append(f"[{ts_str}] {e.speaker or 'user'}: {e.text[:80]}{'...' if len(e.text) > 80 else ''}" + (f" tags={e.tags}" if e.tags else ""))
                 reply = "\n".join(lines) if lines else "No entries in that window."
+                _log_llm_response(user_text, reply)
                 await self.send({"type": "memory_info", "generation_id": my_gen, "entries": [e.to_dict() for e in entries]})
                 await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply})
                 await self._speak_phrase(my_gen, reply[:400] if len(reply) > 400 else reply)
@@ -785,6 +845,7 @@ class OmniSessionA:
                     try:
                         reply = self.llm.complete_messages(messages_when)
                         reply_clean = strip_markdown_for_speech(reply)
+                        _log_llm_response(user_text, reply_clean or reply)
                         await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
                         await self._speak_phrase(my_gen, reply_clean)
                     except Exception as e:
@@ -792,6 +853,9 @@ class OmniSessionA:
                         await self._speak_phrase(my_gen, "I couldn't find that.")
                 else:
                     await self._speak_phrase(my_gen, "I don't have any mentions of that in recent conversation.")
+            if reenter_listen_only:
+                self.listen_only = True
+                await self.send({"type": "memory_event", "event": "listening_mode_on"})
             await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
             self._assistant_active_gen = None
             return
@@ -823,6 +887,7 @@ class OmniSessionA:
                 if my_gen != self.generation_id:
                     return
                 reply_clean = strip_markdown_for_speech(answer)
+                _log_llm_response(user_text, reply_clean or answer)
                 if reply_clean:
                     await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
                 await self._speak_phrase(my_gen, answer)
@@ -835,6 +900,9 @@ class OmniSessionA:
                     pass
             except Exception as e:
                 await self.send({"type": "error", "where": "backend_rag", "message": str(e), "generation_id": my_gen})
+            if reenter_listen_only:
+                self.listen_only = True
+                await self.send({"type": "memory_event", "event": "listening_mode_on"})
             await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
             self._assistant_active_gen = None
             return
@@ -897,6 +965,7 @@ class OmniSessionA:
             if phrase_buf.strip():
                 await self._commit_phrase(my_gen, phrase_buf)
             final = strip_markdown_for_speech(assistant_text.strip())
+            _log_llm_response(user_text, final)
             if final:
                 await self.send({"type": "assistant_text", "generation_id": my_gen, "text": final})
             self.history.append({"role": "user", "content": user_text})
@@ -916,6 +985,7 @@ class OmniSessionA:
                 self._assistant_active_gen = None
                 return
             reply_clean = strip_markdown_for_speech(reply)
+            _log_llm_response(user_text, reply_clean or reply)
             if reply_clean:
                 await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
             await self._speak_phrase(my_gen, reply)

@@ -86,3 +86,33 @@ def test_intent_clear_memory():
     handled, response, extra = parse_and_route("Clear memory", profile, "", False, [])
     assert handled is True
     assert extra.get("clear_memory") is True
+
+
+def test_intent_change_wake_word():
+    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
+    handled, response, extra = parse_and_route("Change wake word to Bob", profile, "", False, [])
+    assert handled is True
+    assert extra.get("pending_wake_word_change") == "bob"
+    assert "yes" in response.lower() or "confirm" in response.lower()
+
+
+def test_intent_confirm_wake_word():
+    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
+    handled, response, extra = parse_and_route("Yes", profile, "", False, [], pending_wake_word_change="Bob")
+    assert handled is True
+    assert extra.get("confirm_wake_word_change") is True
+    assert "bob" in response.lower()
+
+
+def test_intent_change_wake_word_semantic():
+    """Semantic variations: rename you, call you, new name, etc."""
+    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
+    for utterance in [
+        "Rename you to Watson",
+        "I want to call you Bob",
+        "Change your name to Echo",
+        "Can we change the trigger word to Jarvis",
+    ]:
+        handled, response, extra = parse_and_route(utterance, profile, "", False, [])
+        assert handled is True, f"Failed for: {utterance}"
+        assert extra.get("pending_wake_word_change"), f"Failed for: {utterance}"
