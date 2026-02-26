@@ -163,6 +163,22 @@ def _reciprocal_rank_fusion(
     return _weighted_rrf(dense_hits_per_query, sparse_hits_per_query, k, dense_weight=0.5, sparse_weight=0.5)
 
 
+def _doc_epoch_from_meta(meta: dict, doc_created: Optional[str]) -> Optional[float]:
+    """Get Unix epoch for a document from meta (epoch) or fallback to echodate/created_at. Returns None if unavailable."""
+    epoch = meta.get("epoch")
+    if epoch is not None:
+        try:
+            return float(epoch)
+        except (TypeError, ValueError):
+            pass
+    ts = meta.get("echodate") or doc_created
+    if ts:
+        dt = _parse_iso_date(ts)
+        if dt:
+            return dt.timestamp()
+    return None
+
+
 def _get_doc_info_for_hits(hits: List[Dict]) -> Tuple[Dict[str, Optional[str]], Dict[str, dict]]:
     """Fetch created_at and meta_json for each unique doc_id in hits. Returns (doc_id -> created_at, doc_id -> meta)."""
     doc_ids = list({(h.get("source") or {}).get("doc_id") for h in hits if (h.get("source") or {}).get("doc_id")})
@@ -354,6 +370,204 @@ def _parse_last_time_window(question: str) -> Optional[timedelta]:
     return None
 
 
+# Weekday names for "last Monday" etc. (Monday=0, Sunday=6)
+_WEEKDAYS = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6}
+_WEEKDAYS_SHORT = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
+
+
+def _has_explicit_time_mention(question: str) -> bool:
+    """True if the question explicitly mentions a time period, date, or temporal reference. Used to decide whether to apply time-range filtering."""
+    if not (question or "").strip():
+        return False
+    t = question.lower()
+    # Relative: last N hours/days/minutes, past N, for N hours
+    if re.search(r"(?:last|past|for)\s+(\d+)\s*(?:hour|minute|day|min|hr)s?", t):
+        return True
+    if re.search(r"\b\d+\s*(?:hour|hours?|minute|minutes?|day|days?)\b", t):
+        return True
+    # Named: yesterday, today, tomorrow
+    if re.search(r"\b(yesterday|today|tomorrow)\b", t):
+        return True
+    # "today at 2 pm", "at 2pm"
+    if re.search(r"(?:today|yesterday)\s+at\s+\d+", t) or re.search(r"\bat\s+\d+\s*(?:am|pm|o'clock)?", t):
+        return True
+    # Weekday: last Monday, on Monday
+    if re.search(r"\b(?:last|on|this)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", t, re.I):
+        return True
+    # Absolute date: 2 Feb 2026, Feb 2 2026, 2026-02-02
+    if re.search(r"\b\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{4}\b", t, re.I):
+        return True
+    if re.search(r"\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2}\s*,?\s*\d{4}\b", t, re.I):
+        return True
+    if re.search(r"\b\d{4}-\d{2}-\d{2}\b", t):
+        return True
+    if re.search(r"\b\d{1,2}/\d{1,2}/\d{4}\b", t):
+        return True
+    return False
+
+
+def _parse_time_range_from_question(question: str) -> Optional[Tuple[float, float]]:
+    """
+    Parse time range from question using semantic + context rules. Returns (start_epoch, end_epoch) or None.
+    Only returns a range when time is explicitly mentioned. Used for transcript retrieval filtering.
+    Supports: last N hours/days/minutes, 48 hours, yesterday, today, today at 2 pm, last Monday, 2 Feb 2026.
+    """
+    if not (question or "").strip() or not _has_explicit_time_mention(question):
+        return None
+    t = question.lower().strip()
+    now = datetime.now(timezone.utc)
+    start_dt: Optional[datetime] = None
+    end_dt: Optional[datetime] = None
+
+    # 1. Relative: "last 2 hours", "past 48 hours", "for last 3 days", "summary for 2 hours"
+    m = re.search(r"(?:last|past|for\s+last|for)\s+(\d+)\s*(minute|minutes?|mins?)", t)
+    if m:
+        n = min(10080, max(1, int(m.group(1))))
+        start_dt = now - timedelta(minutes=n)
+        end_dt = now
+    if start_dt is None:
+        m = re.search(r"(?:last|past|for\s+last|for)\s+(\d+)\s*(hour|hours?)", t)
+        if m:
+            n = min(720, max(1, int(m.group(1))))
+            start_dt = now - timedelta(hours=n)
+            end_dt = now
+    if start_dt is None:
+        m = re.search(r"(?:last|past|for\s+last|for)\s+(\d+)\s*(day|days?)", t)
+        if m:
+            n = min(365, max(1, int(m.group(1))))
+            start_dt = now - timedelta(days=n)
+            end_dt = now
+    # "48 hours" without "last" (e.g. "summary for 48 hours")
+    if start_dt is None and re.search(r"\b(\d+)\s*(?:hour|hours?)\b", t):
+        m = re.search(r"\b(\d+)\s*(?:hour|hours?)\b", t)
+        if m:
+            n = min(720, max(1, int(m.group(1))))
+            start_dt = now - timedelta(hours=n)
+            end_dt = now
+    if start_dt is None and re.search(r"\b(\d+)\s*(?:day|days?)\b", t):
+        m = re.search(r"\b(\d+)\s*(?:day|days?)\b", t)
+        if m:
+            n = min(365, max(1, int(m.group(1))))
+            start_dt = now - timedelta(days=n)
+            end_dt = now
+
+    # 2. "today at 2 pm" - from 2pm today until now
+    if start_dt is None and re.search(r"today\s+at\s+(\d{1,2})\s*(?:(am|pm))?", t):
+        m = re.search(r"today\s+at\s+(\d{1,2})\s*(?:(am|pm))?", t)
+        if m:
+            hour = int(m.group(1)) % 24
+            pm = (m.group(2) or "").lower() == "pm"
+            am = (m.group(2) or "").lower() == "am"
+            if pm and hour < 12:
+                hour += 12
+            elif am and hour == 12:
+                hour = 0
+            start_dt = now.replace(hour=hour, minute=0, second=0, microsecond=0)
+            if start_dt.tzinfo is None:
+                start_dt = start_dt.replace(tzinfo=timezone.utc)
+            end_dt = now
+            if start_dt > end_dt:
+                start_dt = start_dt - timedelta(days=1)
+
+    # 3. "yesterday at 2 pm" - from 2pm to end of yesterday
+    if start_dt is None and re.search(r"yesterday\s+at\s+(\d{1,2})\s*(?:(am|pm))?", t):
+        m = re.search(r"yesterday\s+at\s+(\d{1,2})\s*(?:(am|pm))?", t)
+        if m:
+            hour = int(m.group(1)) % 24
+            pm = (m.group(2) or "").lower() == "pm"
+            am = (m.group(2) or "").lower() == "am"
+            if pm and hour < 12:
+                hour += 12
+            elif am and hour == 12:
+                hour = 0
+            start_dt = (now - timedelta(days=1)).replace(hour=hour, minute=0, second=0, microsecond=0)
+            if start_dt.tzinfo is None:
+                start_dt = start_dt.replace(tzinfo=timezone.utc)
+            end_dt = (now - timedelta(days=1)).replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    # 4. "today" - from midnight today until now
+    if start_dt is None and re.search(r"\btoday\b", t):
+        start_dt = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        if start_dt.tzinfo is None:
+            start_dt = start_dt.replace(tzinfo=timezone.utc)
+        end_dt = now
+
+    # 5. "yesterday" - full day
+    if start_dt is None and re.search(r"\byesterday\b", t):
+        start_dt = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        if start_dt.tzinfo is None:
+            start_dt = start_dt.replace(tzinfo=timezone.utc)
+        end_dt = start_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    # 6. "last Monday" (or any weekday)
+    if start_dt is None:
+        for name, wd in {**_WEEKDAYS, **_WEEKDAYS_SHORT}.items():
+            if re.search(rf"last\s+{name}\b", t):
+                today_wd = now.weekday()  # Monday=0
+                days_back = (today_wd - wd) % 7
+                if days_back == 0:
+                    days_back = 7  # "last Monday" when today is Monday = previous Monday
+                start_dt = (now - timedelta(days=days_back)).replace(hour=0, minute=0, second=0, microsecond=0)
+                if start_dt.tzinfo is None:
+                    start_dt = start_dt.replace(tzinfo=timezone.utc)
+                end_dt = start_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+                break
+
+    # 7. Absolute date: "2 Feb 2026", "Feb 2 2026", "2026-02-02"
+    if start_dt is None:
+        # "2 Feb 2026" or "2 February 2026"
+        m = re.search(r"\b(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{4})\b", t, re.I)
+        if m:
+            try:
+                from datetime import date
+                months = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12}
+                month = months.get(m.group(2).lower()[:3], 1)
+                d = date(int(m.group(3)), month, min(28, int(m.group(1))))
+                start_dt = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=timezone.utc)
+                end_dt = datetime(d.year, d.month, d.day, 23, 59, 59, tzinfo=timezone.utc)
+            except (ValueError, KeyError):
+                pass
+        if start_dt is None:
+            # "Feb 2 2026" or "February 2, 2026"
+            m = re.search(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})\s*,?\s*(\d{4})\b", t, re.I)
+            if m:
+                try:
+                    from datetime import date
+                    months = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12}
+                    month = months.get(m.group(1).lower()[:3], 1)
+                    d = date(int(m.group(3)), month, min(28, int(m.group(2))))
+                    start_dt = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=timezone.utc)
+                    end_dt = datetime(d.year, d.month, d.day, 23, 59, 59, tzinfo=timezone.utc)
+                except (ValueError, KeyError):
+                    pass
+        if start_dt is None:
+            # "2026-02-02"
+            m = re.search(r"\b(\d{4})-(\d{2})-(\d{2})\b", t)
+            if m:
+                try:
+                    from datetime import date
+                    d = date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                    start_dt = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=timezone.utc)
+                    end_dt = datetime(d.year, d.month, d.day, 23, 59, 59, tzinfo=timezone.utc)
+                except ValueError:
+                    pass
+        if start_dt is None:
+            # "12/1/2025", "10/10/2025" (MM/DD/YYYY)
+            m = re.search(r"\b(\d{1,2})/(\d{1,2})/(\d{4})\b", t)
+            if m:
+                try:
+                    from datetime import date
+                    d = date(int(m.group(3)), int(m.group(1)), int(m.group(2)))
+                    start_dt = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=timezone.utc)
+                    end_dt = datetime(d.year, d.month, d.day, 23, 59, 59, tzinfo=timezone.utc)
+                except ValueError:
+                    pass
+
+    if start_dt is None or end_dt is None:
+        return None
+    return (start_dt.timestamp(), end_dt.timestamp())
+
+
 def _parse_location_from_question(question: str) -> Optional[str]:
     """If question mentions a location (e.g. 'in office', 'at home', 'in the meeting room'), return it for transcript filtering."""
     if not (question or "").strip():
@@ -502,33 +716,29 @@ async def retrieve_semantic_first(
     if getattr(settings, "RAG_TAG_BOOST_ENABLED", False):
         tag_factor = getattr(settings, "RAG_TAG_BOOST_FACTOR", 0.08)
         transcript_hits = _apply_tag_boost(transcript_hits, q, doc_meta_t, tag_factor)
-    # Transcript-specific filters (last N, time window, location, latest)
+    # Transcript-specific filters (last N, time range, location, latest)
+    # Time filter only when user explicitly mentions time (e.g. "last 2 hours", "yesterday", "2 Feb 2026")
     n = _parse_last_n_transcripts(q)
     if n is not None and n > 0:
         recent_ids = _get_recent_transcript_doc_ids(n)
         if recent_ids:
             transcript_hits = [h for h in transcript_hits if (h.get("source") or {}).get("doc_id") in recent_ids]
-    time_window = _parse_last_time_window(q)
+    time_range = _parse_time_range_from_question(q)
     location_filter = _parse_location_from_question(q)
     latest_only = _parse_latest_or_recent_transcript(q)
-    if time_window is not None or location_filter:
-        cutoff = (datetime.now(timezone.utc) - time_window) if time_window else None
+    if time_range is not None or location_filter:
+        start_epoch, end_epoch = time_range if time_range else (None, None)
         filtered = []
         for h in transcript_hits:
             doc_id = (h.get("source") or {}).get("doc_id")
             if not doc_id:
                 continue
             meta = doc_meta_t.get(doc_id) or {}
-            if cutoff is not None:
-                ts_at = meta.get("echodate") or doc_created_t.get(doc_id)
-                if ts_at is None:
+            if time_range is not None and start_epoch is not None and end_epoch is not None:
+                doc_epoch = _doc_epoch_from_meta(meta, doc_created_t.get(doc_id))
+                if doc_epoch is None:
                     continue
-                dt = _parse_iso_date(ts_at)
-                if dt is None:
-                    continue
-                if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                if dt < cutoff:
+                if not (start_epoch <= doc_epoch <= end_epoch):
                     continue
             if location_filter:
                 doc_location = (meta.get("location") or "").strip().lower()
