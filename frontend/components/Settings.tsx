@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AppSettings, PersonaType, PIPER_VOICES } from '../types';
-import { getInstalledVoices, downloadVoice } from '../services/backend';
+import { getInstalledVoices, downloadVoice, addSampleTranscripts } from '../services/backend';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -13,6 +13,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
   const [installedVoiceIds, setInstalledVoiceIds] = useState<Set<string>>(new Set());
   const [downloadingVoiceId, setDownloadingVoiceId] = useState<string | null>(null);
   const [voicesLoadError, setVoicesLoadError] = useState<string | null>(null);
+  const [addingSamples, setAddingSamples] = useState(false);
 
   const loadInstalledVoices = useCallback(async () => {
     try {
@@ -229,6 +230,34 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
               aria-label={settings.developerMode ? 'Disable developer mode' : 'Enable developer mode'}
             >
               <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg transition-all ${settings.developerMode ? 'left-7' : 'left-1'}`} />
+            </button>
+          </div>
+        </section>
+
+        <section className="pt-4 sm:pt-6">
+          <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 border border-amber-500/10 bg-amber-500/5">
+            <h4 className="text-sm font-bold text-amber-400 mb-2">RAG Testing</h4>
+            <p className="text-xs text-slate-500 mb-4">
+              Add sample transcript chunks to the embedding index. Chunks span the last 48 hours plus fixed dates (Dec 1, 2025; Oct 10, 2025). Test queries like &quot;last 2 hours&quot;, &quot;2 Dec 2025&quot;, or &quot;10 Oct 2025&quot;.
+            </p>
+            <button
+              type="button"
+              disabled={addingSamples}
+              onClick={async () => {
+                setAddingSamples(true);
+                try {
+                  const res = await addSampleTranscripts();
+                  window.dispatchEvent(new CustomEvent('echomind:transcripts-added', { detail: res.added }));
+                  alert(`Added ${res.added} sample transcripts. They appear in the Transcripts tab. Try queries like "last 2 hours" or "pricing" in chat.`);
+                } catch (e) {
+                  alert((e as Error)?.message || 'Failed to add sample transcripts');
+                } finally {
+                  setAddingSamples(false);
+                }
+              }}
+              className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {addingSamples ? 'Adding…' : 'Add sample transcripts'}
             </button>
           </div>
         </section>

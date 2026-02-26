@@ -166,6 +166,7 @@ async def handler(ws: WebSocket):
                     "name": name,
                     "location": location,
                     "echodate": echodate_iso,
+                    "epoch": int(time.time()),
                 }
                 kid = await kb.kb_add_text(to_store, meta)
                 interval_buffer.append((to_store, now_iso()))
@@ -402,6 +403,7 @@ async def handler(ws: WebSocket):
                                 "name": name,
                                 "location": location,
                                 "echodate": echodate_iso,
+                                "epoch": int(time.time()),
                             }
                             kid = await kb.kb_add_text(to_store, meta)
                             interval_buffer.append((to_store, now_iso()))
@@ -474,23 +476,23 @@ async def handler(ws: WebSocket):
                     full = session.get_display_text()
                     if full.strip():
                         conv_type, tags = get_metadata(full)
-                        meta = {"session_id": session_id, "kind": "raw", "paragraph_id": None, "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
+                        meta = {"session_id": session_id, "kind": "raw", "paragraph_id": None, "tags": tags, "conversation_type": conv_type, "ts": now_iso(), "epoch": int(time.time())}
                         kid = await kb.kb_add_text(full, meta)
                         items.append({"id": kid, "kind": "raw", "paragraph_id": None, "tags": tags, "ts": now_iso()})
                         full_refined = await refine_text(full)
                         if full_refined.strip():
                             conv_type2, tags2 = get_metadata(full_refined)
-                            meta2 = {"session_id": session_id, "kind": "refined", "paragraph_id": None, "tags": tags2, "conversation_type": conv_type2, "ts": now_iso()}
+                            meta2 = {"session_id": session_id, "kind": "refined", "paragraph_id": None, "tags": tags2, "conversation_type": conv_type2, "ts": now_iso(), "epoch": int(time.time())}
                             kid2 = await kb.kb_add_text(full_refined, meta2)
                             items.append({"id": kid2, "kind": "refined", "paragraph_id": None, "tags": tags2, "ts": now_iso()})
                     for p in session.segments:
                         if p.polished_text:
                             conv_type, tags = get_metadata(p.polished_text)
-                            meta = {"session_id": session_id, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
+                            meta = {"session_id": session_id, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "conversation_type": conv_type, "ts": now_iso(), "epoch": int(time.time())}
                             kid = await kb.kb_add_text(p.polished_text, meta)
                             items.append({"id": kid, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                         conv_type, tags = get_metadata(p.raw_text)
-                        meta = {"session_id": session_id, "kind": "raw", "paragraph_id": p.paragraph_id, "tags": tags, "conversation_type": conv_type, "ts": now_iso()}
+                        meta = {"session_id": session_id, "kind": "raw", "paragraph_id": p.paragraph_id, "tags": tags, "conversation_type": conv_type, "ts": now_iso(), "epoch": int(time.time())}
                         kid = await kb.kb_add_text(p.raw_text, meta)
                         items.append({"id": kid, "kind": "raw", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                 elif scope == "last_paragraph" and session.segments:
@@ -500,7 +502,7 @@ async def handler(ws: WebSocket):
                     kid = await kb.kb_add_text(p.raw_text, meta)
                     items.append({"id": kid, "kind": "raw", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                     if p.polished_text:
-                        kid2 = await kb.kb_add_text(p.polished_text, {**meta, "kind": "refined"})
+                        kid2 = await kb.kb_add_text(p.polished_text, {**meta, "kind": "refined", "epoch": int(time.time())})
                         items.append({"id": kid2, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                 elif scope == "paragraph" and paragraph_id:
                     p = next((x for x in session.segments if x.paragraph_id == paragraph_id), None)
@@ -512,7 +514,7 @@ async def handler(ws: WebSocket):
                     kid = await kb.kb_add_text(p.raw_text, meta)
                     items.append({"id": kid, "kind": "raw", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                     if p.polished_text:
-                        kid2 = await kb.kb_add_text(p.polished_text, {**meta, "kind": "refined"})
+                        kid2 = await kb.kb_add_text(p.polished_text, {**meta, "kind": "refined", "epoch": int(time.time())})
                         items.append({"id": kid2, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                 await _send(ws, {"type": "stored", "session_id": session_id, "items": items})
     except Exception as e:

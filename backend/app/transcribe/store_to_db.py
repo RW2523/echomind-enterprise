@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from ..utils.ids import new_id, now_iso
 from ..core.db import get_conn
 from ..rag.index import index
@@ -94,7 +95,14 @@ async def store_transcript_to_db(
         await index.add_text(
             f"transcript_{tid}",
             index_text,
-            {"type": "transcript", "tags": tags_list, "echotag": echotag, "echodate": echodate, "created_at": echodate},
+            {
+                "type": "transcript",
+                "tags": tags_list,
+                "echotag": echotag,
+                "echodate": echodate,
+                "created_at": echodate,
+                "epoch": int(time.time()),
+            },
         )
     except Exception as e:
         logger.warning("Failed to index transcript %s in RAG: %s", tid, e)

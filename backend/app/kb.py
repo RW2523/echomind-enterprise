@@ -4,6 +4,7 @@ Incremental: embed and store only when paragraph is closed or user requests stor
 Uses existing RAG index (Ollama/Nomic) for add_text and search.
 """
 from __future__ import annotations
+import time
 from typing import Dict, List, Any, Optional
 from .utils.ids import new_id, now_iso
 from .rag.index import index as faiss_index
@@ -13,11 +14,14 @@ async def kb_add_text(text: str, metadata: Dict[str, Any]) -> str:
     """
     Add a text chunk to the knowledge base. Returns item_id.
     Metadata typically includes: session_id, paragraph_id, kind (raw|refined), tags, ts, conversation_type.
+    Adds epoch (Unix timestamp) for time-range retrieval (e.g. "summary of last 2 hours").
     """
     if not text or not text.strip():
         raise ValueError("Cannot add empty text to KB")
     item_id = new_id("kb")
     meta = {**metadata, "kb_id": item_id, "created_at": now_iso()}
+    if "epoch" not in meta:
+        meta["epoch"] = int(time.time())
     await faiss_index.add_text(f"transcript_{item_id}", text.strip(), meta)
     return item_id
 

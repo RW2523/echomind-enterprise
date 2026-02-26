@@ -63,6 +63,13 @@ export async function deleteAllData(): Promise<{ ok: boolean; message: string }>
   return await r.json();
 }
 
+/** Add sample transcript chunks for testing RAG and time-range retrieval. */
+export async function addSampleTranscripts(): Promise<{ ok: boolean; added: number; items: { id: string; label: string; tags: string[] }[] }> {
+  const r = await fetch(`${API_BASE}/api/docs/add-sample-transcripts`, { method: "POST" });
+  if (!r.ok) throw new Error(`add sample transcripts failed: ${r.status}`);
+  return await r.json();
+}
+
 /** Transcripts list (for Knowledge Chat Transcripts panel). */
 export interface TranscriptListItem {
   id: string;

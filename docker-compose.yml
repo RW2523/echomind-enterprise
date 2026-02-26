@@ -4,6 +4,7 @@ services:
       context: ./backend
       args:
         USE_FAISS_GPU: "1"   # set to "1" for FAISS GPU (faster RAG search; needs GPU)
+        # SKIP_MODEL_DOWNLOAD: "1"  # uncomment if build fails with "file already closed"; model downloads at first Live Transcript use
     container_name: echomind-backend
     expose: ["8000"]
     environment:

@@ -102,6 +102,12 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
   }, [resourceTab]);
 
   useEffect(() => {
+    const onAdded = () => { if (resourceTab === 'transcripts') loadTranscripts(); };
+    window.addEventListener('echomind:transcripts-added', onAdded);
+    return () => window.removeEventListener('echomind:transcripts-added', onAdded);
+  }, [resourceTab]);
+
+  useEffect(() => {
     if (!resourcesOpenForId) return;
     const close = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) setResourcesOpenForId(null);
