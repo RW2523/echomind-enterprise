@@ -70,8 +70,20 @@ class AskVoiceIn(BaseModel):
 DEFAULT_RECENT_TRANSCRIPT_HOURS = 24.0
 
 
+def _format_duration_hours(last_hours: float) -> str:
+    """Format last_hours for display in prompt (e.g. '2 hours', '30 minutes', '45 seconds')."""
+    if last_hours >= 1:
+        h = int(last_hours) if last_hours == int(last_hours) else last_hours
+        return f"{h} hour{'s' if h != 1 else ''}"
+    if last_hours >= 1 / 60:
+        m = int(last_hours * 60)
+        return f"{m} minute{'s' if m != 1 else ''}"
+    s = max(1, int(last_hours * 3600))
+    return f"{s} second{'s' if s != 1 else ''}"
+
+
 def _parse_transcript_time_query(message: str) -> float | None:
-    """If the message asks for transcripts in a time range (e.g. 'last 2 hours', 'summarise my transcript last hour', 'recent summary of the transcript'), return hours as float; else None."""
+    """If the message asks for transcripts in a time range (e.g. 'last 2 hours', 'last 30 min', 'last 45 sec'), return hours as float; else None."""
     m = (message or "").strip().lower()
     # Must look like a transcript/time request: transcript, recent, summarise, or speak/say/talk + time
     transcript_related = any(
@@ -79,15 +91,28 @@ def _parse_transcript_time_query(message: str) -> float | None:
     )
     if not m or not transcript_related:
         return None
-    # "last 2 hours", "last 1 hour", "in the last 3 hours", "past 2 hours"
-    match = re.search(r"(?:last|past|in the last)\s+(\d+(?:\.\d+)?)\s*(hour|hours?)", m, re.I)
+    # "last 2 hours", "last 2 hr", "last 2 hrs", "in the last 3 hours", "past 2 hr"
+    match = re.search(r"(?:last|past|in the last)\s+(\d+(?:\.\d+)?)\s*(?:hour|hours?|hr|hrs?)\b", m, re.I)
     if match:
         n = float(match.group(1))
         return n if n > 0 else None
+    # "last 5 min", "last 30 mins", "last 15 minutes", "past 10 min"
+    match = re.search(r"(?:last|past|in the last)\s+(\d+(?:\.\d+)?)\s*(?:min(?:ute)?s?)\b", m, re.I)
+    if match:
+        n = float(match.group(1))
+        return (n / 60.0) if n > 0 else None
+    # "last 30 sec", "last 45 s", "last 60 seconds", "past 10 sec"
+    match = re.search(r"(?:last|past|in the last)\s+(\d+(?:\.\d+)?)\s*(?:sec(?:ond)?s?|s)\b", m, re.I)
+    if match:
+        n = float(match.group(1))
+        return (n / 3600.0) if n > 0 else None
     # "last hour", "past hour", "last one hour" (no digit or word "one") -> 1 hour
-    if re.search(r"(?:last|past|in the last)\s+(?:one\s+)?hour(?:s)?\b", m, re.I):
+    if re.search(r"(?:last|past|in the last)\s+(?:one\s+)?(?:hour|hr)(?:s)?\b", m, re.I):
         return 1.0
-    # "recent summary of the transcript", "summary of the transcript", "give me a recent summary of the transcript" (no explicit time) -> use default window
+    # "last minute", "past minute" -> 1/60 hour
+    if re.search(r"(?:last|past|in the last)\s+(?:one\s+)?min(?:ute)?s?\b", m, re.I):
+        return 1.0 / 60.0
+    # "recent summary of the transcript", "summary of the transcript" (no explicit time) -> use default window
     if "transcript" in m and ("recent" in m or "summary" in m or "summarize" in m):
         return DEFAULT_RECENT_TRANSCRIPT_HOURS
     return None
@@ -136,7 +161,7 @@ async def ask_voice(inp: AskVoiceIn):
             f"The user asked: {msg}\n\n"
             "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
             "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
-            f"Transcripts from the last {int(last_hours)} hour(s):\n\n{transcript_block}\n\n"
+            f"Transcripts from the last {_format_duration_hours(last_hours)}:\n\n{transcript_block}\n\n"
             "Provide a direct answer or summary based only on the above transcript text."
         )
         out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
@@ -170,7 +195,7 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
                 f"The user asked: {msg}\n\n"
                 "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
                 "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
-                f"Transcripts from the last {int(last_hours)} hour(s):\n\n{transcript_block}\n\n"
+                f"Transcripts from the last {_format_duration_hours(last_hours)}:\n\n{transcript_block}\n\n"
                 "Provide a direct answer or summary based only on the above transcript text."
             )
             out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
