@@ -213,6 +213,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   const connect = useCallback(async () => {
     setConnecting(true);
     setConnectionError(null);
+    setMicMuted(false);
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setConnectionError("Microphone not available. Use HTTPS and a supported browser.");
@@ -424,6 +425,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       setPendingAssistantText("");
       setListenBufferText("");
       listenOnlyRef.current = false;
+      setMicMuted(false);
       setConnectionError(null);
       setConnecting(false);
     };
@@ -464,6 +466,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     }
     setUserAnalyser(null);
     setAssistantAnalyser(null);
+    setMicMuted(false);
     setState((prev) => ({
       ...prev,
       isConnected: false,

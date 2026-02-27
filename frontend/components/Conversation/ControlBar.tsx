@@ -62,21 +62,6 @@ export const ControlBar: React.FC<ControlBarProps> = ({
           </button>
         ) : (
           <>
-            {onListenOnlyToggle && (
-              <button
-                type="button"
-                onClick={onListenOnlyToggle}
-                title={listenOnly ? "Stop listening (respond to every utterance)" : "Start listening (only respond after wake word)"}
-                className={`rounded-2xl px-4 py-3.5 min-h-[48px] text-[15px] font-medium transition-all duration-300 touch-manipulation active:scale-[0.97] ${
-                  listenOnly
-                    ? "bg-teal-500/25 text-teal-300 border border-teal-500/40 hover:bg-teal-500/30"
-                    : "bg-white/[0.04] text-slate-500 border border-white/[0.06] hover:bg-white/[0.08] hover:text-slate-400"
-                }`}
-                style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)" }}
-              >
-                {listenOnly ? "Stop listening" : "Start listening"}
-              </button>
-            )}
             <button
               type="button"
               onClick={onMicMutedToggle}
@@ -114,7 +99,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
               className="rounded-2xl px-4 py-3.5 min-h-[48px] text-[15px] font-medium text-rose-400/80 bg-rose-500/[0.08] border border-rose-500/15 hover:bg-rose-500/15 active:scale-[0.97] transition-all duration-300 touch-manipulation"
               style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)" }}
             >
-              Disconnect
+              Stop
             </button>
           </>
         )}

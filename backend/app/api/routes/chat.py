@@ -49,6 +49,12 @@ async def create_chat(inp: CreateChatIn):
     return {"chat_id": cid}
 
 
+class SourceOptionsIn(BaseModel):
+    transcript: bool = True
+    document: bool = True
+    general: bool = True
+
+
 class AskIn(BaseModel):
     chat_id: str
     message: str
@@ -56,6 +62,7 @@ class AskIn(BaseModel):
     context_window: str | None = None
     use_knowledge_base: bool = True  # When True, RAG retrieves from uploaded documents + saved transcripts
     advanced_rag: bool = False
+    source_options: SourceOptionsIn | None = None  # Transcript, Document, General; default all True
 
 
 class AskVoiceIn(BaseModel):
@@ -249,6 +256,12 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
             conn.commit()
 
         full_answer: str | None = None
+        opts = inp.source_options
+        source_opts = (
+            {"transcript": opts.transcript, "document": opts.document, "general": opts.general}
+            if opts is not None
+            else {"transcript": True, "document": True, "general": True}
+        )
         try:
             async for kind, text, citations in answer_stream(
                 inp.message,
@@ -258,6 +271,7 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
                 conversation_summary=conversation_summary,
                 use_knowledge_base=inp.use_knowledge_base,
                 advanced_rag=inp.advanced_rag,
+                source_options=source_opts,
             ):
                 if kind == "chunk":
                     yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"

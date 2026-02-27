@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { ChatMessage, DocumentChunk, AppSettings } from '../types';
 import { ICONS } from '../constants';
 import Uploader from './Uploader';
-import { askChatStream, listDocuments, deleteDocument, listTranscripts, DocListItem, TranscriptListItem } from '../services/backend';
+import { askChatStream, listDocuments, deleteDocument, listTranscripts, deleteTranscript, getTranscript, DocListItem, TranscriptListItem, TranscriptDetail, type SourceOptions } from '../services/backend';
 import type { UseKnowledgeChatReturn } from '../hooks/useKnowledgeChat';
 
 interface KnowledgeChatProps {
@@ -50,10 +50,17 @@ function uniqueFileNames(citations: DocumentChunk[]): string[] {
   return (citations || []).map(c => c.docName).filter(name => { if (seen.has(name)) return false; seen.add(name); return true; });
 }
 
+const DEFAULT_SOURCE_OPTIONS: SourceOptions = {
+  transcript: true,
+  document: true,
+  general: true,
+};
+
 const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }) => {
   const { messages, setMessages, chatId, clearChat } = knowledgeChat;
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [sourceOptions, setSourceOptions] = useState<SourceOptions>(DEFAULT_SOURCE_OPTIONS);
   const [documents, setDocuments] = useState<DocListItem[]>([]);
   const [transcripts, setTranscripts] = useState<TranscriptListItem[]>([]);
   const [transcriptsLoading, setTranscriptsLoading] = useState(false);
@@ -63,6 +70,8 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [resourcesOpenForId, setResourcesOpenForId] = useState<string | null>(null);
   const [expandedTranscriptId, setExpandedTranscriptId] = useState<string | null>(null);
+  const [previewTranscript, setPreviewTranscript] = useState<TranscriptDetail | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [resourcesPanelOpen, setResourcesPanelOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -116,6 +125,10 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
     return () => document.removeEventListener('click', close);
   }, [resourcesOpenForId]);
 
+  const toggleSource = (key: keyof SourceOptions) => {
+    setSourceOptions(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const send = async () => {
     const q = input.trim();
     if (!q || !chatId || busy) return;
@@ -142,6 +155,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
         context_window: settings?.contextWindow ?? undefined,
         advanced_rag: settings?.advancedRag ?? undefined,
         use_knowledge_base: true,
+        source_options: sourceOptions,
       });
     } catch (err: any) {
       setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
@@ -165,6 +179,35 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
       alert((e as Error)?.message || 'Failed to delete');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleDeleteTranscript = async (t: TranscriptListItem) => {
+    if (!window.confirm(`Delete "${t.title}"? This will remove it from embeddings and all stored data. This cannot be undone.`)) return;
+    setDeletingId(t.id);
+    try {
+      await deleteTranscript(t.id);
+      await loadTranscripts();
+      setPreviewTranscript(prev => prev?.id === t.id ? null : prev);
+    } catch (e) {
+      console.error(e);
+      alert((e as Error)?.message || 'Failed to delete transcript');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handlePreviewTranscript = async (t: TranscriptListItem) => {
+    setPreviewLoading(true);
+    setPreviewTranscript(null);
+    try {
+      const detail = await getTranscript(t.id);
+      setPreviewTranscript(detail);
+    } catch (e) {
+      console.error(e);
+      alert((e as Error)?.message || 'Failed to load transcript');
+    } finally {
+      setPreviewLoading(false);
     }
   };
 
@@ -227,21 +270,31 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
               <ul className="space-y-1">
                 {transcripts.map(t => (
                   <li key={t.id} className="rounded-lg border border-white/10 overflow-hidden">
-                    <button type="button" onClick={() => setExpandedTranscriptId(expandedTranscriptId === t.id ? null : t.id)} className="w-full text-left py-2 px-2 hover:bg-white/5 flex flex-col gap-1.5 touch-manipulation">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="flex-1 text-xs truncate min-w-0" title={t.title}>{t.title}</span>
-                        <span className="text-slate-500 text-[10px] shrink-0">{t.created_at?.slice(0, 10)}</span>
-                        <span className={`shrink-0 transition-transform ${expandedTranscriptId === t.id ? 'rotate-180' : ''}`}>▼</span>
-                      </div>
-                      {(t.tags || []).length > 0 && (
-                        <div className="flex flex-wrap gap-1 min-w-0">
-                          {(t.tags || []).slice(0, 6).map((tag, i) => (
-                            <span key={i} className="inline-block px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] truncate max-w-[100px]" title={tag}>{tag}</span>
-                          ))}
-                          {(t.tags || []).length > 6 && <span className="text-[10px] text-slate-500">+{(t.tags || []).length - 6}</span>}
+                    <div className="flex items-center gap-1 py-2 px-2 hover:bg-white/5">
+                      <button type="button" onClick={() => setExpandedTranscriptId(expandedTranscriptId === t.id ? null : t.id)} className="flex-1 min-w-0 text-left flex flex-col gap-1.5 touch-manipulation">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="flex-1 text-xs truncate min-w-0" title={t.title}>{t.title}</span>
+                          <span className="text-slate-500 text-[10px] shrink-0">{t.created_at?.slice(0, 10)}</span>
+                          <span className={`shrink-0 transition-transform ${expandedTranscriptId === t.id ? 'rotate-180' : ''}`}>▼</span>
                         </div>
-                      )}
-                    </button>
+                        {(t.tags || []).length > 0 && (
+                          <div className="flex flex-wrap gap-1 min-w-0">
+                            {(t.tags || []).slice(0, 6).map((tag, i) => (
+                              <span key={i} className="inline-block px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] truncate max-w-[100px]" title={tag}>{tag}</span>
+                            ))}
+                            {(t.tags || []).length > 6 && <span className="text-[10px] text-slate-500">+{(t.tags || []).length - 6}</span>}
+                          </div>
+                        )}
+                      </button>
+                      <div className="shrink-0 flex items-center gap-0.5">
+                        <button type="button" onClick={() => handlePreviewTranscript(t)} disabled={previewLoading} className="p-2 rounded text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 disabled:opacity-50 transition-colors touch-manipulation" title="Preview transcript">
+                          <ICONS.Eye className="w-4 h-4" />
+                        </button>
+                        <button type="button" onClick={() => handleDeleteTranscript(t)} disabled={deletingId === t.id} className="p-2 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors touch-manipulation" title="Delete from embeddings and storage">
+                          <ICONS.Trash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                     {expandedTranscriptId === t.id && (
                       <div className="px-3 py-2 bg-black/30 border-t border-white/10">
                         <p className="text-[10px] text-slate-500 mb-1">Tags</p>
@@ -323,7 +376,39 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
           <div ref={endRef} />
         </div>
 
-        <div className="px-3 sm:px-5 py-3 sm:py-4 border-t border-white/10 flex gap-2 sm:gap-3 shrink-0">
+        <div className="px-3 sm:px-5 py-3 sm:py-4 border-t border-white/10 flex flex-col gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500 shrink-0 mr-1">Search in</span>
+            {(['transcript', 'document', 'general'] as const).map((key) => {
+              const checked = sourceOptions[key];
+              const label = { transcript: 'Transcript', document: 'Document', general: 'General' }[key];
+              const Icon = { transcript: ICONS.Transcript, document: ICONS.File, general: ICONS.Chat }[key];
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleSource(key)}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-200 touch-manipulation active:scale-[0.97] ${
+                    checked
+                      ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-[0_0_12px_-2px_rgba(20,184,166,0.15)]'
+                      : 'bg-white/[0.04] text-slate-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-slate-300 hover:border-white/[0.1]'
+                  }`}
+                  style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0.1, 0.25, 1)' }}
+                >
+                  <span className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 ${checked ? 'bg-teal-500/40' : 'bg-white/[0.06]'}`}>
+                    {checked && (
+                      <svg className="w-2.5 h-2.5 text-teal-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <Icon className="w-4 h-4 opacity-90" />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex gap-2 sm:gap-3">
           <input
             type="text"
             className="flex-1 min-w-0 rounded-xl bg-black/30 border border-white/10 px-4 py-3 min-h-[44px] text-sm outline-none focus:border-white/30"
@@ -340,6 +425,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
           >
             {busy ? 'Thinking...' : 'Send'}
           </button>
+          </div>
         </div>
       </div>
 
@@ -351,6 +437,49 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
       <div className={`fixed md:relative inset-y-0 right-0 z-50 md:z-auto w-full max-w-sm md:max-w-none flex flex-col md:flex-none h-full md:h-auto transform ${resourcesPanelOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} transition-transform duration-200 md:transition-none md:w-64 lg:w-72 md:shrink-0`}>
         {resourcesAside}
       </div>
+
+      {/* Transcript preview modal */}
+      {(previewTranscript || previewLoading) && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => !previewLoading && setPreviewTranscript(null)}>
+          <div className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border border-white/20 bg-[#0f172a] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between shrink-0">
+              <h3 className="font-semibold text-white truncate">{previewTranscript?.title ?? 'Preview'}</h3>
+              <button type="button" onClick={() => !previewLoading && setPreviewTranscript(null)} disabled={previewLoading} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 disabled:opacity-50 transition-colors" aria-label="Close">
+                <ICONS.Close className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-auto p-4 space-y-4">
+              {previewLoading && (
+                <div className="flex items-center justify-center py-12 text-slate-400">
+                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse mr-2" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse [animation-delay:0.2s] mr-2" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse [animation-delay:0.4s] mr-2" />
+                  <span className="text-sm">Loading…</span>
+                </div>
+              )}
+              {!previewLoading && previewTranscript && (
+                <>
+                  {previewTranscript.raw_text && (
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 mb-2">Raw transcript</p>
+                      <pre className="text-sm text-white/90 whitespace-pre-wrap break-words font-sans bg-black/30 rounded-lg p-3 border border-white/10">{previewTranscript.raw_text}</pre>
+                    </div>
+                  )}
+                  {previewTranscript.polished_text && (
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 mb-2">Refined notes</p>
+                      <pre className="text-sm text-white/90 whitespace-pre-wrap break-words font-sans bg-black/30 rounded-lg p-3 border border-white/10">{previewTranscript.polished_text}</pre>
+                    </div>
+                  )}
+                  {!previewTranscript.raw_text && !previewTranscript.polished_text && (
+                    <p className="text-sm text-slate-500">No text content available.</p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

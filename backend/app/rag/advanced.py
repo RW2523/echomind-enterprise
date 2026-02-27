@@ -670,20 +670,31 @@ async def retrieve_single_query(question: str, k: int, context_window: str = "al
     return hits[:k]
 
 
+def _default_source_options() -> Dict[str, bool]:
+    return {"transcript": True, "document": True, "general": True}
+
+
 async def retrieve_semantic_first(
     question: str,
     k: int,
     context_window: str = "all",
+    source_options: Optional[Dict[str, bool]] = None,
 ) -> Tuple[str, List[Dict]]:
     """
-    Embedding-first routing: search transcript first, then document. No LLM intent classification.
+    Embedding-first routing: search transcript and/or document based on source_options.
     Returns (source_type, hits) where source_type is "transcript" | "document" | "general".
-    If transcript has relevant hits (best_score >= threshold) → use transcript.
-    Else if document has relevant hits → use document.
-    Else → general (empty hits).
+    source_options: {transcript, document, general} - which sources to search; general = allow fallback when no hits.
     """
     if not (question or "").strip():
         return ("general", [])
+    opts = source_options or _default_source_options()
+    search_transcript = opts.get("transcript", True)
+    search_document = opts.get("document", True)
+    allow_general = opts.get("general", True)
+
+    if not search_transcript and not search_document:
+        return ("general", [])
+
     q = question.strip()
     k_per = max(k, 4)
     dense_w = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.6)
@@ -694,20 +705,29 @@ async def retrieve_semantic_first(
     qv = np.array(qv, dtype=np.float32).reshape(1, -1)
     faiss.normalize_L2(qv)
 
-    # 2. Run transcript and document search in parallel (dense + sparse each)
-    transcript_dense_task = index.search_transcript_only(q, k_per, query_vector=qv)
-    doc_dense_task = index.search_document_only(q, k_per, query_vector=qv)
-    transcript_sparse_task = asyncio.to_thread(index.transcript_sparse.search, q, k_per)
-    doc_sparse_task = asyncio.to_thread(index.search_document_only_sparse, q, k_per)
+    # 2. Run transcript and document search (only what's enabled)
+    tasks = []
+    if search_transcript:
+        tasks.append(("transcript_dense", index.search_transcript_only(q, k_per, query_vector=qv)))
+        tasks.append(("transcript_sparse", asyncio.to_thread(index.transcript_sparse.search, q, k_per)))
+    if search_document:
+        tasks.append(("doc_dense", index.search_document_only(q, k_per, query_vector=qv)))
+        tasks.append(("doc_sparse", asyncio.to_thread(index.search_document_only_sparse, q, k_per)))
 
-    transcript_dense, doc_dense, transcript_sparse, doc_sparse = await asyncio.gather(
-        transcript_dense_task, doc_dense_task, transcript_sparse_task, doc_sparse_task
-    )
+    results = await asyncio.gather(*[t[1] for t in tasks])
+    result_map = {tasks[i][0]: results[i] for i in range(len(tasks))}
+
+    transcript_dense = result_map.get("transcript_dense", [])
+    transcript_sparse = result_map.get("transcript_sparse", [])
+    doc_dense = result_map.get("doc_dense", [])
+    doc_sparse = result_map.get("doc_sparse", [])
 
     # 3. Merge dense + sparse with RRF for each source
-    transcript_hits = _weighted_rrf(
-        [transcript_dense], [transcript_sparse], k_per, dense_weight=dense_w, sparse_weight=sparse_w
-    )
+    transcript_hits: List[Dict] = []
+    if search_transcript:
+        transcript_hits = _weighted_rrf(
+            [transcript_dense], [transcript_sparse], k_per, dense_weight=dense_w, sparse_weight=sparse_w
+        )
     transcript_hits = _filter_hits_by_context_window(transcript_hits, context_window or "all")
     doc_created_t, doc_meta_t = _get_doc_info_for_hits(transcript_hits)
     halflife = getattr(settings, "RAG_TIME_DECAY_HALFLIFE_DAYS", 0) or 0
@@ -758,31 +778,38 @@ async def retrieve_semantic_first(
                 transcript_hits = filtered
     transcript_hits = transcript_hits[:k]
 
-    # 4. Document hits (already fetched in parallel above)
-    document_hits = _weighted_rrf(
-        [doc_dense], [doc_sparse], k_per, dense_weight=dense_w, sparse_weight=sparse_w
-    )
-    document_hits = _filter_hits_by_context_window(document_hits, context_window or "all")
-    doc_created_d, doc_meta_d = _get_doc_info_for_hits(document_hits)
-    if halflife > 0:
-        document_hits = _apply_time_decay(document_hits, doc_created_d, halflife)
-    if getattr(settings, "RAG_PREFER_AUTHORITATIVE", False):
-        document_hits = _prefer_authoritative_sort(document_hits)
-    document_hits = document_hits[:k]
+    # 4. Document hits (only when search_document)
+    document_hits: List[Dict] = []
+    if search_document:
+        document_hits = _weighted_rrf(
+            [doc_dense], [doc_sparse], k_per, dense_weight=dense_w, sparse_weight=sparse_w
+        )
+        document_hits = _filter_hits_by_context_window(document_hits, context_window or "all")
+        doc_created_d, doc_meta_d = _get_doc_info_for_hits(document_hits)
+        if halflife > 0:
+            document_hits = _apply_time_decay(document_hits, doc_created_d, halflife)
+        if getattr(settings, "RAG_PREFER_AUTHORITATIVE", False):
+            document_hits = _prefer_authoritative_sort(document_hits)
+        document_hits = document_hits[:k]
 
     # 5. Pick source by semantic relevance (best score)
     transcript_best = transcript_hits[0]["score"] if transcript_hits else 0.0
     document_best = document_hits[0]["score"] if document_hits else 0.0
     threshold = settings.RAG_RELEVANCE_THRESHOLD
 
-    if transcript_hits and transcript_best >= threshold:
-        logger.info("RAG semantic-first: transcript wins (score=%.3f) question=%s", transcript_best, (q[:80] + "…") if len(q) > 80 else q)
-        return ("transcript", transcript_hits)
-    if document_hits and document_best >= threshold:
-        logger.info("RAG semantic-first: document wins (score=%.3f) question=%s", document_best, (q[:80] + "…") if len(q) > 80 else q)
-        return ("document", document_hits)
-    logger.info("RAG semantic-first: no relevant hits (transcript=%.3f, document=%.3f) → general", transcript_best, document_best)
-    return ("general", [])
+    if search_transcript and transcript_hits and transcript_best >= threshold:
+        if not search_document or transcript_best >= document_best:
+            logger.info("RAG semantic-first: transcript wins (score=%.3f) question=%s", transcript_best, (q[:80] + "…") if len(q) > 80 else q)
+            return ("transcript", transcript_hits)
+    if search_document and document_hits and document_best >= threshold:
+        if not search_transcript or document_best >= transcript_best:
+            logger.info("RAG semantic-first: document wins (score=%.3f) question=%s", document_best, (q[:80] + "…") if len(q) > 80 else q)
+            return ("document", document_hits)
+    if allow_general:
+        logger.info("RAG semantic-first: no relevant hits (transcript=%.3f, document=%.3f) → general", transcript_best, document_best)
+        return ("general", [])
+    logger.info("RAG semantic-first: no relevant hits, general disabled → insufficient context")
+    return ("insufficient", [])
 
 
 def _get_chunk_text(chunk_id: str) -> str | None:
@@ -1159,12 +1186,19 @@ async def answer_stream(
     conversation_summary: Optional[str] = None,
     use_knowledge_base: bool = True,
     advanced_rag: bool = False,
+    source_options: Optional[Dict[str, bool]] = None,
 ) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
     """
     Same RAG as answer(), but stream the final LLM response. Yields ("chunk", delta, None) then ("done", full_answer, citations).
-    Uses embedding-first semantic routing (no LLM intent classification).
+    Uses embedding-first semantic routing. source_options: {transcript, document, general}.
     """
     if not use_knowledge_base:
+        async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+            yield ev
+        return
+    opts = source_options or _default_source_options()
+    if not opts.get("transcript", True) and not opts.get("document", True):
+        logger.info("RAG (stream): only General selected → answer directly, no retrieval")
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev
         return
@@ -1175,9 +1209,13 @@ async def answer_stream(
         return
 
     source_type, hits = await retrieve_semantic_first(
-        question, settings.TOP_K, context_window=context_window or "all"
+        question, settings.TOP_K, context_window=context_window or "all", source_options=opts
     )
 
+    if source_type == "insufficient":
+        yield ("chunk", INSUFFICIENT_CONTEXT_MSG, None)
+        yield ("done", INSUFFICIENT_CONTEXT_MSG, [])
+        return
     if source_type == "general":
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev

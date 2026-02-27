@@ -166,6 +166,58 @@ class UpdateTranscriptIn(BaseModel):
     tags: list[str] | None = None
 
 
+@router.get("/transcripts/{transcript_id}")
+def get_transcript(transcript_id: str):
+    """Get a single transcript by ID with full raw_text and polished_text (for preview popup)."""
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, title, raw_text, polished_text, tags_json, echotag, created_at, name, location FROM transcripts WHERE id = ?",
+            (transcript_id,),
+        ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Transcript not found")
+    tid, title, raw_text, polished_text, tags_json, echotag, created_at, name_val, location_val = row
+    tags = []
+    if tags_json:
+        try:
+            tags = json.loads(tags_json) if isinstance(tags_json, str) else (tags_json or [])
+        except Exception:
+            pass
+    return {
+        "id": tid,
+        "title": title or tid,
+        "raw_text": raw_text or "",
+        "polished_text": polished_text or "",
+        "tags": tags,
+        "echotag": echotag or "",
+        "created_at": created_at or "",
+        "name": name_val,
+        "location": location_val,
+    }
+
+
+@router.delete("/transcripts/{transcript_id}")
+async def delete_transcript(transcript_id: str):
+    """Delete a transcript from the transcripts table and from the RAG index (embeddings, chunks, documents)."""
+    from ...rag.index import index
+
+    with get_conn() as conn:
+        row = conn.execute("SELECT id FROM transcripts WHERE id = ?", (transcript_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found")
+        doc_row = conn.execute(
+            "SELECT id FROM documents WHERE filename = ?",
+            (f"transcript_{transcript_id}",),
+        ).fetchone()
+    if doc_row:
+        doc_id = doc_row[0]
+        await index.delete_document(doc_id)
+    with get_conn() as conn:
+        conn.execute("DELETE FROM transcripts WHERE id = ?", (transcript_id,))
+        conn.commit()
+    return {"ok": True, "deleted": transcript_id}
+
+
 @router.patch("/transcripts/{transcript_id}")
 async def update_transcript(transcript_id: str, inp: UpdateTranscriptIn):
     """Update transcript metadata (name, location, tags). Editable bar uses this."""

@@ -98,6 +98,38 @@ export async function listTranscripts(): Promise<{ transcripts: TranscriptListIt
   return await r.json();
 }
 
+/** Get a single transcript by ID with full text (for preview popup). */
+export interface TranscriptDetail {
+  id: string;
+  title: string;
+  raw_text: string;
+  polished_text: string;
+  tags: string[];
+  echotag: string;
+  created_at: string;
+  name?: string | null;
+  location?: string | null;
+}
+
+export async function getTranscript(transcriptId: string): Promise<TranscriptDetail> {
+  const r = await fetch(`${API_BASE}/api/transcribe/transcripts/${encodeURIComponent(transcriptId)}`);
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `get transcript failed: ${r.status}`);
+  }
+  return await r.json();
+}
+
+/** Delete a transcript from embeddings and all stored data. */
+export async function deleteTranscript(transcriptId: string): Promise<{ ok: boolean; deleted: string }> {
+  const r = await fetch(`${API_BASE}/api/transcribe/transcripts/${encodeURIComponent(transcriptId)}`, { method: "DELETE" });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `delete transcript failed: ${r.status}`);
+  }
+  return await r.json();
+}
+
 /** chat */
 export async function createChat(title: string): Promise<{chat_id: string}> {
   const r = await fetch(`${API_BASE}/api/chat/create`, {
@@ -125,11 +157,17 @@ export type AskChatStreamCallbacks = {
   onError?: (err: Error) => void;
 };
 
+export interface SourceOptions {
+  transcript: boolean;
+  document: boolean;
+  general: boolean;
+}
+
 export async function askChatStream(
   chatId: string,
   message: string,
   callbacks: AskChatStreamCallbacks,
-  options?: { persona?: string | null; context_window?: string | null; advanced_rag?: boolean; use_knowledge_base?: boolean }
+  options?: { persona?: string | null; context_window?: string | null; advanced_rag?: boolean; use_knowledge_base?: boolean; source_options?: SourceOptions }
 ): Promise<void> {
   const r = await fetch(`${API_BASE}/api/chat/ask-stream`, {
     method: "POST",
@@ -141,6 +179,7 @@ export async function askChatStream(
       context_window: options?.context_window ?? undefined,
       advanced_rag: options?.advanced_rag ?? undefined,
       use_knowledge_base: options?.use_knowledge_base ?? undefined,
+      source_options: options?.source_options ?? undefined,
     }),
   });
   if (!r.ok) {
