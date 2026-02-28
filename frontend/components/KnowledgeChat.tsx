@@ -236,7 +236,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
           <div className="p-3 border-b border-white/10 shrink-0">
             <div className="relative">
               <ICONS.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
-              <input type="text" placeholder="Search resources..." value={docSearch} onChange={e => setDocSearch(e.target.value)} className="w-full rounded-lg bg-black/30 border border-white/10 pl-9 pr-3 py-2 text-sm outline-none focus:border-white/30" />
+              <input type="text" placeholder="Search resources..." value={docSearch} onChange={e => setDocSearch(e.target.value)} className="w-full rounded-lg bg-black/30 border border-white/10 pl-9 pr-3 py-2 text-base outline-none focus:border-white/30" />
             </div>
           </div>
           <div className="flex-1 min-h-0 overflow-auto p-3">
@@ -411,7 +411,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
           <div className="flex gap-2 sm:gap-3">
           <input
             type="text"
-            className="flex-1 min-w-0 rounded-xl bg-black/30 border border-white/10 px-4 py-3 min-h-[44px] text-sm outline-none focus:border-white/30"
+            className="flex-1 min-w-0 rounded-xl bg-black/30 border border-white/10 px-4 py-3 min-h-[44px] text-base outline-none focus:border-white/30"
             placeholder="Ask something..."
             value={input}
             onChange={e => setInput(e.target.value)}

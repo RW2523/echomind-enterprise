@@ -5,6 +5,8 @@ import { transcribeWsUrl, getTranscriptTags, updateTranscript } from "../service
 const KYUTAI_SAMPLE_RATE = 24000;
 const OPEN_TIMEOUT_MS = 15000;
 const READY_TIMEOUT_MS = 300000;
+const HEARTBEAT_INTERVAL_MS = 25000;  // Keep connection alive when tab backgrounded (audio stops)
+const RECONNECT_DELAY_MS = 800;
 
 function floatTo16BitPCM(input: Float32Array) {
   const output = new Int16Array(input.length);
@@ -84,8 +86,16 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const pendingTagsRef = useRef<string[] | null>(null);
   const listeningRef = useRef(false);
   listeningRef.current = listening;
+  const userInitiatedCloseRef = useRef(false);
+  const sessionNameRef = useRef("");
+  const sessionLocationRef = useRef("");
+  const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  sessionNameRef.current = sessionName;
+  sessionLocationRef.current = sessionLocation;
 
   const stopMic = useCallback((sendStop: boolean) => {
+    heartbeatIntervalRef.current && clearInterval(heartbeatIntervalRef.current);
+    heartbeatIntervalRef.current = null;
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       if (sendStop) wsRef.current.send(JSON.stringify({ type: "stop" }));
       else wsRef.current.close(); // App unmount: close without sending stop
@@ -101,8 +111,11 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   }, []);
 
   const doStart = useCallback(
-    async (name: string, location: string) => {
-      if (listeningRef.current) return;
+    async (name: string, location: string, isReconnect = false) => {
+      if (listeningRef.current && !isReconnect) return;
+      userInitiatedCloseRef.current = false;
+      sessionNameRef.current = name || "";
+      sessionLocationRef.current = location || "default";
       setFullTranscript("");
       setPartial("");
       setWsError(null);
@@ -146,16 +159,27 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             }
           }
           if (msg.type === "error") {
-            console.error(msg.message);
-            handleError(msg.message || "Server error");
+            const m = msg.message || "Server error";
+            if (m.includes("Reconnecting")) {
+              stopMic(false);
+              setTimeout(() => doStart(sessionNameRef.current, sessionLocationRef.current, true), RECONNECT_DELAY_MS);
+              return;
+            }
+            console.error(m);
+            handleError(m);
           }
         } catch {}
       };
 
       ws.onerror = () => handleError("WebSocket error");
       ws.onclose = () => {
-        setWsStatus((s) => (s === "error" ? s : "idle"));
+        const wasListening = listeningRef.current;
+        const shouldReconnect = !userInitiatedCloseRef.current && wasListening;
         stopMic(false);
+        setWsStatus((s) => (s === "error" ? s : "idle"));
+        if (shouldReconnect) {
+          setTimeout(() => doStart(sessionNameRef.current, sessionLocationRef.current, true), RECONNECT_DELAY_MS);
+        }
       };
 
       try {
@@ -223,6 +247,9 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
 
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate });
       audioCtxRef.current = audioCtx;
+      if (audioCtx.state === "suspended") {
+        await audioCtx.resume();
+      }
       const src = audioCtx.createMediaStreamSource(stream);
       const processor = audioCtx.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;
@@ -238,11 +265,17 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       src.connect(processor);
       processor.connect(audioCtx.destination);
       setListening(true);
+      heartbeatIntervalRef.current = setInterval(() => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({ type: "ping" }));
+        }
+      }, HEARTBEAT_INTERVAL_MS);
     },
     [stopMic]
   );
 
   const clearAndReset = useCallback(() => {
+    userInitiatedCloseRef.current = true;
     stopMic(true);
     setMicMuted(false);
     setFullTranscript("");
@@ -276,6 +309,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
 
   const handleStopAndExtractTags = useCallback(async () => {
     const text = (transcriptForTagsRef.current || fullTranscript || "").trim();
+    userInitiatedCloseRef.current = true;
     stopMic(true);
     if (text) {
       try {
@@ -317,6 +351,19 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       setNewTagInput("");
     }
   }, [newTagInput, customTags]);
+
+  // Resume AudioContext when tab becomes visible (browser suspends it when backgrounded).
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "visible" || !listeningRef.current) return;
+      const ctx = audioCtxRef.current;
+      if (ctx?.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, []);
 
   // Only stop when App unmounts (user closes tab). NOT when switching in-app tabs.
   useEffect(

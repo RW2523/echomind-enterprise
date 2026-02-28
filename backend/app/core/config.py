@@ -91,5 +91,7 @@ class Settings(BaseSettings):
     TRANSCRIPT_GPU_CONCURRENCY: int = int(os.getenv("TRANSCRIPT_GPU_CONCURRENCY", "2"))
     # STT warmup: number of frames to run on model load (CUDA kernels).
     TRANSCRIPT_STT_WARMUP_FRAMES: int = int(os.getenv("TRANSCRIPT_STT_WARMUP_FRAMES", "8"))
+    # WebSocket receive timeout (seconds). No message for this long = stale connection. Default 24h = effectively indefinite with heartbeat.
+    TRANSCRIPT_WS_RECEIVE_TIMEOUT_SEC: float = float(os.getenv("TRANSCRIPT_WS_RECEIVE_TIMEOUT_SEC", "86400"))
 
 settings = Settings()

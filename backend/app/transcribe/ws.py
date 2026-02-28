@@ -8,11 +8,15 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import logging
 import time
 import uuid
 import numpy as np
 from fastapi import WebSocket
+from starlette.websockets import WebSocketDisconnect
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from ..core.config import settings
 from ..utils.ids import now_iso
@@ -41,6 +45,7 @@ VAD_WINDOW_SAMPLES = max(1, getattr(settings, "TRANSCRIPT_VAD_WINDOW_SAMPLES", 1
 VAD_STEP_SAMPLES = max(1, getattr(settings, "TRANSCRIPT_VAD_STEP_SAMPLES", 512))
 PCM_QUEUE_MAX = getattr(settings, "TRANSCRIPT_PCM_QUEUE_MAX_SIZE", 256)
 INTERVAL_BUFFER_MAX = max(1, getattr(settings, "TRANSCRIPT_INTERVAL_BUFFER_MAX", 2048))
+WS_RECEIVE_TIMEOUT = max(60.0, getattr(settings, "TRANSCRIPT_WS_RECEIVE_TIMEOUT_SEC", 86400))
 
 # GPU concurrency limiter (lazy init when first CUDA STT is used)
 _gpu_sem: Optional[asyncio.Semaphore] = None
@@ -259,14 +264,24 @@ async def handler(ws: WebSocket):
             pcm_float32, sr = item
             try:
                 await _run_kyutai_frames(pcm_float32, sr)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("PCM consumer STT error (continuing): %s", e)
             pcm_queue.task_done()
 
     consumer_task = asyncio.create_task(_pcm_consumer())
     try:
         while True:
-            msg = await ws.receive()
+            try:
+                msg = await asyncio.wait_for(ws.receive(), timeout=WS_RECEIVE_TIMEOUT)
+            except asyncio.TimeoutError:
+                logger.info("Live transcript: no message for %.0fs, closing stale connection", WS_RECEIVE_TIMEOUT)
+                try:
+                    await _send(ws, {"type": "error", "message": "Connection timed out. Reconnecting…"})
+                except Exception:
+                    pass
+                break
+            except WebSocketDisconnect:
+                break
             if not isinstance(msg, dict) or msg.get("type") != "websocket.receive":
                 if msg.get("type") == "websocket.disconnect":
                     break
@@ -308,6 +323,8 @@ async def handler(ws: WebSocket):
                     except asyncio.QueueFull:
                         pass
                 continue
+            if t == "ping":
+                continue  # Keep-alive; resets receive timeout
             if t == "stop":
                 data = {"type": "eos"}
                 t = "eos"
