@@ -30,7 +30,7 @@ Content gets into the system in two ways. Both end up in the **same** vector ind
    - Generates a new `doc_id`.
    - Calls **`chunk_document(text, doc_id)`** (see Part 2 for chunking details).
    - From the returned chunks, takes only **embed chunks** (all chunks that are **not** parent chunks: `embed_chunks = [c for c in all_chunks if not c.is_parent]`).
-   - **Embed**: Each embed chunk’s text is sent to the **Ollama embeddings API** (`OLLAMA_EMBED_URL` + `OLLAMA_EMBED_MODEL`, e.g. `nomic-embed-text`). Text is truncated to `EMBED_MAX_CHARS` at a word boundary so the embed model never overflows.
+   - **Embed**: Each embed chunk’s text is sent to the **SGLang embeddings API** (`EMBED_URL` + `EMBED_MODEL`, e.g. `Alibaba-NLP/gte-Qwen2-1.5B-instruct`). Text is truncated to `EMBED_MAX_CHARS` at a word boundary so the embed model never overflows.
    - **Store**:
      - **FAISS**: Vectors are L2-normalized and added to a single `faiss.IndexFlatIP` (inner product = cosine similarity). The index and a meta file (`chunk_ids`, `source_by_chunk`) are saved to disk.
      - **SQLite**: One row in `documents` (id, filename, filetype, created_at, meta_json). One row per chunk in `chunks` (id, doc_id, chunk_index, text, source_json).
@@ -73,7 +73,7 @@ Entry point is **`retrieve(question, k, context_window)`** in `backend/app/rag/a
 
 - For **each** of the 1–4 queries:
   - **Dense** (`index.search(query, k_per_query)` in `rag/index.py`):
-    - Query is embedded with the same Ollama embed model.
+    - Query is embedded with the same SGLang embed model.
     - FAISS `IndexFlatIP` search returns top‑k_per_query vectors by inner product (cosine on L2-normalized vectors).
     - For each result, chunk `text` and `source_json` are read from SQLite; returned as `{ chunk_id, score, text, source }`.
   - **Sparse** (`index.sparse.search(query, k_per_query)` in `rag/sparse.py`):
@@ -151,7 +151,7 @@ So retrieval is: **question → 1–4 queries → dense + sparse per query → w
       - **Context**: `_build_rag_context(message, hits)` → blocks → `_rag_context_block(blocks)` → one string `ctx_block`.
       - **User message**: Either **conversation summary + current question + ctx_block** (if summary exists) or **last 10 messages +** “Question: … Context: …” (legacy).
       - **System prompt**: **`_rag_system_prompt(persona)`** — “EchoMind, use ONLY the provided context; do not add facts; if parts contradict say so; if context is insufficient say clearly ‘The provided context does not contain enough information to answer this.’”
-      - **LLM**: Ollama-compatible `chat` or `chat_stream` with that system prompt and user content. Temperature and max_tokens from config.
+      - **LLM**: OpenAI-compatible `chat` or `chat_stream` (SGLang) with that system prompt and user content. Temperature and max_tokens from config.
       - **Citations**: Only if `RAG_EXPOSE_SOURCES` is True: build citation list from enriched chunks (filename, chunk_index, score, snippet).
 
 - **After the turn**: The new user message and assistant reply are used to **update the conversation summary** via an LLM call (goals, constraints, decisions, key facts). The new summary is stored in `chats.conversation_summary`.

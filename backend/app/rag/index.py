@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from ..core.config import settings
 from ..core.db import get_conn
 from ..utils.ids import new_id, now_iso
-from .embeddings import OllamaEmbeddings
+from .embeddings import OpenAICompatEmbeddings
 from .sparse import Bm25Index
 from .chunking import chunk_document
 
@@ -19,7 +19,7 @@ def _is_transcript_doc(filename: str, meta: dict) -> bool:
 
 class FaissIndex:
     def __init__(self):
-        self.emb = OllamaEmbeddings()
+        self.emb = OpenAICompatEmbeddings()
         self.index = None
         self.meta = {"chunk_ids": [], "source_by_chunk": {}}
         self.sparse = Bm25Index()

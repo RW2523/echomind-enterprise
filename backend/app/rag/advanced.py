@@ -532,10 +532,13 @@ def _parse_time_range_from_question(question: str) -> Optional[Tuple[float, floa
             m = re.search(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})\s*,?\s*(\d{4})\b", t, re.I)
             if m:
                 try:
+                    from calendar import monthrange
                     from datetime import date
                     months = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12}
                     month = months.get(m.group(1).lower()[:3], 1)
-                    d = date(int(m.group(3)), month, min(28, int(m.group(2))))
+                    year = int(m.group(3))
+                    day = min(int(m.group(2)), monthrange(year, month)[1])
+                    d = date(year, month, day)
                     start_dt = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=timezone.utc)
                     end_dt = datetime(d.year, d.month, d.day, 23, 59, 59, tzinfo=timezone.utc)
                 except (ValueError, KeyError):

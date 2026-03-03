@@ -16,9 +16,9 @@ class Settings:
 
     WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "base")
 
-    # OpenAI-compatible endpoint (Ollama: http://127.0.0.1:11434/v1/chat/completions)
-    LLM_URL: str = os.getenv("LLM_URL", "http://127.0.0.1:11434/v1/chat/completions")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "qwen2.5:7b-instruct-q4_K_M")
+    # OpenAI-compatible endpoint (SGLang: http://127.0.0.1:30000/v1/chat/completions)
+    LLM_URL: str = os.getenv("LLM_URL", "http://127.0.0.1:30000/v1/chat/completions")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "nvidia/Llama-3.1-8B-Instruct-FP8")
 
     # LLM streaming / phrase commit knobs (unmute-like)
     LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.7"))

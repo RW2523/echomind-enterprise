@@ -1,7 +1,7 @@
 """
 Refine feature: LLM-based rewrite of transcript text into clear, structured notes.
 Interface: refine_text(text) -> refined_text.
-Uses existing Ollama LLM when available; otherwise placeholder (spacing + simple formatting).
+Uses SGLang/OpenAI-compatible LLM when available; otherwise placeholder (spacing + simple formatting).
 """
 from __future__ import annotations
 import re

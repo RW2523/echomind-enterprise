@@ -221,6 +221,12 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
     history = [{"role": r[0], "content": r[1]} for r in rows]
     conversation_summary = _get_conversation_summary(inp.chat_id)
 
+    opts = inp.source_options
+    source_opts = (
+        {"transcript": opts.transcript, "document": opts.document, "general": opts.general}
+        if opts is not None
+        else {"transcript": True, "document": True, "general": True}
+    )
     out = await answer_with_citations(
         inp.message,
         history,
@@ -229,6 +235,7 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
         conversation_summary=conversation_summary,
         use_knowledge_base=inp.use_knowledge_base,
         advanced_rag=inp.advanced_rag,
+        source_options=source_opts,
     )
 
     with get_conn() as conn:

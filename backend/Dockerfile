@@ -11,10 +11,10 @@ RUN set -e; \
   rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 # Use requirements-gpu.txt for FAISS GPU (faster search). Default: faiss-cpu.
-ARG USE_FAISS_GPU=1
-COPY requirements.txt /app/
+ARG USE_FAISS_GPU=0
+COPY requirements.txt requirements-gpu.txt /app/
 # Kyutai STT via moshi (libopus-dev required for sphn build on ARM64)
-RUN pip install -r requirements.txt
+RUN if [ "$USE_FAISS_GPU" = "1" ]; then pip install -r requirements-gpu.txt; else pip install -r requirements.txt; fi
 
 RUN pip install --no-cache-dir "bitsandbytes==0.46.0" sentencepiece \
  && pip install --no-cache-dir --no-deps "moshi==0.2.9"

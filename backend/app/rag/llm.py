@@ -33,7 +33,7 @@ class OpenAICompatChat:
             return (j["choices"][0]["message"]["content"] or "").strip()
 
     async def chat_stream(self, messages, temperature: float, max_tokens: int) -> AsyncIterator[str]:
-        """Stream LLM response token-by-token (Ollama SSE). Yields content deltas."""
+        """Stream LLM response token-by-token (OpenAI SSE). Yields content deltas."""
         payload = {"model": self.model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens, "stream": True}
         _log_chat_request(self.base_url, payload, stream=True)
         async with httpx.AsyncClient(timeout=180) as client:

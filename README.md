@@ -6,7 +6,8 @@ This build removes ALL Gemini code and connects the UI to your backend APIs.
 - Frontend: http://<DGX_IP>:3000 (HTTP) or https://<DGX_IP>:3443 (HTTPS)
 - Backend API: proxied under /api
 - Voice bot: proxied under /voice (direct: http://<DGX_IP>:8001). **Voice AI is connected to RAG** (via `BACKEND_CHAT_URL`): questions about your transcripts or uploaded PDFs are answered from the knowledge base.
-- Ollama: http://<DGX_IP>:11434
+- SGLang LLM: http://<DGX_IP>:30000
+- Ollama Embed: http://<DGX_IP>:11435
 
 ## HTTPS (no browser warning)
 
@@ -44,10 +45,13 @@ Or build and start in one go: `./scripts/build.sh --up`.
 ## Model setup (included in build/start)
 
 - **Kyutai STT** (Live Transcript): Pre-downloaded during backend Docker build.
-- **Ollama** (LLM + embeddings): Models (`qwen2.5:7b-instruct-q4_K_M`, `nomic-embed-text`) are pulled automatically when Ollama starts.
+- **SGLang** (LLM): `nvidia/Llama-3.1-8B-Instruct-FP8` on GPU. Run `./scripts/verify-sglang.sh` first on DGX Spark.
+- **Ollama** (embeddings): `nomic-embed-text` on CPU.
 - **Whisper** (Voice): Base model pre-downloaded during voice Docker build.
 
-On first `docker compose up --build`, Ollama will pull its models (2–5 min). Backend and voice wait until models are ready. No manual `ollama pull` needed.
+On first `docker compose up --build`, SGLang and Ollama download models (5–15 min). See [docs/SGLANG_MIGRATION.md](docs/SGLANG_MIGRATION.md) for troubleshooting.
+
+**Verify full RAG flow** (LLM, embeddings, retrieval): `./scripts/verify-rag-flow.sh`. See [docs/RAG_FLOW_GPU_AUDIT.md](docs/RAG_FLOW_GPU_AUDIT.md) for GPU/CPU breakdown.
 
 If you still see Gemini calls in the browser console:
 1) Hard refresh (Ctrl+Shift+R) / clear site data

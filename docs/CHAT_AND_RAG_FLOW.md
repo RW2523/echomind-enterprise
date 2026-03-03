@@ -120,7 +120,7 @@ Steps inside `retrieve()`:
 3. **Vector + sparse search (no LLM)**  
    - **Index:** `FaissIndex` in `backend/app/rag/index.py`  
    - For each final query: **dense** search (FAISS / embeddings) and **sparse** search (BM25).  
-   - **Embeddings:** Via `OllamaEmbeddings` (separate from the chat LLM; not counted as “LLM request” in the list below).  
+   - **Embeddings:** Via `OpenAICompatEmbeddings` (SGLang) (separate from the chat LLM; not counted as “LLM request” in the list below).  
    - Results are merged with weighted RRF (reciprocal rank fusion).
 
 4. **Optional rerank (0 or 1 LLM)**  
@@ -142,7 +142,7 @@ Steps inside `retrieve()`:
 ### 4.7 Final answer (1 LLM, streamed)
 
 - **Function:** `chat.chat_stream(msgs, ...)` (from `backend/app/rag/llm.py` → `OpenAICompatChat`).
-- **Logic:** Messages = RAG system prompt (+ optional persona) + (optional conversation summary + question + context block) or last 10 history turns + current question + context. Single **streaming** chat/completions request to the configured LLM (e.g. Ollama).
+- **Logic:** Messages = RAG system prompt (+ optional persona) + (optional conversation summary + question + context block) or last 10 history turns + current question + context. Single **streaming** chat/completions request to the configured LLM (SGLang).
 - **LLM calls:** **1** (one request; tokens streamed back).
 
 ### 4.8 Conversation summary (1 LLM, background)

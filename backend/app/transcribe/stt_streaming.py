@@ -229,7 +229,7 @@ def preload_kyutai_stt() -> bool:
 
 
 def get_or_create_kyutai_stt() -> Optional[KyutaiStreamingSTT]:
-    """Return the warm instance if available (and mark in use), else create a new instance. One per WebSocket session."""
+    """Return the warm instance if available (and mark in use), else create a new instance. One per WebSocket connection so concurrent connections (e.g. two systems) each get their own STT and do not interfere."""
     global _warm_in_use
     if not KYUTAI_AVAILABLE:
         return None

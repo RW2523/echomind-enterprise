@@ -256,12 +256,15 @@ async def handler(ws: WebSocket):
             await _maybe_emit_partial(ts_ms)
 
     async def _pcm_consumer() -> None:
-        """Consume PCM from queue; backpressure via queue max size."""
+        """Consume PCM from queue; backpressure via queue max size. Drops chunks tagged with a different session_id (after 'start' new session)."""
         while True:
             item = await pcm_queue.get()
             if item is None:
                 break
-            pcm_float32, sr = item
+            pcm_float32, sr, chunk_session_id = item
+            if chunk_session_id is not None and chunk_session_id != session_id:
+                pcm_queue.task_done()
+                continue
             try:
                 await _run_kyutai_frames(pcm_float32, sr)
             except Exception as e:
@@ -295,7 +298,7 @@ async def handler(ws: WebSocket):
                 f32 = _pcm16_to_float32(pcm16)
                 sr = client_sample_rate if client_sample_rate is not None else sample_rate
                 try:
-                    pcm_queue.put_nowait((f32, sr))
+                    pcm_queue.put_nowait((f32, sr, session_id))
                 except asyncio.QueueFull:
                     pass  # drop chunk on backpressure
                 continue
@@ -319,7 +322,7 @@ async def handler(ws: WebSocket):
                     f32 = _pcm16_to_float32(pcm16)
                     sr = client_sample_rate if client_sample_rate is not None else sample_rate
                     try:
-                        pcm_queue.put_nowait((f32, sr))
+                        pcm_queue.put_nowait((f32, sr, session_id))
                     except asyncio.QueueFull:
                         pass
                 continue
@@ -345,6 +348,7 @@ async def handler(ws: WebSocket):
                 while not pcm_queue.empty():
                     try:
                         pcm_queue.get_nowait()
+                        pcm_queue.task_done()
                     except asyncio.QueueEmpty:
                         break
                 _start_periodic_auto_store()

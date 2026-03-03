@@ -41,36 +41,40 @@ def _warm_kyutai_stt():
         logger.warning("Kyutai STT: warmup failed: %s", e)
 
 
-async def _warm_ollama():
-    """Load Ollama LLM and embed models into memory so first chat/RAG request is fast."""
-    # Derive Ollama base URL from LLM_BASE_URL (e.g. http://ollama:11434/v1 -> http://ollama:11434)
-    base = (settings.LLM_BASE_URL or "").rstrip("/")
-    if base.endswith("/v1"):
-        base = base[:-3]
-    if not base:
-        return
+async def _warm_llm_and_embed():
+    """Verify SGLang LLM and Ollama embed endpoints are ready."""
     try:
         async with httpx.AsyncClient(timeout=300) as client:
-            logger.info("Ollama: warming LLM model %s...", settings.LLM_MODEL)
-            r = await client.post(
-                f"{base}/api/chat",
-                json={"model": settings.LLM_MODEL, "messages": []},
-            )
-            if r.is_success:
-                logger.info("Ollama: LLM model loaded.")
-            else:
-                logger.warning("Ollama: LLM warmup returned %s", r.status_code)
-            logger.info("Ollama: warming embed model %s...", settings.OLLAMA_EMBED_MODEL)
-            r2 = await client.post(
-                settings.OLLAMA_EMBED_URL,
-                json={"model": settings.OLLAMA_EMBED_MODEL, "prompt": "."},
-            )
-            if r2.is_success:
-                logger.info("Ollama: embed model loaded.")
-            else:
-                logger.warning("Ollama: embed warmup returned %s", r2.status_code)
+            base = (settings.LLM_BASE_URL or "").rstrip("/")
+            if base:
+                logger.info("LLM: warming %s...", settings.LLM_MODEL)
+                r = await client.post(
+                    f"{base}/chat/completions",
+                    json={
+                        "model": settings.LLM_MODEL,
+                        "messages": [{"role": "user", "content": "."}],
+                        "max_tokens": 1,
+                    },
+                )
+                if r.is_success:
+                    logger.info("LLM ready.")
+                else:
+                    logger.warning("LLM warmup returned %s", r.status_code)
+            if settings.EMBED_URL:
+                fmt = (settings.EMBED_FORMAT or "ollama").lower()
+                logger.info("Embed: warming %s...", settings.EMBED_MODEL)
+                payload = (
+                    {"model": settings.EMBED_MODEL, "prompt": "."}
+                    if fmt == "ollama"
+                    else {"model": settings.EMBED_MODEL, "input": "."}
+                )
+                r2 = await client.post(settings.EMBED_URL, json=payload)
+                if r2.is_success:
+                    logger.info("Embed: ready.")
+                else:
+                    logger.warning("Embed warmup returned %s", r2.status_code)
     except Exception as e:
-        logger.warning("Ollama warmup failed (first request may be slow): %s", e)
+        logger.warning("Warmup failed (first request may be slow): %s", e)
 
 
 @asynccontextmanager
@@ -78,8 +82,8 @@ async def lifespan(app: FastAPI):
     # Pre-download and pre-load Kyutai STT in background so first Live Transcript connection is fast
     t = threading.Thread(target=_warm_kyutai_stt, daemon=True)
     t.start()
-    # Warm Ollama so first chat/RAG request doesn't wait for model load
-    asyncio.create_task(_warm_ollama())
+    # Warm LLM and embed so first chat/RAG request doesn't wait
+    asyncio.create_task(_warm_llm_and_embed())
     yield
     # shutdown: nothing to clean up (daemon thread exits with process)
 

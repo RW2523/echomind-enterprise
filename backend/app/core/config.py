@@ -16,15 +16,17 @@ class Settings(BaseSettings):
     FAISS_TRANSCRIPT_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_transcript.index")
     META_TRANSCRIPT_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_transcript_meta.json")
     SPARSE_TRANSCRIPT_META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "sparse_transcript_meta.json")
-    LLM_BASE_URL: str = "http://ollama:11434/v1"
-    LLM_MODEL: str = "qwen2.5:7b-instruct-q4_K_M"
+    LLM_BASE_URL: str = "http://sglang-llm:30000/v1"
+    LLM_MODEL: str = "nvidia/Llama-3.1-8B-Instruct-FP8"
     LLM_TEMPERATURE: float = 0.2
     LLM_MAX_TOKENS: int = 512
-    OLLAMA_EMBED_URL: str = "http://ollama:11434/api/embeddings"
-    OLLAMA_EMBED_MODEL: str = os.getenv("ECHOMIND_EMBED_MODEL", "nomic-embed-text")
+    # Embeddings: Ollama (prompt/embedding) or SGLang/OpenAI (input/data[0].embedding)
+    EMBED_URL: str = "http://ollama-embed:11434/api/embeddings"
+    EMBED_MODEL: str = os.getenv("ECHOMIND_EMBED_MODEL", "nomic-embed-text")
+    EMBED_FORMAT: str = os.getenv("ECHOMIND_EMBED_FORMAT", "ollama")  # "ollama" | "openai"
     # Max characters per chunk sent to embedding API (avoids "input length exceeds context length").
-    # Conservative default (2000) works with 512-token models; set ECHOMIND_EMBED_MAX_CHARS=8000 for nomic-embed-text.
-    EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "2000"))
+    # nomic-embed-text: 8192 tokens; 8000 chars is safe.
+    EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "8000"))
     CHUNK_SIZE: int = int(os.getenv("ECHOMIND_CHUNK_SIZE", "800"))
     CHUNK_OVERLAP: int = int(os.getenv("ECHOMIND_CHUNK_OVERLAP", "120"))
     TOP_K: int = int(os.getenv("ECHOMIND_TOP_K", "15"))
