@@ -36,6 +36,8 @@ class Chunk:
     char_start: Optional[int] = None
     char_end: Optional[int] = None
     chunk_index: int = 0
+    section_path: Optional[str] = None  # hierarchical path e.g. "Volume 1 > Chapter 3 > Section 0301"
+    page_number: Optional[int] = None
 
     def to_source_dict(self, filename: str, filetype: str) -> dict:
         """Serialize for source_json in DB (backward-compatible + extended metadata)."""
@@ -52,6 +54,10 @@ class Chunk:
         }
         if self.parent_chunk_id is not None:
             d["parent_chunk_id"] = self.parent_chunk_id
+        if self.section_path is not None:
+            d["section_path"] = self.section_path
+        if self.page_number is not None:
+            d["page_number"] = self.page_number
         return d
 
 

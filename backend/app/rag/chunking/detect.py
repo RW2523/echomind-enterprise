@@ -61,7 +61,8 @@ def _looks_like_faq(text: str, lines: list[str]) -> bool:
 
 
 def _looks_like_long_form(text: str, lines: list[str], length: int) -> bool:
-    """Long-form: substantial length, paragraphs, optional headings/chapters."""
+    """Long-form: substantial length, paragraphs, optional headings/chapters.
+    Also recognises DoD/government regulation patterns (e.g. 0101, Section 0301, Volume)."""
     if length < 8000:
         return False
     paragraph_breaks = text.count("\n\n")
@@ -70,12 +71,29 @@ def _looks_like_long_form(text: str, lines: list[str], length: int) -> bool:
     heading_like = sum(
         1
         for ln in lines
-        if len(ln) < 120
-        and re.match(r"^(?:Chapter|Part|Section|\d+[.)])\s+.+", ln, re.IGNORECASE)
+        if len(ln) < 160
+        and re.match(
+            r"^(?:"
+            r"Chapter\s+\d+|"
+            r"Part\s+[IVXLCDM\d]+|"
+            r"Section\s+[\d.]+|"
+            r"Volume\s+\d+|"
+            r"Article\s+\d+|"
+            r"Appendix\s+[A-Z\d]+|"
+            r"Table\s+\d+|"
+            r"\d{4,6}\s+[A-Z]|"      # DoD numbered paragraphs e.g. "0101 GENERAL", "010201 Purpose"
+            r"\d+(?:\.\d+){1,4}\s+"   # deep numbered sections e.g. "1.2.3.4 Title"
+            r")\s*.+",
+            ln,
+            re.IGNORECASE,
+        )
     )
     if heading_like >= 2 or (paragraph_breaks >= 20 and length > 20000):
         return True
     avg_line = sum(len(ln) for ln in lines) / max(1, len(lines))
     if avg_line > 80 and length > 15000:
+        return True
+    # Very large docs (>500k chars, ~100+ pages) with reasonable paragraph density
+    if length > 500_000 and paragraph_breaks >= 50:
         return True
     return False

@@ -43,18 +43,32 @@ def _get_chunk_size_overlap() -> tuple[int, int]:
     """Use config for chunk size/overlap when available (faster retrieval, good quality)."""
     try:
         from ...core.config import settings
-        size = getattr(settings, "CHUNK_SIZE", 600) or 600
-        overlap = getattr(settings, "CHUNK_OVERLAP", 80) or 80
+        size = getattr(settings, "CHUNK_SIZE", 650) or 650
+        overlap = getattr(settings, "CHUNK_OVERLAP", 120) or 120
         return (max(200, min(1200, size)), max(40, min(200, overlap)))
     except Exception:
-        return (600, 80)
+        return (650, 120)
+
+
+def _get_book_limits() -> tuple[int, int, int, int]:
+    """Return (parent_min, parent_max, child_min, child_max) from config or module defaults."""
+    try:
+        from ...core.config import settings
+        return (
+            getattr(settings, "BOOK_PARENT_MIN_TOKENS", _PARENT_MIN) or _PARENT_MIN,
+            getattr(settings, "BOOK_PARENT_MAX_TOKENS", _PARENT_MAX) or _PARENT_MAX,
+            getattr(settings, "BOOK_CHILD_MIN_TOKENS", _CHILD_MIN) or _CHILD_MIN,
+            getattr(settings, "BOOK_CHILD_MAX_TOKENS", _CHILD_MAX) or _CHILD_MAX,
+        )
+    except Exception:
+        return (_PARENT_MIN, _PARENT_MAX, _CHILD_MIN, _CHILD_MAX)
 
 # Sentence boundary (naive); safer split uses _sentences() with abbrev/citation heuristics
 _SENTENCE_RE = re.compile(r"(?<=[.!?])\s+|\n\n+")
 # Min/max child size for long-form (child size follows config when used in unstructured path)
 _PARENT_MIN, _PARENT_MAX = 2000, 3500
-_CHILD_MIN, _CHILD_MAX = 400, 700
-_CHILD_OVERLAP = 80
+_CHILD_MIN, _CHILD_MAX = 500, 700
+_CHILD_OVERLAP_SENTENCES = 3  # 3 sentences ≈ 80-150 tokens depending on sentence length
 # Sensitive: small, minimal overlap
 _SENSITIVE_SIZE = 450
 _SENSITIVE_OVERLAP = 40
@@ -65,20 +79,60 @@ _USER_OVERLAP = 80
 MAX_FAQ_TOKENS = 8000
 
 
+def _estimate_content_density(text: str) -> float:
+    """
+    Estimate content density (0.0–1.0) for dynamic chunk sizing.
+    Dense technical content (numbers, abbreviations, legal references) → smaller chunks.
+    Narrative/discursive text → larger chunks.
+    """
+    if not (text or "").strip():
+        return 0.5
+    sample = text[:4000]
+    chars = len(sample)
+    if chars == 0:
+        return 0.5
+    num_count = len(re.findall(r"\d+(?:\.\d+)?", sample))
+    abbrev_count = len(re.findall(r"\b[A-Z]{2,6}\b", sample))
+    ref_count = len(re.findall(r"(?:§|section|article|paragraph|table|figure|appendix)\s*\d", sample, re.I))
+    paren_count = sample.count("(") + sample.count(")")
+    density_signal = (num_count * 2 + abbrev_count * 3 + ref_count * 5 + paren_count) / max(1, chars)
+    return min(1.0, density_signal * 80)
+
+
+def _dynamic_child_range(text: str) -> Tuple[int, int]:
+    """
+    Return (child_min, child_max) adjusted by content density.
+    Dense technical content → smaller chunks (500–600 tokens).
+    Narrative content → larger chunks (550–700 tokens).
+    """
+    density = _estimate_content_density(text)
+    if density > 0.6:
+        return (500, 600)
+    if density > 0.3:
+        return (500, 650)
+    return (550, 700)
+
+
 # --- 2. Safer sentence segmentation (no mid-sentence splits; avoid abbrev/citation false splits) ---
 def _ends_with_abbrev(s: str) -> bool:
-    """True if s ends with common abbreviation (Dr., e.g., Fig. 1, etc.) so we should not split after it."""
+    """True if s ends with common abbreviation (Dr., e.g., Fig. 1, Sec., DoD, etc.) so we should not split after it."""
     if not s or len(s) < 3:
         return False
     s = s.rstrip()
     if not s:
         return False
-    # Trailing single capital + period (e.g. "Fig. 1" already captured by next)
-    if re.search(r"\s(?:Dr|Mr|Mrs|Ms|Prof|Sr|Jr|vs|etc|e\.g|i\.e|al|Fig|Vol|No|approx)\.\s*$", s, re.I):
+    if re.search(
+        r"\s(?:Dr|Mr|Mrs|Ms|Prof|Sr|Jr|vs|etc|e\.g|i\.e|al|Fig|Vol|No|approx|Sec|Art|Par|Dept|Div|Reg|Rev|Chap|App|Ref|DoD|U\.S)\.\s*$",
+        s,
+        re.I,
+    ):
         return True
-    if re.search(r"[A-Z]\.\s*$", s):  # single letter abbreviation
+    if re.search(r"[A-Z]\.\s*$", s):
         return True
-    if re.search(r"\[\d+\]\s*$|\d+\)\s*$", s):  # citation-like end
+    if re.search(r"\[\d+\]\s*$|\d+\)\s*$", s):
+        return True
+    # DoD-style: ends with a section/paragraph reference number like "0101." or "2.3.4."
+    if re.search(r"\d{2,6}\.\s*$", s):
         return True
     return False
 
@@ -110,51 +164,122 @@ def _sentences(text: str) -> List[str]:
 
 
 # --- 3. Structure awareness for BOOK: chapter/section detection ---
-# Patterns for section headings (capture title, then text until next heading or end)
-_CHAPTER_RE = re.compile(r"(?m)^\s*(?:Chapter\s+\d+(?:\s*[-:]\s*)?|Part\s+[IVXLCDM]+\s*[-:]\s*)(.+?)\s*$", re.IGNORECASE)
+# Patterns for section headings (capture title, then text until next heading or end).
+# Priority order: DoD numbered paragraphs → Chapter/Part/Volume → deep numbered → markdown.
+_CHAPTER_RE = re.compile(
+    r"(?m)^\s*(?:"
+    r"Chapter\s+\d+(?:\s*[-:]\s*)?|"
+    r"Part\s+[IVXLCDM\d]+\s*[-:]\s*|"
+    r"Volume\s+\d+\s*[-:]\s*|"
+    r"Appendix\s+[A-Z\d]+\s*[-:]\s*|"
+    r"Article\s+\d+\s*[-:]\s*"
+    r")(.+?)\s*$",
+    re.IGNORECASE,
+)
+_DOD_NUMBERED_RE = re.compile(
+    r"(?m)^\s*(\d{4,6})\s+([A-Z][A-Z\s,/&-]{2,80})\s*$"
+)
+_SECTION_LABEL_RE = re.compile(
+    r"(?m)^\s*(?:Section|Sec\.?)\s+([\d.]+)\s*[-:]?\s*(.+?)\s*$",
+    re.IGNORECASE,
+)
 _SECTION_MARKDOWN_RE = re.compile(r"(?m)^\s*#{1,4}\s+(.+?)\s*$")
-_SECTION_NUM_RE = re.compile(r"(?m)^\s*(\d+(?:\.\d+)*\s*[.\s]\s*.+?)\s*$")
+_DEEP_NUM_RE = re.compile(
+    r"(?m)^\s*(\d+(?:\.\d+){1,4})\s+(.+?)\s*$"
+)
+
+
+def _split_sections_from_matches(
+    text: str,
+    matches: list,
+    title_group: int = 1,
+) -> List[Tuple[str, str]]:
+    """Build (title, body) pairs from regex match objects."""
+    sections: List[Tuple[str, str]] = []
+    for i, m in enumerate(matches):
+        title = m.group(title_group).strip()
+        start = m.end()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        body = text[start:end].strip()
+        if body:
+            sections.append((title, body))
+    return sections
 
 
 def _split_book_into_sections(text: str) -> List[Tuple[Optional[str], str]]:
     """
     Detect chapter/section headings and split book into (section_title, section_text) pairs.
-    If no structure is detected, returns [(None, text)] so caller can fall back to single-section behavior.
+    Supports DoD-style numbered paragraphs (0101 GENERAL), Chapter/Part/Volume/Appendix/Article,
+    Section X.Y, deep numbered sections (1.2.3.4), and markdown headings.
+    If no structure is detected, falls back to logical paragraph segmentation for very large texts.
     """
     text = (text or "").strip()
     if not text:
         return []
 
-    # Try chapter-style first (Chapter 1, Part I, etc.)
+    # 1. DoD-style: "0101 GENERAL", "010201 PURPOSE" (4–6 digit code + ALL-CAPS title)
+    dod_matches = list(_DOD_NUMBERED_RE.finditer(text))
+    if len(dod_matches) >= 3:
+        sections = _split_sections_from_matches(text, dod_matches, title_group=0)
+        if sections:
+            return sections
+
+    # 2. Chapter/Part/Volume/Appendix/Article
     chapters = list(_CHAPTER_RE.finditer(text))
     if chapters:
-        sections = []
-        for i, m in enumerate(chapters):
-            title = m.group(1).strip()
-            start = m.end()
-            end = chapters[i + 1].start() if i + 1 < len(chapters) else len(text)
-            body = text[start:end].strip()
-            if body:
-                sections.append((title, body))
+        sections = _split_sections_from_matches(text, chapters)
         if sections:
             return sections
 
-    # Try markdown-style ## Heading
+    # 3. "Section 0301" / "Sec. 2.3"
+    sec_labels = list(_SECTION_LABEL_RE.finditer(text))
+    if len(sec_labels) >= 2:
+        sections = _split_sections_from_matches(text, sec_labels, title_group=0)
+        if sections:
+            return sections
+
+    # 4. Deep numbered: "1.2.3 Title"
+    deep_nums = list(_DEEP_NUM_RE.finditer(text))
+    if len(deep_nums) >= 3:
+        sections = _split_sections_from_matches(text, deep_nums, title_group=0)
+        if sections:
+            return sections
+
+    # 5. Markdown ## Heading
     md_heads = list(_SECTION_MARKDOWN_RE.finditer(text))
     if md_heads:
-        sections = []
-        for i, m in enumerate(md_heads):
-            title = m.group(1).strip()
-            start = m.end()
-            end = md_heads[i + 1].start() if i + 1 < len(md_heads) else len(text)
-            body = text[start:end].strip()
-            if body:
-                sections.append((title, body))
+        sections = _split_sections_from_matches(text, md_heads)
         if sections:
             return sections
 
-    # No structure detected: single section
+    # 6. Fallback for very large unstructured text: split into ~10k-char logical segments at paragraph boundaries
+    if len(text) > 50_000:
+        return _fallback_paragraph_segments(text, target_segment_chars=10_000)
+
     return [(None, text)]
+
+
+def _fallback_paragraph_segments(text: str, target_segment_chars: int = 10_000) -> List[Tuple[Optional[str], str]]:
+    """Split large text without headings into segments at paragraph boundaries."""
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    if not paragraphs:
+        return [(None, text)]
+    segments: List[Tuple[Optional[str], str]] = []
+    current: List[str] = []
+    current_len = 0
+    seg_idx = 1
+    for p in paragraphs:
+        plen = len(p)
+        if current_len + plen > target_segment_chars and current:
+            segments.append((f"Segment {seg_idx}", "\n\n".join(current)))
+            seg_idx += 1
+            current = []
+            current_len = 0
+        current.append(p)
+        current_len += plen
+    if current:
+        segments.append((f"Segment {seg_idx}", "\n\n".join(current)))
+    return segments
 
 
 def _group_sentences_to_size(
@@ -253,9 +378,10 @@ def chunk_faq(
 def _adaptive_overlap_sentences(chunk_max_tokens: int) -> int:
     """
     Overlap in number of sentences: scale with chunk size for better continuity.
-    Larger chunks get more overlap; keep sentence-boundary safety. Range 1–4.
+    Larger chunks get more overlap; keep sentence-boundary safety. Range 2–4.
+    Targets ~80-150 tokens of overlap (2-4 sentences).
     """
-    return max(1, min(4, (chunk_max_tokens // 150)))
+    return max(2, min(4, (chunk_max_tokens // 150)))
 
 
 def chunk_long_form(
@@ -263,11 +389,12 @@ def chunk_long_form(
     sensitivity_level: SensitivityLevel,
     redacted: bool,
     section: Optional[str] = None,
+    section_path: Optional[str] = None,
 ) -> List[ParentChildChunk]:
     """
     Parent chunks (token-sized _PARENT_MIN–_PARENT_MAX) for context; child chunks for retrieval.
-    Children reference parent_chunk_id. Section metadata set when provided (from structure detection).
-    Overlap is adaptive by chunk size.
+    Children reference parent_chunk_id. Section/section_path metadata set when provided.
+    Child chunk sizes are dynamically adjusted based on content density.
     """
     text = (text or "").strip()
     if not text:
@@ -277,17 +404,18 @@ def chunk_long_form(
     if not paragraphs:
         return []
 
-    # Parent grouping by token count (constants = tokens)
+    cfg_p_min, cfg_p_max, cfg_c_min, cfg_c_max = _get_book_limits()
+
     parent_chunks: List[str] = []
     current: List[str] = []
     current_tokens = 0
     for p in paragraphs:
         p_tokens = token_len(p)
         sep_tokens = token_len("\n\n") if current else 0
-        if current_tokens + sep_tokens + p_tokens > _PARENT_MAX and current:
+        if current_tokens + sep_tokens + p_tokens > cfg_p_max and current:
             parent_chunks.append("\n\n".join(current))
             overlap_paras = [current[-1]] if len(current) >= 1 else []
-            current = overlap_paras + [p] if p_tokens <= _PARENT_MAX else [p]
+            current = overlap_paras + [p] if p_tokens <= cfg_p_max else [p]
             current_tokens = token_len("\n\n".join(current))
         else:
             current.append(p)
@@ -295,14 +423,14 @@ def chunk_long_form(
     if current:
         parent_chunks.append("\n\n".join(current))
 
-    csize, _ = _get_chunk_size_overlap()
-    child_min = min(_CHILD_MIN, csize // 2)
-    child_max = min(_CHILD_MAX, csize + 100)
+    child_min_dyn, child_max_dyn = _dynamic_child_range(text)
+    child_min = max(cfg_c_min, child_min_dyn)
+    child_max = min(cfg_c_max, child_max_dyn) if child_max_dyn <= cfg_c_max else cfg_c_max
     overlap_sentences = _adaptive_overlap_sentences(child_max)
 
     out: List[ParentChildChunk] = []
     for pi, parent_text in enumerate(parent_chunks):
-        if token_len(parent_text) < _PARENT_MIN and pi < len(parent_chunks) - 1:
+        if token_len(parent_text) < cfg_p_min and pi < len(parent_chunks) - 1:
             continue
         sentences = _sentences(parent_text)
         child_texts = _group_sentences_to_size(
@@ -322,6 +450,7 @@ def chunk_long_form(
             sensitivity_level=sensitivity_level,
             redacted=redacted,
             section=section,
+            section_path=section_path,
             parent_chunk_id=None,
             is_parent=True,
             chunk_index=pi,
@@ -335,6 +464,7 @@ def chunk_long_form(
                 sensitivity_level=sensitivity_level,
                 redacted=redacted,
                 section=section,
+                section_path=section_path,
                 parent_chunk_id="",
                 is_parent=False,
                 chunk_index=pi * 100 + ji,

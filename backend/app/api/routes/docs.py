@@ -6,6 +6,7 @@ import shutil
 from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
 
 from ...core.config import settings
 
@@ -16,6 +17,17 @@ from ...rag.index import index
 from ...utils.ids import new_id
 
 router = APIRouter(prefix="/docs", tags=["docs"])
+
+# Uploaded files are persisted here so the frontend can render them at a specific page.
+_UPLOAD_DIR = os.path.join(settings.DATA_DIR, "uploads")
+
+
+def _upload_path(doc_id: str, filename: str) -> str:
+    """Return the full disk path for a stored upload. Uses the original filename so
+    FileResponse sends the right Content-Type and Content-Disposition."""
+    os.makedirs(_UPLOAD_DIR, exist_ok=True)
+    ext = os.path.splitext(filename)[1].lower() if filename else ""
+    return os.path.join(_UPLOAD_DIR, f"{doc_id}{ext}")
 
 # Sample transcript chunks for testing RAG and time-range retrieval.
 # Each dict: text (longer transcript-style content that chunks into 5–10 pieces), tags, location, and either hours_ago or date.
@@ -129,18 +141,66 @@ def list_docs():
 @router.post("/upload")
 async def upload(file: UploadFile = File(...)):
     data = await file.read()
-    filetype, text = parse_any(file.filename, data)
-    res = await index.add_document(file.filename, filetype, text, {"filename": file.filename, "filetype": filetype})
+    filetype, text, estimated_pages, page_offsets = parse_any(file.filename, data)
+    res = await index.add_document(
+        file.filename,
+        filetype,
+        text,
+        {"filename": file.filename, "filetype": filetype},
+        estimated_pages=estimated_pages,
+        page_offsets=page_offsets,
+    )
+    # Persist raw file so it can be served back for in-browser preview.
+    doc_id = res.get("doc_id") or res.get("id")
+    if doc_id:
+        dest = _upload_path(doc_id, file.filename)
+        try:
+            with open(dest, "wb") as fh:
+                fh.write(data)
+        except Exception as exc:
+            logger.warning("Could not persist upload for preview: %s", exc)
     return {"ok": True, **res}
+
+
+@router.get("/{doc_id}/file")
+async def serve_file(doc_id: str):
+    """Serve the original uploaded file so the frontend can render it (e.g. PDF iframe at a page)."""
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT filename FROM documents WHERE id=?", (doc_id,)
+        ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Document not found")
+    filename = row[0]
+    path = _upload_path(doc_id, filename)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="File not stored on server — please re-upload to enable preview")
+    ext = os.path.splitext(filename)[1].lower() if filename else ""
+    media_type_map = {".pdf": "application/pdf", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".txt": "text/plain"}
+    media_type = media_type_map.get(ext, "application/octet-stream")
+    return FileResponse(
+        path,
+        media_type=media_type,
+        filename=filename,
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
 
 
 @router.delete("/{doc_id}")
 async def delete_doc(doc_id: str):
     with get_conn() as conn:
-        row = conn.execute("SELECT id FROM documents WHERE id=?", (doc_id,)).fetchone()
+        row = conn.execute("SELECT id, filename FROM documents WHERE id=?", (doc_id,)).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Document not found")
+    _id, filename = row
     await index.delete_document(doc_id)
+    # Remove stored file (best-effort)
+    try:
+        upload_path = _upload_path(doc_id, filename or "")
+        if os.path.exists(upload_path):
+            os.remove(upload_path)
+    except Exception as exc:
+        logger.warning("Could not remove stored upload %s: %s", doc_id, exc)
     return {"ok": True, "deleted": doc_id}
 
 
@@ -191,6 +251,12 @@ async def delete_all_data():
         conn.execute("DELETE FROM chats")
         conn.commit()
     index.clear_all()
+    # Remove all stored upload files
+    try:
+        if os.path.isdir(_UPLOAD_DIR):
+            shutil.rmtree(_UPLOAD_DIR)
+    except Exception as exc:
+        logger.warning("Could not clear uploads dir: %s", exc)
     return {"ok": True, "message": "All data deleted."}
 
 

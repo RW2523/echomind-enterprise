@@ -20,7 +20,17 @@ export interface DocumentChunk {
   metadata: {
     pageNumber?: number;
     section?: string;
+    /** Hierarchical section breadcrumb, e.g. "Volume 1 > Chapter 3 > 030201" */
+    sectionPath?: string;
     timestamp: number;
+    /** Relevance score 0–1 from retrieval pipeline */
+    score?: number;
+    /** Document type: "book" | "glossary" | "faq" | "transcript" etc. */
+    docType?: string;
+    /** Raw chunk index in the document */
+    chunkIndex?: number;
+    /** Backend document ID — used to construct the file-serve URL for in-browser PDF preview */
+    docId?: string;
   };
 }
 

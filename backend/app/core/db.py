@@ -40,6 +40,27 @@ def init_db():
             conn.execute("ALTER TABLE transcripts ADD COLUMN updated_at TEXT")
         except Exception:
             pass
+        # Hierarchical section index: stores section-level metadata for BOOK documents.
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS book_sections(
+                section_id TEXT PRIMARY KEY,
+                doc_id TEXT,
+                section_title TEXT,
+                section_path TEXT,
+                full_section_text TEXT,
+                created_at TEXT
+            )"""
+        )
+        # Cross-reference graph: extracted "See paragraph / Refer to Volume" links between sections.
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS section_references(
+                id TEXT PRIMARY KEY,
+                source_section_path TEXT,
+                referenced_section_path TEXT,
+                doc_id TEXT,
+                reference_text TEXT
+            )"""
+        )
         conn.commit()
 
 @contextmanager

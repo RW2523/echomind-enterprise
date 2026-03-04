@@ -39,9 +39,18 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>['components
 function mapCitations(citations: any[]): DocumentChunk[] {
   return (citations || []).map((c: any, i: number) => ({
     id: `cite_${i}_${c?.filename ?? 'doc'}`,
-    docName: c?.filename ?? 'Unknown',
+    docName: c?.filename ?? 'Unknown document',
     content: c?.snippet ?? '',
-    metadata: { section: `chunk ${c?.chunk_index ?? ''}`, timestamp: Date.now() }
+    metadata: {
+      section: c?.section ?? undefined,
+      sectionPath: c?.section_path ?? undefined,
+      pageNumber: c?.page_number ?? undefined,
+      score: typeof c?.score === 'number' ? c.score : undefined,
+      docType: c?.doc_type ?? undefined,
+      chunkIndex: c?.chunk_index ?? undefined,
+      docId: c?.doc_id ?? undefined,
+      timestamp: Date.now(),
+    },
   }));
 }
 
@@ -49,6 +58,319 @@ function uniqueFileNames(citations: DocumentChunk[]): string[] {
   const seen = new Set<string>();
   return (citations || []).map(c => c.docName).filter(name => { if (seen.has(name)) return false; seen.add(name); return true; });
 }
+
+/** Relevance score 0–1 → percentage label with colour class */
+function scoreLabel(score?: number): { text: string; cls: string } | null {
+  if (score == null) return null;
+  const pct = Math.round(score * 100);
+  const cls = pct >= 80 ? 'text-emerald-400' : pct >= 60 ? 'text-cyan-400' : pct >= 40 ? 'text-amber-400' : 'text-slate-400';
+  return { text: `${pct}%`, cls };
+}
+
+/** Doc-type badge colour */
+function docTypeBadge(docType?: string): { label: string; cls: string } | null {
+  if (!docType) return null;
+  const map: Record<string, { label: string; cls: string }> = {
+    book: { label: 'Book', cls: 'bg-violet-500/20 text-violet-300' },
+    glossary: { label: 'Glossary', cls: 'bg-teal-500/20 text-teal-300' },
+    faq: { label: 'FAQ', cls: 'bg-sky-500/20 text-sky-300' },
+    transcript: { label: 'Transcript', cls: 'bg-amber-500/20 text-amber-300' },
+  };
+  return map[docType.toLowerCase()] ?? { label: docType, cls: 'bg-white/10 text-slate-300' };
+}
+
+// ── PDF Page Preview Modal ────────────────────────────────────────────────────
+
+interface PdfPageModalProps {
+  docId: string;
+  filename: string;
+  pageNumber: number;
+  onClose: () => void;
+}
+
+const PdfPageModal: React.FC<PdfPageModalProps> = ({ docId, filename, pageNumber, onClose }) => {
+  const fileUrl = `/api/docs/${docId}/file#page=${pageNumber}`;
+
+  return (
+    <div
+      className="fixed inset-0 z-[90] flex flex-col bg-black/90 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="flex flex-col w-full h-full"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header bar */}
+        <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b border-white/10 bg-[#0c1220]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Back"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white truncate">{filename}</p>
+            <p className="text-[11px] text-slate-400">Navigating to page {pageNumber}</p>
+          </div>
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400/60 hover:bg-cyan-500/10 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            Open in new tab
+          </a>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Close"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* PDF iframe — browser native viewer handles #page=N */}
+        <iframe
+          src={fileUrl}
+          title={`${filename} – page ${pageNumber}`}
+          className="flex-1 w-full border-0"
+        />
+      </div>
+    </div>
+  );
+};
+
+
+// ── Chunk Citation Modal ──────────────────────────────────────────────────────
+
+interface ChunkModalProps {
+  citations: DocumentChunk[];
+  onClose: () => void;
+}
+
+const ChunkCitationModal: React.FC<ChunkModalProps> = ({ citations, onClose }) => {
+  const [selected, setSelected] = useState<DocumentChunk | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{ docId: string; filename: string; pageNumber: number } | null>(null);
+
+  return (
+    <>
+    {pdfPreview && (
+      <PdfPageModal
+        docId={pdfPreview.docId}
+        filename={pdfPreview.filename}
+        pageNumber={pdfPreview.pageNumber}
+        onClose={() => setPdfPreview(null)}
+      />
+    )}
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm"
+      onClick={() => { if (selected) setSelected(null); else onClose(); }}
+    >
+      <div
+        className="w-full max-w-2xl max-h-[88vh] flex flex-col rounded-2xl border border-white/20 bg-[#0c1220] shadow-2xl overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-white/10 shrink-0 flex items-center gap-3">
+          {selected ? (
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+              aria-label="Back to list"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          ) : (
+            <div className="w-5 h-5 shrink-0 opacity-70">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-sm text-white truncate">
+              {selected ? 'Chunk Preview' : `Sources  ·  ${citations.length} chunk${citations.length !== 1 ? 's' : ''}`}
+            </h3>
+            {selected && (
+              <p className="text-[11px] text-slate-500 truncate mt-0.5">{selected.docName}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+            aria-label="Close"
+          >
+            <ICONS.Close className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 min-h-0 overflow-auto">
+          {selected ? (
+            /* ── Chunk Detail / Preview ── */
+            <div className="p-4 space-y-4">
+              {/* Metadata strip */}
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5 space-y-2.5">
+                {/* Document */}
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 w-14 shrink-0 pt-px">File</span>
+                  <span className="text-xs text-white/90 break-all">{selected.docName}</span>
+                </div>
+                {/* Section path */}
+                {selected.metadata.sectionPath && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 w-14 shrink-0 pt-px">Path</span>
+                    <span className="text-xs text-cyan-300/90 font-mono break-all leading-relaxed">{selected.metadata.sectionPath}</span>
+                  </div>
+                )}
+                {/* Section title (when different from path) */}
+                {selected.metadata.section && !selected.metadata.sectionPath && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 w-14 shrink-0 pt-px">Section</span>
+                    <span className="text-xs text-white/80">{selected.metadata.section}</span>
+                  </div>
+                )}
+                {/* Row: page + relevance + type */}
+                <div className="flex items-center flex-wrap gap-3">
+                  {selected.metadata.pageNumber != null && (
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6M5 6h14M5 10h14" />
+                      </svg>
+                      <span className="text-[11px] text-slate-300">Page <span className="font-semibold text-white">{selected.metadata.pageNumber}</span></span>
+                    </div>
+                  )}
+                  {(() => { const s = scoreLabel(selected.metadata.score); return s ? (
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span className={`text-[11px] font-semibold ${s.cls}`}>{s.text} relevance</span>
+                    </div>
+                  ) : null; })()}
+                  {(() => { const b = docTypeBadge(selected.metadata.docType); return b ? (
+                    <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-medium ${b.cls}`}>{b.label}</span>
+                  ) : null; })()}
+                  {selected.metadata.chunkIndex != null && (
+                    <span className="text-[10px] text-slate-500">chunk #{selected.metadata.chunkIndex}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Chunk text */}
+              <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/20 p-4">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-cyan-600 mb-2.5">Retrieved Text</p>
+                <p className="text-sm text-white/85 leading-relaxed whitespace-pre-wrap font-mono">
+                  {selected.content || <span className="text-slate-500 italic">No text preview available.</span>}
+                </p>
+              </div>
+
+              {/* View in Document button — only when docId + pageNumber are available */}
+              {selected.metadata.docId && selected.metadata.pageNumber != null && (
+                <button
+                  type="button"
+                  onClick={() => setPdfPreview({
+                    docId: selected.metadata.docId!,
+                    filename: selected.docName,
+                    pageNumber: selected.metadata.pageNumber!,
+                  })}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-white text-sm font-medium transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  View in Document — Page {selected.metadata.pageNumber}
+                </button>
+              )}
+            </div>
+          ) : (
+            /* ── Chunk List ── */
+            <ul className="divide-y divide-white/[0.06]">
+              {citations.map((c, i) => {
+                const sc = scoreLabel(c.metadata.score);
+                const badge = docTypeBadge(c.metadata.docType);
+                return (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelected(c)}
+                      className="w-full text-left px-4 py-3.5 hover:bg-white/[0.04] transition-colors group"
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Index bubble */}
+                        <span className="shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-slate-400 mt-px">{i + 1}</span>
+
+                        <div className="flex-1 min-w-0 space-y-1">
+                          {/* Filename */}
+                          <div className="text-xs font-medium text-white/90 truncate">{c.docName}</div>
+
+                          {/* Section path or section */}
+                          {(c.metadata.sectionPath || c.metadata.section) && (
+                            <div className="text-[11px] text-cyan-400/80 font-mono truncate leading-snug">
+                              {c.metadata.sectionPath || c.metadata.section}
+                            </div>
+                          )}
+
+                          {/* Meta row */}
+                          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1">
+                            {c.metadata.pageNumber != null && (
+                              <span className="text-[10px] text-slate-400">p. {c.metadata.pageNumber}</span>
+                            )}
+                            {sc && (
+                              <span className={`text-[10px] font-medium ${sc.cls}`}>{sc.text} match</span>
+                            )}
+                            {badge && (
+                              <span className={`inline-block px-1.5 py-0 rounded text-[10px] font-medium ${badge.cls}`}>{badge.label}</span>
+                            )}
+                          </div>
+
+                          {/* Snippet */}
+                          {c.content && (
+                            <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed mt-0.5">
+                              {c.content}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Arrow */}
+                        <svg className="shrink-0 w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Footer hint */}
+        {!selected && (
+          <div className="px-4 py-2 border-t border-white/[0.06] shrink-0">
+            <p className="text-[10px] text-slate-600 text-center">Click any chunk to preview its content · click "View in Document" to jump to the exact page</p>
+          </div>
+        )}
+      </div>
+    </div>
+    </>
+  );
+};
 
 const DEFAULT_SOURCE_OPTIONS: SourceOptions = {
   transcript: true,
@@ -73,6 +395,8 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
   const [previewTranscript, setPreviewTranscript] = useState<TranscriptDetail | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [resourcesPanelOpen, setResourcesPanelOpen] = useState(false);
+  // Citation chunk modal: which message's citations are being shown
+  const [chunkModalForId, setChunkModalForId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -116,14 +440,13 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
     return () => window.removeEventListener('echomind:transcripts-added', onAdded);
   }, [resourceTab]);
 
+  // Close citation modal on Escape key
   useEffect(() => {
-    if (!resourcesOpenForId) return;
-    const close = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) setResourcesOpenForId(null);
-    };
-    document.addEventListener('click', close);
-    return () => document.removeEventListener('click', close);
-  }, [resourcesOpenForId]);
+    if (!chunkModalForId) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setChunkModalForId(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [chunkModalForId]);
 
   const toggleSource = (key: keyof SourceOptions) => {
     setSourceOptions(prev => ({ ...prev, [key]: !prev[key] }));
@@ -354,21 +677,18 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
                 <div className="text-sm whitespace-pre-wrap">{m.content}</div>
               )}
               {m.citations && m.citations.length > 0 && (
-                <div className="mt-3 relative" ref={m.id === resourcesOpenForId ? popoverRef : undefined}>
+                <div className="mt-3">
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); setResourcesOpenForId(resourcesOpenForId === m.id ? null : m.id); }}
-                    className="text-xs font-medium text-cyan-400 hover:text-cyan-300 border border-white/20 hover:border-white/30 rounded-lg px-3 py-1.5 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); setChunkModalForId(m.id); }}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-400/50 hover:bg-cyan-500/[0.07] rounded-lg px-3 py-1.5 transition-colors"
                   >
-                    Resources
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6M5 6h14M5 10h14" />
+                    </svg>
+                    Sources
+                    <span className="ml-0.5 px-1.5 py-0 rounded-full bg-cyan-500/20 text-[10px] font-bold">{m.citations.length}</span>
                   </button>
-                  {resourcesOpenForId === m.id && (
-                    <div className="absolute top-full left-0 mt-1 z-20 rounded-lg border border-white/20 bg-slate-900/98 shadow-xl py-2 min-w-[200px] max-w-[320px]">
-                      {uniqueFileNames(m.citations).map((name, i) => (
-                        <div key={i} className="px-3 py-1.5 text-xs truncate" title={name}>{name}</div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -437,6 +757,18 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
       <div className={`fixed md:relative inset-y-0 right-0 z-50 md:z-auto w-full max-w-sm md:max-w-none flex flex-col md:flex-none h-full md:h-auto transform ${resourcesPanelOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} transition-transform duration-200 md:transition-none md:w-64 lg:w-72 md:shrink-0`}>
         {resourcesAside}
       </div>
+
+      {/* Chunk citation modal */}
+      {chunkModalForId && (() => {
+        const msg = messages.find(m => m.id === chunkModalForId);
+        if (!msg?.citations?.length) return null;
+        return (
+          <ChunkCitationModal
+            citations={msg.citations}
+            onClose={() => setChunkModalForId(null)}
+          />
+        );
+      })()}
 
       {/* Transcript preview modal */}
       {(previewTranscript || previewLoading) && (

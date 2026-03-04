@@ -14,6 +14,8 @@ from ..core.config import settings
 from ..core.db import get_conn
 from .index import index
 from .llm import OpenAICompatChat
+from .query_classifier import classify_query_type, get_rrf_weights
+from .reranker import rerank_hits as _ce_rerank_hits
 
 logger = logging.getLogger(__name__)
 chat = OpenAICompatChat(settings.LLM_BASE_URL, settings.LLM_MODEL)
@@ -177,6 +179,253 @@ def _doc_epoch_from_meta(meta: dict, doc_created: Optional[str]) -> Optional[flo
         if dt:
             return dt.timestamp()
     return None
+
+
+# ── Hierarchical RAG helpers (Steps 1–7) ─────────────────────────────────────
+
+async def _try_glossary_first(
+    query: str, k: int, qv: np.ndarray
+) -> List[Dict]:
+    """Check glossary index for definition queries.
+
+    Returns synthetic hits if top glossary score exceeds RAG_GLOSSARY_SCORE_THRESHOLD,
+    otherwise returns empty list (caller falls back to normal retrieval).
+    """
+    if not getattr(settings, "RAG_USE_GLOSSARY_PRIORITY", True):
+        return []
+    threshold = getattr(settings, "RAG_GLOSSARY_SCORE_THRESHOLD", 0.55)
+    try:
+        gloss_hits = await index.glossary_index.search(query, k=k, query_vector=qv)
+    except Exception as e:
+        logger.debug("Glossary search error (non-fatal): %s", e)
+        return []
+    if not gloss_hits or gloss_hits[0].get("score", 0) < threshold:
+        return []
+    result = []
+    for g in gloss_hits:
+        # Build a synthetic hit so the rest of the pipeline works unchanged
+        sid = f"gls_{abs(hash(g.get('text', '') + str(g.get('section_path', '')))) & 0xFFFFFF:06x}"
+        result.append({
+            "chunk_id": sid,
+            "score": g["score"],
+            "text": g["text"],
+            "source": {
+                "doc_id": g.get("doc_id"),
+                "section_path": g.get("section_path"),
+                "section": "Glossary / Definitions",
+                "doc_type": "glossary",
+                "filename": None,
+                "chunk_index": 0,
+                "filetype": "pdf",
+                "is_parent": False,
+                "redacted": False,
+            },
+        })
+    logger.info(
+        "RAG: glossary priority → %d hit(s) (top_score=%.3f) for query=%s",
+        len(result), result[0]["score"], (query[:60] + "…") if len(query) > 60 else query,
+    )
+    return result
+
+
+async def _get_section_restricted_paths(
+    query: str, qv: np.ndarray
+) -> List[str]:
+    """Search section_index for top matching sections; return their paths for child-search restriction.
+
+    Returns [] when feature is disabled, no sections score above threshold, or section_index is empty.
+    """
+    if not getattr(settings, "RAG_USE_SECTION_RETRIEVAL", True):
+        return []
+    threshold = getattr(settings, "RAG_SECTION_SCORE_THRESHOLD", 0.40)
+    top_k = getattr(settings, "RAG_SECTION_TOP_K", 3)
+    try:
+        sections = await index.section_index.search(query, k=top_k, query_vector=qv)
+    except Exception as e:
+        logger.debug("Section index search error (non-fatal): %s", e)
+        return []
+    qualifying = [s for s in sections if s.get("score", 0) >= threshold]
+    if not qualifying:
+        return []
+    paths = [s["section_path"] for s in qualifying if s.get("section_path")]
+    logger.info(
+        "RAG: section restriction applied → %d section(s) [threshold=%.2f]: %s",
+        len(paths), threshold, paths,
+    )
+    return paths
+
+
+async def _apply_reranker(
+    question: str,
+    hits: List[Dict],
+    top_k_candidates: int,
+    final_n: int,
+) -> List[Dict]:
+    """Re-rank top_k_candidates hits with cross-encoder → keep final_n.
+
+    Falls back to existing LLM reranker if cross-encoder unavailable.
+    """
+    if not getattr(settings, "RAG_USE_RERANKER", True) or not hits:
+        return hits
+    candidates = hits[:top_k_candidates]
+    try:
+        reranked = await _ce_rerank_hits(
+            question,
+            candidates,
+            top_k=final_n,
+            llm_fallback_fn=_rerank_hits,
+        )
+        logger.info(
+            "RAG: reranker → reduced %d → %d hits",
+            len(candidates), len(reranked),
+        )
+        return reranked
+    except Exception as e:
+        logger.warning("Reranker error (non-fatal, using original order): %s", e)
+        return hits[:final_n]
+
+
+def _get_chunk_by_section_path(section_path: str, doc_ids: Optional[List[str]] = None) -> Optional[Dict]:
+    """Fetch a representative chunk for a section_path from DB (for graph expansion)."""
+    try:
+        with get_conn() as conn:
+            if doc_ids:
+                placeholders = ",".join("?" for _ in doc_ids)
+                row = conn.execute(
+                    f"SELECT c.id, c.text, c.source_json FROM chunks c "
+                    f"WHERE c.source_json LIKE ? AND c.doc_id IN ({placeholders}) "
+                    f"AND json_extract(c.source_json, '$.is_parent') = 0 "
+                    f"LIMIT 1",
+                    (f'%"section_path": "{section_path}"%', *doc_ids),
+                ).fetchone()
+            else:
+                row = conn.execute(
+                    "SELECT c.id, c.text, c.source_json FROM chunks c "
+                    "WHERE c.source_json LIKE ? "
+                    "AND json_extract(c.source_json, '$.is_parent') = 0 "
+                    "LIMIT 1",
+                    (f'%"section_path": "{section_path}"%',),
+                ).fetchone()
+    except Exception:
+        return None
+    if not row:
+        return None
+    src_json = row[2]
+    src = json.loads(src_json) if isinstance(src_json, str) else src_json
+    return {"chunk_id": row[0], "score": 0.5, "text": row[1], "source": {**src, "_graph_ref": section_path}}
+
+
+def _apply_graph_expansion(hits: List[Dict], max_additions: int = 3) -> List[Dict]:
+    """Follow cross-references for each hit's section_path (BFS, depth≤2).
+
+    Appends referenced chunks as supplemental context (score=0, _graph_ref tag).
+    Limits total additions to max_additions.
+    """
+    if not getattr(settings, "RAG_USE_GRAPH_EXPANSION", True) or not hits:
+        return hits
+
+    seen_paths = {
+        (h.get("source") or {}).get("section_path")
+        for h in hits
+        if (h.get("source") or {}).get("section_path")
+    }
+    # Collect doc_ids for scoped DB lookup
+    doc_ids = list({
+        (h.get("source") or {}).get("doc_id")
+        for h in hits
+        if (h.get("source") or {}).get("doc_id")
+    })
+
+    additions: List[Dict] = []
+    for h in hits:
+        sp = (h.get("source") or {}).get("section_path")
+        if not sp:
+            continue
+        try:
+            refs = index.cross_ref_graph.get_referenced_paths(
+                sp, max_depth=2, max_total=max_additions - len(additions)
+            )
+        except Exception:
+            continue
+        for ref_path in refs:
+            if ref_path in seen_paths or len(additions) >= max_additions:
+                break
+            seen_paths.add(ref_path)
+            ref_hit = _get_chunk_by_section_path(ref_path, doc_ids=doc_ids or None)
+            if ref_hit:
+                additions.append(ref_hit)
+
+    if additions:
+        logger.info("RAG: graph expansion added %d supplemental section(s)", len(additions))
+    return hits + additions
+
+
+def _has_citation_in_text(text: str) -> bool:
+    """True when the answer text contains at least one (section_path, page) style citation."""
+    if not text:
+        return False
+    # Match patterns like (section_path, page 12) or (Volume 1 > Chapter 3, p. 42)
+    if re.search(r"\([^)]{5,100},\s*(?:p(?:age)?\.?\s*)?\d+\)", text):
+        return True
+    # Match inline page reference
+    if re.search(r"\(p(?:age)?\.?\s*\d+\)", text):
+        return True
+    # Match section path bracket references: [Volume 1 > Chapter 3]
+    if re.search(r"\[Volume\s+\d+|Chapter\s+\d+|Section\s+\d", text, re.I):
+        return True
+    return False
+
+
+def _strict_citation_system_prompt(persona: Optional[str] = None) -> str:
+    """System prompt with strict citation requirement for regulatory documents."""
+    base = (
+        "You are EchoMind, a regulatory document assistant.\n\n"
+        "CRITICAL INSTRUCTION: Every factual claim or statement from the retrieved context MUST be "
+        "followed by an inline citation in the format:\n"
+        "  (section_path, page N)\n"
+        "For example: 'Advances shall not exceed 30 days of pay. (Volume 5 > Chapter 3 > 030201, page 142)'\n\n"
+        "If the context does not contain the information needed to answer WITH a citation, respond with:\n"
+        "  'Insufficient context to answer with citation.'\n\n"
+        "Do NOT omit citations. Do NOT invent section paths or page numbers. "
+        "Only cite sections that appear in the provided context blocks."
+    )
+    if persona:
+        base = f"You are EchoMind in the role of: {persona}.\n\n" + base
+    return base
+
+
+async def _answer_with_strict_citations(
+    question: str,
+    ctx_block: str,
+    history: List[Dict],
+    persona: Optional[str],
+    conversation_summary: Optional[str],
+) -> str:
+    """Generate an answer with mandatory inline citations. Retries once with stronger instruction."""
+    sys_prompt = _strict_citation_system_prompt(persona)
+    user_msg = f"Question: {question}\n\nContext (cite exactly from this):\n{ctx_block}"
+    msgs = [{"role": "system", "content": sys_prompt}] + history[-6:] + [{"role": "user", "content": user_msg}]
+    try:
+        ans = await chat.chat(msgs, temperature=0.0, max_tokens=settings.LLM_MAX_TOKENS)
+        if ans and _has_citation_in_text(ans):
+            return ans
+        # Retry with even stricter instruction
+        retry_msgs = msgs + [
+            {"role": "assistant", "content": ans or ""},
+            {"role": "user", "content": (
+                "Your answer is missing inline citations in the format (section_path, page N). "
+                "Please rewrite your answer and include a citation after EVERY factual claim, "
+                "drawn only from the context provided."
+            )},
+        ]
+        retry_ans = await chat.chat(retry_msgs, temperature=0.0, max_tokens=settings.LLM_MAX_TOKENS)
+        if retry_ans and _has_citation_in_text(retry_ans):
+            return retry_ans
+        logger.info("RAG strict-citations: second attempt also had no citations → insufficient context")
+        return "Insufficient context to answer with citation."
+    except Exception as e:
+        logger.warning("Strict citation generation error: %s", e)
+        return "Insufficient context to answer with citation."
 
 
 def _get_doc_info_for_hits(hits: List[Dict]) -> Tuple[Dict[str, Optional[str]], Dict[str, dict]]:
@@ -681,9 +930,18 @@ async def retrieve_semantic_first(
     source_options: Optional[Dict[str, bool]] = None,
 ) -> Tuple[str, List[Dict]]:
     """
-    Embedding-first routing: search transcript and/or document based on source_options.
-    Returns (source_type, hits) where source_type is "transcript" | "document" | "general".
-    source_options: {transcript, document, general} - which sources to search; general = allow fallback when no hits.
+    Embedding-first routing with hierarchical enhancements:
+
+    1. Embed query once (shared across all sub-searches).
+    2. [Step 3] Classify query type → dynamic dense/sparse RRF weights.
+    3. [Step 7] For 'definition' queries: check glossary index first.
+    4. [Step 1] Search section_index → restrict child FAISS/BM25 to top-N sections.
+    5. Parallel dense + sparse search (section-restricted or global).
+    6. Weighted RRF merge.
+    7. Time/location/tag filters (transcript path).
+    8. Pick source by best score.
+
+    Returns (source_type, hits) where source_type ∈ {"transcript", "document", "general", "insufficient"}.
     """
     if not (question or "").strip():
         return ("general", [])
@@ -697,22 +955,47 @@ async def retrieve_semantic_first(
 
     q = question.strip()
     k_per = max(k, 4)
-    dense_w = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.6)
-    sparse_w = getattr(settings, "RAG_SPARSE_RRF_WEIGHT", 0.4)
 
-    # 1. Embed query once (reused for both transcript and document dense search)
+    # [Step 3] Dynamic RRF weights via query classifier
+    use_classifier = getattr(settings, "RAG_USE_QUERY_CLASSIFIER", True)
+    if use_classifier:
+        dense_w, sparse_w = get_rrf_weights(q)
+        qt = classify_query_type(q)
+        logger.info("RAG: query_type=%s → dense_w=%.2f sparse_w=%.2f", qt, dense_w, sparse_w)
+    else:
+        dense_w = getattr(settings, "RAG_DENSE_RRF_WEIGHT", 0.6)
+        sparse_w = getattr(settings, "RAG_SPARSE_RRF_WEIGHT", 0.4)
+        qt = "conceptual"
+
+    # 1. Embed query once — reused for section_index, transcript, and document searches
     qv = await index.emb.embed([q])
     qv = np.array(qv, dtype=np.float32).reshape(1, -1)
     faiss.normalize_L2(qv)
 
-    # 2. Run transcript and document search (only what's enabled)
+    # [Step 7] Glossary priority: for definition queries, try glossary first
+    if use_classifier and qt == "definition" and search_document:
+        glossary_hits = await _try_glossary_first(q, k=min(k, 5), qv=qv)
+        if glossary_hits:
+            return ("document", glossary_hits)
+
+    # [Step 1] Section-level restriction: search section_index → get allowed section paths
+    allowed_section_paths: List[str] = []
+    if search_document:
+        allowed_section_paths = await _get_section_restricted_paths(q, qv)
+
+    # 2. Run transcript and document search in parallel
     tasks = []
     if search_transcript:
         tasks.append(("transcript_dense", index.search_transcript_only(q, k_per, query_vector=qv)))
         tasks.append(("transcript_sparse", asyncio.to_thread(index.transcript_sparse.search, q, k_per)))
     if search_document:
-        tasks.append(("doc_dense", index.search_document_only(q, k_per, query_vector=qv)))
-        tasks.append(("doc_sparse", asyncio.to_thread(index.search_document_only_sparse, q, k_per)))
+        if allowed_section_paths:
+            # [Step 1] Section-restricted search
+            tasks.append(("doc_dense", index.search_document_restricted(q, k_per, allowed_section_paths, query_vector=qv)))
+            tasks.append(("doc_sparse", asyncio.to_thread(index.search_document_sparse_restricted, q, k_per, allowed_section_paths)))
+        else:
+            tasks.append(("doc_dense", index.search_document_only(q, k_per, query_vector=qv)))
+            tasks.append(("doc_sparse", asyncio.to_thread(index.search_document_only_sparse, q, k_per)))
 
     results = await asyncio.gather(*[t[1] for t in tasks])
     result_map = {tasks[i][0]: results[i] for i in range(len(tasks))}
@@ -722,11 +1005,14 @@ async def retrieve_semantic_first(
     doc_dense = result_map.get("doc_dense", [])
     doc_sparse = result_map.get("doc_sparse", [])
 
-    # 3. Merge dense + sparse with RRF for each source
+    # 3. Merge dense + sparse with dynamic-weighted RRF
     transcript_hits: List[Dict] = []
     if search_transcript:
+        # Transcripts always use balanced weights (content-agnostic)
+        t_dense_w = 0.6
+        t_sparse_w = 0.4
         transcript_hits = _weighted_rrf(
-            [transcript_dense], [transcript_sparse], k_per, dense_weight=dense_w, sparse_weight=sparse_w
+            [transcript_dense], [transcript_sparse], k_per, dense_weight=t_dense_w, sparse_weight=t_sparse_w
         )
     transcript_hits = _filter_hits_by_context_window(transcript_hits, context_window or "all")
     doc_created_t, doc_meta_t = _get_doc_info_for_hits(transcript_hits)
@@ -737,7 +1023,6 @@ async def retrieve_semantic_first(
         tag_factor = getattr(settings, "RAG_TAG_BOOST_FACTOR", 0.08)
         transcript_hits = _apply_tag_boost(transcript_hits, q, doc_meta_t, tag_factor)
     # Transcript-specific filters (last N, time range, location, latest)
-    # Time filter only when user explicitly mentions time (e.g. "last 2 hours", "yesterday", "2 Feb 2026")
     n = _parse_last_n_transcripts(q)
     if n is not None and n > 0:
         recent_ids = _get_recent_transcript_doc_ids(n)
@@ -778,7 +1063,7 @@ async def retrieve_semantic_first(
                 transcript_hits = filtered
     transcript_hits = transcript_hits[:k]
 
-    # 4. Document hits (only when search_document)
+    # 4. Document hits with dynamic weights
     document_hits: List[Dict] = []
     if search_document:
         document_hits = _weighted_rrf(
@@ -1029,17 +1314,23 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
 
 
 def _format_block_with_metadata(block_text: str, source: dict) -> str:
-    """Prepend (doc_type, section) to the block when present so the model can adapt by document type."""
+    """Prepend (doc_type, section, section_path, page) to the block for model context and citation."""
     src = source or {}
     doc_type = src.get("doc_type")
     section = src.get("section")
-    if not doc_type and not section:
+    section_path = src.get("section_path")
+    page_number = src.get("page_number")
+    if not doc_type and not section and not section_path and page_number is None:
         return block_text
     parts = []
     if doc_type:
         parts.append(f"doc_type: {doc_type}")
-    if section:
+    if section_path:
+        parts.append(f"path: {section_path}")
+    elif section:
         parts.append(f"section: {section}")
+    if page_number is not None:
+        parts.append(f"page: {page_number}")
     label = "(" + ", ".join(parts) + ")"
     return f"{label}\n{block_text}"
 
@@ -1047,6 +1338,29 @@ def _format_block_with_metadata(block_text: str, source: dict) -> str:
 def _rag_context_block(blocks: List[str]) -> str:
     """Format blocks as [1] ... [2] ... (no SOURCE lines)."""
     return "\n\n".join([f"[{i+1}] {b}" for i, b in enumerate(blocks)])
+
+
+def _build_citation(enriched_hit: Dict) -> Dict:
+    """Build a citation dict from an enriched hit including section_path and page_number."""
+    src = enriched_hit.get("source") or {}
+    citation = {
+        "filename": src.get("filename"),
+        "chunk_index": src.get("chunk_index"),
+        "score": enriched_hit.get("score"),
+        "snippet": (enriched_hit.get("compressed") or "")[:360],
+    }
+    # Include doc_id so the frontend can construct a file-serve URL for in-browser preview.
+    if src.get("doc_id"):
+        citation["doc_id"] = src["doc_id"]
+    if src.get("section"):
+        citation["section"] = src["section"]
+    if src.get("section_path"):
+        citation["section_path"] = src["section_path"]
+    if src.get("page_number") is not None:
+        citation["page_number"] = src["page_number"]
+    if src.get("doc_type"):
+        citation["doc_type"] = src["doc_type"]
+    return citation
 
 
 async def _build_rag_context_fast(question: str, hits: List[Dict], max_chars_per_chunk: int = 1200) -> Tuple[List[str], List[Dict], List[str]]:
@@ -1138,6 +1452,17 @@ async def answer(
     if source_type == "general":
         return await _answer_general(question, history, persona, conversation_summary)
 
+    # [Step 2] Cross-encoder re-rank document hits
+    if source_type == "document":
+        rerank_top_k = getattr(settings, "RAG_RERANK_TOP_K", 25)
+        rerank_final_n = getattr(settings, "RAG_RERANK_FINAL_N", 7)
+        hits = await _apply_reranker(question, hits, rerank_top_k, rerank_final_n)
+
+    # [Step 4] Graph expansion: follow cross-references
+    if source_type == "document":
+        max_additions = getattr(settings, "RAG_GRAPH_MAX_ADDITIONS", 3)
+        hits = _apply_graph_expansion(hits, max_additions=max_additions)
+
     blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
     original_blocks = _get_original_blocks_for_toc(hits)
     if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(original_blocks):
@@ -1145,7 +1470,13 @@ async def answer(
 
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    logger.info("RAG answer source=%s hits=%d", source_type, len(doc_ids))
+    logger.info("RAG answer source=%s hits=%d doc_ids=%d", source_type, len(hits), len(doc_ids))
+
+    # [Step 5] Strict citation enforcement
+    if getattr(settings, "RAG_STRICT_CITATIONS", False) and source_type == "document":
+        ans = await _answer_with_strict_citations(question, ctx_block, history, persona, conversation_summary)
+        citations = [_build_citation(c) for c in enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        return {"answer": ans, "citations": citations}
 
     if conversation_summary and conversation_summary.strip() and _is_follow_up_question(question):
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)
@@ -1155,7 +1486,7 @@ async def answer(
     ans = await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
     citations = []
     if getattr(settings, "RAG_EXPOSE_SOURCES", False):
-        citations = [{"filename": c["source"].get("filename"), "chunk_index": c["source"].get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]
+        citations = [_build_citation(c) for c in enriched]
     return {"answer": ans, "citations": citations}
 
 
@@ -1221,6 +1552,17 @@ async def answer_stream(
             yield ev
         return
 
+    # [Step 2] Cross-encoder re-rank document hits
+    if source_type == "document":
+        rerank_top_k = getattr(settings, "RAG_RERANK_TOP_K", 25)
+        rerank_final_n = getattr(settings, "RAG_RERANK_FINAL_N", 7)
+        hits = await _apply_reranker(question, hits, rerank_top_k, rerank_final_n)
+
+    # [Step 4] Graph expansion: follow cross-references
+    if source_type == "document":
+        max_additions = getattr(settings, "RAG_GRAPH_MAX_ADDITIONS", 3)
+        hits = _apply_graph_expansion(hits, max_additions=max_additions)
+
     blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
     original_blocks = _get_original_blocks_for_toc(hits)
     if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(original_blocks):
@@ -1231,7 +1573,15 @@ async def answer_stream(
 
     ctx_block = _rag_context_block(blocks)
     doc_ids = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    logger.info("RAG answer (stream) source=%s hits=%d", source_type, len(doc_ids))
+    logger.info("RAG answer (stream) source=%s hits=%d doc_ids=%d", source_type, len(hits), len(doc_ids))
+
+    # [Step 5] Strict citation enforcement (non-streaming path for this mode)
+    if getattr(settings, "RAG_STRICT_CITATIONS", False) and source_type == "document":
+        ans = await _answer_with_strict_citations(question, ctx_block, history, persona, conversation_summary)
+        citations = [_build_citation(c) for c in enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        yield ("chunk", ans, None)
+        yield ("done", ans, citations)
+        return
 
     if conversation_summary and conversation_summary.strip() and _is_follow_up_question(question):
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=ctx_block)
@@ -1240,7 +1590,7 @@ async def answer_stream(
         msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": f"Question: {question}\n\nContext:\n{ctx_block}"}]
     citations = []
     if getattr(settings, "RAG_EXPOSE_SOURCES", False):
-        citations = [{"filename": c["source"].get("filename"), "chunk_index": c["source"].get("chunk_index"), "score": c["score"], "snippet": (c.get("compressed") or "")[:360]} for c in enriched]
+        citations = [_build_citation(c) for c in enriched]
     full = []
     async for delta in chat.chat_stream(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS):
         full.append(delta)

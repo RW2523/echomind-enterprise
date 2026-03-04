@@ -25,12 +25,19 @@ class Settings(BaseSettings):
     # Max characters per chunk sent to embedding API (avoids "input length exceeds context length").
     # Conservative default (2000) works with 512-token models; set ECHOMIND_EMBED_MAX_CHARS=8000 for nomic-embed-text.
     EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "2000"))
-    CHUNK_SIZE: int = int(os.getenv("ECHOMIND_CHUNK_SIZE", "800"))
+    CHUNK_SIZE: int = int(os.getenv("ECHOMIND_CHUNK_SIZE", "650"))
     CHUNK_OVERLAP: int = int(os.getenv("ECHOMIND_CHUNK_OVERLAP", "120"))
     TOP_K: int = int(os.getenv("ECHOMIND_TOP_K", "15"))
+    # Large-doc parent/child token limits (BOOK type). Override for dense regulatory docs.
+    BOOK_PARENT_MIN_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_PARENT_MIN_TOKENS", "2000"))
+    BOOK_PARENT_MAX_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_PARENT_MAX_TOKENS", "3500"))
+    BOOK_CHILD_MIN_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_CHILD_MIN_TOKENS", "500"))
+    BOOK_CHILD_MAX_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_CHILD_MAX_TOKENS", "700"))
+    # Dynamic chunk sizing: auto-shrink children for dense technical content.
+    BOOK_DYNAMIC_CHUNK_SIZING: bool = os.getenv("ECHOMIND_BOOK_DYNAMIC_CHUNK_SIZING", "1").lower() in ("1", "true", "yes")
     RAG_RELEVANCE_THRESHOLD: float = float(os.getenv("ECHOMIND_RAG_RELEVANCE_THRESHOLD", "0.45"))
-    # When False (default), do not expose citations/filenames to client (audit: internal grounding only).
-    RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "0").lower() in ("1", "true", "yes")
+    # Expose citations (section, page, filename) to client for source-aware answers.
+    RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "1").lower() in ("1", "true", "yes")
 
     # --- RAG quality improvements (all optional, no breaking changes) ---
     # When False (default), skip LLM query rewrite and use only the user question + deterministic variants for search. Set ECHOMIND_RAG_QUERY_REWRITE=1 for intent-aware expansion (adds 1 LLM call).
@@ -51,8 +58,8 @@ class Settings(BaseSettings):
     RAG_RERANK_TOP_N: int = int(os.getenv("ECHOMIND_RAG_RERANK_TOP_N", "8"))
     # Prefer authoritative documents (PDF/DOCX/PPTX) over transcripts when scores are close (tie-break).
     RAG_PREFER_AUTHORITATIVE: bool = os.getenv("ECHOMIND_RAG_PREFER_AUTHORITATIVE", "1").lower() in ("1", "true", "yes")
-    # Max chars for parent chunk expansion; lower reduces context domination (default 1600).
-    RAG_PARENT_CONTEXT_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_PARENT_CONTEXT_MAX_CHARS", "1600"))
+    # Max chars for parent chunk expansion; higher for large regulatory docs (2400). Lower reduces context domination.
+    RAG_PARENT_CONTEXT_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_PARENT_CONTEXT_MAX_CHARS", "2400"))
     # Deduplicate overlapping sentences in context (simple overlap threshold). 0 = off.
     RAG_DEDUPE_SENTENCES: bool = os.getenv("ECHOMIND_RAG_DEDUPE_SENTENCES", "1").lower() in ("1", "true", "yes")
     RAG_DEDUPE_OVERLAP_RATIO: float = float(os.getenv("ECHOMIND_RAG_DEDUPE_OVERLAP_RATIO", "0.6"))
@@ -93,5 +100,37 @@ class Settings(BaseSettings):
     TRANSCRIPT_STT_WARMUP_FRAMES: int = int(os.getenv("TRANSCRIPT_STT_WARMUP_FRAMES", "8"))
     # WebSocket receive timeout (seconds). No message for this long = stale connection. Default 24h = effectively indefinite with heartbeat.
     TRANSCRIPT_WS_RECEIVE_TIMEOUT_SEC: float = float(os.getenv("TRANSCRIPT_WS_RECEIVE_TIMEOUT_SEC", "86400"))
+
+    # ── Hierarchical / Graph-aware RAG feature toggles ──────────────────────────
+    # Step 1: Section-level FAISS index restricts child search to top-N sections first.
+    RAG_USE_SECTION_RETRIEVAL: bool = os.getenv("RAG_USE_SECTION_RETRIEVAL", "1").lower() in ("1", "true", "yes")
+    RAG_SECTION_SCORE_THRESHOLD: float = float(os.getenv("RAG_SECTION_SCORE_THRESHOLD", "0.40"))
+    RAG_SECTION_TOP_K: int = int(os.getenv("RAG_SECTION_TOP_K", "3"))
+
+    # Step 2: Cross-encoder re-ranker (sentence-transformers if available, else LLM fallback).
+    RAG_USE_RERANKER: bool = os.getenv("RAG_USE_RERANKER", "1").lower() in ("1", "true", "yes")
+    RAG_RERANK_TOP_K: int = int(os.getenv("RAG_RERANK_TOP_K", "25"))
+    RAG_RERANK_FINAL_N: int = int(os.getenv("RAG_RERANK_FINAL_N", "7"))
+
+    # Step 3: Query-type classifier for dynamic dense/sparse weighting.
+    RAG_USE_QUERY_CLASSIFIER: bool = os.getenv("RAG_USE_QUERY_CLASSIFIER", "1").lower() in ("1", "true", "yes")
+
+    # Step 4: Graph expansion — follow cross-references (max 3 additional sections).
+    RAG_USE_GRAPH_EXPANSION: bool = os.getenv("RAG_USE_GRAPH_EXPANSION", "1").lower() in ("1", "true", "yes")
+    RAG_GRAPH_MAX_ADDITIONS: int = int(os.getenv("RAG_GRAPH_MAX_ADDITIONS", "3"))
+
+    # Step 5: Strict citation enforcement — require (section_path, page) in every answer.
+    RAG_STRICT_CITATIONS: bool = os.getenv("RAG_STRICT_CITATIONS", "0").lower() in ("1", "true", "yes")
+
+    # Step 7: Glossary priority — search glossary index first for definition queries.
+    RAG_USE_GLOSSARY_PRIORITY: bool = os.getenv("RAG_USE_GLOSSARY_PRIORITY", "1").lower() in ("1", "true", "yes")
+    RAG_GLOSSARY_SCORE_THRESHOLD: float = float(os.getenv("RAG_GLOSSARY_SCORE_THRESHOLD", "0.55"))
+
+    # Paths for new hierarchical indexes
+    FAISS_SECTION_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_section.index")
+    SECTION_META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "section_meta.json")
+    FAISS_GLOSSARY_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_glossary.index")
+    GLOSSARY_META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "glossary_meta.json")
+    CROSS_REF_GRAPH_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "cross_ref_graph.json")
 
 settings = Settings()
