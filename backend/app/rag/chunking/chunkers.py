@@ -282,6 +282,57 @@ def _fallback_paragraph_segments(text: str, target_segment_chars: int = 10_000) 
     return segments
 
 
+def _get_large_section_threshold() -> int:
+    """Token threshold for splitting large sections. Default 10000."""
+    try:
+        from ...core.config import settings
+        return int(getattr(settings, "LARGE_SECTION_TOKEN_THRESHOLD", 10000))
+    except Exception:
+        return 10000
+
+
+def handle_large_sections(
+    section_text: str,
+    max_tokens_per_chunk: Optional[int] = None,
+) -> List[str]:
+    """
+    Split large sections into multiple chunks for consistent contextual retrieval.
+
+    When section_text exceeds the threshold (~10k tokens by default), splits at
+    paragraph boundaries into chunks of max_tokens_per_chunk (default: parent max).
+    Ensures each chunk retains coherent context and cross-references stay accurate.
+    """
+    text = (section_text or "").strip()
+    if not text:
+        return []
+    tokens = token_len(text)
+    threshold = _get_large_section_threshold()
+    if tokens <= threshold:
+        return [text]
+    cfg_p_min, cfg_p_max, _, _ = _get_book_limits()
+    max_tok = max_tokens_per_chunk or cfg_p_max
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    if not paragraphs:
+        return [text]
+    chunks: List[str] = []
+    current: List[str] = []
+    current_tokens = 0
+    sep_tokens = token_len("\n\n")
+    for p in paragraphs:
+        p_tokens = token_len(p)
+        if current_tokens + sep_tokens + p_tokens > max_tok and current:
+            chunks.append("\n\n".join(current))
+            overlap = [current[-1]] if len(current) >= 1 else []
+            current = overlap + [p] if p_tokens <= max_tok else [p]
+            current_tokens = token_len("\n\n".join(current))
+        else:
+            current.append(p)
+            current_tokens = (current_tokens + sep_tokens + p_tokens) if current_tokens else p_tokens
+    if current:
+        chunks.append("\n\n".join(current))
+    return chunks if chunks else [text]
+
+
 def _group_sentences_to_size(
     sentences: List[str],
     target_min: int,

@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     BOOK_CHILD_MAX_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_CHILD_MAX_TOKENS", "700"))
     # Dynamic chunk sizing: auto-shrink children for dense technical content.
     BOOK_DYNAMIC_CHUNK_SIZING: bool = os.getenv("ECHOMIND_BOOK_DYNAMIC_CHUNK_SIZING", "1").lower() in ("1", "true", "yes")
+    # Large section threshold: split sections exceeding this (tokens) into multiple chunks. Default 10000.
+    LARGE_SECTION_TOKEN_THRESHOLD: int = int(os.getenv("ECHOMIND_LARGE_SECTION_TOKEN_THRESHOLD", "10000"))
     RAG_RELEVANCE_THRESHOLD: float = float(os.getenv("ECHOMIND_RAG_RELEVANCE_THRESHOLD", "0.45"))
     # Expose citations (section, page, filename) to client for source-aware answers.
     RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "1").lower() in ("1", "true", "yes")
@@ -63,16 +65,20 @@ class Settings(BaseSettings):
     # Deduplicate overlapping sentences in context (simple overlap threshold). 0 = off.
     RAG_DEDUPE_SENTENCES: bool = os.getenv("ECHOMIND_RAG_DEDUPE_SENTENCES", "1").lower() in ("1", "true", "yes")
     RAG_DEDUPE_OVERLAP_RATIO: float = float(os.getenv("ECHOMIND_RAG_DEDUPE_OVERLAP_RATIO", "0.6"))
+    RAG_DEDUPE_BY_SECTION: bool = os.getenv("RAG_DEDUPE_BY_SECTION", "1").lower() in ("1", "true", "yes")
+    RAG_DEDUPE_SECTION_MAX_CHUNKS: int = int(os.getenv("RAG_DEDUPE_SECTION_MAX_CHUNKS", "2"))
     # Book/long-form retrieval: higher recall for TOC and concept queries (e.g. "Matthew Effect" in books).
     RAG_BOOK_K_PER_QUERY: int = int(os.getenv("ECHOMIND_RAG_BOOK_K_PER_QUERY", "20"))
     RAG_BOOK_SPARSE_WEIGHT: float = float(os.getenv("ECHOMIND_RAG_BOOK_SPARSE_WEIGHT", "0.5"))
     # TOC/chapters guardrail: when user asks for chapters/contents, require TOC signals in context or refuse.
     RAG_TOC_GUARDRAIL: bool = os.getenv("ECHOMIND_RAG_TOC_GUARDRAIL", "1").lower() in ("1", "true", "yes")
-    # When True (default), compress each chunk with LLM before sending to answer; when False, use chunk text as-is (truncated only). Set ECHOMIND_RAG_COMPRESS_CONTEXT=0 to disable.
-    RAG_COMPRESS_CONTEXT: bool = os.getenv("ECHOMIND_RAG_COMPRESS_CONTEXT", "1").lower() in ("1", "true", "yes")
+    # When True, compress each chunk with LLM; when False, use chunk text as-is (truncated only). Disabled by default for regulatory docs to preserve precision.
+    RAG_COMPRESS_CONTEXT: bool = os.getenv("ECHOMIND_RAG_COMPRESS_CONTEXT", "0").lower() in ("1", "true", "yes")
     # Bypass compression for chunks that contain key query terms (improves grounding for named concepts).
     RAG_VERBATIM_QUERY_TERMS: bool = os.getenv("ECHOMIND_RAG_VERBATIM_QUERY_TERMS", "1").lower() in ("1", "true", "yes")
-    RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1200"))
+    RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1600"))
+    # Max total context chars; 0 = no limit. When exceeded, trim lowest-scoring blocks.
+    RAG_CONTEXT_MAX_CHARS: int = int(os.getenv("RAG_CONTEXT_MAX_CHARS", "0"))
 
     # Real-time transcription & knowledge capture (Kyutai STT only, 24kHz)
     ECHOMIND_AUTO_STORE_DEFAULT: bool = os.getenv("ECHOMIND_AUTO_STORE_DEFAULT", "1").lower() in ("1", "true", "yes")
@@ -104,23 +110,34 @@ class Settings(BaseSettings):
     # ── Hierarchical / Graph-aware RAG feature toggles ──────────────────────────
     # Step 1: Section-level FAISS index restricts child search to top-N sections first.
     RAG_USE_SECTION_RETRIEVAL: bool = os.getenv("RAG_USE_SECTION_RETRIEVAL", "1").lower() in ("1", "true", "yes")
-    RAG_SECTION_SCORE_THRESHOLD: float = float(os.getenv("RAG_SECTION_SCORE_THRESHOLD", "0.40"))
-    RAG_SECTION_TOP_K: int = int(os.getenv("RAG_SECTION_TOP_K", "3"))
+    RAG_SECTION_SCORE_THRESHOLD: float = float(os.getenv("RAG_SECTION_SCORE_THRESHOLD", "0.30"))
+    RAG_SECTION_TOP_K: int = int(os.getenv("RAG_SECTION_TOP_K", "5"))
 
     # Step 2: Cross-encoder re-ranker (sentence-transformers if available, else LLM fallback).
     RAG_USE_RERANKER: bool = os.getenv("RAG_USE_RERANKER", "1").lower() in ("1", "true", "yes")
     RAG_RERANK_TOP_K: int = int(os.getenv("RAG_RERANK_TOP_K", "25"))
-    RAG_RERANK_FINAL_N: int = int(os.getenv("RAG_RERANK_FINAL_N", "7"))
+    RAG_RERANK_FINAL_N: int = int(os.getenv("RAG_RERANK_FINAL_N", "15"))
+    RAG_CE_MAX_CHARS: int = int(os.getenv("RAG_CE_MAX_CHARS", "1024"))
+    # Cross-encoder model for reranking. Use RAG_CE_MODEL to swap in a domain-specific fine-tuned model (e.g. legal/regulatory).
+    RAG_CE_MODEL: str = os.getenv("RAG_CE_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+    RAG_USE_MMR: bool = os.getenv("RAG_USE_MMR", "0").lower() in ("1", "true", "yes")
+    RAG_MMR_LAMBDA: float = float(os.getenv("RAG_MMR_LAMBDA", "0.7"))
 
     # Step 3: Query-type classifier for dynamic dense/sparse weighting.
     RAG_USE_QUERY_CLASSIFIER: bool = os.getenv("RAG_USE_QUERY_CLASSIFIER", "1").lower() in ("1", "true", "yes")
+    # Citation + procedural multi-type: explicit weights (dense, sparse). Default 0.45/0.55 for balanced retrieval.
+    RAG_CITATION_PROCEDURAL_DENSE_WEIGHT: float = float(os.getenv("RAG_CITATION_PROCEDURAL_DENSE_WEIGHT", "0.45"))
+    RAG_CITATION_PROCEDURAL_SPARSE_WEIGHT: float = float(os.getenv("RAG_CITATION_PROCEDURAL_SPARSE_WEIGHT", "0.55"))
 
     # Step 4: Graph expansion — follow cross-references (max 3 additional sections).
     RAG_USE_GRAPH_EXPANSION: bool = os.getenv("RAG_USE_GRAPH_EXPANSION", "1").lower() in ("1", "true", "yes")
     RAG_GRAPH_MAX_ADDITIONS: int = int(os.getenv("RAG_GRAPH_MAX_ADDITIONS", "3"))
+    RAG_RESCORE_GRAPH_ADDITIONS: bool = os.getenv("RAG_RESCORE_GRAPH_ADDITIONS", "1").lower() in ("1", "true", "yes")
 
     # Step 5: Strict citation enforcement — require (section_path, page) in every answer.
     RAG_STRICT_CITATIONS: bool = os.getenv("RAG_STRICT_CITATIONS", "0").lower() in ("1", "true", "yes")
+    # Post-process answers: add inference transparency notice, suggest sections when info missing.
+    RAG_CITATION_POSTPROCESS: bool = os.getenv("RAG_CITATION_POSTPROCESS", "1").lower() in ("1", "true", "yes")
 
     # Step 7: Glossary priority — search glossary index first for definition queries.
     RAG_USE_GLOSSARY_PRIORITY: bool = os.getenv("RAG_USE_GLOSSARY_PRIORITY", "1").lower() in ("1", "true", "yes")
