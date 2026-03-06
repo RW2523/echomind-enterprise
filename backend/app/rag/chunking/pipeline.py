@@ -2,6 +2,7 @@
 Orchestrator: detect type, sanitize, dispatch chunker, assign IDs.
 Propagates section_path (hierarchical breadcrumb) through all BOOK chunks for citation.
 Supports true page-number assignment via page_offsets from parse_pdf.
+Metadata validation: rejects chunks with malformed section_path (e.g. "Segment N").
 """
 from __future__ import annotations
 import bisect
@@ -22,6 +23,18 @@ from .chunkers import (
     _split_book_into_sections,
 )
 from ..book.section_id import extract_section_id, section_id_from_path
+
+
+def _is_valid_book_section_path(section_path: Optional[str]) -> bool:
+    """Reject 'Segment N' fallback; require Volume and Chapter for BOOK chunks."""
+    if not (section_path or "").strip():
+        return False
+    sp = str(section_path).strip()
+    if re.match(r"^Segment\s+\d+\s*$", sp, re.I):
+        return False
+    has_volume = bool(re.search(r"Volume\s+\d+", sp, re.I))
+    has_chapter = bool(re.search(r"Chapter\s+\d+", sp, re.I))
+    return has_volume and has_chapter
 
 
 def _build_section_path(title: Optional[str], parent_path: Optional[str] = None) -> Optional[str]:
@@ -103,6 +116,8 @@ def chunk_document(
         section_char_offset = 0
         for section_title, section_text in sections:
             section_path = _build_section_path(section_title)
+            if not _is_valid_book_section_path(section_path):
+                continue  # Skip sections with malformed path (e.g. "Segment N")
             canonical_sid = section_id_from_path(section_path or "") or extract_section_id(section_title or "")
             pc_list = chunk_long_form(
                 section_text,

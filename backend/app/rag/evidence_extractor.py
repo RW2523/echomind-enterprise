@@ -1,11 +1,9 @@
 """
-Evidence-First Retrieval: extract 8–12 structured evidence sentences from reranked hits.
+Evidence-First Retrieval: extract structured evidence sentences from reranked hits.
 
-Each sentence is scored by:
-  - query keyword overlap
-  - explicit section id presence
-  - policy/obligation language (shall, must, required, responsible, procedure, approval, certify)
-  - reranker score of the parent chunk
+Sentences are grouped by section_id; only top sections are used to prevent cross-section
+contamination. Each sentence is scored by query overlap, section match, policy language,
+and chunk rerank score.
 
 Only evidence sentences are sent to the LLM — NOT full chunks.
 """
@@ -14,7 +12,9 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
+
+from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,23 @@ class EvidenceSentence:
     chunk_rerank_score: float = 0.0
 
 
+def _get_section_id_for_hit(h: dict) -> str:
+    """Extract canonical section_id from hit source."""
+    src = (h.get("source") or {})
+    sid = src.get("section_id") or src.get("section")
+    if sid:
+        return str(sid).strip()
+    sp = (src.get("section_path") or "").strip()
+    if not sp:
+        return "__no_section__"
+    try:
+        from .book.section_id import section_id_from_path
+        resolved = section_id_from_path(sp)
+        return resolved or sp
+    except Exception:
+        return sp
+
+
 def _extract_metadata(source: dict) -> dict:
     """Pull volume/chapter/section/page from chunk source metadata."""
     src = source or {}
@@ -102,30 +119,35 @@ def extract_evidence_sentences(
     min_sentences: int = 8,
     max_sentences: int = 12,
 ) -> List[EvidenceSentence]:
-    """Extract 8–12 structured evidence sentences from reranked hits.
+    """Extract evidence sentences from reranked hits, grouped by section.
 
-    Scoring:
-      +2 per query keyword found in sentence
-      +3 if sentence contains an explicit section id
-      +2 if sentence contains policy/obligation language
-      +rerank_score of the parent chunk (normalized 0–1)
+    Flow: group sentences by section_id → score sections → select top sections →
+    extract evidence only from those sections. Capped at MAX_EVIDENCE_SENTENCES.
     """
     if not hits or not question:
         return []
 
+    max_ev = getattr(settings, "MAX_EVIDENCE_SENTENCES", 10)
+    max_sentences = min(max_sentences, max_ev)
+    max_sections = getattr(settings, "MAX_SECTIONS_PER_ANSWER", 2)
     q_tokens = _tokenize(question)
-    section_ids = set(explicit_section_ids or [])
+    explicit_ids = set(explicit_section_ids or [])
 
-    collected: List[EvidenceSentence] = []
-    seen: set = set()
+    # 1. Group candidate sentences by section_id
+    by_section: Dict[str, List[Tuple[EvidenceSentence, float]]] = {}
+    seen: Set[str] = set()
 
     for h in hits:
+        src = h.get("source") or {}
+        # Skip graph-expanded chunks that are not metadata_valid (cannot be primary evidence)
+        if src.get("_graph_ref") and src.get("metadata_valid") is False:
+            continue
         text = (h.get("text") or "").strip()
         if not text:
             continue
-        src = h.get("source") or {}
         meta = _extract_metadata(src)
         chunk_score = float(h.get("score") or 0)
+        sid = _get_section_id_for_hit(h)
 
         for sent in _split_sentences(text):
             if not sent or len(sent) < 20:
@@ -136,13 +158,12 @@ def extract_evidence_sentences(
 
             sent_lower = sent_norm.lower()
             sent_tokens = _tokenize(sent_norm)
-
             keyword_hits = len(q_tokens & sent_tokens)
             has_section = bool(
-                section_ids
+                explicit_ids
                 and any(
-                    sid in sent_lower or sid in (meta.get("section_path") or "").lower()
-                    for sid in section_ids
+                    eid in sent_lower or eid in (meta.get("section_path") or "").lower()
+                    for eid in explicit_ids
                 )
             )
             has_policy = bool(_OBLIGATION_RE.search(sent_norm))
@@ -160,7 +181,7 @@ def extract_evidence_sentences(
             )
 
             seen.add(sent_norm)
-            collected.append(EvidenceSentence(
+            ev = EvidenceSentence(
                 sentence=sent_norm,
                 volume=meta.get("volume"),
                 chapter=meta.get("chapter"),
@@ -172,21 +193,46 @@ def extract_evidence_sentences(
                 has_policy_word=has_policy,
                 has_section_id=has_section,
                 chunk_rerank_score=chunk_score,
-            ))
+            )
+            if sid not in by_section:
+                by_section[sid] = []
+            by_section[sid].append((ev, chunk_score))
 
-            if len(collected) >= max_sentences * 3:
-                break
-        if len(collected) >= max_sentences * 3:
-            break
+    if not by_section:
+        return []
 
+    # 2. Score sections: max(chunk_score) + average(chunk_score) + keyword_match_bonus
+    def section_score(sid: str, items: List[Tuple[EvidenceSentence, float]]) -> float:
+        scores = [s for _, s in items]
+        if not scores:
+            return 0.0
+        section_match_bonus = 0.5 if sid in explicit_ids else 0.0
+        keyword_bonus = sum(1 for ev, _ in items if ev.keyword_hits > 0) * 0.3
+        return max(scores) + (sum(scores) / len(scores)) + section_match_bonus + keyword_bonus
+
+    scored_sections = [(sid, items, section_score(sid, items)) for sid, items in by_section.items()]
+    scored_sections.sort(key=lambda x: -x[2])
+    top_section_ids = {x[0] for x in scored_sections[:max_sections]}
+
+    # 3. Extract evidence only from top sections. Preserve original sentence order within sections.
+    collected: List[EvidenceSentence] = []
+    for sid, items, _ in scored_sections:
+        if sid not in top_section_ids:
+            continue
+        # Preserve order: sort by score for selection, but output in chunk order (items order)
+        for ev, _ in items:
+            collected.append(ev)
+    # Sort by score for final selection, cap at MAX_EVIDENCE_SENTENCES
     collected.sort(key=lambda e: -e.score)
     result = collected[:max_sentences]
 
-    # Backfill if below minimum
+    # Backfill from top sections if below minimum
     if len(result) < min_sentences:
         for h in hits:
             if len(result) >= min_sentences:
                 break
+            if _get_section_id_for_hit(h) not in top_section_ids:
+                continue
             text = (h.get("text") or "").strip()
             src = h.get("source") or {}
             meta = _extract_metadata(src)

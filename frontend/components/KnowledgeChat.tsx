@@ -36,7 +36,12 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>['components
   hr: () => <hr className="border-white/10 my-3" />,
 };
 
+const CITATION_DEBUG = (import.meta as { env?: Record<string, string> }).env?.VITE_CITATION_DEBUG === '1';
+
 function mapCitations(citations: any[]): DocumentChunk[] {
+  if (CITATION_DEBUG) {
+    console.log('[Citations] mapCitations input:', { raw: citations, count: (citations || []).length });
+  }
   return (citations || []).map((c: any, i: number) => ({
     id: `cite_${i}_${c?.filename ?? 'doc'}`,
     docName: c?.filename ?? 'Unknown document',
@@ -468,6 +473,9 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
           setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + text } : m));
         },
         onDone: (result) => {
+          if (CITATION_DEBUG) {
+            console.log('[Citations] onDone received:', { answerLen: result.answer?.length, citations: result.citations, count: (result.citations || []).length });
+          }
           setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: result.answer, citations: mapCitations(result.citations) } : m));
         },
         onError: (err) => {

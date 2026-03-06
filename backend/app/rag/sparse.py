@@ -58,8 +58,13 @@ class Bm25Index:
         with get_conn() as conn:
             self.chunk_ids = []
             self.corpus_tokens = []
+            use_ctx = True
             for cid in chunk_ids:
-                row = conn.execute("SELECT text FROM chunks WHERE id=?", (cid,)).fetchone()
+                try:
+                    row = conn.execute("SELECT COALESCE(contextualized_text, text) FROM chunks WHERE id=?", (cid,)).fetchone() if use_ctx else conn.execute("SELECT text FROM chunks WHERE id=?", (cid,)).fetchone()
+                except Exception:
+                    use_ctx = False
+                    row = conn.execute("SELECT text FROM chunks WHERE id=?", (cid,)).fetchone()
                 if not row:
                     continue
                 self.chunk_ids.append(cid)

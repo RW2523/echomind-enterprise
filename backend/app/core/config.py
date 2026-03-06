@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     RAG_RELEVANCE_THRESHOLD: float = float(os.getenv("ECHOMIND_RAG_RELEVANCE_THRESHOLD", "0.45"))
     # Expose citations (section, page, filename) to client for source-aware answers.
     RAG_EXPOSE_SOURCES: bool = os.getenv("ECHOMIND_RAG_EXPOSE_SOURCES", "1").lower() in ("1", "true", "yes")
+    # Log citation pipeline debug (enriched count, valid metadata, citations built). Set RAG_CITATION_DEBUG=1 to troubleshoot missing sources.
+    RAG_CITATION_DEBUG: bool = os.getenv("RAG_CITATION_DEBUG", "0").lower() in ("1", "true", "yes")
 
     # --- RAG quality improvements (all optional, no breaking changes) ---
     # When False (default), skip LLM query rewrite and use only the user question + deterministic variants for search. Set ECHOMIND_RAG_QUERY_REWRITE=1 for intent-aware expansion (adds 1 LLM call).
@@ -113,6 +115,8 @@ class Settings(BaseSettings):
     RAG_SECTION_SCORE_THRESHOLD: float = float(os.getenv("RAG_SECTION_SCORE_THRESHOLD", "0.35"))
     RAG_SECTION_RELAX_THRESHOLD: float = float(os.getenv("RAG_SECTION_RELAX_THRESHOLD", "0.25"))
     RAG_SECTION_TOP_K: int = int(os.getenv("RAG_SECTION_TOP_K", "10"))
+    # Max sections to restrict chunk retrieval to (1–3). Only global retrieval when 0 sections found.
+    MAX_SECTIONS_PER_RETRIEVAL: int = int(os.getenv("RAG_MAX_SECTIONS_PER_RETRIEVAL", "3"))
 
     # Step 2: Cross-encoder re-ranker (sentence-transformers if available, else LLM fallback).
     RAG_USE_RERANKER: bool = os.getenv("RAG_USE_RERANKER", "1").lower() in ("1", "true", "yes")
@@ -158,5 +162,23 @@ class Settings(BaseSettings):
     RAG_TOC_THRESHOLD: float = float(os.getenv("RAG_TOC_THRESHOLD", "0.25"))
     # BookRAG: max 2 chunks per section unless comparison query
     RAG_MAX_CHUNKS_PER_SECTION: int = int(os.getenv("RAG_MAX_CHUNKS_PER_SECTION", "2"))
+
+    # ── Section limiting (reduce cross-section contamination) ───────────────────
+    MAX_SECTIONS_PER_ANSWER: int = int(os.getenv("RAG_MAX_SECTIONS_PER_ANSWER", "2"))
+    MAX_EVIDENCE_SENTENCES: int = int(os.getenv("RAG_MAX_EVIDENCE_SENTENCES", "10"))
+    # Graph expansion: only when top section confidence below this (0 = always)
+    RAG_GRAPH_EXPANSION_CONFIDENCE_THRESHOLD: float = float(os.getenv("RAG_GRAPH_EXPANSION_CONFIDENCE_THRESHOLD", "0.5"))
+    MAX_GRAPH_EXPANSION_DEPTH: int = int(os.getenv("RAG_GRAPH_EXPANSION_DEPTH", "1"))
+    # Graph additions must exceed direct hit score by this margin to override
+    RAG_GRAPH_OVERRIDE_MARGIN: float = float(os.getenv("RAG_GRAPH_OVERRIDE_MARGIN", "0.15"))
+    # Hybrid TOC: combine vector + BM25 with RRF
+    RAG_TOC_HYBRID_SEARCH: bool = os.getenv("RAG_TOC_HYBRID_SEARCH", "1").lower() in ("1", "true", "yes")
+
+    # ── Contextual retrieval (BOOK chunks) ───────────────────────────────────────
+    # When True, generate context headers for BOOK children (document, volume, chapter, section, parent summary, chunk role).
+    # Use contextualized_text for embeddings/BM25; raw text for evidence and citations.
+    RAG_USE_CONTEXTUAL_RETRIEVAL: bool = os.getenv("RAG_USE_CONTEXTUAL_RETRIEVAL", "1").lower() in ("1", "true", "yes")
+    # Max concurrent LLM calls for section/chunk summarization during ingestion.
+    RAG_CONTEXTUAL_SUMMARY_CONCURRENCY: int = int(os.getenv("RAG_CONTEXTUAL_SUMMARY_CONCURRENCY", "3"))
 
 settings = Settings()

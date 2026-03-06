@@ -7,6 +7,7 @@ from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from ...utils.ids import new_id, now_iso
+from ...core.config import settings
 from ...core.db import get_conn
 from ...rag.advanced import answer as answer_with_citations, answer_stream, update_conversation_summary, _answer_general, debug_retrieval
 
@@ -281,7 +282,10 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
                         conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
                                      (new_id("msg"), inp.chat_id, "assistant", full_answer, now_iso()))
                         conn.commit()
-                    yield json.dumps({"type": "done", "answer": full_answer, "citations": citations or []}) + "\n"
+                    cite_list = citations or []
+                    if getattr(settings, "RAG_CITATION_DEBUG", False):
+                        logger.info("[Chat stream] done: citations_count=%d", len(cite_list))
+                    yield json.dumps({"type": "done", "answer": full_answer, "citations": cite_list}) + "\n"
                     if full_answer:
                         background_tasks.add_task(_update_summary_background, conversation_summary, inp.message, full_answer, inp.chat_id)
         except Exception as e:
@@ -302,3 +306,35 @@ async def debug_retrieval_endpoint(inp: DebugRetrievalIn):
     Use to inspect retrieval quality without generating an LLM answer.
     """
     return await debug_retrieval(inp.question, k=inp.k)
+
+
+# Regression test queries for DoD FMR RAG
+CONTEXTUAL_EVAL_QUERIES = [
+    "What liability does a certifying officer have if they approve an illegal, improper, or incorrect payment?",
+    "What steps must a DoD disbursing officer take when a payment is issued incorrectly?",
+    "How are unmatched disbursements and negative unliquidated obligations resolved?",
+    "What is administrative control of funds in the DoD FMR?",
+    "What guidance is provided in paragraph 030201?",
+    "What are the differences between certifying officers and disbursing officers?",
+]
+
+
+@router.post("/eval-contextual-retrieval")
+async def eval_contextual_retrieval_endpoint():
+    """Run regression tests for DoD FMR retrieval. Returns selected sections, evidence, citations, refusal per query."""
+    from ...rag.advanced import debug_retrieval
+
+    results = []
+    for q in CONTEXTUAL_EVAL_QUERIES:
+        r = await debug_retrieval(q, k=15)
+        results.append({
+            "query": q,
+            "source_type": r.get("source_type"),
+            "selected_sections": r.get("selected_sections", []),
+            "top_chunks": r.get("hits", [])[:5],
+            "evidence": r.get("evidence", [])[:5],
+            "citations": r.get("citations", [])[:5],
+            "refused": r.get("refused", False),
+            "gate_passed": r.get("gate", {}).get("passed") if r.get("gate") else None,
+        })
+    return {"queries": len(CONTEXTUAL_EVAL_QUERIES), "results": results}

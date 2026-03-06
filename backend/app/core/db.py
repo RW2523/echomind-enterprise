@@ -7,6 +7,10 @@ def init_db():
     with sqlite3.connect(settings.DB_PATH) as conn:
         conn.execute("CREATE TABLE IF NOT EXISTS documents(id TEXT PRIMARY KEY, filename TEXT, filetype TEXT, created_at TEXT, meta_json TEXT)")
         conn.execute("CREATE TABLE IF NOT EXISTS chunks(id TEXT PRIMARY KEY, doc_id TEXT, chunk_index INTEGER, text TEXT, source_json TEXT)")
+        try:
+            conn.execute("ALTER TABLE chunks ADD COLUMN contextualized_text TEXT")
+        except Exception:
+            pass
         conn.execute("CREATE TABLE IF NOT EXISTS chats(id TEXT PRIMARY KEY, title TEXT, created_at TEXT, conversation_summary TEXT)")
         try:
             conn.execute("ALTER TABLE chats ADD COLUMN conversation_summary TEXT")
@@ -51,6 +55,10 @@ def init_db():
                 created_at TEXT
             )"""
         )
+        try:
+            conn.execute("ALTER TABLE book_sections ADD COLUMN section_summary TEXT")
+        except Exception:
+            pass
         # Cross-reference graph: extracted "See paragraph / Refer to Volume" links between sections.
         conn.execute(
             """CREATE TABLE IF NOT EXISTS section_references(

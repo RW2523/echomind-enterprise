@@ -14,10 +14,18 @@ from ..utils.ids import new_id, now_iso
 from .embeddings import OllamaEmbeddings
 from .sparse import Bm25Index
 from .chunking import chunk_document
+from .chunking.models import DocType
 from .section_index import SectionIndex
 from .glossary_index import GlossaryIndex, is_glossary_section
 from .cross_ref_graph import CrossRefGraph, extract_references
 from .book.section_id import section_id_from_path, extract_section_id, extract_all_codes
+from .metadata_validation import validate_and_fix_source, validate_book_chunk_for_indexing, validate_chunk_metadata
+from .contextualizer import (
+    build_context_header_from_chunk,
+    build_contextualized_text,
+    generate_section_summaries_batch,
+    generate_chunk_roles_batch,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -112,10 +120,11 @@ def _store_book_sections_in_db(sections: List[Dict]) -> None:
         return
     with get_conn() as conn:
         for s in sections:
+            summary = s.get("section_summary")
             conn.execute(
                 "INSERT OR IGNORE INTO book_sections "
-                "(section_id, doc_id, section_title, section_path, full_section_text, created_at) "
-                "VALUES (?,?,?,?,?,?)",
+                "(section_id, doc_id, section_title, section_path, full_section_text, created_at, section_summary) "
+                "VALUES (?,?,?,?,?,?,?)",
                 (
                     s["section_id"],
                     s["doc_id"],
@@ -123,6 +132,7 @@ def _store_book_sections_in_db(sections: List[Dict]) -> None:
                     s["section_path"],
                     s["full_section_text"],
                     now_iso(),
+                    summary,
                 ),
             )
         conn.commit()
@@ -154,6 +164,12 @@ class FaissIndex:
             self.toc_index = TocIndex(self.emb)
         except Exception:
             self.toc_index = None
+        # Section summary index for concept query routing (embeds section_summary)
+        try:
+            from .indexes.section_summary_index import SectionSummaryIndex
+            self.section_summary_index = SectionSummaryIndex(self.emb)
+        except Exception:
+            self.section_summary_index = None
         self._load()
 
     def _load(self):
@@ -280,12 +296,69 @@ class FaissIndex:
         if not all_chunks:
             raise ValueError("No text extracted")
 
+        # Metadata validation: skip invalid BOOK chunks (malformed section_path, missing page_number, etc.)
+        valid_chunks: List = []
+        for c in all_chunks:
+            if getattr(c, "doc_type", None) == DocType.BOOK:
+                src = c.to_source_dict(filename, filetype)
+                _, ok = validate_book_chunk_for_indexing(src)
+                if not ok:
+                    logger.debug("index: skipping invalid BOOK chunk chunk_id=%s section_path=%s", c.chunk_id, getattr(c, "section_path", ""))
+                    continue
+            valid_chunks.append(c)
+        if not valid_chunks:
+            raise ValueError("No valid chunks after metadata validation (check section_path has Volume/Chapter, page_number)")
+        all_chunks = valid_chunks
+
         embed_chunks = [c for c in all_chunks if not c.is_parent]
-        texts_to_embed = [c.text for c in embed_chunks]
+        texts_to_embed: List[str] = []
+        contextualized_by_chunk: Dict[str, str] = {}
+        has_parents = any(c.is_parent for c in all_chunks)
+        use_contextual = (
+            getattr(settings, "RAG_USE_CONTEXTUAL_RETRIEVAL", True)
+            and has_parents
+            and not _is_transcript_doc(filename, meta)
+        )
+
+        section_summaries: Dict[str, str] = {}
+        if use_contextual:
+            book_sections = _build_book_sections_from_chunks(all_chunks, doc_id)
+            section_summaries = await generate_section_summaries_batch(
+                book_sections,
+                max_concurrent=getattr(settings, "RAG_CONTEXTUAL_SUMMARY_CONCURRENCY", 3),
+            )
+            for s in book_sections:
+                sp = s.get("section_path") or ""
+                if sp and sp not in section_summaries and s.get("full_section_text"):
+                    pass
+            chunk_roles_input = [(c.chunk_id, c.text) for c in embed_chunks]
+            chunk_roles = await generate_chunk_roles_batch(
+                chunk_roles_input,
+                max_concurrent=getattr(settings, "RAG_CONTEXTUAL_SUMMARY_CONCURRENCY", 3),
+            )
+            doc_title = (filename or "").replace(".pdf", "").replace(".docx", "").replace("_", " ")
+            for c in embed_chunks:
+                parent_summary = section_summaries.get(c.section_path or "") if c.section_path else None
+                chunk_role = chunk_roles.get(c.chunk_id)
+                header = build_context_header_from_chunk(c, doc_title, parent_summary, chunk_role)
+                ctx_text = build_contextualized_text(header, c.text)
+                contextualized_by_chunk[c.chunk_id] = ctx_text
+                texts_to_embed.append(ctx_text)
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(
+                        "contextual_retrieval: chunk=%s raw_preview=%s ctx_preview=%s",
+                        c.chunk_id[:12],
+                        (c.text or "")[:80],
+                        (ctx_text or "")[:120],
+                    )
+        else:
+            texts_to_embed = [c.text for c in embed_chunks]
+
         vecs = await self.emb.embed(texts_to_embed)
         faiss.normalize_L2(vecs)
         await self._ensure_index(int(vecs.shape[1]))
 
+        validated_sources: dict = {}
         with get_conn() as conn:
             conn.execute(
                 "INSERT INTO documents (id, filename, filetype, created_at, meta_json) VALUES (?,?,?,?,?)",
@@ -293,22 +366,29 @@ class FaissIndex:
             )
             for c in all_chunks:
                 src = c.to_source_dict(filename, filetype)
+                if (src.get("doc_type") or "").lower() == "book":
+                    src, _ = validate_chunk_metadata(src)
+                else:
+                    src, _ = validate_and_fix_source(src, doc_type=src.get("doc_type", ""))
+                    src["metadata_valid"] = True
+                validated_sources[c.chunk_id] = src
+                ctx_text = contextualized_by_chunk.get(c.chunk_id) if c.chunk_id in contextualized_by_chunk else None
                 conn.execute(
-                    "INSERT INTO chunks (id, doc_id, chunk_index, text, source_json) VALUES (?,?,?,?,?)",
-                    (c.chunk_id, doc_id, c.chunk_index, c.text, json.dumps(src)),
+                    "INSERT INTO chunks (id, doc_id, chunk_index, text, source_json, contextualized_text) VALUES (?,?,?,?,?,?)",
+                    (c.chunk_id, doc_id, c.chunk_index, c.text, json.dumps(src), ctx_text),
                 )
             conn.commit()
 
         for c in embed_chunks:
             self.meta["chunk_ids"].append(c.chunk_id)
-            self.meta["source_by_chunk"][c.chunk_id] = c.to_source_dict(filename, filetype)
+            self.meta["source_by_chunk"][c.chunk_id] = validated_sources.get(c.chunk_id, c.to_source_dict(filename, filetype))
         self.index.add(vecs.astype(np.float32))
 
         if _is_transcript_doc(filename, meta):
             await self._ensure_transcript_index(int(vecs.shape[1]))
             for c in embed_chunks:
                 self.transcript_meta["chunk_ids"].append(c.chunk_id)
-                self.transcript_meta["source_by_chunk"][c.chunk_id] = c.to_source_dict(filename, filetype)
+                self.transcript_meta["source_by_chunk"][c.chunk_id] = validated_sources.get(c.chunk_id, c.to_source_dict(filename, filetype))
             self.transcript_index.add(vecs.astype(np.float32))
             self.transcript_sparse.add_chunks([c.chunk_id for c in embed_chunks], texts_to_embed)
 
@@ -318,17 +398,25 @@ class FaissIndex:
         self._maybe_upgrade_to_ivf()
 
         # ── Hierarchical section + glossary indexing (BOOK documents only) ────
-        has_parents = any(c.is_parent for c in all_chunks)
         if has_parents and not _is_transcript_doc(filename, meta):
-            await self._index_book_sections(all_chunks, doc_id)
+            await self._index_book_sections(
+                all_chunks, doc_id,
+                section_summaries=section_summaries if use_contextual else {},
+            )
 
         return {"doc_id": doc_id, "chunks": len(embed_chunks)}
 
-    async def _index_book_sections(self, all_chunks, doc_id: str) -> None:
+    async def _index_book_sections(self, all_chunks, doc_id: str, section_summaries: Optional[Dict[str, str]] = None) -> None:
         """Build and store section-level embeddings, glossary entries, and cross-references."""
         book_sections = _build_book_sections_from_chunks(all_chunks, doc_id)
         if not book_sections:
             return
+
+        summaries = section_summaries or {}
+        for s in book_sections:
+            sp = s.get("section_path") or ""
+            if sp in summaries:
+                s["section_summary"] = summaries[sp]
 
         # Store metadata in DB
         _store_book_sections_in_db(book_sections)
@@ -336,6 +424,13 @@ class FaissIndex:
         # Add to section FAISS index
         await self.section_index.add_sections(book_sections)
         logger.info("index: indexed %d sections for doc_id=%s", len(book_sections), doc_id)
+
+        # Rebuild section summary index (for concept query routing)
+        if self.section_summary_index:
+            try:
+                await self.section_summary_index.rebuild()
+            except Exception as e:
+                logger.warning("index: section summary rebuild failed: %s", e)
 
         # Rebuild TOC index for BookRAG routing
         if self.toc_index:
@@ -409,6 +504,11 @@ class FaissIndex:
                 self.toc_index.clear_all()
             except Exception:
                 pass
+        if getattr(self, "section_summary_index", None):
+            try:
+                self.section_summary_index.clear_all()
+            except Exception:
+                pass
         # Remove TOC nodes cache (toc_builder persists this)
         toc_nodes_path = os.path.join(settings.DATA_DIR, "toc_nodes.json")
         if os.path.exists(toc_nodes_path):
@@ -432,7 +532,12 @@ class FaissIndex:
             conn.execute("DELETE FROM book_sections WHERE doc_id=?", (doc_id,))
             conn.execute("DELETE FROM section_references WHERE doc_id=?", (doc_id,))
             conn.commit()
-            rows = conn.execute("SELECT id, text, source_json FROM chunks ORDER BY doc_id, chunk_index").fetchall()
+            try:
+                rows = conn.execute(
+                    "SELECT id, COALESCE(contextualized_text, text), source_json FROM chunks ORDER BY doc_id, chunk_index"
+                ).fetchall()
+            except Exception:
+                rows = conn.execute("SELECT id, text, source_json FROM chunks ORDER BY doc_id, chunk_index").fetchall()
 
         # Clean up hierarchical indexes
         self.section_index.clear_doc(doc_id)
@@ -443,6 +548,11 @@ class FaissIndex:
                 await self.toc_index.rebuild()
             except Exception as e:
                 logger.warning("TOC rebuild after delete failed: %s", e)
+        if getattr(self, "section_summary_index", None):
+            try:
+                await self.section_summary_index.rebuild()
+            except Exception as e:
+                logger.warning("section summary rebuild after delete failed: %s", e)
 
         remaining_ids = []
         remaining_texts = []

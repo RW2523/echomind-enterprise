@@ -5,9 +5,13 @@ import logging
 import math
 import re
 import time
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, AsyncIterator, Tuple, Optional
+
+# Per-request debug info for RAG pipeline logging (resolved sections, TOC hits, selected sections)
+_rag_debug_info: ContextVar[Dict] = ContextVar("_rag_debug_info", default={})
 
 import faiss
 import numpy as np
@@ -323,17 +327,20 @@ def _detect_volume_from_phrase(query: str) -> Optional[int]:
 
 async def _get_section_restricted_paths(
     query: str, qv: np.ndarray
-) -> Tuple[List[str], bool]:
+) -> Tuple[List[str], bool, Dict]:
     """BookRAG: deterministic navigation + TOC routing + dynamic relax.
 
-    Returns (allowed_paths, no_global_fallback).
+    Returns (allowed_paths, no_global_fallback, debug_info).
     no_global_fallback=True when paths came from explicit refs (hard-anchor: no global fallback in index).
+    debug_info: toc_hits, section_summary_hits, rejected_sections for debug endpoint.
 
     a) Resolver extracts explicit refs → if present, use resolved paths (skip TOC).
     a2) Known phrase → volume restriction (e.g. "administrative control of funds" → Volume 14).
     b) Else: TOC search → allowed sections.
+    b2) Section summary index for concept queries.
     c) Section-index search restricted by scope; dynamic relax if no hits.
     """
+    debug_info: Dict = {"toc_hits": [], "section_summary_hits": [], "rejected_sections": []}
     if not getattr(settings, "RAG_USE_SECTION_RETRIEVAL", True):
         return ([], False)
     threshold = getattr(settings, "RAG_SECTION_SCORE_THRESHOLD", 0.35)
@@ -361,7 +368,10 @@ async def _get_section_restricted_paths(
                 if p and p not in allowed_paths:
                     allowed_paths.append(p)
             logger.info("RAG: comparison → added paths for %s: %s", resolved.comparison_pair, extra)
-        return (allowed_paths, True)  # no_global_fallback=True for explicit refs
+        max_sections = getattr(settings, "MAX_SECTIONS_PER_RETRIEVAL", 3)
+        if len(allowed_paths) > max_sections:
+            allowed_paths = allowed_paths[:max_sections]
+        return (allowed_paths, True, debug_info)
 
     # a2) Known phrase → volume restriction
     detected_vol = _detect_volume_from_phrase(query)
@@ -374,25 +384,37 @@ async def _get_section_restricted_paths(
                 "RAG: phrase-based volume anchor → Volume %d, %d path(s): %s",
                 detected_vol, len(vol_paths), vol_paths[:5],
             )
-            return (allowed_paths, False)
+            return (allowed_paths, False, debug_info)
 
-    # b) TOC routing when no explicit refs
+    # b) TOC routing when no explicit refs (hybrid vector+BM25 for concept queries)
     if use_toc and getattr(index, "toc_index", None) and index.toc_index._index is not None:
         try:
             toc_nodes = await index.toc_index.search(query, k=toc_top_k, threshold=toc_threshold, query_vector=qv)
+            debug_info["toc_hits"] = [{"section_path": n.get("section_path"), "title": n.get("title"), "score": n.get("score")} for n in (toc_nodes or [])]
             if toc_nodes:
                 allowed_paths = index.toc_index.get_section_paths_from_nodes(toc_nodes)
                 logger.info("RAG: TOC routing → %d path(s) from %d nodes", len(allowed_paths), len(toc_nodes))
         except Exception as e:
             logger.debug("TOC search error (non-fatal): %s", e)
 
-    # c) Section-index search (or fallback when TOC empty)
+    # b2) Section summary index for concept queries (do not skip)
+    if not allowed_paths and getattr(index, "section_summary_index", None) and index.section_summary_index._index is not None:
+        try:
+            summary_sections = await index.section_summary_index.search(query, k=top_k, threshold=relax_threshold, query_vector=qv)
+            debug_info["section_summary_hits"] = [{"section_path": s.get("section_path"), "score": s.get("score")} for s in (summary_sections or [])]
+            if summary_sections:
+                allowed_paths = [s["section_path"] for s in summary_sections if s.get("section_path")]
+                logger.info("RAG: section summary index → %d path(s)", len(allowed_paths))
+        except Exception as e:
+            logger.debug("Section summary search error (non-fatal): %s", e)
+
+    # c) Section-index search (or fallback when TOC/summary empty)
     if not allowed_paths:
         try:
             sections = await index.section_index.search(query, k=top_k, query_vector=qv)
         except Exception as e:
             logger.debug("Section index search error (non-fatal): %s", e)
-            return ([], False)
+            return ([], False, debug_info)
         qualifying = [s for s in sections if s.get("score", 0) >= threshold]
         if not qualifying:
             qualifying = [s for s in sections if s.get("score", 0) >= relax_threshold]
@@ -411,12 +433,19 @@ async def _get_section_restricted_paths(
         if extra:
             logger.info("RAG: comparison → added paths for sections %s: %s", comp_sections, extra)
 
+    # Section-first: select only top 1–3 sections. Global retrieval only when 0 sections found.
+    max_sections = getattr(settings, "MAX_SECTIONS_PER_RETRIEVAL", 3)
+    if len(allowed_paths) > max_sections:
+        # Preserve order (explicit refs first, then by discovery order); cap to top N
+        allowed_paths = allowed_paths[:max_sections]
+        logger.info("RAG: capped to top %d sections (section-first retrieval)", max_sections)
+
     if allowed_paths:
         logger.info(
             "RAG: section restriction applied → %d section(s): %s",
             len(allowed_paths), allowed_paths[:5],
         )
-    return (allowed_paths, False)  # no_global_fallback=False for TOC/section routing
+    return (allowed_paths, False, debug_info)
 
 
 def _apply_mmr(hits: List[Dict], lambda_: float = 0.7) -> List[Dict]:
@@ -552,8 +581,8 @@ def _get_chunk_by_section_path(section_path: str, doc_ids: Optional[List[str]] =
     return None
 
 
-def _apply_graph_expansion(hits: List[Dict], max_additions: int = 3) -> List[Dict]:
-    """Follow cross-references for each hit's section_path (BFS, depth≤2).
+def _apply_graph_expansion(hits: List[Dict], max_additions: int = 3, max_depth: int = 1) -> List[Dict]:
+    """Follow cross-references for each hit's section_path (BFS, depth≤max_depth).
 
     Appends referenced chunks as supplemental context (score=0, _graph_ref tag).
     Limits total additions to max_additions.
@@ -580,7 +609,7 @@ def _apply_graph_expansion(hits: List[Dict], max_additions: int = 3) -> List[Dic
             continue
         try:
             ref_ids = index.cross_ref_graph.get_referenced_ref_ids(
-                sp, max_depth=2, max_total=max_additions - len(additions)
+                sp, max_depth=max_depth, max_total=max_additions - len(additions)
             )
             resolver = _get_section_resolver()
             ref_paths = resolver.resolve_to_paths(ref_ids)
@@ -602,7 +631,8 @@ def _apply_graph_expansion(hits: List[Dict], max_additions: int = 3) -> List[Dic
 async def _rescore_graph_additions(question: str, hits: List[Dict]) -> List[Dict]:
     """Re-score graph-expanded additions with the reranker and merge by relevance.
 
-    Splits main hits from additions (_graph_ref), reranks additions, merges and sorts by score.
+    Splits main hits from additions (_graph_ref), reranks additions, merges.
+    Graph additions cannot override direct hits unless score exceeds best_direct + RAG_GRAPH_OVERRIDE_MARGIN.
     """
     main_hits = [h for h in hits if not (h.get("source") or {}).get("_graph_ref")]
     additions = [h for h in hits if (h.get("source") or {}).get("_graph_ref")]
@@ -615,9 +645,13 @@ async def _rescore_graph_additions(question: str, hits: List[Dict]) -> List[Dict
             question, additions, top_k=len(additions), llm_fallback_fn=_rerank_hits
         )
         if scored_additions:
-            merged = main_hits + scored_additions
-            merged.sort(key=lambda x: float(x.get("score") or 0), reverse=True)
-            logger.info("RAG: rescored %d graph additions", len(scored_additions))
+            best_direct = max((float(h.get("score") or 0) for h in main_hits), default=0.0)
+            margin = getattr(settings, "RAG_GRAPH_OVERRIDE_MARGIN", 0.15)
+            high_graph = [g for g in scored_additions if float(g.get("score") or 0) > best_direct + margin]
+            low_graph = [g for g in scored_additions if float(g.get("score") or 0) <= best_direct + margin]
+            merged = sorted(main_hits + high_graph, key=lambda x: float(x.get("score") or 0), reverse=True)
+            merged.extend(sorted(low_graph, key=lambda x: float(x.get("score") or 0), reverse=True))
+            logger.info("RAG: rescored %d graph additions (high=%d, low=%d)", len(scored_additions), len(high_graph), len(low_graph))
             return merged
     except Exception as e:
         logger.debug("RAG: rescore graph additions failed (non-fatal): %s", e)
@@ -644,6 +678,59 @@ def _dedupe_by_section(hits: List[Dict], max_per_section: int = 2) -> List[Dict]
         sorted_group = sorted(group, key=lambda x: float(x.get("score") or 0), reverse=True)
         out.extend(sorted_group[:max_per_section])
     out.sort(key=lambda h: float(h.get("score") or 0), reverse=True)
+    return out
+
+
+def _get_section_id_for_hit(h: Dict) -> str:
+    """Extract canonical section_id from hit (section_id or from section_path)."""
+    src = h.get("source") or {}
+    sid = src.get("section_id")
+    if sid:
+        return sid
+    sp = src.get("section_path") or ""
+    if not sp:
+        return "__no_section__"
+    from .book.section_id import section_id_from_path
+    resolved = section_id_from_path(sp)
+    return resolved or sp
+
+
+def _limit_sections_in_context(
+    hits: List[Dict],
+    max_sections: int = 2,
+    explicit_section_ids: Optional[List[str]] = None,
+) -> List[Dict]:
+    """Keep only chunks from top 1–2 sections. Reduces cross-section contamination.
+
+    Section score = max(chunk_score) + average(chunk_score) + section_match_bonus.
+    """
+    if max_sections <= 0 or not hits:
+        return hits
+    explicit = set(explicit_section_ids or [])
+
+    by_section: Dict[str, List[Dict]] = {}
+    for h in hits:
+        sid = _get_section_id_for_hit(h)
+        if sid not in by_section:
+            by_section[sid] = []
+        by_section[sid].append(h)
+
+    def section_score(sid: str, group: List[Dict]) -> float:
+        scores = [float(h.get("score") or 0) for h in group]
+        if not scores:
+            return 0.0
+        max_s = max(scores)
+        avg_s = sum(scores) / len(scores)
+        bonus = 0.2 if sid in explicit else 0.0
+        return max_s + avg_s + bonus
+
+    scored = [(sid, group, section_score(sid, group)) for sid, group in by_section.items()]
+    scored.sort(key=lambda x: -x[2])
+    top_sections = {x[0] for x in scored[:max_sections]}
+    out = [h for h in hits if _get_section_id_for_hit(h) in top_sections]
+    out.sort(key=lambda h: float(h.get("score") or 0), reverse=True)
+    if len(top_sections) < len(by_section):
+        logger.info("RAG: limited to %d section(s): %s (dropped %d)", len(top_sections), list(top_sections), len(hits) - len(out))
     return out
 
 
@@ -1330,7 +1417,8 @@ async def retrieve_semantic_first(
     allowed_section_paths: List[str] = []
     no_global_fallback = False
     if search_document:
-        allowed_section_paths, no_global_fallback = await _get_section_restricted_paths(q, qv)
+        allowed_section_paths, no_global_fallback, debug_info = await _get_section_restricted_paths(q, qv)
+        _rag_debug_info.set({"allowed_section_paths": allowed_section_paths, **debug_info})
 
     # 2. Run transcript and document search in parallel
     tasks = []
@@ -1752,29 +1840,138 @@ def _rag_context_block(blocks: List[str]) -> str:
     return "\n\n".join([f"[{i+1}] {b}" for i, b in enumerate(blocks)])
 
 
+def _log_citation_debug(enriched: List[Dict], citations: List[Dict], source_type: str) -> None:
+    """Debug: log citation pipeline stats for troubleshooting. Enable with RAG_CITATION_DEBUG=1."""
+    if not getattr(settings, "RAG_CITATION_DEBUG", False):
+        return
+    srcs = [h.get("source") or {} for h in enriched]
+    valid_count = sum(1 for s in srcs if _is_citation_metadata_valid(s)[0])
+    logger.info(
+        "[Citations] source_type=%s enriched=%d valid_metadata=%d citations_built=%d RAG_EXPOSE_SOURCES=%s",
+        source_type, len(enriched), valid_count, len(citations), getattr(settings, "RAG_EXPOSE_SOURCES", False),
+    )
+    if len(enriched) > 0 and len(citations) == 0:
+        logger.warning(
+            "[Citations] No citations produced despite %d enriched hits. Check metadata_valid, filename/doc_id, or RAG_EXPOSE_SOURCES.",
+            len(enriched),
+        )
+    for i, (h, src) in enumerate(zip(enriched, srcs)):
+        ok = _is_citation_metadata_valid(src)[0]
+        logger.info(
+            "  hit[%d] valid=%s doc_type=%s filename=%s doc_id=%s section_path=%s page_number=%s metadata_valid=%s",
+            i, ok, src.get("doc_type"), src.get("filename"), src.get("doc_id"),
+            (src.get("section_path") or "")[:40], src.get("page_number"), src.get("metadata_valid"),
+        )
+
+
+def _is_citation_metadata_valid(src: dict) -> tuple[bool, str | None]:
+    """True if chunk has valid metadata for user-facing citation.
+    Returns (valid, rejection_reason). rejection_reason is None when valid.
+    """
+    if not src:
+        return False, "source empty"
+    if src.get("metadata_valid") is False:
+        return False, "metadata_valid=False"
+    doc_type = (src.get("doc_type") or "").lower()
+
+    # Non-BOOK: relaxed validation — need at least filename or doc_id to identify source
+    if doc_type != "book":
+        has_ident = bool(src.get("filename") or src.get("doc_id"))
+        return (has_ident, None if has_ident else "non-BOOK: missing filename and doc_id")
+
+    # BOOK: require section_path, page_number, and source identity (filename/doc_id)
+    sp = (src.get("section_path") or "").strip()
+    if not sp:
+        return False, "BOOK: section_path empty"
+    if not (src.get("filename") or src.get("doc_id")):
+        return False, "BOOK: missing filename and doc_id"
+    if src.get("page_number") is None:
+        return False, "BOOK: page_number missing"
+    if "2BDoD" in sp:
+        return False, "BOOK: section_path contains malformed 2BDoD"
+    return True, None
+
+
 def _build_citation(enriched_hit: Dict) -> Dict:
-    """Build a citation dict from an enriched hit including volume/chapter/section/page."""
+    """Build a citation dict from an enriched hit. Only use validated metadata.
+
+    BOOK: Volume X → Chapter Y → Section Z, Page N.
+    Non-BOOK: filename, doc_id, snippet, score, doc_type.
+    """
     src = enriched_hit.get("source") or {}
+    valid, reason = _is_citation_metadata_valid(src)
+    if not valid:
+        if getattr(settings, "RAG_CITATION_DEBUG", False):
+            logger.info(
+                "[Citation rejected] chunk_id=%s filename=%s doc_id=%s section_path=%s page_number=%s doc_type=%s reason=%s",
+                enriched_hit.get("chunk_id") or src.get("chunk_id"),
+                src.get("filename"),
+                src.get("doc_id"),
+                (src.get("section_path") or "")[:50],
+                src.get("page_number"),
+                src.get("doc_type"),
+                reason,
+            )
+        return {}  # Do not expose invalid chunks as citations
+
+    # Base fields for all citation types (frontend expects filename, snippet, doc_id)
+    snippet = (enriched_hit.get("compressed") or enriched_hit.get("text") or "")[:360]
+    filename = src.get("filename")
+    # For transcripts (filename like "transcript_xxx"), humanize when no friendly name
+    if filename and filename.startswith("transcript_") and not filename.endswith(".pdf"):
+        filename = src.get("name") or "Transcript"
+
     citation = {
-        "filename": src.get("filename"),
+        "filename": filename or "Unknown document",
         "chunk_index": src.get("chunk_index"),
         "score": enriched_hit.get("score"),
-        "snippet": (enriched_hit.get("compressed") or "")[:360],
+        "snippet": snippet,
     }
     if src.get("doc_id"):
         citation["doc_id"] = src["doc_id"]
-    if src.get("volume") is not None:
-        citation["volume"] = src["volume"]
-    if src.get("chapter") is not None:
-        citation["chapter"] = src["chapter"]
-    if src.get("section"):
-        citation["section"] = src["section"]
-    if src.get("section_path"):
-        citation["section_path"] = src["section_path"]
-    if src.get("page_number") is not None:
-        citation["page_number"] = src["page_number"]
+    cid = enriched_hit.get("chunk_id") or src.get("chunk_id")
+    if cid:
+        citation["chunk_id"] = cid
     if src.get("doc_type"):
         citation["doc_type"] = src["doc_type"]
+
+    # BOOK-specific: volume, chapter, section, page_number
+    doc_type = (src.get("doc_type") or "").lower()
+    if doc_type == "book":
+        vol_id = src.get("volume_id") or (str(src["volume"]) if src.get("volume") is not None else None)
+        ch_id = src.get("chapter_id") or (str(src["chapter"]) if src.get("chapter") is not None else None)
+        sec_id = src.get("section_id") or src.get("section")
+        vol_title = src.get("volume_title") or (f"Volume {vol_id}" if vol_id else None)
+        ch_title = src.get("chapter_title") or (f"Chapter {ch_id}" if ch_id else None)
+        sec_title = src.get("section_title") or sec_id
+        if vol_id is not None:
+            citation["volume_id"] = str(vol_id)
+            citation["volume"] = int(vol_id) if str(vol_id).isdigit() else vol_id
+        if vol_title:
+            citation["volume_title"] = vol_title
+        if ch_id is not None:
+            citation["chapter_id"] = str(ch_id)
+            citation["chapter"] = int(ch_id) if str(ch_id).isdigit() else ch_id
+        if ch_title:
+            citation["chapter_title"] = ch_title
+        if sec_id:
+            citation["section_id"] = sec_id
+            citation["section"] = sec_id
+        if sec_title:
+            citation["section_title"] = sec_title
+        if src.get("section_path"):
+            citation["section_path"] = src["section_path"]
+        if src.get("page_number") is not None:
+            citation["page_number"] = src["page_number"]
+    else:
+        # Non-BOOK: include section/page if present (e.g. PDF with page_number)
+        if src.get("section"):
+            citation["section"] = src["section"]
+        if src.get("section_path"):
+            citation["section_path"] = src["section_path"]
+        if src.get("page_number") is not None:
+            citation["page_number"] = src["page_number"]
+
     return citation
 
 
@@ -1862,6 +2059,7 @@ def _log_retrieval_debug(question: str, hits: List[Dict], top_n: int = 10) -> No
 
     Emits at DEBUG level so production logs stay clean; enable with
     ECHOMIND_LOG_LEVEL=DEBUG or per-logger config.
+    For contextual retrieval: logs raw_text preview (used for evidence/citations).
     """
     if not logger.isEnabledFor(logging.DEBUG):
         return
@@ -1878,9 +2076,39 @@ def _log_retrieval_debug(question: str, hits: List[Dict], top_n: int = 10) -> No
             src.get("page_number", "-"),
             (src.get("section_path") or "-")[:80],
         )
-        text_preview = (h.get("text") or "")[:120].replace("\n", " ")
-        logger.debug("│      text: %s", text_preview)
+        raw_preview = (h.get("text") or "")[:120].replace("\n", " ")
+        logger.debug("│      raw_text (evidence/citations): %s", raw_preview)
     logger.debug("└─ END DEBUG (%d total hits) ─────────────────────", len(hits))
+
+
+def _log_rag_pipeline_debug(
+    question: str,
+    resolved: Optional[ResolveResult],
+    selected_sections: List[str],
+    retrieved_count: int,
+    reranked_hits: List[Dict],
+    evidence_sentences: List[EvidenceSentence],
+    citations: List[Dict],
+) -> None:
+    """Log full RAG pipeline state for debugging: sections, chunks, evidence, citations."""
+    if not logger.isEnabledFor(logging.DEBUG):
+        return
+    logger.debug("┌─ RAG PIPELINE DEBUG q=%s ────────────────────────", question[:80])
+    logger.debug("│ resolved_sections: %s", (resolved.explicit_section_ids or []) if resolved else [])
+    logger.debug("│ resolved_paths: %s", (resolved.resolved_paths or [])[:5] if resolved else [])
+    logger.debug("│ selected_top_sections: %s", selected_sections[:5])
+    logger.debug("│ retrieved_chunks: %d", retrieved_count)
+    for i, h in enumerate(reranked_hits[:5]):
+        src = h.get("source") or {}
+        logger.debug("│   [%d] path=%s score=%.3f", i + 1, (src.get("section_path") or "-")[:60], float(h.get("score") or 0))
+    logger.debug("│ reranked_chunks: %d", len(reranked_hits))
+    logger.debug("│ evidence_sentences: %d", len(evidence_sentences))
+    for i, e in enumerate(evidence_sentences[:5]):
+        logger.debug("│   [%d] %s...", i + 1, (e.sentence or "")[:80])
+    logger.debug("│ citations: %d", len(citations))
+    for i, c in enumerate(citations[:5]):
+        logger.debug("│   [%d] %s", i + 1, c)
+    logger.debug("└─ END RAG PIPELINE DEBUG ─────────────────────────────")
 
 
 # ---------------------------------------------------------------------------
@@ -1932,21 +2160,28 @@ async def _run_rag_pipeline(
         hits = await _apply_reranker(question, hits, rerank_top_k, rerank_final_n)
     timings["rerank_ms"] = (time.monotonic() - t0) * 1000
 
-    # [Step 4] Graph expansion
+    # [Step 4] Graph expansion (only when top section confidence is low)
     t0 = time.monotonic()
     if source_type == "document":
-        max_additions = getattr(settings, "RAG_GRAPH_MAX_ADDITIONS", 3)
-        hits = _apply_graph_expansion(hits, max_additions=max_additions)
-        hits = await _rescore_graph_additions(question, hits)
+        top_score = max((float(h.get("score") or 0) for h in hits), default=0.0)
+        threshold = getattr(settings, "RAG_GRAPH_EXPANSION_CONFIDENCE_THRESHOLD", 0.5)
+        if threshold <= 0 or top_score < threshold:
+            max_additions = getattr(settings, "RAG_GRAPH_MAX_ADDITIONS", 3)
+            max_depth = getattr(settings, "MAX_GRAPH_EXPANSION_DEPTH", 1)
+            hits = _apply_graph_expansion(hits, max_additions=max_additions, max_depth=max_depth)
+            hits = await _rescore_graph_additions(question, hits)
     timings["graph_ms"] = (time.monotonic() - t0) * 1000
 
-    # Sort, dedupe, trim
+    # Sort, dedupe, limit sections, trim
     hits = _sort_hits_by_score(hits)
     if getattr(settings, "RAG_DEDUPE_BY_SECTION", False):
         max_per = getattr(settings, "RAG_MAX_CHUNKS_PER_SECTION", 2)
         if _parse_comparison_sections(question):
             max_per = max(max_per, 4)
         hits = _dedupe_by_section(hits, max_per_section=max_per)
+    max_sections = getattr(settings, "MAX_SECTIONS_PER_ANSWER", 2)
+    explicit_ids = (resolved.explicit_section_ids if resolved and resolved.has_explicit_refs else None)
+    hits = _limit_sections_in_context(hits, max_sections=max_sections, explicit_section_ids=explicit_ids)
     hits = _trim_hits_to_context_budget(hits)
 
     # ── Retrieval Debug: log top 10 hits with metadata ────────────────────
@@ -1965,9 +2200,11 @@ async def _run_rag_pipeline(
             min_sentences=8,
             max_sentences=12,
         )
+        resolver_confident = bool(resolved and resolved.has_explicit_refs and resolved.resolved_paths)
         ev_gate_result = gate_evidence(
             question, evidence_sentences,
             explicit_section_ids=explicit_ids,
+            resolver_confident=resolver_confident,
         )
         logger.info(
             "EvidenceGate: passed=%s confidence=%.3f coverage=%.2f section=%.1f policy=%.2f sentences=%d",
@@ -1981,7 +2218,7 @@ async def _run_rag_pipeline(
     if source_type == "document" and ev_gate_result and not ev_gate_result.passed:
         fallback_enriched = [{**h, "compressed": (h.get("text") or "")[:360]} for h in hits[:3]]
         citations = (
-            [_build_citation(c) for c in fallback_enriched]
+            [c for c in [_build_citation(x) for x in fallback_enriched] if c]
             if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
         )
         return _RagPipelineResult(
@@ -2072,7 +2309,7 @@ async def _run_rag_pipeline(
         if not pass_gate and fallback_msg:
             fallback_enriched = [{**h, "compressed": (h.get("text") or "")[:360]} for h in hits[:3]]
             citations = (
-                [_build_citation(c) for c in fallback_enriched]
+                [c for c in [_build_citation(x) for x in fallback_enriched] if c]
                 if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
             )
             return _RagPipelineResult(
@@ -2091,6 +2328,16 @@ async def _run_rag_pipeline(
         timings.get("rerank_ms", 0), timings.get("graph_ms", 0),
         timings.get("evidence_ms", 0), timings.get("context_build_ms", 0),
     )
+    debug_info = _rag_debug_info.get({})
+    selected_sections = debug_info.get("allowed_section_paths", [])
+    citations_for_debug = [c for c in [_build_citation(x) for x in enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+    _log_rag_pipeline_debug(
+        question, resolved, selected_sections,
+        retrieved_count=len(hits),
+        reranked_hits=hits,
+        evidence_sentences=evidence_sentences,
+        citations=citations_for_debug,
+    )
     return _RagPipelineResult(
         hits=hits, blocks=blocks, enriched=enriched,
         chunk_ids_used=chunk_ids_used, ctx_block=ctx_block,
@@ -2104,26 +2351,68 @@ async def _run_rag_pipeline(
 async def debug_retrieval(question: str, k: int = 15) -> Dict:
     """Debug endpoint: run full retrieval pipeline and return structured debug info.
 
-    Returns top 10 chunks with metadata + evidence sentences + gate result.
+    Returns: resolver output, TOC hits, section summary hits, selected sections,
+    rejected sections, retrieved chunks, evidence by section, gate decision, final citations.
     """
     source_type, hits = await retrieve_semantic_first(question, k)
+    debug_info = _rag_debug_info.get({})
+    selected_sections = debug_info.get("allowed_section_paths", [])
+    toc_hits = debug_info.get("toc_hits", [])
+    section_summary_hits = debug_info.get("section_summary_hits", [])
+
     if source_type == "general" or not hits:
-        return {"source_type": source_type, "hits": [], "evidence": [], "gate": None}
+        return {
+            "source_type": source_type,
+            "resolver": None,
+            "toc_hits": toc_hits,
+            "section_summary_hits": section_summary_hits,
+            "selected_sections": selected_sections,
+            "rejected_sections": [],
+            "hits": [],
+            "evidence": [],
+            "evidence_by_section": {},
+            "gate": None,
+            "citations": [],
+            "refused": False,
+        }
 
     result = await _run_rag_pipeline(question, hits, source_type)
+    resolver_out = None
+    if result.resolved:
+        r = result.resolved
+        resolver_out = {
+            "explicit_section_ids": r.explicit_section_ids or [],
+            "resolved_paths": (r.resolved_paths or [])[:5],
+            "has_explicit_refs": r.has_explicit_refs,
+        }
+
     debug_hits = []
     for i, h in enumerate(result.hits[:10]):
         src = h.get("source") or {}
         debug_hits.append({
             "rank": i + 1,
             "score": round(float(h.get("score") or 0), 4),
-            "volume": src.get("volume"),
-            "chapter": src.get("chapter"),
-            "section": src.get("section"),
+            "volume_id": src.get("volume_id"),
+            "chapter_id": src.get("chapter_id"),
+            "section_id": src.get("section_id"),
             "page": src.get("page_number"),
             "section_path": src.get("section_path"),
+            "metadata_valid": src.get("metadata_valid", True),
             "text_preview": (h.get("text") or "")[:200],
         })
+
+    evidence_by_section: Dict[str, List[Dict]] = {}
+    for e in result.evidence_sentences:
+        sid = e.section or e.section_path or "__no_section__"
+        if sid not in evidence_by_section:
+            evidence_by_section[sid] = []
+        evidence_by_section[sid].append({
+            "sentence": e.sentence[:200],
+            "score": round(e.score, 3),
+            "keyword_hits": e.keyword_hits,
+            "has_policy_word": e.has_policy_word,
+        })
+
     evidence_out = [
         {
             "sentence": e.sentence[:200],
@@ -2137,6 +2426,7 @@ async def debug_retrieval(question: str, k: int = 15) -> Dict:
         }
         for e in result.evidence_sentences
     ]
+
     gate_out = None
     if result.evidence_gate_result:
         g = result.evidence_gate_result
@@ -2149,12 +2439,24 @@ async def debug_retrieval(question: str, k: int = 15) -> Dict:
             "policy_word_ratio": round(g.policy_word_ratio, 2),
             "concepts_found": g.concepts_found,
             "concepts_missing": g.concepts_missing,
+            "fallback_message": g.fallback_message,
         }
+
+    citations = [c for c in [_build_citation(x) for x in result.enriched] if c]
+
     return {
         "source_type": source_type,
+        "resolver": resolver_out,
+        "toc_hits": toc_hits,
+        "section_summary_hits": section_summary_hits,
+        "selected_sections": selected_sections,
+        "rejected_sections": debug_info.get("rejected_sections", []),
         "hits": debug_hits,
         "evidence": evidence_out,
+        "evidence_by_section": evidence_by_section,
         "gate": gate_out,
+        "citations": citations,
+        "refused": result.early_exit and bool(result.early_exit_msg),
         "timing": {k: round(v, 1) for k, v in result.timing.items()},
     }
 
@@ -2263,7 +2565,8 @@ async def answer(
         ans = await _answer_with_strict_citations(
             question, result.ctx_block, history, persona, conversation_summary,
         )
-        citations = [_build_citation(c) for c in result.enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        _log_citation_debug(result.enriched, citations, source_type)
         return {"answer": ans, "citations": citations}
 
     msgs = _build_llm_messages(question, result.ctx_block, history, persona, conversation_summary)
@@ -2274,7 +2577,8 @@ async def answer(
     ans = await _postprocess_answer_text(
         ans, question, result.enriched, result.resolved, result.doc_ids, source_type,
     )
-    citations = [_build_citation(c) for c in result.enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+    citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+    _log_citation_debug(result.enriched, citations, source_type)
 
     logger.info(
         "RAG answer complete retrieve=%.0fms pipeline=%.0fms llm=%.0fms total=%.0fms",
@@ -2367,13 +2671,15 @@ async def answer_stream(
         ans = await _answer_with_strict_citations(
             question, result.ctx_block, history, persona, conversation_summary,
         )
-        citations = [_build_citation(c) for c in result.enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        _log_citation_debug(result.enriched, citations, source_type)
         yield ("chunk", ans, None)
         yield ("done", ans, citations)
         return
 
     msgs = _build_llm_messages(question, result.ctx_block, history, persona, conversation_summary)
-    citations = [_build_citation(c) for c in result.enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+    citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+    _log_citation_debug(result.enriched, citations, source_type)
 
     t_llm_start = time.monotonic()
     full = []

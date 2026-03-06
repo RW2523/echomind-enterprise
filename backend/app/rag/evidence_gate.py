@@ -118,16 +118,13 @@ def gate_evidence(
     explicit_section_ids: Optional[List[str]] = None,
     confidence_threshold: float = 0.30,
     concept_coverage_threshold: float = 0.4,
+    resolver_confident: bool = False,
 ) -> EvidenceGateResult:
-    """Gate evidence before LLM answering.
+    """Gate evidence before LLM answering. Smarter logic for explicit vs concept queries.
 
-    Fails if:
-      - No evidence sentences
-      - Confidence score below threshold
-      - Concept coverage below threshold (core query terms missing from evidence)
-      - Explicit section referenced but not found in evidence
-
-    Returns EvidenceGateResult with score breakdown.
+    Case A (explicit valid section): resolver confident + section in evidence → lower keyword threshold
+    Case B (concept query): require section from index + ≥2 concept matches + confidence
+    Case C (no good evidence): refuse with top 3 candidate sections
     """
     if not evidence:
         return EvidenceGateResult(
@@ -137,7 +134,7 @@ def gate_evidence(
             section_match_score=0.0,
             avg_rerank_score=0.0,
             policy_word_ratio=0.0,
-            fallback_message=WEAK_EVIDENCE_MSG,
+            fallback_message=MISSING_SECTION_MSG,
         )
 
     confidence = calculate_evidence_confidence(question, evidence, explicit_section_ids)
@@ -150,15 +147,52 @@ def gate_evidence(
     if explicit_section_ids:
         evidence_text = " ".join(e.sentence.lower() for e in evidence)
         evidence_paths = " ".join((e.section_path or "").lower() for e in evidence)
-        all_text = evidence_text + " " + evidence_paths
+        evidence_section_ids = " ".join((e.section or "").lower() for e in evidence)
+        all_text = evidence_text + " " + evidence_paths + " " + evidence_section_ids
         if any(sid.lower() in all_text for sid in explicit_section_ids):
             section_match = 1.0
 
-    # Decision
     passed = True
     fallback_message = None
 
-    if confidence < confidence_threshold:
+    # Case A: explicit valid section query — lower keyword threshold if section found
+    if resolver_confident and explicit_section_ids and section_match >= 0.5:
+        # Require: exact section_id in evidence OR parent section match + ≥1 strong sentence
+        min_coverage = 0.2  # Lower threshold for explicit refs
+        if coverage >= min_coverage and avg_rerank >= 0.25:
+            passed = True
+            logger.info(
+                "EvidenceGate: PASS (Case A explicit) section_match=1 coverage=%.2f q=%s",
+                coverage, question[:80],
+            )
+        else:
+            passed = False
+            fallback_message = MISSING_SECTION_MSG
+            logger.info(
+                "EvidenceGate: FAIL (Case A) coverage=%.2f avg_rerank=%.3f q=%s",
+                coverage, avg_rerank, question[:80],
+            )
+        return EvidenceGateResult(
+            passed=passed,
+            confidence_score=confidence,
+            keyword_coverage=coverage,
+            section_match_score=section_match,
+            avg_rerank_score=avg_rerank,
+            policy_word_ratio=policy_ratio,
+            concepts_found=found,
+            concepts_missing=missing,
+            fallback_message=fallback_message,
+        )
+
+    # Case B: concept query — require section + ≥2 concept matches + confidence
+    if explicit_section_ids and section_match < 0.5:
+        passed = False
+        fallback_message = MISSING_SECTION_MSG
+        logger.info(
+            "EvidenceGate: FAIL (section_ids=%s not in evidence) q=%s",
+            explicit_section_ids[:3], question[:80],
+        )
+    elif confidence < confidence_threshold:
         passed = False
         fallback_message = WEAK_EVIDENCE_MSG
         logger.info(
@@ -171,13 +205,6 @@ def gate_evidence(
         logger.info(
             "EvidenceGate: FAIL (coverage=%.2f, missing=%s) q=%s",
             coverage, missing[:5], question[:80],
-        )
-    elif explicit_section_ids and section_match < 0.5:
-        passed = False
-        fallback_message = MISSING_SECTION_MSG
-        logger.info(
-            "EvidenceGate: FAIL (section_ids=%s not in evidence) q=%s",
-            explicit_section_ids[:3], question[:80],
         )
 
     if passed:
