@@ -409,7 +409,14 @@ class FaissIndex:
                 self.toc_index.clear_all()
             except Exception:
                 pass
-        # Clear DB tables
+        # Remove TOC nodes cache (toc_builder persists this)
+        toc_nodes_path = os.path.join(settings.DATA_DIR, "toc_nodes.json")
+        if os.path.exists(toc_nodes_path):
+            try:
+                os.remove(toc_nodes_path)
+            except OSError:
+                pass
+        # Clear DB tables (book_sections, section_references)
         with get_conn() as conn:
             conn.execute("DELETE FROM book_sections")
             conn.execute("DELETE FROM section_references")

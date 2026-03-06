@@ -55,9 +55,15 @@ class TocIndex:
             logger.warning("TocIndex: save failed: %s", e)
 
     def clear_all(self) -> None:
+        """Clear TOC index in-memory and remove persisted files."""
         self._index = None
         self._meta = {"node_ids": [], "node_by_id": {}}
-        self._save()
+        for path in (self.faiss_path, self.meta_path):
+            if path and os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError as e:
+                    logger.warning("TocIndex: could not remove %s: %s", path, e)
 
     async def rebuild(self) -> None:
         """Rebuild TOC index from book_sections."""

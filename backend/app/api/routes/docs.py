@@ -242,7 +242,7 @@ def data_preview():
 
 @router.post("/delete-all")
 async def delete_all_data():
-    """Delete all data: documents, chunks, transcripts, chats, messages. Uses bulk clear for speed."""
+    """Delete all data: documents, chunks, transcripts, chats, messages, TOC, book_sections. Uses bulk clear for speed."""
     with get_conn() as conn:
         conn.execute("DELETE FROM chunks")
         conn.execute("DELETE FROM documents")
