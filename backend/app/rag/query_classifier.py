@@ -153,47 +153,16 @@ _QUERY_WEIGHTS: dict[str, Tuple[float, float]] = {
 }
 
 
-def dynamic_weight_adjustment(query_types: List[str]) -> Tuple[float, float] | None:
-    """Return (dense_weight, sparse_weight) for multi-type queries when explicit tuning applies.
-
-    Citation + procedural: use configurable weights (default 0.45 dense, 0.55 sparse).
-    Returns None when no special adjustment applies (caller falls back to averaging).
-    """
-    if not query_types or len(query_types) < 2:
-        return None
-    types_set = set(query_types)
-    if "citation" in types_set and "procedural" in types_set:
-        try:
-            from ..core.config import settings
-            dense = getattr(settings, "RAG_CITATION_PROCEDURAL_DENSE_WEIGHT", 0.45)
-            sparse = getattr(settings, "RAG_CITATION_PROCEDURAL_SPARSE_WEIGHT", 0.55)
-            total = dense + sparse
-            if total > 0:
-                return (dense / total, sparse / total)
-        except Exception:
-            pass
-        return (0.45, 0.55)
-    return None
-
-
 def get_rrf_weights(query: str) -> Tuple[float, float]:
     """Return (dense_weight, sparse_weight) appropriate for the query type.
 
-    Multi-type queries (e.g. citation + procedural): uses dynamic_weight_adjustment
-    when citation+procedural both present (configurable 0.45/0.55), else blends by
-    averaging dense and sparse across applicable types.
+    Truly multi-label: always blend dense/sparse weights across all detected types.
+    No single-type priority; averaging ensures balanced retrieval for mixed queries.
     """
     types = classify_query_types(query)
     if not types:
         return _QUERY_WEIGHTS["conceptual"]
-    # Single type: use that type's weights
-    if len(types) == 1:
-        return _QUERY_WEIGHTS.get(types[0], _QUERY_WEIGHTS["conceptual"])
-    # Multi-type: check for explicit citation+procedural adjustment
-    adj = dynamic_weight_adjustment(types)
-    if adj is not None:
-        return adj
-    # Fallback: blend weights (average dense, average sparse)
+    # Always blend across all detected types (no special-case priority)
     dense_sum = 0.0
     sparse_sum = 0.0
     for t in types:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 import logging
+import math
 import os
 from typing import Dict, List, Optional, Tuple
 
@@ -16,8 +17,38 @@ from .chunking import chunk_document
 from .section_index import SectionIndex
 from .glossary_index import GlossaryIndex, is_glossary_section
 from .cross_ref_graph import CrossRefGraph, extract_references
+from .book.section_id import section_id_from_path, extract_section_id, extract_all_codes
 
 logger = logging.getLogger(__name__)
+
+IVF_THRESHOLD = 10_000
+IVF_NPROBE = 32
+
+
+def _build_ivf_index(vecs: np.ndarray, dim: int) -> faiss.Index:
+    """Build an IVF index trained on the given vectors.
+
+    nlist = sqrt(n) (clamped 16–1024). The index uses IndexFlatIP as the
+    quantizer so inner-product scores remain comparable.
+    """
+    n = vecs.shape[0]
+    nlist = max(16, min(1024, int(math.sqrt(n))))
+    quantizer = faiss.IndexFlatIP(dim)
+    ivf = faiss.IndexIVFFlat(quantizer, dim, nlist, faiss.METRIC_INNER_PRODUCT)
+    ivf.train(vecs)
+    ivf.add(vecs)
+    ivf.nprobe = IVF_NPROBE
+    logger.info("index: built IVF index — %d vectors, nlist=%d, nprobe=%d", n, nlist, IVF_NPROBE)
+    return ivf
+
+
+def _set_nprobe(idx: faiss.Index) -> None:
+    """Ensure nprobe is set when loading an existing IVF index from disk."""
+    try:
+        if hasattr(idx, "nprobe"):
+            idx.nprobe = IVF_NPROBE
+    except Exception:
+        pass
 
 
 def _is_transcript_doc(filename: str, meta: dict) -> bool:
@@ -30,7 +61,8 @@ def _is_transcript_doc(filename: str, meta: dict) -> bool:
 def _build_book_sections_from_chunks(chunks, doc_id: str) -> List[Dict]:
     """Reconstruct section-level entries from parent chunks (grouped by section_path).
 
-    Returns list of {section_id, doc_id, section_title, section_path, full_section_text}.
+    Returns list of {section_id, doc_id, section_title, section_path, full_section_text, canonical_section_id}.
+    canonical_section_id: DoD-style code (e.g. 030201) for deterministic matching.
     """
     sections_by_path: Dict[str, Dict] = {}
     for c in chunks:
@@ -38,24 +70,38 @@ def _build_book_sections_from_chunks(chunks, doc_id: str) -> List[Dict]:
             continue
         sp = (c.section_path or "").strip() or "__root__"
         if sp not in sections_by_path:
+            canonical_sid = section_id_from_path(sp) or extract_section_id(c.section or sp) or extract_section_id(sp)
+            # Fallback: extract DoD codes from section text (for "Segment N" docs that mention codes in body)
+            if not canonical_sid and c.text:
+                codes = extract_all_codes(c.text)
+                if codes:
+                    canonical_sid = max(codes, key=len)
             sections_by_path[sp] = {
                 "section_id": new_id("sec"),
                 "doc_id": doc_id,
                 "section_title": c.section or sp,
                 "section_path": sp,
                 "texts": [],
+                "canonical_section_id": canonical_sid,
             }
         sections_by_path[sp]["texts"].append(c.text)
 
     result = []
     for sp, v in sections_by_path.items():
         combined = " ".join(v["texts"])
+        canonical_sid = v.get("canonical_section_id")
+        # Fallback: extract DoD codes from combined section text (for "Segment N" docs)
+        if not canonical_sid and combined:
+            codes = extract_all_codes(combined)
+            if codes:
+                canonical_sid = max(codes, key=len)
         result.append({
             "section_id": v["section_id"],
             "doc_id": doc_id,
             "section_title": v["section_title"],
             "section_path": sp,
             "full_section_text": combined[:6000],
+            "canonical_section_id": canonical_sid,
         })
     return result
 
@@ -102,12 +148,19 @@ class FaissIndex:
         )
         # Cross-reference graph
         self.cross_ref_graph = CrossRefGraph(settings.CROSS_REF_GRAPH_PATH)
+        # TOC index for BookRAG routing
+        try:
+            from .indexes.toc_index import TocIndex
+            self.toc_index = TocIndex(self.emb)
+        except Exception:
+            self.toc_index = None
         self._load()
 
     def _load(self):
         os.makedirs(settings.DATA_DIR, exist_ok=True)
         if os.path.exists(settings.FAISS_PATH) and os.path.exists(settings.META_PATH):
             self.index = faiss.read_index(settings.FAISS_PATH)
+            _set_nprobe(self.index)
             with open(settings.META_PATH, "r", encoding="utf-8") as f:
                 self.meta = json.load(f)
             if self.meta.get("chunk_ids") and not self.sparse.chunk_ids:
@@ -180,6 +233,35 @@ class FaissIndex:
         if self.transcript_index is None:
             self.transcript_index = faiss.IndexFlatIP(dim)
 
+    def _maybe_upgrade_to_ivf(self) -> None:
+        """Upgrade the main index from FlatIP to IVF when it exceeds IVF_THRESHOLD.
+
+        This is a no-op if the index is already IVF or below threshold.
+        Reads all child-chunk vectors from the existing FlatIP, builds a trained
+        IVF index, and swaps+saves in place.
+        """
+        if self.index is None:
+            return
+        n = self.index.ntotal
+        if n < IVF_THRESHOLD:
+            return
+        if isinstance(self.index, faiss.IndexIVFFlat):
+            return
+        try:
+            # faiss.IndexIVFFlat is a subclass check but read_index may return
+            # the C++ type; also guard against swigfaiss types.
+            idx_type = type(self.index).__name__
+            if "IVF" in idx_type:
+                return
+        except Exception:
+            pass
+
+        logger.info("index: upgrading FlatIP (%d vectors) to IVF", n)
+        dim = self.index.d
+        vecs = self.index.reconstruct_n(0, n).astype(np.float32)
+        self.index = _build_ivf_index(vecs, dim)
+        self._save()
+
     async def add_document(
         self,
         filename: str,
@@ -233,6 +315,8 @@ class FaissIndex:
         self._save()
         self.sparse.add_chunks([c.chunk_id for c in embed_chunks], texts_to_embed)
 
+        self._maybe_upgrade_to_ivf()
+
         # ── Hierarchical section + glossary indexing (BOOK documents only) ────
         has_parents = any(c.is_parent for c in all_chunks)
         if has_parents and not _is_transcript_doc(filename, meta):
@@ -252,6 +336,13 @@ class FaissIndex:
         # Add to section FAISS index
         await self.section_index.add_sections(book_sections)
         logger.info("index: indexed %d sections for doc_id=%s", len(book_sections), doc_id)
+
+        # Rebuild TOC index for BookRAG routing
+        if self.toc_index:
+            try:
+                await self.toc_index.rebuild()
+            except Exception as e:
+                logger.warning("index: TOC rebuild failed: %s", e)
 
         # Extract cross-references from section texts
         all_refs = []
@@ -313,6 +404,11 @@ class FaissIndex:
         self.section_index.clear_all()
         self.glossary_index.clear_all()
         self.cross_ref_graph.clear_all()
+        if self.toc_index:
+            try:
+                self.toc_index.clear_all()
+            except Exception:
+                pass
         # Clear DB tables
         with get_conn() as conn:
             conn.execute("DELETE FROM book_sections")
@@ -335,6 +431,11 @@ class FaissIndex:
         self.section_index.clear_doc(doc_id)
         self.glossary_index.clear_doc(doc_id)
         self.cross_ref_graph.clear_doc(doc_id)
+        if self.toc_index:
+            try:
+                await self.toc_index.rebuild()
+            except Exception as e:
+                logger.warning("TOC rebuild after delete failed: %s", e)
 
         remaining_ids = []
         remaining_texts = []
@@ -362,9 +463,13 @@ class FaissIndex:
 
         vecs = await self.emb.embed(remaining_texts)
         faiss.normalize_L2(vecs)
+        vecs = vecs.astype(np.float32)
         dim = vecs.shape[1]
-        self.index = faiss.IndexFlatIP(dim)
-        self.index.add(vecs.astype(np.float32))
+        if vecs.shape[0] >= IVF_THRESHOLD:
+            self.index = _build_ivf_index(vecs, dim)
+        else:
+            self.index = faiss.IndexFlatIP(dim)
+            self.index.add(vecs)
         self.meta["chunk_ids"] = remaining_ids
         self.meta["source_by_chunk"] = source_by_chunk
         self._save()
@@ -466,11 +571,13 @@ class FaissIndex:
         k: int,
         allowed_section_paths: List[str],
         query_vector: Optional[np.ndarray] = None,
+        no_global_fallback: bool = False,
     ) -> List[Dict]:
         """Dense search restricted to chunks whose section_path starts with one of allowed_section_paths.
 
         Fetches up to k*8 candidates from FAISS then filters by section_path prefix.
-        Falls back to search_document_only if no hits pass the filter.
+        When no_global_fallback=False, falls back to search_document_only if no hits pass the filter.
+        When no_global_fallback=True (explicit refs), returns empty list instead of falling back.
         """
         if not allowed_section_paths:
             return await self.search_document_only(query, k, query_vector=query_vector)
@@ -505,13 +612,21 @@ class FaissIndex:
                 if any(sp.startswith(allowed) for allowed in allowed_section_paths):
                     out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": src})
 
-        if not out:
+        if not out and not no_global_fallback:
             logger.info("search_document_restricted: no hits for section filter, falling back to global search")
             return await self.search_document_only(query, k, query_vector=qv)
+        if not out and no_global_fallback:
+            logger.info("search_document_restricted: no hits for section filter (explicit refs), no global fallback")
         return out
 
-    def search_document_sparse_restricted(self, query: str, k: int, allowed_section_paths: List[str]) -> List[Dict]:
-        """BM25 search restricted by section_path prefix. Falls back to global sparse if no hits."""
+    def search_document_sparse_restricted(
+        self,
+        query: str,
+        k: int,
+        allowed_section_paths: List[str],
+        no_global_fallback: bool = False,
+    ) -> List[Dict]:
+        """BM25 search restricted by section_path prefix. When no_global_fallback=False, falls back to global sparse if no hits."""
         if not self.sparse._bm25 or not self.sparse.chunk_ids:
             return []
         if not allowed_section_paths:
@@ -528,9 +643,11 @@ class FaissIndex:
             if len(out) >= k:
                 break
 
-        if not out:
+        if not out and not no_global_fallback:
             logger.info("search_document_sparse_restricted: no hits for section filter, falling back to global sparse")
             return self.search_document_only_sparse(query, k)
+        if not out and no_global_fallback:
+            logger.info("search_document_sparse_restricted: no hits for section filter (explicit refs), no global fallback")
         return out
 
 

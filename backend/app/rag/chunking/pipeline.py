@@ -21,6 +21,7 @@ from .chunkers import (
     chunk_unstructured,
     _split_book_into_sections,
 )
+from ..book.section_id import extract_section_id, section_id_from_path
 
 
 def _build_section_path(title: Optional[str], parent_path: Optional[str] = None) -> Optional[str]:
@@ -102,6 +103,7 @@ def chunk_document(
         section_char_offset = 0
         for section_title, section_text in sections:
             section_path = _build_section_path(section_title)
+            canonical_sid = section_id_from_path(section_path or "") or extract_section_id(section_title or "")
             pc_list = chunk_long_form(
                 section_text,
                 sensitivity_level,
@@ -110,9 +112,14 @@ def chunk_document(
                 section_path=section_path,
             )
             for pc in pc_list:
+                pc.parent.section_id = canonical_sid
+                for c in pc.children:
+                    c.section_id = canonical_sid
+            for pc in pc_list:
                 parent = pc.parent
                 parent.chunk_id = new_id("chk")
                 parent.doc_id = doc_id
+                parent.section_title = section_title
                 page = _page_for_offset(
                     section_char_offset, total_chars, estimated_pages, page_offsets
                 )
@@ -123,6 +130,7 @@ def chunk_document(
                     c.parent_chunk_id = parent.chunk_id
                     c.doc_id = doc_id
                     c.chunk_id = new_id("chk")
+                    c.section_title = section_title
                     c.page_number = parent.page_number
                     chunks.append(c)
             section_char_offset += len(section_text)

@@ -97,6 +97,7 @@ class SectionIndex:
                 "doc_id": s.get("doc_id"),
                 "section_title": s.get("section_title"),
                 "section_path": s.get("section_path"),
+                "canonical_section_id": s.get("canonical_section_id"),
             }
         self._save()
         logger.info("SectionIndex: added %d sections (total=%d)", len(sections), len(self._meta["section_ids"]))
@@ -157,6 +158,7 @@ class SectionIndex:
         """Return section_paths that contain any of the given codes (e.g. 0301, 0402).
 
         Used for comparison queries to ensure both sections are in retrieval scope.
+        Checks section_path and canonical_section_id (DoD code from section text).
         """
         if not codes:
             return []
@@ -166,8 +168,15 @@ class SectionIndex:
             sp = (info.get("section_path") or "").strip()
             if not sp or sp in seen:
                 continue
+            canon = (info.get("canonical_section_id") or "").strip()
             for code in codes:
-                if code and (code in sp or sp.endswith(code) or (">" + code) in sp):
+                if not code:
+                    continue
+                if code == canon:
+                    paths.append(sp)
+                    seen.add(sp)
+                    break
+                if code in sp or sp.endswith(code) or (">" + code) in sp:
                     paths.append(sp)
                     seen.add(sp)
                     break

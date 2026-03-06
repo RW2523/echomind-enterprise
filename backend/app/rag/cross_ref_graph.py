@@ -45,28 +45,53 @@ _XREF_PATTERNS = [
 ]
 
 
+def _normalize_to_ref_section_id(pattern_idx: int, groups: List[str]) -> str:
+    """Normalize extracted ref to canonical ref_section_id for lookup table mapping."""
+    if not groups:
+        return ""
+    # 0: paragraph 030201 -> 030201
+    # 1: Volume 5, Chapter 10 -> vol5_ch10
+    # 2: Section 080302 -> 080302
+    # 3: Chapter 5 -> ch5
+    # 4: Volume 7 -> vol7
+    # 5: Part III -> part_III
+    # 6: bare See 123456 -> 123456
+    if pattern_idx == 1 and len(groups) >= 2:
+        return f"vol{groups[0]}_ch{groups[1]}"
+    if pattern_idx == 3:
+        return f"ch{groups[0]}"
+    if pattern_idx == 4:
+        return f"vol{groups[0]}"
+    if pattern_idx == 5:
+        return f"part_{groups[0]}"
+    return groups[0].strip()
+
+
 def extract_references(text: str, source_section_path: str, doc_id: str) -> List[Dict]:
     """Extract cross-references from section text.
 
     Returns list of dicts:
-      {source_section_path, referenced_section_path, doc_id, reference_text}
+      {source_section_path, referenced_section_path, ref_section_id, doc_id, reference_text}
+    ref_section_id: canonical id for lookup (e.g. 030201, vol5_ch10, ch5).
     """
     refs: List[Dict] = []
     seen: Set[tuple] = set()
 
-    for pattern in _XREF_PATTERNS:
+    for idx, pattern in enumerate(_XREF_PATTERNS):
         for m in pattern.finditer(text):
             groups = [g.strip() for g in m.groups() if g and g.strip()]
             if not groups:
                 continue
             ref_path = " ".join(groups)
-            key = (source_section_path, ref_path)
+            ref_section_id = _normalize_to_ref_section_id(idx, groups)
+            key = (source_section_path, ref_section_id or ref_path)
             if key in seen:
                 continue
             seen.add(key)
             refs.append({
                 "source_section_path": source_section_path,
                 "referenced_section_path": ref_path,
+                "ref_section_id": ref_section_id or ref_path,
                 "doc_id": doc_id,
                 "reference_text": m.group(0)[:200],
             })
@@ -115,10 +140,10 @@ class CrossRefGraph:
     # ── Ingestion ─────────────────────────────────────────────────────────────
 
     def add_section_refs(self, refs: List[Dict]) -> None:
-        """Merge extracted reference list into the graph and persist."""
+        """Merge extracted reference list into the graph and persist. Uses ref_section_id as target."""
         for r in refs:
             src = r.get("source_section_path") or ""
-            tgt = r.get("referenced_section_path") or ""
+            tgt = r.get("ref_section_id") or r.get("referenced_section_path") or ""
             if not src or not tgt:
                 continue
             targets = self._graph.setdefault(src, [])
@@ -128,18 +153,20 @@ class CrossRefGraph:
         self._save()
 
     def store_refs_in_db(self, refs: List[Dict]) -> None:
-        """Persist extracted references to the section_references DB table."""
+        """Persist extracted references to the section_references DB table. Includes ref_section_id."""
         if not refs:
             return
         try:
             with get_conn() as conn:
                 for r in refs:
+                    ref_id = r.get("ref_section_id") or r.get("referenced_section_path") or ""
                     conn.execute(
-                        "INSERT OR IGNORE INTO section_references (id, source_section_path, referenced_section_path, doc_id, reference_text) VALUES (?,?,?,?,?)",
+                        "INSERT OR IGNORE INTO section_references (id, source_section_path, referenced_section_path, ref_section_id, doc_id, reference_text) VALUES (?,?,?,?,?,?)",
                         (
                             new_id("xref"),
                             r.get("source_section_path") or "",
                             r.get("referenced_section_path") or "",
+                            ref_id,
                             r.get("doc_id") or "",
                             r.get("reference_text") or "",
                         ),
@@ -150,16 +177,13 @@ class CrossRefGraph:
 
     # ── Retrieval ─────────────────────────────────────────────────────────────
 
-    def get_referenced_paths(
+    def get_referenced_ref_ids(
         self,
         section_path: str,
         max_depth: int = 2,
         max_total: int = 3,
     ) -> List[str]:
-        """BFS from section_path following outgoing edges up to max_depth hops.
-
-        Returns a list of referenced section paths (deduplicated, limited to max_total).
-        """
+        """BFS from section_path following outgoing edges. Returns ref_section_ids (not paths)."""
         if not section_path or section_path not in self._graph:
             return []
 
@@ -183,16 +207,45 @@ class CrossRefGraph:
 
         return results
 
+    def get_referenced_paths(
+        self,
+        section_path: str,
+        ref_id_to_paths: Optional[Dict[str, List[str]]] = None,
+        max_depth: int = 2,
+        max_total: int = 3,
+    ) -> List[str]:
+        """BFS from section_path; resolve ref_section_id -> section_path(s) via lookup table.
+
+        When ref_id_to_paths is provided, maps ref_section_id to paths (no fragile prefix matching).
+        When None, returns ref_section_ids (caller should resolve via SectionResolver.resolve_to_paths).
+        """
+        ref_ids = self.get_referenced_ref_ids(section_path, max_depth=max_depth, max_total=max_total)
+        if not ref_ids:
+            return []
+        if not ref_id_to_paths:
+            return ref_ids  # caller resolves via SectionResolver.resolve_to_paths
+
+        paths: List[str] = []
+        seen: set = set()
+        for rid in ref_ids:
+            for p in ref_id_to_paths.get(rid, []):
+                if p and p not in seen:
+                    seen.add(p)
+                    paths.append(p)
+                    if len(paths) >= max_total:
+                        return paths
+        return paths
+
     # ── Maintenance ───────────────────────────────────────────────────────────
 
     def clear_doc(self, doc_id: str) -> None:
         """Remove all references for a doc_id and rebuild the graph."""
         self._refs = [r for r in self._refs if r.get("doc_id") != doc_id]
-        # Rebuild adjacency from remaining refs
+        # Rebuild adjacency from remaining refs (use ref_section_id)
         self._graph = {}
         for r in self._refs:
             src = r.get("source_section_path") or ""
-            tgt = r.get("referenced_section_path") or ""
+            tgt = r.get("ref_section_id") or r.get("referenced_section_path") or ""
             if src and tgt:
                 targets = self._graph.setdefault(src, [])
                 if tgt not in targets:

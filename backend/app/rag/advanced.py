@@ -4,6 +4,8 @@ import json
 import logging
 import math
 import re
+import time
+from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, AsyncIterator, Tuple, Optional
 
@@ -16,6 +18,15 @@ from .index import index
 from .llm import OpenAICompatChat
 from .query_classifier import classify_query_type, classify_query_types, get_rrf_weights
 from .reranker import rerank_hits as _ce_rerank_hits
+from .book.section_resolver import SectionResolver, ResolveResult
+from .evidence_extractor import (
+    build_evidence_block,
+    build_evidence_only_context,
+    extract_evidence_sentences,
+    EvidenceSentence,
+)
+from .evidence_gate import gate_evidence, EvidenceGateResult
+from .answer_gating import gate_context
 
 logger = logging.getLogger(__name__)
 
@@ -261,31 +272,151 @@ async def _try_glossary_first(
     return result
 
 
+_section_resolver: Optional[SectionResolver] = None
+
+
+def _get_section_resolver() -> SectionResolver:
+    global _section_resolver
+    if _section_resolver is None:
+        _section_resolver = SectionResolver()
+    return _section_resolver
+
+
+_KNOWN_PHRASE_VOLUME_MAP: Dict[str, int] = {
+    "administrative control of funds": 14,
+    "certifying officers": 5,
+    "certifying officer": 5,
+    "disbursing officer": 5,
+    "accountable officer": 5,
+    "cashier": 5,
+    "paying agent": 5,
+    "transportation of things": 9,
+    "travel policy": 9,
+    "per diem": 9,
+    "temporary duty": 9,
+    "military pay": 7,
+    "civilian pay": 8,
+    "retired pay": 7,
+    "contract payments": 10,
+    "accounts receivable": 4,
+    "financial reporting": 6,
+    "budget execution": 3,
+    "budget formulation": 2,
+    "antideficiency act": 14,
+    "reimbursable operations": 11,
+    "working capital fund": 11,
+    "nonappropriated fund": 13,
+    "debt management": 5,
+    "military construction": 3,
+    "garnishment": 7,
+}
+
+
+def _detect_volume_from_phrase(query: str) -> Optional[int]:
+    """Detect volume from known regulation phrases in the query."""
+    q_lower = (query or "").strip().lower()
+    for phrase, vol in _KNOWN_PHRASE_VOLUME_MAP.items():
+        if phrase in q_lower:
+            return vol
+    return None
+
+
 async def _get_section_restricted_paths(
     query: str, qv: np.ndarray
-) -> List[str]:
-    """Search section_index for top matching sections; return their paths for child-search restriction.
+) -> Tuple[List[str], bool]:
+    """BookRAG: deterministic navigation + TOC routing + dynamic relax.
 
-    Returns [] when feature is disabled, no sections score above threshold, or section_index is empty.
+    Returns (allowed_paths, no_global_fallback).
+    no_global_fallback=True when paths came from explicit refs (hard-anchor: no global fallback in index).
+
+    a) Resolver extracts explicit refs → if present, use resolved paths (skip TOC).
+    a2) Known phrase → volume restriction (e.g. "administrative control of funds" → Volume 14).
+    b) Else: TOC search → allowed sections.
+    c) Section-index search restricted by scope; dynamic relax if no hits.
     """
     if not getattr(settings, "RAG_USE_SECTION_RETRIEVAL", True):
-        return []
-    threshold = getattr(settings, "RAG_SECTION_SCORE_THRESHOLD", 0.30)
-    top_k = getattr(settings, "RAG_SECTION_TOP_K", 3)
-    try:
-        sections = await index.section_index.search(query, k=top_k, query_vector=qv)
-    except Exception as e:
-        logger.debug("Section index search error (non-fatal): %s", e)
-        return []
-    qualifying = [s for s in sections if s.get("score", 0) >= threshold]
-    if not qualifying:
-        return []
-    paths = [s["section_path"] for s in qualifying if s.get("section_path")]
-    logger.info(
-        "RAG: section restriction applied → %d section(s) [threshold=%.2f]: %s",
-        len(paths), threshold, paths,
-    )
-    return paths
+        return ([], False)
+    threshold = getattr(settings, "RAG_SECTION_SCORE_THRESHOLD", 0.35)
+    relax_threshold = getattr(settings, "RAG_SECTION_RELAX_THRESHOLD", 0.25)
+    top_k = getattr(settings, "RAG_SECTION_TOP_K", 8)
+    toc_top_k = getattr(settings, "RAG_TOC_TOP_K", 5)
+    toc_threshold = getattr(settings, "RAG_TOC_THRESHOLD", 0.25)
+    use_toc = getattr(settings, "RAG_USE_TOC_ROUTING", True)
+
+    allowed_paths: List[str] = []
+    resolver = _get_section_resolver()
+    resolved = resolver.resolve(query)
+
+    # a) Explicit refs: use resolved paths, skip TOC/section search (hard-anchor: no global fallback)
+    if resolved.has_explicit_refs and resolved.resolved_paths:
+        allowed_paths = resolved.resolved_paths
+        logger.info(
+            "RAG: Book Navigator explicit refs → %d path(s): %s",
+            len(allowed_paths), allowed_paths[:5],
+        )
+        # Comparison: ensure both sections present
+        if resolved.comparison_pair:
+            extra = index.section_index.get_paths_containing_codes(list(resolved.comparison_pair))
+            for p in extra:
+                if p and p not in allowed_paths:
+                    allowed_paths.append(p)
+            logger.info("RAG: comparison → added paths for %s: %s", resolved.comparison_pair, extra)
+        return (allowed_paths, True)  # no_global_fallback=True for explicit refs
+
+    # a2) Known phrase → volume restriction
+    detected_vol = _detect_volume_from_phrase(query)
+    if detected_vol is not None:
+        vol_key = f"vol{detected_vol}"
+        vol_paths = resolver._id_to_paths.get(vol_key, [])
+        if vol_paths:
+            allowed_paths = vol_paths
+            logger.info(
+                "RAG: phrase-based volume anchor → Volume %d, %d path(s): %s",
+                detected_vol, len(vol_paths), vol_paths[:5],
+            )
+            return (allowed_paths, False)
+
+    # b) TOC routing when no explicit refs
+    if use_toc and getattr(index, "toc_index", None) and index.toc_index._index is not None:
+        try:
+            toc_nodes = await index.toc_index.search(query, k=toc_top_k, threshold=toc_threshold, query_vector=qv)
+            if toc_nodes:
+                allowed_paths = index.toc_index.get_section_paths_from_nodes(toc_nodes)
+                logger.info("RAG: TOC routing → %d path(s) from %d nodes", len(allowed_paths), len(toc_nodes))
+        except Exception as e:
+            logger.debug("TOC search error (non-fatal): %s", e)
+
+    # c) Section-index search (or fallback when TOC empty)
+    if not allowed_paths:
+        try:
+            sections = await index.section_index.search(query, k=top_k, query_vector=qv)
+        except Exception as e:
+            logger.debug("Section index search error (non-fatal): %s", e)
+            return ([], False)
+        qualifying = [s for s in sections if s.get("score", 0) >= threshold]
+        if not qualifying:
+            qualifying = [s for s in sections if s.get("score", 0) >= relax_threshold]
+            if qualifying:
+                logger.info("RAG: dynamic relax threshold %.2f → %.2f", threshold, relax_threshold)
+        if qualifying:
+            allowed_paths = [s["section_path"] for s in qualifying if s.get("section_path")]
+
+    # Comparison: ensure both sections in scope
+    comp_sections = _parse_comparison_sections(query)
+    if comp_sections:
+        extra = index.section_index.get_paths_containing_codes(list(comp_sections))
+        for p in extra:
+            if p and p not in allowed_paths:
+                allowed_paths.append(p)
+        if extra:
+            logger.info("RAG: comparison → added paths for sections %s: %s", comp_sections, extra)
+
+    if allowed_paths:
+        logger.info(
+            "RAG: section restriction applied → %d section(s): %s",
+            len(allowed_paths), allowed_paths[:5],
+        )
+    return (allowed_paths, False)  # no_global_fallback=False for TOC/section routing
 
 
 def _apply_mmr(hits: List[Dict], lambda_: float = 0.7) -> List[Dict]:
@@ -448,12 +579,14 @@ def _apply_graph_expansion(hits: List[Dict], max_additions: int = 3) -> List[Dic
         if not sp:
             continue
         try:
-            refs = index.cross_ref_graph.get_referenced_paths(
+            ref_ids = index.cross_ref_graph.get_referenced_ref_ids(
                 sp, max_depth=2, max_total=max_additions - len(additions)
             )
+            resolver = _get_section_resolver()
+            ref_paths = resolver.resolve_to_paths(ref_ids)
         except Exception:
             continue
-        for ref_path in refs:
+        for ref_path in ref_paths:
             if ref_path in seen_paths or len(additions) >= max_additions:
                 break
             seen_paths.add(ref_path)
@@ -1193,19 +1326,11 @@ async def retrieve_semantic_first(
         if glossary_hits:
             return ("document", glossary_hits)
 
-    # [Step 1] Section-level restriction: search section_index → get allowed section paths
+    # [Step 1] BookRAG: section restriction (resolver + TOC + dynamic relax)
     allowed_section_paths: List[str] = []
+    no_global_fallback = False
     if search_document:
-        allowed_section_paths = await _get_section_restricted_paths(q, qv)
-        # Comparison queries: ensure both sections are in retrieval scope
-        comp_sections = _parse_comparison_sections(q)
-        if comp_sections:
-            extra_paths = index.section_index.get_paths_containing_codes(list(comp_sections))
-            for p in extra_paths:
-                if p and p not in allowed_section_paths:
-                    allowed_section_paths.append(p)
-            if extra_paths:
-                logger.info("RAG: comparison query → added paths for sections %s: %s", comp_sections, extra_paths)
+        allowed_section_paths, no_global_fallback = await _get_section_restricted_paths(q, qv)
 
     # 2. Run transcript and document search in parallel
     tasks = []
@@ -1214,9 +1339,9 @@ async def retrieve_semantic_first(
         tasks.append(("transcript_sparse", asyncio.to_thread(index.transcript_sparse.search, q, k_per)))
     if search_document:
         if allowed_section_paths:
-            # [Step 1] Section-restricted search
-            tasks.append(("doc_dense", index.search_document_restricted(q, k_per, allowed_section_paths, query_vector=qv)))
-            tasks.append(("doc_sparse", asyncio.to_thread(index.search_document_sparse_restricted, q, k_per, allowed_section_paths)))
+            # [Step 1] Section-restricted search (no_global_fallback when explicit refs)
+            tasks.append(("doc_dense", index.search_document_restricted(q, k_per, allowed_section_paths, query_vector=qv, no_global_fallback=no_global_fallback)))
+            tasks.append(("doc_sparse", asyncio.to_thread(index.search_document_sparse_restricted, q, k_per, allowed_section_paths, no_global_fallback)))
         else:
             tasks.append(("doc_dense", index.search_document_only(q, k_per, query_vector=qv)))
             tasks.append(("doc_sparse", asyncio.to_thread(index.search_document_only_sparse, q, k_per)))
@@ -1445,10 +1570,9 @@ def _rag_system_prompt(persona: Optional[str] = None) -> str:
     - Do not infer content beyond what was spoken.
 
     CITATIONS (CRITICAL):
-    - Always explicitly mention the section number or chapter reference when answering citation-based queries.
-    - Format: "This information is derived from Section 0301 of DoD FMR. For more details, refer to Volume 15, Chapter 3, Section 14.0."
-    - Or inline: "… (Section 0301, page 42)" / "… (path: Volume 1 > Chapter 3 > 0301, page 12)".
-    - If a citation is not directly available, state clearly that the information is inferred and suggest specific sections: "Refer to Section 0301 for more details on payment requests."
+    - For queries that reference a specific section (e.g. "What does paragraph 030201 say?"), quote or paraphrase directly from that section. Use the [CITATION REFERENCE] block when provided.
+    - Always explicitly mention the section number or chapter reference. Format: "According to Section 0301, …" or inline "… (Section 0301, page 42)".
+    - If the section content is not directly found, state: "This information is inferred from context. Please refer to Section {section_reference} for full details."
     - Never invent section numbers or page references. Only cite sections that appear in the context.
 
     INFERENCES (TRANSPARENCY):
@@ -1457,8 +1581,8 @@ def _rag_system_prompt(persona: Optional[str] = None) -> str:
     - Always explain briefly why the suggested section is relevant to the query.
 
     PROCEDURAL QUERIES (steps, how-to, requirements):
-    - Present each step clearly in a numbered list or bullet points.
-    - Format: "Step 1: [Description] Step 2: [Description] Step 3: [Description]"
+    - Present each step clearly in a numbered list. Format: "Step 1: [Description] (see Section X for details)".
+    - Link each step to a specific section when the context provides it: "Step 1: Submit request. (see Section 0301 for details)"
     - If steps are not explicitly in the context, provide a summary and suggest: "For detailed steps, refer to Section X."
     - Combine citation and procedure when both apply (e.g. "What are the steps under Section 0301?" → steps with citations).
 
@@ -1472,11 +1596,12 @@ def _rag_system_prompt(persona: Optional[str] = None) -> str:
       • Section 0301 emphasizes payment schedule preparation, while Section 0402 outlines terms for delayed payments due to national interest.
     - Ensure the comparison is easy to understand.
 
-    MISSING INFORMATION:
+    MISSING INFORMATION (HARD GROUNDING):
+    - If the retrieved passages do NOT contain the requested section, code, or topic, you MUST say: "I couldn't find this in the retrieved passages" and list the top related sections with citations (section_path + page_number).
     - When a query cannot be answered directly from the document, implement a fallback: suggest relevant sections or chapters.
     - Clearly communicate when the answer is inferred and explain why the suggested section is relevant.
     - Example: "The required information for submitting payment requests is not directly available in Section 0301. However, related guidance can be found in Chapter 7, Section 14.0 of Volume 15, Chapter 3."
-    - Do not guess or invent content.
+    - Do not guess or invent content. Never cite a section that does not appear in the provided context.
 
     STRUCTURED RESPONSES:
     - Procedural answers: numbered steps (Step 1, Step 2, …) in an easily readable format.
@@ -1628,7 +1753,7 @@ def _rag_context_block(blocks: List[str]) -> str:
 
 
 def _build_citation(enriched_hit: Dict) -> Dict:
-    """Build a citation dict from an enriched hit including section_path and page_number."""
+    """Build a citation dict from an enriched hit including volume/chapter/section/page."""
     src = enriched_hit.get("source") or {}
     citation = {
         "filename": src.get("filename"),
@@ -1636,9 +1761,12 @@ def _build_citation(enriched_hit: Dict) -> Dict:
         "score": enriched_hit.get("score"),
         "snippet": (enriched_hit.get("compressed") or "")[:360],
     }
-    # Include doc_id so the frontend can construct a file-serve URL for in-browser preview.
     if src.get("doc_id"):
         citation["doc_id"] = src["doc_id"]
+    if src.get("volume") is not None:
+        citation["volume"] = src["volume"]
+    if src.get("chapter") is not None:
+        citation["chapter"] = src["chapter"]
     if src.get("section"):
         citation["section"] = src["section"]
     if src.get("section_path"):
@@ -1724,6 +1852,373 @@ async def _answer_general(
     return {"answer": ans, "citations": []}
 
 
+# ---------------------------------------------------------------------------
+# Retrieval Debug: structured logging of top hits with full metadata.
+# ---------------------------------------------------------------------------
+
+
+def _log_retrieval_debug(question: str, hits: List[Dict], top_n: int = 10) -> None:
+    """Log top N retrieved hits with metadata for debugging retrieval errors.
+
+    Emits at DEBUG level so production logs stay clean; enable with
+    ECHOMIND_LOG_LEVEL=DEBUG or per-logger config.
+    """
+    if not logger.isEnabledFor(logging.DEBUG):
+        return
+    logger.debug("┌─ RETRIEVAL DEBUG q=%s ─────────────────────────", question[:100])
+    for i, h in enumerate(hits[:top_n]):
+        src = h.get("source") or {}
+        logger.debug(
+            "│ [%2d] score=%.4f | vol=%s ch=%s sec=%s page=%s | path=%s",
+            i + 1,
+            float(h.get("score") or 0),
+            src.get("volume", "-"),
+            src.get("chapter", "-"),
+            src.get("section", "-"),
+            src.get("page_number", "-"),
+            (src.get("section_path") or "-")[:80],
+        )
+        text_preview = (h.get("text") or "")[:120].replace("\n", " ")
+        logger.debug("│      text: %s", text_preview)
+    logger.debug("└─ END DEBUG (%d total hits) ─────────────────────", len(hits))
+
+
+# ---------------------------------------------------------------------------
+# Shared RAG pipeline: rerank → context build → gating (used by both answer
+# and answer_stream to eliminate duplication).
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class _RagPipelineResult:
+    """Intermediate state produced by _run_rag_pipeline()."""
+    hits: List[Dict]
+    blocks: List[str]
+    enriched: List[Dict]
+    chunk_ids_used: List[str]
+    ctx_block: str
+    doc_ids: List[str]
+    resolved: Optional[ResolveResult]
+    source_type: str
+    evidence_sentences: List[EvidenceSentence] = field(default_factory=list)
+    evidence_gate_result: Optional[EvidenceGateResult] = None
+    early_exit: bool = False
+    early_exit_msg: str = ""
+    early_exit_citations: List[Dict] = field(default_factory=list)
+    timing: Dict[str, float] = field(default_factory=dict)
+
+
+async def _run_rag_pipeline(
+    question: str,
+    hits: List[Dict],
+    source_type: str,
+) -> _RagPipelineResult:
+    """Shared RAG pipeline: rerank → graph expansion → sort → dedupe → trim →
+    build context → evidence → comparison/citation → TOC guardrail → answer gating.
+
+    Resolves SectionResolver.resolve() exactly once and reuses the result.
+    """
+    timings: Dict[str, float] = {}
+
+    # Resolve once — reused by evidence, citation, gating, and postprocess
+    resolver = _get_section_resolver()
+    resolved = resolver.resolve(question) if source_type == "document" else None
+
+    # [Step 2] Cross-encoder re-rank
+    t0 = time.monotonic()
+    if source_type == "document":
+        rerank_top_k = getattr(settings, "RAG_RERANK_TOP_K", 25)
+        rerank_final_n = getattr(settings, "RAG_RERANK_FINAL_N", 15)
+        hits = await _apply_reranker(question, hits, rerank_top_k, rerank_final_n)
+    timings["rerank_ms"] = (time.monotonic() - t0) * 1000
+
+    # [Step 4] Graph expansion
+    t0 = time.monotonic()
+    if source_type == "document":
+        max_additions = getattr(settings, "RAG_GRAPH_MAX_ADDITIONS", 3)
+        hits = _apply_graph_expansion(hits, max_additions=max_additions)
+        hits = await _rescore_graph_additions(question, hits)
+    timings["graph_ms"] = (time.monotonic() - t0) * 1000
+
+    # Sort, dedupe, trim
+    hits = _sort_hits_by_score(hits)
+    if getattr(settings, "RAG_DEDUPE_BY_SECTION", False):
+        max_per = getattr(settings, "RAG_MAX_CHUNKS_PER_SECTION", 2)
+        if _parse_comparison_sections(question):
+            max_per = max(max_per, 4)
+        hits = _dedupe_by_section(hits, max_per_section=max_per)
+    hits = _trim_hits_to_context_budget(hits)
+
+    # ── Retrieval Debug: log top 10 hits with metadata ────────────────────
+    _log_retrieval_debug(question, hits)
+
+    # ── Evidence-First Extraction ─────────────────────────────────────────
+    t0 = time.monotonic()
+    explicit_ids = (resolved.explicit_section_ids if resolved and resolved.has_explicit_refs else None)
+    evidence_sentences: List[EvidenceSentence] = []
+    ev_gate_result: Optional[EvidenceGateResult] = None
+
+    if source_type == "document" and hits:
+        evidence_sentences = extract_evidence_sentences(
+            question, hits,
+            explicit_section_ids=explicit_ids,
+            min_sentences=8,
+            max_sentences=12,
+        )
+        ev_gate_result = gate_evidence(
+            question, evidence_sentences,
+            explicit_section_ids=explicit_ids,
+        )
+        logger.info(
+            "EvidenceGate: passed=%s confidence=%.3f coverage=%.2f section=%.1f policy=%.2f sentences=%d",
+            ev_gate_result.passed, ev_gate_result.confidence_score,
+            ev_gate_result.keyword_coverage, ev_gate_result.section_match_score,
+            ev_gate_result.policy_word_ratio, len(evidence_sentences),
+        )
+    timings["evidence_ms"] = (time.monotonic() - t0) * 1000
+
+    # ── Evidence Gate: reject if evidence is too weak ─────────────────────
+    if source_type == "document" and ev_gate_result and not ev_gate_result.passed:
+        fallback_enriched = [{**h, "compressed": (h.get("text") or "")[:360]} for h in hits[:3]]
+        citations = (
+            [_build_citation(c) for c in fallback_enriched]
+            if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        )
+        return _RagPipelineResult(
+            hits=hits, blocks=[], enriched=fallback_enriched,
+            chunk_ids_used=[], ctx_block="",
+            doc_ids=[], resolved=resolved, source_type=source_type,
+            evidence_sentences=evidence_sentences,
+            evidence_gate_result=ev_gate_result,
+            timing=timings, early_exit=True,
+            early_exit_msg=ev_gate_result.fallback_message or "Unable to find strong supporting evidence in the regulation.",
+            early_exit_citations=citations,
+        )
+
+    # ── Build context ─────────────────────────────────────────────────────
+    t0 = time.monotonic()
+    blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
+    timings["context_build_ms"] = (time.monotonic() - t0) * 1000
+
+    # For document queries, prepend evidence-only context so LLM grounds on strongest sentences
+    if source_type == "document" and evidence_sentences:
+        evidence_ctx = build_evidence_only_context(question, hits, explicit_section_ids=explicit_ids)
+        if evidence_ctx:
+            blocks.insert(0, evidence_ctx)
+
+    doc_ids = list({
+        (e.get("source") or {}).get("doc_id")
+        for e in enriched
+        if (e.get("source") or {}).get("doc_id")
+    })
+
+    # Comparison sections
+    comp_sections = _parse_comparison_sections(question)
+    if comp_sections and source_type == "document":
+        from .citation_utils import get_section_content, structure_comparison_response
+        try:
+            c1 = get_section_content(comp_sections[0], doc_ids=doc_ids or None, max_chars=2000)
+            c2 = get_section_content(comp_sections[1], doc_ids=doc_ids or None, max_chars=2000)
+            c1 = c1 or "(No content retrieved for this section)"
+            c2 = c2 or "(No content retrieved for this section)"
+            differences = None
+            if getattr(settings, "RAG_CITATION_POSTPROCESS", True):
+                differences = await _extract_key_differences_async(question, c1, c2)
+            comp_block = structure_comparison_response(
+                comp_sections[0], c1, comp_sections[1], c2, differences=differences
+            )
+            if comp_block and "(No content retrieved" not in comp_block:
+                blocks.insert(0, f"[COMPARISON REFERENCE]\n{comp_block}")
+        except Exception as e:
+            logger.debug("compare_sections failed: %s", e)
+    elif source_type == "document" and resolved:
+        if resolved.has_explicit_refs and resolved.explicit_section_ids and not comp_sections:
+            from .citation_utils import get_section_content
+            ref = resolved.resolved_paths[0] if resolved.resolved_paths else resolved.explicit_section_ids[0]
+            try:
+                direct = get_section_content(ref, doc_ids=doc_ids or None, max_chars=2400)
+                if direct and "(No content retrieved" not in direct:
+                    blocks.insert(0, f"[CITATION REFERENCE – Section {ref}]\n{direct}")
+            except Exception as e:
+                logger.debug("get_section_content for citation failed: %s", e)
+
+    # TOC guardrail
+    original_blocks = _get_original_blocks_for_toc(hits)
+    if (
+        getattr(settings, "RAG_TOC_GUARDRAIL", True)
+        and is_toc_chapters_query(question)
+        and not has_toc_signals_in_context(original_blocks)
+    ):
+        return _RagPipelineResult(
+            hits=hits, blocks=blocks, enriched=enriched,
+            chunk_ids_used=chunk_ids_used, ctx_block="", doc_ids=doc_ids,
+            resolved=resolved, source_type=source_type,
+            evidence_sentences=evidence_sentences,
+            evidence_gate_result=ev_gate_result,
+            timing=timings,
+            early_exit=True,
+            early_exit_msg="I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.",
+        )
+
+    ctx_block = _rag_context_block(blocks)
+
+    # Legacy AnswerGating (fallback for non-evidence cases like transcripts)
+    if source_type == "document" and getattr(settings, "RAG_USE_ANSWER_GATING", True) and resolved:
+        pass_gate, fallback_msg, _ = gate_context(
+            question, ctx_block, hits,
+            explicit_section_ids=explicit_ids,
+            min_query_tokens=2,
+        )
+        if not pass_gate and fallback_msg:
+            fallback_enriched = [{**h, "compressed": (h.get("text") or "")[:360]} for h in hits[:3]]
+            citations = (
+                [_build_citation(c) for c in fallback_enriched]
+                if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+            )
+            return _RagPipelineResult(
+                hits=hits, blocks=blocks, enriched=enriched,
+                chunk_ids_used=chunk_ids_used, ctx_block=ctx_block,
+                doc_ids=doc_ids, resolved=resolved, source_type=source_type,
+                evidence_sentences=evidence_sentences,
+                evidence_gate_result=ev_gate_result,
+                timing=timings, early_exit=True,
+                early_exit_msg=fallback_msg, early_exit_citations=citations,
+            )
+
+    logger.info(
+        "RAG pipeline source=%s hits=%d doc_ids=%d evidence=%d rerank=%.0fms graph=%.0fms evidence=%.0fms ctx=%.0fms",
+        source_type, len(hits), len(doc_ids), len(evidence_sentences),
+        timings.get("rerank_ms", 0), timings.get("graph_ms", 0),
+        timings.get("evidence_ms", 0), timings.get("context_build_ms", 0),
+    )
+    return _RagPipelineResult(
+        hits=hits, blocks=blocks, enriched=enriched,
+        chunk_ids_used=chunk_ids_used, ctx_block=ctx_block,
+        doc_ids=doc_ids, resolved=resolved, source_type=source_type,
+        evidence_sentences=evidence_sentences,
+        evidence_gate_result=ev_gate_result,
+        timing=timings,
+    )
+
+
+async def debug_retrieval(question: str, k: int = 15) -> Dict:
+    """Debug endpoint: run full retrieval pipeline and return structured debug info.
+
+    Returns top 10 chunks with metadata + evidence sentences + gate result.
+    """
+    source_type, hits = await retrieve_semantic_first(question, k)
+    if source_type == "general" or not hits:
+        return {"source_type": source_type, "hits": [], "evidence": [], "gate": None}
+
+    result = await _run_rag_pipeline(question, hits, source_type)
+    debug_hits = []
+    for i, h in enumerate(result.hits[:10]):
+        src = h.get("source") or {}
+        debug_hits.append({
+            "rank": i + 1,
+            "score": round(float(h.get("score") or 0), 4),
+            "volume": src.get("volume"),
+            "chapter": src.get("chapter"),
+            "section": src.get("section"),
+            "page": src.get("page_number"),
+            "section_path": src.get("section_path"),
+            "text_preview": (h.get("text") or "")[:200],
+        })
+    evidence_out = [
+        {
+            "sentence": e.sentence[:200],
+            "volume": e.volume,
+            "chapter": e.chapter,
+            "section": e.section,
+            "page": e.page,
+            "score": round(e.score, 3),
+            "keyword_hits": e.keyword_hits,
+            "has_policy_word": e.has_policy_word,
+        }
+        for e in result.evidence_sentences
+    ]
+    gate_out = None
+    if result.evidence_gate_result:
+        g = result.evidence_gate_result
+        gate_out = {
+            "passed": g.passed,
+            "confidence_score": round(g.confidence_score, 3),
+            "keyword_coverage": round(g.keyword_coverage, 2),
+            "section_match_score": round(g.section_match_score, 2),
+            "avg_rerank_score": round(g.avg_rerank_score, 4),
+            "policy_word_ratio": round(g.policy_word_ratio, 2),
+            "concepts_found": g.concepts_found,
+            "concepts_missing": g.concepts_missing,
+        }
+    return {
+        "source_type": source_type,
+        "hits": debug_hits,
+        "evidence": evidence_out,
+        "gate": gate_out,
+        "timing": {k: round(v, 1) for k, v in result.timing.items()},
+    }
+
+
+async def _postprocess_answer_text(
+    ans: str,
+    question: str,
+    enriched: List[Dict],
+    resolved: Optional[ResolveResult],
+    doc_ids: List[str],
+    source_type: str,
+) -> str:
+    """Shared citation postprocessing: missing-info fallback, inference transparency, citation accuracy."""
+    if not (getattr(settings, "RAG_CITATION_POSTPROCESS", True) and source_type == "document" and ans):
+        return ans
+    from .citation_utils import (
+        handle_missing_information,
+        improve_citation_accuracy,
+        improve_inference_transparency_async,
+        information_missing,
+        is_inferred,
+    )
+    try:
+        if information_missing(ans):
+            fallback = await handle_missing_information(question, doc_ids=doc_ids or None)
+            return f"{ans}\n\n{fallback}"
+        if is_inferred(ans):
+            return await improve_inference_transparency_async(question, ans, doc_ids=doc_ids or None)
+        if not _has_citation_in_text(ans):
+            section_ref = None
+            if resolved and resolved.has_explicit_refs and resolved.explicit_section_ids:
+                section_ref = resolved.resolved_paths[0] if resolved.resolved_paths else resolved.explicit_section_ids[0]
+            if not section_ref:
+                for e in enriched:
+                    sp = (e.get("source") or {}).get("section_path")
+                    if sp:
+                        section_ref = sp
+                        break
+            if section_ref:
+                return improve_citation_accuracy(ans, section_ref, doc_ids=doc_ids or None)
+    except Exception as e:
+        logger.debug("citation postprocess failed: %s", e)
+    return ans
+
+
+def _build_llm_messages(
+    question: str,
+    ctx_block: str,
+    history: List[Dict],
+    persona: Optional[str],
+    conversation_summary: Optional[str],
+) -> List[Dict]:
+    """Build the LLM message list for RAG-grounded answering."""
+    hint = _build_response_format_hint(question)
+    if conversation_summary and conversation_summary.strip() and _is_follow_up_question(question):
+        user_content = _build_user_content_with_summary(
+            conversation_summary, question, context_block=ctx_block,
+            response_format_hint=hint or None,
+        )
+        return [{"role": "system", "content": _rag_system_prompt(persona)}, {"role": "user", "content": user_content}]
+    user_msg = _build_rag_user_message(question, ctx_block)
+    return [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": user_msg}]
+
+
 # --- End-to-end RAG flow (embedding-first, semantic routing) ---
 # 1. Fast path: obvious greetings/thanks/small talk (_is_general_conversation) → answer directly, no RAG.
 # 2. Else: search transcript index first (dense + sparse, RRF).
@@ -1741,117 +2236,53 @@ async def answer(
     conversation_summary: Optional[str] = None,
     use_knowledge_base: bool = True,
     advanced_rag: bool = False,
+    source_options: Optional[Dict[str, bool]] = None,
 ) -> Dict:
     if not use_knowledge_base:
         return await _answer_general(question, history, persona, conversation_summary)
+    opts = source_options or _default_source_options()
     if _is_general_conversation(question):
         logger.info("RAG: general conversation (greeting/thanks) → answer directly, no RAG")
         return await _answer_general(question, history, persona, conversation_summary)
 
+    t_start = time.monotonic()
     source_type, hits = await retrieve_semantic_first(
-        question, settings.TOP_K, context_window=context_window or "all"
+        question, settings.TOP_K, context_window=context_window or "all", source_options=opts,
     )
+    t_retrieve = time.monotonic()
 
     if source_type == "general":
         return await _answer_general(question, history, persona, conversation_summary)
 
-    # [Step 2] Cross-encoder re-rank document hits
-    if source_type == "document":
-        rerank_top_k = getattr(settings, "RAG_RERANK_TOP_K", 25)
-        rerank_final_n = getattr(settings, "RAG_RERANK_FINAL_N", 15)
-        hits = await _apply_reranker(question, hits, rerank_top_k, rerank_final_n)
+    result = await _run_rag_pipeline(question, hits, source_type)
+    if result.early_exit:
+        return {"answer": result.early_exit_msg, "citations": result.early_exit_citations}
 
-    # [Step 4] Graph expansion: follow cross-references
-    if source_type == "document":
-        max_additions = getattr(settings, "RAG_GRAPH_MAX_ADDITIONS", 3)
-        hits = _apply_graph_expansion(hits, max_additions=max_additions)
-        hits = await _rescore_graph_additions(question, hits)
-
-    hits = _sort_hits_by_score(hits)
-    if getattr(settings, "RAG_DEDUPE_BY_SECTION", False):
-        max_per = getattr(settings, "RAG_DEDUPE_SECTION_MAX_CHUNKS", 2)
-        hits = _dedupe_by_section(hits, max_per_section=max_per)
-    hits = _trim_hits_to_context_budget(hits)
-    blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
-    doc_ids_for_ctx = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    comp_sections = _parse_comparison_sections(question)
-    if comp_sections and source_type == "document":
-        from .citation_utils import (
-            get_section_content,
-            structure_comparison_response,
-        )
-        try:
-            c1 = get_section_content(comp_sections[0], doc_ids=doc_ids_for_ctx or None, max_chars=2000)
-            c2 = get_section_content(comp_sections[1], doc_ids=doc_ids_for_ctx or None, max_chars=2000)
-            c1 = c1 or "(No content retrieved for this section)"
-            c2 = c2 or "(No content retrieved for this section)"
-            differences = None
-            if getattr(settings, "RAG_CITATION_POSTPROCESS", True):
-                differences = await _extract_key_differences_async(question, c1, c2)
-            comp_block = structure_comparison_response(
-                comp_sections[0], c1, comp_sections[1], c2, differences=differences
-            )
-            if comp_block and "(No content retrieved" not in comp_block:
-                blocks.insert(0, f"[COMPARISON REFERENCE]\n{comp_block}")
-        except Exception as e:
-            logger.debug("compare_sections failed: %s", e)
-    original_blocks = _get_original_blocks_for_toc(hits)
-    if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(original_blocks):
-        return {"answer": "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text.", "citations": []}
-
-    ctx_block = _rag_context_block(blocks)
-    doc_ids = doc_ids_for_ctx
-    logger.info("RAG answer source=%s hits=%d doc_ids=%d", source_type, len(hits), len(doc_ids))
-
-    # [Step 5] Strict citation enforcement
+    # Strict citations (separate LLM path)
     if getattr(settings, "RAG_STRICT_CITATIONS", False) and source_type == "document":
-        ans = await _answer_with_strict_citations(question, ctx_block, history, persona, conversation_summary)
-        citations = [_build_citation(c) for c in enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        ans = await _answer_with_strict_citations(
+            question, result.ctx_block, history, persona, conversation_summary,
+        )
+        citations = [_build_citation(c) for c in result.enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
         return {"answer": ans, "citations": citations}
 
-    hint = _build_response_format_hint(question)
-    if conversation_summary and conversation_summary.strip() and _is_follow_up_question(question):
-        user_content = _build_user_content_with_summary(
-            conversation_summary, question, context_block=ctx_block, response_format_hint=hint or None
-        )
-        msgs = [{"role": "system", "content": _rag_system_prompt(persona)}, {"role": "user", "content": user_content}]
-    else:
-        user_msg = _build_rag_user_message(question, ctx_block)
-        msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": user_msg}]
+    msgs = _build_llm_messages(question, result.ctx_block, history, persona, conversation_summary)
+    t_llm_start = time.monotonic()
     ans = await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
-    # Post-process: citation accuracy, inference transparency, missing-info fallback
-    if (
-        getattr(settings, "RAG_CITATION_POSTPROCESS", True)
-        and source_type == "document"
-        and ans
-    ):
-        from .citation_utils import (
-            handle_missing_information,
-            improve_citation_accuracy,
-            improve_inference_transparency_async,
-            information_missing,
-            is_inferred,
-        )
-        try:
-            if information_missing(ans):
-                fallback = await handle_missing_information(question, doc_ids=doc_ids or None)
-                ans = f"{ans}\n\n{fallback}"
-            elif is_inferred(ans):
-                ans = await improve_inference_transparency_async(question, ans, doc_ids=doc_ids or None)
-            elif not _has_citation_in_text(ans):
-                top_section = None
-                for e in enriched:
-                    sp = (e.get("source") or {}).get("section_path")
-                    if sp:
-                        top_section = sp
-                        break
-                if top_section:
-                    ans = improve_citation_accuracy(ans, top_section, doc_ids=doc_ids or None)
-        except Exception as e:
-            logger.debug("citation postprocess failed: %s", e)
-    citations = []
-    if getattr(settings, "RAG_EXPOSE_SOURCES", False):
-        citations = [_build_citation(c) for c in enriched]
+    t_llm_end = time.monotonic()
+
+    ans = await _postprocess_answer_text(
+        ans, question, result.enriched, result.resolved, result.doc_ids, source_type,
+    )
+    citations = [_build_citation(c) for c in result.enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+
+    logger.info(
+        "RAG answer complete retrieve=%.0fms pipeline=%.0fms llm=%.0fms total=%.0fms",
+        (t_retrieve - t_start) * 1000,
+        sum(result.timing.values()),
+        (t_llm_end - t_llm_start) * 1000,
+        (time.monotonic() - t_start) * 1000,
+    )
     return {"answer": ans, "citations": citations}
 
 
@@ -1884,10 +2315,7 @@ async def answer_stream(
     advanced_rag: bool = False,
     source_options: Optional[Dict[str, bool]] = None,
 ) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
-    """
-    Same RAG as answer(), but stream the final LLM response. Yields ("chunk", delta, None) then ("done", full_answer, citations).
-    Uses embedding-first semantic routing. source_options: {transcript, document, general}.
-    """
+    """Stream RAG response. Yields ("chunk", delta, None) then ("done", full_answer, citations)."""
     if not use_knowledge_base:
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev
@@ -1899,14 +2327,16 @@ async def answer_stream(
             yield ev
         return
     if _is_general_conversation(question):
-        logger.info("RAG (stream): general conversation (greeting/thanks) → answer directly, no RAG")
+        logger.info("RAG (stream): general conversation → answer directly, no RAG")
         async for ev in _answer_general_stream(question, history, persona, conversation_summary):
             yield ev
         return
 
+    t_start = time.monotonic()
     source_type, hits = await retrieve_semantic_first(
-        question, settings.TOP_K, context_window=context_window or "all", source_options=opts
+        question, settings.TOP_K, context_window=context_window or "all", source_options=opts,
     )
+    t_retrieve = time.monotonic()
 
     if source_type == "insufficient":
         from .citation_utils import handle_missing_information
@@ -1926,111 +2356,42 @@ async def answer_stream(
             yield ev
         return
 
-    # [Step 2] Cross-encoder re-rank document hits
-    if source_type == "document":
-        rerank_top_k = getattr(settings, "RAG_RERANK_TOP_K", 25)
-        rerank_final_n = getattr(settings, "RAG_RERANK_FINAL_N", 15)
-        hits = await _apply_reranker(question, hits, rerank_top_k, rerank_final_n)
-
-    # [Step 4] Graph expansion: follow cross-references
-    if source_type == "document":
-        max_additions = getattr(settings, "RAG_GRAPH_MAX_ADDITIONS", 3)
-        hits = _apply_graph_expansion(hits, max_additions=max_additions)
-        hits = await _rescore_graph_additions(question, hits)
-
-    hits = _sort_hits_by_score(hits)
-    if getattr(settings, "RAG_DEDUPE_BY_SECTION", False):
-        max_per = getattr(settings, "RAG_DEDUPE_SECTION_MAX_CHUNKS", 2)
-        hits = _dedupe_by_section(hits, max_per_section=max_per)
-    hits = _trim_hits_to_context_budget(hits)
-    blocks, enriched, chunk_ids_used = await _build_rag_context(question, hits)
-    doc_ids_for_ctx = list({(e.get("source") or {}).get("doc_id") for e in enriched if (e.get("source") or {}).get("doc_id")})
-    comp_sections = _parse_comparison_sections(question)
-    if comp_sections and source_type == "document":
-        from .citation_utils import (
-            compare_sections,
-            get_section_content,
-            structure_comparison_response,
-        )
-        try:
-            c1 = get_section_content(comp_sections[0], doc_ids=doc_ids_for_ctx or None, max_chars=2000)
-            c2 = get_section_content(comp_sections[1], doc_ids=doc_ids_for_ctx or None, max_chars=2000)
-            c1 = c1 or "(No content retrieved for this section)"
-            c2 = c2 or "(No content retrieved for this section)"
-            differences = None
-            if getattr(settings, "RAG_CITATION_POSTPROCESS", True):
-                differences = await _extract_key_differences_async(question, c1, c2)
-            comp_block = structure_comparison_response(
-                comp_sections[0], c1, comp_sections[1], c2, differences=differences
-            )
-            if comp_block and "(No content retrieved" not in comp_block:
-                blocks.insert(0, f"[COMPARISON REFERENCE]\n{comp_block}")
-        except Exception as e:
-            logger.debug("compare_sections failed: %s", e)
-    original_blocks = _get_original_blocks_for_toc(hits)
-    if getattr(settings, "RAG_TOC_GUARDRAIL", True) and is_toc_chapters_query(question) and not has_toc_signals_in_context(original_blocks):
-        msg = "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text."
-        yield ("chunk", msg, None)
-        yield ("done", msg, [])
+    result = await _run_rag_pipeline(question, hits, source_type)
+    if result.early_exit:
+        yield ("chunk", result.early_exit_msg, None)
+        yield ("done", result.early_exit_msg, result.early_exit_citations)
         return
 
-    ctx_block = _rag_context_block(blocks)
-    doc_ids = doc_ids_for_ctx
-    logger.info("RAG answer (stream) source=%s hits=%d doc_ids=%d", source_type, len(hits), len(doc_ids))
-
-    # [Step 5] Strict citation enforcement (non-streaming path for this mode)
+    # Strict citations (non-streaming for this mode)
     if getattr(settings, "RAG_STRICT_CITATIONS", False) and source_type == "document":
-        ans = await _answer_with_strict_citations(question, ctx_block, history, persona, conversation_summary)
-        citations = [_build_citation(c) for c in enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        ans = await _answer_with_strict_citations(
+            question, result.ctx_block, history, persona, conversation_summary,
+        )
+        citations = [_build_citation(c) for c in result.enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
         yield ("chunk", ans, None)
         yield ("done", ans, citations)
         return
 
-    hint = _build_response_format_hint(question)
-    if conversation_summary and conversation_summary.strip() and _is_follow_up_question(question):
-        user_content = _build_user_content_with_summary(
-            conversation_summary, question, context_block=ctx_block, response_format_hint=hint or None
-        )
-        msgs = [{"role": "system", "content": _rag_system_prompt(persona)}, {"role": "user", "content": user_content}]
-    else:
-        user_msg = _build_rag_user_message(question, ctx_block)
-        msgs = [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": user_msg}]
-    citations = []
-    if getattr(settings, "RAG_EXPOSE_SOURCES", False):
-        citations = [_build_citation(c) for c in enriched]
+    msgs = _build_llm_messages(question, result.ctx_block, history, persona, conversation_summary)
+    citations = [_build_citation(c) for c in result.enriched] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+
+    t_llm_start = time.monotonic()
     full = []
     async for delta in chat.chat_stream(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS):
         full.append(delta)
         yield ("chunk", delta, None)
-    answer = "".join(full).strip()
-    # Post-process: citation accuracy, inference transparency, missing-info fallback
-    if (
-        getattr(settings, "RAG_CITATION_POSTPROCESS", True)
-        and source_type == "document"
-        and answer
-    ):
-        from .citation_utils import (
-            handle_missing_information,
-            improve_citation_accuracy,
-            improve_inference_transparency_async,
-            information_missing,
-            is_inferred,
-        )
-        try:
-            if information_missing(answer):
-                fallback = await handle_missing_information(question, doc_ids=doc_ids or None)
-                answer = f"{answer}\n\n{fallback}"
-            elif is_inferred(answer):
-                answer = await improve_inference_transparency_async(question, answer, doc_ids=doc_ids or None)
-            elif not _has_citation_in_text(answer):
-                top_section = None
-                for e in enriched:
-                    sp = (e.get("source") or {}).get("section_path")
-                    if sp:
-                        top_section = sp
-                        break
-                if top_section:
-                    answer = improve_citation_accuracy(answer, top_section, doc_ids=doc_ids or None)
-        except Exception as e:
-            logger.debug("citation postprocess failed: %s", e)
-    yield ("done", answer, citations)
+    ans = "".join(full).strip()
+    t_llm_end = time.monotonic()
+
+    ans = await _postprocess_answer_text(
+        ans, question, result.enriched, result.resolved, result.doc_ids, source_type,
+    )
+
+    logger.info(
+        "RAG stream complete retrieve=%.0fms pipeline=%.0fms llm=%.0fms total=%.0fms",
+        (t_retrieve - t_start) * 1000,
+        sum(result.timing.values()),
+        (t_llm_end - t_llm_start) * 1000,
+        (time.monotonic() - t_start) * 1000,
+    )
+    yield ("done", ans, citations)

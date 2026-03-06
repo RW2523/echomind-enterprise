@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from ...utils.ids import new_id, now_iso
 from ...core.db import get_conn
-from ...rag.advanced import answer as answer_with_citations, answer_stream, update_conversation_summary, _answer_general
+from ...rag.advanced import answer as answer_with_citations, answer_stream, update_conversation_summary, _answer_general, debug_retrieval
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -288,3 +288,17 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
             yield json.dumps({"type": "error", "message": str(e)}) + "\n"
 
     return StreamingResponse(gen(), media_type="application/x-ndjson")
+
+
+class DebugRetrievalIn(BaseModel):
+    question: str
+    k: int = 15
+
+
+@router.post("/debug-retrieval")
+async def debug_retrieval_endpoint(inp: DebugRetrievalIn):
+    """Debug endpoint: returns top 10 chunks, evidence sentences, and gate scores.
+
+    Use to inspect retrieval quality without generating an LLM answer.
+    """
+    return await debug_retrieval(inp.question, k=inp.k)

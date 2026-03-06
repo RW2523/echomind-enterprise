@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     LLM_BASE_URL: str = "http://ollama:11434/v1"
     LLM_MODEL: str = "qwen2.5:7b-instruct-q4_K_M"
     LLM_TEMPERATURE: float = 0.2
-    LLM_MAX_TOKENS: int = 512
+    LLM_MAX_TOKENS: int = 1024
     OLLAMA_EMBED_URL: str = "http://ollama:11434/api/embeddings"
     OLLAMA_EMBED_MODEL: str = os.getenv("ECHOMIND_EMBED_MODEL", "nomic-embed-text")
     # Max characters per chunk sent to embedding API (avoids "input length exceeds context length").
@@ -78,7 +78,7 @@ class Settings(BaseSettings):
     RAG_VERBATIM_QUERY_TERMS: bool = os.getenv("ECHOMIND_RAG_VERBATIM_QUERY_TERMS", "1").lower() in ("1", "true", "yes")
     RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1600"))
     # Max total context chars; 0 = no limit. When exceeded, trim lowest-scoring blocks.
-    RAG_CONTEXT_MAX_CHARS: int = int(os.getenv("RAG_CONTEXT_MAX_CHARS", "0"))
+    RAG_CONTEXT_MAX_CHARS: int = int(os.getenv("RAG_CONTEXT_MAX_CHARS", "12000"))
 
     # Real-time transcription & knowledge capture (Kyutai STT only, 24kHz)
     ECHOMIND_AUTO_STORE_DEFAULT: bool = os.getenv("ECHOMIND_AUTO_STORE_DEFAULT", "1").lower() in ("1", "true", "yes")
@@ -110,8 +110,9 @@ class Settings(BaseSettings):
     # ── Hierarchical / Graph-aware RAG feature toggles ──────────────────────────
     # Step 1: Section-level FAISS index restricts child search to top-N sections first.
     RAG_USE_SECTION_RETRIEVAL: bool = os.getenv("RAG_USE_SECTION_RETRIEVAL", "1").lower() in ("1", "true", "yes")
-    RAG_SECTION_SCORE_THRESHOLD: float = float(os.getenv("RAG_SECTION_SCORE_THRESHOLD", "0.30"))
-    RAG_SECTION_TOP_K: int = int(os.getenv("RAG_SECTION_TOP_K", "5"))
+    RAG_SECTION_SCORE_THRESHOLD: float = float(os.getenv("RAG_SECTION_SCORE_THRESHOLD", "0.35"))
+    RAG_SECTION_RELAX_THRESHOLD: float = float(os.getenv("RAG_SECTION_RELAX_THRESHOLD", "0.25"))
+    RAG_SECTION_TOP_K: int = int(os.getenv("RAG_SECTION_TOP_K", "10"))
 
     # Step 2: Cross-encoder re-ranker (sentence-transformers if available, else LLM fallback).
     RAG_USE_RERANKER: bool = os.getenv("RAG_USE_RERANKER", "1").lower() in ("1", "true", "yes")
@@ -136,6 +137,8 @@ class Settings(BaseSettings):
 
     # Step 5: Strict citation enforcement — require (section_path, page) in every answer.
     RAG_STRICT_CITATIONS: bool = os.getenv("RAG_STRICT_CITATIONS", "0").lower() in ("1", "true", "yes")
+    # AnswerGating: verify context has explicit section id + ≥2 key tokens before answering; else return "Not found".
+    RAG_USE_ANSWER_GATING: bool = os.getenv("RAG_USE_ANSWER_GATING", "1").lower() in ("1", "true", "yes")
     # Post-process answers: add inference transparency notice, suggest sections when info missing.
     RAG_CITATION_POSTPROCESS: bool = os.getenv("RAG_CITATION_POSTPROCESS", "1").lower() in ("1", "true", "yes")
 
@@ -149,5 +152,11 @@ class Settings(BaseSettings):
     FAISS_GLOSSARY_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_glossary.index")
     GLOSSARY_META_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "glossary_meta.json")
     CROSS_REF_GRAPH_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "cross_ref_graph.json")
+    # BookRAG: TOC index for chapter/section routing when no explicit refs
+    RAG_USE_TOC_ROUTING: bool = os.getenv("RAG_USE_TOC_ROUTING", "1").lower() in ("1", "true", "yes")
+    RAG_TOC_TOP_K: int = int(os.getenv("RAG_TOC_TOP_K", "8"))
+    RAG_TOC_THRESHOLD: float = float(os.getenv("RAG_TOC_THRESHOLD", "0.25"))
+    # BookRAG: max 2 chunks per section unless comparison query
+    RAG_MAX_CHUNKS_PER_SECTION: int = int(os.getenv("RAG_MAX_CHUNKS_PER_SECTION", "2"))
 
 settings = Settings()

@@ -260,6 +260,45 @@ async def delete_all_data():
     return {"ok": True, "message": "All data deleted."}
 
 
+@router.post("/upload-toc")
+async def upload_toc(file: UploadFile = File(...)):
+    """Upload a separate Table of Contents PDF (e.g. DOD_FMR_Table_of_Contents.pdf).
+
+    Parses the TOC hierarchy (Volume > Chapter > Section > Paragraph) and stores
+    it in book_sections. This provides authoritative routing for section-level
+    retrieval — much more accurate than inferring structure from the main document.
+    """
+    if not (file.filename or "").lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="TOC file must be a PDF")
+    data = await file.read()
+    try:
+        from ...rag.book.toc_parser import parse_toc_pdf, ingest_toc, flatten_toc
+        tree = parse_toc_pdf(data)
+        if not tree:
+            raise HTTPException(status_code=422, detail="Could not parse any TOC entries from this PDF")
+        doc_id = new_id("toc")
+        result = await ingest_toc(tree, doc_id)
+        flat = flatten_toc(tree)
+        # Rebuild section and TOC FAISS indexes
+        try:
+            if index.toc_index:
+                await index.toc_index.rebuild()
+        except Exception as e:
+            logger.warning("TOC index rebuild after upload failed: %s", e)
+        return {
+            "ok": True,
+            "doc_id": doc_id,
+            "filename": file.filename,
+            "entries_parsed": len(flat),
+            **result,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("TOC upload failed")
+        raise HTTPException(status_code=500, detail=f"TOC parsing failed: {e}")
+
+
 @router.post("/add-sample-transcripts")
 async def add_sample_transcripts():
     """

@@ -37,6 +37,9 @@ class Chunk:
     char_end: Optional[int] = None
     chunk_index: int = 0
     section_path: Optional[str] = None  # hierarchical path e.g. "Volume 1 > Chapter 3 > Section 0301"
+    section_title: Optional[str] = None  # section heading/title for citation
+    section_id: Optional[str] = None  # canonical DoD code e.g. "030201" for deterministic matching
+    toc_node_id: Optional[str] = None  # optional TOC node for routing
     page_number: Optional[int] = None
 
     def to_source_dict(self, filename: str, filetype: str) -> dict:
@@ -56,6 +59,12 @@ class Chunk:
             d["parent_chunk_id"] = self.parent_chunk_id
         if self.section_path is not None:
             d["section_path"] = self.section_path
+        if self.section_title is not None:
+            d["section_title"] = self.section_title
+        if self.section_id is not None:
+            d["section_id"] = self.section_id
+        if self.toc_node_id is not None:
+            d["toc_node_id"] = self.toc_node_id
         if self.page_number is not None:
             d["page_number"] = self.page_number
         return d

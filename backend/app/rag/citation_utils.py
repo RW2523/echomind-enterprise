@@ -18,6 +18,7 @@ from typing import List, Optional
 
 from ..core.db import get_conn
 from .index import index
+from .book.section_id import extract_all_codes, canonicalize_section_id
 
 
 def _section_path_matches(ref_path: str, chunk_path: str) -> bool:
@@ -75,11 +76,15 @@ def get_section_content(
     except Exception:
         rows = []
 
+    ref_canon = canonicalize_section_id(ref)
     for row in rows:
         sp, text = (row[0] or "").strip(), (row[1] or "").strip()
         if not sp or not text:
             continue
         if _section_path_matches(ref, sp):
+            return (text[:max_chars] + "…") if len(text) > max_chars else text
+        # Match DoD code in section text (e.g. ref "030201" when section_path is "Segment 64")
+        if ref_canon and ref_canon in extract_all_codes(text):
             return (text[:max_chars] + "…") if len(text) > max_chars else text
 
     # 2. Fallback: chunks from DB (avoids circular import with advanced)
@@ -100,13 +105,17 @@ def get_section_content(
                 ).fetchall()
     except Exception:
         return None
+    ref_canon = canonicalize_section_id(ref)
     for row in rows:
         src = json.loads(row[1]) if isinstance(row[1], str) else row[1]
         chunk_path = (src or {}).get("section_path") or ""
+        chunk_text = (row[0] or "").strip()
         if _section_path_matches(ref, chunk_path):
-            text = (row[0] or "").strip()
-            if text:
-                return (text[:max_chars] + "…") if len(text) > max_chars else text
+            if chunk_text:
+                return (chunk_text[:max_chars] + "…") if len(chunk_text) > max_chars else chunk_text
+        # Match DoD code in chunk text when path is "Segment N"
+        if ref_canon and chunk_text and ref_canon in extract_all_codes(chunk_text):
+            return (chunk_text[:max_chars] + "…") if len(chunk_text) > max_chars else chunk_text
     return None
 
 
@@ -313,17 +322,24 @@ def structure_complex_query(
 def structure_procedural_steps(
     steps: List[str],
     section_reference: Optional[str] = None,
+    step_section_refs: Optional[List[str]] = None,
 ) -> str:
     """
-    Format a list of steps as a numbered list.
+    Format a list of steps as a numbered list with section citations.
 
     Example: ["Do X", "Do Y"] -> "Step 1: Do X\nStep 2: Do Y"
     When section_reference is provided, appends " (see Section X for details)" to each step.
+    When step_section_refs is provided (list of section refs per step), uses per-step citations.
     """
     if not steps:
         return ""
-    suffix = f" (see {section_reference} for details)" if section_reference else ""
-    return "\n".join(f"Step {i + 1}: {s}{suffix}" for i, s in enumerate(steps))
+    refs = step_section_refs if step_section_refs and len(step_section_refs) >= len(steps) else None
+    out = []
+    for i, s in enumerate(steps):
+        ref = (refs[i] if refs else section_reference) if section_reference or refs else None
+        suffix = f" (see Section {ref} for details)" if ref else ""
+        out.append(f"Step {i + 1}: {s}{suffix}")
+    return "\n".join(out)
 
 
 def information_missing(response: str) -> bool:
@@ -347,6 +363,19 @@ def information_missing(response: str) -> bool:
         "does not appear",
     ]
     return any(p in r for p in phrases)
+
+
+def answer_grounding(response: str, section_path: str) -> str:
+    """
+    Ensure answers are grounded. If the response indicates inference, append a notice
+    guiding the user to the section for full details.
+    """
+    if not response or not section_path:
+        return response
+    r = response.strip().lower()
+    if "inferred" in r or "infer" in r or "not directly" in r or "not found" in r:
+        return f"{response}\n\nThis information is inferred. For full details, refer to Section {section_path}."
+    return response
 
 
 async def handle_missing_information(

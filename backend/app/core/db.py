@@ -57,10 +57,15 @@ def init_db():
                 id TEXT PRIMARY KEY,
                 source_section_path TEXT,
                 referenced_section_path TEXT,
+                ref_section_id TEXT,
                 doc_id TEXT,
                 reference_text TEXT
             )"""
         )
+        try:
+            conn.execute("ALTER TABLE section_references ADD COLUMN ref_section_id TEXT")
+        except Exception:
+            pass
         conn.commit()
 
 @contextmanager
