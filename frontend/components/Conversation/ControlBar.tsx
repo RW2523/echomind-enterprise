@@ -46,7 +46,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
       )}
       {isConnected && listenOnly && (
         <p className="text-[12px] text-teal-400/90 font-medium uppercase tracking-wider">
-          Listening mode — say &quot;EchoMind&quot; or &quot;now you can speak&quot; to respond
+          Listening mode — say &quot;Start talking&quot; to respond
         </p>
       )}
       <div className="flex flex-wrap items-center justify-center gap-2.5">
