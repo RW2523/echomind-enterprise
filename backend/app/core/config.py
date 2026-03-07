@@ -81,6 +81,9 @@ class Settings(BaseSettings):
     RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1600"))
     # Max total context chars; 0 = no limit. When exceeded, trim lowest-scoring blocks.
     RAG_CONTEXT_MAX_CHARS: int = int(os.getenv("RAG_CONTEXT_MAX_CHARS", "12000"))
+    # When evidence gate fails: try keyword (BM25) fallback retrieval before refusing. Only refuse when both paths yield no usable chunks.
+    RAG_FALLBACK_KEYWORD_RETRIEVAL: bool = os.getenv("RAG_FALLBACK_KEYWORD_RETRIEVAL", "1").lower() in ("1", "true", "yes")
+    RAG_FALLBACK_KEYWORD_K: int = int(os.getenv("RAG_FALLBACK_KEYWORD_K", "40"))
 
     # Real-time transcription & knowledge capture (Kyutai STT only, 24kHz)
     ECHOMIND_AUTO_STORE_DEFAULT: bool = os.getenv("ECHOMIND_AUTO_STORE_DEFAULT", "1").lower() in ("1", "true", "yes")
@@ -180,5 +183,44 @@ class Settings(BaseSettings):
     RAG_USE_CONTEXTUAL_RETRIEVAL: bool = os.getenv("RAG_USE_CONTEXTUAL_RETRIEVAL", "1").lower() in ("1", "true", "yes")
     # Max concurrent LLM calls for section/chunk summarization during ingestion.
     RAG_CONTEXTUAL_SUMMARY_CONCURRENCY: int = int(os.getenv("RAG_CONTEXTUAL_SUMMARY_CONCURRENCY", "3"))
+
+    # ── BookRAG-lite++ upgrades ────────────────────────────────────────────────
+    # Prepend [Volume X > Chapter Y > Section Z] heading path to BOOK chunk embed text.
+    # Dramatically improves semantic recall for section-lookup and citation queries.
+    BOOK_HEADING_PATH_IN_EMBED: bool = os.getenv("BOOK_HEADING_PATH_IN_EMBED", "1").lower() in ("1", "true", "yes")
+    # Detect DoD-style clause IDs (030201.A, 030201.B.1) and store in chunk metadata.
+    # Enables clause-level citation and threshold/exception retrieval.
+    BOOK_CLAUSE_CHUNKING_ENABLED: bool = os.getenv("BOOK_CLAUSE_CHUNKING_ENABLED", "1").lower() in ("1", "true", "yes")
+    # After reranking, fetch immediate prev/next sibling chunks for top BOOK hits.
+    # Reduces missed answers caused by clause splits at chunk boundaries.
+    BOOK_ADJACENCY_EXPANSION: bool = os.getenv("BOOK_ADJACENCY_EXPANSION", "1").lower() in ("1", "true", "yes")
+    # Max additional chunks to fetch per side (prev + next); 1 = one chunk each direction.
+    BOOK_ADJACENCY_MAX_CHUNKS: int = int(os.getenv("BOOK_ADJACENCY_MAX_CHUNKS", "1"))
+    # Populate the page_index table during BOOK document ingestion.
+    # Required for accurate per-page citation previews and logical page mapping.
+    BOOK_PAGE_INDEX_ENABLED: bool = os.getenv("BOOK_PAGE_INDEX_ENABLED", "1").lower() in ("1", "true", "yes")
+    # OCR fallback for pages with very short extracted text (requires pytesseract + Pillow).
+    # Disabled by default; enable when scanned pages are present in the corpus.
+    BOOK_OCR_FALLBACK: bool = os.getenv("BOOK_OCR_FALLBACK", "0").lower() in ("1", "true", "yes")
+    # Pages with fewer chars than this threshold trigger OCR when BOOK_OCR_FALLBACK=1.
+    BOOK_OCR_MIN_TEXT_CHARS: int = int(os.getenv("BOOK_OCR_MIN_TEXT_CHARS", "80"))
+    # Strict grounded mode for BOOK/government docs: minimize inference; require explicit evidence.
+    BOOK_STRICT_GROUNDED: bool = os.getenv("BOOK_STRICT_GROUNDED", "1").lower() in ("1", "true", "yes")
+    # Post-generation verifier: check every claim has evidence support before returning answer.
+    # Adds ~1 LLM call; disabled by default for latency.
+    BOOK_VERIFIER_ENABLED: bool = os.getenv("BOOK_VERIFIER_ENABLED", "0").lower() in ("1", "true", "yes")
+    # Generate chapter-level summaries in addition to section summaries during ingestion.
+    # Improves routing for "what is in Chapter 3?" type queries.
+    BOOK_CHAPTER_SUMMARIES: bool = os.getenv("BOOK_CHAPTER_SUMMARIES", "0").lower() in ("1", "true", "yes")
+    # Enable heuristic table detection during parsing; store table_id in chunk metadata.
+    BOOK_TABLE_EXTRACTION: bool = os.getenv("BOOK_TABLE_EXTRACTION", "1").lower() in ("1", "true", "yes")
+    # Boost score of BOOK chunks with has_table=True when query is table/threshold type.
+    BOOK_TABLE_SCORE_BOOST: float = float(os.getenv("BOOK_TABLE_SCORE_BOOST", "0.15"))
+    # Multi-file corpus: allow retrieval across multiple PDFs that share one TOC/volume set.
+    BOOK_CORPUS_MULTI_FILE: bool = os.getenv("BOOK_CORPUS_MULTI_FILE", "1").lower() in ("1", "true", "yes")
+    # Phase 1: Direct section lookup — when query contains 030201, 030201.A, bypass vector-first.
+    # Fetch chunks by section_id/clause_id from DB; use as primary if >= min chunks.
+    BOOK_DIRECT_SECTION_LOOKUP: bool = os.getenv("BOOK_DIRECT_SECTION_LOOKUP", "1").lower() in ("1", "true", "yes")
+    BOOK_DIRECT_SECTION_MIN_CHUNKS: int = int(os.getenv("BOOK_DIRECT_SECTION_MIN_CHUNKS", "2"))
 
 settings = Settings()

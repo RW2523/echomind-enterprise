@@ -141,15 +141,49 @@ def list_docs():
 @router.post("/upload")
 async def upload(file: UploadFile = File(...)):
     data = await file.read()
-    filetype, text, estimated_pages, page_offsets = parse_any(file.filename, data)
-    res = await index.add_document(
-        file.filename,
-        filetype,
-        text,
-        {"filename": file.filename, "filetype": filetype},
-        estimated_pages=estimated_pages,
-        page_offsets=page_offsets,
-    )
+    if not data:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    try:
+        filetype, text, estimated_pages, page_offsets = parse_any(file.filename, data)
+    except Exception as exc:
+        logger.warning("parse_any failed for %s: %s", file.filename, exc)
+        raise HTTPException(status_code=422, detail=f"Could not parse file '{file.filename}': {exc}")
+
+    if not (text or "").strip():
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"No text could be extracted from '{file.filename}'. "
+                "The file may be a scanned/image-only PDF (OCR not enabled), empty, or corrupted. "
+                "Try converting to a text-layer PDF or a .docx/.txt file."
+            ),
+        )
+
+    try:
+        res = await index.add_document(
+            file.filename,
+            filetype,
+            text,
+            {"filename": file.filename, "filetype": filetype},
+            estimated_pages=estimated_pages,
+            page_offsets=page_offsets,
+        )
+    except ValueError as exc:
+        msg = str(exc)
+        logger.warning("add_document rejected %s: %s", file.filename, msg)
+        # "No text extracted" or "No valid chunks after metadata validation"
+        if "no valid chunks" in msg.lower() or "no text" in msg.lower():
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Could not index '{file.filename}': {msg}. "
+                    "For DoD FMR volumes, ensure the PDF contains Volume and Chapter markers. "
+                    "If the PDF is scanned, enable OCR (BOOK_OCR_FALLBACK=1)."
+                ),
+            )
+        raise HTTPException(status_code=422, detail=msg)
+
     # Persist raw file so it can be served back for in-browser preview.
     doc_id = res.get("doc_id") or res.get("id")
     if doc_id:

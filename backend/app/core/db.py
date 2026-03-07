@@ -74,6 +74,73 @@ def init_db():
             conn.execute("ALTER TABLE section_references ADD COLUMN ref_section_id TEXT")
         except Exception:
             pass
+
+        # ── BookRAG-lite++: page-level index ─────────────────────────────────
+        # One row per PDF page per document; enables accurate page citations,
+        # logical page mapping, and table/low-text detection per page.
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS page_index(
+                id TEXT PRIMARY KEY,
+                doc_id TEXT NOT NULL,
+                page_number_pdf INTEGER NOT NULL,
+                page_number_logical INTEGER,
+                page_text TEXT,
+                page_char_start INTEGER,
+                page_char_end INTEGER,
+                section_path TEXT,
+                has_table INTEGER DEFAULT 0,
+                has_low_text INTEGER DEFAULT 0,
+                extraction_source TEXT DEFAULT 'text',
+                created_at TEXT
+            )"""
+        )
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_page_index_doc_id ON page_index(doc_id)")
+        except Exception:
+            pass
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_page_index_page ON page_index(doc_id, page_number_pdf)")
+        except Exception:
+            pass
+
+        # ── BookRAG-lite++: extracted tables ──────────────────────────────────
+        # One row per detected table region; enables table-aware retrieval and citation.
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS doc_tables(
+                id TEXT PRIMARY KEY,
+                doc_id TEXT NOT NULL,
+                page_number INTEGER,
+                section_path TEXT,
+                caption TEXT,
+                raw_rows_text TEXT,
+                char_start INTEGER,
+                char_end INTEGER,
+                created_at TEXT
+            )"""
+        )
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_doc_tables_doc_id ON doc_tables(doc_id)")
+        except Exception:
+            pass
+
+        # ── BookRAG-lite++: clause_id and adjacency on chunks ─────────────────
+        # Added as optional columns; existing rows get NULL values (safe migration).
+        for col_def in [
+            "ALTER TABLE chunks ADD COLUMN clause_id TEXT",
+            "ALTER TABLE chunks ADD COLUMN prev_chunk_id TEXT",
+            "ALTER TABLE chunks ADD COLUMN next_chunk_id TEXT",
+            "ALTER TABLE chunks ADD COLUMN retrieval_text TEXT",
+            "ALTER TABLE chunks ADD COLUMN canonical_id TEXT",
+            "ALTER TABLE chunks ADD COLUMN page_start INTEGER",
+            "ALTER TABLE chunks ADD COLUMN page_end INTEGER",
+            "ALTER TABLE chunks ADD COLUMN evidence_type TEXT",
+            "ALTER TABLE chunks ADD COLUMN has_table INTEGER DEFAULT 0",
+        ]:
+            try:
+                conn.execute(col_def)
+            except Exception:
+                pass
+
         conn.commit()
 
 @contextmanager

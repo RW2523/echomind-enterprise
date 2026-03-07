@@ -79,6 +79,11 @@ class ConversationMemory:
         if before != len(self._entries):
             self._log(f"ConversationMemory: evicted {before - len(self._entries)} old entries")
 
+    def clear(self) -> None:
+        """Clear all entries (e.g. when user repeats the same question)."""
+        self._entries = []
+        self._log("ConversationMemory: cleared")
+
     def add_text(
         self,
         text: str,

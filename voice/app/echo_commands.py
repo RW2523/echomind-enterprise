@@ -2,6 +2,8 @@
 EchoMind command / intent router. Parses voice commands and returns deterministic
 responses for profile, listen mode, and memory queries. Fact-check and open queries
 return None so session can use LLM with retrieved context.
+
+Listen mode: "Start Listening" enters, "Start Talking" exits and triggers response.
 """
 from __future__ import annotations
 import re
@@ -45,70 +47,12 @@ def _extract_minutes(utterance: str) -> Optional[float]:
     return None
 
 
-# Semantic intent: phrases that suggest "user wants to change what they call the assistant"
-_WAKE_WORD_CHANGE_INTENT_KEYWORDS = [
-    "change wake word", "change the wake word", "change your wake word",
-    "change trigger", "change trigger word", "change the trigger",
-    "rename you", "rename the assistant", "rename yourself",
-    "call you", "call you something", "call you differently",
-    "new name", "different name", "change your name", "change name to",
-    "what i call you", "what to call you", "how to call you",
-    "be called", "be named", "from now on call",
-    "wake word to", "trigger word to", "name you",
-]
-
-# Extraction patterns: (regex, group_or_last) - group 1 or use last word of match
-_WAKE_WORD_EXTRACT_PATTERNS = [
-    (r"(?:to|into)\s+([a-zA-Z][a-zA-Z0-9\s\-]{0,30}?)(?:\s+from\s+now|\s*[.?!,]|$)", 1),
-    (r"(?:as|like)\s+([a-zA-Z][a-zA-Z0-9\s\-]{0,30}?)(?:\s*[.?!,]|$)", 1),
-    (r"call\s+(?:you|yourself)\s+([a-zA-Z][a-zA-Z0-9\s\-]{0,30}?)(?:\s*[.?!,]|$)", 1),
-    (r"(?:be\s+)?(?:called|named)\s+([a-zA-Z][a-zA-Z0-9\s\-]{0,30}?)(?:\s+from\s+now|\s*[.?!,]|$)", 1),
-    (r"([a-zA-Z][a-zA-Z0-9\-]{1,30})\s+from\s+now\s+on", 1),
-    (r"([a-zA-Z][a-zA-Z0-9\-]{1,30})\s*[.?!,]?\s*$", 1),  # last word/phrase
-]
-
-
-def _has_wake_word_change_intent(normalized_utterance: str) -> bool:
-    """True if utterance semantically suggests changing the wake word / assistant name."""
-    return any(kw in normalized_utterance for kw in _WAKE_WORD_CHANGE_INTENT_KEYWORDS)
-
-
-def _extract_new_wake_word(utterance: str, current_wake: str, last_utterance: Optional[str] = None) -> Optional[str]:
-    """
-    Detect wake-word-change intent by semantic meaning, then extract the new word.
-    Triggers on: "change wake word to X", "rename you to X", "call you X", "I want to call you Bob", etc.
-    If X is "that"/"this"/"it", use last_utterance when provided.
-    """
-    u = _normalize(utterance)
-    current = (current_wake or "").strip().lower()
-    if current and u.startswith(current):
-        u = u[len(current):].lstrip(" ,;:")
-    if not _has_wake_word_change_intent(u):
-        return None
-    for pat, grp in _WAKE_WORD_EXTRACT_PATTERNS:
-        m = re.search(pat, u)
-        if m:
-            raw = (m.group(grp) if isinstance(grp, int) else m.group(0)).strip()
-            raw = re.sub(r"[.?!,;:]+$", "", raw)
-            if not raw or len(raw) > 50:
-                continue
-            if raw in ("that", "this", "it") and last_utterance:
-                words = (last_utterance or "").strip().split()
-                return words[-1] if words else None
-            if raw in ("yes", "no", "change", "name", "word", "you", "me"):
-                continue
-            return raw
-    return None
-
-
 def parse_and_route(
     user_text: str,
     profile: Dict[str, Any],
     memory_summary: str,
     listen_only: bool,
     trigger_phrases: List[str],
-    pending_wake_word_change: Optional[str] = None,
-    last_utterance: Optional[str] = None,
 ) -> IntentResult:
     """
     Run intent routing. Returns (handled, response_text, extra).
@@ -119,23 +63,8 @@ def parse_and_route(
     u = _normalize(user_text)
     extra: Dict[str, Any] = {}
 
-    # ----- Confirm wake word change (user said "yes" after we proposed a change) -----
-    if pending_wake_word_change:
-        if _match_any(user_text, ["yes", "yeah", "confirm", "change it", "do it", "sure", "ok", "okay"]):
-            extra["confirm_wake_word_change"] = True
-            return True, f"Done. Wake word is now {pending_wake_word_change}. Say '{pending_wake_word_change}' when you want me to respond.", extra
-        if _match_any(user_text, ["no", "cancel", "never mind", "forget it", "nope"]):
-            extra["clear_pending_wake_word_change"] = True
-            return True, "Okay, I won't change the wake word.", extra
-
-    # ----- Change wake word (requires confirmation) -----
-    new_wake = _extract_new_wake_word(user_text, profile.get("wake_word") or "", last_utterance)
-    if new_wake and len(new_wake) < 50:
-        extra["pending_wake_word_change"] = new_wake
-        return True, f"Do you want to change the wake word to {new_wake}? Say yes to confirm.", extra
-
-    # ----- Assistant name (immediate, no confirmation) -----
-    for pattern in ["your name is ", "call yourself ", "wake word is ", "you're called "]:
+    # ----- Assistant name (immediate) -----
+    for pattern in ["your name is ", "call yourself ", "you're called "]:
         name = _extract_after(user_text, [pattern])
         if name and len(name) < 80:
             extra["set_assistant_name"] = name.strip()
@@ -169,8 +98,7 @@ def parse_and_route(
     # ----- Start listening (enter listen-only) -----
     if _match_any(user_text, ["listen to conversation", "start listening", "just listen", "keep listening"]):
         extra["set_listen_only"] = True
-        wake = (profile.get("wake_word") or "EchoMind" or "Stop listening" or "Exit" or "Stoplistening").strip()
-        return True, f"I am starting to listen. Say '{wake}' when you want me to respond", extra
+        return True, "I am starting to listen. Say 'Start Talking' when you want me to respond.", extra
 
     # # ----- Stop listening (exit listen-only) -----
     # if _match_any(user_text, ["stop listening", "pause listening", "pause", "don't listen"]):
@@ -222,17 +150,3 @@ def parse_and_route(
         return True, None, extra
 
     return False, None, extra
-
-
-def strip_wake_word(utterance: str, wake_word: str) -> str:
-    """Remove leading wake word (case-insensitive) and comma/space. Return trimmed rest."""
-    if not (wake_word or "").strip():
-        return (utterance or "").strip()
-    u = (utterance or "").strip()
-    w = wake_word.strip().lower()
-    if not w:
-        return u
-    if u.lower().startswith(w):
-        rest = u[len(w):].lstrip(" ,;:")
-        return rest.strip()
-    return u

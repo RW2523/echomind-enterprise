@@ -19,6 +19,7 @@ from .section_id import (
     extract_section_id,
     section_id_from_path,
 )
+from .clause_parser import detect_clause_ids
 
 logger = logging.getLogger(__name__)
 
@@ -79,9 +80,9 @@ def extract_explicit_refs(query: str) -> Dict[str, Any]:
     return out
 
 
-# "Section 0705", "paragraph 030201"
+# "Section 0705", "paragraph 030201", "030201.A", "030201.B.1"
 _SECTION_LABEL_RE = re.compile(
-    r"\b(?:Section|Sec\.?|Paragraph|Para\.?)\s+([\d]{3,6}(?:\.\d{1,4}){0,3})\b",
+    r"\b(?:Section|Sec\.?|Paragraph|Para\.?|Subparagraph|Subpara\.?)\s+([\d]{3,6}(?:\.\d{1,4}|\.\w[\d.]*)?)\b",
     re.I,
 )
 
@@ -252,11 +253,20 @@ def resolve_section_refs(
                 logger.info("SectionResolver: comparison pair %s vs %s", a, b)
             break
 
-    # Extract all DoD codes
+    # Extract all DoD codes (section-level: 030201, 030202)
     codes = extract_all_codes(q)
     for c in codes:
         if c and c not in explicit_ids:
             explicit_ids.append(c)
+
+    # Extract clause-level refs (030201.A, 030201.B.1) and add base section
+    clause_ids = detect_clause_ids(q)
+    for cid in clause_ids:
+        if cid and cid not in explicit_ids:
+            explicit_ids.append(cid)
+        base = cid.split(".")[0] if cid and "." in cid else None
+        if base and base not in explicit_ids:
+            explicit_ids.append(base)
 
     # Volume/Chapter if present ("Volume 2B", "Chapter 8")
     vol_m = re.search(r"\b(?:Volume|Vol\.?)\s+(\d+[A-Za-z]?)\b", q, re.I)
@@ -272,7 +282,7 @@ def resolve_section_refs(
         except ValueError:
             explicit_chapter = chap_m.group(1)  # e.g. "8"
 
-    # Resolve ids to paths
+    # Resolve ids to paths (section + clause; clause 030201.A falls back to base 030201)
     resolved: List[str] = []
     seen: set = set()
     for sid in explicit_ids:
@@ -281,6 +291,12 @@ def resolve_section_refs(
             if p and p not in seen:
                 seen.add(p)
                 resolved.append(p)
+        if "." in sid:
+            base = sid.split(".")[0]
+            for p in mapping.get(base, []):
+                if p and p not in seen:
+                    seen.add(p)
+                    resolved.append(p)
 
     # Resolve Volume/Chapter to paths
     if explicit_volume is not None or explicit_chapter is not None:

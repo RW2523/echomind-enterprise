@@ -10,6 +10,9 @@
     #log { white-space: pre-wrap; border: 1px solid #ddd; padding: 12px; height: 320px; overflow: auto; margin-top: 10px; }
     .row { margin-top: 10px; }
     code { background: #f6f6f6; padding: 2px 6px; border-radius: 6px; }
+    .thinking-indicator { display: inline-flex; align-items: center; gap: 8px; color: #666; }
+    .thinking-spinner { width: 16px; height: 16px; border: 2px solid #e0e0e0; border-top-color: #555; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -59,6 +62,10 @@ let ws=null;
 let micStream=null;
 let audioCtx=null;
 let workletNode=null;
+
+// Mute mic during thinking + first ~7 words of response (~3.5s from first audio_out)
+let micMuted=false;
+let unmuteTimer=null;
 
 // Playback with smoothing
 let playCtx=null, gainNode=null;
@@ -219,6 +226,7 @@ async function startMic16kFrames() {
 
   workletNode.port.onmessage = (ev) => {
     if (!ws || ws.readyState !== 1) return;
+    if (micMuted) return;
     const u8 = new Uint8Array(ev.data);
     ws.send(JSON.stringify({
       type: "audio_frame",
@@ -269,7 +277,7 @@ async function start() {
       return;
     }
     if (msg.type === "profile_update") {
-      document.getElementById("profileAssistant").textContent = msg.assistant_name || msg.wake_word || "—";
+      document.getElementById("profileAssistant").textContent = msg.assistant_name || "—";
       document.getElementById("profileUser").textContent = msg.user_name || "—";
       document.getElementById("profileTz").textContent = msg.timezone || "—";
       document.getElementById("profileLocation").textContent = msg.location || "—";
@@ -288,7 +296,20 @@ async function start() {
         await smoothStop();
         clearPlayQueue();
       }
- log("EVENT:", msg.event, "gen:", msg.generation_id ?? ""); return; }
+      if (msg.event === "THINKING") {
+        micMuted = true;
+        if (unmuteTimer) clearTimeout(unmuteTimer);
+        unmuteTimer = null;
+        assistantEl.innerHTML = '<span class="thinking-indicator"><span class="thinking-spinner"></span>Thinking…</span>';
+      }
+      if (msg.event === "BACK_TO_LISTENING") {
+        micMuted = false;
+        if (unmuteTimer) clearTimeout(unmuteTimer);
+        unmuteTimer = null;
+      }
+      log("EVENT:", msg.event, "gen:", msg.generation_id ?? "");
+      return;
+    }
     if (msg.type === "error") { log("ERROR:", msg.where, msg.message); return; }
 
     if (msg.type === "cancel") {
@@ -297,16 +318,31 @@ async function start() {
       assistantEl.textContent = "";
       playQueue = [];
       smoothStop(70);
+      micMuted = false;
+      if (unmuteTimer) clearTimeout(unmuteTimer);
+      unmuteTimer = null;
       return;
     }
     if (msg.type === "asr_final") { asrEl.textContent = msg.text; return; }
-    if (msg.type === "assistant_text_partial") { assistantEl.textContent = msg.text; return; }
-    if (msg.type === "assistant_text") { assistantEl.textContent = msg.text; return; }
+    if (msg.type === "assistant_text_partial") {
+      assistantEl.textContent = msg.text;
+      return;
+    }
+    if (msg.type === "assistant_text") {
+      assistantEl.textContent = msg.text;
+      return;
+    }
 
     if (msg.type === "audio_out") {
       const bytes = b64ToBytes(msg.pcm16_b64);
       const f32 = pcm16ToFloat32(bytes);
       await enqueuePcmChunk(f32, msg.sample_rate, msg.playback_rate || 1.0);
+      if (micMuted && !unmuteTimer) {
+        unmuteTimer = setTimeout(() => {
+          micMuted = false;
+          unmuteTimer = null;
+        }, 3500);
+      }
       return;
     }
   };
@@ -320,6 +356,9 @@ async function stopAll() {
   if (micStream) micStream.getTracks().forEach(t => t.stop());
   if (audioCtx) { try { await audioCtx.close(); } catch(e){} }
   workletNode=null; micStream=null; audioCtx=null;
+  micMuted = false;
+  if (unmuteTimer) clearTimeout(unmuteTimer);
+  unmuteTimer = null;
 
   await stopPlaybackNow();
   if (ws) ws.close();

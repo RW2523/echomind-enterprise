@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
 
 from conversation_memory import ConversationMemory, MemoryEntry
-from echo_commands import parse_and_route, strip_wake_word
+from echo_commands import parse_and_route
 
 
 def test_memory_add_and_query_last():
@@ -44,14 +44,8 @@ def test_memory_summarize_last():
     assert "Assistant" in s or "assistant" in s
 
 
-def test_strip_wake_word():
-    assert strip_wake_word("EchoMind, what did I say?", "EchoMind") == "what did I say?"
-    assert strip_wake_word("echomind  hello", "EchoMind") == "hello"
-    assert strip_wake_word("Something else", "EchoMind") == "Something else"
-
-
 def test_intent_set_assistant_name():
-    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
+    profile = {"assistant_name": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
     handled, response, extra = parse_and_route("Your name is Watson", profile, "", False, [])
     assert handled is True
     assert extra.get("set_assistant_name") == "watson"
@@ -59,14 +53,15 @@ def test_intent_set_assistant_name():
 
 
 def test_intent_start_listening():
-    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
+    profile = {"assistant_name": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
     handled, response, extra = parse_and_route("Listen to conversation", profile, "", False, [])
     assert handled is True
     assert extra.get("set_listen_only") is True
+    assert "Start Talking" in response
 
 
 def test_intent_fact_check():
-    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
+    profile = {"assistant_name": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
     handled, response, extra = parse_and_route("Fact check that", profile, "", False, [])
     assert handled is True
     assert extra.get("fact_check") is True
@@ -74,7 +69,7 @@ def test_intent_fact_check():
 
 
 def test_intent_memory_query_minutes():
-    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
+    profile = {"assistant_name": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
     handled, response, extra = parse_and_route("What did I say in the last 5 minutes?", profile, "", False, [])
     assert handled is True
     assert extra.get("memory_query_type") == "recap"
@@ -82,37 +77,7 @@ def test_intent_memory_query_minutes():
 
 
 def test_intent_clear_memory():
-    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
+    profile = {"assistant_name": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
     handled, response, extra = parse_and_route("Clear memory", profile, "", False, [])
     assert handled is True
     assert extra.get("clear_memory") is True
-
-
-def test_intent_change_wake_word():
-    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
-    handled, response, extra = parse_and_route("Change wake word to Bob", profile, "", False, [])
-    assert handled is True
-    assert extra.get("pending_wake_word_change") == "bob"
-    assert "yes" in response.lower() or "confirm" in response.lower()
-
-
-def test_intent_confirm_wake_word():
-    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
-    handled, response, extra = parse_and_route("Yes", profile, "", False, [], pending_wake_word_change="Bob")
-    assert handled is True
-    assert extra.get("confirm_wake_word_change") is True
-    assert "bob" in response.lower()
-
-
-def test_intent_change_wake_word_semantic():
-    """Semantic variations: rename you, call you, new name, etc."""
-    profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
-    for utterance in [
-        "Rename you to Watson",
-        "I want to call you Bob",
-        "Change your name to Echo",
-        "Can we change the trigger word to Jarvis",
-    ]:
-        handled, response, extra = parse_and_route(utterance, profile, "", False, [])
-        assert handled is True, f"Failed for: {utterance}"
-        assert extra.get("pending_wake_word_change"), f"Failed for: {utterance}"

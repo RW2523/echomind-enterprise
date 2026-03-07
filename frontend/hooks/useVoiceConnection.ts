@@ -111,6 +111,8 @@ export interface UseVoiceConnectionReturn {
   /** When true, mic is muted so the assistant can finish without interruption */
   micMuted: boolean;
   setMicMuted: (muted: boolean) => void;
+  /** Processing indicator: true when transcript sent to LLM, waiting for response */
+  isThinking: boolean;
   /** Error starting mic or connection (e.g. permission denied); cleared when user retries or disconnects */
   connectionError: string | null;
 }
@@ -151,6 +153,8 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   const [micMuted, setMicMuted] = useState(false);
   const micMutedRef = useRef(false);
   micMutedRef.current = micMuted;
+  const [isThinking, setIsThinking] = useState(false);
+  const unmuteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listenOnlyRef = useRef(false);
   listenOnlyRef.current = state.listenOnly;
 
@@ -334,11 +338,27 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         setState((prev) => ({ ...prev, interruptedAt: Date.now(), assistantOrb: "idle" }));
         return;
       }
+      if (msg.type === "event" && msg.event === "THINKING") {
+        setIsThinking(true);
+        setMicMuted(true);
+        if (unmuteTimerRef.current) {
+          clearTimeout(unmuteTimerRef.current);
+          unmuteTimerRef.current = null;
+        }
+        setState((prev) => ({ ...prev, assistantOrb: "thinking" }));
+        return;
+      }
       if (msg.type === "event" && msg.event === "SPEAKING") {
         setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
         return;
       }
       if (msg.type === "event" && msg.event === "BACK_TO_LISTENING") {
+        setIsThinking(false);
+        setMicMuted(false);
+        if (unmuteTimerRef.current) {
+          clearTimeout(unmuteTimerRef.current);
+          unmuteTimerRef.current = null;
+        }
         setState((prev) => ({ ...prev, assistantOrb: "idle" }));
         return;
       }
@@ -363,17 +383,19 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         if (userText && !listenOnlyRef.current) {
           setVoiceMessages((prev) => [...prev, { role: "user", text: userText }]);
         }
-        setState((prev) => ({ ...prev, userOrb: "idle", assistantOrb: listenOnlyRef.current ? "idle" : "thinking" }));
+        setState((prev) => ({ ...prev, userOrb: "idle", assistantOrb: "idle" }));
         return;
       }
       if (msg.type === "assistant_text_partial") {
         const text = typeof msg.text === "string" ? msg.text : "";
+        setIsThinking(false);
         setPendingAssistantText(text);
         setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
         return;
       }
       if (msg.type === "assistant_text") {
         const text = typeof msg.text === "string" ? String(msg.text).trim() : "";
+        setIsThinking(false);
         if (text) {
           setVoiceMessages((prev) => [...prev, { role: "assistant", text }]);
         }
@@ -386,6 +408,12 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
           const bytes = b64ToBytes(msg.pcm16_b64);
           const f32 = pcm16ToFloat32(bytes);
           enqueuePlayback(f32, (msg.sample_rate as number) || 24000, (msg.playback_rate as number) || 1);
+          if (micMutedRef.current && !unmuteTimerRef.current) {
+            unmuteTimerRef.current = setTimeout(() => {
+              setMicMuted(false);
+              unmuteTimerRef.current = null;
+            }, 3500);
+          }
         } catch (_) {
           // skip malformed audio chunk
         }
@@ -424,8 +452,13 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       setVoiceMessages([]);
       setPendingAssistantText("");
       setListenBufferText("");
+      setIsThinking(false);
       listenOnlyRef.current = false;
       setMicMuted(false);
+      if (unmuteTimerRef.current) {
+        clearTimeout(unmuteTimerRef.current);
+        unmuteTimerRef.current = null;
+      }
       setConnectionError(null);
       setConnecting(false);
     };
@@ -571,6 +604,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     connecting,
     micMuted,
     setMicMuted,
+    isThinking,
     connectionError,
   };
 }

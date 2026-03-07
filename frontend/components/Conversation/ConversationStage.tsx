@@ -44,6 +44,8 @@ export interface ConversationStageProps {
   pendingAssistantText?: string;
   /** Accumulated transcript in listen-only mode (live updates until wake word) */
   listenBufferText?: string;
+  /** Processing indicator: show "Thinking…" in Live transcript */
+  isThinking?: boolean;
   connectionError?: string | null;
   onClearMemory: () => void;
   /** Continuous listening: only respond after wake word "EchoMind" */
@@ -67,6 +69,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
   voiceMessages = [],
   pendingAssistantText = "",
   listenBufferText = "",
+  isThinking = false,
   connectionError = null,
   onClearMemory,
   listenOnly = false,
@@ -95,7 +98,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [voiceMessages, pendingAssistantText]);
 
-  const showTranscript = voiceMessages.length > 0 || !!pendingAssistantText || listenOnly;
+  const showTranscript = voiceMessages.length > 0 || !!pendingAssistantText || isThinking || listenOnly;
 
   return (
     <div
@@ -120,7 +123,7 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         {showTranscript && (
           <div className="shrink-0 flex flex-col max-h-[36vh] min-h-0 border-t border-white/[0.04]">
             <div className="px-4 py-2.5 text-[13px] font-medium text-slate-500 uppercase tracking-wider">
-              {listenOnly ? "Listening — say EchoMind when done" : "Live transcript"}
+              {listenOnly ? "Listening — say Start Talking when done" : "Live transcript"}
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-3 space-y-1.5">
               {listenOnly && listenBufferText ? (
@@ -142,6 +145,12 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
                     {msg.text}
                   </div>
                 ))}
+              {isThinking && !pendingAssistantText && (
+                <div className="mr-auto flex items-center gap-2 rounded-2xl px-4 py-2 text-[14px] max-w-[85%] bg-teal-500/[0.06] text-teal-300/70 border border-teal-500/10 animate-[fadeIn_0.3s_ease-out]" aria-label="Thinking">
+                  <span className="inline-block w-3 h-3 border border-teal-400/40 border-t-teal-300/80 rounded-full animate-spin shrink-0" aria-hidden />
+                  <span className="opacity-90">Thinking…</span>
+                </div>
+              )}
               {pendingAssistantText && (
                 <div className="mr-auto rounded-2xl px-4 py-2.5 text-[15px] max-w-[85%] bg-teal-500/[0.08] text-teal-200/90 border border-teal-500/15 animate-[fadeIn_0.4s_cubic-bezier(0.25,0.1,0.25,1)]">
                   {pendingAssistantText}

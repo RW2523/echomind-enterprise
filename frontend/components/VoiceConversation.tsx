@@ -17,6 +17,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdat
     voiceMessages,
     pendingAssistantText,
     listenBufferText,
+    isThinking,
     clearMemory,
     listenOnly,
     setListenOnly,
@@ -48,6 +49,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdat
         voiceMessages={voiceMessages}
         pendingAssistantText={pendingAssistantText}
         listenBufferText={listenBufferText}
+        isThinking={isThinking}
         connectionError={connectionError}
         onClearMemory={clearMemory}
         listenOnly={listenOnly}

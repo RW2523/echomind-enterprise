@@ -20,7 +20,7 @@ from ..core.config import settings
 from ..core.db import get_conn
 from .index import index
 from .llm import OpenAICompatChat
-from .query_classifier import classify_query_type, classify_query_types, get_rrf_weights
+from .query_classifier import classify_query_type, classify_query_types, get_rrf_weights, is_threshold_query, is_table_query, is_comparison_query
 from .reranker import rerank_hits as _ce_rerank_hits
 from .book.section_resolver import SectionResolver, ResolveResult
 from .evidence_extractor import (
@@ -342,7 +342,7 @@ async def _get_section_restricted_paths(
     """
     debug_info: Dict = {"toc_hits": [], "section_summary_hits": [], "rejected_sections": []}
     if not getattr(settings, "RAG_USE_SECTION_RETRIEVAL", True):
-        return ([], False)
+        return ([], False, debug_info)
     threshold = getattr(settings, "RAG_SECTION_SCORE_THRESHOLD", 0.35)
     relax_threshold = getattr(settings, "RAG_SECTION_RELAX_THRESHOLD", 0.25)
     top_k = getattr(settings, "RAG_SECTION_TOP_K", 8)
@@ -357,9 +357,11 @@ async def _get_section_restricted_paths(
     # a) Explicit refs: use resolved paths, skip TOC/section search (hard-anchor: no global fallback)
     if resolved.has_explicit_refs and resolved.resolved_paths:
         allowed_paths = resolved.resolved_paths
+        debug_info["explicit_section_ids"] = resolved.explicit_section_ids or []
+        debug_info["resolution_success"] = True
         logger.info(
-            "RAG: Book Navigator explicit refs → %d path(s): %s",
-            len(allowed_paths), allowed_paths[:5],
+            "RAG: Book Navigator explicit refs → %d path(s), ids=%s",
+            len(allowed_paths), (resolved.explicit_section_ids or [])[:5],
         )
         # Comparison: ensure both sections present
         if resolved.comparison_pair:
@@ -372,6 +374,13 @@ async def _get_section_restricted_paths(
         if len(allowed_paths) > max_sections:
             allowed_paths = allowed_paths[:max_sections]
         return (allowed_paths, True, debug_info)
+    if resolved.has_explicit_refs and not resolved.resolved_paths:
+        debug_info["explicit_section_ids"] = resolved.explicit_section_ids or []
+        debug_info["resolution_success"] = False
+        logger.info(
+            "RAG: explicit refs detected but no paths resolved (ids=%s) — will try direct section lookup",
+            (resolved.explicit_section_ids or [])[:5],
+        )
 
     # a2) Known phrase → volume restriction
     detected_vol = _detect_volume_from_phrase(query)
@@ -663,6 +672,18 @@ def _sort_hits_by_score(hits: List[Dict]) -> List[Dict]:
     return sorted(hits, key=lambda h: float(h.get("score") or 0), reverse=True)
 
 
+def _merge_hits_deduped(primary: List[Dict], fallback: List[Dict]) -> List[Dict]:
+    """Merge primary and fallback hits, deduping by chunk_id (keep highest score)."""
+    seen: Dict[str, Dict] = {}
+    for h in primary + fallback:
+        cid = h.get("chunk_id") or h.get("source", {}).get("chunk_id")
+        if not cid:
+            continue
+        if cid not in seen or float(h.get("score") or 0) > float(seen[cid].get("score") or 0):
+            seen[cid] = h
+    return _sort_hits_by_score(list(seen.values()))
+
+
 def _dedupe_by_section(hits: List[Dict], max_per_section: int = 2) -> List[Dict]:
     """Limit chunks per section_path to max_per_section (highest-scoring). Reduces redundancy."""
     if max_per_section <= 0 or not hits:
@@ -758,6 +779,103 @@ def _trim_hits_to_context_budget(hits: List[Dict]) -> List[Dict]:
                 logger.info("RAG: trimmed %d hits to fit context budget (%d chars)", len(hits) - n, max_chars)
             return hits[:n]
     return hits[:1]
+
+
+def _get_adjacent_chunk(chunk_id: str) -> Optional[Dict]:
+    """Fetch a chunk from the DB by ID and return it as a hit dict.
+
+    Used by adjacency expansion to retrieve prev/next sibling chunks.
+    Returns None when the chunk is not found or is a parent (synthesis only).
+    """
+    if not chunk_id:
+        return None
+    try:
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT id, text, source_json FROM chunks WHERE id = ?",
+                (chunk_id,),
+            ).fetchone()
+        if not row:
+            return None
+        chunk_id_r, text, source_json = row
+        try:
+            src = json.loads(source_json) if isinstance(source_json, str) else (source_json or {})
+        except Exception:
+            src = {}
+        # Skip parent chunks — they are for synthesis, not retrieval
+        if src.get("is_parent"):
+            return None
+        return {
+            "chunk_id": chunk_id_r,
+            "text": text or "",
+            "source": src,
+            "score": 0.0,  # adjacency score; will be filtered/tagged separately
+            "_adjacency": True,
+        }
+    except Exception as e:
+        logger.debug("_get_adjacent_chunk error: %s", e)
+        return None
+
+
+def _apply_adjacency_expansion(hits: List[Dict], max_per_side: int = 1) -> List[Dict]:
+    """Fetch prev/next sibling chunks for top BOOK hits and add them to the result set.
+
+    Only operates on BOOK chunks that have prev_chunk_id / next_chunk_id metadata.
+    Prevents duplicates (existing chunk_ids are skipped).
+    Limits additional chunks to max_per_side * 2 per original hit.
+
+    This repairs retrieval failures caused by clause splits at chunk boundaries —
+    the answer may be in the next clause (e.g., the threshold is in 030201.B when
+    retrieval returned only 030201.A).
+    """
+    if not hits or max_per_side <= 0:
+        return hits
+
+    existing_ids = {h["chunk_id"] for h in hits if h.get("chunk_id")}
+    additions: List[Dict] = []
+
+    for h in hits[:8]:  # Only expand top 8 hits to limit latency
+        src = h.get("source") or {}
+        doc_type = (src.get("doc_type") or "").lower()
+        if doc_type != "book":
+            continue
+
+        prev_id = src.get("prev_chunk_id")
+        next_id = src.get("next_chunk_id")
+
+        for adj_id in [prev_id, next_id]:
+            if not adj_id or adj_id in existing_ids:
+                continue
+            adj = _get_adjacent_chunk(adj_id)
+            if adj:
+                adj["score"] = max(0.0, float(h.get("score") or 0) * 0.75)
+                adj["_adjacency_parent"] = h["chunk_id"]
+                existing_ids.add(adj_id)
+                additions.append(adj)
+
+    if additions:
+        logger.info("RAG: adjacency expansion added %d adjacent chunks", len(additions))
+        hits = hits + additions
+        hits = sorted(hits, key=lambda h: float(h.get("score") or 0), reverse=True)
+    return hits
+
+
+def _apply_table_boost(hits: List[Dict], boost: float = 0.15) -> List[Dict]:
+    """Boost score for BOOK chunks that contain table content.
+
+    Used when query is of type 'threshold' or 'table' — tables often contain
+    the precise numeric values or rate schedules being asked about.
+    """
+    if boost <= 0:
+        return hits
+    out = []
+    for h in hits:
+        src = h.get("source") or {}
+        if src.get("has_table") or src.get("doc_type", "").lower() == "book" and "table" in (h.get("text") or "").lower()[:200]:
+            out.append({**h, "score": min(1.0, float(h.get("score") or 0) + boost)})
+        else:
+            out.append(h)
+    return out
 
 
 def _has_citation_in_text(text: str) -> bool:
@@ -1420,13 +1538,28 @@ async def retrieve_semantic_first(
         allowed_section_paths, no_global_fallback, debug_info = await _get_section_restricted_paths(q, qv)
         _rag_debug_info.set({"allowed_section_paths": allowed_section_paths, **debug_info})
 
-    # 2. Run transcript and document search in parallel
+    # [Phase 1] Direct section lookup: when explicit refs (030201, 030201.A), bypass vector-first
+    direct_hits: List[Dict] = []
+    explicit_ids = _rag_debug_info.get().get("explicit_section_ids") or []
+    if search_document and explicit_ids and getattr(settings, "BOOK_DIRECT_SECTION_LOOKUP", True):
+        direct_hits = await asyncio.to_thread(index.get_chunks_by_section_ids, explicit_ids, k=k_per)
+        if direct_hits:
+            logger.info("RAG: direct section lookup → %d chunks (ids=%s)", len(direct_hits), explicit_ids[:5])
+
+    # 2. Run transcript and document search in parallel (skip doc search if direct hits sufficient)
     tasks = []
     if search_transcript:
         tasks.append(("transcript_dense", index.search_transcript_only(q, k_per, query_vector=qv)))
         tasks.append(("transcript_sparse", asyncio.to_thread(index.transcript_sparse.search, q, k_per)))
     if search_document:
-        if allowed_section_paths:
+        min_direct_for_primary = getattr(settings, "BOOK_DIRECT_SECTION_MIN_CHUNKS", 2)
+        if direct_hits and len(direct_hits) >= min_direct_for_primary:
+            # Use direct lookup as primary; no vector search for document
+            async def _return_direct() -> List[Dict]:
+                return direct_hits
+            tasks.append(("doc_dense", _return_direct()))
+            tasks.append(("doc_sparse", asyncio.to_thread(lambda: direct_hits)))
+        elif allowed_section_paths:
             # [Step 1] Section-restricted search (no_global_fallback when explicit refs)
             tasks.append(("doc_dense", index.search_document_restricted(q, k_per, allowed_section_paths, query_vector=qv, no_global_fallback=no_global_fallback)))
             tasks.append(("doc_sparse", asyncio.to_thread(index.search_document_sparse_restricted, q, k_per, allowed_section_paths, no_global_fallback)))
@@ -1703,6 +1836,17 @@ def _rag_system_prompt(persona: Optional[str] = None) -> str:
 
     base_prompt = f"You are EchoMind, a retrieval-augmented assistant. Adapt your reasoning style and tone to the document type(s) of the provided context.\n\n{rag_doc_type_rules.strip()}"
 
+    # BookRAG-lite++: inject strict regulatory grounding notice when enabled
+    if getattr(settings, "BOOK_STRICT_GROUNDED", True):
+        grounding_notice = (
+            "\n\nSTRICT REGULATORY GROUNDING (ACTIVE):\n"
+            "- Answer ONLY from the evidence shown in the context blocks. Do not blend, paraphrase beyond what the text supports, or infer policy from adjacent sections not in context.\n"
+            "- If the exact clause or threshold asked about is NOT in the context, say so explicitly and list the closest related sections you did find.\n"
+            "- Clearly distinguish: (a) direct statement from the document, (b) inference or paraphrase — label inferences as '[Inferred from context]'.\n"
+            "- For numeric thresholds, limits, percentages, or deadlines: quote the exact value from the evidence. Do not approximate unless the document itself uses approximations."
+        )
+        base_prompt += grounding_notice
+
     if persona:
         base_prompt = f"You are EchoMind in the role of: {persona}. Adapt your reasoning style and tone to this role.\n\n" + base_prompt
 
@@ -1963,6 +2107,21 @@ def _build_citation(enriched_hit: Dict) -> Dict:
             citation["section_path"] = src["section_path"]
         if src.get("page_number") is not None:
             citation["page_number"] = src["page_number"]
+        # BookRAG-lite++ citation fields
+        if src.get("clause_id"):
+            citation["clause_id"] = src["clause_id"]
+        if src.get("canonical_id"):
+            citation["canonical_id"] = src["canonical_id"]
+        page_start = src.get("page_start")
+        page_end = src.get("page_end")
+        if page_start is not None and page_start != src.get("page_number"):
+            citation["page_start"] = page_start
+        if page_end is not None and page_end != src.get("page_number"):
+            citation["page_end"] = page_end
+        if src.get("evidence_type"):
+            citation["evidence_type"] = src["evidence_type"]
+        if src.get("has_table"):
+            citation["has_table"] = True
     else:
         # Non-BOOK: include section/page if present (e.g. PDF with page_number)
         if src.get("section"):
@@ -2160,6 +2319,22 @@ async def _run_rag_pipeline(
         hits = await _apply_reranker(question, hits, rerank_top_k, rerank_final_n)
     timings["rerank_ms"] = (time.monotonic() - t0) * 1000
 
+    # [BookRAG-lite++] Threshold / table score boosting — before graph expansion so
+    # boosted chunks can participate in graph scoring as well.
+    if source_type == "document":
+        if is_threshold_query(question) or is_table_query(question):
+            boost = getattr(settings, "BOOK_TABLE_SCORE_BOOST", 0.15)
+            hits = _apply_table_boost(hits, boost=boost)
+            hits = _sort_hits_by_score(hits)
+
+    # [BookRAG-lite++] Adjacency expansion — fetch prev/next sibling chunks for
+    # top BOOK hits after reranking. Prevents missed answers at clause boundaries.
+    if source_type == "document" and getattr(settings, "BOOK_ADJACENCY_EXPANSION", True):
+        t0 = time.monotonic()
+        max_adj = getattr(settings, "BOOK_ADJACENCY_MAX_CHUNKS", 1)
+        hits = _apply_adjacency_expansion(hits, max_per_side=max_adj)
+        timings["adjacency_ms"] = (time.monotonic() - t0) * 1000
+
     # [Step 4] Graph expansion (only when top section confidence is low)
     t0 = time.monotonic()
     if source_type == "document":
@@ -2172,16 +2347,24 @@ async def _run_rag_pipeline(
             hits = await _rescore_graph_additions(question, hits)
     timings["graph_ms"] = (time.monotonic() - t0) * 1000
 
+    # [BookRAG-lite++] For comparison queries, relax section limit to allow more sections
+    if source_type == "document" and is_comparison_query(question):
+        max_sections_override = max(
+            getattr(settings, "MAX_SECTIONS_PER_ANSWER", 2),
+            4  # comparisons need at least 2 sections × 2 chunks each
+        )
+    else:
+        max_sections_override = getattr(settings, "MAX_SECTIONS_PER_ANSWER", 2)
+
     # Sort, dedupe, limit sections, trim
     hits = _sort_hits_by_score(hits)
     if getattr(settings, "RAG_DEDUPE_BY_SECTION", False):
         max_per = getattr(settings, "RAG_MAX_CHUNKS_PER_SECTION", 2)
-        if _parse_comparison_sections(question):
+        if _parse_comparison_sections(question) or is_comparison_query(question):
             max_per = max(max_per, 4)
         hits = _dedupe_by_section(hits, max_per_section=max_per)
-    max_sections = getattr(settings, "MAX_SECTIONS_PER_ANSWER", 2)
     explicit_ids = (resolved.explicit_section_ids if resolved and resolved.has_explicit_refs else None)
-    hits = _limit_sections_in_context(hits, max_sections=max_sections, explicit_section_ids=explicit_ids)
+    hits = _limit_sections_in_context(hits, max_sections=max_sections_override, explicit_section_ids=explicit_ids)
     hits = _trim_hits_to_context_budget(hits)
 
     # ── Retrieval Debug: log top 10 hits with metadata ────────────────────
@@ -2214,23 +2397,76 @@ async def _run_rag_pipeline(
         )
     timings["evidence_ms"] = (time.monotonic() - t0) * 1000
 
-    # ── Evidence Gate: reject if evidence is too weak ─────────────────────
+    # ── Evidence Gate: try fallback keyword retrieval before refusing ────
+    NO_CHUNKS_MSG = "I couldn't find any matching chunks in the uploaded documents."
+    use_partial_evidence = False
+
     if source_type == "document" and ev_gate_result and not ev_gate_result.passed:
-        fallback_enriched = [{**h, "compressed": (h.get("text") or "")[:360]} for h in hits[:3]]
-        citations = (
-            [c for c in [_build_citation(x) for x in fallback_enriched] if c]
-            if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
-        )
-        return _RagPipelineResult(
-            hits=hits, blocks=[], enriched=fallback_enriched,
-            chunk_ids_used=[], ctx_block="",
-            doc_ids=[], resolved=resolved, source_type=source_type,
-            evidence_sentences=evidence_sentences,
-            evidence_gate_result=ev_gate_result,
-            timing=timings, early_exit=True,
-            early_exit_msg=ev_gate_result.fallback_message or "Unable to find strong supporting evidence in the regulation.",
-            early_exit_citations=citations,
-        )
+        # Zero hits: try fallback keyword search; refuse only if both paths yield nothing
+        if not hits and getattr(settings, "RAG_FALLBACK_KEYWORD_RETRIEVAL", True):
+            k_fb = getattr(settings, "RAG_FALLBACK_KEYWORD_K", 40)
+            fallback_hits = await asyncio.to_thread(index.search_document_only_sparse, question, k_fb)
+            if fallback_hits:
+                hits = _sort_hits_by_score(fallback_hits)
+                hits = _limit_sections_in_context(hits, max_sections=max_sections_override, explicit_section_ids=explicit_ids)
+                hits = _trim_hits_to_context_budget(hits)
+                evidence_sentences = extract_evidence_sentences(
+                    question, hits, explicit_section_ids=explicit_ids, min_sentences=6, max_sentences=10,
+                )
+                resolver_confident = bool(resolved and resolved.has_explicit_refs and resolved.resolved_paths)
+                ev_gate_result = gate_evidence(
+                    question, evidence_sentences,
+                    explicit_section_ids=explicit_ids,
+                    resolver_confident=resolver_confident,
+                )
+                if ev_gate_result.passed:
+                    logger.info("EvidenceGate: fallback keyword retrieval passed")
+                else:
+                    use_partial_evidence = True
+                    logger.info("EvidenceGate: fallback has hits but gate still fails; proceeding with partial evidence")
+
+        # Has hits but gate failed: try fallback keyword retrieval to surface more content
+        elif hits and getattr(settings, "RAG_FALLBACK_KEYWORD_RETRIEVAL", True):
+            k_fb = getattr(settings, "RAG_FALLBACK_KEYWORD_K", 40)
+            fallback_hits = await asyncio.to_thread(index.search_document_only_sparse, question, k_fb)
+            merged = _merge_hits_deduped(hits, fallback_hits)
+            merged = _limit_sections_in_context(merged, max_sections=max_sections_override, explicit_section_ids=explicit_ids)
+            merged = _trim_hits_to_context_budget(merged)
+            evidence_sentences = extract_evidence_sentences(
+                question, merged, explicit_section_ids=explicit_ids, min_sentences=6, max_sentences=10,
+            )
+            resolver_confident = bool(resolved and resolved.has_explicit_refs and resolved.resolved_paths)
+            ev_gate_result = gate_evidence(
+                question, evidence_sentences,
+                explicit_section_ids=explicit_ids,
+                resolver_confident=resolver_confident,
+            )
+            if ev_gate_result.passed:
+                hits = merged
+                logger.info("EvidenceGate: fallback merge passed with %d hits", len(hits))
+            else:
+                hits = merged
+                use_partial_evidence = True
+                logger.info(
+                    "EvidenceGate: fallback merge has %d hits but gate fails; proceeding with partial evidence",
+                    len(hits),
+                )
+
+        # Still no hits after fallback (or fallback disabled): refuse
+        if not hits:
+            return _RagPipelineResult(
+                hits=[], blocks=[], enriched=[],
+                chunk_ids_used=[], ctx_block="",
+                doc_ids=[], resolved=resolved, source_type=source_type,
+                evidence_sentences=[], evidence_gate_result=ev_gate_result,
+                timing=timings, early_exit=True,
+                early_exit_msg=NO_CHUNKS_MSG,
+                early_exit_citations=[],
+            )
+
+        # We have hits but gate still failed: proceed with partial evidence
+        if not ev_gate_result.passed:
+            use_partial_evidence = True
 
     # ── Build context ─────────────────────────────────────────────────────
     t0 = time.monotonic()
@@ -2242,6 +2478,14 @@ async def _run_rag_pipeline(
         evidence_ctx = build_evidence_only_context(question, hits, explicit_section_ids=explicit_ids)
         if evidence_ctx:
             blocks.insert(0, evidence_ctx)
+
+    # When proceeding with partial evidence (fallback keyword hits, gate still failed), instruct LLM
+    if source_type == "document" and use_partial_evidence:
+        blocks.insert(
+            0,
+            "[PARTIAL EVIDENCE] Keyword search found some matching content but confidence is low. "
+            "Answer based on what is provided; cite sources and indicate uncertainty where appropriate.",
+        )
 
     doc_ids = list({
         (e.get("source") or {}).get("doc_id")
@@ -2468,10 +2712,24 @@ async def _postprocess_answer_text(
     resolved: Optional[ResolveResult],
     doc_ids: List[str],
     source_type: str,
+    evidence_text: Optional[str] = None,
+    citations: Optional[List[Dict]] = None,
 ) -> str:
-    """Shared citation postprocessing: missing-info fallback, inference transparency, citation accuracy."""
+    """Shared citation postprocessing: missing-info fallback, inference transparency, citation accuracy.
+    When BOOK_VERIFIER_ENABLED: verifies answer against evidence before returning."""
     if not (getattr(settings, "RAG_CITATION_POSTPROCESS", True) and source_type == "document" and ans):
         return ans
+
+    # Phase 8: Post-generation verifier for BOOK docs
+    if getattr(settings, "BOOK_VERIFIER_ENABLED", False) and source_type == "document" and ans:
+        from .answer_verifier import verify_answer
+        ev_text = evidence_text or " ".join((e.get("text") or e.get("compressed") or "") for e in (enriched or [])[:10])
+        cite_list = citations or [c for c in [_build_citation(x) for x in (enriched or [])] if c]
+        explicit_ids = (resolved.explicit_section_ids or []) if resolved else None
+        passed, revised, refusal = verify_answer(ans, ev_text, cite_list, question, explicit_section_ids=explicit_ids)
+        if not passed and refusal:
+            logger.info("AnswerVerifier: failed — %s", refusal[:80])
+            return f"I couldn't confidently answer based on the retrieved evidence. {refusal}"
     from .citation_utils import (
         handle_missing_information,
         improve_citation_accuracy,
@@ -2574,10 +2832,12 @@ async def answer(
     ans = await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
     t_llm_end = time.monotonic()
 
+    citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+    ev_text = " ".join((e.get("text") or e.get("compressed") or "") for e in (result.enriched or [])[:15])
     ans = await _postprocess_answer_text(
         ans, question, result.enriched, result.resolved, result.doc_ids, source_type,
+        evidence_text=ev_text, citations=citations,
     )
-    citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
     _log_citation_debug(result.enriched, citations, source_type)
 
     logger.info(
@@ -2688,9 +2948,10 @@ async def answer_stream(
         yield ("chunk", delta, None)
     ans = "".join(full).strip()
     t_llm_end = time.monotonic()
-
+    ev_text = " ".join((e.get("text") or e.get("compressed") or "") for e in (result.enriched or [])[:15])
     ans = await _postprocess_answer_text(
         ans, question, result.enriched, result.resolved, result.doc_ids, source_type,
+        evidence_text=ev_text, citations=citations,
     )
 
     logger.info(

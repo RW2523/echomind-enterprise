@@ -42,6 +42,20 @@ class Chunk:
     toc_node_id: Optional[str] = None  # optional TOC node for routing
     page_number: Optional[int] = None
 
+    # ── BookRAG-lite++ additions (all Optional; safe for non-BOOK docs) ──────
+    clause_id: Optional[str] = None       # detected clause code e.g. "030201.A" or "030201.B.1"
+    prev_chunk_id: Optional[str] = None   # previous sibling chunk within same section
+    next_chunk_id: Optional[str] = None   # next sibling chunk within same section
+    # retrieval_text: heading path + clause label prepended to chunk text for embedding.
+    # None = use self.text. Stored in chunks.retrieval_text; raw text always in chunks.text.
+    retrieval_text: Optional[str] = None
+    canonical_id: Optional[str] = None    # deterministic ID: vol_05_ch_03_sec_030201_page_0142_chunk_02
+    page_start: Optional[int] = None      # first page spanned by this chunk (for multi-page chunks)
+    page_end: Optional[int] = None        # last page spanned by this chunk
+    # evidence_type: "child" | "parent" | "clause" | "table" | "page" | "section_summary"
+    evidence_type: Optional[str] = None
+    has_table: bool = False               # heuristic: chunk contains a table
+
     def to_source_dict(self, filename: str, filetype: str) -> dict:
         """Serialize for source_json in DB (backward-compatible + extended metadata)."""
         d = {
@@ -67,6 +81,23 @@ class Chunk:
             d["toc_node_id"] = self.toc_node_id
         if self.page_number is not None:
             d["page_number"] = self.page_number
+        # BookRAG-lite++ fields
+        if self.clause_id is not None:
+            d["clause_id"] = self.clause_id
+        if self.prev_chunk_id is not None:
+            d["prev_chunk_id"] = self.prev_chunk_id
+        if self.next_chunk_id is not None:
+            d["next_chunk_id"] = self.next_chunk_id
+        if self.canonical_id is not None:
+            d["canonical_id"] = self.canonical_id
+        if self.page_start is not None:
+            d["page_start"] = self.page_start
+        if self.page_end is not None:
+            d["page_end"] = self.page_end
+        if self.evidence_type is not None:
+            d["evidence_type"] = self.evidence_type
+        if self.has_table:
+            d["has_table"] = True
         return d
 
 

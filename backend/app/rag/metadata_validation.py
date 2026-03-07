@@ -149,8 +149,10 @@ def validate_and_fix_source(source: dict, doc_type: str = "") -> Tuple[dict, boo
 def validate_section_path(section_path: Optional[str], reject_segment_fallback: bool = True) -> Tuple[bool, Optional[str]]:
     """Validate section_path for BOOK chunks.
 
-    - Must contain "Volume <number>" and "Chapter <number>"
-    - Reject "Segment N" fallback labels when reject_segment_fallback=True
+    Strict pass: path contains both "Volume N" and "Chapter N" markers (ideal for full DoD FMR).
+    Relaxed pass: path contains a DoD-style numeric code (4-6 digits, e.g. "010101 GENERAL")
+      OR at least one of Volume/Chapter — handles PDFs that split by DoD code without full breadcrumbs.
+    Always rejects: empty paths, bare "Segment N" fallback tokens.
     Returns (is_valid, reason).
     """
     if not (section_path or "").strip():
@@ -161,13 +163,20 @@ def validate_section_path(section_path: Optional[str], reject_segment_fallback: 
         return False, "Segment N fallback not allowed"
     has_volume = bool(re.search(r"Volume\s+\d+", sp, re.I))
     has_chapter = bool(re.search(r"Chapter\s+\d+", sp, re.I))
-    if not has_volume or not has_chapter:
-        logger.warning(
-            "metadata_validation: section_path missing Volume/Chapter: %r",
-            sp[:80],
-        )
-        return False, "section_path must contain Volume <number> and Chapter <number>"
-    return True, None
+    if has_volume and has_chapter:
+        return True, None
+    # Accept DoD-style 4-6 digit section codes ("010101 GENERAL", "030201.A PURPOSE")
+    has_dod_code = bool(re.search(r"\b\d{4,6}(?:\.\w+)?\b", sp))
+    if has_dod_code:
+        return True, None
+    # Accept partial hierarchy (Volume-only or Chapter-only with at least one word)
+    if (has_volume or has_chapter) and len(sp.split()) >= 2:
+        return True, None
+    logger.warning(
+        "metadata_validation: section_path has no Volume/Chapter/DoD code: %r",
+        sp[:80],
+    )
+    return False, "section_path must contain Volume/Chapter markers or a DoD section code"
 
 
 def validate_book_chunk_for_indexing(source: dict) -> Tuple[dict, bool]:
