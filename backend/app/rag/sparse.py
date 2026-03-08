@@ -54,21 +54,35 @@ class Bm25Index:
             json.dump({"chunk_ids": self.chunk_ids, "corpus_tokens": self.corpus_tokens}, f, ensure_ascii=False)
 
     def rebuild_from_chunk_ids(self, chunk_ids: List[str]) -> None:
-        """Rebuild full BM25 from DB (e.g. when sparse_meta was missing but FAISS has data)."""
+        """Rebuild full BM25 from DB (e.g. when sparse_meta was missing but FAISS has data).
+
+        Uses batch queries (500 at a time) for performance with large corpora.
+        """
+        self.chunk_ids = []
+        self.corpus_tokens = []
+        batch_size = 500
         with get_conn() as conn:
-            self.chunk_ids = []
-            self.corpus_tokens = []
+            # Detect if contextualized_text column exists
             use_ctx = True
-            for cid in chunk_ids:
-                try:
-                    row = conn.execute("SELECT COALESCE(contextualized_text, text) FROM chunks WHERE id=?", (cid,)).fetchone() if use_ctx else conn.execute("SELECT text FROM chunks WHERE id=?", (cid,)).fetchone()
-                except Exception:
-                    use_ctx = False
-                    row = conn.execute("SELECT text FROM chunks WHERE id=?", (cid,)).fetchone()
-                if not row:
-                    continue
-                self.chunk_ids.append(cid)
-                self.corpus_tokens.append(_tokenize(row[0] or ""))
+            try:
+                conn.execute("SELECT contextualized_text FROM chunks LIMIT 1")
+            except Exception:
+                use_ctx = False
+            for start in range(0, len(chunk_ids), batch_size):
+                batch = chunk_ids[start:start + batch_size]
+                placeholders = ",".join("?" for _ in batch)
+                col = "COALESCE(contextualized_text, text)" if use_ctx else "text"
+                rows = conn.execute(
+                    f"SELECT id, {col} FROM chunks WHERE id IN ({placeholders})",
+                    batch,
+                ).fetchall()
+                row_map = {r[0]: r[1] for r in rows}
+                for cid in batch:
+                    txt = row_map.get(cid)
+                    if txt is None:
+                        continue
+                    self.chunk_ids.append(cid)
+                    self.corpus_tokens.append(_tokenize(txt))
         if self.corpus_tokens:
             from rank_bm25 import BM25Okapi
             self._bm25 = BM25Okapi(self.corpus_tokens)

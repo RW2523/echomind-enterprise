@@ -15,17 +15,18 @@ from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 
-SECTION_SUMMARY_SYSTEM = """You are summarizing a section from a regulatory document (e.g. DoD Financial Management Regulation).
+SECTION_SUMMARY_SYSTEM = """You are summarizing a section from a financial or regulatory document (e.g. DoD FMR, government regulations).
 Output a single short paragraph (2-4 sentences) covering:
 - What this section is about
-- What responsibilities, rules, or procedures it covers
-- Major policy terms or concepts
-Be concise. Use regulatory language. No preamble."""
+- What responsibilities, rules, procedures, or compliance requirements it covers
+- Major policy terms, financial concepts, or regulatory definitions
+Be concise. Use regulatory and financial language. No preamble."""
 
-CHUNK_ROLE_SYSTEM = """You are describing the role of a paragraph within a regulatory section.
+CHUNK_ROLE_SYSTEM = """You are describing the role of a paragraph within a regulatory or financial section (e.g. DoD FMR).
 Output exactly one sentence starting with "This paragraph" that explains what this specific paragraph covers.
 Examples: "This paragraph explains responsibilities for certifying claims and liability for improper payments."
 "This paragraph defines administrative control of funds and outlines the certifying officer's duties."
+"This paragraph specifies disbursing officer steps when a payment is issued incorrectly."
 Be specific to the content. No preamble."""
 
 
@@ -91,11 +92,18 @@ def build_context_header(
     return "\n".join(parts) if parts else ""
 
 
-def build_contextualized_text(header: str, raw_text: str) -> str:
-    """Append raw chunk text to context header."""
+def build_contextualized_text(header: str, raw_text: str, max_chars: int | None = None) -> str:
+    """Append raw chunk text to context header, truncating body to stay within embedding limits."""
+    if max_chars is None:
+        from ..core.config import settings
+        max_chars = settings.EMBED_MAX_CHARS
     if not header:
-        return raw_text
-    return f"{header}\n\n{raw_text}" if raw_text else header
+        return (raw_text or "")[:max_chars]
+    if not raw_text:
+        return header[:max_chars]
+    body_budget = max(200, max_chars - len(header) - 2)
+    body = raw_text[:body_budget]
+    return f"{header}\n\n{body}"
 
 
 async def generate_section_summary(section_text: str, section_path: str) -> Optional[str]:

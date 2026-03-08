@@ -142,14 +142,22 @@ def list_docs():
 async def upload(file: UploadFile = File(...)):
     data = await file.read()
     filetype, text, estimated_pages, page_offsets = parse_any(file.filename, data)
-    res = await index.add_document(
-        file.filename,
-        filetype,
-        text,
-        {"filename": file.filename, "filetype": filetype},
-        estimated_pages=estimated_pages,
-        page_offsets=page_offsets,
-    )
+    if not (text or "").strip():
+        raise HTTPException(
+            status_code=422,
+            detail="No text could be extracted from this file. It may be a scanned/image PDF (OCR not supported), corrupted, or empty.",
+        )
+    try:
+        res = await index.add_document(
+            file.filename,
+            filetype,
+            text,
+            {"filename": file.filename, "filetype": filetype},
+            estimated_pages=estimated_pages,
+            page_offsets=page_offsets,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     # Persist raw file so it can be served back for in-browser preview.
     doc_id = res.get("doc_id") or res.get("id")
     if doc_id:
@@ -178,12 +186,11 @@ async def serve_file(doc_id: str):
     ext = os.path.splitext(filename)[1].lower() if filename else ""
     media_type_map = {".pdf": "application/pdf", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".txt": "text/plain"}
     media_type = media_type_map.get(ext, "application/octet-stream")
-    return FileResponse(
-        path,
-        media_type=media_type,
-        filename=filename,
-        headers={"Content-Disposition": f'inline; filename="{filename}"'},
-    )
+    headers = {
+        "Content-Disposition": f'inline; filename="{filename}"',
+        "Cache-Control": "public, max-age=86400",  # 24h cache for fast preview
+    }
+    return FileResponse(path, media_type=media_type, filename=filename, headers=headers)
 
 
 @router.delete("/{doc_id}")

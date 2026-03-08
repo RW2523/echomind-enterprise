@@ -3,6 +3,7 @@ import json
 import logging
 import math
 import os
+import re
 from typing import Dict, List, Optional, Tuple
 
 import faiss
@@ -28,6 +29,37 @@ from .contextualizer import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Stopwords excluded from keyword/grep fallback (keep acronyms and meaningful terms)
+_KEYWORD_STOP = frozenset({
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "from",
+    "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+    "will", "would", "could", "should", "may", "might", "must", "can", "what", "which", "when", "where",
+    "who", "how", "why", "that", "this", "these", "those", "it", "its",
+})
+
+
+def _extract_keyword_search_terms(query: str) -> List[str]:
+    """Extract terms for literal substring search: acronyms (2+ caps), words >= 2 chars, numbers. Excludes stopwords."""
+    if not (query or "").strip():
+        return []
+    q = query.strip()
+    terms: List[str] = []
+    seen: set = set()
+    # Acronyms: 2+ consecutive uppercase letters (e.g. DDRS, DoD, FMR)
+    for m in re.finditer(r"[A-Z]{2,}", q):
+        t = m.group(0)
+        if t.lower() not in _KEYWORD_STOP and t not in seen:
+            terms.append(t)
+            seen.add(t)
+    # Words: alphanumeric, min 2 chars
+    for m in re.findall(r"[a-zA-Z0-9]{2,}", q):
+        t = m
+        if t.lower() in _KEYWORD_STOP or t in seen:
+            continue
+        terms.append(t)
+        seen.add(t)
+    return terms[:10]  # Cap to avoid huge LIKE chains
 
 IVF_THRESHOLD = 10_000
 IVF_NPROBE = 32
@@ -307,7 +339,7 @@ class FaissIndex:
                     continue
             valid_chunks.append(c)
         if not valid_chunks:
-            raise ValueError("No valid chunks after metadata validation (check section_path has Volume/Chapter, page_number)")
+            raise ValueError("No valid chunks after metadata validation. Ensure sections have recognized paths (DoD codes, Volume/Chapter, or Section/Appendix) and page numbers.")
         all_chunks = valid_chunks
 
         embed_chunks = [c for c in all_chunks if not c.is_parent]
@@ -681,6 +713,52 @@ class FaissIndex:
         raw = self.sparse.search(query, min(k * 4, len(self.sparse.chunk_ids)))
         out = [h for h in raw if not self._is_transcript_chunk(h.get("source") or {})]
         return out[:k]
+
+    def search_document_keyword_grep(self, query: str, k: int) -> List[Dict]:
+        """Literal substring search (grep-like) over document chunks. Fallback when semantic/BM25 miss exact terms (e.g. acronyms like DDRS).
+
+        Extracts search terms from query (acronyms, words >= 2 chars), runs SQL LIKE over chunk text,
+        excludes transcripts. Returns same shape as other search methods: {chunk_id, score, text, source}.
+        Score: 0.5 base + 0.1 per extra term matched (capped 0.8).
+        """
+        terms = _extract_keyword_search_terms(query)
+        if not terms:
+            return []
+        with get_conn() as conn:
+            # Match ANY term (OR) for recall; score by match count in Python
+            conditions = []
+            params: List[str] = []
+            for t in terms:
+                conditions.append("LOWER(COALESCE(c.contextualized_text, c.text)) LIKE ?")
+                params.append(f"%{t.lower()}%")
+            where_clause = " OR ".join(conditions)
+            sql = f"""
+                SELECT c.id, c.text, c.source_json, c.contextualized_text
+                FROM chunks c
+                INNER JOIN documents d ON c.doc_id = d.id
+                WHERE (d.filename IS NULL OR d.filename NOT LIKE 'transcript_%')
+                AND ({where_clause})
+            """
+            rows = conn.execute(sql, params).fetchall()
+        if not rows:
+            return []
+        # Score by number of terms matched (more = higher)
+        scored: Dict[str, Dict] = {}
+        for row in rows:
+            cid, text, src_json, ctx_text = row
+            content = (ctx_text or text or "").lower()
+            matches = sum(1 for t in terms if t.lower() in content)
+            if matches == 0:
+                continue
+            src = json.loads(src_json) if src_json else {}
+            if self._is_transcript_chunk(src):
+                continue
+            # Base 0.5 + 0.1 per term matched, cap 0.8
+            score = min(0.8, 0.5 + 0.1 * matches)
+            if cid not in scored or scored[cid]["score"] < score:
+                scored[cid] = {"chunk_id": cid, "score": score, "text": text or "", "source": src}
+        out = sorted(scored.values(), key=lambda x: x["score"], reverse=True)[:k]
+        return out
 
     async def search_document_restricted(
         self,

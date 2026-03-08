@@ -20,21 +20,39 @@ from .chunkers import (
     chunk_long_form,
     chunk_sensitive,
     chunk_unstructured,
+    handle_large_sections,
     _split_book_into_sections,
 )
 from ..book.section_id import extract_section_id, section_id_from_path
 
 
 def _is_valid_book_section_path(section_path: Optional[str]) -> bool:
-    """Reject 'Segment N' fallback; require Volume and Chapter for BOOK chunks."""
+    """Reject generic 'Segment N' fallback but accept DoD-style numbered sections.
+
+    Valid paths:
+      - Contains Volume and Chapter (e.g. "Volume 5 > Chapter 3 > Section 0301")
+      - DoD numbered section (e.g. "0101 GENERAL", "010201 PURPOSE")
+      - Contains Chapter or Section keywords
+    Invalid:
+      - Empty or whitespace-only
+      - Generic "Segment N" fallback from paragraph splitter
+    """
     if not (section_path or "").strip():
         return False
     sp = str(section_path).strip()
     if re.match(r"^Segment\s+\d+\s*$", sp, re.I):
         return False
+    # DoD numbered sections: 4-6 digit code followed by title (e.g. "0101 GENERAL")
+    if re.match(r"^\d{4,6}\s+", sp):
+        return True
     has_volume = bool(re.search(r"Volume\s+\d+", sp, re.I))
     has_chapter = bool(re.search(r"Chapter\s+\d+", sp, re.I))
-    return has_volume and has_chapter
+    if has_volume and has_chapter:
+        return True
+    # Accept paths with Section, Chapter, or Appendix keywords
+    if re.search(r"(?:Section|Chapter|Appendix)\s+[\dA-Z]", sp, re.I):
+        return True
+    return False
 
 
 def _build_section_path(title: Optional[str], parent_path: Optional[str] = None) -> Optional[str]:
@@ -117,38 +135,65 @@ def chunk_document(
         for section_title, section_text in sections:
             section_path = _build_section_path(section_title)
             if not _is_valid_book_section_path(section_path):
-                continue  # Skip sections with malformed path (e.g. "Segment N")
+                section_char_offset += len(section_title or "") + len(section_text)
+                continue
             canonical_sid = section_id_from_path(section_path or "") or extract_section_id(section_title or "")
-            pc_list = chunk_long_form(
-                section_text,
-                sensitivity_level,
-                redacted,
-                section=section_title,
-                section_path=section_path,
-            )
-            for pc in pc_list:
-                pc.parent.section_id = canonical_sid
-                for c in pc.children:
-                    c.section_id = canonical_sid
-            for pc in pc_list:
-                parent = pc.parent
-                parent.chunk_id = new_id("chk")
-                parent.doc_id = doc_id
-                parent.section_title = section_title
-                page = _page_for_offset(
-                    section_char_offset, total_chars, estimated_pages, page_offsets
+            # Split oversized sections at paragraph boundaries before chunking
+            sub_texts = handle_large_sections(section_text)
+            sub_char_offset = section_char_offset
+            for sub_idx, sub_text in enumerate(sub_texts):
+                effective_title = section_title if len(sub_texts) == 1 else f"{section_title} (part {sub_idx + 1})"
+                effective_path = section_path if len(sub_texts) == 1 else f"{section_path} (part {sub_idx + 1})"
+                pc_list = chunk_long_form(
+                    sub_text,
+                    sensitivity_level,
+                    redacted,
+                    section=effective_title,
+                    section_path=effective_path,
                 )
-                if page is not None:
-                    parent.page_number = page
-                chunks.append(parent)
-                for c in pc.children:
-                    c.parent_chunk_id = parent.chunk_id
-                    c.doc_id = doc_id
-                    c.chunk_id = new_id("chk")
-                    c.section_title = section_title
-                    c.page_number = parent.page_number
-                    chunks.append(c)
-            section_char_offset += len(section_text)
+                for pc in pc_list:
+                    pc.parent.section_id = canonical_sid
+                    for c in pc.children:
+                        c.section_id = canonical_sid
+                for pc in pc_list:
+                    parent = pc.parent
+                    parent.chunk_id = new_id("chk")
+                    parent.doc_id = doc_id
+                    parent.section_title = effective_title
+                    page = _page_for_offset(
+                        sub_char_offset, total_chars, estimated_pages, page_offsets
+                    )
+                    if page is not None:
+                        parent.page_number = page
+                    chunks.append(parent)
+                    child_count = len(pc.children)
+                    for ci, c in enumerate(pc.children):
+                        c.parent_chunk_id = parent.chunk_id
+                        c.doc_id = doc_id
+                        c.chunk_id = new_id("chk")
+                        c.section_title = effective_title
+                        if child_count > 0 and (page_offsets or estimated_pages > 0):
+                            child_offset = sub_char_offset + int((ci / max(child_count, 1)) * len(sub_text))
+                            child_page = _page_for_offset(child_offset, total_chars, estimated_pages, page_offsets)
+                            c.page_number = child_page if child_page is not None else parent.page_number
+                        else:
+                            c.page_number = parent.page_number
+                        chunks.append(c)
+                sub_char_offset += len(sub_text)
+            section_char_offset += len(section_title or "") + len(section_text)
+        if not chunks:
+            # No valid Volume/Chapter sections found — fall back to unstructured chunking
+            chunks = chunk_unstructured(clean_text, sensitivity_level, redacted)
+            n_chunks = len(chunks)
+            for i, c in enumerate(chunks):
+                c.doc_id = doc_id
+                c.chunk_id = new_id("chk")
+                c.chunk_index = i
+                # Estimate page from chunk position for document preview
+                if n_chunks > 0 and (estimated_pages > 0 or page_offsets):
+                    offset = int((i / n_chunks) * total_chars) if total_chars > 0 else 0
+                    c.page_number = _page_for_offset(offset, total_chars, estimated_pages, page_offsets)
+            return chunks
         _assign_indices(chunks)
         return chunks
     elif doc_type == DocType.SENSITIVE:
@@ -156,10 +201,15 @@ def chunk_document(
     else:
         chunks = chunk_unstructured(clean_text, sensitivity_level, redacted)
 
+    n_chunks = len(chunks)
     for i, c in enumerate(chunks):
         c.doc_id = doc_id
         c.chunk_id = new_id("chk")
         c.chunk_index = i
+        # Estimate page from chunk position for document preview (USER/SENSITIVE)
+        if n_chunks > 0 and (estimated_pages > 0 or page_offsets) and c.page_number is None:
+            offset = int((i / n_chunks) * total_chars) if total_chars > 0 else 0
+            c.page_number = _page_for_offset(offset, total_chars, estimated_pages, page_offsets)
     return chunks
 
 

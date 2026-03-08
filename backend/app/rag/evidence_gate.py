@@ -184,8 +184,27 @@ def gate_evidence(
             fallback_message=fallback_message,
         )
 
-    # Case B: concept query — require section + ≥2 concept matches + confidence
-    if explicit_section_ids and section_match < 0.5:
+    # Case B: concept query (no explicit section refs) — relax: pass if we have evidence + some coverage
+    if not explicit_section_ids:
+        # Concept query: pass when we have ≥3 evidence sentences and ≥1 concept match
+        min_evidence = 3
+        min_coverage = 0.2
+        if len(evidence) >= min_evidence and (coverage >= min_coverage or not (found or missing)):
+            passed = True
+            logger.info(
+                "EvidenceGate: PASS (concept query) evidence=%d coverage=%.2f q=%s",
+                len(evidence), coverage, question[:80],
+            )
+        elif len(evidence) >= 1 and coverage >= 0.15:
+            passed = True
+            logger.info(
+                "EvidenceGate: PASS (concept query, relaxed) evidence=%d coverage=%.2f q=%s",
+                len(evidence), coverage, question[:80],
+            )
+        else:
+            passed = False
+            fallback_message = WEAK_EVIDENCE_MSG
+    elif explicit_section_ids and section_match < 0.5:
         passed = False
         fallback_message = MISSING_SECTION_MSG
         logger.info(

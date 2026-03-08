@@ -23,6 +23,8 @@ class Settings:
     # LLM streaming / phrase commit knobs (unmute-like)
     LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.7"))
     LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "220"))
+    # Log full LLM request payload (set LLM_LOG_PAYLOAD=1 to see entire messages/temperature/etc; uses WARNING so it shows)
+    LLM_LOG_PAYLOAD: bool = os.getenv("LLM_LOG_PAYLOAD", "0").lower() in ("1", "true", "yes")
 
     PHRASE_MIN_CHARS: int = int(os.getenv("PHRASE_MIN_CHARS", "28"))
     PHRASE_MAX_CHARS: int = int(os.getenv("PHRASE_MAX_CHARS", "120"))
@@ -43,7 +45,7 @@ class Settings:
     MOSHI_SUPPORTS_TEXT_INJECT: bool = os.getenv("MOSHI_SUPPORTS_TEXT_INJECT", "0") == "1"
 
     # Greeting spoken by TTS when session starts (natural conversation opener)
-    INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "Hi! I'm here. What would you like to talk about?")
+    INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "Hi! I'm your financial assistant. Ask me about DoD FMR, regulations, or your uploaded documents.")
 
     # Backend RAG: when set, voice can call this URL for knowledge-base answers (use_knowledge_base=true).
     # Example: http://backend:8000 (no trailing slash; /api/chat/ask-voice is appended).

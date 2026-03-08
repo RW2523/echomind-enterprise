@@ -3,16 +3,22 @@ import logging
 import requests
 from typing import Iterator, List, Dict
 
+from ..config import SETTINGS
+
 logger = logging.getLogger(__name__)
 
 
 def _log_chat_request(url: str, payload: dict, stream: bool) -> None:
-    """Log full prompt (no content cut)."""
-    logger.info(
-        "LLM request %s -> %s full_payload=%s",
-        "stream" if stream else "sync",
+    """Log full LLM request payload when LLM_LOG_PAYLOAD is enabled. Uses WARNING so it shows with default log level."""
+    if not getattr(SETTINGS, "LLM_LOG_PAYLOAD", False):
+        return
+    mode = "stream" if stream else "sync"
+    payload_json = json.dumps(payload, ensure_ascii=False, indent=2)
+    logger.warning(
+        "[VOICE_LLM_REQUEST] %s -> %s\nfull_payload=%s",
+        mode,
         url,
-        json.dumps(payload, ensure_ascii=False),
+        payload_json,
     )
 
 

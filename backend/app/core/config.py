@@ -19,20 +19,20 @@ class Settings(BaseSettings):
     LLM_BASE_URL: str = "http://ollama:11434/v1"
     LLM_MODEL: str = "qwen2.5:7b-instruct-q4_K_M"
     LLM_TEMPERATURE: float = 0.2
-    LLM_MAX_TOKENS: int = 1024
+    LLM_MAX_TOKENS: int = int(os.getenv("ECHOMIND_LLM_MAX_TOKENS", "2048"))
     OLLAMA_EMBED_URL: str = "http://ollama:11434/api/embeddings"
     OLLAMA_EMBED_MODEL: str = os.getenv("ECHOMIND_EMBED_MODEL", "nomic-embed-text")
-    # Max characters per chunk sent to embedding API (avoids "input length exceeds context length").
-    # Conservative default (2000) works with 512-token models; set ECHOMIND_EMBED_MAX_CHARS=8000 for nomic-embed-text.
+    # Max characters per chunk sent to embedding API. nomic-embed-text context varies by Ollama build;
+    # 2000 chars (~500 tokens) is safe for all configurations. Set higher only if your model supports it.
     EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "2000"))
-    CHUNK_SIZE: int = int(os.getenv("ECHOMIND_CHUNK_SIZE", "650"))
+    CHUNK_SIZE: int = int(os.getenv("ECHOMIND_CHUNK_SIZE", "450"))
     CHUNK_OVERLAP: int = int(os.getenv("ECHOMIND_CHUNK_OVERLAP", "120"))
     TOP_K: int = int(os.getenv("ECHOMIND_TOP_K", "15"))
     # Large-doc parent/child token limits (BOOK type). Override for dense regulatory docs.
     BOOK_PARENT_MIN_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_PARENT_MIN_TOKENS", "2000"))
     BOOK_PARENT_MAX_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_PARENT_MAX_TOKENS", "3500"))
     BOOK_CHILD_MIN_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_CHILD_MIN_TOKENS", "500"))
-    BOOK_CHILD_MAX_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_CHILD_MAX_TOKENS", "700"))
+    BOOK_CHILD_MAX_TOKENS: int = int(os.getenv("ECHOMIND_BOOK_CHILD_MAX_TOKENS", "400"))
     # Dynamic chunk sizing: auto-shrink children for dense technical content.
     BOOK_DYNAMIC_CHUNK_SIZING: bool = os.getenv("ECHOMIND_BOOK_DYNAMIC_CHUNK_SIZING", "1").lower() in ("1", "true", "yes")
     # Large section threshold: split sections exceeding this (tokens) into multiple chunks. Default 10000.
@@ -79,8 +79,8 @@ class Settings(BaseSettings):
     # Bypass compression for chunks that contain key query terms (improves grounding for named concepts).
     RAG_VERBATIM_QUERY_TERMS: bool = os.getenv("ECHOMIND_RAG_VERBATIM_QUERY_TERMS", "1").lower() in ("1", "true", "yes")
     RAG_VERBATIM_MAX_CHARS: int = int(os.getenv("ECHOMIND_RAG_VERBATIM_MAX_CHARS", "1600"))
-    # Max total context chars; 0 = no limit. When exceeded, trim lowest-scoring blocks.
-    RAG_CONTEXT_MAX_CHARS: int = int(os.getenv("RAG_CONTEXT_MAX_CHARS", "12000"))
+    # Max total context chars; 0 = no limit. When exceeded, trim lowest-scoring blocks. 24k for 7300-page DoD FMR.
+    RAG_CONTEXT_MAX_CHARS: int = int(os.getenv("RAG_CONTEXT_MAX_CHARS", "24000"))
 
     # Real-time transcription & knowledge capture (Kyutai STT only, 24kHz)
     ECHOMIND_AUTO_STORE_DEFAULT: bool = os.getenv("ECHOMIND_AUTO_STORE_DEFAULT", "1").lower() in ("1", "true", "yes")
@@ -115,14 +115,14 @@ class Settings(BaseSettings):
     RAG_SECTION_SCORE_THRESHOLD: float = float(os.getenv("RAG_SECTION_SCORE_THRESHOLD", "0.35"))
     RAG_SECTION_RELAX_THRESHOLD: float = float(os.getenv("RAG_SECTION_RELAX_THRESHOLD", "0.25"))
     RAG_SECTION_TOP_K: int = int(os.getenv("RAG_SECTION_TOP_K", "10"))
-    # Max sections to restrict chunk retrieval to (1–3). Only global retrieval when 0 sections found.
-    MAX_SECTIONS_PER_RETRIEVAL: int = int(os.getenv("RAG_MAX_SECTIONS_PER_RETRIEVAL", "3"))
+    # Max sections to restrict chunk retrieval to. Higher for large docs (7300-page DoD FMR). Only global retrieval when 0 sections found.
+    MAX_SECTIONS_PER_RETRIEVAL: int = int(os.getenv("RAG_MAX_SECTIONS_PER_RETRIEVAL", "5"))
 
     # Step 2: Cross-encoder re-ranker (sentence-transformers if available, else LLM fallback).
     RAG_USE_RERANKER: bool = os.getenv("RAG_USE_RERANKER", "1").lower() in ("1", "true", "yes")
     RAG_RERANK_TOP_K: int = int(os.getenv("RAG_RERANK_TOP_K", "25"))
     RAG_RERANK_FINAL_N: int = int(os.getenv("RAG_RERANK_FINAL_N", "15"))
-    RAG_CE_MAX_CHARS: int = int(os.getenv("RAG_CE_MAX_CHARS", "1024"))
+    RAG_CE_MAX_CHARS: int = int(os.getenv("RAG_CE_MAX_CHARS", "1500"))
     # Cross-encoder model for reranking. Use RAG_CE_MODEL to swap in a domain-specific fine-tuned model (e.g. legal/regulatory).
     RAG_CE_MODEL: str = os.getenv("RAG_CE_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
     RAG_USE_MMR: bool = os.getenv("RAG_USE_MMR", "0").lower() in ("1", "true", "yes")
@@ -141,10 +141,16 @@ class Settings(BaseSettings):
 
     # Step 5: Strict citation enforcement — require (section_path, page) in every answer.
     RAG_STRICT_CITATIONS: bool = os.getenv("RAG_STRICT_CITATIONS", "0").lower() in ("1", "true", "yes")
-    # AnswerGating: verify context has explicit section id + ≥2 key tokens before answering; else return "Not found".
-    RAG_USE_ANSWER_GATING: bool = os.getenv("RAG_USE_ANSWER_GATING", "1").lower() in ("1", "true", "yes")
+    # EvidenceGate: refuse when evidence is weak (confidence/coverage below threshold). Default OFF for single-doc DoD FMR.
+    RAG_USE_EVIDENCE_GATE: bool = os.getenv("RAG_USE_EVIDENCE_GATE", "0").lower() in ("1", "true", "yes")
+    # AnswerGating: verify context has explicit section id + key tokens before answering. Default OFF for single-doc DoD FMR.
+    RAG_USE_ANSWER_GATING: bool = os.getenv("RAG_USE_ANSWER_GATING", "0").lower() in ("1", "true", "yes")
     # Post-process answers: add inference transparency notice, suggest sections when info missing.
     RAG_CITATION_POSTPROCESS: bool = os.getenv("RAG_CITATION_POSTPROCESS", "1").lower() in ("1", "true", "yes")
+    # When True, run literal substring (grep-like) search over chunks when semantic/BM25 scores are weak. Catches acronyms (DDRS), exact terms BM25 may miss.
+    RAG_USE_KEYWORD_FALLBACK: bool = os.getenv("RAG_USE_KEYWORD_FALLBACK", "1").lower() in ("1", "true", "yes")
+    # Run keyword fallback when best document score is below this (default 0.45 = RAG_RELEVANCE_THRESHOLD).
+    RAG_KEYWORD_FALLBACK_THRESHOLD: float = float(os.getenv("RAG_KEYWORD_FALLBACK_THRESHOLD", "0.45"))
 
     # Step 7: Glossary priority — search glossary index first for definition queries.
     RAG_USE_GLOSSARY_PRIORITY: bool = os.getenv("RAG_USE_GLOSSARY_PRIORITY", "1").lower() in ("1", "true", "yes")
@@ -160,12 +166,13 @@ class Settings(BaseSettings):
     RAG_USE_TOC_ROUTING: bool = os.getenv("RAG_USE_TOC_ROUTING", "1").lower() in ("1", "true", "yes")
     RAG_TOC_TOP_K: int = int(os.getenv("RAG_TOC_TOP_K", "8"))
     RAG_TOC_THRESHOLD: float = float(os.getenv("RAG_TOC_THRESHOLD", "0.25"))
-    # BookRAG: max 2 chunks per section unless comparison query
-    RAG_MAX_CHUNKS_PER_SECTION: int = int(os.getenv("RAG_MAX_CHUNKS_PER_SECTION", "2"))
+    # BookRAG: max chunks per section (4 for single-doc DoD FMR; 2 for multi-doc)
+    RAG_MAX_CHUNKS_PER_SECTION: int = int(os.getenv("RAG_MAX_CHUNKS_PER_SECTION", "4"))
 
     # ── Section limiting (reduce cross-section contamination) ───────────────────
-    MAX_SECTIONS_PER_ANSWER: int = int(os.getenv("RAG_MAX_SECTIONS_PER_ANSWER", "2"))
-    MAX_EVIDENCE_SENTENCES: int = int(os.getenv("RAG_MAX_EVIDENCE_SENTENCES", "10"))
+    # Max sections to include in context. 6 for single-doc DoD FMR (cross-volume answers); 2–3 for multi-doc.
+    MAX_SECTIONS_PER_ANSWER: int = int(os.getenv("RAG_MAX_SECTIONS_PER_ANSWER", "6"))
+    MAX_EVIDENCE_SENTENCES: int = int(os.getenv("RAG_MAX_EVIDENCE_SENTENCES", "15"))
     # Graph expansion: only when top section confidence below this (0 = always)
     RAG_GRAPH_EXPANSION_CONFIDENCE_THRESHOLD: float = float(os.getenv("RAG_GRAPH_EXPANSION_CONFIDENCE_THRESHOLD", "0.5"))
     MAX_GRAPH_EXPANSION_DEPTH: int = int(os.getenv("RAG_GRAPH_EXPANSION_DEPTH", "1"))

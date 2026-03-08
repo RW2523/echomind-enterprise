@@ -149,8 +149,13 @@ def validate_and_fix_source(source: dict, doc_type: str = "") -> Tuple[dict, boo
 def validate_section_path(section_path: Optional[str], reject_segment_fallback: bool = True) -> Tuple[bool, Optional[str]]:
     """Validate section_path for BOOK chunks.
 
-    - Must contain "Volume <number>" and "Chapter <number>"
-    - Reject "Segment N" fallback labels when reject_segment_fallback=True
+    Valid paths:
+      - Contains Volume and Chapter (e.g. "Volume 5 > Chapter 3 > Section 0301")
+      - DoD numbered section (e.g. "0101 GENERAL", "010201 PURPOSE")
+      - Contains Section, Chapter, or Appendix keywords
+    Invalid:
+      - Empty / missing
+      - "Segment N" fallback from paragraph splitter
     Returns (is_valid, reason).
     """
     if not (section_path or "").strip():
@@ -159,15 +164,21 @@ def validate_section_path(section_path: Optional[str], reject_segment_fallback: 
     if reject_segment_fallback and SEGMENT_FALLBACK_RE.match(sp):
         logger.warning("metadata_validation: rejecting Segment fallback path=%r", sp)
         return False, "Segment N fallback not allowed"
+    # DoD numbered sections: 4-6 digit code followed by title
+    if re.match(r"^\d{4,6}\s+", sp):
+        return True, None
     has_volume = bool(re.search(r"Volume\s+\d+", sp, re.I))
     has_chapter = bool(re.search(r"Chapter\s+\d+", sp, re.I))
-    if not has_volume or not has_chapter:
-        logger.warning(
-            "metadata_validation: section_path missing Volume/Chapter: %r",
-            sp[:80],
-        )
-        return False, "section_path must contain Volume <number> and Chapter <number>"
-    return True, None
+    if has_volume and has_chapter:
+        return True, None
+    # Accept paths with Section, Chapter, or Appendix keywords
+    if re.search(r"(?:Section|Chapter|Appendix)\s+[\dA-Z]", sp, re.I):
+        return True, None
+    logger.warning(
+        "metadata_validation: section_path not recognized: %r",
+        sp[:80],
+    )
+    return False, "section_path must contain Volume/Chapter, DoD section code, or Section/Appendix keyword"
 
 
 def validate_book_chunk_for_indexing(source: dict) -> Tuple[dict, bool]:
@@ -209,21 +220,20 @@ def validate_book_chunk_for_indexing(source: dict) -> Tuple[dict, bool]:
         logger.warning("metadata_validation: BOOK chunk invalid section_path, skipping: %s", sp[:60])
         return src, False
 
-    # page_number: required for BOOK
+    # page_number: preferred for BOOK but not a hard rejection (DoD sections from regex may miss pages)
     pn = src.get("page_number")
-    _, pn_ok = validate_page_number(pn, required_for_book=True)
-    if not pn_ok or pn is None:
-        logger.warning("metadata_validation: BOOK chunk missing page_number, skipping")
-        return src, False
+    _, pn_ok = validate_page_number(pn, required_for_book=False)
+    if pn is None:
+        logger.debug("metadata_validation: BOOK chunk missing page_number (non-fatal)")
 
-    # section_id: must match regex (after canonicalize attempt)
+    # section_id: validate format (after canonicalize attempt), drop if invalid but don't reject chunk
     sid = src.get("section_id") or src.get("section")
     if sid:
         corrected, ok = validate_section_id(sid)
         if not ok:
-            logger.warning("metadata_validation: BOOK chunk invalid section_id=%r, skipping", sid)
-            return src, False
-        if corrected:
+            logger.warning("metadata_validation: BOOK chunk invalid section_id=%r, clearing", sid)
+            src.pop("section_id", None)
+        elif corrected:
             src["section_id"] = corrected
 
     # Require doc_id; parent_chunk_id required for child chunks only

@@ -26,8 +26,9 @@ from ..utils.ids import new_id, now_iso
 
 logger = logging.getLogger(__name__)
 
-# Max chars to embed per section (stay within nomic-embed-text context window)
-_SECTION_EMBED_MAX_CHARS = int(os.getenv("ECHOMIND_SECTION_EMBED_MAX_CHARS", "6000"))
+# Max chars to embed per section. Must fit within embedding model context window.
+# nomic-embed-text default context varies; 2000 chars is safe for all Ollama builds.
+_SECTION_EMBED_MAX_CHARS = int(os.getenv("ECHOMIND_SECTION_EMBED_MAX_CHARS", "2000"))
 
 
 class SectionIndex:

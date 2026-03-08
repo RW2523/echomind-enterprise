@@ -71,7 +71,12 @@ def _parse_comparison_sections(question: str) -> Optional[Tuple[str, str]]:
 CONTEXT_WINDOW_VALUES = ("24h", "48h", "1w", "all")
 
 # Deterministic message when document/transcript intent but retrieval is insufficient (no hallucination fallback to general chat).
-INSUFFICIENT_CONTEXT_MSG = "The provided documents do not contain this information."
+INSUFFICIENT_CONTEXT_MSG = (
+    "I couldn't find a confident answer to your question in the uploaded DoD FMR or related documents. "
+    "This may happen when the topic spans multiple volumes or uses terminology that differs from the document's headings. "
+    "Try rephrasing your question, referencing a specific section or paragraph number (e.g. 'What does paragraph 030201 say?'), "
+    "or ask me to search for related sections."
+)
 
 def _parse_iso_date(created_at: Optional[str]) -> Optional[datetime]:
     if not created_at:
@@ -809,20 +814,18 @@ async def _extract_key_differences_async(
 
 
 def _strict_citation_system_prompt(persona: Optional[str] = None) -> str:
-    """System prompt with strict citation requirement for regulatory documents."""
+    """System prompt with strict citation requirement for regulatory documents (DoD FMR, government docs)."""
     base = (
-        "You are EchoMind, a regulatory document assistant.\n\n"
-        "CRITICAL INSTRUCTION: Every factual claim or statement from the retrieved context MUST be "
-        "followed by an inline citation in the format:\n"
-        "  (section_path, page N)\n"
-        "For example: 'Advances shall not exceed 30 days of pay. (Volume 5 > Chapter 3 > 030201, page 142)'\n\n"
-        "If the context does not contain the information needed to answer WITH a citation:\n"
-        "  - State clearly that the information is not directly available.\n"
-        "  - Suggest relevant sections or chapters where related guidance may be found.\n"
-        "  - Example: 'The required information is not directly available in Section 0301. However, related guidance can be found in Chapter 7, Section 14.0.'\n\n"
-        "When information is inferred, state so explicitly and cite the section(s) from which you inferred it.\n\n"
-        "Do NOT omit citations. Do NOT invent section paths or page numbers. "
-        "Only cite sections that appear in the provided context blocks."
+        "You are EchoMind, a knowledgeable DoD financial management advisor.\n\n"
+        "CRITICAL RULE: Every factual claim MUST include an inline citation from the provided context:\n"
+        "  Format: (Section 0301, page 42) or (Volume 5, Chapter 3, page 15)\n"
+        "  Example: 'Advances shall not exceed 30 days of pay (Volume 5, Chapter 3, Section 030201, page 142).'\n\n"
+        "Be direct and confident—lead with the answer, then supporting detail. "
+        "Do NOT start with disclaimers. Do NOT invent section numbers or page references. "
+        "Only cite sections present in the provided context.\n\n"
+        "If the context lacks the answer, say so briefly and suggest which Volume/Chapter may cover the topic.\n\n"
+        "GUARDRAIL: Only answer DoD FMR, financial management, and regulatory questions. "
+        "For anything else: 'I'm a financial management advisor. I can only help with DoD FMR and regulatory topics.'"
     )
     if persona:
         base = f"You are EchoMind in the role of: {persona}.\n\n" + base
@@ -838,7 +841,7 @@ async def _answer_with_strict_citations(
 ) -> str:
     """Generate an answer with mandatory inline citations. Retries once with stronger instruction."""
     sys_prompt = _strict_citation_system_prompt(persona)
-    user_msg = f"Question: {question}\n\nContext (cite exactly from this):\n{ctx_block}"
+    user_msg = f"Question: {question}\n\nDocument excerpts (use these to give correct guidance—interpret, explain, and cite when making factual claims):\n{ctx_block}"
     msgs = [{"role": "system", "content": sys_prompt}] + history[-6:] + [{"role": "user", "content": user_msg}]
     try:
         ans = await chat.chat(msgs, temperature=0.0, max_tokens=settings.LLM_MAX_TOKENS)
@@ -1514,6 +1517,24 @@ async def retrieve_semantic_first(
             document_hits = _prefer_authoritative_sort(document_hits)
         document_hits = document_hits[:k]
 
+        # 4b. Keyword/grep fallback when semantic/BM25 scores are weak (e.g. acronyms like DDRS)
+        if getattr(settings, "RAG_USE_KEYWORD_FALLBACK", True):
+            doc_best_so_far = document_hits[0]["score"] if document_hits else 0.0
+            fallback_threshold = getattr(settings, "RAG_KEYWORD_FALLBACK_THRESHOLD", 0.45)
+            if doc_best_so_far < fallback_threshold:
+                keyword_hits = index.search_document_keyword_grep(q, k_per)
+                if keyword_hits:
+                    existing_ids = {h["chunk_id"] for h in document_hits}
+                    for kh in keyword_hits:
+                        if kh["chunk_id"] not in existing_ids:
+                            document_hits.append(kh)
+                            existing_ids.add(kh["chunk_id"])
+                    document_hits = sorted(document_hits, key=lambda h: h["score"], reverse=True)[:k]
+                    logger.info(
+                        "RAG keyword fallback: merged %d grep hits (doc_best=%.3f < %.3f)",
+                        len(keyword_hits), doc_best_so_far, fallback_threshold,
+                    )
+
     # 5. Pick source by semantic relevance (best score)
     transcript_best = transcript_hits[0]["score"] if transcript_hits else 0.0
     document_best = document_hits[0]["score"] if document_hits else 0.0
@@ -1603,9 +1624,10 @@ def _dedupe_overlapping_sentences(blocks: List[str], overlap_ratio: float) -> Li
 
 
 # Compression prompt: extract only answer-critical sentences; label partial/conflicting to improve faithfulness.
-COMPRESS_SYSTEM = """Extract only sentences that are directly needed to answer the question. Copy verbatim; do not paraphrase or add interpretation.
+COMPRESS_SYSTEM = """Extract only sentences that are directly needed to answer the question about regulatory or financial content. Copy verbatim; do not paraphrase or add interpretation.
 - If the excerpt is only partially relevant, prefix with "[Partial]: " and keep only the relevant part.
 - If the excerpt contradicts or differs from something you already extracted, include it and note "[Conflicting]: ".
+- Preserve section references, paragraph numbers, and page citations when present.
 - Omit sentences that do not help answer the question. Keep the result short (at most a few sentences)."""
 
 
@@ -1623,85 +1645,27 @@ async def compress(question: str, chunk_text: str, src: dict) -> str:
 
 # RAG generation rules: faithfulness, grounding, citations, structured responses.
 def _rag_system_prompt(persona: Optional[str] = None) -> str:
-    rag_doc_type_rules = """
-    DOCUMENT TYPES & STYLES:
+    base_prompt = (
+        "You are EchoMind, a knowledgeable DoD financial management advisor.\n\n"
 
-    1. 📘 Books (doc_type: book)
-    - Treat as conceptual and explanatory.
-    - Paraphrase when appropriate; combine chunks if they align.
-    - Style: natural language, structured paragraphs or bullets.
-    - Cite chapter/section when available.
-    - Do not quote large blocks unless requested.
+        "ROLE: You provide authoritative guidance on the DoD Financial Management Regulation (FMR), "
+        "government financial procedures, compliance, and regulatory matters. Interpret the regulations, "
+        "explain their practical implications, and guide the user on what to do and why.\n\n"
 
-    2. ❓ FAQ Documents (doc_type: faq)
-    - Treat each entry as authoritative Q&A.
-    - Prefer exact answers over paraphrasing.
-    - Style: direct, concise, one clear answer per question.
-    - Do not merge unrelated FAQs. Note conflicts if they exist.
+        "ANSWER RULES:\n"
+        "1. Answer ONLY from the provided document excerpts. Never invent facts, section numbers, or page references.\n"
+        "2. Cite every factual claim inline: (Section 0301, page 42) or (Volume 5, Chapter 3). Only cite sections that appear in the context.\n"
+        "3. Be direct and confident. Lead with the answer, then provide supporting detail. Do NOT start with disclaimers or hedging.\n"
+        "4. Keep answers focused and concise. Use numbered steps for procedures, bullets for lists, short paragraphs for explanations. "
+        "Avoid repeating the same point in multiple formats.\n"
+        "5. If the context does not contain the answer, say so clearly and suggest which Volume/Chapter may cover the topic. "
+        "Do NOT fabricate an answer from general knowledge.\n"
+        "6. For broad questions (e.g. 'What is the DoD FMR?'), synthesize an overview from the available context rather than saying you can't find it.\n\n"
 
-    3. 🏛️ Government Documents / Forms (doc_type: government/forms)
-    - Treat as procedural/legal content.
-    - Style: precise, step-by-step, neutral.
-    - Reference form and section when possible.
-    - Do not infer or extrapolate.
-
-    4. 📊 Records / Structured Data (CSV, logs, spreadsheets) (doc_type: records)
-    - Treat as factual data.
-    - Prefer filtering, aggregation, or listing.
-    - Include date ranges or filters when applicable.
-    - Do not invent trends or values.
-
-    5. 🎤 Live Transcripts (lectures, discussions, meetings) (doc_type: transcript)
-    - Treat as ongoing speech content.
-    - Summarize, extract key points, or answer questions using only the transcript.
-    - Maintain speaker distinctions if provided.
-    - Do not infer content beyond what was spoken.
-
-    CITATIONS (CRITICAL):
-    - For queries that reference a specific section (e.g. "What does paragraph 030201 say?"), quote or paraphrase directly from that section. Use the [CITATION REFERENCE] block when provided.
-    - Always explicitly mention the section number or chapter reference. Format: "According to Section 0301, …" or inline "… (Section 0301, page 42)".
-    - If the section content is not directly found, state: "This information is inferred from context. Please refer to Section {section_reference} for full details."
-    - Never invent section numbers or page references. Only cite sections that appear in the context.
-
-    INFERENCES (TRANSPARENCY):
-    - When an answer is based on inferred content, state this explicitly: "The information here is inferred from Section 0301, but a detailed explanation can be found in Chapter X."
-    - For undefined terms (e.g. "audit readiness"): if no formal definition exists, suggest related sections. Example: "The definition of 'audit readiness' is not directly found in the FMR but can be inferred based on general guidelines outlined in Section 1502, which discusses financial reporting and preparation for audits."
-    - Always explain briefly why the suggested section is relevant to the query.
-
-    PROCEDURAL QUERIES (steps, how-to, requirements):
-    - Present each step clearly in a numbered list. Format: "Step 1: [Description] (see Section X for details)".
-    - Link each step to a specific section when the context provides it: "Step 1: Submit request. (see Section 0301 for details)"
-    - If steps are not explicitly in the context, provide a summary and suggest: "For detailed steps, refer to Section X."
-    - Combine citation and procedure when both apply (e.g. "What are the steps under Section 0301?" → steps with citations).
-
-    COMPARISON QUERIES (Section X vs Section Y, differences):
-    - Reference each section explicitly. State differences clearly.
-    - Use side-by-side bullet points or a tabular format for clarity.
-    - Example format:
-      Section 0301: [Details of payment schedule preparation]
-      Section 0402: [Details on delayed payments under AECA § 2761(d)]
-      Key Differences:
-      • Section 0301 emphasizes payment schedule preparation, while Section 0402 outlines terms for delayed payments due to national interest.
-    - Ensure the comparison is easy to understand.
-
-    MISSING INFORMATION (HARD GROUNDING):
-    - If the retrieved passages do NOT contain the requested section, code, or topic, you MUST say: "I couldn't find this in the retrieved passages" and list the top related sections with citations (section_path + page_number).
-    - When a query cannot be answered directly from the document, implement a fallback: suggest relevant sections or chapters.
-    - Clearly communicate when the answer is inferred and explain why the suggested section is relevant.
-    - Example: "The required information for submitting payment requests is not directly available in Section 0301. However, related guidance can be found in Chapter 7, Section 14.0 of Volume 15, Chapter 3."
-    - Do not guess or invent content. Never cite a section that does not appear in the provided context.
-
-    STRUCTURED RESPONSES:
-    - Procedural answers: numbered steps (Step 1, Step 2, …) in an easily readable format.
-    - Comparisons: side-by-side format or clear bullet points separating differences between sections.
-    - Conceptual questions: "Key Principles: • [Item 1] • [Item 2]"
-    - Avoid redundant repetition; return the most relevant or representative content per section.
-
-    GENERAL:
-    - Only answer from the provided context. Do not invent information.
-    """
-
-    base_prompt = f"You are EchoMind, a retrieval-augmented assistant. Adapt your reasoning style and tone to the document type(s) of the provided context.\n\n{rag_doc_type_rules.strip()}"
+        "GUARDRAIL: Only answer questions about DoD FMR, financial management, government regulations, compliance, "
+        "disbursing/certifying officers, payment procedures, audit readiness, or the user's uploaded documents. "
+        "For anything else, reply: 'I'm a financial management advisor. I can only help with DoD FMR and regulatory topics.'"
+    )
 
     if persona:
         base_prompt = f"You are EchoMind in the role of: {persona}. Adapt your reasoning style and tone to this role.\n\n" + base_prompt
@@ -1711,38 +1675,33 @@ def _rag_system_prompt(persona: Optional[str] = None) -> str:
 
 def _build_response_format_hint(question: str) -> str:
     """Return optional format hint for the LLM based on query type."""
-    hints = []
     types = classify_query_types(question)
     if "procedural" in types:
-        hints.append(
-            "Format as numbered steps (Step 1: [description], Step 2: [description], …). "
-            "Link each step to the relevant section when applicable (e.g. 'see Section 0301 for details')."
-        )
+        return "Use numbered steps. Cite the relevant section for each step."
     if _parse_comparison_sections(question):
-        hints.append(
-            "Structure as: Section X: [details], Section Y: [details], Key Differences: [bullet points]. "
-            "Use side-by-side or tabular format. Quote or summarize content from both sections."
-        )
-    if "citation" in types:
-        hints.append(
-            "Explicitly mention section number or chapter reference. Quote directly from the section when possible. "
-            "If inferred, state so explicitly and suggest related sections."
-        )
-    if not hints:
-        return ""
-    return "\n".join(hints)
+        return "Compare the sections side by side, then list key differences."
+    return ""
 
-_GENERAL_SYSTEM = "You are EchoMind, a friendly enterprise assistant. The user is greeting you or making small talk. Reply briefly and warmly in one or two sentences. Do not mention documents or sources."
+_GENERAL_SYSTEM = (
+    "You are EchoMind, a DoD financial management advisor. "
+    "For greetings or small talk, reply briefly and warmly in one or two sentences. "
+    "GUARDRAIL: For anything other than greetings or financial/regulatory topics, reply: "
+    "'I'm a financial management advisor. I can only help with DoD FMR and regulatory topics.'"
+)
 
 def _general_system_prompt(persona: Optional[str] = None) -> str:
     if persona:
-        return f"You are EchoMind in the role of: {persona}. The user is greeting you or making small talk. Reply briefly and warmly in one or two sentences, in character. Do not mention documents or sources."
+        return (
+            f"You are EchoMind in the role of: {persona}. For greetings, reply briefly and warmly. "
+            "GUARDRAIL: For non-financial/regulatory questions, reply: "
+            "'I'm a financial management advisor. I can only help with DoD FMR and regulatory topics.'"
+        )
     return _GENERAL_SYSTEM
 
 # Conversation summary: structured, compressed context for RAG (goals, constraints, decisions, key facts)
-CONVERSATION_SUMMARY_SYSTEM = """You maintain a compressed, structured summary of an ongoing conversation.
+CONVERSATION_SUMMARY_SYSTEM = """You maintain a compressed, structured summary of an ongoing conversation about financial or regulatory topics.
 Given the previous summary (or "None" if this is the first exchange) and the new exchange below, output an updated summary.
-Capture: goals (what the user is trying to achieve), constraints (limits, preferences, requirements), decisions (conclusions or choices made), and key facts (important information stated or agreed).
+Capture: goals (what the user is trying to achieve), constraints (limits, preferences, requirements), decisions (conclusions or choices made), key facts (important information stated or agreed), and any references to regulations, sections, or procedures (e.g. DoD FMR, paragraph numbers).
 Keep it concise: a few short paragraphs or bullet points. Preserve all signal that would help answer follow-up questions. Output only the updated summary, no preamble."""
 
 
@@ -1775,7 +1734,7 @@ async def _build_rag_context(question: str, hits: List[Dict]) -> Tuple[List[str]
     blocks: List[str] = []
     enriched: List[Dict] = []
     chunk_ids_used: List[str] = []
-    use_compression = False
+    use_compression = getattr(settings, "RAG_COMPRESS_CONTEXT", False)
     key_terms = _key_query_terms(question)
     use_verbatim = getattr(settings, "RAG_VERBATIM_QUERY_TERMS", True)
     verbatim_max = getattr(settings, "RAG_VERBATIM_MAX_CHARS", 1200)
@@ -1975,7 +1934,7 @@ def _build_citation(enriched_hit: Dict) -> Dict:
     return citation
 
 
-async def _build_rag_context_fast(question: str, hits: List[Dict], max_chars_per_chunk: int = 1200) -> Tuple[List[str], List[Dict], List[str]]:
+async def _build_rag_context_fast(question: str, hits: List[Dict], max_chars_per_chunk: int = 1600) -> Tuple[List[str], List[Dict], List[str]]:
     """Fast context builder: no LLM compress, just truncated chunk text. Used for advanced_rag (single-query retrieval) path."""
     blocks: List[str] = []
     enriched: List[Dict] = []
@@ -2019,7 +1978,9 @@ def _build_user_content_with_summary(
         q_block += f"\n\nResponse format: {response_format_hint.strip()}"
     parts.append(q_block)
     if context_block and context_block.strip():
-        parts.append(f"Context (use only for factual claims):\n{context_block.strip()}")
+        parts.append(
+            f"Document excerpts (use these to give correct guidance—interpret, explain, and cite when making factual claims):\n{context_block.strip()}"
+        )
     if conversation_summary and conversation_summary.strip() and _is_follow_up_question(question):
         parts.append(f"Optional context from earlier in conversation (use only if directly relevant to the current question):\n{conversation_summary.strip()}")
     return "\n\n".join(parts)
@@ -2028,9 +1989,12 @@ def _build_user_content_with_summary(
 def _build_rag_user_message(question: str, context_block: str) -> str:
     """Build user message for RAG answer (question + optional format hint + context)."""
     hint = _build_response_format_hint(question)
+    ctx_intro = "Document excerpts (cite these inline when making factual claims):"
+    parts = [f"Question: {question}"]
     if hint:
-        return f"Question: {question}\n\nResponse format: {hint}\n\nContext:\n{context_block}"
-    return f"Question: {question}\n\nContext:\n{context_block}"
+        parts.append(f"Response format: {hint}")
+    parts.append(f"{ctx_intro}\n{context_block}")
+    return "\n\n".join(parts)
 
 
 async def _answer_general(
@@ -2194,11 +2158,12 @@ async def _run_rag_pipeline(
     ev_gate_result: Optional[EvidenceGateResult] = None
 
     if source_type == "document" and hits:
+        _max_ev = getattr(settings, "MAX_EVIDENCE_SENTENCES", 15)
         evidence_sentences = extract_evidence_sentences(
             question, hits,
             explicit_section_ids=explicit_ids,
-            min_sentences=8,
-            max_sentences=12,
+            min_sentences=min(10, _max_ev),
+            max_sentences=_max_ev,
         )
         resolver_confident = bool(resolved and resolved.has_explicit_refs and resolved.resolved_paths)
         ev_gate_result = gate_evidence(
@@ -2214,8 +2179,9 @@ async def _run_rag_pipeline(
         )
     timings["evidence_ms"] = (time.monotonic() - t0) * 1000
 
-    # ── Evidence Gate: reject if evidence is too weak ─────────────────────
-    if source_type == "document" and ev_gate_result and not ev_gate_result.passed:
+    # ── Evidence Gate: reject if evidence is too weak (only when enabled) ─────
+    use_evidence_gate = getattr(settings, "RAG_USE_EVIDENCE_GATE", False)
+    if use_evidence_gate and source_type == "document" and ev_gate_result and not ev_gate_result.passed:
         fallback_enriched = [{**h, "compressed": (h.get("text") or "")[:360]} for h in hits[:3]]
         citations = (
             [c for c in [_build_citation(x) for x in fallback_enriched] if c]

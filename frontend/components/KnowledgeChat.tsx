@@ -84,77 +84,15 @@ function docTypeBadge(docType?: string): { label: string; cls: string } | null {
   return map[docType.toLowerCase()] ?? { label: docType, cls: 'bg-white/10 text-slate-300' };
 }
 
-// ── PDF Page Preview Modal ────────────────────────────────────────────────────
-
-interface PdfPageModalProps {
-  docId: string;
-  filename: string;
-  pageNumber: number;
-  onClose: () => void;
+// ── PDF prefetch helper (loads into browser cache for instant preview) ────────
+const API_BASE = (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE || '';
+const _prefetchCache = new Set<string>();
+function prefetchPdf(docId: string, _pageNumber?: number): void {
+  if (_prefetchCache.has(docId)) return;
+  _prefetchCache.add(docId);
+  const url = `${API_BASE}/api/docs/${docId}/file`;
+  fetch(url, { method: 'GET', credentials: 'same-origin' }).catch(() => {}); // Fire-and-forget; browser caches response
 }
-
-const PdfPageModal: React.FC<PdfPageModalProps> = ({ docId, filename, pageNumber, onClose }) => {
-  const fileUrl = `/api/docs/${docId}/file#page=${pageNumber}`;
-
-  return (
-    <div
-      className="fixed inset-0 z-[90] flex flex-col bg-black/90 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="flex flex-col w-full h-full"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header bar */}
-        <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b border-white/10 bg-[#0c1220]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-            aria-label="Back"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">{filename}</p>
-            <p className="text-[11px] text-slate-400">Navigating to page {pageNumber}</p>
-          </div>
-          <a
-            href={fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400/60 hover:bg-cyan-500/10 transition-colors"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-            Open in new tab
-          </a>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-            aria-label="Close"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* PDF iframe — browser native viewer handles #page=N */}
-        <iframe
-          src={fileUrl}
-          title={`${filename} – page ${pageNumber}`}
-          className="flex-1 w-full border-0"
-        />
-      </div>
-    </div>
-  );
-};
-
 
 // ── Chunk Citation Modal ──────────────────────────────────────────────────────
 
@@ -165,18 +103,21 @@ interface ChunkModalProps {
 
 const ChunkCitationModal: React.FC<ChunkModalProps> = ({ citations, onClose }) => {
   const [selected, setSelected] = useState<DocumentChunk | null>(null);
-  const [pdfPreview, setPdfPreview] = useState<{ docId: string; filename: string; pageNumber: number } | null>(null);
+
+  // Prefetch PDFs when modal opens so "View in Document" loads instantly in new tab
+  useEffect(() => {
+    const docIds = new Set<string>();
+    for (const c of citations) {
+      if (c.metadata?.docId && c.metadata?.docType?.toLowerCase() !== 'transcript') {
+        docIds.add(c.metadata.docId);
+      }
+    }
+    for (const docId of docIds) {
+      prefetchPdf(docId);
+    }
+  }, [citations]);
 
   return (
-    <>
-    {pdfPreview && (
-      <PdfPageModal
-        docId={pdfPreview.docId}
-        filename={pdfPreview.filename}
-        pageNumber={pdfPreview.pageNumber}
-        onClose={() => setPdfPreview(null)}
-      />
-    )}
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm"
       onClick={() => { if (selected) setSelected(null); else onClose(); }}
@@ -284,23 +225,21 @@ const ChunkCitationModal: React.FC<ChunkModalProps> = ({ citations, onClose }) =
                 </p>
               </div>
 
-              {/* View in Document button — only when docId + pageNumber are available */}
-              {selected.metadata.docId && selected.metadata.pageNumber != null && (
-                <button
-                  type="button"
-                  onClick={() => setPdfPreview({
-                    docId: selected.metadata.docId!,
-                    filename: selected.docName,
-                    pageNumber: selected.metadata.pageNumber!,
-                  })}
+              {/* View in Document — opens PDF in new tab at the cited page */}
+              {selected.metadata.docId && selected.metadata.docType?.toLowerCase() !== 'transcript' && (
+                <a
+                  href={`${API_BASE}/api/docs/${selected.metadata.docId}/file#page=${selected.metadata.pageNumber ?? 1}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onMouseEnter={() => prefetchPdf(selected.metadata.docId!, selected.metadata.pageNumber ?? 1)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-white text-sm font-medium transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                  View in Document — Page {selected.metadata.pageNumber}
-                </button>
+                  View in Document{selected.metadata.pageNumber != null ? ` — Page ${selected.metadata.pageNumber}` : ''}
+                </a>
               )}
             </div>
           ) : (
@@ -314,6 +253,7 @@ const ChunkCitationModal: React.FC<ChunkModalProps> = ({ citations, onClose }) =
                     <button
                       type="button"
                       onClick={() => setSelected(c)}
+                      onMouseEnter={() => c.metadata?.docId && c.metadata?.docType?.toLowerCase() !== 'transcript' && prefetchPdf(c.metadata.docId, c.metadata.pageNumber ?? 1)}
                       className="w-full text-left px-4 py-3.5 hover:bg-white/[0.04] transition-colors group"
                     >
                       <div className="flex items-start gap-3">
@@ -368,12 +308,11 @@ const ChunkCitationModal: React.FC<ChunkModalProps> = ({ citations, onClose }) =
         {/* Footer hint */}
         {!selected && (
           <div className="px-4 py-2 border-t border-white/[0.06] shrink-0">
-            <p className="text-[10px] text-slate-600 text-center">Click any chunk to preview its content · click "View in Document" to jump to the exact page</p>
+            <p className="text-[10px] text-slate-600 text-center">Click any chunk to preview its content · click "View in Document" to open the page in a new tab</p>
           </div>
         )}
       </div>
     </div>
-    </>
   );
 };
 

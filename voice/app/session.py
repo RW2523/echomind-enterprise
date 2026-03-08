@@ -227,6 +227,7 @@ class OmniSessionA:
         self._speech_lead_count = 0  # consecutive speech frames before we treat as user speech (barge-in robustness)
         self._assistant_is_speaking = False
         self._assistant_active_gen: Optional[int] = None
+        self._is_playing_intro = False  # Disable barge-in during intro to avoid mic feedback cutting it off
 
         self.stt = WhisperSTT(SETTINGS.WHISPER_MODEL)
         self.llm = OpenAICompatLLMStream(
@@ -245,7 +246,17 @@ class OmniSessionA:
         self.moshi = MoshiWsAdapter(SETTINGS.MOSHI_URL) if SETTINGS.USE_MOSHI_CORE else None
 
         # ---- Conversation memory (LLM turn history) ----
-        self.system_prompt: str = "You are a realtime voice assistant. Be concise, helpful, and conversational."
+        self.system_prompt: str = (
+            "You are a financial assistant helping with DoD FMR, government regulations, and uploaded documents. "
+            "Be concise, precise, and cite sections when answering from documents. "
+            "For procedural questions, give numbered steps. For comparisons, use clear bullet points. "
+            "Never invent section numbers or page references—only cite what appears in the context.\n\n"
+            "GUARDRAIL: Only answer questions about financial management, DoD FMR, government regulations, compliance, "
+            "disbursing/certifying officers, payment procedures, audit readiness, or your uploaded documents/transcripts. "
+            "If the user asks about anything else (e.g. weather, general knowledge, jokes, coding, entertainment), "
+            "politely refuse and say: 'I'm a financial assistant. I can only help with DoD FMR, regulations, or your uploaded documents. "
+            "What would you like to know about those topics?'"
+        )
         self.history: List[Dict] = []  # [{"role":"user"/"assistant","content":...}, ...]
         self.max_history_turns: int = 12
         self.max_history_tokens: int = 1400  # keep prompt reasonable
@@ -290,7 +301,7 @@ class OmniSessionA:
         await self.send({
             "type": "hello",
             "session_id": session_id,
-            "note": "EchoMind: Context + memory + listen-only. Say 'listen to conversation' or use wake word."
+            "note": "Financial assistant: Ask about DoD FMR, regulations, or your uploaded docs. Say 'listen to conversation' or use wake word."
         })
         await self.send({"type": "context_ack", "system_prompt": self.system_prompt})
         await self._emit_profile_update()
@@ -300,12 +311,13 @@ class OmniSessionA:
             asyncio.create_task(self._play_intro(intro_phrase.strip()))
 
     async def _play_intro(self, phrase: str):
-        """Play intro TTS once after start; respects barge-in (generation_id)."""
+        """Play intro TTS once after start. Barge-in disabled during intro to avoid mic feedback cutting it off."""
         phrase = strip_markdown_for_speech(phrase or "")
         if not phrase:
             return
         my_gen = self.generation_id
         self._assistant_is_speaking = True
+        self._is_playing_intro = True
         try:
             await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
             try:
@@ -330,6 +342,7 @@ class OmniSessionA:
                 })
                 await asyncio.sleep(0.0)
         finally:
+            self._is_playing_intro = False
             if self._assistant_is_speaking and self.generation_id == my_gen:
                 self._assistant_is_speaking = False
             await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": self.generation_id})
@@ -526,20 +539,22 @@ class OmniSessionA:
                 self.speech_count += 1
                 self._speech_lead_count += 1
 
-                lead_idle = max(1, getattr(SETTINGS, "BARGE_IN_SPEECH_LEAD_IDLE", 2))
-                lead_active = max(1, getattr(SETTINGS, "BARGE_IN_SPEECH_LEAD_ACTIVE", 6))
-                need_lead = lead_active if self._assistant_active() else lead_idle
+                # Skip barge-in during intro to avoid mic feedback cutting it off
+                if not self._is_playing_intro:
+                    lead_idle = max(1, getattr(SETTINGS, "BARGE_IN_SPEECH_LEAD_IDLE", 2))
+                    lead_active = max(1, getattr(SETTINGS, "BARGE_IN_SPEECH_LEAD_ACTIVE", 6))
+                    need_lead = lead_active if self._assistant_active() else lead_idle
 
-                if not self.in_speech and self._speech_lead_count >= need_lead:
-                    self.in_speech = True
-                    self.utt.reset()
-                    await self._cancel_assistant_pipeline(keep_listening=True, send_cancel=True)
-                    await self.send({"type": "event", "event": "USER_SPEECH_START", "generation_id": self.generation_id})
-                    if self.moshi:
-                        asyncio.create_task(self.moshi.cancel(self.generation_id))
+                    if not self.in_speech and self._speech_lead_count >= need_lead:
+                        self.in_speech = True
+                        self.utt.reset()
+                        await self._cancel_assistant_pipeline(keep_listening=True, send_cancel=True)
+                        await self.send({"type": "event", "event": "USER_SPEECH_START", "generation_id": self.generation_id})
+                        if self.moshi:
+                            asyncio.create_task(self.moshi.cancel(self.generation_id))
 
-                if self.in_speech:
-                    self.utt.push(fr)
+                    if self.in_speech:
+                        self.utt.push(fr)
 
             else:
                 self._speech_lead_count = 0
@@ -723,9 +738,10 @@ class OmniSessionA:
         if extra.get("fact_check"):
             fc_context = self.conversation_memory.get_entries_for_context(10, max_chars=3000)
             fc_prompt = (
-                "You are a fact-checking assistant. Based ONLY on the following conversation transcript, "
-                "identify any factual claims and assess their accuracy. If you have no external sources, "
-                "clearly state uncertainty and give reasoning. Be concise.\n\nTranscript:\n" + fc_context
+                "You are a fact-checking assistant for financial and regulatory discussions. "
+                "Based ONLY on the following conversation transcript, identify any factual claims "
+                "(especially about DoD FMR, regulations, procedures, or compliance) and assess their accuracy. "
+                "If you have no external sources, clearly state uncertainty and give reasoning. Be concise.\n\nTranscript:\n" + fc_context
             )
             messages_fc = self._build_messages(user_text, system_override=fc_prompt)
             backend_url = (getattr(SETTINGS, "BACKEND_CHAT_URL", None) or "").strip().rstrip("/")
@@ -808,7 +824,8 @@ class OmniSessionA:
                 if summary_text:
                     messages_sum = self._build_messages(
                         f"Summarize this conversation from the last {int(minutes)} minutes in 2-4 sentences.",
-                        system_override="You are a concise summarizer. Output only the summary, no preamble.\n\nConversation:\n" + summary_text[:3000],
+                        system_override="You are a concise summarizer for financial and regulatory discussions. "
+                        "Summarize key points, decisions, and any references to regulations or procedures. Output only the summary, no preamble.\n\nConversation:\n" + summary_text[:3000],
                     )
                     try:
                         reply = self.llm.complete_messages(messages_sum)
@@ -840,7 +857,8 @@ class OmniSessionA:
                     summary = self.conversation_memory.summarize_last(30)  # use last 30 min for context
                     messages_when = self._build_messages(
                         f"When did we talk about this? User asked: {user_text}",
-                        system_override="Use only this transcript. List approximate times and who said what.\n\n" + summary[:2500],
+                        system_override="Use only this transcript. List approximate times and who said what. "
+                        "Focus on financial topics, regulations, or procedures when mentioned.\n\n" + summary[:2500],
                     )
                     try:
                         reply = self.llm.complete_messages(messages_when)

@@ -170,7 +170,8 @@ async def ask_voice(inp: AskVoiceIn):
             "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
             "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
             f"Transcripts from the last {_format_duration_hours(last_hours)}:\n\n{transcript_block}\n\n"
-            "Provide a direct answer or summary based only on the above transcript text."
+            "Provide a direct answer or summary based only on the above transcript text. "
+            "When relevant, highlight financial topics, regulatory references, or compliance matters."
         )
         out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
         return {"answer": out["answer"]}
@@ -204,7 +205,8 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
                 "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
                 "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
                 f"Transcripts from the last {_format_duration_hours(last_hours)}:\n\n{transcript_block}\n\n"
-                "Provide a direct answer or summary based only on the above transcript text."
+                "Provide a direct answer or summary based only on the above transcript text. "
+                "When relevant, highlight financial topics, regulatory references, or compliance matters."
             )
             out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
         with get_conn() as conn:

@@ -163,43 +163,36 @@ def improve_citation_accuracy(
     content = get_section_content(section_reference, doc_ids=doc_ids, max_chars=800)
     ref = section_reference.strip()
 
-    # Check if response already cites this section
     if ref in response or re.search(r"\b" + re.escape(ref) + r"\b", response):
-        if content:
-            return f"According to Section {ref}, {content}\n\n{response}"
         return response
 
-    # Inferred: add notice
-    inferred = (
-        f"This information is inferred from context. Please refer to Section {ref} for full details."
-    )
     if content:
-        inferred = f"{inferred}\n\nRelevant excerpt from Section {ref}: {content[:400]}…"
-    return f"{response}\n\n{inferred}"
+        return f"{response}\n\n*See also Section {ref}: {content[:400]}*"
+    return f"{response}\n\n*See also: Section {ref}.*"
 
 
 def is_inferred(response: str) -> bool:
-    """Heuristic: True if the response appears to be inferred rather than directly cited."""
+    """Heuristic: True if the response *opens* with a hedging/uncertainty disclaimer.
+
+    Only triggers on phrases that appear in the first ~300 chars (the opening statement).
+    Avoids false positives on well-cited answers that naturally say "based on Section X" or
+    "suggest" mid-answer.
+    """
     if not response or not response.strip():
         return False
-    r = response.strip().lower()
-    inferred_phrases = [
-        "inferred",
-        "infer",
-        "not directly",
-        "not explicitly",
-        "based on",
-        "suggest",
-        "suggested",
-        "unable to find",
-        "not found",
-        "not available",
-        "no specific",
-        "no direct",
-        "cannot be found",
-        "does not contain",
+    opening = response.strip()[:300].lower()
+    strong_signals = [
+        "i couldn't find a direct",
+        "i could not find",
+        "no direct definition",
+        "not directly found in",
+        "unable to find the requested",
+        "the information is not available",
+        "i don't have enough context",
+        "the provided context does not contain",
+        "this information is inferred",
     ]
-    return any(p in r for p in inferred_phrases)
+    return any(p in opening for p in strong_signals)
 
 
 def _build_inference_notice(
@@ -207,19 +200,13 @@ def _build_inference_notice(
     related: List[str],
     query: Optional[str] = None,
 ) -> str:
-    """Build inference notice with optional related section hints and query context."""
-    section_hint = ""
+    """Append a brief notice pointing to related sections when the answer is uncertain."""
     if related:
         refs = ", ".join(related[:3])
-        section_hint = f" Please refer to {refs} for full details."
+        notice = f"\n\n---\n*For more detail, see: {refs}.*"
     else:
-        section_hint = " Please refer to the relevant sections in the document for full details."
-    query_ctx = ""
-    if query and query.strip():
-        query_ctx = f" (in response to your question about \"{query.strip()[:80]}{'…' if len(query.strip()) > 80 else ''}\")"
-    return (
-        f"The following information is inferred from the context provided{query_ctx}.{section_hint}\n\n"
-    ) + response
+        notice = ""
+    return response + notice
 
 
 def improve_inference_transparency(
@@ -343,26 +330,24 @@ def structure_procedural_steps(
 
 
 def information_missing(response: str) -> bool:
-    """Heuristic: True if the response indicates missing information."""
+    """Heuristic: True if the response *opens* with an explicit statement that info is missing.
+
+    Only checks the first ~300 chars to avoid false positives on answers that mention
+    "not found" in a different context mid-answer.
+    """
     if not response or not response.strip():
         return False
-    r = response.strip().lower()
+    opening = response.strip()[:300].lower()
     phrases = [
-        "not found",
-        "not available",
-        "unable to",
-        "insufficient",
-        "no information",
-        "no specific",
-        "does not contain",
-        "cannot find",
-        "could not find",
-        "not directly available",
-        "not in the provided",
-        "not in the context",
-        "does not appear",
+        "insufficient context",
+        "i couldn't find",
+        "i could not find",
+        "the context does not contain",
+        "not in the provided context",
+        "the retrieved passages do not",
+        "no relevant information was found",
     ]
-    return any(p in r for p in phrases)
+    return any(p in opening for p in phrases)
 
 
 def answer_grounding(response: str, section_path: str) -> str:
