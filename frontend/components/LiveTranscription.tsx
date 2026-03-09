@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ICONS } from '../constants';
 import { defaultTranscriptName } from '../services/backend';
 import type { UseLiveTranscriptionReturn } from '../hooks/useLiveTranscription';
+import WordCloudModal from './WordCloudModal';
 
 function formatSessionDateTime(d: Date): string {
   const y = d.getFullYear();
@@ -17,6 +18,7 @@ interface LiveTranscriptionProps {
 }
 
 const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription }) => {
+  const [showWordCloud, setShowWordCloud] = useState(false);
   const {
     fullTranscript,
     partial,
@@ -140,6 +142,15 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
         <div className="ml-auto flex items-center gap-2 flex-wrap">
           <button
             type="button"
+            onClick={() => setShowWordCloud(true)}
+            className="shrink-0 p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Word cloud"
+            title="Word cloud"
+          >
+            <ICONS.WordCloud className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
             onClick={clearAndReset}
             className="shrink-0 p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Clear transcript and start new session"
@@ -198,6 +209,14 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
           </div>
         </div>
       </div>
+
+      {showWordCloud && (
+        <WordCloudModal
+          onClose={() => setShowWordCloud(false)}
+          liveText={[fullTranscript, partial].filter(Boolean).join(' ')}
+          listening={listening}
+        />
+      )}
     </div>
   );
 };
