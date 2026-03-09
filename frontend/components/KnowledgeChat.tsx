@@ -323,7 +323,7 @@ const DEFAULT_SOURCE_OPTIONS: SourceOptions = {
 };
 
 const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }) => {
-  const { messages, setMessages, chatId, clearChat } = knowledgeChat;
+  const { messages, setMessages, chatId, newChat, loadChats } = knowledgeChat;
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [sourceOptions, setSourceOptions] = useState<SourceOptions>(DEFAULT_SOURCE_OPTIONS);
@@ -416,6 +416,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
             console.log('[Citations] onDone received:', { answerLen: result.answer?.length, citations: result.citations, count: (result.citations || []).length });
           }
           setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: result.answer, citations: mapCitations(result.citations) } : m));
+          loadChats(); // refresh sidebar so chat title updates from first message
         },
         onError: (err) => {
           setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
@@ -595,8 +596,8 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
           <button type="button" onClick={() => setResourcesPanelOpen(true)} className="md:hidden shrink-0 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Open resources">
             <ICONS.File className="w-5 h-5" />
           </button>
-          <button type="button" onClick={() => clearChat()} className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Clear chat" title="Clear chat">
-            <ICONS.Trash className="w-5 h-5" />
+          <button type="button" onClick={() => newChat()} className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="New chat" title="New chat">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
           </button>
         </div>
 
@@ -644,7 +645,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
         </div>
 
         <div className="px-3 sm:px-5 py-3 sm:py-4 border-t border-white/10 flex flex-col gap-3 shrink-0">
-          <div className="flex flex-wrap items-center gap-2">
+          {/* <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500 shrink-0 mr-1">Search in</span>
             {(['transcript', 'document', 'general'] as const).map((key) => {
               const checked = sourceOptions[key];
@@ -674,7 +675,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
                 </button>
               );
             })}
-          </div>
+          </div> */}
           <div className="flex gap-2 sm:gap-3">
           <input
             type="text"

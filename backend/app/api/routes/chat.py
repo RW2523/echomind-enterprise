@@ -3,7 +3,7 @@ import logging
 import re
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from ...utils.ids import new_id, now_iso
@@ -40,14 +40,72 @@ class CreateChatIn(BaseModel):
     title: str = "EchoMind Chat"
 
 
+DEFAULT_CHAT_TITLE = "EchoMind Chat"
+
+
 @router.post("/create")
 async def create_chat(inp: CreateChatIn):
     cid = new_id("chat")
     with get_conn() as conn:
         conn.execute("INSERT INTO chats (id, title, created_at, conversation_summary) VALUES (?,?,?,?)",
-                     (cid, inp.title, now_iso(), None))
+                     (cid, inp.title or DEFAULT_CHAT_TITLE, now_iso(), None))
         conn.commit()
     return {"chat_id": cid}
+
+
+@router.get("/list")
+def list_chats():
+    """List all chats, newest first. Used for chat history sidebar."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT id, title, created_at FROM chats ORDER BY created_at DESC"
+        ).fetchall()
+    return {
+        "chats": [
+            {"id": r[0], "title": r[1] or DEFAULT_CHAT_TITLE, "created_at": r[2] or ""}
+            for r in rows
+        ]
+    }
+
+
+@router.get("/{chat_id}")
+def get_chat(chat_id: str):
+    """Get a single chat with its messages (for loading history when switching chats)."""
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, title, created_at FROM chats WHERE id = ?", (chat_id,)
+        ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    with get_conn() as conn:
+        msg_rows = conn.execute(
+            "SELECT id, role, content, created_at FROM messages WHERE chat_id = ? ORDER BY created_at ASC",
+            (chat_id,),
+        ).fetchall()
+    messages = [
+        {
+            "id": m[0],
+            "role": m[1],
+            "content": m[2] or "",
+            "created_at": m[3] or "",
+        }
+        for m in msg_rows
+    ]
+    return {"id": row[0], "title": row[1] or DEFAULT_CHAT_TITLE, "created_at": row[2] or "", "messages": messages}
+
+
+@router.delete("/{chat_id}")
+def delete_chat(chat_id: str):
+    """Delete a chat and all its messages (ChatGPT-style delete from history)."""
+    with get_conn() as conn:
+        row = conn.execute("SELECT id FROM chats WHERE id = ?", (chat_id,)).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    with get_conn() as conn:
+        conn.execute("DELETE FROM messages WHERE chat_id = ?", (chat_id,))
+        conn.execute("DELETE FROM chats WHERE id = ?", (chat_id,))
+        conn.commit()
+    return {"ok": True, "deleted": chat_id}
 
 
 class SourceOptionsIn(BaseModel):
@@ -254,8 +312,12 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
         conversation_summary = _get_conversation_summary(inp.chat_id)
 
         with get_conn() as conn:
+            count = conn.execute("SELECT COUNT(*) FROM messages WHERE chat_id = ?", (inp.chat_id,)).fetchone()[0]
             conn.execute("INSERT INTO messages (id, chat_id, role, content, created_at) VALUES (?,?,?,?,?)",
                          (new_id("msg"), inp.chat_id, "user", inp.message, now_iso()))
+            if count == 0:
+                title = (inp.message or "").strip()[:50] or DEFAULT_CHAT_TITLE
+                conn.execute("UPDATE chats SET title = ? WHERE id = ?", (title, inp.chat_id))
             conn.commit()
 
         full_answer: str | None = None

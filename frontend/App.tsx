@@ -109,7 +109,7 @@ const App: React.FC = () => {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none z-0" aria-hidden />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none z-0" aria-hidden />
 
-      <Sidebar activeView={activeView} setActiveView={setActiveView} sidebarOpen={sidebarOpen} onCloseSidebar={() => setSidebarOpen(false)} />
+      <Sidebar activeView={activeView} setActiveView={setActiveView} sidebarOpen={sidebarOpen} onCloseSidebar={() => setSidebarOpen(false)} knowledgeChat={knowledgeChat} />
       
       <main className="flex-1 flex flex-col relative z-10 border-l border-white/5 min-w-0 min-h-0 overflow-hidden">
         <Header activeView={activeView} settings={settings} onMenuClick={() => setSidebarOpen(true)} />

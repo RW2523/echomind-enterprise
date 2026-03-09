@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AppView } from '../types';
 import { ICONS } from '../constants';
 import { getStorageUsage, StorageUsage } from '../services/backend';
+import type { UseKnowledgeChatReturn } from '../hooks/useKnowledgeChat';
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
@@ -10,14 +11,28 @@ function formatBytes(bytes: number): string {
   return `${bytes} B`;
 }
 
+function formatChatDate(created_at: string): string {
+  if (!created_at) return '';
+  const d = new Date(created_at);
+  const now = new Date();
+  const sameDay = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  if (sameDay) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = d.getDate() === yesterday.getDate() && d.getMonth() === yesterday.getMonth() && d.getFullYear() === yesterday.getFullYear();
+  if (isYesterday) return 'Yesterday';
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
 interface SidebarProps {
   activeView: AppView;
   setActiveView: (view: AppView) => void;
   sidebarOpen?: boolean;
   onCloseSidebar?: () => void;
+  knowledgeChat?: UseKnowledgeChatReturn | null;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpen = false, onCloseSidebar }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpen = false, onCloseSidebar, knowledgeChat }) => {
   const handleNav = (view: AppView) => {
     setActiveView(view);
     onCloseSidebar?.();
@@ -50,12 +65,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
   const ratio = capacityBytes > 0 ? Math.min(1, usageBytes / capacityBytes) : 0;
   const usageStr = formatBytes(usageBytes);
   const capacityStr = capacityBytes > 0 ? formatBytes(capacityBytes) : null;
-
+  //  { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings },
+  // { id: AppView.VOICE_CONVERSATION, label: 'Conversation', icon: ICONS.Mic },
   const navItems = [
     { id: AppView.KNOWLEDGE_CHAT, label: 'Knowledge Chat', icon: ICONS.Chat },
     { id: AppView.TRANSCRIPTION, label: 'Live Transcript', icon: ICONS.Transcript },
-    { id: AppView.VOICE_CONVERSATION, label: 'Conversation', icon: ICONS.Mic },
-    { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings },
   ];
 
   const sidebarContent = (
@@ -78,7 +92,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
         )}
       </div>
 
-      <nav className="flex-1 px-2 md:px-3 pt-2 md:pt-4 space-y-1 overflow-y-auto">
+      <nav className="px-2 md:px-3 pt-2 md:pt-4 space-y-1 shrink-0">
         {navItems.map((item) => (
           <button
             key={item.id}
@@ -95,6 +109,53 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
           </button>
         ))}
       </nav>
+
+      {activeView === AppView.KNOWLEDGE_CHAT && knowledgeChat && (
+        <div className="flex-1 min-h-0 flex flex-col px-2 md:px-3 pt-3 border-t border-white/5 overflow-hidden">
+          <div className="flex items-center justify-between gap-2 shrink-0 mb-2">
+            <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Chat history</span>
+            <button
+              type="button"
+              onClick={() => knowledgeChat.newChat()}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-cyan-400 hover:bg-cyan-500/10 border border-cyan-500/20 transition-colors touch-manipulation"
+            >
+              <span className="w-3.5 h-3.5 flex items-center justify-center">+</span>
+              <span className="hidden md:inline">New chat</span>
+            </button>
+          </div>
+          <ul className="flex-1 min-h-0 overflow-y-auto space-y-0.5">
+            {knowledgeChat.chats.length === 0 && (
+              <li className="text-xs text-slate-500 py-2 px-2">No chats yet</li>
+            )}
+            {knowledgeChat.chats.map((chat) => (
+              <li key={chat.id} className="group flex items-center gap-1 rounded-lg hover:bg-white/5 min-h-[36px]">
+                <button
+                  type="button"
+                  onClick={() => knowledgeChat.selectChat(chat.id)}
+                  className={`flex-1 min-w-0 text-left px-2 py-2 rounded-lg text-sm truncate touch-manipulation ${
+                    knowledgeChat.chatId === chat.id
+                      ? 'bg-cyan-500/15 text-cyan-300'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                  title={chat.title}
+                >
+                  <span className="block truncate">{chat.title || 'New chat'}</span>
+                  <span className="block text-[10px] text-slate-500 mt-0.5">{formatChatDate(chat.created_at)}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); if (window.confirm('Delete this chat? This cannot be undone.')) knowledgeChat.deleteChat(chat.id); }}
+                  className="shrink-0 p-1.5 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity touch-manipulation"
+                  aria-label="Delete chat"
+                  title="Delete chat"
+                >
+                  <ICONS.Trash className="w-3.5 h-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="px-3 py-4 md:px-4 md:py-4 mt-auto hidden md:block border-t border-white/5 shrink-0">
         <div className="w-full glass rounded-2xl p-4 border border-white/5 bg-white/5 text-left">
