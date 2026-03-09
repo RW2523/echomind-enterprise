@@ -51,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({ activeView, onMenuClick }) => {
         <h2 className="text-base sm:text-lg font-semibold text-white truncate">{getTitle()}</h2>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      {/* <div className="flex items-center gap-2 shrink-0">
         <button
           type="button"
           onClick={handleClearData}
@@ -60,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({ activeView, onMenuClick }) => {
         >
           {clearing ? 'Clearing…' : 'Clear Data'}
         </button>
-      </div>
+      </div> */}
     </header>
   );
 };

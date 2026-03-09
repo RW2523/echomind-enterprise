@@ -131,11 +131,57 @@ export async function deleteTranscript(transcriptId: string): Promise<{ ok: bool
 }
 
 /** chat */
+export const DEFAULT_CHAT_TITLE = "EchoMind Chat";
+
+export interface ChatListItem {
+  id: string;
+  title: string;
+  created_at: string;
+}
+
+export async function listChats(): Promise<{ chats: ChatListItem[] }> {
+  const r = await fetch(`${API_BASE}/api/chat/list`);
+  if (!r.ok) throw new Error(`list chats failed: ${r.status}`);
+  return await r.json();
+}
+
+export interface ChatMessageFromApi {
+  id: string;
+  role: string;
+  content: string;
+  created_at: string;
+}
+
+export interface ChatDetail {
+  id: string;
+  title: string;
+  created_at: string;
+  messages: ChatMessageFromApi[];
+}
+
+export async function getChat(chatId: string): Promise<ChatDetail> {
+  const r = await fetch(`${API_BASE}/api/chat/${encodeURIComponent(chatId)}`);
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `get chat failed: ${r.status}`);
+  }
+  return await r.json();
+}
+
+export async function deleteChat(chatId: string): Promise<{ ok: boolean; deleted: string }> {
+  const r = await fetch(`${API_BASE}/api/chat/${encodeURIComponent(chatId)}`, { method: "DELETE" });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `delete chat failed: ${r.status}`);
+  }
+  return await r.json();
+}
+
 export async function createChat(title: string): Promise<{chat_id: string}> {
   const r = await fetch(`${API_BASE}/api/chat/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title }),
+    body: JSON.stringify({ title: title || DEFAULT_CHAT_TITLE }),
   });
   if (!r.ok) throw new Error(`create chat failed: ${r.status}`);
   return await r.json();
