@@ -1,0 +1,9 @@
+# Override for one-time online preparation only.
+# Use: docker compose -f docker-compose.yml -f docker-compose.prepare.yml up -d ollama
+# Then stop ollama; after that normal docker compose up uses OLLAMA_OFFLINE=1 and never pulls.
+services:
+  ollama:
+    environment:
+      - OLLAMA_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
+      - OLLAMA_EMBED_MODEL=nomic-embed-text
+      - OLLAMA_OFFLINE=0

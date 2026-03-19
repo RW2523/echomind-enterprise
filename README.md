@@ -25,9 +25,21 @@ Trusted HTTPS on localhost with [mkcert](https://github.com/FiloSottile/mkcert):
 The image also serves HTTPS with a self-signed cert (browser will show a warning; use **Advanced** → **Proceed**).
 
 ## Run
+
+**Offline-first (recommended):** One-time preparation, then run without internet:
+
+```bash
+./scripts/prepare_offline.sh   # once, with internet: builds images + populates Ollama volume
+docker compose up -d           # thereafter: fully offline
+```
+
+**With build (uses internet for build and first Ollama run):**
+
 ```bash
 docker compose up --build
 ```
+
+See **[OFFLINE_DEPLOYMENT.md](OFFLINE_DEPLOYMENT.md)** for export/import to air-gapped machines and troubleshooting.
 
 ### Build fails with "failed to execute bake: read |0: file already closed"
 This Docker BuildKit bug occurs when the backend's long Hugging Face download runs in parallel with other services. Use the build script (builds backend first, then the rest):
@@ -37,17 +49,16 @@ This Docker BuildKit bug occurs when the backend's long Hugging Face download ru
 docker compose up -d
 ```
 
-Or build and start in one go: `./scripts/build.sh --up`.
+Or use offline preparation (builds everything and populates Ollama once): `./scripts/prepare_offline.sh`
 
 **Alternative:** Disable provenance: `BUILDX_METADATA_PROVENANCE=disabled docker compose build`
 
 ## Model setup (included in build/start)
 
-- **Kyutai STT** (Live Transcript): Pre-downloaded during backend Docker build.
-- **Ollama** (LLM + embeddings): Models (`qwen2.5:7b-instruct-q4_K_M`, `nomic-embed-text`) are pulled automatically when Ollama starts.
+- **Kyutai STT** (Live Transcript): Pre-downloaded during backend Docker build. Runtime uses local cache only (`HF_HUB_OFFLINE=1`).
+- **Ollama** (LLM + embeddings): Models (`qwen2.5:7b-instruct-q4_K_M`, `nomic-embed-text`) are stored in the `ollama_data` volume. Run `./scripts/prepare_offline.sh` once (with internet) to populate the volume; after that, `docker compose up` runs offline (`OLLAMA_OFFLINE=1`).
 - **Whisper** (Voice): Base model pre-downloaded during voice Docker build.
-
-On first `docker compose up --build`, Ollama will pull its models (2–5 min). Backend and voice wait until models are ready. No manual `ollama pull` needed.
+- **Piper** (Voice): Default voice baked in voice image; runtime download disabled when `VOICE_OFFLINE=1`.
 
 If you still see Gemini calls in the browser console:
 1) Hard refresh (Ctrl+Shift+R) / clear site data

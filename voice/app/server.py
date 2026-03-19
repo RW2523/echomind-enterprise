@@ -2,6 +2,7 @@ import asyncio
 import base64
 import json
 import logging
+import os
 import uuid
 from fastapi import FastAPI, WebSocket, HTTPException
 
@@ -30,7 +31,12 @@ def get_installed_voices():
 
 @app.post("/voices/download")
 async def post_download_voice(body: DownloadVoiceBody):
-    """Download a Piper voice by id (e.g. en_US-lessac-medium) to the voices dir. Blocks until done."""
+    """Download a Piper voice by id (e.g. en_US-lessac-medium) to the voices dir. Disabled in offline mode."""
+    if os.environ.get("VOICE_OFFLINE", "").strip().lower() in ("1", "true", "yes"):
+        raise HTTPException(
+            status_code=503,
+            detail="Voice download is disabled in offline mode. Use only pre-installed voices in /voices.",
+        )
     voice_id = (body.voice_id or "").strip()
     if not voice_id:
         raise HTTPException(status_code=400, detail="voice_id required")

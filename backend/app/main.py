@@ -24,19 +24,19 @@ logger = logging.getLogger(__name__)
 
 
 def _warm_kyutai_stt():
-    """Run in background: download Kyutai model then pre-load one STT instance (cache for first Live Transcript)."""
+    """Run in background: ensure Kyutai model in cache (no download when HF_HUB_OFFLINE=1), then pre-load one STT instance."""
     try:
         from .transcribe.stt_streaming import KYUTAI_AVAILABLE, download_kyutai_model, preload_kyutai_stt
         if not KYUTAI_AVAILABLE:
             return
-        logger.info("Kyutai STT: pre-downloading model (first run may take 2–5 min)...")
+        # In offline mode download_kyutai_model only checks local cache (no network).
         if download_kyutai_model():
-            logger.info("Kyutai STT: model cached.")
+            logger.info("Kyutai STT: model in cache.")
         logger.info("Kyutai STT: pre-loading model...")
         if preload_kyutai_stt():
             logger.info("Kyutai STT: ready (Live Transcript will connect instantly).")
         else:
-            logger.warning("Kyutai STT: pre-load failed (Live Transcript will load on first use).")
+            logger.warning("Kyutai STT: pre-load failed (Live Transcript will load on first use or fail if offline and missing).")
     except Exception as e:
         logger.warning("Kyutai STT: warmup failed: %s", e)
 

@@ -36,9 +36,13 @@ except ImportError as e:
     _kyutai_import_error = str(e)
     F = None  # type: ignore
 
-# Kyutai model (moshi format)
+# Kyutai model (moshi format). Must be pre-downloaded at build time when HF_HUB_OFFLINE=1.
 KYUTAI_MODEL_NAME = "kyutai/stt-1b-en_fr"
 KYUTAI_SAMPLE_RATE = 24000
+
+# Offline mode: use only local cache; never hit the network (set by docker-compose for production).
+def _hub_offline() -> bool:
+    return os.environ.get("HF_HUB_OFFLINE", "").strip() in ("1", "true", "yes")
 
 # Warmup: number of real frames to run (CUDA kernels, etc.)
 KYUTAI_WARMUP_FRAMES = max(4, getattr(settings, "TRANSCRIPT_STT_WARMUP_FRAMES", 8))
@@ -93,7 +97,16 @@ class KyutaiStreamingSTT:
     """
     def __init__(self):
         self.device = "cuda" if (KYUTAI_AVAILABLE and getattr(torch, "cuda", None) and torch.cuda.is_available()) else "cpu"
-        snapshot_download(KYUTAI_MODEL_NAME)
+        # Offline: use only local cache; fail clearly if model missing (no silent download).
+        try:
+            snapshot_download(KYUTAI_MODEL_NAME, local_files_only=_hub_offline())
+        except Exception as e:
+            if _hub_offline():
+                raise RuntimeError(
+                    "Kyutai STT model not found in local cache (HF_HUB_OFFLINE=1). "
+                    "Rebuild the backend image without SKIP_MODEL_DOWNLOAD=1, or run once online to populate cache."
+                ) from e
+            raise
         checkpoint_info = loaders.CheckpointInfo.from_hf_repo(KYUTAI_MODEL_NAME)
         self.mimi = checkpoint_info.get_mimi(device=self.device)
         self.frame_size = int(self.mimi.sample_rate / self.mimi.frame_rate)
@@ -199,9 +212,18 @@ _warm_lock = threading.Lock()
 
 
 def download_kyutai_model() -> bool:
-    """Download Kyutai model to Hugging Face cache (idempotent). Call at startup. Returns True if successful."""
+    """
+    Ensure Kyutai model is in local cache. In offline mode (HF_HUB_OFFLINE=1) does nothing and
+    relies on build-time download; returns True only if model is already present. No runtime network.
+    """
     if not KYUTAI_AVAILABLE:
         return False
+    if _hub_offline():
+        try:
+            snapshot_download(KYUTAI_MODEL_NAME, local_files_only=True)
+            return True
+        except Exception:
+            return False
     try:
         snapshot_download(KYUTAI_MODEL_NAME)
         return True

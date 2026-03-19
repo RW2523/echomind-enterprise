@@ -1,36 +1,59 @@
 #!/bin/sh
-# Start Ollama, wait for API, pre-pull models so runtime doesn't load.
-# Models: LLM (chat) + embed (RAG). Backend/voice depend on these.
+# Start Ollama and ensure required models are available.
+# OFFLINE MODE: When OLLAMA_OFFLINE=1, do NOT pull models; fail clearly if missing.
+# PREPARE MODE: When OLLAMA_OFFLINE=0 (or unset), pull models if missing (one-time online prep).
 
 set -e
 
 OLLAMA_LLM_MODEL="${OLLAMA_LLM_MODEL:-qwen2.5:7b-instruct-q4_K_M}"
 OLLAMA_EMBED_MODEL="${OLLAMA_EMBED_MODEL:-nomic-embed-text}"
+OLLAMA_OFFLINE="${OLLAMA_OFFLINE:-1}"
 
-echo "[ollama-setup] Starting Ollama server in background..."
+echo "[ollama] Starting Ollama server in background..."
 ollama serve &
 OLLAMA_PID=$!
 
-echo "[ollama-setup] Waiting for API to be ready..."
+echo "[ollama] Waiting for API to be ready..."
 until ollama list >/dev/null 2>&1; do
   sleep 2
 done
 
-echo "[ollama-setup] Pre-pulling LLM model: $OLLAMA_LLM_MODEL"
-ollama pull "$OLLAMA_LLM_MODEL"
+_has_model() {
+  ollama list 2>/dev/null | grep -qF "$1"
+}
 
-echo "[ollama-setup] Pre-pulling embed model: $OLLAMA_EMBED_MODEL"
-ollama pull "$OLLAMA_EMBED_MODEL"
+_ensure_models() {
+  local missing=""
+  _has_model "$OLLAMA_LLM_MODEL" || missing="${missing}${missing:+ }$OLLAMA_LLM_MODEL"
+  _has_model "$OLLAMA_EMBED_MODEL" || missing="${missing}${missing:+ }$OLLAMA_EMBED_MODEL"
 
-echo "[ollama-setup] Warming LLM model (load into memory)..."
+  if [ -n "$missing" ]; then
+    if [ "$OLLAMA_OFFLINE" = "1" ]; then
+      echo "[ollama] ERROR: Offline mode (OLLAMA_OFFLINE=1) but required models are missing: $missing"
+      echo "[ollama] Run one-time preparation with: OLLAMA_OFFLINE=0 docker compose up -d ollama"
+      echo "[ollama] Wait for health, then stop. After that, start with docker compose up -d"
+      kill $OLLAMA_PID 2>/dev/null || true
+      exit 1
+    fi
+    echo "[ollama] Pre-pulling missing models (one-time, requires internet)..."
+    _has_model "$OLLAMA_LLM_MODEL" || { echo "[ollama] Pulling LLM: $OLLAMA_LLM_MODEL"; ollama pull "$OLLAMA_LLM_MODEL"; }
+    _has_model "$OLLAMA_EMBED_MODEL" || { echo "[ollama] Pulling embed: $OLLAMA_EMBED_MODEL"; ollama pull "$OLLAMA_EMBED_MODEL"; }
+  else
+    echo "[ollama] Required models already present (no network pull)."
+  fi
+}
+
+_ensure_models
+
+echo "[ollama] Warming LLM model (load into memory)..."
 curl -s -X POST http://127.0.0.1:11434/api/chat \
   -H "Content-Type: application/json" \
   -d "{\"model\":\"$OLLAMA_LLM_MODEL\",\"messages\":[]}" >/dev/null || true
 
-echo "[ollama-setup] Warming embed model (load into memory)..."
+echo "[ollama] Warming embed model (load into memory)..."
 curl -s -X POST http://127.0.0.1:11434/api/embeddings \
   -H "Content-Type: application/json" \
   -d "{\"model\":\"$OLLAMA_EMBED_MODEL\",\"prompt\":\".\"}" >/dev/null || true
 
-echo "[ollama-setup] Models ready and warmed. Keeping Ollama running."
+echo "[ollama] Models ready and warmed. Keeping Ollama running."
 wait $OLLAMA_PID

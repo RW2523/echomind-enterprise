@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" style="height: 100%;">
 <head>
@@ -6,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover">
   <meta name="theme-color" content="#05070a">
   <title>EchoMind | Ajace AI</title>
-  <link rel="icon" href="https://www.ajace.com/wp-content/uploads/2016/12/cropped-logo-32x32.png" type="image/png">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Offline-safe: local data URI favicon (no external request) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%2306b6d4' width='32' height='32' rx='6'/%3E%3Ctext x='16' y='22' text-anchor='middle' fill='%2305070a' font-size='18' font-family='system-ui' font-weight='bold'%3EE%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+  <!-- No CDN: Tailwind and fonts are bundled at build time for offline use -->
   <style>
     html, body, #root {
       height: 100%;
@@ -20,33 +17,19 @@
       background-color: #05070a;
     }
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #e2e8f0;
       overflow: hidden;
-      position: fixed; /* Prevents bounce scroll on iOS */
+      position: fixed;
     }
     .font-mono {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
     }
-    /* Scrollbar: WebKit (Chrome, Safari, Edge) + standard (Firefox) */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.02);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.02);
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+    * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.02); }
     .glass {
       background: rgba(15, 23, 42, 0.6);
       -webkit-backdrop-filter: blur(12px);
@@ -57,9 +40,7 @@
       0%, 100% { opacity: 0.5; transform: scale(1); }
       50% { opacity: 0.8; transform: scale(1.05); }
     }
-    .animate-pulse-cyan {
-      animation: pulse-cyan 3s infinite ease-in-out;
-    }
+    .animate-pulse-cyan { animation: pulse-cyan 3s infinite ease-in-out; }
     @keyframes listening-bar {
       0%, 100% { transform: scaleY(0.4); opacity: 0.6; }
       50% { transform: scaleY(1); opacity: 1; }
@@ -68,31 +49,24 @@
       animation: listening-bar 0.8s ease-in-out infinite;
       transform-origin: bottom;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    /* Prevent iOS/Android zoom on input focus - inputs need 16px+ to avoid auto-zoom */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @media screen and (max-width: 768px) {
-      input, textarea, select {
-        font-size: 16px !important;
-      }
+      input, textarea, select { font-size: 16px !important; }
     }
   </style>
-<script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "@google/genai": "https://esm.sh/@google/genai@^1.40.0"
+  <script type="importmap">
+  {
+    "imports": {
+      "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+      "react/": "https://esm.sh/react@^19.2.4/",
+      "react": "https://esm.sh/react@^19.2.4",
+      "@google/genai": "https://esm.sh/@google/genai@^1.40.0"
+    }
   }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
+  </script>
 </head>
 <body>
   <div id="root"></div>
-<script type="module" src="/index.tsx"></script>
+  <script type="module" src="/index.tsx"></script>
 </body>
 </html>

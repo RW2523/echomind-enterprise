@@ -4,7 +4,7 @@ services:
       context: ./backend
       args:
         USE_FAISS_GPU: "1"   # set to "1" for FAISS GPU (faster RAG search; needs GPU)
-        # SKIP_MODEL_DOWNLOAD: "1"  # uncomment if build fails with "file already closed"; model downloads at first Live Transcript use
+        # SKIP_MODEL_DOWNLOAD: "1"  # uncomment if build fails with "file already closed"; incompatible with offline
     container_name: echomind-backend
     expose: ["8000"]
     environment:
@@ -12,6 +12,9 @@ services:
       - LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
       - OLLAMA_EMBED_URL=http://ollama:11434/api/embeddings
       - OLLAMA_EMBED_MODEL=nomic-embed-text
+      # Offline: use only local Hugging Face cache (no runtime model download)
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
     volumes:
       - echomind_data:/data
     depends_on:
@@ -37,6 +40,8 @@ services:
       - WHISPER_MODEL=base
       # RAG: voice bot calls backend for answers from documents + transcripts
       - BACKEND_CHAT_URL=http://backend:8000
+      # Offline: disable runtime Piper voice download from Hugging Face
+      - VOICE_OFFLINE=1
     depends_on:
       ollama:
         condition: service_healthy
@@ -62,10 +67,12 @@ services:
     environment:
       - OLLAMA_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
       - OLLAMA_EMBED_MODEL=nomic-embed-text
+      # Offline: do not pull at startup; require models in volume (populated by prepare step)
+      - OLLAMA_OFFLINE=1
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
-      # Pass only when both models are pulled (entrypoint pulls at startup)
+      # Pass only when both models are available (pre-loaded in volume by prepare)
       test: ["CMD", "sh", "-c", "ollama list | grep -q qwen2.5:7b-instruct-q4_K_M && ollama list | grep -q nomic-embed-text"]
       interval: 15s
       timeout: 10s
