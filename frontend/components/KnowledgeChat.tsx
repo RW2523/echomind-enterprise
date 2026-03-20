@@ -343,6 +343,9 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
   const [chunkModalForId, setChunkModalForId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  /** Stream accumulator + rAF: avoids React 18 batching many chunks into one paint when TCP delivers a burst. */
+  const streamBufRef = useRef('');
+  const streamRafRef = useRef<number | null>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -399,6 +402,11 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
   const send = async () => {
     const q = input.trim();
     if (!q || !chatId || busy) return;
+    streamBufRef.current = '';
+    if (streamRafRef.current != null) {
+      cancelAnimationFrame(streamRafRef.current);
+      streamRafRef.current = null;
+    }
     setBusy(true);
     const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', content: q, timestamp: Date.now() };
     setMessages(prev => [...prev, userMsg]);
@@ -406,12 +414,29 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
     const assistantId = `a_${Date.now()}`;
     const assistantMsg: ChatMessage = { id: assistantId, role: 'assistant', content: '', citations: undefined, timestamp: Date.now() };
     setMessages(prev => [...prev, assistantMsg]);
+
+    const flushStreamToMessages = () => {
+      streamRafRef.current = null;
+      const delta = streamBufRef.current;
+      streamBufRef.current = '';
+      if (!delta) return;
+      setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, content: m.content + delta } : m)));
+    };
+
     try {
       await askChatStream(chatId, q, {
         onChunk: (text) => {
-          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + text } : m));
+          streamBufRef.current += text;
+          if (streamRafRef.current == null) {
+            streamRafRef.current = requestAnimationFrame(flushStreamToMessages);
+          }
         },
         onDone: (result) => {
+          if (streamRafRef.current != null) {
+            cancelAnimationFrame(streamRafRef.current);
+            streamRafRef.current = null;
+          }
+          streamBufRef.current = '';
           if (CITATION_DEBUG) {
             console.log('[Citations] onDone received:', { answerLen: result.answer?.length, citations: result.citations, count: (result.citations || []).length });
           }
@@ -419,6 +444,11 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
           loadChats(); // refresh sidebar so chat title updates from first message
         },
         onError: (err) => {
+          if (streamRafRef.current != null) {
+            cancelAnimationFrame(streamRafRef.current);
+            streamRafRef.current = null;
+          }
+          streamBufRef.current = '';
           setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
         }
       }, {
@@ -429,6 +459,11 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
         source_options: sourceOptions,
       });
     } catch (err: any) {
+      if (streamRafRef.current != null) {
+        cancelAnimationFrame(streamRafRef.current);
+        streamRafRef.current = null;
+      }
+      streamBufRef.current = '';
       setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
     } finally {
       setBusy(false);

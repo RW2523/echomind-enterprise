@@ -9,7 +9,14 @@ from pydantic import BaseModel
 from ...utils.ids import new_id, now_iso
 from ...core.config import settings
 from ...core.db import get_conn
-from ...rag.advanced import answer as answer_with_citations, answer_stream, update_conversation_summary, _answer_general, debug_retrieval
+from ...rag.advanced import (
+    answer as answer_with_citations,
+    answer_stream,
+    update_conversation_summary,
+    _answer_general,
+    _answer_general_stream,
+    debug_retrieval,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -246,6 +253,77 @@ async def ask_voice(inp: AskVoiceIn):
     return {"answer": out["answer"]}
 
 
+@router.post("/ask-voice-stream")
+async def ask_voice_stream(inp: AskVoiceIn):
+    """Same RAG/transcript logic as ask-voice but streams NDJSON chunks for low-latency TTS on the voice service."""
+
+    async def gen():
+        msg = (inp.message or "").strip()
+        last_hours = _parse_transcript_time_query(msg)
+        if last_hours is not None:
+            transcripts = _fetch_transcripts_since_hours(last_hours)
+            parts = []
+            for t in transcripts:
+                text = (t.get("polished_text") or t.get("raw_text") or "").strip()
+                if text:
+                    parts.append(text)
+            if not parts:
+                empty = "I couldn't find any transcripts in that time range."
+                yield json.dumps({"type": "chunk", "text": empty}) + "\n"
+                yield json.dumps({"type": "done", "answer": empty, "citations": []}) + "\n"
+                return
+            transcript_block = "\n\n---\n\n".join(parts)
+            user_content = (
+                f"The user asked: {msg}\n\n"
+                "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
+                "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
+                f"Transcripts from the last {_format_duration_hours(last_hours)}:\n\n{transcript_block}\n\n"
+                "Provide a direct answer or summary based only on the above transcript text. "
+                "When relevant, highlight financial topics, regulatory references, or compliance matters."
+            )
+            try:
+                async for kind, text, citations in _answer_general_stream(
+                    user_content, [], inp.persona, None
+                ):
+                    if kind == "chunk":
+                        yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"
+                    elif kind == "done":
+                        cite_list = citations if citations is not None else []
+                        yield json.dumps({"type": "done", "answer": text or "", "citations": cite_list}) + "\n"
+            except Exception as e:
+                yield json.dumps({"type": "error", "message": str(e)}) + "\n"
+            return
+
+        try:
+            async for kind, text, citations in answer_stream(
+                inp.message,
+                [],
+                persona=inp.persona,
+                context_window=inp.context_window or "all",
+                conversation_summary=None,
+                use_knowledge_base=inp.use_knowledge_base,
+                advanced_rag=inp.advanced_rag,
+                source_options={"transcript": True, "document": True, "general": True},
+            ):
+                if kind == "chunk":
+                    yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"
+                elif kind == "done":
+                    cite_list = citations if citations is not None else []
+                    yield json.dumps({"type": "done", "answer": text or "", "citations": cite_list}) + "\n"
+        except Exception as e:
+            yield json.dumps({"type": "error", "message": str(e)}) + "\n"
+
+    return StreamingResponse(
+        gen(),
+        media_type="application/x-ndjson",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @router.post("/ask")
 async def ask(inp: AskIn, background_tasks: BackgroundTasks):
     msg = (inp.message or "").strip()
@@ -355,7 +433,16 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
         except Exception as e:
             yield json.dumps({"type": "error", "message": str(e)}) + "\n"
 
-    return StreamingResponse(gen(), media_type="application/x-ndjson")
+    # Headers so reverse proxies (nginx) and intermediaries do not buffer the body; tokens reach the client ASAP.
+    return StreamingResponse(
+        gen(),
+        media_type="application/x-ndjson",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 class DebugRetrievalIn(BaseModel):

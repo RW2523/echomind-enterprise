@@ -217,6 +217,7 @@ export async function askChatStream(
 ): Promise<void> {
   const r = await fetch(`${API_BASE}/api/chat/ask-stream`, {
     method: "POST",
+    cache: "no-store",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       chat_id: chatId,

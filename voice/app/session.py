@@ -76,7 +76,11 @@ def detect_emotion_playback_rate(text: str) -> float:
     return 1.00
 
 def ends_sentence(buf: str) -> bool:
-    return bool(re.search(r"[\.!\?]\s*$", buf.strip()))
+    """True when buffer ends on sentence-ending punctuation (optional closing quote)."""
+    s = (buf or "").rstrip()
+    if not s:
+        return False
+    return bool(re.search(r'[.!?]["\']?\s*$', s))
 
 def approx_token_count(text: str) -> int:
     # crude but safe: ~4 chars per token in English
@@ -115,6 +119,17 @@ _RAG_INDICATOR_PHRASES = (
     "live transcript", "live transcription", "transcript", "transcripts",
     "discussion", "discussions", "book", "books", "pdf", "pdfs",
     "file", "files", "uploaded", "saved transcript",
+    # DoD / policy-style questions without saying "document"
+    "dod fmr", "fmr", "certifying officer", "disbursing officer",
+    "unliquidated", "appropriation", "disbursement",
+    "regulation", "compliance", "audit",
+)
+# Section/paragraph references (word boundary so "intersection" does not match "section")
+_RAG_REF_PATTERNS = (
+    re.compile(r"\bsection\s+[0-9]", re.I),
+    re.compile(r"\bparagraph\s+[0-9]", re.I),
+    re.compile(r"\bvol(?:ume)?\.?\s*[0-9]", re.I),
+    re.compile(r"\bchapter\s+[0-9]", re.I),
 )
 
 
@@ -158,6 +173,10 @@ def _user_asks_about_knowledge(user_text: str) -> bool:
     if matched:
         logger.info("RAG check: input=%r intent=%s", user_text[:200], matched)
         return True
+    for rx in _RAG_REF_PATTERNS:
+        if rx.search(t):
+            logger.info("RAG check: input=%r intent=ref_pattern=%s", user_text[:200], rx.pattern)
+            return True
     logger.info("RAG check: input=%r intent=none", user_text[:200])
     return False
 
@@ -218,6 +237,7 @@ class OmniSessionA:
         self._reply_task: Optional[asyncio.Task] = None
         self._llm_prod_task: Optional[asyncio.Task] = None
         self._kickoff_task: Optional[asyncio.Task] = None
+        self._tts_phrase_task: Optional[asyncio.Task] = None
         self._cancel_lock = asyncio.Lock()
 
         self.in_speech = False
@@ -305,23 +325,29 @@ class OmniSessionA:
         })
         await self.send({"type": "context_ack", "system_prompt": self.system_prompt})
         await self._emit_profile_update()
-        # Intro TTS: ask user to  and speak (plays immediately after connect)
-        intro_phrase = getattr(SETTINGS, "INTRO_PHRASE", "Hi! I'm here. What would you like to talk about?")
-        if intro_phrase and intro_phrase.strip():
-            asyncio.create_task(self._play_intro(intro_phrase.strip()))
+        # Intro TTS: play once after connect. Set _is_playing_intro BEFORE scheduling the task so _consume_loop
+        # cannot barge-in / bump generation_id while the intro task hasn't started yet (that was cutting audio short).
+        intro_phrase = (getattr(SETTINGS, "INTRO_PHRASE", "Hi! I'm here. What would you like to talk about?") or "").strip()
+        phrase_speech = strip_markdown_for_speech(intro_phrase) if intro_phrase else ""
+        if phrase_speech:
+            self._is_playing_intro = True
+            asyncio.create_task(self._play_intro(intro_phrase))
 
     async def _play_intro(self, phrase: str):
         """Play intro TTS once after start. Barge-in disabled during intro to avoid mic feedback cutting it off."""
         phrase = strip_markdown_for_speech(phrase or "")
         if not phrase:
+            self._is_playing_intro = False
             return
         my_gen = self.generation_id
         self._assistant_is_speaking = True
-        self._is_playing_intro = True
         try:
             await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
+            # Full text in UI immediately (intro did not send text before, so transcript looked empty or "cut off")
+            await self.send({"type": "assistant_text", "generation_id": my_gen, "text": phrase})
             try:
-                y = self.tts.synth(phrase)
+                loop = asyncio.get_running_loop()
+                y = await loop.run_in_executor(None, self.tts.synth, phrase)
                 sr = self.tts.sr
             except Exception as e:
                 await self.send({"type": "error", "where": "tts_intro", "message": str(e), "generation_id": my_gen})
@@ -367,7 +393,7 @@ class OmniSessionA:
         async with self._cancel_lock:
             self.generation_id += 1
 
-            for t in [self._reply_task, self._llm_prod_task, self._kickoff_task, self._finalize_task]:
+            for t in [self._reply_task, self._llm_prod_task, self._kickoff_task, self._finalize_task, self._tts_phrase_task]:
                 if t and (not t.done()):
                     t.cancel()
 
@@ -375,6 +401,7 @@ class OmniSessionA:
             self._llm_prod_task = None
             self._kickoff_task = None
             self._finalize_task = None
+            self._tts_phrase_task = None
 
             self._assistant_is_speaking = False
             self._assistant_active_gen = None
@@ -398,7 +425,13 @@ class OmniSessionA:
             return True
         if self._assistant_active_gen is not None:
             return True
-        if self._reply_task is not None or self._llm_prod_task is not None or self._kickoff_task is not None or self._finalize_task is not None:
+        if (
+            self._reply_task is not None
+            or self._llm_prod_task is not None
+            or self._kickoff_task is not None
+            or self._finalize_task is not None
+            or self._tts_phrase_task is not None
+        ):
             return True
         return False
 
@@ -608,6 +641,213 @@ class OmniSessionA:
         finally:
             self._last_user_utterance = user_text
 
+    async def _reply_from_backend_rag_stream(
+        self,
+        my_gen: int,
+        user_text: str,
+        backend_url: str,
+        payload: dict,
+    ) -> None:
+        """Stream NDJSON from POST /api/chat/ask-voice-stream; phrase-commit + TTS like local LLM stream."""
+        phrase_buf = ""
+        assistant_text = ""
+        last_emit = time.time()
+        phrases_enqueued = 0
+
+        def commit_needed(buf: str) -> bool:
+            s = buf.strip()
+            if not s:
+                return False
+            if len(s) >= SETTINGS.PHRASE_MAX_CHARS:
+                return True
+            min_sentence = (
+                max(4, getattr(SETTINGS, "FIRST_SENTENCE_MIN_CHARS", 8))
+                if phrases_enqueued == 0
+                else SETTINGS.PHRASE_MIN_CHARS
+            )
+            if len(s) >= min_sentence and ends_sentence(buf):
+                return True
+            if (
+                len(s) >= SETTINGS.PHRASE_MIN_CHARS
+                and (time.time() - last_emit) * 1000 >= SETTINGS.PHRASE_COMMIT_PAUSE_MS
+            ):
+                return True
+            return False
+
+        tts_q: asyncio.Queue = asyncio.Queue()
+        chunk_q: asyncio.Queue = asyncio.Queue(maxsize=8000)
+        loop_c = asyncio.get_running_loop()
+        base = backend_url.rstrip("/")
+        stream_url = f"{base}/api/chat/ask-voice-stream"
+
+        async def tts_consumer():
+            while True:
+                item = await tts_q.get()
+                if item is None:
+                    break
+                if my_gen != self.generation_id:
+                    continue
+                await self._commit_phrase(my_gen, item)
+
+        def run_backend_ndjson():
+            def put(it):
+                loop_c.call_soon_threadsafe(chunk_q.put_nowait, it)
+
+            try:
+                with requests.post(
+                    stream_url,
+                    json=payload,
+                    stream=True,
+                    timeout=180,
+                    headers={"Content-Type": "application/json"},
+                ) as r:
+                    r.raise_for_status()
+                    for line in r.iter_lines(decode_unicode=True):
+                        if not line:
+                            continue
+                        try:
+                            obj = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        t = obj.get("type")
+                        if t == "chunk":
+                            tx = obj.get("text") or ""
+                            if tx:
+                                put(tx)
+                        elif t == "done":
+                            put({"__done__": True, "answer": (obj.get("answer") or "")})
+                        elif t == "error":
+                            put({"__error__": str(obj.get("message") or "error")})
+            except Exception as e:
+                put({"__error__": str(e)})
+            finally:
+                put(None)
+
+        _abort_tts = False
+        self._tts_phrase_task = asyncio.create_task(tts_consumer())
+        try:
+
+            async def producer():
+                await loop_c.run_in_executor(None, run_backend_ndjson)
+
+            self._llm_prod_task = asyncio.create_task(producer())
+            prod_task = self._llm_prod_task
+
+            while True:
+                if my_gen != self.generation_id:
+                    prod_task.cancel()
+                    return
+
+                item = await chunk_q.get()
+                if item is None:
+                    break
+                if isinstance(item, dict) and item.get("__error__"):
+                    raise RuntimeError(item["__error__"])
+                if isinstance(item, dict) and item.get("__done__"):
+                    server_ans = (item.get("answer") or "").strip()
+                    if server_ans and len(server_ans) > len(assistant_text.strip()):
+                        assistant_text = server_ans
+                    continue
+
+                assistant_text += item
+                phrase_buf += item
+                await self.send(
+                    {
+                        "type": "assistant_text_partial",
+                        "generation_id": my_gen,
+                        "text": strip_markdown_for_speech(assistant_text),
+                    }
+                )
+                if commit_needed(phrase_buf):
+                    await tts_q.put(phrase_buf.strip())
+                    phrases_enqueued += 1
+                    phrase_buf = ""
+                    last_emit = time.time()
+
+            if my_gen != self.generation_id:
+                return
+            if phrase_buf.strip():
+                await tts_q.put(phrase_buf.strip())
+            final = strip_markdown_for_speech(assistant_text.strip())
+            _log_llm_response(user_text, final)
+            if final:
+                await self.send({"type": "assistant_text", "generation_id": my_gen, "text": final})
+            self.history.append({"role": "user", "content": user_text})
+            self.history.append({"role": "assistant", "content": final})
+            self._trim_history()
+            try:
+                self.conversation_memory.add_text(final, speaker="assistant")
+            except Exception:
+                pass
+
+        except Exception as e:
+            _abort_tts = True
+            try:
+                while True:
+                    tts_q.get_nowait()
+            except asyncio.QueueEmpty:
+                pass
+            try:
+                await tts_q.put(None)
+            except Exception:
+                pass
+            wtx = self._tts_phrase_task
+            self._tts_phrase_task = None
+            if wtx and not wtx.done():
+                wtx.cancel()
+                try:
+                    await wtx
+                except asyncio.CancelledError:
+                    pass
+            # One-shot fallback: full answer then speak (offline / proxy issues)
+            try:
+                r = requests.post(
+                    f"{base}/api/chat/ask-voice",
+                    json=payload,
+                    timeout=120,
+                    headers={"Content-Type": "application/json"},
+                )
+                r.raise_for_status()
+                answer = (r.json().get("answer") or "").strip()
+                if my_gen != self.generation_id:
+                    return
+                reply_clean = strip_markdown_for_speech(answer)
+                _log_llm_response(user_text, reply_clean or answer)
+                if reply_clean:
+                    await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
+                await self._speak_phrase(my_gen, answer)
+                self.history.append({"role": "user", "content": user_text})
+                self.history.append({"role": "assistant", "content": reply_clean or answer})
+                self._trim_history()
+                try:
+                    self.conversation_memory.add_text(reply_clean or answer, speaker="assistant")
+                except Exception:
+                    pass
+            except Exception as e2:
+                await self.send(
+                    {
+                        "type": "error",
+                        "where": "backend_rag",
+                        "message": f"{e} (fallback: {e2})",
+                        "generation_id": my_gen,
+                    }
+                )
+        finally:
+            if _abort_tts:
+                pass
+            else:
+                try:
+                    await tts_q.put(None)
+                except Exception:
+                    pass
+                wt = self._tts_phrase_task
+                self._tts_phrase_task = None
+                if wt:
+                    try:
+                        await wt
+                    except asyncio.CancelledError:
+                        pass
+
     async def _finalize_and_reply_impl(self, my_gen: int, user_text: str):
         """Inner implementation; _last_user_utterance is set by caller after return."""
         # Always store user utterance in EchoMind conversation memory
@@ -746,41 +986,14 @@ class OmniSessionA:
             messages_fc = self._build_messages(user_text, system_override=fc_prompt)
             backend_url = (getattr(SETTINGS, "BACKEND_CHAT_URL", None) or "").strip().rstrip("/")
             if self.use_knowledge_base and backend_url and _user_asks_about_knowledge(user_text):
-                try:
-                    payload = {
-                        "message": f"Fact-check the following. User request: {user_text}\n\nContext:\n{fc_context}",
-                        "persona": self.persona or None,
-                        "context_window": self.context_window or "all",
-                        "use_knowledge_base": True,
-                        "advanced_rag": True,
-                    }
-                    loop = asyncio.get_running_loop()
-                    r = await loop.run_in_executor(
-                        None,
-                        lambda: requests.post(
-                            f"{backend_url}/api/chat/ask-voice",
-                            json=payload,
-                            timeout=60,
-                            headers={"Content-Type": "application/json"},
-                        ),
-                    )
-                    r.raise_for_status()
-                    answer = (r.json().get("answer") or "").strip()
-                    if my_gen != self.generation_id:
-                        return
-                    reply_clean = strip_markdown_for_speech(answer)
-                    _log_llm_response(user_text, reply_clean or answer)
-                    await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
-                    await self._speak_phrase(my_gen, answer)
-                    self.history.append({"role": "user", "content": user_text})
-                    self.history.append({"role": "assistant", "content": reply_clean or answer})
-                    self._trim_history()
-                    try:
-                        self.conversation_memory.add_text(reply_clean or answer, speaker="assistant")
-                    except Exception:
-                        pass
-                except Exception as e:
-                    await self.send({"type": "error", "where": "backend_rag", "message": str(e), "generation_id": my_gen})
+                payload = {
+                    "message": f"Fact-check the following. User request: {user_text}\n\nContext:\n{fc_context}",
+                    "persona": self.persona or None,
+                    "context_window": self.context_window or "all",
+                    "use_knowledge_base": True,
+                    "advanced_rag": True,
+                }
+                await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload)
             else:
                 try:
                     reply = self.llm.complete_messages(messages_fc)
@@ -881,43 +1094,14 @@ class OmniSessionA:
         # RAG path: only when user message indicates document/transcript/resources/book/pdf/file (otherwise general conversation)
         backend_url = (getattr(SETTINGS, "BACKEND_CHAT_URL", None) or "").strip().rstrip("/")
         if self.use_knowledge_base and backend_url and _user_asks_about_knowledge(user_text):
-            try:
-                payload = {
-                    "message": user_text,
-                    "persona": self.persona or None,
-                    "context_window": self.context_window or "all",
-                    "use_knowledge_base": True,
-                    "advanced_rag": True,
-                }
-                loop = asyncio.get_running_loop()
-                r = await loop.run_in_executor(
-                    None,
-                    lambda: requests.post(
-                        f"{backend_url}/api/chat/ask-voice",
-                        json=payload,
-                        timeout=60,
-                        headers={"Content-Type": "application/json"},
-                    ),
-                )
-                r.raise_for_status()
-                data = r.json()
-                answer = (data.get("answer") or "").strip()
-                if my_gen != self.generation_id:
-                    return
-                reply_clean = strip_markdown_for_speech(answer)
-                _log_llm_response(user_text, reply_clean or answer)
-                if reply_clean:
-                    await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
-                await self._speak_phrase(my_gen, answer)
-                self.history.append({"role": "user", "content": user_text})
-                self.history.append({"role": "assistant", "content": reply_clean or answer})
-                self._trim_history()
-                try:
-                    self.conversation_memory.add_text(reply_clean or answer, speaker="assistant")
-                except Exception:
-                    pass
-            except Exception as e:
-                await self.send({"type": "error", "where": "backend_rag", "message": str(e), "generation_id": my_gen})
+            payload = {
+                "message": user_text,
+                "persona": self.persona or None,
+                "context_window": self.context_window or "all",
+                "use_knowledge_base": True,
+                "advanced_rag": True,
+            }
+            await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload)
             if reenter_listen_only:
                 self.listen_only = True
                 await self.send({"type": "memory_event", "event": "listening_mode_on"})
@@ -934,26 +1118,54 @@ class OmniSessionA:
         phrase_buf = ""
         assistant_text = ""
         last_emit = time.time()
+        phrases_enqueued = 0
 
         def commit_needed(buf: str) -> bool:
             s = buf.strip()
+            if not s:
+                return False
             if len(s) >= SETTINGS.PHRASE_MAX_CHARS:
                 return True
-            if len(s) >= SETTINGS.PHRASE_MIN_CHARS and ends_sentence(buf):
+            # First phrase: lower bar so TTS starts as soon as the first sentence completes (stream=true + overlap).
+            min_sentence = (
+                max(4, getattr(SETTINGS, "FIRST_SENTENCE_MIN_CHARS", 8))
+                if phrases_enqueued == 0
+                else SETTINGS.PHRASE_MIN_CHARS
+            )
+            if len(s) >= min_sentence and ends_sentence(buf):
                 return True
-            if len(s) >= SETTINGS.PHRASE_MIN_CHARS and (time.time() - last_emit) * 1000 >= SETTINGS.PHRASE_COMMIT_PAUSE_MS:
+            if (
+                len(s) >= SETTINGS.PHRASE_MIN_CHARS
+                and (time.time() - last_emit) * 1000 >= SETTINGS.PHRASE_COMMIT_PAUSE_MS
+            ):
                 return True
             return False
 
+        # Serial TTS queue: main loop keeps draining LLM tokens while Piper plays phrases in order.
+        tts_q: asyncio.Queue = asyncio.Queue()
+
+        async def tts_consumer():
+            while True:
+                item = await tts_q.get()
+                if item is None:
+                    break
+                if my_gen != self.generation_id:
+                    continue
+                await self._commit_phrase(my_gen, item)
+
+        self._tts_phrase_task = asyncio.create_task(tts_consumer())
+        _abort_tts = False
         try:
             tok_q: asyncio.Queue = asyncio.Queue(maxsize=4000)
 
             async def producer():
                 loop = asyncio.get_running_loop()
+
                 def run_iter():
                     for t in self.llm.stream_messages(messages):
                         tok_q.put_nowait(t)
                     tok_q.put_nowait(None)
+
                 await loop.run_in_executor(None, run_iter)
 
             self._llm_prod_task = asyncio.create_task(producer())
@@ -968,20 +1180,26 @@ class OmniSessionA:
                 if tok is None:
                     break
 
-                last_emit = time.time()
                 assistant_text += tok
                 phrase_buf += tok
-                await self.send({"type": "assistant_text_partial", "generation_id": my_gen, "text": strip_markdown_for_speech(assistant_text)})
+                await self.send(
+                    {
+                        "type": "assistant_text_partial",
+                        "generation_id": my_gen,
+                        "text": strip_markdown_for_speech(assistant_text),
+                    }
+                )
 
                 if commit_needed(phrase_buf):
-                    await self._commit_phrase(my_gen, phrase_buf)
+                    await tts_q.put(phrase_buf.strip())
+                    phrases_enqueued += 1
                     phrase_buf = ""
+                    last_emit = time.time()
 
-            # Stream ended successfully: commit remaining phrase, send final text, save history (fix for unreachable block)
             if my_gen != self.generation_id:
                 return
             if phrase_buf.strip():
-                await self._commit_phrase(my_gen, phrase_buf)
+                await tts_q.put(phrase_buf.strip())
             final = strip_markdown_for_speech(assistant_text.strip())
             _log_llm_response(user_text, final)
             if final:
@@ -995,6 +1213,24 @@ class OmniSessionA:
                 pass
 
         except Exception as e:
+            _abort_tts = True
+            try:
+                while True:
+                    tts_q.get_nowait()
+            except asyncio.QueueEmpty:
+                pass
+            try:
+                await tts_q.put(None)
+            except Exception:
+                pass
+            wtx = self._tts_phrase_task
+            self._tts_phrase_task = None
+            if wtx and not wtx.done():
+                wtx.cancel()
+                try:
+                    await wtx
+                except asyncio.CancelledError:
+                    pass
             await self.send({"type": "error", "where": "llm_stream", "message": str(e), "generation_id": my_gen})
             try:
                 reply = self.llm.complete_messages(messages)
@@ -1014,6 +1250,21 @@ class OmniSessionA:
                 self.conversation_memory.add_text(reply_clean or reply, speaker="assistant")
             except Exception:
                 pass
+        finally:
+            if _abort_tts:
+                pass
+            else:
+                try:
+                    await tts_q.put(None)
+                except Exception:
+                    pass
+                wt = self._tts_phrase_task
+                self._tts_phrase_task = None
+                if wt:
+                    try:
+                        await wt
+                    except asyncio.CancelledError:
+                        pass
 
         await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
         self._assistant_active_gen = None
@@ -1041,7 +1292,8 @@ class OmniSessionA:
                 rate = detect_emotion_playback_rate(phrase)
 
             try:
-                y = self.tts.synth(phrase)
+                loop = asyncio.get_running_loop()
+                y = await loop.run_in_executor(None, self.tts.synth, phrase)
                 sr = self.tts.sr
             except Exception as e:
                 await self.send({"type": "error", "where": "tts", "message": str(e), "generation_id": my_gen})

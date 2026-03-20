@@ -107,12 +107,12 @@ So:
 - **Routes**: `backend/app/api/routes/chat.py`
   - **POST /api/chat/ask**: one-shot answer; loads history from DB, optional transcript-time query, then `answer_with_citations` or `_answer_general`; saves user + assistant message; background conversation summary update.
   - **POST /api/chat/ask-stream**: same but streams chunks; saves assistant message on done.
-  - **POST /api/chat/ask-voice**: used by the **voice** service when the user asks about documents/transcripts; same RAG/general logic, returns `{ answer }`.
+  - **POST /api/chat/ask-voice-stream**: used by the **voice** service for knowledge questions; streams NDJSON chunks (same RAG as chat) so TTS can start early. Falls back to **POST /api/chat/ask-voice** if streaming fails.
 - **RAG/LLM**: `backend/app/rag/advanced.py`
   - General vs RAG path (e.g. `_is_general_conversation` → no retrieval; else retrieve → build context → LLM with “EchoMind” system prompt).
   - Conversation summary is stored in `chats.conversation_summary` and used for context.
 
-The voice assistant uses this backend only when **use_knowledge_base** is True and the user message matches **RAG indicator phrases** (document, transcript, etc.); then the voice service calls **ask-voice** and speaks the answer.
+The voice assistant uses this backend only when **use_knowledge_base** is True and the user message matches **RAG indicator phrases** (document, transcript, FMR, section/paragraph refs, etc.); then the voice service calls **ask-voice-stream** (chunked TTS) with fallback to **ask-voice**.
 
 ---
 

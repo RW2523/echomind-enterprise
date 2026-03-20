@@ -16,19 +16,23 @@ class Settings:
 
     WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "base")
 
-    # OpenAI-compatible endpoint (Ollama: http://127.0.0.1:11434/v1/chat/completions)
+    # OpenAI-compatible chat/completions (full URL including /v1/chat/completions).
+    # docker-compose sets TRT-LLM on host: LLM_URL=http://host.docker.internal:8355/v1/chat/completions
+    #   and LLM_MODEL=nvidia/Llama-3.1-8B-Instruct-FP4. Defaults below suit local Ollama without Compose.
     LLM_URL: str = os.getenv("LLM_URL", "http://127.0.0.1:11434/v1/chat/completions")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "qwen2.5:7b-instruct-q4_K_M")
 
-    # LLM streaming / phrase commit knobs (unmute-like)
+    # LLM streaming / phrase commit knobs. Main dialogue uses stream=true via OpenAICompatLLMStream.stream_messages.
     LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.7"))
     LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "220"))
-    # Log full LLM request payload (set LLM_LOG_PAYLOAD=1 to see entire messages/temperature/etc; uses WARNING so it shows)
+    # Log full LLM JSON body (set LLM_LOG_PAYLOAD=1). Timing lines always log at INFO (VOICE_LLM stream start/done).
     LLM_LOG_PAYLOAD: bool = os.getenv("LLM_LOG_PAYLOAD", "0").lower() in ("1", "true", "yes")
 
     PHRASE_MIN_CHARS: int = int(os.getenv("PHRASE_MIN_CHARS", "28"))
     PHRASE_MAX_CHARS: int = int(os.getenv("PHRASE_MAX_CHARS", "120"))
     PHRASE_COMMIT_PAUSE_MS: int = int(os.getenv("PHRASE_COMMIT_PAUSE_MS", "180"))
+    # First spoken phrase: commit on sentence end with this lower minimum so TTS starts right after the first sentence.
+    FIRST_SENTENCE_MIN_CHARS: int = int(os.getenv("FIRST_SENTENCE_MIN_CHARS", "8"))
 
     # Piper TTS (model path; voices dir for download is VOICES_DIR, default /voices)
     PIPER_MODEL: str = os.getenv("PIPER_MODEL", "/voices/en_US-lessac-medium.onnx")
@@ -47,8 +51,8 @@ class Settings:
     # Greeting spoken by TTS when session starts (natural conversation opener)
     INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "Hi! I'm your financial assistant. Ask me about DoD FMR, regulations, or your uploaded documents.")
 
-    # Backend RAG: when set, voice can call this URL for knowledge-base answers (use_knowledge_base=true).
-    # Example: http://backend:8000 (no trailing slash; /api/chat/ask-voice is appended).
+    # Backend RAG: when set, voice calls ask-voice-stream (NDJSON chunks → phrase TTS) and falls back to ask-voice.
+    # Example: http://backend:8000 (no trailing slash).
     BACKEND_CHAT_URL: str = os.getenv("BACKEND_CHAT_URL", "")
 
     # EchoMind Conversation Intelligence

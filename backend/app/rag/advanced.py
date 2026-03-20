@@ -2518,11 +2518,19 @@ async def answer(
         question, settings.TOP_K, context_window=context_window or "all", source_options=opts,
     )
     t_retrieve = time.monotonic()
+    retrieve_ms = (t_retrieve - t_start) * 1000
+    logger.info(
+        "RAG phase retrieve done source_type=%s hits=%d retrieve_ms=%.0f",
+        source_type, len(hits), retrieve_ms,
+    )
 
     if source_type == "general":
         return await _answer_general(question, history, persona, conversation_summary)
 
+    t_pipe0 = time.monotonic()
     result = await _run_rag_pipeline(question, hits, source_type)
+    t_pipe1 = time.monotonic()
+    pipeline_wall_ms = (t_pipe1 - t_pipe0) * 1000
     if result.early_exit:
         return {"answer": result.early_exit_msg, "citations": result.early_exit_citations}
 
@@ -2539,19 +2547,30 @@ async def answer(
     t_llm_start = time.monotonic()
     ans = await chat.chat(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS)
     t_llm_end = time.monotonic()
+    llm_ms = (t_llm_end - t_llm_start) * 1000
 
+    t_post0 = time.monotonic()
     ans = await _postprocess_answer_text(
         ans, question, result.enriched, result.resolved, result.doc_ids, source_type,
     )
+    post_ms = (time.monotonic() - t_post0) * 1000
     citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
     _log_citation_debug(result.enriched, citations, source_type)
 
+    pipeline_internal_ms = sum(result.timing.values())
     logger.info(
-        "RAG answer complete retrieve=%.0fms pipeline=%.0fms llm=%.0fms total=%.0fms",
-        (t_retrieve - t_start) * 1000,
-        sum(result.timing.values()),
-        (t_llm_end - t_llm_start) * 1000,
+        "RAG answer complete retrieve_ms=%.0f pipeline_internal_ms=%.0f pipeline_wall_ms=%.0f "
+        "llm_ms=%.0f postprocess_ms=%.0f end_to_end_ms=%.0f (breakdown rerank/graph/evidence/ctx: %.0f/%.0f/%.0f/%.0f)",
+        retrieve_ms,
+        pipeline_internal_ms,
+        pipeline_wall_ms,
+        llm_ms,
+        post_ms,
         (time.monotonic() - t_start) * 1000,
+        result.timing.get("rerank_ms", 0),
+        result.timing.get("graph_ms", 0),
+        result.timing.get("evidence_ms", 0),
+        result.timing.get("context_build_ms", 0),
     )
     return {"answer": ans, "citations": citations}
 
@@ -2607,6 +2626,11 @@ async def answer_stream(
         question, settings.TOP_K, context_window=context_window or "all", source_options=opts,
     )
     t_retrieve = time.monotonic()
+    retrieve_ms = (t_retrieve - t_start) * 1000
+    logger.info(
+        "RAG (stream) phase retrieve done source_type=%s hits=%d retrieve_ms=%.0f",
+        source_type, len(hits), retrieve_ms,
+    )
 
     if source_type == "insufficient":
         from .citation_utils import handle_missing_information
@@ -2626,7 +2650,10 @@ async def answer_stream(
             yield ev
         return
 
+    t_pipe0 = time.monotonic()
     result = await _run_rag_pipeline(question, hits, source_type)
+    t_pipe1 = time.monotonic()
+    pipeline_wall_ms = (t_pipe1 - t_pipe0) * 1000
     if result.early_exit:
         yield ("chunk", result.early_exit_msg, None)
         yield ("done", result.early_exit_msg, result.early_exit_citations)
@@ -2654,16 +2681,27 @@ async def answer_stream(
         yield ("chunk", delta, None)
     ans = "".join(full).strip()
     t_llm_end = time.monotonic()
+    llm_ms = (t_llm_end - t_llm_start) * 1000
 
+    t_post0 = time.monotonic()
     ans = await _postprocess_answer_text(
         ans, question, result.enriched, result.resolved, result.doc_ids, source_type,
     )
+    post_ms = (time.monotonic() - t_post0) * 1000
 
+    pipeline_internal_ms = sum(result.timing.values())
     logger.info(
-        "RAG stream complete retrieve=%.0fms pipeline=%.0fms llm=%.0fms total=%.0fms",
-        (t_retrieve - t_start) * 1000,
-        sum(result.timing.values()),
-        (t_llm_end - t_llm_start) * 1000,
+        "RAG stream complete retrieve_ms=%.0f pipeline_internal_ms=%.0f pipeline_wall_ms=%.0f "
+        "llm_ms=%.0f postprocess_ms=%.0f end_to_end_ms=%.0f (rerank/graph/evidence/ctx: %.0f/%.0f/%.0f/%.0f)",
+        retrieve_ms,
+        pipeline_internal_ms,
+        pipeline_wall_ms,
+        llm_ms,
+        post_ms,
         (time.monotonic() - t_start) * 1000,
+        result.timing.get("rerank_ms", 0),
+        result.timing.get("graph_ms", 0),
+        result.timing.get("evidence_ms", 0),
+        result.timing.get("context_build_ms", 0),
     )
     yield ("done", ans, citations)
