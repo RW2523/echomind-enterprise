@@ -2,12 +2,14 @@
 # Start Ollama and ensure required models are available.
 # OFFLINE MODE: When OLLAMA_OFFLINE=1, do NOT pull models; fail clearly if missing.
 # PREPARE MODE: When OLLAMA_OFFLINE=0 (or unset), pull models if missing (one-time online prep).
+# EMBED_ONLY: When OLLAMA_EMBED_ONLY=1, only the embedding model is required (chat LLM is TensorRT-LLM).
 
 set -e
 
 OLLAMA_LLM_MODEL="${OLLAMA_LLM_MODEL:-qwen2.5:7b-instruct-q4_K_M}"
 OLLAMA_EMBED_MODEL="${OLLAMA_EMBED_MODEL:-nomic-embed-text}"
 OLLAMA_OFFLINE="${OLLAMA_OFFLINE:-1}"
+OLLAMA_EMBED_ONLY="${OLLAMA_EMBED_ONLY:-0}"
 
 echo "[ollama] Starting Ollama server in background..."
 ollama serve &
@@ -23,7 +25,23 @@ _has_model() {
 }
 
 _ensure_models() {
-  local missing=""
+  if [ "$OLLAMA_EMBED_ONLY" = "1" ]; then
+    if ! _has_model "$OLLAMA_EMBED_MODEL"; then
+      if [ "$OLLAMA_OFFLINE" = "1" ]; then
+        echo "[ollama] ERROR: Offline mode (OLLAMA_OFFLINE=1) but embed model is missing: $OLLAMA_EMBED_MODEL"
+        echo "[ollama] Run one-time preparation with: OLLAMA_OFFLINE=0 docker compose up -d ollama"
+        kill $OLLAMA_PID 2>/dev/null || true
+        exit 1
+      fi
+      echo "[ollama] Pre-pulling embed model (one-time, requires internet)..."
+      ollama pull "$OLLAMA_EMBED_MODEL"
+    else
+      echo "[ollama] Embed model already present (no network pull)."
+    fi
+    return
+  fi
+
+  missing=""
   _has_model "$OLLAMA_LLM_MODEL" || missing="${missing}${missing:+ }$OLLAMA_LLM_MODEL"
   _has_model "$OLLAMA_EMBED_MODEL" || missing="${missing}${missing:+ }$OLLAMA_EMBED_MODEL"
 
@@ -45,10 +63,12 @@ _ensure_models() {
 
 _ensure_models
 
-echo "[ollama] Warming LLM model (load into memory)..."
-curl -s -X POST http://127.0.0.1:11434/api/chat \
-  -H "Content-Type: application/json" \
-  -d "{\"model\":\"$OLLAMA_LLM_MODEL\",\"messages\":[]}" >/dev/null || true
+if [ "$OLLAMA_EMBED_ONLY" != "1" ]; then
+  echo "[ollama] Warming LLM model (load into memory)..."
+  curl -s -X POST http://127.0.0.1:11434/api/chat \
+    -H "Content-Type: application/json" \
+    -d "{\"model\":\"$OLLAMA_LLM_MODEL\",\"messages\":[]}" >/dev/null || true
+fi
 
 echo "[ollama] Warming embed model (load into memory)..."
 curl -s -X POST http://127.0.0.1:11434/api/embeddings \

@@ -15,15 +15,15 @@ echo "[1/4] Building all images (backend first to avoid BuildKit pipe bug)..."
 docker compose build backend
 BUILDX_METADATA_PROVENANCE=disabled docker compose build
 
-echo "[2/4] Populating Ollama volume (one-time pull)..."
+echo "[2/4] Populating Ollama volume (embed model only; chat uses TensorRT-LLM in compose)..."
 docker compose -f docker-compose.yml -f docker-compose.prepare.yml up -d ollama
 
-echo "[3/4] Waiting for Ollama to have both models (up to ~5 min)..."
+echo "[3/4] Waiting for Ollama embed model (up to ~5 min)..."
 max_wait=300
 elapsed=0
 while [ $elapsed -lt $max_wait ]; do
-  if docker compose exec -T ollama sh -c "ollama list 2>/dev/null | grep -q qwen2.5:7b-instruct-q4_K_M && ollama list 2>/dev/null | grep -q nomic-embed-text"; then
-    echo "Ollama models ready."
+  if docker compose exec -T ollama sh -c "ollama list 2>/dev/null | grep -q nomic-embed-text"; then
+    echo "Ollama embed model ready."
     break
   fi
   sleep 10
@@ -42,5 +42,8 @@ echo ""
 echo "=== Preparation complete ==="
 echo "Start the stack (fully offline):"
 echo "  docker compose up -d"
+echo ""
+echo "Note: First start still fills the TensorRT-LLM Hugging Face cache (volume trtllm_hf_cache)"
+echo "      if empty — can take a long time and needs GPU. Set HF_TOKEN in .env if the model is gated."
 echo ""
 echo "To verify offline readiness: ./scripts/verify_offline_readiness.sh"

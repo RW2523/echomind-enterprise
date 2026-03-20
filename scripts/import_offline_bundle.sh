@@ -14,7 +14,7 @@ PROJECT_ROOT="$(cd "$PROJECT_DIR" && pwd)"
 echo "=== Importing EchoMind offline bundle from $BUNDLE_ROOT ==="
 
 echo "[1/4] Loading Docker images..."
-for f in "$BUNDLE_ROOT"/image-backend.tar "$BUNDLE_ROOT"/image-voice.tar "$BUNDLE_ROOT"/image-frontend.tar "$BUNDLE_ROOT"/image-ollama.tar; do
+for f in "$BUNDLE_ROOT"/image-backend.tar "$BUNDLE_ROOT"/image-voice.tar "$BUNDLE_ROOT"/image-frontend.tar "$BUNDLE_ROOT"/image-ollama.tar "$BUNDLE_ROOT"/image-trtllm.tar; do
   [ -f "$f" ] || continue
   docker load -i "$f"
   echo "  loaded $(basename "$f")"
@@ -31,6 +31,16 @@ else
   echo "  WARN: ollama_data.tar not in bundle (Ollama will fail until models are present)"
 fi
 
+echo "[2b/4] TensorRT-LLM HF cache volume..."
+TRTLLM_VOLUME="${PROJECT_NAME}_trtllm_hf_cache"
+docker volume create "$TRTLLM_VOLUME" 2>/dev/null || true
+if [ -f "$BUNDLE_ROOT/trtllm_hf_cache.tar" ]; then
+  docker run --rm -v "$TRTLLM_VOLUME:/data" -v "$BUNDLE_ROOT:/in" alpine sh -c "cd /data && tar xf /in/trtllm_hf_cache.tar"
+  echo "  restored trtllm_hf_cache volume"
+else
+  echo "  WARN: trtllm_hf_cache.tar missing (first online start will download/build; or export after warming trtllm)"
+fi
+
 echo "[3/4] Optional: copy voice assets into project..."
 if [ -d "$BUNDLE_ROOT/voice-assets" ] && [ "$(ls -A "$BUNDLE_ROOT/voice-assets" 2>/dev/null)" ]; then
   mkdir -p "$PROJECT_ROOT/voice/voices"
@@ -43,6 +53,9 @@ fi
 echo "[4/4] Verifying..."
 if docker volume inspect "$OLLAMA_VOLUME" &>/dev/null; then
   echo "  Ollama volume: $OLLAMA_VOLUME"
+fi
+if docker volume inspect "$TRTLLM_VOLUME" &>/dev/null; then
+  echo "  TensorRT-LLM HF cache volume: $TRTLLM_VOLUME"
 fi
 
 echo ""

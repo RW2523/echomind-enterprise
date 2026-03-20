@@ -23,9 +23,18 @@ if ! docker volume inspect "$OLLAMA_VOLUME" &>/dev/null; then
   OLLAMA_VOLUME=""
 fi
 
+TRTLLM_VOLUME="${PROJECT_NAME}_trtllm_hf_cache"
+if ! docker volume inspect "$TRTLLM_VOLUME" &>/dev/null; then
+  TRTLLM_VOLUME="trtllm_hf_cache"
+fi
+if ! docker volume inspect "$TRTLLM_VOLUME" &>/dev/null; then
+  echo "WARN: TensorRT-LLM HF cache volume not found; skipping trtllm_hf_cache.tar"
+  TRTLLM_VOLUME=""
+fi
+
 echo "[1/4] Saving Docker images..."
-# Image names: compose uses project_service (e.g. echomind-enterprise-backend); ollama has image: echomind-ollama:setup
-for pair in "backend:${PROJECT_NAME}-backend" "voice:${PROJECT_NAME}-voice" "frontend:${PROJECT_NAME}-frontend" "ollama:echomind-ollama:setup"; do
+# Image names: compose uses project_service (e.g. echomind-enterprise-backend); ollama/trtllm use fixed image: tags
+for pair in "backend:${PROJECT_NAME}-backend" "voice:${PROJECT_NAME}-voice" "frontend:${PROJECT_NAME}-frontend" "ollama:echomind-ollama:setup" "trtllm:echomind-trtllm:1.2.0rc6"; do
   svc="${pair%%:*}"
   name="${pair#*:}"
   if docker image inspect "$name" &>/dev/null 2>&1; then
@@ -44,6 +53,14 @@ else
   echo "  skipped (no volume)"
 fi
 
+echo "[2b/4] Exporting TensorRT-LLM Hugging Face cache (large)..."
+if [ -n "$TRTLLM_VOLUME" ]; then
+  docker run --rm -v "$TRTLLM_VOLUME:/data" -v "$BUNDLE_ROOT:/out" alpine tar cf /out/trtllm_hf_cache.tar -C /data .
+  echo "  saved trtllm_hf_cache.tar"
+else
+  echo "  skipped (no volume)"
+fi
+
 echo "[3/4] Copying voice assets and docs..."
 mkdir -p "$BUNDLE_ROOT/voice-assets"
 [ -d "voice/voices" ] && [ "$(ls -A voice/voices 2>/dev/null)" ] && cp -a voice/voices/. "$BUNDLE_ROOT/voice-assets/" && echo "  copied voice/voices"
@@ -54,8 +71,9 @@ cat > "$BUNDLE_ROOT/MANIFEST.txt" << MANI
 EchoMind offline bundle
 Exported: $(date -Iseconds)
 Contents:
-- image-backend.tar, image-voice.tar, image-frontend.tar, image-ollama.tar: Docker images
-- ollama_data.tar: Ollama model store (LLM + embed models)
+- image-backend.tar, image-voice.tar, image-frontend.tar, image-ollama.tar, image-trtllm.tar: Docker images
+- ollama_data.tar: Ollama model store (embed model when using TensorRT-LLM for chat)
+- trtllm_hf_cache.tar: TensorRT-LLM Hugging Face cache (weights + engines; large)
 - voice-assets/: Piper voice files (optional; images include defaults)
 - OFFLINE_DEPLOYMENT.md: Deployment instructions
 

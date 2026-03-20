@@ -10,18 +10,20 @@ This document describes the **offline-first** architecture: one-time online prep
 
 | Dependency | Where | Purpose |
 |------------|--------|---------|
-| Docker base images | All Dockerfiles | `nvcr.io/nvidia/pytorch`, `node:20-alpine`, `nginx`, `ollama/ollama` |
+| Docker base images | All Dockerfiles | `nvcr.io/nvidia/pytorch`, `nvcr.io/nvidia/tensorrt-llm/release`, `node:20-alpine`, `nginx`, `ollama/ollama` |
 | apt packages | Backend, Voice, Ollama | ffmpeg, libopus-dev, wget, curl, etc. |
 | pip packages | Backend, Voice | requirements.txt, moshi, whisper, piper-tts |
 | npm packages | Frontend | package.json (npm ci) |
 | Kyutai STT | Backend Dockerfile | `snapshot_download('kyutai/stt-1b-en_fr')` |
 | Piper TTS | Voice Dockerfile | wget from Hugging Face for en_US-lessac-medium |
 | Whisper | Voice Dockerfile | `whisper.load_model('base')` |
-| Ollama models | One-time prepare step | `ollama pull` for LLM + embed (stored in volume) |
+| Ollama embed model | One-time prepare step | `ollama pull` for `nomic-embed-text` (stored in `ollama_data`) |
+| TensorRT-LLM weights | First `trtllm` start with internet | `hf download` into volume `trtllm_hf_cache` (or restore from `trtllm_hf_cache.tar`) |
 
 ### Runtime (no internet)
 
-- **Ollama**: With `OLLAMA_OFFLINE=1`, entrypoint only checks that required models exist in the volume; never runs `ollama pull`. If missing, exits with a clear error.
+- **Ollama**: With `OLLAMA_OFFLINE=1`, entrypoint only checks that required models exist in the volume; never runs `ollama pull`. With `OLLAMA_EMBED_ONLY=1`, only the embedding model is required. If missing, exits with a clear error.
+- **TensorRT-LLM**: With `TRTLLM_SKIP_DOWNLOAD=1` and `HF_HUB_OFFLINE=1` on the `trtllm` service, no Hugging Face download at startup; the `trtllm_hf_cache` volume must already contain the model (populate online once or import `trtllm_hf_cache.tar`).
 - **Backend**: `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`; Kyutai loads from local Hugging Face cache only (`local_files_only=True`). No `snapshot_download` over the network.
 - **Voice**: Piper and Whisper use assets baked in the image (or mounted `./voice/voices`). `VOICE_OFFLINE=1` disables the `/voices/download` API so no runtime Piper download from Hugging Face.
 - **Frontend**: Static build in image; nginx serves from disk. CSS (Tailwind) and fonts are bundled at build time; no CDN or Google Fonts at runtime. Favicon is a data URI (no external request).
@@ -30,7 +32,8 @@ This document describes the **offline-first** architecture: one-time online prep
 
 | Asset | Location | Persists across restarts |
 |-------|----------|---------------------------|
-| Ollama LLM + embed | Docker volume `ollama_data` | Yes (volume) |
+| Ollama embeddings | Docker volume `ollama_data` | Yes (volume) |
+| TensorRT-LLM HF cache | Docker volume `trtllm_hf_cache` | Yes (volume) |
 | Kyutai STT | Backend image (HF cache under `/root/.cache/huggingface`) | Yes (image) |
 | Piper default voice | Voice image `/voices` (or host `./voice/voices` if mounted) | Yes (image or host) |
 | Whisper base | Voice image (whisper cache) | Yes (image) |
@@ -48,12 +51,14 @@ Run **once** on a machine with internet:
 
 This will:
 
-1. Build all images (backend, voice, frontend, ollama) — downloads base images, apt, pip, npm, Kyutai, Piper, Whisper.
-2. Start Ollama with `OLLAMA_OFFLINE=0` so it pulls `qwen2.5:7b-instruct-q4_K_M` and `nomic-embed-text` into the `ollama_data` volume.
-3. Wait until both models are present.
-4. Stop Ollama. The volume keeps the models.
+1. Build all images (backend, voice, frontend, ollama, trtllm) — downloads base images, apt, pip, npm, Kyutai, Piper, Whisper.
+2. Start Ollama with `OLLAMA_OFFLINE=0` so it pulls `nomic-embed-text` into the `ollama_data` volume (chat LLM is TensorRT-LLM, not Ollama).
+3. Wait until the embed model is present.
+4. Stop Ollama. The volume keeps the model.
 
-After this, **normal startup never uses the network**.
+**TensorRT-LLM:** The first time you run `docker compose up -d`, the `trtllm` service downloads the configured `MODEL_HANDLE` into `trtllm_hf_cache` (long-running; GPU required). For a fully offline stack after that, set on the `trtllm` service: `TRTLLM_SKIP_DOWNLOAD=1` and `TRTLLM_HF_HUB_OFFLINE=1`, and keep the populated volume (or import `trtllm_hf_cache.tar` from `./scripts/export_offline_bundle.sh`).
+
+After caches and volumes are populated, **normal startup can avoid the network** (see env vars above for TRT + existing backend/voice/Ollama guards).
 
 ---
 
@@ -65,7 +70,7 @@ Start the stack (no internet required):
 docker compose up -d
 ```
 
-Stop and start again anytime; all assets are in images or the `ollama_data` volume.
+Stop and start again anytime; assets live in images plus `ollama_data` and `trtllm_hf_cache` (when TRT is in offline mode).
 
 ---
 
@@ -80,8 +85,9 @@ On a machine that has run `prepare_offline.sh` and has built images:
 
 This creates:
 
-- `image-backend.tar`, `image-voice.tar`, `image-frontend.tar`, `image-ollama.tar`
-- `ollama_data.tar` (Ollama model store)
+- `image-backend.tar`, `image-voice.tar`, `image-frontend.tar`, `image-ollama.tar`, `image-trtllm.tar`
+- `ollama_data.tar` (Ollama embed store)
+- `trtllm_hf_cache.tar` (TensorRT-LLM Hugging Face cache — large)
 - `voice-assets/` (optional copy of `voice/voices`)
 - `MANIFEST.txt`, `OFFLINE_DEPLOYMENT.md`
 
@@ -104,7 +110,7 @@ cd /path/to/echomind-enterprise
 docker compose up -d
 ```
 
-No network access is required.
+No network access is required if Ollama and TensorRT-LLM volumes were restored (and TRT offline env vars are set as above).
 
 ---
 
@@ -116,7 +122,7 @@ Check that the setup is offline-ready (no runtime pull/download):
 ./scripts/verify_offline_readiness.sh
 ```
 
-Checks include: Ollama entrypoint guarded by `OLLAMA_OFFLINE`, compose sets `OLLAMA_OFFLINE=1` and `HF_HUB_OFFLINE=1`, backend Dockerfile pre-downloads Kyutai, voice Dockerfile pre-downloads Piper/Whisper, and Ollama volume exists after prepare.
+Checks include: Ollama entrypoint guarded by `OLLAMA_OFFLINE`, compose sets `OLLAMA_OFFLINE=1` and `HF_HUB_OFFLINE=1`, backend Dockerfile pre-downloads Kyutai, voice Dockerfile pre-downloads Piper/Whisper, and Ollama volume exists after prepare. TensorRT-LLM offline mode is opt-in via `TRTLLM_SKIP_DOWNLOAD` / `TRTLLM_HF_HUB_OFFLINE` on the `trtllm` service.
 
 ---
 
@@ -124,10 +130,16 @@ Checks include: Ollama entrypoint guarded by `OLLAMA_OFFLINE`, compose sets `OLL
 
 ### "Required models are missing" (Ollama)
 
-- You started with `OLLAMA_OFFLINE=1` and the `ollama_data` volume was empty.
+- You started with `OLLAMA_OFFLINE=1` and the `ollama_data` volume was empty (or `nomic-embed-text` was never pulled).
 - **Fix**: Run one-time preparation with internet:  
   `OLLAMA_OFFLINE=0 docker compose up -d ollama`  
-  Wait for health (both models present), then `docker compose stop ollama`. After that, `docker compose up -d` works offline.
+  Wait for health (`nomic-embed-text` listed), then `docker compose stop ollama`. After that, `docker compose up -d` works offline for embeddings.
+
+### TensorRT-LLM: download fails or health never passes
+
+- **Gated model**: set `HF_TOKEN` in `.env` (compose passes it into `trtllm`).
+- **First start slow**: engine build can exceed the healthcheck `start_period`; watch `docker compose logs -f trtllm`.
+- **Offline without cache**: populate `trtllm_hf_cache` online once, then set `TRTLLM_SKIP_DOWNLOAD=1` and `TRTLLM_HF_HUB_OFFLINE=1` on the `trtllm` service, or restore `trtllm_hf_cache.tar` from an export bundle.
 
 ### "Kyutai STT model not found in local cache"
 
@@ -152,7 +164,7 @@ Checks include: Ollama entrypoint guarded by `OLLAMA_OFFLINE`, compose sets `OLL
 - **Ollama**: Entrypoint checks for required models; if missing and `OLLAMA_OFFLINE=1`, exits with an error. Pull only when `OLLAMA_OFFLINE=0` (prepare step).
 - **Backend**: `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`; Kyutai uses `snapshot_download(..., local_files_only=True)` when offline; clear error if model missing.
 - **Voice**: `VOICE_OFFLINE=1` disables the Piper download API; Piper/Whisper use only image or mounted assets.
-- **Compose**: `OLLAMA_OFFLINE=1` for ollama service; backend and voice get offline env vars.
-- **Scripts**: `prepare_offline.sh`, `verify_offline_readiness.sh`, `export_offline_bundle.sh`, `import_offline_bundle.sh` for one-time prep, verification, and air-gapped move.
+- **Compose**: `trtllm` service (TensorRT-LLM) with persistent `trtllm_hf_cache`; `OLLAMA_OFFLINE=1` and `OLLAMA_EMBED_ONLY=1` for Ollama; backend/voice point `LLM_*` at `trtllm:8355`.
+- **Scripts**: `prepare_offline.sh`, `verify_offline_readiness.sh`, `export_offline_bundle.sh`, `import_offline_bundle.sh` for one-time prep, verification, and air-gapped move (bundle includes TRT image + HF cache tar when present).
 
-No runtime `pull`, `wget`, or `snapshot_download` over the network after preparation.
+After preparation, avoid runtime network by using offline guards on backend/voice/Ollama and TRT (`TRTLLM_SKIP_DOWNLOAD` + `TRTLLM_HF_HUB_OFFLINE` once the HF cache volume is full).

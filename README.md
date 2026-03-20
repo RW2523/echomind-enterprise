@@ -6,7 +6,8 @@ This build removes ALL Gemini code and connects the UI to your backend APIs.
 - Frontend: http://<DGX_IP>:3000 (HTTP) or https://<DGX_IP>:3443 (HTTPS)
 - Backend API: proxied under /api
 - Voice bot: proxied under /voice (direct: http://<DGX_IP>:8001). **Voice AI is connected to RAG** (via `BACKEND_CHAT_URL`): questions about your transcripts or uploaded PDFs are answered from the knowledge base.
-- Ollama: http://<DGX_IP>:11434
+- **TensorRT-LLM** (chat): OpenAI-compatible API on port **8355** (`docker compose` service `trtllm`; model weights live in volume `trtllm_hf_cache`). Set `HF_TOKEN` in `.env` if your `MODEL_HANDLE` is gated.
+- **Ollama** (embeddings only for RAG): http://<DGX_IP>:11434 — `nomic-embed-text` in volume `ollama_data`
 
 ## HTTPS (no browser warning)
 
@@ -56,7 +57,8 @@ Or use offline preparation (builds everything and populates Ollama once): `./scr
 ## Model setup (included in build/start)
 
 - **Kyutai STT** (Live Transcript): Pre-downloaded during backend Docker build. Runtime uses local cache only (`HF_HUB_OFFLINE=1`).
-- **Ollama** (LLM + embeddings): Models (`qwen2.5:7b-instruct-q4_K_M`, `nomic-embed-text`) are stored in the `ollama_data` volume. Run `./scripts/prepare_offline.sh` once (with internet) to populate the volume; after that, `docker compose up` runs offline (`OLLAMA_OFFLINE=1`).
+- **TensorRT-LLM** (chat LLM): Service `trtllm` uses `nvcr.io/nvidia/tensorrt-llm/release:1.2.0rc6` (see `docker/trtllm/`). On first start, `hf download` fills `trtllm_hf_cache` (can take a long time; needs GPU). Override model with `TRTLLM_MODEL_HANDLE` in `.env`. For air-gapped use after prep, export/import includes `trtllm_hf_cache.tar`; set `TRTLLM_SKIP_DOWNLOAD=1` and `TRTLLM_HF_HUB_OFFLINE=1` on the `trtllm` service once the cache is complete.
+- **Ollama** (embeddings only): `nomic-embed-text` in `ollama_data`. Run `./scripts/prepare_offline.sh` once to pull it; chat does not use Ollama (`OLLAMA_EMBED_ONLY=1`).
 - **Whisper** (Voice): Base model pre-downloaded during voice Docker build.
 - **Piper** (Voice): Default voice baked in voice image; runtime download disabled when `VOICE_OFFLINE=1`.
 

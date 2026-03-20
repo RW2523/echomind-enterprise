@@ -1,4 +1,42 @@
 services:
+  trtllm:
+    build:
+      context: ./docker/trtllm
+    image: echomind-trtllm:1.2.0rc6
+    container_name: echomind-trtllm
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    ports:
+      - "8355:8355"
+    environment:
+      # Gated HF models: set HF_TOKEN in .env or the shell before compose up
+      - HF_TOKEN=${HF_TOKEN:-}
+      - MODEL_HANDLE=${TRTLLM_MODEL_HANDLE:-nvidia/Llama-3.1-8B-Instruct-FP4}
+      # First start downloads weights into the volume; later starts reuse cache (set TRTLLM_SKIP_DOWNLOAD=1 + HF_HUB_OFFLINE=1 only after cache is full)
+      - HF_HUB_OFFLINE=${TRTLLM_HF_HUB_OFFLINE:-0}
+      - TRTLLM_SKIP_DOWNLOAD=${TRTLLM_SKIP_DOWNLOAD:-0}
+    volumes:
+      - trtllm_hf_cache:/root/.cache/huggingface
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8355/v1/models', timeout=5).read()\"",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 120
+      start_period: 1200s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
   backend:
     build:
       context: ./backend
@@ -8,18 +46,18 @@ services:
     container_name: echomind-backend
     expose: ["8000"]
     environment:
-      - LLM_BASE_URL=http://host.docker.internal:8355/v1
+      - LLM_BASE_URL=http://trtllm:8355/v1
       - LLM_MODEL=nvidia/Llama-3.1-8B-Instruct-FP4
       - OLLAMA_EMBED_URL=http://ollama:11434/api/embeddings
       - OLLAMA_EMBED_MODEL=nomic-embed-text
       # Offline: use only local Hugging Face cache (no runtime model download)
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - echomind_data:/data
     depends_on:
+      trtllm:
+        condition: service_healthy
       ollama:
         condition: service_healthy
     deploy:
@@ -37,8 +75,8 @@ services:
     container_name: echomind-voice
     ports: ["8001:8000"]
     environment:
-      # TensorRT-LLM on host (same OpenAI-compatible API as backend); dialogue uses stream=true for TTFT.
-      - LLM_URL=http://host.docker.internal:8355/v1/chat/completions
+      # TensorRT-LLM in compose (OpenAI-compatible); dialogue uses stream=true for TTFT.
+      - LLM_URL=http://trtllm:8355/v1/chat/completions
       - LLM_MODEL=nvidia/Llama-3.1-8B-Instruct-FP4
       # Optional: LLM_LOG_PAYLOAD=1 logs full JSON body at WARNING (timing always INFO: VOICE_LLM stream start/done).
       - WHISPER_MODEL=base
@@ -46,9 +84,9 @@ services:
       - BACKEND_CHAT_URL=http://backend:8000
       # Offline: disable runtime Piper voice download from Hugging Face
       - VOICE_OFFLINE=1
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
+      trtllm:
+        condition: service_healthy
       ollama:
         condition: service_healthy
       backend:
@@ -73,13 +111,15 @@ services:
     environment:
       - OLLAMA_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
       - OLLAMA_EMBED_MODEL=nomic-embed-text
+      # Chat LLM is TensorRT-LLM; Ollama only serves embeddings for RAG
+      - OLLAMA_EMBED_ONLY=1
       # Offline: do not pull at startup; require models in volume (populated by prepare step)
       - OLLAMA_OFFLINE=1
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
-      # Pass only when both models are available (pre-loaded in volume by prepare)
-      test: ["CMD", "sh", "-c", "ollama list | grep -q qwen2.5:7b-instruct-q4_K_M && ollama list | grep -q nomic-embed-text"]
+      # Embed model only (see OLLAMA_EMBED_ONLY)
+      test: ["CMD", "sh", "-c", "ollama list | grep -q nomic-embed-text"]
       interval: 15s
       timeout: 10s
       retries: 80
@@ -95,3 +135,4 @@ services:
 volumes:
   echomind_data:
   ollama_data:
+  trtllm_hf_cache:
