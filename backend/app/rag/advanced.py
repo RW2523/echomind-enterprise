@@ -73,7 +73,8 @@ CONTEXT_WINDOW_VALUES = ("24h", "48h", "1w", "all")
 # Deterministic message when document/transcript intent but retrieval is insufficient (no hallucination fallback to general chat).
 INSUFFICIENT_CONTEXT_MSG = (
     "I couldn't find a confident answer to your question in the uploaded DoD FMR or related documents. "
-    "This may happen when the topic spans multiple volumes or uses terminology that differs from the document's headings. "
+    "This may happen when the indexed excerpts do not contain enough matching detail, the topic spans multiple volumes, "
+    "or terminology differs from the document's headings. "
     "Try rephrasing your question, referencing a specific section or paragraph number (e.g. 'What does paragraph 030201 say?'), "
     "or ask me to search for related sections."
 )

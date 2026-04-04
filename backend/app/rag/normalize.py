@@ -41,16 +41,17 @@ def collapse_spaced_letters(text: str) -> str:
 
 def normalize_whitespace_preserve_paragraphs(text: str) -> str:
     """
-    Normalize whitespace: collapse runs of spaces/tabs to single space, preserve paragraph breaks (\n\n).
+    Normalize whitespace: collapse runs of spaces/tabs/newlines to single space within each paragraph,
+    preserve paragraph breaks (\n\n), trim each paragraph and drop empties.
     """
     if not text:
         return text
-    # Replace \n\n (paragraph) with a sentinel, collapse other whitespace, restore \n\n
-    PARAGRAPH = "\x00PARA\x00"
-    t = text.replace("\n\n", PARAGRAPH)
-    t = re.sub(r"[ \t\r\n]+", " ", t)
-    t = t.replace(PARAGRAPH, "\n\n")
-    return t.strip()
+    parts = []
+    for para in text.split("\n\n"):
+        collapsed = re.sub(r"[ \t\r\n]+", " ", para).strip()
+        if collapsed:
+            parts.append(collapsed)
+    return "\n\n".join(parts)
 
 
 def normalize_extracted_text(text: str) -> str:
@@ -59,7 +60,7 @@ def normalize_extracted_text(text: str) -> str:
     Order: dehyphenate -> collapse spaced letters -> normalize whitespace.
     """
     if not (text or "").strip():
-        return text or ""
+        return ""
     t = dehyphenate(text)
     t = collapse_spaced_letters(t)
     t = normalize_whitespace_preserve_paragraphs(t)

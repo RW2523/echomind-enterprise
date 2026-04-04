@@ -36,23 +36,11 @@ def _warm_nemotron_stt():
         if preload_nemotron_stt():
             logger.info("Nemotron ASR: ready (Live Transcript can connect).")
         else:
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-            logger.warning("Kyutai STT: pre-load failed (Live Transcript will load on first use or fail if offline and missing).")
-    except Exception as e:
-        logger.warning("Kyutai STT: warmup failed: %s", e)
-=======
-=======
->>>>>>> Stashed changes
             logger.warning(
                 "Nemotron ASR: pre-load failed (Live Transcript will retry on first connection or fail if offline and missing)."
             )
     except Exception as e:
         logger.warning("Nemotron ASR: warmup failed: %s", e)
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 
 async def _warm_llm_and_embeddings():
