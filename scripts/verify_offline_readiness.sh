@@ -45,11 +45,11 @@ fi
 # 5. Runtime code uses offline guards where needed
 echo "OK: Runtime download sites (backend/voice) use offline guards"
 
-# 6. Backend Dockerfile pre-downloads Kyutai unless explicitly skipped
-if grep -q "snapshot_download.*kyutai" backend/Dockerfile 2>/dev/null; then
-  echo "OK: Backend Dockerfile includes Kyutai model download step"
+# 6. Backend Dockerfile pre-downloads Nemotron (or ASR model) unless explicitly skipped
+if grep -q "snapshot_download" backend/Dockerfile 2>/dev/null && grep -q "nemotron-speech-streaming\|ECHOMIND_ASR_MODEL_NAME" backend/Dockerfile 2>/dev/null; then
+  echo "OK: Backend Dockerfile includes Nemotron / ASR model download step"
 else
-  echo "FAIL: Backend Dockerfile should pre-download Kyutai (required for offline)"
+  echo "FAIL: Backend Dockerfile should pre-download Nemotron ASR weights (required for offline)"
   ERR=1
 fi
 

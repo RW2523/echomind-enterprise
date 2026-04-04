@@ -1,0 +1,28 @@
+.git
+.gitignore
+.cursor
+.vscode
+.idea
+**/.DS_Store
+
+# Python / virtual env
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.pytest_cache
+backend/.venv
+
+# Node
+frontend/node_modules
+frontend/dist
+
+# Logs / temp
+**/*.log
+tmp
+.cache
+
+# Local secrets/certs
+.env
+.env.*
+**/*.pem
+**/*.key

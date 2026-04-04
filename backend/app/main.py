@@ -23,22 +23,30 @@ logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-def _warm_kyutai_stt():
-    """Run in background: ensure Kyutai model in cache (no download when HF_HUB_OFFLINE=1), then pre-load one STT instance."""
+def _warm_nemotron_stt():
+    """Background: ensure Nemotron weights in HF cache when online; pre-load shared NeMo ASR model."""
     try:
-        from .transcribe.stt_streaming import KYUTAI_AVAILABLE, download_kyutai_model, preload_kyutai_stt
-        if not KYUTAI_AVAILABLE:
+        from .transcribe.stt_streaming import NEMOTRON_AVAILABLE, download_nemotron_model, preload_nemotron_stt
+
+        if not NEMOTRON_AVAILABLE:
             return
-        # In offline mode download_kyutai_model only checks local cache (no network).
-        if download_kyutai_model():
-            logger.info("Kyutai STT: model in cache.")
-        logger.info("Kyutai STT: pre-loading model...")
-        if preload_kyutai_stt():
-            logger.info("Kyutai STT: ready (Live Transcript will connect instantly).")
+        if download_nemotron_model():
+            logger.info("Nemotron ASR: Hugging Face cache check ok.")
+        logger.info("Nemotron ASR: loading model...")
+        if preload_nemotron_stt():
+            logger.info("Nemotron ASR: ready (Live Transcript can connect).")
         else:
+<<<<<<< Updated upstream
             logger.warning("Kyutai STT: pre-load failed (Live Transcript will load on first use or fail if offline and missing).")
     except Exception as e:
         logger.warning("Kyutai STT: warmup failed: %s", e)
+=======
+            logger.warning(
+                "Nemotron ASR: pre-load failed (Live Transcript will retry on first connection or fail if offline and missing)."
+            )
+    except Exception as e:
+        logger.warning("Nemotron ASR: warmup failed: %s", e)
+>>>>>>> Stashed changes
 
 
 async def _warm_llm_and_embeddings():
@@ -80,8 +88,8 @@ async def _warm_llm_and_embeddings():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Pre-download and pre-load Kyutai STT in background so first Live Transcript connection is fast
-    t = threading.Thread(target=_warm_kyutai_stt, daemon=True)
+    # Pre-download and pre-load Nemotron ASR in background so first Live Transcript connection is faster
+    t = threading.Thread(target=_warm_nemotron_stt, daemon=True)
     t.start()
     # Warm LLM + embed backends so first chat/RAG is responsive
     asyncio.create_task(_warm_llm_and_embeddings())

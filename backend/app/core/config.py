@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     # Max total context chars; 0 = no limit. When exceeded, trim lowest-scoring blocks. 24k for 7300-page DoD FMR.
     RAG_CONTEXT_MAX_CHARS: int = int(os.getenv("RAG_CONTEXT_MAX_CHARS", "24000"))
 
-    # Real-time transcription & knowledge capture (Kyutai STT only, 24kHz)
+    # Real-time transcription & knowledge capture (Nemotron NeMo ASR, 16 kHz)
     ECHOMIND_AUTO_STORE_DEFAULT: bool = os.getenv("ECHOMIND_AUTO_STORE_DEFAULT", "1").lower() in ("1", "true", "yes")
     # When auto_store is on: store new transcript content to the KB every N seconds (0 = only on stop).
     AUTO_STORE_INTERVAL_SEC: int = int(os.getenv("ECHOMIND_AUTO_STORE_INTERVAL_SEC", "60"))
@@ -92,7 +92,11 @@ class Settings(BaseSettings):
     TRANSCRIPT_RECENT_BUFFER_MAX_CHARS: int = int(os.getenv("TRANSCRIPT_RECENT_BUFFER_MAX_CHARS", "120"))
     TRANSCRIPT_OVERLAP_K: int = int(os.getenv("TRANSCRIPT_OVERLAP_K", "200"))
     TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC: float = float(os.getenv("TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC", "15"))
-    SAMPLE_RATE: int = 24000  # Kyutai STT (kyutai/stt-1b-en_fr)
+    SAMPLE_RATE: int = 16000  # Nemotron streaming ASR (16 kHz)
+    # Nemotron: chunk length in ms (e.g. 560 matches livetranscript default for accuracy/latency tradeoff)
+    TRANSCRIPT_NEMOTRON_CHUNK_MS: int = int(os.getenv("TRANSCRIPT_NEMOTRON_CHUNK_MS", "560"))
+    # Must stay 1 with a single shared NeMo model (see ASRModelAdapter._forward_lock); >1 only if each worker had its own model.
+    TRANSCRIPT_ASR_EXECUTOR_WORKERS: int = int(os.getenv("TRANSCRIPT_ASR_EXECUTOR_WORKERS", "1"))
     # Voice activity: skip feeding audio to STT when RMS below this (0 = disabled). Reduces noise/silence transcribed as text.
     TRANSCRIPT_VAD_RMS_THRESHOLD: float = float(os.getenv("TRANSCRIPT_VAD_RMS_THRESHOLD", "0.008"))
     # VAD sliding window: window size and step in samples (e.g. 1024/512). Only used when VAD threshold > 0; chunk passes if any window exceeds threshold.
@@ -103,7 +107,8 @@ class Settings(BaseSettings):
     # Max interval_buffer entries per session (prevents memory leak).
     TRANSCRIPT_INTERVAL_BUFFER_MAX: int = int(os.getenv("TRANSCRIPT_INTERVAL_BUFFER_MAX", "2048"))
     # GPU concurrency: max concurrent STT inference when device is CUDA (1 = serial).
-    TRANSCRIPT_GPU_CONCURRENCY: int = int(os.getenv("TRANSCRIPT_GPU_CONCURRENCY", "2"))
+    # Serial GPU STT avoids overlapping forwards on one shared Nemotron instance (illegal memory access).
+    TRANSCRIPT_GPU_CONCURRENCY: int = int(os.getenv("TRANSCRIPT_GPU_CONCURRENCY", "1"))
     # STT warmup: number of frames to run on model load (CUDA kernels).
     TRANSCRIPT_STT_WARMUP_FRAMES: int = int(os.getenv("TRANSCRIPT_STT_WARMUP_FRAMES", "8"))
     # WebSocket receive timeout (seconds). No message for this long = stale connection. Default 24h = effectively indefinite with heartbeat.

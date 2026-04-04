@@ -1,0 +1,199 @@
+:root {
+  --bg: #0f0f12;
+  --surface: #1a1a20;
+  --border: #2a2a32;
+  --text: #e8e8ec;
+  --text-muted: #8888a0;
+  --accent: #00c2a8;
+  --accent-dim: #006b5c;
+  --error: #e85555;
+  --partial: #88c0ff;
+  --final: #c8e6c9;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.app {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.status-dot.connected {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.status-dot.listening {
+  background: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.status-dot.processing {
+  background: var(--partial);
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+.status-dot.error {
+  background: var(--error);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn:hover {
+  background: var(--border);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.btn.danger:hover:not(:disabled) {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.transcript-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.transcript-panel .toolbar {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.transcript-content {
+  flex: 1;
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+}
+
+.transcript-content:empty::before {
+  content: 'Transcript will appear here when you start speaking.';
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.transcript-line {
+  margin-bottom: 0.35rem;
+}
+
+.transcript-line.partial {
+  color: var(--partial);
+}
+
+.transcript-line.final {
+  color: var(--final);
+}
+
+.transcript-line.final + .transcript-line.partial {
+  margin-top: 0.5rem;
+}
+
+.error-message {
+  padding: 0.5rem 0.75rem;
+  background: rgba(232, 85, 85, 0.12);
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  color: var(--error);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

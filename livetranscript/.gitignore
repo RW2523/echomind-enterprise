@@ -1,0 +1,50 @@
+# OS/editor
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage*
+
+# Virtual envs
+.venv/
+venv/
+env/
+backend/.venv/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Build / runtime artifacts
+*.log
+logs/
+tmp/
+.cache/
+
+# Model/cache artifacts
+.huggingface/
+.cache/huggingface/
+.cache/torch/
+*.nemo
+
+# Local certs / secrets
+*.pem
+*.key
+.env
+.env.*
+
+# Cursor / local tooling
+.cursor/

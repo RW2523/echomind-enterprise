@@ -2,7 +2,7 @@
 WebSocket handler for real-time transcription & knowledge capture.
 Protocol: binary PCM16 chunks, text JSON (start/pause/resume/eos/refine/store).
 Uses SessionState for stabilization and segmentation; refine and store for KB.
-Kyutai STT only (24kHz). Per-session STT instance; PCM queue backpressure; GPU semaphore; audio-relative timestamps.
+Nemotron NeMo streaming ASR (16 kHz). Shared model, per-connection stream state; PCM queue; GPU semaphore.
 """
 from __future__ import annotations
 import asyncio
@@ -22,21 +22,22 @@ from ..core.config import settings
 from ..utils.ids import now_iso
 from .session_state import SessionState
 from .stt_streaming import (
+    NEMOTRON_AVAILABLE,
+    NEMOTRON_SAMPLE_RATE,
+    NemotronStreamContext,
+    _nemotron_import_error,
     _pcm16_to_float32,
-    _sliding_window_rms,
-    get_or_create_kyutai_stt,
-    release_kyutai_stt,
-    KYUTAI_AVAILABLE,
     _resample_fast,
-    KYUTAI_SAMPLE_RATE,
+    _sliding_window_rms,
+    get_nemotron_process_lock,
+    get_shared_asr_adapter,
 )
 from ..refine import refine_text
 from ..tagging import get_metadata
 from .. import kb
 from .store_to_db import store_transcript_to_db, create_transcript_for_session, append_transcript_chunk, update_transcript_tags_and_echotag
 
-# Kyutai sample rate (24kHz)
-SAMPLE_RATE = KYUTAI_SAMPLE_RATE
+SAMPLE_RATE = NEMOTRON_SAMPLE_RATE
 # Rate limit partials to client
 EMIT_MIN_INTERVAL = 1.0 / max(0.1, getattr(settings, "TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC", 15))
 # VAD: skip feeding audio when sliding-window max RMS below this (0 = disabled)
@@ -54,7 +55,7 @@ _gpu_sem: Optional[asyncio.Semaphore] = None
 def _get_gpu_sem() -> asyncio.Semaphore:
     global _gpu_sem
     if _gpu_sem is None:
-        _gpu_sem = asyncio.Semaphore(max(1, getattr(settings, "TRANSCRIPT_GPU_CONCURRENCY", 2)))
+        _gpu_sem = asyncio.Semaphore(max(1, getattr(settings, "TRANSCRIPT_GPU_CONCURRENCY", 1)))
     return _gpu_sem
 
 
@@ -86,24 +87,29 @@ async def handler(ws: WebSocket):
     await _send(ws, {"type": "loading"})
 
     loop = asyncio.get_running_loop()
-    kyutai_stt = None
-    if KYUTAI_AVAILABLE:
+    asr_adapter = None
+    stream_ctx: Optional[NemotronStreamContext] = None
+    if NEMOTRON_AVAILABLE:
         try:
-            kyutai_stt = await loop.run_in_executor(None, get_or_create_kyutai_stt)
+            asr_adapter = await loop.run_in_executor(None, get_shared_asr_adapter)
         except Exception as e:
-            await _send(ws, {"type": "error", "message": f"Kyutai STT load failed: {e}"})
+            await _send(ws, {"type": "error", "message": f"Nemotron ASR load failed: {e}"})
             return
 
-    if kyutai_stt is None:
-        from .stt_streaming import _kyutai_import_error
-        hint = f" ({_kyutai_import_error})" if _kyutai_import_error else ""
+    if asr_adapter is None:
+        hint = f" ({_nemotron_import_error})" if _nemotron_import_error else ""
         await _send(ws, {
             "type": "error",
-            "message": f"Kyutai STT not available. Install: pip install moshi huggingface-hub. Live transcript requires Kyutai STT.{hint}"
+            "message": f"Nemotron ASR not available. Install NeMo ASR (see backend Dockerfile). Live transcript requires Nemotron.{hint}",
         })
         return
 
-    sample_rate = kyutai_stt.sample_rate
+    # Allocate first session GPU state under the same process-wide lock as inference (NeMo + shared weights).
+    async with get_nemotron_process_lock():
+        stream_ctx = NemotronStreamContext(asr_adapter)
+    # Serialize Nemotron buffer/state: consumer task vs main-loop eos/start/flush/reset (race = CUDA corruption).
+    asr_stream_lock = asyncio.Lock()
+    sample_rate = NEMOTRON_SAMPLE_RATE
     await _send(ws, {"type": "ready", "sample_rate": sample_rate})
 
     session_id: Optional[str] = None
@@ -124,7 +130,7 @@ async def handler(ws: WebSocket):
     auto_store_interval_sec = max(0, getattr(settings, "AUTO_STORE_INTERVAL_SEC", 60))
     pcm_queue: asyncio.Queue = asyncio.Queue(maxsize=PCM_QUEUE_MAX if PCM_QUEUE_MAX > 0 else 0)
     consumer_task: Optional[asyncio.Task] = None
-    use_cuda = kyutai_stt.device == "cuda"
+    use_cuda = asr_adapter.device == "cuda"
 
     async def _periodic_auto_store_fn() -> None:
         """Every auto_store_interval_sec: create or append transcript row, then add chunk to RAG with name/location/time meta. CPU-heavy work off event loop."""
@@ -228,22 +234,25 @@ async def handler(ws: WebSocket):
             "segments": segments_payload,
         })
 
-    async def _run_kyutai_frames(pcm_float32: np.ndarray, sr: int):
-        """Feed PCM to Kyutai; use sliding-window VAD, audio-relative ts_ms, GPU semaphore if CUDA."""
-        if kyutai_stt is None:
+    async def _run_nemotron_frames(pcm_float32: np.ndarray, sr: int):
+        """Feed PCM to Nemotron (16 kHz internal); VAD on client-rate audio; GPU semaphore if CUDA."""
+        if stream_ctx is None:
             return
         if VAD_RMS_THRESHOLD > 0 and _sliding_window_rms(pcm_float32, VAD_WINDOW_SAMPLES, VAD_STEP_SAMPLES) < VAD_RMS_THRESHOLD:
             return
-        if sr != kyutai_stt.sample_rate:
-            pcm_float32 = _resample_fast(pcm_float32, sr, kyutai_stt.sample_rate, kyutai_stt.device)
         if use_cuda:
             await _get_gpu_sem().acquire()
         try:
-            pieces, ts_ms = await loop.run_in_executor(None, lambda: kyutai_stt.add_audio(pcm_float32))
+            async with get_nemotron_process_lock():
+                deltas = await stream_ctx.process_pcm_chunk(
+                    pcm_float32, sr, loop, asr_adapter.device
+                )
         finally:
             if use_cuda:
                 _get_gpu_sem().release()
-        for piece in pieces:
+        last_ts = 0
+        for piece, ts_ms in deltas:
+            last_ts = ts_ms
             if not piece.strip() or not _is_valid_english_piece(piece):
                 continue
             _ensure_session()
@@ -252,8 +261,8 @@ async def handler(ws: WebSocket):
                 new_p = session.maybe_new_paragraph(ts_ms)
                 if new_p:
                     await _send(ws, {"type": "segment", "session_id": session_id, "paragraph_id": new_p.paragraph_id, "text": new_p.raw_text})
-        if pieces:
-            await _maybe_emit_partial(ts_ms)
+        if deltas:
+            await _maybe_emit_partial(last_ts)
 
     async def _pcm_consumer() -> None:
         """Consume PCM from queue; backpressure via queue max size."""
@@ -263,7 +272,8 @@ async def handler(ws: WebSocket):
                 break
             pcm_float32, sr = item
             try:
-                await _run_kyutai_frames(pcm_float32, sr)
+                async with asr_stream_lock:
+                    await _run_nemotron_frames(pcm_float32, sr)
             except Exception as e:
                 logger.warning("PCM consumer STT error (continuing): %s", e)
             pcm_queue.task_done()
@@ -286,7 +296,7 @@ async def handler(ws: WebSocket):
                 if msg.get("type") == "websocket.disconnect":
                     break
                 continue
-            # Binary: PCM16 audio (client sends at ready.sample_rate: 24kHz for Kyutai)
+            # Binary: PCM16 audio (client sends at ready.sample_rate, typically 16 kHz for Nemotron)
             raw_bytes = msg.get("bytes")
             if raw_bytes and len(raw_bytes) > 0:
                 if session and session._paused:
@@ -329,26 +339,28 @@ async def handler(ws: WebSocket):
                 data = {"type": "eos"}
                 t = "eos"
             if t == "start":
-                session_id = data.get("session_id") or str(uuid.uuid4())
-                session = SessionState(session_id)
-                started_at = time.time()
-                started_at_iso[0] = now_iso()
-                session_name[0] = (data.get("name") or "").strip() or ""
-                session_location[0] = (data.get("location") or "").strip() or "default"
-                transcript_id_ref[0] = None
-                mode = data.get("mode", "transcribe")
-                language = data.get("language", "en")
-                auto_store = data.get("auto_store", settings.ECHOMIND_AUTO_STORE_DEFAULT)
-                client_sample_rate = data.get("sample_rate")
-                last_auto_stored_length[0] = 0
-                interval_buffer.clear()
-                while not pcm_queue.empty():
-                    try:
-                        pcm_queue.get_nowait()
-                    except asyncio.QueueEmpty:
-                        break
-                _start_periodic_auto_store()
-                kyutai_stt.reset_streaming()
+                async with asr_stream_lock:
+                    session_id = data.get("session_id") or str(uuid.uuid4())
+                    session = SessionState(session_id)
+                    started_at = time.time()
+                    started_at_iso[0] = now_iso()
+                    session_name[0] = (data.get("name") or "").strip() or ""
+                    session_location[0] = (data.get("location") or "").strip() or "default"
+                    transcript_id_ref[0] = None
+                    mode = data.get("mode", "transcribe")
+                    language = data.get("language", "en")
+                    auto_store = data.get("auto_store", settings.ECHOMIND_AUTO_STORE_DEFAULT)
+                    client_sample_rate = data.get("sample_rate")
+                    last_auto_stored_length[0] = 0
+                    interval_buffer.clear()
+                    while not pcm_queue.empty():
+                        try:
+                            pcm_queue.get_nowait()
+                        except asyncio.QueueEmpty:
+                            break
+                    _start_periodic_auto_store()
+                    async with get_nemotron_process_lock():
+                        stream_ctx.reset()
                 await _send(ws, {"type": "ready", "session_id": session_id, "sample_rate": sample_rate})
                 continue
             if t == "pause":
@@ -360,23 +372,34 @@ async def handler(ws: WebSocket):
                     session.resume()
                 continue
             if t == "eos":
-                _cancel_periodic_auto_store()
-                _ensure_session()
-                ts_flush_ms = int((kyutai_stt.audio_offset_samples / kyutai_stt.sample_rate) * 1000)
-                if use_cuda:
-                    await _get_gpu_sem().acquire()
-                try:
-                    pieces = await loop.run_in_executor(None, kyutai_stt.flush)
-                finally:
+                async with asr_stream_lock:
+                    while True:
+                        try:
+                            pcm_queue.get_nowait()
+                        except asyncio.QueueEmpty:
+                            break
+                    _cancel_periodic_auto_store()
+                    _ensure_session()
                     if use_cuda:
-                        _get_gpu_sem().release()
-                for piece in pieces:
-                    if piece.strip() and _is_valid_english_piece(piece):
-                        session.append_piece(piece, ts_flush_ms)
-                kyutai_stt.reset_streaming()
-                session.finalize()
-                final_text = session.get_display_text()
-                segments_payload = [{"paragraph_id": p.paragraph_id, "text": p.raw_text} for p in session.segments]
+                        await _get_gpu_sem().acquire()
+                    try:
+                        async with get_nemotron_process_lock():
+                            flush_deltas = await stream_ctx.flush(loop)
+                    finally:
+                        if use_cuda:
+                            _get_gpu_sem().release()
+                    ts_flush_ms = int(
+                        (stream_ctx.audio_offset_samples / NEMOTRON_SAMPLE_RATE) * 1000
+                    )
+                    for piece, ts_ms in flush_deltas:
+                        tsm = ts_ms if ts_ms else ts_flush_ms
+                        if piece.strip() and _is_valid_english_piece(piece):
+                            session.append_piece(piece, tsm)
+                    async with get_nemotron_process_lock():
+                        stream_ctx.reset()
+                    session.finalize()
+                    final_text = session.get_display_text()
+                    segments_payload = [{"paragraph_id": p.paragraph_id, "text": p.raw_text} for p in session.segments]
                 await _send(ws, {
                     "type": "final",
                     "session_id": session_id,
@@ -540,8 +563,6 @@ async def handler(ws: WebSocket):
         except Exception:
             pass
     finally:
-        if kyutai_stt is not None:
-            await loop.run_in_executor(None, lambda: release_kyutai_stt(kyutai_stt))
         if consumer_task is not None and not consumer_task.done():
             try:
                 pcm_queue.put_nowait(None)

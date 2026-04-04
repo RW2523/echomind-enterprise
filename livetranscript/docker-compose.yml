@@ -1,0 +1,43 @@
+# Live Transcript stack for DGX Spark (or any host with NVIDIA GPU).
+# Run: docker compose up --build
+# Frontend: http://localhost
+# Backend health: http://localhost:8000/health (from host) or http://backend:8000/health (from frontend container)
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
+      - ASR_ATT_CONTEXT_RIGHT=6
+      - AUDIO_CHUNK_MS=560
+      - SILENCE_MS_BEFORE_FINAL=500
+      - NVIDIA_VISIBLE_DEVICES=all
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      backend:
+        condition: service_healthy

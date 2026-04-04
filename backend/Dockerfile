@@ -13,16 +13,22 @@ WORKDIR /app
 # Use requirements-gpu.txt for FAISS GPU (faster search). Default: faiss-cpu.
 ARG USE_FAISS_GPU=1
 COPY requirements.txt /app/
-# Kyutai STT via moshi (libopus-dev required for sphn build on ARM64)
 RUN pip install -r requirements.txt
 
-RUN pip install --no-cache-dir "bitsandbytes==0.46.0" sentencepiece \
- && pip install --no-cache-dir --no-deps "moshi==0.2.9"
+# NeMo ASR (Nemotron streaming). Cython/packaging are NeMo prerequisites.
+RUN pip install --no-cache-dir Cython packaging sentencepiece \
+ && pip install --no-cache-dir "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@main"
 
-# Pre-download Kyutai STT model during build (required for offline: runtime uses HF_HUB_OFFLINE=1 and local cache only).
-# Set SKIP_MODEL_DOWNLOAD=1 only if build fails with "file already closed"; then offline run will fail until model is present.
+# NeMo upgrades torch; NGC torchvision targets the old torch — upgrade torchvision to match.
+# NeMo pulls NumPy 2.x; faiss-cpu targets NumPy 1.x — pin NumPy and reinstall FAISS.
+RUN pip install --no-cache-dir "numpy>=1.26.4,<2.0" --force-reinstall \
+ && pip install --no-cache-dir --no-deps --force-reinstall "faiss-cpu==1.8.0.post1" \
+ && pip install --no-cache-dir --upgrade torchvision
+
+# Pre-download Nemotron weights during build (offline runs use HF_HUB_OFFLINE=1 and local cache only).
 ARG SKIP_MODEL_DOWNLOAD=0
-RUN if [ "$SKIP_MODEL_DOWNLOAD" != "1" ]; then python -c "from huggingface_hub import snapshot_download; snapshot_download('kyutai/stt-1b-en_fr')"; fi
+ARG ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
+RUN if [ "$SKIP_MODEL_DOWNLOAD" != "1" ]; then python -c "from huggingface_hub import snapshot_download; snapshot_download('${ECHOMIND_ASR_MODEL_NAME}')"; fi
 
 COPY app /app/app
 EXPOSE 8000
