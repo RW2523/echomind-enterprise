@@ -152,7 +152,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
           </div>
         </section>
 
-        <section>
+        {/* <section>
           <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Voice Context / Role (System Prompt)</h3>
           <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 space-y-4">
             <p className="text-xs text-slate-500 -mt-2">Set the assistant&apos;s role and context for Voice AI Conversation. This is saved and retained until you clear it.</p>
@@ -198,7 +198,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
               />
             </div>
           </div>
-        </section>
+        </section> */}
 
         <section>
           <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Voice & Audio (Piper TTS)</h3>
