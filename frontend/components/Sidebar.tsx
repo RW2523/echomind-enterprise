@@ -65,11 +65,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
   const ratio = capacityBytes > 0 ? Math.min(1, usageBytes / capacityBytes) : 0;
   const usageStr = formatBytes(usageBytes);
   const capacityStr = capacityBytes > 0 ? formatBytes(capacityBytes) : null;
-  //  { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings },
-  // { id: AppView.VOICE_CONVERSATION, label: 'Conversation', icon: ICONS.Mic },
+
+  
   const navItems = [
     { id: AppView.KNOWLEDGE_CHAT, label: 'Knowledge Chat', icon: ICONS.Chat },
     { id: AppView.TRANSCRIPTION, label: 'Live Transcript', icon: ICONS.Transcript },
+    { id: AppView.VOICE_CONVERSATION, label: 'Conversation', icon: ICONS.Mic },
+    { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings }
   ];
 
   const sidebarContent = (
