@@ -27,6 +27,9 @@ dist/
 *.sqlite
 /data/
 
+# Local book/RAG experiments (large PDFs; not part of app source)
+BookRAG/
+
 # Optional: uncomment if you don't want to track these
 # echomind_data/
 # ollama_data/
