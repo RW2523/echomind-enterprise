@@ -142,6 +142,47 @@ class AskVoiceIn(BaseModel):
 # Default hours when user asks for "recent summary of the transcript" with no explicit time (voice/conversation bot).
 DEFAULT_RECENT_TRANSCRIPT_HOURS = 24.0
 
+_PERSONA_TRANSCRIPT_HINTS: dict[str, str] = {
+    "Teacher / Professor": (
+        "Explain the content educationally—provide context, clarify key concepts, and highlight what is most "
+        "important for understanding. Use analogies where helpful."
+    ),
+    "Financial Advisor": (
+        "Identify and highlight any financial topics, regulatory references, compliance matters, budget decisions, "
+        "or DoD FMR-related content. Be precise and cite specific statements from the transcript."
+    ),
+    "Funny & Calming Assistant": (
+        "Summarize the content in a warm, engaging, and positive way. Make it easy and enjoyable to digest."
+    ),
+    "Lawyer": (
+        "Identify any legal obligations, rights, compliance risks, contractual commitments, regulatory deadlines, "
+        "or liability issues present in the transcript. Apply structured legal analysis."
+    ),
+    "AI Expert & Manager": (
+        "Highlight technical decisions, architecture choices, action items, engineering risks, blockers, "
+        "and any process or team management insights from the transcript."
+    ),
+}
+
+_DEFAULT_TRANSCRIPT_HINT = (
+    "Provide a direct answer or summary based on the transcript text. "
+    "Highlight key topics, decisions, and any important references."
+)
+
+
+def _get_transcript_persona_hint(persona: str | None) -> str:
+    """Return a persona-appropriate instruction for transcript-based answers."""
+    if not persona:
+        return _DEFAULT_TRANSCRIPT_HINT
+    if persona in _PERSONA_TRANSCRIPT_HINTS:
+        return _PERSONA_TRANSCRIPT_HINTS[persona]
+    # Case-insensitive partial match
+    lower = persona.lower()
+    for key, hint in _PERSONA_TRANSCRIPT_HINTS.items():
+        if key.lower() in lower or lower in key.lower():
+            return hint
+    return _DEFAULT_TRANSCRIPT_HINT
+
 
 def _format_duration_hours(last_hours: float) -> str:
     """Format last_hours for display in prompt (e.g. '2 hours', '30 minutes', '45 seconds')."""
@@ -230,13 +271,13 @@ async def ask_voice(inp: AskVoiceIn):
         if not parts:
             return {"answer": "I couldn't find any transcripts in that time range."}
         transcript_block = "\n\n---\n\n".join(parts)
+        persona_hint = _get_transcript_persona_hint(inp.persona)
         user_content = (
             f"The user asked: {msg}\n\n"
             "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
             "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
             f"Transcripts from the last {_format_duration_hours(last_hours)}:\n\n{transcript_block}\n\n"
-            "Provide a direct answer or summary based only on the above transcript text. "
-            "When relevant, highlight financial topics, regulatory references, or compliance matters."
+            f"{persona_hint}"
         )
         out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
         return {"answer": out["answer"]}
@@ -273,13 +314,13 @@ async def ask_voice_stream(inp: AskVoiceIn):
                 yield json.dumps({"type": "done", "answer": empty, "citations": []}) + "\n"
                 return
             transcript_block = "\n\n---\n\n".join(parts)
+            persona_hint = _get_transcript_persona_hint(inp.persona)
             user_content = (
                 f"The user asked: {msg}\n\n"
                 "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
                 "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
                 f"Transcripts from the last {_format_duration_hours(last_hours)}:\n\n{transcript_block}\n\n"
-                "Provide a direct answer or summary based only on the above transcript text. "
-                "When relevant, highlight financial topics, regulatory references, or compliance matters."
+                f"{persona_hint}"
             )
             try:
                 async for kind, text, citations in _answer_general_stream(
@@ -327,6 +368,12 @@ async def ask_voice_stream(inp: AskVoiceIn):
 @router.post("/ask")
 async def ask(inp: AskIn, background_tasks: BackgroundTasks):
     msg = (inp.message or "").strip()
+    opts = inp.source_options
+    source_opts = (
+        {"transcript": opts.transcript, "document": opts.document, "general": opts.general}
+        if opts is not None
+        else {"transcript": True, "document": True, "general": True}
+    )
     last_hours = _parse_transcript_time_query(msg)
     if last_hours is not None:
         transcripts = _fetch_transcripts_since_hours(last_hours)
@@ -336,13 +383,13 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
             out = {"answer": "I couldn't find any transcripts in that time range.", "citations": []}
         else:
             transcript_block = "\n\n---\n\n".join(parts)
+            persona_hint = _get_transcript_persona_hint(inp.persona)
             user_content = (
                 f"The user asked: {msg}\n\n"
                 "Below are their saved transcripts from the requested time period. Use ONLY this text to answer. "
                 "Do not say the documents or context do not contain transcripts—they are provided below.\n\n"
                 f"Transcripts from the last {_format_duration_hours(last_hours)}:\n\n{transcript_block}\n\n"
-                "Provide a direct answer or summary based only on the above transcript text. "
-                "When relevant, highlight financial topics, regulatory references, or compliance matters."
+                f"{persona_hint}"
             )
             out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
         with get_conn() as conn:
@@ -358,16 +405,17 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
     with get_conn() as conn:
         rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
     history = [{"role": r[0], "content": r[1]} for r in rows]
-    conversation_summary = _get_conversation_summary(inp.chat_id)
+    conversation_search = _get_conversation_summary(inp.chat_id)
 
     out = await answer_with_citations(
         inp.message,
         history,
         persona=inp.persona,
         context_window=inp.context_window or "all",
-        conversation_summary=conversation_summary,
+        conversation_summary=conversation_search,
         use_knowledge_base=inp.use_knowledge_base,
         advanced_rag=inp.advanced_rag,
+        source_options=source_opts,
     )
 
     with get_conn() as conn:
@@ -377,7 +425,7 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
                      (new_id("msg"), inp.chat_id, "assistant", out["answer"], now_iso()))
         conn.commit()
 
-    background_tasks.add_task(_update_summary_background, conversation_summary, inp.message, out["answer"], inp.chat_id)
+    background_tasks.add_task(_update_summary_background, conversation_search, inp.message, out["answer"], inp.chat_id)
     return out
 
 

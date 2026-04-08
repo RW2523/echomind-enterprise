@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ChatMessage, DocumentChunk, AppSettings } from '../types';
+import { ChatMessage, DocumentChunk, AppSettings, PersonaType } from '../types';
 import { ICONS } from '../constants';
 import Uploader from './Uploader';
 import { askChatStream, listDocuments, deleteDocument, listTranscripts, deleteTranscript, getTranscript, DocListItem, TranscriptListItem, TranscriptDetail, type SourceOptions } from '../services/backend';
@@ -37,6 +37,51 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>['components
 };
 
 const CITATION_DEBUG = (import.meta as { env?: Record<string, string> }).env?.VITE_CITATION_DEBUG === '1';
+
+const PERSONA_CHAT_META: Record<string, { icon: string; label: string; accent: string; emptyState: string; placeholder: string }> = {
+  [PersonaType.TEACHER]: {
+    icon: '🎓',
+    label: 'Professor',
+    accent: 'text-emerald-400',
+    emptyState: 'Ask me to explain any topic from your documents and transcripts. I\'ll break it down clearly with examples, analogies, and step-by-step lessons.',
+    placeholder: 'Ask me to explain, teach, or break down any topic…',
+  },
+  [PersonaType.FINANCIAL]: {
+    icon: '💼',
+    label: 'Financial Advisor',
+    accent: 'text-cyan-400',
+    emptyState: 'Ask me anything about your DoD FMR documents, regulations, or transcripts. I\'ll cite every claim precisely—no fabrication, only facts from your sources.',
+    placeholder: 'Ask about DoD FMR, regulations, compliance, or your documents…',
+  },
+  [PersonaType.FUNNY]: {
+    icon: '😄',
+    label: 'EchoMind',
+    accent: 'text-amber-400',
+    emptyState: 'Hey there! Ask me anything about your documents and transcripts. I\'ll give you real, helpful answers—with a smile. No question too big, no topic too dry!',
+    placeholder: 'Ask me anything about your documents and transcripts…',
+  },
+  [PersonaType.LAWYER]: {
+    icon: '⚖️',
+    label: 'Legal Advisor',
+    accent: 'text-violet-400',
+    emptyState: 'Ask me to analyze your documents and transcripts for legal obligations, risks, and compliance matters. I\'ll apply structured legal reasoning and cite my sources.',
+    placeholder: 'Ask about legal obligations, contracts, regulations, or risks…',
+  },
+  [PersonaType.AI_EXPERT]: {
+    icon: '🤖',
+    label: 'AI Expert',
+    accent: 'text-rose-400',
+    emptyState: 'Ask me about AI architectures, software design decisions, or technical insights from your documents and transcripts. I\'ll ground my recommendations in your actual context.',
+    placeholder: 'Ask about AI, software architecture, engineering decisions, or your docs…',
+  },
+};
+
+const DEFAULT_PERSONA_CHAT_META = PERSONA_CHAT_META[PersonaType.FINANCIAL];
+
+function getPersonaMeta(persona?: string | null) {
+  if (persona && PERSONA_CHAT_META[persona]) return PERSONA_CHAT_META[persona];
+  return DEFAULT_PERSONA_CHAT_META;
+}
 
 function mapCitations(citations: any[]): DocumentChunk[] {
   if (CITATION_DEBUG) {
@@ -324,6 +369,7 @@ const DEFAULT_SOURCE_OPTIONS: SourceOptions = {
 
 const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }) => {
   const { messages, setMessages, chatId, newChat, loadChats } = knowledgeChat;
+  const personaMeta = getPersonaMeta(settings?.persona);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [sourceOptions, setSourceOptions] = useState<SourceOptions>(DEFAULT_SOURCE_OPTIONS);
@@ -628,6 +674,12 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
         <div className="px-3 sm:px-4 py-3 sm:py-4 border-b border-white/10 flex items-center gap-2 shrink-0">
           <div className="opacity-80 shrink-0"><ICONS.Chat className="w-5 h-5" /></div>
           <div className="font-semibold truncate min-w-0 flex-1">Knowledge Chat</div>
+          {settings?.persona && (
+            <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-xs font-medium shrink-0 ${personaMeta.accent}`}>
+              <span className="text-sm leading-none">{personaMeta.icon}</span>
+              <span>{personaMeta.label}</span>
+            </div>
+          )}
           <button type="button" onClick={() => setResourcesPanelOpen(true)} className="md:hidden shrink-0 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Open resources">
             <ICONS.File className="w-5 h-5" />
           </button>
@@ -638,11 +690,19 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
 
         <div className="flex-1 min-h-0 overflow-auto p-4 sm:p-5 space-y-4">
           {messages.length === 0 && (
-            <div className="text-sm opacity-70 text-center py-8">Ask questions about your resources. I’ll use them when relevant.</div>
+            <div className="flex flex-col items-center gap-3 py-10 px-4 text-center">
+              <span className="text-4xl">{personaMeta.icon}</span>
+              <p className={`text-sm font-semibold ${personaMeta.accent}`}>{personaMeta.label}</p>
+              <p className="text-sm text-slate-400 max-w-md leading-relaxed">{personaMeta.emptyState}</p>
+              <p className="text-[11px] text-slate-600 mt-1">Searches both documents and transcripts · cites sources inline</p>
+            </div>
           )}
           {messages.map(m => (
             <div key={m.id} className={`rounded-2xl p-4 border ${m.role === 'user' ? 'bg-white/10 border-white/10 ml-8' : 'bg-black/20 border-white/10 mr-8'}`}>
-              <div className="text-xs opacity-60 mb-2">{m.role === 'user' ? 'You' : 'EchoMind'}</div>
+              <div className="text-xs opacity-60 mb-2 flex items-center gap-1.5">
+                {m.role === 'assistant' && <span className="text-sm leading-none">{personaMeta.icon}</span>}
+                <span>{m.role === 'user' ? 'You' : personaMeta.label}</span>
+              </div>
               {m.role === 'assistant' && !m.content && busy && messages[messages.length - 1]?.id === m.id ? (
                 <div className="text-sm text-white/60 flex items-center gap-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
@@ -715,7 +775,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
           <input
             type="text"
             className="flex-1 min-w-0 rounded-xl bg-black/30 border border-white/10 px-4 py-3 min-h-[44px] text-base outline-none focus:border-white/30"
-            placeholder="Ask something..."
+            placeholder={personaMeta.placeholder}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') send(); }}

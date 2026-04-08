@@ -24,6 +24,47 @@ from .adapters.moshi_ws import MoshiWsAdapter
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Persona-specific intro phrases (keyed by PersonaType value from frontend)
+# ---------------------------------------------------------------------------
+_PERSONA_INTRO_PHRASES: dict = {
+    "Teacher / Professor": (
+        "Hello! I'm your professor and guide. Ask me anything you'd like to learn or understand — "
+        "from your uploaded documents, transcripts, or any topic you're curious about. I'm here to teach!"
+    ),
+    "Financial Advisor": (
+        "Hello! I'm your DoD financial management advisor. I can help with FMR regulations, compliance questions, "
+        "and your uploaded documents and transcripts. What would you like to explore?"
+    ),
+    "Funny & Calming Assistant": (
+        "Hey there! Great to have you here. Whatever's on your mind, I'm here to help — with a smile and zero stress. "
+        "What can I do for you today?"
+    ),
+    "Lawyer": (
+        "Good day. I'm your legal advisor. I can analyze contracts, regulations, and documents for legal obligations, "
+        "risks, and compliance matters. How may I assist you?"
+    ),
+    "AI Expert & Manager": (
+        "Hello! I'm your AI expert and technical manager. Ask me about AI architectures, software design, "
+        "engineering decisions, or insights from your documents and meetings. What are we building today?"
+    ),
+}
+
+_DEFAULT_INTRO_PHRASE = "Hi! I'm EchoMind, your AI assistant. How can I help you today?"
+
+
+def _get_persona_intro(persona: str) -> str:
+    """Return the persona-specific intro phrase, or the default if persona is unknown."""
+    if persona and persona in _PERSONA_INTRO_PHRASES:
+        return _PERSONA_INTRO_PHRASES[persona]
+    # Case-insensitive partial match
+    if persona:
+        lower = persona.lower()
+        for key, phrase in _PERSONA_INTRO_PHRASES.items():
+            if key.lower() in lower or lower in key.lower():
+                return phrase
+    return (getattr(SETTINGS, "INTRO_PHRASE", "") or "").strip() or _DEFAULT_INTRO_PHRASE
+
 
 def _log_llm_response(user_text: str, reply: str):
     """Log user input and LLM response for debugging."""
@@ -250,6 +291,7 @@ class OmniSessionA:
         self._assistant_is_speaking = False
         self._assistant_active_gen: Optional[int] = None
         self._is_playing_intro = False  # Disable barge-in during intro to avoid mic feedback cutting it off
+        self._pending_intro = True      # Wait for first set_context (persona) before playing intro
 
         self.stt = NemotronUtteranceSTT()
         self.llm = OpenAICompatLLMStream(
@@ -270,15 +312,13 @@ class OmniSessionA:
 
         # ---- Conversation memory (LLM turn history) ----
         self.system_prompt: str = (
-            "You are a financial assistant helping with DoD FMR, government regulations, and uploaded documents. "
-            "Be concise, precise, and cite sections when answering from documents. "
+            "You are EchoMind, a helpful, knowledgeable voice assistant. "
+            "Be concise, natural, and conversational—this is a voice interface, so keep responses clear and well-paced. "
+            "Cite sections or sources when answering from documents. "
             "For procedural questions, give numbered steps. For comparisons, use clear bullet points. "
-            "Never invent section numbers or page references—only cite what appears in the context.\n\n"
-            "GUARDRAIL: Only answer questions about financial management, DoD FMR, government regulations, compliance, "
-            "disbursing/certifying officers, payment procedures, audit readiness, or your uploaded documents/transcripts. "
-            "If the user asks about anything else (e.g. weather, general knowledge, jokes, coding, entertainment), "
-            "politely refuse and say: 'I'm a financial assistant. I can only help with DoD FMR, regulations, or your uploaded documents. "
-            "What would you like to know about those topics?'"
+            "Never invent facts, section numbers, or page references.\n\n"
+            "GUARDRAIL: Be genuinely helpful. Refuse harmful, offensive, or clearly illegal requests politely: "
+            "'I can't help with that, but I'm happy to assist with something constructive. What else can I do for you?'"
         )
         self.history: List[Dict] = []  # [{"role":"user"/"assistant","content":...}, ...]
         self.max_history_turns: int = 12
@@ -325,17 +365,12 @@ class OmniSessionA:
         await self.send({
             "type": "hello",
             "session_id": session_id,
-            "note": "Financial assistant: Ask about DoD FMR, regulations, or your uploaded docs. Say 'listen to conversation' or use wake word."
+            "note": "EchoMind voice assistant ready. Intro will play after persona context is set."
         })
         await self.send({"type": "context_ack", "system_prompt": self.system_prompt})
         await self._emit_profile_update()
-        # Intro TTS: play once after connect. Set _is_playing_intro BEFORE scheduling the task so _consume_loop
-        # cannot barge-in / bump generation_id while the intro task hasn't started yet (that was cutting audio short).
-        intro_phrase = (getattr(SETTINGS, "INTRO_PHRASE", "Hi! I'm here. What would you like to talk about?") or "").strip()
-        phrase_speech = strip_markdown_for_speech(intro_phrase) if intro_phrase else ""
-        if phrase_speech:
-            self._is_playing_intro = True
-            asyncio.create_task(self._play_intro(intro_phrase))
+        # Intro TTS: deferred until first set_context so we know the persona.
+        # _pending_intro is True; on_control will fire the persona-specific greeting.
 
     async def _play_intro(self, phrase: str):
         """Play intro TTS once after start. Barge-in disabled during intro to avoid mic feedback cutting it off."""
@@ -499,6 +534,14 @@ class OmniSessionA:
                 self.listen_buffer = ""
             # Optional: switch Piper TTS voice if client sent piper_voice (e.g. en_US-lessac-medium)
             piper_voice = (data.get("piper_voice") or "").strip()
+            # Fire persona-specific intro on the first set_context (deferred from start())
+            if self._pending_intro:
+                self._pending_intro = False
+                intro_phrase = _get_persona_intro(self.persona)
+                phrase_speech = strip_markdown_for_speech(intro_phrase) if intro_phrase else ""
+                if phrase_speech:
+                    self._is_playing_intro = True
+                    asyncio.create_task(self._play_intro(intro_phrase))
             if piper_voice:
                 model_path = f"/voices/{piper_voice}.onnx"
                 if os.path.exists(model_path):

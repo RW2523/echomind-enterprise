@@ -1,7 +1,55 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { voiceWsUrl } from "../services/backend";
 import type { ConversationState } from "../components/Conversation/ChatState";
+import { PersonaType } from "../types";
 import type { AppSettings } from "../types";
+
+const PERSONA_VOICE_PROMPTS: Record<string, string> = {
+  [PersonaType.TEACHER]: (
+    "You are EchoMind, an expert Teacher and Professor. " +
+    "Explain topics clearly with analogies, step-by-step breakdowns, and an encouraging academic tone. " +
+    "Adapt complexity to the learner's level. Keep voice responses concise and well-paced. " +
+    "GUARDRAIL: Educate and inform. Refuse harmful or unethical requests politely."
+  ),
+  [PersonaType.FINANCIAL]: (
+    "You are EchoMind, a DoD financial management advisor. " +
+    "Be concise, precise, and cite sections when answering from documents. " +
+    "For procedures give numbered steps; for comparisons use clear bullet points. " +
+    "Never invent section numbers or page references—only cite what appears in context. " +
+    "GUARDRAIL: Only answer financial management, DoD FMR, regulations, and compliance questions. " +
+    "For anything else: 'I'm a financial advisor. I can only help with DoD FMR and regulatory topics.'"
+  ),
+  [PersonaType.FUNNY]: (
+    "You are EchoMind, a warm, witty, and calming voice assistant. " +
+    "Blend light humor with genuine helpfulness. Keep things positive and stress-free. " +
+    "Give real, accurate answers—humor enhances but never replaces substance. " +
+    "Keep voice responses concise and delightful. " +
+    "GUARDRAIL: Always be kind and appropriate. Refuse harmful requests warmly."
+  ),
+  [PersonaType.LAWYER]: (
+    "You are EchoMind, an experienced legal advisor. " +
+    "Provide structured legal reasoning—cite laws, regulations, and document clauses precisely. " +
+    "Use clear, professional language. Keep voice responses focused and actionable. " +
+    "Always mention: 'This is informational, not formal legal advice.' " +
+    "GUARDRAIL: Focus on legal analysis and compliance. " +
+    "For unrelated topics: 'That falls outside my legal practice area.'"
+  ),
+  [PersonaType.AI_EXPERT]: (
+    "You are EchoMind, a senior AI Expert and Software Engineering Manager. " +
+    "Give direct, well-reasoned technical recommendations with clear trade-offs. " +
+    "Think like both an engineer and a leader. Keep voice responses crisp and actionable. " +
+    "GUARDRAIL: Focus on AI, software engineering, architecture, and tech leadership. " +
+    "For unrelated topics: 'That's outside my technical domain. I'm here for AI and software topics.'"
+  ),
+};
+
+function buildPersonaVoicePrompt(persona: string | undefined, voiceContext: string): string {
+  const basePersonaPrompt = persona && PERSONA_VOICE_PROMPTS[persona]
+    ? PERSONA_VOICE_PROMPTS[persona]
+    : "You are EchoMind, a helpful voice assistant. Be concise, helpful, and conversational.";
+  const ctx = (voiceContext ?? "").trim();
+  return ctx ? `${basePersonaPrompt}\n\n${ctx}` : basePersonaPrompt;
+}
 
 const LISTENING_THRESHOLD = 18;
 const MIC_CHECK_MS = 150;
@@ -296,11 +344,16 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         micBelowCountRef.current = 0;
         const botName = (settings?.voiceBotName ?? "").trim();
         const userName = (settings?.voiceUserName ?? "").trim();
-        const personaPrefix = settings?.persona ? `You are EchoMind in the role of: ${settings.persona}. Be concise, helpful, and conversational. ` : "";
-        const savedContext = (settings?.voiceContext ?? "").trim();
-        let systemPrompt = personaPrefix + savedContext || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
+        let systemPrompt = buildPersonaVoicePrompt(settings?.persona, settings?.voiceContext ?? "");
         if (botName) {
-          systemPrompt = `You are ${botName}. Talk in a natural, conversational way—like a friendly voice assistant. When the user says your name or speaks to you, respond naturally. If they say "stop", pause speaking; if they say "start" or your name, continue. ${userName ? `The user's name is ${userName}; use it when it fits naturally. ` : ""}` + systemPrompt;
+          const userNameHint = userName ? `The user's name is ${userName}; use it when it fits naturally. ` : "";
+          systemPrompt = (
+            `You are ${botName}. Talk in a natural, conversational way—like a friendly voice assistant. ` +
+            `When the user says your name or speaks to you, respond naturally. ` +
+            `If they say "stop", pause speaking; if they say "start" or your name, continue. ` +
+            `${userNameHint}` +
+            systemPrompt
+          );
         }
         ws.send(JSON.stringify({
           type: "set_context",
@@ -523,14 +576,18 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   const applyContext = useCallback(() => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    const personaPrefix = settings?.persona ? `You are EchoMind in the role of: ${settings.persona}. Be concise, helpful, and conversational. ` : "";
-    const savedContext = (settings?.voiceContext ?? "").trim();
-    const systemPrompt = personaPrefix + savedContext || "You are a realtime voice assistant. Be concise, helpful, and conversational.";
     const botName = (settings?.voiceBotName ?? "").trim();
     const userName = (settings?.voiceUserName ?? "").trim();
-    let sysPrompt = systemPrompt;
+    let sysPrompt = buildPersonaVoicePrompt(settings?.persona, settings?.voiceContext ?? "");
     if (botName) {
-      sysPrompt = `You are ${botName}. Talk in a natural, conversational way—like a friendly voice assistant. When the user says your name or speaks to you, respond naturally. If they say "stop", pause speaking; if they say "start" or your name, continue. ${userName ? `The user's name is ${userName}; use it when it fits naturally. ` : ""}` + systemPrompt;
+      const userNameHint = userName ? `The user's name is ${userName}; use it when it fits naturally. ` : "";
+      sysPrompt = (
+        `You are ${botName}. Talk in a natural, conversational way—like a friendly voice assistant. ` +
+        `When the user says your name or speaks to you, respond naturally. ` +
+        `If they say "stop", pause speaking; if they say "start" or your name, continue. ` +
+        `${userNameHint}` +
+        sysPrompt
+      );
     }
     ws.send(JSON.stringify({
       type: "set_context",

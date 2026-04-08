@@ -17,7 +17,7 @@ const SETTINGS_KEY = "echomind_settings";
 const defaultSettings: AppSettings = {
   voiceName: 'en_US-lessac-medium',
   contextWindow: 'all',
-  persona: PersonaType.GENERAL,
+  persona: PersonaType.FINANCIAL,
   model: '-3-pro-preview',
   developerMode: false,
   advancedRag: false,

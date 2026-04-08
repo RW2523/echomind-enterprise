@@ -2,6 +2,64 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AppSettings, PersonaType, PIPER_VOICES } from '../types';
 import { getInstalledVoices, downloadVoice, addSampleTranscripts } from '../services/backend';
 
+interface PersonaMeta {
+  icon: string;
+  title: string;
+  description: string;
+  accentColor: string;
+  borderColor: string;
+  activeBg: string;
+  activeBorder: string;
+}
+
+const PERSONA_META: Record<PersonaType, PersonaMeta> = {
+  [PersonaType.TEACHER]: {
+    icon: '🎓',
+    title: 'Teacher / Professor',
+    description: 'Explains any topic with clarity and depth. Uses analogies, step-by-step breakdowns, and an encouraging academic tone. Perfect for learning and understanding complex concepts.',
+    accentColor: 'text-emerald-400',
+    borderColor: 'border-emerald-500/40',
+    activeBg: 'bg-emerald-500/10',
+    activeBorder: 'border-emerald-500/40',
+  },
+  [PersonaType.FINANCIAL]: {
+    icon: '💼',
+    title: 'Financial Advisor',
+    description: 'Expert in DoD FMR, government financial regulations, compliance, and regulatory matters. Cites sections precisely and provides authoritative financial guidance.',
+    accentColor: 'text-cyan-400',
+    borderColor: 'border-cyan-500/40',
+    activeBg: 'bg-cyan-500/10',
+    activeBorder: 'border-cyan-500/40',
+  },
+  [PersonaType.FUNNY]: {
+    icon: '😄',
+    title: 'Funny & Calming Assistant',
+    description: 'Warm, witty, and genuinely helpful. Blends tasteful humor with real assistance to keep things light and stress-free. Great for everyday questions and when you need a calming presence.',
+    accentColor: 'text-amber-400',
+    borderColor: 'border-amber-500/40',
+    activeBg: 'bg-amber-500/10',
+    activeBorder: 'border-amber-500/40',
+  },
+  [PersonaType.LAWYER]: {
+    icon: '⚖️',
+    title: 'Lawyer',
+    description: 'Experienced legal advisor specializing in contracts, compliance, regulations, and risk analysis. Uses IRAC structure, cites statutes precisely, and always includes appropriate legal disclaimers.',
+    accentColor: 'text-violet-400',
+    borderColor: 'border-violet-500/40',
+    activeBg: 'bg-violet-500/10',
+    activeBorder: 'border-violet-500/40',
+  },
+  [PersonaType.AI_EXPERT]: {
+    icon: '🤖',
+    title: 'AI Expert & Manager',
+    description: 'Senior AI/ML engineer and software manager. Advises on AI architectures, system design, engineering best practices, technical roadmaps, and team leadership with hands-on depth.',
+    accentColor: 'text-rose-400',
+    borderColor: 'border-rose-500/40',
+    activeBg: 'bg-rose-500/10',
+    activeBorder: 'border-rose-500/40',
+  },
+};
+
 interface SettingsProps {
   settings: AppSettings;
   setSettings: (s: AppSettings) => void;
@@ -57,30 +115,40 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
     <div className="h-full min-h-0 bg-[#0a0c1a]/20 overflow-y-auto overflow-x-hidden">
       <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 py-2 px-1 sm:px-0 pb-16">
         <section>
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Persona Configuration</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2">Persona Configuration</h3>
+          <p className="text-xs text-slate-500 mb-4 sm:mb-6">Choose the AI persona for Knowledge Chat and Voice. Each persona has its own expertise, tone, and guardrails.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            {personas.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => update('persona', p)}
-                className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all text-left group touch-manipulation ${
-                  settings.persona === p
-                    ? 'bg-cyan-500/10 border-cyan-500/40'
-                    : 'bg-white/5 border-white/5 hover:border-white/10'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm font-bold ${settings.persona === p ? 'text-cyan-400' : 'text-slate-300'}`}>
-                    {p}
-                  </span>
-                  {settings.persona === p && <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>}
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Tailors reasoning style, vocabulary, and response tone for specialized workflows. Used in Knowledge Chat and Voice.
-                </p>
-              </button>
-            ))}
+            {personas.map((p) => {
+              const meta = PERSONA_META[p as PersonaType];
+              const isActive = settings.persona === p;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => update('persona', p)}
+                  className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all text-left group touch-manipulation ${
+                    isActive
+                      ? `${meta.activeBg} ${meta.activeBorder}`
+                      : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/8'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2 gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-xl leading-none">{meta.icon}</span>
+                      <span className={`text-sm font-bold ${isActive ? meta.accentColor : 'text-slate-300'}`}>
+                        {meta.title}
+                      </span>
+                    </div>
+                    {isActive && (
+                      <div className={`w-2 h-2 mt-1 shrink-0 rounded-full ${meta.accentColor.replace('text-', 'bg-')} shadow-lg`} />
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed pl-8">
+                    {meta.description}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -199,40 +267,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
           </div>
         </section>
 
-        <section>
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Advanced RAG Settings</h3>
-          <div className="flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-cyan-500/5 border border-cyan-500/10">
-            <div>
-              <h4 className="text-sm font-bold text-cyan-400"> RAG (fast retrieval)</h4>
-              <p className="text-xs text-slate-500 mt-1">When on: single-query embedding retrieval only (no query rewriting). Faster. When off: full RAG with intent and query expansion.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => update('advancedRag', !settings.advancedRag)}
-              className={`w-14 h-8 rounded-full relative transition-colors touch-manipulation min-h-[44px] ${settings.advancedRag ? 'bg-cyan-500' : 'bg-slate-800'}`}
-              aria-label={settings.advancedRag ? 'Disable advanced RAG' : 'Enable advanced RAG'}
-            >
-              <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg transition-all ${settings.advancedRag ? 'left-7' : 'left-1'}`} />
-            </button>
-          </div>
-        </section>
-
-        <section className="pt-6 sm:pt-8 border-t border-white/5">
-          <div className="flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-red-500/5 border border-red-500/10">
-            <div>
-              <h4 className="text-sm font-bold text-red-400">Developer Mode</h4>
-              <p className="text-xs text-slate-500 mt-1">Access raw model parameters and debug tools.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => update('developerMode', !settings.developerMode)}
-              className={`w-14 h-8 rounded-full relative transition-colors touch-manipulation min-h-[44px] ${settings.developerMode ? 'bg-red-500' : 'bg-slate-800'}`}
-              aria-label={settings.developerMode ? 'Disable developer mode' : 'Enable developer mode'}
-            >
-              <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg transition-all ${settings.developerMode ? 'left-7' : 'left-1'}`} />
-            </button>
-          </div>
-        </section>
 
         <section className="pt-4 sm:pt-6">
           <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 border border-amber-500/10 bg-amber-500/5">

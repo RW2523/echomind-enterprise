@@ -7,10 +7,11 @@ export enum AppView {
 }
 
 export enum PersonaType {
-  GENERAL = 'General Assistant',
-  LAWYER = 'Corporate Lawyer',
-  ACCOUNTANT = 'Financial Accountant',
-  TECH_EXPERT = 'Technical Architect'
+  TEACHER    = 'Teacher / Professor',
+  FINANCIAL  = 'Financial Advisor',
+  FUNNY      = 'Funny & Calming Assistant',
+  LAWYER     = 'Lawyer',
+  AI_EXPERT  = 'AI Expert & Manager',
 }
 
 export interface DocumentChunk {

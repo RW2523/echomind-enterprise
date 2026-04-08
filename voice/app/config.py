@@ -58,7 +58,7 @@ class Settings:
     MOSHI_SUPPORTS_TEXT_INJECT: bool = os.getenv("MOSHI_SUPPORTS_TEXT_INJECT", "0") == "1"
 
     # Greeting spoken by TTS when session starts (natural conversation opener)
-    INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "Hi! I'm your financial assistant")
+    INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "Hi! I'm EchoMind, your AI assistant. How can I help you today?")
 
     # Backend RAG: when set, voice calls ask-voice-stream (NDJSON chunks → phrase TTS) and falls back to ask-voice.
     # Example: http://backend:8000 (no trailing slash).
