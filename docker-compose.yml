@@ -39,10 +39,14 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
       args:
         USE_FAISS_GPU: "1"   # set to "1" for FAISS GPU (faster RAG search; needs GPU)
+        HF_TOKEN: ${HF_TOKEN:-}
+        ECHOMIND_ASR_MODEL_NAME: ${ECHOMIND_ASR_MODEL_NAME:-nvidia/nemotron-speech-streaming-en-0.6b}
         # SKIP_MODEL_DOWNLOAD: "1"  # uncomment if build fails with "file already closed"; incompatible with offline
+        # SKIP_NEMOTRON_WARMUP: "1"  # skip NeMo load during build (faster CI; colder first runtime load)
     container_name: echomind-backend
     expose: ["8000"]
     environment:
@@ -69,7 +73,13 @@ services:
               capabilities: [gpu]
 
   voice:
-    build: ./voice
+    build:
+      context: .
+      dockerfile: voice/Dockerfile
+      args:
+        HF_TOKEN: ${HF_TOKEN:-}
+        ECHOMIND_ASR_MODEL_NAME: ${ECHOMIND_ASR_MODEL_NAME:-nvidia/nemotron-speech-streaming-en-0.6b}
+        # SKIP_NEMOTRON_WARMUP: "1"  # optional: skip build-time NeMo warmup
     volumes:
        - ./voice/voices:/voices
     container_name: echomind-voice
@@ -79,7 +89,21 @@ services:
       - LLM_URL=http://trtllm:8355/v1/chat/completions
       - LLM_MODEL=nvidia/Llama-3.1-8B-Instruct-FP4
       # Optional: LLM_LOG_PAYLOAD=1 logs full JSON body at WARNING (timing always INFO: VOICE_LLM stream start/done).
-      - WHISPER_MODEL=base
+      # Nemotron STT (same model as backend live transcript; gated HF — set HF_TOKEN in .env if needed)
+      - ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
+      # DGX / Spark: keep ASR on GPU (PyTorch). Use ECHOMIND_ASR_DEVICE=cpu only for CPU-only hosts.
+      - ECHOMIND_ASR_DEVICE=cuda
+      # Fail startup if the voice container cannot see a GPU (no silent CPU fallback for ASR).
+      - ECHOMIND_ASR_REQUIRE_CUDA=${ECHOMIND_ASR_REQUIRE_CUDA:-1}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - HF_HUB_OFFLINE=${HF_HUB_OFFLINE:-1}
+      # Utterance chunking for voice STT (ms); optional override
+      - VOICE_NEMOTRON_CHUNK_MS=${VOICE_NEMOTRON_CHUNK_MS:-560}
+      # 1 = load Nemotron at startup so GPU/weights issues fail fast on DGX; set 0 for faster WS accept on weak hosts
+      - VOICE_NEMOTRON_STARTUP_LOAD=${VOICE_NEMOTRON_STARTUP_LOAD:-1}
+      # Piper ONNX TTS on GPU (requires onnxruntime-gpu in the voice image)
+      - VOICE_PIPER_USE_CUDA=${VOICE_PIPER_USE_CUDA:-1}
+      # Pin voice to one GPU if the host runs trtllm/backend on others, e.g. NVIDIA_VISIBLE_DEVICES=2
       # RAG: voice bot calls backend for answers from documents + transcripts
       - BACKEND_CHAT_URL=http://backend:8000
       # Offline: disable runtime Piper voice download from Hugging Face
@@ -91,6 +115,13 @@ services:
         condition: service_healthy
       backend:
         condition: service_started
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   frontend:
     build:

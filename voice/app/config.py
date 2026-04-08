@@ -14,7 +14,14 @@ class Settings:
     BARGE_IN_SPEECH_LEAD_IDLE: int = int(os.getenv("BARGE_IN_SPEECH_LEAD_IDLE", "2"))   # when assistant idle
     BARGE_IN_SPEECH_LEAD_ACTIVE: int = int(os.getenv("BARGE_IN_SPEECH_LEAD_ACTIVE", "6"))  # when assistant speaking (stricter)
 
-    WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "base")
+    # Nemotron streaming ASR (same model/env as backend live transcript)
+    NEMOTRON_MODEL_NAME: str = os.getenv(
+        "ECHOMIND_ASR_MODEL_NAME",
+        os.getenv("NEMOTRON_MODEL_NAME", "nvidia/nemotron-speech-streaming-en-0.6b"),
+    )
+    NEMOTRON_ATT_CONTEXT_RIGHT: int = int(os.getenv("ECHOMIND_ASR_ATT_CONTEXT_RIGHT", "6"))
+    # Chunk size for utterance-final decode (ms); align with backend TRANSCRIPT_NEMOTRON_CHUNK_MS default
+    NEMOTRON_CHUNK_MS: int = int(os.getenv("VOICE_NEMOTRON_CHUNK_MS", os.getenv("TRANSCRIPT_NEMOTRON_CHUNK_MS", "560")))
 
     # OpenAI-compatible chat/completions (full URL including /v1/chat/completions).
     # docker-compose sets TRT-LLM on host: LLM_URL=http://host.docker.internal:8355/v1/chat/completions
@@ -36,6 +43,8 @@ class Settings:
 
     # Piper TTS (model path; voices dir for download is VOICES_DIR, default /voices)
     PIPER_MODEL: str = os.getenv("PIPER_MODEL", "/voices/en_US-lessac-medium.onnx")
+    # ONNX Runtime: use CUDAExecutionProvider when True (image must have onnxruntime-gpu; see voice/Dockerfile).
+    PIPER_USE_CUDA: bool = os.getenv("VOICE_PIPER_USE_CUDA", "0").lower() in ("1", "true", "yes")
     PIPER_SPEAKER: int = int(os.getenv("PIPER_SPEAKER", "0"))
     PIPER_NOISE_SCALE: float = float(os.getenv("PIPER_NOISE_SCALE", "0.667"))
     PIPER_LENGTH_SCALE: float = float(os.getenv("PIPER_LENGTH_SCALE", "1.0"))
@@ -49,7 +58,7 @@ class Settings:
     MOSHI_SUPPORTS_TEXT_INJECT: bool = os.getenv("MOSHI_SUPPORTS_TEXT_INJECT", "0") == "1"
 
     # Greeting spoken by TTS when session starts (natural conversation opener)
-    INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "Hi! I'm your financial assistant. Ask me about DoD FMR, regulations, or your uploaded documents.")
+    INTRO_PHRASE: str = os.getenv("INTRO_PHRASE", "Hi! I'm your financial assistant")
 
     # Backend RAG: when set, voice calls ask-voice-stream (NDJSON chunks → phrase TTS) and falls back to ask-voice.
     # Example: http://backend:8000 (no trailing slash).

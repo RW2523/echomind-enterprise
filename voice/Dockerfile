@@ -1,24 +1,63 @@
-FROM nvcr.io/nvidia/pytorch:24.10-py3
-# Use MIT mirror if ports.ubuntu.com returns 403; retry once on failure
-RUN for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do [ -f "$f" ] && sed -i 's|http://ports.ubuntu.com/ubuntu-ports|http://mirrors.mit.edu/ubuntu-ports|g' "$f"; done; \
+# Build from repository root: docker compose build voice
+FROM nvcr.io/nvidia/pytorch:25.01-py3
+RUN set -e; \
+  for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do \
+    [ -f "$f" ] && sed -i -e 's|https\?://ports\.ubuntu\.com/ubuntu-ports/\?|http://mirrors.mit.edu/ubuntu-ports/|g' -e 's|https\?://ports\.ubuntu\.com/ubuntu-ports|http://mirrors.mit.edu/ubuntu-ports/|g' "$f" || true; \
+  done; \
   apt-get update && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1 \
-  || (sleep 15 && apt-get update && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1) \
-  && rm -rf /var/lib/apt/lists/*
+  || (sleep 20 && apt-get update && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1); \
+  rm -rf /var/lib/apt/lists/*
 
-# Piper TTS model (expected at /voices/en_US-lessac-medium.onnx by config)
+WORKDIR /workspace
+RUN python -m pip install --upgrade pip && pip install "setuptools>=70,<82" wheel
+
+COPY voice/requirements.txt /workspace/requirements.txt
+RUN pip install --no-cache-dir -r /workspace/requirements.txt
+
+RUN pip install --no-cache-dir Cython packaging sentencepiece \
+ && pip install --no-cache-dir "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@main"
+
+RUN pip install --no-cache-dir "numpy>=1.26.4,<2.0" --force-reinstall \
+ && pip install --no-cache-dir --upgrade torchvision
+
+COPY nemotron_asr /workspace/nemotron_asr
+RUN pip install --no-cache-dir /workspace/nemotron_asr
+
+# Piper: onnxruntime. onnxruntime-gpu has no manylinux aarch64 wheel from PyPI — keep CPU ORT on ARM64 (Spark).
+RUN set -e; \
+    ARCH="$(dpkg --print-architecture)"; \
+    if [ "$ARCH" = "amd64" ]; then \
+      pip uninstall -y onnxruntime 2>/dev/null || true; \
+      pip install --no-cache-dir "onnxruntime-gpu>=1.17.0,<2"; \
+    else \
+      echo "voice image ($ARCH): using onnxruntime CPU for Piper; CUDA EP unavailable via pip on this arch"; \
+    fi
+
+ARG SKIP_MODEL_DOWNLOAD=0
+ARG SKIP_NEMOTRON_WARMUP=0
+ARG ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
+ARG WARMUP_ASR_DEVICE=cpu
+# Optional: HF_TOKEN for gated Nemotron weights during build (same as runtime .env)
+ARG HF_TOKEN=
+RUN export HF_TOKEN="${HF_TOKEN}" && \
+    if [ "$SKIP_MODEL_DOWNLOAD" != "1" ]; then \
+      python -c "from huggingface_hub import snapshot_download; snapshot_download('${ECHOMIND_ASR_MODEL_NAME}')"; \
+    fi
+# Load NeMo + one forward pass on CPU (docker build has no GPU by default); fills HF/NeMo caches for fast runtime GPU load.
+RUN export HF_TOKEN="${HF_TOKEN}" && \
+    if [ "$SKIP_MODEL_DOWNLOAD" != "1" ] && [ "$SKIP_NEMOTRON_WARMUP" != "1" ]; then \
+      TORCHDYNAMO_DISABLE=1 TORCHINDUCTOR_DISABLE=1 TORCH_COMPILE_DISABLE=1 \
+      python -m nemotron_asr.warmup_build \
+        --model "${ECHOMIND_ASR_MODEL_NAME}" \
+        --device "${WARMUP_ASR_DEVICE}"; \
+    fi
+
 RUN mkdir -p /voices && cd /voices && \
     wget -q -O en_US-lessac-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx && \
     wget -q -O en_US-lessac-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
 
-WORKDIR /workspace
-COPY . /workspace
-# setuptools>=82 removed pkg_resources; openai-whisper needs it. Pin setuptools<82 and use --no-build-isolation for whisper.
-RUN python -m pip install --upgrade pip && pip install "setuptools>=70,<82" wheel
-RUN pip install fastapi==0.115.6 "uvicorn[standard]==0.32.1" numpy==1.26.4 webrtcvad==2.0.10 websockets==12.0 requests==2.32.3 soundfile==0.12.1 piper-tts==1.2.0
-RUN pip install --no-build-isolation openai-whisper==20240930
-
-# Pre-download Whisper base model during build (avoids load on first Voice use)
-RUN python -c "import whisper; whisper.load_model('base')"
+COPY voice /workspace
 
 EXPOSE 8000
+ENV PYTHONUNBUFFERED=1
 CMD ["uvicorn","app.server:app","--host","0.0.0.0","--port","8000"]

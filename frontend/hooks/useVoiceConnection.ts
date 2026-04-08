@@ -153,6 +153,10 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   micMutedRef.current = micMuted;
   const listenOnlyRef = useRef(false);
   listenOnlyRef.current = state.listenOnly;
+  /** True only after WS open + mic/audio graph is ready (used to show connect errors vs. silent stop). */
+  const voiceSessionReadyRef = useRef(false);
+  /** User clicked Stop (or left Voice) while still connecting — do not treat close as a failure. */
+  const userCancelledConnectRef = useRef(false);
 
   const pumpPlayback = useCallback(() => {
     const ctx = playbackCtxRef.current;
@@ -234,6 +238,8 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     }
 
     micStreamRef.current = stream;
+    voiceSessionReadyRef.current = false;
+    userCancelledConnectRef.current = false;
     const ws = new WebSocket(voiceWsUrl());
     wsRef.current = ws;
 
@@ -279,6 +285,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         gain.connect(playCtx.destination);
 
         setAssistantAnalyser(pAnalyser);
+        voiceSessionReadyRef.current = true;
         setState((prev) => ({
           ...prev,
           isConnected: true,
@@ -394,6 +401,8 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     };
 
     const cleanupOnClose = () => {
+      const sessionReady = voiceSessionReadyRef.current;
+      voiceSessionReadyRef.current = false;
       playQueueRef.current = [];
       playingRef.current = false;
       if (workletRef.current) {
@@ -426,17 +435,26 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       setListenBufferText("");
       listenOnlyRef.current = false;
       setMicMuted(false);
-      setConnectionError(null);
+      if (!sessionReady && !userCancelledConnectRef.current) {
+        setConnectionError((prev) => prev ?? "Could not connect to the voice service. Check that Docker `voice` is running and try again.");
+      } else {
+        setConnectionError(null);
+      }
+      userCancelledConnectRef.current = false;
       setConnecting(false);
     };
 
     ws.onclose = () => {
       cleanupOnClose();
     };
-    ws.onerror = () => setConnecting(false);
+    ws.onerror = () => {
+      setConnecting(false);
+      setConnectionError((prev) => prev ?? "Voice WebSocket failed. Confirm the voice container is up and nginx proxies /voice/ws.");
+    };
   }, [settings?.persona, settings?.voiceName, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceContext, settings?.contextWindow, enqueuePlayback, smoothStop]);
 
   const disconnect = useCallback(async () => {
+    userCancelledConnectRef.current = true;
     setConnectionError(null);
     if (workletRef.current) {
       try {
@@ -475,17 +493,6 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       listenOnly: false,
     }));
   }, []);
-
-  // Disconnect when user switches browser tabs (document becomes hidden)
-  useEffect(() => {
-    const handler = () => {
-      if (document.hidden && state.isConnected) {
-        disconnect();
-      }
-    };
-    document.addEventListener("visibilitychange", handler);
-    return () => document.removeEventListener("visibilitychange", handler);
-  }, [state.isConnected, disconnect]);
 
   useEffect(() => {
     if (!state.isConnected || !userAnalyser) return;

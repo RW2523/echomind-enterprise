@@ -17,7 +17,7 @@ from .config import SETTINGS
 from .conversation_memory import ConversationMemory
 from .echo_commands import parse_and_route, strip_wake_word
 from .wake_word_storage import load_wake_word, save_wake_word
-from .adapters.stt_whisper import WhisperSTT
+from .adapters.stt_nemotron import NemotronUtteranceSTT
 from .adapters.llm_openai_stream import OpenAICompatLLMStream
 from .adapters.tts_piper import PiperTTS
 from .adapters.moshi_ws import MoshiWsAdapter
@@ -207,7 +207,7 @@ class UtteranceBuffer:
 
 class OmniSessionA:
     """Convo-like session:
-    - VAD endpointing -> Whisper final ASR
+    - VAD endpointing -> Nemotron utterance-final ASR (shared nemotron_asr package)
     - LLM streaming with conversation memory
     - Phrase commit -> Piper TTS streaming
     - Barge-in cancel + client fade smoothing
@@ -245,11 +245,13 @@ class OmniSessionA:
         self.speech_count = 0
         self.utt = UtteranceBuffer(max_ms=15000)
         self._speech_lead_count = 0  # consecutive speech frames before we treat as user speech (barge-in robustness)
+        # Frames classified as speech before in_speech flips True (must be replayed into utt or the first word is clipped)
+        self._pending_lead_frames: List[Frame] = []
         self._assistant_is_speaking = False
         self._assistant_active_gen: Optional[int] = None
         self._is_playing_intro = False  # Disable barge-in during intro to avoid mic feedback cutting it off
 
-        self.stt = WhisperSTT(SETTINGS.WHISPER_MODEL)
+        self.stt = NemotronUtteranceSTT()
         self.llm = OpenAICompatLLMStream(
             SETTINGS.LLM_URL,
             SETTINGS.LLM_MODEL,
@@ -261,6 +263,7 @@ class OmniSessionA:
             speaker_id=SETTINGS.PIPER_SPEAKER,
             noise_scale=SETTINGS.PIPER_NOISE_SCALE,
             length_scale=SETTINGS.PIPER_LENGTH_SCALE,
+            use_cuda=SETTINGS.PIPER_USE_CUDA,
         )
 
         self.moshi = MoshiWsAdapter(SETTINGS.MOSHI_URL) if SETTINGS.USE_MOSHI_CORE else None
@@ -306,6 +309,7 @@ class OmniSessionA:
         }
         self.pending_wake_word_change: Optional[str] = None
         self._last_user_utterance: Optional[str] = None
+        self._logged_first_audio_frame = False
 
     async def start(self, session_id: str):
         self.listen_buffer = ""
@@ -412,9 +416,15 @@ class OmniSessionA:
                 self.speech_count = 0
                 self._speech_run = 0
                 self._nonspeech_run = 0
+                self._pending_lead_frames.clear()
                 self.utt.reset()
 
             if send_cancel:
+                logger.info(
+                    "Voice: cancel assistant pipeline gen=%s keep_listening=%s",
+                    self.generation_id,
+                    keep_listening,
+                )
                 await self.send({"type": "cancel", "generation_id": self.generation_id})
 
             if self.moshi:
@@ -440,6 +450,15 @@ class OmniSessionA:
             return
         if len(pcm16) != self.frame_bytes:
             return
+        if not self._logged_first_audio_frame:
+            self._logged_first_audio_frame = True
+            logger.info(
+                "Voice: first audio_frame sr=%s frame_bytes=%d ts=%s gen=%s",
+                self.sr,
+                len(pcm16),
+                ts,
+                self.generation_id,
+            )
         try:
             self.in_q.put_nowait(Frame(ts=ts, pcm16=pcm16))
         except asyncio.QueueFull:
@@ -489,6 +508,7 @@ class OmniSessionA:
                             speaker_id=SETTINGS.PIPER_SPEAKER,
                             noise_scale=SETTINGS.PIPER_NOISE_SCALE,
                             length_scale=SETTINGS.PIPER_LENGTH_SCALE,
+                            use_cuda=SETTINGS.PIPER_USE_CUDA,
                         )
                     except Exception:
                         pass
@@ -578,19 +598,25 @@ class OmniSessionA:
                     lead_active = max(1, getattr(SETTINGS, "BARGE_IN_SPEECH_LEAD_ACTIVE", 6))
                     need_lead = lead_active if self._assistant_active() else lead_idle
 
-                    if not self.in_speech and self._speech_lead_count >= need_lead:
-                        self.in_speech = True
-                        self.utt.reset()
-                        await self._cancel_assistant_pipeline(keep_listening=True, send_cancel=True)
-                        await self.send({"type": "event", "event": "USER_SPEECH_START", "generation_id": self.generation_id})
-                        if self.moshi:
-                            asyncio.create_task(self.moshi.cancel(self.generation_id))
-
-                    if self.in_speech:
+                    if not self.in_speech:
+                        self._pending_lead_frames.append(fr)
+                        if self._speech_lead_count >= need_lead:
+                            self.in_speech = True
+                            self.utt.reset()
+                            for _pf in self._pending_lead_frames:
+                                self.utt.push(_pf)
+                            self._pending_lead_frames.clear()
+                            await self._cancel_assistant_pipeline(keep_listening=True, send_cancel=True)
+                            await self.send({"type": "event", "event": "USER_SPEECH_START", "generation_id": self.generation_id})
+                            if self.moshi:
+                                asyncio.create_task(self.moshi.cancel(self.generation_id))
+                    else:
                         self.utt.push(fr)
 
             else:
                 self._speech_lead_count = 0
+                if not self.in_speech:
+                    self._pending_lead_frames.clear()
                 if self.in_speech:
                     self.silence_count += 1
                     if self.tail_frames > 0:
@@ -620,9 +646,13 @@ class OmniSessionA:
             return
 
         try:
-            user_text = self.stt.transcribe(audio)
+            user_text = await self.stt.transcribe(audio)
         except Exception as e:
             await self.send({"type": "error", "where": "stt", "message": str(e), "generation_id": my_gen})
+            return
+
+        if my_gen != self.generation_id:
+            logger.info("Voice STT: dropped result after barge-in/cancel gen=%s current=%s", my_gen, self.generation_id)
             return
 
         user_text = (user_text or "").strip()

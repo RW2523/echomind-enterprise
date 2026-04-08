@@ -4,11 +4,14 @@ import json
 import logging
 import os
 import uuid
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, WebSocket, HTTPException
 
 # Root default WARNING; bump LLM adapter to INFO so VOICE_LLM stream/sync timing lines appear in docker logs.
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logging.getLogger("app.adapters.llm_openai_stream").setLevel(logging.INFO)
+logging.getLogger("app.adapters.stt_nemotron").setLevel(logging.INFO)
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -16,7 +19,24 @@ from pydantic import BaseModel
 from .session import OmniSessionA
 from .voice_download import list_installed_voices, download_voice
 
-app = FastAPI(title="(Context + Memory)")
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Nemotron: lazy load on first STT by default (VOICE_NEMOTRON_STARTUP_LOAD=0) so the server accepts WS immediately.
+    # Set VOICE_NEMOTRON_STARTUP_LOAD=1 to fail fast if the model cannot load.
+    from .adapters.stt_nemotron import ensure_nemotron_loaded_at_startup
+
+    try:
+        await asyncio.to_thread(ensure_nemotron_loaded_at_startup)
+    except Exception:
+        logger.exception("Voice service: Nemotron startup load failed")
+        raise
+    yield
+
+
+app = FastAPI(title="(Context + Memory)", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 

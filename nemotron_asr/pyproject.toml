@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nemotron-asr-echomind"
+version = "0.1.0"
+description = "Shared NVIDIA Nemotron streaming ASR adapter for EchoMind backend + voice"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["."]
