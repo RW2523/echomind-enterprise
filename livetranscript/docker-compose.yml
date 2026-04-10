@@ -7,6 +7,10 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.backend
+      args:
+        # Pass HF_TOKEN for gated Nemotron weights at build time. Not needed at runtime.
+        HF_TOKEN: ${HF_TOKEN:-}
+        ECHOMIND_ASR_MODEL_NAME: ${ECHOMIND_ASR_MODEL_NAME:-nvidia/nemotron-speech-streaming-en-0.6b}
     deploy:
       resources:
         reservations:
@@ -22,6 +26,9 @@ services:
       - AUDIO_CHUNK_MS=560
       - SILENCE_MS_BEFORE_FINAL=500
       - NVIDIA_VISIBLE_DEVICES=all
+      # Offline: model is pre-downloaded into the image at build time; no runtime HF download.
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
     ports:
       - "8000:8000"
     healthcheck:

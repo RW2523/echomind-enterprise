@@ -11,12 +11,13 @@ services:
     ports:
       - "8355:8355"
     environment:
-      # Gated HF models: set HF_TOKEN in .env or the shell before compose up
+      # Gated HF models: set HF_TOKEN in .env only for the first-time prepare run.
       - HF_TOKEN=${HF_TOKEN:-}
       - MODEL_HANDLE=${TRTLLM_MODEL_HANDLE:-nvidia/Llama-3.1-8B-Instruct-FP4}
-      # First start downloads weights into the volume; later starts reuse cache (set TRTLLM_SKIP_DOWNLOAD=1 + HF_HUB_OFFLINE=1 only after cache is full)
-      - HF_HUB_OFFLINE=${TRTLLM_HF_HUB_OFFLINE:-0}
-      - TRTLLM_SKIP_DOWNLOAD=${TRTLLM_SKIP_DOWNLOAD:-0}
+      # Offline by default: model weights live in the trtllm_hf_cache volume (populated once via docker-compose.prepare.yml).
+      # To re-download, set TRTLLM_HF_HUB_OFFLINE=0 and TRTLLM_SKIP_DOWNLOAD=0 in your .env for one run.
+      - HF_HUB_OFFLINE=${TRTLLM_HF_HUB_OFFLINE:-1}
+      - TRTLLM_SKIP_DOWNLOAD=${TRTLLM_SKIP_DOWNLOAD:-1}
     volumes:
       - trtllm_hf_cache:/root/.cache/huggingface
     healthcheck:

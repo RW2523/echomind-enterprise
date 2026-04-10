@@ -1,6 +1,8 @@
 # Backend with NeMo ASR for NVIDIA DGX Spark (Ubuntu, GPU).
-# Build: docker build -f docker/Dockerfile.backend -t live-transcript-backend .
-# Run with GPU: docker run --gpus all -p 8000:8000 live-transcript-backend
+# Build: docker compose build backend   (from livetranscript/ directory)
+# Run with GPU: docker compose up
+# Offline: Nemotron weights are pre-downloaded into the image at build time.
+#           Set HF_TOKEN in your environment/shell before building if the model is gated.
 FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -26,8 +28,21 @@ RUN pip install --no-cache-dir "nemo_toolkit[asr] @ git+https://github.com/NVIDI
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download Nemotron ASR weights at build time so the container runs fully offline.
+# Pass HF_TOKEN as a build-arg if the model is gated: docker compose build --build-arg HF_TOKEN=<token>
+ARG HF_TOKEN=
+ARG ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
+ARG SKIP_MODEL_DOWNLOAD=0
+RUN export HF_TOKEN="${HF_TOKEN}" && \
+    if [ "${SKIP_MODEL_DOWNLOAD}" != "1" ]; then \
+      python3 -c "from huggingface_hub import snapshot_download; snapshot_download('${ECHOMIND_ASR_MODEL_NAME}')"; \
+    fi
+
 COPY backend/ /app/
 
+# Offline runtime: use only the HF cache baked into the image — no network access to Hugging Face.
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
 ENV HOST=0.0.0.0
 ENV PORT=8000
 EXPOSE 8000

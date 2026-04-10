@@ -77,11 +77,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
   const sidebarContent = (
     <>
       <div className="px-3 py-4 md:px-4 md:py-5 flex items-center gap-3">
-        <img
-          src="https://www.ajace.com/wp-content/uploads/2016/12/cropped-logo-32x32.png"
-          alt="Ajace"
-          className="w-8 h-8 md:w-9 md:h-9 rounded-xl object-contain shrink-0"
-        />
+        <svg
+          viewBox="0 0 36 36"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-8 h-8 md:w-9 md:h-9 rounded-xl shrink-0"
+          aria-label="EchoMind"
+        >
+          <rect width="36" height="36" rx="8" fill="#06b6d4" />
+          <text x="18" y="25" textAnchor="middle" fill="#05070a" fontSize="20" fontFamily="system-ui, sans-serif" fontWeight="bold">E</text>
+        </svg>
         <div className="hidden md:block min-w-0">
           <h1 className="text-base font-bold tracking-tight text-white leading-none truncate">EchoMind</h1>
           <p className="text-[10px] text-cyan-400/80 uppercase tracking-widest font-semibold mt-0.5">by Ajace AI</p>
