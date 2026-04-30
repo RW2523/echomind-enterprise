@@ -35,11 +35,14 @@ class Settings:
     # Log full LLM JSON body (set LLM_LOG_PAYLOAD=1). Timing lines always log at INFO (VOICE_LLM stream start/done).
     LLM_LOG_PAYLOAD: bool = os.getenv("LLM_LOG_PAYLOAD", "0").lower() in ("1", "true", "yes")
 
-    PHRASE_MIN_CHARS: int = int(os.getenv("PHRASE_MIN_CHARS", "28"))
-    PHRASE_MAX_CHARS: int = int(os.getenv("PHRASE_MAX_CHARS", "120"))
-    PHRASE_COMMIT_PAUSE_MS: int = int(os.getenv("PHRASE_COMMIT_PAUSE_MS", "180"))
+    # Phrase chunking for streaming TTS: lower values = more frequent Piper calls (lower latency, slightly choppier).
+    PHRASE_MIN_CHARS: int = int(os.getenv("PHRASE_MIN_CHARS", "18"))
+    PHRASE_MAX_CHARS: int = int(os.getenv("PHRASE_MAX_CHARS", "96"))
+    PHRASE_COMMIT_PAUSE_MS: int = int(os.getenv("PHRASE_COMMIT_PAUSE_MS", "120"))
     # First spoken phrase: commit on sentence end with this lower minimum so TTS starts right after the first sentence.
     FIRST_SENTENCE_MIN_CHARS: int = int(os.getenv("FIRST_SENTENCE_MIN_CHARS", "8"))
+    # Commit on comma/semicolon/colon when buffer is at least this long (natural clause breaks for earlier audio).
+    PHRASE_CLAUSE_MIN_CHARS: int = int(os.getenv("PHRASE_CLAUSE_MIN_CHARS", "18"))
 
     # Piper TTS (model path; voices dir for download is VOICES_DIR, default /voices)
     PIPER_MODEL: str = os.getenv("PIPER_MODEL", "/voices/en_US-lessac-medium.onnx")
@@ -63,6 +66,8 @@ class Settings:
     # Backend RAG: when set, voice calls ask-voice-stream (NDJSON chunks → phrase TTS) and falls back to ask-voice.
     # Example: http://backend:8000 (no trailing slash).
     BACKEND_CHAT_URL: str = os.getenv("BACKEND_CHAT_URL", "")
+    # Cap streamed RAG completion length for voice (shorter = faster TTS); backend default LLM max is often 2048.
+    VOICE_RAG_MAX_TOKENS: int = int(os.getenv("VOICE_RAG_MAX_TOKENS", "640"))
 
     # EchoMind Conversation Intelligence
     MEMORY_WINDOW_MINUTES: float = float(os.getenv("MEMORY_WINDOW_MINUTES", "30"))

@@ -51,17 +51,19 @@ Open: `http://<host>:8000`
 ### LLM (TensorRT-LLM / OpenAI-compatible)
 - **docker-compose** sets `LLM_URL` to `http://host.docker.internal:8355/v1/chat/completions` and `LLM_MODEL=nvidia/Llama-3.1-8B-Instruct-FP4` (same stack as backend chat).
 - Main replies use **`stream: true`** via `OpenAICompatLLMStream.stream_messages` for low time-to-first-token; summaries/tool paths use non-streaming `complete_messages`.
-- **TTS pipeline:** Tokens are read in the main coroutine while a **serial phrase queue** feeds Piper. The **first phrase** commits as soon as a **sentence boundary** is seen (`FIRST_SENTENCE_MIN_CHARS`, default 8); later phrases use `PHRASE_MIN_CHARS` / max length / pause. Piper **`synth` runs in a thread pool** so the LLM stream keeps draining while audio plays—smoother end-to-end latency.
+- **TTS pipeline:** Tokens are read in the main coroutine while a **serial phrase queue** feeds Piper. Phrases commit on **max length**, **clause ends** (comma/semicolon/colon after `PHRASE_CLAUSE_MIN_CHARS`), **sentence ends** (`.?!` with `FIRST_SENTENCE_MIN_CHARS` for the first phrase), or **pause flush** (`PHRASE_MIN_CHARS` + `PHRASE_COMMIT_PAUSE_MS`). Defaults favor **earlier first audio** over fewer Piper calls. Piper **`synth` runs in a thread pool** so the LLM stream keeps draining while audio plays.
 - **Logs** (container stdout): `VOICE_LLM stream start … stream=true` / `VOICE_LLM stream done … ttft_ms=… stream_total_ms=…` at INFO. Set `LLM_LOG_PAYLOAD=1` for full request JSON at WARNING.
-- **Backend RAG** (`BACKEND_CHAT_URL`): document / transcript / FMR-style questions use **`POST /api/chat/ask-voice-stream`** (NDJSON, same streaming pipeline as web chat) so speech starts as soon as the backend LLM emits tokens—**not** after the full RAG answer is buffered. Falls back to `ask-voice` if the stream fails.
+- **Backend RAG** (`BACKEND_CHAT_URL`): document / transcript / FMR-style questions use **`POST /api/chat/ask-voice-stream`** (NDJSON, same streaming pipeline as web chat) so speech starts as soon as the backend LLM emits tokens—**not** after the full RAG answer is buffered. Falls back to `ask-voice` if the stream fails. Payload includes **`voice_max_tokens`** (default **`VOICE_RAG_MAX_TOKENS=640`**) so the backend uses **`stream: true`** with a bounded completion length.
 
 ### Config (env)
 - `FIRST_SENTENCE_MIN_CHARS` — min chars before committing the **first** phrase on `.?!` (default 8); lower = earlier TTS start after first sentence.
-- `PHRASE_MIN_CHARS`, `PHRASE_MAX_CHARS`, `PHRASE_COMMIT_PAUSE_MS` — later phrases and pause-based flush (pause timer updates only on phrase commit, not every token).
+- `PHRASE_CLAUSE_MIN_CHARS` — min chars before committing on `,` / `;` / `:` (default 18); enables streaming TTS before a full sentence.
+- `PHRASE_MIN_CHARS`, `PHRASE_MAX_CHARS`, `PHRASE_COMMIT_PAUSE_MS` — pause-based flush and caps (defaults 18 / 96 / 120 ms; pause timer updates only on phrase commit).
 - `MEMORY_WINDOW_MINUTES` — rolling window for conversation memory (default 30).
 - `DEFAULT_ASSISTANT_NAME` — wake word / assistant name (default EchoMind).
 - `DEFAULT_USER_NAME`, `DEFAULT_TIMEZONE`, `DEFAULT_LOCATION` — session defaults.
 - `ECHO_DEBUG=1` — log when listen_only toggles, when memory entries are added, and when profile updates (server logs).
+- `VOICE_RAG_MAX_TOKENS` — passed to `/api/chat/ask-voice-stream` as `voice_max_tokens` (default 640); lower = shorter spoken answers and less GPU time.
 
 ### New server→client messages
 - `profile_update` — `{ assistant_name, wake_word, user_name, timezone, location }`.

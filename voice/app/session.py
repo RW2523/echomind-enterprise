@@ -123,6 +123,43 @@ def ends_sentence(buf: str) -> bool:
         return False
     return bool(re.search(r'[.!?]["\']?\s*$', s))
 
+
+def ends_natural_clause(buf: str) -> bool:
+    """True when buffer ends on a clause boundary (comma/semicolon/colon). Skips trailing-number patterns like 1,234."""
+    s = (buf or "").rstrip()
+    if not s:
+        return False
+    if re.search(r",\d\s*$", s):
+        return False
+    return bool(re.search(r'[,;:]["\']?\s*$', s))
+
+
+def phrase_commit_needed(phrase_buf: str, phrases_enqueued: int, last_emit: float) -> bool:
+    """
+    Whether to enqueue ``phrase_buf`` for TTS. Used for both local LLM SSE and backend RAG NDJSON streams.
+    """
+    s = phrase_buf.strip()
+    if not s:
+        return False
+    if len(s) >= SETTINGS.PHRASE_MAX_CHARS:
+        return True
+    clause_min = max(8, getattr(SETTINGS, "PHRASE_CLAUSE_MIN_CHARS", 18))
+    if len(s) >= clause_min and ends_natural_clause(phrase_buf):
+        return True
+    min_sentence = (
+        max(4, getattr(SETTINGS, "FIRST_SENTENCE_MIN_CHARS", 8))
+        if phrases_enqueued == 0
+        else SETTINGS.PHRASE_MIN_CHARS
+    )
+    if len(s) >= min_sentence and ends_sentence(phrase_buf):
+        return True
+    if (
+        len(s) >= SETTINGS.PHRASE_MIN_CHARS
+        and (time.time() - last_emit) * 1000 >= SETTINGS.PHRASE_COMMIT_PAUSE_MS
+    ):
+        return True
+    return False
+
 def approx_token_count(text: str) -> int:
     # crude but safe: ~4 chars per token in English
     return max(1, int(len(text) / 4))
@@ -727,28 +764,8 @@ class OmniSessionA:
         last_emit = time.time()
         phrases_enqueued = 0
 
-        def commit_needed(buf: str) -> bool:
-            s = buf.strip()
-            if not s:
-                return False
-            if len(s) >= SETTINGS.PHRASE_MAX_CHARS:
-                return True
-            min_sentence = (
-                max(4, getattr(SETTINGS, "FIRST_SENTENCE_MIN_CHARS", 8))
-                if phrases_enqueued == 0
-                else SETTINGS.PHRASE_MIN_CHARS
-            )
-            if len(s) >= min_sentence and ends_sentence(buf):
-                return True
-            if (
-                len(s) >= SETTINGS.PHRASE_MIN_CHARS
-                and (time.time() - last_emit) * 1000 >= SETTINGS.PHRASE_COMMIT_PAUSE_MS
-            ):
-                return True
-            return False
-
         tts_q: asyncio.Queue = asyncio.Queue()
-        chunk_q: asyncio.Queue = asyncio.Queue(maxsize=8000)
+        chunk_q: asyncio.Queue = asyncio.Queue()
         loop_c = asyncio.get_running_loop()
         base = backend_url.rstrip("/")
         stream_url = f"{base}/api/chat/ask-voice-stream"
@@ -831,7 +848,7 @@ class OmniSessionA:
                         "text": strip_markdown_for_speech(assistant_text),
                     }
                 )
-                if commit_needed(phrase_buf):
+                if phrase_commit_needed(phrase_buf, phrases_enqueued, last_emit):
                     await tts_q.put(phrase_buf.strip())
                     phrases_enqueued += 1
                     phrase_buf = ""
@@ -1065,6 +1082,7 @@ class OmniSessionA:
                     "context_window": self.context_window or "all",
                     "use_knowledge_base": True,
                     "advanced_rag": True,
+                    "voice_max_tokens": getattr(SETTINGS, "VOICE_RAG_MAX_TOKENS", 640),
                 }
                 await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload)
             else:
@@ -1173,6 +1191,7 @@ class OmniSessionA:
                 "context_window": self.context_window or "all",
                 "use_knowledge_base": True,
                 "advanced_rag": True,
+                "voice_max_tokens": getattr(SETTINGS, "VOICE_RAG_MAX_TOKENS", 640),
             }
             await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload)
             if reenter_listen_only:
@@ -1193,27 +1212,6 @@ class OmniSessionA:
         last_emit = time.time()
         phrases_enqueued = 0
 
-        def commit_needed(buf: str) -> bool:
-            s = buf.strip()
-            if not s:
-                return False
-            if len(s) >= SETTINGS.PHRASE_MAX_CHARS:
-                return True
-            # First phrase: lower bar so TTS starts as soon as the first sentence completes (stream=true + overlap).
-            min_sentence = (
-                max(4, getattr(SETTINGS, "FIRST_SENTENCE_MIN_CHARS", 8))
-                if phrases_enqueued == 0
-                else SETTINGS.PHRASE_MIN_CHARS
-            )
-            if len(s) >= min_sentence and ends_sentence(buf):
-                return True
-            if (
-                len(s) >= SETTINGS.PHRASE_MIN_CHARS
-                and (time.time() - last_emit) * 1000 >= SETTINGS.PHRASE_COMMIT_PAUSE_MS
-            ):
-                return True
-            return False
-
         # Serial TTS queue: main loop keeps draining LLM tokens while Piper plays phrases in order.
         tts_q: asyncio.Queue = asyncio.Queue()
 
@@ -1229,7 +1227,7 @@ class OmniSessionA:
         self._tts_phrase_task = asyncio.create_task(tts_consumer())
         _abort_tts = False
         try:
-            tok_q: asyncio.Queue = asyncio.Queue(maxsize=4000)
+            tok_q: asyncio.Queue = asyncio.Queue()
 
             async def producer():
                 loop = asyncio.get_running_loop()
@@ -1263,7 +1261,7 @@ class OmniSessionA:
                     }
                 )
 
-                if commit_needed(phrase_buf):
+                if phrase_commit_needed(phrase_buf, phrases_enqueued, last_emit):
                     await tts_q.put(phrase_buf.strip())
                     phrases_enqueued += 1
                     phrase_buf = ""

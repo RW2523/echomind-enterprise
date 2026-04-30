@@ -137,6 +137,8 @@ class AskVoiceIn(BaseModel):
     context_window: str | None = None
     use_knowledge_base: bool = True
     advanced_rag: bool = True
+    # Voice service sends this to cap the RAG LLM response length and prevent 10-20s GPU freezes.
+    voice_max_tokens: int | None = None
 
 
 # Default hours when user asks for "recent summary of the transcript" with no explicit time (voice/conversation bot).
@@ -324,7 +326,8 @@ async def ask_voice_stream(inp: AskVoiceIn):
             )
             try:
                 async for kind, text, citations in _answer_general_stream(
-                    user_content, [], inp.persona, None
+                    user_content, [], inp.persona, None,
+                    max_tokens=inp.voice_max_tokens,
                 ):
                     if kind == "chunk":
                         yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"
@@ -345,6 +348,7 @@ async def ask_voice_stream(inp: AskVoiceIn):
                 use_knowledge_base=inp.use_knowledge_base,
                 advanced_rag=inp.advanced_rag,
                 source_options={"transcript": True, "document": True, "general": True},
+                max_tokens=inp.voice_max_tokens,
             ):
                 if kind == "chunk":
                     yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"
@@ -352,6 +356,7 @@ async def ask_voice_stream(inp: AskVoiceIn):
                     cite_list = citations if citations is not None else []
                     yield json.dumps({"type": "done", "answer": text or "", "citations": cite_list}) + "\n"
         except Exception as e:
+            logger.warning("ask-voice-stream: %s", e, exc_info=True)
             yield json.dumps({"type": "error", "message": str(e)}) + "\n"
 
     return StreamingResponse(

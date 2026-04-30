@@ -81,8 +81,12 @@ class OpenAICompatLLMStream:
                     choices = obj.get("choices") or []
                     if not choices:
                         continue
-                    delta = choices[0].get("delta") or {}
+                    ch0 = choices[0] or {}
+                    delta = ch0.get("delta") or {}
                     token = delta.get("content")
+                    if not token:
+                        # Legacy / alternate OpenAI-compatible streaming (e.g. some TensorRT-LLM builds)
+                        token = ch0.get("text")
                     if token:
                         if ttft_mono is None:
                             ttft_mono = time.monotonic()

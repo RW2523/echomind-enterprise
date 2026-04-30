@@ -25,6 +25,9 @@ function getHttpsConfig(): { https: { cert: Buffer; key: Buffer } } | { https: t
 
 const httpsConfig = getHttpsConfig();
 
+/** Match docker-compose voice host port (default 8002); set VOICE_HOST_PORT when running Vite against compose. */
+const voiceDevPort = process.env.VOICE_HOST_PORT || '8002';
+
 export default defineConfig(() => ({
   server: {
     port: 3000,
@@ -32,7 +35,7 @@ export default defineConfig(() => ({
     ...(httpsConfig || {}),
     proxy: {
       '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true, ws: true },
-      '/voice': { target: 'http://127.0.0.1:8001', changeOrigin: true, ws: true, rewrite: (p) => p.replace(/^\/voice/, '') },
+      '/voice': { target: `http://127.0.0.1:${voiceDevPort}`, changeOrigin: true, ws: true, rewrite: (p) => p.replace(/^\/voice/, '') },
     },
   },
   plugins: useHttps ? [react(), basicSsl()] : [react()],

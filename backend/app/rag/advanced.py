@@ -2765,6 +2765,7 @@ async def _answer_general_stream(
     history: List[Dict],
     persona: Optional[str] = None,
     conversation_summary: Optional[str] = None,
+    max_tokens: Optional[int] = None,
 ) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
     sys = _general_system_prompt(persona)
     if conversation_summary and conversation_summary.strip() and _is_follow_up_question(question):
@@ -2772,8 +2773,9 @@ async def _answer_general_stream(
         msgs = [{"role": "system", "content": sys}, {"role": "user", "content": user_content}]
     else:
         msgs = [{"role": "system", "content": sys}] + history[-10:] + [{"role": "user", "content": question}]
+    eff_max = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
     full = []
-    async for delta in chat.chat_stream(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS):
+    async for delta in chat.chat_stream(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=eff_max):
         full.append(delta)
         yield ("chunk", delta, None)
     yield ("done", "".join(full).strip(), [])
@@ -2788,21 +2790,29 @@ async def answer_stream(
     use_knowledge_base: bool = True,
     advanced_rag: bool = False,
     source_options: Optional[Dict[str, bool]] = None,
+    max_tokens: Optional[int] = None,
 ) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
     """Stream RAG response. Yields ("chunk", delta, None) then ("done", full_answer, citations)."""
+    eff_max = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
     if not use_knowledge_base:
-        async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+        async for ev in _answer_general_stream(
+            question, history, persona, conversation_summary, max_tokens=eff_max
+        ):
             yield ev
         return
     opts = source_options or _default_source_options()
     if not opts.get("transcript", True) and not opts.get("document", True):
         logger.info("RAG (stream): only General selected → answer directly, no retrieval")
-        async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+        async for ev in _answer_general_stream(
+            question, history, persona, conversation_summary, max_tokens=eff_max
+        ):
             yield ev
         return
     if _is_general_conversation(question):
         logger.info("RAG (stream): general conversation → answer directly, no RAG")
-        async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+        async for ev in _answer_general_stream(
+            question, history, persona, conversation_summary, max_tokens=eff_max
+        ):
             yield ev
         return
 
@@ -2831,7 +2841,9 @@ async def answer_stream(
         yield ("done", INSUFFICIENT_CONTEXT_MSG, [])
         return
     if source_type == "general":
-        async for ev in _answer_general_stream(question, history, persona, conversation_summary):
+        async for ev in _answer_general_stream(
+            question, history, persona, conversation_summary, max_tokens=eff_max
+        ):
             yield ev
         return
 
@@ -2861,7 +2873,7 @@ async def answer_stream(
 
     t_llm_start = time.monotonic()
     full = []
-    async for delta in chat.chat_stream(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=settings.LLM_MAX_TOKENS):
+    async for delta in chat.chat_stream(msgs, temperature=settings.LLM_TEMPERATURE, max_tokens=eff_max):
         full.append(delta)
         yield ("chunk", delta, None)
     ans = "".join(full).strip()

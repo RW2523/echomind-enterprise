@@ -5,7 +5,7 @@ This build removes ALL Gemini code and connects the UI to your backend APIs.
 ## Services
 - Frontend: http://<DGX_IP>:3000 (HTTP) or https://<DGX_IP>:3443 (HTTPS)
 - Backend API: proxied under /api
-- Voice bot: proxied under /voice (direct: http://<DGX_IP>:8001). **Voice AI is connected to RAG** (via `BACKEND_CHAT_URL`): questions about your transcripts or uploaded PDFs are answered from the knowledge base.
+- Voice bot: proxied under /voice (direct: http://<DGX_IP>:8002 by default; set `VOICE_HOST_PORT` in `.env` to change). **Voice AI is connected to RAG** (via `BACKEND_CHAT_URL`): questions about your transcripts or uploaded PDFs are answered from the knowledge base.
 - **TensorRT-LLM** (chat): OpenAI-compatible API on port **8355** (`docker compose` service `trtllm`; model weights live in volume `trtllm_hf_cache`). Set `HF_TOKEN` in `.env` if your `MODEL_HANDLE` is gated.
 - **Ollama** (embeddings only for RAG): http://<DGX_IP>:11434 — `nomic-embed-text` in volume `ollama_data`
 

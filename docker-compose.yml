@@ -84,7 +84,9 @@ services:
     volumes:
        - ./voice/voices:/voices
     container_name: echomind-voice
-    ports: ["8001:8000"]
+    # Host port for optional direct voice access; Nginx uses voice:8000 on the Docker network (unchanged).
+    # Default 8002 — host 8001 is often taken (e.g. uvicorn). Override: VOICE_HOST_PORT=8001 in .env
+    ports: ["${VOICE_HOST_PORT:-8002}:8000"]
     environment:
       # TensorRT-LLM in compose (OpenAI-compatible); dialogue uses stream=true for TTFT.
       - LLM_URL=http://trtllm:8355/v1/chat/completions

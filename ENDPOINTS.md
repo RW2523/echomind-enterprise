@@ -24,7 +24,7 @@ Quick reference to confirm all endpoints and frontend calls are connected.
 ## Frontend → API base URL
 
 - **Production (Docker):** `API_BASE` is `""`, so requests go to same origin; nginx handles `/api` and `/voice`.
-- **Development (Vite):** Proxy in `vite.config.ts` sends `/api` → `http://127.0.0.1:8000`, `/voice` → `http://127.0.0.1:8001`. Run backend on 8000 and voice on 8001 when developing locally.
+- **Development (Vite):** Proxy in `vite.config.ts` sends `/api` → `http://127.0.0.1:8000`, `/voice` → `http://127.0.0.1:<VOICE_HOST_PORT>` (default **8002**, matches `docker-compose` voice mapping). Set env `VOICE_HOST_PORT` if you remap the voice container port.
 
 ## WebSocket proxying (nginx)
 
