@@ -38,6 +38,35 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
     onCloseSidebar?.();
   };
   const [storage, setStorage] = useState<StorageUsage>({ usage_bytes: 0, capacity_bytes: null });
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+
+  const startEditingChat = (chatId: string, title: string) => {
+    setEditingChatId(chatId);
+    setEditingTitle(title || "");
+  };
+
+  const cancelEditingChat = () => {
+    setEditingChatId(null);
+    setEditingTitle("");
+  };
+
+  const commitEditingChat = async (chatId: string) => {
+    if (!knowledgeChat?.renameChat) {
+      cancelEditingChat();
+      return;
+    }
+    const nextTitle = editingTitle.trim();
+    if (!nextTitle) {
+      cancelEditingChat();
+      return;
+    }
+    try {
+      await knowledgeChat.renameChat(chatId, nextTitle);
+    } finally {
+      cancelEditingChat();
+    }
+  };
 
   const refreshUsage = useCallback(async () => {
     try {
@@ -146,8 +175,41 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
                   }`}
                   title={chat.title}
                 >
-                  <span className="block truncate">{chat.title || 'New chat'}</span>
+                  {editingChatId === chat.id ? (
+                    <input
+                      autoFocus
+                      value={editingTitle}
+                      onChange={(e) => setEditingTitle(e.target.value)}
+                      onBlur={() => { void commitEditingChat(chat.id); }}
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          void commitEditingChat(chat.id);
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault();
+                          cancelEditingChat();
+                        }
+                      }}
+                      className="block w-full bg-transparent border border-white/20 rounded px-1"
+                    />
+                  ) : (
+                    <span className="block truncate">{chat.title || 'New chat'}</span>
+                  )}
                   <span className="block text-[10px] text-slate-500 mt-0.5">{formatChatDate(chat.created_at)}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    startEditingChat(chat.id, chat.title || '');
+                  }}
+                  className="shrink-0 p-1.5 rounded text-slate-500 hover:text-cyan-300 hover:bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity touch-manipulation"
+                  aria-label="Rename chat"
+                  title="Rename chat"
+                >
+                  ✎
                 </button>
                 <button
                   type="button"

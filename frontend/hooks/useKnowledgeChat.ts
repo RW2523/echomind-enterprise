@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { createChat, listChats, getChat, deleteChat, DEFAULT_CHAT_TITLE } from "../services/backend";
+import { createChat, listChats, getChat, deleteChat, updateChatTitle, DEFAULT_CHAT_TITLE } from "../services/backend";
 import type { ChatMessage } from "../types";
 import type { ChatListItem } from "../services/backend";
 
@@ -17,6 +17,8 @@ export interface UseKnowledgeChatReturn {
   newChat: () => Promise<void>;
   /** Delete a chat from history. If it was current, switches to another or creates new. */
   deleteChat: (id: string) => Promise<void>;
+  /** Rename a chat title and update local list state. */
+  renameChat: (chatId: string, title: string) => Promise<{ chat_id: string; title: string } | undefined>;
   /** @deprecated Use newChat() for ChatGPT-style "new chat". clearChat() still works. */
   clearChat: () => Promise<void>;
 }
@@ -119,6 +121,17 @@ export function useKnowledgeChat(): UseKnowledgeChatReturn {
     }
   }, [chatId, loadChats]);
 
+  const renameChat = useCallback(async (chatId: string, title: string) => {
+    try {
+      const updated = await updateChatTitle(chatId, title);
+      setChats(prev => prev.map(c => (c.id === chatId ? { ...c, title: updated.title } : c)));
+      return updated;
+    } catch (e) {
+      console.error(e);
+      return undefined;
+    }
+  }, []);
+
   const clearChat = useCallback(async () => {
     setMessages([]);
     try {
@@ -139,6 +152,7 @@ export function useKnowledgeChat(): UseKnowledgeChatReturn {
     selectChat,
     newChat,
     deleteChat: deleteChatById,
+    renameChat,
     clearChat,
   };
 }

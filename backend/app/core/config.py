@@ -2,7 +2,8 @@ from pydantic_settings import BaseSettings
 import os
 
 # Base dir for all persistence; env ECHOMIND_DATA_DIR overrides. Used so DB_PATH, FAISS_*, etc. stay under one root.
-_DEFAULT_DATA_DIR = os.getenv("ECHOMIND_DATA_DIR", "/data")
+_DEFAULT_DATA_DIR = os.path.abspath(os.getenv("ECHOMIND_DATA_DIR", "./data"))
+os.makedirs(_DEFAULT_DATA_DIR, exist_ok=True)
 
 
 class Settings(BaseSettings):

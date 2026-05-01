@@ -47,6 +47,10 @@ class CreateChatIn(BaseModel):
     title: str = "EchoMind Chat"
 
 
+class UpdateChatTitleIn(BaseModel):
+    title: str
+
+
 DEFAULT_CHAT_TITLE = "EchoMind Chat"
 
 
@@ -113,6 +117,23 @@ def delete_chat(chat_id: str):
         conn.execute("DELETE FROM chats WHERE id = ?", (chat_id,))
         conn.commit()
     return {"ok": True, "deleted": chat_id}
+
+
+@router.patch("/{chat_id}/title")
+def update_chat_title(chat_id: str, inp: UpdateChatTitleIn):
+    title = (inp.title or "").strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Title cannot be empty")
+
+    with get_conn() as conn:
+        row = conn.execute("SELECT id FROM chats WHERE id = ?", (chat_id,)).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    with get_conn() as conn:
+        conn.execute("UPDATE chats SET title = ? WHERE id = ?", (title, chat_id))
+        conn.commit()
+    return {"chat_id": chat_id, "title": title}
 
 
 class SourceOptionsIn(BaseModel):

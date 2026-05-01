@@ -177,6 +177,19 @@ export async function deleteChat(chatId: string): Promise<{ ok: boolean; deleted
   return await r.json();
 }
 
+export async function updateChatTitle(chatId: string, title: string): Promise<{ chat_id: string; title: string }> {
+  const r = await fetch(`${API_BASE}/api/chat/${encodeURIComponent(chatId)}/title`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `update chat title failed: ${r.status}`);
+  }
+  return await r.json();
+}
+
 export async function createChat(title: string): Promise<{chat_id: string}> {
   const r = await fetch(`${API_BASE}/api/chat/create`, {
     method: "POST",
