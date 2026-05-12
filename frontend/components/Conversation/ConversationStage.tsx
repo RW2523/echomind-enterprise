@@ -3,6 +3,10 @@ import { TopBar } from "./TopBar";
 import { VoiceOrb } from "./VoiceOrb";
 import { ControlBar } from "./ControlBar";
 import type { ConversationState } from "./ChatState";
+import type { AppSettings, DocumentChunk, VoiceMessage } from "../../types";
+import { ChunkCitationModal } from "../KnowledgeChat";
+import ProductModeHeader, { type ModeStatusTone } from "../ProductModeHeader";
+import { CITATION_CHIP_CLASS } from "../../utils/modeChrome";
 
 function useOrbSize(): number {
   const [size, setSize] = useState(200);
@@ -31,11 +35,6 @@ function resolveOrbColor(element: HTMLElement | null, cssVar: string, fallbackHe
   return /^#?[0-9A-Fa-f]{6}$/.test(hex) ? (hex.startsWith("#") ? hex : `#${hex}`) : fallbackHex;
 }
 
-export interface VoiceMessage {
-  role: "user" | "assistant";
-  text: string;
-}
-
 export interface ConversationStageProps {
   state: ConversationState;
   userAnalyser: AnalyserNode | null;
@@ -55,6 +54,8 @@ export interface ConversationStageProps {
   micMuted?: boolean;
   onMicMutedToggle?: () => void;
   onSettingsClick?: () => void;
+  settings?: AppSettings | null;
+  onInterruptAssistant?: () => void;
 }
 
 const ASSISTANT_COLOR_VAR = "var(--assistant-color, #14b8a6)";
@@ -77,12 +78,15 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
   micMuted = false,
   onMicMutedToggle,
   onSettingsClick,
+  settings = null,
+  onInterruptAssistant,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [resolvedAssistantColor, setResolvedAssistantColor] = useState("#14b8a6");
   const [resolvedUserColor, setResolvedUserColor] = useState("#94a3b8");
   const orbSize = useOrbSize();
   const transcriptEndRef = useRef<HTMLDivElement>(null);
+  const [citationModal, setCitationModal] = useState<DocumentChunk[] | null>(null);
 
   useLayoutEffect(() => {
     const el = containerRef.current;
@@ -95,14 +99,44 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [voiceMessages, pendingAssistantText]);
 
-  const showTranscript = voiceMessages.length > 0 || !!pendingAssistantText || listenOnly;
+  const showTranscript =
+    state.isConnected || voiceMessages.length > 0 || !!pendingAssistantText || listenOnly;
+
+  const conversationStatus = (() => {
+    if (connecting) return { text: "Connecting…", tone: "thinking" as const };
+    if (!state.isConnected) return { text: "Disconnected", tone: "neutral" as const };
+    if (micMuted) return { text: "Muted", tone: "muted" as const };
+    if (state.assistantOrb === "speaking" || pendingAssistantText) return { text: "Speaking", tone: "speaking" as const };
+    if (state.assistantOrb === "thinking") return { text: "Thinking", tone: "thinking" as const };
+    if (state.userOrb === "listening" || state.assistantOrb === "listening") return { text: "Listening", tone: "listening" as const };
+    if (state.interruptedAt && Date.now() - state.interruptedAt < 1800) return { text: "Interrupted", tone: "muted" as const };
+    return { text: "Idle", tone: "neutral" as const };
+  })();
+
+  const extraConv: { label: string; tone?: ModeStatusTone }[] = [];
+  if (state.isConnected && listenOnly) extraConv.push({ label: "Listen only", tone: "thinking" });
 
   return (
     <div
       ref={containerRef}
       className="flex flex-col h-full min-h-0 bg-[var(--voice-bg,#0f172a)] text-[var(--voice-text,#f1f5f9)] overflow-hidden"
     >
+      {citationModal && citationModal.length > 0 ? (
+        <ChunkCitationModal citations={citationModal} onClose={() => setCitationModal(null)} />
+      ) : null}
       <TopBar onSettingsClick={onSettingsClick} />
+      <ProductModeHeader
+        className="border-white/[0.04] bg-black/20 !py-2.5"
+        title="Conversation"
+        tagline="Real-time voice conversation."
+        status={conversationStatus.text}
+        statusTone={conversationStatus.tone}
+        extraStatuses={extraConv}
+        sessionName={null}
+        showKnowledge
+        knowledgeEnabled={!!settings?.voiceUseKnowledgeBase}
+        outputHint="Speech enabled — the assistant replies with voice when connected."
+      />
 
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <VoiceOrb
@@ -123,6 +157,12 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
               {listenOnly ? "Listening — say EchoMind when done" : "Live transcript"}
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-3 space-y-1.5">
+              {!listenOnly &&
+              state.isConnected &&
+              voiceMessages.length === 0 &&
+              !pendingAssistantText ? (
+                <p className="text-center text-slate-500 text-sm py-8 px-2">Start speaking naturally.</p>
+              ) : null}
               {listenOnly && listenBufferText ? (
                 <div className="rounded-2xl px-4 py-3 text-[15px] bg-white/[0.06] text-slate-300 border border-white/10 whitespace-pre-wrap break-words">
                   {listenBufferText}
@@ -133,13 +173,39 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
                 voiceMessages.map((msg, i) => (
                   <div
                     key={i}
-                    className={`rounded-2xl px-4 py-2.5 text-[15px] max-w-[85%] animate-[fadeIn_0.4s_cubic-bezier(0.25,0.1,0.25,1)] ${
-                      msg.role === "user"
-                        ? "ml-auto bg-white/[0.06] text-slate-400"
-                        : "mr-auto bg-teal-500/[0.08] text-teal-200/90"
+                    className={`max-w-[85%] animate-[fadeIn_0.4s_cubic-bezier(0.25,0.1,0.25,1)] ${
+                      msg.role === "user" ? "ml-auto" : "mr-auto"
                     }`}
                   >
-                    {msg.text}
+                    <div
+                      className={`rounded-2xl px-4 py-2.5 text-[15px] ${
+                        msg.role === "user"
+                          ? "bg-white/[0.06] text-slate-400"
+                          : "bg-teal-500/[0.08] text-teal-200/90"
+                      }`}
+                    >
+                      {msg.text}
+                    </div>
+                    {msg.role === "assistant" && msg.citations && msg.citations.length > 0 ? (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {msg.citations.map((c) => {
+                          const label =
+                            (c.docName.length > 28 ? `${c.docName.slice(0, 26)}…` : c.docName) +
+                            (c.metadata.pageNumber != null ? ` · p.${c.metadata.pageNumber}` : "");
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => setCitationModal(msg.citations ?? null)}
+                              className={CITATION_CHIP_CLASS}
+                              title={c.docName}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               {pendingAssistantText && (
@@ -160,12 +226,14 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         connectionError={connectionError}
         micMuted={micMuted}
         assistantOrb={state.assistantOrb}
+        hasPendingAssistantText={!!pendingAssistantText}
         listenOnly={listenOnly}
         onListenOnlyToggle={onListenOnlyToggle}
         onConnect={onConnect}
         onDisconnect={onDisconnect}
         onMicMutedToggle={onMicMutedToggle ?? (() => {})}
         onClearMemory={onClearMemory}
+        onInterrupt={onInterruptAssistant}
       />
     </div>
   );

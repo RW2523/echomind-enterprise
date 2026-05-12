@@ -60,6 +60,15 @@ def get_shared_asr_adapter():
         return _shared_adapter
 
 
+def _drop_shared_asr_and_force_cpu_env() -> None:
+    """Clear cached adapter so next load uses ECHOMIND_ASR_DEVICE=cpu (runtime escape hatch for GPU contention)."""
+    global _shared_adapter
+    with _adapter_lock:
+        _shared_adapter = None
+    os.environ["ECHOMIND_ASR_DEVICE"] = "cpu"
+    os.environ["ECHOMIND_ASR_REQUIRE_CUDA"] = "0"
+
+
 def ensure_nemotron_loaded_at_startup() -> None:
     """Load at process start only when VOICE_NEMOTRON_STARTUP_LOAD=1. Default 0: lazy load on first transcribe."""
     if os.getenv("VOICE_NEMOTRON_STARTUP_LOAD", "0").strip().lower() not in ("1", "true", "yes"):
@@ -102,8 +111,37 @@ class NemotronUtteranceSTT:
         try:
             text = await loop.run_in_executor(ex, _run)
         except Exception as e:
-            logger.exception("Voice Nemotron: transcribe failed: %s", e)
-            raise
+            err_l = str(e).lower()
+            cudaish = (
+                "cuda" in err_l
+                or "acceleratorerror" in err_l
+                or "cublas" in err_l
+                or "nvrtc" in err_l
+            )
+            if cudaish and getattr(adapter, "device", None) == "cuda":
+                logger.warning(
+                    "Voice Nemotron: CUDA transcribe failed (%s); reloading ASR on CPU once",
+                    type(e).__name__,
+                )
+                _drop_shared_asr_and_force_cpu_env()
+                adapter = get_shared_asr_adapter()
+
+                def _run_cpu() -> str:
+                    return transcribe_utterance_float32(
+                        adapter,
+                        audio_f32,
+                        sample_rate=self.sample_rate,
+                        chunk_ms=self.chunk_ms,
+                    )
+
+                try:
+                    text = await loop.run_in_executor(ex, _run_cpu)
+                except Exception as e2:
+                    logger.exception("Voice Nemotron: transcribe failed after CPU fallback: %s", e2)
+                    raise e2 from e
+            else:
+                logger.exception("Voice Nemotron: transcribe failed: %s", e)
+                raise
         ms = (time.monotonic() - t0) * 1000.0
         preview = (text or "")[:120]
         logger.info(

@@ -58,6 +58,10 @@ services:
       # Offline: use only local Hugging Face cache (no runtime model download)
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
+      # Nemotron live STT (Transcribe / Assistant / Silent): default CPU avoids CUDA contention with
+      # trtllm + voice on one GPU (otherwise pcm consumer logs cudaErrorNotPermitted / unknown and no text).
+      # Override in .env: ECHOMIND_BACKEND_ASR_DEVICE=cuda when backend has its own GPU or MIG slice.
+      - ECHOMIND_ASR_DEVICE=${ECHOMIND_BACKEND_ASR_DEVICE:-cpu}
     volumes:
       - echomind_data:/data
     depends_on:
@@ -94,10 +98,12 @@ services:
       # Optional: LLM_LOG_PAYLOAD=1 logs full JSON body at WARNING (timing always INFO: VOICE_LLM stream start/done).
       # Nemotron STT (same model as backend live transcript; gated HF — set HF_TOKEN in .env if needed)
       - ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
-      # DGX / Spark: keep ASR on GPU (PyTorch). Use ECHOMIND_ASR_DEVICE=cpu only for CPU-only hosts.
-      - ECHOMIND_ASR_DEVICE=cuda
-      # Fail startup if the voice container cannot see a GPU (no silent CPU fallback for ASR).
-      - ECHOMIND_ASR_REQUIRE_CUDA=${ECHOMIND_ASR_REQUIRE_CUDA:-1}
+      # Default CPU: same single-GPU contention that breaks backend CUDA Nemotron also breaks voice STT
+      # when TensorRT-LLM is loaded (cudaErrorNotPermitted / unknown). Override: ECHOMIND_VOICE_ASR_DEVICE=cuda
+      # when this container has a dedicated GPU slice.
+      - ECHOMIND_ASR_DEVICE=${ECHOMIND_VOICE_ASR_DEVICE:-cpu}
+      # With CPU STT, do not require CUDA for Nemotron load (Piper TTS may still use GPU via VOICE_PIPER_USE_CUDA).
+      - ECHOMIND_ASR_REQUIRE_CUDA=${ECHOMIND_VOICE_ASR_REQUIRE_CUDA:-0}
       - HF_TOKEN=${HF_TOKEN:-}
       - HF_HUB_OFFLINE=${HF_HUB_OFFLINE:-1}
       # Utterance chunking for voice STT (ms); optional override

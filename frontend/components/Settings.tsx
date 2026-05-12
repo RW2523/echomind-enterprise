@@ -237,6 +237,32 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
                 })}
               </div>
             </div>
+            <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="min-w-0">
+                  <label className="text-sm font-bold text-slate-300">Knowledge base in Conversation</label>
+                  <p className="text-xs text-slate-500 mt-1 max-w-xl">
+                    When enabled, Conversation mode can send eligible questions to the backend for RAG (documents and saved transcripts). When disabled, replies use the general local LLM path only.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={settings.voiceUseKnowledgeBase}
+                  onClick={() => update('voiceUseKnowledgeBase', !settings.voiceUseKnowledgeBase)}
+                  className={`shrink-0 self-start sm:self-center relative inline-flex h-9 w-[4.25rem] items-center rounded-full transition-colors touch-manipulation ${
+                    settings.voiceUseKnowledgeBase ? 'bg-cyan-500/80' : 'bg-slate-600'
+                  }`}
+                >
+                  <span className="sr-only">Toggle knowledge base for voice conversation</span>
+                  <span
+                    className={`inline-block h-7 w-7 rounded-full bg-white shadow transition-transform ${
+                      settings.voiceUseKnowledgeBase ? 'translate-x-[1.85rem]' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 

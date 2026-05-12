@@ -14,11 +14,20 @@ const Header: React.FC<HeaderProps> = ({ activeView, onMenuClick }) => {
 
   const getTitle = () => {
     switch (activeView) {
-      case AppView.KNOWLEDGE_CHAT: return 'Knowledge Chat';
-      case AppView.TRANSCRIPTION: return 'Live Transcription & Refinement';
-      case AppView.VOICE_CONVERSATION: return 'Voice AI Conversation';
-      case AppView.SETTINGS: return 'Platform Settings';
-      default: return 'EchoMind';
+      case AppView.KNOWLEDGE_CHAT:
+        return 'Knowledge Chat';
+      case AppView.TRANSCRIPTION:
+        return 'Transcribe';
+      case AppView.ASSISTANT:
+        return 'Assistant';
+      case AppView.SILENT_ASSISTANT:
+        return 'Silent Assistant';
+      case AppView.VOICE_CONVERSATION:
+        return 'Conversation';
+      case AppView.SETTINGS:
+        return 'Platform Settings';
+      default:
+        return 'EchoMind';
     }
   };
 

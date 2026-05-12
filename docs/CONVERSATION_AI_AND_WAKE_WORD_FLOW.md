@@ -18,7 +18,7 @@ This document maps the **entire conversation AI flow** in EchoMind and how it im
         ▼                       ▼                       ▼
 ┌───────────────┐     ┌─────────────────┐     ┌─────────────────────────────┐
 │ Backend       │     │ Voice service    │     │ Backend (transcribe)          │
-│ /api/chat/*   │     │ /voice/ws        │     │ /transcribe/ws (Kyutai STT)  │
+│ /api/chat/*   │     │ /voice/ws        │     │ /transcribe/ws (Nemotron STT) │
 │ • ask         │     │ OmniSessionA     │     │ (separate: live transcript   │
 │ • ask-stream  │     │ • VAD → Whisper │     │  recording, not voice AI)    │
 │ • ask-voice   │     │ • LLM stream     │     └─────────────────────────────┘
@@ -57,7 +57,7 @@ The voice flow lives in **`voice/app/session.py`** and **`voice/app/echo_command
   - For each frame: VAD (webrtcvad + RMS) → if speech, push to **UtteranceBuffer** (max ~15s); on **silence endpoint** (configurable silence frames) → **USER_SPEECH_END**.
   - On endpoint: enqueue **`_finalize_and_reply(my_gen)`** (unless too short).
 
-So **transcription is utterance-based**: each “chunk” is one VAD-ended utterance, then Whisper transcribes that chunk. There is **no** continuous streaming STT in the voice path (the backend has Kyutai streaming STT in `backend/app/transcribe/ws.py`, but that is for the **Live Transcription** feature, not for the voice assistant).
+So **transcription is utterance-based**: each “chunk” is one VAD-ended utterance, then the voice service STT transcribes that chunk. There is **no** shared continuous streaming STT socket with the Transcribe tab (the backend has Nemotron streaming STT in `backend/app/transcribe/ws.py` for **Transcribe**, not for the voice assistant binary protocol).
 
 ### 2.3 After STT: Intent, Wake Word, Listen-Only
 
@@ -160,7 +160,7 @@ The voice assistant uses this backend only when **use_knowledge_base** is True a
    In `session.py`, after handling a wake-word/trigger response (after BACK_TO_LISTENING), set `self.listen_only = True` again so the assistant keeps listening until “Stop listening.” (Optionally make this configurable.)
 
 3. **Streaming STT + live transcript buffer**  
-   For “real-time buffer accumulation” in the strict sense (streaming words as they’re recognized), the voice pipeline would need integration with a streaming STT (e.g. Kyutai in the backend or a similar stream in the voice service) and a **streaming** buffer that is scanned for the wake word as text arrives. Current design is simpler: wake word is checked once per **utterance** after Whisper returns.
+   For “real-time buffer accumulation” in the strict sense (streaming words as they’re recognized), the voice pipeline would need integration with a streaming STT path (e.g. token streaming from the voice service’s Nemotron adapter) and a **streaming** buffer that is scanned for the wake word as text arrives. Current design is simpler: wake word is checked once per **utterance** after STT returns.
 
 4. **Frontend**  
    ✅ Implemented: Control bar has “Start listening” / “Stop listening” button; `set_context` sends `listen_only`; `memory_event` (listening_mode_on/off) updates `state.listenOnly`; “Listening mode” hint is shown when active.

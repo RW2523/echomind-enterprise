@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { AppView, AppSettings, PersonaType } from './types';
+import { AppView, AppSettings, PersonaType, isConversationAppView } from './types';
 import { ICONS, COLORS } from './constants';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import KnowledgeChat from './components/KnowledgeChat';
 import LiveTranscription from './components/LiveTranscription';
 import VoiceConversation from './components/VoiceConversation';
+import AssistantMode from './components/AssistantMode';
+import SilentAssistantMode from './components/SilentAssistantMode';
 import Settings from './components/Settings';
 import { useVoiceConnection } from './hooks/useVoiceConnection';
 import { useLiveTranscription } from './hooks/useLiveTranscription';
@@ -75,9 +77,9 @@ const App: React.FC = () => {
   // Knowledge Chat lives in App so conversation persists when switching tabs.
   const knowledgeChat = useKnowledgeChat();
 
-  // Disconnect when user navigates away from Voice AI tab within the app
+  // Disconnect when user navigates away from Conversation mode (voice duplex tab)
   useEffect(() => {
-    if (activeView !== AppView.VOICE_CONVERSATION && voiceConnection.state.isConnected) {
+    if (!isConversationAppView(activeView) && voiceConnection.state.isConnected) {
       voiceConnection.disconnect();
     }
   }, [activeView, voiceConnection]);
@@ -87,7 +89,11 @@ const App: React.FC = () => {
       case AppView.KNOWLEDGE_CHAT:
         return <KnowledgeChat settings={settings} knowledgeChat={knowledgeChat} />;
       case AppView.TRANSCRIPTION:
-        return <LiveTranscription liveTranscription={liveTranscription} />;
+        return <LiveTranscription liveTranscription={liveTranscription} settings={settings} />;
+      case AppView.ASSISTANT:
+        return <AssistantMode liveTranscription={liveTranscription} settings={settings} />;
+      case AppView.SILENT_ASSISTANT:
+        return <SilentAssistantMode liveTranscription={liveTranscription} settings={settings} />;
       case AppView.VOICE_CONVERSATION:
         return (
           <VoiceConversation

@@ -26,6 +26,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdat
     micMuted,
     setMicMuted,
     connectionError,
+    interruptAssistantPlayback,
   } = voiceConnection;
 
   return (
@@ -57,6 +58,8 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdat
         connecting={connecting}
         micMuted={micMuted}
         onMicMutedToggle={() => setMicMuted(!micMuted)}
+        settings={settings}
+        onInterruptAssistant={interruptAssistantPlayback}
       />
     </div>
   );

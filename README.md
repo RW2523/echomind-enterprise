@@ -2,6 +2,8 @@
 
 This build removes ALL Gemini code and connects the UI to your backend APIs.
 
+**Product modes (Transcribe, Conversation, Assistant, Silent Assistant)** are defined in **[docs/ECHOMIND_FOUR_MODE_IMPLEMENTATION_PLAN.md](docs/ECHOMIND_FOUR_MODE_IMPLEMENTATION_PLAN.md)**.
+
 ## Services
 - Frontend: http://<DGX_IP>:3000 (HTTP) or https://<DGX_IP>:3443 (HTTPS)
 - Backend API: proxied under /api
@@ -56,7 +58,7 @@ Or use offline preparation (builds everything and populates Ollama once): `./scr
 
 ## Model setup (included in build/start)
 
-- **Kyutai STT** (Live Transcript): Pre-downloaded during backend Docker build. Runtime uses local cache only (`HF_HUB_OFFLINE=1`).
+- **Nemotron STT** (Transcribe Mode / `backend/app/transcribe/ws.py`): Pre-downloaded during backend Docker build (`ECHOMIND_ASR_MODEL_NAME`, default `nvidia/nemotron-speech-streaming-en-0.6b`). Runtime uses local cache only (`HF_HUB_OFFLINE=1`).
 - **TensorRT-LLM** (chat LLM): Service `trtllm` uses `nvcr.io/nvidia/tensorrt-llm/release:1.2.0rc6` (see `docker/trtllm/`). On first start, `hf download` fills `trtllm_hf_cache` (can take a long time; needs GPU). Override model with `TRTLLM_MODEL_HANDLE` in `.env`. For air-gapped use after prep, export/import includes `trtllm_hf_cache.tar`; set `TRTLLM_SKIP_DOWNLOAD=1` and `TRTLLM_HF_HUB_OFFLINE=1` on the `trtllm` service once the cache is complete.
 - **Ollama** (embeddings only): `nomic-embed-text` in `ollama_data`. Run `./scripts/prepare_offline.sh` once to pull it; chat does not use Ollama (`OLLAMA_EMBED_ONLY=1`).
 - **Whisper** (Voice): Base model pre-downloaded during voice Docker build.
@@ -77,12 +79,11 @@ The backend service already has GPU access in `docker-compose.yml`. No code chan
 
 **Note:** The PyPI `faiss-gpu` package (1.7.2) is archived and only provides wheels for Python ≤3.10. If the backend image uses Python 3.11+, the GPU build may fail; in that case keep `faiss-cpu` or use a conda base image with `faiss-gpu`.
 
-## Live Transcript (Kyutai STT)
+## Transcribe (Nemotron STT)
 
-The **Real-Time Transcription** tab uses **Kyutai STT** (`kyutai/stt-1b-en_fr`) for streaming speech-to-text. No Whisper—Kyutai only.
+The **Transcribe** tab uses **Nemotron streaming ASR** (NeMo, default `nvidia/nemotron-speech-streaming-en-0.6b`) via `backend/app/transcribe/ws.py`. Voice Conversation uses Nemotron STT inside the `voice` service (separate container).
 
-- **Sample rate:** 24 kHz (Kyutai)
-- **Works on:** x86_64 and ARM64 (e.g. DGX Spark)
-- **Deps:** `moshi`, `huggingface-hub` (included in `backend/requirements.txt`). On ARM64: `libopus-dev` required for sphn.
+- **Sample rate:** 16 kHz for live transcribe WebSocket (matches Nemotron pipeline in backend config).
+- **Works on:** x86_64 and ARM64 where the backend/voice images and GPU drivers support the stack.
 
-On first use, the model (~1B params) is downloaded from Hugging Face. Requires PyTorch (provided by the NVIDIA PyTorch base image). For DGX Spark (ARM64), ensure the backend Dockerfile uses an ARM64-compatible base image; the dependencies support both architectures.
+Weights are downloaded at image build (or first run when not skipped). Requires PyTorch / NeMo dependencies in the backend image.

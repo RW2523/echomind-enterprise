@@ -574,11 +574,12 @@ class OmniSessionA:
             # Fire persona-specific intro on the first set_context (deferred from start())
             if self._pending_intro:
                 self._pending_intro = False
-                intro_phrase = _get_persona_intro(self.persona)
-                phrase_speech = strip_markdown_for_speech(intro_phrase) if intro_phrase else ""
-                if phrase_speech:
-                    self._is_playing_intro = True
-                    asyncio.create_task(self._play_intro(intro_phrase))
+                if not bool(data.get("skip_intro")):
+                    intro_phrase = _get_persona_intro(self.persona)
+                    phrase_speech = strip_markdown_for_speech(intro_phrase) if intro_phrase else ""
+                    if phrase_speech:
+                        self._is_playing_intro = True
+                        asyncio.create_task(self._play_intro(intro_phrase))
             if piper_voice:
                 model_path = f"/voices/{piper_voice}.onnx"
                 if os.path.exists(model_path):
@@ -598,6 +599,21 @@ class OmniSessionA:
         if t == "clear_memory":
             self.history = []
             await self.send({"type": "context_ack", "system_prompt": self.system_prompt, "cleared": True})
+
+        if t == "speak_text_only":
+            # One-shot TTS for Assistant Mode (approved suggestion). No STT/LLM; does not auto-reply to mic.
+            text = strip_markdown_for_speech((data.get("text") or "").strip())
+            if not text:
+                return
+            await self._cancel_assistant_pipeline(keep_listening=True, send_cancel=True)
+            my_gen = self.generation_id
+            await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
+            await self.send({"type": "assistant_text", "generation_id": my_gen, "text": text})
+            await self._speak_phrase(my_gen, text)
+            await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
+
+        if t == "interrupt_assistant":
+            await self._cancel_assistant_pipeline(keep_listening=True, send_cancel=True)
 
     def _barge_in(self):
         self.generation_id += 1
@@ -761,6 +777,7 @@ class OmniSessionA:
         """Stream NDJSON from POST /api/chat/ask-voice-stream; phrase-commit + TTS like local LLM stream."""
         phrase_buf = ""
         assistant_text = ""
+        rag_citations: list = []
         last_emit = time.time()
         phrases_enqueued = 0
 
@@ -805,7 +822,13 @@ class OmniSessionA:
                             if tx:
                                 put(tx)
                         elif t == "done":
-                            put({"__done__": True, "answer": (obj.get("answer") or "")})
+                            put(
+                                {
+                                    "__done__": True,
+                                    "answer": (obj.get("answer") or ""),
+                                    "citations": obj.get("citations") if isinstance(obj.get("citations"), list) else [],
+                                }
+                            )
                         elif t == "error":
                             put({"__error__": str(obj.get("message") or "error")})
             except Exception as e:
@@ -837,6 +860,8 @@ class OmniSessionA:
                     server_ans = (item.get("answer") or "").strip()
                     if server_ans and len(server_ans) > len(assistant_text.strip()):
                         assistant_text = server_ans
+                    raw_cites = item.get("citations")
+                    rag_citations = raw_cites if isinstance(raw_cites, list) else []
                     continue
 
                 assistant_text += item
@@ -862,6 +887,15 @@ class OmniSessionA:
             _log_llm_response(user_text, final)
             if final:
                 await self.send({"type": "assistant_text", "generation_id": my_gen, "text": final})
+            if rag_citations:
+                await self.send(
+                    {
+                        "type": "assistant_citations",
+                        "message_id": str(my_gen),
+                        "generation_id": my_gen,
+                        "citations": rag_citations,
+                    }
+                )
             self.history.append({"role": "user", "content": user_text})
             self.history.append({"role": "assistant", "content": final})
             self._trim_history()
@@ -898,13 +932,24 @@ class OmniSessionA:
                     headers={"Content-Type": "application/json"},
                 )
                 r.raise_for_status()
-                answer = (r.json().get("answer") or "").strip()
+                body = r.json()
+                answer = (body.get("answer") or "").strip()
+                fallback_cites = body.get("citations") if isinstance(body.get("citations"), list) else []
                 if my_gen != self.generation_id:
                     return
                 reply_clean = strip_markdown_for_speech(answer)
                 _log_llm_response(user_text, reply_clean or answer)
                 if reply_clean:
                     await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
+                if fallback_cites:
+                    await self.send(
+                        {
+                            "type": "assistant_citations",
+                            "message_id": str(my_gen),
+                            "generation_id": my_gen,
+                            "citations": fallback_cites,
+                        }
+                    )
                 await self._speak_phrase(my_gen, answer)
                 self.history.append({"role": "user", "content": user_text})
                 self.history.append({"role": "assistant", "content": reply_clean or answer})

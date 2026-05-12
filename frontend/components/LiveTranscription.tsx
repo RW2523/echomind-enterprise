@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
-import { ICONS } from '../constants';
-import { defaultTranscriptName } from '../services/backend';
-import type { UseLiveTranscriptionReturn } from '../hooks/useLiveTranscription';
-import WordCloudModal from './WordCloudModal';
+import React, { useMemo, useState } from "react";
+import { ICONS } from "../constants";
+import { defaultTranscriptName } from "../services/backend";
+import type { UseLiveTranscriptionReturn } from "../hooks/useLiveTranscription";
+import type { AppSettings } from "../types";
+import ProductModeHeader from "./ProductModeHeader";
+import WordCloudModal from "./WordCloudModal";
+
+function formatSegmentTime(ts: number): string {
+  try {
+    return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch {
+    return "";
+  }
+}
 
 function formatSessionDateTime(d: Date): string {
   const y = d.getFullYear();
@@ -15,9 +25,10 @@ function formatSessionDateTime(d: Date): string {
 
 interface LiveTranscriptionProps {
   liveTranscription: UseLiveTranscriptionReturn;
+  settings?: AppSettings;
 }
 
-const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription }) => {
+const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription, settings }) => {
   const [showWordCloud, setShowWordCloud] = useState(false);
   const {
     fullTranscript,
@@ -48,6 +59,7 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
     setModalLocation,
     setShowStartModal,
     applyDefault,
+    transcriptSegments,
   } = liveTranscription;
 
   const onStartFromModal = () => {
@@ -55,6 +67,86 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
     const location = (modalLocation || '').trim() || 'default';
     startSession(name, location);
   };
+
+  const { primaryStatus, statusTone, extras } = useMemo(() => {
+    const extrasLocal: { label: string; tone?: "muted" }[] = [];
+    if (listening && micMuted) extrasLocal.push({ label: "Muted", tone: "muted" });
+    if (wsStatus === "connecting" || wsStatus === "loading") {
+      return { primaryStatus: "Connecting…", statusTone: "thinking" as const, extras: extrasLocal };
+    }
+    if (!listening) {
+      return { primaryStatus: "Stopped", statusTone: "neutral" as const, extras: extrasLocal };
+    }
+    if (partial.trim().length > 0) {
+      return { primaryStatus: "Transcribing", statusTone: "transcribing" as const, extras: extrasLocal };
+    }
+    return { primaryStatus: "Listening", statusTone: "listening" as const, extras: extrasLocal };
+  }, [listening, micMuted, partial, wsStatus]);
+
+  const rightControls = (
+    <>
+      <button
+        type="button"
+        onClick={() => listening && setMicMuted(!micMuted)}
+        disabled={!listening}
+        className={`relative flex items-center justify-center w-10 h-10 rounded-xl touch-manipulation transition-colors ${
+          !listening ? "bg-white/5 cursor-default" : micMuted ? "bg-red-500/20 hover:bg-red-500/30" : "bg-emerald-500/20 hover:bg-emerald-500/30"
+        }`}
+        aria-label={listening ? (micMuted ? "Unmute mic" : "Mute mic") : "Mic"}
+        title={listening ? (micMuted ? "Unmute" : "Mute") : undefined}
+      >
+        <ICONS.Mic className={`w-5 h-5 ${!listening ? "text-slate-400" : micMuted ? "text-red-400" : "text-emerald-400"}`} />
+        {listening && !micMuted && (
+          <span className="absolute inset-0 rounded-xl bg-emerald-400/20 animate-ping" style={{ animationDuration: "1.5s" }} />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={() => setShowWordCloud(true)}
+        className="shrink-0 p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+        aria-label="Word cloud"
+        title="Word cloud"
+      >
+        <ICONS.WordCloud className="w-5 h-5" />
+      </button>
+      <button
+        type="button"
+        onClick={clearAndReset}
+        className="shrink-0 p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+        aria-label="Clear transcript and start new session"
+        title="Clear"
+      >
+        <ICONS.Trash className="w-5 h-5" />
+      </button>
+      {wsStatus === "connecting" && <span className="text-xs text-slate-400">Connecting…</span>}
+      {wsStatus === "loading" && (
+        <span className="text-xs text-slate-400 max-w-[140px] sm:max-w-none">Loading STT…</span>
+      )}
+      {wsError && (
+        <span className="text-xs text-red-400 max-w-[120px] sm:max-w-[200px] truncate" title={wsError}>
+          {wsError}
+        </span>
+      )}
+      {!listening ? (
+        <button
+          type="button"
+          onClick={openStartModal}
+          disabled={wsStatus === "connecting" || wsStatus === "loading"}
+          className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-50 transition-colors touch-manipulation"
+        >
+          Start
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleStopAndExtractTags}
+          className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors touch-manipulation"
+        >
+          Stop
+        </button>
+      )}
+    </>
+  );
 
   return (
     <div className="h-full min-h-0 flex flex-col rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
@@ -99,74 +191,19 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
         </div>
       )}
 
-      <div
-        className={`shrink-0 flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 border-b transition-all duration-300 ${
-          listening ? 'border-cyan-500/30 bg-cyan-500/5' : 'border-white/10'
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => listening && setMicMuted(!micMuted)}
-            disabled={!listening}
-            className={`relative flex items-center justify-center w-10 h-10 rounded-xl touch-manipulation transition-colors ${
-              !listening ? 'bg-white/5 cursor-default' : micMuted ? 'bg-red-500/20 hover:bg-red-500/30' : 'bg-emerald-500/20 hover:bg-emerald-500/30'
-            }`}
-            aria-label={listening ? (micMuted ? 'Unmute mic' : 'Mute mic') : 'Mic'}
-            title={listening ? (micMuted ? 'Unmute' : 'Mute') : undefined}
-          >
-            <ICONS.Mic className={`w-5 h-5 ${!listening ? 'text-slate-400' : micMuted ? 'text-red-400' : 'text-emerald-400'}`} />
-            {listening && !micMuted && (
-              <span className="absolute inset-0 rounded-xl bg-emerald-400/20 animate-ping" style={{ animationDuration: '1.5s' }} />
-            )}
-          </button>
-          <div>
-            <div className="font-semibold">Real-Time Transcription</div>
-            <div className="flex items-center gap-2 mt-0.5">
-              {listening ? (
-                <>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 text-[10px] font-medium text-red-400 uppercase tracking-wider">Live</span>
-                  <span className="flex items-center gap-1">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <span key={i} className="w-1 rounded-full bg-emerald-400/80 animate-listening-bar" style={{ height: 8, animationDelay: `${i * 0.12}s` }} />
-                    ))}
-                  </span>
-                  <span className="text-[10px] text-slate-400/90">{micMuted ? 'Muted' : 'Listening…'}</span>
-                </>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/10 px-2.5 py-0.5 text-[10px] font-medium text-slate-400 uppercase tracking-wider">Stopped</span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="ml-auto flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setShowWordCloud(true)}
-            className="shrink-0 p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Word cloud"
-            title="Word cloud"
-          >
-            <ICONS.WordCloud className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            onClick={clearAndReset}
-            className="shrink-0 p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Clear transcript and start new session"
-            title="Clear"
-          >
-            <ICONS.Trash className="w-5 h-5" />
-          </button>
-          {wsStatus === 'connecting' && <span className="text-xs text-slate-400">Connecting…</span>}
-          {wsStatus === 'loading' && <span className="text-xs text-slate-400">Loading Kyutai STT… (first run may take 2–5 min)</span>}
-          {wsError && <span className="text-xs text-red-400 max-w-[120px] sm:max-w-[200px] truncate" title={wsError}>{wsError}</span>}
-          {!listening ? (
-            <button type="button" onClick={openStartModal} disabled={wsStatus === 'connecting' || wsStatus === 'loading'} className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-50 transition-colors touch-manipulation">Start</button>
-          ) : (
-            <button type="button" onClick={handleStopAndExtractTags} className="rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors touch-manipulation">Stop</button>
-          )}
-        </div>
+      <div className={`shrink-0 border-b transition-all duration-300 ${listening ? "border-cyan-500/25 bg-cyan-500/[0.04]" : "border-white/10"}`}>
+        <ProductModeHeader
+          title="Transcribe"
+          tagline="Listen and write everything down."
+          status={primaryStatus}
+          statusTone={statusTone}
+          extraStatuses={extras}
+          sessionName={sessionName?.trim() || null}
+          showKnowledge
+          knowledgeEnabled={!!settings?.voiceUseKnowledgeBase}
+          outputHint="No speech — text-only transcript. Suggestions are not generated in this mode."
+          rightSlot={<div className="flex flex-wrap items-center gap-2">{rightControls}</div>}
+        />
       </div>
 
       {/* Editable bar: name, location, date/time, custom tags - wraps on mobile */}
@@ -201,13 +238,33 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
         </div>
       )}
 
-      <div className="flex-1 min-h-0 p-4 sm:p-5 overflow-auto">
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4 min-h-[280px] flex flex-col">
+      <div className="flex-1 min-h-0 p-4 sm:p-5 overflow-auto flex flex-col gap-4">
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-4 flex flex-col flex-1 min-h-0">
           <div className="text-xs font-semibold opacity-70 mb-3 shrink-0">Live transcript (auto-saved every 1 min to transcripts table + RAG; name, location &amp; time used for chat queries)</div>
           <div className="flex-1 min-h-0 text-sm whitespace-pre-wrap opacity-90 overflow-auto">
-            {[fullTranscript, partial].filter(Boolean).join(' ') || '—'}
+            {[fullTranscript, partial].filter(Boolean).join(" ").trim() ? (
+              [fullTranscript, partial].filter(Boolean).join(" ")
+            ) : (
+              <span className="text-slate-500 italic">Start speaking to see live transcript.</span>
+            )}
           </div>
         </div>
+        {transcriptSegments.length > 0 && (
+          <div className="rounded-2xl border border-white/10 bg-black/15 p-4 shrink-0 max-h-[40vh] flex flex-col min-h-0">
+            <div className="text-xs font-semibold text-slate-400 mb-2 shrink-0">Committed segments ({transcriptSegments.length})</div>
+            <ul className="space-y-2 overflow-y-auto text-sm min-h-0">
+              {transcriptSegments.map((seg) => (
+                <li key={seg.paragraphId} className="border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                  <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">
+                    {seg.paragraphId}
+                    {seg.receivedAt ? <span className="normal-case text-slate-500"> · {formatSegmentTime(seg.receivedAt)}</span> : null}
+                  </div>
+                  <div className="text-slate-200 whitespace-pre-wrap">{seg.text}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {showWordCloud && (

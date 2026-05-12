@@ -7,6 +7,8 @@ export interface ControlBarProps {
   connectionError: string | null;
   micMuted: boolean;
   assistantOrb: string;
+  /** True while assistant reply text is streaming (before final). */
+  hasPendingAssistantText?: boolean;
   /** Continuous listening: only respond after wake word "EchoMind" */
   listenOnly?: boolean;
   onListenOnlyToggle?: () => void;
@@ -14,6 +16,8 @@ export interface ControlBarProps {
   onDisconnect: () => void;
   onMicMutedToggle: () => void;
   onClearMemory: () => void;
+  /** Stop current assistant speech / streaming audio (local playback). */
+  onInterrupt?: () => void;
   className?: string;
 }
 
@@ -23,14 +27,20 @@ export const ControlBar: React.FC<ControlBarProps> = ({
   connectionError,
   micMuted,
   assistantOrb,
+  hasPendingAssistantText = false,
   listenOnly = false,
   onListenOnlyToggle,
   onConnect,
   onDisconnect,
   onMicMutedToggle,
   onClearMemory,
+  onInterrupt,
   className = "",
 }) => {
+  const canInterrupt =
+    !!onInterrupt &&
+    isConnected &&
+    (assistantOrb === "speaking" || hasPendingAssistantText);
   return (
     <div
       className={`shrink-0 border-t border-white/[0.04] px-4 py-3 flex flex-col items-center gap-3 ${className}`}
@@ -62,6 +72,22 @@ export const ControlBar: React.FC<ControlBarProps> = ({
           </button>
         ) : (
           <>
+            {onListenOnlyToggle && (
+              <button
+                type="button"
+                onClick={onListenOnlyToggle}
+                aria-pressed={listenOnly}
+                title={listenOnly ? "Listen only is on — assistant waits for wake phrase" : "Listen only is off — assistant responds after each utterance"}
+                className={`rounded-2xl px-4 py-3.5 min-h-[48px] text-[13px] font-semibold border transition-all duration-300 touch-manipulation active:scale-[0.97] ${
+                  listenOnly
+                    ? "bg-amber-500/20 text-amber-200 border-amber-500/40 hover:bg-amber-500/30"
+                    : "bg-white/[0.06] text-slate-300 border-white/10 hover:bg-white/10 hover:text-white"
+                }`}
+                style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)" }}
+              >
+                Listen only: {listenOnly ? "ON" : "OFF"}
+              </button>
+            )}
             <button
               type="button"
               onClick={onMicMutedToggle}
@@ -85,6 +111,17 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                 )}
               </span>
             </button>
+            {canInterrupt ? (
+              <button
+                type="button"
+                onClick={onInterrupt}
+                title="Interrupt assistant speech"
+                className="rounded-2xl px-4 py-3.5 min-h-[48px] text-[13px] font-semibold text-amber-200/95 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 active:scale-[0.97] transition-all duration-300 touch-manipulation"
+                style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)" }}
+              >
+                Interrupt
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={onClearMemory}

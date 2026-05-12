@@ -10,10 +10,39 @@ from typing import List, Optional
 
 from ..core.config import settings
 
-# Commit when recent_buffer ends with strong punctuation
-PUNCT_END = re.compile(r".*[.?!]\s*$")
 # No space before punctuation
 NO_SPACE_BEFORE = re.compile(r"\s+([.,?!:;)])\s*")
+
+_STUTTER_PERIOD = re.compile(r"(?:\s*\.){2,}")
+
+
+def _period_clause_substantial(body: str, min_words: int, min_chars: int) -> bool:
+    """True if text before a terminal period looks like a sentence, not a one-token interim."""
+    body = body.strip()
+    if not body:
+        return False
+    words = [w for w in body.split() if w]
+    if len(words) >= min_words:
+        return True
+    if len(body) >= min_chars:
+        return True
+    return False
+
+
+def ends_with_commit_trigger(text: str, min_words: int, min_chars: int) -> bool:
+    """
+    ? and ! always trigger commit; '.' only when enough words/chars precede it so we do not
+    commit on every Nemotron-style micro-segment ending with a period.
+    """
+    s = text.rstrip()
+    if not s:
+        return False
+    last = s[-1]
+    if last in "!?":
+        return True
+    if last != ".":
+        return False
+    return _period_clause_substantial(s[:-1], min_words, min_chars)
 
 
 @dataclass
@@ -34,6 +63,8 @@ def _normalize_whitespace(text: str) -> str:
         return ""
     t = re.sub(r"\s+", " ", text).strip()
     t = NO_SPACE_BEFORE.sub(r"\1", t)
+    t = re.sub(r"\.{2,}", ".", t)
+    t = _STUTTER_PERIOD.sub(". ", t)
     return t
 
 
@@ -44,6 +75,9 @@ def _normalize_piece(piece: str) -> str:
     # Collapse internal multiple spaces, fix no-space-before-punct
     t = re.sub(r"\s+", " ", piece)
     t = NO_SPACE_BEFORE.sub(r"\1", t)
+    # Streaming ASR sometimes stacks ". ." or ".." across hypothesis updates
+    t = re.sub(r"\.{2,}", ".", t)
+    t = _STUTTER_PERIOD.sub(". ", t)
     # Strip trailing but preserve leading (word boundary)
     return t.rstrip() if t.startswith(" ") else t.strip()
 
@@ -86,6 +120,8 @@ class SessionState:
         self.max_paragraph_chars = settings.TRANSCRIPT_MAX_PARAGRAPH_CHARS
         self.buffer_max_chars = settings.TRANSCRIPT_RECENT_BUFFER_MAX_CHARS
         self.overlap_k = settings.TRANSCRIPT_OVERLAP_K
+        self.commit_period_min_words = settings.TRANSCRIPT_COMMIT_PERIOD_MIN_WORDS
+        self.commit_period_min_chars = settings.TRANSCRIPT_COMMIT_PERIOD_MIN_CHARS
 
     def _next_paragraph_id(self) -> str:
         self._paragraph_counter += 1
@@ -137,12 +173,12 @@ class SessionState:
     def get_display_text(self) -> str:
         """Full text to send to client (raw + recent buffer)."""
         if not self.recent_buffer:
-            return self.raw_text.strip()
+            return _normalize_whitespace(self.raw_text)
         r = self.raw_text.strip()
         if r:
             sep = " " if not r.endswith(" ") and not self.recent_buffer.startswith(" ") else ""
-            return r + sep + self.recent_buffer
-        return self.recent_buffer
+            return _normalize_whitespace(r + sep + self.recent_buffer)
+        return _normalize_whitespace(self.recent_buffer)
 
     def maybe_commit(self, ts_ms: int) -> bool:
         """
@@ -154,7 +190,9 @@ class SessionState:
         now = ts_ms
         silence_gap = (now - self.last_piece_ts_ms) if self.last_piece_ts_ms is not None else 0
         should_commit = (
-            bool(PUNCT_END.search(self.recent_buffer))
+            ends_with_commit_trigger(
+                self.recent_buffer, self.commit_period_min_words, self.commit_period_min_chars
+            )
             or silence_gap >= self.silence_commit_ms
             or len(self.recent_buffer) >= self.buffer_max_chars
         )
@@ -182,7 +220,9 @@ class SessionState:
             self._current_paragraph_start_ts = ts_ms / 1000.0
         now = ts_ms
         silence_gap = (now - self.last_piece_ts_ms) if self.last_piece_ts_ms is not None else 0
-        ends_strong = bool(PUNCT_END.search(current_full))
+        ends_strong = ends_with_commit_trigger(
+            current_full, self.commit_period_min_words, self.commit_period_min_chars
+        )
         over_length = len(segment_so_far) >= self.max_paragraph_chars
         if (ends_strong and silence_gap >= self.paragraph_silence_ms) or over_length:
             return self._close_current_paragraph(now / 1000.0)

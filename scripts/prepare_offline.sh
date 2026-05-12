@@ -2,7 +2,7 @@
 # One-time online preparation for fully offline operation.
 # Run this once with internet; after that, docker compose up runs without network.
 #
-# 1. Builds all images (base images, apt, pip, npm, Kyutai, Whisper, Piper).
+# 1. Builds all images (base images, apt, pip, npm, Nemotron ASR / backend STT, Whisper, Piper).
 # 2. Starts Ollama with OLLAMA_OFFLINE=0 to pull LLM + embed models into the volume.
 # 3. Stops Ollama so the volume persists.
 # 4. Normal runs use OLLAMA_OFFLINE=1 and never pull.

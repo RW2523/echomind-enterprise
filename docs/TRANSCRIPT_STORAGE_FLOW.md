@@ -28,14 +28,14 @@ This doc explains how live transcription content gets into storage: **one flow**
    - Sends JSON: `{ type: "start", auto_store: true, sample_rate: 24000, name: "...", location: "..." }` (sample_rate from backend ready).
 
 2. **Backend** (`transcribe/ws.py`):  
-   - Loads Kyutai STT, sends `{ type: "ready", sample_rate: 24000 }`. On `type: "start"`: stores **name**, **location**, **started_at_iso** (now), resets **transcript_id**; creates/resets session (`SessionState`), starts **periodic auto-store task**.  
+   - Loads Nemotron STT, sends `{ type: "ready", sample_rate: 16000 }` (see `NEMOTRON_SAMPLE_RATE` in backend). On `type: "start"`: stores **name**, **location**, **started_at_iso** (now), resets **transcript_id**; creates/resets session (`SessionState`), starts **periodic auto-store task**.  
    - Sends `{ type: "ready", session_id, sample_rate }`.
 
-3. **Frontend**: starts sending binary PCM16 (or JSON `{ type: "audio", pcm16_b64 }`) at 24 kHz (Kyutai).
+3. **Frontend**: starts sending JSON `{ type: "audio", pcm16_b64 }` at the negotiated `sample_rate` (typically 16 kHz for Nemotron).
 
 ### 2.2 Audio → text (in memory)
 
-- **Backend** uses **Kyutai STT** (frame-by-frame); emits text pieces into **SessionState** (paragraphs/segments).  
+- **Backend** uses **Nemotron streaming STT**; emits text pieces into **SessionState** (paragraphs/segments).  
 - No DB write yet; this is all in-memory.  
 - Client gets `partial` / `segment` / `final` messages with the live text.
 
@@ -149,7 +149,7 @@ So: **1‑min (and on-stop) auto-store** = **transcripts** table (one row per se
 [Frontend: Start with name, location] ──► WebSocket start (auto_store: true, name, location)
        │
        ▼
-[Audio] ──► Kyutai STT ──► SessionState (in-memory transcript)
+[Audio] ──► Nemotron STT ──► SessionState (in-memory transcript)
        │
        ├── Every AUTO_STORE_INTERVAL_SEC (e.g. 60 s):
        │     new text ──► create_transcript_for_session (if first) OR append_transcript_chunk

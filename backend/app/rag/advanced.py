@@ -1345,6 +1345,37 @@ async def retrieve_single_query(question: str, k: int, context_window: str = "al
     return hits[:k]
 
 
+async def retrieve_for_kb_probe(
+    question: str,
+    k: int = 8,
+    context_window: str = "all",
+    source_options: Optional[Dict[str, bool]] = None,
+) -> Tuple[List[Dict], str]:
+    """
+    KB retrieval for Assistant / Silent Assistant: matches the chat RAG retrieval path via
+    ``retrieve_semantic_first`` (hybrid dense+sparse, query-classifier RRF weights, section
+    restriction, keyword grep fallback, transcript vs. document routing, relevance threshold).
+
+    If no chunk clears that gate, falls back to ``retrieve_single_query`` (unified FAISS search)
+    so probes can still surface weaker citations with appropriately low confidence.
+    """
+    q = (question or "").strip()
+    if not q:
+        return [], "empty"
+    kk = max(int(k), 6)
+    _src, hits = await retrieve_semantic_first(
+        q, k=kk, context_window=context_window or "all", source_options=source_options
+    )
+    if hits:
+        logger.debug(
+            "KB probe semantic_first: %d hits (context_window=%s)", len(hits), context_window
+        )
+        return hits[: int(k)], "semantic_first"
+    fb = await retrieve_single_query(q, k=int(k), context_window=context_window)
+    logger.debug("KB probe fallback search: %d hits after semantic_first empty", len(fb))
+    return fb, "fallback"
+
+
 def _default_source_options() -> Dict[str, bool]:
     return {"transcript": True, "document": True, "general": True}
 

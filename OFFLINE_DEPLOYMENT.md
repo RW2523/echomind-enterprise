@@ -14,7 +14,7 @@ This document describes the **offline-first** architecture: one-time online prep
 | apt packages | Backend, Voice, Ollama | ffmpeg, libopus-dev, wget, curl, etc. |
 | pip packages | Backend, Voice | requirements.txt, moshi, whisper, piper-tts |
 | npm packages | Frontend | package.json (npm ci) |
-| Kyutai STT | Backend Dockerfile | `snapshot_download('kyutai/stt-1b-en_fr')` |
+| Nemotron STT (live transcribe) | Backend Dockerfile | `snapshot_download` for `ECHOMIND_ASR_MODEL_NAME` (default `nvidia/nemotron-speech-streaming-en-0.6b`) |
 | Piper TTS | Voice Dockerfile | wget from Hugging Face for en_US-lessac-medium |
 | Whisper | Voice Dockerfile | `whisper.load_model('base')` |
 | Ollama embed model | One-time prepare step | `ollama pull` for `nomic-embed-text` (stored in `ollama_data`) |
@@ -24,7 +24,7 @@ This document describes the **offline-first** architecture: one-time online prep
 
 - **Ollama**: With `OLLAMA_OFFLINE=1`, entrypoint only checks that required models exist in the volume; never runs `ollama pull`. With `OLLAMA_EMBED_ONLY=1`, only the embedding model is required. If missing, exits with a clear error.
 - **TensorRT-LLM**: With `TRTLLM_SKIP_DOWNLOAD=1` and `HF_HUB_OFFLINE=1` on the `trtllm` service, no Hugging Face download at startup; the `trtllm_hf_cache` volume must already contain the model (populate online once or import `trtllm_hf_cache.tar`).
-- **Backend**: `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`; Kyutai loads from local Hugging Face cache only (`local_files_only=True`). No `snapshot_download` over the network.
+- **Backend**: `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`; Nemotron ASR weights load from local Hugging Face cache only when offline. No `snapshot_download` over the network at runtime.
 - **Voice**: Piper and Whisper use assets baked in the image (or mounted `./voice/voices`). `VOICE_OFFLINE=1` disables the `/voices/download` API so no runtime Piper download from Hugging Face.
 - **Frontend**: Static build in image; nginx serves from disk. CSS (Tailwind) and fonts are bundled at build time; no CDN or Google Fonts at runtime. Favicon is a data URI (no external request).
 
@@ -34,7 +34,7 @@ This document describes the **offline-first** architecture: one-time online prep
 |-------|----------|---------------------------|
 | Ollama embeddings | Docker volume `ollama_data` | Yes (volume) |
 | TensorRT-LLM HF cache | Docker volume `trtllm_hf_cache` | Yes (volume) |
-| Kyutai STT | Backend image (HF cache under `/root/.cache/huggingface`) | Yes (image) |
+| Nemotron STT | Backend image (HF cache under `/root/.cache/huggingface`) | Yes (image) |
 | Piper default voice | Voice image `/voices` (or host `./voice/voices` if mounted) | Yes (image or host) |
 | Whisper base | Voice image (whisper cache) | Yes (image) |
 | Frontend CSS/fonts | Frontend image (Tailwind bundled; system fonts) | Yes (image) |
@@ -51,7 +51,7 @@ Run **once** on a machine with internet:
 
 This will:
 
-1. Build all images (backend, voice, frontend, ollama, trtllm) — downloads base images, apt, pip, npm, Kyutai, Piper, Whisper.
+1. Build all images (backend, voice, frontend, ollama, trtllm) — downloads base images, apt, pip, npm, Nemotron ASR (backend), Piper, Whisper.
 2. Start Ollama with `OLLAMA_OFFLINE=0` so it pulls `nomic-embed-text` into the `ollama_data` volume (chat LLM is TensorRT-LLM, not Ollama).
 3. Wait until the embed model is present.
 4. Stop Ollama. The volume keeps the model.
@@ -122,7 +122,7 @@ Check that the setup is offline-ready (no runtime pull/download):
 ./scripts/verify_offline_readiness.sh
 ```
 
-Checks include: Ollama entrypoint guarded by `OLLAMA_OFFLINE`, compose sets `OLLAMA_OFFLINE=1` and `HF_HUB_OFFLINE=1`, backend Dockerfile pre-downloads Kyutai, voice Dockerfile pre-downloads Piper/Whisper, and Ollama volume exists after prepare. TensorRT-LLM offline mode is opt-in via `TRTLLM_SKIP_DOWNLOAD` / `TRTLLM_HF_HUB_OFFLINE` on the `trtllm` service.
+Checks include: Ollama entrypoint guarded by `OLLAMA_OFFLINE`, compose sets `OLLAMA_OFFLINE=1` and `HF_HUB_OFFLINE=1`, backend Dockerfile pre-downloads Nemotron ASR weights, voice Dockerfile pre-downloads Piper/Whisper, and Ollama volume exists after prepare. TensorRT-LLM offline mode is opt-in via `TRTLLM_SKIP_DOWNLOAD` / `TRTLLM_HF_HUB_OFFLINE` on the `trtllm` service.
 
 ---
 
@@ -141,7 +141,7 @@ Checks include: Ollama entrypoint guarded by `OLLAMA_OFFLINE`, compose sets `OLL
 - **First start slow**: engine build can exceed the healthcheck `start_period`; watch `docker compose logs -f trtllm`.
 - **Offline without cache**: populate `trtllm_hf_cache` online once, then set `TRTLLM_SKIP_DOWNLOAD=1` and `TRTLLM_HF_HUB_OFFLINE=1` on the `trtllm` service, or restore `trtllm_hf_cache.tar` from an export bundle.
 
-### "Kyutai STT model not found in local cache"
+### "Nemotron STT" / ASR model not found in local cache
 
 - Backend was built with `SKIP_MODEL_DOWNLOAD=1` or the Hugging Face cache is missing.
 - **Fix**: Rebuild backend without `SKIP_MODEL_DOWNLOAD`: remove or set to `0` in docker-compose build args, then `docker compose build backend`.
@@ -162,7 +162,7 @@ Checks include: Ollama entrypoint guarded by `OLLAMA_OFFLINE`, compose sets `OLL
 ## Summary of Changes
 
 - **Ollama**: Entrypoint checks for required models; if missing and `OLLAMA_OFFLINE=1`, exits with an error. Pull only when `OLLAMA_OFFLINE=0` (prepare step).
-- **Backend**: `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`; Kyutai uses `snapshot_download(..., local_files_only=True)` when offline; clear error if model missing.
+- **Backend**: `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`; Nemotron ASR uses the Hugging Face cache offline when weights were baked in at build; clear error if model missing.
 - **Voice**: `VOICE_OFFLINE=1` disables the Piper download API; Piper/Whisper use only image or mounted assets.
 - **Compose**: `trtllm` service (TensorRT-LLM) with persistent `trtllm_hf_cache`; `OLLAMA_OFFLINE=1` and `OLLAMA_EMBED_ONLY=1` for Ollama; backend/voice point `LLM_*` at `trtllm:8355`.
 - **Scripts**: `prepare_offline.sh`, `verify_offline_readiness.sh`, `export_offline_bundle.sh`, `import_offline_bundle.sh` for one-time prep, verification, and air-gapped move (bundle includes TRT image + HF cache tar when present).

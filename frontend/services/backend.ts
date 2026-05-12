@@ -1,3 +1,5 @@
+import type { AnalyzeTranscriptResponse, CorrectionFinding, Suggestion } from "../types";
+
 export const API_BASE = (import.meta as any).env?.VITE_API_BASE || "";
 
 /** docs */
@@ -344,6 +346,151 @@ export function transcribeWsUrl(): string {
 export function voiceWsUrl(): string {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   return `${proto}://${location.host}/voice/ws`;
+}
+
+/** List Assistant Mode suggestions for a session (`status=all` returns every status). */
+export async function listAssistantSuggestions(sessionId: string, status: string = "pending"): Promise<Suggestion[]> {
+  const q = status === "all" ? "status=all" : `status=${encodeURIComponent(status)}`;
+  const r = await fetch(`${API_BASE}/api/assistant/sessions/${encodeURIComponent(sessionId)}/suggestions?${q}`);
+  if (!r.ok) throw new Error(`assistant suggestions list failed: ${r.status}`);
+  return await r.json();
+}
+
+/** Unified KB-only transcript analysis (Assistant + Silent Assistant). Persists qualifying rows when persist_results is true. */
+export async function analyzeAssistantTranscript(body: {
+  session_id: string;
+  mode: "assistant" | "silent_assistant";
+  transcript_text: string;
+  full_transcript?: string | null;
+  transcript_offset?: number;
+  since_last_analysis?: boolean;
+  knowledge_base_enabled?: boolean;
+  context_window?: string;
+  persist_results?: boolean;
+}): Promise<AnalyzeTranscriptResponse> {
+  const r = await fetch(`${API_BASE}/api/assistant/analyze-transcript`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id: body.session_id,
+      mode: body.mode,
+      transcript_text: body.transcript_text,
+      full_transcript: body.full_transcript ?? undefined,
+      transcript_offset: body.transcript_offset ?? 0,
+      since_last_analysis: body.since_last_analysis ?? true,
+      knowledge_base_enabled: body.knowledge_base_enabled ?? true,
+      context_window: body.context_window ?? "all",
+      persist_results: body.persist_results ?? true,
+    }),
+  });
+  if (!r.ok) throw new Error(`analyze-transcript failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function generateAssistantSuggestions(
+  sessionId: string,
+  recentTranscript: string,
+  useKnowledgeBase: boolean,
+  contextWindow: string = "all"
+): Promise<{ suggestions: Suggestion[]; skipped_reason?: string | null }> {
+  const r = await fetch(`${API_BASE}/api/assistant/sessions/${encodeURIComponent(sessionId)}/suggestions/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      recent_transcript: recentTranscript,
+      use_knowledge_base: useKnowledgeBase,
+      context_window: contextWindow,
+    }),
+  });
+  if (!r.ok) throw new Error(`assistant suggestions generate failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function approveAssistantSuggestion(suggestionId: string): Promise<Suggestion> {
+  const r = await fetch(`${API_BASE}/api/assistant/suggestions/${encodeURIComponent(suggestionId)}/approve`, {
+    method: "POST",
+  });
+  if (!r.ok) throw new Error(`assistant approve failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function dismissAssistantSuggestion(suggestionId: string): Promise<Suggestion> {
+  const r = await fetch(`${API_BASE}/api/assistant/suggestions/${encodeURIComponent(suggestionId)}/dismiss`, {
+    method: "POST",
+  });
+  if (!r.ok) throw new Error(`assistant dismiss failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function ignoreAssistantSuggestion(suggestionId: string): Promise<Suggestion> {
+  const r = await fetch(`${API_BASE}/api/assistant/suggestions/${encodeURIComponent(suggestionId)}/ignore`, {
+    method: "POST",
+  });
+  if (!r.ok) throw new Error(`assistant ignore failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function markAssistantSuggestionSpoken(suggestionId: string): Promise<Suggestion> {
+  const r = await fetch(`${API_BASE}/api/assistant/suggestions/${encodeURIComponent(suggestionId)}/spoken`, {
+    method: "POST",
+  });
+  if (!r.ok) throw new Error(`assistant spoken failed: ${r.status}`);
+  return await r.json();
+}
+
+/** Silent Assistant: list correction findings (`user_action=all` for full history). */
+export async function listSilentFindings(sessionId: string, userAction: string = "pending"): Promise<CorrectionFinding[]> {
+  const q = userAction === "all" ? "user_action=all" : `user_action=${encodeURIComponent(userAction)}`;
+  const r = await fetch(`${API_BASE}/api/silent-assistant/sessions/${encodeURIComponent(sessionId)}/findings?${q}`);
+  if (!r.ok) throw new Error(`silent findings list failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function analyzeSilentFinding(
+  sessionId: string,
+  body: {
+    text: string;
+    transcript_segment_id?: string | null;
+    turn_id?: string | null;
+    use_knowledge_base?: boolean;
+    active_mode?: string;
+    context_window?: string;
+  }
+): Promise<{ findings: CorrectionFinding[]; skipped_reason?: string | null }> {
+  const r = await fetch(`${API_BASE}/api/silent-assistant/sessions/${encodeURIComponent(sessionId)}/findings/analyze`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: body.text,
+      transcript_segment_id: body.transcript_segment_id ?? undefined,
+      turn_id: body.turn_id ?? undefined,
+      use_knowledge_base: body.use_knowledge_base ?? false,
+      active_mode: body.active_mode ?? "SILENT_ASSISTANT",
+      context_window: body.context_window ?? "all",
+    }),
+  });
+  if (!r.ok) throw new Error(`silent analyze failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function dismissSilentFinding(findingId: string): Promise<CorrectionFinding> {
+  const r = await fetch(`${API_BASE}/api/silent-assistant/findings/${encodeURIComponent(findingId)}/dismiss`, { method: "POST" });
+  if (!r.ok) throw new Error(`silent dismiss failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function acceptSilentFinding(findingId: string): Promise<CorrectionFinding> {
+  const r = await fetch(`${API_BASE}/api/silent-assistant/findings/${encodeURIComponent(findingId)}/accept`, { method: "POST" });
+  if (!r.ok) throw new Error(`silent accept failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function markSilentFindingUnhelpful(findingId: string): Promise<CorrectionFinding> {
+  const r = await fetch(`${API_BASE}/api/silent-assistant/findings/${encodeURIComponent(findingId)}/mark_unhelpful`, {
+    method: "POST",
+  });
+  if (!r.ok) throw new Error(`silent mark_unhelpful failed: ${r.status}`);
+  return await r.json();
 }
 
 /** List Piper voice ids already installed on the voice server. */

@@ -16,6 +16,14 @@ from fastapi import WebSocket
 from starlette.websockets import WebSocketDisconnect
 from typing import Optional
 
+_WS_SEND_DISCONNECT: tuple[type[BaseException], ...] = (WebSocketDisconnect,)
+try:
+    from uvicorn.protocols.utils import ClientDisconnected
+
+    _WS_SEND_DISCONNECT = (WebSocketDisconnect, ClientDisconnected)
+except ImportError:
+    pass
+
 logger = logging.getLogger(__name__)
 
 from ..core.config import settings
@@ -84,7 +92,8 @@ def _is_valid_english_piece(piece: str) -> bool:
 
 async def handler(ws: WebSocket):
     await ws.accept()
-    await _send(ws, {"type": "loading"})
+    if not await _send(ws, {"type": "loading"}):
+        return
 
     loop = asyncio.get_running_loop()
     asr_adapter = None
@@ -98,10 +107,11 @@ async def handler(ws: WebSocket):
 
     if asr_adapter is None:
         hint = f" ({_nemotron_import_error})" if _nemotron_import_error else ""
-        await _send(ws, {
+        if not await _send(ws, {
             "type": "error",
             "message": f"Nemotron ASR not available. Install NeMo ASR (see backend Dockerfile). Live transcript requires Nemotron.{hint}",
-        })
+        }):
+            return
         return
 
     # Allocate first session GPU state under the same process-wide lock as inference (NeMo + shared weights).
@@ -110,7 +120,8 @@ async def handler(ws: WebSocket):
     # Serialize Nemotron buffer/state: consumer task vs main-loop eos/start/flush/reset (race = CUDA corruption).
     asr_stream_lock = asyncio.Lock()
     sample_rate = NEMOTRON_SAMPLE_RATE
-    await _send(ws, {"type": "ready", "sample_rate": sample_rate})
+    if not await _send(ws, {"type": "ready", "sample_rate": sample_rate}):
+        return
 
     session_id: Optional[str] = None
     session: Optional[SessionState] = None
@@ -131,6 +142,8 @@ async def handler(ws: WebSocket):
     pcm_queue: asyncio.Queue = asyncio.Queue(maxsize=PCM_QUEUE_MAX if PCM_QUEUE_MAX > 0 else 0)
     consumer_task: Optional[asyncio.Task] = None
     use_cuda = asr_adapter.device == "cuda"
+    stt_consecutive_errors = 0
+    stt_error_notified = False
 
     async def _periodic_auto_store_fn() -> None:
         """Every auto_store_interval_sec: create or append transcript row, then add chunk to RAG with name/location/time meta. CPU-heavy work off event loop."""
@@ -266,6 +279,7 @@ async def handler(ws: WebSocket):
 
     async def _pcm_consumer() -> None:
         """Consume PCM from queue; backpressure via queue max size."""
+        nonlocal stt_consecutive_errors, stt_error_notified
         while True:
             item = await pcm_queue.get()
             if item is None:
@@ -276,6 +290,27 @@ async def handler(ws: WebSocket):
                     await _run_nemotron_frames(pcm_float32, sr)
             except Exception as e:
                 logger.warning("PCM consumer STT error (continuing): %s", e)
+                stt_consecutive_errors += 1
+                err_low = str(e).lower()
+                cudaish = "cuda" in err_low or "cublas" in err_low or "nvrtc" in err_low or "illegal" in err_low
+                if not stt_error_notified and stt_consecutive_errors >= 3 and cudaish:
+                    stt_error_notified = True
+                    try:
+                        await _send(
+                            ws,
+                            {
+                                "type": "error",
+                                "message": (
+                                    "Speech-to-text failed repeatedly (often GPU contention with trtllm/voice). "
+                                    "Default Docker backend ASR uses CPU; set ECHOMIND_BACKEND_ASR_DEVICE=cuda only if "
+                                    "this container has a dedicated GPU. Then reconnect."
+                                ),
+                            },
+                        )
+                    except Exception:
+                        pass
+            else:
+                stt_consecutive_errors = 0
             pcm_queue.task_done()
 
     consumer_task = asyncio.create_task(_pcm_consumer())
@@ -578,5 +613,11 @@ async def handler(ws: WebSocket):
                     pass
 
 
-async def _send(ws: WebSocket, obj: dict):
-    await ws.send_text(json.dumps(obj))
+async def _send(ws: WebSocket, obj: dict) -> bool:
+    """Send JSON to the client. Returns False if the socket is already closed (normal on refresh/navigation)."""
+    try:
+        await ws.send_text(json.dumps(obj))
+        return True
+    except _WS_SEND_DISCONNECT:
+        logger.debug("WebSocket closed during send (%s)", obj.get("type"))
+        return False

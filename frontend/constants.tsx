@@ -51,7 +51,25 @@ export const ICONS = {
   Eye: (props: any) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
   ),
+  /** Assistant mode: hand-raise / KB-grounded suggestion. */
+  HandRaise: (props: any) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+      <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2" />
+      <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8" />
+      <path d="M18 8v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-8" />
+      <path d="M6 15h-1a2 2 0 0 1-2-2v0a2 2 0 0 1 2-2h1" />
+    </svg>
+  ),
+  /** Silent Assistant: review without speech (eye + subtle scan). */
+  SilentReview: (props: any) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M4 4l16 16" opacity="0.45" />
+    </svg>
+  ),
   WordCloud: (props: any) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M12 6v2"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M10 14h4"/></svg>
-  )
+  ),
 };

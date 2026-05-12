@@ -271,7 +271,7 @@ async def ask_voice(inp: AskVoiceIn):
             if text:
                 parts.append(text)
         if not parts:
-            return {"answer": "I couldn't find any transcripts in that time range."}
+            return {"answer": "I couldn't find any transcripts in that time range.", "citations": []}
         transcript_block = "\n\n---\n\n".join(parts)
         persona_hint = _get_transcript_persona_hint(inp.persona)
         user_content = (
@@ -282,7 +282,7 @@ async def ask_voice(inp: AskVoiceIn):
             f"{persona_hint}"
         )
         out = await _answer_general(user_content, history=[], persona=inp.persona, conversation_summary=None)
-        return {"answer": out["answer"]}
+        return {"answer": out["answer"], "citations": out.get("citations") or []}
 
     out = await answer_with_citations(
         inp.message,
@@ -293,7 +293,7 @@ async def ask_voice(inp: AskVoiceIn):
         use_knowledge_base=inp.use_knowledge_base,
         advanced_rag=inp.advanced_rag,
     )
-    return {"answer": out["answer"]}
+    return {"answer": out["answer"], "citations": out.get("citations") or []}
 
 
 @router.post("/ask-voice-stream")

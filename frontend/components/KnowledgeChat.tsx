@@ -6,6 +6,7 @@ import { ICONS } from '../constants';
 import Uploader from './Uploader';
 import { askChatStream, listDocuments, deleteDocument, listTranscripts, deleteTranscript, getTranscript, DocListItem, TranscriptListItem, TranscriptDetail, type SourceOptions } from '../services/backend';
 import type { UseKnowledgeChatReturn } from '../hooks/useKnowledgeChat';
+import { mapCitations } from '../utils/mapCitations';
 
 interface KnowledgeChatProps {
   settings?: AppSettings | null;
@@ -35,8 +36,6 @@ const markdownComponents: React.ComponentProps<typeof ReactMarkdown>['components
   blockquote: ({ children }) => <blockquote className="border-l-2 border-cyan-500/60 pl-3 my-2 text-white/80 italic">{children}</blockquote>,
   hr: () => <hr className="border-white/10 my-3" />,
 };
-
-const CITATION_DEBUG = (import.meta as { env?: Record<string, string> }).env?.VITE_CITATION_DEBUG === '1';
 
 const PERSONA_CHAT_META: Record<string, { icon: string; label: string; accent: string; emptyState: string; placeholder: string }> = {
   [PersonaType.TEACHER]: {
@@ -83,27 +82,6 @@ function getPersonaMeta(persona?: string | null) {
   return DEFAULT_PERSONA_CHAT_META;
 }
 
-function mapCitations(citations: any[]): DocumentChunk[] {
-  if (CITATION_DEBUG) {
-    console.log('[Citations] mapCitations input:', { raw: citations, count: (citations || []).length });
-  }
-  return (citations || []).map((c: any, i: number) => ({
-    id: `cite_${i}_${c?.filename ?? 'doc'}`,
-    docName: c?.filename ?? 'Unknown document',
-    content: c?.snippet ?? '',
-    metadata: {
-      section: c?.section ?? undefined,
-      sectionPath: c?.section_path ?? undefined,
-      pageNumber: c?.page_number ?? undefined,
-      score: typeof c?.score === 'number' ? c.score : undefined,
-      docType: c?.doc_type ?? undefined,
-      chunkIndex: c?.chunk_index ?? undefined,
-      docId: c?.doc_id ?? undefined,
-      timestamp: Date.now(),
-    },
-  }));
-}
-
 function uniqueFileNames(citations: DocumentChunk[]): string[] {
   const seen = new Set<string>();
   return (citations || []).map(c => c.docName).filter(name => { if (seen.has(name)) return false; seen.add(name); return true; });
@@ -146,7 +124,7 @@ interface ChunkModalProps {
   onClose: () => void;
 }
 
-const ChunkCitationModal: React.FC<ChunkModalProps> = ({ citations, onClose }) => {
+export const ChunkCitationModal: React.FC<ChunkModalProps> = ({ citations, onClose }) => {
   const [selected, setSelected] = useState<DocumentChunk | null>(null);
 
   // Prefetch PDFs when modal opens so "View in Document" loads instantly in new tab
@@ -483,7 +461,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
             streamRafRef.current = null;
           }
           streamBufRef.current = '';
-          if (CITATION_DEBUG) {
+          if ((import.meta as { env?: Record<string, string> }).env?.VITE_CITATION_DEBUG === '1') {
             console.log('[Citations] onDone received:', { answerLen: result.answer?.length, citations: result.citations, count: (result.citations || []).length });
           }
           setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: result.answer, citations: mapCitations(result.citations) } : m));
@@ -611,13 +589,13 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
       {resourceTab === 'transcripts' && (
         <div className="flex-1 min-h-0 flex flex-col p-3">
           <div className="shrink-0 flex items-center justify-between gap-2 mb-2">
-            <span className="text-xs text-slate-500">From Live Transcript · tags = main keywords</span>
+            <span className="text-xs text-slate-500">From Transcribe · tags = main keywords</span>
             <button type="button" onClick={loadTranscripts} disabled={transcriptsLoading} className="text-xs text-cyan-400 hover:text-cyan-300 disabled:opacity-50 touch-manipulation py-1">{transcriptsLoading ? 'Loading…' : 'Refresh'}</button>
           </div>
           {transcriptsError && <div className="shrink-0 text-xs text-red-400 mb-2 py-1">{transcriptsError}</div>}
           <div className="flex-1 min-h-0 overflow-auto">
             {transcriptsLoading && transcripts.length === 0 && <div className="text-xs opacity-60 py-4 text-center">Loading transcripts…</div>}
-            {!transcriptsLoading && transcripts.length === 0 && !transcriptsError && <div className="text-xs opacity-60 py-4 text-center">No transcripts yet. Save from Live Transcript.</div>}
+            {!transcriptsLoading && transcripts.length === 0 && !transcriptsError && <div className="text-xs opacity-60 py-4 text-center">No transcripts yet. Save from Transcribe.</div>}
             {transcripts.length > 0 && (
               <ul className="space-y-1">
                 {transcripts.map(t => (

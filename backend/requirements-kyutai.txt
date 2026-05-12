@@ -1,1 +1,1 @@
-# Kyutai STT uses transformers (in main requirements.txt). This file kept for reference.
+# Legacy filename: live transcribe uses Nemotron NeMo ASR (see backend Dockerfile / `transcribe/`). Kept empty for reference.

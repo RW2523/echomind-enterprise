@@ -1,8 +1,25 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { transcribeWsUrl, getTranscriptTags, updateTranscript } from "../services/backend";
+import type { TranscriptSegment } from "../types";
 
-/** Kyutai STT sample rate (24kHz). Backend sends this in ready message. */
-const KYUTAI_SAMPLE_RATE = 24000;
+/** Fallback sample rate if `ready` omits `sample_rate` (Nemotron live transcribe uses 16 kHz). */
+const DEFAULT_TRANSCRIBE_SAMPLE_RATE = 16000;
+
+function parseSegmentsPayload(raw: unknown): TranscriptSegment[] {
+  if (!Array.isArray(raw)) return [];
+  const now = Date.now();
+  return raw
+    .map((s: unknown, idx: number) => {
+      if (!s || typeof s !== "object") return null;
+      const o = s as Record<string, unknown>;
+      const pid = o.paragraph_id ?? o.paragraphId;
+      const paragraphId = pid != null && String(pid).trim() ? String(pid) : `p${idx + 1}`;
+      const text = String(o.text ?? "").trim();
+      if (!text) return null;
+      return { paragraphId, text, receivedAt: now } as TranscriptSegment;
+    })
+    .filter((x): x is TranscriptSegment => x != null);
+}
 const OPEN_TIMEOUT_MS = 15000;
 const READY_TIMEOUT_MS = 300000;
 const HEARTBEAT_INTERVAL_MS = 25000;  // Keep connection alive when tab backgrounded (audio stops)
@@ -55,6 +72,8 @@ export interface UseLiveTranscriptionReturn {
   setModalLocation: (v: string) => void;
   setShowStartModal: (v: boolean) => void;
   applyDefault: () => void;
+  /** Committed paragraph segments from the server (partial/final `segments` and `segment` events). */
+  transcriptSegments: TranscriptSegment[];
 }
 
 export function useLiveTranscription(defaultName: () => string): UseLiveTranscriptionReturn {
@@ -74,6 +93,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [newTagInput, setNewTagInput] = useState("");
   const [micMuted, setMicMuted] = useState(false);
+  const [transcriptSegments, setTranscriptSegments] = useState<TranscriptSegment[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const micMutedRef = useRef(false);
@@ -118,11 +138,19 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       sessionLocationRef.current = location || "default";
       setFullTranscript("");
       setPartial("");
+      setTranscriptSegments([]);
       setWsError(null);
       setWsStatus("connecting");
 
       const ws = new WebSocket(transcribeWsUrl());
       wsRef.current = ws;
+
+      /** Resolve Nemotron handshake from the same onmessage that receives `loading`/`ready` so we never miss `ready` if it arrives before a late `addEventListener` would attach (fixes stuck "Loading STT…"). */
+      let sttHandshake: {
+        resolve: (sr: number) => void;
+        reject: (e: Error) => void;
+        timer: ReturnType<typeof setTimeout>;
+      } | null = null;
 
       const handleError = (err: string) => {
         setWsError(err);
@@ -134,18 +162,51 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         try {
           const msg = JSON.parse(ev.data);
           if (msg.type === "loading") setWsStatus("loading");
-          if (msg.type === "ready") setWsStatus("ready");
+          if (msg.type === "ready") {
+            setWsStatus("ready");
+            if (sttHandshake) {
+              clearTimeout(sttHandshake.timer);
+              const sr =
+                typeof msg.sample_rate === "number" && msg.sample_rate > 0
+                  ? msg.sample_rate
+                  : DEFAULT_TRANSCRIBE_SAMPLE_RATE;
+              sttHandshake.resolve(sr);
+              sttHandshake = null;
+            }
+          }
           if (msg.type === "partial") {
             const t = msg.text ?? "";
             setFullTranscript(t);
             transcriptForTagsRef.current = t;
             setPartial("");
+            if (Array.isArray(msg.segments)) {
+              setTranscriptSegments(parseSegmentsPayload(msg.segments));
+            }
+          }
+          if (msg.type === "segment") {
+            const pid = msg.paragraph_id != null ? String(msg.paragraph_id) : "";
+            const text = String(msg.text ?? "").trim();
+            if (pid && text) {
+              const row: TranscriptSegment = { paragraphId: pid, text, receivedAt: Date.now() };
+              setTranscriptSegments((prev) => {
+                const i = prev.findIndex((s) => s.paragraphId === pid);
+                if (i >= 0) {
+                  const next = [...prev];
+                  next[i] = row;
+                  return next;
+                }
+                return [...prev, row];
+              });
+            }
           }
           if (msg.type === "final") {
             const t = (msg.text ?? "").trim();
             setFullTranscript(t);
             transcriptForTagsRef.current = t;
             setPartial("");
+            if (Array.isArray(msg.segments)) {
+              setTranscriptSegments(parseSegmentsPayload(msg.segments));
+            }
           }
           if (msg.type === "stored") {
             setWsError(null);
@@ -160,6 +221,12 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
           }
           if (msg.type === "error") {
             const m = msg.message || "Server error";
+            if (sttHandshake) {
+              clearTimeout(sttHandshake.timer);
+              sttHandshake.reject(new Error(m));
+              sttHandshake = null;
+              return;
+            }
             if (m.includes("Reconnecting")) {
               stopMic(false);
               setTimeout(() => doStart(sessionNameRef.current, sessionLocationRef.current, true), RECONNECT_DELAY_MS);
@@ -173,6 +240,11 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
 
       ws.onerror = () => handleError("WebSocket error");
       ws.onclose = () => {
+        if (sttHandshake) {
+          clearTimeout(sttHandshake.timer);
+          sttHandshake.reject(new Error("Connection closed before STT was ready"));
+          sttHandshake = null;
+        }
         const wasListening = listeningRef.current;
         const shouldReconnect = !userInitiatedCloseRef.current && wasListening;
         stopMic(false);
@@ -201,33 +273,18 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       }
 
       const readyPromise = new Promise<number>((resolve, reject) => {
-        const t = setTimeout(
-          () => reject(new Error("Kyutai STT loading timeout (model may still be downloading)")),
-          READY_TIMEOUT_MS
-        );
-        const check = (ev: MessageEvent) => {
-          try {
-            const msg = JSON.parse(ev.data);
-            if (msg.type === "ready") {
-              clearTimeout(t);
-              ws.removeEventListener("message", check);
-              resolve(msg.sample_rate ?? KYUTAI_SAMPLE_RATE);
-            }
-            if (msg.type === "error") {
-              clearTimeout(t);
-              ws.removeEventListener("message", check);
-              reject(new Error(msg.message || "STT failed"));
-            }
-          } catch {}
-        };
-        ws.addEventListener("message", check);
+        const timer = setTimeout(() => {
+          sttHandshake = null;
+          reject(new Error("Nemotron STT loading timeout (model may still be downloading)"));
+        }, READY_TIMEOUT_MS);
+        sttHandshake = { resolve, reject, timer };
       });
 
       let sampleRate: number;
       try {
         sampleRate = await readyPromise;
       } catch (e) {
-        handleError((e as Error)?.message || "Kyutai STT not ready");
+        handleError((e as Error)?.message || "Nemotron STT not ready");
         return;
       }
 
@@ -280,6 +337,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     setMicMuted(false);
     setFullTranscript("");
     setPartial("");
+    setTranscriptSegments([]);
     setSessionName("");
     setSessionLocation("");
     setSessionStartedAt(null);
@@ -402,5 +460,6 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     setModalLocation,
     setShowStartModal,
     applyDefault,
+    transcriptSegments,
   };
 }

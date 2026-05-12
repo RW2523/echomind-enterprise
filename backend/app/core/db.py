@@ -74,6 +74,146 @@ def init_db():
             conn.execute("ALTER TABLE section_references ADD COLUMN ref_section_id TEXT")
         except Exception:
             pass
+        # Assistant Mode: hand-raise suggestions (local only; session_id is client-owned UUID string).
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS assistant_suggestions(
+                id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                mode TEXT NOT NULL DEFAULT 'ASSISTANT',
+                title TEXT NOT NULL,
+                short_text TEXT NOT NULL,
+                speak_text TEXT NOT NULL,
+                reason TEXT,
+                category TEXT NOT NULL,
+                confidence REAL NOT NULL,
+                source_origin TEXT NOT NULL,
+                evidence_status TEXT NOT NULL,
+                citations_json TEXT NOT NULL DEFAULT '[]',
+                created_at TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                updated_at TEXT NOT NULL
+            )"""
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_assistant_suggestions_session_status "
+            "ON assistant_suggestions(session_id, status)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_assistant_suggestions_session_created "
+            "ON assistant_suggestions(session_id, created_at)"
+        )
+        # Silent Assistant Mode: correction findings (display-only; never TTS).
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS silent_findings(
+                id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                transcript_segment_id TEXT,
+                turn_id TEXT,
+                original_text TEXT NOT NULL,
+                highlighted_span_start INTEGER NOT NULL DEFAULT 0,
+                highlighted_span_end INTEGER NOT NULL DEFAULT 0,
+                category TEXT NOT NULL,
+                status_label TEXT NOT NULL,
+                suggested_correction TEXT NOT NULL DEFAULT '',
+                reason TEXT NOT NULL,
+                evidence_status TEXT NOT NULL,
+                confidence REAL NOT NULL,
+                source_origin TEXT NOT NULL,
+                citations_json TEXT NOT NULL DEFAULT '[]',
+                created_at TEXT NOT NULL,
+                user_action TEXT NOT NULL DEFAULT 'pending',
+                updated_at TEXT NOT NULL
+            )"""
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_silent_findings_session_action ON silent_findings(session_id, user_action)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_silent_findings_session_created ON silent_findings(session_id, created_at)"
+        )
+        for col in (
+            "influencing_rule_set_id TEXT",
+            "influencing_rule_set_name TEXT",
+            "influencing_rule_id TEXT",
+            "influencing_rule_title TEXT",
+        ):
+            try:
+                conn.execute(f"ALTER TABLE silent_findings ADD COLUMN {col}")
+            except Exception:
+                pass
+        # Rules Library (local policy): named sets, rules, per-session enablement.
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS rule_sets(
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                version TEXT NOT NULL DEFAULT '1.0.0',
+                priority INTEGER NOT NULL DEFAULT 0,
+                is_active_default INTEGER NOT NULL DEFAULT 0,
+                source_policy_text TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )"""
+        )
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS rules(
+                id TEXT PRIMARY KEY,
+                rule_set_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                text TEXT NOT NULL,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                category TEXT NOT NULL DEFAULT 'general',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )"""
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_rules_rule_set ON rules(rule_set_id)")
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS session_rule_activations(
+                id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                rule_set_id TEXT NOT NULL,
+                enabled INTEGER NOT NULL DEFAULT 1,
+                priority_override INTEGER,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(session_id, rule_set_id)
+            )"""
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_session_rule_act_session ON session_rule_activations(session_id, enabled)"
+        )
+        for col in (
+            "influencing_rule_set_id TEXT",
+            "influencing_rule_set_name TEXT",
+            "influencing_rule_id TEXT",
+            "influencing_rule_title TEXT",
+            "trigger_excerpt TEXT",
+        ):
+            try:
+                conn.execute(f"ALTER TABLE assistant_suggestions ADD COLUMN {col}")
+            except Exception:
+                pass
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS session_notes(
+                id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                source_type TEXT NOT NULL,
+                source_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                citations_json TEXT NOT NULL DEFAULT '[]',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                pinned INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(session_id, source_type, source_id)
+            )"""
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_session_notes_session_updated ON session_notes(session_id, updated_at DESC)"
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_session_notes_session_pinned ON session_notes(session_id, pinned)")
         conn.commit()
 
 @contextmanager

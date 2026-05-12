@@ -67,11 +67,34 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
   const capacityStr = capacityBytes > 0 ? formatBytes(capacityBytes) : null;
 
   
-  const navItems = [
+  type NavIcon = React.ComponentType<{ className?: string }>;
+  const navItems: { id: AppView; label: string; icon: NavIcon; description?: string }[] = [
     { id: AppView.KNOWLEDGE_CHAT, label: 'Knowledge Chat', icon: ICONS.Chat },
-    { id: AppView.TRANSCRIPTION, label: 'Live Transcript', icon: ICONS.Transcript },
-    { id: AppView.VOICE_CONVERSATION, label: 'Conversation', icon: ICONS.Mic },
-    { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings }
+    {
+      id: AppView.TRANSCRIPTION,
+      label: 'Transcribe',
+      icon: ICONS.Transcript,
+      description: 'Listen and write everything down.',
+    },
+    {
+      id: AppView.ASSISTANT,
+      label: 'Assistant',
+      icon: ICONS.HandRaise,
+      description: 'Listens quietly and raises its hand when useful.',
+    },
+    {
+      id: AppView.SILENT_ASSISTANT,
+      label: 'Silent Assistant',
+      icon: ICONS.SilentReview,
+      description: 'Checks and highlights quietly without speaking.',
+    },
+    {
+      id: AppView.VOICE_CONVERSATION,
+      label: 'Conversation',
+      icon: ICONS.Mic,
+      description: 'Real-time voice conversation.',
+    },
+    { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings },
   ];
 
   const sidebarContent = (
@@ -112,7 +135,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
             }`}
           >
             <item.icon className={`w-5 h-5 shrink-0 ${activeView === item.id ? 'text-cyan-400' : 'group-hover:text-white'}`} />
-            <span className="hidden md:block font-medium text-sm truncate">{item.label}</span>
+            <div className="hidden md:block min-w-0 text-left">
+              <span className="font-medium text-sm truncate block">{item.label}</span>
+              {item.description ? (
+                <p className="text-[10px] text-slate-500 leading-snug mt-0.5 line-clamp-2 font-normal">{item.description}</p>
+              ) : null}
+            </div>
           </button>
         ))}
       </nav>

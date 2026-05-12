@@ -1,8 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { voiceWsUrl } from "../services/backend";
+import { b64ToBytes, fadeBufferEdges, pcm16ToFloat32, resampleLinear } from "../utils/voicePlayback";
 import type { ConversationState } from "../components/Conversation/ChatState";
-import { PersonaType } from "../types";
-import type { AppSettings } from "../types";
+import { PersonaType, type AppSettings, type VoiceMessage } from "../types";
+import { mapCitations } from "../utils/mapCitations";
+
+export type { VoiceMessage } from "../types";
 
 const PERSONA_VOICE_PROMPTS: Record<string, string> = {
   [PersonaType.TEACHER]: (
@@ -56,46 +59,6 @@ const MIC_CHECK_MS = 150;
 /** Consecutive samples above/below threshold before changing state (stops orb flicker) */
 const MIC_HYSTERESIS = 4;
 
-function b64ToBytes(b64: string): Uint8Array {
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
-}
-
-function pcm16ToFloat32(pcmBytes: Uint8Array): Float32Array {
-  const view = new DataView(pcmBytes.buffer, pcmBytes.byteOffset, pcmBytes.byteLength);
-  const out = new Float32Array(pcmBytes.byteLength / 2);
-  for (let i = 0; i < out.length; i++) out[i] = view.getInt16(i * 2, true) / 32768;
-  return out;
-}
-
-function resampleLinear(input: Float32Array, srcSr: number, dstSr: number): Float32Array {
-  if (srcSr === dstSr) return input;
-  const ratio = dstSr / srcSr;
-  const n = Math.floor(input.length * ratio);
-  const out = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    const x = i / ratio;
-    const i0 = Math.floor(x);
-    const i1 = Math.min(i0 + 1, input.length - 1);
-    const w = x - i0;
-    out[i] = (1 - w) * input[i0] + w * input[i1];
-  }
-  return out;
-}
-
-/** Apply short fade-in/fade-out to reduce clicks at chunk boundaries. Modifies in place. */
-function fadeBufferEdges(f32: Float32Array, sampleRate: number, fadeMs: number = 3): void {
-  const n = Math.min(Math.floor((sampleRate * fadeMs) / 1000), Math.floor(f32.length / 2));
-  if (n <= 0) return;
-  for (let i = 0; i < n; i++) {
-    const t = (i + 1) / (n + 1);
-    f32[i] *= t;
-    f32[f32.length - 1 - i] *= t;
-  }
-}
-
 const WORKLET_CODE = `
   class Framer16k extends AudioWorkletProcessor {
     constructor() {
@@ -133,11 +96,6 @@ const WORKLET_CODE = `
   registerProcessor('framer16k', Framer16k);
 `;
 
-export interface VoiceMessage {
-  role: "user" | "assistant";
-  text: string;
-}
-
 export interface UseVoiceConnectionReturn {
   state: ConversationState;
   userAnalyser: AnalyserNode | null;
@@ -161,6 +119,8 @@ export interface UseVoiceConnectionReturn {
   setMicMuted: (muted: boolean) => void;
   /** Error starting mic or connection (e.g. permission denied); cleared when user retries or disconnects */
   connectionError: string | null;
+  /** Stop assistant TTS: clears local playback, asks voice server to cancel generation, ignores stale audio. */
+  interruptAssistantPlayback: () => void;
 }
 
 export interface UseVoiceConnectionOptions {
@@ -205,6 +165,10 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   const voiceSessionReadyRef = useRef(false);
   /** User clicked Stop (or left Voice) while still connecting — do not treat close as a failure. */
   const userCancelledConnectRef = useRef(false);
+  /** Last `use_knowledge_base` sent on the wire (sync when Settings toggles while connected). */
+  const lastSentUseKnowledgeBaseRef = useRef<boolean | null>(null);
+  /** Drop `audio_out` whose `generation_id` is below this floor (updated from server `cancel` after interrupt / barge-in). */
+  const playbackFloorGenRef = useRef(0);
 
   const pumpPlayback = useCallback(() => {
     const ctx = playbackCtxRef.current;
@@ -355,18 +319,20 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
             systemPrompt
           );
         }
+        const useKb = !!(settings?.voiceUseKnowledgeBase);
         ws.send(JSON.stringify({
           type: "set_context",
           system_prompt: systemPrompt,
           clear_memory: false,
           listen_only: false,
           piper_voice: settings?.voiceName ?? undefined,
-          use_knowledge_base: true,
+          use_knowledge_base: useKb,
           persona: settings?.persona ?? undefined,
           context_window: settings?.contextWindow ?? undefined,
           voice_bot_name: botName || undefined,
           voice_user_name: userName || undefined,
         }));
+        lastSentUseKnowledgeBaseRef.current = useKb;
       } catch (e: any) {
         console.error(e);
         const msg = e?.message || "Could not start voice. Try again.";
@@ -392,6 +358,18 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         playQueueRef.current = [];
         smoothStop();
         setState((prev) => ({ ...prev, interruptedAt: Date.now(), assistantOrb: "idle" }));
+        return;
+      }
+      if (msg.type === "cancel") {
+        const g =
+          typeof msg.generation_id === "number" && Number.isFinite(msg.generation_id)
+            ? msg.generation_id
+            : typeof msg.generation_id === "string" && String(msg.generation_id).trim() !== ""
+              ? Number(msg.generation_id)
+              : NaN;
+        if (Number.isFinite(g)) {
+          playbackFloorGenRef.current = Math.max(playbackFloorGenRef.current, g);
+        }
         return;
       }
       if (msg.type === "event" && msg.event === "SPEAKING") {
@@ -434,14 +412,62 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       }
       if (msg.type === "assistant_text") {
         const text = typeof msg.text === "string" ? String(msg.text).trim() : "";
+        const gid =
+          typeof msg.generation_id === "number" && Number.isFinite(msg.generation_id)
+            ? msg.generation_id
+            : typeof msg.generation_id === "string" && msg.generation_id.trim() !== ""
+              ? Number(msg.generation_id)
+              : undefined;
         if (text) {
-          setVoiceMessages((prev) => [...prev, { role: "assistant", text }]);
+          setVoiceMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              text,
+              ...(gid != null && Number.isFinite(gid) ? { generationId: gid } : {}),
+            },
+          ]);
         }
         setPendingAssistantText("");
         setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
         return;
       }
+      if (msg.type === "assistant_citations") {
+        const gid =
+          typeof msg.generation_id === "number" && Number.isFinite(msg.generation_id)
+            ? msg.generation_id
+            : typeof msg.message_id === "string" && msg.message_id.trim() !== ""
+              ? Number(msg.message_id)
+              : typeof msg.message_id === "number"
+                ? msg.message_id
+                : NaN;
+        if (!Number.isFinite(gid)) return;
+        const raw = msg.citations;
+        const chunks = mapCitations(Array.isArray(raw) ? raw : []);
+        if (chunks.length === 0) return;
+        setVoiceMessages((prev) => {
+          for (let i = prev.length - 1; i >= 0; i--) {
+            const m = prev[i];
+            if (m.role === "assistant" && m.generationId === gid) {
+              const next = [...prev];
+              next[i] = { ...m, citations: chunks };
+              return next;
+            }
+          }
+          return prev;
+        });
+        return;
+      }
       if (msg.type === "audio_out" && typeof msg.pcm16_b64 === "string") {
+        const ag =
+          typeof msg.generation_id === "number" && Number.isFinite(msg.generation_id)
+            ? msg.generation_id
+            : typeof msg.generation_id === "string" && String(msg.generation_id).trim() !== ""
+              ? Number(msg.generation_id)
+              : NaN;
+        if (Number.isFinite(ag) && ag < playbackFloorGenRef.current) {
+          return;
+        }
         try {
           const bytes = b64ToBytes(msg.pcm16_b64);
           const f32 = pcm16ToFloat32(bytes);
@@ -458,6 +484,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       voiceSessionReadyRef.current = false;
       playQueueRef.current = [];
       playingRef.current = false;
+      playbackFloorGenRef.current = 0;
       if (workletRef.current) {
         try {
           workletRef.current.disconnect();
@@ -495,6 +522,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       }
       userCancelledConnectRef.current = false;
       setConnecting(false);
+      lastSentUseKnowledgeBaseRef.current = null;
     };
 
     ws.onclose = () => {
@@ -504,7 +532,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       setConnecting(false);
       setConnectionError((prev) => prev ?? "Voice WebSocket failed. Confirm the voice container is up and nginx proxies /voice/ws.");
     };
-  }, [settings?.persona, settings?.voiceName, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceContext, settings?.contextWindow, enqueuePlayback, smoothStop]);
+  }, [settings?.persona, settings?.voiceName, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceContext, settings?.contextWindow, settings?.voiceUseKnowledgeBase, enqueuePlayback, smoothStop]);
 
   const disconnect = useCallback(async () => {
     userCancelledConnectRef.current = true;
@@ -589,19 +617,36 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         sysPrompt
       );
     }
+    const useKb = !!(settings?.voiceUseKnowledgeBase);
     ws.send(JSON.stringify({
       type: "set_context",
       system_prompt: sysPrompt,
       clear_memory: false,
       listen_only: state.listenOnly,
       piper_voice: settings?.voiceName ?? undefined,
-      use_knowledge_base: true,
+      use_knowledge_base: useKb,
       persona: settings?.persona ?? undefined,
       context_window: settings?.contextWindow ?? undefined,
       voice_bot_name: botName || undefined,
       voice_user_name: userName || undefined,
     }));
-  }, [state.listenOnly, settings?.persona, settings?.voiceName, settings?.voiceContext, settings?.contextWindow, settings?.voiceBotName, settings?.voiceUserName]);
+    lastSentUseKnowledgeBaseRef.current = useKb;
+  }, [state.listenOnly, settings?.persona, settings?.voiceName, settings?.voiceContext, settings?.contextWindow, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceUseKnowledgeBase]);
+
+  const interruptAssistantPlayback = useCallback(() => {
+    playQueueRef.current = [];
+    smoothStop();
+    setPendingAssistantText("");
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.send(JSON.stringify({ type: "interrupt_assistant" }));
+      } catch {
+        /* ignore */
+      }
+    }
+    setState((prev) => ({ ...prev, interruptedAt: Date.now(), assistantOrb: "idle" }));
+  }, [smoothStop]);
 
   const clearMemory = useCallback(() => {
     const ws = wsRef.current;
@@ -618,6 +663,23 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     }
     setState((prev) => ({ ...prev, listenOnly: on }));
   }, []);
+
+  useEffect(() => {
+    const ws = wsRef.current;
+    const kb = !!(settings?.voiceUseKnowledgeBase);
+    if (!state.isConnected || !ws || ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    if (lastSentUseKnowledgeBaseRef.current === kb) return;
+    lastSentUseKnowledgeBaseRef.current = kb;
+    ws.send(
+      JSON.stringify({
+        type: "set_context",
+        use_knowledge_base: kb,
+        listen_only: state.listenOnly,
+      })
+    );
+  }, [settings?.voiceUseKnowledgeBase, state.isConnected, state.listenOnly]);
 
   return {
     state,
@@ -636,5 +698,6 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     micMuted,
     setMicMuted,
     connectionError,
+    interruptAssistantPlayback,
   };
 }
