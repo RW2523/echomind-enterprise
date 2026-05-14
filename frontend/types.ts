@@ -2,9 +2,28 @@
 export enum AppView {
   KNOWLEDGE_CHAT = 'knowledge_chat',
   TRANSCRIPTION = 'transcription',
+  SILENT_ASSISTANT = 'silent_assistant',
+  PERSONAL_ASSISTANT = 'personal_assistant',
+  BOARD_ROOM = 'board_room',
   VOICE_CONVERSATION = 'voice_conversation',
   SETTINGS = 'settings'
 }
+
+export type AssistantMode = 'silent_assistant' | 'personal_assistant';
+
+export type HandRaiseAction =
+  | 'view_details'
+  | 'save_for_later'
+  | 'ignore'
+  | 'ask_follow_up'
+  | 'speak_now';
+
+export type AssistantInsightActionStatus =
+  | 'ignored'
+  | 'saved_for_later'
+  | 'viewed'
+  | 'asked_follow_up'
+  | 'spoke_now';
 
 export enum PersonaType {
   TEACHER    = 'Teacher / Professor',
@@ -61,6 +80,122 @@ export interface TranscriptEntry {
 
 /** Piper TTS voice id (en_US model name, e.g. en_US-lessac-medium). */
 export type PiperVoiceId = string;
+
+export type AssistantClassification =
+  | 'supported'
+  | 'contradicted'
+  | 'related'
+  | 'missing_context'
+  | 'warning';
+
+export type AssistantPriority = 'low' | 'medium' | 'high';
+
+export type AssistantEvidenceSourceType = 'document' | 'transcript' | 'book' | 'faq' | 'unknown';
+
+export interface AssistantEvidence {
+  source_name: string;
+  source_type: AssistantEvidenceSourceType;
+  doc_id?: string | null;
+  chunk_id?: string | null;
+  page?: number | null;
+  section?: string | null;
+  matched_text: string;
+}
+
+export interface AssistantInsight {
+  id: string;
+  transcript_text: string;
+  classification: AssistantClassification;
+  confidence: number;
+  start_char?: number | null;
+  end_char?: number | null;
+  paragraph_id?: string | null;
+  show_highlight: boolean;
+  show_hand_raise: boolean;
+  priority: AssistantPriority;
+  evidence: AssistantEvidence[];
+  assistant_interpretation: string;
+  suggested_action: string;
+  suggested_response?: string | null;
+  /** Set when loaded from SQLite or after bulk-save. */
+  action_status?: AssistantInsightActionStatus | null;
+  created_at?: string | null;
+  persisted?: boolean;
+}
+
+/** In-memory Personal Assistant session UI (no persistence). */
+export interface HandRaiseSessionState {
+  dismissedInsightIds: string[];
+  savedForLater: AssistantInsight[];
+}
+
+export interface AssistantAnalysisScope {
+  documents: boolean;
+  transcripts: boolean;
+  books: boolean;
+  faqs: boolean;
+}
+
+export interface AssistantAnalyzeRequest {
+  session_id: string;
+  mode: 'silent_assistant' | 'personal_assistant';
+  transcript_window: string;
+  rolling_context: string;
+  analysis_scope: AssistantAnalysisScope;
+}
+
+export interface AssistantAnalyzeResponse {
+  session_id: string;
+  mode: string;
+  insights: AssistantInsight[];
+}
+
+export interface AssistantBulkSaveResponse {
+  session_id: string;
+  inserted: number;
+  skipped: number;
+  duplicate_merged: number;
+  id_map: Record<string, string>;
+}
+
+export interface AssistantSessionInsightsResponse {
+  session_id: string;
+  insights: AssistantInsight[];
+}
+
+export interface BoardRoomSttStatus {
+  available: boolean;
+  model_name: string;
+  loaded: boolean;
+  cached?: boolean;
+  using_fallback?: boolean;
+  fallback_model_name?: string | null;
+  load_error?: string | null;
+  import_error?: string | null;
+}
+
+export interface BoardRoomKnowledgeCheck {
+  claim: string;
+  classification: string;
+  confidence: number;
+  interpretation: string;
+  suggested_action: string;
+  evidence: AssistantEvidence[];
+}
+
+export interface BoardRoomReport {
+  report_id: string;
+  session_id: string;
+  title: string;
+  session_name: string;
+  session_location: string;
+  polished_transcript: string;
+  executive_summary: string;
+  knowledge_checks: BoardRoomKnowledgeCheck[];
+  markdown: string;
+}
+
+export type BoardRoomExportFormat = 'pdf' | 'pptx';
 
 export interface AppSettings {
   /** Piper voice: e.g. en_US-lessac-medium, en_US-ryan-medium */

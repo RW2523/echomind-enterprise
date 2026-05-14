@@ -256,6 +256,7 @@ async def delete_all_data():
         conn.execute("DELETE FROM transcripts")
         conn.execute("DELETE FROM messages")
         conn.execute("DELETE FROM chats")
+        conn.execute("DELETE FROM assistant_insights")
         conn.commit()
     index.clear_all()
     # Remove all stored upload files

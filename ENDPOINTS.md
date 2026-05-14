@@ -13,6 +13,7 @@ Quick reference to confirm all endpoints and frontend calls are connected.
 | WS | `/api/transcribe/ws` | `{type:"audio", pcm16_b64}` / `{type:"stop"}` | `ready` / `partial` / `final` / `error` | `transcribeWsUrl()` + LiveTranscription |
 | POST | `/api/transcribe/refine` | `{raw_text}` | `{refined}` | `refineTranscript()` in LiveTranscription |
 | POST | `/api/transcribe/store` | `{raw_text, refined_text?}` | `{transcript_id, tags, created_at}` | `storeTranscript()` in LiveTranscription |
+| POST | `/api/assistant/analyze-window` | `{ session_id, mode, transcript_window, rolling_context, analysis_scope }` | `{ session_id, mode, insights[] }` | `analyzeAssistantWindow()` in Silent Assistant |
 
 ## Voice app (served at `voice:8000` in Docker; nginx proxies `/voice/` → voice)
 

@@ -116,7 +116,7 @@ def delete_chat(chat_id: str):
 
 
 class SourceOptionsIn(BaseModel):
-    transcript: bool = True
+    transcript: bool = False
     document: bool = True
     general: bool = True
 
@@ -126,9 +126,9 @@ class AskIn(BaseModel):
     message: str
     persona: str | None = None
     context_window: str | None = None
-    use_knowledge_base: bool = True  # When True, RAG retrieves from uploaded documents + saved transcripts
+    use_knowledge_base: bool = True  # When True, RAG retrieves from uploaded documents (transcripts if enabled in source_options)
     advanced_rag: bool = False
-    source_options: SourceOptionsIn | None = None  # Transcript, Document, General; default all True
+    source_options: SourceOptionsIn | None = None  # Transcript off by default; document + general on
 
 
 class AskVoiceIn(BaseModel):
@@ -347,7 +347,7 @@ async def ask_voice_stream(inp: AskVoiceIn):
                 conversation_summary=None,
                 use_knowledge_base=inp.use_knowledge_base,
                 advanced_rag=inp.advanced_rag,
-                source_options={"transcript": True, "document": True, "general": True},
+                source_options={"transcript": False, "document": True, "general": True},
                 max_tokens=inp.voice_max_tokens,
             ):
                 if kind == "chunk":
@@ -377,7 +377,7 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
     source_opts = (
         {"transcript": opts.transcript, "document": opts.document, "general": opts.general}
         if opts is not None
-        else {"transcript": True, "document": True, "general": True}
+        else {"transcript": False, "document": True, "general": True}
     )
     last_hours = _parse_transcript_time_query(msg)
     if last_hours is not None:
@@ -456,7 +456,7 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
         source_opts = (
             {"transcript": opts.transcript, "document": opts.document, "general": opts.general}
             if opts is not None
-            else {"transcript": True, "document": True, "general": True}
+            else {"transcript": False, "document": True, "general": True}
         )
         try:
             async for kind, text, citations in answer_stream(

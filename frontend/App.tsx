@@ -5,6 +5,9 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import KnowledgeChat from './components/KnowledgeChat';
 import LiveTranscription from './components/LiveTranscription';
+import SilentAssistant from './components/SilentAssistant';
+import PersonalAssistant from './components/PersonalAssistant';
+import BoardRoom from './components/BoardRoom';
 import VoiceConversation from './components/VoiceConversation';
 import Settings from './components/Settings';
 import { useVoiceConnection } from './hooks/useVoiceConnection';
@@ -72,6 +75,13 @@ const App: React.FC = () => {
   // It only stops when the user clicks Stop.
   const liveTranscription = useLiveTranscription(defaultTranscriptName);
 
+  /** Separate hook from Live Transcript so both modes do not share one WebSocket. */
+  const silentAssistantTranscription = useLiveTranscription(defaultTranscriptName);
+
+  const personalAssistantTranscription = useLiveTranscription(defaultTranscriptName);
+
+  const boardRoomTranscription = useLiveTranscription(defaultTranscriptName, { sttProfile: "board_room" });
+
   // Knowledge Chat lives in App so conversation persists when switching tabs.
   const knowledgeChat = useKnowledgeChat();
 
@@ -88,6 +98,23 @@ const App: React.FC = () => {
         return <KnowledgeChat settings={settings} knowledgeChat={knowledgeChat} />;
       case AppView.TRANSCRIPTION:
         return <LiveTranscription liveTranscription={liveTranscription} />;
+      case AppView.SILENT_ASSISTANT:
+        return <SilentAssistant liveTranscription={silentAssistantTranscription} />;
+      case AppView.PERSONAL_ASSISTANT:
+        return (
+          <PersonalAssistant
+            settings={settings}
+            liveTranscription={personalAssistantTranscription}
+            onOpenKnowledgeChatWithDraft={(draft) => {
+              setActiveView(AppView.KNOWLEDGE_CHAT);
+              window.setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('echomind-chat-followup', { detail: { draft } }));
+              }, 0);
+            }}
+          />
+        );
+      case AppView.BOARD_ROOM:
+        return <BoardRoom liveTranscription={boardRoomTranscription} />;
       case AppView.VOICE_CONVERSATION:
         return (
           <VoiceConversation

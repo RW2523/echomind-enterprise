@@ -7,6 +7,8 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, HTTPException
+from fastapi.responses import Response
+from pydantic import BaseModel, Field
 
 # Root default WARNING; bump LLM adapter to INFO so VOICE_LLM stream/sync timing lines appear in docker logs.
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -14,9 +16,8 @@ logging.getLogger("app.adapters.llm_openai_stream").setLevel(logging.INFO)
 logging.getLogger("app.adapters.stt_nemotron").setLevel(logging.INFO)
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-
 from .session import OmniSessionA
+from .tts_oneoff import synthesize_wav_bytes
 from .voice_download import list_installed_voices, download_voice
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,28 @@ async def post_download_voice(body: DownloadVoiceBody):
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
+
+
+class TtsSpeakBody(BaseModel):
+    """One-shot Piper synthesis for Personal Assistant Speak Now (does not use /ws)."""
+    text: str = Field(..., min_length=1, max_length=2600)
+    voice_id: str | None = Field(None, max_length=200)
+
+
+@app.post("/tts/speak")
+async def post_tts_speak(body: TtsSpeakBody):
+    voice = (body.voice_id or "").strip() or None
+    try:
+        wav, _sr = await asyncio.to_thread(synthesize_wav_bytes, body.text, voice)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Piper voice model not found") from None
+    except Exception:
+        logger.exception("POST /tts/speak failed")
+        raise HTTPException(status_code=503, detail="TTS synthesis failed") from None
+    return Response(content=wav, media_type="audio/wav")
+
 
 @app.get("/")
 def root():

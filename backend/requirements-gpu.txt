@@ -13,6 +13,7 @@ faiss-gpu==1.7.2
 pypdf==5.1.0
 python-docx==1.1.2
 python-pptx==0.6.23
+fpdf2==2.8.2
 langchain-text-splitters==0.3.2
 rank-bm25==0.2.2
 # Live transcript uses Nemotron via NeMo ASR — install in Docker image (see backend/Dockerfile).

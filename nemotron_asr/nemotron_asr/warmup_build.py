@@ -42,11 +42,15 @@ def run_warmup(
     rng = np.random.default_rng(0)
     audio = (rng.random(n, dtype=np.float64).astype(np.float32) - 0.5) * 0.02
 
+    # NeMo 2.2.x build warmup: keep the utterance in one streaming step so RNNT
+    # decoding does not require partial_hypotheses across chunks.
+    warmup_chunk_ms = max(chunk_ms, int((n / 16000.0) * 1000) + 100)
+
     text = transcribe_utterance_float32(
         adapter,
         audio,
         sample_rate=16000,
-        chunk_ms=chunk_ms,
+        chunk_ms=warmup_chunk_ms,
     )
     return text or ""
 

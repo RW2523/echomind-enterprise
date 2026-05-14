@@ -29,8 +29,8 @@ from .stt_streaming import (
     _pcm16_to_float32,
     _resample_fast,
     _sliding_window_rms,
+    get_asr_adapter,
     get_nemotron_process_lock,
-    get_shared_asr_adapter,
 )
 from ..refine import refine_text
 from ..tagging import get_metadata
@@ -86,14 +86,15 @@ async def handler(ws: WebSocket):
     await ws.accept()
     await _send(ws, {"type": "loading"})
 
+    stt_profile = (ws.query_params.get("stt_profile") or "default").strip().lower()
     loop = asyncio.get_running_loop()
     asr_adapter = None
     stream_ctx: Optional[NemotronStreamContext] = None
     if NEMOTRON_AVAILABLE:
         try:
-            asr_adapter = await loop.run_in_executor(None, get_shared_asr_adapter)
+            asr_adapter = await loop.run_in_executor(None, lambda: get_asr_adapter(stt_profile))
         except Exception as e:
-            await _send(ws, {"type": "error", "message": f"Nemotron ASR load failed: {e}"})
+            await _send(ws, {"type": "error", "message": f"ASR load failed ({stt_profile}): {e}"})
             return
 
     if asr_adapter is None:
@@ -110,7 +111,7 @@ async def handler(ws: WebSocket):
     # Serialize Nemotron buffer/state: consumer task vs main-loop eos/start/flush/reset (race = CUDA corruption).
     asr_stream_lock = asyncio.Lock()
     sample_rate = NEMOTRON_SAMPLE_RATE
-    await _send(ws, {"type": "ready", "sample_rate": sample_rate})
+    await _send(ws, {"type": "ready", "sample_rate": sample_rate, "stt_profile": stt_profile})
 
     session_id: Optional[str] = None
     session: Optional[SessionState] = None
@@ -244,24 +245,21 @@ async def handler(ws: WebSocket):
             await _get_gpu_sem().acquire()
         try:
             async with get_nemotron_process_lock():
-                deltas = await stream_ctx.process_pcm_chunk(
+                await stream_ctx.process_pcm_chunk(
                     pcm_float32, sr, loop, asr_adapter.device
                 )
         finally:
             if use_cuda:
                 _get_gpu_sem().release()
-        last_ts = 0
-        for piece, ts_ms in deltas:
-            last_ts = ts_ms
-            if not piece.strip() or not _is_valid_english_piece(piece):
-                continue
+        last_ts = int((stream_ctx.audio_offset_samples / NEMOTRON_SAMPLE_RATE) * 1000)
+        hypothesis = (stream_ctx.merged_hypothesis or "").strip()
+        if hypothesis:
             _ensure_session()
-            session.append_piece(piece, ts_ms)
-            if session.maybe_commit(ts_ms):
-                new_p = session.maybe_new_paragraph(ts_ms)
+            session.apply_stream_asr(hypothesis, last_ts)
+            if session.maybe_commit(last_ts):
+                new_p = session.maybe_new_paragraph(last_ts)
                 if new_p:
                     await _send(ws, {"type": "segment", "session_id": session_id, "paragraph_id": new_p.paragraph_id, "text": new_p.raw_text})
-        if deltas:
             await _maybe_emit_partial(last_ts)
 
     async def _pcm_consumer() -> None:
@@ -384,17 +382,16 @@ async def handler(ws: WebSocket):
                         await _get_gpu_sem().acquire()
                     try:
                         async with get_nemotron_process_lock():
-                            flush_deltas = await stream_ctx.flush(loop)
+                            await stream_ctx.flush(loop)
                     finally:
                         if use_cuda:
                             _get_gpu_sem().release()
                     ts_flush_ms = int(
                         (stream_ctx.audio_offset_samples / NEMOTRON_SAMPLE_RATE) * 1000
                     )
-                    for piece, ts_ms in flush_deltas:
-                        tsm = ts_ms if ts_ms else ts_flush_ms
-                        if piece.strip() and _is_valid_english_piece(piece):
-                            session.append_piece(piece, tsm)
+                    hypothesis = (stream_ctx.merged_hypothesis or "").strip()
+                    if hypothesis:
+                        session.apply_stream_asr(hypothesis, ts_flush_ms, finalize=True)
                     async with get_nemotron_process_lock():
                         stream_ctx.reset()
                     session.finalize()

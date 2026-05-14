@@ -74,6 +74,34 @@ def init_db():
             conn.execute("ALTER TABLE section_references ADD COLUMN ref_section_id TEXT")
         except Exception:
             pass
+        # Assistant (Silent / Personal): persisted visible insights only — not indexed into RAG.
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS assistant_insights(
+                id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                transcript_id TEXT,
+                mode TEXT NOT NULL,
+                dedupe_key TEXT NOT NULL,
+                transcript_text TEXT NOT NULL,
+                classification TEXT NOT NULL,
+                confidence REAL NOT NULL,
+                priority TEXT NOT NULL,
+                evidence_json TEXT NOT NULL,
+                assistant_interpretation TEXT,
+                suggested_action TEXT,
+                suggested_response TEXT,
+                start_char INTEGER,
+                end_char INTEGER,
+                paragraph_id TEXT,
+                action_status TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )"""
+        )
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_assistant_insights_session_dedupe "
+            "ON assistant_insights(session_id, dedupe_key)"
+        )
         conn.commit()
 
 @contextmanager

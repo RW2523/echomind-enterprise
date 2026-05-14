@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import logging
 import os
 import threading
 from collections import deque
@@ -17,6 +18,8 @@ import torch.nn.functional as F
 
 from ..core.config import settings
 
+logger = logging.getLogger(__name__)
+
 for _k in ("TORCHDYNAMO_DISABLE", "TORCHINDUCTOR_DISABLE", "TORCH_COMPILE_DISABLE"):
     if _k not in os.environ:
         os.environ[_k] = "1"
@@ -26,6 +29,7 @@ _nemotron_import_error: Optional[str] = None
 
 try:
     from .asr_model_adapter import ASRModelAdapter
+    from nemotron_asr.adapter import _resolve_local_nemo_checkpoint
 
     import nemo.collections.asr  # noqa: F401 — fail fast when NeMo not installed
 
@@ -38,12 +42,17 @@ except ImportError as e:
 NEMOTRON_MODEL_NAME = os.getenv(
     "ECHOMIND_ASR_MODEL_NAME", "nvidia/nemotron-speech-streaming-en-0.6b"
 )
+BOARD_ROOM_ASR_MODEL_NAME = os.getenv(
+    "BOARD_ROOM_ASR_MODEL_NAME", "nvidia/multitalker-parakeet-streaming-0.6b-v1"
+)
 NEMOTRON_SAMPLE_RATE = 16000
 NEMOTRON_ATT_CONTEXT_RIGHT = int(os.getenv("ECHOMIND_ASR_ATT_CONTEXT_RIGHT", "6"))
 
 _asr_executor: Optional[concurrent.futures.ThreadPoolExecutor] = None
 _adapter_lock = threading.Lock()
 _shared_adapter: Optional["ASRModelAdapter"] = None
+_board_room_adapter: Optional["ASRModelAdapter"] = None
+_board_room_load_error: Optional[str] = None
 # One Nemotron forward / session-state build at a time process-wide (shared weights + NeMo streaming).
 _nemotron_process_lock: Optional[asyncio.Lock] = None
 
@@ -115,6 +124,9 @@ def _hypothesis_delta(prev: str, curr: str) -> str:
         return curr
     if curr.startswith(prev):
         return curr[len(prev) :]
+    if len(curr) < len(prev):
+        # Streaming ASR retracted unstable tail; session sync uses the full hypothesis instead.
+        return ""
     n = min(len(prev), len(curr))
     i = 0
     while i < n and prev[i] == curr[i]:
@@ -122,14 +134,85 @@ def _hypothesis_delta(prev: str, curr: str) -> str:
     return curr[i:]
 
 
+def _max_suffix_prefix_overlap(tail: str, incoming: str, k: int) -> int:
+    if not tail or not incoming or k <= 0:
+        return 0
+    n = min(k, len(tail), len(incoming))
+    for length in range(n, 0, -1):
+        if tail[-length:] == incoming[:length]:
+            return length
+    return 0
+
+
+def _merge_streaming_hypothesis(display: str, step_prev: str, step_curr: str) -> str:
+    """Accumulate per-step ASR text into one monotonic transcript for the session."""
+    step_curr = (step_curr or "").strip()
+    if not step_curr:
+        return display
+    if not display:
+        return step_curr
+    if step_curr.startswith(display):
+        return step_curr
+    if display.startswith(step_curr):
+        return display
+    step_prev = (step_prev or "").strip()
+    if step_prev and step_curr.startswith(step_prev):
+        extension = step_curr[len(step_prev) :]
+        if extension and display.rstrip().endswith(step_prev):
+            return display + extension
+    overlap = _max_suffix_prefix_overlap(display.rstrip(), step_curr.lstrip(), 80)
+    if overlap:
+        addition = step_curr[overlap:]
+    else:
+        addition = step_curr
+        if not display.endswith(" ") and addition and not addition.startswith(" "):
+            addition = " " + addition
+    if not addition or display.rstrip().endswith(addition.strip()):
+        return display
+    return display + addition
+
+
 def get_shared_asr_adapter() -> "ASRModelAdapter":
-    global _shared_adapter
+    return get_asr_adapter("default")
+
+
+def get_asr_adapter(profile: str = "default") -> "ASRModelAdapter":
+    global _shared_adapter, _board_room_adapter, _board_room_load_error
     if not NEMOTRON_AVAILABLE:
         raise RuntimeError(
             "Nemotron ASR not available. Install NeMo ASR toolkit (see backend Dockerfile). "
             + (_nemotron_import_error or "")
         )
+    prof = (profile or "default").strip().lower()
     with _adapter_lock:
+        if prof in ("board_room", "board-room", "multitalker", "parakeet"):
+            if _board_room_adapter is not None:
+                return _board_room_adapter
+            try:
+                adapter = ASRModelAdapter(
+                    model_name=BOARD_ROOM_ASR_MODEL_NAME,
+                    att_context_right=NEMOTRON_ATT_CONTEXT_RIGHT,
+                )
+                adapter.load()
+                _board_room_adapter = adapter
+                _board_room_load_error = None
+                return adapter
+            except Exception as exc:
+                _board_room_load_error = str(exc)
+                logger.warning(
+                    "Board Room ASR %s unavailable (%s); using %s",
+                    BOARD_ROOM_ASR_MODEL_NAME,
+                    exc,
+                    NEMOTRON_MODEL_NAME,
+                )
+                if _shared_adapter is None:
+                    _shared_adapter = ASRModelAdapter(
+                        model_name=NEMOTRON_MODEL_NAME,
+                        att_context_right=NEMOTRON_ATT_CONTEXT_RIGHT,
+                    )
+                    _shared_adapter.load()
+                _board_room_adapter = _shared_adapter
+                return _board_room_adapter
         if _shared_adapter is None:
             _shared_adapter = ASRModelAdapter(
                 model_name=NEMOTRON_MODEL_NAME,
@@ -151,12 +234,53 @@ def download_nemotron_model() -> bool:
         return not _hub_offline()
 
 
+def download_board_room_model() -> bool:
+    if not NEMOTRON_AVAILABLE:
+        return False
+    try:
+        from huggingface_hub import snapshot_download
+
+        snapshot_download(BOARD_ROOM_ASR_MODEL_NAME, local_files_only=_hub_offline())
+        return True
+    except Exception:
+        return not _hub_offline()
+
+
 def preload_nemotron_stt() -> bool:
     try:
-        get_shared_asr_adapter()
+        get_asr_adapter("default")
         return True
     except Exception:
         return False
+
+
+def preload_board_room_stt() -> bool:
+    try:
+        get_asr_adapter("board_room")
+        return True
+    except Exception:
+        return False
+
+
+def board_room_stt_status() -> dict:
+    loaded = _board_room_adapter is not None
+    cached = _resolve_local_nemo_checkpoint(BOARD_ROOM_ASR_MODEL_NAME) is not None
+    using_fallback = bool(
+        loaded
+        and _shared_adapter is not None
+        and _board_room_adapter is _shared_adapter
+        and _board_room_load_error
+    )
+    return {
+        "available": NEMOTRON_AVAILABLE,
+        "model_name": BOARD_ROOM_ASR_MODEL_NAME,
+        "loaded": loaded,
+        "cached": cached,
+        "using_fallback": using_fallback,
+        "fallback_model_name": NEMOTRON_MODEL_NAME if using_fallback else None,
+        "load_error": _board_room_load_error,
+        "import_error": _nemotron_import_error,
+    }
 
 
 def _run_chunk_sync(ctx: "NemotronStreamContext", audio: np.ndarray, keep_all: bool) -> Tuple[str, int]:
@@ -184,6 +308,7 @@ class NemotronStreamContext:
         self.stream_step_num = 0
         self.audio_offset_samples = 0
         self.last_hypothesis = ""
+        self.merged_hypothesis = ""
 
     def _chunk_samples(self) -> int:
         ms = max(80, getattr(settings, "TRANSCRIPT_NEMOTRON_CHUNK_MS", 560))
@@ -222,32 +347,33 @@ class NemotronStreamContext:
         client_sr: int,
         loop,
         device: str,
-    ) -> List[Tuple[str, int]]:
-        """Resample to 16 kHz, buffer, run ASR steps. Returns list of (delta_text, ts_ms)."""
+    ) -> bool:
+        """Resample to 16 kHz, buffer, run ASR steps. Returns True when transcript text changed."""
         if client_sr != NEMOTRON_SAMPLE_RATE:
             # Resample on CPU only — GPU interpolate from asyncio + thread pool races the shared CUDA context.
             pcm_float32 = _resample_fast(pcm_float32, client_sr, NEMOTRON_SAMPLE_RATE, "cpu")
         self.append_samples(pcm_float32)
-        deltas: List[Tuple[str, int]] = []
+        before = self.merged_hypothesis
         ex = _get_asr_executor()
         while True:
             audio = self._take_chunk()
             if audio is None:
                 break
             audio_copy = audio.copy()
-            text, ts_ms = await loop.run_in_executor(
+            text, _ts_ms = await loop.run_in_executor(
                 ex,
                 lambda ac=audio_copy: _run_chunk_sync(self, ac, False),
             )
-            piece = _hypothesis_delta(self.last_hypothesis, text)
-            self.last_hypothesis = text
-            if piece.strip():
-                deltas.append((piece, ts_ms))
-        return deltas
+            if text:
+                self.merged_hypothesis = _merge_streaming_hypothesis(
+                    self.merged_hypothesis, self.last_hypothesis, text
+                )
+                self.last_hypothesis = text
+        return self.merged_hypothesis != before
 
-    async def flush(self, loop) -> List[Tuple[str, int]]:
+    async def flush(self, loop) -> bool:
         """Process remainder with keep_all_outputs=True (end of stream)."""
-        deltas: List[Tuple[str, int]] = []
+        before = self.merged_hypothesis
         ex = _get_asr_executor()
         if self.buffer_samples > 0:
             chunks = list(self.buffer)
@@ -256,15 +382,16 @@ class NemotronStreamContext:
             audio = np.concatenate(chunks).astype(np.float32) if chunks else np.zeros(0, dtype=np.float32)
             if audio.size > 0:
                 audio_copy = audio.copy()
-                text, ts_ms = await loop.run_in_executor(
+                text, _ts_ms = await loop.run_in_executor(
                     ex,
                     lambda ac=audio_copy: _run_chunk_sync(self, ac, True),
                 )
-                piece = _hypothesis_delta(self.last_hypothesis, text)
-                self.last_hypothesis = text
-                if piece.strip():
-                    deltas.append((piece, ts_ms))
-        return deltas
+                if text:
+                    self.merged_hypothesis = _merge_streaming_hypothesis(
+                        self.merged_hypothesis, self.last_hypothesis, text
+                    )
+                    self.last_hypothesis = text
+        return self.merged_hypothesis != before
 
 
 async def process_audio_stream(
@@ -283,12 +410,8 @@ async def process_audio_stream(
     all_text: List[str] = []
     for raw in pcm16_chunks:
         f32 = _pcm16_to_float32(raw)
-        for piece, ts_ms in await ctx.process_pcm_chunk(f32, sample_rate, loop, device):
-            on_piece(piece, ts_ms)
-            all_text.append(piece)
-    for piece, ts_ms in await ctx.flush(loop):
-        on_piece(piece, ts_ms)
-        all_text.append(piece)
+        await ctx.process_pcm_chunk(f32, sample_rate, loop, device)
+    await ctx.flush(loop)
     if on_eos:
         on_eos()
-    return "".join(all_text)
+    return ctx.merged_hypothesis

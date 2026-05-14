@@ -1346,7 +1346,7 @@ async def retrieve_single_query(question: str, k: int, context_window: str = "al
 
 
 def _default_source_options() -> Dict[str, bool]:
-    return {"transcript": True, "document": True, "general": True}
+    return {"transcript": False, "document": True, "general": True}
 
 
 async def retrieve_semantic_first(
@@ -1372,7 +1372,7 @@ async def retrieve_semantic_first(
     if not (question or "").strip():
         return ("general", [])
     opts = source_options or _default_source_options()
-    search_transcript = opts.get("transcript", True)
+    search_transcript = opts.get("transcript", False)
     search_document = opts.get("document", True)
     allow_general = opts.get("general", True)
 
@@ -2674,11 +2674,8 @@ def _build_llm_messages(
 
 # --- End-to-end RAG flow (embedding-first, semantic routing) ---
 # 1. Fast path: obvious greetings/thanks/small talk (_is_general_conversation) → answer directly, no RAG.
-# 2. Else: search transcript index first (dense + sparse, RRF).
-# 3. Search document index (exclude transcripts).
-# 4. If transcript best_score >= threshold → use transcript hits.
-# 5. Else if document best_score >= threshold → use document hits.
-# 6. Else → general (no RAG). Semantic search decides; no relevant hits = general.
+# 2. Else: retrieve from document index (and transcript index only when source_options.transcript is true).
+# 3. Semantic search picks best source; no relevant hits → general (no RAG).
 
 
 async def answer(
@@ -2801,7 +2798,7 @@ async def answer_stream(
             yield ev
         return
     opts = source_options or _default_source_options()
-    if not opts.get("transcript", True) and not opts.get("document", True):
+    if not opts.get("transcript", False) and not opts.get("document", True):
         logger.info("RAG (stream): only General selected → answer directly, no retrieval")
         async for ev in _answer_general_stream(
             question, history, persona, conversation_summary, max_tokens=eff_max

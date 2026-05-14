@@ -37,11 +37,13 @@ export interface UseLiveTranscriptionReturn {
   sessionStartedAt: Date | null;
   customTags: string[];
   newTagInput: string;
+  /** Latest transcript id from server `stored` message when auto_store is on; null otherwise. */
+  transcriptId: string | null;
   setSessionName: (v: string) => void;
   setSessionLocation: (v: string) => void;
   setNewTagInput: (v: string) => void;
   openStartModal: () => void;
-  startSession: (name: string, location: string) => Promise<void>;
+  startSession: (name: string, location: string, opts?: { autoStore?: boolean }) => Promise<void>;
   handleStopAndExtractTags: () => Promise<void>;
   clearAndReset: () => void;
   addTag: () => void;
@@ -57,7 +59,26 @@ export interface UseLiveTranscriptionReturn {
   applyDefault: () => void;
 }
 
-export function useLiveTranscription(defaultName: () => string): UseLiveTranscriptionReturn {
+export interface UseLiveTranscriptionOptions {
+  /** When false, transcript is not auto-saved to SQLite/RAG (WS start sends auto_store: false). Default true. */
+  autoStore?: boolean;
+  /** ASR profile for the transcribe WebSocket (default Nemotron vs Board Room multitalker). */
+  sttProfile?: "default" | "board_room";
+}
+
+export function useLiveTranscription(
+  defaultName: () => string,
+  hookOptions?: UseLiveTranscriptionOptions
+): UseLiveTranscriptionReturn {
+  const autoStoreRef = useRef(hookOptions?.autoStore !== false);
+  const sttProfileRef = useRef<"default" | "board_room">(hookOptions?.sttProfile === "board_room" ? "board_room" : "default");
+
+  useEffect(() => {
+    autoStoreRef.current = hookOptions?.autoStore !== false;
+  }, [hookOptions?.autoStore]);
+  useEffect(() => {
+    sttProfileRef.current = hookOptions?.sttProfile === "board_room" ? "board_room" : "default";
+  }, [hookOptions?.sttProfile]);
   const [fullTranscript, setFullTranscript] = useState("");
   const [partial, setPartial] = useState("");
   const [listening, setListening] = useState(false);
@@ -73,6 +94,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null);
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [newTagInput, setNewTagInput] = useState("");
+  const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [micMuted, setMicMuted] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -116,12 +138,14 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       userInitiatedCloseRef.current = false;
       sessionNameRef.current = name || "";
       sessionLocationRef.current = location || "default";
-      setFullTranscript("");
-      setPartial("");
+      if (!isReconnect) {
+        setFullTranscript("");
+        setPartial("");
+      }
       setWsError(null);
       setWsStatus("connecting");
 
-      const ws = new WebSocket(transcribeWsUrl());
+      const ws = new WebSocket(transcribeWsUrl(sttProfileRef.current));
       wsRef.current = ws;
 
       const handleError = (err: string) => {
@@ -151,6 +175,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             setWsError(null);
             const tid = msg.transcript_id;
             if (tid) {
+              setTranscriptId(String(tid));
               lastStoredTranscriptIdRef.current = tid;
               if (pendingTagsRef.current?.length) {
                 updateTranscript(tid, { tags: pendingTagsRef.current }).catch(() => {});
@@ -234,7 +259,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       ws.send(
         JSON.stringify({
           type: "start",
-          auto_store: true,
+          auto_store: autoStoreRef.current,
           sample_rate: sampleRate,
           language: "en",
           name: name || undefined,
@@ -271,7 +296,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         }
       }, HEARTBEAT_INTERVAL_MS);
     },
-    [stopMic]
+    [stopMic, hookOptions?.autoStore]
   );
 
   const clearAndReset = useCallback(() => {
@@ -288,11 +313,17 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     transcriptForTagsRef.current = "";
     lastStoredTranscriptIdRef.current = null;
     pendingTagsRef.current = null;
+    setTranscriptId(null);
     setWsError(null);
   }, [stopMic]);
 
   const startSession = useCallback(
-    async (name: string, location: string) => {
+    async (name: string, location: string, opts?: { autoStore?: boolean }) => {
+      if (opts && typeof opts.autoStore === "boolean") {
+        autoStoreRef.current = opts.autoStore;
+      } else {
+        autoStoreRef.current = hookOptions?.autoStore !== false;
+      }
       setMicMuted(false);
       setSessionName(name);
       setSessionLocation(location);
@@ -300,11 +331,12 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       setCustomTags([]);
       transcriptForTagsRef.current = "";
       lastStoredTranscriptIdRef.current = null;
+      setTranscriptId(null);
       pendingTagsRef.current = null;
       setShowStartModal(false);
       await doStart(name, location);
     },
-    [doStart]
+    [doStart, hookOptions?.autoStore]
   );
 
   const handleStopAndExtractTags = useCallback(async () => {
@@ -384,6 +416,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     sessionStartedAt,
     customTags,
     newTagInput,
+    transcriptId,
     setSessionName,
     setSessionLocation,
     setNewTagInput,

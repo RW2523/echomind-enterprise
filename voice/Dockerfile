@@ -9,13 +9,15 @@ RUN set -e; \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
+ENV PIP_DEFAULT_TIMEOUT=1000
+ENV PIP_RETRIES=10
 RUN python -m pip install --upgrade pip && pip install "setuptools>=70,<82" wheel
 
 COPY voice/requirements.txt /workspace/requirements.txt
 RUN pip install --no-cache-dir -r /workspace/requirements.txt
 
-RUN pip install --no-cache-dir Cython packaging sentencepiece \
- && pip install --no-cache-dir "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@main"
+COPY docker/install_nemo_asr.sh /tmp/install_nemo_asr.sh
+RUN chmod +x /tmp/install_nemo_asr.sh && /tmp/install_nemo_asr.sh
 
 RUN pip install --no-cache-dir "numpy>=1.26.4,<2.0" --force-reinstall \
  && pip install --no-cache-dir --upgrade torchvision

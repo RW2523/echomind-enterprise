@@ -1,4 +1,81 @@
+import type {
+  AssistantAnalyzeRequest,
+  AssistantAnalyzeResponse,
+  AssistantAnalysisScope,
+  AssistantBulkSaveResponse,
+  AssistantInsight,
+  AssistantInsightActionStatus,
+  AssistantMode,
+  AssistantSessionInsightsResponse,
+  BoardRoomExportFormat,
+  BoardRoomReport,
+  BoardRoomSttStatus,
+} from "../types";
+
 export const API_BASE = (import.meta as any).env?.VITE_API_BASE || "";
+
+export async function analyzeAssistantWindow(
+  body: AssistantAnalyzeRequest
+): Promise<AssistantAnalyzeResponse> {
+  const r = await fetch(`${API_BASE}/api/assistant/analyze-window`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `analyze-window failed: ${r.status}`);
+  }
+  return (await r.json()) as AssistantAnalyzeResponse;
+}
+
+export async function bulkSaveAssistantInsights(body: {
+  session_id: string;
+  mode: AssistantMode;
+  transcript_id?: string | null;
+  insights: AssistantInsight[];
+}): Promise<AssistantBulkSaveResponse> {
+  const r = await fetch(`${API_BASE}/api/assistant/insights/bulk-save`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `bulk-save insights failed: ${r.status}`);
+  }
+  return (await r.json()) as AssistantBulkSaveResponse;
+}
+
+export async function listAssistantSessionInsights(sessionId: string): Promise<AssistantSessionInsightsResponse> {
+  const r = await fetch(
+    `${API_BASE}/api/assistant/sessions/${encodeURIComponent(sessionId)}/insights`
+  );
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `list session insights failed: ${r.status}`);
+  }
+  return (await r.json()) as AssistantSessionInsightsResponse;
+}
+
+export async function patchAssistantInsightAction(
+  insightId: string,
+  action_status: AssistantInsightActionStatus
+): Promise<{ ok: boolean; id: string; action_status: string }> {
+  const r = await fetch(
+    `${API_BASE}/api/assistant/insights/${encodeURIComponent(insightId)}/action`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action_status }),
+    }
+  );
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `patch insight action failed: ${r.status}`);
+  }
+  return (await r.json()) as { ok: boolean; id: string; action_status: string };
+}
 
 /** docs */
 export async function uploadDocument(file: File): Promise<{ok:boolean; doc_id?:string; chunks?:number}> {
@@ -335,15 +412,65 @@ export async function updateTranscript(
   return await r.json();
 }
 
-export function transcribeWsUrl(): string {
+export function transcribeWsUrl(sttProfile: "default" | "board_room" = "default"): string {
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  return `${proto}://${location.host}${API_BASE}/api/transcribe/ws`;
+  const q = sttProfile === "board_room" ? "?stt_profile=board_room" : "";
+  return `${proto}://${location.host}${API_BASE}/api/transcribe/ws${q}`;
+}
+
+export async function getBoardRoomSttStatus(): Promise<BoardRoomSttStatus> {
+  const r = await fetch(`${API_BASE}/api/board-room/stt-status`);
+  if (!r.ok) throw new Error(`board-room stt-status failed: ${r.status}`);
+  return await r.json();
+}
+
+export async function generateBoardRoomReport(body: {
+  session_id: string;
+  title: string;
+  transcript: string;
+  session_name?: string;
+  session_location?: string;
+  include_rag_validation?: boolean;
+  analysis_scope?: AssistantAnalysisScope;
+}): Promise<BoardRoomReport> {
+  const r = await fetch(`${API_BASE}/api/board-room/reports/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `generate report failed: ${r.status}`);
+  }
+  return await r.json();
+}
+
+export function boardRoomReportExportUrl(reportId: string, format: BoardRoomExportFormat): string {
+  return `${API_BASE}/api/board-room/reports/${encodeURIComponent(reportId)}/export?format=${format}`;
 }
 
 /** Voice conversation WebSocket (proxied to voice service at /voice/ws). */
 export function voiceWsUrl(): string {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   return `${proto}://${location.host}/voice/ws`;
+}
+
+/** Personal Assistant Speak Now: one-shot Piper WAV from the voice service (not the /ws conversation). */
+export async function speakAssistantTts(
+  body: { text: string; voice_id?: string },
+  signal?: AbortSignal
+): Promise<Blob> {
+  const r = await fetch(`${location.origin}/voice/tts/speak`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `tts/speak failed: ${r.status}`);
+  }
+  return r.blob();
 }
 
 /** List Piper voice ids already installed on the voice server. */

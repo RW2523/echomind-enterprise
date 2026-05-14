@@ -16,6 +16,9 @@ const Header: React.FC<HeaderProps> = ({ activeView, onMenuClick }) => {
     switch (activeView) {
       case AppView.KNOWLEDGE_CHAT: return 'Knowledge Chat';
       case AppView.TRANSCRIPTION: return 'Live Transcription & Refinement';
+      case AppView.SILENT_ASSISTANT: return 'Silent Assistant';
+      case AppView.PERSONAL_ASSISTANT: return 'Personal Assistant';
+      case AppView.BOARD_ROOM: return 'Board Room';
       case AppView.VOICE_CONVERSATION: return 'Voice AI Conversation';
       case AppView.SETTINGS: return 'Platform Settings';
       default: return 'EchoMind';

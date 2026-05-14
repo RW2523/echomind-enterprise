@@ -43,35 +43,35 @@ const PERSONA_CHAT_META: Record<string, { icon: string; label: string; accent: s
     icon: '🎓',
     label: 'Professor',
     accent: 'text-emerald-400',
-    emptyState: 'Ask me to explain any topic from your documents and transcripts. I\'ll break it down clearly with examples, analogies, and step-by-step lessons.',
+    emptyState: 'Ask me to explain any topic from your uploaded documents. I\'ll break it down clearly with examples, analogies, and step-by-step lessons.',
     placeholder: 'Ask me to explain, teach, or break down any topic…',
   },
   [PersonaType.FINANCIAL]: {
     icon: '💼',
     label: 'Financial Advisor',
     accent: 'text-cyan-400',
-    emptyState: 'Ask me anything about your DoD FMR documents, regulations, or transcripts. I\'ll cite every claim precisely—no fabrication, only facts from your sources.',
+    emptyState: 'Ask me anything about your DoD FMR documents and regulations. I\'ll cite every claim precisely—no fabrication, only facts from your sources.',
     placeholder: 'Ask about DoD FMR, regulations, compliance, or your documents…',
   },
   [PersonaType.FUNNY]: {
     icon: '😄',
     label: 'EchoMind',
     accent: 'text-amber-400',
-    emptyState: 'Hey there! Ask me anything about your documents and transcripts. I\'ll give you real, helpful answers—with a smile. No question too big, no topic too dry!',
-    placeholder: 'Ask me anything about your documents and transcripts…',
+    emptyState: 'Hey there! Ask me anything about your uploaded documents. I\'ll give you real, helpful answers—with a smile. No question too big, no topic too dry!',
+    placeholder: 'Ask about your uploaded documents…',
   },
   [PersonaType.LAWYER]: {
     icon: '⚖️',
     label: 'Legal Advisor',
     accent: 'text-violet-400',
-    emptyState: 'Ask me to analyze your documents and transcripts for legal obligations, risks, and compliance matters. I\'ll apply structured legal reasoning and cite my sources.',
+    emptyState: 'Ask me to analyze your uploaded documents for legal obligations, risks, and compliance matters. I\'ll apply structured legal reasoning and cite my sources.',
     placeholder: 'Ask about legal obligations, contracts, regulations, or risks…',
   },
   [PersonaType.AI_EXPERT]: {
     icon: '🤖',
     label: 'AI Expert',
     accent: 'text-rose-400',
-    emptyState: 'Ask me about AI architectures, software design decisions, or technical insights from your documents and transcripts. I\'ll ground my recommendations in your actual context.',
+    emptyState: 'Ask me about AI architectures, software design decisions, or technical insights from your uploaded documents. I\'ll ground my recommendations in your actual context.',
     placeholder: 'Ask about AI, software architecture, engineering decisions, or your docs…',
   },
 };
@@ -362,7 +362,7 @@ const ChunkCitationModal: React.FC<ChunkModalProps> = ({ citations, onClose }) =
 };
 
 const DEFAULT_SOURCE_OPTIONS: SourceOptions = {
-  transcript: true,
+  transcript: false,
   document: true,
   general: true,
 };
@@ -394,6 +394,16 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
   const streamRafRef = useRef<number | null>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  useEffect(() => {
+    const onFollowUp = (e: Event) => {
+      const ce = e as CustomEvent<{ draft?: string }>;
+      const draft = (ce.detail?.draft || '').trim();
+      if (draft) setInput(draft);
+    };
+    window.addEventListener('echomind-chat-followup', onFollowUp as EventListener);
+    return () => window.removeEventListener('echomind-chat-followup', onFollowUp as EventListener);
+  }, []);
 
   const loadDocs = async () => {
     try {
@@ -694,7 +704,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
               <span className="text-4xl">{personaMeta.icon}</span>
               <p className={`text-sm font-semibold ${personaMeta.accent}`}>{personaMeta.label}</p>
               <p className="text-sm text-slate-400 max-w-md leading-relaxed">{personaMeta.emptyState}</p>
-              <p className="text-[11px] text-slate-600 mt-1">Searches both documents and transcripts · cites sources inline</p>
+              <p className="text-[11px] text-slate-600 mt-1">Searches uploaded documents by default · turn Transcript on to include saved transcripts · cites sources inline</p>
             </div>
           )}
           {messages.map(m => (

@@ -11,6 +11,8 @@ from .core.db import init_db
 from .api.routes.docs import router as docs_router
 from .api.routes.chat import router as chat_router
 from .api.routes.transcribe import router as transcribe_router
+from .api.routes.assistant import router as assistant_router
+from .api.routes.board_room import router as board_room_router
 
 # So Docker logs (stdout) show app logs including RAG intent debug
 logging.basicConfig(
@@ -26,7 +28,13 @@ logger = logging.getLogger(__name__)
 def _warm_nemotron_stt():
     """Background: ensure Nemotron weights in HF cache when online; pre-load shared NeMo ASR model."""
     try:
-        from .transcribe.stt_streaming import NEMOTRON_AVAILABLE, download_nemotron_model, preload_nemotron_stt
+        from .transcribe.stt_streaming import (
+            NEMOTRON_AVAILABLE,
+            download_board_room_model,
+            download_nemotron_model,
+            preload_board_room_stt,
+            preload_nemotron_stt,
+        )
 
         if not NEMOTRON_AVAILABLE:
             return
@@ -39,6 +47,13 @@ def _warm_nemotron_stt():
             logger.warning(
                 "Nemotron ASR: pre-load failed (Live Transcript will retry on first connection or fail if offline and missing)."
             )
+        if download_board_room_model():
+            logger.info("Board Room ASR: Hugging Face cache check ok.")
+        logger.info("Board Room ASR: loading multitalker model...")
+        if preload_board_room_stt():
+            logger.info("Board Room ASR: ready.")
+        else:
+            logger.warning("Board Room ASR: pre-load failed (Board Room will retry on first connection).")
     except Exception as e:
         logger.warning("Nemotron ASR: warmup failed: %s", e)
 
@@ -109,3 +124,5 @@ def health():
 app.include_router(docs_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(transcribe_router, prefix="/api")
+app.include_router(assistant_router, prefix="/api")
+app.include_router(board_room_router, prefix="/api")

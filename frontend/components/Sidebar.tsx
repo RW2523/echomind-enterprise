@@ -70,6 +70,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
   const navItems = [
     { id: AppView.KNOWLEDGE_CHAT, label: 'Knowledge Chat', icon: ICONS.Chat },
     { id: AppView.TRANSCRIPTION, label: 'Live Transcript', icon: ICONS.Transcript },
+    { id: AppView.SILENT_ASSISTANT, label: 'Silent Assistant', icon: ICONS.Eye },
+    { id: AppView.PERSONAL_ASSISTANT, label: 'Personal Assistant', icon: ICONS.Zap },
+    { id: AppView.BOARD_ROOM, label: 'Board Room', icon: ICONS.BoardRoom },
     { id: AppView.VOICE_CONVERSATION, label: 'Conversation', icon: ICONS.Mic },
     { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings }
   ];

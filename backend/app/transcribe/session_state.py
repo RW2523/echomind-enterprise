@@ -14,6 +14,9 @@ from ..core.config import settings
 PUNCT_END = re.compile(r".*[.?!]\s*$")
 # No space before punctuation
 NO_SPACE_BEFORE = re.compile(r"\s+([.,?!:;)])\s*")
+# Streaming ASR often re-emits ". " after a correction; collapse duplicate sentence ends.
+_DUP_SENTENCE_END = re.compile(r"([.!?])(?:\s*[.!?])+")
+_DUP_DOTS = re.compile(r"\.{2,}")
 
 
 @dataclass
@@ -34,6 +37,15 @@ def _normalize_whitespace(text: str) -> str:
         return ""
     t = re.sub(r"\s+", " ", text).strip()
     t = NO_SPACE_BEFORE.sub(r"\1", t)
+    return _collapse_spurious_punctuation(t)
+
+
+def _collapse_spurious_punctuation(text: str) -> str:
+    """Remove repeated sentence-ending punctuation introduced by streaming ASR revisions."""
+    if not text:
+        return ""
+    t = _DUP_DOTS.sub(".", text)
+    t = _DUP_SENTENCE_END.sub(r"\1", t)
     return t
 
 
@@ -44,8 +56,45 @@ def _normalize_piece(piece: str) -> str:
     # Collapse internal multiple spaces, fix no-space-before-punct
     t = re.sub(r"\s+", " ", piece)
     t = NO_SPACE_BEFORE.sub(r"\1", t)
+    t = _collapse_spurious_punctuation(t)
     # Strip trailing but preserve leading (word boundary)
     return t.rstrip() if t.startswith(" ") else t.strip()
+
+
+def _normalize_stream_hypothesis(hypothesis: str) -> str:
+    """Normalize a full streaming hypothesis before reconciling with session state."""
+    if not hypothesis:
+        return ""
+    t = re.sub(r"\s+", " ", hypothesis)
+    t = NO_SPACE_BEFORE.sub(r"\1", t)
+    return _collapse_spurious_punctuation(t.strip())
+
+
+def _longest_common_prefix(a: str, b: str) -> str:
+    n = min(len(a), len(b))
+    i = 0
+    while i < n and a[i] == b[i]:
+        i += 1
+    return a[:i]
+
+
+def _trim_redundant_leading_punctuation(tail: str, piece: str) -> str:
+    """Drop a leading '.?!' when the transcript already ends with sentence punctuation."""
+    if not piece or not tail:
+        return piece
+    tail_r = tail.rstrip()
+    if not tail_r or tail_r[-1] not in ".?!":
+        return piece
+    leading_ws = len(piece) - len(piece.lstrip(" "))
+    core = piece.lstrip(" ")
+    if not core:
+        return ""
+    if core[0] in ".?!":
+        core = core.lstrip(".?!")
+        if not core:
+            return ""
+        return (" " * leading_ws) + core
+    return piece
 
 
 def _max_suffix_prefix_overlap(tail: str, incoming: str, k: int) -> int:
@@ -62,6 +111,7 @@ def _max_suffix_prefix_overlap(tail: str, incoming: str, k: int) -> int:
 class SessionState:
     """
     Maintains raw transcript, recent buffer, last emit, and segments.
+    - sync_hypothesis(hypothesis, ts_ms): reconcile full streaming ASR text (avoids duplicate punctuation on revision).
     - append_piece(piece, ts_ms): add STT piece with anti-dup, normalize, maybe commit.
     - get_display_text(): raw_text + recent_buffer for client.
     - maybe_commit(ts_ms): commit buffer into raw_text on punctuation/silence/length.
@@ -111,6 +161,77 @@ class SessionState:
         self._current_paragraph_start_ts = None
         return p
 
+    def _truncate_display_to_prefix(self, prefix: str) -> None:
+        """Rewind committed + buffer text when streaming ASR revises earlier words/punctuation."""
+        current = self.get_display_text()
+        if not prefix:
+            self.raw_text = ""
+            self.recent_buffer = ""
+            return
+        if not current.startswith(prefix):
+            return
+        self.raw_text = prefix
+        self.recent_buffer = ""
+
+    def apply_stream_asr(
+        self,
+        hypothesis: str,
+        ts_ms: int,
+        *,
+        finalize: bool = False,
+    ) -> None:
+        """Apply one streaming ASR hypothesis snapshot to the session transcript."""
+        hyp = _normalize_stream_hypothesis(hypothesis)
+        if not hyp:
+            return
+        self.sync_hypothesis(hypothesis, ts_ms, allow_replace=finalize)
+
+    def sync_hypothesis(self, hypothesis: str, ts_ms: int, *, allow_replace: bool = False) -> None:
+        """Apply the latest full streaming hypothesis instead of blind delta append."""
+        if self._paused:
+            return
+        hypothesis = _normalize_stream_hypothesis(hypothesis)
+        if not hypothesis:
+            return
+        current = self.get_display_text()
+        if hypothesis == current:
+            self.last_piece_ts_ms = ts_ms
+            return
+        if hypothesis.startswith(current):
+            self.append_piece(hypothesis[len(current) :], ts_ms)
+            return
+        lcp = _longest_common_prefix(current, hypothesis)
+        if lcp:
+            self._truncate_display_to_prefix(lcp)
+            remainder = hypothesis[len(lcp) :]
+            if remainder:
+                self.append_piece(remainder, ts_ms)
+            else:
+                self.last_piece_ts_ms = ts_ms
+            return
+        if current and len(hypothesis) <= len(current):
+            piece = hypothesis
+            if not current.endswith(" ") and piece and not piece.startswith(" "):
+                piece = " " + piece
+            self.append_piece(piece, ts_ms)
+            return
+        if allow_replace:
+            self.raw_text = hypothesis
+            self.recent_buffer = ""
+        else:
+            piece = hypothesis
+            if current and not current.endswith(" ") and piece and not piece.startswith(" "):
+                piece = " " + piece
+            overlap = _max_suffix_prefix_overlap(current.rstrip(), piece.lstrip(), self.overlap_k)
+            if overlap:
+                piece = piece[overlap:]
+            if piece:
+                self.append_piece(piece, ts_ms)
+            else:
+                self.last_piece_ts_ms = ts_ms
+            return
+        self.last_piece_ts_ms = ts_ms
+
     def append_piece(self, piece: str, ts_ms: int) -> None:
         """Append a text piece from STT with anti-duplication and whitespace normalization."""
         if self._paused or not piece:
@@ -118,7 +239,12 @@ class SessionState:
         piece = _normalize_piece(piece)
         if not piece:
             return
-        tail = (self.raw_text + self.recent_buffer).strip()
+        tail = self.get_display_text()
+        piece = _trim_redundant_leading_punctuation(tail, piece)
+        if not piece:
+            self.last_piece_ts_ms = ts_ms
+            return
+        tail = tail.strip()
         # Skip exact duplicate: if incoming piece is identical to end of tail, do not append
         if tail and len(piece) <= len(tail) and tail.endswith(piece):
             self.last_piece_ts_ms = ts_ms
@@ -132,17 +258,18 @@ class SessionState:
             return
         # Pieces from STT already include word-boundary spaces (▁→" "); concatenate directly.
         self.recent_buffer += piece
+        self.recent_buffer = _collapse_spurious_punctuation(self.recent_buffer)
         self.last_piece_ts_ms = ts_ms
 
     def get_display_text(self) -> str:
         """Full text to send to client (raw + recent buffer)."""
         if not self.recent_buffer:
-            return self.raw_text.strip()
+            return _collapse_spurious_punctuation(self.raw_text.strip())
         r = self.raw_text.strip()
         if r:
             sep = " " if not r.endswith(" ") and not self.recent_buffer.startswith(" ") else ""
-            return r + sep + self.recent_buffer
-        return self.recent_buffer
+            return _collapse_spurious_punctuation(r + sep + self.recent_buffer)
+        return _collapse_spurious_punctuation(self.recent_buffer)
 
     def maybe_commit(self, ts_ms: int) -> bool:
         """

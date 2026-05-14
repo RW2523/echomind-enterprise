@@ -6,6 +6,7 @@ import copy
 import logging
 import os
 import threading
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -45,6 +46,52 @@ def extract_transcriptions(hyps: List[Any]) -> List[str]:
     if isinstance(hyps[0], _Hypothesis):
         return [h.text for h in hyps]
     return list(hyps)
+
+
+def _hub_offline() -> bool:
+    return os.environ.get("HF_HUB_OFFLINE", "").strip().lower() in ("1", "true", "yes")
+
+
+def _resolve_local_nemo_checkpoint(model_name: str) -> Optional[str]:
+    """Resolve a Hugging Face repo id to a local .nemo file (offline-safe)."""
+    if model_name.endswith(".nemo") and os.path.isfile(model_name):
+        return model_name
+    if "/" not in model_name:
+        return None
+    try:
+        from huggingface_hub import snapshot_download
+
+        repo_dir = snapshot_download(model_name, local_files_only=_hub_offline())
+    except Exception as exc:
+        logger.warning("ASR: could not resolve local cache for %s: %s", model_name, exc)
+        return None
+    candidates = sorted(Path(repo_dir).rglob("*.nemo"))
+    if not candidates:
+        return None
+    preferred = [p for p in candidates if model_name.split("/")[-1] in p.name]
+    return str((preferred or candidates)[0])
+
+
+def _load_pretrained_asr_model(model_name: str, device: str):
+    _import_nemo()
+    if _hub_offline():
+        local = _resolve_local_nemo_checkpoint(model_name)
+        if not local:
+            raise RuntimeError(
+                f"HF_HUB_OFFLINE is enabled but no local .nemo checkpoint was found for {model_name}. "
+                "Rebuild the backend image with model download enabled or bake the weights into the image."
+            )
+        logger.info("Restoring ASR model from local checkpoint: %s", local)
+        return _nemo_asr.models.ASRModel.restore_from(restore_path=local, map_location=device)
+
+    try:
+        return _nemo_asr.models.ASRModel.from_pretrained(model_name=model_name)
+    except Exception as exc:
+        local = _resolve_local_nemo_checkpoint(model_name)
+        if local:
+            logger.warning("ASR from_pretrained failed for %s (%s); using local checkpoint", model_name, exc)
+            return _nemo_asr.models.ASRModel.restore_from(restore_path=local, map_location=device)
+        raise
 
 
 class ASRModelAdapter:
@@ -89,7 +136,7 @@ class ASRModelAdapter:
                 "yes",
             )
         logger.info("Loading Nemotron ASR model: %s on device=%s", self.model_name, self.device)
-        self._model = _nemo_asr.models.ASRModel.from_pretrained(model_name=self.model_name)
+        self._model = _load_pretrained_asr_model(self.model_name, self.device)
         self._model = self._model.to(device=self.device, dtype=self._compute_dtype)
         self._model.eval()
         if self.device == "cuda":
@@ -113,6 +160,7 @@ class ASRModelAdapter:
             sig = inspect.signature(self._model.change_decoding_strategy)
             if "decoder_type" in sig.parameters:
                 self._model.change_decoding_strategy(decoder_type="rnnt")
+        self._maybe_disable_rnnt_cuda_graphs()
 
         self._pre_encode_cache_size = self._model.encoder.streaming_cfg.pre_encode_cache_size[1]
         self._num_channels = self._model.cfg.preprocessor.features
@@ -124,6 +172,26 @@ class ASRModelAdapter:
     def load(self) -> None:
         with self._forward_lock:
             self._do_load_body()
+
+    def _maybe_disable_rnnt_cuda_graphs(self) -> None:
+        if self.device != "cuda":
+            return
+        disable = os.getenv("ECHOMIND_ASR_DISABLE_CUDA_GRAPHS", "1").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+        if not disable:
+            return
+        try:
+            decoding = getattr(self._model, "decoding", None)
+            greedy = getattr(decoding, "decoding", None) if decoding is not None else None
+            computer = getattr(greedy, "_decoding_computer", None) if greedy is not None else None
+            if computer is not None and hasattr(computer, "force_cuda_graphs_mode"):
+                computer.force_cuda_graphs_mode("no_graphs")
+                logger.info("ASR RNNT CUDA graphs disabled (ECHOMIND_ASR_DISABLE_CUDA_GRAPHS)")
+        except Exception as exc:
+            logger.warning("ASR: could not disable RNNT CUDA graphs: %s", exc)
 
     def _build_preprocessor(self):
         cfg = copy.deepcopy(self._model._cfg)
@@ -191,6 +259,9 @@ class ASRModelAdapter:
             drop_extra = None
             if step_num > 0 and hasattr(self._model.encoder.streaming_cfg, "drop_extra_pre_encoded"):
                 drop_extra = self._model.encoder.streaming_cfg.drop_extra_pre_encoded
+            # NeMo 2.2 RNNT/TDT decoders reject carried decoder state across stream steps.
+            state["previous_hypotheses"] = None
+            state["pred_out_stream"] = None
             with torch.inference_mode():
                 (
                     pred_out_stream,
