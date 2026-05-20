@@ -1,6 +1,17 @@
 import os, sqlite3
 from contextlib import contextmanager
+from typing import List, Tuple
 from .config import settings
+
+
+def _safe_add_columns(conn: sqlite3.Connection, table: str, columns: List[Tuple[str, str]]) -> None:
+    """Add columns to an existing table without failing if they already exist."""
+    for col_name, col_def in columns:
+        try:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_def}")
+        except Exception:
+            pass  # Column already exists — safe to ignore
+
 
 def init_db():
     os.makedirs(settings.DATA_DIR, exist_ok=True)
@@ -74,6 +85,57 @@ def init_db():
             conn.execute("ALTER TABLE section_references ADD COLUMN ref_section_id TEXT")
         except Exception:
             pass
+        # Board Room sessions: multi-speaker meeting capture.
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS boardroom_sessions(
+                id TEXT PRIMARY KEY,
+                title TEXT,
+                location TEXT,
+                status TEXT DEFAULT 'active',
+                started_at TEXT,
+                ended_at TEXT,
+                duration_sec REAL,
+                raw_transcript TEXT,
+                speaker_map_json TEXT,
+                segments_json TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            )"""
+        )
+        # Safe migrations — add new columns without breaking existing rows.
+        _safe_add_columns(conn, "boardroom_sessions", [
+            ("audio_file_path", "TEXT"),
+            ("speaker_count", "INTEGER DEFAULT 0"),
+            ("cleaned_transcript", "TEXT"),
+            ("primary_model_name", "TEXT"),
+            ("diarization_model_name", "TEXT"),
+            ("cleanup_model_name", "TEXT"),
+            ("transcription_source", "TEXT DEFAULT 'boardroom_multitalker'"),
+            ("rag_ingested", "INTEGER DEFAULT 0"),
+            ("mode", "TEXT DEFAULT 'boardroom'"),
+            ("sample_rate", "INTEGER DEFAULT 16000"),
+            ("audio_format", "TEXT DEFAULT 'pcm16'"),
+            ("error_message", "TEXT"),
+            ("report_id", "TEXT"),
+        ])
+        # Board Room reports: LLM+RAG generated analysis of a session.
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS boardroom_reports(
+                id TEXT PRIMARY KEY,
+                session_id TEXT,
+                status TEXT DEFAULT 'pending',
+                report_json TEXT,
+                rag_evidence_json TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            )"""
+        )
+        _safe_add_columns(conn, "boardroom_reports", [
+            ("report_markdown", "TEXT"),
+            ("pdf_path", "TEXT"),
+            ("pptx_path", "TEXT"),
+            ("transcript_id", "TEXT"),
+        ])
         conn.commit()
 
 @contextmanager

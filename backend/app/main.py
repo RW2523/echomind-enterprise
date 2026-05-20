@@ -11,6 +11,8 @@ from .core.db import init_db
 from .api.routes.docs import router as docs_router
 from .api.routes.chat import router as chat_router
 from .api.routes.transcribe import router as transcribe_router
+from .api.routes.boardroom import router as boardroom_router
+from .api.routes.models import router as models_router
 
 # So Docker logs (stdout) show app logs including RAG intent debug
 logging.basicConfig(
@@ -20,6 +22,9 @@ logging.basicConfig(
     force=True,
 )
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+# Enable DEBUG-level speaker detection logs for Board Room diagnostics.
+# This prints cosine distances every check interval so we can tune thresholds.
+logging.getLogger("app.boardroom.stt_parakeet").setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -41,6 +46,51 @@ def _warm_nemotron_stt():
             )
     except Exception as e:
         logger.warning("Nemotron ASR: warmup failed: %s", e)
+
+
+def _warm_vibevoice_cleanup():
+    """Background: pre-load VibeVoice-ASR for final cleanup/backup if enabled."""
+    try:
+        from .cleanup.stt_vibevoice import VIBEVOICE_AVAILABLE, _VIBEVOICE_MODEL_NAME, preload_vibevoice
+        from .core.config import settings
+        if not settings.FINAL_CLEANUP_ENABLED:
+            logger.info("VibeVoice-ASR (Final Cleanup): disabled via FINAL_CLEANUP_ENABLED=false.")
+            return
+        if not settings.FINAL_CLEANUP_WARM_ON_STARTUP:
+            logger.info("VibeVoice-ASR (Final Cleanup): startup warmup skipped (FINAL_CLEANUP_WARM_ON_STARTUP=false); will lazy-load on first use.")
+            return
+        if not VIBEVOICE_AVAILABLE:
+            logger.info("VibeVoice-ASR (Final Cleanup): transformers not available, skipping warmup.")
+            return
+        logger.info("VibeVoice-ASR (Final Cleanup): loading %s ...", _VIBEVOICE_MODEL_NAME)
+        if preload_vibevoice():
+            logger.info("VibeVoice-ASR (Final Cleanup): ready — will run after Board Room sessions.")
+        else:
+            logger.warning("VibeVoice-ASR (Final Cleanup): pre-load failed; will retry on first use.")
+    except Exception as e:
+        logger.warning("VibeVoice-ASR (Final Cleanup): warmup failed: %s", e)
+
+
+def _warm_parakeet_boardroom():
+    """Background: pre-download and pre-load Parakeet multitalker ASR for Board Room Mode."""
+    try:
+        from .boardroom.stt_parakeet import PARAKEET_AVAILABLE, download_parakeet_model, preload_parakeet
+
+        if not PARAKEET_AVAILABLE:
+            logger.info("Parakeet ASR (Board Room): NeMo not available, skipping warmup.")
+            return
+        logger.info("Parakeet ASR (Board Room): checking HF cache for %s ...", settings.BOARDROOM_ASR_MODEL_NAME)
+        if download_parakeet_model():
+            logger.info("Parakeet ASR (Board Room): Hugging Face cache check ok.")
+        logger.info("Parakeet ASR (Board Room): loading model...")
+        if preload_parakeet():
+            logger.info("Parakeet ASR (Board Room): ready — Board Room Mode can connect.")
+        else:
+            logger.warning(
+                "Parakeet ASR (Board Room): pre-load failed. Board Room Mode will retry on first connection."
+            )
+    except Exception as e:
+        logger.warning("Parakeet ASR (Board Room): warmup failed: %s", e)
 
 
 async def _warm_llm_and_embeddings():
@@ -83,12 +133,18 @@ async def _warm_llm_and_embeddings():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Pre-download and pre-load Nemotron ASR in background so first Live Transcript connection is faster
-    t = threading.Thread(target=_warm_nemotron_stt, daemon=True)
-    t.start()
+    t_nemotron = threading.Thread(target=_warm_nemotron_stt, daemon=True)
+    t_nemotron.start()
+    # Pre-download and pre-load Parakeet multitalker ASR for Board Room Mode
+    t_parakeet = threading.Thread(target=_warm_parakeet_boardroom, daemon=True)
+    t_parakeet.start()
+    # Pre-load VibeVoice-ASR for final cleanup/backup (optional; lazy-loads on first use if skipped)
+    t_vibevoice = threading.Thread(target=_warm_vibevoice_cleanup, daemon=True)
+    t_vibevoice.start()
     # Warm LLM + embed backends so first chat/RAG is responsive
     asyncio.create_task(_warm_llm_and_embeddings())
     yield
-    # shutdown: nothing to clean up (daemon thread exits with process)
+    # shutdown: nothing to clean up (daemon threads exit with process)
 
 
 init_db()
@@ -109,3 +165,5 @@ def health():
 app.include_router(docs_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(transcribe_router, prefix="/api")
+app.include_router(boardroom_router, prefix="/api")
+app.include_router(models_router, prefix="/api")

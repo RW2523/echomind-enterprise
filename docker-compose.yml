@@ -46,8 +46,10 @@ services:
         USE_FAISS_GPU: "1"   # set to "1" for FAISS GPU (faster RAG search; needs GPU)
         HF_TOKEN: ${HF_TOKEN:-}
         ECHOMIND_ASR_MODEL_NAME: ${ECHOMIND_ASR_MODEL_NAME:-nvidia/nemotron-speech-streaming-en-0.6b}
+        BOARDROOM_ASR_MODEL_NAME: ${BOARDROOM_ASR_MODEL_NAME:-nvidia/multitalker-parakeet-streaming-0.6b-v1}
         # SKIP_MODEL_DOWNLOAD: "1"  # uncomment if build fails with "file already closed"; incompatible with offline
         # SKIP_NEMOTRON_WARMUP: "1"  # skip NeMo load during build (faster CI; colder first runtime load)
+        # SKIP_PARAKEET_WARMUP: "1"  # skip Parakeet Board Room model build-time warmup
     container_name: echomind-backend
     expose: ["8000"]
     environment:
@@ -58,6 +60,27 @@ services:
       # Offline: use only local Hugging Face cache (no runtime model download)
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
+      # Board Room Mode: Parakeet multitalker ASR
+      - BOARDROOM_ASR_MODEL_NAME=${BOARDROOM_ASR_MODEL_NAME:-nvidia/multitalker-parakeet-streaming-0.6b-v1}
+      - BOARDROOM_DIAR_MODEL=${BOARDROOM_DIAR_MODEL:-nvidia/diar_streaming_sortformer_4spk-v2.1}
+      - BOARDROOM_CHUNK_MS=${BOARDROOM_CHUNK_MS:-400}
+      - BOARDROOM_GPU_CONCURRENCY=${BOARDROOM_GPU_CONCURRENCY:-1}
+      - BOARDROOM_REPORT_MAX_TOKENS=${BOARDROOM_REPORT_MAX_TOKENS:-4096}
+      - BOARDROOM_MAX_SPEAKERS=${BOARDROOM_MAX_SPEAKERS:-4}
+      - BOARDROOM_ATT_CONTEXT_SIZE=${BOARDROOM_ATT_CONTEXT_SIZE:-[70,13]}
+      # Final Cleanup / Backup: VibeVoice-ASR post-session quality improvement.
+      # FINAL_CLEANUP_ENABLED=false until microsoft/VibeVoice-ASR is downloaded into the HF cache.
+      # To enable: (1) set HF_HUB_OFFLINE=0, (2) run once to cache the model, (3) set back offline + enable below.
+      - FINAL_CLEANUP_ENABLED=${FINAL_CLEANUP_ENABLED:-false}
+      - FINAL_CLEANUP_MODEL=${FINAL_CLEANUP_MODEL:-microsoft/VibeVoice-ASR}
+      - FINAL_CLEANUP_USE_AS_BACKUP=${FINAL_CLEANUP_USE_AS_BACKUP:-true}
+      - FINAL_CLEANUP_WARM_ON_STARTUP=${FINAL_CLEANUP_WARM_ON_STARTUP:-false}
+      - FINAL_CLEANUP_DEVICE=${FINAL_CLEANUP_DEVICE:-auto}
+      # Report generation settings
+      - REPORT_LLM_PROVIDER=${REPORT_LLM_PROVIDER:-tensorrt}
+      - REPORT_USE_RAG=${REPORT_USE_RAG:-true}
+      - REPORT_EXPORT_PDF=${REPORT_EXPORT_PDF:-true}
+      - REPORT_EXPORT_PPTX=${REPORT_EXPORT_PPTX:-true}
     volumes:
       - echomind_data:/data
     depends_on:

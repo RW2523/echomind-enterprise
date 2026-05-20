@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { transcribeWsUrl, getTranscriptTags, updateTranscript } from "../services/backend";
 
-/** Kyutai STT sample rate (24kHz). Backend sends this in ready message. */
-const KYUTAI_SAMPLE_RATE = 24000;
+/** Fallback sample rate if backend does not send one in the ready message. */
+const FALLBACK_SAMPLE_RATE = 16000;
 const OPEN_TIMEOUT_MS = 15000;
 const READY_TIMEOUT_MS = 300000;
 const HEARTBEAT_INTERVAL_MS = 25000;  // Keep connection alive when tab backgrounded (audio stops)
@@ -17,14 +17,6 @@ function floatTo16BitPCM(input: Float32Array) {
   return output;
 }
 
-function b64FromBytes(bytes: Uint8Array) {
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)) as any);
-  }
-  return btoa(binary);
-}
 
 export interface UseLiveTranscriptionReturn {
   fullTranscript: string;
@@ -211,7 +203,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             if (msg.type === "ready") {
               clearTimeout(t);
               ws.removeEventListener("message", check);
-              resolve(msg.sample_rate ?? KYUTAI_SAMPLE_RATE);
+              resolve(msg.sample_rate ?? FALLBACK_SAMPLE_RATE);
             }
             if (msg.type === "error") {
               clearTimeout(t);
@@ -223,43 +215,54 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         ws.addEventListener("message", check);
       });
 
-      let sampleRate: number;
+      let requestedSampleRate: number;
       try {
-        sampleRate = await readyPromise;
+        requestedSampleRate = await readyPromise;
       } catch (e) {
-        handleError((e as Error)?.message || "Kyutai STT not ready");
+        handleError((e as Error)?.message || "STT not ready");
         return;
       }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recRef.current = stream;
+
+      // Create the AudioContext at the server-requested rate. Browsers support any rate
+      // from 8 kHz to 96 kHz, but we read back the ACTUAL rate in case the browser clamped
+      // it (some embedded/mobile environments), so the backend can resample correctly.
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({
+        sampleRate: requestedSampleRate,
+      });
+      audioCtxRef.current = audioCtx;
+      if (audioCtx.state === "suspended") {
+        await audioCtx.resume();
+      }
+      // Use the ACTUAL context rate – it may differ from the requested one.
+      const actualSampleRate = audioCtx.sampleRate;
 
       ws.send(
         JSON.stringify({
           type: "start",
           auto_store: true,
-          sample_rate: sampleRate,
+          sample_rate: actualSampleRate,   // tell backend the TRUE capture rate
           language: "en",
           name: name || undefined,
           location: location || undefined,
         })
       );
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      recRef.current = stream;
-
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate });
-      audioCtxRef.current = audioCtx;
-      if (audioCtx.state === "suspended") {
-        await audioCtx.resume();
-      }
       const src = audioCtx.createMediaStreamSource(stream);
-      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+      // Buffer size 2048 → 128 ms at 16 kHz – half the old 256 ms, giving the model
+      // more granular chunks and less chance of silently dropping a long buffer.
+      const processor = audioCtx.createScriptProcessor(2048, 1, 1);
       processorRef.current = processor;
 
       processor.onaudioprocess = (e) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || micMutedRef.current) return;
         const input = e.inputBuffer.getChannelData(0);
         const pcm16 = floatTo16BitPCM(input);
-        const b64 = b64FromBytes(new Uint8Array(pcm16.buffer));
-        wsRef.current.send(JSON.stringify({ type: "audio", pcm16_b64: b64 }));
+        // Send raw binary (Int16 PCM) – the backend binary path is faster and
+        // avoids the base64-encode overhead inside the audio callback thread.
+        wsRef.current.send(pcm16.buffer);
       };
 
       src.connect(processor);

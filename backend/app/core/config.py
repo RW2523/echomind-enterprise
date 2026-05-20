@@ -90,7 +90,11 @@ class Settings(BaseSettings):
     TRANSCRIPT_PARAGRAPH_SILENCE_MS: int = int(os.getenv("TRANSCRIPT_PARAGRAPH_SILENCE_MS", "2000"))
     TRANSCRIPT_MAX_PARAGRAPH_CHARS: int = int(os.getenv("TRANSCRIPT_MAX_PARAGRAPH_CHARS", "700"))
     TRANSCRIPT_RECENT_BUFFER_MAX_CHARS: int = int(os.getenv("TRANSCRIPT_RECENT_BUFFER_MAX_CHARS", "120"))
-    TRANSCRIPT_OVERLAP_K: int = int(os.getenv("TRANSCRIPT_OVERLAP_K", "200"))
+    # Anti-dup suffix/prefix overlap in SessionState.append_piece.
+    # 200 was far too large — it caused legitimate repeated phrases (e.g. "I think I think")
+    # to be silently stripped.  _hypothesis_delta already handles model revisions, so we
+    # only need a small window to absorb word-boundary artefacts from the tokeniser.
+    TRANSCRIPT_OVERLAP_K: int = int(os.getenv("TRANSCRIPT_OVERLAP_K", "15"))
     TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC: float = float(os.getenv("TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC", "15"))
     SAMPLE_RATE: int = 16000  # Nemotron streaming ASR (16 kHz)
     # Nemotron: chunk length in ms (e.g. 560 matches livetranscript default for accuracy/latency tradeoff)
@@ -192,5 +196,69 @@ class Settings(BaseSettings):
     RAG_USE_CONTEXTUAL_RETRIEVAL: bool = os.getenv("RAG_USE_CONTEXTUAL_RETRIEVAL", "1").lower() in ("1", "true", "yes")
     # Max concurrent LLM calls for section/chunk summarization during ingestion.
     RAG_CONTEXTUAL_SUMMARY_CONCURRENCY: int = int(os.getenv("RAG_CONTEXTUAL_SUMMARY_CONCURRENCY", "3"))
+
+    # ── Live Transcript Mode ──────────────────────────────────────────────────────
+    LIVE_TRANSCRIPT_ENABLED: bool = os.getenv("LIVE_TRANSCRIPT_ENABLED", "true").lower() in ("1", "true", "yes")
+    LIVE_TRANSCRIPT_MODEL: str = os.getenv("LIVE_TRANSCRIPT_MODEL", "nvidia/nemotron-speech-streaming-en-0.6b")
+    LIVE_TRANSCRIPT_SAMPLE_RATE: int = int(os.getenv("LIVE_TRANSCRIPT_SAMPLE_RATE", "16000"))
+    LIVE_TRANSCRIPT_AUDIO_FORMAT: str = os.getenv("LIVE_TRANSCRIPT_AUDIO_FORMAT", "pcm16")
+    LIVE_TRANSCRIPT_WARM_ON_STARTUP: bool = os.getenv("LIVE_TRANSCRIPT_WARM_ON_STARTUP", "true").lower() in ("1", "true", "yes")
+
+    # ── Board Room Mode ───────────────────────────────────────────────────────────
+    BOARDROOM_ENABLED: bool = os.getenv("BOARDROOM_ENABLED", "true").lower() in ("1", "true", "yes")
+    # Multi-speaker streaming ASR model (Parakeet multitalker, NeMo).
+    BOARDROOM_ASR_MODEL_NAME: str = os.getenv("BOARDROOM_ASR_MODEL_NAME", "nvidia/multitalker-parakeet-streaming-0.6b-v1")
+    # Streaming diarization model (Sortformer 4-speaker).
+    BOARDROOM_DIAR_MODEL: str = os.getenv("BOARDROOM_DIAR_MODEL", "nvidia/diar_streaming_sortformer_4spk-v2.1")
+    # Audio format accepted from browser (pcm16 = raw little-endian int16).
+    BOARDROOM_AUDIO_FORMAT: str = os.getenv("BOARDROOM_AUDIO_FORMAT", "pcm16")
+    # Attention context size for Parakeet conformer encoder (accuracy vs latency trade-off).
+    BOARDROOM_ATT_CONTEXT_SIZE: str = os.getenv("BOARDROOM_ATT_CONTEXT_SIZE", "[70,13]")
+    # Board room audio chunk length in ms (longer chunks for board room = better accuracy).
+    # 400 ms gives 2-3 encoder output frames per step — responsive for speaker detection.
+    # Was 800 ms which made speaker change detection very sluggish.
+    BOARDROOM_CHUNK_MS: int = int(os.getenv("BOARDROOM_CHUNK_MS", "400"))
+    # Board room session audio storage path (for full-session replay/reprocessing).
+    BOARDROOM_DATA_DIR: str = os.path.join(_DEFAULT_DATA_DIR, "boardroom")
+    BOARDROOM_AUDIO_DIR: str = os.getenv("BOARDROOM_AUDIO_DIR", os.path.join(_DEFAULT_DATA_DIR, "boardroom", "audio"))
+    BOARDROOM_OUTPUT_DIR: str = os.getenv("BOARDROOM_OUTPUT_DIR", os.path.join(_DEFAULT_DATA_DIR, "boardroom", "output"))
+    BOARDROOM_REPORT_DIR: str = os.getenv("BOARDROOM_REPORT_DIR", os.path.join(_DEFAULT_DATA_DIR, "boardroom", "reports"))
+    # Maximum number of speakers to track in a session.
+    BOARDROOM_MAX_SPEAKERS: int = int(os.getenv("BOARDROOM_MAX_SPEAKERS", "4"))
+    BOARDROOM_WARM_ON_STARTUP: bool = os.getenv("BOARDROOM_WARM_ON_STARTUP", "true").lower() in ("1", "true", "yes")
+    # Max RAG chunks used during report generation.
+    BOARDROOM_REPORT_RAG_TOP_K: int = int(os.getenv("BOARDROOM_REPORT_RAG_TOP_K", "12"))
+    # Max tokens for the full board room report.
+    BOARDROOM_REPORT_MAX_TOKENS: int = int(os.getenv("BOARDROOM_REPORT_MAX_TOKENS", "4096"))
+    # Speaker colour palette (JSON array of hex colours) for UI display.
+    BOARDROOM_SPEAKER_COLORS: str = os.getenv(
+        "BOARDROOM_SPEAKER_COLORS",
+        '["#22d3ee","#a78bfa","#34d399","#f59e0b","#f87171","#60a5fa","#e879f9","#4ade80","#fb923c","#94a3b8"]'
+    )
+    # When True, GPU semaphore applies to Parakeet inference (prevents CUDA races with Nemotron).
+    BOARDROOM_GPU_CONCURRENCY: int = int(os.getenv("BOARDROOM_GPU_CONCURRENCY", "1"))
+    # FAISS path for boardroom session index.
+    FAISS_BOARDROOM_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_boardroom.index")
+    META_BOARDROOM_PATH: str = os.path.join(_DEFAULT_DATA_DIR, "faiss_boardroom_meta.json")
+
+    # ── Final Cleanup / Backup (VibeVoice-ASR) ───────────────────────────────────
+    # Enabled by default; runs microsoft/VibeVoice-ASR on the saved full-session WAV
+    # after the primary Board Room transcription completes (or as fallback if it fails).
+    FINAL_CLEANUP_ENABLED: bool = os.getenv("FINAL_CLEANUP_ENABLED", "true").lower() in ("1", "true", "yes")
+    FINAL_CLEANUP_MODEL: str = os.getenv("FINAL_CLEANUP_MODEL", "microsoft/VibeVoice-ASR")
+    FINAL_CLEANUP_AUDIO_DIR: str = os.getenv("FINAL_CLEANUP_AUDIO_DIR", os.path.join(_DEFAULT_DATA_DIR, "transcripts", "audio"))
+    # When True, use VibeVoice output as fallback if primary Board Room ASR fails.
+    FINAL_CLEANUP_USE_AS_BACKUP: bool = os.getenv("FINAL_CLEANUP_USE_AS_BACKUP", "true").lower() in ("1", "true", "yes")
+    FINAL_CLEANUP_WARM_ON_STARTUP: bool = os.getenv("FINAL_CLEANUP_WARM_ON_STARTUP", "false").lower() in ("1", "true", "yes")
+    # Max duration (seconds) to feed to VibeVoice in one pass (chunked for long meetings).
+    FINAL_CLEANUP_CHUNK_SEC: int = int(os.getenv("FINAL_CLEANUP_CHUNK_SEC", "30"))
+    # Device for VibeVoice: "auto" picks CUDA when available, else CPU.
+    FINAL_CLEANUP_DEVICE: str = os.getenv("FINAL_CLEANUP_DEVICE", "auto")
+
+    # ── Report generation ─────────────────────────────────────────────────────────
+    REPORT_LLM_PROVIDER: str = os.getenv("REPORT_LLM_PROVIDER", "tensorrt")
+    REPORT_USE_RAG: bool = os.getenv("REPORT_USE_RAG", "true").lower() in ("1", "true", "yes")
+    REPORT_EXPORT_PDF: bool = os.getenv("REPORT_EXPORT_PDF", "true").lower() in ("1", "true", "yes")
+    REPORT_EXPORT_PPTX: bool = os.getenv("REPORT_EXPORT_PPTX", "true").lower() in ("1", "true", "yes")
 
 settings = Settings()

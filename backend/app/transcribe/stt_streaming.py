@@ -107,19 +107,45 @@ def _sliding_window_rms(audio: np.ndarray, window_samples: int, step_samples: in
 
 
 def _hypothesis_delta(prev: str, curr: str) -> str:
+    """Compute the new content appended since the previous hypothesis.
+
+    The Nemotron RNNT model accumulates the hypothesis monotonically: each chunk
+    extends (or rarely revises) the cumulative text.  We extract only what is new.
+
+    If curr cleanly extends prev, we return the suffix.  If the model revised an
+    earlier word (e.g. 'wrd' → 'world'), we find the longest suffix of prev that
+    appears as a prefix of curr (the "true join point") and return everything
+    after it, so the session accumulator receives the correct new fragment without
+    the revised word being re-emitted.
+    """
     prev = (prev or "").strip()
     curr = (curr or "").strip()
     if not curr:
         return ""
     if not prev:
         return curr
+    # Fast path: model simply extended the hypothesis.
     if curr.startswith(prev):
-        return curr[len(prev) :]
+        return curr[len(prev):]
+    # Find common character-level prefix.
     n = min(len(prev), len(curr))
     i = 0
     while i < n and prev[i] == curr[i]:
         i += 1
-    return curr[i:]
+    # If the common prefix is ≥ 70 % of prev, the model made a small tweak near the
+    # end: return the suffix of curr from the divergence point.  The SessionState
+    # anti-dup will absorb any repeated overlap.
+    if i >= int(len(prev) * 0.70):
+        return curr[i:]
+    # Large divergence (model rewrote more than 30 % of prev): find the longest
+    # suffix of prev that is a prefix of curr so we emit only the truly new part.
+    max_check = min(len(prev), len(curr), 80)  # cap search to 80 chars
+    for L in range(max_check, 0, -1):
+        if prev[-L:] == curr[:L]:
+            return curr[L:]
+    # Complete rewrite – return the full new hypothesis; SessionState overlap
+    # detection (overlap_k) will strip the part that was already accumulated.
+    return curr
 
 
 def get_shared_asr_adapter() -> "ASRModelAdapter":

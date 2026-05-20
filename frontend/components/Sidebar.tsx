@@ -71,6 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
     { id: AppView.KNOWLEDGE_CHAT, label: 'Knowledge Chat', icon: ICONS.Chat },
     { id: AppView.TRANSCRIPTION, label: 'Live Transcript', icon: ICONS.Transcript },
     { id: AppView.VOICE_CONVERSATION, label: 'Conversation', icon: ICONS.Mic },
+    { id: AppView.BOARDROOM, label: 'Board Room', icon: ICONS.BoardRoom },
     { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings }
   ];
 

@@ -40,10 +40,14 @@ from .store_to_db import store_transcript_to_db, create_transcript_for_session, 
 SAMPLE_RATE = NEMOTRON_SAMPLE_RATE
 # Rate limit partials to client
 EMIT_MIN_INTERVAL = 1.0 / max(0.1, getattr(settings, "TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC", 15))
-# VAD: skip feeding audio when sliding-window max RMS below this (0 = disabled)
-VAD_RMS_THRESHOLD = max(0.0, getattr(settings, "TRANSCRIPT_VAD_RMS_THRESHOLD", 0.008))
+# VAD: skip feeding audio when sliding-window max RMS below this (0 = disabled).
+# Lowered to 0.003 (from 0.008) so soft speech and brief word-starts are not dropped.
+VAD_RMS_THRESHOLD = max(0.0, getattr(settings, "TRANSCRIPT_VAD_RMS_THRESHOLD", 0.003))
 VAD_WINDOW_SAMPLES = max(1, getattr(settings, "TRANSCRIPT_VAD_WINDOW_SAMPLES", 1024))
 VAD_STEP_SAMPLES = max(1, getattr(settings, "TRANSCRIPT_VAD_STEP_SAMPLES", 512))
+# After voice is detected, keep passing audio for this many seconds even if RMS dips
+# below threshold (handles between-word gaps and trailing syllables).
+VAD_HOLD_SEC = float(getattr(settings, "TRANSCRIPT_VAD_HOLD_SEC", 1.5))
 PCM_QUEUE_MAX = getattr(settings, "TRANSCRIPT_PCM_QUEUE_MAX_SIZE", 256)
 INTERVAL_BUFFER_MAX = max(1, getattr(settings, "TRANSCRIPT_INTERVAL_BUFFER_MAX", 2048))
 WS_RECEIVE_TIMEOUT = max(60.0, getattr(settings, "TRANSCRIPT_WS_RECEIVE_TIMEOUT_SEC", 86400))
@@ -123,6 +127,7 @@ async def handler(ws: WebSocket):
     session_location: list = [""]  # mutable: from start payload
     transcript_id_ref: list = [None]  # mutable: transcript id once created (groups 1-min chunks)
     last_emit_time = 0.0
+    last_voice_time: list = [0.0]   # mutable for closure: last wall-clock time voice was detected
     client_sample_rate: Optional[int] = None
     last_auto_stored_length: list = [0]  # mutable for closure
     interval_buffer: list = []  # (text, ts) for each interval; cap INTERVAL_BUFFER_MAX
@@ -238,8 +243,16 @@ async def handler(ws: WebSocket):
         """Feed PCM to Nemotron (16 kHz internal); VAD on client-rate audio; GPU semaphore if CUDA."""
         if stream_ctx is None:
             return
-        if VAD_RMS_THRESHOLD > 0 and _sliding_window_rms(pcm_float32, VAD_WINDOW_SAMPLES, VAD_STEP_SAMPLES) < VAD_RMS_THRESHOLD:
-            return
+        if VAD_RMS_THRESHOLD > 0:
+            rms = _sliding_window_rms(pcm_float32, VAD_WINDOW_SAMPLES, VAD_STEP_SAMPLES)
+            if rms >= VAD_RMS_THRESHOLD:
+                # Voice detected: update hold timestamp.
+                last_voice_time[0] = time.time()
+            else:
+                # Below threshold: pass audio through during the hold window so inter-word
+                # gaps and trailing syllables are not silently dropped.
+                if time.time() - last_voice_time[0] > VAD_HOLD_SEC:
+                    return
         if use_cuda:
             await _get_gpu_sem().acquire()
         try:
@@ -358,6 +371,7 @@ async def handler(ws: WebSocket):
                             pcm_queue.get_nowait()
                         except asyncio.QueueEmpty:
                             break
+                    last_voice_time[0] = 0.0
                     _start_periodic_auto_store()
                     async with get_nemotron_process_lock():
                         stream_ctx.reset()

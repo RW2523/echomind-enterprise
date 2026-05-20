@@ -112,18 +112,28 @@ class SessionState:
         return p
 
     def append_piece(self, piece: str, ts_ms: int) -> None:
-        """Append a text piece from STT with anti-duplication and whitespace normalization."""
+        """Append a text piece from STT with anti-duplication and whitespace normalization.
+
+        _hypothesis_delta() (in stt_streaming.py) already computes only the truly NEW
+        portion of each streaming hypothesis, so most de-duplication is done upstream.
+        Here we only guard against:
+          • tiny artefacts (whitespace/single-char repeats) — exact-dup check capped at 3 chars
+          • word-boundary tokeniser overlap — suffix/prefix overlap up to overlap_k chars (15)
+        Keeping these checks minimal prevents legitimate repeated phrases from being dropped.
+        """
         if self._paused or not piece:
             return
         piece = _normalize_piece(piece)
         if not piece:
             return
         tail = (self.raw_text + self.recent_buffer).strip()
-        # Skip exact duplicate: if incoming piece is identical to end of tail, do not append
-        if tail and len(piece) <= len(tail) and tail.endswith(piece):
+        # Skip exact duplicate only for very short artefacts (≤ 3 chars) — longer pieces
+        # may be genuine repetitions in the speaker's words ("I think I think so").
+        if tail and len(piece) <= 3 and tail.endswith(piece):
             self.last_piece_ts_ms = ts_ms
             return
-        # Anti-duplication: max suffix/prefix overlap between existing tail and incoming
+        # Anti-duplication: remove any suffix/prefix overlap (word-boundary artefacts).
+        # overlap_k is kept small (≤ 15) so only tokeniser seams are absorbed.
         overlap = _max_suffix_prefix_overlap(tail, piece, self.overlap_k)
         if overlap > 0:
             piece = piece[overlap:]
