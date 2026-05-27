@@ -11,6 +11,7 @@ from .core.db import init_db
 from .api.routes.docs import router as docs_router
 from .api.routes.chat import router as chat_router
 from .api.routes.transcribe import router as transcribe_router
+from .api.routes.boardroom import router as boardroom_router
 
 # So Docker logs (stdout) show app logs including RAG intent debug
 logging.basicConfig(
@@ -109,3 +110,4 @@ def health():
 app.include_router(docs_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(transcribe_router, prefix="/api")
+app.include_router(boardroom_router, prefix="/api")

@@ -1,12 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { transcribeWsUrl, getTranscriptTags, updateTranscript } from "../services/backend";
+import { transcribeWsUrl, getTranscriptTags, updateTranscript, createBoardroomSession, uploadBoardroomChunk, finalizeBoardroomSession, getBoardroomSession } from "../services/backend";
+import type { AnalysisCard, TranscriptSegment, BoardroomSession } from "../types";
 
 /** Kyutai STT sample rate (24kHz). Backend sends this in ready message. */
 const KYUTAI_SAMPLE_RATE = 24000;
 const OPEN_TIMEOUT_MS = 15000;
 const READY_TIMEOUT_MS = 300000;
-const HEARTBEAT_INTERVAL_MS = 25000;  // Keep connection alive when tab backgrounded (audio stops)
-const RECONNECT_DELAY_MS = 800;
+const HEARTBEAT_INTERVAL_MS = 20000;  // Keep connection alive when tab backgrounded (audio stops)
+const RECONNECT_DELAY_MS = 1200;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 function floatTo16BitPCM(input: Float32Array) {
   const output = new Int16Array(input.length);
@@ -29,6 +31,15 @@ function b64FromBytes(bytes: Uint8Array) {
 export interface UseLiveTranscriptionReturn {
   fullTranscript: string;
   partial: string;
+  /** Completed paragraph segments (for highlighting) */
+  transcriptSegments: TranscriptSegment[];
+  /** Analysis cards from Silent Assistant */
+  analysisCards: AnalysisCard[];
+  /** Segment IDs currently being analyzed (spinner state) */
+  analyzingSegmentIds: Set<string>;
+  /** ID of the currently selected segment/card (for bidirectional highlight) */
+  selectedSegmentId: string | null;
+  setSelectedSegmentId: (id: string | null) => void;
   listening: boolean;
   wsStatus: "idle" | "connecting" | "loading" | "ready" | "error";
   wsError: string | null;
@@ -55,11 +66,22 @@ export interface UseLiveTranscriptionReturn {
   setModalLocation: (v: string) => void;
   setShowStartModal: (v: boolean) => void;
   applyDefault: () => void;
+  /** Boardroom mode */
+  boardroomMode: boolean;
+  setBoardroomMode: (v: boolean) => void;
+  boardroomSession: BoardroomSession | null;
+  setBoardroomSession: (s: BoardroomSession | null) => void;
+  boardroomUploading: boolean;
+  endBoardroomSession: () => Promise<void>;
 }
 
 export function useLiveTranscription(defaultName: () => string): UseLiveTranscriptionReturn {
   const [fullTranscript, setFullTranscript] = useState("");
   const [partial, setPartial] = useState("");
+  const [transcriptSegments, setTranscriptSegments] = useState<TranscriptSegment[]>([]);
+  const [analysisCards, setAnalysisCards] = useState<AnalysisCard[]>([]);
+  const [analyzingSegmentIds, setAnalyzingSegmentIds] = useState<Set<string>>(new Set());
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
   const [wsStatus, setWsStatus] = useState<"idle" | "connecting" | "loading" | "ready" | "error">("idle");
   const [wsError, setWsError] = useState<string | null>(null);
@@ -75,6 +97,17 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const [newTagInput, setNewTagInput] = useState("");
   const [micMuted, setMicMuted] = useState(false);
 
+  // Boardroom mode state
+  const [boardroomMode, setBoardroomMode] = useState(false);
+  const [boardroomSession, setBoardroomSession] = useState<BoardroomSession | null>(null);
+  const [boardroomUploading, setBoardroomUploading] = useState(false);
+  const boardroomSessionIdRef = useRef<string | null>(null);
+  const boardroomRecorderRef = useRef<MediaRecorder | null>(null);
+  const boardroomChunksRef = useRef<Blob[]>([]);
+  const boardroomChunkIndexRef = useRef(0);
+  const boardroomModeRef = useRef(false);
+  boardroomModeRef.current = boardroomMode;
+
   const wsRef = useRef<WebSocket | null>(null);
   const micMutedRef = useRef(false);
   micMutedRef.current = micMuted;
@@ -87,6 +120,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const listeningRef = useRef(false);
   listeningRef.current = listening;
   const userInitiatedCloseRef = useRef(false);
+  const reconnectAttemptsRef = useRef(0);
   const sessionNameRef = useRef("");
   const sessionLocationRef = useRef("");
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -116,8 +150,15 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       userInitiatedCloseRef.current = false;
       sessionNameRef.current = name || "";
       sessionLocationRef.current = location || "default";
-      setFullTranscript("");
-      setPartial("");
+      // On reconnect: keep existing transcript visible so user doesn't see a blank screen
+      if (!isReconnect) {
+        setFullTranscript("");
+        setPartial("");
+        setTranscriptSegments([]);
+        setAnalysisCards([]);
+        setAnalyzingSegmentIds(new Set());
+        setSelectedSegmentId(null);
+      }
       setWsError(null);
       setWsStatus("connecting");
 
@@ -139,7 +180,80 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             const t = msg.text ?? "";
             setFullTranscript(t);
             transcriptForTagsRef.current = t;
-            setPartial("");
+            // partial_text = text of the current live paragraph (not yet committed as a segment).
+            // Falls back to full text when no segments exist yet (first ~2 s of speech).
+            setPartial(msg.partial_text ?? "");
+            // Update segment texts from partial payload
+            if (Array.isArray(msg.segments)) {
+              setTranscriptSegments((prev) => {
+                const prevMap = new Map(prev.map((s) => [s.paragraph_id, s]));
+                return msg.segments.map((s: { paragraph_id: string; text: string }) => ({
+                  paragraph_id: s.paragraph_id,
+                  text: s.text,
+                  label: prevMap.get(s.paragraph_id)?.label,
+                  confidence: prevMap.get(s.paragraph_id)?.confidence,
+                }));
+              });
+            }
+          }
+          if (msg.type === "segment") {
+            // A paragraph has been completed — add/update in segments list
+            setTranscriptSegments((prev) => {
+              const exists = prev.find((s) => s.paragraph_id === msg.paragraph_id);
+              if (exists) {
+                return prev.map((s) =>
+                  s.paragraph_id === msg.paragraph_id ? { ...s, text: msg.text } : s
+                );
+              }
+              return [...prev, { paragraph_id: msg.paragraph_id, text: msg.text }];
+            });
+          }
+          if (msg.type === "analysis_start") {
+            // Silent Assistant started analyzing this segment — show spinner
+            setAnalyzingSegmentIds((prev) => new Set([...prev, msg.segment_id]));
+          }
+          if (msg.type === "analysis_done") {
+            // Analysis finished (no result to show) — clear spinner
+            setAnalyzingSegmentIds((prev) => {
+              const next = new Set(prev);
+              next.delete(msg.segment_id);
+              return next;
+            });
+          }
+          if (msg.type === "analysis") {
+            // Silent Assistant result — add card, annotate segment, clear spinner
+            setAnalyzingSegmentIds((prev) => {
+              const next = new Set(prev);
+              next.delete(msg.segment_id);
+              return next;
+            });
+            const card: AnalysisCard = {
+              id: msg.id,
+              segment_id: msg.segment_id,
+              segment_text: msg.segment_text,
+              label: msg.label,
+              confidence: msg.confidence,
+              explanation: msg.explanation,
+              source_chunks: msg.source_chunks || [],
+            };
+            setAnalysisCards((prev) => {
+              // Replace if same segment already has a card
+              const exists = prev.findIndex((c) => c.segment_id === msg.segment_id);
+              if (exists >= 0) {
+                const next = [...prev];
+                next[exists] = card;
+                return next;
+              }
+              return [...prev, card];
+            });
+            // Annotate the matching segment with the label
+            setTranscriptSegments((prev) =>
+              prev.map((s) =>
+                s.paragraph_id === msg.segment_id
+                  ? { ...s, label: msg.label, confidence: msg.confidence }
+                  : s
+              )
+            );
           }
           if (msg.type === "final") {
             const t = (msg.text ?? "").trim();
@@ -172,13 +286,23 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       };
 
       ws.onerror = () => handleError("WebSocket error");
-      ws.onclose = () => {
+      ws.onclose = (ev) => {
         const wasListening = listeningRef.current;
-        const shouldReconnect = !userInitiatedCloseRef.current && wasListening;
+        const shouldReconnect =
+          !userInitiatedCloseRef.current &&
+          wasListening &&
+          reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS;
         stopMic(false);
-        setWsStatus((s) => (s === "error" ? s : "idle"));
         if (shouldReconnect) {
-          setTimeout(() => doStart(sessionNameRef.current, sessionLocationRef.current, true), RECONNECT_DELAY_MS);
+          reconnectAttemptsRef.current += 1;
+          setWsStatus("connecting");
+          const delay = RECONNECT_DELAY_MS * reconnectAttemptsRef.current;
+          setTimeout(() => doStart(sessionNameRef.current, sessionLocationRef.current, true), delay);
+        } else {
+          setWsStatus((s) => (s === "error" ? s : "idle"));
+          if (!userInitiatedCloseRef.current && reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+            setWsError("Connection lost after multiple retries. Please restart.");
+          }
         }
       };
 
@@ -242,7 +366,16 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         })
       );
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Reset reconnect counter once we've gotten past the WebSocket ready handshake
+      reconnectAttemptsRef.current = 0;
+
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (micErr) {
+        handleError("Microphone access denied or unavailable. Please allow microphone and try again.");
+        return;
+      }
       recRef.current = stream;
 
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate });
@@ -270,16 +403,44 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
           wsRef.current.send(JSON.stringify({ type: "ping" }));
         }
       }, HEARTBEAT_INTERVAL_MS);
+
+      // Boardroom mode: start MediaRecorder for full-quality audio capture
+      if (boardroomModeRef.current && boardroomSessionIdRef.current) {
+        try {
+          const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+            ? "audio/webm;codecs=opus"
+            : MediaRecorder.isTypeSupported("audio/webm")
+            ? "audio/webm"
+            : "audio/ogg";
+          const recorder = new MediaRecorder(stream, { mimeType });
+          boardroomChunksRef.current = [];
+          boardroomChunkIndexRef.current = 0;
+          recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              boardroomChunksRef.current.push(e.data);
+            }
+          };
+          recorder.start(5000); // 5-second chunks
+          boardroomRecorderRef.current = recorder;
+        } catch (e) {
+          console.warn("Boardroom MediaRecorder failed:", e);
+        }
+      }
     },
     [stopMic]
   );
 
   const clearAndReset = useCallback(() => {
     userInitiatedCloseRef.current = true;
+    reconnectAttemptsRef.current = 0;
     stopMic(true);
     setMicMuted(false);
     setFullTranscript("");
     setPartial("");
+    setTranscriptSegments([]);
+    setAnalysisCards([]);
+    setAnalyzingSegmentIds(new Set());
+    setSelectedSegmentId(null);
     setSessionName("");
     setSessionLocation("");
     setSessionStartedAt(null);
@@ -289,23 +450,102 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     lastStoredTranscriptIdRef.current = null;
     pendingTagsRef.current = null;
     setWsError(null);
+    // Clean up boardroom recorder
+    if (boardroomRecorderRef.current?.state !== "inactive") {
+      boardroomRecorderRef.current?.stop();
+    }
+    boardroomRecorderRef.current = null;
+    boardroomChunksRef.current = [];
+    boardroomChunkIndexRef.current = 0;
+    boardroomSessionIdRef.current = null;
+    setBoardroomSession(null);
   }, [stopMic]);
 
   const startSession = useCallback(
     async (name: string, location: string) => {
+      reconnectAttemptsRef.current = 0;
       setMicMuted(false);
       setSessionName(name);
       setSessionLocation(location);
       setSessionStartedAt(new Date());
       setCustomTags([]);
+      setTranscriptSegments([]);
+      setAnalysisCards([]);
+      setAnalyzingSegmentIds(new Set());
+      setSelectedSegmentId(null);
       transcriptForTagsRef.current = "";
       lastStoredTranscriptIdRef.current = null;
       pendingTagsRef.current = null;
       setShowStartModal(false);
+
+      // If boardroom mode, create a session first
+      if (boardroomModeRef.current) {
+        try {
+          const { session_id } = await createBoardroomSession();
+          boardroomSessionIdRef.current = session_id;
+          setBoardroomSession({ id: session_id, status: "recording" });
+        } catch (e) {
+          console.warn("Failed to create boardroom session:", e);
+        }
+      }
+
       await doStart(name, location);
     },
     [doStart]
   );
+
+  const endBoardroomSession = useCallback(async () => {
+    const sid = boardroomSessionIdRef.current;
+    if (!sid) return;
+
+    setBoardroomUploading(true);
+    try {
+      // Stop recorder and collect final chunks
+      if (boardroomRecorderRef.current?.state === "recording") {
+        await new Promise<void>((resolve) => {
+          boardroomRecorderRef.current!.onstop = () => resolve();
+          boardroomRecorderRef.current!.stop();
+        });
+      }
+
+      const chunks = [...boardroomChunksRef.current];
+      boardroomChunksRef.current = [];
+
+      // Upload chunks to backend
+      for (let i = 0; i < chunks.length; i++) {
+        try {
+          await uploadBoardroomChunk(sid, i, chunks[i], "webm");
+        } catch (e) {
+          console.warn(`Chunk ${i} upload failed:`, e);
+        }
+      }
+
+      // Trigger finalization
+      await finalizeBoardroomSession(sid);
+      setBoardroomSession((prev) => prev ? { ...prev, status: "processing" } : null);
+
+      // Poll for status until transcribed
+      const poll = async () => {
+        let attempts = 0;
+        while (attempts < 60) {
+          await new Promise((r) => setTimeout(r, 3000));
+          try {
+            const s = await getBoardroomSession(sid);
+            setBoardroomSession(s);
+            if (s.status === "transcribed" || s.status === "analysed" || s.status === "error") {
+              break;
+            }
+          } catch {}
+          attempts++;
+        }
+      };
+      poll().catch(() => {});
+    } catch (e) {
+      console.error("Boardroom session upload failed:", e);
+    } finally {
+      setBoardroomUploading(false);
+    }
+  }, []);
 
   const handleStopAndExtractTags = useCallback(async () => {
     const text = (transcriptForTagsRef.current || fullTranscript || "").trim();
@@ -376,6 +616,11 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   return {
     fullTranscript,
     partial,
+    transcriptSegments,
+    analysisCards,
+    analyzingSegmentIds,
+    selectedSegmentId,
+    setSelectedSegmentId,
     listening,
     wsStatus,
     wsError,
@@ -402,5 +647,11 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     setModalLocation,
     setShowStartModal,
     applyDefault,
+    boardroomMode,
+    setBoardroomMode,
+    boardroomSession,
+    setBoardroomSession,
+    boardroomUploading,
+    endBoardroomSession,
   };
 }

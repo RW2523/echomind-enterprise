@@ -59,6 +59,71 @@ export interface TranscriptEntry {
   };
 }
 
+// ── Silent Assistant & Boardroom types ───────────────────────────────────────
+
+export type AnalysisLabel =
+  | 'Supported'
+  | 'Contradicted'
+  | 'Unverified'
+  | 'Violating'
+  | 'Risky Statement';
+
+export interface SourceChunkPreview {
+  chunk_id: string;
+  text: string;
+  doc_title?: string;
+  doc_id?: string;
+}
+
+export interface AnalysisCard {
+  id: string;
+  /** Maps to paragraph_id from the WS segment message */
+  segment_id: string;
+  segment_text: string;
+  label: AnalysisLabel;
+  confidence: number;
+  explanation: string;
+  source_chunks: SourceChunkPreview[];
+  created_at?: string;
+}
+
+export interface TranscriptSegment {
+  paragraph_id: string;
+  text: string;
+  /** Set when an analysis card exists for this segment */
+  label?: AnalysisLabel;
+  confidence?: number;
+}
+
+export interface DiarizedSegment {
+  speaker: string;
+  text: string;
+  start_time?: number;
+  end_time?: number;
+}
+
+export interface MeetingReport {
+  executive_summary?: string;
+  speakers?: { speaker: string; summary: string; key_points?: string[] }[];
+  key_topics?: string[];
+  rag_verified_facts?: string[];
+  contradictions?: string[];
+  recommendations?: string[];
+  overall_sentiment?: string;
+  raw_transcript?: string;
+}
+
+export interface BoardroomSession {
+  id: string;
+  transcript_id?: string | null;
+  status: 'recording' | 'processing' | 'transcribed' | 'analysing' | 'analysed' | 'error';
+  chunk_count?: number;
+  diarized_segments?: DiarizedSegment[] | null;
+  report?: MeetingReport | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 /** Piper TTS voice id (en_US model name, e.g. en_US-lessac-medium). */
 export type PiperVoiceId = string;
 

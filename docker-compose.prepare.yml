@@ -1,9 +1,11 @@
-# One-time online preparation: populates the ollama volume (embed model) and the trtllm HF cache volume (LLM weights).
+# One-time online preparation: populates the ollama volume (embed model), the trtllm HF cache volume (LLM weights),
+# and the echomind_data volume (VibeVoice-ASR-HF model weights — ~18 GB).
+#
 # Run ONCE before the first docker compose up:
 #
-#   HF_TOKEN=<your_token> docker compose -f docker-compose.yml -f docker-compose.prepare.yml up ollama trtllm
+#   HF_TOKEN=<your_token> docker compose -f docker-compose.yml -f docker-compose.prepare.yml up ollama trtllm backend
 #
-# Wait for both to finish pulling (trtllm can take a while — it downloads ~8 GB).
+# Wait for all services to finish downloading (trtllm ~8 GB, VibeVoice ~18 GB — can take 30-60 min).
 # Then Ctrl-C or docker compose down. From that point on, docker compose up works fully offline.
 services:
   ollama:
@@ -19,3 +21,14 @@ services:
       # Allow download during prepare run
       - HF_HUB_OFFLINE=0
       - TRTLLM_SKIP_DOWNLOAD=0
+
+  # Downloads VibeVoice-ASR-HF (~18 GB) into the echomind_data volume at /data/hf_cache.
+  # The normal runtime backend has HF_HUB_OFFLINE=1; this prepare override sets it to 0.
+  backend:
+    entrypoint: ["bash", "-c"]
+    command:
+      - "mkdir -p /data/hf_cache && echo 'Downloading VibeVoice-ASR-HF...' && python -c 'import os; from huggingface_hub import snapshot_download; p=snapshot_download(\"microsoft/VibeVoice-ASR-HF\",cache_dir=\"/data/hf_cache\"); print(\"Downloaded:\",p)'"
+    environment:
+      - HF_HUB_OFFLINE=0
+      - TRANSFORMERS_OFFLINE=0
+      - HF_TOKEN=${HF_TOKEN:-}

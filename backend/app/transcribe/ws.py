@@ -36,6 +36,7 @@ from ..refine import refine_text
 from ..tagging import get_metadata
 from .. import kb
 from .store_to_db import store_transcript_to_db, create_transcript_for_session, append_transcript_chunk, update_transcript_tags_and_echotag
+from .analyzer import analyze_segment
 
 SAMPLE_RATE = NEMOTRON_SAMPLE_RATE
 # Rate limit partials to client
@@ -130,6 +131,7 @@ async def handler(ws: WebSocket):
     auto_store_interval_sec = max(0, getattr(settings, "AUTO_STORE_INTERVAL_SEC", 60))
     pcm_queue: asyncio.Queue = asyncio.Queue(maxsize=PCM_QUEUE_MAX if PCM_QUEUE_MAX > 0 else 0)
     consumer_task: Optional[asyncio.Task] = None
+    analysis_tasks: list[asyncio.Task] = []
     use_cuda = asr_adapter.device == "cuda"
 
     async def _periodic_auto_store_fn() -> None:
@@ -231,6 +233,7 @@ async def handler(ws: WebSocket):
             "type": "partial",
             "session_id": session_id,
             "text": session.get_display_text(),
+            "partial_text": session.get_live_partial(),
             "segments": segments_payload,
         })
 
@@ -261,8 +264,43 @@ async def handler(ws: WebSocket):
                 new_p = session.maybe_new_paragraph(ts_ms)
                 if new_p:
                     await _send(ws, {"type": "segment", "session_id": session_id, "paragraph_id": new_p.paragraph_id, "text": new_p.raw_text})
+                    t = asyncio.create_task(_run_segment_analysis(new_p.paragraph_id, new_p.raw_text))
+                    analysis_tasks.append(t)
         if deltas:
             await _maybe_emit_partial(last_ts)
+
+    async def _run_segment_analysis(paragraph_id: str, paragraph_text: str) -> None:
+        """Background: analyze a completed paragraph against RAG and emit result if meaningful."""
+        # Notify frontend that analysis has started for this segment
+        try:
+            await _send(ws, {
+                "type": "analysis_start",
+                "segment_id": paragraph_id,
+            })
+        except Exception:
+            pass
+        try:
+            result = await analyze_segment(
+                text=paragraph_text,
+                segment_id=paragraph_id,
+                session_id=session_id,
+                transcript_id=transcript_id_ref[0],
+            )
+            if result is not None:
+                await _send(ws, result.to_ws_payload())
+            else:
+                # Tell frontend analysis is done but nothing to show (so spinner clears)
+                await _send(ws, {
+                    "type": "analysis_done",
+                    "segment_id": paragraph_id,
+                    "result": None,
+                })
+        except Exception as exc:
+            logger.warning("Segment analysis error for [%s]: %s", paragraph_id, exc)
+            try:
+                await _send(ws, {"type": "analysis_done", "segment_id": paragraph_id, "result": None})
+            except Exception:
+                pass
 
     async def _pcm_consumer() -> None:
         """Consume PCM from queue; backpressure via queue max size."""
@@ -291,9 +329,11 @@ async def handler(ws: WebSocket):
                     pass
                 break
             except WebSocketDisconnect:
+                logger.info("Live transcript: client disconnected (WebSocketDisconnect) session=%s", session_id)
                 break
             if not isinstance(msg, dict) or msg.get("type") != "websocket.receive":
                 if msg.get("type") == "websocket.disconnect":
+                    logger.info("Live transcript: websocket.disconnect message session=%s", session_id)
                     break
                 continue
             # Binary: PCM16 audio (client sends at ready.sample_rate, typically 16 kHz for Nemotron)
@@ -452,6 +492,7 @@ async def handler(ws: WebSocket):
                             await _send(ws, {"type": "stored", "session_id": session_id, "transcript_id": tid, "items": [{"id": kid, "kind": "raw", "tags": tags, "ts": now_iso()}]})
                     except Exception as e:
                         await _send(ws, {"type": "error", "message": str(e)})
+                logger.info("Live transcript: EOS processed, closing session=%s", session_id)
                 break
             if t == "refine":
                 scope = data.get("scope", "all")
@@ -558,11 +599,19 @@ async def handler(ws: WebSocket):
                         items.append({"id": kid2, "kind": "refined", "paragraph_id": p.paragraph_id, "tags": tags, "ts": now_iso()})
                 await _send(ws, {"type": "stored", "session_id": session_id, "items": items})
     except Exception as e:
+        logger.warning("Live transcript: unhandled exception in handler session=%s: %s", session_id, e)
         try:
             await _send(ws, {"type": "error", "message": str(e)})
         except Exception:
             pass
     finally:
+        # Cancel any still-running analysis background tasks
+        for at in analysis_tasks:
+            if not at.done():
+                at.cancel()
+        if analysis_tasks:
+            await asyncio.gather(*analysis_tasks, return_exceptions=True)
+
         if consumer_task is not None and not consumer_task.done():
             try:
                 pcm_queue.put_nowait(None)
@@ -576,6 +625,7 @@ async def handler(ws: WebSocket):
                     await consumer_task
                 except asyncio.CancelledError:
                     pass
+        logger.info("Live transcript: handler fully cleaned up session=%s", session_id)
 
 
 async def _send(ws: WebSocket, obj: dict):

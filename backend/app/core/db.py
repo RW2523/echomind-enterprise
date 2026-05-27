@@ -74,6 +74,56 @@ def init_db():
             conn.execute("ALTER TABLE section_references ADD COLUMN ref_section_id TEXT")
         except Exception:
             pass
+        # Real-time RAG analysis of live transcript segments.
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS transcript_analysis(
+                id TEXT PRIMARY KEY,
+                session_id TEXT,
+                transcript_id TEXT,
+                segment_id TEXT,
+                segment_text TEXT,
+                label TEXT,
+                confidence REAL,
+                explanation TEXT,
+                source_refs TEXT,
+                created_at TEXT
+            )"""
+        )
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_ta_session ON transcript_analysis(session_id)")
+        except Exception:
+            pass
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_ta_transcript ON transcript_analysis(transcript_id)")
+        except Exception:
+            pass
+        # Boardroom sessions: full-meeting audio capture, diarization, and AI report.
+        # If the table exists with the old schema (no chunk_count column), rename it so we
+        # can create the new schema alongside without losing legacy rows.
+        _brm_cols = [
+            row[1]
+            for row in conn.execute("PRAGMA table_info(boardroom_sessions)").fetchall()
+        ]
+        if _brm_cols and "chunk_count" not in _brm_cols:
+            try:
+                conn.execute(
+                    "ALTER TABLE boardroom_sessions RENAME TO boardroom_sessions_legacy"
+                )
+            except Exception:
+                pass
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS boardroom_sessions(
+                id TEXT PRIMARY KEY,
+                transcript_id TEXT,
+                status TEXT,
+                chunk_count INTEGER DEFAULT 0,
+                audio_format TEXT,
+                diarized_json TEXT,
+                report_json TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            )"""
+        )
         conn.commit()
 
 @contextmanager

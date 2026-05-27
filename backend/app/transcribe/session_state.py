@@ -144,6 +144,28 @@ class SessionState:
             return r + sep + self.recent_buffer
         return self.recent_buffer
 
+    def get_live_partial(self) -> str:
+        """Text of the current (not yet committed as a segment) paragraph.
+
+        This is the portion of get_display_text() that starts after all
+        committed segments, i.e. what is actively being transcribed right now.
+        Always non-empty while the user is speaking; resets to '' when a new
+        paragraph is closed.
+        """
+        sep = (
+            " "
+            if self.raw_text
+            and self.recent_buffer
+            and not self.raw_text.endswith(" ")
+            and not self.recent_buffer.startswith(" ")
+            else ""
+        )
+        current_full = (self.raw_text + sep + self.recent_buffer).strip()
+        if self._current_paragraph_start_index < len(current_full):
+            return current_full[self._current_paragraph_start_index:]
+        # Fallback: if index has drifted past current length (edge case after finalize)
+        return self.recent_buffer.strip()
+
     def maybe_commit(self, ts_ms: int) -> bool:
         """
         Commit recent_buffer into raw_text when: ends with .?! or silence > threshold or buffer too long.

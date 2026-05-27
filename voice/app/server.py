@@ -69,6 +69,45 @@ async def post_download_voice(body: DownloadVoiceBody):
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
+class SpeakBody(BaseModel):
+    text: str
+    voice_id: str | None = None
+
+
+@app.post("/speak")
+async def speak_tts(body: SpeakBody):
+    """
+    Simple TTS endpoint: synthesize text with Piper and return raw WAV bytes.
+    Used internally by the backend /api/transcribe/speak endpoint.
+    """
+    from fastapi.responses import Response as FastAPIResponse
+    import io, wave
+    import soundfile as sf
+    import numpy as np
+
+    text = (body.text or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="text is required")
+
+    from .config import SETTINGS
+    try:
+        tts = PiperTTS(
+            model_path=SETTINGS.PIPER_MODEL,
+            speaker_id=SETTINGS.PIPER_SPEAKER,
+            noise_scale=SETTINGS.PIPER_NOISE_SCALE,
+            length_scale=SETTINGS.PIPER_LENGTH_SCALE,
+            use_cuda=SETTINGS.PIPER_USE_CUDA,
+        )
+        audio = tts.synth(text[:2000])
+        buf = io.BytesIO()
+        sf.write(buf, audio, tts.sr, format="WAV", subtype="PCM_16")
+        buf.seek(0)
+        return FastAPIResponse(content=buf.read(), media_type="audio/wav")
+    except Exception as e:
+        logger.error("Piper TTS speak error: %s", e)
+        raise HTTPException(status_code=500, detail=f"TTS failed: {e}")
+
+
 @app.get("/")
 def root():
     with open("static/index.html", "r", encoding="utf-8") as f:

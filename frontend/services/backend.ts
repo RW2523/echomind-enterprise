@@ -340,6 +340,95 @@ export function transcribeWsUrl(): string {
   return `${proto}://${location.host}${API_BASE}/api/transcribe/ws`;
 }
 
+/** Fetch all analysis cards for a stored transcript. */
+export async function getTranscriptAnalysis(transcriptId: string): Promise<{ cards: import('../types').AnalysisCard[] }> {
+  const r = await fetch(`${API_BASE}/api/transcribe/transcripts/${encodeURIComponent(transcriptId)}/analysis`);
+  if (!r.ok) throw new Error(`analysis fetch failed: ${r.status}`);
+  return r.json();
+}
+
+/** Fetch source chunk text for an analysis card source preview. */
+export async function getChunkPreview(chunkId: string): Promise<{ chunk_id: string; text: string; doc_title: string; doc_id: string }> {
+  const r = await fetch(`${API_BASE}/api/transcribe/chunks/${encodeURIComponent(chunkId)}/preview`);
+  if (!r.ok) throw new Error(`chunk preview failed: ${r.status}`);
+  return r.json();
+}
+
+/** Request TTS audio for a card or summary. Returns audio_b64 (WAV) or null (use browser TTS). */
+export async function speakText(
+  mode: 'card' | 'summary',
+  options: { text?: string; cards?: import('../types').AnalysisCard[]; transcript_id?: string }
+): Promise<{ audio_b64: string | null; format: string | null; text: string }> {
+  const r = await fetch(`${API_BASE}/api/transcribe/speak`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      mode,
+      text: options.text ?? null,
+      cards: options.cards
+        ? options.cards.map(c => ({ label: c.label, segment_text: c.segment_text, explanation: c.explanation }))
+        : null,
+      transcript_id: options.transcript_id ?? null,
+    }),
+  });
+  if (!r.ok) throw new Error(`speak failed: ${r.status}`);
+  return r.json();
+}
+
+// ── Boardroom API ─────────────────────────────────────────────────────────────
+
+export async function createBoardroomSession(transcriptId?: string): Promise<{ session_id: string; status: string }> {
+  const r = await fetch(`${API_BASE}/api/boardroom/sessions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript_id: transcriptId ?? null }),
+  });
+  if (!r.ok) throw new Error(`create boardroom session failed: ${r.status}`);
+  return r.json();
+}
+
+export async function uploadBoardroomChunk(
+  sessionId: string,
+  chunkIndex: number,
+  blob: Blob,
+  audioFormat = 'webm'
+): Promise<{ ok: boolean; chunk_count: number }> {
+  const fd = new FormData();
+  fd.append('file', blob, `chunk_${chunkIndex}.${audioFormat}`);
+  const r = await fetch(
+    `${API_BASE}/api/boardroom/sessions/${encodeURIComponent(sessionId)}/chunks?chunk_index=${chunkIndex}&audio_format=${audioFormat}`,
+    { method: 'POST', body: fd }
+  );
+  if (!r.ok) throw new Error(`chunk upload failed: ${r.status}`);
+  return r.json();
+}
+
+export async function finalizeBoardroomSession(sessionId: string): Promise<{ ok: boolean; status: string }> {
+  const r = await fetch(`${API_BASE}/api/boardroom/sessions/${encodeURIComponent(sessionId)}/finalize`, {
+    method: 'POST',
+  });
+  if (!r.ok) throw new Error(`finalize failed: ${r.status}`);
+  return r.json();
+}
+
+export async function analyseBoardroomSession(sessionId: string): Promise<{ ok: boolean; status: string }> {
+  const r = await fetch(`${API_BASE}/api/boardroom/sessions/${encodeURIComponent(sessionId)}/analyse`, {
+    method: 'POST',
+  });
+  if (!r.ok) throw new Error(`analyse failed: ${r.status}`);
+  return r.json();
+}
+
+export async function getBoardroomSession(sessionId: string): Promise<import('../types').BoardroomSession> {
+  const r = await fetch(`${API_BASE}/api/boardroom/sessions/${encodeURIComponent(sessionId)}`);
+  if (!r.ok) throw new Error(`get boardroom session failed: ${r.status}`);
+  return r.json();
+}
+
+export function boardroomExportUrl(sessionId: string, format: 'pdf' | 'pptx'): string {
+  return `${API_BASE}/api/boardroom/sessions/${encodeURIComponent(sessionId)}/export?format=${format}`;
+}
+
 /** Voice conversation WebSocket (proxied to voice service at /voice/ws). */
 export function voiceWsUrl(): string {
   const proto = location.protocol === "https:" ? "wss" : "ws";

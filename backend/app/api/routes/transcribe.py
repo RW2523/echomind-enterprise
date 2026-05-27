@@ -1,11 +1,18 @@
 import json
+import httpx
+import logging
 from fastapi import APIRouter, WebSocket, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel
 from ...core.db import get_conn
 from ...refine import refine_text
 from ...transcribe.ws import handler as ws_handler
 from ...transcribe.store_to_db import store_transcript_to_db
 from ...tagging import get_metadata
+from ...rag.llm import OpenAICompatChat
+from ...core.config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/transcribe", tags=["transcribe"])
 
@@ -216,6 +223,114 @@ async def delete_transcript(transcript_id: str):
         conn.execute("DELETE FROM transcripts WHERE id = ?", (transcript_id,))
         conn.commit()
     return {"ok": True, "deleted": transcript_id}
+
+
+@router.get("/transcripts/{transcript_id}/analysis")
+def get_transcript_analysis(transcript_id: str):
+    """Return all analysis cards for a given transcript (stored during live session)."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            """SELECT id, segment_id, segment_text, label, confidence, explanation, source_refs, created_at
+               FROM transcript_analysis WHERE transcript_id = ? ORDER BY created_at ASC""",
+            (transcript_id,),
+        ).fetchall()
+    cards = []
+    for row in rows:
+        aid, seg_id, seg_text, label, conf, expl, src_refs, created_at = row
+        try:
+            sources = json.loads(src_refs or "[]")
+        except Exception:
+            sources = []
+        cards.append({
+            "id": aid,
+            "segment_id": seg_id,
+            "segment_text": seg_text,
+            "label": label,
+            "confidence": conf,
+            "explanation": expl,
+            "source_chunks": sources,
+            "created_at": created_at,
+        })
+    return {"cards": cards}
+
+
+@router.get("/chunks/{chunk_id}/preview")
+def get_chunk_preview(chunk_id: str):
+    """Return source chunk text and document metadata for analysis card source preview."""
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT text, source_json, doc_id FROM chunks WHERE id = ?", (chunk_id,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Chunk not found")
+        text, src_json, doc_id = row
+        source = {}
+        try:
+            source = json.loads(src_json or "{}")
+        except Exception:
+            pass
+        doc_title = ""
+        if doc_id:
+            doc_row = conn.execute("SELECT filename FROM documents WHERE id = ?", (doc_id,)).fetchone()
+            if doc_row:
+                doc_title = doc_row[0]
+    return {
+        "chunk_id": chunk_id,
+        "text": text or "",
+        "doc_title": doc_title or source.get("filename") or "",
+        "doc_id": doc_id or source.get("doc_id") or "",
+        "source": source,
+    }
+
+
+class SpeakIn(BaseModel):
+    mode: str = "card"  # "card" | "summary"
+    text: str | None = None  # for mode=card: the text to speak
+    cards: list | None = None  # for mode=summary: list of {label, segment_text, explanation}
+    transcript_id: str | None = None
+
+
+@router.post("/speak")
+async def speak(inp: SpeakIn):
+    """
+    Generate spoken audio for an analysis card or a summary of all cards.
+    Uses the voice service Piper TTS if available; returns text fallback otherwise.
+    Frontend should use browser SpeechSynthesis if audio_b64 is null.
+    """
+    if inp.mode == "card" and inp.text:
+        speak_text = inp.text
+    elif inp.mode == "summary" and inp.cards:
+        # Build a summary text from all cards
+        lines = ["Here is the analysis summary from the live transcript:"]
+        for card in inp.cards[:20]:
+            label = card.get("label", "")
+            seg = (card.get("segment_text") or "")[:120]
+            expl = (card.get("explanation") or "")[:200]
+            lines.append(f"{label}: {seg}. {expl}")
+        speak_text = " ".join(lines)
+    else:
+        speak_text = inp.text or ""
+
+    if not speak_text.strip():
+        raise HTTPException(status_code=400, detail="No text to speak")
+
+    # Try voice service TTS
+    voice_url = getattr(settings, "VOICE_TTS_URL", "http://voice:8002/speak")
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.post(
+                voice_url,
+                json={"text": speak_text},
+            )
+            if r.is_success:
+                import base64
+                audio_b64 = base64.b64encode(r.content).decode()
+                return {"audio_b64": audio_b64, "format": "wav", "text": speak_text}
+    except Exception as e:
+        logger.debug("Voice TTS unavailable, returning text fallback: %s", e)
+
+    # Fallback: return text for browser SpeechSynthesis
+    return {"audio_b64": None, "format": None, "text": speak_text}
 
 
 @router.patch("/transcripts/{transcript_id}")
