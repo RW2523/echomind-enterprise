@@ -57,6 +57,8 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({ settings, onUpdat
         connecting={connecting}
         micMuted={micMuted}
         onMicMutedToggle={() => setMicMuted(!micMuted)}
+        partialTranscript={state.partialTranscript}
+        backchannelText={state.backchannelText}
       />
     </div>
   );

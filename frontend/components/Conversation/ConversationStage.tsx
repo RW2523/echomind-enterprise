@@ -55,6 +55,10 @@ export interface ConversationStageProps {
   micMuted?: boolean;
   onMicMutedToggle?: () => void;
   onSettingsClick?: () => void;
+  /** Streaming partial transcript shown while user is still speaking */
+  partialTranscript?: string;
+  /** Latest backchannel word from assistant ("Mm-hmm", "I see" …) */
+  backchannelText?: string;
 }
 
 const ASSISTANT_COLOR_VAR = "var(--assistant-color, #14b8a6)";
@@ -77,6 +81,8 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
   micMuted = false,
   onMicMutedToggle,
   onSettingsClick,
+  partialTranscript = "",
+  backchannelText = "",
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [resolvedAssistantColor, setResolvedAssistantColor] = useState("#14b8a6");
@@ -95,7 +101,11 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [voiceMessages, pendingAssistantText]);
 
-  const showTranscript = voiceMessages.length > 0 || !!pendingAssistantText || listenOnly;
+  const showTranscript =
+    voiceMessages.length > 0 ||
+    !!pendingAssistantText ||
+    listenOnly ||
+    !!partialTranscript;
 
   return (
     <div
@@ -148,6 +158,22 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
                   <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse rounded-sm opacity-80" aria-hidden />
                 </div>
               )}
+
+              {/* Partial transcript from streaming STT — shown while user is still speaking */}
+              {!listenOnly && partialTranscript && !pendingAssistantText && (
+                <div className="ml-auto rounded-2xl px-4 py-2.5 text-[15px] max-w-[85%] bg-white/[0.04] text-slate-400/70 border border-white/[0.06] italic animate-[fadeIn_0.3s_ease]">
+                  {partialTranscript}
+                  <span className="inline-block w-1.5 h-3.5 ml-1 bg-slate-400/60 rounded-sm animate-pulse align-middle" aria-hidden />
+                </div>
+              )}
+
+              {/* Backchannel flash — briefly shows "Mm-hmm", "I see" etc. */}
+              {backchannelText && (
+                <div className="mr-auto rounded-2xl px-3 py-1.5 text-[13px] max-w-[50%] bg-teal-500/[0.05] text-teal-300/60 border border-teal-500/10 animate-[fadeIn_0.25s_ease]">
+                  {backchannelText}
+                </div>
+              )}
+
               <div ref={transcriptEndRef} />
             </div>
           </div>

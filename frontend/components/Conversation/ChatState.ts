@@ -7,6 +7,8 @@ export type OrbState =
   | "listening"
   | "thinking"
   | "speaking"
+  /** Filler/lead phrase playing: pulsing but not full speaking animation */
+  | "filler"
   | "interrupted"
   | "disconnected";
 
@@ -20,6 +22,10 @@ export interface ConversationState {
   interruptedAt: number;
   /** Continuous listening mode: assistant only responds after wake word ("EchoMind") or trigger phrase */
   listenOnly: boolean;
+  /** Latest backchannel text ("Mm-hmm", "I see" etc.) shown briefly in transcript */
+  backchannelText: string;
+  /** Partial transcript from streaming STT during active user speech */
+  partialTranscript: string;
 }
 
 export const initialConversationState: ConversationState = {
@@ -28,6 +34,8 @@ export const initialConversationState: ConversationState = {
   isConnected: false,
   interruptedAt: 0,
   listenOnly: false,
+  backchannelText: "",
+  partialTranscript: "",
 };
 
 export function getOrbStateParams(state: OrbState): {

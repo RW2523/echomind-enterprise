@@ -63,6 +63,10 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({
         .voice-orb-wrapper[data-state="speaking"] .voice-orb-halo {
           animation: voice-orb-halo 1.6s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
         }
+        /* Filler state: softer pulse, between thinking and speaking */
+        .voice-orb-wrapper[data-state="filler"] .voice-orb-halo {
+          animation: voice-orb-thinking 1.8s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+        }
       `}</style>
       <div className="flex flex-col items-center gap-5 flex-1 min-h-0 justify-center py-5">
         <div
@@ -104,7 +108,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({
             <OrbCanvas
               role="assistant"
               analyserNode={assistantAnalyser}
-              isActive={orbState === "speaking" || orbState === "thinking"}
+              isActive={orbState === "speaking" || orbState === "thinking" || orbState === "filler"}
               isConnected={isConnected}
               orbState={orbState}
               interruptedAt={interruptedAt}

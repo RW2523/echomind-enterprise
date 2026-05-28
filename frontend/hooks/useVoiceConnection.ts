@@ -175,6 +175,8 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     isConnected: false,
     interruptedAt: 0,
     listenOnly: false,
+    backchannelText: "",
+    partialTranscript: "",
   });
   const [connecting, setConnecting] = useState(false);
   const [userAnalyser, setUserAnalyser] = useState<AnalyserNode | null>(null);
@@ -398,8 +400,27 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
         return;
       }
+      if (msg.type === "event" && msg.event === "FILLER_SPEAKING") {
+        // Lead phrase playing: use softer "thinking" orb, not full speaking bounce
+        setState((prev) => ({ ...prev, assistantOrb: "filler" }));
+        return;
+      }
+      if (msg.type === "event" && msg.event === "BACKCHANNEL") {
+        // Brief backchannel ("Mm-hmm", "I see") during long user speech
+        const bcText = typeof msg.text === "string" ? msg.text : "";
+        setState((prev) => ({ ...prev, backchannelText: bcText }));
+        // Auto-clear after 2.5 s
+        setTimeout(() => {
+          setState((prev) => ({ ...prev, backchannelText: "" }));
+        }, 2500);
+        return;
+      }
+      if (msg.type === "partial_transcript" && typeof msg.text === "string") {
+        setState((prev) => ({ ...prev, partialTranscript: msg.text as string }));
+        return;
+      }
       if (msg.type === "event" && msg.event === "BACK_TO_LISTENING") {
-        setState((prev) => ({ ...prev, assistantOrb: "idle" }));
+        setState((prev) => ({ ...prev, assistantOrb: "idle", backchannelText: "", partialTranscript: "" }));
         return;
       }
       if (msg.type === "memory_event" && msg.event === "listening_mode_on") {
@@ -482,7 +503,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       wsRef.current = null;
       setUserAnalyser(null);
       setAssistantAnalyser(null);
-      setState((prev) => ({ ...prev, isConnected: false, userOrb: "disconnected", assistantOrb: "disconnected", listenOnly: false }));
+      setState((prev) => ({ ...prev, isConnected: false, userOrb: "disconnected", assistantOrb: "disconnected", listenOnly: false, backchannelText: "", partialTranscript: "" }));
       setVoiceMessages([]);
       setPendingAssistantText("");
       setListenBufferText("");

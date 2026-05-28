@@ -55,6 +55,25 @@ class Settings:
     # Emotion mode (client playback-rate + tiny fillers)
     EMOTION_MODE: bool = os.getenv("EMOTION_MODE", "1") == "1"
 
+    # ── Full-duplex upgrades ───────────────────────────────────────────────
+    # Lead phrase: speak a short filler immediately while LLM/RAG runs async.
+    LEAD_PHRASE_ENABLED: bool = os.getenv("LEAD_PHRASE_ENABLED", "1") in ("1", "true", "yes")
+
+    # Backchannel injection: "Mm-hmm", "I see" etc. during long user speech.
+    BACKCHANNEL_ENABLED: bool = os.getenv("BACKCHANNEL_ENABLED", "1") in ("1", "true", "yes")
+    # Minimum continuous speech before a backchannel may fire (seconds).
+    BACKCHANNEL_MIN_SPEECH_S: float = float(os.getenv("BACKCHANNEL_MIN_SPEECH_S", "3.0"))
+    # Minimum gap between two backchannels (seconds).
+    BACKCHANNEL_COOLDOWN_S: float = float(os.getenv("BACKCHANNEL_COOLDOWN_S", "6.0"))
+    # Short-pause window that triggers backchannel: silence frames >= this many ms but < ENDPOINT_SILENCE_MS.
+    BACKCHANNEL_PAUSE_MIN_MS: int = int(os.getenv("BACKCHANNEL_PAUSE_MIN_MS", "300"))
+
+    # Streaming partial STT: push frames through Nemotron streaming during speech for early intent detection.
+    STREAMING_STT_ENABLED: bool = os.getenv("STREAMING_STT_ENABLED", "1") in ("1", "true", "yes")
+
+    # Barge-in recovery: speak a brief acknowledgment when the user interrupts.
+    BARGE_IN_RECOVERY_ENABLED: bool = os.getenv("BARGE_IN_RECOVERY_ENABLED", "1") in ("1", "true", "yes")
+
     # Moshi optional
     MOSHI_URL: str = os.getenv("MOSHI_URL", "ws://127.0.0.1:8080/ws")
     USE_MOSHI_CORE: bool = os.getenv("USE_MOSHI_CORE", "0") == "1"

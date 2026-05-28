@@ -113,3 +113,73 @@ class NemotronUtteranceSTT:
             preview,
         )
         return text or ""
+
+
+class NemotronStreamingSTT:
+    """
+    Per-utterance streaming STT using Nemotron's process_chunk API.
+
+    Feed audio frames while the user is still speaking to get a growing
+    partial transcript. This lets us classify intent (knowledge-intensive vs.
+    casual) before the utterance ends, so we can pre-warm RAG and pick the
+    right lead phrase without any extra latency.
+
+    Thread-safety: push_chunk() is designed to be called from a single thread
+    (the executor thread in _consume_loop). reset() must be called between
+    utterances.
+    """
+
+    def __init__(self):
+        self.sample_rate = SETTINGS.SR
+        # Nemotron streaming chunk: 560ms default, same as live transcript
+        frame_ms = int(os.getenv("VOICE_STREAMING_CHUNK_MS", "560"))
+        self._frame_samples = int(self.sample_rate * frame_ms / 1000)
+        self._buf: np.ndarray = np.zeros(0, dtype=np.float32)
+        self._state = None
+        self._step: int = 0
+        self._last_hyp: str = ""
+
+    def reset(self) -> None:
+        """Call at the start of each new utterance."""
+        self._buf = np.zeros(0, dtype=np.float32)
+        self._state = None
+        self._step = 0
+        self._last_hyp = ""
+
+    def push_chunk(self, audio_f32: np.ndarray) -> str:
+        """
+        Accumulate audio and process full Nemotron frames synchronously.
+        Returns the latest partial hypothesis (may be empty string).
+        Safe to call from a thread-pool executor.
+        """
+        try:
+            adapter = get_shared_asr_adapter()
+            if self._state is None:
+                self._state = adapter.create_session_state()
+
+            self._buf = np.concatenate([self._buf, audio_f32])
+
+            while len(self._buf) >= self._frame_samples:
+                frame = self._buf[: self._frame_samples]
+                self._buf = self._buf[self._frame_samples :]
+                try:
+                    hyp, self._state = adapter.process_chunk(
+                        frame,
+                        self._state,
+                        keep_all_outputs=False,
+                        step_num=self._step,
+                    )
+                    if hyp and hyp.strip():
+                        self._last_hyp = hyp
+                except Exception as e:
+                    logger.debug("NemotronStreamingSTT chunk error (step %d): %s", self._step, e)
+                self._step += 1
+
+        except Exception as e:
+            logger.debug("NemotronStreamingSTT push_chunk error: %s", e)
+
+        return self._last_hyp
+
+    def latest_partial(self) -> str:
+        """Return the most recent partial hypothesis without feeding new audio."""
+        return self._last_hyp

@@ -3,6 +3,7 @@ import base64
 import json
 import logging
 import os
+import random
 import re
 import time
 from dataclasses import dataclass
@@ -17,10 +18,11 @@ from .config import SETTINGS
 from .conversation_memory import ConversationMemory
 from .echo_commands import parse_and_route, strip_wake_word
 from .wake_word_storage import load_wake_word, save_wake_word
-from .adapters.stt_nemotron import NemotronUtteranceSTT
+from .adapters.stt_nemotron import NemotronUtteranceSTT, NemotronStreamingSTT
 from .adapters.llm_openai_stream import OpenAICompatLLMStream
 from .adapters.tts_piper import PiperTTS
 from .adapters.moshi_ws import MoshiWsAdapter
+from .lead_phrases import pick_lead_phrase
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,17 @@ _PERSONA_INTRO_PHRASES: dict = {
 }
 
 _DEFAULT_INTRO_PHRASE = "Hi! I'm EchoMind, your AI assistant. How can I help you today?"
+
+# Backchannels spoken quietly while the user is talking (full-duplex feel)
+_BACKCHANNEL_POOL = [
+    "Mm-hmm.", "I see.", "Right.", "Go on.", "Okay.", "Sure.",
+    "Interesting.", "I understand.", "Got it.", "Yes.",
+]
+
+# Barge-in acknowledgments spoken after the user interrupts the assistant
+_BARGE_IN_ACK_POOL = [
+    "Sure.", "Of course.", "Go ahead.", "No problem.",
+]
 
 
 def _get_persona_intro(persona: str) -> str:
@@ -331,6 +344,15 @@ class OmniSessionA:
         self._pending_intro = True      # Wait for first set_context (persona) before playing intro
 
         self.stt = NemotronUtteranceSTT()
+        # Streaming STT for partial transcript during user speech (intent pre-detection)
+        self._stream_stt = NemotronStreamingSTT() if SETTINGS.STREAMING_STT_ENABLED else None
+        self._partial_transcript: str = ""   # latest partial from streaming STT
+
+        # Backchannel state (full-duplex-like acknowledgments during user speech)
+        self._last_backchannel_ts: float = 0.0
+        self._speech_frames_since_backchannel: int = 0
+        self._backchannel_silence_count: int = 0  # frames of mid-speech silence (for pause detection)
+
         self.llm = OpenAICompatLLMStream(
             SETTINGS.LLM_URL,
             SETTINGS.LLM_MODEL,
@@ -467,6 +489,7 @@ class OmniSessionA:
         If keep_listening=True, do NOT reset the current utterance buffer (so barge-in keeps capturing your speech).
         """
         async with self._cancel_lock:
+            was_speaking = self._assistant_is_speaking
             self.generation_id += 1
 
             for t in [self._reply_task, self._llm_prod_task, self._kickoff_task, self._finalize_task, self._tts_phrase_task]:
@@ -501,6 +524,12 @@ class OmniSessionA:
 
             if self.moshi:
                 asyncio.create_task(self.moshi.cancel(self.generation_id))
+
+            # Barge-in recovery: speak a brief acknowledgment so the assistant
+            # doesn't go silent mid-thought when interrupted — more human-like.
+            if SETTINGS.BARGE_IN_RECOVERY_ENABLED and keep_listening and was_speaking:
+                ack = random.choice(_BARGE_IN_ACK_POOL)
+                asyncio.create_task(self._speak_phrase(self.generation_id, ack, is_filler=True))
 
     def _assistant_active(self) -> bool:
         if self._assistant_is_speaking:
@@ -658,6 +687,12 @@ class OmniSessionA:
             await self.ws.send_text(json.dumps(msg))
 
     async def _consume_loop(self):
+        loop = asyncio.get_running_loop()
+        # Pre-compute backchannel thresholds once
+        bc_min_frames = max(1, int(SETTINGS.BACKCHANNEL_MIN_SPEECH_S * 1000 / self.frame_ms))
+        bc_pause_min_frames = max(1, int(SETTINGS.BACKCHANNEL_PAUSE_MIN_MS / self.frame_ms))
+        bc_pause_max_frames = max(bc_pause_min_frames + 1, self.endpoint_silence_frames - 1)
+
         while not self._closed:
             fr = await self.in_q.get()
 
@@ -671,6 +706,8 @@ class OmniSessionA:
                 self.silence_count = 0
                 self.speech_count += 1
                 self._speech_lead_count += 1
+                self._speech_frames_since_backchannel += 1
+                self._backchannel_silence_count = 0
 
                 # Skip barge-in during intro to avoid mic feedback cutting it off
                 if not self._is_playing_intro:
@@ -683,9 +720,14 @@ class OmniSessionA:
                         if self._speech_lead_count >= need_lead:
                             self.in_speech = True
                             self.utt.reset()
+                            if self._stream_stt:
+                                self._stream_stt.reset()
+                                self._partial_transcript = ""
                             for _pf in self._pending_lead_frames:
                                 self.utt.push(_pf)
                             self._pending_lead_frames.clear()
+                            self._speech_frames_since_backchannel = 0
+                            self._backchannel_silence_count = 0
                             await self._cancel_assistant_pipeline(keep_listening=True, send_cancel=True)
                             await self.send({"type": "event", "event": "USER_SPEECH_START", "generation_id": self.generation_id})
                             if self.moshi:
@@ -693,17 +735,54 @@ class OmniSessionA:
                     else:
                         self.utt.push(fr)
 
+                        # Streaming STT: push frame for early partial transcript
+                        if self._stream_stt is not None:
+                            f32 = pcm16_bytes_to_float32(fr.pcm16)
+
+                            def _push(stt=self._stream_stt, audio=f32):
+                                return stt.push_chunk(audio)
+
+                            try:
+                                partial = await loop.run_in_executor(None, _push)
+                                if partial and partial != self._partial_transcript:
+                                    self._partial_transcript = partial
+                                    await self.send({
+                                        "type": "partial_transcript",
+                                        "text": partial,
+                                        "generation_id": self.generation_id,
+                                    })
+                            except Exception:
+                                pass
+
             else:
                 self._speech_lead_count = 0
                 if not self.in_speech:
                     self._pending_lead_frames.clear()
                 if self.in_speech:
                     self.silence_count += 1
+                    self._backchannel_silence_count += 1
                     if self.tail_frames > 0:
                         self.utt.push(fr)
 
+                    # ── Backchannel injection ──────────────────────────────
+                    # Fire when: user paused (short silence < endpoint),
+                    # has spoken long enough, and cooldown has passed.
+                    if (
+                        SETTINGS.BACKCHANNEL_ENABLED
+                        and not self._assistant_active()
+                        and bc_pause_min_frames <= self._backchannel_silence_count < bc_pause_max_frames
+                        and self._speech_frames_since_backchannel >= bc_min_frames
+                        and (time.time() - self._last_backchannel_ts) >= SETTINGS.BACKCHANNEL_COOLDOWN_S
+                    ):
+                        bc = random.choice(_BACKCHANNEL_POOL)
+                        asyncio.create_task(self._speak_phrase(self.generation_id, bc, is_filler=True))
+                        await self.send({"type": "event", "event": "BACKCHANNEL", "text": bc, "generation_id": self.generation_id})
+                        self._last_backchannel_ts = time.time()
+                        self._speech_frames_since_backchannel = 0
+
                     if self.silence_count >= self.endpoint_silence_frames:
                         self.in_speech = False
+                        self._backchannel_silence_count = 0
                         await self.send({"type": "event", "event": "USER_SPEECH_END", "generation_id": self.generation_id})
 
                         if self.speech_count < self.min_speech_frames:
@@ -1060,6 +1139,19 @@ class OmniSessionA:
         await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
         await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
         self._assistant_active_gen = my_gen
+
+        # ── Lead phrase: speak immediately while LLM/RAG generates (MoshiRAG pattern) ──
+        # This eliminates the dead-silence gap and makes the conversation feel alive.
+        _needs_knowledge = _user_asks_about_knowledge(user_text)
+        if SETTINGS.LEAD_PHRASE_ENABLED:
+            lead = pick_lead_phrase(user_text, needs_rag=_needs_knowledge)
+            asyncio.create_task(self._speak_phrase(my_gen, lead, is_filler=True))
+            await self.send({
+                "type": "event",
+                "event": "FILLER_SPEAKING",
+                "text": lead,
+                "generation_id": my_gen,
+            })
 
         # Compiled context for LLM (recent memory + optional topic)
         compiled_context = self.conversation_memory.get_entries_for_context(15, max_chars=3500)
