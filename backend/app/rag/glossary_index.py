@@ -147,15 +147,57 @@ class GlossaryIndex:
         return out
 
     def clear_doc(self, doc_id: str) -> None:
-        surviving = [
-            eid for eid in self._meta["ids"]
-            if self._meta["by_id"].get(eid, {}).get("doc_id") != doc_id
+        """Remove a doc's glossary entries AND their FAISS vectors, keeping row↔meta alignment.
+
+        search() maps FAISS row idx -> ids[idx]; removing meta entries without removing the
+        corresponding vectors desyncs every row after the deletion point. IndexFlatIP has no
+        in-place delete, so reconstruct the surviving rows and rebuild the index. (H4)
+        """
+        old_ids = list(self._meta.get("ids", []))
+        by_id = self._meta.get("by_id", {})
+        keep_positions = [
+            i for i, eid in enumerate(old_ids)
+            if by_id.get(eid, {}).get("doc_id") != doc_id
         ]
-        for eid in list(self._meta["by_id"].keys()):
-            if self._meta["by_id"][eid].get("doc_id") == doc_id:
-                del self._meta["by_id"][eid]
-        self._meta["ids"] = surviving
+        if len(keep_positions) == len(old_ids):
+            return  # nothing for this doc
+
+        rebuilt_ok = self._rebuild_from_positions(keep_positions, len(old_ids))
+
+        if rebuilt_ok:
+            self._meta["ids"] = [old_ids[i] for i in keep_positions]
+            for eid in list(by_id.keys()):
+                if by_id[eid].get("doc_id") == doc_id:
+                    del by_id[eid]
+            self._meta["by_id"] = by_id
+        else:
+            self._index = None
+            self._meta = {"ids": [], "by_id": {}}
         self._save()
+
+    def _rebuild_from_positions(self, keep_positions: List[int], expected_total: int) -> bool:
+        """Rebuild the FAISS index keeping only ``keep_positions`` rows. Returns False when the
+        index/meta were already out of sync or reconstruct fails (caller resets to empty)."""
+        if self._index is None:
+            return False
+        if self._index.ntotal != expected_total:
+            logger.warning(
+                "GlossaryIndex: index/meta out of sync (ntotal=%d expected=%d); resetting",
+                self._index.ntotal, expected_total,
+            )
+            return False
+        try:
+            if not keep_positions:
+                self._index = None
+                return True
+            kept = np.vstack([self._index.reconstruct(int(i)) for i in keep_positions]).astype(np.float32)
+            new_index = faiss.IndexFlatIP(kept.shape[1])
+            new_index.add(kept)
+            self._index = new_index
+            return True
+        except Exception as e:
+            logger.warning("GlossaryIndex: vector rebuild failed: %s; resetting index", e)
+            return False
 
     def clear_all(self) -> None:
         self._index = None

@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from ...boardroom import service as br
+from ...core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,29 @@ def get_session(session_id: str):
     return s
 
 
+class LinkTranscriptIn(BaseModel):
+    transcript_id: str
+
+
+@router.delete("/sessions/{session_id}")
+def delete_session(session_id: str):
+    """Delete a boardroom session and all associated audio chunks."""
+    found = br.delete_session(session_id)
+    if not found:
+        raise HTTPException(status_code=404, detail="Boardroom session not found")
+    return {"ok": True, "deleted": session_id}
+
+
+@router.post("/sessions/{session_id}/link-transcript")
+def link_transcript(session_id: str, inp: LinkTranscriptIn):
+    """Link a live-transcript row to this boardroom session (called when first auto-store fires)."""
+    s = br.get_session(session_id)
+    if not s:
+        raise HTTPException(status_code=404, detail="Boardroom session not found")
+    br.link_transcript(session_id, inp.transcript_id)
+    return {"ok": True, "session_id": session_id, "transcript_id": inp.transcript_id}
+
+
 @router.post("/sessions/{session_id}/chunks")
 async def upload_chunk(
     session_id: str,
@@ -63,14 +87,25 @@ async def upload_chunk(
         raise HTTPException(status_code=404, detail="Boardroom session not found")
     if s["status"] not in ("recording",):
         raise HTTPException(status_code=400, detail=f"Session is in state '{s['status']}', cannot upload chunks")
+    # Reject unsupported formats early (also enforced in store_chunk for defense in depth).
+    if audio_format.strip().lower() not in br.ALLOWED_AUDIO_FORMATS:
+        raise HTTPException(status_code=400, detail=f"Unsupported audio_format '{audio_format}'")
     try:
         data = await file.read()
         if not data:
             raise HTTPException(status_code=400, detail="Empty chunk")
+        if len(data) > settings.BOARDROOM_MAX_CHUNK_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Chunk too large ({len(data)} bytes > {settings.BOARDROOM_MAX_CHUNK_BYTES})",
+            )
         count = br.store_chunk(session_id, data, chunk_index, audio_format)
         return {"ok": True, "session_id": session_id, "chunk_index": chunk_index, "chunk_count": count}
     except HTTPException:
         raise
+    except ValueError as e:
+        # Validation failures (bad format / out-of-range index / bad path) → client error.
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -84,6 +119,16 @@ async def finalize_session(session_id: str, background_tasks: BackgroundTasks):
     s = br.get_session(session_id)
     if not s:
         raise HTTPException(status_code=404, detail="Boardroom session not found")
+
+    # Atomically claim the session for processing. Only one concurrent /finalize wins;
+    # others (or a session already processing/transcribed) get 409 instead of spawning
+    # another ~18 GB GPU subprocess.
+    if not br.try_transition(session_id, "processing", allowed_from=("recording", "error")):
+        cur = br.get_session(session_id)
+        raise HTTPException(
+            status_code=409,
+            detail=f"Session cannot be finalized from state '{(cur or {}).get('status')}'",
+        )
 
     async def _run():
         try:
@@ -105,17 +150,24 @@ async def analyse_session(session_id: str, background_tasks: BackgroundTasks):
     s = br.get_session(session_id)
     if not s:
         raise HTTPException(status_code=404, detail="Boardroom session not found")
-    if s["status"] not in ("transcribed", "analysed"):
+
+    # Atomically claim the session for analysis (prevents re-entrant LLM/RAG fan-out).
+    prev_status = s.get("status")  # 'transcribed' or 'analysed' (re-analyse)
+    if not br.try_transition(session_id, "analysing", allowed_from=("transcribed", "analysed")):
+        cur = br.get_session(session_id)
         raise HTTPException(
-            status_code=400,
-            detail=f"Session must be in 'transcribed' state. Current: '{s['status']}'"
+            status_code=409,
+            detail=f"Session must be 'transcribed' to analyse. Current: '{(cur or {}).get('status')}'",
         )
 
     async def _run():
         try:
             await br.analyse_meeting(session_id)
         except Exception as e:
+            # Restore the PRIOR status (not always 'transcribed') so a failed re-analysis of an
+            # already-'analysed' session keeps its existing report instead of desyncing. (audit M)
             logger.error("Boardroom analyse error for %s: %s", session_id, e)
+            br._update_status(session_id, prev_status or "transcribed")
 
     background_tasks.add_task(_run)
     return {"ok": True, "session_id": session_id, "status": "analysing"}

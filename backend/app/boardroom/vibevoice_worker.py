@@ -47,26 +47,134 @@ def _ts_to_sec(ts: str) -> float:
     return 0.0
 
 
-def _parse_vibevoice_output(raw_text: str, time_offset_s: float = 0.0) -> list:
+_CHAT_TEMPLATE_RE = re.compile(
+    r"<\|im_start\|>.*?<\|im_start\|>assistant\s*|"
+    r"<\|im_end\|>.*|"
+    r"<\|endoftext\|>.*",
+    re.DOTALL,
+)
+
+# Noise-only labels that should be silently dropped
+_NOISE_LABELS = {"[silence]", "[music]", "[noise]", "[laughter]", "[applause]"}
+
+
+def _strip_chat_tokens(text: str) -> str:
+    """Remove HuggingFace/chat-template wrapper tokens from model output."""
+    # Strip <|im_start|>assistant ... <|im_end|> <|endoftext|>
+    text = re.sub(r"<\|im_start\|>\s*\w+\s*", "", text)
+    text = re.sub(r"<\|im_end\|>", "", text)
+    text = re.sub(r"<\|endoftext\|>", "", text)
+    return text.strip()
+
+
+def _parse_vibevoice_json(raw_text: str, time_offset_s: float = 0.0) -> list | None:
+    """
+    VibeVoice newer output format — a JSON array inside the model's chat template:
+
+        <|im_start|>assistant [{"Start":0,"End":1.51,"Content":"[Silence]"},
+         {"Start":1.51,"End":8.53,"Speaker":0,"Content":"They call you..."}]
+        <|im_end|> <|endoftext|>
+
+    Returns our standard segment list, or None if the text is not JSON.
+    """
+    # Find the JSON array anywhere in the output (after stripping chat tokens)
+    clean = _strip_chat_tokens(raw_text)
+    m = re.search(r"\[.*\]", clean, re.DOTALL)
+    if not m:
+        return None
+
+    try:
+        items = json.loads(m.group())
+    except json.JSONDecodeError:
+        return None
+
+    if not isinstance(items, list):
+        return None
+
+    segments: list = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+
+        content = str(item.get("Content") or item.get("content") or "").strip()
+        if not content or content.lower() in _NOISE_LABELS:
+            continue
+
+        # Speaker field is an integer (0-indexed); map to 1-indexed label
+        raw_spk = item.get("Speaker") if item.get("Speaker") is not None else item.get("speaker")
+        if raw_spk is None:
+            # Items without a Speaker key are non-speech (silence, music, etc.)
+            continue
+        try:
+            spk_idx = int(raw_spk)
+            speaker = f"Speaker {spk_idx + 1}"
+        except (ValueError, TypeError):
+            speaker = str(raw_spk).strip() or "Speaker 1"
+
+        start_s = float(item.get("Start") or item.get("start") or 0.0) + time_offset_s
+        end_s   = float(item.get("End")   or item.get("end")   or start_s) + time_offset_s
+
+        segments.append({
+            "speaker":    speaker,
+            "text":       content,
+            "start_time": start_s,
+            "end_time":   end_s,
+        })
+
+    return segments if segments else None
+
+
+def _parse_vibevoice_text(raw_text: str, time_offset_s: float = 0.0) -> list:
+    """
+    Legacy VibeVoice text format:
+        [00:00 - 00:05] Speaker 1: Hello, welcome.
+        [0.00s - 5.23s] SPEAKER_1: Hi there.
+    """
+    clean = _strip_chat_tokens(raw_text)
     pattern = re.compile(
         r"\[([^\]\-–]+?)\s*[-–]\s*([^\]]+?)\]\s*([^:\[\n]+?):\s*(.+?)(?=\[|\Z)",
         re.DOTALL,
     )
     segments: list = []
-    for m in pattern.finditer(raw_text):
+    for m in pattern.finditer(clean):
         start_s = _ts_to_sec(m.group(1)) + time_offset_s
         end_s   = _ts_to_sec(m.group(2)) + time_offset_s
         speaker = m.group(3).strip()
         text    = re.sub(r"\s+", " ", m.group(4)).strip()
-        if text:
+        if text and text.lower() not in _NOISE_LABELS:
             segments.append({"speaker": speaker, "text": text,
                               "start_time": start_s, "end_time": end_s})
-
-    if not segments and raw_text.strip():
-        clean = re.sub(r"\s+", " ", raw_text).strip()
-        segments = [{"speaker": "Speaker 1", "text": clean,
-                     "start_time": time_offset_s, "end_time": time_offset_s}]
     return segments
+
+
+def _parse_vibevoice_output(raw_text: str, time_offset_s: float = 0.0) -> list:
+    """
+    Auto-detect VibeVoice output format and parse accordingly.
+
+    Priority:
+    1. JSON array format  (newer VibeVoice versions inside chat template tokens)
+    2. [MM:SS - MM:SS] Speaker N: text  (older text format)
+    3. Treat entire output as single Speaker 1 utterance (fallback)
+    """
+    # Try JSON first (newer format)
+    json_segs = _parse_vibevoice_json(raw_text, time_offset_s)
+    if json_segs is not None:
+        return json_segs
+
+    # Try legacy text format
+    text_segs = _parse_vibevoice_text(raw_text, time_offset_s)
+    if text_segs:
+        return text_segs
+
+    # Last resort: strip tokens and dump everything as one segment
+    clean = _strip_chat_tokens(raw_text).strip()
+    # Remove any remaining JSON-like noise if it leaked through
+    clean = re.sub(r"[\[\]{}\"]", " ", clean)
+    clean = re.sub(r"\s+", " ", clean).strip()
+    if clean:
+        return [{"speaker": "Speaker 1", "text": clean,
+                 "start_time": time_offset_s, "end_time": time_offset_s}]
+    return []
 
 
 # ── main ──────────────────────────────────────────────────────────────────────

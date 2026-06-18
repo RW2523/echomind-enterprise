@@ -12,6 +12,8 @@ export enum PersonaType {
   FUNNY      = 'Funny & Calming Assistant',
   LAWYER     = 'Lawyer',
   AI_EXPERT  = 'AI Expert & Manager',
+  GENERAL    = 'General Assistant',
+  ECHOMIND   = 'EchoMind Guide',
 }
 
 export interface DocumentChunk {
@@ -132,8 +134,6 @@ export interface AppSettings {
   voiceName: PiperVoiceId;
   contextWindow: '24h' | '48h' | '1w' | 'all';
   persona: PersonaType;
-  model: string;
-  developerMode: boolean;
   /** When true: fast RAG (no query rewriting; single embedding + LLM). When false: full RAG (intent + query rewrite). */
   advancedRag: boolean;
   /** Voice only: when true use knowledge base (RAG); when false answer generally. */

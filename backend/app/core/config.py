@@ -113,6 +113,16 @@ class Settings(BaseSettings):
     TRANSCRIPT_STT_WARMUP_FRAMES: int = int(os.getenv("TRANSCRIPT_STT_WARMUP_FRAMES", "8"))
     # WebSocket receive timeout (seconds). No message for this long = stale connection. Default 24h = effectively indefinite with heartbeat.
     TRANSCRIPT_WS_RECEIVE_TIMEOUT_SEC: float = float(os.getenv("TRANSCRIPT_WS_RECEIVE_TIMEOUT_SEC", "86400"))
+    # Max concurrent live-transcription WebSocket sessions (0 = unbounded). Prevents GPU/queue exhaustion.
+    TRANSCRIPT_WS_MAX_SESSIONS: int = int(os.getenv("TRANSCRIPT_WS_MAX_SESSIONS", "16"))
+
+    # ── Boardroom limits / GPU concurrency ──────────────────────────────────────
+    # Max concurrent boardroom GPU jobs (VibeVoice/Nemotron transcription). 1 = serial (recommended on a single GPU).
+    BOARDROOM_GPU_CONCURRENCY: int = int(os.getenv("BOARDROOM_GPU_CONCURRENCY", "1"))
+    # Reject chunk uploads above this index (bounds total chunks per session; ~5s/chunk => 4000 ≈ 5.5h).
+    BOARDROOM_MAX_CHUNKS: int = int(os.getenv("BOARDROOM_MAX_CHUNKS", "4000"))
+    # Reject a single chunk larger than this many bytes (defense vs disk-fill DoS).
+    BOARDROOM_MAX_CHUNK_BYTES: int = int(os.getenv("BOARDROOM_MAX_CHUNK_BYTES", str(25 * 1024 * 1024)))
 
     # ── Hierarchical / Graph-aware RAG feature toggles ──────────────────────────
     # Step 1: Section-level FAISS index restricts child search to top-N sections first.

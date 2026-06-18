@@ -12,6 +12,7 @@ const STATE_LABELS: Record<OrbState, string> = {
   listening: "Listening…",
   thinking: "Thinking…",
   speaking: "Speaking",
+  filler: "Speaking",
   interrupted: "Interrupted",
   disconnected: "Disconnected",
 };

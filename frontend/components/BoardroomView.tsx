@@ -50,7 +50,9 @@ const BoardroomView: React.FC<BoardroomViewProps> = ({ session, onSessionUpdate,
   }, [onSessionUpdate]);
 
   useEffect(() => {
-    if (session.status === 'processing') {
+    // Poll for any in-flight state so a session opened mid-process/analysis keeps refreshing
+    // instead of being stuck on a spinner until manual reload. (audit M)
+    if (session.status === 'processing' || session.status === 'analysing') {
       pollStatus(session.id);
     }
     return () => { if (pollRef.current) clearInterval(pollRef.current); };

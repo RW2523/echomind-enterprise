@@ -1,21 +1,39 @@
 from __future__ import annotations
 import json
 import logging
+import os
 import time
 import httpx
 from typing import AsyncIterator
 
 logger = logging.getLogger(__name__)
 
+# Logging full prompts means writing every uploaded-document / transcript excerpt to logs
+# in plaintext (PII / confidential content). Off by default; opt in only for debugging.
+_LOG_FULL_PROMPTS = os.getenv("ECHOMIND_LOG_FULL_PROMPTS", "0").lower() in ("1", "true", "yes")
+
 
 def _log_chat_request(url: str, payload: dict, stream: bool) -> None:
-    """Log full prompt before sending chat/completions request (no content cut)."""
+    """Log chat/completions request. Logs only metadata at INFO; the full prompt (which
+    contains retrieved document/transcript content) is logged at DEBUG and only when
+    ECHOMIND_LOG_FULL_PROMPTS is enabled, to avoid leaking sensitive content into logs."""
+    messages = payload.get("messages") or []
+    total_chars = sum(len(str(m.get("content") or "")) for m in messages)
     logger.info(
-        "LLM request %s -> %s/chat/completions full_payload=%s",
+        "LLM request %s -> %s/chat/completions model=%s msgs=%d prompt_chars=%d max_tokens=%s",
         "stream" if stream else "sync",
         url,
-        json.dumps(payload, ensure_ascii=False),
+        payload.get("model"),
+        len(messages),
+        total_chars,
+        payload.get("max_tokens"),
     )
+    if _LOG_FULL_PROMPTS and logger.isEnabledFor(logging.DEBUG):
+        logger.debug(
+            "LLM full_payload (%s) %s",
+            "stream" if stream else "sync",
+            json.dumps(payload, ensure_ascii=False),
+        )
 
 
 class OpenAICompatChat:

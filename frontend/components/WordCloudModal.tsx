@@ -1,11 +1,11 @@
-import React, { useRef, useEffect, useCallback, useState } from "react";
+import React, { useRef, useEffect, useCallback, useState, useMemo } from "react";
 import { getWordCounts, type WordCount } from "../utils/wordCloudUtils";
 import { listTranscripts, getTranscript } from "../services/backend";
 import { ICONS } from "../constants";
 
 const CLOUD_UPDATE_INTERVAL_MS = 60 * 1000; // 1 minute when live
-const MIN_FONT = 12;
-const MAX_FONT = 52;
+const MIN_FONT = 14;
+const MAX_FONT = 80;
 const PADDING = 4;
 
 /** Font scale: log n — size proportional to log(1+count). */
@@ -144,10 +144,14 @@ const WordCloudModal: React.FC<WordCloudModalProps> = ({ onClose, liveText, list
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const combinedText = `${dbText}\n${liveText}`.trim();
-  const rawWords = getWordCounts(combinedText);
-  const topCount = rawWords[0]?.count ?? 0;
-  const words: WordCount[] = [{ word: "EchoMind", count: topCount + 10 }, ...rawWords].slice(0, 50);
+  // Memoize the (expensive) tokenization so it only recomputes when the text changes — not on
+  // every render / unrelated state update. (M24)
+  const words: WordCount[] = useMemo(() => {
+    const combinedText = `${dbText}\n${liveText}`.trim();
+    const rawWords = getWordCounts(combinedText);
+    const topCount = rawWords[0]?.count ?? 0;
+    return [{ word: "EchoMind", count: topCount + 10 }, ...rawWords].slice(0, 50);
+  }, [dbText, liveText]);
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -171,17 +175,13 @@ const WordCloudModal: React.FC<WordCloudModalProps> = ({ onClose, liveText, list
     (async () => {
       try {
         const { transcripts } = await listTranscripts();
-        const texts: string[] = [];
-        for (const t of transcripts) {
-          if (cancelled) return;
-          try {
-            const detail = await getTranscript(t.id);
-            if (detail.raw_text) texts.push(detail.raw_text);
-          } catch {
-            // skip single transcript failure
-          }
-        }
-        if (!cancelled) setDbText(texts.join("\n"));
+        // Fetch transcript bodies in parallel instead of one sequential round-trip each (N+1). (M23)
+        const details = await Promise.all(
+          transcripts.map((t) =>
+            getTranscript(t.id).then((d) => d.raw_text || "").catch(() => "")
+          )
+        );
+        if (!cancelled) setDbText(details.filter(Boolean).join("\n"));
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
       } finally {
@@ -218,14 +218,15 @@ const WordCloudModal: React.FC<WordCloudModalProps> = ({ onClose, liveText, list
   }, [words.length, redraw]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950" onClick={onClose}>
       <div
-        className="rounded-2xl border border-white/20 bg-slate-900 shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
+        className="flex flex-col w-full h-full"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/10">
+        {/* Header */}
+        <div className="shrink-0 flex items-center justify-between px-5 py-3 border-b border-white/10 bg-slate-900/80 backdrop-blur">
           <div className="font-semibold text-white flex flex-wrap items-center gap-2">
-            <span>Word cloud</span>
+            <span>Word Cloud</span>
             <span className="text-xs font-normal text-slate-400">
               All previous transcripts + live transcript
             </span>
@@ -238,26 +239,29 @@ const WordCloudModal: React.FC<WordCloudModalProps> = ({ onClose, liveText, list
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
             aria-label="Close"
           >
             <ICONS.Close className="w-5 h-5" />
           </button>
         </div>
-        <div className="flex-1 min-h-0 p-4 flex flex-col">
+
+        {/* Full-screen canvas area */}
+        <div className="flex-1 min-h-0 p-0 flex flex-col">
           {loading ? (
-            <div className="flex-1 flex items-center justify-center text-slate-400">Loading transcripts…</div>
+            <div className="flex-1 flex items-center justify-center text-slate-400 text-lg">
+              Loading transcripts…
+            </div>
           ) : error ? (
             <div className="flex-1 flex items-center justify-center text-red-400">{error}</div>
           ) : words.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-slate-400">
-              No words yet. Add previous transcripts or start a live transcript.
+            <div className="flex-1 flex items-center justify-center text-slate-400 text-lg">
+              No words yet. Add transcripts or start a live transcript.
             </div>
           ) : (
             <canvas
               ref={canvasRef}
-              className="w-full h-[480px] rounded-xl border border-white/10 bg-slate-950/80"
-              style={{ minHeight: 320 }}
+              className="w-full flex-1 min-h-0 bg-slate-950"
             />
           )}
         </div>

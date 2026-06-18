@@ -100,7 +100,6 @@ async def analyze_segment(
     segment_id: str,
     session_id: Optional[str] = None,
     transcript_id: Optional[str] = None,
-    persona: Optional[str] = None,
 ) -> Optional[AnalysisResult]:
     """
     Analyze a finalized transcript segment against the RAG knowledge base.
@@ -118,7 +117,9 @@ async def analyze_segment(
     logger.info("Silent Assistant: analyzing segment [%s] (%d words): %.80s…", segment_id, word_count, text)
 
     try:
-        hits = await faiss_index.search(text, k=8)
+        # Search uploaded documents only (not transcript chunks) so doc recall isn't diluted
+        # in transcript-heavy knowledge bases.
+        hits = await faiss_index.search_document_only(text, k=8)
     except Exception as e:
         logger.warning("Silent Assistant: RAG search error for [%s]: %s", segment_id, e)
         return None
@@ -179,9 +180,8 @@ async def analyze_segment(
     logger.info("Silent Assistant: calling LLM with %d context chunks for [%s]", len(context_parts), segment_id)
 
     context = "\n\n".join(context_parts)
-    persona_note = f"\nPersona context for risk evaluation: {persona}" if persona else ""
     user_msg = (
-        f'Spoken statement to evaluate:{persona_note}\n"{text}"\n\n'
+        f'Spoken statement to evaluate:\n"{text}"\n\n'
         f"Reference document excerpts:\n{context}"
     )
 
@@ -216,7 +216,12 @@ async def analyze_segment(
         return None
 
     label = (parsed.get("label") or "None").strip()
-    confidence = float(parsed.get("confidence") or 0)
+    # Coerce confidence defensively — LLMs sometimes return "85%", "high", or null.
+    try:
+        confidence = float(re.sub(r"[^0-9.]", "", str(parsed.get("confidence", 0))) or 0)
+    except (ValueError, TypeError):
+        confidence = 0.0
+    confidence = max(0.0, min(100.0, confidence))
     explanation = (parsed.get("explanation") or "").strip()
     relevant_ids: list[str] = parsed.get("relevant_chunk_ids") or []
 

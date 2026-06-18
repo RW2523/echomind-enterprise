@@ -9,7 +9,7 @@ const certPath = process.env.VITE_SSL_CERT;
 const keyPath = process.env.VITE_SSL_KEY;
 
 /** Trusted HTTPS: use mkcert certs when set (no browser warning). Else use basic-ssl (self-signed) when VITE_DEV_HTTPS=1. */
-function getHttpsConfig(): { https: { cert: Buffer; key: Buffer } } | { https: true } | undefined {
+function getHttpsConfig(): { https: { cert: Buffer; key: Buffer } } | undefined {
   if (!useHttps) return undefined;
   if (certPath && keyPath) {
     try {
@@ -20,7 +20,8 @@ function getHttpsConfig(): { https: { cert: Buffer; key: Buffer } } | { https: t
       console.warn('VITE_SSL_CERT/VITE_SSL_KEY could not be read, falling back to self-signed:', (e as Error).message);
     }
   }
-  return { https: true };
+  // basicSsl plugin handles self-signed HTTPS when no cert files are provided.
+  return undefined;
 }
 
 const httpsConfig = getHttpsConfig();

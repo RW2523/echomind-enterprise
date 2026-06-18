@@ -17,6 +17,8 @@ from typing import Dict, List, Optional, Tuple
 from docx import Document
 from pptx import Presentation
 
+from .normalize import normalize_extracted_text
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -135,11 +137,14 @@ def _parse_pdf_fitz(data: bytes) -> Tuple[str, int, List[Tuple[int, int]]]:
 
     header_pats, footer_pats = detect_header_footer_patterns(pages_text)
 
+    # Normalize each page BEFORE computing offsets so page_offsets live in the same
+    # coordinate system the chunker uses (which no longer re-normalizes). Otherwise
+    # downstream normalization shifts every offset and page citations drift. (H3)
     page_offsets: List[Tuple[int, int]] = []
     cleaned_pages: List[str] = []
     offset = 0
     for i, raw_text in enumerate(pages_text):
-        cleaned = strip_header_footer_lines(raw_text, header_pats, footer_pats)
+        cleaned = normalize_extracted_text(strip_header_footer_lines(raw_text, header_pats, footer_pats))
         page_offsets.append((offset, i + 1))
         cleaned_pages.append(cleaned)
         offset += len(cleaned) + 1
@@ -164,11 +169,12 @@ def _parse_pdf_pypdf(data: bytes) -> Tuple[str, int, List[Tuple[int, int]]]:
 
     header_pats, footer_pats = detect_header_footer_patterns(pages_text)
 
+    # Normalize per-page before computing offsets (see H3 note in _parse_pdf_fitz).
     page_offsets: List[Tuple[int, int]] = []
     cleaned_pages: List[str] = []
     offset = 0
     for i, raw_text in enumerate(pages_text):
-        cleaned = strip_header_footer_lines(raw_text, header_pats, footer_pats)
+        cleaned = normalize_extracted_text(strip_header_footer_lines(raw_text, header_pats, footer_pats))
         page_offsets.append((offset, i + 1))
         cleaned_pages.append(cleaned)
         offset += len(cleaned) + 1

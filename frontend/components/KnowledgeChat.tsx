@@ -74,6 +74,20 @@ const PERSONA_CHAT_META: Record<string, { icon: string; label: string; accent: s
     emptyState: 'Ask me about AI architectures, software design decisions, or technical insights from your documents and transcripts. I\'ll ground my recommendations in your actual context.',
     placeholder: 'Ask about AI, software architecture, engineering decisions, or your docs…',
   },
+  [PersonaType.GENERAL]: {
+    icon: '💬',
+    label: 'Assistant',
+    accent: 'text-sky-400',
+    emptyState: 'Ask me anything—questions, writing, brainstorming, or insights from your documents and transcripts. I\'ll give clear, direct, helpful answers.',
+    placeholder: 'Ask me anything…',
+  },
+  [PersonaType.ECHOMIND]: {
+    icon: '🧠',
+    label: 'EchoMind Guide',
+    accent: 'text-fuchsia-400',
+    emptyState: 'Ask me how EchoMind works—its features, and how it runs entirely on the NVIDIA DGX Spark: private, offline, and GPU-accelerated.',
+    placeholder: 'Ask how EchoMind and the DGX Spark work…',
+  },
 };
 
 const DEFAULT_PERSONA_CHAT_META = PERSONA_CHAT_META[PersonaType.FINANCIAL];
@@ -392,6 +406,17 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
   /** Stream accumulator + rAF: avoids React 18 batching many chunks into one paint when TCP delivers a burst. */
   const streamBufRef = useRef('');
   const streamRafRef = useRef<number | null>(null);
+  const abortRef = useRef<AbortController | null>(null);   // aborts the in-flight stream (M20)
+  const mountedRef = useRef(true);
+  // Abort the stream + cancel rAF on unmount so callbacks don't setState on an unmounted component. (M20)
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
+      if (streamRafRef.current != null) cancelAnimationFrame(streamRafRef.current);
+    };
+  }, []);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -453,6 +478,10 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
       cancelAnimationFrame(streamRafRef.current);
       streamRafRef.current = null;
     }
+    // Abort any prior in-flight stream and start a fresh AbortController for this send. (M20)
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setBusy(true);
     const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', content: q, timestamp: Date.now() };
     setMessages(prev => [...prev, userMsg]);
@@ -465,19 +494,21 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
       streamRafRef.current = null;
       const delta = streamBufRef.current;
       streamBufRef.current = '';
-      if (!delta) return;
+      if (!delta || !mountedRef.current) return;
       setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, content: m.content + delta } : m)));
     };
 
     try {
       await askChatStream(chatId, q, {
         onChunk: (text) => {
+          if (!mountedRef.current) return;  // dropped after unmount (M20)
           streamBufRef.current += text;
           if (streamRafRef.current == null) {
             streamRafRef.current = requestAnimationFrame(flushStreamToMessages);
           }
         },
         onDone: (result) => {
+          if (!mountedRef.current) return;  // (M20)
           if (streamRafRef.current != null) {
             cancelAnimationFrame(streamRafRef.current);
             streamRafRef.current = null;
@@ -494,8 +525,20 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
             cancelAnimationFrame(streamRafRef.current);
             streamRafRef.current = null;
           }
+          // Ignore aborts (intentional cancel on unmount / new send) and post-unmount errors. (M20)
+          if (!mountedRef.current || controller.signal.aborted || (err && err.name === 'AbortError')) return;
+          const pending = streamBufRef.current;
           streamBufRef.current = '';
-          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
+          const notice = err?.message || 'Request failed';
+          // Preserve any partial answer that already streamed and flag it as interrupted,
+          // rather than wiping it and showing only the error. (H9)
+          setMessages(prev => prev.map(m => {
+            if (m.id !== assistantId) return m;
+            const merged = m.content + pending;
+            return merged.trim()
+              ? { ...m, content: `${merged}\n\n_⚠️ ${notice}_` }
+              : { ...m, content: notice };
+          }));
         }
       }, {
         persona: settings?.persona ?? undefined,
@@ -503,6 +546,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
         advanced_rag: settings?.advancedRag ?? undefined,
         use_knowledge_base: true,
         source_options: sourceOptions,
+        signal: controller.signal,
       });
     } catch (err: any) {
       if (streamRafRef.current != null) {
@@ -510,6 +554,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
         streamRafRef.current = null;
       }
       streamBufRef.current = '';
+      if (!mountedRef.current || controller.signal.aborted || err?.name === 'AbortError') return;  // (M20)
       setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: err?.message || 'Request failed' } : m));
     } finally {
       setBusy(false);

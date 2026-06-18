@@ -85,6 +85,17 @@ def section_id_from_path(section_path: str) -> Optional[str]:
     return None
 
 
+def _looks_like_year_or_amount(raw: str) -> bool:
+    """Heuristic: a bare 4-digit number in the calendar-year range (1900-2099) with no decimal is
+    almost certainly a year (or amount), not a DoD section id — exclude it from code extraction so
+    body text like 'fiscal year 2024' doesn't pollute section routing. (M6)"""
+    if "." in raw:
+        return False
+    if len(raw) == 4 and raw.isdigit():
+        return 1900 <= int(raw) <= 2099
+    return False
+
+
 def extract_all_codes(text: str) -> list[str]:
     """Extract all DoD-style codes from text (for comparison queries like "0301 vs 0402")."""
     if not (text or "").strip():
@@ -92,7 +103,10 @@ def extract_all_codes(text: str) -> list[str]:
     seen: set[str] = set()
     out: list[str] = []
     for m in _DOD_CODE_RE.finditer(text):
-        c = canonicalize_section_id(m.group(1))
+        raw = m.group(1)
+        if _looks_like_year_or_amount(raw):
+            continue
+        c = canonicalize_section_id(raw)
         if c and c not in seen:
             seen.add(c)
             out.append(c)

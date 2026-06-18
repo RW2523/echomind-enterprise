@@ -58,7 +58,9 @@ def get_tags(text: str, max_tags: int = 12) -> List[str]:
         scored.append((bigram, c * 1.5))
     added_phrases = set(scored[i][0] for i in range(len(scored)))
     for w, c in unigrams.most_common(max_tags * 2):
-        if any(w in p for p in added_phrases if " " in p):
+        # Skip a unigram only if it is one of the WORDS of an added bigram — not a mere substring,
+        # which wrongly dropped legitimate unigrams (e.g. "cat" inside "category"). (L20)
+        if any(w in p.split() for p in added_phrases if " " in p):
             continue
         scored.append((w, c))
     scored.sort(key=lambda x: -x[1])

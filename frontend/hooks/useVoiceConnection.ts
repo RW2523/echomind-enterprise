@@ -41,6 +41,21 @@ const PERSONA_VOICE_PROMPTS: Record<string, string> = {
     "GUARDRAIL: Focus on AI, software engineering, architecture, and tech leadership. " +
     "For unrelated topics: 'That's outside my technical domain. I'm here for AI and software topics.'"
   ),
+  [PersonaType.GENERAL]: (
+    "You are EchoMind, a friendly, helpful all-purpose voice assistant. " +
+    "Answer any question clearly and directly, scaling depth to what's asked. " +
+    "Draw on your broad knowledge and the user's documents and transcripts; never fabricate facts. " +
+    "Keep voice responses concise and conversational. " +
+    "GUARDRAIL: Be helpful, honest, and respectful. Refuse harmful requests politely."
+  ),
+  [PersonaType.ECHOMIND]: (
+    "You are EchoMind, the voice guide to the EchoMind application itself. " +
+    "Explain EchoMind's features and how it runs entirely on the NVIDIA DGX Spark—private, offline, and " +
+    "GPU-accelerated, with no cloud. Main features: Knowledge Chat (RAG over your documents and transcripts), " +
+    "Real-Time Transcription, Voice Conversation, and Boardroom. " +
+    "Explain clearly and enthusiastically in plain language; keep voice responses concise. Be honest about anything you don't know. " +
+    "GUARDRAIL: Focus on EchoMind and the DGX Spark. For unrelated topics: 'I'm the EchoMind guide—I focus on how this app and the DGX Spark work.'"
+  ),
 };
 
 function buildPersonaVoicePrompt(persona: string | undefined, voiceContext: string): string {
@@ -196,6 +211,11 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   const playQueueRef = useRef<{ f32: Float32Array; rate: number }[]>([]);
   const playingRef = useRef(false);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  // Gapless scheduled playback: each TTS phrase is scheduled back-to-back on the audio clock
+  // (nextStartRef) instead of chained via onended, so there are no clicks/gaps between phrases.
+  const nextStartRef = useRef(0);
+  const scheduledSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+  const backchannelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const micAboveCountRef = useRef(0);
   const micBelowCountRef = useRef(0);
   const [micMuted, setMicMuted] = useState(false);
@@ -208,61 +228,86 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   /** User clicked Stop (or left Voice) while still connecting — do not treat close as a failure. */
   const userCancelledConnectRef = useRef(false);
 
-  const pumpPlayback = useCallback(() => {
+  /** Stop ALL playback immediately and cleanly (used for barge-in / interruption).
+   *  Kills every scheduled source so there is never overlapping/garbled audio, then
+   *  restores gain so the next response plays normally. */
+  const stopAllPlayback = useCallback((fade: boolean = true) => {
     const ctx = playbackCtxRef.current;
     const gain = playbackGainRef.current;
-    if (!ctx || !gain || playQueueRef.current.length === 0) {
-      playingRef.current = false;
-      setState((prev) => ({ ...prev, assistantOrb: "idle" }));
-      return;
+    if (ctx && gain && fade) {
+      const now = ctx.currentTime;
+      try {
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setValueAtTime(gain.gain.value, now);
+        gain.gain.linearRampToValueAtTime(0.0001, now + 0.05);
+      } catch (_) {}
     }
-    playingRef.current = true;
-    const item = playQueueRef.current.shift()!;
-    const buf = ctx.createBuffer(1, item.f32.length, ctx.sampleRate);
-    buf.copyToChannel(item.f32 as Float32Array, 0);
-    const analyser = playbackAnalyserRef.current!;
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.playbackRate.value = item.rate;
-    src.connect(analyser);
-    currentSourceRef.current = src;
-    src.onended = () => pumpPlayback();
-    src.start();
+    // Detach onended (so a stopped source can't trigger more playback) and stop each source.
+    scheduledSourcesRef.current.forEach((s) => {
+      try { s.onended = null; s.stop(); } catch (_) {}
+    });
+    scheduledSourcesRef.current.clear();
+    playQueueRef.current = [];
+    currentSourceRef.current = null;
+    nextStartRef.current = 0;
+    playingRef.current = false;
+    // Restore gain just after the fade so subsequent audio is audible.
+    if (ctx && gain) {
+      setTimeout(() => {
+        try {
+          gain.gain.cancelScheduledValues(ctx.currentTime);
+          gain.gain.setValueAtTime(1, ctx.currentTime);
+        } catch (_) {}
+      }, 60);
+    }
+    setState((prev) => ({ ...prev, assistantOrb: "idle" }));
   }, []);
 
   const enqueuePlayback = useCallback(
     (pcmF32: Float32Array, sr: number, rate: number = 1) => {
       const ctx = playbackCtxRef.current;
-      if (!ctx) return;
+      const analyser = playbackAnalyserRef.current;
+      if (!ctx || !analyser) return;
       const targetSr = ctx.sampleRate;
       const f32 = resampleLinear(pcmF32, sr, targetSr);
       fadeBufferEdges(f32, targetSr, 3);
-      playQueueRef.current.push({ f32, rate });
-      if (!playingRef.current) {
-        setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
-        pumpPlayback();
-      }
-    },
-    [pumpPlayback]
-  );
+      const buf = ctx.createBuffer(1, f32.length, targetSr);
+      buf.copyToChannel(f32 as Float32Array, 0);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.playbackRate.value = rate;
+      src.connect(analyser);
 
-  const smoothStop = useCallback(() => {
-    const ctx = playbackCtxRef.current;
-    const gain = playbackGainRef.current;
-    if (!ctx || !gain) return;
-    const now = ctx.currentTime;
-    gain.gain.cancelScheduledValues(now);
-    gain.gain.setValueAtTime(gain.gain.value, now);
-    gain.gain.linearRampToValueAtTime(0, now + 0.06);
-    const src = currentSourceRef.current;
-    if (src) src.stop(now + 0.07);
-    setTimeout(() => {
-      if (playbackCtxRef.current && playbackGainRef.current) {
-        playbackGainRef.current.gain.setValueAtTime(1, playbackCtxRef.current.currentTime);
+      // Schedule this phrase right after whatever is already queued on the audio clock.
+      const now = ctx.currentTime;
+      const startAt = Math.max(now + 0.02, nextStartRef.current);
+      const playDur = buf.duration / (rate || 1);
+      try {
+        src.start(startAt);
+      } catch (_) {
+        return;
       }
-      pumpPlayback();
-    }, 80);
-  }, [pumpPlayback]);
+      nextStartRef.current = startAt + playDur;
+      currentSourceRef.current = src;
+      scheduledSourcesRef.current.add(src);
+
+      if (!playingRef.current) {
+        playingRef.current = true;
+        setState((prev) => ({ ...prev, assistantOrb: "speaking" }));
+      }
+      src.onended = () => {
+        scheduledSourcesRef.current.delete(src);
+        if (scheduledSourcesRef.current.size === 0) {
+          // Nothing left scheduled -> assistant finished this turn.
+          playingRef.current = false;
+          nextStartRef.current = 0;
+          currentSourceRef.current = null;
+          setState((prev) => ({ ...prev, assistantOrb: "idle" }));
+        }
+      };
+    },
+    []
+  );
 
   const connect = useCallback(async () => {
     setConnecting(true);
@@ -277,7 +322,11 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
 
     let stream: MediaStream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Echo cancellation keeps the bot's own TTS out of the mic (prevents false barge-ins and
+      // self-triggered backchannels); noise suppression + AGC clean the signal for better STT.
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
     } catch (e: any) {
       const msg = e?.name === "NotAllowedError" || e?.message?.toLowerCase().includes("permission")
         ? "Microphone access denied. Allow mic in browser settings and try again."
@@ -391,8 +440,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         return;
       }
       if (msg.type === "event" && (msg.event === "BARGE_IN" || msg.event === "USER_SPEECH_START")) {
-        playQueueRef.current = [];
-        smoothStop();
+        stopAllPlayback(true);
         setState((prev) => ({ ...prev, interruptedAt: Date.now(), assistantOrb: "idle" }));
         return;
       }
@@ -409,8 +457,11 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         // Brief backchannel ("Mm-hmm", "I see") during long user speech
         const bcText = typeof msg.text === "string" ? msg.text : "";
         setState((prev) => ({ ...prev, backchannelText: bcText }));
-        // Auto-clear after 2.5 s
-        setTimeout(() => {
+        // Auto-clear after 2.5 s — cancel any prior timer so an older one can't wipe a newer
+        // backchannel early. (L34)
+        if (backchannelTimerRef.current) clearTimeout(backchannelTimerRef.current);
+        backchannelTimerRef.current = setTimeout(() => {
+          backchannelTimerRef.current = null;
           setState((prev) => ({ ...prev, backchannelText: "" }));
         }, 2500);
         return;
@@ -477,8 +528,12 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     const cleanupOnClose = () => {
       const sessionReady = voiceSessionReadyRef.current;
       voiceSessionReadyRef.current = false;
+      scheduledSourcesRef.current.forEach((s) => { try { s.onended = null; s.stop(); } catch (_) {} });
+      scheduledSourcesRef.current.clear();
+      if (backchannelTimerRef.current) { clearTimeout(backchannelTimerRef.current); backchannelTimerRef.current = null; }
       playQueueRef.current = [];
       playingRef.current = false;
+      nextStartRef.current = 0;
       if (workletRef.current) {
         try {
           workletRef.current.disconnect();
@@ -525,7 +580,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       setConnecting(false);
       setConnectionError((prev) => prev ?? "Voice WebSocket failed. Confirm the voice container is up and nginx proxies /voice/ws.");
     };
-  }, [settings?.persona, settings?.voiceName, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceContext, settings?.contextWindow, enqueuePlayback, smoothStop]);
+  }, [settings?.persona, settings?.voiceName, settings?.voiceBotName, settings?.voiceUserName, settings?.voiceContext, settings?.contextWindow, enqueuePlayback, stopAllPlayback]);
 
   const disconnect = useCallback(async () => {
     userCancelledConnectRef.current = true;
@@ -544,8 +599,11 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       await audioCtxRef.current.close();
       audioCtxRef.current = null;
     }
+    scheduledSourcesRef.current.forEach((s) => { try { s.onended = null; s.stop(); } catch (_) {} });
+    scheduledSourcesRef.current.clear();
     playQueueRef.current = [];
     playingRef.current = false;
+    nextStartRef.current = 0;
     if (playbackCtxRef.current) {
       await playbackCtxRef.current.close();
       playbackCtxRef.current = null;

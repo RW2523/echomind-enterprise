@@ -97,6 +97,15 @@ def init_db():
             conn.execute("CREATE INDEX IF NOT EXISTS idx_ta_transcript ON transcript_analysis(transcript_id)")
         except Exception:
             pass
+        # session_id on transcripts — lets us always correlate a transcript back to its live session.
+        try:
+            conn.execute("ALTER TABLE transcripts ADD COLUMN session_id TEXT")
+        except Exception:
+            pass
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_session ON transcripts(session_id)")
+        except Exception:
+            pass
         # Boardroom sessions: full-meeting audio capture, diarization, and AI report.
         # If the table exists with the old schema (no chunk_count column), rename it so we
         # can create the new schema alongside without losing legacy rows.
@@ -129,6 +138,10 @@ def init_db():
 @contextmanager
 def get_conn():
     conn = sqlite3.connect(settings.DB_PATH)
+    # WAL mode: concurrent readers + writers without blocking each other.
+    # NORMAL sync: safe on power loss (WAL checkpoint handles durability).
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
     try:
         yield conn
     finally:

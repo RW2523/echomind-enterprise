@@ -7,7 +7,15 @@ class Settings:
     FRAME_MS: int = int(os.getenv("FRAME_MS", "20"))
 
     VAD_AGGR: int = int(os.getenv("VAD_AGGR", "2"))
+    # Neutral end-of-turn silence (ms): used when the partial transcript gives no strong signal.
     ENDPOINT_SILENCE_MS: int = int(os.getenv("ENDPOINT_SILENCE_MS", "450"))
+    # Semantic/adaptive endpointing: choose the end-of-turn wait from the partial transcript so the
+    # bot replies fast when you're clearly done but waits through natural mid-thought pauses.
+    SEMANTIC_ENDPOINTING_ENABLED: bool = os.getenv("SEMANTIC_ENDPOINTING_ENABLED", "1") in ("1", "true", "yes")
+    # Utterance looks COMPLETE (ends with . ! ?) -> end the turn quickly.
+    ENDPOINT_SILENCE_COMPLETE_MS: int = int(os.getenv("ENDPOINT_SILENCE_COMPLETE_MS", "300"))
+    # Utterance looks INCOMPLETE (trailing 'and', 'because', filler, comma...) -> wait longer.
+    ENDPOINT_SILENCE_INCOMPLETE_MS: int = int(os.getenv("ENDPOINT_SILENCE_INCOMPLETE_MS", "950"))
     MIN_SPEECH_MS: int = int(os.getenv("MIN_SPEECH_MS", "250"))
     END_TAIL_MS: int = int(os.getenv("END_TAIL_MS", "120"))
     # Barge-in: require this many consecutive speech frames before treating as user speech (reduces false triggers from noise)

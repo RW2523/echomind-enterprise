@@ -41,7 +41,9 @@ _APPENDIX_RE = re.compile(
     re.IGNORECASE,
 )
 _SECTION_RE = re.compile(
-    r"^\s*(?:Section\s+)?(0[1-9]\d{2,4})\s+(.*?)\s*(?:\.{2,}|\s{3,}|\d+\s*$|$)",
+    # Accept non-zero-prefixed 4-6 digit codes (e.g. 7001, 5050) too, mirroring the body chunker's
+    # _DOD_NUMBERED_RE — the old 0-prefix-only pattern silently dropped them from the TOC. (M7)
+    r"^\s*(?:Section\s+)?((?:[1-9]\d{3,5})|(?:0[1-9]\d{2,4}))\s+(.*?)\s*(?:\.{2,}|\s{3,}|\d+\s*$|$)",
     re.IGNORECASE,
 )
 _PARA_RE = re.compile(

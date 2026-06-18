@@ -75,6 +75,7 @@ class SessionState:
         self.recent_buffer = ""
         self.last_emit_text = ""
         self.last_piece_ts_ms: Optional[int] = None
+        self.prev_piece_ts_ms: Optional[int] = None  # ts of the piece before the latest (for real silence gaps) (M12)
         self.segments: List[Paragraph] = []
         self._current_paragraph_start_ts: Optional[float] = None
         self._current_paragraph_start_index: int = 0  # index into raw_text where current paragraph started
@@ -89,7 +90,10 @@ class SessionState:
 
     def _next_paragraph_id(self) -> str:
         self._paragraph_counter += 1
-        return f"p{self._paragraph_counter}"
+        # Prefix with the (server-generated) session id so ids stay unique across reconnects —
+        # otherwise a new connection restarts at p1 and its cards overwrite the previous ones.
+        sid = (self.session_id or "")[:8]
+        return f"{sid}-p{self._paragraph_counter}" if sid else f"p{self._paragraph_counter}"
 
     def _close_current_paragraph(self, end_ts: float) -> Optional[Paragraph]:
         """Close current paragraph if any text; return it."""
@@ -119,19 +123,20 @@ class SessionState:
         if not piece:
             return
         tail = (self.raw_text + self.recent_buffer).strip()
-        # Skip exact duplicate: if incoming piece is identical to end of tail, do not append
+        # Skip exact duplicate: if incoming piece is identical to end of tail, do not append.
+        # Do NOT stamp the timestamp on fully-deduped pieces, else the real silence gap is lost. (M12)
         if tail and len(piece) <= len(tail) and tail.endswith(piece):
-            self.last_piece_ts_ms = ts_ms
             return
         # Anti-duplication: max suffix/prefix overlap between existing tail and incoming
         overlap = _max_suffix_prefix_overlap(tail, piece, self.overlap_k)
         if overlap > 0:
             piece = piece[overlap:]
         if not piece:
-            self.last_piece_ts_ms = ts_ms
             return
         # Pieces from STT already include word-boundary spaces (▁→" "); concatenate directly.
         self.recent_buffer += piece
+        # Remember the previous piece's ts so silence_gap reflects the real inter-piece pause. (M12)
+        self.prev_piece_ts_ms = self.last_piece_ts_ms
         self.last_piece_ts_ms = ts_ms
 
     def get_display_text(self) -> str:
@@ -174,7 +179,8 @@ class SessionState:
         if not self.recent_buffer.strip():
             return False
         now = ts_ms
-        silence_gap = (now - self.last_piece_ts_ms) if self.last_piece_ts_ms is not None else 0
+        # Gap between the latest piece and the one before it = actual pause (clamped >= 0). (M12)
+        silence_gap = max(0, (now - self.prev_piece_ts_ms)) if self.prev_piece_ts_ms is not None else 0
         should_commit = (
             bool(PUNCT_END.search(self.recent_buffer))
             or silence_gap >= self.silence_commit_ms
@@ -203,7 +209,7 @@ class SessionState:
         if self._current_paragraph_start_ts is None:
             self._current_paragraph_start_ts = ts_ms / 1000.0
         now = ts_ms
-        silence_gap = (now - self.last_piece_ts_ms) if self.last_piece_ts_ms is not None else 0
+        silence_gap = max(0, (now - self.prev_piece_ts_ms)) if self.prev_piece_ts_ms is not None else 0  # (M12)
         ends_strong = bool(PUNCT_END.search(current_full))
         over_length = len(segment_so_far) >= self.max_paragraph_chars
         if (ends_strong and silence_gap >= self.paragraph_silence_ms) or over_length:

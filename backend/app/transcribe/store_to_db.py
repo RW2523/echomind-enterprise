@@ -123,6 +123,7 @@ def create_transcript_for_session(
     location: str | None = None,
     started_at_iso: str | None = None,
     initial_text: str | None = None,
+    session_id: str | None = None,
 ) -> str:
     """
     Create a single transcript row for a live session (grouped by session).
@@ -136,8 +137,8 @@ def create_transcript_for_session(
     raw = (initial_text or "").strip()
     with get_conn() as conn:
         conn.execute(
-            "INSERT INTO transcripts (id, title, raw_text, polished_text, tags_json, echotag, echodate, created_at, updated_at, name, location) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            (tid, title, raw, None, json.dumps([]), name_val or "transcript", echodate, echodate, echodate, name_val, location_val),
+            "INSERT INTO transcripts (id, title, raw_text, polished_text, tags_json, echotag, echodate, created_at, updated_at, name, location, session_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (tid, title, raw, None, json.dumps([]), name_val or "transcript", echodate, echodate, echodate, name_val, location_val, session_id),
         )
         conn.commit()
     return tid

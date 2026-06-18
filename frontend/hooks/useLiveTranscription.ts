@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { transcribeWsUrl, getTranscriptTags, updateTranscript, createBoardroomSession, uploadBoardroomChunk, finalizeBoardroomSession, getBoardroomSession } from "../services/backend";
+import { transcribeWsUrl, getTranscriptTags, updateTranscript, createBoardroomSession, uploadBoardroomChunk, finalizeBoardroomSession, getBoardroomSession, linkBoardroomTranscript } from "../services/backend";
 import type { AnalysisCard, TranscriptSegment, BoardroomSession } from "../types";
 
 /** Kyutai STT sample rate (24kHz). Backend sends this in ready message. */
@@ -10,22 +10,13 @@ const HEARTBEAT_INTERVAL_MS = 20000;  // Keep connection alive when tab backgrou
 const RECONNECT_DELAY_MS = 1200;
 const MAX_RECONNECT_ATTEMPTS = 5;
 
-function floatTo16BitPCM(input: Float32Array) {
+function floatTo16BitPCM(input: Float32Array): Int16Array {
   const output = new Int16Array(input.length);
   for (let i = 0; i < input.length; i++) {
     const s = Math.max(-1, Math.min(1, input[i]));
     output[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
   }
   return output;
-}
-
-function b64FromBytes(bytes: Uint8Array) {
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)) as any);
-  }
-  return btoa(binary);
 }
 
 export interface UseLiveTranscriptionReturn {
@@ -104,6 +95,8 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const boardroomSessionIdRef = useRef<string | null>(null);
   const boardroomRecorderRef = useRef<MediaRecorder | null>(null);
   const boardroomChunksRef = useRef<Blob[]>([]);
+  // Actual container the recorder used ('webm' | 'ogg' | ...) so the upload format matches reality. (audit L)
+  const boardroomFormatRef = useRef<string>("webm");
   const boardroomChunkIndexRef = useRef(0);
   const boardroomModeRef = useRef(false);
   boardroomModeRef.current = boardroomMode;
@@ -112,7 +105,8 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const micMutedRef = useRef(false);
   micMutedRef.current = micMuted;
   const recRef = useRef<MediaStream | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const processorRef = useRef<AudioWorkletNode | null>(null);
+  const boardroomPollCancelRef = useRef(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const transcriptForTagsRef = useRef("");
   const lastStoredTranscriptIdRef = useRef<string | null>(null);
@@ -156,9 +150,11 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         setPartial("");
         setTranscriptSegments([]);
         setAnalysisCards([]);
-        setAnalyzingSegmentIds(new Set());
         setSelectedSegmentId(null);
       }
+      // Always clear in-flight analysis spinners: the new connection is a fresh server session
+      // and will never emit analysis_done for paragraph ids from before the drop. (audit M)
+      setAnalyzingSegmentIds(new Set());
       setWsError(null);
       setWsStatus("connecting");
 
@@ -177,6 +173,8 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
           if (msg.type === "loading") setWsStatus("loading");
           if (msg.type === "ready") setWsStatus("ready");
           if (msg.type === "partial") {
+            // Session is stable (producing transcripts) -> safe to reset the reconnect budget. (M21)
+            reconnectAttemptsRef.current = 0;
             const t = msg.text ?? "";
             setFullTranscript(t);
             transcriptForTagsRef.current = t;
@@ -260,6 +258,19 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             setFullTranscript(t);
             transcriptForTagsRef.current = t;
             setPartial("");
+            // Merge the final segments (incl. the trailing paragraph closed at EOS) so the last
+            // spoken sentence doesn't vanish from the segment list, preserving any labels. (audit H3)
+            if (Array.isArray(msg.segments)) {
+              setTranscriptSegments((prev) => {
+                const prevMap = new Map(prev.map((s) => [s.paragraph_id, s]));
+                return msg.segments.map((s: { paragraph_id: string; text: string }) => ({
+                  paragraph_id: s.paragraph_id,
+                  text: s.text,
+                  label: prevMap.get(s.paragraph_id)?.label,
+                  confidence: prevMap.get(s.paragraph_id)?.confidence,
+                }));
+              });
+            }
           }
           if (msg.type === "stored") {
             setWsError(null);
@@ -269,6 +280,11 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
               if (pendingTagsRef.current?.length) {
                 updateTranscript(tid, { tags: pendingTagsRef.current }).catch(() => {});
                 pendingTagsRef.current = null;
+              }
+              // Link this transcript to the active boardroom session (first time only)
+              const bsid = boardroomSessionIdRef.current;
+              if (bsid) {
+                linkBoardroomTranscript(bsid, tid).catch(() => {});
               }
             }
           }
@@ -355,23 +371,11 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         return;
       }
 
-      ws.send(
-        JSON.stringify({
-          type: "start",
-          auto_store: true,
-          sample_rate: sampleRate,
-          language: "en",
-          name: name || undefined,
-          location: location || undefined,
-        })
-      );
-
-      // Reset reconnect counter once we've gotten past the WebSocket ready handshake
-      reconnectAttemptsRef.current = 0;
-
       let stream: MediaStream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        });
       } catch (micErr) {
         handleError("Microphone access denied or unavailable. Please allow microphone and try again.");
         return;
@@ -383,20 +387,46 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       if (audioCtx.state === "suspended") {
         await audioCtx.resume();
       }
-      const src = audioCtx.createMediaStreamSource(stream);
-      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
 
-      processor.onaudioprocess = (e) => {
+      // Send the AudioContext's ACTUAL sample rate, not the requested 16k. The {sampleRate} hint
+      // is not always honored (Safari/Android frequently stay at 48k); the backend resamples to
+      // 16k, but only if told the true rate — otherwise audio is fed in 3x too fast = garbled. (audit H2)
+      ws.send(
+        JSON.stringify({
+          type: "start",
+          auto_store: true,
+          sample_rate: audioCtx.sampleRate,
+          language: "en",
+          name: name || undefined,
+          location: location || undefined,
+        })
+      );
+
+      // NOTE: do NOT reset reconnectAttemptsRef here. Resetting right after the handshake means a
+      // server that accepts then immediately drops the socket never reaches MAX_RECONNECT_ATTEMPTS
+      // (infinite reconnect loop). It's reset only once the session is actually stable — i.e. when
+      // the first 'partial'/'final' transcription arrives (see ws.onmessage). (M21)
+
+      const src = audioCtx.createMediaStreamSource(stream);
+
+      let workletNode: AudioWorkletNode;
+      try {
+        await audioCtx.audioWorklet.addModule('/pcm-processor.js');
+        workletNode = new AudioWorkletNode(audioCtx, 'pcm-processor');
+      } catch (workletErr) {
+        handleError("AudioWorklet failed to load. Please reload the page.");
+        return;
+      }
+      processorRef.current = workletNode;
+
+      workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || micMutedRef.current) return;
-        const input = e.inputBuffer.getChannelData(0);
-        const pcm16 = floatTo16BitPCM(input);
-        const b64 = b64FromBytes(new Uint8Array(pcm16.buffer));
-        wsRef.current.send(JSON.stringify({ type: "audio", pcm16_b64: b64 }));
+        const pcm16 = floatTo16BitPCM(new Float32Array(e.data));
+        wsRef.current.send(pcm16.buffer);
       };
 
-      src.connect(processor);
-      processor.connect(audioCtx.destination);
+      src.connect(workletNode);
+      workletNode.connect(audioCtx.destination);
       setListening(true);
       heartbeatIntervalRef.current = setInterval(() => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -413,6 +443,8 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             ? "audio/webm"
             : "audio/ogg";
           const recorder = new MediaRecorder(stream, { mimeType });
+          // Record the real container so the backend stores/decodes the right format.
+          boardroomFormatRef.current = (recorder.mimeType || mimeType).includes("ogg") ? "ogg" : "webm";
           boardroomChunksRef.current = [];
           boardroomChunkIndexRef.current = 0;
           recorder.ondataavailable = (e) => {
@@ -450,6 +482,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     lastStoredTranscriptIdRef.current = null;
     pendingTagsRef.current = null;
     setWsError(null);
+    boardroomPollCancelRef.current = true;
     // Clean up boardroom recorder
     if (boardroomRecorderRef.current?.state !== "inactive") {
       boardroomRecorderRef.current?.stop();
@@ -511,10 +544,11 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       const chunks = [...boardroomChunksRef.current];
       boardroomChunksRef.current = [];
 
-      // Upload chunks to backend
+      // Upload chunks to backend (use the format the recorder actually produced)
+      const fmt = boardroomFormatRef.current || "webm";
       for (let i = 0; i < chunks.length; i++) {
         try {
-          await uploadBoardroomChunk(sid, i, chunks[i], "webm");
+          await uploadBoardroomChunk(sid, i, chunks[i], fmt);
         } catch (e) {
           console.warn(`Chunk ${i} upload failed:`, e);
         }
@@ -524,11 +558,13 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       await finalizeBoardroomSession(sid);
       setBoardroomSession((prev) => prev ? { ...prev, status: "processing" } : null);
 
-      // Poll for status until transcribed
+      // Poll for status until transcribed (or cancelled via clearAndReset)
+      boardroomPollCancelRef.current = false;
       const poll = async () => {
         let attempts = 0;
         while (attempts < 60) {
           await new Promise((r) => setTimeout(r, 3000));
+          if (boardroomPollCancelRef.current) break;
           try {
             const s = await getBoardroomSession(sid);
             setBoardroomSession(s);
@@ -544,6 +580,11 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       console.error("Boardroom session upload failed:", e);
     } finally {
       setBoardroomUploading(false);
+      // Recording is finished — clear the active-session refs so a later session can't reuse this
+      // id and the live-transcript 'stored' handler stops linking to it. (L29)
+      boardroomSessionIdRef.current = null;
+      boardroomRecorderRef.current = null;
+      boardroomChunksRef.current = [];
     }
   }, []);
 

@@ -186,21 +186,61 @@ class SectionIndex:
     # ── Maintenance ───────────────────────────────────────────────────────────
 
     def clear_doc(self, doc_id: str) -> None:
-        """Remove all section entries for a doc_id from meta (index vectors stay but are ignored).
+        """Remove a doc's section entries AND their FAISS vectors, keeping row↔meta alignment.
 
-        Note: FAISS IndexFlatIP does not support in-place deletion.  The orphaned
-        vectors will not be returned because their section_id is removed from meta.
-        A full index rebuild is triggered by delete_document in FaissIndex.
+        search() maps FAISS row idx -> section_ids[idx], so the list position must equal the
+        FAISS row position. IndexFlatIP has no in-place delete, so we reconstruct the surviving
+        rows' vectors and rebuild the index. Removing meta entries without removing the vectors
+        (the old behavior) desynced every row after the deletion point and returned wrong
+        sections. (H4)
         """
-        surviving = [
-            sid for sid in self._meta["section_ids"]
-            if self._meta["section_by_id"].get(sid, {}).get("doc_id") != doc_id
+        old_ids = list(self._meta.get("section_ids", []))
+        sec_by_id = self._meta.get("section_by_id", {})
+        keep_positions = [
+            i for i, sid in enumerate(old_ids)
+            if sec_by_id.get(sid, {}).get("doc_id") != doc_id
         ]
-        for sid in list(self._meta["section_by_id"].keys()):
-            if self._meta["section_by_id"][sid].get("doc_id") == doc_id:
-                del self._meta["section_by_id"][sid]
-        self._meta["section_ids"] = surviving
+        if len(keep_positions) == len(old_ids):
+            return  # nothing for this doc
+
+        rebuilt_ok = self._rebuild_from_positions(keep_positions, len(old_ids))
+
+        if rebuilt_ok:
+            self._meta["section_ids"] = [old_ids[i] for i in keep_positions]
+            for sid in list(sec_by_id.keys()):
+                if sec_by_id[sid].get("doc_id") == doc_id:
+                    del sec_by_id[sid]
+            self._meta["section_by_id"] = sec_by_id
+        else:
+            # Index/meta already out of sync or reconstruct failed: reset to a consistent
+            # empty state (re-populated on next ingest) rather than serving wrong sections.
+            self._index = None
+            self._meta = {"section_ids": [], "section_by_id": {}}
         self._save()
+
+    def _rebuild_from_positions(self, keep_positions: List[int], expected_total: int) -> bool:
+        """Rebuild the FAISS index keeping only ``keep_positions`` rows. Returns False if the
+        index/meta were already out of sync (caller resets to empty)."""
+        if self._index is None:
+            return False
+        if self._index.ntotal != expected_total:
+            logger.warning(
+                "SectionIndex: index/meta out of sync (ntotal=%d expected=%d); resetting",
+                self._index.ntotal, expected_total,
+            )
+            return False
+        try:
+            if not keep_positions:
+                self._index = None
+                return True
+            kept = np.vstack([self._index.reconstruct(int(i)) for i in keep_positions]).astype(np.float32)
+            new_index = faiss.IndexFlatIP(kept.shape[1])
+            new_index.add(kept)
+            self._index = new_index
+            return True
+        except Exception as e:
+            logger.warning("SectionIndex: vector rebuild failed: %s; resetting index", e)
+            return False
 
     def clear_all(self) -> None:
         self._index = None

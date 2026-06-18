@@ -58,6 +58,24 @@ const PERSONA_META: Record<PersonaType, PersonaMeta> = {
     activeBg: 'bg-rose-500/10',
     activeBorder: 'border-rose-500/40',
   },
+  [PersonaType.GENERAL]: {
+    icon: '💬',
+    title: 'General Assistant',
+    description: 'A friendly, all-purpose helper for anything you need—questions, writing, brainstorming, or insights from your documents and transcripts. Clear, direct, and helpful across every topic.',
+    accentColor: 'text-sky-400',
+    borderColor: 'border-sky-500/40',
+    activeBg: 'bg-sky-500/10',
+    activeBorder: 'border-sky-500/40',
+  },
+  [PersonaType.ECHOMIND]: {
+    icon: '🧠',
+    title: 'EchoMind Guide',
+    description: 'Your in-app guide to EchoMind itself. Explains how this application works, its features, and how it runs fully on-device on the NVIDIA DGX Spark—private, offline, and GPU-accelerated.',
+    accentColor: 'text-fuchsia-400',
+    borderColor: 'border-fuchsia-500/40',
+    activeBg: 'bg-fuchsia-500/10',
+    activeBorder: 'border-fuchsia-500/40',
+  },
 };
 
 interface SettingsProps {

@@ -90,6 +90,7 @@ async def speak_tts(body: SpeakBody):
         raise HTTPException(status_code=400, detail="text is required")
 
     from .config import SETTINGS
+    from .adapters.tts_piper import PiperTTS  # (H7) was referenced but never imported -> always 500
     try:
         tts = PiperTTS(
             model_path=SETTINGS.PIPER_MODEL,

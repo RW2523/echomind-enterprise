@@ -213,12 +213,13 @@ export async function askChatStream(
   chatId: string,
   message: string,
   callbacks: AskChatStreamCallbacks,
-  options?: { persona?: string | null; context_window?: string | null; advanced_rag?: boolean; use_knowledge_base?: boolean; source_options?: SourceOptions }
+  options?: { persona?: string | null; context_window?: string | null; advanced_rag?: boolean; use_knowledge_base?: boolean; source_options?: SourceOptions; signal?: AbortSignal }
 ): Promise<void> {
   const r = await fetch(`${API_BASE}/api/chat/ask-stream`, {
     method: "POST",
     cache: "no-store",
     headers: { "Content-Type": "application/json" },
+    signal: options?.signal,  // allow the caller to abort the stream on unmount/new-send (M20)
     body: JSON.stringify({
       chat_id: chatId,
       message,
@@ -242,6 +243,24 @@ export async function askChatStream(
   }
   const dec = new TextDecoder();
   let buf = "";
+  // Track whether the server sent a terminal event. If the stream ends (or the network
+  // drops) before a "done"/"error" line, we must surface an error instead of silently
+  // presenting a truncated answer as if it were complete. (H9)
+  let sawTerminal = false;
+  const handleLine = (t: string) => {
+    if (!t) return;
+    try {
+      const obj = JSON.parse(t);
+      if (obj.type === "chunk" && obj.text != null) callbacks.onChunk(obj.text);
+      else if (obj.type === "done") {
+        sawTerminal = true;
+        callbacks.onDone({ answer: obj.answer ?? "", citations: obj.citations ?? [] });
+      } else if (obj.type === "error") {
+        sawTerminal = true;
+        callbacks.onError?.(new Error(obj.message ?? "Stream error"));
+      }
+    } catch (_) {}
+  };
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -249,28 +268,20 @@ export async function askChatStream(
       buf += dec.decode(value, { stream: true });
       const lines = buf.split("\n");
       buf = lines.pop() ?? "";
-      for (const line of lines) {
-        const t = line.trim();
-        if (!t) continue;
-        try {
-          const obj = JSON.parse(t);
-          if (obj.type === "chunk" && obj.text != null) callbacks.onChunk(obj.text);
-          else if (obj.type === "done") callbacks.onDone({ answer: obj.answer ?? "", citations: obj.citations ?? [] });
-          else if (obj.type === "error") {
-            callbacks.onError?.(new Error(obj.message ?? "Stream error"));
-          }
-        } catch (_) {}
-      }
+      for (const line of lines) handleLine(line.trim());
     }
-    if (buf.trim()) {
-      try {
-        const obj = JSON.parse(buf.trim());
-        if (obj.type === "chunk" && obj.text != null) callbacks.onChunk(obj.text);
-        else if (obj.type === "done") callbacks.onDone({ answer: obj.answer ?? "", citations: obj.citations ?? [] });
-      } catch (_) {}
+    if (buf.trim()) handleLine(buf.trim());
+    // Clean EOF but the server never sent a terminal event -> truncated/interrupted stream.
+    if (!sawTerminal) {
+      callbacks.onError?.(new Error("Stream ended unexpectedly before completion"));
+    }
+  } catch (readErr) {
+    // Reader threw mid-stream (e.g. network drop). Route to onError so the UI can recover.
+    if (!sawTerminal) {
+      callbacks.onError?.(readErr instanceof Error ? readErr : new Error(String(readErr)));
     }
   } finally {
-    reader.releaseLock();
+    try { reader.releaseLock(); } catch (_) {}
   }
 }
 
@@ -423,6 +434,39 @@ export async function getBoardroomSession(sessionId: string): Promise<import('..
   const r = await fetch(`${API_BASE}/api/boardroom/sessions/${encodeURIComponent(sessionId)}`);
   if (!r.ok) throw new Error(`get boardroom session failed: ${r.status}`);
   return r.json();
+}
+
+export interface BoardroomSessionListItem {
+  id: string;
+  transcript_id: string | null;
+  status: string;
+  chunk_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function listBoardroomSessions(limit = 20): Promise<{ sessions: BoardroomSessionListItem[] }> {
+  const r = await fetch(`${API_BASE}/api/boardroom/sessions?limit=${limit}`);
+  if (!r.ok) throw new Error(`list boardroom sessions failed: ${r.status}`);
+  return r.json();
+}
+
+export async function deleteBoardroomSession(sessionId: string): Promise<{ ok: boolean; deleted: string }> {
+  const r = await fetch(`${API_BASE}/api/boardroom/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || `delete boardroom session failed: ${r.status}`);
+  }
+  return r.json();
+}
+
+export async function linkBoardroomTranscript(sessionId: string, transcriptId: string): Promise<void> {
+  const r = await fetch(`${API_BASE}/api/boardroom/sessions/${encodeURIComponent(sessionId)}/link-transcript`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript_id: transcriptId }),
+  });
+  if (!r.ok) throw new Error(`link boardroom transcript failed: ${r.status}`);
 }
 
 export function boardroomExportUrl(sessionId: string, format: 'pdf' | 'pptx'): string {

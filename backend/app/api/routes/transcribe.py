@@ -212,28 +212,60 @@ async def delete_transcript(transcript_id: str):
         row = conn.execute("SELECT id FROM transcripts WHERE id = ?", (transcript_id,)).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Transcript not found")
-        doc_row = conn.execute(
-            "SELECT id FROM documents WHERE filename = ?",
-            (f"transcript_{transcript_id}",),
+        # Collect every KB document tied to this transcript. Live/auto-stored transcripts are
+        # indexed under filename transcript_<kb_id> (NOT transcript_<transcript_id>) with the
+        # transcript_id only in meta_json — so match on both, else embeddings are orphaned. (audit H1)
+        doc_ids: set = set()
+        legacy = conn.execute(
+            "SELECT id FROM documents WHERE filename = ?", (f"transcript_{transcript_id}",),
         ).fetchone()
-    if doc_row:
-        doc_id = doc_row[0]
-        await index.delete_document(doc_id)
+        if legacy:
+            doc_ids.add(legacy[0])
+        for did, meta_json in conn.execute(
+            "SELECT id, meta_json FROM documents WHERE meta_json LIKE ?", (f"%{transcript_id}%",),
+        ).fetchall():
+            try:
+                if json.loads(meta_json or "{}").get("transcript_id") == transcript_id:
+                    doc_ids.add(did)
+            except Exception:
+                pass
+    for doc_id in doc_ids:
+        try:
+            await index.delete_document(doc_id)
+        except Exception as e:
+            logger.warning("delete_transcript: failed to delete KB doc %s: %s", doc_id, e)
     with get_conn() as conn:
         conn.execute("DELETE FROM transcripts WHERE id = ?", (transcript_id,))
         conn.commit()
-    return {"ok": True, "deleted": transcript_id}
+    return {"ok": True, "deleted": transcript_id, "kb_docs_removed": len(doc_ids)}
 
 
 @router.get("/transcripts/{transcript_id}/analysis")
 def get_transcript_analysis(transcript_id: str):
-    """Return all analysis cards for a given transcript (stored during live session)."""
+    """Return all analysis cards for a given transcript (stored during live session).
+
+    Also searches by session_id for the transcript row, so cards saved before the
+    first auto-store (which had transcript_id=NULL but session_id set) are included.
+    """
     with get_conn() as conn:
-        rows = conn.execute(
-            """SELECT id, segment_id, segment_text, label, confidence, explanation, source_refs, created_at
-               FROM transcript_analysis WHERE transcript_id = ? ORDER BY created_at ASC""",
-            (transcript_id,),
-        ).fetchall()
+        trow = conn.execute("SELECT session_id FROM transcripts WHERE id = ?", (transcript_id,)).fetchone()
+        session_id = trow[0] if trow else None
+        # Include cards saved before the first auto-store (transcript_id NULL, session_id set) and
+        # any that finished after the last backfill — they'd otherwise be invisible. (audit M)
+        if session_id:
+            rows = conn.execute(
+                """SELECT id, segment_id, segment_text, label, confidence, explanation, source_refs, created_at
+                   FROM transcript_analysis
+                   WHERE transcript_id = ? OR (transcript_id IS NULL AND session_id = ?)
+                   ORDER BY created_at ASC""",
+                (transcript_id, session_id),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """SELECT id, segment_id, segment_text, label, confidence, explanation, source_refs, created_at
+                   FROM transcript_analysis WHERE transcript_id = ? ORDER BY created_at ASC""",
+                (transcript_id,),
+            ).fetchall()
     cards = []
     for row in rows:
         aid, seg_id, seg_text, label, conf, expl, src_refs, created_at = row

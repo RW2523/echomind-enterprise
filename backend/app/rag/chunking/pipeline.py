@@ -107,6 +107,7 @@ def chunk_document(
     doc_id: str,
     estimated_pages: int = 0,
     page_offsets: Optional[List[Tuple[int, int]]] = None,
+    already_normalized: bool = False,
 ) -> List[Chunk]:
     """Full pipeline: detect document type, sanitize, chunk by strategy, assign IDs.
 
@@ -117,11 +118,15 @@ def chunk_document(
         estimated_pages: total page count from parser (for linear-interpolation fallback).
         page_offsets: list of (start_char_offset, page_number_1indexed) from parse_pdf.
             When provided, used for exact page assignment instead of linear estimation.
+        already_normalized: when True (PDFs, normalized per-page in parse_pdf so page_offsets
+            stay aligned), skip re-normalization here — re-running it would shift every offset
+            relative to page_offsets and corrupt page citations. (H3)
     """
     if not (text or "").strip():
         return []
 
-    text = normalize_extracted_text(text or "")
+    if not already_normalized:
+        text = normalize_extracted_text(text or "")
     doc_type = detect_document_type(text)
     clean_text, redacted, sensitivity_level = sanitize_text(text)
     total_chars = len(clean_text)

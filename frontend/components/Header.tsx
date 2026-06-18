@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AppView, AppSettings } from '../types';
 import { ICONS } from '../constants';
-import { deleteAllData } from '../services/backend';
 
 interface HeaderProps {
   activeView: AppView;
-  settings: AppSettings;
+  settings?: AppSettings;  // retained for caller compatibility; not used here
   onMenuClick?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ activeView, onMenuClick }) => {
-  const [clearing, setClearing] = useState(false);
-
+  // NOTE: the Clear-Data button (JSX commented out below) and its handler/state/import were removed
+  // as dead code. Re-add deleteAllData + handler if the button is restored. (L37)
   const getTitle = () => {
     switch (activeView) {
       case AppView.KNOWLEDGE_CHAT: return 'Knowledge Chat';
@@ -19,19 +18,6 @@ const Header: React.FC<HeaderProps> = ({ activeView, onMenuClick }) => {
       case AppView.VOICE_CONVERSATION: return 'Voice AI Conversation';
       case AppView.SETTINGS: return 'Platform Settings';
       default: return 'EchoMind';
-    }
-  };
-
-  const handleClearData = async () => {
-    if (!window.confirm('Clear ALL data (documents, chunks, transcripts, chats)? This cannot be undone.')) return;
-    setClearing(true);
-    try {
-      await deleteAllData();
-      window.dispatchEvent(new CustomEvent('echomind-data-cleared'));
-    } catch (e) {
-      alert((e as Error)?.message || 'Failed to clear data');
-    } finally {
-      setClearing(false);
     }
   };
 

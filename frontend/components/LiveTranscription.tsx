@@ -7,6 +7,7 @@ import { LABEL_CONFIG } from './AnalysisCardModal';
 import AnalysisPanel from './AnalysisPanel';
 import WordCloudModal from './WordCloudModal';
 import BoardroomView from './BoardroomView';
+import TranscriptHistoryPanel from './TranscriptHistoryPanel';
 
 function formatSessionDateTime(d: Date): string {
   const y = d.getFullYear();
@@ -25,6 +26,7 @@ interface LiveTranscriptionProps {
 const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription }) => {
   const [showWordCloud, setShowWordCloud] = useState(false);
   const [showBoardroom, setShowBoardroom] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -93,6 +95,15 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
     await endBoardroomSession();
     setShowBoardroom(true);
   }, [endBoardroomSession]);
+
+  // Show history panel overlay
+  if (showHistory) {
+    return (
+      <div className="h-full min-h-0 flex flex-col rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
+        <TranscriptHistoryPanel onClose={() => setShowHistory(false)} />
+      </div>
+    );
+  }
 
   // Show boardroom view overlay
   if (showBoardroom && boardroomSession) {
@@ -255,6 +266,19 @@ const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ liveTranscription
               View Boardroom
             </button>
           )}
+
+          {/* History button */}
+          <button
+            type="button"
+            onClick={() => setShowHistory(true)}
+            className="shrink-0 p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Session history"
+            title="Session history"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
 
           <button
             type="button"

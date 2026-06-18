@@ -231,6 +231,11 @@ class FaissIndex:
 
     async def _rebuild_transcript_index(self) -> None:
         """Rebuild transcript-only index from DB."""
+        # Capture the current vectors' positions so survivors can be reconstructed instead of
+        # re-embedded (re-embedding every transcript chunk on each delete is the slow path). (audit perf)
+        _old_t_ids = list(self.transcript_meta.get("chunk_ids", []))
+        _old_t_pos = {cid: i for i, cid in enumerate(_old_t_ids)}
+        _old_t_index = self.transcript_index
         with get_conn() as conn:
             rows = conn.execute(
                 """SELECT c.id, c.text, c.source_json FROM chunks c
@@ -258,11 +263,26 @@ class FaissIndex:
             self.transcript_sparse._save()
             self._save_transcript()
             return
-        vecs = await self.emb.embed(transcript_texts)
-        faiss.normalize_L2(vecs)
+        vecs = None
+        if (
+            _old_t_index is not None
+            and _old_t_index.ntotal == len(_old_t_ids)
+            and all(cid in _old_t_pos for cid in transcript_ids)
+        ):
+            try:
+                vecs = np.vstack(
+                    [_old_t_index.reconstruct(int(_old_t_pos[cid])) for cid in transcript_ids]
+                ).astype(np.float32)
+            except Exception as e:
+                logger.warning("_rebuild_transcript_index: reconstruct failed (%s); re-embedding", e)
+                vecs = None
+        if vecs is None:
+            vecs = await self.emb.embed(transcript_texts)
+            faiss.normalize_L2(vecs)
+            vecs = vecs.astype(np.float32)
         dim = vecs.shape[1]
         self.transcript_index = faiss.IndexFlatIP(dim)
-        self.transcript_index.add(vecs.astype(np.float32))
+        self.transcript_index.add(vecs)
         self.transcript_sparse.rebuild_from_chunk_ids(transcript_ids)
         self._save_transcript()
 
@@ -324,6 +344,9 @@ class FaissIndex:
             text or "", doc_id,
             estimated_pages=estimated_pages,
             page_offsets=page_offsets,
+            # PDFs are normalized per-page in parse_pdf (keeps page_offsets aligned); other
+            # types still get normalized inside chunk_document.
+            already_normalized=bool(page_offsets),
         )
         if not all_chunks:
             raise ValueError("No text extracted")
@@ -610,9 +633,31 @@ class FaissIndex:
             await self._rebuild_transcript_index()
             return
 
-        vecs = await self.emb.embed(remaining_texts)
-        faiss.normalize_L2(vecs)
-        vecs = vecs.astype(np.float32)
+        # Rebuild vectors for the survivors. Prefer reconstructing the existing (already-normalized)
+        # vectors from the current index — re-embedding the whole corpus on every delete is O(corpus)
+        # and made deleting a single transcript take many seconds/minutes on a large KB. Fall back to
+        # re-embedding only when the index can't be reconstructed (e.g. IVF without a direct map, or a
+        # prior index/meta desync). (audit perf)
+        old_ids = self.meta.get("chunk_ids", [])
+        old_pos = {cid: i for i, cid in enumerate(old_ids)}
+        vecs = None
+        if (
+            self.index is not None
+            and self.index.ntotal == len(old_ids)
+            and remaining_ids
+            and all(cid in old_pos for cid in remaining_ids)
+        ):
+            try:
+                vecs = np.vstack(
+                    [self.index.reconstruct(int(old_pos[cid])) for cid in remaining_ids]
+                ).astype(np.float32)
+            except Exception as e:
+                logger.warning("delete_document: vector reconstruct failed (%s); re-embedding", e)
+                vecs = None
+        if vecs is None:
+            vecs = await self.emb.embed(remaining_texts)
+            faiss.normalize_L2(vecs)
+            vecs = vecs.astype(np.float32)
         dim = vecs.shape[1]
         if vecs.shape[0] >= IVF_THRESHOLD:
             self.index = _build_ivf_index(vecs, dim)

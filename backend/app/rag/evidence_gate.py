@@ -7,11 +7,25 @@ core concepts. Returns a structured result with score breakdown for debug loggin
 from __future__ import annotations
 
 import logging
+import math
 import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from .evidence_extractor import EvidenceSentence, POLICY_WORDS
+
+
+def _normalize_rerank_score(s: float) -> float:
+    """Map a rerank score to [0,1] regardless of domain. Cross-encoder rerankers emit unbounded
+    logits (~-11..+11) while cosine/inner-product sits in 0..1; the gate's thresholds assume 0..1,
+    so sigmoid-squash anything that looks like a logit and pass cosine through. (M3)"""
+    try:
+        s = float(s)
+    except (TypeError, ValueError):
+        return 0.0
+    if s < 0.0 or s > 1.0:
+        return 1.0 / (1.0 + math.exp(-s))
+    return s
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +104,8 @@ def calculate_evidence_confidence(
     coverage, _, _ = check_concept_coverage(question, evidence)
     kw_score = min(coverage, 1.0) * 0.35
 
-    # Average rerank score (normalize: typical inner product 0.3–0.8 → 0–1)
-    avg_rerank = sum(e.chunk_rerank_score for e in evidence) / len(evidence) if evidence else 0.0
+    # Average rerank score, normalized to 0–1 first so CE logits and cosine both behave. (M3)
+    avg_rerank = sum(_normalize_rerank_score(e.chunk_rerank_score) for e in evidence) / len(evidence) if evidence else 0.0
     rerank_norm = min(max((avg_rerank - 0.2) / 0.6, 0.0), 1.0)
     rerank_score = rerank_norm * 0.30
 
@@ -139,7 +153,8 @@ def gate_evidence(
 
     confidence = calculate_evidence_confidence(question, evidence, explicit_section_ids)
     coverage, found, missing = check_concept_coverage(question, evidence, concept_coverage_threshold)
-    avg_rerank = sum(e.chunk_rerank_score for e in evidence) / len(evidence)
+    # Normalize to 0–1 so the avg_rerank >= 0.25 threshold means the same for CE logits & cosine. (M3)
+    avg_rerank = sum(_normalize_rerank_score(e.chunk_rerank_score) for e in evidence) / len(evidence)
     policy_ratio = sum(1 for e in evidence if e.has_policy_word) / len(evidence)
 
     # Section match check
