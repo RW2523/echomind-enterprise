@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import logging
 import os
 import threading
 from collections import deque
@@ -16,6 +17,8 @@ import torch
 import torch.nn.functional as F
 
 from ..core.config import settings
+
+logger = logging.getLogger(__name__)
 
 for _k in ("TORCHDYNAMO_DISABLE", "TORCHINDUCTOR_DISABLE", "TORCH_COMPILE_DISABLE"):
     if _k not in os.environ:
@@ -46,6 +49,38 @@ _adapter_lock = threading.Lock()
 _shared_adapter: Optional["ASRModelAdapter"] = None
 # One Nemotron forward / session-state build at a time process-wide (shared weights + NeMo streaming).
 _nemotron_process_lock: Optional[asyncio.Lock] = None
+
+# ── GPU/CUDA fatal-fault detection (mirror of voice/app/adapters/stt_nemotron.py) ──
+# A CUDA error poisons the process CUDA context (shared by Nemotron STT + FAISS-GPU), so every
+# subsequent GPU op fails until the container restarts. Flag it so /health reports unhealthy and a
+# watchdog can exit for the orchestrator (restart: unless-stopped) to recreate the container.
+_stt_fatal = threading.Event()
+_FATAL_HINTS = (
+    "cuda", "cublas", "cudnn", "cudaerror", "device-side assert",
+    "illegal memory access", "no kernel image", "misaligned address",
+)
+
+
+def note_stt_error(e: BaseException) -> bool:
+    """Mark STT/GPU unrecoverable if the error indicates a poisoned CUDA context. Returns True if fatal."""
+    msg = str(e).lower()
+    if any(h in msg for h in _FATAL_HINTS):
+        if not _stt_fatal.is_set():
+            logger.critical(
+                "Nemotron ASR: FATAL GPU/CUDA error — context poisoned, marking UNHEALTHY "
+                "(container restart required): %s", e,
+            )
+            _stt_fatal.set()
+        return True
+    return False
+
+
+def stt_healthy() -> bool:
+    return not _stt_fatal.is_set()
+
+
+def stt_fatal_event() -> threading.Event:
+    return _stt_fatal
 
 
 def get_nemotron_process_lock() -> asyncio.Lock:
@@ -235,10 +270,14 @@ class NemotronStreamContext:
             if audio is None:
                 break
             audio_copy = audio.copy()
-            text, ts_ms = await loop.run_in_executor(
-                ex,
-                lambda ac=audio_copy: _run_chunk_sync(self, ac, False),
-            )
+            try:
+                text, ts_ms = await loop.run_in_executor(
+                    ex,
+                    lambda ac=audio_copy: _run_chunk_sync(self, ac, False),
+                )
+            except Exception as e:
+                note_stt_error(e)  # flag unhealthy if poisoned-CUDA fault
+                raise
             piece = _hypothesis_delta(self.last_hypothesis, text)
             self.last_hypothesis = text
             if piece.strip():
@@ -256,10 +295,14 @@ class NemotronStreamContext:
             audio = np.concatenate(chunks).astype(np.float32) if chunks else np.zeros(0, dtype=np.float32)
             if audio.size > 0:
                 audio_copy = audio.copy()
-                text, ts_ms = await loop.run_in_executor(
-                    ex,
-                    lambda ac=audio_copy: _run_chunk_sync(self, ac, True),
-                )
+                try:
+                    text, ts_ms = await loop.run_in_executor(
+                        ex,
+                        lambda ac=audio_copy: _run_chunk_sync(self, ac, True),
+                    )
+                except Exception as e:
+                    note_stt_error(e)
+                    raise
                 piece = _hypothesis_delta(self.last_hypothesis, text)
                 self.last_hypothesis = text
                 if piece.strip():

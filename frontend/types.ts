@@ -3,6 +3,7 @@ export enum AppView {
   KNOWLEDGE_CHAT = 'knowledge_chat',
   TRANSCRIPTION = 'transcription',
   VOICE_CONVERSATION = 'voice_conversation',
+  DOCUMENT_STUDIO = 'document_studio',
   SETTINGS = 'settings'
 }
 

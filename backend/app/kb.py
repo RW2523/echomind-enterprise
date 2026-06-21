@@ -1,7 +1,8 @@
 """
 Knowledge base storage for transcripts: FAISS CPU + embeddings.
 Incremental: embed and store only when paragraph is closed or user requests store.
-Uses existing RAG index (Ollama/Nomic) for add_text and search.
+Uses the existing RAG index (FAISS + nomic-embed-text embeddings served via the Ollama embeddings
+endpoint, OLLAMA_EMBED_URL) for add_text and search.
 """
 from __future__ import annotations
 import time

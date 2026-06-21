@@ -26,6 +26,43 @@ _adapter_lock = threading.Lock()
 _shared_adapter: Optional[object] = None
 _executor: Optional[concurrent.futures.ThreadPoolExecutor] = None
 
+# ── GPU/CUDA fatal-fault detection ───────────────────────────────────────────
+# A CUDA error (e.g. cudaErrorUnknown) poisons the process CUDA context so that
+# EVERY subsequent inference fails. There is no in-process recovery — the container
+# must restart. We flag it here so /health can report unhealthy and a watchdog can
+# exit the process for the orchestrator (restart: unless-stopped) to recreate it.
+_stt_fatal = threading.Event()
+_FATAL_HINTS = (
+    "cuda", "cublas", "cudnn", "cudaerror", "device-side assert",
+    "illegal memory access", "no kernel image", "misaligned address",
+)
+
+
+def is_fatal_gpu_error(e: BaseException) -> bool:
+    msg = str(e).lower()
+    return any(h in msg for h in _FATAL_HINTS)
+
+
+def note_stt_error(e: BaseException) -> bool:
+    """Mark STT unrecoverable if the error indicates a poisoned CUDA context. Returns True if fatal."""
+    if is_fatal_gpu_error(e):
+        if not _stt_fatal.is_set():
+            logger.critical(
+                "Voice Nemotron: FATAL GPU/CUDA error — context poisoned, STT marked UNHEALTHY "
+                "(container restart required): %s", e,
+            )
+            _stt_fatal.set()
+        return True
+    return False
+
+
+def stt_healthy() -> bool:
+    return not _stt_fatal.is_set()
+
+
+def stt_fatal_event() -> threading.Event:
+    return _stt_fatal
+
 
 def _get_executor() -> concurrent.futures.ThreadPoolExecutor:
     global _executor
@@ -102,6 +139,7 @@ class NemotronUtteranceSTT:
         try:
             text = await loop.run_in_executor(ex, _run)
         except Exception as e:
+            note_stt_error(e)  # flag unhealthy if this is a poisoned-CUDA fault
             logger.exception("Voice Nemotron: transcribe failed: %s", e)
             raise
         ms = (time.monotonic() - t0) * 1000.0
@@ -172,10 +210,12 @@ class NemotronStreamingSTT:
                     if hyp and hyp.strip():
                         self._last_hyp = hyp
                 except Exception as e:
+                    note_stt_error(e)
                     logger.debug("NemotronStreamingSTT chunk error (step %d): %s", self._step, e)
                 self._step += 1
 
         except Exception as e:
+            note_stt_error(e)
             logger.debug("NemotronStreamingSTT push_chunk error: %s", e)
 
         return self._last_hyp

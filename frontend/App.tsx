@@ -6,7 +6,9 @@ import Header from './components/Header';
 import KnowledgeChat from './components/KnowledgeChat';
 import LiveTranscription from './components/LiveTranscription';
 import VoiceConversation from './components/VoiceConversation';
+import DocumentStudio from './components/DocumentStudio';
 import Settings from './components/Settings';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useVoiceConnection } from './hooks/useVoiceConnection';
 import { useLiveTranscription } from './hooks/useLiveTranscription';
 import { useKnowledgeChat } from './hooks/useKnowledgeChat';
@@ -92,6 +94,8 @@ const App: React.FC = () => {
             voiceConnection={voiceConnection}
           />
         );
+      case AppView.DOCUMENT_STUDIO:
+        return <DocumentStudio settings={settings} />;
       case AppView.SETTINGS:
         return <Settings settings={settings} setSettings={setSettings} />;
       default:
@@ -111,7 +115,9 @@ const App: React.FC = () => {
         <Header activeView={activeView} settings={settings} onMenuClick={() => setSidebarOpen(true)} />
         <div className="flex-1 min-h-0 overflow-auto flex flex-col overscroll-contain">
           <div className="flex-1 min-h-0 px-3 py-3 sm:px-5 sm:py-5 md:px-6 md:py-5 lg:px-8 lg:py-6 flex flex-col min-w-0">
-            {renderView()}
+            <ErrorBoundary key={activeView} label={String(activeView)}>
+              {renderView()}
+            </ErrorBoundary>
           </div>
         </div>
       </main>

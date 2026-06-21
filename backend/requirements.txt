@@ -20,3 +20,5 @@ huggingface-hub==0.33.5
 accelerate>=0.26.0
 httpx==0.27.2
 reportlab>=4.0,<5
+# Document Studio on-device text-to-image (SDXL-Turbo) for the "diffusers" image backend
+diffusers>=0.38,<0.40

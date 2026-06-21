@@ -49,7 +49,16 @@ services:
         # SKIP_MODEL_DOWNLOAD: "1"  # uncomment if build fails with "file already closed"; incompatible with offline
         # SKIP_NEMOTRON_WARMUP: "1"  # skip NeMo load during build (faster CI; colder first runtime load)
     container_name: echomind-backend
+    restart: unless-stopped
     expose: ["8000"]
+    healthcheck:
+      # 503 when a fatal GPU/CUDA fault poisons the shared context; combined with the in-process
+      # watchdog (exits on fatal) + restart policy, the container self-recovers.
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)\""]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 180s
     environment:
       - LLM_BASE_URL=http://trtllm:8355/v1
       - LLM_MODEL=nvidia/Llama-3.1-8B-Instruct-FP4
@@ -58,6 +67,16 @@ services:
       # Offline: use only local Hugging Face cache (no runtime model download)
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
+      # Document Studio images: real on-device text-to-image (SDXL-Turbo via diffusers).
+      # Private + offline after the one-time model download (cached in /data). Set
+      # DOCGEN_IMAGE_BACKEND=local for the no-GPU synthetic fallback, or =nim for cloud.
+      - DOCGEN_IMAGE_BACKEND=diffusers
+      - DOCGEN_DIFFUSERS_MODEL=stabilityai/sdxl-turbo
+      - DOCGEN_DIFFUSERS_CACHE=/data/docgen_models
+      - DOCGEN_DIFFUSERS_STEPS=4
+      - DOCGEN_DIFFUSERS_MAX=1024
+      - DOCGEN_MAX_IMAGES=8
+      - DOCGEN_IMAGE_CONCURRENCY=1
     volumes:
       - echomind_data:/data
     depends_on:
@@ -84,9 +103,18 @@ services:
     volumes:
        - ./voice/voices:/voices
     container_name: echomind-voice
+    restart: unless-stopped
     # Host port for optional direct voice access; Nginx uses voice:8000 on the Docker network (unchanged).
     # Default 8002 — host 8001 is often taken (e.g. uvicorn). Override: VOICE_HOST_PORT=8001 in .env
     ports: ["${VOICE_HOST_PORT:-8002}:8000"]
+    healthcheck:
+      # /health returns 503 once a fatal CUDA fault poisons STT; with the watchdog (self-exit on
+      # fatal) + restart policy, the container recovers automatically with a fresh CUDA context.
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)\""]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 120s
     environment:
       # TensorRT-LLM in compose (OpenAI-compatible); dialogue uses stream=true for TTFT.
       - LLM_URL=http://trtllm:8355/v1/chat/completions

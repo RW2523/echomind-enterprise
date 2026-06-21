@@ -133,6 +133,30 @@ def init_db():
                 updated_at TEXT
             )"""
         )
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS docgen_jobs(
+                id TEXT PRIMARY KEY,
+                title TEXT,
+                template_id TEXT,
+                persona TEXT,
+                mode TEXT,
+                status TEXT,
+                stage TEXT,
+                doc_json TEXT,
+                error TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            )"""
+        )
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS docgen_templates(
+                id TEXT PRIMARY KEY,
+                name TEXT,
+                blueprint_json TEXT,
+                source_path TEXT,
+                created_at TEXT
+            )"""
+        )
         conn.commit()
 
 @contextmanager

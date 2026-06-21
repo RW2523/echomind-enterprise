@@ -55,7 +55,7 @@ const PERSONA_CHAT_META: Record<string, { icon: string; label: string; accent: s
   },
   [PersonaType.FUNNY]: {
     icon: '😄',
-    label: 'EchoMind',
+    label: 'Companion',
     accent: 'text-amber-400',
     emptyState: 'Hey there! Ask me anything about your documents and transcripts. I\'ll give you real, helpful answers—with a smile. No question too big, no topic too dry!',
     placeholder: 'Ask me anything about your documents and transcripts…',

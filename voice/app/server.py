@@ -22,6 +22,20 @@ from .voice_download import list_installed_voices, download_voice
 logger = logging.getLogger(__name__)
 
 
+async def _stt_fatal_watchdog():
+    """Wait for a fatal CUDA/STT fault, then exit the process so the orchestrator
+    (restart: unless-stopped) recreates the container with a fresh CUDA context.
+    A poisoned CUDA context cannot recover in-process, so a clean restart is the fix."""
+    from .adapters.stt_nemotron import stt_fatal_event
+
+    await asyncio.to_thread(stt_fatal_event().wait)
+    grace = float(os.getenv("VOICE_FATAL_EXIT_GRACE_S", "2"))
+    logger.critical("Voice service: STT fatal fault detected — exiting in %.0fs for restart", grace)
+    await asyncio.sleep(grace)
+    if os.getenv("VOICE_EXIT_ON_FATAL_CUDA", "1").strip().lower() in ("1", "true", "yes"):
+        os._exit(1)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Nemotron: lazy load on first STT by default (VOICE_NEMOTRON_STARTUP_LOAD=0) so the server accepts WS immediately.
@@ -33,11 +47,26 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.exception("Voice service: Nemotron startup load failed")
         raise
-    yield
+    watchdog = asyncio.create_task(_stt_fatal_watchdog())
+    try:
+        yield
+    finally:
+        watchdog.cancel()
 
 
 app = FastAPI(title="(Context + Memory)", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/health")
+def health():
+    """Liveness + STT health. Returns 503 once a fatal GPU/CUDA fault poisons the STT context
+    so the Docker healthcheck can flag the container and the watchdog can trigger a restart."""
+    from .adapters.stt_nemotron import stt_healthy
+
+    if not stt_healthy():
+        raise HTTPException(status_code=503, detail="STT unhealthy: GPU/CUDA fault — restart required")
+    return {"ok": True}
 
 
 class DownloadVoiceBody(BaseModel):
@@ -135,6 +164,18 @@ async def ws_endpoint(ws: WebSocket):
                     except Exception:
                         continue
                     await sess.on_audio_frame(float(data.get("ts", 0.0)), pcm)
+                    # If a fatal GPU fault poisoned STT, tell the client (don't fail silently) and
+                    # close — the watchdog will restart the container and the client can reconnect.
+                    from .adapters.stt_nemotron import stt_healthy
+                    if not stt_healthy():
+                        try:
+                            await ws.send_text(json.dumps({
+                                "type": "error", "fatal": True,
+                                "message": "Speech recognition is temporarily unavailable (GPU fault); reconnecting…",
+                            }))
+                        except Exception:
+                            pass
+                        break
                 else:
                     await sess.on_control(data)
     except Exception:

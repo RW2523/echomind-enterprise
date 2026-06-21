@@ -30,7 +30,7 @@ const PERSONA_VOICE_PROMPTS: Record<string, string> = {
     "You are EchoMind, an experienced legal advisor. " +
     "Provide structured legal reasoning—cite laws, regulations, and document clauses precisely. " +
     "Use clear, professional language. Keep voice responses focused and actionable. " +
-    "Always mention: 'This is informational, not formal legal advice.' " +
+    "Always mention: 'This is informational legal analysis, not formal legal advice. Consult a licensed attorney for binding decisions.' " +
     "GUARDRAIL: Focus on legal analysis and compliance. " +
     "For unrelated topics: 'That falls outside my legal practice area.'"
   ),
@@ -58,12 +58,28 @@ const PERSONA_VOICE_PROMPTS: Record<string, string> = {
   ),
 };
 
-function buildPersonaVoicePrompt(persona: string | undefined, voiceContext: string): string {
-  const basePersonaPrompt = persona && PERSONA_VOICE_PROMPTS[persona]
+function buildPersonaVoicePrompt(
+  persona: string | undefined,
+  voiceContext: string,
+  botName?: string,
+  userName?: string,
+): string {
+  let basePersonaPrompt = persona && PERSONA_VOICE_PROMPTS[persona]
     ? PERSONA_VOICE_PROMPTS[persona]
     : "You are EchoMind, a helpful voice assistant. Be concise, helpful, and conversational.";
+  const name = (botName ?? "").trim();
+  if (name) {
+    // Substitute only the LEADING identity so there's a single identity, not a contradictory
+    // "You are <name>" + "You are EchoMind". Anchored so product references (e.g. the EchoMind
+    // Guide persona) stay intact. (audit M7)
+    basePersonaPrompt = basePersonaPrompt.replace(/^You are EchoMind\b/, `You are ${name}`);
+  }
+  const parts = [basePersonaPrompt];
+  const uname = (userName ?? "").trim();
+  if (uname) parts.push(`The user's name is ${uname}; use it when it fits naturally.`);
   const ctx = (voiceContext ?? "").trim();
-  return ctx ? `${basePersonaPrompt}\n\n${ctx}` : basePersonaPrompt;
+  if (ctx) parts.push(ctx);
+  return parts.join("\n\n");
 }
 
 const LISTENING_THRESHOLD = 18;
@@ -395,17 +411,8 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
         micBelowCountRef.current = 0;
         const botName = (settings?.voiceBotName ?? "").trim();
         const userName = (settings?.voiceUserName ?? "").trim();
-        let systemPrompt = buildPersonaVoicePrompt(settings?.persona, settings?.voiceContext ?? "");
-        if (botName) {
-          const userNameHint = userName ? `The user's name is ${userName}; use it when it fits naturally. ` : "";
-          systemPrompt = (
-            `You are ${botName}. Talk in a natural, conversational way—like a friendly voice assistant. ` +
-            `When the user says your name or speaks to you, respond naturally. ` +
-            `If they say "stop", pause speaking; if they say "start" or your name, continue. ` +
-            `${userNameHint}` +
-            systemPrompt
-          );
-        }
+        // Single identity: the bot/user names are substituted into the persona prompt itself. (M7)
+        const systemPrompt = buildPersonaVoicePrompt(settings?.persona, settings?.voiceContext ?? "", botName, userName);
         ws.send(JSON.stringify({
           type: "set_context",
           system_prompt: systemPrompt,
@@ -657,17 +664,8 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const botName = (settings?.voiceBotName ?? "").trim();
     const userName = (settings?.voiceUserName ?? "").trim();
-    let sysPrompt = buildPersonaVoicePrompt(settings?.persona, settings?.voiceContext ?? "");
-    if (botName) {
-      const userNameHint = userName ? `The user's name is ${userName}; use it when it fits naturally. ` : "";
-      sysPrompt = (
-        `You are ${botName}. Talk in a natural, conversational way—like a friendly voice assistant. ` +
-        `When the user says your name or speaks to you, respond naturally. ` +
-        `If they say "stop", pause speaking; if they say "start" or your name, continue. ` +
-        `${userNameHint}` +
-        sysPrompt
-      );
-    }
+    // Single identity: bot/user names substituted into the persona prompt itself. (M7)
+    const sysPrompt = buildPersonaVoicePrompt(settings?.persona, settings?.voiceContext ?? "", botName, userName);
     ws.send(JSON.stringify({
       type: "set_context",
       system_prompt: sysPrompt,

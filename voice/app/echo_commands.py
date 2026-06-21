@@ -169,8 +169,10 @@ def parse_and_route(
     # ----- Start listening (enter listen-only) -----
     if _match_any(user_text, ["listen to conversation", "start listening", "just listen", "keep listening"]):
         extra["set_listen_only"] = True
-        wake = (profile.get("wake_word") or "EchoMind" or "Stop listening" or "Exit" or "Stoplistening").strip()
-        return True, f"I am starting to listen. Say '{wake}' when you want me to respond", extra
+        # The chained `or` of literals always resolved to the wake word and never the exit phrases —
+        # resolve the wake word once and name the exit phrase explicitly. (audit M1/L1)
+        wake = (profile.get("wake_word") or "EchoMind").strip()
+        return True, f"I am starting to listen. Say '{wake}' or 'stop listening' when you want me to respond.", extra
 
     # # ----- Stop listening (exit listen-only) -----
     # if _match_any(user_text, ["stop listening", "pause listening", "pause", "don't listen"]):
