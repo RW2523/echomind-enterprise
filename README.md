@@ -1,88 +1,132 @@
-# EchoMind — Enterprise Edition (Clean v2)
+<h1 align="center">EchoMind Enterprise</h1>
 
-This build removes ALL Gemini code and connects the UI to your backend APIs.
+<p align="center"><strong>The private, on-premises AI workspace.</strong><br/>
+Chat, live meeting intelligence, voice, and document generation — running entirely on your own GPUs, fully offline.</p>
 
-## Services
-- Frontend: http://<DGX_IP>:3000 (HTTP) or https://<DGX_IP>:3443 (HTTPS)
-- Backend API: proxied under /api
-- Voice bot: proxied under /voice (direct: http://<DGX_IP>:8002 by default; set `VOICE_HOST_PORT` in `.env` to change). **Voice AI is connected to RAG** (via `BACKEND_CHAT_URL`): questions about your transcripts or uploaded PDFs are answered from the knowledge base.
-- **TensorRT-LLM** (chat): OpenAI-compatible API on port **8355** (`docker compose` service `trtllm`; model weights live in volume `trtllm_hf_cache`). Set `HF_TOKEN` in `.env` if your `MODEL_HANDLE` is gated.
-- **Ollama** (embeddings only for RAG): http://<DGX_IP>:11434 — `nomic-embed-text` in volume `ollama_data`
+<p align="center">
+  <img alt="Deployment" src="https://img.shields.io/badge/Deployment-100%25%20On--Prem-0e7490?style=flat-square">
+  <img alt="Offline" src="https://img.shields.io/badge/Runtime-Offline%20%2F%20Air--gapped-0891b2?style=flat-square">
+  <img alt="GPU" src="https://img.shields.io/badge/Accelerator-NVIDIA%20GPU-76b900?style=flat-square&logo=nvidia&logoColor=white">
+  <img alt="Backend" src="https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white">
+  <img alt="Frontend" src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61dafb?style=flat-square&logo=react&logoColor=black">
+  <img alt="Orchestration" src="https://img.shields.io/badge/Runs%20on-Docker%20Compose-2496ed?style=flat-square&logo=docker&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/License-Proprietary-555?style=flat-square">
+</p>
 
-## HTTPS (no browser warning)
+<p align="center">
+  <a href="https://github.com/RW2523/echomind-enterprise/wiki"><b>📖 Wiki</b></a> ·
+  <a href="docs/USER_MANUAL.md"><b>📘 User Manual</b></a> ·
+  <a href="docs/CAPABILITIES.md"><b>🧠 Capabilities</b></a> ·
+  <a href="docs/EchoMind_Marketing_Book.pdf"><b>📕 Marketing Book</b></a>
+</p>
 
-**Production (server with a hostname)**  
-Trusted HTTPS with a free domain and Let's Encrypt:
-- Free subdomain: [DuckDNS](https://www.duckdns.org/) → e.g. **echomind.duckdns.org**
-- Trusted cert: **`sudo certbot --nginx -d echomind.duckdns.org`**
-- **HTTPS:** https://echomind.duckdns.org — no warning. Full steps: **[docs/HTTPS_TRUSTED_CERTIFICATE.md](docs/HTTPS_TRUSTED_CERTIFICATE.md)**
+---
 
-**Local development**  
-Trusted HTTPS on localhost with [mkcert](https://github.com/FiloSottile/mkcert):
-- Install mkcert, run `mkcert -install`, create certs for localhost, then run the frontend with `VITE_DEV_HTTPS=1` and `VITE_SSL_CERT` / `VITE_SSL_KEY`.
-- **HTTPS:** https://localhost:3000 — no warning. Steps: **[docs/HTTPS_LOCAL_TRUSTED.md](docs/HTTPS_LOCAL_TRUSTED.md)**
+> Most AI assistants quietly send your prompts, files, and recordings to someone else's cloud. **EchoMind doesn't.** Every model — the LLM, embeddings, speech-to-text, text-to-speech, and image generation — is pre-cached and served locally on your own NVIDIA GPU hardware. No third-party AI APIs, no telemetry, no internet dependency at runtime. You can unplug the network cable and it keeps working.
 
-**Fallback – self-signed**  
-The image also serves HTTPS with a self-signed cert (browser will show a warning; use **Advanced** → **Proceed**).
+Built for **defense, government, legal, finance, healthcare**, and any team for whom data sovereignty is non-negotiable.
 
-## Run
+## ✨ The Platform — Five Modules, One Web App
 
-**Offline-first (recommended):** One-time preparation, then run without internet:
+| Module | What it does |
+|---|---|
+| 💬 **Knowledge Chat** | Ask plain-language questions over your documents and transcripts, with **citations** (document · section · page). Hybrid retrieval (vector + BM25) with cross-encoder reranking. |
+| 🎙️ **Live Transcription + Silent Assistant** | Real-time speech-to-text that **fact-checks each statement live** against your knowledge base — labelled *Supported / Contradicted / Unverified / Violating / Risky*. |
+| 🧑‍💼 **Boardroom** | Capture a whole meeting → **speaker-diarized transcript** → AI meeting report (summary, decisions, contradictions, recommendations) → export PDF/PPTX. |
+| 🔊 **Voice Conversation** | Natural, **full-duplex** speech-to-speech (barge-in, backchannels, memory), wired to the same RAG so spoken answers come from your corpus. |
+| 📄 **Document Studio** | Turn a topic, a chat, or your sources into a polished document using **18 templates**, with **on-device AI images**, exported to PDF & PPTX. |
 
-```bash
-./scripts/prepare_offline.sh   # once, with internet: builds images + populates Ollama volume
-docker compose up -d           # thereafter: fully offline
+## 🗺️ Product Vision
+
+EchoMind is a **building block**, not a one-size product. Ajace AI runs N customizations per customer — **we don't sell hardware; we fix the problem statement and advise the hardware + cloud that fit your security posture.**
+
+- 🛰️ **Edge devices** — connect to the host's knowledge base while staying **fully offline**; intelligence at the edge, data kept home.
+- 🔐 **Secure offline→online content export** — when content must go online, an **offline risk/sensitivity evaluation** flags every risk and can **redact** before anything crosses the gateway.
+- 🧱 **Offline & online layers** — sensitive work stays isolated; online capability is reached only through a controlled, audited gateway.
+
+## 🏗️ Architecture
+
+```
+                         ┌──────────────────────────────────────────────┐
+   Browser (SPA) ──────▶ │  frontend (nginx)   :3000 http / :3443 https  │
+   HTTPS / WSS           │  React + Vite + Tailwind                       │
+                         └───────┬───────────────────────────┬──────────┘
+                          /api   │                    /voice  │
+                                 ▼                            ▼
+                   ┌──────────────────────────┐   ┌────────────────────────┐
+                   │  backend (FastAPI)  :8000 │   │  voice (FastAPI)  :8000 │
+                   │  RAG · Chat · Transcribe  │   │  STT + LLM + TTS loop   │
+                   │  Boardroom · Document Std │   │  (speech-to-speech /ws) │
+                   └───┬───────────┬───────┬───┘   └───────┬─────────┬──────┘
+            embeddings │       LLM │       │ STT/TTS    LLM │     STT │ TTS
+                       ▼           ▼       ▼ (GPU)          ▼         ▼ (GPU)
+              ┌──────────────┐ ┌────────────────────────┐  │   Nemotron   Piper
+              │ ollama :11434│ │ trtllm  :8355 (OpenAI)  │◀─┘   (in-proc)  (ONNX)
+              │ nomic-embed  │ │ Llama-3.1-8B-Instruct-FP4│
+              └──────────────┘ └────────────────────────┘
 ```
 
-**With build (uses internet for build and first Ollama run):**
+| Service | Role | GPU |
+|---|---|---|
+| `frontend` | nginx serving the React SPA; proxies `/api` & `/voice` | – |
+| `backend` | FastAPI: ingestion, RAG/chat, transcription, boardroom, Document Studio | 1 |
+| `voice` | FastAPI WebSocket speech-to-speech loop | 1 |
+| `trtllm` | OpenAI-compatible chat LLM — **Llama-3.1-8B-Instruct-FP4** | all |
+| `ollama` | **Embeddings only** — `nomic-embed-text` | all |
+
+## 🚀 Quick Start
+
+**Prerequisites:** Linux host with NVIDIA GPU(s) + drivers, Docker + Docker Compose + NVIDIA Container Toolkit, and an `.env` with `HF_TOKEN` (to fetch the gated Nemotron model at build time).
 
 ```bash
-docker compose up --build
-```
+# One-time, WITH internet: build images + populate model volumes
+./scripts/prepare_offline.sh
 
-See **[OFFLINE_DEPLOYMENT.md](OFFLINE_DEPLOYMENT.md)** for export/import to air-gapped machines and troubleshooting.
-
-### Build fails with "failed to execute bake: read |0: file already closed"
-This Docker BuildKit bug occurs when the backend's long Hugging Face download runs in parallel with other services. Use the build script (builds backend first, then the rest):
-
-```bash
-./scripts/build.sh
+# Thereafter: fully offline
 docker compose up -d
 ```
 
-Or use offline preparation (builds everything and populates Ollama once): `./scripts/prepare_offline.sh`
+Then open **`http://<HOST_IP>:3000`** (or **`https://<HOST_IP>:3443`**). Microphone features (voice, transcription) require HTTPS or `localhost`.
 
-**Alternative:** Disable provenance: `BUILDX_METADATA_PROVENANCE=disabled docker compose build`
+<details>
+<summary>Build inline, air-gapped transfer & FAISS-GPU</summary>
 
-## Model setup (included in build/start)
+- **Build inline:** `docker compose up --build` (or `./scripts/build.sh` if BuildKit chokes on the parallel model download).
+- **Air-gapped:** export/import the `trtllm_hf_cache`, `ollama_data`, and `echomind_data` volumes — see [OFFLINE_DEPLOYMENT.md](OFFLINE_DEPLOYMENT.md).
+- **Faster RAG:** set the backend build arg `USE_FAISS_GPU: "1"` in `docker-compose.yml`, then rebuild the backend.
+</details>
 
-- **Kyutai STT** (Live Transcript): Pre-downloaded during backend Docker build. Runtime uses local cache only (`HF_HUB_OFFLINE=1`).
-- **TensorRT-LLM** (chat LLM): Service `trtllm` uses `nvcr.io/nvidia/tensorrt-llm/release:1.2.0rc6` (see `docker/trtllm/`). On first start, `hf download` fills `trtllm_hf_cache` (can take a long time; needs GPU). Override model with `TRTLLM_MODEL_HANDLE` in `.env`. For air-gapped use after prep, export/import includes `trtllm_hf_cache.tar`; set `TRTLLM_SKIP_DOWNLOAD=1` and `TRTLLM_HF_HUB_OFFLINE=1` on the `trtllm` service once the cache is complete.
-- **Ollama** (embeddings only): `nomic-embed-text` in `ollama_data`. Run `./scripts/prepare_offline.sh` once to pull it; chat does not use Ollama (`OLLAMA_EMBED_ONLY=1`).
-- **Whisper** (Voice): Base model pre-downloaded during voice Docker build.
-- **Piper** (Voice): Default voice baked in voice image; runtime download disabled when `VOICE_OFFLINE=1`.
+## 🔐 Privacy & Security
 
-If you still see Gemini calls in the browser console:
-1) Hard refresh (Ctrl+Shift+R) / clear site data
-2) Ensure you rebuilt images: `docker compose up --build`
+- **All inference is local** — no outbound model/API calls, no telemetry; data never leaves the host.
+- **Injection-resistant** — retrieved/recorded content is fenced as *untrusted data* in every prompt.
+- **Trusted-network design** — this build ships without authentication and with wildcard CORS. Deploy on an **isolated network**; if exposed more broadly, put it behind your own SSO / VPN / authenticating reverse proxy and lock down CORS first. See [Security & Privacy](https://github.com/RW2523/echomind-enterprise/wiki/Security-and-Privacy).
 
-## FAISS GPU (faster RAG search)
+## 📚 Documentation
 
-By default the backend uses **faiss-cpu**. For faster vector search you can use **faiss-gpu** (requires an NVIDIA GPU and CUDA).
+| | |
+|---|---|
+| 📖 **[Project Wiki](https://github.com/RW2523/echomind-enterprise/wiki)** | Full handbook: architecture, every module, config, deployment |
+| 📘 **User Manual** | [Markdown](docs/USER_MANUAL.md) · [PDF](docs/USER_MANUAL.pdf) — complete, step-by-step, 16 chapters |
+| 🧠 **[Capabilities & How It Works](docs/CAPABILITIES.md)** | What EchoMind is and how each part works |
+| 📕 **Generated showcase** | [Marketing Book](docs/EchoMind_Marketing_Book.pdf) · [User Guide](docs/EchoMind_User_Guide.pdf) — produced *in* Document Studio |
+| 🔒 **HTTPS** | [Trusted cert (prod)](docs/HTTPS_TRUSTED_CERTIFICATE.md) · [Local (mkcert)](docs/HTTPS_LOCAL_TRUSTED.md) |
+| 🔎 **Internals** | [RAG & chunking](docs/RAG_AND_CHUNKING_EXPLAINED.md) · [RAG flow](docs/RAG_FLOW.md) · [Chat flow](docs/CHAT_AND_RAG_FLOW.md) · [Voice flow](docs/CONVERSATION_AI_AND_WAKE_WORD_FLOW.md) · [Transcript storage](docs/TRANSCRIPT_STORAGE_FLOW.md) |
 
-1. In `docker-compose.yml`, set the backend build arg: `USE_FAISS_GPU: "1"`.
-2. Rebuild: `docker compose build --no-cache backend && docker compose up -d backend`.
+## 🛠️ Tech Stack
 
-The backend service already has GPU access in `docker-compose.yml`. No code changes are needed—the same `faiss` API is used; the GPU build just runs the index on the GPU.
+**Frontend:** React 19 · Vite 6 · TypeScript · Tailwind · nginx
+**Backend / Voice:** Python · FastAPI · Uvicorn (NVIDIA PyTorch base image)
+**Retrieval:** FAISS (dense) · rank-bm25 (sparse) · cross-encoder reranker · SQLite
+**Models (all local):** Llama-3.1-8B-Instruct-FP4 (TensorRT-LLM) · `nomic-embed-text` (Ollama) · NVIDIA Nemotron streaming ASR · VibeVoice diarization · Piper TTS · SDXL-Turbo
+**Infra:** Docker Compose · NVIDIA Container Toolkit · offline-first model caches in named volumes
 
-**Note:** The PyPI `faiss-gpu` package (1.7.2) is archived and only provides wheels for Python ≤3.10. If the backend image uses Python 3.11+, the GPU build may fail; in that case keep `faiss-cpu` or use a conda base image with `faiss-gpu`.
+## 🖥️ Requirements
 
-## Live Transcript (Kyutai STT)
+- Linux + NVIDIA GPU(s) with recent drivers (DGX / DGX Spark supported; x86_64 and ARM64)
+- Docker, Docker Compose, NVIDIA Container Toolkit
+- `HF_TOKEN` for the gated Nemotron model (build time only)
 
-The **Real-Time Transcription** tab uses **Kyutai STT** (`kyutai/stt-1b-en_fr`) for streaming speech-to-text. No Whisper—Kyutai only.
+---
 
-- **Sample rate:** 24 kHz (Kyutai)
-- **Works on:** x86_64 and ARM64 (e.g. DGX Spark)
-- **Deps:** `moshi`, `huggingface-hub` (included in `backend/requirements.txt`). On ARM64: `libopus-dev` required for sphn.
-
-On first use, the model (~1B params) is downloaded from Hugging Face. Requires PyTorch (provided by the NVIDIA PyTorch base image). For DGX Spark (ARM64), ensure the backend Dockerfile uses an ARM64-compatible base image; the dependencies support both architectures.
+<p align="center"><sub>© Ajace AI · EchoMind Enterprise — a private AI platform. Proprietary.</sub></p>
