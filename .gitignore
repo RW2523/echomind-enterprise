@@ -33,3 +33,7 @@ BookRAG/
 # Optional: uncomment if you don't want to track these
 # echomind_data/
 # ollama_data/
+
+# PPTX exports temporarily hidden — Document Studio PPTX export is WIP (kept locally, not published)
+docs/EchoMind_Marketing_Book.pptx
+docs/EchoMind_User_Guide.pptx
