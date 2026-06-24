@@ -29,8 +29,12 @@ TUNNEL_TOKEN=eyJ...your-tunnel-token...
 
 ### Step 3 — Route the public hostname to the app
 In the tunnel's **Public Hostname** tab → **Add a public hostname**:
-- **Subdomain:** *(leave blank)* **Domain:** `echomind-ajace.com`
+- **Subdomain:** **leave EMPTY** ⚠️ — do **not** type `echomind-ajace.com` here.
+- **Domain:** pick `echomind-ajace.com` from the dropdown.
+- **Path:** leave empty.
 - **Service Type:** `HTTP` **URL:** `frontend:80`
+
+> ⚠️ **Common mistake:** putting the full domain in the *Subdomain* box creates `echomind-ajace.com.echomind-ajace.com`, which never resolves and has no valid TLS cert. The final hostname shown must be exactly **`echomind-ajace.com`**.
 
 (Cloudflare provides HTTPS at the edge; the internal hop to nginx is plain HTTP on the Docker network. Add a second hostname `www` → same service if you want.)
 
@@ -69,3 +73,18 @@ Or disable the public hostname / Access app in the dashboard.
 - **Tighten CORS later (optional):** with Access in front it's low-risk, but for defense-in-depth you can restrict the backend's CORS from `*` to `https://echomind-ajace.com` once everything works.
 - **Local access is unchanged:** LAN/Tailscale access via `:3000`/`:3443` keeps working.
 - **Privacy/ToS:** if outside users upload data, add a basic privacy policy and an abuse-handling contact.
+
+## Troubleshooting
+
+**`curl: Could not resolve host: echomind-ajace.com`** — the apex has no DNS record yet. Either the zone isn't **Active** in Cloudflare (Websites → it must show *Active*, nameservers pointed), or no correct Public Hostname exists. Fixing Step 3 (correct apex hostname) auto-creates the proxied DNS record; it resolves within ~1 minute.
+
+**Hostname shows as `echomind-ajace.com.echomind-ajace.com` in the cloudflared logs / TLS handshake fails** — the Public Hostname was created with the domain typed into the *Subdomain* field. Edit (or delete + re-add) that Public Hostname so the subdomain is **empty** and the domain is `echomind-ajace.com`. Cloudflare's universal cert doesn't cover doubled names, hence the `sslv3 alert handshake failure`.
+
+**Order of operations (safety):** while the apex does **not** resolve, the app is not reachable — use that window to finish **Step 4 (Cloudflare Access)** *before* correcting the hostname, so the site is gated from the very first second it goes live.
+
+**`failed to sufficiently increase receive buffer size` in cloudflared logs** — harmless QUIC warning; the tunnel still works. To silence it, on the host: `sudo sysctl -w net.core.rmem_max=7500000 net.core.wmem_max=7500000`.
+
+**Verify from the DGX once configured:**
+```bash
+curl -sI https://echomind-ajace.com         # expect HTTP 302 to a Cloudflare Access login (gated) — that's success
+```
