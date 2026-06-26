@@ -43,6 +43,12 @@ RUN export HF_TOKEN="${HF_TOKEN}" && \
     if [ "$SKIP_MODEL_DOWNLOAD" != "1" ]; then \
       python -c "from huggingface_hub import snapshot_download; snapshot_download('${ECHOMIND_ASR_MODEL_NAME}')"; \
     fi
+# Accurate final-decode model (Parakeet-TDT) for the voice path — public model, baked for offline runtime.
+ARG VOICE_FINAL_ASR_MODEL=nvidia/parakeet-tdt-0.6b-v2
+RUN export HF_TOKEN="${HF_TOKEN}" && \
+    if [ "$SKIP_MODEL_DOWNLOAD" != "1" ]; then \
+      python -c "from huggingface_hub import snapshot_download; snapshot_download('${VOICE_FINAL_ASR_MODEL}')"; \
+    fi
 # Load NeMo + one forward pass on CPU (docker build has no GPU by default); fills HF/NeMo caches for fast runtime GPU load.
 RUN export HF_TOKEN="${HF_TOKEN}" && \
     if [ "$SKIP_MODEL_DOWNLOAD" != "1" ] && [ "$SKIP_NEMOTRON_WARMUP" != "1" ]; then \

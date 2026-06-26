@@ -158,6 +158,9 @@ services:
       # mishearing ("DoD FMR"->"DODFMA"). Live partials stay on the streaming model. Falls back on error.
       - VOICE_USE_PARAKEET=${VOICE_USE_PARAKEET:-1}
       - VOICE_FINAL_ASR_MODEL=${VOICE_FINAL_ASR_MODEL:-nvidia/parakeet-tdt-0.6b-v2}
+      # Parakeet on CPU (Grace) — avoids the CUDA-graph illegal-memory-access seen when it ran
+      # on the GPU alongside trtllm. Set to cuda only if a future stack proves stable.
+      - VOICE_PARAKEET_DEVICE=${VOICE_PARAKEET_DEVICE:-cpu}
     depends_on:
       trtllm:
         condition: service_healthy

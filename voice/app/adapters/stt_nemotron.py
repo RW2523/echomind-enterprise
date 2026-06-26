@@ -136,12 +136,23 @@ def _get_parakeet():
             logger.info("Voice Parakeet: loading final-decode model=%s", name)
             t0 = time.monotonic()
             m = ASRModel.from_pretrained(name)
-            try:
-                m = m.to("cuda")
-            except Exception:
-                pass
+            # Default to CPU: a fatal CUDA illegal-memory-access occurred when Parakeet's GPU
+            # CUDA-graph decoding ran on the same context as trtllm. CPU final-decode (once per
+            # turn, on the strong Grace CPU) avoids the conflict entirely. Set VOICE_PARAKEET_DEVICE=cuda
+            # to opt back into GPU if a future stack proves stable.
+            dev = os.getenv("VOICE_PARAKEET_DEVICE", "cpu").strip().lower()
+            if dev == "cuda":
+                try:
+                    m = m.to("cuda")
+                except Exception:
+                    dev = "cpu"
+            else:
+                try:
+                    m = m.to("cpu")
+                except Exception:
+                    pass
             m.eval()
-            logger.info("Voice Parakeet: ready load_wall_s=%.2f", time.monotonic() - t0)
+            logger.info("Voice Parakeet: ready device=%s load_wall_s=%.2f", dev, time.monotonic() - t0)
             _parakeet_model = m
         return _parakeet_model
 
