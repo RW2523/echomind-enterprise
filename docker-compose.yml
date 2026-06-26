@@ -135,12 +135,23 @@ services:
       # 1 = load Nemotron at startup so GPU/weights issues fail fast on DGX; set 0 for faster WS accept on weak hosts
       - VOICE_NEMOTRON_STARTUP_LOAD=${VOICE_NEMOTRON_STARTUP_LOAD:-1}
       # Piper ONNX TTS on GPU (requires onnxruntime-gpu in the voice image)
-      - VOICE_PIPER_USE_CUDA=${VOICE_PIPER_USE_CUDA:-1}
+      # Piper TTS: onnxruntime CUDA EP isn't available on Spark/ARM (it silently fell back to CPU);
+      # set 0 to go straight to CPU. CPU Piper is fast enough for short replies.
+      - VOICE_PIPER_USE_CUDA=${VOICE_PIPER_USE_CUDA:-0}
       # Pin voice to one GPU if the host runs trtllm/backend on others, e.g. NVIDIA_VISIBLE_DEVICES=2
       # RAG: voice bot calls backend for answers from documents + transcripts
       - BACKEND_CHAT_URL=http://backend:8000
       # Offline: disable runtime Piper voice download from Hugging Face
       - VOICE_OFFLINE=1
+      # ── Voice turn-taking tuning (fixes "cuts off my speech / doesn't listen / cut off for no reason") ──
+      # Less-aggressive endpointing so a natural pause doesn't end your turn early.
+      - ENDPOINT_SILENCE_MS=${ENDPOINT_SILENCE_MS:-700}
+      - ENDPOINT_SILENCE_COMPLETE_MS=${ENDPOINT_SILENCE_COMPLETE_MS:-550}
+      - ENDPOINT_SILENCE_INCOMPLETE_MS=${ENDPOINT_SILENCE_INCOMPLETE_MS:-1300}
+      # Stricter barge-in (~240ms of clear speech) so TTS echo/room noise can't cut the assistant off.
+      - BARGE_IN_SPEECH_LEAD_ACTIVE=${BARGE_IN_SPEECH_LEAD_ACTIVE:-12}
+      # More permissive VAD so quieter speech isn't dropped.
+      - VAD_AGGR=${VAD_AGGR:-1}
     depends_on:
       trtllm:
         condition: service_healthy
