@@ -152,6 +152,8 @@ services:
       - BARGE_IN_SPEECH_LEAD_ACTIVE=${BARGE_IN_SPEECH_LEAD_ACTIVE:-12}
       # More permissive VAD so quieter speech isn't dropped.
       - VAD_AGGR=${VAD_AGGR:-1}
+      # Local voice replies were capped at 220 tokens (~150 words) and truncated mid-sentence; raise the ceiling.
+      - LLM_MAX_TOKENS=${VOICE_LLM_MAX_TOKENS:-420}
     depends_on:
       trtllm:
         condition: service_healthy
