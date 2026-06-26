@@ -13,7 +13,9 @@ services:
     environment:
       # Gated HF models: set HF_TOKEN in .env only for the first-time prepare run.
       - HF_TOKEN=${HF_TOKEN:-}
-      - MODEL_HANDLE=${TRTLLM_MODEL_HANDLE:-nvidia/Llama-3.1-8B-Instruct-FP4}
+      - MODEL_HANDLE=${TRTLLM_MODEL_HANDLE:-nvidia/Qwen3-30B-A3B-FP4}
+      # Memory management: cap KV cache (was 0.9 ~83GB) so the LLM fits beside STT + SDXL on one Spark.
+      - TRTLLM_KV_FRACTION=${TRTLLM_KV_FRACTION:-0.5}
       # Offline by default: model weights live in the trtllm_hf_cache volume (populated once via docker-compose.prepare.yml).
       # To re-download, set TRTLLM_HF_HUB_OFFLINE=0 and TRTLLM_SKIP_DOWNLOAD=0 in your .env for one run.
       - HF_HUB_OFFLINE=${TRTLLM_HF_HUB_OFFLINE:-1}
@@ -61,7 +63,7 @@ services:
       start_period: 180s
     environment:
       - LLM_BASE_URL=http://trtllm:8355/v1
-      - LLM_MODEL=nvidia/Llama-3.1-8B-Instruct-FP4
+      - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
       - OLLAMA_EMBED_URL=http://ollama:11434/api/embeddings
       - OLLAMA_EMBED_MODEL=nomic-embed-text
       # Offline: use only local Hugging Face cache (no runtime model download)
@@ -118,7 +120,7 @@ services:
     environment:
       # TensorRT-LLM in compose (OpenAI-compatible); dialogue uses stream=true for TTFT.
       - LLM_URL=http://trtllm:8355/v1/chat/completions
-      - LLM_MODEL=nvidia/Llama-3.1-8B-Instruct-FP4
+      - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
       # Optional: LLM_LOG_PAYLOAD=1 logs full JSON body at WARNING (timing always INFO: VOICE_LLM stream start/done).
       # Nemotron STT (same model as backend live transcript; gated HF — set HF_TOKEN in .env if needed)
       - ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b

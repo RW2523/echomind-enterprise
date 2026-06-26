@@ -23,6 +23,12 @@ def _log_chat_request(url: str, payload: dict, stream: bool) -> None:
     )
 
 
+# Reasoning models (e.g. Qwen3) emit <think> blocks by default — kills voice TTFT.
+# Disabled by default; set LLM_ENABLE_THINKING=1 to re-enable.
+_ENABLE_THINKING = (__import__("os").getenv("LLM_ENABLE_THINKING", "0").strip().lower() in ("1", "true", "yes"))
+_EXTRA = {} if _ENABLE_THINKING else {"chat_template_kwargs": {"enable_thinking": False}}
+
+
 class OpenAICompatLLMStream:
     def __init__(self, url: str, model: str, temperature: float = 0.7, max_tokens: int = 220):
         self.url = url
@@ -38,6 +44,7 @@ class OpenAICompatLLMStream:
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
             "stream": True,
+            **_EXTRA,
         }
         _log_chat_request(self.url, payload, stream=True)
         logger.info(
@@ -118,6 +125,7 @@ class OpenAICompatLLMStream:
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
             "stream": False,
+            **_EXTRA,
         }
         _log_chat_request(self.url, payload, stream=False)
         logger.info(

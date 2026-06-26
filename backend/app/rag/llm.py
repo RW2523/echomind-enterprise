@@ -36,13 +36,19 @@ def _log_chat_request(url: str, payload: dict, stream: bool) -> None:
         )
 
 
+# Reasoning models (e.g. Qwen3) emit <think> blocks by default — slow + noisy for chat/voice.
+# Disabled by default; set LLM_ENABLE_THINKING=1 to re-enable (e.g. for batch report quality).
+_ENABLE_THINKING = (__import__("os").getenv("LLM_ENABLE_THINKING", "0").strip().lower() in ("1", "true", "yes"))
+_EXTRA = {} if _ENABLE_THINKING else {"chat_template_kwargs": {"enable_thinking": False}}
+
+
 class OpenAICompatChat:
     def __init__(self, base_url: str, model: str):
         self.base_url = base_url.rstrip("/")
         self.model = model
 
     async def chat(self, messages, temperature: float, max_tokens: int) -> str:
-        payload={"model":self.model,"messages":messages,"temperature":temperature,"max_tokens":max_tokens,"stream":False}
+        payload={"model":self.model,"messages":messages,"temperature":temperature,"max_tokens":max_tokens,"stream":False, **_EXTRA}
         _log_chat_request(self.base_url, payload, stream=False)
         t0 = time.monotonic()
         async with httpx.AsyncClient(timeout=180) as client:
@@ -68,7 +74,7 @@ class OpenAICompatChat:
 
     async def chat_stream(self, messages, temperature: float, max_tokens: int) -> AsyncIterator[str]:
         """Stream LLM response token-by-token (SSE). Yields content deltas."""
-        payload = {"model": self.model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens, "stream": True}
+        payload = {"model": self.model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens, "stream": True, **_EXTRA}
         _log_chat_request(self.base_url, payload, stream=True)
         t0 = time.monotonic()
         ttft_mono: float | None = None
