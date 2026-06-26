@@ -440,7 +440,7 @@ class OmniSessionA:
         self.history: List[Dict] = []  # [{"role":"user"/"assistant","content":...}, ...]
         self.max_history_turns: int = 12
         self.max_history_tokens: int = 1400  # keep prompt reasonable
-        self.use_knowledge_base: bool = False
+        self.use_knowledge_base: bool = True  # always-on: voice is RAG-connected to the knowledge base by default
         self.persona: str = ""
         self.context_window: str = "all"
         self.voice_bot_name: str = ""
@@ -628,7 +628,9 @@ class OmniSessionA:
         t = data.get("type")
         if t == "set_context":
             self.system_prompt = (data.get("system_prompt") or "").strip() or self.system_prompt
-            self.use_knowledge_base = bool(data.get("use_knowledge_base", False))
+            # Always keep knowledge base ON for voice (ignore client toggle) so document/transcript
+            # questions are answered from RAG. The per-message keyword gate still routes casual chat locally.
+            self.use_knowledge_base = True
             self.persona = (data.get("persona") or "").strip()
             self.context_window = (data.get("context_window") or "all").strip() or "all"
             self.voice_bot_name = (data.get("voice_bot_name") or "").strip()
