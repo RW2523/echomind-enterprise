@@ -113,6 +113,79 @@ def ensure_nemotron_loaded_at_startup() -> None:
         ) from e
 
 
+# ── Accurate final-decode model (Parakeet) ───────────────────────────────────
+# The streaming Nemotron-0.6B is tuned for low-latency partials, not accuracy
+# (it mangles domain terms, e.g. "DoD FMR" -> "DODFMA", "B visa" -> "Pizza").
+# For the FINAL transcript that feeds the LLM we use a more accurate NeMo model
+# (Parakeet-TDT) when VOICE_USE_PARAKEET=1. Live on-screen partials stay on the
+# streaming model. Any failure falls back to the streaming model automatically.
+_parakeet_lock = threading.Lock()
+_parakeet_model: Optional[object] = None
+
+
+def _parakeet_enabled() -> bool:
+    return os.getenv("VOICE_USE_PARAKEET", "0").strip().lower() in ("1", "true", "yes")
+
+
+def _get_parakeet():
+    global _parakeet_model
+    with _parakeet_lock:
+        if _parakeet_model is None:
+            from nemo.collections.asr.models import ASRModel
+            name = os.getenv("VOICE_FINAL_ASR_MODEL", "nvidia/parakeet-tdt-0.6b-v2")
+            logger.info("Voice Parakeet: loading final-decode model=%s", name)
+            t0 = time.monotonic()
+            m = ASRModel.from_pretrained(name)
+            try:
+                m = m.to("cuda")
+            except Exception:
+                pass
+            m.eval()
+            logger.info("Voice Parakeet: ready load_wall_s=%.2f", time.monotonic() - t0)
+            _parakeet_model = m
+        return _parakeet_model
+
+
+def _transcribe_final_parakeet(audio_f32: np.ndarray, sample_rate: int) -> str:
+    import tempfile
+    import wave
+    m = _get_parakeet()
+    pcm16 = (np.clip(audio_f32, -1.0, 1.0) * 32767.0).astype("<i2")
+    fd, path = tempfile.mkstemp(suffix=".wav")
+    os.close(fd)
+    try:
+        with wave.open(path, "wb") as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(int(sample_rate))
+            w.writeframes(pcm16.tobytes())
+        try:
+            out = m.transcribe([path], batch_size=1, verbose=False)
+        except TypeError:
+            out = m.transcribe([path])
+        h = out[0] if out else ""
+        if isinstance(h, (list, tuple)):
+            h = h[0] if h else ""
+        text = getattr(h, "text", h)
+        return (text if isinstance(text, str) else str(text or "")).strip()
+    finally:
+        try:
+            os.remove(path)
+        except Exception:
+            pass
+
+
+def ensure_parakeet_loaded_at_startup() -> None:
+    """Pre-warm the Parakeet final-decode model so the first utterance isn't slow. Non-fatal:
+    on failure the streaming model handles the final decode (fallback in transcribe())."""
+    if not _parakeet_enabled():
+        return
+    try:
+        _get_parakeet()
+    except Exception as e:
+        logger.warning("Voice Parakeet: startup pre-warm failed (%s); will lazy-load / fall back", e)
+
+
 class NemotronUtteranceSTT:
     """Async-friendly utterance STT for OmniSessionA (float32 mono, sample rate from SETTINGS.SR)."""
 
@@ -129,6 +202,14 @@ class NemotronUtteranceSTT:
         t0 = time.monotonic()
 
         def _run() -> str:
+            if _parakeet_enabled():
+                try:
+                    return _transcribe_final_parakeet(audio_f32, self.sample_rate)
+                except Exception as e:
+                    note_stt_error(e)
+                    logger.warning(
+                        "Voice Parakeet final-decode failed (%s); falling back to streaming model", e
+                    )
             return transcribe_utterance_float32(
                 adapter,
                 audio_f32,

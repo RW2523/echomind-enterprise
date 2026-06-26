@@ -154,6 +154,10 @@ services:
       - VAD_AGGR=${VAD_AGGR:-1}
       # Local voice replies were capped at 220 tokens (~150 words) and truncated mid-sentence; raise the ceiling.
       - LLM_MAX_TOKENS=${VOICE_LLM_MAX_TOKENS:-420}
+      # Accurate FINAL transcript (the text that feeds the LLM) via NeMo Parakeet-TDT; fixes domain-term
+      # mishearing ("DoD FMR"->"DODFMA"). Live partials stay on the streaming model. Falls back on error.
+      - VOICE_USE_PARAKEET=${VOICE_USE_PARAKEET:-1}
+      - VOICE_FINAL_ASR_MODEL=${VOICE_FINAL_ASR_MODEL:-nvidia/parakeet-tdt-0.6b-v2}
     depends_on:
       trtllm:
         condition: service_healthy

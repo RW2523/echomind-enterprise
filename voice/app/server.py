@@ -47,6 +47,12 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.exception("Voice service: Nemotron startup load failed")
         raise
+    # Pre-warm the accurate Parakeet final-decode model (if enabled) so the first utterance isn't slow. Non-fatal.
+    try:
+        from .adapters.stt_nemotron import ensure_parakeet_loaded_at_startup
+        await asyncio.to_thread(ensure_parakeet_loaded_at_startup)
+    except Exception:
+        logger.exception("Voice service: Parakeet startup pre-warm failed (non-fatal)")
     watchdog = asyncio.create_task(_stt_fatal_watchdog())
     try:
         yield
