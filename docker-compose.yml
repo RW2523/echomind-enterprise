@@ -148,8 +148,8 @@ services:
       - ENDPOINT_SILENCE_MS=${ENDPOINT_SILENCE_MS:-700}
       - ENDPOINT_SILENCE_COMPLETE_MS=${ENDPOINT_SILENCE_COMPLETE_MS:-550}
       - ENDPOINT_SILENCE_INCOMPLETE_MS=${ENDPOINT_SILENCE_INCOMPLETE_MS:-1300}
-      # Stricter barge-in (~240ms of clear speech) so TTS echo/room noise can't cut the assistant off.
-      - BARGE_IN_SPEECH_LEAD_ACTIVE=${BARGE_IN_SPEECH_LEAD_ACTIVE:-12}
+      # Barge-in balance (~160ms): low enough to interrupt easily, high enough to ignore brief echo/noise.
+      - BARGE_IN_SPEECH_LEAD_ACTIVE=${BARGE_IN_SPEECH_LEAD_ACTIVE:-8}
       # More permissive VAD so quieter speech isn't dropped.
       - VAD_AGGR=${VAD_AGGR:-1}
       # Local voice replies were capped at 220 tokens (~150 words) and truncated mid-sentence; raise the ceiling.
