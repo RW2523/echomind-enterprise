@@ -41,6 +41,36 @@ export async function logout(): Promise<void> {
   try { await fetch(`${API_BASE}/api/auth/logout`, { method: "POST" }); } catch (_) {}
 }
 
+export async function listUsers(): Promise<AuthUser[]> {
+  const r = await fetch(`${API_BASE}/api/auth/users`);
+  if (!r.ok) throw new Error(`list users failed: ${r.status}`);
+  const d = await r.json();
+  return (d.users ?? []) as AuthUser[];
+}
+
+export async function createUser(username: string, password: string, role: string): Promise<AuthUser> {
+  const r = await fetch(`${API_BASE}/api/auth/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, role }),
+  });
+  if (!r.ok) {
+    let msg = "Create failed";
+    try { const e = await r.json(); msg = e.detail || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+  return (await r.json()).user as AuthUser;
+}
+
+export async function deleteUserAccount(username: string): Promise<void> {
+  const r = await fetch(`${API_BASE}/api/auth/users/${encodeURIComponent(username)}`, { method: "DELETE" });
+  if (!r.ok) {
+    let msg = "Delete failed";
+    try { const e = await r.json(); msg = e.detail || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+}
+
 /** docs */
 export async function uploadDocument(file: File): Promise<{ok:boolean; doc_id?:string; chunks?:number}> {
   const fd = new FormData();

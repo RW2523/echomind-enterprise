@@ -47,3 +47,45 @@ def me(request: Request):
     if not payload:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return {"user": {"id": payload.get("sub"), "username": payload.get("username"), "role": payload.get("role")}}
+
+
+# ── RBAC: admin-only user management ─────────────────────────────────────────────
+class CreateUserIn(BaseModel):
+    username: str
+    password: str
+    role: str = "user"
+
+
+def _require_admin(request: Request) -> dict:
+    payload = authmod.user_from_request(request)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if (payload.get("role") or "") != "admin":
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+    return payload
+
+
+@router.get("/users")
+def admin_list_users(request: Request):
+    _require_admin(request)
+    return {"users": authmod.list_users()}
+
+
+@router.post("/users")
+def admin_create_user(request: Request, inp: CreateUserIn):
+    _require_admin(request)
+    role = inp.role if inp.role in ("admin", "user") else "user"
+    try:
+        user = authmod.create_user(inp.username, inp.password, role=role)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"user": user}
+
+
+@router.delete("/users/{username}")
+def admin_delete_user(request: Request, username: str):
+    payload = _require_admin(request)
+    if username == payload.get("username"):
+        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+    authmod.delete_user(username)
+    return {"ok": True, "deleted": username}
