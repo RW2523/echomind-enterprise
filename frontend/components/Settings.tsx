@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AppSettings, PersonaType, PIPER_VOICES, KOKORO_VOICES } from '../types';
 import { getInstalledVoices, downloadVoice, addSampleTranscripts } from '../services/backend';
 import UserManagement from './UserManagement';
+import SecureExport from './SecureExport';
 
 interface PersonaMeta {
   icon: string;
@@ -170,6 +171,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
     <div className="h-full min-h-0 bg-[#0a0c1a]/20 overflow-y-auto overflow-x-hidden">
       <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12 py-2 px-1 sm:px-0 pb-16">
         <UserManagement />
+        <SecureExport />
         <section>
           <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2">Persona Configuration</h3>
           <p className="text-xs text-slate-500 mb-4 sm:mb-6">Choose the AI persona for Knowledge Chat and Voice. Each persona has its own expertise, tone, and guardrails.</p>

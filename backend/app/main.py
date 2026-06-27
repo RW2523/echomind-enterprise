@@ -17,6 +17,7 @@ from .api.routes.transcribe import router as transcribe_router
 from .api.routes.boardroom import router as boardroom_router
 from .api.routes.docgen import router as docgen_router
 from .api.routes.auth import router as auth_router
+from .api.routes.export import router as export_router
 from .core.auth import user_from_request, seed_admin
 from .core.audit import record_activity
 
@@ -220,3 +221,4 @@ app.include_router(transcribe_router, prefix="/api")
 app.include_router(boardroom_router, prefix="/api")
 app.include_router(docgen_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(export_router, prefix="/api")

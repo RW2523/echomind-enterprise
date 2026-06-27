@@ -85,6 +85,23 @@ export async function getUsage(): Promise<UsageSummary> {
   return await r.json() as UsageSummary;
 }
 
+export interface ExportEvaluation {
+  risk_level: string;
+  finding_count: number;
+  findings: { type: string; severity: string; preview: string }[];
+  redacted_text: string;
+  safe_to_export: boolean;
+}
+export async function evaluateExport(text: string): Promise<ExportEvaluation> {
+  const r = await fetch(`${API_BASE}/api/export/evaluate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!r.ok) throw new Error(`export evaluate failed: ${r.status}`);
+  return await r.json() as ExportEvaluation;
+}
+
 /** docs */
 export async function uploadDocument(file: File): Promise<{ok:boolean; doc_id?:string; chunks?:number}> {
   const fd = new FormData();
