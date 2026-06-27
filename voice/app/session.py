@@ -442,6 +442,7 @@ class OmniSessionA:
         self.max_history_turns: int = 12
         self.max_history_tokens: int = 1400  # keep prompt reasonable
         self.use_knowledge_base: bool = True  # always-on: voice is RAG-connected to the knowledge base by default
+        self.kb_namespace: str = ""  # KB namespace (vertical pack); "" = whole KB
         self.persona: str = ""
         self.context_window: str = "all"
         self.voice_bot_name: str = ""
@@ -642,6 +643,7 @@ class OmniSessionA:
             self.use_knowledge_base = True
             self.persona = (data.get("persona") or "").strip()
             self.context_window = (data.get("context_window") or "all").strip() or "all"
+            self.kb_namespace = (data.get("kb_namespace") or data.get("namespace") or "").strip()
             self.voice_bot_name = (data.get("voice_bot_name") or "").strip()
             self.voice_user_name = (data.get("voice_user_name") or "").strip()
             # Wire the voice bot/user names into the profile so they actually take effect (assistant
@@ -1307,6 +1309,7 @@ class OmniSessionA:
                     "use_knowledge_base": True,
                     "advanced_rag": True,
                     "voice_max_tokens": getattr(SETTINGS, "VOICE_RAG_MAX_TOKENS", 640),
+                    "namespace": self.kb_namespace or None,
                 }
                 await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload)
             else:
@@ -1418,6 +1421,7 @@ class OmniSessionA:
                 "use_knowledge_base": True,
                 "advanced_rag": True,
                 "voice_max_tokens": getattr(SETTINGS, "VOICE_RAG_MAX_TOKENS", 640),
+                "namespace": self.kb_namespace or None,
             }
             await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload)
             if reenter_listen_only:

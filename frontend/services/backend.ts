@@ -1,9 +1,13 @@
+import { getActiveNamespace } from '../packs';
+
 export const API_BASE = (import.meta as any).env?.VITE_API_BASE || "";
 
 /** docs */
 export async function uploadDocument(file: File): Promise<{ok:boolean; doc_id?:string; chunks?:number}> {
   const fd = new FormData();
   fd.append("file", file);
+  const ns = getActiveNamespace();
+  if (ns) fd.append("namespace", ns);
   const r = await fetch(`${API_BASE}/api/docs/upload`, { method: "POST", body: fd });
   if (!r.ok) throw new Error(`upload failed: ${r.status}`);
   return await r.json();
@@ -191,7 +195,7 @@ export async function askChat(chatId: string, message: string): Promise<{answer:
   const r = await fetch(`${API_BASE}/api/chat/ask`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, message }),
+    body: JSON.stringify({ chat_id: chatId, message, namespace: getActiveNamespace() || undefined }),
   });
   if (!r.ok) throw new Error(`ask failed: ${r.status}`);
   return await r.json();
@@ -228,6 +232,7 @@ export async function askChatStream(
       advanced_rag: options?.advanced_rag ?? undefined,
       use_knowledge_base: options?.use_knowledge_base ?? undefined,
       source_options: options?.source_options ?? undefined,
+      namespace: getActiveNamespace() || undefined,
     }),
   });
   if (!r.ok) {

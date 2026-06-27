@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { AppView, AppSettings, PersonaType } from './types';
+import { resolvePack } from './packs';
 import { ICONS, COLORS } from './constants';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -16,10 +17,14 @@ import { defaultTranscriptName } from './services/backend';
 
 const SETTINGS_KEY = "echomind_settings";
 
+// Active vertical pack (subdomain or ?vertical=). null on the main app.
+const activePack = resolvePack();
+if (activePack && typeof document !== 'undefined') document.title = activePack.name;
+
 const defaultSettings: AppSettings = {
   voiceName: 'en_US-lessac-medium',
   contextWindow: 'all',
-  persona: PersonaType.FINANCIAL,
+  persona: activePack?.persona ?? PersonaType.FINANCIAL,
   advancedRag: false,
   voiceUseKnowledgeBase: false,
   voiceBotName: '',
@@ -116,7 +121,7 @@ const App: React.FC = () => {
       <Sidebar activeView={activeView} setActiveView={setActiveView} sidebarOpen={sidebarOpen} onCloseSidebar={() => setSidebarOpen(false)} knowledgeChat={knowledgeChat} />
       
       <main className="flex-1 flex flex-col relative z-10 border-l border-white/5 min-w-0 min-h-0 overflow-hidden">
-        <Header activeView={activeView} settings={settings} onMenuClick={() => setSidebarOpen(true)} />
+        <Header activeView={activeView} settings={settings} pack={activePack} onMenuClick={() => setSidebarOpen(true)} />
         <div className="flex-1 min-h-0 overflow-auto flex flex-col overscroll-contain">
           <div className="flex-1 min-h-0 px-3 py-3 sm:px-5 sm:py-5 md:px-6 md:py-5 lg:px-8 lg:py-6 flex flex-col min-w-0">
             <ErrorBoundary key={activeView} label={String(activeView)}>

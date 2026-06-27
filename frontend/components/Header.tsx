@@ -1,14 +1,16 @@
 import React from 'react';
 import { AppView, AppSettings } from '../types';
 import { ICONS } from '../constants';
+import type { VerticalPack } from '../packs';
 
 interface HeaderProps {
   activeView: AppView;
   settings?: AppSettings;  // retained for caller compatibility; not used here
+  pack?: VerticalPack | null;
   onMenuClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ activeView, onMenuClick }) => {
+const Header: React.FC<HeaderProps> = ({ activeView, pack, onMenuClick }) => {
   // NOTE: the Clear-Data button (JSX commented out below) and its handler/state/import were removed
   // as dead code. Re-add deleteAllData + handler if the button is restored. (L37)
   const getTitle = () => {
@@ -37,6 +39,16 @@ const Header: React.FC<HeaderProps> = ({ activeView, onMenuClick }) => {
         )}
         <h2 className="text-base sm:text-lg font-semibold text-white truncate">{getTitle()}</h2>
       </div>
+
+      {pack && (
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: pack.accent }} aria-hidden />
+          <div className="text-right leading-tight hidden sm:block">
+            <div className="text-sm font-semibold text-white">{pack.name}</div>
+            <div className="text-[11px] text-slate-400">{pack.tagline}</div>
+          </div>
+        </div>
+      )}
 
       {/* <div className="flex items-center gap-2 shrink-0">
         <button

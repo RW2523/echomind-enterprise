@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { voiceWsUrl } from "../services/backend";
+import { getActiveNamespace } from "../packs";
 import type { ConversationState } from "../components/Conversation/ChatState";
 import { PersonaType } from "../types";
 import type { AppSettings } from "../types";
@@ -421,6 +422,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
           piper_voice: settings?.voiceName ?? undefined,
           tts_engine: settings?.ttsEngine ?? 'piper',
           kokoro_voice: settings?.kokoroVoice ?? 'af_heart',
+          namespace: getActiveNamespace() || undefined,
           use_knowledge_base: true,
           persona: settings?.persona ?? undefined,
           context_window: settings?.contextWindow ?? undefined,
@@ -676,6 +678,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       piper_voice: settings?.voiceName ?? undefined,
       tts_engine: settings?.ttsEngine ?? 'piper',
       kokoro_voice: settings?.kokoroVoice ?? 'af_heart',
+      namespace: getActiveNamespace() || undefined,
       use_knowledge_base: true,
       persona: settings?.persona ?? undefined,
       context_window: settings?.contextWindow ?? undefined,
