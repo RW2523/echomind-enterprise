@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage, DocumentChunk, AppSettings, PersonaType } from '../types';
 import { ICONS } from '../constants';
+import { resolvePack } from '../packs';
 import Uploader from './Uploader';
 import { askChatStream, listDocuments, deleteDocument, listTranscripts, deleteTranscript, getTranscript, DocListItem, TranscriptListItem, TranscriptDetail, type SourceOptions } from '../services/backend';
 import type { UseKnowledgeChatReturn } from '../hooks/useKnowledgeChat';
@@ -385,6 +386,7 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
   const { messages, setMessages, chatId, newChat, loadChats } = knowledgeChat;
   const personaMeta = getPersonaMeta(settings?.persona);
   const [input, setInput] = useState('');
+  const pack = resolvePack();
   const [busy, setBusy] = useState(false);
   const [sourceOptions, setSourceOptions] = useState<SourceOptions>(DEFAULT_SOURCE_OPTIONS);
   const [documents, setDocuments] = useState<DocListItem[]>([]);
@@ -470,8 +472,8 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
     setSourceOptions(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const send = async () => {
-    const q = input.trim();
+  const send = async (overrideText?: string) => {
+    const q = (typeof overrideText === 'string' ? overrideText : input).trim();
     if (!q || !chatId || busy) return;
     streamBufRef.current = '';
     if (streamRafRef.current != null) {
@@ -736,9 +738,24 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
         <div className="flex-1 min-h-0 overflow-auto p-4 sm:p-5 space-y-4">
           {messages.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-10 px-4 text-center">
-              <span className="text-4xl">{personaMeta.icon}</span>
-              <p className={`text-sm font-semibold ${personaMeta.accent}`}>{personaMeta.label}</p>
-              <p className="text-sm text-slate-400 max-w-md leading-relaxed">{personaMeta.emptyState}</p>
+              <span className="text-4xl">{pack ? pack.icon : personaMeta.icon}</span>
+              <p className={`text-sm font-semibold ${pack ? 'text-accent' : personaMeta.accent}`}>{pack ? pack.content.welcomeTitle : personaMeta.label}</p>
+              <p className="text-sm text-slate-400 max-w-md leading-relaxed">{pack ? pack.content.welcomeBlurb : personaMeta.emptyState}</p>
+              {pack && pack.content.suggestedPrompts.length > 0 && (
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-3 max-w-lg">
+                  {pack.content.suggestedPrompts.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => send(p)}
+                      disabled={busy || !chatId}
+                      className="px-3 py-2 rounded-xl text-xs font-medium bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 disabled:opacity-50 transition-colors"
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              )}
               <p className="text-[11px] text-slate-600 mt-1">Searches both documents and transcripts · cites sources inline</p>
             </div>
           )}
@@ -750,9 +767,9 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
               </div>
               {m.role === 'assistant' && !m.content && busy && messages[messages.length - 1]?.id === m.id ? (
                 <div className="text-sm text-white/60 flex items-center gap-2">
-                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse [animation-delay:0.2s]" />
-                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse [animation-delay:0.4s]" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse [animation-delay:0.2s]" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse [animation-delay:0.4s]" />
                   <span className="ml-1">Thinking...</span>
                 </div>
               ) : m.role === 'assistant' && m.content ? (
@@ -769,13 +786,13 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setChunkModalForId(m.id); }}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-400/50 hover:bg-cyan-500/[0.07] rounded-lg px-3 py-1.5 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:opacity-80 border border-accent/30 hover:border-accent/50 hover:bg-accent/[0.07] rounded-lg px-3 py-1.5 transition-colors"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6M5 6h14M5 10h14" />
                     </svg>
                     Sources
-                    <span className="ml-0.5 px-1.5 py-0 rounded-full bg-cyan-500/20 text-[10px] font-bold">{m.citations.length}</span>
+                    <span className="ml-0.5 px-1.5 py-0 rounded-full bg-accent/20 text-[10px] font-bold">{m.citations.length}</span>
                   </button>
                 </div>
               )}
@@ -820,15 +837,15 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
           <input
             type="text"
             className="flex-1 min-w-0 rounded-xl bg-black/30 border border-white/10 px-4 py-3 min-h-[44px] text-base outline-none focus:border-white/30"
-            placeholder={personaMeta.placeholder}
+            placeholder={pack ? `Ask ${pack.name}…` : personaMeta.placeholder}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') send(); }}
           />
           <button
             type="button"
-            className="rounded-xl px-5 py-3 min-h-[44px] text-sm font-semibold bg-white/10 hover:bg-white/15 disabled:opacity-50 transition-colors touch-manipulation shrink-0"
-            onClick={send}
+            className="rounded-xl px-5 py-3 min-h-[44px] text-sm font-semibold bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25 disabled:opacity-50 transition-colors touch-manipulation shrink-0"
+            onClick={() => send()}
             disabled={busy || !chatId}
           >
             {busy ? 'Thinking...' : 'Send'}
@@ -871,9 +888,9 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
             <div className="flex-1 min-h-0 overflow-auto p-4 space-y-4">
               {previewLoading && (
                 <div className="flex items-center justify-center py-12 text-slate-400">
-                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse mr-2" />
-                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse [animation-delay:0.2s] mr-2" />
-                  <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse [animation-delay:0.4s] mr-2" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse mr-2" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse [animation-delay:0.2s] mr-2" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse [animation-delay:0.4s] mr-2" />
                   <span className="text-sm">Loading…</span>
                 </div>
               )}

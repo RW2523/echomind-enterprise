@@ -15,6 +15,10 @@ export enum PersonaType {
   AI_EXPERT  = 'AI Expert & Manager',
   GENERAL    = 'General Assistant',
   ECHOMIND   = 'EchoMind Guide',
+  CLINICAL   = 'Clinical Assistant',
+  BANKING    = 'Banking Advisor',
+  MEETING    = 'Meeting Facilitator',
+  RETAIL     = 'Retail Advisor',
 }
 
 export interface DocumentChunk {

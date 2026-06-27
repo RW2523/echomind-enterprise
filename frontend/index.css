@@ -2,3 +2,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Per-vertical theme defaults (main app = cyan/violet). packs.ts overrides these on :root. */
+:root {
+  --accent-rgb: 34 211 238;    /* cyan-400  */
+  --accent2-rgb: 139 92 246;   /* violet-500 */
+  --glow-1: rgba(34, 211, 238, 0.10);
+  --glow-2: rgba(139, 92, 246, 0.10);
+}

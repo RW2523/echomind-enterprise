@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AppView } from '../types';
 import { ICONS } from '../constants';
+import { resolvePack } from '../packs';
 import { getStorageUsage, StorageUsage } from '../services/backend';
 import type { UseKnowledgeChatReturn } from '../hooks/useKnowledgeChat';
 
@@ -33,6 +34,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpen = false, onCloseSidebar, knowledgeChat }) => {
+  const pack = resolvePack();
   const handleNav = (view: AppView) => {
     setActiveView(view);
     onCloseSidebar?.();
@@ -67,12 +69,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
   const capacityStr = capacityBytes > 0 ? formatBytes(capacityBytes) : null;
 
   
+  const nl = pack?.content.navLabels;
   const navItems = [
-    { id: AppView.KNOWLEDGE_CHAT, label: 'Knowledge Chat', icon: ICONS.Chat },
-    { id: AppView.TRANSCRIPTION, label: 'Live Transcript', icon: ICONS.Transcript },
-    { id: AppView.VOICE_CONVERSATION, label: 'Conversation', icon: ICONS.Mic },
-    { id: AppView.DOCUMENT_STUDIO, label: 'Document Studio', icon: ICONS.File },
-    { id: AppView.SETTINGS, label: 'Settings', icon: ICONS.Settings }
+    { id: AppView.KNOWLEDGE_CHAT, label: nl?.[AppView.KNOWLEDGE_CHAT] ?? 'Knowledge Chat', icon: ICONS.Chat },
+    { id: AppView.TRANSCRIPTION, label: nl?.[AppView.TRANSCRIPTION] ?? 'Live Transcript', icon: ICONS.Transcript },
+    { id: AppView.VOICE_CONVERSATION, label: nl?.[AppView.VOICE_CONVERSATION] ?? 'Conversation', icon: ICONS.Mic },
+    { id: AppView.DOCUMENT_STUDIO, label: nl?.[AppView.DOCUMENT_STUDIO] ?? 'Document Studio', icon: ICONS.File },
+    { id: AppView.SETTINGS, label: nl?.[AppView.SETTINGS] ?? 'Settings', icon: ICONS.Settings }
   ];
 
   const sidebarContent = (
@@ -85,12 +88,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
           className="w-8 h-8 md:w-9 md:h-9 rounded-xl shrink-0"
           aria-label="EchoMind"
         >
-          <rect width="36" height="36" rx="8" fill="#06b6d4" />
+          <rect width="36" height="36" rx="8" fill={pack?.accent ?? '#06b6d4'} />
           <text x="18" y="25" textAnchor="middle" fill="#05070a" fontSize="20" fontFamily="system-ui, sans-serif" fontWeight="bold">E</text>
         </svg>
         <div className="hidden md:block min-w-0">
-          <h1 className="text-base font-bold tracking-tight text-white leading-none truncate">EchoMind</h1>
-          <p className="text-[10px] text-cyan-400/80 uppercase tracking-widest font-semibold mt-0.5">by Ajace AI</p>
+          <h1 className="text-base font-bold tracking-tight text-white leading-none truncate">{pack?.name ?? 'EchoMind'}</h1>
+          <p className="text-[10px] text-accent/80 uppercase tracking-widest font-semibold mt-0.5">{pack?.tagline ?? 'by Ajace AI'}</p>
         </div>
         <div className="flex-1 md:hidden" />
         {onCloseSidebar && (
@@ -108,11 +111,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
             onClick={() => handleNav(item.id)}
             className={`w-full flex items-center justify-center md:justify-start gap-3 px-2 py-3 md:px-3 md:py-3 rounded-xl transition-all duration-200 group min-h-[44px] touch-manipulation ${
               activeView === item.id 
-                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_20px_rgba(34,211,238,0.05)]' 
+                ? 'bg-accent/10 text-accent border border-accent/20 shadow-[0_0_20px_rgba(255,255,255,0.04)]'
                 : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'
             }`}
           >
-            <item.icon className={`w-5 h-5 shrink-0 ${activeView === item.id ? 'text-cyan-400' : 'group-hover:text-white'}`} />
+            <item.icon className={`w-5 h-5 shrink-0 ${activeView === item.id ? 'text-accent' : 'group-hover:text-white'}`} />
             <span className="hidden md:block font-medium text-sm truncate">{item.label}</span>
           </button>
         ))}
@@ -125,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
             <button
               type="button"
               onClick={() => knowledgeChat.newChat()}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-cyan-400 hover:bg-cyan-500/10 border border-cyan-500/20 transition-colors touch-manipulation"
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-accent hover:bg-accent/10 border border-accent/20 transition-colors touch-manipulation"
             >
               <span className="w-3.5 h-3.5 flex items-center justify-center">+</span>
               <span className="hidden md:inline">New chat</span>
@@ -142,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
                   onClick={() => knowledgeChat.selectChat(chat.id)}
                   className={`flex-1 min-w-0 text-left px-2 py-2 rounded-lg text-sm truncate touch-manipulation ${
                     knowledgeChat.chatId === chat.id
-                      ? 'bg-cyan-500/15 text-cyan-300'
+                      ? 'bg-accent/15 text-accent'
                       : 'text-slate-300 hover:text-white'
                   }`}
                   title={chat.title}
@@ -170,7 +173,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
           <p className="text-xs text-slate-500 mb-2">Usage</p>
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div
-              className="bg-cyan-400 h-full shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-500"
+              className="bg-accent h-full transition-all duration-500"
               style={{ width: `${ratio * 100}%` }}
             />
           </div>

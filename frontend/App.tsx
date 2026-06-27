@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { AppView, AppSettings, PersonaType } from './types';
-import { resolvePack } from './packs';
+import { resolvePack, applyPackTheme } from './packs';
 import { ICONS, COLORS } from './constants';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -20,6 +20,7 @@ const SETTINGS_KEY = "echomind_settings";
 // Active vertical pack (subdomain or ?vertical=). null on the main app.
 const activePack = resolvePack();
 if (activePack && typeof document !== 'undefined') document.title = activePack.name;
+applyPackTheme();
 
 const defaultSettings: AppSettings = {
   voiceName: 'en_US-lessac-medium',
@@ -115,8 +116,8 @@ const App: React.FC = () => {
   return (
     <div className="flex h-full w-full bg-[#05070a] text-slate-200 overflow-hidden" style={{ height: '100dvh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
       {/* Dynamic Background Glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none z-0" aria-hidden />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none z-0" aria-hidden />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none z-0" style={{ backgroundColor: 'var(--glow-1)' }} aria-hidden />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none z-0" style={{ backgroundColor: 'var(--glow-2)' }} aria-hidden />
 
       <Sidebar activeView={activeView} setActiveView={setActiveView} sidebarOpen={sidebarOpen} onCloseSidebar={() => setSidebarOpen(false)} knowledgeChat={knowledgeChat} />
       

@@ -9,7 +9,13 @@ export default {
     "./utils/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        // Per-vertical accent, driven by CSS vars set from the active pack (see packs.ts / index.css).
+        accent: 'rgb(var(--accent-rgb) / <alpha-value>)',
+        accent2: 'rgb(var(--accent2-rgb) / <alpha-value>)',
+      },
+    },
   },
   plugins: [],
 };
