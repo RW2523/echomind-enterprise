@@ -203,4 +203,11 @@ class Settings(BaseSettings):
     # Max concurrent LLM calls for section/chunk summarization during ingestion.
     RAG_CONTEXTUAL_SUMMARY_CONCURRENCY: int = int(os.getenv("RAG_CONTEXTUAL_SUMMARY_CONCURRENCY", "3"))
 
+    # ── Auth (Phase 0b) — opt-in. AUTH_ENABLED=0 (default) keeps the app open (demo unaffected). ──
+    AUTH_ENABLED: bool = os.getenv("AUTH_ENABLED", "0").lower() in ("1", "true", "yes")
+    AUTH_SECRET: str = os.getenv("AUTH_SECRET", "")  # HS256 signing key; auto-generated + persisted under DATA_DIR if empty
+    AUTH_TOKEN_TTL_MIN: int = int(os.getenv("AUTH_TOKEN_TTL_MIN", "720"))  # token lifetime in minutes (12h default)
+    AUTH_ADMIN_USER: str = os.getenv("AUTH_ADMIN_USER", "admin")
+    AUTH_ADMIN_PASSWORD: str = os.getenv("AUTH_ADMIN_PASSWORD", "")  # if set, (re)seed this admin password on boot
+
 settings = Settings()

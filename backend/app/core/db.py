@@ -7,6 +7,8 @@ def init_db():
     with sqlite3.connect(settings.DB_PATH) as conn:
         conn.execute("CREATE TABLE IF NOT EXISTS documents(id TEXT PRIMARY KEY, filename TEXT, filetype TEXT, created_at TEXT, meta_json TEXT)")
         conn.execute("CREATE TABLE IF NOT EXISTS chunks(id TEXT PRIMARY KEY, doc_id TEXT, chunk_index INTEGER, text TEXT, source_json TEXT)")
+        # Phase 0b auth: local user accounts (used only when AUTH_ENABLED).
+        conn.execute("CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user', created_at TEXT)")
         try:
             conn.execute("ALTER TABLE chunks ADD COLUMN contextualized_text TEXT")
         except Exception:

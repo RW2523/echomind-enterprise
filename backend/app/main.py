@@ -6,6 +6,7 @@ import threading
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import httpx
 from .core.config import settings
 from .core.db import init_db
@@ -14,6 +15,8 @@ from .api.routes.chat import router as chat_router
 from .api.routes.transcribe import router as transcribe_router
 from .api.routes.boardroom import router as boardroom_router
 from .api.routes.docgen import router as docgen_router
+from .api.routes.auth import router as auth_router
+from .core.auth import user_from_request, seed_admin
 
 # So Docker logs (stdout) show app logs including RAG intent debug
 logging.basicConfig(
@@ -113,6 +116,7 @@ async def lifespan(app: FastAPI):
 
 
 init_db()
+seed_admin()  # ensure an admin login exists when auth is (or will be) enabled; no-op otherwise
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
 app.add_middleware(
@@ -122,6 +126,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Auth guard (Phase 0b) — enforced only when AUTH_ENABLED; pass-through otherwise. ──
+# HTTP-only (WebSocket endpoints are not gated here yet). Login/config stay public.
+_AUTH_PUBLIC_PATHS = {"/health", "/api/auth/login", "/api/auth/config", "/api/auth/logout", "/api/client-error"}
+
+
+@app.middleware("http")
+async def _auth_guard(request: Request, call_next):
+    if settings.AUTH_ENABLED and request.method != "OPTIONS":
+        path = request.url.path
+        if path.startswith("/api/") and path not in _AUTH_PUBLIC_PATHS:
+            if not user_from_request(request):
+                return JSONResponse({"detail": "Not authenticated"}, status_code=401)
+    return await call_next(request)
 
 @app.get("/health")
 def health():
@@ -161,3 +179,4 @@ app.include_router(chat_router, prefix="/api")
 app.include_router(transcribe_router, prefix="/api")
 app.include_router(boardroom_router, prefix="/api")
 app.include_router(docgen_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
