@@ -210,5 +210,6 @@ class Settings(BaseSettings):
     AUTH_ADMIN_USER: str = os.getenv("AUTH_ADMIN_USER", "admin")
     AUTH_ADMIN_PASSWORD: str = os.getenv("AUTH_ADMIN_PASSWORD", "")  # if set, (re)seed this admin password on boot
     CORS_ALLOW_ORIGINS: str = os.getenv("CORS_ALLOW_ORIGINS", "*")  # comma-separated origins; "*" = open (default, demo)
+    RATE_LIMIT_PER_MIN: int = int(os.getenv("RATE_LIMIT_PER_MIN", "0"))  # per-IP API requests/min; 0 = off (default)
 
 settings = Settings()

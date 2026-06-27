@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import threading
+import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -160,6 +161,25 @@ async def _activity_log(request: Request, call_next):
     except Exception:
         pass
     return response
+
+
+# ── Per-IP rate limit (token bucket) — opt-in via RATE_LIMIT_PER_MIN; 0 = off (default). ──
+_RL_BUCKETS: dict = {}  # ip -> [tokens, last_monotonic]
+
+
+@app.middleware("http")
+async def _rate_limit(request: Request, call_next):
+    rpm = settings.RATE_LIMIT_PER_MIN
+    if rpm > 0 and request.url.path.startswith("/api/") and request.url.path != "/api/auth/config":
+        ip = request.client.host if request.client else "?"
+        now = time.monotonic()
+        tokens, last = _RL_BUCKETS.get(ip, (float(rpm), now))
+        tokens = min(float(rpm), tokens + (now - last) * (rpm / 60.0))
+        if tokens < 1.0:
+            _RL_BUCKETS[ip] = (tokens, now)
+            return JSONResponse({"detail": "Rate limit exceeded — please slow down."}, status_code=429)
+        _RL_BUCKETS[ip] = (tokens - 1.0, now)
+    return await call_next(request)
 
 @app.get("/health")
 def health():
