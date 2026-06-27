@@ -17,6 +17,7 @@ from .api.routes.boardroom import router as boardroom_router
 from .api.routes.docgen import router as docgen_router
 from .api.routes.auth import router as auth_router
 from .core.auth import user_from_request, seed_admin
+from .core.audit import record_activity
 
 # So Docker logs (stdout) show app logs including RAG intent debug
 logging.basicConfig(
@@ -119,10 +120,11 @@ init_db()
 seed_admin()  # ensure an admin login exists when auth is (or will be) enabled; no-op otherwise
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
+_cors_origins = [o.strip() for o in (settings.CORS_ALLOW_ORIGINS or "*").split(",") if o.strip()] or ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=_cors_origins,
+    allow_credentials=(_cors_origins != ["*"]),
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -140,6 +142,24 @@ async def _auth_guard(request: Request, call_next):
             if not user_from_request(request):
                 return JSONResponse({"detail": "Not authenticated"}, status_code=401)
     return await call_next(request)
+
+
+# ── Activity log (audit view + usage metering) — best-effort; logs /api mutations + logins. ──
+_ACTIVITY_EXCLUDE = {"/api/auth/config", "/api/client-error"}
+
+
+@app.middleware("http")
+async def _activity_log(request: Request, call_next):
+    response = await call_next(request)
+    try:
+        path = request.url.path
+        if path.startswith("/api/") and request.method in ("POST", "PUT", "DELETE", "PATCH") and path not in _ACTIVITY_EXCLUDE:
+            payload = user_from_request(request)
+            ip = request.client.host if request.client else ""
+            record_activity((payload or {}).get("username"), (payload or {}).get("role"), request.method, path, response.status_code, ip)
+    except Exception:
+        pass
+    return response
 
 @app.get("/health")
 def health():

@@ -9,6 +9,12 @@ def init_db():
         conn.execute("CREATE TABLE IF NOT EXISTS chunks(id TEXT PRIMARY KEY, doc_id TEXT, chunk_index INTEGER, text TEXT, source_json TEXT)")
         # Phase 0b auth: local user accounts (used only when AUTH_ENABLED).
         conn.execute("CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user', created_at TEXT)")
+        # Phase 0b: activity log — powers the audit view + usage metering (admin only).
+        conn.execute("CREATE TABLE IF NOT EXISTS activity_log(id TEXT PRIMARY KEY, ts TEXT, username TEXT, role TEXT, method TEXT, path TEXT, status INTEGER, ip TEXT)")
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_activity_ts ON activity_log(ts)")
+        except Exception:
+            pass
         try:
             conn.execute("ALTER TABLE chunks ADD COLUMN contextualized_text TEXT")
         except Exception:

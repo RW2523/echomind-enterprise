@@ -71,6 +71,20 @@ export async function deleteUserAccount(username: string): Promise<void> {
   }
 }
 
+export interface ActivityEvent { ts: string; username: string; role: string; method: string; path: string; status: number; ip: string; }
+export async function getAudit(): Promise<ActivityEvent[]> {
+  const r = await fetch(`${API_BASE}/api/auth/audit`);
+  if (!r.ok) throw new Error(`audit failed: ${r.status}`);
+  return ((await r.json()).events ?? []) as ActivityEvent[];
+}
+
+export interface UsageSummary { total_events: number; by_user: { username: string; events: number; last: string }[]; }
+export async function getUsage(): Promise<UsageSummary> {
+  const r = await fetch(`${API_BASE}/api/auth/usage`);
+  if (!r.ok) throw new Error(`usage failed: ${r.status}`);
+  return await r.json() as UsageSummary;
+}
+
 /** docs */
 export async function uploadDocument(file: File): Promise<{ok:boolean; doc_id?:string; chunks?:number}> {
   const fd = new FormData();

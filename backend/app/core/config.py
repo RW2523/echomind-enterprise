@@ -209,5 +209,6 @@ class Settings(BaseSettings):
     AUTH_TOKEN_TTL_MIN: int = int(os.getenv("AUTH_TOKEN_TTL_MIN", "720"))  # token lifetime in minutes (12h default)
     AUTH_ADMIN_USER: str = os.getenv("AUTH_ADMIN_USER", "admin")
     AUTH_ADMIN_PASSWORD: str = os.getenv("AUTH_ADMIN_PASSWORD", "")  # if set, (re)seed this admin password on boot
+    CORS_ALLOW_ORIGINS: str = os.getenv("CORS_ALLOW_ORIGINS", "*")  # comma-separated origins; "*" = open (default, demo)
 
 settings = Settings()

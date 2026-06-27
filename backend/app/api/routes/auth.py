@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from ...core.config import settings
 from ...core import auth as authmod
+from ...core import audit as auditmod
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -89,3 +90,17 @@ def admin_delete_user(request: Request, username: str):
         raise HTTPException(status_code=400, detail="You cannot delete your own account")
     authmod.delete_user(username)
     return {"ok": True, "deleted": username}
+
+
+@router.get("/audit")
+def admin_audit(request: Request):
+    """Admin-only: recent activity (who did what)."""
+    _require_admin(request)
+    return {"events": auditmod.recent_activity(150)}
+
+
+@router.get("/usage")
+def admin_usage(request: Request):
+    """Admin-only: usage metering summary (per-user request counts)."""
+    _require_admin(request)
+    return auditmod.usage_summary()

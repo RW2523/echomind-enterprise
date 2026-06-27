@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAuthConfig, getMe, listUsers, createUser, deleteUserAccount, AuthUser } from '../services/backend';
+import { getAuthConfig, getMe, listUsers, createUser, deleteUserAccount, getAudit, getUsage, AuthUser, ActivityEvent, UsageSummary } from '../services/backend';
 
 /** Admin-only account management. Renders nothing unless auth is enabled AND the current user is an admin. */
 const UserManagement: React.FC = () => {
@@ -11,8 +11,14 @@ const UserManagement: React.FC = () => {
   const [role, setRole] = useState('user');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [audit, setAudit] = useState<ActivityEvent[]>([]);
+  const [usage, setUsage] = useState<UsageSummary | null>(null);
 
-  const refresh = async () => { try { setUsers(await listUsers()); } catch (_) {} };
+  const refresh = async () => {
+    try { setUsers(await listUsers()); } catch (_) {}
+    try { setUsage(await getUsage()); } catch (_) {}
+    try { setAudit(await getAudit()); } catch (_) {}
+  };
 
   useEffect(() => {
     (async () => {
@@ -74,6 +80,37 @@ const UserManagement: React.FC = () => {
         <button type="button" onClick={add} disabled={busy || !u || !p} className="rounded-xl px-4 py-2 text-sm font-semibold bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25 disabled:opacity-50 transition-colors">Add</button>
       </div>
       {err && <p className="text-xs text-red-400">{err}</p>}
+
+      {usage && (
+        <div className="border-t border-white/10 pt-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Usage · {usage.total_events} events</h4>
+          <div className="flex flex-col gap-1">
+            {usage.by_user.slice(0, 8).map((row) => (
+              <div key={row.username} className="flex items-center justify-between text-xs text-slate-400">
+                <span className="truncate">{row.username}</span>
+                <span className="text-slate-500">{row.events}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {audit.length > 0 && (
+        <div className="border-t border-white/10 pt-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Recent activity</h4>
+          <div className="flex flex-col gap-1 max-h-56 overflow-y-auto">
+            {audit.slice(0, 60).map((e, i) => (
+              <div key={i} className="flex items-center gap-2 text-[11px] text-slate-500 font-mono">
+                <span className="text-slate-600 shrink-0">{(e.ts || '').slice(5, 16).replace('T', ' ')}</span>
+                <span className="text-slate-400 shrink-0 w-16 truncate">{e.username}</span>
+                <span className="shrink-0 w-10">{e.method}</span>
+                <span className="truncate">{e.path}</span>
+                <span className={`ml-auto shrink-0 ${e.status >= 400 ? 'text-red-400' : 'text-slate-600'}`}>{e.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
