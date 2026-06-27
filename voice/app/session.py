@@ -510,6 +510,7 @@ class OmniSessionA:
                 return
             chunk = int(sr * 0.22)
             i = 0
+            t0 = time.monotonic()
             while i < y.size:
                 if my_gen != self.generation_id:
                     return
@@ -523,6 +524,13 @@ class OmniSessionA:
                     "pcm16_raw": float32_to_pcm16_bytes(part.astype(np.float32))
                 })
                 await asyncio.sleep(0.0)
+            # We stream the intro fast, but the client plays it in real time. Keep barge-in
+            # disabled (_is_playing_intro stays True) until playback actually finishes, otherwise
+            # the intro's own speaker echo trips a false barge-in and cuts it off mid-sentence.
+            total_dur = (y.size / float(sr)) if sr else 0.0
+            remaining = total_dur - (time.monotonic() - t0) + 0.4
+            if remaining > 0 and my_gen == self.generation_id:
+                await asyncio.sleep(remaining)
         finally:
             self._is_playing_intro = False
             if self._assistant_is_speaking and self.generation_id == my_gen:
