@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { AppView, AppSettings, PersonaType } from './types';
 import { resolvePack, applyPackTheme } from './packs';
+import { VERTICAL_EXPERIENCES } from './verticals/registry';
 import { ICONS, COLORS } from './constants';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -132,6 +133,12 @@ const App: React.FC = () => {
   }
   if (auth.required && !auth.user) {
     return <Login onSuccess={(u) => setAuth({ checked: true, required: true, user: u })} />;
+  }
+
+  // Bespoke per-vertical experience fully replaces the standard app when one is registered for this pack.
+  const VerticalExperience = activePack ? VERTICAL_EXPERIENCES[activePack.id] : undefined;
+  if (VerticalExperience) {
+    return <VerticalExperience />;
   }
 
   return (
