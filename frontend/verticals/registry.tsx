@@ -1,5 +1,4 @@
 import React from 'react';
-import BankExperience from './BankExperience';
 import HealthExperience from './HealthExperience';
 import MeetingsExperience from './MeetingsExperience';
 import LawExperience from './LawExperience';
@@ -11,7 +10,6 @@ import RetailExperience from './RetailExperience';
  * standard themed app.
  */
 export const VERTICAL_EXPERIENCES: Record<string, React.FC> = {
-  bank: BankExperience,
   health: HealthExperience,
   meetings: MeetingsExperience,
   law: LawExperience,
