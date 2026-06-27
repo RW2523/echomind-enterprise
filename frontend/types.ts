@@ -73,7 +73,8 @@ export type AnalysisLabel =
   | 'Contradicted'
   | 'Unverified'
   | 'Violating'
-  | 'Risky Statement';
+  | 'Risky Statement'
+  | 'Relevant';
 
 export interface SourceChunkPreview {
   chunk_id: string;

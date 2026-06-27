@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { transcribeWsUrl, getTranscriptTags, updateTranscript, createBoardroomSession, uploadBoardroomChunk, finalizeBoardroomSession, getBoardroomSession, linkBoardroomTranscript } from "../services/backend";
 import type { AnalysisCard, TranscriptSegment, BoardroomSession } from "../types";
+import { getActiveNamespace } from "../packs";
 
 /** Kyutai STT sample rate (24kHz). Backend sends this in ready message. */
 const KYUTAI_SAMPLE_RATE = 24000;
@@ -399,6 +400,8 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
           language: "en",
           name: name || undefined,
           location: location || undefined,
+          namespace: getActiveNamespace() || undefined,
+          analysis_always_surface: true,
         })
       );
 

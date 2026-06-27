@@ -14,7 +14,7 @@ from typing import Optional
 
 from ..core.config import settings
 from ..core.db import get_conn
-from ..rag.index import index as faiss_index
+from ..rag.index import index as faiss_index, set_active_namespace
 from ..rag.llm import OpenAICompatChat
 from ..utils.ids import new_id, now_iso
 
@@ -22,6 +22,16 @@ logger = logging.getLogger(__name__)
 
 ANALYSIS_LABELS = {"Supported", "Contradicted", "Unverified", "Violating", "Risky Statement"}
 CONFIDENCE_THRESHOLD = 60
+
+# Per-vertical "rule packs": domain guidance appended to the system prompt when a namespace is
+# active, so the live check flags domain-specific risks (the differentiator).
+_VERTICAL_RULES = {
+    "health": "\n\nDOMAIN FOCUS (clinical): prioritize flagging drug interactions, contraindications, incorrect dosing, and missed screening / guideline deviations against the references.",
+    "law": "\n\nDOMAIN FOCUS (legal): prioritize flagging risky, missing, or one-sided clauses, conflicts, and missing terms against the references.",
+    "bank": "\n\nDOMAIN FOCUS (banking): prioritize flagging missing required disclosures (KYC/AML), mis-selling, and suitability issues against the references.",
+    "meetings": "\n\nDOMAIN FOCUS (meetings): prioritize surfacing decisions, commitments, and action items, and flag anything that contradicts company policy in the references.",
+    "retail": "\n\nDOMAIN FOCUS (retail): prioritize flagging inaccurate product, price, warranty, or financing claims against the catalog references.",
+}
 
 _llm: Optional[OpenAICompatChat] = None
 
@@ -103,6 +113,8 @@ async def analyze_segment(
     segment_id: str,
     session_id: Optional[str] = None,
     transcript_id: Optional[str] = None,
+    namespace: Optional[str] = None,
+    always_surface: bool = False,
 ) -> Optional[AnalysisResult]:
     """
     Analyze a finalized transcript segment against the RAG knowledge base.
@@ -118,6 +130,9 @@ async def analyze_segment(
         return None
 
     logger.info("Silent Assistant: analyzing segment [%s] (%d words): %.80s…", segment_id, word_count, text)
+
+    # Scope retrieval to the active vertical's KB; "" / None -> whole KB (unchanged behavior).
+    set_active_namespace(namespace)
 
     try:
         # Search uploaded documents only (not transcript chunks) so doc recall isn't diluted
@@ -196,7 +211,7 @@ async def analyze_segment(
         raw = await asyncio.wait_for(
             llm.chat(
                 [
-                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "system", "content": _SYSTEM_PROMPT + _VERTICAL_RULES.get((namespace or "").strip(), "")},
                     {"role": "user", "content": user_msg},
                 ],
                 temperature=0.1,
@@ -236,15 +251,22 @@ async def analyze_segment(
         segment_id, label, confidence,
     )
 
-    if label == "None" or label not in ANALYSIS_LABELS:
-        logger.info("Silent Assistant: label %r not actionable for [%s] — skipping", label, segment_id)
-        return None
-    if confidence < CONFIDENCE_THRESHOLD:
-        logger.info(
-            "Silent Assistant: confidence %.0f < %d for [%s] — skipping",
-            confidence, CONFIDENCE_THRESHOLD, segment_id,
-        )
-        return None
+    flagged = label in ANALYSIS_LABELS and confidence >= CONFIDENCE_THRESHOLD
+    if not flagged:
+        if always_surface and source_chunks:
+            # Parakeet-style: even when nothing is flagged, surface the relevant KB material as an
+            # info card so every paragraph instantly shows the matching reference data.
+            label = "Relevant"
+            if not explanation:
+                explanation = "Related reference material found in the knowledge base."
+            if confidence <= 0:
+                confidence = 50.0
+        else:
+            logger.info(
+                "Silent Assistant: not actionable (label=%r conf=%.0f) for [%s] — skipping",
+                label, confidence, segment_id,
+            )
+            return None
 
     # Narrow source_chunks to only what the LLM cited
     if relevant_ids:

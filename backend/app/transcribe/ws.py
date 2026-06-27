@@ -102,7 +102,7 @@ class _Ctx:
         "asr_stream_lock", "pcm_queue",
         "periodic_auto_store_task", "consumer_task", "analysis_tasks",
         "emitted_paragraph_ids", "dropped_frames", "last_overload_notify", "store_lock",
-        "analysis_sem",
+        "analysis_sem", "kb_namespace", "analysis_always",
     )
 
     def __init__(self, ws: WebSocket, loop, asr_adapter, stream_ctx):
@@ -127,6 +127,8 @@ class _Ctx:
         self.mode: str = "transcribe"
         self.language: str = "en"
         self.client_sample_rate: Optional[int] = None
+        self.kb_namespace: str = ""          # active vertical KB namespace ("" = whole KB)
+        self.analysis_always: bool = False   # Parakeet-style: always surface relevant KB info per paragraph
 
         self.asr_stream_lock: asyncio.Lock = asyncio.Lock()
         self.pcm_queue: asyncio.Queue = asyncio.Queue(
@@ -323,6 +325,8 @@ async def _run_segment_analysis(ctx: _Ctx, paragraph_id: str, paragraph_text: st
                 segment_id=paragraph_id,
                 session_id=ctx.session_id,
                 transcript_id=ctx.transcript_id,
+                namespace=ctx.kb_namespace,
+                always_surface=ctx.analysis_always,
             )
         if result is not None:
             await _send(ctx.ws, result.to_ws_payload())
@@ -411,6 +415,8 @@ async def _handle_start(ctx: _Ctx, data: dict) -> None:
         ctx.language = data.get("language", "en")
         ctx.auto_store = data.get("auto_store", settings.ECHOMIND_AUTO_STORE_DEFAULT)
         ctx.client_sample_rate = data.get("sample_rate")
+        ctx.kb_namespace = (data.get("namespace") or "").strip()
+        ctx.analysis_always = bool(data.get("analysis_always_surface", False))
         ctx.last_auto_stored_length = 0
         ctx.interval_buffer.clear()
         _drain_pcm_queue(ctx)

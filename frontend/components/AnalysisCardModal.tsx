@@ -8,6 +8,7 @@ export const LABEL_CONFIG: Record<AnalysisLabel, { bg: string; border: string; t
   Unverified:        { bg: 'bg-yellow-500/10',  border: 'border-yellow-400/40',  text: 'text-yellow-300',  badge: 'bg-yellow-500/20 text-yellow-300',  icon: '?' },
   Violating:         { bg: 'bg-orange-600/10',  border: 'border-orange-500/40',  text: 'text-orange-300',  badge: 'bg-orange-500/20 text-orange-300',  icon: '⚠' },
   'Risky Statement': { bg: 'bg-amber-500/10',   border: 'border-amber-400/40',   text: 'text-amber-300',   badge: 'bg-amber-500/20 text-amber-300',   icon: '⚡' },
+  Relevant:          { bg: 'bg-cyan-500/10',    border: 'border-cyan-500/40',    text: 'text-cyan-300',    badge: 'bg-cyan-500/20 text-cyan-300',    icon: 'ℹ' },
 };
 
 interface AnalysisCardModalProps {
