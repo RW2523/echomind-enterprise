@@ -157,6 +157,11 @@ def root():
 
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
+    # Auth gate (Phase 0b, opt-in via VOICE_AUTH_ENABLED): validate the backend session cookie.
+    from .auth_check import auth_enabled, valid_token
+    if auth_enabled() and not valid_token(ws.cookies.get("echomind_token", "")):
+        await ws.close(code=1008)
+        return
     await ws.accept()
     sess = OmniSessionA(ws)
     await sess.start(str(uuid.uuid4()))

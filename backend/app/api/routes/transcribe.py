@@ -122,6 +122,13 @@ def list_transcripts(since: str | None = None, last_hours: float | None = None):
 
 @router.websocket("/ws")
 async def ws(ws: WebSocket):
+    # Auth gate (Phase 0b): when enabled, require a valid session cookie on the WS handshake.
+    from ...core.config import settings as _settings
+    if _settings.AUTH_ENABLED:
+        from ...core.auth import decode_token
+        if not decode_token(ws.cookies.get("echomind_token", "")):
+            await ws.close(code=1008)
+            return
     await ws_handler(ws)
 
 class TagsIn(BaseModel):
