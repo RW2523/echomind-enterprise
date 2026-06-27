@@ -219,10 +219,28 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
         </section> */}
 
         <section>
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Voice & Audio (Piper TTS)</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Voice & Audio</h3>
           <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 space-y-6">
+            <div className="flex flex-col gap-3">
+              <label className="text-sm font-bold text-slate-300">TTS Engine</label>
+              <p className="text-xs text-slate-500 -mt-2">Speech engine for Voice Conversation. <b>Kokoro</b> sounds more natural; <b>Piper</b> is fastest.</p>
+              <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-white/5 max-w-xs">
+                {([{ id: 'piper', label: 'Piper (fast)' }, { id: 'kokoro', label: 'Kokoro (natural)' }] as const).map((e) => (
+                  <button
+                    key={e.id}
+                    type="button"
+                    onClick={() => update('ttsEngine', e.id)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                      (settings.ttsEngine ?? 'piper') === e.id ? 'bg-violet-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    {e.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="flex flex-col gap-4">
-              <label className="text-sm font-bold text-slate-300">Piper Voice (en_US)</label>
+              <label className="text-sm font-bold text-slate-300">Piper Voice (en_US) — used when Piper is selected</label>
               <p className="text-xs text-slate-500 -mt-2">Select the TTS voice for Voice Conversation. The chosen voice is downloaded automatically when selected.</p>
               {voicesLoadError && (
                 <p className="text-xs text-amber-400">Voice server: {voicesLoadError}. You can still select a voice; it will be downloaded when the server is available.</p>

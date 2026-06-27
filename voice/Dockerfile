@@ -4,8 +4,8 @@ RUN set -e; \
   for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do \
     [ -f "$f" ] && sed -i -e 's|https\?://ports\.ubuntu\.com/ubuntu-ports/\?|http://mirrors.mit.edu/ubuntu-ports/|g' -e 's|https\?://ports\.ubuntu\.com/ubuntu-ports|http://mirrors.mit.edu/ubuntu-ports/|g' "$f" || true; \
   done; \
-  apt-get update && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1 \
-  || (sleep 20 && apt-get update && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1); \
+  apt-get update && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1 espeak-ng \
+  || (sleep 20 && apt-get update && apt-get install -y --no-install-recommends --fix-missing ffmpeg wget libsndfile1 espeak-ng); \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
@@ -61,6 +61,18 @@ RUN export HF_TOKEN="${HF_TOKEN}" && \
 RUN mkdir -p /voices && cd /voices && \
     wget -q -O en_US-lessac-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx && \
     wget -q -O en_US-lessac-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
+
+# Kokoro-82M TTS (selectable alternative to Piper) — install + bake model/voice/G2P caches for offline runtime.
+RUN pip install --no-cache-dir kokoro soundfile
+RUN if [ "$SKIP_MODEL_DOWNLOAD" != "1" ]; then \
+      python - <<'PY' ; \
+from kokoro import KPipeline
+p = KPipeline(lang_code="a")
+for _ in p("Warming up the Kokoro model and voice cache.", voice="af_heart"):
+    pass
+print("kokoro baked")
+PY
+    fi
 
 COPY voice /workspace
 

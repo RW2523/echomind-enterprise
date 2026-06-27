@@ -21,6 +21,7 @@ from .wake_word_storage import load_wake_word, save_wake_word
 from .adapters.stt_nemotron import NemotronUtteranceSTT, NemotronStreamingSTT
 from .adapters.llm_openai_stream import OpenAICompatLLMStream
 from .adapters.tts_piper import PiperTTS
+from .adapters.tts_kokoro import KokoroTTS
 from .adapters.moshi_ws import MoshiWsAdapter
 from .lead_phrases import pick_lead_phrase
 
@@ -675,6 +676,22 @@ class OmniSessionA:
                 self.listen_buffer = ""
             # Optional: switch Piper TTS voice if client sent piper_voice (e.g. en_US-lessac-medium)
             piper_voice = (data.get("piper_voice") or "").strip()
+            # TTS engine selection (Piper default; Kokoro-82M = more natural). Set BEFORE the intro so it uses it.
+            engine = (data.get("tts_engine") or "").strip().lower()
+            if engine == "kokoro" and not isinstance(self.tts, KokoroTTS):
+                try:
+                    self.tts = KokoroTTS()
+                    logger.info("Voice TTS engine -> Kokoro")
+                except Exception as e:
+                    logger.warning("Kokoro TTS unavailable (%s); keeping Piper", e)
+            elif engine == "piper" and isinstance(self.tts, KokoroTTS):
+                try:
+                    self.tts = PiperTTS(SETTINGS.PIPER_MODEL, speaker_id=SETTINGS.PIPER_SPEAKER,
+                                        noise_scale=SETTINGS.PIPER_NOISE_SCALE,
+                                        length_scale=SETTINGS.PIPER_LENGTH_SCALE, use_cuda=SETTINGS.PIPER_USE_CUDA)
+                    logger.info("Voice TTS engine -> Piper")
+                except Exception:
+                    pass
             # Fire persona-specific intro on the first set_context (deferred from start())
             if self._pending_intro:
                 self._pending_intro = False
@@ -683,7 +700,7 @@ class OmniSessionA:
                 if phrase_speech:
                     self._is_playing_intro = True
                     asyncio.create_task(self._play_intro(intro_phrase))
-            if piper_voice:
+            if piper_voice and not isinstance(self.tts, KokoroTTS):
                 model_path = f"/voices/{piper_voice}.onnx"
                 if os.path.exists(model_path):
                     try:

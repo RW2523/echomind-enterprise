@@ -25,6 +25,7 @@ const defaultSettings: AppSettings = {
   voiceBotName: '',
   voiceUserName: '',
   voiceContext: '',
+  ttsEngine: 'piper',
 };
 
 function loadSettings(): AppSettings {
@@ -41,6 +42,7 @@ function loadSettings(): AppSettings {
         voiceBotName: parsed.voiceBotName ?? defaultSettings.voiceBotName,
         voiceUserName: parsed.voiceUserName ?? defaultSettings.voiceUserName,
         voiceContext: parsed.voiceContext ?? defaultSettings.voiceContext,
+        ttsEngine: parsed.ttsEngine ?? defaultSettings.ttsEngine,
       };
     }
   } catch (_) {}

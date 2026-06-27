@@ -145,6 +145,8 @@ export interface AppSettings {
   voiceUserName: string;
   /** Voice: context/role (system prompt); persisted until user clears context. */
   voiceContext: string;
+  /** Voice TTS engine: 'piper' (fast, default) or 'kokoro' (more natural). */
+  ttsEngine?: 'piper' | 'kokoro';
 }
 
 /** Piper English (en_US) voices available for TTS. Format: voiceKey -> label. Quality variants in id. */

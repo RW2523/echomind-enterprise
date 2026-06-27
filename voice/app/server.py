@@ -53,6 +53,12 @@ async def lifespan(app: FastAPI):
         await asyncio.to_thread(ensure_parakeet_loaded_at_startup)
     except Exception:
         logger.exception("Voice service: Parakeet startup pre-warm failed (non-fatal)")
+    # Pre-warm Kokoro TTS in the background (non-blocking) so selecting it in Settings is instant.
+    try:
+        from .adapters.tts_kokoro import ensure_kokoro_loaded
+        asyncio.create_task(asyncio.to_thread(ensure_kokoro_loaded))
+    except Exception:
+        logger.exception("Voice service: Kokoro pre-warm scheduling failed (non-fatal)")
     watchdog = asyncio.create_task(_stt_fatal_watchdog())
     try:
         yield
