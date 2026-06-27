@@ -9,11 +9,12 @@ import LiveTranscription from './components/LiveTranscription';
 import VoiceConversation from './components/VoiceConversation';
 import DocumentStudio from './components/DocumentStudio';
 import Settings from './components/Settings';
+import Login from './components/Login';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useVoiceConnection } from './hooks/useVoiceConnection';
 import { useLiveTranscription } from './hooks/useLiveTranscription';
 import { useKnowledgeChat } from './hooks/useKnowledgeChat';
-import { defaultTranscriptName } from './services/backend';
+import { defaultTranscriptName, getAuthConfig, getMe, logout as apiLogout, AuthUser } from './services/backend';
 
 const SETTINGS_KEY = "echomind_settings";
 
@@ -67,6 +68,7 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<AppView>(AppView.KNOWLEDGE_CHAT);
   const [settings, setSettingsState] = useState<AppSettings>(() => loadSettings());
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [auth, setAuth] = useState<{ checked: boolean; required: boolean; user: AuthUser | null }>({ checked: false, required: false, user: null });
 
   const setSettings = useCallback((s: AppSettings) => {
     setSettingsState(s);
@@ -89,6 +91,18 @@ const App: React.FC = () => {
       voiceConnection.disconnect();
     }
   }, [activeView, voiceConnection]);
+
+  // Auth gate (Phase 0b): only enforced when the backend reports auth_enabled (else app stays open).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const cfg = await getAuthConfig();
+      if (!cfg.auth_enabled) { if (!cancelled) setAuth({ checked: true, required: false, user: null }); return; }
+      const me = await getMe();
+      if (!cancelled) setAuth({ checked: true, required: true, user: me });
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const renderView = () => {
     switch (activeView) {
@@ -113,6 +127,13 @@ const App: React.FC = () => {
     }
   };
 
+  if (!auth.checked) {
+    return <div className="flex h-full w-full items-center justify-center bg-[#05070a] text-slate-500" style={{ height: '100dvh' }}>Loading…</div>;
+  }
+  if (auth.required && !auth.user) {
+    return <Login onSuccess={(u) => setAuth({ checked: true, required: true, user: u })} />;
+  }
+
   return (
     <div className="flex h-full w-full bg-[#05070a] text-slate-200 overflow-hidden" style={{ height: '100dvh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
       {/* Dynamic Background Glows */}
@@ -122,7 +143,7 @@ const App: React.FC = () => {
       <Sidebar activeView={activeView} setActiveView={setActiveView} sidebarOpen={sidebarOpen} onCloseSidebar={() => setSidebarOpen(false)} knowledgeChat={knowledgeChat} />
       
       <main className="flex-1 flex flex-col relative z-10 border-l border-white/5 min-w-0 min-h-0 overflow-hidden">
-        <Header activeView={activeView} settings={settings} pack={activePack} onMenuClick={() => setSidebarOpen(true)} />
+        <Header activeView={activeView} settings={settings} pack={activePack} user={auth.required ? auth.user : null} onLogout={async () => { await apiLogout(); setAuth({ checked: true, required: true, user: null }); }} onMenuClick={() => setSidebarOpen(true)} />
         <div className="flex-1 min-h-0 overflow-auto flex flex-col overscroll-contain">
           <div className="flex-1 min-h-0 px-3 py-3 sm:px-5 sm:py-5 md:px-6 md:py-5 lg:px-8 lg:py-6 flex flex-col min-w-0">
             <ErrorBoundary key={activeView} label={String(activeView)}>

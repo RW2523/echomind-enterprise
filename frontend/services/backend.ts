@@ -2,6 +2,45 @@ import { getActiveNamespace } from '../packs';
 
 export const API_BASE = (import.meta as any).env?.VITE_API_BASE || "";
 
+/** auth (Phase 0b) — cookie-based; same-origin requests carry the httpOnly session automatically. */
+export interface AuthUser { id: string; username: string; role: string; }
+
+export async function getAuthConfig(): Promise<{ auth_enabled: boolean }> {
+  try {
+    const r = await fetch(`${API_BASE}/api/auth/config`);
+    if (!r.ok) return { auth_enabled: false };
+    return await r.json();
+  } catch (_) { return { auth_enabled: false }; }
+}
+
+export async function getMe(): Promise<AuthUser | null> {
+  try {
+    const r = await fetch(`${API_BASE}/api/auth/me`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    return (d.user ?? null) as AuthUser | null;
+  } catch (_) { return null; }
+}
+
+export async function login(username: string, password: string): Promise<AuthUser> {
+  const r = await fetch(`${API_BASE}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!r.ok) {
+    let msg = "Login failed";
+    try { const e = await r.json(); msg = e.detail || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+  const d = await r.json();
+  return d.user as AuthUser;
+}
+
+export async function logout(): Promise<void> {
+  try { await fetch(`${API_BASE}/api/auth/logout`, { method: "POST" }); } catch (_) {}
+}
+
 /** docs */
 export async function uploadDocument(file: File): Promise<{ok:boolean; doc_id?:string; chunks?:number}> {
   const fd = new FormData();

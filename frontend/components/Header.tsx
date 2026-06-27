@@ -2,15 +2,18 @@ import React from 'react';
 import { AppView, AppSettings } from '../types';
 import { ICONS } from '../constants';
 import type { VerticalPack } from '../packs';
+import type { AuthUser } from '../services/backend';
 
 interface HeaderProps {
   activeView: AppView;
   settings?: AppSettings;  // retained for caller compatibility; not used here
   pack?: VerticalPack | null;
+  user?: AuthUser | null;
+  onLogout?: () => void;
   onMenuClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ activeView, pack, onMenuClick }) => {
+const Header: React.FC<HeaderProps> = ({ activeView, pack, user, onLogout, onMenuClick }) => {
   // NOTE: the Clear-Data button (JSX commented out below) and its handler/state/import were removed
   // as dead code. Re-add deleteAllData + handler if the button is restored. (L37)
   const getTitle = () => {
@@ -47,6 +50,19 @@ const Header: React.FC<HeaderProps> = ({ activeView, pack, onMenuClick }) => {
             <div className="text-sm font-semibold text-white">{pack.name}</div>
             <div className="text-[11px] text-slate-400">{pack.tagline}</div>
           </div>
+        </div>
+      )}
+
+      {user && (
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          <span className="hidden sm:inline text-xs text-slate-400">{user.username}</span>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white transition-colors touch-manipulation"
+          >
+            Sign out
+          </button>
         </div>
       )}
 
