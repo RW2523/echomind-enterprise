@@ -147,7 +147,20 @@ export interface AppSettings {
   voiceContext: string;
   /** Voice TTS engine: 'piper' (fast, default) or 'kokoro' (more natural). */
   ttsEngine?: 'piper' | 'kokoro';
+  /** Kokoro voice id (used when ttsEngine === 'kokoro'), e.g. af_heart. */
+  kokoroVoice?: string;
 }
+
+/** Kokoro-82M voices (American English). */
+export const KOKORO_VOICES: { id: string; label: string }[] = [
+  { id: 'af_heart', label: 'Heart (F)' },
+  { id: 'af_bella', label: 'Bella (F)' },
+  { id: 'af_nicole', label: 'Nicole (F)' },
+  { id: 'af_sarah', label: 'Sarah (F)' },
+  { id: 'am_michael', label: 'Michael (M)' },
+  { id: 'am_fenrir', label: 'Fenrir (M)' },
+  { id: 'am_adam', label: 'Adam (M)' },
+];
 
 /** Piper English (en_US) voices available for TTS. Format: voiceKey -> label. Quality variants in id. */
 export const PIPER_VOICES: { id: string; label: string }[] = [

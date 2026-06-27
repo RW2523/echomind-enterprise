@@ -68,8 +68,9 @@ RUN if [ "$SKIP_MODEL_DOWNLOAD" != "1" ]; then \
       python - <<'PY' ; \
 from kokoro import KPipeline
 p = KPipeline(lang_code="a")
-for _ in p("Warming up the Kokoro model and voice cache.", voice="af_heart"):
-    pass
+for v in ["af_heart","af_bella","af_nicole","af_sarah","am_michael","am_fenrir","am_adam"]:
+    for _ in p("Warming up the Kokoro voice cache.", voice=v):
+        pass
 print("kokoro baked")
 PY
     fi

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AppSettings, PersonaType, PIPER_VOICES } from '../types';
+import { AppSettings, PersonaType, PIPER_VOICES, KOKORO_VOICES } from '../types';
 import { getInstalledVoices, downloadVoice, addSampleTranscripts } from '../services/backend';
 
 interface PersonaMeta {
@@ -239,6 +239,28 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
                 ))}
               </div>
             </div>
+            {(settings.ttsEngine ?? 'piper') === 'kokoro' && (
+              <div className="flex flex-col gap-3">
+                <label className="text-sm font-bold text-slate-300">Kokoro Voice</label>
+                <p className="text-xs text-slate-500 -mt-2">Pick the Kokoro speaker (F = female, M = male).</p>
+                <div className="flex flex-wrap gap-2">
+                  {KOKORO_VOICES.map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => update('kokoroVoice', v.id)}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                        (settings.kokoroVoice ?? 'af_heart') === v.id
+                          ? 'bg-violet-600 border-violet-500 text-white shadow-lg'
+                          : 'bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {v.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex flex-col gap-4">
               <label className="text-sm font-bold text-slate-300">Piper Voice (en_US) — used when Piper is selected</label>
               <p className="text-xs text-slate-500 -mt-2">Select the TTS voice for Voice Conversation. The chosen voice is downloaded automatically when selected.</p>

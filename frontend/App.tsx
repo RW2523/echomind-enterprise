@@ -26,6 +26,7 @@ const defaultSettings: AppSettings = {
   voiceUserName: '',
   voiceContext: '',
   ttsEngine: 'piper',
+  kokoroVoice: 'af_heart',
 };
 
 function loadSettings(): AppSettings {
@@ -43,6 +44,7 @@ function loadSettings(): AppSettings {
         voiceUserName: parsed.voiceUserName ?? defaultSettings.voiceUserName,
         voiceContext: parsed.voiceContext ?? defaultSettings.voiceContext,
         ttsEngine: parsed.ttsEngine ?? defaultSettings.ttsEngine,
+        kokoroVoice: parsed.kokoroVoice ?? defaultSettings.kokoroVoice,
       };
     }
   } catch (_) {}

@@ -678,12 +678,14 @@ class OmniSessionA:
             piper_voice = (data.get("piper_voice") or "").strip()
             # TTS engine selection (Piper default; Kokoro-82M = more natural). Set BEFORE the intro so it uses it.
             engine = (data.get("tts_engine") or "").strip().lower()
-            if engine == "kokoro" and not isinstance(self.tts, KokoroTTS):
-                try:
-                    self.tts = KokoroTTS()
-                    logger.info("Voice TTS engine -> Kokoro")
-                except Exception as e:
-                    logger.warning("Kokoro TTS unavailable (%s); keeping Piper", e)
+            kokoro_voice = (data.get("kokoro_voice") or "").strip() or "af_heart"
+            if engine == "kokoro":
+                if (not isinstance(self.tts, KokoroTTS)) or getattr(self.tts, "voice", None) != kokoro_voice:
+                    try:
+                        self.tts = KokoroTTS(voice=kokoro_voice)
+                        logger.info("Voice TTS engine -> Kokoro (voice=%s)", kokoro_voice)
+                    except Exception as e:
+                        logger.warning("Kokoro TTS unavailable (%s); keeping Piper", e)
             elif engine == "piper" and isinstance(self.tts, KokoroTTS):
                 try:
                     self.tts = PiperTTS(SETTINGS.PIPER_MODEL, speaker_id=SETTINGS.PIPER_SPEAKER,
