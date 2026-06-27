@@ -23,6 +23,108 @@ from typing import Any, Dict, List
 SECTION_KINDS = ("prose", "table", "flow", "bullets", "callout", "image", "status_codes", "toc")
 
 TEMPLATES: Dict[str, Dict[str, Any]] = {
+    # ── Vertical-pack templates (health / law / meetings / retail / bank) ────────────
+    "clinical_note": {
+        "id": "clinical_note",
+        "name": "Clinical Visit Note (SOAP)",
+        "icon": "File",
+        "persona": "Clinical Assistant",
+        "description": "Structured SOAP visit note — Subjective, Objective, Assessment, Plan — from a visit summary or transcript. For clinical documentation support.",
+        "default_org": "EchoMind Health",
+        "default_doc_type": "Clinical Documentation",
+        "theme": "midnight",
+        "system_guidance": (
+            "Write as a careful clinician documenting an encounter. Be concise, factual, and structured. "
+            "Use only information present in the source/brief; never invent vitals, doses, history, or findings. "
+            "This is documentation support, not medical advice; include a one-line disclaimer."
+        ),
+        "section_blueprint": [
+            {"key": "subjective", "title": "Subjective", "kinds": ["prose"], "guidance": "Chief complaint, history of present illness, relevant history from the source."},
+            {"key": "objective", "title": "Objective", "kinds": ["table", "prose"], "guidance": "Vitals as a table; exam findings and any labs as prose/table. Only what the source states."},
+            {"key": "assessment", "title": "Assessment", "kinds": ["bullets", "prose"], "guidance": "Problem list with brief clinical reasoning, grounded in the source."},
+            {"key": "plan", "title": "Plan", "kinds": ["bullets"], "guidance": "Per-problem plan: treatment, follow-up, referrals, patient instructions."},
+        ],
+    },
+    "contract_review": {
+        "id": "contract_review",
+        "name": "Contract Review Memo",
+        "icon": "File",
+        "persona": "Lawyer",
+        "description": "Structured review of an agreement: key terms, risk flags, and recommended positions. Informational analysis, not legal advice.",
+        "default_org": "EchoMind Law",
+        "default_doc_type": "Legal Analysis",
+        "theme": "midnight",
+        "system_guidance": (
+            "Write as an experienced legal associate reviewing a contract. Be precise and cite clauses by number/heading "
+            "when present in the source. Do not invent terms. Always add: 'Informational analysis, not legal advice.'"
+        ),
+        "section_blueprint": [
+            {"key": "summary", "title": "Summary & Parties", "kinds": ["prose"], "guidance": "Parties, purpose, term, and overall posture of the agreement."},
+            {"key": "key_terms", "title": "Key Terms", "kinds": ["table"], "guidance": "Table: Term | Provision | Clause ref — fees, IP, confidentiality, liability cap, termination, governing law."},
+            {"key": "risk_flags", "title": "Risk Flags", "kinds": ["bullets", "callout"], "guidance": "Risky/missing/one-sided clauses, each with why it matters. Use a callout for the single highest risk."},
+            {"key": "recommendations", "title": "Recommended Positions", "kinds": ["table"], "guidance": "Table: Issue | Standard fallback position | Priority."},
+        ],
+    },
+    "meeting_minutes": {
+        "id": "meeting_minutes",
+        "name": "Meeting Minutes & Actions",
+        "icon": "File",
+        "persona": "Meeting Facilitator",
+        "description": "Board/meeting minutes from a transcript or notes: attendees, decisions, and an action-item table with owners and due dates.",
+        "default_org": "EchoMind",
+        "default_doc_type": "Meeting Minutes",
+        "theme": "midnight",
+        "system_guidance": (
+            "Write crisp, neutral meeting minutes. Capture only what the source states. Make decisions and action items "
+            "unambiguous, with owners and due dates where present."
+        ),
+        "section_blueprint": [
+            {"key": "overview", "title": "Overview", "kinds": ["prose", "table"], "guidance": "Date, attendees, and agenda. Use a small table for attendees/roles if available."},
+            {"key": "discussion", "title": "Discussion", "kinds": ["bullets"], "guidance": "Key discussion points per agenda item, concise bullets."},
+            {"key": "decisions", "title": "Decisions", "kinds": ["bullets", "callout"], "guidance": "Explicit decisions made. Callout the most consequential one."},
+            {"key": "actions", "title": "Action Items", "kinds": ["table"], "guidance": "Table: Action | Owner | Due date | Status."},
+        ],
+    },
+    "loan_suitability": {
+        "id": "loan_suitability",
+        "name": "Loan Suitability Summary",
+        "icon": "File",
+        "persona": "Banking Advisor",
+        "description": "Banking product/loan summary with required disclosures and a suitability check. Grounded in your bank's materials; not personalized investment advice.",
+        "default_org": "EchoMind Bank",
+        "default_doc_type": "Banking Summary",
+        "theme": "midnight",
+        "system_guidance": (
+            "Write as a compliance-minded banking advisor. State product terms exactly from the source, surface required "
+            "disclosures, and never invent rates/fees. Add: 'Not personalized investment advice.'"
+        ),
+        "section_blueprint": [
+            {"key": "product", "title": "Product & Terms", "kinds": ["table"], "guidance": "Table: Item | Value — rate/APR/APY, fees, term, eligibility from the source."},
+            {"key": "suitability", "title": "Suitability Assessment", "kinds": ["bullets", "prose"], "guidance": "Fit against the stated customer need/profile, grounded in the source."},
+            {"key": "disclosures", "title": "Required Disclosures", "kinds": ["bullets", "callout"], "guidance": "KYC/AML and product disclosures that must be presented. Callout any mandatory one."},
+            {"key": "next_steps", "title": "Next Steps", "kinds": ["bullets"], "guidance": "Documentation needed and the path to proceed."},
+        ],
+    },
+    "product_quote": {
+        "id": "product_quote",
+        "name": "Product / Vehicle Quote Sheet",
+        "icon": "File",
+        "persona": "Retail Advisor",
+        "description": "Customer-facing quote/spec sheet: products or vehicles with specs, pricing, warranty, and financing options from your catalog.",
+        "default_org": "EchoMind Retail",
+        "default_doc_type": "Sales Quote",
+        "theme": "midnight",
+        "system_guidance": (
+            "Write a clear, honest, customer-facing quote. Use only catalog/source facts; never invent prices or specs. "
+            "Be helpful, no pressure tactics."
+        ),
+        "section_blueprint": [
+            {"key": "selection", "title": "Selection", "kinds": ["table"], "guidance": "Table of chosen product(s)/vehicle(s): Item | Key specs | Price."},
+            {"key": "warranty", "title": "Warranty & Coverage", "kinds": ["bullets"], "guidance": "Warranty terms and coverage from the source."},
+            {"key": "financing", "title": "Financing Options", "kinds": ["table"], "guidance": "Table: Option | Term | APR | Est. payment, from the source."},
+            {"key": "summary", "title": "Quote Summary", "kinds": ["prose", "callout"], "guidance": "Total and what's included; callout the headline offer."},
+        ],
+    },
     "technical_document": {
         "id": "technical_document",
         "name": "Technical Document",
