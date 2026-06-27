@@ -18,6 +18,7 @@ from ...rag.advanced import (
     _fence_untrusted,
     debug_retrieval,
 )
+from ...rag.index import set_active_namespace
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -166,6 +167,7 @@ class AskIn(BaseModel):
     use_knowledge_base: bool = True  # When True, RAG retrieves from uploaded documents + saved transcripts
     advanced_rag: bool = False
     source_options: SourceOptionsIn | None = None  # Transcript, Document, General; default all True
+    namespace: str | None = None  # KB namespace (vertical/tenant); None = whole KB (default)
 
 
 class AskVoiceIn(BaseModel):
@@ -176,6 +178,7 @@ class AskVoiceIn(BaseModel):
     advanced_rag: bool = True
     # Voice service sends this to cap the RAG LLM response length and prevent 10-20s GPU freezes.
     voice_max_tokens: int | None = None
+    namespace: str | None = None  # KB namespace (vertical/tenant); None = whole KB (default)
 
 
 # Default hours when user asks for "recent summary of the transcript" with no explicit time (voice/conversation bot).
@@ -306,6 +309,7 @@ def _fetch_transcripts_since_hours(last_hours: float) -> list[dict]:
 
 @router.post("/ask-voice")
 async def ask_voice(inp: AskVoiceIn):
+    set_active_namespace(inp.namespace)
     msg = (inp.message or "").strip()
     last_hours = _parse_transcript_time_query(msg)
     if last_hours is not None:
@@ -340,6 +344,7 @@ async def ask_voice_stream(inp: AskVoiceIn):
     """Same RAG/transcript logic as ask-voice but streams NDJSON chunks for low-latency TTS on the voice service."""
 
     async def gen():
+        set_active_namespace(inp.namespace)
         msg = (inp.message or "").strip()
         last_hours = _parse_transcript_time_query(msg)
         if last_hours is not None:
@@ -405,6 +410,7 @@ async def ask_voice_stream(inp: AskVoiceIn):
 
 @router.post("/ask")
 async def ask(inp: AskIn, background_tasks: BackgroundTasks):
+    set_active_namespace(inp.namespace)
     msg = (inp.message or "").strip()
     opts = inp.source_options
     source_opts = (
@@ -466,6 +472,7 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
 @router.post("/ask-stream")
 async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
     async def gen():
+        set_active_namespace(inp.namespace)
         with get_conn() as conn:
             rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
         history = [{"role": r[0], "content": r[1]} for r in rows]

@@ -18,7 +18,7 @@ import numpy as np
 
 from ..core.config import settings
 from ..core.db import get_conn
-from .index import index
+from .index import index, _ns_ok
 from .llm import OpenAICompatChat
 from .query_classifier import classify_query_type, classify_query_types, get_rrf_weights
 from .reranker import rerank_hits as _ce_rerank_hits
@@ -2634,6 +2634,7 @@ async def debug_retrieval(question: str, k: int = 15) -> Dict:
     rejected sections, retrieved chunks, evidence by section, gate decision, final citations.
     """
     source_type, hits = await retrieve_semantic_first(question, k)
+    hits = [h for h in hits if _ns_ok(h.get("source") or {})]  # KB namespace isolation (safety net across all retrieval methods)
     debug_info = _rag_debug_info.get({})
     selected_sections = debug_info.get("allowed_section_paths", [])
     toc_hits = debug_info.get("toc_hits", [])
@@ -2830,6 +2831,7 @@ async def answer(
     source_type, hits = await retrieve_semantic_first(
         question, settings.TOP_K, context_window=context_window or "all", source_options=opts,
     )
+    hits = [h for h in hits if _ns_ok(h.get("source") or {})]  # KB namespace isolation (safety net across all retrieval methods)
     t_retrieve = time.monotonic()
     retrieve_ms = (t_retrieve - t_start) * 1000
     logger.info(
@@ -2948,6 +2950,7 @@ async def answer_stream(
     source_type, hits = await retrieve_semantic_first(
         question, settings.TOP_K, context_window=context_window or "all", source_options=opts,
     )
+    hits = [h for h in hits if _ns_ok(h.get("source") or {})]  # KB namespace isolation (safety net across all retrieval methods)
     t_retrieve = time.monotonic()
     retrieve_ms = (t_retrieve - t_start) * 1000
     logger.info(

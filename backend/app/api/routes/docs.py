@@ -5,7 +5,7 @@ import os
 import shutil
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 
 from ...core.config import settings
@@ -139,7 +139,7 @@ def list_docs():
 
 
 @router.post("/upload")
-async def upload(file: UploadFile = File(...)):
+async def upload(file: UploadFile = File(...), namespace: str = Form("default")):
     data = await file.read()
     filetype, text, estimated_pages, page_offsets = parse_any(file.filename, data)
     if not (text or "").strip():
@@ -155,6 +155,7 @@ async def upload(file: UploadFile = File(...)):
             {"filename": file.filename, "filetype": filetype},
             estimated_pages=estimated_pages,
             page_offsets=page_offsets,
+            namespace=namespace,
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))

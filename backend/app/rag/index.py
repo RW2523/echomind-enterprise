@@ -4,6 +4,7 @@ import logging
 import math
 import os
 import re
+import contextvars
 from typing import Dict, List, Optional, Tuple
 
 import faiss
@@ -21,6 +22,22 @@ from .glossary_index import GlossaryIndex, is_glossary_section
 from .cross_ref_graph import CrossRefGraph, extract_references
 from .book.section_id import section_id_from_path, extract_section_id, extract_all_codes
 from .metadata_validation import validate_and_fix_source, validate_book_chunk_for_indexing, validate_chunk_metadata
+
+# ── KB namespacing: per-vertical / per-tenant isolation, set per request (contextvar = async-safe).
+# namespace None  -> no filter (existing single-KB behavior, fully backward compatible).
+# namespace "X"   -> search returns only chunks tagged namespace == "X".
+_active_namespace: contextvars.ContextVar = contextvars.ContextVar("active_namespace", default=None)
+
+
+def set_active_namespace(ns: Optional[str]) -> None:
+    _active_namespace.set((ns or "").strip() or None)
+
+
+def _ns_ok(src: dict) -> bool:
+    ns = _active_namespace.get()
+    if ns is None:
+        return True
+    return ((src or {}).get("namespace") or "default") == ns
 from .contextualizer import (
     build_context_header_from_chunk,
     build_contextualized_text,
@@ -338,8 +355,11 @@ class FaissIndex:
         meta: dict,
         estimated_pages: int = 0,
         page_offsets: Optional[List[Tuple[int, int]]] = None,
+        namespace: str = "default",
     ) -> dict:
         doc_id = new_id("doc")
+        ns = (namespace or "default").strip() or "default"
+        meta = {**(meta or {}), "namespace": ns}
         all_chunks = chunk_document(
             text or "", doc_id,
             estimated_pages=estimated_pages,
@@ -426,6 +446,7 @@ class FaissIndex:
                 else:
                     src, _ = validate_and_fix_source(src, doc_type=src.get("doc_type", ""))
                     src["metadata_valid"] = True
+                src["namespace"] = ns
                 validated_sources[c.chunk_id] = src
                 ctx_text = contextualized_by_chunk.get(c.chunk_id) if c.chunk_id in contextualized_by_chunk else None
                 conn.execute(
@@ -688,7 +709,10 @@ class FaissIndex:
                 if not row:
                     continue
                 text, src_json = row
-                out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": json.loads(src_json)})
+                src = json.loads(src_json)
+                if not _ns_ok(src):
+                    continue
+                out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": src})
         return out
 
     async def search_transcript_only(self, query: str, k: int, query_vector: Optional[np.ndarray] = None) -> List[Dict]:
@@ -715,7 +739,10 @@ class FaissIndex:
                 if not row:
                     continue
                 text, src_json = row
-                out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": json.loads(src_json)})
+                src = json.loads(src_json)
+                if not _ns_ok(src):
+                    continue
+                out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": src})
         return out
 
     def _is_transcript_chunk(self, source: dict) -> bool:
@@ -748,6 +775,8 @@ class FaissIndex:
                 src = json.loads(src_json)
                 if self._is_transcript_chunk(src):
                     continue
+                if not _ns_ok(src):
+                    continue
                 out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": src})
         return out
 
@@ -756,7 +785,7 @@ class FaissIndex:
         if not self.sparse._bm25 or not self.sparse.chunk_ids:
             return []
         raw = self.sparse.search(query, min(k * 4, len(self.sparse.chunk_ids)))
-        out = [h for h in raw if not self._is_transcript_chunk(h.get("source") or {})]
+        out = [h for h in raw if not self._is_transcript_chunk(h.get("source") or {}) and _ns_ok(h.get("source") or {})]
         return out[:k]
 
     def search_document_keyword_grep(self, query: str, k: int) -> List[Dict]:
