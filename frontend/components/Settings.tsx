@@ -77,6 +77,42 @@ const PERSONA_META: Record<PersonaType, PersonaMeta> = {
     activeBg: 'bg-fuchsia-500/10',
     activeBorder: 'border-fuchsia-500/40',
   },
+  [PersonaType.CLINICAL]: {
+    icon: '🩺',
+    title: 'Clinical Assistant',
+    description: 'Clinical decision support for licensed clinicians—answers from your protocols, formulary, and visit notes with source citations. Decision support, not a substitute for professional judgment.',
+    accentColor: 'text-teal-400',
+    borderColor: 'border-teal-500/40',
+    activeBg: 'bg-teal-500/10',
+    activeBorder: 'border-teal-500/40',
+  },
+  [PersonaType.BANKING]: {
+    icon: '🏦',
+    title: 'Banking Advisor',
+    description: 'Banking copilot—answers product, rate, and policy questions and surfaces required disclosures, grounded in your bank’s own materials. No personalized investment advice.',
+    accentColor: 'text-green-400',
+    borderColor: 'border-green-500/40',
+    activeBg: 'bg-green-500/10',
+    activeBorder: 'border-green-500/40',
+  },
+  [PersonaType.MEETING]: {
+    icon: '🗂️',
+    title: 'Meeting Facilitator',
+    description: 'Boardroom assistant—summarizes decisions and action items (owners + due dates) and answers from company minutes, policies, and briefs.',
+    accentColor: 'text-blue-400',
+    borderColor: 'border-blue-500/40',
+    activeBg: 'bg-blue-500/10',
+    activeBorder: 'border-blue-500/40',
+  },
+  [PersonaType.RETAIL]: {
+    icon: '🛍️',
+    title: 'Retail Advisor',
+    description: 'Sales associate—answers product, inventory, warranty, and financing questions from your catalog. Helpful and honest, no pressure tactics.',
+    accentColor: 'text-orange-400',
+    borderColor: 'border-orange-500/40',
+    activeBg: 'bg-orange-500/10',
+    activeBorder: 'border-orange-500/40',
+  },
 };
 
 interface SettingsProps {
@@ -140,6 +176,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {personas.map((p) => {
               const meta = PERSONA_META[p as PersonaType];
+              if (!meta) return null;  // guard: enum may gain personas before this map does
               const isActive = settings.persona === p;
               return (
                 <button
