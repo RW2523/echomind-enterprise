@@ -5,10 +5,11 @@ import os
 import shutil
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
 from fastapi.responses import FileResponse
 
 from ...core.config import settings
+from ...core.auth import user_from_request
 
 logger = logging.getLogger(__name__)
 from ...core.db import get_conn
@@ -139,7 +140,13 @@ def list_docs():
 
 
 @router.post("/upload")
-async def upload(file: UploadFile = File(...), namespace: str = Form("default")):
+async def upload(file: UploadFile = File(...), namespace: str = Form("default"), request: Request = None):
+    # Per-tenant scoping (#4): a tenant user's uploads are tagged with their tenant namespace.
+    if settings.AUTH_ENABLED and request is not None:
+        u = user_from_request(request)
+        tenant = (u or {}).get("tenant") or ""
+        if tenant:
+            namespace = tenant
     data = await file.read()
     filetype, text, estimated_pages, page_offsets = parse_any(file.filename, data)
     if not (text or "").strip():

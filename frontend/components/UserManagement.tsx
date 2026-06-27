@@ -9,6 +9,7 @@ const UserManagement: React.FC = () => {
   const [u, setU] = useState('');
   const [p, setP] = useState('');
   const [role, setRole] = useState('user');
+  const [tenant, setTenant] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [audit, setAudit] = useState<ActivityEvent[]>([]);
@@ -35,8 +36,8 @@ const UserManagement: React.FC = () => {
     if (!u || !p || busy) return;
     setBusy(true); setErr('');
     try {
-      await createUser(u, p, role);
-      setU(''); setP(''); setRole('user');
+      await createUser(u, p, role, tenant);
+      setU(''); setP(''); setRole('user'); setTenant('');
       await refresh();
     } catch (e: any) { setErr(e?.message || 'Failed to add user'); }
     setBusy(false);
@@ -61,6 +62,7 @@ const UserManagement: React.FC = () => {
             <div className="min-w-0 flex items-center gap-2">
               <span className="text-sm text-white truncate">{usr.username}</span>
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-accent/15 text-accent">{usr.role}</span>
+              {usr.tenant && <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-slate-400 truncate">{usr.tenant}</span>}
             </div>
             {usr.username !== me?.username && (
               <button type="button" onClick={() => del(usr.username)} className="shrink-0 text-xs text-slate-400 hover:text-red-400 transition-colors">Delete</button>
@@ -73,6 +75,7 @@ const UserManagement: React.FC = () => {
       <div className="flex flex-col sm:flex-row gap-2">
         <input value={u} onChange={(e) => setU(e.target.value)} placeholder="Username" className="flex-1 rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm outline-none focus:border-accent/50" />
         <input value={p} onChange={(e) => setP(e.target.value)} type="password" placeholder="Password" className="flex-1 rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm outline-none focus:border-accent/50" />
+        <input value={tenant} onChange={(e) => setTenant(e.target.value)} placeholder="Tenant (optional)" className="flex-1 rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm outline-none focus:border-accent/50" />
         <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm outline-none focus:border-accent/50">
           <option value="user">User</option>
           <option value="admin">Admin</option>

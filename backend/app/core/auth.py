@@ -72,11 +72,11 @@ def _secret() -> bytes:
         return b"echomind-ephemeral-" + secrets.token_hex(8).encode("ascii")
 
 
-def make_token(sub: str, role: str, username: str, ttl_min: Optional[int] = None) -> str:
+def make_token(sub: str, role: str, username: str, tenant: str = "", ttl_min: Optional[int] = None) -> str:
     now = int(time.time())
     ttl = (ttl_min if ttl_min is not None else settings.AUTH_TOKEN_TTL_MIN) * 60
     header = {"alg": "HS256", "typ": "JWT"}
-    payload = {"sub": sub, "role": role, "username": username, "iat": now, "exp": now + ttl}
+    payload = {"sub": sub, "role": role, "username": username, "tenant": tenant or "", "iat": now, "exp": now + ttl}
     h = _b64u(json.dumps(header, separators=(",", ":")).encode())
     p = _b64u(json.dumps(payload, separators=(",", ":")).encode())
     sig = _b64u(hmac.new(_secret(), f"{h}.{p}".encode(), hashlib.sha256).digest())
@@ -101,27 +101,28 @@ def decode_token(token: str) -> Optional[dict]:
 def get_user_by_username(username: str) -> Optional[dict]:
     with get_conn() as conn:
         row = conn.execute(
-            "SELECT id, username, password_hash, role, created_at FROM users WHERE username=?", (username,)
+            "SELECT id, username, password_hash, role, COALESCE(tenant,''), created_at FROM users WHERE username=?", (username,)
         ).fetchone()
     if not row:
         return None
-    return {"id": row[0], "username": row[1], "password_hash": row[2], "role": row[3], "created_at": row[4]}
+    return {"id": row[0], "username": row[1], "password_hash": row[2], "role": row[3], "tenant": row[4], "created_at": row[5]}
 
 
-def create_user(username: str, password: str, role: str = "user") -> dict:
+def create_user(username: str, password: str, role: str = "user", tenant: str = "") -> dict:
     username = (username or "").strip()
     if not username or not password:
         raise ValueError("username and password required")
     if get_user_by_username(username):
         raise ValueError("user already exists")
     uid = new_id("usr")
+    tenant = (tenant or "").strip()
     with get_conn() as conn:
         conn.execute(
-            "INSERT INTO users (id, username, password_hash, role, created_at) VALUES (?,?,?,?,?)",
-            (uid, username, hash_password(password), role, now_iso()),
+            "INSERT INTO users (id, username, password_hash, role, tenant, created_at) VALUES (?,?,?,?,?,?)",
+            (uid, username, hash_password(password), role, tenant, now_iso()),
         )
         conn.commit()
-    return {"id": uid, "username": username, "role": role}
+    return {"id": uid, "username": username, "role": role, "tenant": tenant}
 
 
 def set_password(username: str, password: str) -> None:
@@ -132,8 +133,8 @@ def set_password(username: str, password: str) -> None:
 
 def list_users() -> list:
     with get_conn() as conn:
-        rows = conn.execute("SELECT id, username, role, created_at FROM users ORDER BY created_at ASC").fetchall()
-    return [{"id": r[0], "username": r[1], "role": r[2], "created_at": r[3]} for r in rows]
+        rows = conn.execute("SELECT id, username, role, COALESCE(tenant,''), created_at FROM users ORDER BY created_at ASC").fetchall()
+    return [{"id": r[0], "username": r[1], "role": r[2], "tenant": r[3], "created_at": r[4]} for r in rows]
 
 
 def delete_user(username: str) -> None:
@@ -151,7 +152,7 @@ def authenticate(username: str, password: str) -> Optional[dict]:
     u = get_user_by_username(username)
     if not u or not verify_password(password, u["password_hash"]):
         return None
-    return {"id": u["id"], "username": u["username"], "role": u["role"]}
+    return {"id": u["id"], "username": u["username"], "role": u["role"], "tenant": u.get("tenant", "")}
 
 
 def seed_admin() -> None:

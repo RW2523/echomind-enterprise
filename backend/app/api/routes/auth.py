@@ -28,7 +28,7 @@ def login(inp: LoginIn, response: Response):
     user = authmod.authenticate(inp.username, inp.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    token = authmod.make_token(user["id"], user["role"], user["username"])
+    token = authmod.make_token(user["id"], user["role"], user["username"], tenant=user.get("tenant", ""))
     response.set_cookie(
         "echomind_token", token, httponly=True, samesite="lax",
         max_age=settings.AUTH_TOKEN_TTL_MIN * 60,
@@ -47,7 +47,7 @@ def me(request: Request):
     payload = authmod.user_from_request(request)
     if not payload:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return {"user": {"id": payload.get("sub"), "username": payload.get("username"), "role": payload.get("role")}}
+    return {"user": {"id": payload.get("sub"), "username": payload.get("username"), "role": payload.get("role"), "tenant": payload.get("tenant", "")}}
 
 
 # ── RBAC: admin-only user management ─────────────────────────────────────────────
@@ -55,6 +55,7 @@ class CreateUserIn(BaseModel):
     username: str
     password: str
     role: str = "user"
+    tenant: str = ""
 
 
 def _require_admin(request: Request) -> dict:
@@ -77,7 +78,7 @@ def admin_create_user(request: Request, inp: CreateUserIn):
     _require_admin(request)
     role = inp.role if inp.role in ("admin", "user") else "user"
     try:
-        user = authmod.create_user(inp.username, inp.password, role=role)
+        user = authmod.create_user(inp.username, inp.password, role=role, tenant=inp.tenant)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {"user": user}

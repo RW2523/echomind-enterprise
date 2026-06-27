@@ -3,7 +3,7 @@ import logging
 import re
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from ...utils.ids import new_id, now_iso
@@ -19,6 +19,18 @@ from ...rag.advanced import (
     debug_retrieval,
 )
 from ...rag.index import set_active_namespace
+from ...core.auth import user_from_request
+
+
+def _effective_ns(request, requested):
+    """Per-tenant scoping (#4): when auth is on and the user is bound to a tenant, force that
+    tenant's namespace so a tenant user cannot read another tenant's KB by sending a different one."""
+    if settings.AUTH_ENABLED:
+        u = user_from_request(request)
+        tenant = (u or {}).get("tenant") or ""
+        if tenant:
+            return tenant
+    return requested
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -308,8 +320,8 @@ def _fetch_transcripts_since_hours(last_hours: float) -> list[dict]:
 
 
 @router.post("/ask-voice")
-async def ask_voice(inp: AskVoiceIn):
-    set_active_namespace(inp.namespace)
+async def ask_voice(inp: AskVoiceIn, request: Request):
+    set_active_namespace(_effective_ns(request, inp.namespace))
     msg = (inp.message or "").strip()
     last_hours = _parse_transcript_time_query(msg)
     if last_hours is not None:
@@ -340,11 +352,11 @@ async def ask_voice(inp: AskVoiceIn):
 
 
 @router.post("/ask-voice-stream")
-async def ask_voice_stream(inp: AskVoiceIn):
+async def ask_voice_stream(inp: AskVoiceIn, request: Request):
     """Same RAG/transcript logic as ask-voice but streams NDJSON chunks for low-latency TTS on the voice service."""
 
     async def gen():
-        set_active_namespace(inp.namespace)
+        set_active_namespace(_effective_ns(request, inp.namespace))
         msg = (inp.message or "").strip()
         last_hours = _parse_transcript_time_query(msg)
         if last_hours is not None:
@@ -409,8 +421,8 @@ async def ask_voice_stream(inp: AskVoiceIn):
 
 
 @router.post("/ask")
-async def ask(inp: AskIn, background_tasks: BackgroundTasks):
-    set_active_namespace(inp.namespace)
+async def ask(inp: AskIn, background_tasks: BackgroundTasks, request: Request):
+    set_active_namespace(_effective_ns(request, inp.namespace))
     msg = (inp.message or "").strip()
     opts = inp.source_options
     source_opts = (
@@ -470,9 +482,9 @@ async def ask(inp: AskIn, background_tasks: BackgroundTasks):
 
 
 @router.post("/ask-stream")
-async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks):
+async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks, request: Request):
     async def gen():
-        set_active_namespace(inp.namespace)
+        set_active_namespace(_effective_ns(request, inp.namespace))
         with get_conn() as conn:
             rows = conn.execute("SELECT role, content FROM messages WHERE chat_id=? ORDER BY created_at ASC", (inp.chat_id,)).fetchall()
         history = [{"role": r[0], "content": r[1]} for r in rows]

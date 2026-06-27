@@ -3,7 +3,7 @@ import { getActiveNamespace } from '../packs';
 export const API_BASE = (import.meta as any).env?.VITE_API_BASE || "";
 
 /** auth (Phase 0b) — cookie-based; same-origin requests carry the httpOnly session automatically. */
-export interface AuthUser { id: string; username: string; role: string; }
+export interface AuthUser { id: string; username: string; role: string; tenant?: string; }
 
 export async function getAuthConfig(): Promise<{ auth_enabled: boolean }> {
   try {
@@ -48,11 +48,11 @@ export async function listUsers(): Promise<AuthUser[]> {
   return (d.users ?? []) as AuthUser[];
 }
 
-export async function createUser(username: string, password: string, role: string): Promise<AuthUser> {
+export async function createUser(username: string, password: string, role: string, tenant: string = ""): Promise<AuthUser> {
   const r = await fetch(`${API_BASE}/api/auth/users`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password, role }),
+    body: JSON.stringify({ username, password, role, tenant }),
   });
   if (!r.ok) {
     let msg = "Create failed";
