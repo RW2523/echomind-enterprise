@@ -1,5 +1,6 @@
 import React from 'react';
 import BankExperience from './BankExperience';
+import HealthExperience from './HealthExperience';
 
 /**
  * Per-vertical bespoke experiences. When a pack is active AND it has an entry here, App renders this
@@ -8,4 +9,5 @@ import BankExperience from './BankExperience';
  */
 export const VERTICAL_EXPERIENCES: Record<string, React.FC> = {
   bank: BankExperience,
+  health: HealthExperience,
 };
