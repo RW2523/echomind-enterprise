@@ -76,6 +76,11 @@ services:
       # Offline: use only local Hugging Face cache (no runtime model download)
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
+      # Live Transcript ASR pinned to CPU: the backend also runs FAISS-GPU, and the two
+      # concurrent CUDA inits trip GB10's flaky NVML for this container (torch device_count=0),
+      # which crashed Live Transcript with "Stream init failed: CUDA device(s) busy or unavailable".
+      # Nemotron-0.6B streaming keeps up on the Grace CPU; the voice bot keeps its own ASR on GPU.
+      - ECHOMIND_ASR_DEVICE=cpu
       # Document Studio images: real on-device text-to-image (SDXL-Turbo via diffusers).
       # Private + offline after the one-time model download (cached in /data). Set
       # DOCGEN_IMAGE_BACKEND=local for the no-GPU synthetic fallback, or =nim for cloud.
@@ -92,13 +97,12 @@ services:
       # trtllm dependency removed — chat is served by ollama now (trtllm is profile-gated/off).
       ollama:
         condition: service_healthy
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # Use `gpus: all` (== docker run --gpus all), NOT deploy.resources.reservations.devices:
+    # on GB10 the deploy form gives a broken NVML — torch reports device_count=0
+    # ("Failed to initialize NVML: Unknown Error"), so ASR/FAISS silently lose the GPU and
+    # Live Transcript dies with "Stream init failed: CUDA-capable device(s) busy or unavailable".
+    # Same fix that was applied to trtllm. Verified: this image sees the GB10 with --gpus all.
+    gpus: all
 
   voice:
     build:
@@ -173,13 +177,12 @@ services:
         condition: service_healthy
       backend:
         condition: service_started
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # Use `gpus: all` (== docker run --gpus all), NOT deploy.resources.reservations.devices:
+    # on GB10 the deploy form gives a broken NVML — torch reports device_count=0
+    # ("Failed to initialize NVML: Unknown Error"), so ASR/FAISS silently lose the GPU and
+    # Live Transcript dies with "Stream init failed: CUDA-capable device(s) busy or unavailable".
+    # Same fix that was applied to trtllm. Verified: this image sees the GB10 with --gpus all.
+    gpus: all
 
   frontend:
     build:
