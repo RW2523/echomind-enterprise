@@ -76,11 +76,11 @@ services:
       # Offline: use only local Hugging Face cache (no runtime model download)
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
-      # Live Transcript ASR pinned to CPU: the backend also runs FAISS-GPU, and the two
-      # concurrent CUDA inits trip GB10's flaky NVML for this container (torch device_count=0),
-      # which crashed Live Transcript with "Stream init failed: CUDA device(s) busy or unavailable".
-      # Nemotron-0.6B streaming keeps up on the Grace CPU; the voice bot keeps its own ASR on GPU.
-      - ECHOMIND_ASR_DEVICE=cpu
+      # Live Transcript ASR on GPU. Driver 580.159.03 fixed the GB10 NVML-in-container bug that
+      # made this container report torch device_count=0 (which crashed streams with
+      # "Stream init failed: CUDA device(s) busy or unavailable" and forced a CPU pin). The
+      # backend now sees the GPU reliably alongside FAISS-GPU. Revert to cpu if NVML regresses.
+      - ECHOMIND_ASR_DEVICE=cuda
       # Document Studio images: real on-device text-to-image (SDXL-Turbo via diffusers).
       # Private + offline after the one-time model download (cached in /data). Set
       # DOCGEN_IMAGE_BACKEND=local for the no-GPU synthetic fallback, or =nim for cloud.
