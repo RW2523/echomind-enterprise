@@ -1,0 +1,9 @@
+#!/bin/bash
+# GB10 unified-memory shim: real nvidia-smi returns [N/A] for GPU memory, which crashes SGLang's
+# startup capacity probe. Report the Spark's ~120GB unified memory for memory.total queries only;
+# pass everything else through to the real nvidia-smi.
+if printf '%s' "$*" | grep -q "memory.total"; then
+  echo 122880
+else
+  exec /usr/bin/nvidia-smi "$@"
+fi

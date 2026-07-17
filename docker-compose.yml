@@ -4,6 +4,13 @@ services:
       context: ./docker/trtllm
     image: echomind-trtllm:1.2.0rc6
     container_name: echomind-trtllm
+    # DISABLED by default on GB10: TRT-LLM-1.2.0rc6's worker-spawn CUDA bug makes this container
+    # spin at ~90% CPU and hold a GPU context without ever serving — it hogged a core (loadavg ~24)
+    # and serialized ollama's GPU kernels, slowing chat to 0.4 tok/s. Chat now runs on ollama
+    # (see backend/voice LLM_MODEL). Only starts with `docker compose --profile trtllm up`;
+    # restart:"no" so a manual run can't relaunch the busy-loop. Re-enable once GB10 FP4 serving works.
+    profiles: ["trtllm"]
+    restart: "no"
     ipc: host
     ulimits:
       memlock: -1
@@ -32,13 +39,11 @@ services:
       timeout: 10s
       retries: 120
       start_period: 1200s
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    # Use `gpus: all` (== docker run --gpus all), NOT deploy.resources.reservations.devices:
+    # the deploy form injects the devices but NOT a working NVML, so trtllm dies at
+    # pynvml.nvmlInit() ("Failed to initialize NVML" -> MPI_ABORT). Verified: same image
+    # works with --gpus all, fails via the deploy form.
+    gpus: all
 
   backend:
     build:
@@ -62,8 +67,10 @@ services:
       retries: 3
       start_period: 180s
     environment:
-      - LLM_BASE_URL=http://trtllm:8355/v1
-      - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
+      # trtllm (Qwen3-30B) is down due to a TRT-LLM-1.2.0rc6-on-GB10 worker-spawn CUDA bug;
+      # serve chat from ollama (qwen2.5:7b) instead. Revert these two to trtllm once that's fixed.
+      - LLM_BASE_URL=http://ollama:11434/v1
+      - LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
       - OLLAMA_EMBED_URL=http://ollama:11434/api/embeddings
       - OLLAMA_EMBED_MODEL=nomic-embed-text
       # Offline: use only local Hugging Face cache (no runtime model download)
@@ -82,8 +89,7 @@ services:
     volumes:
       - echomind_data:/data
     depends_on:
-      trtllm:
-        condition: service_healthy
+      # trtllm dependency removed — chat is served by ollama now (trtllm is profile-gated/off).
       ollama:
         condition: service_healthy
     deploy:
@@ -119,8 +125,8 @@ services:
       start_period: 120s
     environment:
       # TensorRT-LLM in compose (OpenAI-compatible); dialogue uses stream=true for TTFT.
-      - LLM_URL=http://trtllm:8355/v1/chat/completions
-      - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
+      - LLM_URL=http://ollama:11434/v1/chat/completions
+      - LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
       # Optional: LLM_LOG_PAYLOAD=1 logs full JSON body at WARNING (timing always INFO: VOICE_LLM stream start/done).
       # Nemotron STT (same model as backend live transcript; gated HF — set HF_TOKEN in .env if needed)
       - ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
@@ -162,8 +168,7 @@ services:
       # on the GPU alongside trtllm. Set to cuda only if a future stack proves stable.
       - VOICE_PARAKEET_DEVICE=${VOICE_PARAKEET_DEVICE:-cpu}
     depends_on:
-      trtllm:
-        condition: service_healthy
+      # trtllm dependency removed — voice LLM is served by ollama now (trtllm is profile-gated/off).
       ollama:
         condition: service_healthy
       backend:
@@ -182,6 +187,7 @@ services:
       args:
         - VITE_API_BASE=
     container_name: echomind-frontend
+    restart: unless-stopped
     ports: ["3000:80", "3443:443"]
     depends_on: [backend, voice]
 
@@ -205,6 +211,7 @@ services:
       dockerfile: Dockerfile
     image: echomind-ollama:setup
     container_name: echomind-ollama
+    restart: unless-stopped
     ports: ["11434:11434"]
     environment:
       - OLLAMA_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
