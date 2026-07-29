@@ -353,20 +353,26 @@ async def speak(inp: SpeakIn):
     if not speak_text.strip():
         raise HTTPException(status_code=400, detail="No text to speak")
 
-    # Try voice service TTS
-    voice_url = getattr(settings, "VOICE_TTS_URL", "http://voice:8002/speak")
+    # Try voice service TTS. NOTE: 8000 is the voice container's port ON THE DOCKER NETWORK;
+    # 8002 (VOICE_HOST_PORT) is only the host-side mapping, so voice:8002 is refused from here
+    # — that silently returned audio_b64=null for every request.
+    voice_url = getattr(settings, "VOICE_TTS_URL", "") or "http://voice:8000/speak"
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             r = await client.post(
                 voice_url,
                 json={"text": speak_text},
             )
-            if r.is_success:
+            if r.is_success and r.content:
                 import base64
                 audio_b64 = base64.b64encode(r.content).decode()
                 return {"audio_b64": audio_b64, "format": "wav", "text": speak_text}
+            logger.warning(
+                "Voice TTS returned no audio (%s %s, %d bytes) — falling back to browser speech",
+                voice_url, r.status_code, len(r.content or b""),
+            )
     except Exception as e:
-        logger.debug("Voice TTS unavailable, returning text fallback: %s", e)
+        logger.warning("Voice TTS unavailable at %s (%s) — falling back to browser speech", voice_url, e)
 
     # Fallback: return text for browser SpeechSynthesis
     return {"audio_b64": None, "format": None, "text": speak_text}

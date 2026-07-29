@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = 0.2
     LLM_MAX_TOKENS: int = int(os.getenv("ECHOMIND_LLM_MAX_TOKENS", "2048"))
     OLLAMA_EMBED_URL: str = "http://ollama:11434/api/embeddings"
+    # Piper TTS in the voice service, used by /api/transcribe/speak (read-a-card aloud).
+    # Port 8000 is the voice container's port ON the Docker network; VOICE_HOST_PORT (8002)
+    # is only the host mapping and is refused from inside the network.
+    VOICE_TTS_URL: str = os.getenv("VOICE_TTS_URL", "http://voice:8000/speak")
     OLLAMA_EMBED_MODEL: str = os.getenv("ECHOMIND_EMBED_MODEL", "nomic-embed-text")
     # Max characters per chunk sent to embedding API. nomic-embed-text context varies by Ollama build;
     # 2000 chars (~500 tokens) is safe for all configurations. Set higher only if your model supports it.
