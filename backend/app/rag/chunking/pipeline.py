@@ -6,6 +6,7 @@ Metadata validation: rejects chunks with malformed section_path (e.g. "Segment N
 """
 from __future__ import annotations
 import bisect
+import logging
 import re
 from typing import Dict, List, Optional, Tuple
 
@@ -25,6 +26,8 @@ from .chunkers import (
 )
 from ..book.section_id import extract_section_id, section_id_from_path
 
+
+logger = logging.getLogger(__name__)
 
 def _is_valid_book_section_path(section_path: Optional[str]) -> bool:
     """Reject generic 'Segment N' fallback but accept DoD-style numbered sections.
@@ -128,6 +131,12 @@ def chunk_document(
     if not already_normalized:
         text = normalize_extracted_text(text or "")
     doc_type = detect_document_type(text)
+    # Record the routing decision: doc_type selects the entire chunking strategy, and it
+    # was previously never logged at any level — a misdetection was invisible.
+    logger.info(
+        "chunking: doc_id=%s doc_type=%s chars=%d paragraph_breaks=%d",
+        doc_id, getattr(doc_type, "value", doc_type), len(text), text.count("\n\n"),
+    )
     clean_text, redacted, sensitivity_level = sanitize_text(text)
     total_chars = len(clean_text)
 
@@ -137,9 +146,30 @@ def chunk_document(
         sections = _split_book_into_sections(clean_text)
         chunks = []
         section_char_offset = 0
+        salvaged_sections = 0
+        salvaged_chars = 0
         for section_title, section_text in sections:
             section_path = _build_section_path(section_title)
             if not _is_valid_book_section_path(section_path):
+                # SALVAGE, don't discard. This used to `continue`, dropping the whole
+                # section's text — never chunked, never embedded, never retrievable —
+                # while ingestion still reported success. On the FMR corpus that lost
+                # 21-95% of a document (one kept only 5%). Sections without a usable
+                # section_path still get indexed via flat chunking; they just carry no
+                # section metadata. Only reachable since BOOK detection was repaired.
+                salvaged = chunk_unstructured(section_text, sensitivity_level, redacted)
+                for c in salvaged:
+                    c.doc_id = doc_id
+                    c.chunk_id = new_id("chk")
+                    c.section_title = section_title or None
+                    page = _page_for_offset(
+                        section_char_offset, total_chars, estimated_pages, page_offsets
+                    )
+                    if page is not None:
+                        c.page_number = page
+                    chunks.append(c)
+                salvaged_sections += 1
+                salvaged_chars += len(section_text)
                 section_char_offset += len(section_title or "") + len(section_text)
                 continue
             canonical_sid = section_id_from_path(section_path or "") or extract_section_id(section_title or "")
@@ -186,8 +216,23 @@ def chunk_document(
                         chunks.append(c)
                 sub_char_offset += len(sub_text)
             section_char_offset += len(section_title or "") + len(section_text)
+        if salvaged_sections:
+            logger.info(
+                "chunking: doc_id=%s salvaged %d section(s) (%d chars) via flat chunking — "
+                "no valid section_path, but content is indexed",
+                doc_id, salvaged_sections, salvaged_chars,
+            )
         if not chunks:
-            # No valid Volume/Chapter sections found — fall back to unstructured chunking
+            # No valid Volume/Chapter sections found — fall back to unstructured chunking.
+            # LOUD: this silently disables the whole BookRAG path (parent/child chunks,
+            # section index, TOC routing, contextual headers). It hid two real bugs for
+            # months because the chunking package had no logging at all.
+            logger.warning(
+                "chunking: doc_id=%s detected as BOOK but produced no valid sections — "
+                "falling back to flat chunking (no parent/child, no section_path, "
+                "no contextual retrieval)",
+                doc_id,
+            )
             chunks = chunk_unstructured(clean_text, sensitivity_level, redacted)
             n_chunks = len(chunks)
             for i, c in enumerate(chunks):

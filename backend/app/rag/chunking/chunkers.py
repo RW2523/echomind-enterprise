@@ -225,9 +225,13 @@ def _split_book_into_sections(text: str) -> List[Tuple[Optional[str], str]]:
             return sections
 
     # 2. Chapter/Part/Volume/Appendix/Article
+    # title_group=0 keeps the heading LABEL ("Chapter 4 Travel Reimbursement"). _CHAPTER_RE
+    # puts the label in a non-capturing group, so the default title_group=1 yields only the
+    # trailing title ("Travel Reimbursement") — which _is_valid_book_section_path rejects,
+    # so every chapter-structured book silently fell through to flat chunk_unstructured.
     chapters = list(_CHAPTER_RE.finditer(text))
     if chapters:
-        sections = _split_sections_from_matches(text, chapters)
+        sections = _split_sections_from_matches(text, chapters, title_group=0)
         if sections:
             return sections
 
@@ -385,13 +389,25 @@ def chunk_faq(
     parts = next_q.split(text)
     if len(parts) <= 1:
         parts = [text]
+    # SPLIT oversized blocks instead of truncating them. The old code replaced an
+    # over-long block with its first MAX_FAQ_TOKENS tokens and dropped the rest —
+    # silent data loss: the tail was never chunked, embedded, or indexed, while the
+    # upload still reported success. A misdetected 31-page PDF lost 53% of its text.
+    parts = [
+        b
+        for p in parts
+        for b in (
+            _group_sentences_to_size(_sentences(p), MAX_FAQ_TOKENS // 2, MAX_FAQ_TOKENS)
+            if token_len(p) > MAX_FAQ_TOKENS
+            else [p]
+        )
+    ]
+
     idx = 0
     for block in parts:
         block = block.strip()
         if not block or token_len(block) < 5:
             continue
-        if token_len(block) > MAX_FAQ_TOKENS:
-            block = _truncate_to_tokens(block, MAX_FAQ_TOKENS)
         chunks_out.append(
             Chunk(
                 doc_id="",

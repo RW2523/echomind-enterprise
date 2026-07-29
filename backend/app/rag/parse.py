@@ -133,7 +133,21 @@ def _parse_pdf_fitz(data: bytes) -> Tuple[str, int, List[Tuple[int, int]]]:
     doc = fitz.open(stream=data, filetype="pdf")
     pages_text: List[str] = []
     for page in doc:
-        pages_text.append(page.get_text("text") or "")
+        # Extract by BLOCKS (≈ paragraphs), joined with a blank line, so paragraph
+        # structure survives normalization. get_text("text") emits only single "\n"
+        # line breaks; normalize_whitespace_preserve_paragraphs then collapses a whole
+        # page into ONE line, leaving zero "\n\n" in the document. That silently made
+        # _looks_like_long_form bail at `paragraph_breaks < 5`, so every PDF was typed
+        # USER/FAQ and the entire BookRAG path (parent/child chunks, section index,
+        # TOC routing, contextual headers) never ran. Measured on the FMR corpus:
+        # 0 breaks before -> 74-206 after. sort=True keeps reading order.
+        blocks = page.get_text("blocks", sort=True) or []
+        parts = [
+            (b[4] or "").strip()
+            for b in blocks
+            if len(b) > 6 and b[6] == 0 and (b[4] or "").strip()  # b[6]==0 -> text block
+        ]
+        pages_text.append("\n\n".join(parts) if parts else (page.get_text("text") or ""))
 
     header_pats, footer_pats = detect_header_footer_patterns(pages_text)
 
@@ -147,9 +161,11 @@ def _parse_pdf_fitz(data: bytes) -> Tuple[str, int, List[Tuple[int, int]]]:
         cleaned = normalize_extracted_text(strip_header_footer_lines(raw_text, header_pats, footer_pats))
         page_offsets.append((offset, i + 1))
         cleaned_pages.append(cleaned)
-        offset += len(cleaned) + 1
+        # +2 must match the 2-char "\n\n" page separator below, or every page_offset
+        # drifts by 1 char per page and page citations point at the wrong page (H3).
+        offset += len(cleaned) + 2
 
-    text = "\n".join(cleaned_pages)
+    text = "\n\n".join(cleaned_pages)
     doc.close()
     return text, len(pages_text), page_offsets
 
@@ -177,9 +193,11 @@ def _parse_pdf_pypdf(data: bytes) -> Tuple[str, int, List[Tuple[int, int]]]:
         cleaned = normalize_extracted_text(strip_header_footer_lines(raw_text, header_pats, footer_pats))
         page_offsets.append((offset, i + 1))
         cleaned_pages.append(cleaned)
-        offset += len(cleaned) + 1
+        # +2 must match the 2-char "\n\n" page separator below, or every page_offset
+        # drifts by 1 char per page and page citations point at the wrong page (H3).
+        offset += len(cleaned) + 2
 
-    text = "\n".join(cleaned_pages)
+    text = "\n\n".join(cleaned_pages)
     return text, len(r.pages), page_offsets
 
 

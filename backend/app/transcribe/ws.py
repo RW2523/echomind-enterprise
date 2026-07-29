@@ -9,6 +9,7 @@ import asyncio
 import base64
 import json
 import logging
+import os
 import time
 import uuid
 from typing import Optional
@@ -758,9 +759,26 @@ async def handler(ws: WebSocket):
         except Exception:
             pass
     finally:
-        for at in ctx.analysis_tasks:
-            if not at.done():
-                at.cancel()
+        # Drain in-flight Silent Assistant analyses before cancelling. The trailing
+        # paragraph is only closed by finalize() at EOS, so its analysis starts here —
+        # the old unconditional cancel meant the LAST statement of every session was
+        # never fact-checked (measured: mid-stream card arrived in 3.5s, trailing card
+        # never arrived even after 45s). The socket is still open in `finally`, so the
+        # card can still be delivered. Cancel only stragglers past the deadline.
+        pending = [at for at in ctx.analysis_tasks if not at.done()]
+        if pending:
+            drain_s = float(os.getenv("TRANSCRIPT_ANALYSIS_DRAIN_SEC", "35"))
+            try:
+                _, still_pending = await asyncio.wait(pending, timeout=drain_s)
+            except Exception:
+                still_pending = set(pending)
+            if still_pending:
+                logger.warning(
+                    "Live transcript: %d analysis task(s) exceeded %.0fs drain — cancelling session=%s",
+                    len(still_pending), drain_s, ctx.session_id,
+                )
+                for at in still_pending:
+                    at.cancel()
         if ctx.analysis_tasks:
             await asyncio.gather(*ctx.analysis_tasks, return_exceptions=True)
 
