@@ -77,11 +77,10 @@ EchoMind is a **building block**, not a one-size product. Ajace AI runs N custom
              LLM +     │      FAISS +  │ STT (GPU)   LLM  │     STT │ TTS (CPU)
              embeddings│      BM25 + CE│ Nemotron         │  Nemotron (GPU)
                        ▼      reranker ▼ (in-proc)        ▼  + Parakeet (CPU)
-              ┌──────────────────────┐            ┌──────────────┐   Piper /
-              │  ollama  :11434      │◀───────────│  same ollama │   Kokoro
-              │  Qwen2.5-7B (chat)   │            └──────────────┘
-              │  nomic-embed (RAG)   │
-              └──────────────────────┘
+       ┌──────────────────────────┐  ┌──────────────────┐          Piper /
+       │  trtllm  :8355 (OpenAI)  │  │  ollama  :11434  │          Kokoro
+       │  Qwen3-30B-A3B **NVFP4** │  │  nomic-embed(RAG)│
+       └──────────────────────────┘  └──────────────────┘
 ```
 
 | Service | Role | GPU |
@@ -89,8 +88,8 @@ EchoMind is a **building block**, not a one-size product. Ajace AI runs N custom
 | `frontend` | nginx serving the React SPA; proxies `/api` & `/voice` (WS-aware, unbuffered streaming) | – |
 | `backend` | FastAPI: ingestion, RAG/chat, live transcription + Silent Assistant, Boardroom, Document Studio | ✅ |
 | `voice` | FastAPI WebSocket speech-to-speech loop (VAD, semantic endpointing, barge-in) | ✅ |
-| `ollama` | Chat LLM (**Qwen2.5-7B-Instruct, Q4**) + embeddings (`nomic-embed-text`) | ✅ |
-| `trtllm` | *Optional, profile-gated:* TensorRT-LLM serving **Qwen3-30B-A3B-FP4** — enabled once GB10 FP4 kernels mature (`--profile trtllm`) | ✅ |
+| `trtllm` | **Chat LLM — TensorRT-LLM serving Qwen3-30B-A3B (MoE) in Blackwell-native NVFP4**; ~3k tok/s prefill | ✅ |
+| `ollama` | Embeddings (`nomic-embed-text`) + Qwen2.5-7B kept as a fallback chat engine | ✅ |
 | `cloudflared` | *Optional, profile-gated:* public access via Cloudflare Tunnel (`--profile public`) | – |
 
 ## 🚀 Quick Start
@@ -150,7 +149,7 @@ Scored: routing (small talk / refusals / off-corpus must never cite), expected-d
 **Frontend:** React 19 · Vite 6 · TypeScript · Tailwind · nginx
 **Backend / Voice:** Python · FastAPI · Uvicorn (NVIDIA PyTorch base image)
 **Retrieval:** FAISS (dense) · rank-bm25 (sparse) · weighted RRF fusion · `ms-marco-MiniLM-L-6-v2` cross-encoder reranker + relevance gate · Anthropic-style contextual chunk headers · SQLite
-**Models (all local, all open-weight):** Qwen2.5-7B-Instruct Q4 via Ollama (chat) · Qwen3-30B-A3B-FP4 via TensorRT-LLM (design target, profile-gated) · `nomic-embed-text` (embeddings) · NVIDIA Nemotron streaming ASR (live partials, GPU) · NVIDIA Parakeet-TDT (accurate final STT) · VibeVoice diarization · Piper TTS (+ Kokoro-82M option) · SDXL-Turbo (images)
+**Models (all local, all open-weight):** Qwen3-30B-A3B-FP4 (MoE) via TensorRT-LLM (chat) · Qwen2.5-7B-Instruct Q4 via Ollama (fallback) · `nomic-embed-text` (embeddings) · NVIDIA Nemotron streaming ASR (live partials, GPU) · NVIDIA Parakeet-TDT (accurate final STT) · VibeVoice diarization · Piper TTS (+ Kokoro-82M option) · SDXL-Turbo (images)
 **Infra:** Docker Compose · NVIDIA Container Toolkit · offline-first model caches in named volumes · optional Cloudflare Tunnel
 
 ## 🖥️ Requirements
