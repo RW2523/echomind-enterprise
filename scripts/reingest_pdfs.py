@@ -102,7 +102,7 @@ async def reingest(targets: list[dict], apply: bool) -> None:
                 fh.write(data)
         except Exception as exc:
             print(f"  WARN {t['filename']}: could not persist preview file: {exc}")
-        index.delete_document(t["doc_id"])
+        await index.delete_document(t["doc_id"])  # async — MUST be awaited or nothing is deleted
         try:
             os.remove(t["path"])
         except OSError:
