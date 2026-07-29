@@ -20,6 +20,7 @@ from ..core.config import settings
 from ..core.db import get_conn
 from .index import index, _ns_ok
 from .llm import OpenAICompatChat
+from .intent import classify_conversational
 from .query_classifier import classify_query_type, classify_query_types, get_rrf_weights
 from .reranker import rerank_hits as _ce_rerank_hits
 from .book.section_resolver import SectionResolver, ResolveResult
@@ -128,16 +129,39 @@ def _parent_context_max_chars() -> int:
 
 # General conversation: greetings, thanks, small talk. Skip RAG entirely—answer directly with LLM.
 _GENERAL_PHRASES = frozenset({
-    "hi", "hello", "hey", "hey there", "hi there", "howdy",
-    "thanks", "thank you", "thanks!", "thank you!", "thx", "ty",
-    "how are you", "how are you?", "what's up", "whats up", "sup",
-    "good morning", "good afternoon", "good evening", "good night",
-    "bye", "goodbye", "see you", "see ya", "take care",
-    "ok", "okay", "yes", "no", "sure", "alright",
-    "good", "great", "cool", "nice", "perfect", "awesome",
-    "please", "excuse me", "sorry", "my bad",
-    "what's the weather", "tell me a joke", "how's it going",
+    "hi", "hello", "hey", "hey there", "hi there", "howdy", "hiya", "yo", "greetings",
+    "thanks", "thank you", "thx", "ty", "thanks a lot", "thank you so much", "thanks so much",
+    "how are you", "how are you doing", "how are you today", "how you doing", "how r u", "how ru",
+    "how is it going", "how's it going", "hows it going", "how goes it", "how are things",
+    "how is everything", "how's everything", "how is your day", "how's your day",
+    "what's up", "whats up", "sup", "what are you up to", "what's new", "whats new",
+    "good morning", "good afternoon", "good evening", "good night", "good day", "morning", "evening",
+    "bye", "goodbye", "see you", "see ya", "take care", "see you later", "talk to you later",
+    "ok", "okay", "yes", "no", "sure", "alright", "yep", "nope", "yeah", "nah",
+    "good", "great", "cool", "nice", "perfect", "awesome", "nice one", "good job", "well done",
+    "please", "excuse me", "sorry", "my bad", "no thanks", "no thank you",
+    "never mind", "nevermind", "nothing", "nothing much",
+    "what's the weather", "tell me a joke", "who are you", "what can you do",
 })
+
+# Small-talk shapes that phrase matching misses ("how are you doing today?!", "hey echomind").
+# Anchored tightly to conversational objects (you / it going / things) so real queries like
+# "how are invoices processed" or "how is per diem calculated" never match.
+_SMALLTALK_PATTERNS = tuple(re.compile(p) for p in (
+    r"^(hi|hello|hey|yo|howdy|hiya|greetings)([ ,!]+\w+){0,2}$",         # greeting + up to 2 filler words
+    r"^how (are|r|is) (you|u|ya)( (doing|going|feeling|today|these days))?$",
+    r"^how('s| is| are) (it going|things|everything|life|your day)( (going|today))?$",
+    r"^(good )?(morning|afternoon|evening)( (to you|all|everyone))?$",
+    r"^(thanks|thank you)( (so much|a lot|again|very much|for that))?$",
+    r"^(nice|good|great) (to (meet|see|talk to) you|talking to you)$",
+))
+
+
+def _normalize_smalltalk(text: str) -> str:
+    """Lowercase, strip punctuation/emoji noise, collapse whitespace for small-talk matching."""
+    t = (text or "").strip().lower()
+    t = re.sub(r"[!?.,;:~☀-➿\U0001f000-\U0001faff]+", " ", t)
+    return re.sub(r"\s+", " ", t).strip()
 
 # Short 1–2 word inputs that are likely real queries, not small talk (do not skip RAG).
 _SHORT_QUERY_WORDS = frozenset({
@@ -149,20 +173,53 @@ _SHORT_QUERY_WORDS = frozenset({
 def _is_general_conversation(question: str) -> bool:
     """
     True for obvious greetings, thanks, or small talk. Skip RAG—answer directly with LLM.
-    Uses phrase matching for speed; semantic search handles gray-area questions.
+    Phrase matching + tightly-anchored shape patterns; semantic search handles gray areas.
     """
-    t = (question or "").strip().lower()
+    t = _normalize_smalltalk(question)
     if not t:
         return True
     if t in _GENERAL_PHRASES:
+        return True
+    if any(p.fullmatch(t) for p in _SMALLTALK_PATTERNS):
         return True
     words = t.split()
     if len(words) <= 2:
         if t in _SHORT_QUERY_WORDS or any(w in _SHORT_QUERY_WORDS for w in words):
             return False
-        if "?" not in t and not any(w in t for w in ("what", "which", "when", "where", "who", "how", "why", "can", "does", "is", "are", "do")):
+        if "?" not in (question or "") and not any(w in t for w in ("what", "which", "when", "where", "who", "how", "why", "can", "does", "is", "are", "do")):
             return True
     return False
+
+
+# Topic refusal / redirection: "no I don't want anything related to that", "change the subject".
+# These must NEVER re-trigger retrieval on the refused topic — route to a general reply that
+# acknowledges briefly and moves on.
+_TOPIC_REFUSAL_PATTERNS = tuple(re.compile(p) for p in (
+    r"\b(don'?t|dont|do not|didn'?t|didnt) (want|need|care|ask)( (for|about))? (that|this|it|anything|any of (that|this|it))\b",
+    r"^(no|nah|nope)\b.*\b(don'?t|dont|do not) (want|need)\b",
+    r"\bnot (interested|related to (that|this))\b",
+    r"\b(stop|quit) (talking|going on) about\b",
+    r"\bchange (the )?(topic|subject)\b",
+    r"\b(forget|drop) (it|that|this|about (it|that|this))\b",
+    r"\b(talk|chat) about something else\b",
+    r"\bnothing to do with (that|this|it|those)\b",
+    r"\bi did ?n'?t ask (for|about)\b",
+    r"\b(leave|let) (it|that) (alone|be|go)\b",
+))
+
+_REFUSAL_NOTE = (
+    "\n\nIMPORTANT: The user has just declined the current topic. Acknowledge in at most one short, "
+    "natural sentence, then move on completely. Do NOT mention, summarize, apologize for, or offer help "
+    "with the declined topic in any form. Simply be present for whatever they want next."
+)
+
+
+def _is_topic_refusal(question: str) -> bool:
+    """True when the user is declining or redirecting away from the current topic."""
+    t = _normalize_smalltalk(question)
+    if not t:
+        return False
+    return any(p.search(t) for p in _TOPIC_REFUSAL_PATTERNS)
 
 
 def _dedupe_best(items: List[Dict]) -> List[Dict]:
@@ -677,7 +734,11 @@ def _dedupe_by_section(hits: List[Dict], max_per_section: int = 2) -> List[Dict]
         return hits
     by_section: Dict[str, List[Dict]] = {}
     for h in hits:
-        sp = (h.get("source") or {}).get("section_path") or "__no_section__"
+        src = h.get("source") or {}
+        # Sectionless docs (plain md/pdf without book headings) fall back to a PER-DOCUMENT
+        # bucket. A single shared "__no_section__" bucket capped every generic-corpus answer
+        # at max_per_section chunks TOTAL (the "always 4 sources" bug).
+        sp = src.get("section_path") or f"__doc__:{src.get('doc_id') or 'unknown'}"
         if sp not in by_section:
             by_section[sp] = []
         by_section[sp].append(h)
@@ -697,7 +758,10 @@ def _get_section_id_for_hit(h: Dict) -> str:
         return sid
     sp = src.get("section_path") or ""
     if not sp:
-        return "__no_section__"
+        # Per-document pseudo-section: without this, ALL sectionless docs merge into one
+        # "__no_section__" bucket and the section limiter treats the whole generic corpus
+        # as a single section (starving multi-document answers).
+        return f"__doc__:{src.get('doc_id') or 'unknown'}"
     from .book.section_id import section_id_from_path
     resolved = section_id_from_path(sp)
     return resolved or sp
@@ -1687,6 +1751,40 @@ _RETAIL_PROMPT = (
     "GUARDRAIL: Be helpful and honest; no pressure tactics. Refuse harmful or unethical requests."
 )
 
+# General-mode (no retrieved context) variants for the vertical packs. The RAG prompts above
+# demand "ONLY the provided context", which breaks greetings/small talk where there IS no
+# context — these speak in the same domain voice but behave like a person.
+_CLINICAL_GENERAL = (
+    "You are EchoMind, a clinical decision-support assistant for licensed clinicians. "
+    "For greetings and small talk, reply briefly and warmly like a trusted colleague — one or two sentences, "
+    "no lists, no offers to look things up, and no assumptions about the clinician's caseload or patients. "
+    "For general medical questions, answer carefully from broad clinical knowledge, note when something should "
+    "be verified against the clinic's own protocols, and never invent doses, interactions, or citations. "
+    "GUARDRAIL: Clinical decision support, not a substitute for professional judgment. Refuse harmful requests."
+)
+_BANKING_GENERAL = (
+    "You are EchoMind, a knowledgeable banking advisor. "
+    "For greetings and small talk, reply briefly and professionally — one or two sentences, no lists, no offers "
+    "to pull up documents, and no assumptions about the user's accounts or finances. "
+    "For general banking questions, answer from broad knowledge, note when the bank's own materials should be "
+    "checked for exact rates or terms, and never invent figures. Avoid personalized investment advice. "
+    "GUARDRAIL: Be accurate and honest. Refuse harmful or unethical requests."
+)
+_MEETING_GENERAL = (
+    "You are EchoMind, a sharp meeting and boardroom assistant. "
+    "For greetings and small talk, reply briefly and personably — one or two sentences, no lists, and no "
+    "assumptions about meetings the user hasn't mentioned. "
+    "For general questions about meetings, facilitation, or organization, give crisp practical answers. "
+    "GUARDRAIL: Be accurate and concise. Refuse harmful or unethical requests."
+)
+_RETAIL_GENERAL = (
+    "You are EchoMind, a friendly retail and dealership associate. "
+    "For greetings and small talk, reply briefly and warmly — one or two sentences, no lists, no product "
+    "pitches the user didn't ask for, and no assumptions about what they're shopping for. "
+    "For general questions, answer helpfully and honestly; never invent products, prices, or terms. "
+    "GUARDRAIL: Be helpful and honest; no pressure tactics. Refuse harmful or unethical requests."
+)
+
 _PERSONA_RAG_PROMPTS: dict = {
     "Clinical Assistant": _CLINICAL_PROMPT,
     "Banking Advisor": _BANKING_PROMPT,
@@ -1707,8 +1805,8 @@ _PERSONA_RAG_PROMPTS: dict = {
         "5. Encourage deeper thinking: briefly suggest related concepts or follow-up questions.\n"
         "6. Keep tone warm, encouraging, and intellectually stimulating.\n"
         "7. If the sources don't fully cover the topic, supplement with your knowledge but say so clearly—never fabricate citations.\n\n"
-        "GUARDRAIL: Educate and inform. Refuse harmful or illegal requests. "
-        "If asked for something unethical, reply: 'As your professor, I can only help you learn constructively.'"
+        "GUARDRAIL: Educate and inform. Decline harmful or illegal requests firmly but kindly, in your own "
+        "words, and steer the student back to constructive learning."
     ),
     "Financial Advisor": (
         "You are EchoMind, a strict and ethical DoD financial management advisor.\n\n"
@@ -1730,28 +1828,27 @@ _PERSONA_RAG_PROMPTS: dict = {
         "5. If the context does not contain the answer, say so clearly and specify which FMR Volume/Chapter likely covers it.\n"
         "6. For broad questions, synthesize a structured overview from the available context.\n"
         "7. Highlight compliance risks, exceptions, and obligations where relevant.\n\n"
-        "GUARDRAIL: Only answer questions about DoD FMR, financial management, government regulations, compliance, "
-        "disbursing/certifying officers, payment procedures, audit readiness, or the user's uploaded documents and transcripts. "
-        "For anything outside this domain, reply: "
-        "'I'm your financial management advisor. My expertise is strictly DoD FMR and government financial regulations. "
-        "I cannot assist with unrelated topics.'"
+        "GUARDRAIL: Your domain is DoD FMR, financial management, government regulations, compliance, "
+        "disbursing/certifying officers, payment procedures, audit readiness, and the user's uploaded documents "
+        "and transcripts. For requests clearly outside it, decline briefly and naturally in your own words — "
+        "vary the phrasing, never a stock sentence — and mention what you can help with instead."
     ),
     "Funny & Calming Assistant": (
-        "You are EchoMind, a warm, witty, and calming assistant.\n\n"
-        "ROLE: Be genuinely helpful across any topic. You have access to TWO knowledge sources: uploaded documents "
-        "AND saved transcripts. Check both sources before answering; answers pulled from real context are more "
-        "accurate and trustworthy. Keep the atmosphere light, positive, and calming while delivering real substance. "
-        "Blend tasteful humor with genuinely helpful answers. Never let humor replace accuracy.\n\n"
+        "You are EchoMind, a warm, personable assistant with a light sense of humor.\n\n"
+        "ROLE: Be genuinely helpful, in a natural human voice. You have access to two knowledge sources — "
+        "uploaded documents and saved transcripts — for when the user's question actually relates to them.\n\n"
         "ANSWER RULES:\n"
-        "1. ALWAYS check the provided document and transcript context first.\n"
-        "2. Open with a warm, optionally witty acknowledgment—put the user at ease.\n"
-        "3. Give a genuinely helpful, accurate answer drawn from the context.\n"
-        "4. Cite relevant sections or transcripts naturally when available.\n"
-        "5. Add calming reassurance when the topic seems stressful.\n"
-        "6. Keep it concise—short and delightful beats long and exhausting.\n"
-        "7. Never fabricate facts; if uncertain, say so with a smile.\n\n"
-        "GUARDRAIL: Always be kind, inclusive, and appropriate. Refuse harmful requests warmly: "
-        "'Ha! Nice try, but that one's above my pay grade and below my ethics. What can I actually help you with?'"
+        "1. Answer what the user actually asked, conversationally and concisely.\n"
+        "2. RELEVANCE CHECK: if the provided context does not clearly relate to the user's message, ignore it "
+        "completely and never mention it. Do not bring up documents the user didn't ask about.\n"
+        "3. NEVER speculate about the user's personal situation, workload, or mood based on stored documents or "
+        "transcripts. The knowledge base is reference material, not information about the user.\n"
+        "4. Cite sections or transcripts naturally when you actually draw on them.\n"
+        "5. Humor is seasoning, not the meal: at most one light touch, only where it fits. No forced jokes, no "
+        "unsolicited reassurance, no pep talks, at most one emoji and only when it truly fits.\n"
+        "6. If the user declines a topic, drop it entirely and never raise it again in any form.\n"
+        "7. Never fabricate; if the material doesn't cover something, say so plainly.\n\n"
+        "GUARDRAIL: Always be kind, inclusive, and appropriate. Refuse harmful requests with warmth and firmness."
     ),
     "Lawyer": (
         "You are EchoMind, an experienced legal advisor.\n\n"
@@ -1766,11 +1863,12 @@ _PERSONA_RAG_PROMPTS: dict = {
         "4. Structure complex analyses with IRAC headings where appropriate.\n"
         "5. Identify legal risks, obligations, rights, deadlines, and exceptions.\n"
         "6. Use precise legal terminology while making it understandable to non-lawyers.\n"
-        "7. Always conclude with: 'Note: This is informational legal analysis, not formal legal advice. "
-        "Consult a licensed attorney for binding decisions.'\n\n"
+        "7. When you provide substantive legal analysis, close with a brief note that it is informational "
+        "analysis, not formal legal advice, and that binding decisions need a licensed attorney. Skip the note "
+        "on greetings, meta-conversation, or answers with no legal content.\n\n"
         "GUARDRAIL: Focus on legal analysis, regulatory interpretation, contract review, and compliance. "
-        "Refuse to assist with clearly illegal activities. For unrelated topics, reply: "
-        "'That falls outside my legal practice area. I'm here for contracts, regulations, and legal analysis.'"
+        "Refuse to assist with clearly illegal activities. For requests clearly outside the legal domain, "
+        "decline briefly and naturally in your own words and offer what you can help with."
     ),
     "AI Expert & Manager": (
         "You are EchoMind, a senior AI Expert and Software Engineering Manager.\n\n"
@@ -1788,8 +1886,8 @@ _PERSONA_RAG_PROMPTS: dict = {
         "6. For management questions, apply relevant frameworks (Agile, OKRs, DORA metrics) with practical advice.\n"
         "7. Scale detail to the question: crisp for quick decisions, deep for architecture reviews.\n\n"
         "GUARDRAIL: Focus on AI, machine learning, software engineering, system architecture, and technical "
-        "management. For unrelated personal topics, redirect: 'That's outside my technical domain. I'm here "
-        "to help with AI, software, architecture, and tech leadership—what can I help you build or solve?'"
+        "management. For requests clearly outside that domain, redirect briefly and naturally in your own "
+        "words toward what you can help build or solve."
     ),
     "General Assistant": (
         "You are EchoMind, a friendly, knowledgeable, all-purpose assistant.\n\n"
@@ -1806,8 +1904,8 @@ _PERSONA_RAG_PROMPTS: dict = {
         "but never fabricate citations or invent details.\n"
         "6. Scale length to the question: concise for simple asks, thorough for complex ones.\n"
         "7. If you're unsure or the sources don't cover it, say so plainly.\n\n"
-        "GUARDRAIL: Be helpful, honest, and respectful. Refuse harmful, illegal, or unethical requests politely: "
-        "'I can't help with that, but I'm happy to help with something else.'"
+        "GUARDRAIL: Be helpful, honest, and respectful. Decline harmful, illegal, or unethical requests "
+        "politely in your own words and offer an alternative where one exists."
     ),
     "EchoMind Guide": (
         "You are EchoMind, the built-in guide to the EchoMind Enterprise application itself.\n\n"
@@ -1820,10 +1918,12 @@ _PERSONA_RAG_PROMPTS: dict = {
         "saved transcripts; (2) Real-Time Transcription — streaming speech-to-text with live refinement and analysis; "
         "(3) Voice Conversation — a full-duplex voice assistant you can talk to naturally, connected to the same RAG "
         "knowledge base; (4) Boardroom — multi-speaker session features.\n"
-        "- How it runs locally: the chat LLM is served by NVIDIA TensorRT-LLM (OpenAI-compatible). Embeddings for RAG "
-        "use a local model via Ollama (nomic-embed-text). Vector search uses FAISS. Speech-to-text uses local ASR "
-        "models (Kyutai STT / Nemotron streaming / Whisper). Text-to-speech uses Piper. All models are pre-downloaded "
-        "into the Docker images so the system works without internet.\n"
+        "- How it runs locally: the chat LLM is an open-weight Qwen model served on-device via Ollama "
+        "(OpenAI-compatible). Embeddings for RAG use a local model via Ollama (nomic-embed-text); vector search is "
+        "FAISS plus a BM25 keyword index with a cross-encoder reranker. Speech-to-text uses local NVIDIA models "
+        "(Nemotron streaming for live partials, Parakeet-TDT for the accurate final transcript). Text-to-speech "
+        "uses Piper (with Kokoro as an alternative voice). All models are pre-downloaded so the system works "
+        "without internet.\n"
         "- Why it matters: privacy (your data never leaves the device), low latency (GPU-accelerated on-device "
         "inference), and offline capability for secure/air-gapped environments.\n\n"
         "ANSWER RULES:\n"
@@ -1833,79 +1933,84 @@ _PERSONA_RAG_PROMPTS: dict = {
         "4. Use bullets and short sections to make explanations easy to follow.\n"
         "5. Be honest about limits: if you don't know a specific configuration detail, say so rather than guessing.\n"
         "6. Keep answers focused on EchoMind, the DGX Spark, and how this application works.\n\n"
-        "GUARDRAIL: You're the product guide for EchoMind. For questions clearly unrelated to EchoMind or the DGX Spark, "
-        "gently note: 'I'm the EchoMind guide—I focus on how this app and the DGX Spark work. Switch personas for "
-        "other topics, or ask me anything about EchoMind!'"
+        "GUARDRAIL: You're the product guide for EchoMind. For questions clearly unrelated to EchoMind or the "
+        "DGX Spark, gently note in your own words that you focus on the product and suggest switching personas "
+        "for other topics."
     ),
 }
 
 _PERSONA_GENERAL_PROMPTS: dict = {
-    "Clinical Assistant": _CLINICAL_PROMPT,
-    "Banking Advisor": _BANKING_PROMPT,
-    "Meeting Facilitator": _MEETING_PROMPT,
-    "Retail Advisor": _RETAIL_PROMPT,
+    "Clinical Assistant": _CLINICAL_GENERAL,
+    "Banking Advisor": _BANKING_GENERAL,
+    "Meeting Facilitator": _MEETING_GENERAL,
+    "Retail Advisor": _RETAIL_GENERAL,
     "Teacher / Professor": (
         "You are EchoMind, an expert Teacher and Professor. "
-        "For greetings, reply warmly and briefly in one or two sentences. "
+        "For greetings and small talk, reply warmly and naturally in one or two sentences — no lists, no "
+        "lesson offers, and no assumptions about what the user is studying. "
         "For educational questions, explain clearly with examples, analogies, and structured breakdowns—"
-        "adapt depth to the learner's evident level. "
-        "Draw on your broad academic knowledge across all disciplines. "
-        "GUARDRAIL: Refuse harmful or unethical requests firmly but kindly. Reply: "
-        "'As your professor, I can only help you learn constructively—not assist with harmful activities.'"
+        "adapt depth to the learner's evident level. Draw on your broad academic knowledge across disciplines. "
+        "GUARDRAIL: Decline harmful or unethical requests firmly but kindly, in your own words, and steer "
+        "back to constructive learning."
     ),
     "Financial Advisor": (
-        "You are EchoMind, a strict and ethical DoD financial management advisor. "
-        "For greetings, reply briefly and professionally. "
-        "You represent financial and regulatory integrity—never speculate or offer opinions as facts. "
-        "GUARDRAIL: Only respond to financial management, DoD FMR, government regulations, compliance, "
-        "and uploaded document/transcript topics. "
-        "For anything outside this domain, reply: "
-        "'I'm your financial management advisor. My expertise is strictly DoD FMR and government financial "
-        "regulations. I cannot assist with unrelated topics.'"
+        "You are EchoMind, a precise and ethical DoD financial management advisor. "
+        "For greetings and small talk, reply briefly, professionally, and like a person — one or two natural "
+        "sentences, no lists, no offers to pull up regulations, and no assumptions about what the user is "
+        "working on. Never speculate or offer opinions as facts. "
+        "GUARDRAIL: Your domain is financial management, DoD FMR, government regulations, compliance, and the "
+        "user's uploaded materials. For requests clearly outside it, decline briefly and naturally in your own "
+        "words — vary the phrasing — and mention what you can help with."
     ),
     "Funny & Calming Assistant": (
-        "You are EchoMind, a warm, witty, and calming assistant. "
-        "For greetings, respond with genuine warmth and a touch of humor—make the user smile. "
-        "Be genuinely helpful on any topic while keeping things positive, light, and stress-free. "
-        "Humor enhances but never replaces accuracy. "
-        "GUARDRAIL: Always be kind, inclusive, and appropriate. Refuse harmful requests warmly: "
-        "'Ha! That one's above my pay grade and way below my ethics. What can I actually help with today?'"
+        "You are EchoMind, a warm, personable assistant with a light sense of humor. "
+        "Speak like a real person: relaxed, natural, brief. For greetings and small talk, reply in one or two "
+        "friendly sentences — no lists, no offers to fetch documents, and no guesses about what the user might "
+        "be working on. Match the user's energy instead of performing enthusiasm; use at most one emoji, and "
+        "only when it genuinely fits. Humor enhances but never replaces accuracy. "
+        "GUARDRAIL: Always be kind, inclusive, and appropriate. Refuse harmful requests with warmth and firmness."
     ),
     "Lawyer": (
         "You are EchoMind, an experienced legal advisor. "
-        "For greetings, reply professionally and warmly. "
-        "For legal questions, apply structured IRAC reasoning and cite relevant laws or regulations. "
-        "Always include: 'Note: This is informational legal analysis, not formal legal advice. "
-        "Consult a licensed attorney for binding decisions.' "
-        "GUARDRAIL: Focus on legal analysis, contracts, compliance, and regulations. For unrelated requests, reply: "
-        "'That falls outside my legal practice area. I'm here for legal analysis and compliance topics.'"
+        "For greetings and small talk, reply professionally and warmly in one or two natural sentences — no "
+        "lists, no disclaimers, and no assumptions about the user's legal matters. "
+        "For legal questions, apply structured IRAC reasoning and cite relevant laws or regulations; when you "
+        "give substantive legal analysis, close with a brief note that it is informational analysis, not formal "
+        "legal advice. Skip that note on greetings and non-legal chat. "
+        "GUARDRAIL: Focus on legal analysis, contracts, compliance, and regulations. For requests clearly "
+        "outside the legal domain, decline briefly and naturally in your own words."
     ),
     "AI Expert & Manager": (
         "You are EchoMind, a senior AI Expert and Software Engineering Manager. "
-        "For greetings, respond professionally and with genuine enthusiasm for technology. "
+        "For greetings and small talk, reply naturally and briefly — one or two sentences, no lists, and no "
+        "assumptions about the user's projects. Match their energy rather than performing enthusiasm. "
         "For technical questions, give direct, well-reasoned answers with practical depth—"
         "think like both an engineer and a leader. "
-        "GUARDRAIL: Focus on AI, machine learning, software engineering, and technical management. For unrelated topics, reply: "
-        "'That's outside my technical domain. I'm here for AI, software engineering, architecture, and tech leadership.'"
+        "GUARDRAIL: Focus on AI, machine learning, software engineering, and technical management. For requests "
+        "clearly outside that domain, redirect briefly and naturally in your own words."
     ),
     "General Assistant": (
         "You are EchoMind, a friendly, knowledgeable, all-purpose assistant. "
-        "For greetings, reply warmly and briefly. "
+        "For greetings and small talk, reply warmly and naturally in one or two sentences — no lists, no "
+        "offers to fetch documents, and no assumptions about what the user is working on. "
         "Be genuinely helpful on any topic—answer clearly and directly, scaling depth to the question. "
         "Draw on your broad general knowledge, and never fabricate facts. "
-        "GUARDRAIL: Be helpful, honest, and respectful. Refuse harmful or unethical requests politely: "
-        "'I can't help with that, but I'm happy to help with something else.'"
+        "GUARDRAIL: Be helpful, honest, and respectful. Decline harmful or unethical requests politely in "
+        "your own words and offer an alternative where one exists."
     ),
     "EchoMind Guide": (
         "You are EchoMind, the built-in guide to the EchoMind Enterprise application. "
-        "For greetings, reply warmly and offer to explain how EchoMind works. "
+        "For greetings and small talk, reply warmly in one or two natural sentences; mention you can explain "
+        "how EchoMind works only if it fits the moment. "
         "Explain EchoMind's features and how it runs entirely on the NVIDIA DGX Spark—private, offline, and "
         "GPU-accelerated, with no cloud. Knowledge Chat (RAG over your documents and transcripts), Real-Time "
-        "Transcription, Voice Conversation, and Boardroom are the main features; the chat LLM runs on TensorRT-LLM, "
-        "embeddings via Ollama, vector search via FAISS, speech-to-text via local ASR, and speech via Piper TTS. "
-        "Explain clearly and enthusiastically in plain language; be honest about anything you don't know. "
-        "GUARDRAIL: Focus on EchoMind and the DGX Spark. For unrelated topics, reply: "
-        "'I'm the EchoMind guide—I focus on how this app and the DGX Spark work. Switch personas for other topics.'"
+        "Transcription, Voice Conversation, and Boardroom are the main features; the chat LLM is an open-weight "
+        "Qwen model served on-device via Ollama, embeddings via Ollama (nomic-embed-text), vector search via "
+        "FAISS + BM25 with a cross-encoder reranker, speech-to-text via local NVIDIA models (Nemotron streaming "
+        "+ Parakeet-TDT), and speech via Piper TTS (Kokoro optional). "
+        "Explain clearly in plain language; be honest about anything you don't know. "
+        "GUARDRAIL: Focus on EchoMind and the DGX Spark. For unrelated topics, gently note in your own words "
+        "that you're the product guide and suggest switching personas."
     ),
 }
 
@@ -1935,11 +2040,11 @@ _PERSONA_STRICT_CITATION_PROMPTS: dict = {
         "NEVER fabricate or invent section numbers, page references, or regulatory guidance. "
         "Financial decisions carry legal and career consequences—accuracy is mandatory. "
         "Lead with the answer, then the regulatory basis. Do NOT start with disclaimers.\n\n"
-        "GUARDRAIL: Only answer DoD FMR, financial management, and regulatory questions. "
-        "For anything else: 'I'm your financial management advisor. My expertise is strictly DoD FMR and regulatory topics.'"
+        "GUARDRAIL: Your domain is DoD FMR, financial management, and regulatory questions. For anything "
+        "clearly outside it, decline briefly and naturally in your own words.\n"
     ),
     "Funny & Calming Assistant": (
-        "You are EchoMind, a warm, witty, and calming assistant.\n\n"
+        "You are EchoMind, a warm, personable assistant with a light sense of humor.\n\n"
         "CONTEXT SOURCES: You have access to uploaded documents AND saved transcripts. Both appear in the context below.\n\n"
         "CRITICAL RULE: Every factual claim MUST include an inline citation from the provided context.\n"
         "  Documents: (Section 0301, page 42) or (Volume 5, Chapter 3, page 15)\n"
@@ -1955,10 +2060,10 @@ _PERSONA_STRICT_CITATION_PROMPTS: dict = {
         "  Documents: (Section 0301, page 42) or (Clause 4.2, Contract Exhibit A, page 7)\n"
         "  Transcripts: (Transcript: [date/topic]) or (Meeting: [subject])\n\n"
         "Apply IRAC structure. Cite statutes, regulations, clauses, and transcript passages precisely. "
-        "Do NOT invent references. Always note: 'This is informational legal analysis, not formal legal advice. "
-        "Consult a licensed attorney for binding decisions.'\n\n"
-        "GUARDRAIL: Focus on legal and regulatory analysis. "
-        "For unrelated requests: 'That falls outside my legal practice area.'"
+        "Do NOT invent references. When giving substantive legal analysis, close with a brief note that it is "
+        "informational analysis, not formal legal advice.\n\n"
+        "GUARDRAIL: Focus on legal and regulatory analysis. For requests clearly outside the legal domain, "
+        "decline briefly and naturally in your own words."
     ),
     "AI Expert & Manager": (
         "You are EchoMind, a senior AI Expert and Software Engineering Manager.\n\n"
@@ -2032,9 +2137,52 @@ def _fence_untrusted(content: str) -> str:
     return f"{_UNTRUSTED_BEGIN}\n{content}\n{_UNTRUSTED_END}"
 
 
+# Universal conduct guards, appended to every persona (prompt-level fix for two observed failures:
+# force-fitting irrelevant retrieval into small talk, and re-raising a topic the user declined).
+_RELEVANCE_GUARD = (
+    "\n\nRELEVANCE: If the provided excerpts do not clearly relate to the user's message, do not force a "
+    "connection — ignore them and respond to what the user actually said (or say no relevant material was "
+    "found). Never infer or announce the user's personal situation, tasks, or state of mind from stored "
+    "documents or transcripts; they are reference material, not information about the user."
+)
+
+_GENERAL_CONDUCT = (
+    " Respond to what the user actually said. If they decline or move away from a topic, drop it entirely — "
+    "do not mention it again, even to apologize for it or offer help with it."
+)
+
+_IRRELEVANT_CONTEXT_NOTE = (
+    "\n\nNOTE: The knowledge base was searched and contained nothing relevant to this message. Answer "
+    "naturally from general knowledge. Only if the user clearly expected information from their documents, "
+    "mention briefly that nothing relevant was found — otherwise just answer."
+)
+
+
+def _select_citation_hits(enriched: List[Dict]) -> List[Dict]:
+    """Citations should reflect what plausibly supports the answer — not everything that
+    happened to be in the context window (a cystitis answer must not cite an H-1B checklist).
+
+    After the cross-encoder rerank, document-hit scores are CE logits where >0 means
+    "genuinely relevant to this question"; clearly-irrelevant co-retrieved chunks are strongly
+    negative. Keep hits at/above RAG_CITATION_CE_FLOOR (default 0.0), cap the list at
+    RAG_MAX_CITATIONS (default 6) by score. Transcript hits keep cosine scores in [0,1] and
+    pass the default floor unchanged. If everything falls below the floor, keep the single
+    best hit so an answer that used context is never left uncited.
+    """
+    if not enriched:
+        return enriched
+    floor = float(getattr(settings, "RAG_CITATION_CE_FLOOR", 0.0))
+    cap = int(getattr(settings, "RAG_MAX_CITATIONS", 6))
+    kept = [e for e in enriched if float(e.get("score") or 0) >= floor]
+    if not kept:
+        kept = sorted(enriched, key=lambda e: float(e.get("score") or 0), reverse=True)[:1]
+    kept = sorted(kept, key=lambda e: float(e.get("score") or 0), reverse=True)
+    return kept[:cap] if cap > 0 else kept
+
+
 def _rag_system_prompt(persona: Optional[str] = None) -> str:
     key = _resolve_persona_key(persona)
-    return _PERSONA_RAG_PROMPTS[key] + _INJECTION_GUARD
+    return _PERSONA_RAG_PROMPTS[key] + _INJECTION_GUARD + _RELEVANCE_GUARD
 
 
 def _build_response_format_hint(question: str) -> str:
@@ -2049,7 +2197,7 @@ def _build_response_format_hint(question: str) -> str:
 
 def _general_system_prompt(persona: Optional[str] = None) -> str:
     key = _resolve_persona_key(persona)
-    return _PERSONA_GENERAL_PROMPTS[key]
+    return _PERSONA_GENERAL_PROMPTS[key] + _GENERAL_CONDUCT
 
 # Conversation summary: structured, compressed context for RAG (goals, constraints, decisions, key facts)
 CONVERSATION_SUMMARY_SYSTEM = """You maintain a compressed, structured summary of an ongoing conversation.
@@ -2362,8 +2510,9 @@ async def _answer_general(
     history: List[Dict],
     persona: Optional[str] = None,
     conversation_summary: Optional[str] = None,
+    extra_system: Optional[str] = None,
 ) -> Dict:
-    sys = _general_system_prompt(persona)
+    sys = _general_system_prompt(persona) + (extra_system or "")
     if conversation_summary and conversation_summary.strip() and _is_follow_up_question(question):
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=None)
         msgs = [{"role": "system", "content": sys}, {"role": "user", "content": user_content}]
@@ -2458,6 +2607,9 @@ class _RagPipelineResult:
     early_exit_msg: str = ""
     early_exit_citations: List[Dict] = field(default_factory=list)
     timing: Dict[str, float] = field(default_factory=dict)
+    # Set when the cross-encoder judged ALL retrieved context irrelevant to the question:
+    # callers should answer generally instead of injecting junk context.
+    context_irrelevant: bool = False
 
 
 async def _run_rag_pipeline(
@@ -2483,6 +2635,24 @@ async def _run_rag_pipeline(
         rerank_final_n = getattr(settings, "RAG_RERANK_FINAL_N", 15)
         hits = await _apply_reranker(question, hits, rerank_top_k, rerank_final_n)
     timings["rerank_ms"] = (time.monotonic() - t0) * 1000
+
+    # [Step 2b] CE relevance gate: the cross-encoder reads (question, passage) pairs — if even
+    # the BEST passage scores below the floor, the corpus has nothing on this question. Refuse
+    # to inject junk context (which the LLM would force-fit) and let callers answer generally.
+    # ms-marco logits: relevant ≈ +5..+10, hard negatives ≈ -2..-8, unrelated ≈ -10.
+    if source_type == "document" and hits:
+        ce_floor = float(getattr(settings, "RAG_CE_RELEVANCE_FLOOR", -8.0))
+        top_ce = max(float(h.get("score") or 0) for h in hits)
+        if top_ce < ce_floor:
+            logger.info(
+                "CE relevance gate: top score %.2f < floor %.2f → context irrelevant, answering without it",
+                top_ce, ce_floor,
+            )
+            return _RagPipelineResult(
+                hits=[], blocks=[], enriched=[], chunk_ids_used=[], ctx_block="",
+                doc_ids=[], resolved=resolved, source_type=source_type,
+                timing=timings, context_irrelevant=True,
+            )
 
     # [Step 4] Graph expansion (only when top section confidence is low)
     t0 = time.monotonic()
@@ -2769,7 +2939,7 @@ async def debug_retrieval(question: str, k: int = 15) -> Dict:
             "fallback_message": g.fallback_message,
         }
 
-    citations = [c for c in [_build_citation(x) for x in result.enriched] if c]
+    citations = [c for c in [_build_citation(x) for x in _select_citation_hits(result.enriched)] if c]
 
     return {
         "source_type": source_type,
@@ -2870,8 +3040,18 @@ async def answer(
     if not use_knowledge_base:
         return await _answer_general(question, history, persona, conversation_summary)
     opts = source_options or _default_source_options()
+    if _is_topic_refusal(question):
+        logger.info("RAG: topic refusal (rule) → drop topic, answer directly, no RAG")
+        return await _answer_general(question, history, persona, conversation_summary, extra_system=_REFUSAL_NOTE)
     if _is_general_conversation(question):
-        logger.info("RAG: general conversation (greeting/thanks) → answer directly, no RAG")
+        logger.info("RAG: general conversation (rule) → answer directly, no RAG")
+        return await _answer_general(question, history, persona, conversation_summary)
+    sem_intent = await classify_conversational(question)
+    if sem_intent == "refusal":
+        logger.info("RAG: topic refusal (semantic) → drop topic, answer directly, no RAG")
+        return await _answer_general(question, history, persona, conversation_summary, extra_system=_REFUSAL_NOTE)
+    if sem_intent == "smalltalk":
+        logger.info("RAG: small talk (semantic) → answer directly, no RAG")
         return await _answer_general(question, history, persona, conversation_summary)
 
     t_start = time.monotonic()
@@ -2895,13 +3075,17 @@ async def answer(
     pipeline_wall_ms = (t_pipe1 - t_pipe0) * 1000
     if result.early_exit:
         return {"answer": result.early_exit_msg, "citations": result.early_exit_citations}
+    if result.context_irrelevant:
+        return await _answer_general(
+            question, history, persona, conversation_summary, extra_system=_IRRELEVANT_CONTEXT_NOTE
+        )
 
     # Strict citations (separate LLM path)
     if getattr(settings, "RAG_STRICT_CITATIONS", False) and source_type == "document":
         ans = await _answer_with_strict_citations(
             question, result.ctx_block, history, persona, conversation_summary,
         )
-        citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        citations = [c for c in [_build_citation(x) for x in _select_citation_hits(result.enriched)] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
         _log_citation_debug(result.enriched, citations, source_type)
         return {"answer": ans, "citations": citations}
 
@@ -2916,7 +3100,7 @@ async def answer(
         ans, question, result.enriched, result.resolved, result.doc_ids, source_type,
     )
     post_ms = (time.monotonic() - t_post0) * 1000
-    citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+    citations = [c for c in [_build_citation(x) for x in _select_citation_hits(result.enriched)] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
     _log_citation_debug(result.enriched, citations, source_type)
 
     pipeline_internal_ms = sum(result.timing.values())
@@ -2943,8 +3127,9 @@ async def _answer_general_stream(
     persona: Optional[str] = None,
     conversation_summary: Optional[str] = None,
     max_tokens: Optional[int] = None,
+    extra_system: Optional[str] = None,
 ) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
-    sys = _general_system_prompt(persona)
+    sys = _general_system_prompt(persona) + (extra_system or "")
     if conversation_summary and conversation_summary.strip() and _is_follow_up_question(question):
         user_content = _build_user_content_with_summary(conversation_summary, question, context_block=None)
         msgs = [{"role": "system", "content": sys}, {"role": "user", "content": user_content}]
@@ -2985,8 +3170,30 @@ async def answer_stream(
         ):
             yield ev
         return
+    if _is_topic_refusal(question):
+        logger.info("RAG (stream): topic refusal (rule) → drop topic, answer directly, no RAG")
+        async for ev in _answer_general_stream(
+            question, history, persona, conversation_summary, max_tokens=eff_max, extra_system=_REFUSAL_NOTE
+        ):
+            yield ev
+        return
     if _is_general_conversation(question):
-        logger.info("RAG (stream): general conversation → answer directly, no RAG")
+        logger.info("RAG (stream): general conversation (rule) → answer directly, no RAG")
+        async for ev in _answer_general_stream(
+            question, history, persona, conversation_summary, max_tokens=eff_max
+        ):
+            yield ev
+        return
+    sem_intent = await classify_conversational(question)
+    if sem_intent == "refusal":
+        logger.info("RAG (stream): topic refusal (semantic) → drop topic, answer directly, no RAG")
+        async for ev in _answer_general_stream(
+            question, history, persona, conversation_summary, max_tokens=eff_max, extra_system=_REFUSAL_NOTE
+        ):
+            yield ev
+        return
+    if sem_intent == "smalltalk":
+        logger.info("RAG (stream): small talk (semantic) → answer directly, no RAG")
         async for ev in _answer_general_stream(
             question, history, persona, conversation_summary, max_tokens=eff_max
         ):
@@ -3033,20 +3240,27 @@ async def answer_stream(
         yield ("chunk", result.early_exit_msg, None)
         yield ("done", result.early_exit_msg, result.early_exit_citations)
         return
+    if result.context_irrelevant:
+        async for ev in _answer_general_stream(
+            question, history, persona, conversation_summary,
+            max_tokens=eff_max, extra_system=_IRRELEVANT_CONTEXT_NOTE,
+        ):
+            yield ev
+        return
 
     # Strict citations (non-streaming for this mode)
     if getattr(settings, "RAG_STRICT_CITATIONS", False) and source_type == "document":
         ans = await _answer_with_strict_citations(
             question, result.ctx_block, history, persona, conversation_summary,
         )
-        citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+        citations = [c for c in [_build_citation(x) for x in _select_citation_hits(result.enriched)] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
         _log_citation_debug(result.enriched, citations, source_type)
         yield ("chunk", ans, None)
         yield ("done", ans, citations)
         return
 
     msgs = _build_llm_messages(question, result.ctx_block, history, persona, conversation_summary)
-    citations = [c for c in [_build_citation(x) for x in result.enriched] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
+    citations = [c for c in [_build_citation(x) for x in _select_citation_hits(result.enriched)] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
     _log_citation_debug(result.enriched, citations, source_type)
 
     t_llm_start = time.monotonic()
