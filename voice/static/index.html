@@ -108,6 +108,7 @@ async function startPlayback() {
   currentSource = null;
 }
 
+let scheduledSources = [];
 function smoothStop(ms=60) {
   if (!playCtx || !gainNode) return;
   const now = playCtx.currentTime;
@@ -116,9 +117,12 @@ function smoothStop(ms=60) {
     gainNode.gain.setValueAtTime(gainNode.gain.value, now);
     gainNode.gain.linearRampToValueAtTime(0.0, now + ms/1000);
   } catch(e) {}
-  if (currentSource) {
-    try { currentSource.stop(now + ms/1000 + 0.01); } catch(e) {}
+  // Stop EVERY scheduled source (playhead scheduling keeps several in flight).
+  for (const s of scheduledSources) {
+    try { s.onended = null; s.stop(now + ms/1000 + 0.01); } catch(e) {}
   }
+  scheduledSources = [];
+  nextStartTime = 0;
   setTimeout(() => {
     if (!playCtx) return;
     try { gainNode.gain.setValueAtTime(1.0, playCtx.currentTime); } catch(e) {}
@@ -127,6 +131,7 @@ function smoothStop(ms=60) {
 
 function clearPlayQueue() {
   playQueue = [];
+  nextStartTime = 0;
 }
 
 async function stopPlaybackNow() {
@@ -137,34 +142,33 @@ async function stopPlaybackNow() {
   playCtx=null; gainNode=null; currentSource=null;
 }
 
+// Sample-accurate playhead scheduling (matches the React app's player): each chunk is
+// scheduled on the audio clock right after the previous one. The old onended-chained
+// pump added 5-30 ms of main-thread latency between every 0.35 s chunk — audible gaps.
+let nextStartTime = 0;
 async function enqueuePcmChunk(pcmF32, sr, playbackRate=1.0) {
   if (!playCtx) await startPlayback();
   const targetSr = playCtx.sampleRate;
   const f32 = resampleLinear(pcmF32, sr, targetSr);
-  playQueue.push({f32, rate: playbackRate});
-  if (!playing) pumpPlayback();
-}
 
-function pumpPlayback() {
-  if (!playCtx || !gainNode) return;
-  if (playQueue.length===0) { playing=false; return; }
-  playing=true;
-
-  const item = playQueue.shift();
-  const chunk = item.f32;
-  const rate = item.rate || 1.0;
-
-  const buf = playCtx.createBuffer(1, chunk.length, playCtx.sampleRate);
-  buf.copyToChannel(chunk, 0);
-
+  const buf = playCtx.createBuffer(1, f32.length, targetSr);
+  buf.copyToChannel(f32, 0);
   const src = playCtx.createBufferSource();
   src.buffer = buf;
-  src.playbackRate.value = rate;
+  src.playbackRate.value = playbackRate || 1.0;
   src.connect(gainNode);
 
+  const now = playCtx.currentTime;
+  const startAt = Math.max(now + 0.02, nextStartTime);
+  src.start(startAt);
+  nextStartTime = startAt + buf.duration / (playbackRate || 1.0);
   currentSource = src;
-  src.onended = () => pumpPlayback();
-  src.start();
+  scheduledSources.push(src);
+  playing = true;
+  src.onended = () => {
+    scheduledSources = scheduledSources.filter((s) => s !== src);
+    if (playCtx && nextStartTime <= playCtx.currentTime + 0.021) playing = false;
+  };
 }
 
 async function startMic16kFrames() {

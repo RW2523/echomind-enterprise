@@ -106,20 +106,26 @@ def float32_to_pcm16_bytes(x: np.ndarray) -> bytes:
     return (x * 32767.0).astype(np.int16).tobytes()
 
 
-def _fade_chunk_edges(a: np.ndarray, sr: int, fade_ms: float = 4.0) -> np.ndarray:
-    """Apply short fade-in and fade-out to avoid clicks at chunk boundaries. Modifies in place, returns a."""
+def _fade_chunk_edges(
+    a: np.ndarray, sr: int, fade_ms: float = 4.0,
+    fade_in: bool = True, fade_out: bool = True,
+) -> np.ndarray:
+    """Short fades to avoid clicks. Apply only at PHRASE edges (fade_in on the first chunk,
+    fade_out on the last): the client joins chunks gaplessly on the audio clock, so fading
+    every chunk dips volume to zero every 0.35 s — audible flutter inside a phrase.
+    Modifies in place, returns a."""
     if a.size == 0:
         return a
     n = int(sr * (fade_ms / 1000.0))
     n = min(n, a.size // 2)
     if n <= 0:
         return a
-    # fade-in: linear 0 -> 1 over first n samples
-    for i in range(n):
-        a[i] *= (i + 1) / (n + 1)
-    # fade-out: linear 1 -> 0 over last n samples
-    for i in range(n):
-        a[-(i + 1)] *= (i + 1) / (n + 1)
+    if fade_in:
+        ramp = np.arange(1, n + 1, dtype=np.float32) / (n + 1)
+        a[:n] *= ramp
+    if fade_out:
+        ramp = np.arange(n, 0, -1, dtype=np.float32) / (n + 1)
+        a[-n:] *= ramp
     return a
 
 def rms_energy(pcm16: bytes) -> float:
@@ -1600,17 +1606,33 @@ class OmniSessionA:
                 await self.send({"type": "error", "where": "tts", "message": str(e), "generation_id": my_gen})
                 return
 
+            # Controlled inter-phrase pause: synth() trims Piper's baked-in edge silence
+            # (which stacked into 200-300 ms of dead air at every phrase join); re-add a
+            # short, CONSISTENT pause so speech flows naturally — longer at sentence ends,
+            # brief at clause splits, none after fillers (the reply follows immediately).
+            if not is_filler and y.size:
+                pause_ms = 160.0 if phrase.rstrip().endswith((".", "!", "?", ":")) else 90.0
+                y = np.concatenate([y, np.zeros(int(sr * pause_ms / 1000.0), dtype=np.float32)])
+
             # Larger chunks = fewer boundaries = fewer clicks; 0.35s at 22kHz ~= 7700 samples
             chunk_samples = int(sr * 0.35)
             chunk_samples = max(chunk_samples, 256)
+            n_chunks = (y.size + chunk_samples - 1) // chunk_samples
             i = 0
+            idx = 0
             while i < y.size:
                 if my_gen != self.generation_id:
                     return
                 part = y[i : i + chunk_samples].astype(np.float32)
                 i += chunk_samples
-                # Short fade at edges to avoid crackling at chunk boundaries
-                _fade_chunk_edges(part, sr, fade_ms=4.0)
+                # Fade only the PHRASE edges (first chunk in, last chunk out). The client
+                # schedules chunks gaplessly on the audio clock, so fading every chunk just
+                # dipped the volume to zero every 0.35 s — audible flutter inside a phrase.
+                _fade_chunk_edges(
+                    part, sr, fade_ms=4.0,
+                    fade_in=(idx == 0), fade_out=(idx == n_chunks - 1),
+                )
+                idx += 1
                 await self.send({
                     "type": "audio_out",
                     "generation_id": my_gen,

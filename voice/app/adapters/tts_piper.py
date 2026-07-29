@@ -57,4 +57,32 @@ class PiperTTS:
         if audio.ndim > 1:
             audio = audio.mean(axis=1)
         self.sr = int(sr)
-        return audio.astype(np.float32)
+        # Trim the model's leading/trailing silence. Each phrase is an independent Piper run
+        # that bakes in sentence-end silence + quiet edges; phrase-chunked streaming then
+        # stacks those into 200-300 ms of dead air at EVERY phrase join (measured: 128 gaps,
+        # 26.6 s dead air in a 198 s reply). The caller inserts a controlled short pause
+        # between phrases instead, so joins sound natural rather than gappy.
+        return _trim_edge_silence(audio.astype(np.float32), int(sr))
+
+
+def _trim_edge_silence(
+    y: np.ndarray,
+    sr: int,
+    threshold: float = 0.003,
+    keep_head_ms: float = 25.0,
+    keep_tail_ms: float = 50.0,
+) -> np.ndarray:
+    """Cut leading/trailing near-silence, keeping small natural margins."""
+    if y.size == 0:
+        return y
+    win = max(1, int(sr * 0.01))  # 10 ms windows
+    n = y.size // win
+    if n < 3:
+        return y
+    rms = np.sqrt((y[: n * win].reshape(n, win) ** 2).mean(axis=1))
+    voiced = np.nonzero(rms > threshold)[0]
+    if voiced.size == 0:
+        return y
+    start = max(0, voiced[0] * win - int(sr * keep_head_ms / 1000))
+    end = min(y.size, (voiced[-1] + 1) * win + int(sr * keep_tail_ms / 1000))
+    return y[start:end]
