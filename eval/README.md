@@ -51,3 +51,20 @@ docker exec echomind-backend python3 -c "import sqlite3;c=sqlite3.connect('/data
 
 Latency note: the whole suite is serial against one GPU box (~1–5 s/question). The
 conversational set is fast; the retrieval sets dominate.
+
+## Voice end-to-end test (no microphone needed)
+
+`voice_e2e_test.py` exercises the full speech loop by synthesizing a spoken question
+with Piper and feeding it into the live voice WebSocket as real 20 ms mic frames:
+VAD → streaming partials → semantic endpointing → Parakeet final STT → intent routing
+→ LLM/RAG → phrase-chunked TTS. It prints what the bot heard, the reply, and the
+latencies that matter (asr_final / first reply text / **first audio**) measured from
+end-of-speech. Runs inside the voice container:
+
+```bash
+docker cp eval/voice_e2e_test.py echomind-voice:/tmp/t.py && docker exec echomind-voice python3 /tmp/t.py
+```
+
+Reference numbers on the DGX Spark with Qwen3-30B-A3B-FP4 (TRT-LLM): casual turn
+first-audio ≈ **+0.4 s** after end of speech; full RAG turn ≈ **+0.6 s** (lead
+phrase) with the 30B answer streaming from ≈ +1.1 s.
