@@ -66,6 +66,8 @@ _REFUSAL_PROTOTYPES = (
 
 # Knowledge-seeking contrast class: real questions that MUST reach retrieval. These act
 # as anchors — small talk / refusal only wins with a margin over the best knowledge match.
+# Includes casually/conversationally phrased domain questions: eval showed those embed
+# deceptively close to small-talk prototypes ("Do jumbo CDs earn anything extra?").
 _KNOWLEDGE_PROTOTYPES = (
     "what does the document say about this topic?",
     "summarize the key points of the uploaded file",
@@ -79,6 +81,15 @@ _KNOWLEDGE_PROTOTYPES = (
     "find the definition of this term in the glossary",
     "what are the risks identified in the report?",
     "compare the two sections of the manual",
+    # conversationally phrased domain questions (still knowledge-seeking):
+    "do I get charged anything extra for early withdrawal?",
+    "who do I call when there's a problem with a result?",
+    "how fast do I need to submit the paperwork?",
+    "how long do I have to return it and what's the fee?",
+    "what's the penalty if I cancel early?",
+    "how often do these reviews happen?",
+    "what rate does that account pay and what's the minimum?",
+    "what happens after the trial period ends?",
 )
 
 _emb = OllamaEmbeddings()  # shares the module-global query LRU cache with retrieval
@@ -128,11 +139,16 @@ async def classify_conversational(question: str, timeout_s: float = 4.0) -> Opti
     if not getattr(settings, "RAG_INTENT_SEMANTIC", True):
         return None
     q = (question or "").strip()
+    nwords = len(q.split())
     # Long messages are almost never pure small talk; don't spend a call on them.
-    if not q or len(q.split()) > 24:
+    if not q or nwords > 24:
         return None
-    floor = float(getattr(settings, "RAG_INTENT_SIM_FLOOR", 0.66))
-    margin = float(getattr(settings, "RAG_INTENT_MARGIN", 0.03))
+    # Real small talk is SHORT. Longer conversational phrasings are usually domain
+    # questions ("Do jumbo CDs earn anything extra, and how long ...?") — never
+    # classify those as small talk; refusals may legitimately run longer.
+    smalltalk_max_words = int(getattr(settings, "RAG_INTENT_SMALLTALK_MAX_WORDS", 12))
+    floor = float(getattr(settings, "RAG_INTENT_SIM_FLOOR", 0.68))
+    margin = float(getattr(settings, "RAG_INTENT_MARGIN", 0.05))
     try:
         async def _run() -> Optional[str]:
             if not await _ensure_prototypes():
@@ -147,7 +163,11 @@ async def classify_conversational(question: str, timeout_s: float = 4.0) -> Opti
             )
             if best["refusal"] >= floor and best["refusal"] > best["knowledge"] + margin:
                 return "refusal"
-            if best["smalltalk"] >= floor and best["smalltalk"] > best["knowledge"] + margin:
+            if (
+                nwords <= smalltalk_max_words
+                and best["smalltalk"] >= floor
+                and best["smalltalk"] > best["knowledge"] + margin
+            ):
                 return "smalltalk"
             return None
 

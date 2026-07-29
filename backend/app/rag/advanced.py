@@ -18,7 +18,7 @@ import numpy as np
 
 from ..core.config import settings
 from ..core.db import get_conn
-from .index import index, _ns_ok
+from .index import index, _ns_ok, _active_namespace
 from .llm import OpenAICompatChat
 from .intent import classify_conversational
 from .query_classifier import classify_query_type, classify_query_types, get_rrf_weights
@@ -1484,10 +1484,14 @@ async def retrieve_semantic_first(
         if glossary_hits:
             return ("document", glossary_hits)
 
-    # [Step 1] BookRAG: section restriction (resolver + TOC + dynamic relax)
+    # [Step 1] BookRAG: section restriction (resolver + TOC + dynamic relax).
+    # ONLY for the default (whole-KB) corpus: the section/TOC indexes are global and
+    # book-oriented — inside a vertical namespace they match FMR sections that contain
+    # zero in-namespace chunks, and the restricted search then returns 0 hits for
+    # questions the namespace answers easily (found by the golden-question eval).
     allowed_section_paths: List[str] = []
     no_global_fallback = False
-    if search_document:
+    if search_document and _active_namespace.get() is None:
         allowed_section_paths, no_global_fallback, debug_info = await _get_section_restricted_paths(q, qv)
         _rag_debug_info.set({"allowed_section_paths": allowed_section_paths, **debug_info})
 
@@ -1579,8 +1583,14 @@ async def retrieve_semantic_first(
         )
         document_hits = _filter_hits_by_context_window(document_hits, context_window or "all")
         doc_created_d, doc_meta_d = _get_doc_info_for_hits(document_hits)
-        if halflife > 0:
-            document_hits = _apply_time_decay(document_hits, doc_created_d, halflife)
+        # Reference DOCUMENTS do not decay with upload age — a policy handbook is not less
+        # true after 3 weeks. (Half-life decay crushed in-namespace scores below the 0.45
+        # relevance threshold: 0.61 × exp(-ln2·32d/14d) ≈ 0.13 → every vertical query
+        # collapsed to "general". Found by the golden-question eval.) Transcript recency
+        # decay above is unchanged. Opt back in with RAG_DOC_TIME_DECAY_HALFLIFE_DAYS.
+        doc_halflife = float(getattr(settings, "RAG_DOC_TIME_DECAY_HALFLIFE_DAYS", 0.0))
+        if doc_halflife > 0:
+            document_hits = _apply_time_decay(document_hits, doc_created_d, doc_halflife)
         if getattr(settings, "RAG_PREFER_AUTHORITATIVE", False):
             document_hits = _prefer_authoritative_sort(document_hits)
         document_hits = document_hits[:k]
@@ -1592,12 +1602,14 @@ async def retrieve_semantic_first(
             if doc_best_so_far < fallback_threshold:
                 keyword_hits = index.search_document_keyword_grep(q, k_per)
                 if keyword_hits:
-                    existing_ids = {h["chunk_id"] for h in document_hits}
+                    # On duplicates keep the HIGHER score: a grep rescue must be able to
+                    # rescue chunks dense already found weakly, else the fallback is a no-op.
+                    by_id = {h["chunk_id"]: h for h in document_hits}
                     for kh in keyword_hits:
-                        if kh["chunk_id"] not in existing_ids:
-                            document_hits.append(kh)
-                            existing_ids.add(kh["chunk_id"])
-                    document_hits = sorted(document_hits, key=lambda h: h["score"], reverse=True)[:k]
+                        cur = by_id.get(kh["chunk_id"])
+                        if cur is None or float(kh["score"]) > float(cur["score"]):
+                            by_id[kh["chunk_id"]] = kh
+                    document_hits = sorted(by_id.values(), key=lambda h: h["score"], reverse=True)[:k]
                     logger.info(
                         "RAG keyword fallback: merged %d grep hits (doc_best=%.3f < %.3f)",
                         len(keyword_hits), doc_best_so_far, fallback_threshold,
@@ -2148,7 +2160,9 @@ _RELEVANCE_GUARD = (
 
 _GENERAL_CONDUCT = (
     " Respond to what the user actually said. If they decline or move away from a topic, drop it entirely — "
-    "do not mention it again, even to apologize for it or offer help with it."
+    "do not mention it again, even to apologize for it or offer help with it. "
+    "You have NO retrieved documents in this reply: never invent citations, section numbers, page references, "
+    "or document names — if you answer from general knowledge, present it as general knowledge."
 )
 
 _IRRELEVANT_CONTEXT_NOTE = (

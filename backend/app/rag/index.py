@@ -38,6 +38,20 @@ def _ns_ok(src: dict) -> bool:
     if ns is None:
         return True
     return ((src or {}).get("namespace") or "default") == ns
+
+
+def _ns_fetch_k(k: int, base_mult: int, total: int) -> int:
+    """Candidate-pool size for FAISS/BM25 fetches, namespace-aware.
+
+    Searches rank GLOBALLY then filter by namespace. With a large default corpus
+    (e.g. 10k FMR chunks) a small vertical namespace (~60 chunks) can be entirely
+    absent from a k*4 global top — retrieval returns 0 hits for questions the
+    namespace answers easily. When a namespace is active, widen the pool a lot;
+    FlatIP over ~10k vectors costs milliseconds, so the recall is cheap.
+    """
+    if _active_namespace.get() is not None:
+        return min(max(k * 50, 512), total)
+    return min(k * base_mult, total)
 from .contextualizer import (
     build_context_header_from_chunk,
     build_contextualized_text,
@@ -759,7 +773,7 @@ class FaissIndex:
             qv = await self.emb.embed([query])
             qv = np.array(qv, dtype=np.float32) if not isinstance(qv, np.ndarray) else qv.astype(np.float32)
             faiss.normalize_L2(qv)
-        fetch_k = min(k * 4, self.index.ntotal)
+        fetch_k = _ns_fetch_k(k, 4, self.index.ntotal)
         D, I = self.index.search(qv, fetch_k)
         out = []
         chunk_ids = self.meta["chunk_ids"]
@@ -784,7 +798,7 @@ class FaissIndex:
         """Sparse (BM25) search over documents only (exclude transcripts)."""
         if not self.sparse._bm25 or not self.sparse.chunk_ids:
             return []
-        raw = self.sparse.search(query, min(k * 4, len(self.sparse.chunk_ids)))
+        raw = self.sparse.search(query, _ns_fetch_k(k, 4, len(self.sparse.chunk_ids)))
         out = [h for h in raw if not self._is_transcript_chunk(h.get("source") or {}) and _ns_ok(h.get("source") or {})]
         return out[:k]
 
@@ -827,6 +841,11 @@ class FaissIndex:
             src = json.loads(src_json) if src_json else {}
             if self._is_transcript_chunk(src):
                 continue
+            # Namespace isolation: without this the grep fallback leaks out-of-namespace
+            # chunks (score 0.8) that outrank real in-namespace hits AND get killed by the
+            # downstream _ns_ok safety net → net effect was 0 hits for vertical queries.
+            if not _ns_ok(src):
+                continue
             # Base 0.5 + 0.1 per term matched, cap 0.8
             score = min(0.8, 0.5 + 0.1 * matches)
             if cid not in scored or scored[cid]["score"] < score:
@@ -861,7 +880,7 @@ class FaissIndex:
             qv = np.array(qv, dtype=np.float32) if not isinstance(qv, np.ndarray) else qv.astype(np.float32)
             faiss.normalize_L2(qv)
 
-        fetch_k = min(k * 8, self.index.ntotal)
+        fetch_k = _ns_fetch_k(k, 8, self.index.ntotal)
         D, I = self.index.search(qv, fetch_k)
         out = []
         chunk_ids = self.meta["chunk_ids"]
@@ -901,7 +920,7 @@ class FaissIndex:
         if not allowed_section_paths:
             return self.search_document_only_sparse(query, k)
 
-        raw = self.sparse.search(query, min(k * 8, len(self.sparse.chunk_ids)))
+        raw = self.sparse.search(query, _ns_fetch_k(k, 8, len(self.sparse.chunk_ids)))
         out = []
         for h in raw:
             if self._is_transcript_chunk(h.get("source") or {}):
