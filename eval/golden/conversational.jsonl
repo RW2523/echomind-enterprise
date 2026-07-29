@@ -1,0 +1,12 @@
+# Routing regression set: these must NEVER trigger retrieval / citations.
+# Covers the exact failures from the 2026-07-29 "Companion" conversation plus the semantic layer.
+{"id": "conv-greeting-exact", "type": "smalltalk", "persona": "Funny & Calming Assistant", "question": "How are you doing", "forbid_facts": ["H-1B", "visa", "Antideficiency", "document"]}
+{"id": "conv-greeting-variant", "type": "smalltalk", "persona": "General Assistant", "question": "hey there! hows it going?", "forbid_facts": ["document", "transcript", "knowledge base"]}
+{"id": "conv-greeting-semantic", "type": "smalltalk", "persona": "Clinical Assistant", "question": "hows life treating you?", "forbid_facts": ["formulary", "protocol", "document"]}
+{"id": "conv-greeting-semantic-2", "type": "smalltalk", "persona": "AI Expert & Manager", "question": "wassup my friend", "forbid_facts": ["document", "architecture doc"]}
+{"id": "conv-thanks", "type": "smalltalk", "persona": "Lawyer", "question": "thanks so much!", "forbid_facts": ["not formal legal advice", "licensed attorney"]}
+{"id": "conv-refusal-rule", "type": "refusal", "persona": "Funny & Calming Assistant", "setup": ["what documents do you have about H-1B visas"], "question": "no I dont want anything related to that", "forbid_facts": ["H-1B", "visa", "petition", "checklist"]}
+{"id": "conv-refusal-semantic", "type": "refusal", "persona": "Financial Advisor", "setup": ["what does the FMR say about travel reimbursement"], "question": "why do you keep bringing that up, lets talk about something else", "forbid_facts": ["reimburs", "FMR", "travel expense"]}
+{"id": "conv-offcorpus", "type": "offcorpus", "persona": "General Assistant", "question": "what is the best recipe for chocolate cake", "expect_facts": [["flour", "cocoa", "sugar", "bake"]], "forbid_facts": ["FMR", "H-1B", "formulary"]}
+{"id": "conv-greeting-lawyer-no-disclaimer", "type": "smalltalk", "persona": "Lawyer", "question": "good morning!", "forbid_facts": ["not formal legal advice", "licensed attorney", "informational legal analysis"]}
+{"id": "conv-domain-shape-not-smalltalk", "type": "retrieval", "namespace": "meetings", "persona": "Meeting Facilitator", "question": "how are travel expenses reimbursed", "expect_docs": ["Company Policy Handbook"], "expect_citations": ">=1"}
