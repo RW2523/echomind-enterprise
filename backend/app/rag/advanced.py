@@ -2199,6 +2199,12 @@ def _rag_system_prompt(persona: Optional[str] = None) -> str:
     return _PERSONA_RAG_PROMPTS[key] + _INJECTION_GUARD + _RELEVANCE_GUARD
 
 
+_MULTIPART_RE = re.compile(
+    r",\s+and\s+(how|what|when|where|who|which|above|at)\b|\band\s+(how|what)\s+(long|much|fast|often|many)\b",
+    re.I,
+)
+
+
 def _build_response_format_hint(question: str) -> str:
     """Return optional format hint for the LLM based on query type."""
     types = classify_query_types(question)
@@ -2206,6 +2212,10 @@ def _build_response_format_hint(question: str) -> str:
         return "Use numbered steps. Cite the relevant section for each step."
     if _parse_comparison_sections(question):
         return "Compare the sections side by side, then list key differences."
+    # Multi-part questions ("...what rate, and what's the penalty?"): the 7B model tends to
+    # answer only the first part — found by the golden eval.
+    if _MULTIPART_RE.search(question or "") or (question or "").count("?") > 1:
+        return "The question has multiple parts — answer every part explicitly, none may be skipped."
     return ""
 
 
@@ -2644,23 +2654,29 @@ async def _run_rag_pipeline(
 
     # [Step 2] Cross-encoder re-rank
     t0 = time.monotonic()
+    pre_ce_best = max((float(h.get("score") or 0) for h in hits), default=0.0)  # fused/dense scale
     if source_type == "document":
         rerank_top_k = getattr(settings, "RAG_RERANK_TOP_K", 25)
         rerank_final_n = getattr(settings, "RAG_RERANK_FINAL_N", 15)
         hits = await _apply_reranker(question, hits, rerank_top_k, rerank_final_n)
     timings["rerank_ms"] = (time.monotonic() - t0) * 1000
 
-    # [Step 2b] CE relevance gate: the cross-encoder reads (question, passage) pairs — if even
-    # the BEST passage scores below the floor, the corpus has nothing on this question. Refuse
-    # to inject junk context (which the LLM would force-fit) and let callers answer generally.
-    # ms-marco logits: relevant ≈ +5..+10, hard negatives ≈ -2..-8, unrelated ≈ -10.
+    # [Step 2b] CE relevance gate, two-tier. ms-marco logits: relevant ≈ +5..+10, unrelated ≈ -11.
+    # - Below the HARD floor: gate unconditionally (measured junk cluster: -10.9..-11.4).
+    # - Below the SOFT floor: gate only when the dense signal is ALSO weak. The CE has blind
+    #   spots on symbol-heavy text ("K+ > 6.0" vs "potassium over 6.0" scored -9.8 despite a
+    #   confident 0.57 dense match — found by the golden eval); when the bi-encoder is
+    #   confident, trust it and keep the context.
     if source_type == "document" and hits:
-        ce_floor = float(getattr(settings, "RAG_CE_RELEVANCE_FLOOR", -8.0))
+        soft_floor = float(getattr(settings, "RAG_CE_RELEVANCE_FLOOR", -8.0))
+        hard_floor = float(getattr(settings, "RAG_CE_HARD_FLOOR", -10.5))
+        dense_override = float(getattr(settings, "RAG_CE_DENSE_OVERRIDE", 0.5))
         top_ce = max(float(h.get("score") or 0) for h in hits)
-        if top_ce < ce_floor:
+        gated = top_ce < hard_floor or (top_ce < soft_floor and pre_ce_best < dense_override)
+        if gated:
             logger.info(
-                "CE relevance gate: top score %.2f < floor %.2f → context irrelevant, answering without it",
-                top_ce, ce_floor,
+                "CE relevance gate: top_ce=%.2f (hard=%.2f soft=%.2f dense_best=%.2f) → context irrelevant, answering without it",
+                top_ce, hard_floor, soft_floor, pre_ce_best,
             )
             return _RagPipelineResult(
                 hits=[], blocks=[], enriched=[], chunk_ids_used=[], ctx_block="",
