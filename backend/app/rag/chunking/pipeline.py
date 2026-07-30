@@ -170,6 +170,20 @@ def chunk_document(
         "chunking: doc_id=%s doc_type=%s chars=%d paragraph_breaks=%d",
         doc_id, getattr(doc_type, "value", doc_type), len(text), text.count("\n\n"),
     )
+    # BookRAG (parent/child + section paths + contextual headers) is OPT-IN. The chunking
+    # fixes below are correct, but on the current FMR corpus the structured path measured
+    # WORSE end-to-end than flat chunking: the golden eval dropped 48/52 -> 43/52 with
+    # doc-precision 0.98 -> 0.90 (facts land in parent-context chunks that rank differently,
+    # and several questions started citing the wrong chapter). Flat chunking stays the
+    # default until that is understood; set RAG_ENABLE_BOOKRAG=1 to evaluate the structured
+    # path. See eval/test_chunk_coverage.py before changing this.
+    if doc_type == DocType.BOOK and os.getenv("RAG_ENABLE_BOOKRAG", "0").lower() not in ("1", "true", "yes"):
+        logger.info(
+            "chunking: doc_id=%s detected BOOK but RAG_ENABLE_BOOKRAG is off — using flat chunking",
+            doc_id,
+        )
+        doc_type = DocType.USER
+
     clean_text, redacted, sensitivity_level = sanitize_text(text)
     total_chars = len(clean_text)
 
