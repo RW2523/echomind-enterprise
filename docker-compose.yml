@@ -139,9 +139,11 @@ services:
       # TensorRT-LLM in compose (OpenAI-compatible); dialogue uses stream=true for TTFT.
       - LLM_URL=http://trtllm:8355/v1/chat/completions
       - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
-      # Gate the voice WebSocket with the backend session cookie (same AUTH_SECRET).
+      # Gate the voice WebSocket with the backend session cookie. NOTE the name:
+      # voice/app/auth_check.py reads VOICE_AUTH_SECRET, which must equal the backend's
+      # AUTH_SECRET or every handshake fails signature validation.
       - VOICE_AUTH_ENABLED=${VOICE_AUTH_ENABLED:-0}
-      - AUTH_SECRET=${AUTH_SECRET:-}
+      - VOICE_AUTH_SECRET=${AUTH_SECRET:-}
       # Optional: LLM_LOG_PAYLOAD=1 logs full JSON body at WARNING (timing always INFO: VOICE_LLM stream start/done).
       # Nemotron STT (same model as backend live transcript; gated HF — set HF_TOKEN in .env if needed)
       - ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
