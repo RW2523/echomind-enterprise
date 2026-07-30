@@ -129,8 +129,13 @@ def evaluate_item(base: str, run_id: str, it: dict) -> dict:
     try:
         resp = _ask(base, chat_id, it["question"], persona, ns)
     except Exception as e:
+        # Keep the same shape as a normal row so the reporting loop can't KeyError on a
+        # failed request (a timeout used to crash the whole run and discard the report).
         return {"id": it["id"], "set": it["_set"], "type": it.get("type", "retrieval"),
-                "passed": False, "error": str(e)[:200], "checks": {}, "latency_s": round(time.monotonic() - t0, 2)}
+                "passed": False, "error": str(e)[:200], "checks": {"request": False},
+                "notes": [f"request failed: {str(e)[:150]}"],
+                "doc_precision": None, "n_citations": 0, "cited": [], "answer_head": "",
+                "latency_s": round(time.monotonic() - t0, 2)}
     latency = time.monotonic() - t0
 
     answer = resp.get("answer") or ""

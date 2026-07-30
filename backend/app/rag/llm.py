@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import time
 import httpx
 from typing import AsyncIterator
@@ -42,6 +43,40 @@ _ENABLE_THINKING = (__import__("os").getenv("LLM_ENABLE_THINKING", "0").strip().
 _EXTRA = {} if _ENABLE_THINKING else {"chat_template_kwargs": {"enable_thinking": False}}
 
 
+# ── Reasoning-leak guard ────────────────────────────────────────────────────────
+# Qwen3-30B on TRT-LLM intermittently (~6% of short answers, sampling-dependent) fails to
+# emit EOS: it produces a complete answer, then a stray token ("RefreshLayout", "移除",
+# "Feedback", "<think>"), then chain-of-thought about the user's request. thinking is
+# already disabled via chat_template_kwargs and finish_reason is usually "stop", so this is
+# a decode-time artifact, not a prompt bug. Cut the answer at the leak boundary.
+_LEAK_RE = re.compile(
+    r"(?:<think>|"
+    r"(?:^|\n)\s*(?:Okay|Alright|Hmm|So)\s*,?\s+(?:the user|I need to|I should|let me|we need)\b|"
+    r"(?:^|\n)\s*The user (?:asked|wants|is asking)\b)",
+    re.IGNORECASE,
+)
+
+
+def strip_reasoning_leak(text: str) -> str:
+    """Truncate an answer at leaked chain-of-thought. Returns the clean prefix."""
+    if not text:
+        return text
+    m = _LEAK_RE.search(text)
+    if not m or m.start() == 0:
+        # start==0 means the WHOLE response is reasoning — keep it rather than blank the answer
+        return text
+    cleaned = text[: m.start()].rstrip()
+    # Drop a trailing stray token left on the last line (e.g. "... 😊\nRefreshLayout")
+    lines = cleaned.split("\n")
+    if len(lines) > 1 and 0 < len(lines[-1].strip()) <= 24 and " " not in lines[-1].strip():
+        lines = lines[:-1]
+        cleaned = "\n".join(lines).rstrip()
+    logger.warning(
+        "LLM: reasoning leak detected — truncated %d trailing chars", len(text) - len(cleaned)
+    )
+    return cleaned
+
+
 class OpenAICompatChat:
     def __init__(self, base_url: str, model: str):
         self.base_url = base_url.rstrip("/")
@@ -55,7 +90,7 @@ class OpenAICompatChat:
             r = await client.post(f"{self.base_url}/chat/completions", json=payload)
             r.raise_for_status()
             j=r.json()
-            out = (j["choices"][0]["message"]["content"] or "").strip()
+            out = strip_reasoning_leak((j["choices"][0]["message"]["content"] or "").strip())
         elapsed_ms = (time.monotonic() - t0) * 1000
         usage = j.get("usage") or {}
         logger.info(
@@ -80,6 +115,7 @@ class OpenAICompatChat:
         ttft_mono: float | None = None
         sse_data_events = 0
         content_deltas = 0
+        _acc = ""
         total_chars = 0
 
         async with httpx.AsyncClient(timeout=180) as client:
@@ -98,6 +134,12 @@ class OpenAICompatChat:
                             delta = (j.get("choices") or [{}])[0].get("delta") or {}
                             content = delta.get("content")
                             if content:
+                                # Reasoning-leak guard (streaming): once chain-of-thought
+                                # starts leaking, stop the stream rather than emit it.
+                                _acc += content
+                                if _LEAK_RE.search(_acc[-400:]):
+                                    logger.warning("LLM stream: reasoning leak detected — cutting stream")
+                                    break
                                 if ttft_mono is None:
                                     ttft_mono = time.monotonic()
                                 content_deltas += 1

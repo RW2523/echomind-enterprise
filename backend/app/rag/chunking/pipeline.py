@@ -7,6 +7,7 @@ Metadata validation: rejects chunks with malformed section_path (e.g. "Segment N
 from __future__ import annotations
 import bisect
 import logging
+import os
 import re
 from typing import Dict, List, Optional, Tuple
 
@@ -47,6 +48,11 @@ def _is_valid_book_section_path(section_path: Optional[str]) -> bool:
         return False
     # DoD numbered sections: 4-6 digit code followed by title (e.g. "0101 GENERAL")
     if re.match(r"^\d{4,6}\s+", sp):
+        return True
+    # Decimal-numbered sections used throughout the FMR chapters ("2.0 POLICY",
+    # "1.1 Purpose", "4.5 Incorporated References"). These are real section labels;
+    # rejecting them silently dropped every FMR chapter to flat chunking.
+    if re.match(r"^\d+(?:\.\d+)*\s+\S", sp):
         return True
     has_volume = bool(re.search(r"Volume\s+\d+", sp, re.I))
     has_chapter = bool(re.search(r"Chapter\s+\d+", sp, re.I))
@@ -103,6 +109,33 @@ def _page_for_offset(
     if page_offsets:
         return _true_page_for_offset(offset, page_offsets)
     return _estimate_page_for_offset(offset, total_chars, estimated_pages)
+
+
+
+def _coverage_ratio(source: str, chunks: List[Chunk]) -> float:
+    """Fraction of the source represented by the chunks, measured on word shingles.
+
+    Substring matching is too brittle here: chunkers re-join sentences and normalize
+    whitespace, so identical content fails an exact `find`. Comparing sets of 8-word
+    shingles is robust to whitespace/rejoining while still detecting genuinely dropped
+    passages. Summing chunk lengths is NOT a substitute — overlap double-counts and can
+    read >100% while a third of the document is missing (observed).
+    """
+    N = 8
+    src_words = (source or "").split()
+    if len(src_words) < N:
+        return 1.0
+    src = {tuple(src_words[i:i + N]) for i in range(len(src_words) - N + 1)}
+    if not src:
+        return 1.0
+    got: set = set()
+    for c in chunks:
+        w = ((getattr(c, "text", "") or "")).split()
+        for i in range(max(0, len(w) - N + 1)):
+            sh = tuple(w[i:i + N])
+            if sh in src:
+                got.add(sh)
+    return len(got) / len(src)
 
 
 def chunk_document(
@@ -244,6 +277,29 @@ def chunk_document(
                     offset = int((i / n_chunks) * total_chars) if total_chars > 0 else 0
                     c.page_number = _page_for_offset(offset, total_chars, estimated_pages, page_offsets)
             return chunks
+        # CONTENT-LOSS GUARD: structured chunking must not lose the document. Sub-paths
+        # (section split, parent/child sizing, large-section handling) have each dropped
+        # text at some point; rather than trust them, verify and fall back to the
+        # proven-lossless flat chunker when coverage is short. Never silent.
+        min_cov = float(os.getenv("CHUNK_MIN_COVERAGE", "0.98"))
+        cov = _coverage_ratio(clean_text, chunks)
+        if cov < min_cov:
+            logger.warning(
+                "chunking: doc_id=%s BOOK chunking covered only %.0f%% of the document "
+                "(< %.0f%% required) — falling back to flat chunking to preserve content",
+                doc_id, cov * 100, min_cov * 100,
+            )
+            chunks = chunk_unstructured(clean_text, sensitivity_level, redacted)
+            n_chunks = len(chunks)
+            for i, c in enumerate(chunks):
+                c.doc_id = doc_id
+                c.chunk_id = new_id("chk")
+                c.chunk_index = i
+                if n_chunks > 0 and (estimated_pages > 0 or page_offsets):
+                    offset = int((i / n_chunks) * total_chars) if total_chars > 0 else 0
+                    c.page_number = _page_for_offset(offset, total_chars, estimated_pages, page_offsets)
+            return chunks
+        logger.info("chunking: doc_id=%s BOOK coverage %.0f%%", doc_id, cov * 100)
         _assign_indices(chunks)
         return chunks
     elif doc_type == DocType.SENSITIVE:

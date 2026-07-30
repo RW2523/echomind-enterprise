@@ -189,16 +189,58 @@ _DEEP_NUM_RE = re.compile(
 )
 
 
+# A heading match ends at `$`, but paragraph-preserved text keeps a whole paragraph on ONE
+# line — so `(.+?)\s*$` swallows the entire section body into the title (observed: 2,000-char
+# section_paths). Bound the title to the actual heading.
+_NEXT_NUM_MARKER_RE = re.compile(r"\s+\d+(?:\.\d+)+\.?\s")
+_HEADING_MAX_CHARS = 100
+
+
+def _clean_heading_title(title: str) -> str:
+    """Reduce a matched heading line to a short breadcrumb label.
+
+    '2.0 POLICY 2.1 Defense-wide Appropriations Unless otherwise...' -> '2.0 POLICY'
+    """
+    t = " ".join((title or "").split())
+    if not t:
+        return t
+    # Cut before the NEXT numbered marker ("2.0 POLICY 2.1 Defense-wide..." -> "2.0 POLICY").
+    m = _NEXT_NUM_MARKER_RE.search(t, 1)
+    if m:
+        t = t[: m.start()].strip()
+    # Otherwise stop at the first sentence end.
+    if len(t) > _HEADING_MAX_CHARS:
+        dot = t.find(". ")
+        if 0 < dot < _HEADING_MAX_CHARS:
+            t = t[:dot]
+    # Hard cap on a word boundary.
+    if len(t) > _HEADING_MAX_CHARS:
+        cut = t.rfind(" ", 0, _HEADING_MAX_CHARS)
+        t = t[: cut if cut > 0 else _HEADING_MAX_CHARS]
+    return t.strip(" .:-")
+
+
 def _split_sections_from_matches(
     text: str,
     matches: list,
     title_group: int = 1,
 ) -> List[Tuple[str, str]]:
-    """Build (title, body) pairs from regex match objects."""
+    """Build (title, body) pairs from regex match objects.
+
+    CONTENT SAFETY: the body starts at the match START, not its end. With title_group=0 the
+    match can span a whole paragraph, and the title is truncated to a short label — anything
+    between the truncated label and m.end() would otherwise be silently DISCARDED (measured:
+    41% of a 68k-char FMR chapter lost). The title is only a label; the body owns the text.
+    Any preamble before the first heading is emitted as its own leading section.
+    """
     sections: List[Tuple[str, str]] = []
+    if matches and matches[0].start() > 0:
+        preamble = text[: matches[0].start()].strip()
+        if preamble:
+            sections.append(("", preamble))
     for i, m in enumerate(matches):
-        title = m.group(title_group).strip()
-        start = m.end()
+        title = _clean_heading_title(m.group(title_group))
+        start = m.start()
         end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
         body = text[start:end].strip()
         if body:

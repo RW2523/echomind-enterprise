@@ -392,18 +392,30 @@ class FaissIndex:
         if not all_chunks:
             raise ValueError("No text extracted")
 
-        # Metadata validation: skip invalid BOOK chunks (malformed section_path, missing page_number, etc.)
+        # Metadata validation for BOOK chunks. DEGRADE, NEVER DROP: a chunk whose section
+        # metadata is unrecognized is still indexed as an ordinary chunk (it just loses the
+        # section breadcrumb/citation precision). Previously such chunks were `continue`d at
+        # logger.debug — measured content loss of 90% on one FMR chapter (47 chunks -> 4)
+        # the first time BookRAG detection started firing, with nothing above DEBUG to show it.
         valid_chunks: List = []
+        degraded = 0
         for c in all_chunks:
             if getattr(c, "doc_type", None) == DocType.BOOK:
                 src = c.to_source_dict(filename, filetype)
                 _, ok = validate_book_chunk_for_indexing(src)
                 if not ok:
-                    logger.debug("index: skipping invalid BOOK chunk chunk_id=%s section_path=%s", c.chunk_id, getattr(c, "section_path", ""))
-                    continue
+                    c.doc_type = DocType.USER
+                    c.section_path = None
+                    c.section = None
+                    c.section_id = None
+                    degraded += 1
             valid_chunks.append(c)
-        if not valid_chunks:
-            raise ValueError("No valid chunks after metadata validation. Ensure sections have recognized paths (DoD codes, Volume/Chapter, or Section/Appendix) and page numbers.")
+        if degraded:
+            logger.warning(
+                "index: %d/%d chunk(s) in %s had unrecognized BOOK section metadata — "
+                "indexed WITHOUT section info (content preserved, citations lose section/page precision)",
+                degraded, len(all_chunks), filename,
+            )
         all_chunks = valid_chunks
 
         embed_chunks = [c for c in all_chunks if not c.is_parent]

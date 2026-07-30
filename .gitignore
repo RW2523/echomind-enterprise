@@ -24,6 +24,8 @@ dist/
 # Local / secrets (do not commit)
 .env
 .env.local
+.env.bak*
+.env.*.bak
 *.sqlite
 /data/
 
