@@ -388,6 +388,47 @@ def _detect_volume_from_phrase(query: str) -> Optional[int]:
     return None
 
 
+_SECTION_COVERAGE_CACHE: Dict[str, Any] = {"ok": None}
+
+
+def _section_index_coverage_ok() -> bool:
+    """True when book_sections covers enough of the corpus for inferred section
+    restriction to be safe.
+
+    Section restriction is a HARD filter: retrieval is confined to the matched
+    section paths. That is a big win on a fully-sectioned corpus (a regulation split
+    into Volume/Chapter/Section) and actively harmful on a partially-sectioned one,
+    where it confines every query to the few documents that happen to have sections.
+    Measured here at 25% coverage: whole-KB retrieval went 7/7 -> 0/7.
+    """
+    cached = _SECTION_COVERAGE_CACHE.get("ok")
+    if cached is not None:
+        return bool(cached)
+    min_ratio = float(getattr(settings, "RAG_SECTION_MIN_DOC_COVERAGE", 0.6))
+    try:
+        with get_conn() as conn:
+            sec_docs = conn.execute("SELECT COUNT(DISTINCT doc_id) FROM book_sections").fetchone()[0] or 0
+            total_docs = conn.execute(
+                "SELECT COUNT(*) FROM documents WHERE filename NOT LIKE 'transcript_%'"
+            ).fetchone()[0] or 0
+        ratio = (sec_docs / total_docs) if total_docs else 0.0
+        ok = ratio >= min_ratio
+        logger.info(
+            "RAG: section-index coverage %d/%d docs (%.0f%%) — inferred section restriction %s",
+            sec_docs, total_docs, ratio * 100, "ENABLED" if ok else "DISABLED",
+        )
+    except Exception as e:  # never block retrieval on a bookkeeping query
+        logger.debug("section coverage check failed (%s) — disabling inferred restriction", e)
+        ok = False
+    _SECTION_COVERAGE_CACHE["ok"] = ok
+    return ok
+
+
+def invalidate_section_coverage_cache() -> None:
+    """Call after ingest/delete so coverage is recomputed."""
+    _SECTION_COVERAGE_CACHE["ok"] = None
+
+
 async def _get_section_restricted_paths(
     query: str, qv: np.ndarray
 ) -> Tuple[List[str], bool, Dict]:
@@ -419,6 +460,14 @@ async def _get_section_restricted_paths(
     resolver = _get_section_resolver()
     resolved = resolver.resolve(query)
 
+    # Fuzzy (non-explicit) section restriction is only safe when the section index
+    # actually covers the corpus. With partial coverage it HARD-RESTRICTS every query
+    # into the minority of documents that happen to have section paths and starves the
+    # rest: measured at 25% coverage, whole-KB retrieval went 7/7 -> 0/7 because every
+    # answer was pulled into the 3 sectioned PDFs. Explicit references ("Volume 5
+    # Chapter 3") still hard-anchor below — those are a deliberate user request.
+    coverage_ok = _section_index_coverage_ok()
+
     # a) Explicit refs: use resolved paths, skip TOC/section search (hard-anchor: no global fallback)
     if resolved.has_explicit_refs and resolved.resolved_paths:
         allowed_paths = resolved.resolved_paths
@@ -437,6 +486,11 @@ async def _get_section_restricted_paths(
         if len(allowed_paths) > max_sections:
             allowed_paths = allowed_paths[:max_sections]
         return (allowed_paths, True, debug_info)
+
+    # Below here the restriction is INFERRED, not requested. Skip it entirely when the
+    # section index covers too little of the corpus (see _section_index_coverage_ok).
+    if not coverage_ok:
+        return ([], False, debug_info)
 
     # a2) Known phrase → volume restriction
     detected_vol = _detect_volume_from_phrase(query)
@@ -1834,7 +1888,7 @@ _PERSONA_RAG_PROMPTS: dict = {
         "- Financial and regulatory guidance must be precise—lives, careers, and legal liability depend on accuracy.\n\n"
         "ANSWER RULES:\n"
         "1. ALWAYS search and use the provided document and transcript context. Never answer from memory alone on regulatory matters.\n"
-        "2. Cite every factual regulatory claim inline: (Section 0301, page 42) or (Volume 5, Chapter 3) or (Transcript: [date]).\n"
+        "2. Cite every factual regulatory claim inline: (<section>, page N) or (<document> — <heading>) or (Transcript: [date]).\n"
         "3. Lead with the direct answer, then provide the regulatory basis and supporting detail.\n"
         "4. Use numbered steps for procedures, bullets for lists, short paragraphs for explanations.\n"
         "5. If the context does not contain the answer, say so clearly and specify which FMR Volume/Chapter likely covers it.\n"
@@ -2035,7 +2089,7 @@ _PERSONA_STRICT_CITATION_PROMPTS: dict = {
         "You are EchoMind, an expert Teacher and Professor.\n\n"
         "CONTEXT SOURCES: You have access to uploaded documents AND saved transcripts. Both appear in the context below.\n\n"
         "CRITICAL RULE: Every factual claim MUST include an inline citation from the provided context.\n"
-        "  Documents: (Section 0301, page 42) or (Volume 5, Chapter 3, page 15)\n"
+        "  Documents: (<section or heading>, page N) — use the document's OWN structure\n"
         "  Transcripts: (Transcript: 2026-04-01) or (Meeting notes: [date])\n\n"
         "Explain cited content clearly using analogies and step-by-step breakdowns. "
         "Adapt to the learner's level. Do NOT invent section numbers or transcript references. "
@@ -2046,9 +2100,9 @@ _PERSONA_STRICT_CITATION_PROMPTS: dict = {
         "You are EchoMind, a strict and ethical DoD financial management advisor.\n\n"
         "CONTEXT SOURCES: You have access to uploaded regulatory documents (FMR volumes) AND saved transcripts. Both appear in the context below.\n\n"
         "CRITICAL ETHICAL RULE: Every factual regulatory claim MUST include an inline citation from the provided context.\n"
-        "  Documents: (Section 0301, page 42) or (Volume 5, Chapter 3, Section 030201, page 142)\n"
+        "  Documents: (<section or heading>, page N) — use the document's OWN structure\n"
         "  Transcripts: (Transcript: [date]) or (Meeting: [topic])\n"
-        "  Example: 'Advances shall not exceed 30 days of pay (Volume 5, Chapter 3, Section 030201, page 142).'\n\n"
+        "  Example: 'Advances shall not exceed 30 days of pay (Section 030201, page 142).'\n\n"
         "NEVER fabricate or invent section numbers, page references, or regulatory guidance. "
         "Financial decisions carry legal and career consequences—accuracy is mandatory. "
         "Lead with the answer, then the regulatory basis. Do NOT start with disclaimers.\n\n"
@@ -2059,7 +2113,7 @@ _PERSONA_STRICT_CITATION_PROMPTS: dict = {
         "You are EchoMind, a warm, personable assistant with a light sense of humor.\n\n"
         "CONTEXT SOURCES: You have access to uploaded documents AND saved transcripts. Both appear in the context below.\n\n"
         "CRITICAL RULE: Every factual claim MUST include an inline citation from the provided context.\n"
-        "  Documents: (Section 0301, page 42) or (Volume 5, Chapter 3, page 15)\n"
+        "  Documents: (<section or heading>, page N) — use the document's OWN structure\n"
         "  Transcripts: (Transcript: [date])\n\n"
         "Cite accurately, but keep the tone warm and approachable. A touch of humor is welcome. "
         "Do NOT invent references. If the context lacks the answer, say so warmly.\n\n"
@@ -2092,7 +2146,7 @@ _PERSONA_STRICT_CITATION_PROMPTS: dict = {
         "You are EchoMind, a friendly, knowledgeable, all-purpose assistant.\n\n"
         "CONTEXT SOURCES: You have access to uploaded documents AND saved transcripts. Both appear in the context below.\n\n"
         "CRITICAL RULE: Every factual claim drawn from the sources MUST include an inline citation from the provided context.\n"
-        "  Documents: (Section 0301, page 42) or (Volume 5, Chapter 3, page 15)\n"
+        "  Documents: (<section or heading>, page N) — use the document's OWN structure\n"
         "  Transcripts: (Transcript: [date])\n\n"
         "Answer clearly and directly. Cite the context for any claim that comes from it. "
         "Do NOT invent references. If the context lacks the answer, say so plainly.\n\n"
@@ -2168,7 +2222,12 @@ _GENERAL_CONDUCT = (
 _IRRELEVANT_CONTEXT_NOTE = (
     "\n\nNOTE: The knowledge base was searched and contained nothing relevant to this message. Answer "
     "naturally from general knowledge. Only if the user clearly expected information from their documents, "
-    "mention briefly that nothing relevant was found — otherwise just answer."
+    "mention briefly that nothing relevant was found — otherwise just answer.\n"
+    "STAY IN SCOPE: you have no sources to draw on here, so do NOT provide substantive domain guidance "
+    "outside your own stated area of expertise (a banking assistant must not give clinical advice, a "
+    "clinical assistant must not give legal advice, and so on). Say plainly that the question falls "
+    "outside both your knowledge base and your role, and offer what you can actually help with. "
+    "Never present general-knowledge claims as if they came from the user's documents."
 )
 
 
@@ -2480,6 +2539,19 @@ async def _build_rag_context_fast(question: str, hits: List[Dict], max_chars_per
         chunk_ids_used.append(h["chunk_id"])
     return blocks, enriched, chunk_ids_used
 
+# How many raw conversation turns to keep alongside the summary on follow-ups.
+_FOLLOWUP_RAW_TURNS = 6
+
+# Word-boundary matched so "it" doesn't fire on "credit"/"limit" and "and" not on
+# "standard" — substring matching made almost every question look like a follow-up,
+# which then took the summary branch and (previously) dropped history entirely.
+_FOLLOW_UP_RE = re.compile(
+    r"\b(that|it|this|these|those|they|them|its|their|also|more|another|"
+    r"what about|how about|and the|explain|elaborate|tell me more|go on)\b",
+    re.IGNORECASE,
+)
+
+
 def _is_follow_up_question(question: str) -> bool:
     """True when question seems like a follow-up (vague, short, or references prior context). Use summary only then."""
     t = (question or "").strip()
@@ -2488,11 +2560,7 @@ def _is_follow_up_question(question: str) -> bool:
     words = t.split()
     if len(words) <= 4:
         return True
-    follow_up_markers = ("that", "it", "this", "these", "those", "what about", "and", "also", "more", "explain", "elaborate", "tell me more", "go on")
-    t_lower = t.lower()
-    if any(m in t_lower for m in follow_up_markers):
-        return True
-    return False
+    return bool(_FOLLOW_UP_RE.search(t))
 
 
 def _build_user_content_with_summary(
@@ -3043,7 +3111,15 @@ def _build_llm_messages(
             conversation_summary, question, context_block=ctx_block,
             response_format_hint=hint or None,
         )
-        return [{"role": "system", "content": _rag_system_prompt(persona)}, {"role": "user", "content": user_content}]
+        # Keep the last few RAW turns alongside the summary. Dropping history entirely
+        # broke pronoun/ellipsis resolution on follow-ups ("what dose for that?" listed
+        # every alternative instead of resolving "that"); the compressed summary alone
+        # loses the immediate referent.
+        return (
+            [{"role": "system", "content": _rag_system_prompt(persona)}]
+            + history[-_FOLLOWUP_RAW_TURNS:]
+            + [{"role": "user", "content": user_content}]
+        )
     user_msg = _build_rag_user_message(question, ctx_block)
     return [{"role": "system", "content": _rag_system_prompt(persona)}] + history[-10:] + [{"role": "user", "content": user_msg}]
 
@@ -3292,6 +3368,13 @@ async def answer_stream(
     msgs = _build_llm_messages(question, result.ctx_block, history, persona, conversation_summary)
     citations = [c for c in [_build_citation(x) for x in _select_citation_hits(result.enriched)] if c] if getattr(settings, "RAG_EXPOSE_SOURCES", False) else []
     _log_citation_debug(result.enriched, citations, source_type)
+
+    # Retrieval already finished, so publish the sources NOW rather than making the client
+    # wait for the terminal "done" event — on long answers that was 20-37s of the user
+    # reading an answer with no visible attribution. The "done" event still carries the
+    # full citation list, so older clients are unaffected.
+    if citations:
+        yield ("sources", None, citations)
 
     t_llm_start = time.monotonic()
     full = []

@@ -51,7 +51,14 @@ def _ns_fetch_k(k: int, base_mult: int, total: int) -> int:
     """
     if _active_namespace.get() is not None:
         return min(max(k * 50, 512), total)
-    return min(k * base_mult, total)
+    # Unfiltered (whole-KB) path: keep the pool NARROW. Widening it to 192 was tried and
+    # measured WORSE — the golden eval dropped 47->43 with doc-precision 0.98->0.86, and
+    # all six regressions were whole-KB questions. This corpus is ~97% transcript chunks,
+    # so a bigger candidate pool mostly admits near-miss transcript noise that crowds the
+    # correct document out of the reranker's top-N. Override per-deployment if your corpus
+    # is document-dominated rather than transcript-dominated.
+    floor = int(getattr(settings, "RAG_GLOBAL_FETCH_FLOOR", 0))
+    return min(max(k * base_mult, floor), total)
 from .contextualizer import (
     build_context_header_from_chunk,
     build_contextualized_text,

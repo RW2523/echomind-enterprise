@@ -304,6 +304,9 @@ export async function askChat(chatId: string, message: string): Promise<{answer:
 export type AskChatStreamCallbacks = {
   onChunk: (text: string) => void;
   onDone: (result: { answer: string; citations: any[] }) => void;
+  /** Fired as soon as retrieval finishes, before the answer streams — lets the UI show
+   *  sources immediately instead of waiting for `done` (20-37s on long answers). */
+  onSources?: (citations: any[]) => void;
   onError?: (err: Error) => void;
 };
 
@@ -357,6 +360,7 @@ export async function askChatStream(
     try {
       const obj = JSON.parse(t);
       if (obj.type === "chunk" && obj.text != null) callbacks.onChunk(obj.text);
+      else if (obj.type === "sources") callbacks.onSources?.(obj.citations ?? []);
       else if (obj.type === "done") {
         sawTerminal = true;
         callbacks.onDone({ answer: obj.answer ?? "", citations: obj.citations ?? [] });

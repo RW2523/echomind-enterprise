@@ -7,6 +7,11 @@ MODEL_HANDLE="${MODEL_HANDLE:-nvidia/Qwen3-30B-A3B-FP4}"
 # 0.9 previously grabbed ~83 GB of unified memory; 0.5 leaves headroom. Override via TRTLLM_KV_FRACTION.
 KVF="${TRTLLM_KV_FRACTION:-0.5}"
 MAXB="${TRTLLM_MAX_BATCH:-64}"
+# Max tokens per scheduled batch. The 8192 default rejected RAG prompts with HTTP 400
+# ("sum of prompt length (8209) should not exceed max_num_tokens (8192)") once BookRAG
+# started supplying whole sections as context. 16384 leaves real headroom for long
+# retrieval contexts and is well inside max_seq_len (40960).
+MAXNT="${TRTLLM_MAX_NUM_TOKENS:-16384}"
 
 if [ "${TRTLLM_SKIP_DOWNLOAD:-0}" = "1" ]; then
   echo "[trtllm] TRTLLM_SKIP_DOWNLOAD=1 — skipping hf download (model must exist in /root/.cache/huggingface)."
@@ -27,9 +32,10 @@ cuda_graph_config:
 disable_overlap_scheduler: true
 EOF
 
-echo "[trtllm] Starting trtllm-serve: model=${MODEL_HANDLE} kv_fraction=${KVF} max_batch=${MAXB} on 0.0.0.0:8355 ..."
+echo "[trtllm] Starting trtllm-serve: model=${MODEL_HANDLE} kv_fraction=${KVF} max_batch=${MAXB} max_num_tokens=${MAXNT} on 0.0.0.0:8355 ..."
 exec trtllm-serve "${MODEL_HANDLE}" \
   --max_batch_size "${MAXB}" \
+  --max_num_tokens "${MAXNT}" \
   --trust_remote_code \
   --host 0.0.0.0 \
   --port 8355 \

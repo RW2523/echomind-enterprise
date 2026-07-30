@@ -509,6 +509,13 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
             streamRafRef.current = requestAnimationFrame(flushStreamToMessages);
           }
         },
+        onSources: (citations) => {
+          // Retrieval is done long before generation finishes — show the sources now
+          // rather than after the whole answer streams. onDone overwrites with the
+          // final list, so this is purely an earlier first paint.
+          if (!mountedRef.current) return;
+          setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, citations: mapCitations(citations) } : m)));
+        },
         onDone: (result) => {
           if (!mountedRef.current) return;  // (M20)
           if (streamRafRef.current != null) {

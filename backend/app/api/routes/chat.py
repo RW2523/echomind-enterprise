@@ -402,6 +402,11 @@ async def ask_voice_stream(inp: AskVoiceIn, request: Request):
             ):
                 if kind == "chunk":
                     yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"
+                elif kind == "sources":
+                    # Sources arrive as soon as retrieval finishes, before generation —
+                    # the client can render attribution immediately instead of waiting
+                    # for "done". "done" still carries the full list.
+                    yield json.dumps({"type": "sources", "citations": citations or []}) + "\n"
                 elif kind == "done":
                     cite_list = citations if citations is not None else []
                     yield json.dumps({"type": "done", "answer": text or "", "citations": cite_list}) + "\n"
@@ -520,6 +525,11 @@ async def ask_stream(inp: AskIn, background_tasks: BackgroundTasks, request: Req
             ):
                 if kind == "chunk":
                     yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"
+                elif kind == "sources":
+                    # Sources arrive as soon as retrieval finishes, before generation —
+                    # the client can render attribution immediately instead of waiting
+                    # for "done". "done" still carries the full list.
+                    yield json.dumps({"type": "sources", "citations": citations or []}) + "\n"
                 elif kind == "done":
                     full_answer = text or ""
                     with get_conn() as conn:
