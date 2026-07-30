@@ -47,13 +47,38 @@ DEFAULT_BASE = "http://localhost:3000/api"
 CONVERSATIONAL_TYPES = {"smalltalk", "refusal", "offcorpus"}
 
 
+# Bearer token used when the backend has AUTH_ENABLED=1 (see _login).
+_AUTH_TOKEN: str | None = None
+
+
 def _post(base: str, path: str, payload: dict, timeout: int = 240) -> dict:
     body = json.dumps(payload).encode()
-    req = urllib.request.Request(
-        f"{base}{path}", body, {"Content-Type": "application/json"}
-    )
+    headers = {"Content-Type": "application/json"}
+    if _AUTH_TOKEN:
+        headers["Authorization"] = f"Bearer {_AUTH_TOKEN}"
+    req = urllib.request.Request(f"{base}{path}", body, headers)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read())
+
+
+def _login(base: str, user: str, password: str) -> None:
+    """Obtain a bearer token so the suite works when auth is enabled."""
+    global _AUTH_TOKEN
+    try:
+        r = _post(base, "/auth/login", {"username": user, "password": password}, timeout=30)
+        _AUTH_TOKEN = r.get("token")
+        print(f"authenticated as {user}\n")
+    except Exception as e:
+        sys.exit(f"login failed for user '{user}': {e}\n"
+                 "Set ECHOMIND_EVAL_USER / ECHOMIND_EVAL_PASSWORD, or disable auth.")
+
+
+def _auth_required(base: str) -> bool:
+    try:
+        with urllib.request.urlopen(f"{base}/auth/config", timeout=10) as r:
+            return bool(json.loads(r.read()).get("auth_enabled"))
+    except Exception:
+        return False
 
 
 def _ask(base: str, chat_id: str, message: str, persona: str, namespace: str) -> dict:
@@ -200,6 +225,15 @@ def main() -> int:
     ap.add_argument("--judge", action="store_true", help="add LLM-as-judge grading via ollama")
     ap.add_argument("--judge-base", default="http://localhost:11434/v1", help="OpenAI-compatible base for --judge")
     args = ap.parse_args()
+
+    # Authenticate when the backend requires it (AUTH_ENABLED=1).
+    if _auth_required(args.base):
+        import os as _os
+        _login(
+            args.base,
+            _os.getenv("ECHOMIND_EVAL_USER", "admin"),
+            _os.getenv("ECHOMIND_EVAL_PASSWORD", ""),
+        )
 
     items = load_items(args.only_set)
     run_id = time.strftime("%Y%m%d-%H%M%S")

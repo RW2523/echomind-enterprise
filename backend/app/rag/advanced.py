@@ -2383,6 +2383,65 @@ def _rag_context_block(blocks: List[str]) -> str:
     return "\n\n".join([f"[{i+1}] {b}" for i, b in enumerate(blocks)])
 
 
+# Internal context-block bookkeeping the model sometimes echoes into prose:
+# "(Document 5)", "(excerpt 10)", "[3]", "Document 1, Document 2, Document 12".
+# These numbers refer to the prompt's block ordering, which the user never sees —
+# they read as broken citations. Rewrite to the real filename when the number maps
+# to a block, otherwise drop the artifact.
+_BLOCK_REF_RE = re.compile(
+    r"\(\s*(?:see\s+)?(?:document|doc|excerpt|source|context|block)s?\s*#?\s*"
+    r"(\d+(?:\s*(?:,|and|&)\s*(?:document|doc|excerpt|source|context|block)?\s*#?\s*\d+)*)\s*\)",
+    re.IGNORECASE,
+)
+_BARE_BLOCK_RE = re.compile(r"(?<![\w.])\[(\d{1,2})\](?!\()")
+# ", excerpt 11" / "; document 3" appearing inside an otherwise-valid citation.
+_EMBEDDED_BLOCK_RE = re.compile(
+    r"\s*[,;]\s*(?:see\s+)?(?:document|doc|excerpt|source|context|block)s?\s*#?\s*\d+(?=\s*[),;])",
+    re.IGNORECASE,
+)
+
+
+def _sanitize_block_references(ans: str, enriched: List[Dict]) -> str:
+    """Replace internal block numbers in the answer with real document names."""
+    if not ans:
+        return ans
+    names: List[str] = []
+    for e in enriched:
+        src = e.get("source") or {}
+        names.append(str(src.get("filename") or src.get("doc_title") or "").strip())
+
+    def _name_for(num_str: str) -> Optional[str]:
+        try:
+            idx = int(num_str) - 1  # blocks are 1-based
+        except ValueError:
+            return None
+        if 0 <= idx < len(names) and names[idx]:
+            return names[idx]
+        return None
+
+    def _repl_group(m: re.Match) -> str:
+        nums = re.findall(r"\d+", m.group(1))
+        resolved: List[str] = []
+        for n in nums:
+            nm = _name_for(n)
+            if nm and nm not in resolved:
+                resolved.append(nm)
+        if not resolved:
+            return ""  # unresolvable bookkeeping — drop it rather than show a fake ref
+        return "(" + ", ".join(resolved) + ")"
+
+    out = _BLOCK_REF_RE.sub(_repl_group, ans)
+    out = _BARE_BLOCK_RE.sub(lambda m: (f"({_name_for(m.group(1))})" if _name_for(m.group(1)) else ""), out)
+    # Artifact embedded inside an otherwise-valid citation: "(page 11, excerpt 11)" —
+    # keep the real locator, drop the block number.
+    out = _EMBEDDED_BLOCK_RE.sub("", out)
+    # tidy the whitespace/punctuation left behind by removals
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    out = re.sub(r"\s+([,.;:])", r"\1", out)
+    out = re.sub(r"\(\s*\)", "", out)
+    return out.strip()
+
+
 def _log_citation_debug(enriched: List[Dict], citations: List[Dict], source_type: str) -> None:
     """Debug: log citation pipeline stats for troubleshooting. Enable with RAG_CITATION_DEBUG=1."""
     if not getattr(settings, "RAG_CITATION_DEBUG", False):
@@ -3067,6 +3126,10 @@ async def _postprocess_answer_text(
     """Shared citation postprocessing: missing-info fallback, inference transparency, citation accuracy."""
     if not (getattr(settings, "RAG_CITATION_POSTPROCESS", True) and source_type == "document" and ans):
         return ans
+    # Always strip internal block bookkeeping ("(Document 12)", "(excerpt 10)") first —
+    # those numbers are prompt-ordering artifacts the user never sees, so they read as
+    # broken citations. Runs before every early-return path below.
+    ans = _sanitize_block_references(ans, enriched)
     from .citation_utils import (
         handle_missing_information,
         improve_citation_accuracy,

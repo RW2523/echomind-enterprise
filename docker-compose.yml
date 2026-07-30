@@ -74,6 +74,12 @@ services:
       - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
       - OLLAMA_EMBED_URL=http://ollama:11434/api/embeddings
       - OLLAMA_EMBED_MODEL=nomic-embed-text
+      # ── Auth (Phase 0b). Values come from .env (gitignored). AUTH_ENABLED=0 there
+      # reverts to the open demo behaviour; AUTH_ADMIN_PASSWORD re-seeds the admin on boot.
+      - AUTH_ENABLED=${AUTH_ENABLED:-0}
+      - AUTH_SECRET=${AUTH_SECRET:-}
+      - AUTH_ADMIN_USER=${AUTH_ADMIN_USER:-admin}
+      - AUTH_ADMIN_PASSWORD=${AUTH_ADMIN_PASSWORD:-}
       # Offline: use only local Hugging Face cache (no runtime model download)
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
@@ -133,6 +139,9 @@ services:
       # TensorRT-LLM in compose (OpenAI-compatible); dialogue uses stream=true for TTFT.
       - LLM_URL=http://trtllm:8355/v1/chat/completions
       - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
+      # Gate the voice WebSocket with the backend session cookie (same AUTH_SECRET).
+      - VOICE_AUTH_ENABLED=${VOICE_AUTH_ENABLED:-0}
+      - AUTH_SECRET=${AUTH_SECRET:-}
       # Optional: LLM_LOG_PAYLOAD=1 logs full JSON body at WARNING (timing always INFO: VOICE_LLM stream start/done).
       # Nemotron STT (same model as backend live transcript; gated HF — set HF_TOKEN in .env if needed)
       - ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b

@@ -108,6 +108,11 @@ def get_user_by_username(username: str) -> Optional[dict]:
     return {"id": row[0], "username": row[1], "password_hash": row[2], "role": row[3], "tenant": row[4], "created_at": row[5]}
 
 
+# Namespace values a tenant may NOT be bound to. "default" is the implicit namespace of
+# every untagged chunk, so it means "all documents" rather than an isolated tenant.
+_RESERVED_TENANTS = {"default", "*", "all"}
+
+
 def create_user(username: str, password: str, role: str = "user", tenant: str = "") -> dict:
     username = (username or "").strip()
     if not username or not password:
@@ -116,6 +121,15 @@ def create_user(username: str, password: str, role: str = "user", tenant: str = 
         raise ValueError("user already exists")
     uid = new_id("usr")
     tenant = (tenant or "").strip()
+    # "default" is not a tenant — it is the fallback namespace for every chunk that carries
+    # no explicit namespace tag (see _ns_ok), i.e. the WHOLE corpus. Provisioning a user with
+    # tenant="default" would silently grant them cross-tenant read access to everything.
+    # Bind tenants to a real vertical namespace instead, or leave blank for a full-access user.
+    if tenant.lower() in _RESERVED_TENANTS:
+        raise ValueError(
+            f"tenant '{tenant}' is reserved (it maps to the whole knowledge base); "
+            "use a specific namespace such as 'health' or 'law'"
+        )
     with get_conn() as conn:
         conn.execute(
             "INSERT INTO users (id, username, password_hash, role, tenant, created_at) VALUES (?,?,?,?,?,?)",
