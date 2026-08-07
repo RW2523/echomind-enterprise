@@ -1,0 +1,19 @@
+{
+  "golden_eval_baseline": "50/52 (2026-07-30, corpus 10,363 chunks)",
+  "golden_eval_after_paper_work": "49/52 (corpus 17,631 chunks, +70%)",
+  "regression_found_and_fixed": "During the experiment campaign the suite fell to 42/52. Root cause was NOT the experiment code: advanced.py called Bm25Index.search directly for the sparse transcript path, bypassing the _ns_ok namespace predicate applied by every other retrieval path. Under a tenant-scoped query it returned 10/10 out-of-namespace transcript chunks. Those leaked hits also outranked in-namespace documents and won source selection, zeroing citations on vertical queries. The defect was PRE-EXISTING and latent; it became observable only when the corpus grew from 10.3k to 17.6k chunks (auto-saved voice transcripts) and the leaked hits began to outrank real ones.",
+  "fixes_applied": [
+    "index.py: new search_transcript_only_sparse() enforcing _ns_ok (verified 10 leaked hits -> 0)",
+    "advanced.py: transcript sparse path routed through the filtered wrapper",
+    "index.py: namespace candidate pool now scales with corpus size instead of a fixed 512, so small-namespace starvation does not silently return as the KB grows"
+  ],
+  "voice_changes": [
+    "session.py: additive 'loop' field (L_I / L_G) on assistant messages \u2014 required to make invariant I1 measurable at all; ignored by existing clients",
+    "session.py: VOICE_ABLATION_MODE env/file switch for E10 arms; default 'dual_i1' is the shipped behaviour, so production is unchanged"
+  ],
+  "non_regression_evidence": [
+    "voice E2E after changes: first audio +0.28 s casual, +0.93 s RAG, word-perfect STT",
+    "golden eval 49/52 with doc-precision 0.98 after the isolation fix",
+    "all five retrieval paths audited: 0 out-of-namespace hits across 359 checked"
+  ]
+}

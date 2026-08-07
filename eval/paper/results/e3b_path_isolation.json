@@ -1,0 +1,57 @@
+{
+  "status": "complete",
+  "paths": [
+    {
+      "path": "dense_document",
+      "n_hits_checked": 168,
+      "n_out_of_namespace": 0,
+      "leak_rate": 0.0,
+      "wilson_ci_95": [
+        0,
+        0.0224
+      ],
+      "leak_samples": []
+    },
+    {
+      "path": "sparse_document",
+      "n_hits_checked": 118,
+      "n_out_of_namespace": 0,
+      "leak_rate": 0.0,
+      "wilson_ci_95": [
+        0,
+        0.0315
+      ],
+      "leak_samples": []
+    },
+    {
+      "path": "dense_transcript",
+      "n_hits_checked": 0,
+      "n_out_of_namespace": 0,
+      "leak_rate": null,
+      "wilson_ci_95": null,
+      "leak_samples": []
+    },
+    {
+      "path": "sparse_transcript",
+      "n_hits_checked": 0,
+      "n_out_of_namespace": 0,
+      "leak_rate": null,
+      "wilson_ci_95": null,
+      "leak_samples": []
+    },
+    {
+      "path": "keyword_grep",
+      "n_hits_checked": 73,
+      "n_out_of_namespace": 0,
+      "leak_rate": 0.0,
+      "wilson_ci_95": [
+        0,
+        0.05
+      ],
+      "leak_samples": []
+    }
+  ],
+  "_purpose": "Audits property P1 at the level of individual retrieval paths rather than at the answer level. The answer-level test (E3) reported 0/50 leakage, but its probes only exercised document paths.",
+  "_history": "Before the fix applied in this session, sparse_transcript returned 10/10 out-of-namespace hits under a bank-scoped query (chunks tagged 'default' and null): advanced.py called Bm25Index.search directly, bypassing _ns_ok, while the other three paths filtered correctly. The breach ALSO degraded quality \u2014 leaked transcript hits outranked in-namespace documents and won source selection, silently zeroing citations on vertical queries (golden eval 50/52 -> 42/52). It surfaced only because the corpus grew 10.3k -> 17.6k chunks; at the original size the leaked hits did not outrank real ones. Numbers above are POST-fix.",
+  "_finding_for_paper": "An architecturally-stated invariant (permission-before-retrieval) held in 3 of 4 retrieval paths and was violated in the 4th at the implementation level. Neither the architecture nor an answer-level evaluation detected it. This argues for path-level invariant testing, which is \u00a710 open question 2."
+}

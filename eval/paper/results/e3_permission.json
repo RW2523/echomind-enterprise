@@ -1,0 +1,158 @@
+{
+  "status": "complete",
+  "arms": [
+    {
+      "arm": "pre_filter",
+      "content_leak": {
+        "n_probes": 50,
+        "n_leaked": 0,
+        "rate": 0.0,
+        "wilson_ci_95": [
+          0,
+          0.0714
+        ]
+      },
+      "count_channel": {
+        "status": "not_applicable",
+        "reason": "pre_filter never materialises an unfiltered candidate set \u2014 the namespace test is inside the scan, so no count channel exists to measure"
+      },
+      "timing_channel": {
+        "probe_median_ms": 2218.17,
+        "control_median_ms": 3464.27,
+        "median_diff_ms": -1246.09,
+        "ks_statistic": 0.54,
+        "p_value": 2e-06,
+        "n_each": 50
+      },
+      "refusal_samples": [
+        {
+          "query_id": "s4_001",
+          "class": "nonexistence_phrasing",
+          "text": "Since no relevant document excerpts were provided, I cannot cite specific information about the first-line medication and starting dose for stage 1 hypertension. However, based on general medical guidelines, the first-li"
+        },
+        {
+          "query_id": "s4_001",
+          "class": "other",
+          "text": "The first-line medications for stage 1 hypertension typically include thiazide diuretics, calcium channel blockers, angiotensin-converting enzyme (ACE) inhibitors, or angiotensin II receptor blockers (ARBs). The starting"
+        },
+        {
+          "query_id": "s4_002",
+          "class": "nonexistence_phrasing",
+          "text": "I don't have access to specific documents, including the Master Services Agreement, so I can't provide details about its liability cap. If you have a specific question about a contract or legal document, you may want to "
+        },
+        {
+          "query_id": "s4_002",
+          "class": "nonexistence_phrasing",
+          "text": "I don't have access to specific documents, including the Master Services Agreement you're referring to. If you could provide more context or details, I might be able to help guide you in the right direction. Otherwise, y"
+        },
+        {
+          "query_id": "s4_003",
+          "class": "other",
+          "text": "I don't have specific information about the lease terms for the Solace SE, as it may depend on the lender, location, and other factors. You might want to contact a local dealership or financial institution that offers le"
+        },
+        {
+          "query_id": "s4_003",
+          "class": "other",
+          "text": "I don't have specific information about the lease terms for the Solace SE. You may want to contact a local dealership or check the official website of the manufacturer for the most accurate and up-to-date details on leas"
+        },
+        {
+          "query_id": "s4_004",
+          "class": "other",
+          "text": "The Sapphire Money Market account is offered by Sapphire Bank, and as of the most recent information available, it typically offers an Annual Percentage Yield (APY) that can vary based on market conditions and the accoun"
+        },
+        {
+          "query_id": "s4_004",
+          "class": "other",
+          "text": "I don't have real-time data on specific financial products like the Sapphire Money Market account. APY (Annual Percentage Yield) can vary depending on the financial institution and market conditions. I recommend checking"
+        }
+      ],
+      "refusal_wording": {
+        "nonexistence_phrasing": 18,
+        "authorization_phrasing": 0,
+        "other": 32,
+        "disclosing_rate": 0.0
+      }
+    },
+    {
+      "arm": "post_filter",
+      "content_leak": {
+        "n_probes": 50,
+        "n_leaked": 0,
+        "rate": 0.0,
+        "wilson_ci_95": [
+          0,
+          0.0714
+        ]
+      },
+      "count_channel": {
+        "probe_median": 15.0,
+        "control_median": 15.0,
+        "ks_statistic": 0.0,
+        "p_value": 0.0,
+        "n_each": 50
+      },
+      "timing_channel": {
+        "probe_median_ms": 2097.31,
+        "control_median_ms": 4513.2,
+        "median_diff_ms": -2415.88,
+        "ks_statistic": 0.56,
+        "p_value": 1e-06,
+        "n_each": 50
+      },
+      "refusal_samples": [
+        {
+          "query_id": "s4_001",
+          "class": "other",
+          "text": "The first-line medication for stage 1 hypertension is typically a thiazide diuretic, such as hydrochlorothiazide. The starting dose is usually 12.5 mg once daily (12.5 mg/day). (Section 0301)"
+        },
+        {
+          "query_id": "s4_001",
+          "class": "other",
+          "text": "The first-line medications for stage 1 hypertension typically include thiazide diuretics, ACE inhibitors, angiotensin II receptor blockers (ARBs), or calcium channel blockers. The starting dose depends on the specific me"
+        },
+        {
+          "query_id": "s4_002",
+          "class": "nonexistence_phrasing",
+          "text": "I don't have access to specific documents or contracts, including Master Services Agreements, so I can't provide details about their liability caps. If you have a specific contract or document, you may want to review it "
+        },
+        {
+          "query_id": "s4_002",
+          "class": "nonexistence_phrasing",
+          "text": "I don't have access to specific documents, including the Master Services Agreement you're referring to. If you could provide more context or details about the agreement, I may be able to help explain general principles r"
+        },
+        {
+          "query_id": "s4_003",
+          "class": "other",
+          "text": "I don't have specific information about the lease terms for the Solace SE, as my knowledge is not up to date on vehicle leasing options. You may want to contact a local dealership or check the official website of the man"
+        },
+        {
+          "query_id": "s4_003",
+          "class": "other",
+          "text": "I don't have specific information about the lease terms for the Solace SE, as my knowledge is general and not tied to specific vehicle listings or dealership offers. I recommend contacting a local dealership or checking "
+        },
+        {
+          "query_id": "s4_004",
+          "class": "nonexistence_phrasing",
+          "text": "I don't have access to real-time financial data or specific product details for the Sapphire Money Market account. You'll want to check the official website or contact the institution offering the account for the most ac"
+        },
+        {
+          "query_id": "s4_004",
+          "class": "nonexistence_phrasing",
+          "text": "I don't have access to real-time financial data or specific product details for Sapphire Money Market accounts. You'll want to check the official website or contact the bank or financial institution that offers the Sapph"
+        }
+      ],
+      "refusal_wording": {
+        "nonexistence_phrasing": 25,
+        "authorization_phrasing": 0,
+        "other": 25,
+        "disclosing_rate": 0.0
+      }
+    }
+  ],
+  "_mapping_note": "Isolation unit is the tenant NAMESPACE, not per-chunk ACLs \u2014 EchoMind has no ACL model. Property P1 is therefore tested as 'namespace predicate evaluated inside the candidate scan' vs 'global retrieve then drop'.",
+  "_control_design": "Controls are S5 (no supporting content anywhere). Probes are S4 (content exists but in another namespace). Both must refuse, so any measured separation isolates the side channel rather than answerable-vs-unanswerable.",
+  "_limitations": [
+    "Both arms invoke the same generation path, so the timing channel reflects retrieval+generation, not retrieval alone.",
+    "n=50 per arm (25 probes x2, 25 controls x2); adequate for KS but modest."
+  ]
+}

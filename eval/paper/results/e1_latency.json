@@ -1,0 +1,170 @@
+{
+  "status": "complete",
+  "n_runs_per_cell": 30,
+  "cells": [
+    {
+      "cache_state": "warm",
+      "concurrency": 1,
+      "n": 30,
+      "n_errors": 0,
+      "stages": {
+        "query.embed": {
+          "median_ms": 0.01,
+          "p95_ms": 37.93,
+          "p99_ms": 39.49,
+          "n": 30
+        },
+        "retrieval.permission_filter": {
+          "median_ms": 0.08,
+          "p95_ms": 0.17,
+          "p99_ms": 0.18,
+          "n": 30
+        },
+        "retrieval.vector_search": {
+          "median_ms": 34.67,
+          "p95_ms": 43.31,
+          "p99_ms": 46.66,
+          "n": 30
+        },
+        "retrieval.sparse_search": {
+          "median_ms": 42.73,
+          "p95_ms": 59.62,
+          "p99_ms": 75.81,
+          "n": 30
+        },
+        "retrieval.rerank": {
+          "median_ms": 14.25,
+          "p95_ms": 32.22,
+          "p99_ms": 40.36,
+          "n": 26
+        },
+        "context.assemble": {
+          "median_ms": 2.03,
+          "p95_ms": 6.59,
+          "p99_ms": 7.0,
+          "n": 30
+        },
+        "T_grounded": {
+          "median_ms": 3313.17,
+          "p95_ms": 15171.37,
+          "p99_ms": 18440.7,
+          "n": 30
+        }
+      },
+      "retrieval_share_of_T_grounded": 0.0283,
+      "share_warning": null,
+      "notes": "T_grounded measured in-process (no HTTP); see e1_api_endtoend for the API-level figure that includes serialization and queueing."
+    },
+    {
+      "cache_state": "warm",
+      "concurrency": 4,
+      "n": 30,
+      "n_errors": 0,
+      "stages": {
+        "query.embed": {
+          "median_ms": 0.01,
+          "p95_ms": 0.04,
+          "p99_ms": 0.04,
+          "n": 30
+        },
+        "retrieval.permission_filter": {
+          "median_ms": 0.13,
+          "p95_ms": 0.28,
+          "p99_ms": 0.28,
+          "n": 30
+        },
+        "retrieval.vector_search": {
+          "median_ms": 62.64,
+          "p95_ms": 100.57,
+          "p99_ms": 117.0,
+          "n": 30
+        },
+        "retrieval.sparse_search": {
+          "median_ms": 110.96,
+          "p95_ms": 224.87,
+          "p99_ms": 247.12,
+          "n": 30
+        },
+        "retrieval.rerank": {
+          "median_ms": 96.54,
+          "p95_ms": 166.01,
+          "p99_ms": 171.02,
+          "n": 26
+        },
+        "context.assemble": {
+          "median_ms": 2.07,
+          "p95_ms": 6.7,
+          "p99_ms": 7.33,
+          "n": 30
+        },
+        "T_grounded": {
+          "median_ms": 4129.9,
+          "p95_ms": 14092.41,
+          "p99_ms": 16544.61,
+          "n": 30
+        }
+      },
+      "retrieval_share_of_T_grounded": 0.0659,
+      "share_warning": null,
+      "notes": "T_grounded measured in-process (no HTTP); see e1_api_endtoend for the API-level figure that includes serialization and queueing."
+    },
+    {
+      "cache_state": "warm",
+      "concurrency": 16,
+      "n": 30,
+      "n_errors": 0,
+      "stages": {
+        "query.embed": {
+          "median_ms": 0.02,
+          "p95_ms": 0.03,
+          "p99_ms": 0.03,
+          "n": 30
+        },
+        "retrieval.permission_filter": {
+          "median_ms": 0.1,
+          "p95_ms": 0.24,
+          "p99_ms": 0.27,
+          "n": 30
+        },
+        "retrieval.vector_search": {
+          "median_ms": 72.49,
+          "p95_ms": 100.15,
+          "p99_ms": 125.62,
+          "n": 30
+        },
+        "retrieval.sparse_search": {
+          "median_ms": 160.64,
+          "p95_ms": 540.63,
+          "p99_ms": 618.59,
+          "n": 30
+        },
+        "retrieval.rerank": {
+          "median_ms": 567.9,
+          "p95_ms": 897.91,
+          "p99_ms": 972.83,
+          "n": 26
+        },
+        "context.assemble": {
+          "median_ms": 2.12,
+          "p95_ms": 7.22,
+          "p99_ms": 7.56,
+          "n": 30
+        },
+        "T_grounded": {
+          "median_ms": 8431.87,
+          "p95_ms": 21321.39,
+          "p99_ms": 24592.06,
+          "n": 30
+        }
+      },
+      "retrieval_share_of_T_grounded": 0.0953,
+      "share_warning": null,
+      "notes": "T_grounded measured in-process (no HTTP); see e1_api_endtoend for the API-level figure that includes serialization and queueing."
+    }
+  ],
+  "_limitations": [
+    "Cold-cache cells NOT run: dropping the OS page cache requires root on the host, which the harness does not have. All cells are warm. Reported as a gap rather than relabelling warm runs as cold.",
+    "T_first / interaction.first_audio / bargein.acoustic_stop are voice-loop spans, measured separately in E7 \u2014 they are not part of the text RAG path timed here.",
+    "tts.first_audio and asr.* likewise belong to the voice service (E7)."
+  ]
+}

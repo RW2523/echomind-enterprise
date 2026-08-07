@@ -1,0 +1,1810 @@
+{
+  "pre_filter": {
+    "probes": [
+      {
+        "query_id": "s4_001",
+        "arm": "pre_filter",
+        "ms": 5445.897330995649,
+        "answer": "Since no relevant document excerpts were provided, I cannot cite specific information about the first-line medication and starting dose for stage 1 hypertension. However, based on general medical guidelines, the first-line treatment for stage 1 hypertension typically includes lifestyle modifications and medications such as thiazide diuretics, ACE inhibitors, or ARBs. The starting dose may vary depending on the specific medication and individual patient factors.\n\nFor personalized medical advice, consult a healthcare professional.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_001",
+        "arm": "pre_filter",
+        "ms": 4940.00553607475,
+        "answer": "The first-line medications for stage 1 hypertension typically include thiazide diuretics, calcium channel blockers, angiotensin-converting enzyme (ACE) inhibitors, or angiotensin II receptor blockers (ARBs). The starting dose varies depending on the specific medication chosen and the patient's individual characteristics.\n\nFor example:\n- **Thiazide diuretics** (e.g., hydrochlorothiazide): A common starting dose is 12.5 to 25 mg once daily.\n- **Calcium channel blockers** (e.g., amlodipine): A typical starting dose is 5 mg once daily.\n- **ACE inhibitors** (e.g., lisinopril): A usual starting dose",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_002",
+        "arm": "pre_filter",
+        "ms": 5590.401037945412,
+        "answer": "I don't have access to specific documents, including the Master Services Agreement, so I can't provide details about its liability cap. If you have a specific question about a contract or legal document, you may want to consult the document directly or reach out to the relevant party for clarification. Let me know if there's anything else I can assist with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_002",
+        "arm": "pre_filter",
+        "ms": 1771.276714047417,
+        "answer": "I don't have access to specific documents, including the Master Services Agreement you're referring to. If you could provide more context or details, I might be able to help guide you in the right direction. Otherwise, you may need to consult the document directly or reach out to the relevant party for exact terms.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_003",
+        "arm": "pre_filter",
+        "ms": 1801.6295220004395,
+        "answer": "I don't have specific information about the lease terms for the Solace SE, as it may depend on the lender, location, and other factors. You might want to contact a local dealership or financial institution that offers leasing options for this vehicle. Would you like help finding contact information for dealers in your area?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_003",
+        "arm": "pre_filter",
+        "ms": 1716.7216771049425,
+        "answer": "I don't have specific information about the lease terms for the Solace SE. You may want to contact a local dealership or check the official website of the manufacturer for the most accurate and up-to-date details on lease terms and conditions. Let me know if there's anything else I can help with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_004",
+        "arm": "pre_filter",
+        "ms": 2171.8124030157924,
+        "answer": "The Sapphire Money Market account is offered by Sapphire Bank, and as of the most recent information available, it typically offers an Annual Percentage Yield (APY) that can vary based on market conditions and the account balance. For the most accurate and up-to-date APY, I recommend checking the official Sapphire Bank website or contacting their customer service directly. Would you like help finding their contact information?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_004",
+        "arm": "pre_filter",
+        "ms": 1865.1256440207362,
+        "answer": "I don't have real-time data on specific financial products like the Sapphire Money Market account. APY (Annual Percentage Yield) can vary depending on the financial institution and market conditions. I recommend checking the official website or contacting the customer service of the institution that offers the Sapphire Money Market account for the most accurate and up-to-date information.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_005",
+        "arm": "pre_filter",
+        "ms": 2011.0666790278628,
+        "answer": "I don't have access to specific documents or contracts like the MSA (Master Service Agreement), so I can't provide the exact auto-renewal notice period. If you have a specific contract or agreement, I recommend reviewing the terms directly or contacting the relevant party for precise information. Let me know if there's anything else I can assist with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_005",
+        "arm": "pre_filter",
+        "ms": 2096.666832920164,
+        "answer": "I don't have access to specific documents or agreements, including the MSA (Master Service Agreement), so I can't provide details about the auto-renewal notice period. If you have a specific contract or agreement, you may want to review the terms directly or contact the relevant party for accurate information. Let me know if there's anything else I can assist you with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_006",
+        "arm": "pre_filter",
+        "ms": 2756.292960024439,
+        "answer": "The mileage reimbursement rate per kilometre varies depending on the country, the organization, and the purpose of the travel. For example, in Canada, the federal government reimbursement rate for business travel is $0.59 per kilometre as of 2023. In the U.S., the standard rate for business travel is $0.58 per mile as of 2023. Always check with the specific organization or government guidelines for the most accurate and up-to-date information.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_006",
+        "arm": "pre_filter",
+        "ms": 2089.7748690331355,
+        "answer": "The mileage reimbursement rate per kilometre varies depending on the country, the organization, and the specific policy being followed. In many places, a common rate might be around 0.50 to 0.60 Canadian dollars per kilometre, but this can change. If you have a specific organization or country in mind, I can try to provide more accurate information.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_007",
+        "arm": "pre_filter",
+        "ms": 2278.8355910452083,
+        "answer": "For community-acquired pneumonia in patients with a penicillin allergy, antibiotics such as macrolides (e.g., azithromycin or clarithromycin) or doxycycline are commonly used. The choice depends on the patient's specific situation, including the severity of the infection and local resistance patterns. It's important to consult a healthcare provider for an accurate diagnosis and treatment plan.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_007",
+        "arm": "pre_filter",
+        "ms": 2244.336712989025,
+        "answer": "For community-acquired pneumonia in someone with a penicillin allergy, antibiotics such as macrolides (like azithromycin or clarithromycin) or doxycycline are commonly used. The choice depends on the patient's specific situation, including age, other medical conditions, and local antibiotic resistance patterns. It's important to consult a healthcare provider for an accurate diagnosis and treatment plan.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_008",
+        "arm": "pre_filter",
+        "ms": 2026.1474649887532,
+        "answer": "I don't have access to specific information about the grace period for a jumbo CD after maturity, as the provided document excerpts are empty. For accurate details, I recommend consulting the specific terms of the jumbo CD or contacting the financial institution that issued it. If you have additional context or documentation, feel free to share it, and I'll help clarify further.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_008",
+        "arm": "pre_filter",
+        "ms": 1546.7808629618958,
+        "answer": "I don't have access to specific information about the grace period for a jumbo CD after maturity, as the provided documents do not contain relevant details. For accurate information, please consult the terms and conditions of the specific jumbo CD or contact the financial institution that issued it.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_009",
+        "arm": "pre_filter",
+        "ms": 2505.030589061789,
+        "answer": "The restocking fee for returns is not explicitly mentioned in the provided documents. However, the documents do mention specific terms related to termination, data handling, and payment, but there is no direct reference to a restocking fee. \n\nIf you need information about restocking fees, you may need to consult additional documentation or contact the relevant party directly for clarification. \n\nLet me know if there's anything else you'd like to explore!",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_009",
+        "arm": "pre_filter",
+        "ms": 1939.7454930003732,
+        "answer": "The restocking fee for returns is not explicitly mentioned in the provided documents. However, the documents do mention specific timelines and procedures for data return and termination, but there is no direct information about restocking fees.\n\nIf you need information about restocking fees, you may need to consult additional documentation or contact the relevant department for clarification.",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_010",
+        "arm": "pre_filter",
+        "ms": 1704.0885399328545,
+        "answer": "I don't have access to specific medical information about individuals, including Mr. Okonkwo. If you're looking for information about A1c and fasting glucose results, I can provide general information about what these tests measure and what typical ranges are. Let me know how I can assist!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_010",
+        "arm": "pre_filter",
+        "ms": 1787.5514599727467,
+        "answer": "I'm sorry, but I don't have access to specific medical information about individuals, including Mr. Okonkwo. If you have questions about medical test results, I recommend consulting the healthcare provider who ordered the tests or reviewing the official medical records. Let me know if there's anything else I can help with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_011",
+        "arm": "pre_filter",
+        "ms": 2986.793544027023,
+        "answer": "I don't have access to specific information about the breach-notification window for regulated data, as no relevant document excerpts were provided. The exact timeframe can vary depending on the jurisdiction and the type of data involved. For example, in the United States, the California Consumer Privacy Act (CCPA) and other state laws may have different requirements, while the European Union's General Data Protection Regulation (GDPR) mandates notification within 72 hours of becoming aware of a breach.\n\nIf you have specific regulations or jurisdictions in mind, I can provide more targeted inf",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_011",
+        "arm": "pre_filter",
+        "ms": 1946.100348024629,
+        "answer": "I don't have access to specific information about breach-notification windows for regulated data in the provided documents. If you could share the relevant sections or context, I would be happy to help clarify based on that information. In general, breach-notification requirements vary by jurisdiction and type of data, so it's important to consult the specific regulations that apply to your situation.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_012",
+        "arm": "pre_filter",
+        "ms": 2433.44897008501,
+        "answer": "The number of working days of PTO (Paid Time Off) that accrue by tenure varies depending on the employer's policy. Different companies have different PTO accrual structures, which may be based on years of service, job role, or other factors. For specific information, you would need to consult your employer's employee handbook or HR department. Would you like help finding general information about PTO accruals or something else?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_012",
+        "arm": "pre_filter",
+        "ms": 2971.9749980140477,
+        "answer": "The number of paid time off (PTO) days an employee accrues by tenure can vary widely depending on the employer's policies, the employee's length of service, and the specific job role. Generally, companies may offer between 5 to 15 PTO days per year, with some increasing the amount as employees stay longer with the company.\n\nFor precise information, you would need to consult your employer's specific PTO policy or HR guidelines. Would you like help finding a general guideline or understanding how PTO accruals typically work?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_013",
+        "arm": "pre_filter",
+        "ms": 2255.5257679196075,
+        "answer": "The question about the ownership percentage at which beneficial owners must be verified is not addressed in the provided document excerpts. The documents cover various policies related to PTO, expense reimbursement, information security, and other operational procedures, but none mention specific ownership thresholds for verifying beneficial owners. \n\nIf you have additional context or documents that address this topic, please provide them, and I can assist further.",
+        "n_citations": 1,
+        "cited": [
+          "Q3 Product Strategy \u2014 Meeting Minutes (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_013",
+        "arm": "pre_filter",
+        "ms": 3521.0311979753897,
+        "answer": "The question about the ownership percentage at which beneficial owners must be verified is not addressed in the provided document excerpts. None of the sections mention specific ownership thresholds for verifying beneficial owners.\n\nIf this is a regulatory or compliance-related question, you may need to consult financial regulations, such as those from the Financial Crimes Enforcement Network (FinCEN) in the U.S. or equivalent bodies in other jurisdictions. For example, in the U.S., FinCEN requires verification of beneficial owners for certain business entities, but the exact threshold may var",
+        "n_citations": 1,
+        "cited": [
+          "Q3 Product Strategy \u2014 Meeting Minutes (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_014",
+        "arm": "pre_filter",
+        "ms": 2615.102506009862,
+        "answer": "The provided document excerpts do not contain any information about how long metformin should be held before or after receiving IV contrast. The documents primarily cover company policies related to PTO, expense reimbursement, information security, and other operational guidelines.\n\nIf you need medical advice or specific guidelines regarding metformin and IV contrast, it is best to consult a healthcare professional or refer to medical guidelines such as those from the American Diabetes Association or a similar authoritative source.",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_014",
+        "arm": "pre_filter",
+        "ms": 2737.1565949870273,
+        "answer": "The provided documents do not contain any information about when metformin should be held before or after receiving IV contrast. The excerpts provided are related to company policies, PTO, expense reimbursement, information security, and other administrative procedures, but none address medical guidelines or medication protocols.\n\nFor medical questions, it's best to consult a healthcare professional or refer to clinical guidelines. If you need help finding general information about metformin and IV contrast, I can assist with that as well.",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_015",
+        "arm": "pre_filter",
+        "ms": 1791.1814249819145,
+        "answer": "I don't have access to current promotional offers or specific financial details about the Tavari Volt EV. You may want to check the official Tavari website or contact a Tavari dealership directly for the most accurate and up-to-date information on APR promotions. Would you like help with anything else?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_015",
+        "arm": "pre_filter",
+        "ms": 1805.9688989305869,
+        "answer": "I don't have access to current promotional information for the Tavari Volt EV or other vehicles. You may want to check the official Tavari website or contact a local dealership for the latest APR (Annual Percentage Rate) offers and promotions. Let me know if there's anything else I can assist you with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_016",
+        "arm": "pre_filter",
+        "ms": 2608.33828500472,
+        "answer": "The provided documents do not specify an expense receipt threshold in euros. The documents mention thresholds in U.S. dollars, such as the $10,000 reporting threshold for currency transactions, but they do not provide any information about thresholds in euros or other currencies. \n\nIf you need information about expense receipt thresholds in euros, you may need to consult additional resources or provide more context about the specific policy or regulation you are inquiring about.",
+        "n_citations": 1,
+        "cited": [
+          "KYC-AML & Loan Suitability Guidelines (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_016",
+        "arm": "pre_filter",
+        "ms": 2495.233347057365,
+        "answer": "The expense receipt threshold in euros is not explicitly mentioned in the provided document excerpts. The documents primarily focus on financial regulations, customer identification, and reporting requirements, but they do not specify a particular euro-based threshold for expense receipts. \n\nIf you need information about expense receipt thresholds in euros, you may need to consult specific local regulations or organizational policies that govern expense reporting in euros. Let me know if you'd like help finding that information.",
+        "n_citations": 1,
+        "cited": [
+          "KYC-AML & Loan Suitability Guidelines (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_017",
+        "arm": "pre_filter",
+        "ms": 1575.6523909512907,
+        "answer": "I don't have specific information about the warranty for the NovaWave H7 Pro. You should check the manufacturer's official website or the documentation that came with the product for detailed warranty information. Let me know if there's anything else I can assist you with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_017",
+        "arm": "pre_filter",
+        "ms": 1534.7707869950682,
+        "answer": "I don't have specific information about the warranty for the NovaWave H7 Pro. You should check the manufacturer's official website or the documentation that came with the product for detailed warranty information. Let me know if there's anything else I can assist you with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_018",
+        "arm": "pre_filter",
+        "ms": 3230.906132957898,
+        "answer": "I'm not sure which specific Atlas feature you're referring to, as the term \"Atlas\" could relate to various products or services. Could you please provide more context or clarify which Atlas feature you're asking about? That way, I can give you a more accurate answer.\n\u8fd4\u5de5\n\nI'm not sure which specific Atlas feature you're referring to, as the term \"Atlas\" could relate to various products or services. Could you please provide more context or clarify which Atlas feature you're asking about? That way, I can give you a more accurate answer.\n\u8fd4\u5de5",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_018",
+        "arm": "pre_filter",
+        "ms": 2316.5421050507575,
+        "answer": "The Atlas feature freeze typically refers to a period during which certain features or updates are temporarily paused to ensure stability, often during a major software release or maintenance window. However, without specific context or a reference to a particular system or platform, it's difficult to provide an exact date or timeline.\n\nIf you're referring to a specific service or product, please provide more details, and I'll do my best to assist you.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_019",
+        "arm": "pre_filter",
+        "ms": 2192.004441982135,
+        "answer": "The early-withdrawal penalty on a 12-month Certificate of Deposit (CD) varies by bank, but typically it is a fee that the bank charges if you withdraw your money before the CD matures. This penalty is usually a few months' worth of interest, and sometimes a flat fee. It's best to check with the specific bank where the CD was purchased for exact details.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_019",
+        "arm": "pre_filter",
+        "ms": 2826.370793976821,
+        "answer": "The early-withdrawal penalty on a 12-month certificate of deposit (CD) typically depends on the bank's policies and the terms of the CD. Many banks charge a penalty if you withdraw funds before the CD matures, often in the form of a fee or by reducing the interest earned. For a 12-month CD, the penalty might be a few months' worth of interest, but it can vary. It's best to check with the specific bank or review the CD's terms for exact details.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_020",
+        "arm": "pre_filter",
+        "ms": 1784.0476490091532,
+        "answer": "I don't have access to the specific details of the contract playbook you're referring to. If you can provide more context or share the relevant sections, I'd be happy to help clarify or summarize the payment terms. Otherwise, I recommend consulting the specific document or reaching out to the relevant department for precise information.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_020",
+        "arm": "pre_filter",
+        "ms": 1794.783758930862,
+        "answer": "I don't have access to the specific details of the contract playbook you're referring to. If you can provide more context or share the relevant sections, I'd be happy to help clarify or explain the payment terms. Otherwise, I recommend checking the playbook directly or reaching out to the person or department that manages contracts.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_021",
+        "arm": "pre_filter",
+        "ms": 2958.802028093487,
+        "answer": "Mammography screening intervals and age ranges can vary depending on the guidelines of different health organizations. Generally, for women at average risk, screening mammograms are recommended every 1 to 2 years starting at age 40 or 50, depending on the specific guidelines. For example, the American Cancer Society recommends annual screenings starting at age 40, while other organizations may suggest starting at 50. It's best to consult with a healthcare provider to determine the most appropriate schedule based on individual risk factors and medical history.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_021",
+        "arm": "pre_filter",
+        "ms": 3103.3465379150584,
+        "answer": "Mammography screening intervals and age ranges can vary depending on the guidelines from different health organizations. Generally, for women at average risk, screening mammography is recommended starting at age 40 or 50, with intervals ranging from every 1 to 2 years. For example, the U.S. Preventive Services Task Force suggests biennial screening starting at age 50, while some organizations recommend starting at age 40 with annual or biennial screenings. It's best to consult with a healthcare provider to determine the most appropriate schedule based on individual risk factors.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_022",
+        "arm": "pre_filter",
+        "ms": 2707.707708934322,
+        "answer": "The governing law of a Master Service Agreement (MSA) depends on the specific terms outlined within the agreement itself. Typically, the MSA will include a \"Governing Law\" clause that specifies which jurisdiction's laws will govern the interpretation and enforcement of the agreement. If you have a specific MSA in question, you would need to review that document to find the exact governing law stated. If you'd like, I can help you understand how to locate or interpret such a clause.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_022",
+        "arm": "pre_filter",
+        "ms": 2714.427173952572,
+        "answer": "The governing law that applies to a Master Service Agreement (MSA) depends on the specific terms outlined within the agreement itself. Typically, the MSA will include a \"Governing Law\" clause that specifies which jurisdiction's laws will govern the interpretation and enforcement of the contract. If you have a specific MSA in question, you would need to review that document to find the exact governing law stated within it. If you'd like help reviewing a particular document, feel free to share the relevant sections.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_023",
+        "arm": "pre_filter",
+        "ms": 52030.39066493511,
+        "answer": "The \"dealer cash\" available on the Chevrolet Volt EV can vary depending on the dealership, current promotions, and the specific model year. It typically refers to incentives or discounts offered by the dealer, which may include things like rebates, reduced financing rates, or other special offers. To get the most accurate and up-to-date information, I recommend contacting a local Chevrolet dealership or checking their official website. Would you like help finding a dealership or more information about the Volt?\nUpdating the response...\nUpdating the response...\nUpdating the response...\nUpdating",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_023",
+        "arm": "pre_filter",
+        "ms": 1920.3512159874663,
+        "answer": "I don't have access to specific dealer cash offers or incentives for the Chevrolet Volt, as these can vary by location and time. You may want to check with a local Chevrolet dealership or visit the official Chevrolet website for the most up-to-date information on incentives and offers. Would you like help finding a dealership or more information on the Volt?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_024",
+        "arm": "pre_filter",
+        "ms": 3342.2435560496524,
+        "answer": "I don't have access to specific information about remote-work stipends for working abroad in the provided documents. If you have a specific policy document or guideline that outlines remote-work stipends, please share it, and I can help analyze the details for you.\n\nIf this is a general question, I can say that remote-work stipends vary widely depending on the company, country, and individual circumstances. Some companies offer a fixed monthly allowance, while others may provide reimbursement for specific expenses like internet, housing, or travel. For accurate information, you would need to c",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_024",
+        "arm": "pre_filter",
+        "ms": 1648.4745080815628,
+        "answer": "I don't have access to specific information about remote-work stipends for working abroad, as no relevant documents or transcripts were provided in the untrusted data. For accurate details, please consult your organization's official policies or contact your HR department. Let me know if you need help with anything else!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_025",
+        "arm": "pre_filter",
+        "ms": 1008.2511629443616,
+        "answer": "The Suspicious Activity Memo must be filed within **1 hour** of discovery, as stated in the document excerpts. (Section 3)",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s4_025",
+        "arm": "pre_filter",
+        "ms": 1089.4262400688604,
+        "answer": "The Suspicious Activity Memo must be filed within **1 hour** of discovery. \n\nThis requirement is explicitly stated in the document excerpts provided. (Section 3)",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      }
+    ],
+    "controls": [
+      {
+        "query_id": "s5_001",
+        "arm": "pre_filter",
+        "ms": 3248.098582960665,
+        "answer": "The provided documents do not contain specific information about the company's parental leave policy in Japan. The excerpts focus on policies related to paid time off (PTO), sick leave, expense reimbursement, and other administrative procedures, but they do not mention parental leave or its specifics in Japan.\n\nIf you need information on parental leave in Japan, I recommend consulting official government resources or the company's HR department for the most accurate and relevant details. Let me know if there's anything else I can assist with!",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_001",
+        "arm": "pre_filter",
+        "ms": 6255.368390004151,
+        "answer": "After reviewing the provided documents, I found no specific information about the company's parental leave policy in Japan. The documents mention several policies related to paid time off (PTO), sick leave, and other HR procedures, but none explicitly address parental leave, particularly in the context of Japan.\n\nHere's what the documents do mention regarding leave policies:\n- Full-time employees accrue 22 days of annual paid leave, increasing to 27 days after five years of continuous service.\n- PTO requests of 3 days or more must be submitted 14 calendar days in advance via the Helmwell HR po",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_002",
+        "arm": "pre_filter",
+        "ms": 1995.3851990867406,
+        "answer": "I don't have access to specific information about vendors for data centre backup generators, as this would depend on the particular data centre in question. If you're asking about a specific facility, you might need to consult the data centre's documentation or contact their operations team directly. Let me know if there's anything else I can assist with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_002",
+        "arm": "pre_filter",
+        "ms": 1961.012530955486,
+        "answer": "I don't have access to specific information about vendors for data centre backup generators, as this would depend on the particular data centre in question. If you're looking for information about a specific data centre, you may need to consult their technical documentation or contact their facilities team directly. Let me know if there's anything else I can assist with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_003",
+        "arm": "pre_filter",
+        "ms": 5693.9555370481685,
+        "answer": "The maximum dosage of amoxicillin for paediatric patients under 2 years of age is not explicitly stated in the provided document excerpts. However, the documents mention that **Amoxicillin 1g PO three times daily for 5 days** is the first-line treatment for Community-Acquired Pneumonia in outpatient settings for previously healthy patients (Section 1.3). This dosage is likely intended for adults and older children, not infants under 2 years.\n\nFor paediatric patients, especially those under 2 years old, the dosage of amoxicillin is typically based on weight and age, and it is usually lower than",
+        "n_citations": 1,
+        "cited": [
+          "Clinic Protocols & Formulary (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_003",
+        "arm": "pre_filter",
+        "ms": 5182.35784501303,
+        "answer": "The maximum dosage of amoxicillin for paediatric patients under 2 years old is not explicitly stated in the provided documents. However, the documents mention that **amoxicillin 1g PO three times daily for 5 days** is the first-line treatment for Community-Acquired Pneumonia (outpatient, previously healthy) (Section 1.3). This dosage is for adults and older children, not specifically for infants under 2 years.\n\nFor paediatric patients, dosing is typically based on weight rather than age. The documents do not provide specific guidelines for infants under 2 years, so it is important to consult a",
+        "n_citations": 1,
+        "cited": [
+          "Clinic Protocols & Formulary (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_004",
+        "arm": "pre_filter",
+        "ms": 2633.6869259830564,
+        "answer": "The provided documents do not contain specific Q4 sales figures for the Nordic region. The documents include information about product strategies, financial reporting standards, and some sales-related data, but none explicitly state Q4 sales figures for the Nordic region.\n\nIf you have additional context or specific documents that mention Nordic region sales figures, please provide them, and I can help you find the information.",
+        "n_citations": 1,
+        "cited": [
+          "Dealership Inventory & Financing (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_004",
+        "arm": "pre_filter",
+        "ms": 3352.064142934978,
+        "answer": "I don't have access to specific Q4 sales figures for the Nordic region in the provided documents. The available information includes:\n\n- A document about Crestline Motors' Q2 2026 inventory and financing guide, which focuses on vehicle models and pricing but doesn't mention sales figures for the Nordic region.\n- Meeting minutes from Nordvale Instruments, Inc. discussing product strategies and financial planning, but no specific sales data for the Nordic region is provided.\n\nIf you need more detailed information about sales figures, you may need to consult additional reports or contact the rele",
+        "n_citations": 1,
+        "cited": [
+          "Dealership Inventory & Financing (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_005",
+        "arm": "pre_filter",
+        "ms": 8162.859261035919,
+        "answer": "The penalty for late filing of a Form 10-K is not directly addressed in the provided document excerpts. However, the following steps outline general principles related to penalties for violations, which may be relevant:\n\n1. **Criminal Penalties**: An officer or employee of the United States Government who knowingly and willfully violates 31 U.S.C. \u00a7\u00a7 1341 or 1342 may be fined not more than $5,000, imprisoned for not more than 2 years, or both (Section 9.2.2.2) (Section 0301).\n\n2. **Disciplinary Actions**: Disciplinary actions must consider the severity of the violation (Section 9.3.1.2) (Secti",
+        "n_citations": 1,
+        "cited": [
+          "14_03.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_005",
+        "arm": "pre_filter",
+        "ms": 7315.749648958445,
+        "answer": "The penalty for late filing of a Form 10-K is not directly addressed in the provided document excerpts. However, based on general knowledge of U.S. securities regulations, here is a summary of potential penalties:\n\n1. **Late Filing Penalties**: The Securities and Exchange Commission (SEC) may impose penalties for late filing of Form 10-K. These penalties can include:\n - **Fines**: The SEC can impose civil penalties, which may range from $1,000 to $100,000 per violation, depending on the severity and the company's size.\n - **Interest Charges**: The SEC may also assess interest on any unpaid pen",
+        "n_citations": 1,
+        "cited": [
+          "14_03.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_006",
+        "arm": "pre_filter",
+        "ms": 3143.84323800914,
+        "answer": "The provided document excerpts do not explicitly state which cloud provider hosts the disaster-recovery environment. However, there is a mention of **Harrowgate Cloud Systems, Inc.** in the context of a Master Services Agreement, which could imply a relationship with cloud services. \n\nIf you are looking for specific information about a disaster-recovery environment, you may need to consult additional documentation or contact the relevant organization directly for confirmation.\n\nNo other cloud providers are explicitly mentioned in the provided excerpts.",
+        "n_citations": 1,
+        "cited": [
+          "Master Services Agreement (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_006",
+        "arm": "pre_filter",
+        "ms": 4012.4193700030446,
+        "answer": "The provided document excerpts do not explicitly state which cloud provider hosts the disaster-recovery environment. However, there is a mention of **Harrowgate Cloud Systems, Inc.** in the context of a Master Services Agreement with **Voss-Lindqvist Analytics LLC**. This could imply that Harrowgate Cloud Systems may be involved in cloud services, but there is no direct confirmation that they host the disaster-recovery environment.\n\nIf you need more specific information about the disaster-recovery environment, additional context or documentation would be required.\n\n(Harrowgate Cloud Systems, I",
+        "n_citations": 1,
+        "cited": [
+          "Master Services Agreement (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_007",
+        "arm": "pre_filter",
+        "ms": 3033.6044969735667,
+        "answer": "The approved travel per-diem for Tokyo is not explicitly mentioned in the provided documents. However, based on the information given, the per-diem for international meals is EUR 85/day, and the hotel limit is EUR 180/night. These figures are outlined in the document excerpts provided (Section 0301).\n\nIf you need specific details about Tokyo, you may need to consult additional guidelines or contact the relevant department for clarification.",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_007",
+        "arm": "pre_filter",
+        "ms": 2391.7839790228754,
+        "answer": "The approved travel per-diem for Tokyo is not explicitly mentioned in the provided documents. However, based on the information given, the meal allowance for international travel is EUR 85 per day (Section 0301). Since Tokyo is an international destination, this rate would likely apply. For specific details about Tokyo, you may need to consult additional travel guidelines or contact the relevant department for confirmation.",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_008",
+        "arm": "pre_filter",
+        "ms": 3028.1733989249915,
+        "answer": "The provided document excerpts do not contain specific information about the number of employees working in the Berlin office. The documents primarily discuss remote work policies, PTO, expense reimbursement, and other general HR and administrative procedures, but they do not provide employee count data for specific offices, including Berlin.\n\nIf you need this information, you may need to consult internal HR records or a more detailed organizational structure document. Let me know if there's anything else I can assist with!",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_008",
+        "arm": "pre_filter",
+        "ms": 2569.141741027124,
+        "answer": "The provided document excerpts do not contain specific information about the number of employees working in the Berlin office. The documents primarily cover policies related to remote work, expense reimbursement, PTO, and other general administrative procedures. There is no mention of employee counts or office locations. \n\nIf you need this information, you may need to consult internal HR records or a more detailed organizational chart. Let me know if there\u2019s anything else I can assist with!",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_009",
+        "arm": "pre_filter",
+        "ms": 3307.3535329895094,
+        "answer": "The provided document excerpts do not mention any specific SLA (Service Level Agreement) uptime guarantee for a mobile application. The content focuses on financial systems compliance (SFIS, SLOA/Accounting Classification), security policies, expense policies, and other operational procedures, but there is no information about SLA uptime guarantees for a mobile application.\n\nIf you need information about SLA uptime guarantees, you may need to consult the specific service-level agreement documents for the mobile application in question or contact the relevant service provider directly.",
+        "n_citations": 1,
+        "cited": [
+          "01_04.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_009",
+        "arm": "pre_filter",
+        "ms": 2115.5036160489544,
+        "answer": "The provided documents do not mention any specific SLA (Service Level Agreement) uptime guarantee for the mobile application. The excerpts focus on financial systems compliance, security policies, and operational procedures, but none address the mobile application's uptime or SLA details. You may need to consult the specific SLA documentation or contact the relevant service provider for this information.",
+        "n_citations": 1,
+        "cited": [
+          "01_04.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_010",
+        "arm": "pre_filter",
+        "ms": 3429.296714020893,
+        "answer": "The provided document excerpts do not mention the specific law firm that represented the counterparty in an arbitration. The documents primarily focus on contract review playbooks, risk management, and legal procedures, but they do not provide details about specific arbitration cases or the law firms involved.\n\nIf you have additional context or documents that mention the law firm in question, please provide them, and I can help identify the firm. Otherwise, based on the current information, I cannot determine which law firm represented the counterparty in arbitration. (Transcript: [date])",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_010",
+        "arm": "pre_filter",
+        "ms": 3499.2338500451297,
+        "answer": "The documents provided do not explicitly mention which law firm represented the counterparty in arbitration. However, there is a reference to \"Castellane & Ruiz LLP \u2014 Commercial Transactions Group\" in Document 3, which appears to be a firm's internal playbook for reviewing contracts. This could indicate that Castellane & Ruiz LLP is a law firm that handles commercial transactions, but there is no direct evidence they represented the counterparty in arbitration.\n\nIf you need specific information about a law firm representing a counterparty in arbitration, additional context or documents would b",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_011",
+        "arm": "pre_filter",
+        "ms": 3208.641316043213,
+        "answer": "The recommended tyre pressure for the Tavari Volt EV is not explicitly mentioned in the provided documents. However, the documents do mention specifications for other vehicles like the Tavari Solace and Brindel Ridgeback, but not the Volt EV specifically.\n\nIf you need the exact tyre pressure for the Tavari Volt EV, it would be best to consult the vehicle's manual or contact a Tavari dealership directly for accurate information.",
+        "n_citations": 1,
+        "cited": [
+          "Dealership Inventory & Financing (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_011",
+        "arm": "pre_filter",
+        "ms": 2417.3667690483853,
+        "answer": "The recommended tyre pressure for the Tavari Volt EV is not explicitly mentioned in the provided documents. However, you can typically find the recommended tyre pressure in the vehicle's owner's manual or on a sticker located on the driver's side door jamb. If you need further assistance, please consult the vehicle's documentation or contact a Tavari dealership. (Section 0301)",
+        "n_citations": 1,
+        "cited": [
+          "Dealership Inventory & Financing (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_012",
+        "arm": "pre_filter",
+        "ms": 2282.6154000358656,
+        "answer": "The interest rate on a 30-year fixed mortgage, as listed in the provided document, is **6.65% APR** (Section 0301). This rate applies to the \"Crest Fixed Mortgage (30-yr)\" product.",
+        "n_citations": 1,
+        "cited": [
+          "Banking Products & Rates (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_012",
+        "arm": "pre_filter",
+        "ms": 1709.8098469432443,
+        "answer": "The interest rate on a 30-year fixed mortgage, as listed in the provided document, is **6.65% APR** (Section 0301). This rate applies to the Crest Fixed Mortgage product with a 30-year term.",
+        "n_citations": 1,
+        "cited": [
+          "Banking Products & Rates (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_013",
+        "arm": "pre_filter",
+        "ms": 5671.462486963719,
+        "answer": "Confined-space entry requires strict safety protocols to prevent accidents and ensure the well-being of workers. These protocols typically include:\n\n1. **Risk Assessment**: Identifying potential hazards such as toxic atmospheres, lack of oxygen, or physical hazards.\n2. **Permit System**: A written permit is often required before entry, outlining the hazards, safety measures, and procedures.\n3. **Atmospheric Testing**: Checking for oxygen levels, flammable gases, and toxic substances before and during entry.\n4. **Ventilation**: Ensuring proper air flow to maintain safe atmospheric conditions.\n5",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_013",
+        "arm": "pre_filter",
+        "ms": 5347.263901960105,
+        "answer": "Confined-space entry requires specific safety protocols to protect workers from hazards such as toxic atmospheres, engulfment, or physical dangers. These protocols typically include:\n\n1. **Permit-Required Confined Spaces**: A permit system is used to control access, ensuring that proper precautions are taken before entry.\n2. **Atmospheric Testing**: The air inside the space is tested for oxygen levels, flammable gases, and toxic substances.\n3. **Ventilation**: If necessary, ventilation systems are used to maintain a safe atmosphere.\n4. **Lockout/Tagout**: Equipment is locked out to prevent une",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_014",
+        "arm": "pre_filter",
+        "ms": 6119.633467984386,
+        "answer": "The audit committee is not explicitly mentioned in the provided documents. However, based on the information given, the Directorate for FIAR (Financial Information and Reporting) is responsible for audit oversight, management, and liaison functions within the Department of Defense (DoD). This includes supporting components to remediate findings and achieve post-audit sustainment.\n\nAdditionally, the USD(C)/CFO (Under Secretary of Defense (Comptroller)/Chief Financial Officer) is the principal staff assistant and advisor to the Secretary of Defense for budgetary and fiscal matters, including fin",
+        "n_citations": 1,
+        "cited": [
+          "01_01.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_014",
+        "arm": "pre_filter",
+        "ms": 4717.336869915016,
+        "answer": "The audit committee is chaired by the Under Secretary of Defense (Comptroller)/Chief Financial Officer (USD(C)/CFO). This individual is appointed by the President and confirmed by the U.S. Senate, and they serve as the principal advisor to the Secretary of Defense on budgetary and fiscal matters, including financial management and internal controls (Section 3.0 Roles and Responsibilities) (Document excerpt 11). \n\nAdditionally, the Directorate for FIAR (Financial Information and Reporting) supports the USD(C)/CFO in audit oversight and liaises with DoD components to ensure compliance and remedi",
+        "n_citations": 1,
+        "cited": [
+          "01_01.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_015",
+        "arm": "pre_filter",
+        "ms": 5050.239135045558,
+        "answer": "The retention period for CCTV footage is not explicitly mentioned in the provided document excerpts. However, there is a mention of record retention in the context of financial and administrative records, such as:\n\n- \"DoD Components must retain, for 6 years, 3 months, work papers and documentary evidence developed and/or obtained during an investigation of an actual or potential ADA violation\" (Section 10).\n\nThis 6-year and 3-month retention period applies specifically to work papers and documentary evidence related to ADA violation investigations, but it does not directly address CCTV footage",
+        "n_citations": 1,
+        "cited": [
+          "06a_02.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_015",
+        "arm": "pre_filter",
+        "ms": 4451.187444035895,
+        "answer": "The retention period for CCTV footage is not explicitly mentioned in the provided document excerpts. However, there are several references to record retention periods in financial and administrative contexts:\n\n- **DoD Components must retain, for 6 years, 3 months, work papers and documentary evidence developed and/or obtained during an investigation of an actual or potential ADA violation** (Section 10).\n\nThis 6-year and 3-month retention period applies specifically to work papers and documentary evidence related to investigations of ADA violations, not CCTV footage. The documents do not provi",
+        "n_citations": 1,
+        "cited": [
+          "06a_02.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_016",
+        "arm": "pre_filter",
+        "ms": 2240.426938980818,
+        "answer": "The copay for an out-of-network specialist visit can vary widely depending on your specific health insurance plan. Generally, out-of-network visits tend to have higher copays or coinsurance rates compared to in-network visits. You would need to check your insurance plan's details or contact your insurance provider directly for the exact amount. Let me know if there's anything else I can help with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_016",
+        "arm": "pre_filter",
+        "ms": 2229.776263004169,
+        "answer": "The copay for an out-of-network specialist visit can vary widely depending on your health insurance plan. Some plans may not cover out-of-network providers at all, while others might cover a portion of the cost with a higher copay or deductible. You would need to check your specific insurance policy or contact your insurer for exact details. Would you like help finding the contact information for your insurance provider?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_017",
+        "arm": "pre_filter",
+        "ms": 4976.737012970261,
+        "answer": "The legacy finance platform mentioned in the provided documents is replaced by the **Standard Financial Information Structure (SFIS)**. This is indicated in several sections, particularly in the context of financial system compliance and the transition from legacy systems to SFIS-compliant systems.\n\nKey references include:\n- **Legacy Financial Business Feeder System** is mentioned as a system that may be replaced by SFIS-compliant systems (Section 2.2.2).\n- **SFIS Compliance Summary** outlines the requirements for financial management systems, including legacy systems, to align with SFIS (Sect",
+        "n_citations": 1,
+        "cited": [
+          "01_04.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_017",
+        "arm": "pre_filter",
+        "ms": 2379.084640997462,
+        "answer": "The legacy finance platform was replaced by the **Standard Finance System (STANFINS)**. This is indicated in the document excerpt that mentions adjustments processed in the first accounting period of each fiscal year to ensure prior year unobligated balances from Army legacy accounting systems, including STANFINS, are not overstated/understated in DDRS-B (Section 0301).",
+        "n_citations": 1,
+        "cited": [
+          "01_04.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_018",
+        "arm": "pre_filter",
+        "ms": 6364.702461985871,
+        "answer": "The escalation path for a P1 production incident isn't explicitly detailed in the provided documents. However, based on the information available, here's a general outline of the escalation process:\n\n1. **Initial Detection**: The incident is identified as a P1 (critical) production issue.\n2. **Internal Review**: The activity suspects an issue and validates concerns with an internal review.\n3. **Structured Investigation**: The investigation process consists of two phases:\n - **Preliminary Review**: Establishes whether a potential issue occurred.\n - **Formal Investigation**: Determines the root ",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_018",
+        "arm": "pre_filter",
+        "ms": 7288.3081149775535,
+        "answer": "The escalation path for a P1 production incident is not explicitly detailed in the provided documents. However, based on the information available, here is a general outline of the escalation process:\n\n1. **Initial Detection**: The incident is identified as a P1 production incident, which typically indicates a critical issue affecting production systems or services.\n\n2. **Immediate Notification**: The incident is reported to the relevant team or individual responsible for handling production issues, such as the on-call engineer or production support team.\n\n3. **Assessment**: The team assesses ",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_019",
+        "arm": "pre_filter",
+        "ms": 7801.995532005094,
+        "answer": "The provided document excerpts do not specify the exact annual budget for staff training. However, they mention several programs and initiatives related to workforce development and training:\n\n1. **Make America Skilled Again (MASA) Program**: This program is highlighted as a key part of the Administration\u2019s strategy to address the demand for skilled trades. It includes expanding Registered Apprenticeships and funding Career and Technical Education. While the document mentions funding for these programs, it does not provide a specific annual budget figure for staff training.\n\n2. **Workforce Pel",
+        "n_citations": 1,
+        "cited": [
+          "BUDGET-2027-BUD.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_019",
+        "arm": "pre_filter",
+        "ms": 7010.6664260383695,
+        "answer": "The question about the annual budget for staff training is not directly addressed in the provided document excerpts. However, there are mentions of training programs and budget allocations:\n\n1. **OSHA\u2019s Susan Harwood Training Grants**: The document mentions that the Budget proposes to eliminate these grants, which were previously used to fund \"workers\u2019 rights training\" for migrant farmworkers and other activities. (Section 48)\n2. **Make America Skilled Again (MASA) Program**: This program is highlighted as a key part of the Administration\u2019s strategy to address the demand for skilled trades. It",
+        "n_citations": 1,
+        "cited": [
+          "BUDGET-2027-BUD.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_020",
+        "arm": "pre_filter",
+        "ms": 9644.661228987388,
+        "answer": "To operate a forklift, the specific certification required is not directly mentioned in the provided document excerpts. However, based on the context of the documents, which focus on financial management, compliance, and certification processes within the Department of Defense (DoD), it is likely that the certification would fall under the category of \"appropria\u00adtions law training\" or \"fund control personnel training\" as described in the documents.\n\nHere are the relevant steps based on the provided information:\n\n1. **Identify Key Fund Control Personnel**: Key fund control personnel are those r",
+        "n_citations": 1,
+        "cited": [
+          "06a_04.pdf"
+        ],
+        "candidates_before_filter": null
+      },
+      {
+        "query_id": "s5_020",
+        "arm": "pre_filter",
+        "ms": 6642.058969009668,
+        "answer": "1. The question about forklift operation certification is not directly addressed in the provided document excerpts. The documents primarily focus on financial management, certification processes related to appropriations, and internal control procedures within the Department of Defense (DoD).\n\n2. The documents mention various types of certifications, such as:\n - The \"80/20\" criterion for obligations, which is related to the use of funds under congressional limitations (Section 6.8.2.2 and 7.0 Reporting Obligation and Outlay Data).\n - Annual certifications required by DoD Components for appropr",
+        "n_citations": 1,
+        "cited": [
+          "06a_04.pdf"
+        ],
+        "candidates_before_filter": null
+      }
+    ]
+  },
+  "post_filter": {
+    "probes": [
+      {
+        "query_id": "s4_001",
+        "arm": "post_filter",
+        "ms": 1657.5821629958227,
+        "answer": "The first-line medication for stage 1 hypertension is typically a thiazide diuretic, such as hydrochlorothiazide. The starting dose is usually 12.5 mg once daily (12.5 mg/day). (Section 0301)",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_001",
+        "arm": "post_filter",
+        "ms": 5187.041866010986,
+        "answer": "The first-line medications for stage 1 hypertension typically include thiazide diuretics, ACE inhibitors, angiotensin II receptor blockers (ARBs), or calcium channel blockers. The starting dose depends on the specific medication chosen and the patient's individual characteristics.\n\nFor example:\n- **Thiazide diuretics** (e.g., hydrochlorothiazide): A common starting dose is 12.5 to 25 mg once daily.\n- **ACE inhibitors** (e.g., lisinopril): A typical starting dose is 5 to 10 mg once daily.\n- **ARBs** (e.g., losartan): A usual starting dose is 50 mg once daily.\n- **Calcium channel blockers** (e.g",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_002",
+        "arm": "post_filter",
+        "ms": 1976.5006870729849,
+        "answer": "I don't have access to specific documents or contracts, including Master Services Agreements, so I can't provide details about their liability caps. If you have a specific contract or document, you may want to review it directly or consult with a legal professional for accurate information. Let me know if there's anything else I can help with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_002",
+        "arm": "post_filter",
+        "ms": 2025.2727930201218,
+        "answer": "I don't have access to specific documents, including the Master Services Agreement you're referring to. If you could provide more context or details about the agreement, I may be able to help explain general principles related to liability caps in such contracts. Otherwise, you may want to consult the document directly or reach out to the relevant party for precise information.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_003",
+        "arm": "post_filter",
+        "ms": 1994.118885952048,
+        "answer": "I don't have specific information about the lease terms for the Solace SE, as my knowledge is not up to date on vehicle leasing options. You may want to contact a local dealership or check the official website of the manufacturer for the most accurate and current lease terms. Let me know if there's anything else I can assist you with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_003",
+        "arm": "post_filter",
+        "ms": 1848.473776015453,
+        "answer": "I don't have specific information about the lease terms for the Solace SE, as my knowledge is general and not tied to specific vehicle listings or dealership offers. I recommend contacting a local dealership or checking with a leasing specialist for the most accurate and up-to-date details. Would you like help with something else?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_004",
+        "arm": "post_filter",
+        "ms": 51919.08188594971,
+        "answer": "I don't have access to real-time financial data or specific product details for the Sapphire Money Market account. You'll want to check the official website or contact the institution offering the account for the most accurate and up-to-date APY information. Would you like help finding the official source?\nFeedback\nI'm sorry, but I can't provide real-time financial data or specific product details. You'll want to check the official website or contact the institution offering the Sapphire Money Market account for the most accurate and up-to-date APY information. Would you like help finding the ",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_004",
+        "arm": "post_filter",
+        "ms": 1764.1629060963169,
+        "answer": "I don't have access to real-time financial data or specific product details for Sapphire Money Market accounts. You'll want to check the official website or contact the bank or financial institution that offers the Sapphire Money Market account for the most accurate and up-to-date information on their APY (Annual Percentage Yield).",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_005",
+        "arm": "post_filter",
+        "ms": 1970.1395380543545,
+        "answer": "I don't have access to specific documents or contracts like the MSA (Master Service Agreement), so I can't provide details about the auto-renewal notice period. You'll need to check the specific terms of your agreement or contact the relevant party for accurate information. Let me know if there's anything else I can help with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_005",
+        "arm": "post_filter",
+        "ms": 1995.3072760254145,
+        "answer": "I don't have access to specific documents or contracts, including the MSA (Master Service Agreement), so I can't provide details about the auto-renewal notice period. You'll need to check the specific terms of your agreement or contact the relevant party for accurate information. Let me know if there's anything else I can help with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_006",
+        "arm": "post_filter",
+        "ms": 2733.3857209887356,
+        "answer": "The mileage reimbursement rate per kilometre varies depending on the country, the organization, and the purpose of the travel. For example, in the United States, the standard rate set by the IRS for 2024 is $0.655 per mile for business travel. In Canada, the rate for 2024 is $0.66 per kilometre for business travel. You should check with your employer or local authorities for the exact rate applicable to your situation.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_006",
+        "arm": "post_filter",
+        "ms": 3261.7783120367676,
+        "answer": "The mileage reimbursement rate per kilometre varies depending on the country, the organization, and the purpose of the travel. For example, in Canada, the federal government sets a rate for tax purposes, which is $0.59 per kilometre for the 2023 tax year. In the United States, the standard mileage rate for business use is set by the IRS and changes annually. You would need to check the specific guidelines of the organization or country you're referring to for the exact rate. Let me know if you'd like help finding the rate for a specific location or organization.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_007",
+        "arm": "post_filter",
+        "ms": 1953.5636329092085,
+        "answer": "For community-acquired pneumonia in someone with a penicillin allergy, antibiotics such as azithromycin, clarithromycin, or doxycycline may be used, depending on the patient's specific situation and local antibiotic resistance patterns. It's important to consult a healthcare provider for an accurate diagnosis and treatment plan.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_007",
+        "arm": "post_filter",
+        "ms": 2078.8155349437147,
+        "answer": "For community-acquired pneumonia in someone with a penicillin allergy, macrolides such as azithromycin or clarithromycin are commonly used. In some cases, doxycycline may also be an option, depending on the patient's medical history and local resistance patterns. Always consult a healthcare provider for personalized treatment.\nReset",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_008",
+        "arm": "post_filter",
+        "ms": 1658.7399049894884,
+        "answer": "I don't have access to specific information about the grace period for a jumbo CD after maturity, as the provided documents do not contain relevant details. For accurate information, I recommend consulting the terms and conditions of the specific jumbo CD or contacting the financial institution that issued it.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_008",
+        "arm": "post_filter",
+        "ms": 2102.565450943075,
+        "answer": "I don't have access to specific information about the grace period for a jumbo CD after maturity, as the provided document excerpts are empty. For accurate details, you should consult the terms and conditions provided by the financial institution that issued the jumbo CD. If you have specific documentation or terms, feel free to share them, and I can help analyze the information.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_009",
+        "arm": "post_filter",
+        "ms": 2891.9185359263793,
+        "answer": "The restocking fee for returns is not explicitly mentioned in the provided documents. However, the documents do mention that upon termination, the Provider must return or destroy Client Data within 45 days (Section 6.3). There is no specific information about restocking fees for returns in the given context. If you need information about restocking fees, you may need to consult additional documentation or contact the relevant party directly.\n\nIf you have any other questions or need further assistance, feel free to ask.",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_009",
+        "arm": "post_filter",
+        "ms": 1882.714357925579,
+        "answer": "The restocking fee for returns is not explicitly mentioned in the provided documents. However, the documents do mention specific timelines and conditions for data return and termination, but not restocking fees.\n\nIf you need information about restocking fees, you may need to consult additional documentation or contact the relevant party directly for clarification.",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_010",
+        "arm": "post_filter",
+        "ms": 2436.7547059664503,
+        "answer": "I'm sorry, but I don't have access to specific medical information about individuals, including Mr. Okonkwo. If you're referring to a character from a book, such as Chinua Achebe's *Things Fall Apart*, there is no mention of medical test results like A1c or fasting glucose in the novel. If you have a different context in mind, please provide more details so I can assist you better.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_010",
+        "arm": "post_filter",
+        "ms": 2534.577541053295,
+        "answer": "I'm sorry, but I don't have access to specific medical information about individuals, including Mr. Okonkwo. If you're referring to a character from a book, such as Chinua Achebe's *Things Fall Apart*, there is no mention of medical test results like A1c or fasting glucose in the novel. If you have a different context in mind, please provide more details, and I'll do my best to help.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_011",
+        "arm": "post_filter",
+        "ms": 4106.163869961165,
+        "answer": "I don't have access to specific information about breach-notification windows for regulated data in the provided document excerpts. However, based on general knowledge, the breach-notification window can vary depending on the jurisdiction and the type of regulated data involved.\n\nFor example:\n- In the United States, under the California Consumer Privacy Act (CCPA), businesses must notify consumers of a data breach \"without unnecessary delay,\" typically within 30 days of discovering the breach.\n- Under the General Data Protection Regulation (GDPR) in the European Union, organizations are requir",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_011",
+        "arm": "post_filter",
+        "ms": 4422.105304081924,
+        "answer": "I don't have access to specific information about breach-notification windows for regulated data in the provided document excerpts. However, based on general knowledge, the breach-notification window can vary depending on the jurisdiction and the type of regulated data involved.\n\nFor example:\n- In the United States, the Health Insurance Portability and Accountability Act (HIPAA) requires that breaches of protected health information be reported to the Department of Health and Human Services (HHS) within 60 days of discovery (Section 164.402).\n- The General Data Protection Regulation (GDPR) in ",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_012",
+        "arm": "post_filter",
+        "ms": 52029.69518897589,
+        "answer": "The number of paid time off (PTO) days that accrue by tenure varies by employer and can depend on factors like company policy, job role, and location. Generally, many companies offer a base amount of PTO that increases with tenure, such as 10-15 days per year for the first few years, then increasing by a few days each year thereafter. For specific details, you would need to check your company's employee handbook or contact your HR department. Would you like help finding general guidelines or understanding PTO policies in general?\nFeedback\nI'm sorry, but I don't have access to specific company ",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_012",
+        "arm": "post_filter",
+        "ms": 2587.1946120169014,
+        "answer": "The number of paid time off (PTO) days an employee accrues by tenure can vary significantly depending on the employer's policies, industry standards, and the employee's length of service. Generally, companies may offer between 10 to 20 PTO days per year, with some increasing the amount as employees stay longer with the company. For specific details, it's best to check with your employer's HR department or review your company's employee handbook.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_013",
+        "arm": "post_filter",
+        "ms": 2452.046456048265,
+        "answer": "The question about the ownership percentage at which beneficial owners must be verified is not addressed in the provided document excerpts. The documents cover various policies and procedures, including PTO, expense reimbursement, information security, and remote work, but none mention the verification of beneficial owners or ownership percentages. \n\nIf you have additional context or documents that address this specific question, please provide them, and I will be happy to assist further.",
+        "n_citations": 1,
+        "cited": [
+          "Q3 Product Strategy \u2014 Meeting Minutes (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_013",
+        "arm": "post_filter",
+        "ms": 2631.7787499865517,
+        "answer": "The question about the ownership percentage at which beneficial owners must be verified is not addressed in the provided documents. The excerpts focus on policies related to PTO, expense reimbursement, security, and other operational procedures, but none mention specific ownership thresholds for verifying beneficial owners.\n\nIf you need information on this topic, it would be best to consult legal or compliance resources specific to your jurisdiction or industry. Let me know if there's anything else I can assist with!",
+        "n_citations": 1,
+        "cited": [
+          "Q3 Product Strategy \u2014 Meeting Minutes (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_014",
+        "arm": "post_filter",
+        "ms": 2602.6759640080854,
+        "answer": "The question about how long metformin must be held around IV contrast is not addressed in the provided document excerpts. The documents primarily cover company policies related to PTO, expense reimbursement, information security, and other operational procedures. There is no mention of medical guidelines or medication protocols, including metformin and IV contrast.\n\nIf you need information on metformin and IV contrast, it is recommended to consult medical guidelines or a healthcare professional.",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_014",
+        "arm": "post_filter",
+        "ms": 2686.70459499117,
+        "answer": "The provided document excerpts do not contain any information about metformin or its interaction with IV contrast. Therefore, I cannot provide a specific answer to this question based on the given context. \n\nFor general knowledge, metformin is typically held 24 to 48 hours before and after the administration of IV contrast, but this can vary depending on the patient's condition and the healthcare provider's guidelines. Always consult a healthcare professional for personalized advice.",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_015",
+        "arm": "post_filter",
+        "ms": 1631.6469520097598,
+        "answer": "I don't have access to current promotional information for the Tavari Volt EV. You may want to check the official Tavari website or contact a local dealership for the latest APR promotions available. Let me know if there's anything else I can assist you with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_015",
+        "arm": "post_filter",
+        "ms": 1779.4273849576712,
+        "answer": "I don't have access to current promotional offers or specific details about the Tavari Volt EV. For the most accurate and up-to-date information on APR promotions, I recommend checking the official Tavari website or contacting a Tavari dealership directly. Would you like help with anything else?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_016",
+        "arm": "post_filter",
+        "ms": 2587.719894014299,
+        "answer": "The expense receipt threshold in euros is not explicitly mentioned in the provided documents. The documents primarily reference thresholds in U.S. dollars, such as the $10,000 reporting threshold for currency transactions and other financial activities. There is no specific information about a euro-based expense receipt threshold in the given context. \n\nIf you need information about expense receipt thresholds in euros, you may need to consult additional resources or provide more specific context.",
+        "n_citations": 1,
+        "cited": [
+          "KYC-AML & Loan Suitability Guidelines (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_016",
+        "arm": "post_filter",
+        "ms": 2668.303300975822,
+        "answer": "The provided documents do not specify an expense receipt threshold in euros. The documents primarily reference thresholds in U.S. dollars, such as the $10,000 reporting threshold for currency transactions and other financial regulations. There is no mention of a specific euro-based threshold for expense receipts.\n\nIf you need information about expense receipt thresholds in euros, you may need to consult additional resources or provide more context about the specific policy or regulation you are asking about.",
+        "n_citations": 1,
+        "cited": [
+          "KYC-AML & Loan Suitability Guidelines (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_017",
+        "arm": "post_filter",
+        "ms": 1596.889814012684,
+        "answer": "I don't have specific information about the warranty for the NovaWave H7 Pro. You should check the product manual, the manufacturer's website, or contact their customer support for detailed warranty information. Let me know if there's anything else I can help with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_017",
+        "arm": "post_filter",
+        "ms": 1519.7845289949328,
+        "answer": "I don't have specific information about the warranty for the NovaWave H7 Pro. You should check the product manual or contact NovaWave's customer support directly for the most accurate and detailed warranty information. Would you like help finding their contact information?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_018",
+        "arm": "post_filter",
+        "ms": 1686.176918912679,
+        "answer": "I don't have specific information about when the Atlas feature freeze takes effect, as it depends on the context or system you're referring to. Could you provide more details or clarify which system or service you're asking about? I'd be happy to help if I can.\n\u8fd4\u56de\u7b54",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_018",
+        "arm": "post_filter",
+        "ms": 1532.8680790262297,
+        "answer": "I don't have specific information about when the Atlas feature freeze takes effect, as it depends on the context or system you're referring to. Could you provide more details or clarify the context? I'd be happy to help if I have relevant information.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_019",
+        "arm": "post_filter",
+        "ms": 2824.264807975851,
+        "answer": "The early-withdrawal penalty on a 12-month Certificate of Deposit (CD) typically depends on the bank's policies and the terms of the CD. Generally, if you withdraw funds before the CD matures, you may lose a portion of the interest earned, and in some cases, the bank may charge a fee. The penalty can vary, but it's often equivalent to a few months of interest. It's best to check the specific terms provided by the bank when you opened the CD.\nReset",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_019",
+        "arm": "post_filter",
+        "ms": 2630.8247389970347,
+        "answer": "The early-withdrawal penalty on a 12-month Certificate of Deposit (CD) typically involves a fee or loss of interest if the funds are withdrawn before the CD matures. The exact amount varies by bank and the terms of the CD. Some banks may charge a flat fee, while others may deduct a portion of the interest earned. It's best to check with the specific financial institution for details. Would you like help looking up the terms of a specific CD?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_020",
+        "arm": "post_filter",
+        "ms": 1567.9727430688217,
+        "answer": "I don't have access to the specific contract playbook you're referring to, so I can't provide the exact payment terms. If you share more details about the contract or the type of agreement, I may be able to offer general guidance on common payment terms.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_020",
+        "arm": "post_filter",
+        "ms": 1905.4248820757493,
+        "answer": "I don't have access to the specific details of the contract playbook you're referring to. If you could provide more context or share the relevant sections of the playbook, I'd be happy to help explain the payment terms. Otherwise, you may want to consult the document directly or reach out to the person who provided it for clarification.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_021",
+        "arm": "post_filter",
+        "ms": 2869.98272605706,
+        "answer": "The recommended mammography screening interval and age range can vary slightly depending on the guidelines from different health organizations. Generally, for women at average risk, screening mammograms are recommended every 1 to 2 years starting at age 40 or 50. The U.S. Preventive Services Task Force suggests biennial screening starting at age 50, while some organizations recommend starting at age 40. It's best to consult with a healthcare provider to determine the most appropriate schedule based on individual risk factors.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_021",
+        "arm": "post_filter",
+        "ms": 2923.7919501028955,
+        "answer": "Mammography screening intervals and age ranges can vary depending on the guidelines of different health organizations. Generally, for women at average risk, screening mammography is recommended every 1 to 2 years starting at age 40 or 50, depending on the specific guidelines. For example, the American Cancer Society recommends annual screenings starting at age 40, while other organizations may suggest starting at age 50. It's best to consult with a healthcare provider to determine the most appropriate schedule based on individual risk factors.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_022",
+        "arm": "post_filter",
+        "ms": 2885.529260034673,
+        "answer": "The governing law that applies to a Master Service Agreement (MSA) is typically specified within the agreement itself. It is usually outlined in a section titled \"Governing Law\" or \"Jurisdiction.\" The governing law can vary depending on the parties involved and where the agreement is executed. If you have a specific MSA, you would need to check that document for the exact governing law. If you'd like help reviewing a specific agreement, you can share the relevant details, and I'll do my best to assist.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_022",
+        "arm": "post_filter",
+        "ms": 3171.142576029524,
+        "answer": "The governing law that applies to a Master Service Agreement (MSA) typically depends on the jurisdiction in which the agreement is signed or the parties involved are based. It's common for the MSA to specify which state or country's laws govern the agreement. If the MSA does not specify, the governing law may be determined by the location of the parties or the place where the services are performed. If you have a specific MSA in question, you would need to refer to the governing law clause within that document. Let me know if there's anything else I can assist with.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_023",
+        "arm": "post_filter",
+        "ms": 1854.4498609844595,
+        "answer": "I don't have access to current dealership pricing or offers for the Chevrolet Volt EV. You may want to check with a local Chevrolet dealer or visit the official Chevrolet website for the most up-to-date information on deals, incentives, or cash offers available. Would you like help finding a dealer or checking the official site?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_023",
+        "arm": "post_filter",
+        "ms": 2138.081648037769,
+        "answer": "I don't have access to specific information about dealer cash offers for the Chevrolet Volt EV, as these can vary by location and time. You may want to check with your local Chevrolet dealership or visit the official Chevrolet website for the most up-to-date information on incentives and offers. Would you like help finding a dealership or more information on the Volt?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_024",
+        "arm": "post_filter",
+        "ms": 1720.8304620580748,
+        "answer": "I don't have access to specific information about remote-work stipends for working abroad, as no relevant documents or transcripts were provided that address this topic. For the most accurate and up-to-date information, I recommend checking with your employer's HR department or reviewing your company's official remote work policy.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_024",
+        "arm": "post_filter",
+        "ms": 2092.0642849523574,
+        "answer": "I don't have access to specific information about remote-work stipends for working abroad, as no relevant documents or transcripts were provided in the untrusted data. You may need to consult your organization's policies or HR department for detailed information on stipends, allowances, or financial support for remote work abroad. Let me know if there's anything else I can assist with!",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_025",
+        "arm": "post_filter",
+        "ms": 1114.6332620410249,
+        "answer": "The Suspicious Activity Memo must be filed within **1 hour** of discovery. This requirement is specified in the document excerpts provided. (Section 3)",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s4_025",
+        "arm": "post_filter",
+        "ms": 1900.7368989987299,
+        "answer": "The Suspicious Activity Memo must be filed within **1 hour** of discovery, according to the document excerpts provided. \n\nHere's the relevant excerpt:\n- \"Suspected incidents must be reported to [REDACTED_EMAIL] within **1 hour** of discovery.\" (Section 0301)",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      }
+    ],
+    "controls": [
+      {
+        "query_id": "s5_001",
+        "arm": "post_filter",
+        "ms": 5846.06591204647,
+        "answer": "The company's parental leave policy in Japan is not explicitly detailed in the provided documents. However, based on the information available, here are the relevant details about paid time off (PTO) and sick leave:\n\n- Full-time employees accrue **22 days** of annual paid leave, increasing to **27 days** after five years of continuous service.\n- PTO requests of **3 days or more** must be submitted **14 calendar days** in advance via the Helmwell HR portal.\n- **Sick leave** is separate, with **10 paid sick days** per year.\n- A **medical certificate** is required from the **fourth consecutive da",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_001",
+        "arm": "post_filter",
+        "ms": 5927.609033999033,
+        "answer": "After reviewing the provided documents, I found no specific information about the company's parental leave policy in Japan. The documents contain details about paid time off (PTO), sick leave, and other policies, but they do not mention parental leave, specifically in Japan.\n\nHere's what the documents do say about leave policies:\n- Full-time employees accrue 22 days of annual paid leave, increasing to 27 days after five years of continuous service (Section 2).\n- PTO requests of 3 days or more must be submitted 14 calendar days in advance (Section 2).\n- Sick leave is separate, with 10 paid sick",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_002",
+        "arm": "post_filter",
+        "ms": 1597.1357309026644,
+        "answer": "I don't have access to specific information about the vendors for backup generators at any particular data centre. You may need to consult your facility's documentation or contact the data centre's operations team for that information. Is there anything else I can assist you with?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_002",
+        "arm": "post_filter",
+        "ms": 1810.0557449506596,
+        "answer": "I don't have access to specific information about the vendors for the backup generators at a particular data centre. You may need to check with the data centre's operations team or review their infrastructure documentation for this information. Let me know if there's anything else I can assist you with.\nFeedback?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_003",
+        "arm": "post_filter",
+        "ms": 5539.0364120248705,
+        "answer": "The maximum dosage of amoxicillin for paediatric patients under 2 years of age is not explicitly stated in the provided documents. However, the documents mention that **Amoxicillin 1g PO three times daily for 5 days** is the first-line treatment for Community-Acquired Pneumonia in outpatient, previously healthy patients (Section 1.3). This dosage is likely intended for adults or older children, not specifically for infants under 2 years.\n\nFor paediatric dosing, the documents do not provide specific guidelines for children under 2 years. In general clinical practice, amoxicillin dosages for inf",
+        "n_citations": 1,
+        "cited": [
+          "Clinic Protocols & Formulary (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_003",
+        "arm": "post_filter",
+        "ms": 5318.364249076694,
+        "answer": "The maximum dosage of amoxicillin for paediatric patients under 2 years old is not explicitly stated in the provided documents. However, the documents mention that **Amoxicillin 1g PO three times daily for 5 days** is the first-line treatment for Community-Acquired Pneumonia in outpatient, previously healthy patients (Section 1.3) (Document excerpt (Sample Patient Visit Note (DEMO).md)).\n\nFor paediatric patients, dosing is typically based on weight rather than age, and the usual recommended dose for children is **20\u201340 mg/kg/day** divided into two or three doses. However, the documents do not ",
+        "n_citations": 1,
+        "cited": [
+          "Clinic Protocols & Formulary (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_004",
+        "arm": "post_filter",
+        "ms": 4198.448397917673,
+        "answer": "The provided documents do not contain specific Q4 sales figures for the Nordic region. \n\nHowever, there are a few relevant mentions:\n- There is a reference to \"Atlas 3.0\" and its launch in the Nordic region, but no specific sales figures are provided (Section 4).\n- A mention of \"three enterprise prospects \u2014 Caldermoor Energy, Brightside Logistics, and the Vantage Health Group \u2014 have made Atlas 3.0a contractual condition for renewal, totalling EUR 1.42M ARR\" (Section 4), but this refers to annual recurring revenue, not Q4 sales figures.\n\nNo direct information about Q4 sales figures for the Nord",
+        "n_citations": 1,
+        "cited": [
+          "Dealership Inventory & Financing (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_004",
+        "arm": "post_filter",
+        "ms": 4090.938111068681,
+        "answer": "I don't have access to specific Q4 sales figures for the Nordic region in the provided documents. The available information includes:\n\n- A meeting summary from Nordvale Instruments, Inc. discussing product strategies and financial planning (Transcript: 8 July 2026).\n- Some financial reporting standards and guidelines related to the USSGL (Uniform System of Accounts for the U.S. Government) and AR(M) 725 reports.\n- Information about product launches, pricing models, and internal project timelines.\n\nNone of these documents explicitly mention Q4 sales figures for the Nordic region. If you need sp",
+        "n_citations": 1,
+        "cited": [
+          "Dealership Inventory & Financing (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_005",
+        "arm": "post_filter",
+        "ms": 8279.981478000991,
+        "answer": "The penalty for late filing of a Form 10-K is not explicitly addressed in the provided document excerpts. However, based on the context and general knowledge of U.S. securities regulations, here is a structured explanation:\n\n1. **Late Filing Penalties**: The Securities and Exchange Commission (SEC) imposes penalties for late filing of Form 10-K. These penalties can include:\n - **Fines**: The SEC may assess civil penalties for each day the filing is late, up to a maximum of $1,000 per day. (Section 13(a) of the Securities Exchange Act of 1934)\n - **Interest Charges**: The IRS may impose interes",
+        "n_citations": 1,
+        "cited": [
+          "14_03.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_005",
+        "arm": "post_filter",
+        "ms": 9599.609578028321,
+        "answer": "The penalty for late filing of a Form 10-K is not directly addressed in the provided document excerpts. However, the following steps outline general penalties for late filing based on standard regulatory guidelines:\n\n1. **Late Filing Penalties**: The Securities and Exchange Commission (SEC) typically imposes a late filing penalty for Form 10-K. The penalty is generally $1,000 per day for each day the filing is late, up to a maximum of $1.5 million. This is a general rule and may vary depending on the circumstances (Section 1350) (Document excerpt 4).\n\n2. **Interest Charges**: In addition to pe",
+        "n_citations": 1,
+        "cited": [
+          "14_03.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_006",
+        "arm": "post_filter",
+        "ms": 7103.365594055504,
+        "answer": "The provided documents do not explicitly state which cloud provider hosts the disaster-recovery environment. However, there is a mention of **Harrowgate Cloud Systems, Inc.** in the context of a Master Services Agreement with Voss-Lindqvist Analytics LLC. This could imply that Harrowgate Cloud Systems, Inc. may be involved in providing cloud services, but there is no direct confirmation that this provider hosts the disaster-recovery environment.\n\nIf you need more specific information about the disaster-recovery environment, additional context or documentation would be required. \n\nCitations:\n- ",
+        "n_citations": 1,
+        "cited": [
+          "Master Services Agreement (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_006",
+        "arm": "post_filter",
+        "ms": 3111.541147925891,
+        "answer": "The provided documents do not explicitly state which cloud provider hosts the disaster-recovery environment. However, there is a mention of **Harrowgate Cloud Systems, Inc.** in the context of a Master Services Agreement, which could imply a relationship with cloud services. \n\nIf the question pertains to a specific organization or system mentioned in the documents, additional context would be needed to identify the exact cloud provider for a disaster-recovery environment. \n\nFor now, based on the information provided, there is no direct answer to the question.",
+        "n_citations": 1,
+        "cited": [
+          "Master Services Agreement (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_007",
+        "arm": "post_filter",
+        "ms": 3055.9752779081464,
+        "answer": "The approved per-diem for meals during international travel in Tokyo is **EUR 85/day**, according to the document excerpts provided (Section 0301). This rate applies to meals for international travel and requires approval from a manager. \n\nNo specific per-diem rate for Tokyo is mentioned for hotel stays, but the general limit for hotel expenses is **EUR 180/night**, also requiring manager approval. \n\nIf you need further clarification on other aspects of travel reimbursement, let me know.",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_007",
+        "arm": "post_filter",
+        "ms": 3377.107786014676,
+        "answer": "The approved travel per-diem for Tokyo is not explicitly mentioned in the provided documents. However, the documents do mention meal allowances for international travel, which are set at **EUR 85/day**. This could be relevant for Tokyo, as it is an international destination.\n\nIf you need specific details about Tokyo, you may need to consult additional sources or the company's travel policy for more precise information. \n\nKey points from the documents:\n- Meals (international travel): **EUR 85/day** (approved by Manager) (Section 0301).",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_008",
+        "arm": "post_filter",
+        "ms": 2653.815467027016,
+        "answer": "I don't have access to specific employee count data for the Berlin office in the provided documents. The excerpts focus on policies related to remote work, PTO, expense reimbursement, and other general HR procedures, but none mention the number of employees working in the Berlin office.\n\nIf you need this information, you may need to consult internal HR records or a more detailed organizational chart. Let me know if there's anything else I can assist with!",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_008",
+        "arm": "post_filter",
+        "ms": 1251.5568269882351,
+        "answer": "The provided document excerpts do not specify the number of employees working in the Berlin office. None of the sections or transcripts contain this information. (No relevant material was found.)",
+        "n_citations": 1,
+        "cited": [
+          "Company Policy Handbook Excerpts (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_009",
+        "arm": "post_filter",
+        "ms": 3300.2861390123144,
+        "answer": "The provided document excerpts do not mention any specific SLA (Service Level Agreement) uptime guarantee for the mobile application. The content focuses on financial systems compliance, data standards (such as SFIS and SLOA/Accounting Classification), security policies, and other operational procedures, but it does not address the uptime or availability of a mobile application.\n\nIf you need information about the SLA uptime guarantee for a mobile application, you may need to consult the specific service agreement or documentation related to that application. Let me know if you'd like help find",
+        "n_citations": 1,
+        "cited": [
+          "01_04.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_009",
+        "arm": "post_filter",
+        "ms": 2888.8948529493064,
+        "answer": "The provided documents do not include any information about the SLA (Service Level Agreement) uptime guarantee for a mobile application. The excerpts focus on financial systems, compliance requirements, security policies, and other operational guidelines, but none mention SLA details or mobile application uptime guarantees.\n\nIf you need information about SLA uptime guarantees, you may need to consult specific service agreements, technical documentation, or contact the relevant service provider directly. Let me know if there's anything else I can assist with!",
+        "n_citations": 1,
+        "cited": [
+          "01_04.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_010",
+        "arm": "post_filter",
+        "ms": 2209.811998065561,
+        "answer": "The provided document excerpts do not specify which law firm represented the counterparty in arbitration. The documents primarily focus on contract review playbooks, risk management, and legal fallback positions, but they do not mention specific law firms or counterparty representation in arbitration. \n\nIf you have additional context or documents that include this information, please provide them for a more precise answer.",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_010",
+        "arm": "post_filter",
+        "ms": 2485.5127669870853,
+        "answer": "The provided documents do not specify which law firm represented the counterparty in arbitration. The text mentions that arbitration is preferred for cross-border deals, with the American Arbitration Association (AAA) as the default, but it does not identify the specific law firm involved in representing the counterparty.\n\nIf you have additional context or documents that mention the law firm, please provide them, and I can help identify the firm.",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_011",
+        "arm": "post_filter",
+        "ms": 3681.2605060404167,
+        "answer": "The recommended tyre pressure for the Tavari Volt EV is not explicitly mentioned in the provided documents. However, for electric vehicles like the Volt EV, tyre pressure recommendations typically depend on the vehicle's specifications and the manufacturer's guidelines.\n\nFor accurate information, I recommend checking the owner's manual or the tyre information label located on the driver's side door jamb. If you need further assistance, please let me know. \n\nIf you have any specific documents or sources that mention the tyre pressure for the Volt EV, feel free to share them, and I can provide a",
+        "n_citations": 1,
+        "cited": [
+          "Dealership Inventory & Financing (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_011",
+        "arm": "post_filter",
+        "ms": 2511.9118379661813,
+        "answer": "The recommended tyre pressure for the Volt EV is not explicitly mentioned in the provided documents. However, you can typically find the recommended tyre pressure in the vehicle's owner's manual or on a sticker located on the driver's side door jamb. If you need further assistance, please provide the specific model year of the Volt EV, and I can guide you further. (Section 0301)",
+        "n_citations": 1,
+        "cited": [
+          "Dealership Inventory & Financing (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_012",
+        "arm": "post_filter",
+        "ms": 3974.263967014849,
+        "answer": "The interest rate for a 30-year fixed mortgage, as stated in the provided documents, is **6.65% APR** (Section 0301). This rate applies to the \"Crest Fixed Mortgage (30-yr)\" product. \n\nAdditional details:\n- The maximum loan amount is $2,000,000 (for jumbo loans).\n- There is an origination fee of 0.75 points.\n- Eligibility requirements include a minimum 20% down payment, 12 months of cash reserves, and a CrestScore of 740 or higher for the jumbo tier.",
+        "n_citations": 1,
+        "cited": [
+          "Banking Products & Rates (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_012",
+        "arm": "post_filter",
+        "ms": 2084.149058908224,
+        "answer": "The interest rate for a 30-year fixed mortgage, as mentioned in the provided document, is **6.65% APR** (Annual Percentage Rate). This information is explicitly stated in the document under the \"Crest Fixed Mortgage (30-yr)\" product listing (Section 0301).",
+        "n_citations": 1,
+        "cited": [
+          "Banking Products & Rates (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_013",
+        "arm": "post_filter",
+        "ms": 4918.977141962387,
+        "answer": "Confined-space entry requires strict safety protocols to protect workers from hazards such as toxic atmospheres, oxygen deficiency, engulfment, or physical hazards. Key protocols include:\n\n1. **Permit-Required Confined Spaces**: A permit system must be in place, outlining the specific hazards and procedures for safe entry.\n2. **Atmospheric Testing**: Before entry, the air inside the space must be tested for oxygen levels, flammable gases, and toxic substances.\n3. **Ventilation**: Proper ventilation should be used to maintain a safe atmosphere.\n4. **Training**: All personnel involved must be tr",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_013",
+        "arm": "post_filter",
+        "ms": 2124.6834950288758,
+        "answer": "A key safety protocol for confined-space entry is to ensure proper ventilation and testing for hazardous atmospheres before entry. All personnel should be trained in confined-space procedures, and a rescue plan must be in place. Additionally, a permit system is often required to control access and ensure all safety measures are followed. Always prioritize the safety of workers and follow local occupational safety regulations.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_014",
+        "arm": "post_filter",
+        "ms": 6392.884425004013,
+        "answer": "The audit committee is not explicitly mentioned in the provided document excerpts. However, the text refers to several directorates and roles within the Department of Defense (DoD) that are involved in audit oversight and financial management. For example:\n\n- The Directorate for FIAR is responsible for audit oversight, management, and liaison functions (Section 0301).\n- The Directorate for Financial Management Policy and Reporting (FMPR) is responsible for developing, promulgating, implementing, and interpreting DoD-wide accounting and finance policies (Section 0301).\n- The USD(C)/CFO (Under S",
+        "n_citations": 1,
+        "cited": [
+          "01_01.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_014",
+        "arm": "post_filter",
+        "ms": 7504.742844961584,
+        "answer": "Based on the provided document excerpts, the audit committee is not explicitly mentioned. However, the text refers to various directorates and roles within the Department of Defense (DoD) that are involved in financial management, audit oversight, and internal controls.\n\nThe **Directorate for FIAR** (Financial Information and Audit Readiness) is responsible for audit oversight, management, and liaison functions, supporting Components to remediate findings and achieve post-audit sustainment. This Directorate also manages the Defense-wide Statement of Assurance process and implements the Federal",
+        "n_citations": 1,
+        "cited": [
+          "01_01.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_015",
+        "arm": "post_filter",
+        "ms": 6382.892439956777,
+        "answer": "The retention period for CCTV footage is not explicitly mentioned in the provided document excerpts. However, there are several references to record retention periods in financial and administrative contexts:\n\n- **Section 2.10.4.3** mentions that DoD Components must retain, for **6 years, 3 months**, work papers and documentary evidence developed and/or obtained during an investigation of an actual or potential ADA violation. (Section 2.10.4.3)\n- **Section 2.2.2.4** refers to maintaining supporting documentation for corrections made to DoD Component submissions as part of the audit trail for t",
+        "n_citations": 1,
+        "cited": [
+          "06a_02.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_015",
+        "arm": "post_filter",
+        "ms": 4827.949144993909,
+        "answer": "The retention period for CCTV footage is not explicitly mentioned in the provided document excerpts. However, there is a mention of record retention in the context of financial and administrative records:\n\n- **Section 2.10.4** states: \"DoD Components must retain, for 6 years, 3 months, work papers and documentary evidence developed and/or obtained during an investigation of an actual or potential ADA violation.\"\n\nWhile this section specifically refers to work papers and evidence related to ADA (Accountability, Disclosure, and Audit) investigations, it does not directly address CCTV footage. Th",
+        "n_citations": 1,
+        "cited": [
+          "06a_02.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_016",
+        "arm": "post_filter",
+        "ms": 2383.8704739464447,
+        "answer": "The copay for an out-of-network specialist visit can vary widely depending on your specific health insurance plan. Typically, out-of-network visits have higher costs than in-network visits, and the copay may be a fixed amount or a percentage of the total cost. You would need to check your insurance plan details or contact your insurance provider for the exact amount. Let me know if you'd like help finding that information.",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_016",
+        "arm": "post_filter",
+        "ms": 2201.4561609830707,
+        "answer": "The copay for an out-of-network specialist visit can vary widely depending on your specific health insurance plan. Generally, out-of-network visits may have higher copays or coinsurance rates compared to in-network visits. You should check your insurance plan's details or contact your insurance provider directly for the most accurate information. Would you like help finding the contact information for your insurance provider?",
+        "n_citations": 0,
+        "cited": [],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_017",
+        "arm": "post_filter",
+        "ms": 5302.086542942561,
+        "answer": "The legacy finance platform mentioned in the provided documents is replaced by the **Standard Financial Information Structure (SFIS)**. \n\nThis is indicated by references to SFIS compliance, business rules, and its role in ensuring financial data alignment with DoD standards. Specifically:\n\n- The **SFIS business rules** dictate how data elements must be implemented to ensure compliance (Section 2.4).\n- The **SFIS Compliant Trial Balance** is required for systems interfacing with the Defense Departmental Reporting System (Section 3.4).\n- Legacy systems, such as the **Standard Finance System (STA",
+        "n_citations": 1,
+        "cited": [
+          "01_04.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_017",
+        "arm": "post_filter",
+        "ms": 5320.9555899957195,
+        "answer": "The legacy finance platform mentioned in the provided documents is the **Standard Finance System (STANFINS)**. This system is referenced in the context of adjustments processed in the first accounting period of each fiscal year to ensure prior year unobligated balances are not overstated or understated in DDRS-B (Defense Departmental Reporting System).\n\nAdditionally, other legacy systems mentioned include:\n- **Standard Operations and Maintenance Army Research and Development System (SOMARDS)**\n- **Civil Engineers Financial Management System (CEFMS)**\n\nHowever, the specific ERP system that repl",
+        "n_citations": 1,
+        "cited": [
+          "01_04.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_018",
+        "arm": "post_filter",
+        "ms": 10956.959148985334,
+        "answer": "The escalation path for a P1 production incident is not explicitly detailed in the provided documents. However, based on the information available, here's a general outline of the escalation process:\n\n1. **Initial Review**: If an activity suspects an ADA violation and validates those concerns with an internal review, the activity must conduct an in-depth investigation (Section 12).\n\n2. **Investigation Process**:\n - The investigation consists of two phases: a preliminary review and, if required, a formal investigation (Section 12).\n - The preliminary review establishes whether a potential ADA v",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_018",
+        "arm": "post_filter",
+        "ms": 6502.833142061718,
+        "answer": "The escalation path for a P1 production incident is not explicitly detailed in the provided documents. However, based on the information available, here's a general outline of the escalation process:\n\n1. **Initial Detection**: The incident is identified as a P1 (critical) production issue.\n2. **Internal Review**: The relevant team or individual conducts an initial assessment to confirm the severity and impact of the incident.\n3. **Escalation to Management**: The issue is escalated to the appropriate management level, such as a team lead or manager, who can allocate resources and coordinate a r",
+        "n_citations": 1,
+        "cited": [
+          "Contract Review Playbook (DEMO).md"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_019",
+        "arm": "post_filter",
+        "ms": 8068.374177091755,
+        "answer": "The provided document excerpts do not specify the exact annual budget for staff training. However, they mention several programs and initiatives related to workforce development and training:\n\n1. **Make America Skilled Again (MASA) Program**: This is a key part of the Administration\u2019s strategy to meet the demand for skilled workers. The Budget funds this program, which expands Registered Apprenticeship and supports the goal of one million active apprentices.\n\n2. **Workforce Pell Grants**: Authorized by the Working Families Tax Cut Act, these grants are part of the strategy to support post-seco",
+        "n_citations": 1,
+        "cited": [
+          "BUDGET-2027-BUD.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_019",
+        "arm": "post_filter",
+        "ms": 6844.538350007497,
+        "answer": "The provided documents do not specify the exact annual budget for staff training. However, they mention several programs and initiatives related to workforce development and training:\n\n1. **Make America Skilled Again (MASA) program**: This is a key part of the Administration\u2019s strategy to address the demand for skilled trades. The Budget expands Registered Apprenticeship and supports the President\u2019s goal of one million active apprentices. (Section 45)\n\n2. **Workforce Pell Grants**: Authorized by the Working Families Tax Cut Act, these grants are part of the strategy to support post-secondary e",
+        "n_citations": 1,
+        "cited": [
+          "BUDGET-2027-BUD.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_020",
+        "arm": "post_filter",
+        "ms": 7632.525943103246,
+        "answer": "The question about the certification required to operate a forklift is not directly addressed in the provided document excerpts. However, based on the context given, here is a general answer:\n\n1. **Training and Certification**: Operators must complete a training program that includes both classroom and practical instruction. This training should cover the safe operation of the forklift, including load handling, stability, and safety procedures. (This is general knowledge, as no specific forklift certification is mentioned in the provided documents.)\n\n2. **Certification Process**: After complet",
+        "n_citations": 1,
+        "cited": [
+          "06a_04.pdf"
+        ],
+        "candidates_before_filter": 15
+      },
+      {
+        "query_id": "s5_020",
+        "arm": "post_filter",
+        "ms": 8123.298485064879,
+        "answer": "The question about the certification required to operate a forklift is not directly addressed in the provided document excerpts. However, based on the context of certifications and training mentioned in the documents, here are the relevant steps:\n\n1. **Identify the appropriate training program**: The documents mention training requirements for personnel involved in fund control and financial management. While not specific to forklift operation, similar principles apply\u2014individuals must receive proper training. (Section 4.1.2.4)\n\n2. **Ensure training and experience**: The documents emphasize th",
+        "n_citations": 1,
+        "cited": [
+          "06a_04.pdf"
+        ],
+        "candidates_before_filter": 15
+      }
+    ]
+  }
+}

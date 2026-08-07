@@ -1,0 +1,90 @@
+{
+  "_mapping_note": "Spec assumes pgvector/ACL/Whisper stack. EchoMind is FAISS+BM25+SQLite, namespace-based isolation (not per-chunk ACLs), NVIDIA NeMo ASR. Fields below describe the ACTUAL system; spec-only fields are marked not_applicable.",
+  "asr": {
+    "model": "nvidia/nemotron-speech-streaming-en-0.6b (streaming partials) + nvidia/parakeet-tdt-0.6b-v2 (final decode)",
+    "revision": "HF default",
+    "quantization": "fp32/bf16 (NeMo default)",
+    "streaming": true,
+    "chunk_ms": 560,
+    "vad": "webrtcvad aggressiveness=1 + RMS gate 0.004",
+    "beam_size": 0,
+    "_note": "two-model design; spec assumed whisper-large-v3"
+  },
+  "embedding": {
+    "model": "nomic-embed-text",
+    "revision": "ollama latest",
+    "dimension": 768,
+    "normalization": "l2"
+  },
+  "vector_store": {
+    "engine": "FAISS 1.8.0 (in-process) + SQLite metadata",
+    "index_type": "IndexIVFFlat",
+    "hnsw_m": 0,
+    "hnsw_ef_construction": 0,
+    "hnsw_ef_search": 0,
+    "ivfflat_lists": 0,
+    "distance": "ip (cosine via L2-norm)",
+    "permission_predicate": "namespace equality test _ns_ok(src) evaluated INSIDE the candidate scan loop in index.py (pre-filter). Not an SQL predicate; not per-chunk ACLs. Sparse BM25 path filtered identically.",
+    "_spec_fields_not_applicable": [
+      "hnsw_m",
+      "hnsw_ef_construction",
+      "hnsw_ef_search",
+      "ivfflat_lists"
+    ]
+  },
+  "chunking": {
+    "strategy": "type-detected: recursive/sentence-aware (flat) \u2014 BookRAG parent/child gated off by RAG_ENABLE_BOOKRAG=0",
+    "chunk_tokens": 450,
+    "overlap_tokens": 120
+  },
+  "retrieval": {
+    "k_candidates": 15,
+    "k_after_rerank": 15,
+    "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "reranker_revision": "sentence-transformers default",
+    "fusion": "weighted RRF (K=60), query-type-adaptive dense/sparse weights",
+    "sparse": "rank-bm25 BM25Okapi"
+  },
+  "answer_model": {
+    "model": "nvidia/Qwen3-30B-A3B-FP4",
+    "revision": "nvidia FP4 checkpoint",
+    "quantization": "NVFP4 (4-bit, Blackwell-native)",
+    "serving": "TensorRT-LLM 1.2.0rc6 (OpenAI-compatible)",
+    "max_context_tokens": 40960,
+    "temperature": 0.2,
+    "top_p": 1.0,
+    "seed": 0,
+    "_note": "temperature is the deployed default; experiments override to 0.0"
+  },
+  "tts": {
+    "model": "piper en_US-lessac-medium (CPU)",
+    "streaming": true
+  },
+  "duplex_layer": {
+    "implementation": "voice/app/session.py \u2014 L_I lead-phrase loop + L_G grounded RAG loop, phrase-committed TTS",
+    "micro_turn_ms": 20
+  },
+  "hardware": {
+    "accelerator": "NVIDIA GB10, [N/A]",
+    "accelerator_count": 1,
+    "driver": "580.159.03",
+    "cpu": "20 cores ARM64 Grace",
+    "ram_gb": 121,
+    "storage": "NVMe SSD",
+    "colocated": true,
+    "_note": "unified CPU+GPU memory (GB10); all services on one node"
+  },
+  "corpus": {
+    "n_documents": 17111,
+    "n_chunks": 17514,
+    "n_transcripts": 17091,
+    "total_tokens_est": 353579,
+    "domain_mix": "DoD FMR regulation PDFs + 5 synthetic vertical demo docs (bank/health/law/meetings/retail) + auto-saved voice transcripts",
+    "synthetic_fraction": null,
+    "provenance": "public (DoD FMR) + synthetic demo docs"
+  },
+  "date_run": "2026-08-06",
+  "harness_commit": "n/a (container)",
+  "torch": "2.12.0+cu130",
+  "cuda_available": true
+}

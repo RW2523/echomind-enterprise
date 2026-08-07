@@ -1,0 +1,79 @@
+{
+  "status": "partial",
+  "n_answers": 66,
+  "citation_precision": {
+    "mean": 0.9792,
+    "ci_95": [
+      0.9383,
+      1.02
+    ],
+    "n": 36
+  },
+  "citation_recall": {
+    "mean": 0.8256,
+    "ci_95": [
+      0.7132,
+      0.938
+    ],
+    "n": 43
+  },
+  "fact_support_rate": {
+    "rate": 0.8152,
+    "n_fact_groups": 92,
+    "n_supported": 75,
+    "_definition": "fraction of required gold fact groups present in the answer; a proxy for supported-claim rate, NOT the spec's atomic-claim entailment metric"
+  },
+  "abstention_accuracy_S5": {
+    "n": 23,
+    "correct": 18,
+    "rate": 0.7826,
+    "wilson_ci_95": [
+      0.581,
+      0.9034
+    ],
+    "n_excluded_as_answerable": 1,
+    "excluded_items": [
+      {
+        "query_id": "s5_006",
+        "text": "What tartan is used for the corporate kilt uniform?",
+        "reason": "corpus contains supporting content \u2014 not a valid S5 item"
+      }
+    ],
+    "_definition": "denominator excludes S5 items the corpus can actually answer; those are query-set defects, not model failures",
+    "n_speculative_general_knowledge": 5,
+    "n_other_nonabstaining": 0,
+    "n_with_citations": 1,
+    "_breakdown_note": "On unanswerable queries the system NEVER cited the corpus (n_with_citations should be 0) \u2014 so it does not fabricate provenance. Non-abstaining answers are general-knowledge responses, which is a weaker failure than a hallucinated citation."
+  },
+  "by_stratum": [
+    {
+      "stratum": "S1",
+      "n": 32,
+      "citation_precision": 0.9722,
+      "citation_recall": 0.8281,
+      "fact_support_rate": 0.8305
+    },
+    {
+      "stratum": "S2",
+      "n": 11,
+      "citation_precision": 1.0,
+      "citation_recall": 0.8182,
+      "fact_support_rate": 0.7879
+    }
+  ],
+  "judge": {
+    "type": "deterministic_string_match",
+    "judge_model": null,
+    "human_validated_n": 0,
+    "cohens_kappa": null,
+    "_note": "NO LLM judge was used, so no kappa is reportable. Metrics are exact-substring matches against gold fact variants mined from the corpus. This UNDERSTATES support (a correct paraphrase scores as unsupported) and cannot measure the spec's unsupported_claim_rate, which needs atomic-claim decomposition."
+  },
+  "ragas": {
+    "status": "not_run",
+    "reason": "ragas not installed in the offline image"
+  },
+  "_limitations": [
+    "unsupported_claim_rate NOT measured (needs atomic-claim decomposition + validated judge). fact_support_rate is reported instead and is a different metric.",
+    "S3 stratum absent from the corpus, so cross-source grounding is unmeasured."
+  ]
+}

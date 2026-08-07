@@ -1,0 +1,141 @@
+{
+  "n_documents": 17111,
+  "n_chunks": 17514,
+  "content_documents": 20,
+  "content_chunks": 421,
+  "transcript_documents": 17091,
+  "transcript_chunks": 17093,
+  "namespace_distribution": {
+    "untagged": 10301,
+    "bank": 6,
+    "health": 5,
+    "law": 6,
+    "meetings": 6,
+    "retail": 5,
+    "default": 7185
+  },
+  "corpus_sha256_of_chunk_ids": "9d635eb43f0c0315ffa75caeea7cbedd733fb378227a75a55a15bdf7807e1585",
+  "content_documents_detail": [
+    {
+      "doc_id": "doc_517027a5616b",
+      "filename": "BUDGET-2027-BUD.pdf",
+      "n_chunks": 155,
+      "chars": 258703
+    },
+    {
+      "doc_id": "doc_4ee01b75890e",
+      "filename": "14_03.pdf",
+      "n_chunks": 47,
+      "chars": 79595
+    },
+    {
+      "doc_id": "doc_1a9782414199",
+      "filename": "06a_02.pdf",
+      "n_chunks": 35,
+      "chars": 58299
+    },
+    {
+      "doc_id": "doc_fac432354412",
+      "filename": "06a_04.pdf",
+      "n_chunks": 34,
+      "chars": 58597
+    },
+    {
+      "doc_id": "doc_516b39d35ecd",
+      "filename": "14_02.pdf",
+      "n_chunks": 33,
+      "chars": 55386
+    },
+    {
+      "doc_id": "doc_15f43b1b1059",
+      "filename": "14_01.pdf",
+      "n_chunks": 27,
+      "chars": 45921
+    },
+    {
+      "doc_id": "doc_402ef748f4f9",
+      "filename": "01_01.pdf",
+      "n_chunks": 20,
+      "chars": 32562
+    },
+    {
+      "doc_id": "doc_77e8ce1218b1",
+      "filename": "01_04.pdf",
+      "n_chunks": 16,
+      "chars": 25680
+    },
+    {
+      "doc_id": "doc_941bbce40860",
+      "filename": "06a_03.pdf",
+      "n_chunks": 14,
+      "chars": 23565
+    },
+    {
+      "doc_id": "doc_835809399fdd",
+      "filename": "01_07.pdf",
+      "n_chunks": 12,
+      "chars": 20196
+    },
+    {
+      "doc_id": "doc_1c2fe4579599",
+      "filename": "Product Catalog (DEMO).md",
+      "n_chunks": 3,
+      "chars": 3809
+    },
+    {
+      "doc_id": "doc_1c414a9a35b8",
+      "filename": "Master Services Agreement (DEMO).md",
+      "n_chunks": 3,
+      "chars": 4593
+    },
+    {
+      "doc_id": "doc_40c218430bdd",
+      "filename": "KYC-AML & Loan Suitability Guidelines (DEMO).md",
+      "n_chunks": 3,
+      "chars": 4801
+    },
+    {
+      "doc_id": "doc_5a50212e3a39",
+      "filename": "Q3 Product Strategy \u2014 Meeting Minutes (DEMO).md",
+      "n_chunks": 3,
+      "chars": 3928
+    },
+    {
+      "doc_id": "doc_64526c515483",
+      "filename": "Contract Review Playbook (DEMO).md",
+      "n_chunks": 3,
+      "chars": 4272
+    },
+    {
+      "doc_id": "doc_69df6936f6eb",
+      "filename": "Company Policy Handbook Excerpts (DEMO).md",
+      "n_chunks": 3,
+      "chars": 4343
+    },
+    {
+      "doc_id": "doc_9ba159660df9",
+      "filename": "Banking Products & Rates (DEMO).md",
+      "n_chunks": 3,
+      "chars": 3740
+    },
+    {
+      "doc_id": "doc_d43f3784aa32",
+      "filename": "Clinic Protocols & Formulary (DEMO).md",
+      "n_chunks": 3,
+      "chars": 3800
+    },
+    {
+      "doc_id": "doc_76a834adf4ee",
+      "filename": "Sample Patient Visit Note (DEMO).md",
+      "n_chunks": 2,
+      "chars": 3517
+    },
+    {
+      "doc_id": "doc_abf50d3e4fc2",
+      "filename": "Dealership Inventory & Financing (DEMO).md",
+      "n_chunks": 2,
+      "chars": 3119
+    }
+  ],
+  "_honesty_note": "97% of chunks are auto-saved voice-session transcripts, most very short. The substantive corpus is the DoD FMR PDFs + 10 demo markdown documents. This is materially smaller than the spec's 1,000-doc minimum; every retrieval-scale claim must be read with that caveat."
+}

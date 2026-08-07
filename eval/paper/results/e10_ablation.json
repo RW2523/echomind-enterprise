@@ -1,0 +1,70 @@
+{
+  "status": "complete",
+  "arms": [
+    {
+      "arm": "dual_i1",
+      "n": 10,
+      "T_first_median_ms": 635.8,
+      "T_first_p95_ms": 894.0,
+      "n_L_I_utterances": 10,
+      "n_i1_violations": 0,
+      "i1_violation_rate": 0.0,
+      "i1_wilson_ci_95": [
+        0,
+        0.2775
+      ],
+      "violation_samples": [],
+      "T_first_grounded_token_median_ms": 642.6,
+      "T_first_grounded_token_p95_ms": 893.9
+    },
+    {
+      "arm": "single_loop",
+      "n": 10,
+      "T_first_median_ms": 865.8,
+      "T_first_p95_ms": 1208.8,
+      "n_L_I_utterances": 0,
+      "n_i1_violations": 0,
+      "i1_violation_rate": null,
+      "i1_wilson_ci_95": null,
+      "violation_samples": [],
+      "T_first_grounded_token_median_ms": 689.5,
+      "T_first_grounded_token_p95_ms": 910.4
+    },
+    {
+      "arm": "dual_no_i1",
+      "n": 10,
+      "T_first_median_ms": 750.9,
+      "T_first_p95_ms": 1040.5,
+      "n_L_I_utterances": 10,
+      "n_i1_violations": 10,
+      "i1_violation_rate": 1.0,
+      "i1_wilson_ci_95": [
+        0.7225,
+        1
+      ],
+      "violation_samples": [
+        "The liability cap is around fifty thousand dollars, I believe.",
+        "Expenses are reimbursed within about two weeks, as far as I recall.",
+        "Expenses are reimbursed within about two weeks, as far as I recall."
+      ],
+      "T_first_grounded_token_median_ms": 641.9,
+      "T_first_grounded_token_p95_ms": 973.2
+    }
+  ],
+  "_predicted": "(a) single_loop: high T_first, zero violations; (b) dual_no_i1: low T_first, nonzero violations; (c) dual_i1: low T_first AND near-zero violations.",
+  "_i1_checker": {
+    "type": "rule_based_on_loop_provenance",
+    "human_validated": false,
+    "note": "Now measurable because L_I and L_G utterances carry an explicit loop tag. Only L_I utterances emitted before the first L_G increment are candidates. The assertion test (specific figure or hedged declarative) is rule-based and NOT human-validated, so per spec rule 4 report it as indicative."
+  },
+  "_limitations": [
+    "n=10 turns per arm, below the spec's ideal.",
+    "Ablation arms are env-gated evaluation paths; default deployment is dual_i1."
+  ],
+  "_metric_definitions": {
+    "T_first_ms": "end of user speech -> first audible assistant audio (any loop)",
+    "T_first_grounded_token_ms": "end of user speech -> FIRST token of the grounded answer. NOT the spec-s T_grounded (full grounded answer complete); the text-path figure for that is in e1_latency.json (median 3313 ms). Do not compare these two numbers directly.",
+    "i1_violation_rate": "L_I utterances asserting a fact before the first grounded increment arrived"
+  },
+  "_finding": "Predicted pattern CONFIRMED in direction: single_loop has the highest T_first (865.8 ms) and no L_I utterances at all; dual_no_i1 violates I1 on 10/10 turns by construction; dual_i1 achieves the lowest T_first (635.8 ms) with 0/10 violations. The benefit is real but MODEST \u2014 230 ms, ~27% faster first audio. Because TensorRT-LLM prefill is fast on this hardware, the grounded answer begins almost immediately (first grounded token ~642 ms), leaving little latency for the interaction loop to mask. The architecture should matter more as generation slows or context grows; that scaling relationship is NOT measured here."
+}

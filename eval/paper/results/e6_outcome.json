@@ -1,0 +1,4 @@
+{
+  "status": "not_run",
+  "reason": "Outcome correctness needs per-query rubric annotation by two independent annotators with Cohen's kappa. No annotator panel available; an LLM-only rubric score would violate the spec's rule 4 (unvalidated judge)."
+}

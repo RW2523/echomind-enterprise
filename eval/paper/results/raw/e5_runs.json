@@ -1,0 +1,640 @@
+{
+  "answerable": [
+    {
+      "query_id": "s1_001",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 301,
+      "answer_head": "The Sapphire Money Market account pays an APY of 4.10% (Banking Products & Rates \u2014 Savings). To open the account, a minimum opening balance of $25,000 is required. Additionally, to earn the APY, the a"
+    },
+    {
+      "query_id": "s1_002",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 456,
+      "answer_head": "If you put money in a 12-month Certificate of Deposit (CD), you would receive an APY of 4.55% (as shown in the table under \"Certificates of Deposit (Crest TermVault)\") with a minimum deposit of $5,000"
+    },
+    {
+      "query_id": "s2_003",
+      "stratum": "S2",
+      "n_citations": 0,
+      "citation_precision": null,
+      "citation_recall": 0.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 0,
+      "answer_len": 260,
+      "answer_head": "I don't have access to specific information about qualifying for a Crest Personal Loan, as no relevant documents were provided in the context. For details about eligibility requirements, I recommend c"
+    },
+    {
+      "query_id": "s1_004",
+      "stratum": "S1",
+      "n_citations": 0,
+      "citation_precision": null,
+      "citation_recall": 0.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 0,
+      "answer_len": 337,
+      "answer_head": "The context provided does not include information about jumbo CDs, their interest rates, or the time frame for withdrawing or renewing them after maturity. Therefore, I cannot provide specific details"
+    },
+    {
+      "query_id": "s1_005",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 1,
+      "fact_groups_supported": 1,
+      "answer_len": 166,
+      "answer_head": "When onboarding a company, the bank must identify and verify all beneficial owners holding 25% or more of the entity's ownership (Banking Products & Rates \u2014 Savings)."
+    },
+    {
+      "query_id": "s1_006",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 321,
+      "answer_head": "1. File an internal Suspicious Activity Memo (SAM) within **24 hours** of detecting a red flag. (Cite: Banking Products & Rates \u2014 Savings)\n2. The Financial Crimes & Compliance Unit (FCCU) evaluates an"
+    },
+    {
+      "query_id": "s1_007",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 335,
+      "answer_head": "1. High-risk customers are re-reviewed every 6 months. (Document: Banking Products & Rates \u2014 Savings, section \"Tier | Examples | Review frequency\")\n\n2. Enhanced due diligence requires source-of-funds "
+    },
+    {
+      "query_id": "s1_008",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 0,
+      "fact_groups_supported": 0,
+      "answer_len": 902,
+      "answer_head": "Travel expenses are reimbursed according to the following policies:\n\n- Meals (domestic travel): EUR 55/day, approved by a manager.\n- Meals (international travel): EUR 85/day, approved by a manager.\n- "
+    },
+    {
+      "query_id": "s1_009",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 1239,
+      "answer_head": "Under the DoD Financial Management Regulation (FMR), the approval of Journal Vouchers (JVs) is determined by the dollar amount of the adjustment. Based on the provided document excerpts, the following"
+    },
+    {
+      "query_id": "s1_010",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 1,
+      "fact_groups_supported": 1,
+      "answer_len": 918,
+      "answer_head": "The dollar amount at which a journal voucher (JV) must be coordinated with the affected DoD Component is **over $1 billion**.\n\nThis requirement is explicitly stated in the provided documents. Specific"
+    },
+    {
+      "query_id": "s1_011",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 997,
+      "answer_head": "The question has multiple parts \u2014 answer every part explicitly, none may be skipped.\n\n1. **How often must DFAS perform reconciliations between the general ledger and subsidiary records?** \n DFAS must "
+    },
+    {
+      "query_id": "s1_012",
+      "stratum": "S1",
+      "n_citations": 4,
+      "citation_precision": 0.25,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 1941,
+      "answer_head": "The Antideficiency Act (ADA) is primarily codified in **Title 31, United States Code (U.S.C.)**, specifically in **sections 1511 through 1519**. These sections are explicitly referenced in the provide"
+    },
+    {
+      "query_id": "s1_013",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 1844,
+      "answer_head": "The **Purpose Statute** is codified in **31 U.S.C. \u00a7 1301**, which stipulates that **appropriations must be applied only to the objects for which the appropriations were made, except as otherwise prov"
+    },
+    {
+      "query_id": "s1_014",
+      "stratum": "S1",
+      "n_citations": 4,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 363,
+      "answer_head": "The DoD Component must complete the preliminary review within **four months** from the date it was directed by the DoD Component (<page 10>). \n\nThe DoD Component must complete the formal investigation"
+    },
+    {
+      "query_id": "s2_015",
+      "stratum": "S2",
+      "n_citations": 4,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 3,
+      "answer_len": 1217,
+      "answer_head": "The Chief Financial Officer (CFO) of the Department of Defense (DoD) is the Under Secretary of Defense (Comptroller)/Chief Financial Officer (USD(C)/CFO). This individual serves as the principal finan"
+    },
+    {
+      "query_id": "s2_016",
+      "stratum": "S2",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 3,
+      "answer_len": 429,
+      "answer_head": "The first-line medication for stage 1 hypertension in an adult without CKD or diabetes is **Lisinopril 10 mg PO once daily**, with titration to 20-40 mg over 4 weeks (Clinic Protocols & Formulary \u2014 Co"
+    },
+    {
+      "query_id": "s2_017",
+      "stratum": "S2",
+      "n_citations": 0,
+      "citation_precision": null,
+      "citation_recall": 0.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 0,
+      "answer_len": 359,
+      "answer_head": "No relevant material was found in the provided documents to address the question about antibiotic selection, dose, and duration for a patient with community-acquired pneumonia who is allergic to penic"
+    },
+    {
+      "query_id": "s1_018",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 399,
+      "answer_head": "The question has multiple parts \u2014 answer every part explicitly, none may be skipped.\n\n1. **How long does metformin need to be held around IV contrast?** \n Metformin should be held for 48 hours around "
+    },
+    {
+      "query_id": "s1_019",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 501,
+      "answer_head": "1. If a patient returns with a critical lab value like potassium over 6.0, you should page the on-call clinician immediately. This is specified in the clinical protocols under the \"Escalation\" section"
+    },
+    {
+      "query_id": "s1_020",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 176,
+      "answer_head": "Under the CHFH screening schedule, women should get mammograms every 2 years between the ages of 40 and 74 (Clinic Protocols & Formulary \u2014 Adult Preventive Screening Schedule)."
+    },
+    {
+      "query_id": "s1_021",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 189,
+      "answer_head": "The new blood pressure medication started for Daniel Okonkwo at his June visit was amlodipine. The dose was 5 mg PO daily. (Cedar Hollow Family Health \u2014 Outpatient Visit Note (SOAP) \u2014 Plan)"
+    },
+    {
+      "query_id": "s2_022",
+      "stratum": "S2",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 3,
+      "answer_len": 232,
+      "answer_head": "Mr. Okonkwo's recent A1c was 6.4%, and his fasting glucose was 128 mg/dL. These results led to a diagnosis of prediabetes (ICD-10 R73.03). (Document (Sample Patient Visit Note (DEMO).md) and (Clinic P"
+    },
+    {
+      "query_id": "s1_023",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 677,
+      "answer_head": "The Harrowgate platform subscription costs **USD 18,500 per month**. Invoices are due **net thirty (30) days** from the invoice date.\n\n**Analysis:**\n\n- **Subscription Cost:** The base platform subscri"
+    },
+    {
+      "query_id": "s1_024",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 1531,
+      "answer_head": "The liability cap in the Master Services Agreement (MSA) between Harrowgate and Voss-Lindqvist is **the greater of USD 250,000 or the fees paid in the twelve (12) months preceding the claim**.\n\n**Rule"
+    },
+    {
+      "query_id": "s1_025",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 967,
+      "answer_head": "The initial term of the Master Services Agreement is thirty-six (36) months from the Effective Date. The Agreement is governed by the laws of the State of Delaware.\n\n**Rule:** Under the terms of the M"
+    },
+    {
+      "query_id": "s1_026",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 1479,
+      "answer_head": "**Answer:**\n\nWhen redlining a vendor contract's payment terms, you should push for **Net 45 terms** and a **cap on late-payment interest at 1.5% per month**, as outlined in the Contract Review Playboo"
+    },
+    {
+      "query_id": "s1_027",
+      "stratum": "S1",
+      "n_citations": 2,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 1,
+      "answer_len": 2001,
+      "answer_head": "The question involves two distinct parts: (1) the required speed of breach reporting for contracts involving regulated data, and (2) the timeframe for the counterparty to return or destroy the data af"
+    },
+    {
+      "query_id": "s1_028",
+      "stratum": "S1",
+      "n_citations": 0,
+      "citation_precision": null,
+      "citation_recall": 0.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 1,
+      "answer_len": 964,
+      "answer_head": "1. The approval requirement for a deal when the liability cap drops below six months of fees is governed by Section 7.3 of the Master Services Agreement (MSA). This section states that any modificatio"
+    },
+    {
+      "query_id": "s1_029",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 0.5,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 1507,
+      "answer_head": "**Legal Conclusion:** The auto-renewal notice period in the Harrowgate MSA does not meet the firm's playbook standard fallback for non-renewal notice.\n\n**Rule:** According to the firm's Contract Revie"
+    },
+    {
+      "query_id": "s1_030",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 540,
+      "answer_head": "1. The smallest expense that requires a receipt is **EUR 25**. This is specified in the Expense Reimbursement section under the \"Receipts are mandatory for any expense over EUR 25\" note (document exce"
+    },
+    {
+      "query_id": "s2_031",
+      "stratum": "S2",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 3,
+      "answer_len": 458,
+      "answer_head": "Full-time employees at Nordvale Instruments, Inc. accrue **22 days** of annual paid leave, which increases to **27 days** after five years of continuous service (Q3 Product Strategy \u2014 Action Items). \n"
+    },
+    {
+      "query_id": "s1_032",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 1,
+      "fact_groups_supported": 1,
+      "answer_len": 144,
+      "answer_head": "The company reimburses **EUR 0.42 per kilometer** for personal vehicle use during business travel (document 2, section \"Expense Reimbursement\")."
+    },
+    {
+      "query_id": "s1_033",
+      "stratum": "S1",
+      "n_citations": 0,
+      "citation_precision": null,
+      "citation_recall": 0.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 0,
+      "answer_len": 222,
+      "answer_head": "I don't have access to information about working from another EU country or home-office allowances in the provided context. Please consult your company's HR policies or contact the relevant department"
+    },
+    {
+      "query_id": "s1_034",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 371,
+      "answer_head": "The code freeze for Atlas 3.0 is scheduled for 22 August 2026, according to document excerpt (Q3 Product Strategy \u2014 Meeting Minutes (DEMO).md). Atlas 3.0 is targeted to go GA on 15 September 2026, as "
+    },
+    {
+      "query_id": "s2_035",
+      "stratum": "S2",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 3,
+      "answer_len": 381,
+      "answer_head": "The question has multiple parts \u2014 answer every part explicitly, none may be skipped.\n\n1. The per-seat prices in the new Tiered Access pricing model are: Starter (EUR 39/seat/mo), Team (EUR 79/seat/mo)"
+    },
+    {
+      "query_id": "s2_036",
+      "stratum": "S2",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 3,
+      "answer_len": 451,
+      "answer_head": "1. **Enterprise customers that made Atlas 3.0 a condition for their renewal:** \n - Caldermoor Energy \n - Brightside Logistics \n - Vantage Health Group \n\n2. **Total ARR at stake:** \n - EUR 1.42M \n\nCita"
+    },
+    {
+      "query_id": "s2_037",
+      "stratum": "S2",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 3,
+      "answer_len": 371,
+      "answer_head": "The financing promotion running on the Tavari Volt EV is a 2.9% APR up to 60 months for Tier 1/2 buyers, available through 2026-07-31 (Financing & APR Options \u2014 Representative tiers). If you skip the "
+    },
+    {
+      "query_id": "s1_038",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 127,
+      "answer_head": "The Tavari Volt Long Range costs $45,300 and has an EPA range of 318 miles (Product Catalog \u2014 Tavari Volt EV \u2014 Electric Sedan)."
+    },
+    {
+      "query_id": "s2_039",
+      "stratum": "S2",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 3,
+      "answer_len": 311,
+      "answer_head": "The lease terms for the Solace SE are as follows:\n\n- **Monthly payment:** $329 per month.\n- **Lease term:** 36 months.\n- **Mileage limit:** 10,000 miles per year.\n- **Down payment at signing:** $3,500"
+    },
+    {
+      "query_id": "s1_040",
+      "stratum": "S1",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 2,
+      "answer_len": 413,
+      "answer_head": "The question has multiple parts \u2014 answer every part explicitly, none may be skipped.\n\n1. **Can the difference be rolled into the new loan?** \n Yes, the difference may roll into the new loan, but only "
+    },
+    {
+      "query_id": "s1_041",
+      "stratum": "S1",
+      "n_citations": 0,
+      "citation_precision": null,
+      "citation_recall": 0.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 0,
+      "answer_len": 212,
+      "answer_head": "The provided document excerpts do not contain information about the battery life of the NovaWave H7 Pro headphones or their promo price. Therefore, I cannot answer the question based on the available "
+    },
+    {
+      "query_id": "s1_042",
+      "stratum": "S1",
+      "n_citations": 0,
+      "citation_precision": null,
+      "citation_recall": 0.0,
+      "fact_groups_total": 2,
+      "fact_groups_supported": 0,
+      "answer_len": 100,
+      "answer_head": "I couldn't find the table of contents/chapter list in the retrieved excerpts from the uploaded text."
+    },
+    {
+      "query_id": "s2_043",
+      "stratum": "S2",
+      "n_citations": 1,
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "fact_groups_total": 3,
+      "fact_groups_supported": 2,
+      "answer_len": 190,
+      "answer_head": "The VeltoraCare+ extended plan for the Veltora Glide 14 ultrabook costs $179. You can add the VeltoraCare+ extended plan within 30 days of purchasing the laptop. (Product Catalog \u2014 Warranty)"
+    }
+  ],
+  "s5": [
+    {
+      "query_id": "s5_001",
+      "abstained": false,
+      "speculative": true,
+      "n_citations": 0,
+      "answer_head": "That's a classic reference to a humorous question from Monty Python! In reality, the \"airspeed velocity\" of a company shuttle service would depend on the specific aircraft used, its model, and operati"
+    },
+    {
+      "query_id": "s5_002",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I'm sorry, but I don't have access to the specific recipes used in the cafeteria. However, I can share a general mushroom risotto recipe that you might enjoy trying at home! Let me know if you'd like "
+    },
+    {
+      "query_id": "s5_003",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have information about the specific instruments stocked in a recreation room, as this can vary widely depending on the location and its purpose. If you're referring to a specific place, like a"
+    },
+    {
+      "query_id": "s5_004",
+      "abstained": false,
+      "speculative": true,
+      "n_citations": 0,
+      "answer_head": "The concept of a breeding season for clownfish in an office aquarium isn't typically applicable, as clownfish in captivity do not usually breed under normal office conditions. In the wild, clownfish h"
+    },
+    {
+      "query_id": "s5_005",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have access to specific information about the geothermal borehole or the car park you're referring to. If you have more details or need assistance with something else, feel free to let me know"
+    },
+    {
+      "query_id": "s5_007",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have access to specific information about the location of disaster-recovery bunkers or nearby volcanoes, as this would depend on the exact location of the bunker. Could you provide more detail"
+    },
+    {
+      "query_id": "s5_008",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have access to specific information about company yachts, as this details would be unique to each organization. If you're referring to a specific company or yacht, you might need to consult th"
+    },
+    {
+      "query_id": "s5_009",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have specific information about the number of beehives on a roof terrace, as this would depend on the location and the specific building in question. If you're asking about a particular place,"
+    },
+    {
+      "query_id": "s5_010",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have access to specific information about equipment in your building, including a seismograph in the basement. You may need to consult the maintenance records or contact the facility manager f"
+    },
+    {
+      "query_id": "s5_011",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have access to information about the specific species of bamboo planted in the atrium you're referring to. Could you provide more details about the location or context? I'd be happy to help if"
+    },
+    {
+      "query_id": "s5_012",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 1,
+      "answer_head": "After reviewing the provided document excerpts, there is no specific information about the maximum altitude of the surveying drone fleet. The documents primarily focus on financial reporting, certific"
+    },
+    {
+      "query_id": "s5_013",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have access to specific data about coffee roasting operations, as this information would be unique to each establishment. You might want to contact the specific coffee roastery or business dir"
+    },
+    {
+      "query_id": "s5_014",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have specific information about the thread count of the guest-room linens. If you're referring to a specific hotel or accommodation, I recommend checking their website or contacting them direc"
+    },
+    {
+      "query_id": "s5_015",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have specific information about which glacier supplies meltwater to a cooling system, as this would depend on the location and specific infrastructure in question. Could you provide more conte"
+    },
+    {
+      "query_id": "s5_016",
+      "abstained": false,
+      "speculative": true,
+      "n_citations": 0,
+      "answer_head": "The wingspan of a falcon used for pigeon control can vary depending on the species. For example, the peregrine falcon, which is commonly used for this purpose, has a wingspan ranging from about 3 to 4"
+    },
+    {
+      "query_id": "s5_017",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have specific information about the number of pipe organs installed in the auditorium you're asking about. Could you provide more details, such as the name or location of the auditorium? That "
+    },
+    {
+      "query_id": "s5_018",
+      "abstained": false,
+      "speculative": true,
+      "n_citations": 0,
+      "answer_head": "The fermentation time for kombucha can vary depending on the method and desired taste, but typically it takes between 7 to 14 days. Some people may ferment it for a shorter time if they prefer a sweet"
+    },
+    {
+      "query_id": "s5_019",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I'm sorry, but I don't have specific information about the constellation on the lobby ceiling mural you're asking about. Could you provide more details about the location or the building? I'd be happy"
+    },
+    {
+      "query_id": "s5_020",
+      "abstained": false,
+      "speculative": true,
+      "n_citations": 0,
+      "answer_head": "The tensile strength of climbing wall anchors can vary depending on the type and quality of the anchor, as well as the materials used. Generally, high-quality climbing anchors are designed to withstan"
+    },
+    {
+      "query_id": "s5_021",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have access to specific information about the corporate retreat grounds or the number of llamas there. If you have more details or need help with something else, feel free to ask!"
+    },
+    {
+      "query_id": "s5_022",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have access to information about the specific wine cellar you're asking about. Could you provide more details or clarify which wine cellar you're referring to? I'd be happy to help with any ot"
+    },
+    {
+      "query_id": "s5_023",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have information about the specific dialects taught in optional language clubs, as this can vary depending on the school or institution. You might want to check with the club's organizer or th"
+    },
+    {
+      "query_id": "s5_024",
+      "abstained": true,
+      "speculative": false,
+      "n_citations": 0,
+      "answer_head": "I don't have information about the specific sculpture in the reception you're asking about, as I don't have access to details about individual artworks or locations. Could you provide more context or "
+    }
+  ]
+}

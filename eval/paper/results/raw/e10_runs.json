@@ -1,0 +1,338 @@
+{
+  "dual_i1": [
+    {
+      "T_first_ms": 827.2,
+      "T_grounded_ms": 775.7,
+      "audio_chunks": 59,
+      "L_I_utterances": [
+        {
+          "t": 0.69,
+          "text": "One moment while I check.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 58
+    },
+    {
+      "T_first_ms": 352.0,
+      "T_grounded_ms": 435.1,
+      "audio_chunks": 22,
+      "L_I_utterances": [
+        {
+          "t": 0.317,
+          "text": "Of course.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 26
+    },
+    {
+      "T_first_ms": 462.5,
+      "T_grounded_ms": 462.3,
+      "audio_chunks": 73,
+      "L_I_utterances": [
+        {
+          "t": 0.36,
+          "text": "One moment while I check.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 73
+    },
+    {
+      "T_first_ms": 883.0,
+      "T_grounded_ms": 883.0,
+      "audio_chunks": 97,
+      "L_I_utterances": [
+        {
+          "t": 0.756,
+          "text": "One moment while I check.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 96
+    },
+    {
+      "T_first_ms": 778.7,
+      "T_grounded_ms": 778.7,
+      "audio_chunks": 41,
+      "L_I_utterances": [
+        {
+          "t": 0.69,
+          "text": "One moment while I check.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 38
+    },
+    {
+      "T_first_ms": 407.4,
+      "T_grounded_ms": 450.0,
+      "audio_chunks": 77,
+      "L_I_utterances": [
+        {
+          "t": 0.34,
+          "text": "Of course.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 68
+    },
+    {
+      "T_first_ms": 492.9,
+      "T_grounded_ms": 476.0,
+      "audio_chunks": 78,
+      "L_I_utterances": [
+        {
+          "t": 0.393,
+          "text": "One moment while I check.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 81
+    },
+    {
+      "T_first_ms": 894.0,
+      "T_grounded_ms": 893.9,
+      "audio_chunks": 76,
+      "L_I_utterances": [
+        {
+          "t": 0.779,
+          "text": "One moment while I check.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 79
+    },
+    {
+      "T_first_ms": 879.9,
+      "T_grounded_ms": 879.0,
+      "audio_chunks": 64,
+      "L_I_utterances": [
+        {
+          "t": 0.788,
+          "text": "One moment while I check.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 62
+    },
+    {
+      "T_first_ms": 420.7,
+      "T_grounded_ms": 509.5,
+      "audio_chunks": 153,
+      "L_I_utterances": [
+        {
+          "t": 0.349,
+          "text": "Of course.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 157
+    }
+  ],
+  "single_loop": [
+    {
+      "T_first_ms": 1069.0,
+      "T_grounded_ms": 864.4,
+      "audio_chunks": 45,
+      "L_I_utterances": [],
+      "L_G_deltas": 51
+    },
+    {
+      "T_first_ms": 714.4,
+      "T_grounded_ms": 537.9,
+      "audio_chunks": 19,
+      "L_I_utterances": [],
+      "L_G_deltas": 26
+    },
+    {
+      "T_first_ms": 578.9,
+      "T_grounded_ms": 476.9,
+      "audio_chunks": 37,
+      "L_I_utterances": [],
+      "L_G_deltas": 39
+    },
+    {
+      "T_first_ms": 1089.9,
+      "T_grounded_ms": 892.3,
+      "audio_chunks": 88,
+      "L_I_utterances": [],
+      "L_G_deltas": 84
+    },
+    {
+      "T_first_ms": 1208.8,
+      "T_grounded_ms": 910.4,
+      "audio_chunks": 69,
+      "L_I_utterances": [],
+      "L_G_deltas": 74
+    },
+    {
+      "T_first_ms": 611.9,
+      "T_grounded_ms": 536.9,
+      "audio_chunks": 108,
+      "L_I_utterances": [],
+      "L_G_deltas": 98
+    },
+    {
+      "T_first_ms": 527.9,
+      "T_grounded_ms": 442.3,
+      "audio_chunks": 74,
+      "L_I_utterances": [],
+      "L_G_deltas": 74
+    },
+    {
+      "T_first_ms": 1017.2,
+      "T_grounded_ms": 841.2,
+      "audio_chunks": 182,
+      "L_I_utterances": [],
+      "L_G_deltas": 183
+    },
+    {
+      "T_first_ms": 1084.2,
+      "T_grounded_ms": 867.5,
+      "audio_chunks": 80,
+      "L_I_utterances": [],
+      "L_G_deltas": 88
+    },
+    {
+      "T_first_ms": 665.8,
+      "T_grounded_ms": 457.1,
+      "audio_chunks": 88,
+      "L_I_utterances": [],
+      "L_G_deltas": 82
+    }
+  ],
+  "dual_no_i1": [
+    {
+      "T_first_ms": 1040.5,
+      "T_grounded_ms": 934.4,
+      "audio_chunks": 68,
+      "L_I_utterances": [
+        {
+          "t": 0.805,
+          "text": "The liability cap is around fifty thousand dollars, I believe.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 60
+    },
+    {
+      "T_first_ms": 571.3,
+      "T_grounded_ms": 460.6,
+      "audio_chunks": 91,
+      "L_I_utterances": [
+        {
+          "t": 0.37,
+          "text": "Expenses are reimbursed within about two weeks, as far as I recall.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 77
+    },
+    {
+      "T_first_ms": 602.9,
+      "T_grounded_ms": 453.8,
+      "audio_chunks": 107,
+      "L_I_utterances": [
+        {
+          "t": 0.372,
+          "text": "Expenses are reimbursed within about two weeks, as far as I recall.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 101
+    },
+    {
+      "T_first_ms": 884.6,
+      "T_grounded_ms": 871.2,
+      "audio_chunks": 90,
+      "L_I_utterances": [
+        {
+          "t": 0.736,
+          "text": "I believe the answer is yes, based on what I remember.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 77
+    },
+    {
+      "T_first_ms": 907.9,
+      "T_grounded_ms": 863.7,
+      "audio_chunks": 91,
+      "L_I_utterances": [
+        {
+          "t": 0.749,
+          "text": "The liability cap is around fifty thousand dollars, I believe.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 91
+    },
+    {
+      "T_first_ms": 410.3,
+      "T_grounded_ms": 332.0,
+      "audio_chunks": 83,
+      "L_I_utterances": [
+        {
+          "t": 0.243,
+          "text": "Expenses are reimbursed within about two weeks, as far as I recall.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 67
+    },
+    {
+      "T_first_ms": 617.2,
+      "T_grounded_ms": 464.8,
+      "audio_chunks": 97,
+      "L_I_utterances": [
+        {
+          "t": 0.382,
+          "text": "Expenses are reimbursed within about two weeks, as far as I recall.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 85
+    },
+    {
+      "T_first_ms": 891.0,
+      "T_grounded_ms": 815.7,
+      "audio_chunks": 95,
+      "L_I_utterances": [
+        {
+          "t": 0.704,
+          "text": "I believe the answer is yes, based on what I remember.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 80
+    },
+    {
+      "T_first_ms": 1033.6,
+      "T_grounded_ms": 973.2,
+      "audio_chunks": 69,
+      "L_I_utterances": [
+        {
+          "t": 0.798,
+          "text": "The liability cap is around fifty thousand dollars, I believe.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 60
+    },
+    {
+      "T_first_ms": 574.4,
+      "T_grounded_ms": 468.1,
+      "audio_chunks": 31,
+      "L_I_utterances": [
+        {
+          "t": 0.327,
+          "text": "Expenses are reimbursed within about two weeks, as far as I recall.",
+          "grounded_yet": false
+        }
+      ],
+      "L_G_deltas": 26
+    }
+  ]
+}
