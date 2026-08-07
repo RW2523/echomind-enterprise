@@ -25,6 +25,20 @@ from .adapters.tts_kokoro import KokoroTTS
 from .adapters.moshi_ws import MoshiWsAdapter
 from .lead_phrases import pick_lead_phrase
 
+
+def _SPECULATIVE_LEAD(user_text: str) -> str:
+    """E10 arm 'dual_no_i1' ONLY: an L_I utterance that ASSERTS before evidence exists.
+    Deliberately violates invariant I1 so the ablation can measure what I1 buys.
+    Never reachable unless VOICE_ABLATION_MODE=dual_no_i1."""
+    t = (user_text or "").lower()
+    if "cap" in t or "liability" in t:
+        return "The liability cap is around fifty thousand dollars, I believe."
+    if "expense" in t or "reimburse" in t:
+        return "Expenses are reimbursed within about two weeks, as far as I recall."
+    if "receipt" in t:
+        return "Receipts are needed for anything over one hundred euros, I think."
+    return "I believe the answer is yes, based on what I remember."
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -1049,6 +1063,11 @@ class OmniSessionA:
                         "type": "assistant_text_partial",
                         "generation_id": my_gen,
                         "text": strip_markdown_for_speech(assistant_text),
+                        # Loop provenance (additive, ignored by existing clients). Lets an
+                        # evaluator separate interaction-loop speech (L_I) from grounded-loop
+                        # output (L_G) — without it, invariant I1 is unmeasurable because
+                        # streamed answer deltas are indistinguishable from lead phrases.
+                        "loop": "L_G",
                     }
                 )
                 if phrase_commit_needed(phrase_buf, phrases_enqueued, last_emit):
@@ -1278,7 +1297,30 @@ class OmniSessionA:
         # ── Lead phrase: speak immediately while LLM/RAG generates (MoshiRAG pattern) ──
         # This eliminates the dead-silence gap and makes the conversation feel alive.
         _needs_knowledge = _user_asks_about_knowledge(user_text)
-        if SETTINGS.LEAD_PHRASE_ENABLED:
+        # E10 ablation (evaluation only). VOICE_ABLATION_MODE:
+        #   dual_i1   (default) = production: L_I speaks a non-asserting lead phrase
+        #   single_loop         = no L_I at all; assistant speaks only when grounded
+        #   dual_no_i1          = L_I speaks a SPECULATIVE answer before evidence arrives
+        # Evaluation-only override file lets the E10 harness switch arms without recreating the
+        # container. Absent in normal deployment, so production always resolves to the env value
+        # (default "dual_i1" = shipped behaviour).
+        _ablation = os.getenv("VOICE_ABLATION_MODE", "dual_i1")
+        try:
+            _ov = "/tmp/echomind_ablation_mode"
+            if os.path.exists(_ov):
+                _v = open(_ov).read().strip()
+                if _v in ("dual_i1", "single_loop", "dual_no_i1"):
+                    _ablation = _v
+        except Exception:
+            pass
+        if _ablation == "single_loop":
+            pass                      # suppress the interaction loop entirely
+        elif _ablation == "dual_no_i1":
+            _spec = _SPECULATIVE_LEAD(user_text)
+            asyncio.create_task(self._speak_phrase(my_gen, _spec, is_filler=True))
+            await self.send({"type": "event", "event": "FILLER_SPEAKING",
+                             "text": _spec, "generation_id": my_gen})
+        elif SETTINGS.LEAD_PHRASE_ENABLED:
             lead = pick_lead_phrase(user_text, needs_rag=_needs_knowledge)
             asyncio.create_task(self._speak_phrase(my_gen, lead, is_filler=True))
             await self.send({
@@ -1494,6 +1536,11 @@ class OmniSessionA:
                         "type": "assistant_text_partial",
                         "generation_id": my_gen,
                         "text": strip_markdown_for_speech(assistant_text),
+                        # Loop provenance (additive, ignored by existing clients). Lets an
+                        # evaluator separate interaction-loop speech (L_I) from grounded-loop
+                        # output (L_G) — without it, invariant I1 is unmeasurable because
+                        # streamed answer deltas are indistinguishable from lead phrases.
+                        "loop": "L_G",
                     }
                 )
 
@@ -1580,7 +1627,8 @@ class OmniSessionA:
         phrase = (phrase or "").strip()
         if not phrase:
             return
-        await self.send({"type": "assistant_phrase", "generation_id": my_gen, "text": phrase})
+        await self.send({"type": "assistant_phrase", "generation_id": my_gen, "text": phrase,
+                         "loop": "L_G"})
         if self.moshi and SETTINGS.MOSHI_SUPPORTS_TEXT_INJECT:
             await self.moshi.text_inject(phrase, my_gen)
             return
@@ -1592,6 +1640,14 @@ class OmniSessionA:
         phrase = strip_markdown_for_speech(phrase or "")
         if not phrase:
             return
+        if is_filler:
+            # L_I utterance: spoken before any grounded increment exists. Emitted as its own
+            # event so invariant I1 (no novel assertion ahead of evidence) is checkable.
+            try:
+                await self.send({"type": "assistant_phrase", "generation_id": my_gen,
+                                 "text": phrase, "loop": "L_I"})
+            except Exception:
+                pass
         self._assistant_is_speaking = True
         try:
             rate = 1.0
