@@ -1553,7 +1553,9 @@ async def retrieve_semantic_first(
     tasks = []
     if search_transcript:
         tasks.append(("transcript_dense", index.search_transcript_only(q, k_per, query_vector=qv)))
-        tasks.append(("transcript_sparse", asyncio.to_thread(index.transcript_sparse.search, q, k_per)))
+        # Namespace-filtered wrapper. Calling index.transcript_sparse.search directly bypassed
+        # _ns_ok and leaked other tenants' transcript chunks into scoped queries.
+        tasks.append(("transcript_sparse", asyncio.to_thread(index.search_transcript_only_sparse, q, k_per)))
     if search_document:
         if allowed_section_paths:
             # [Step 1] Section-restricted search (no_global_fallback when explicit refs)

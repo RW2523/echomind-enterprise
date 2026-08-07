@@ -50,7 +50,14 @@ def _ns_fetch_k(k: int, base_mult: int, total: int) -> int:
     FlatIP over ~10k vectors costs milliseconds, so the recall is cheap.
     """
     if _active_namespace.get() is not None:
-        return min(max(k * 50, 512), total)
+        # A fixed 512-candidate pool is a FRACTION of the index, so it degrades as the corpus
+        # grows: this deployment auto-saves voice transcripts, the index went 10.3k -> 17.6k
+        # chunks, and eight vertical-namespace questions silently began returning 0 citations
+        # (golden eval 50/52 -> 42/52). Scale the pool WITH the index instead of fixing it, so a
+        # namespace holding a handful of chunks stays reachable at any corpus size. Cost is a few
+        # ms — the filter itself was measured at 0.08 ms median.
+        frac = float(getattr(settings, "RAG_NS_FETCH_FRACTION", 0.5))
+        return min(max(k * 50, 512, int(total * frac)), total)
     # Unfiltered (whole-KB) path: keep the pool NARROW. Widening it to 192 was tried and
     # measured WORSE — the golden eval dropped 47->43 with doc-precision 0.98->0.86, and
     # all six regressions were whole-KB questions. This corpus is ~97% transcript chunks,
@@ -812,6 +819,22 @@ class FaissIndex:
                     continue
                 out.append({"chunk_id": cid, "score": float(D[0][rank]), "text": text, "source": src})
         return out
+
+    def search_transcript_only_sparse(self, query: str, k: int) -> List[Dict]:
+        """Sparse (BM25) search over TRANSCRIPTS with namespace isolation enforced.
+
+        SECURITY: advanced.py previously called self.transcript_sparse.search() directly, which
+        applies no namespace predicate — a tenant-scoped query returned transcript chunks from
+        other namespaces. Every other retrieval path (dense doc, sparse doc, dense transcript)
+        filters via _ns_ok; this one did not. Besides the isolation breach it also broke
+        retrieval quality: leaked transcript hits outscored in-namespace documents and won
+        source selection, which silently zeroed citations on vertical queries.
+        """
+        if not self.transcript_sparse._bm25 or not self.transcript_sparse.chunk_ids:
+            return []
+        raw = self.transcript_sparse.search(query, _ns_fetch_k(k, 4, len(self.transcript_sparse.chunk_ids)))
+        out = [h for h in raw if _ns_ok(h.get("source") or {})]
+        return out[:k]
 
     def search_document_only_sparse(self, query: str, k: int) -> List[Dict]:
         """Sparse (BM25) search over documents only (exclude transcripts)."""
