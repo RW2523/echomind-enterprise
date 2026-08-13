@@ -4,7 +4,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from emkit import *
 
-OUT = "/home/echomind/Documents/echomind/echomind-enterprise/docs/EchoMind_Pitch_Deck.pdf"
+OUT = "/home/echomind/Documents/echomind/echomind-enterprise/marketing_doc/EchoMind_Pitch_Deck.pdf"
 d = Doc(OUT, "EchoMind — Pitch Deck", subject="The private AI assistant that can sit in the room", land=True)
 c = d.c
 PW, PH = d.pw, d.ph

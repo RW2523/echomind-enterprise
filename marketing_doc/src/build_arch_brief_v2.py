@@ -6,7 +6,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.colors import HexColor, Color
 from reportlab.lib.utils import simpleSplit
 
-OUT = "/home/echomind/Documents/echomind/echomind-enterprise/docs/arch/EchoMind_Architecture_Brief_v2.pdf"
+OUT = "/home/echomind/Documents/echomind/echomind-enterprise/marketing_doc/EchoMind_Architecture_Brief_v2.pdf"
 
 W, H = A4                      # 595 x 842 portrait
 LW, LH = landscape(A4)         # 842 x 595

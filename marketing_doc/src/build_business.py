@@ -4,7 +4,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from emkit import *
 
-OUT = "/home/echomind/Documents/echomind/echomind-enterprise/docs/EchoMind_Business_Overview.pdf"
+OUT = "/home/echomind/Documents/echomind/echomind-enterprise/marketing_doc/EchoMind_Business_Overview.pdf"
 d = Doc(OUT, "EchoMind — Business & Sales Overview", subject="Non-technical overview for marketing and sales")
 d.footer_text = "EchoMind by Ajace AI   ·   Business & Sales Overview   ·   Internal / Confidential"
 c = d.c

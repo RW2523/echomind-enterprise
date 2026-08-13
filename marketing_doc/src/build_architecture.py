@@ -4,7 +4,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from emkit import *
 
-OUT = "/home/echomind/Documents/echomind/echomind-enterprise/docs/EchoMind_Architecture_Flows.pdf"
+OUT = "/home/echomind/Documents/echomind/echomind-enterprise/marketing_doc/EchoMind_Architecture_Flows.pdf"
 d = Doc(OUT, "EchoMind — Architecture & Flows", subject="System architecture and end-to-end flowcharts", land=True)
 d.footer_text = "EchoMind by Ajace AI   ·   Architecture & Flows   ·   Internal / Confidential"
 c = d.c
