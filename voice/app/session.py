@@ -210,31 +210,114 @@ def classify_utterance_end(text: str) -> str:
     return "neutral"
 
 
-def phrase_commit_needed(phrase_buf: str, phrases_enqueued: int, last_emit: float) -> bool:
-    """
-    Whether to enqueue ``phrase_buf`` for TTS. Used for both local LLM SSE and backend RAG NDJSON streams.
-    """
-    s = phrase_buf.strip()
-    if not s:
+_SENT_END_RE = re.compile(r'[.!?]["\']?(?=\s|$)')
+_CLAUSE_END_RE = re.compile(r'[,;:](?=\s)')  # requires following space, so 1,234 never matches
+
+
+# Common abbreviations whose trailing period is not a sentence end.
+_ABBREV_RE = re.compile(
+    r"(?:\b(?:Dr|Mr|Mrs|Ms|Prof|St|vs|etc|approx|Dept|Inc|Ltd|Corp|Fig|Sect|No|Vol|Rev)"
+    r"|\b[A-Z])\.$"  # single-initial: "U." in U.S., "J." in J. Smith
+)
+
+
+def _is_sentence_boundary(s: str, end: int) -> bool:
+    """Reject false sentence ends: abbreviations/initials, and a bare trailing
+    digit-period at the very end of the buffer (could be a streaming decimal —
+    "3." with ".5" still in flight)."""
+    head = s[:end].rstrip("\"'")
+    if _ABBREV_RE.search(head[-8:] if len(head) > 8 else head):
         return False
-    if len(s) >= SETTINGS.PHRASE_MAX_CHARS:
-        return True
-    clause_min = max(8, getattr(SETTINGS, "PHRASE_CLAUSE_MIN_CHARS", 18))
-    if len(s) >= clause_min and ends_natural_clause(phrase_buf):
-        return True
-    min_sentence = (
-        max(4, getattr(SETTINGS, "FIRST_SENTENCE_MIN_CHARS", 8))
-        if phrases_enqueued == 0
-        else SETTINGS.PHRASE_MIN_CHARS
+    if end >= len(s.rstrip()) and len(head) >= 2 and head.endswith(".") and head[-2].isdigit():
+        return False  # wait one more token; a real "42." commits once a space follows
+    return True
+
+
+def _last_sentence_end(s: str) -> int:
+    """End index (exclusive) of the last complete sentence in s, else 0.
+
+    Newlines count as sentence boundaries: streamed answers often contain
+    markdown-style lists and headings with no terminal punctuation for long
+    stretches, and a line break is exactly where the voice should breathe."""
+    last = 0
+    for m in _SENT_END_RE.finditer(s):
+        if _is_sentence_boundary(s, m.end()):
+            last = m.end()
+    nl = s.rfind("\n")
+    if nl >= 0:
+        last = max(last, nl + 1)
+    return last
+
+
+def _last_clause_end(s: str) -> int:
+    """End index (exclusive) of the last clause boundary (comma/semicolon/colon), else 0."""
+    last = 0
+    for m in _CLAUSE_END_RE.finditer(s):
+        last = m.end()
+    return last
+
+
+def _last_word_cut(s: str, limit: int) -> int:
+    """Last whitespace at or before limit — a cut that never splits a word. 0 if none."""
+    cut = s.rfind(" ", 0, limit + 1)
+    return cut if cut > 0 else 0
+
+
+def phrase_split_point(phrase_buf: str, phrases_enqueued: int, last_growth: float) -> int:
+    """Return the cut index (exclusive) for the next TTS phrase, or 0 to keep buffering.
+
+    Replaces the old boolean phrase_commit_needed, which chopped the stream into
+    ~20-char fragments (any 18-char buffer committed 120 ms after the previous commit,
+    and every comma split): measured on real replies, 95-99% of fragments ended
+    mid-sentence, so every fragment got its own Piper prosody contour plus an inserted
+    pause — the "chunk...speak" cadence.
+
+    New policy:
+      - Phrase 0 favors latency: first sentence end (FIRST_SENTENCE_MIN_CHARS), or an
+        early clause once PHRASE_CLAUSE_MIN_CHARS is buffered, capped at
+        PHRASE_FIRST_MAX_CHARS.
+      - Later phrases favor prosody: cut ONLY at sentence ends, merging short
+        sentences up to at least PHRASE_MIN_CHARS, capped at PHRASE_MAX_CHARS —
+        Piper renders whole sentences (commas intact) with natural intonation.
+      - Stall rule fires only when the stream itself stops feeding us
+        (PHRASE_STALL_MS since the last token APPENDED, not since the last commit).
+      - Overflow and stall cuts snap to sentence > clause > word boundary:
+        a word is never split.
+    """
+    s = phrase_buf
+    if not s.strip():
+        return 0
+    first = phrases_enqueued == 0
+    max_chars = (
+        getattr(SETTINGS, "PHRASE_FIRST_MAX_CHARS", 100) if first else SETTINGS.PHRASE_MAX_CHARS
     )
-    if len(s) >= min_sentence and ends_sentence(phrase_buf):
-        return True
-    if (
-        len(s) >= SETTINGS.PHRASE_MIN_CHARS
-        and (time.time() - last_emit) * 1000 >= SETTINGS.PHRASE_COMMIT_PAUSE_MS
-    ):
-        return True
-    return False
+
+    if len(s) >= max_chars:
+        cut = _last_sentence_end(s)
+        if cut < 12:
+            cut = _last_clause_end(s)
+        if cut < 12:
+            cut = _last_word_cut(s, max_chars)
+        return cut if cut >= 12 else len(s)  # pathological unbroken run: emit as-is
+
+    if first:
+        cut = _last_sentence_end(s)
+        if cut >= max(4, getattr(SETTINGS, "FIRST_SENTENCE_MIN_CHARS", 8)):
+            return cut
+        cut = _last_clause_end(s)
+        if cut >= max(8, getattr(SETTINGS, "PHRASE_CLAUSE_MIN_CHARS", 30)):
+            return cut
+    else:
+        cut = _last_sentence_end(s)
+        if cut >= SETTINGS.PHRASE_MIN_CHARS:
+            return cut
+
+    stall_ms = getattr(SETTINGS, "PHRASE_STALL_MS", 350)
+    if len(s.strip()) >= 12 and (time.time() - last_growth) * 1000 >= stall_ms:
+        cut = _last_sentence_end(s) or _last_clause_end(s) or _last_word_cut(s, len(s))
+        return cut if cut >= 12 else len(s)
+    return 0
+
 
 def approx_token_count(text: str) -> int:
     # crude but safe: ~4 chars per token in English
@@ -419,6 +502,11 @@ class OmniSessionA:
         self._pending_lead_frames: List[Frame] = []
         self._assistant_is_speaking = False
         self._assistant_active_gen: Optional[int] = None
+        # Emotion playback rate is latched once per reply generation: per-phrase rate
+        # changes (0.96 vs 1.0 vs 1.06) resampled adjacent phrases of one answer at
+        # different tempo/pitch — an audible seam at every join.
+        self._reply_rate: float = 1.0
+        self._reply_rate_gen: int = -1
         self._is_playing_intro = False  # Disable barge-in during intro to avoid mic feedback cutting it off
         self._pending_intro = True      # Wait for first set_context (persona) before playing intro
 
@@ -978,7 +1066,7 @@ class OmniSessionA:
         """Stream NDJSON from POST /api/chat/ask-voice-stream; phrase-commit + TTS like local LLM stream."""
         phrase_buf = ""
         assistant_text = ""
-        last_emit = time.time()
+        last_growth = time.time()
         phrases_enqueued = 0
 
         tts_q: asyncio.Queue = asyncio.Queue()
@@ -986,15 +1074,6 @@ class OmniSessionA:
         loop_c = asyncio.get_running_loop()
         base = backend_url.rstrip("/")
         stream_url = f"{base}/api/chat/ask-voice-stream"
-
-        async def tts_consumer():
-            while True:
-                item = await tts_q.get()
-                if item is None:
-                    break
-                if my_gen != self.generation_id:
-                    continue
-                await self._commit_phrase(my_gen, item)
 
         def run_backend_ndjson():
             def put(it):
@@ -1031,7 +1110,7 @@ class OmniSessionA:
                 put(None)
 
         _abort_tts = False
-        self._tts_phrase_task = asyncio.create_task(tts_consumer())
+        self._tts_phrase_task = asyncio.create_task(self._phrase_pipeline(tts_q, my_gen))
         try:
 
             async def producer():
@@ -1045,7 +1124,18 @@ class OmniSessionA:
                     prod_task.cancel()
                     return
 
-                item = await chunk_q.get()
+                try:
+                    # Bounded wait so the stall rule is observable DURING a stall:
+                    # blocking indefinitely here meant buffered text sat unspoken
+                    # until the stream resumed, however long that took.
+                    item = await asyncio.wait_for(chunk_q.get(), timeout=0.2)
+                except asyncio.TimeoutError:
+                    cut = phrase_split_point(phrase_buf, phrases_enqueued, last_growth)
+                    if cut:
+                        await tts_q.put(phrase_buf[:cut].strip())
+                        phrases_enqueued += 1
+                        phrase_buf = phrase_buf[cut:].lstrip()
+                    continue
                 if item is None:
                     break
                 if isinstance(item, dict) and item.get("__error__"):
@@ -1070,11 +1160,14 @@ class OmniSessionA:
                         "loop": "L_G",
                     }
                 )
-                if phrase_commit_needed(phrase_buf, phrases_enqueued, last_emit):
-                    await tts_q.put(phrase_buf.strip())
+                # Evaluate the split against the PREVIOUS growth time, then stamp:
+                # stamping first made the stall clock always read ~0 (dead rule).
+                cut = phrase_split_point(phrase_buf, phrases_enqueued, last_growth)
+                last_growth = time.time()
+                if cut:
+                    await tts_q.put(phrase_buf[:cut].strip())
                     phrases_enqueued += 1
-                    phrase_buf = ""
-                    last_emit = time.time()
+                    phrase_buf = phrase_buf[cut:].lstrip()
 
             if my_gen != self.generation_id:
                 return
@@ -1487,22 +1580,14 @@ class OmniSessionA:
 
         phrase_buf = ""
         assistant_text = ""
-        last_emit = time.time()
+        last_growth = time.time()
         phrases_enqueued = 0
 
-        # Serial TTS queue: main loop keeps draining LLM tokens while Piper plays phrases in order.
+        # Pipelined TTS: main loop drains LLM tokens; _phrase_pipeline synthesizes one
+        # phrase ahead while the previous phrase's audio streams to the client.
         tts_q: asyncio.Queue = asyncio.Queue()
 
-        async def tts_consumer():
-            while True:
-                item = await tts_q.get()
-                if item is None:
-                    break
-                if my_gen != self.generation_id:
-                    continue
-                await self._commit_phrase(my_gen, item)
-
-        self._tts_phrase_task = asyncio.create_task(tts_consumer())
+        self._tts_phrase_task = asyncio.create_task(self._phrase_pipeline(tts_q, my_gen))
         _abort_tts = False
         try:
             tok_q: asyncio.Queue = asyncio.Queue()
@@ -1525,7 +1610,17 @@ class OmniSessionA:
                     prod_task.cancel()
                     return
 
-                tok = await tok_q.get()
+                try:
+                    # Bounded wait so the stall rule is observable DURING a stall
+                    # (see the backend-RAG loop for the rationale).
+                    tok = await asyncio.wait_for(tok_q.get(), timeout=0.2)
+                except asyncio.TimeoutError:
+                    cut = phrase_split_point(phrase_buf, phrases_enqueued, last_growth)
+                    if cut:
+                        await tts_q.put(phrase_buf[:cut].strip())
+                        phrases_enqueued += 1
+                        phrase_buf = phrase_buf[cut:].lstrip()
+                    continue
                 if tok is None:
                     break
 
@@ -1544,11 +1639,14 @@ class OmniSessionA:
                     }
                 )
 
-                if phrase_commit_needed(phrase_buf, phrases_enqueued, last_emit):
-                    await tts_q.put(phrase_buf.strip())
+                # Evaluate the split against the PREVIOUS growth time, then stamp
+                # (stamping first made the stall clock always read ~0).
+                cut = phrase_split_point(phrase_buf, phrases_enqueued, last_growth)
+                last_growth = time.time()
+                if cut:
+                    await tts_q.put(phrase_buf[:cut].strip())
                     phrases_enqueued += 1
-                    phrase_buf = ""
-                    last_emit = time.time()
+                    phrase_buf = phrase_buf[cut:].lstrip()
 
             if my_gen != self.generation_id:
                 return
@@ -1623,18 +1721,96 @@ class OmniSessionA:
         await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
         self._assistant_active_gen = None
 
-    async def _commit_phrase(self, my_gen: int, phrase: str):
-        phrase = (phrase or "").strip()
-        if not phrase:
-            return
-        await self.send({"type": "assistant_phrase", "generation_id": my_gen, "text": phrase,
-                         "loop": "L_G"})
-        if self.moshi and SETTINGS.MOSHI_SUPPORTS_TEXT_INJECT:
-            await self.moshi.text_inject(phrase, my_gen)
-            return
-        await self._speak_phrase(my_gen, phrase)
+    def _rate_for(self, my_gen: int, phrase: str, is_filler: bool) -> float:
+        """Playback rate for a phrase. Latched once per reply generation so adjacent
+        phrases of one answer never play at different tempo/pitch."""
+        if is_filler or not SETTINGS.EMOTION_MODE:
+            return 1.0
+        if self._reply_rate_gen != my_gen:
+            self._reply_rate = detect_emotion_playback_rate(phrase)
+            self._reply_rate_gen = my_gen
+        return self._reply_rate
+
+    @staticmethod
+    def _resample_24k(y: np.ndarray, sr: int) -> tuple:
+        """Resample a whole phrase to 24 kHz (the client's fixed AudioContext rate).
+
+        The browser previously resampled each 0.35 s chunk independently with
+        edge-clamped interpolation — a tiny waveform discontinuity at every chunk
+        seam. Resampling the phrase ONCE server-side makes the client path a no-op
+        and keeps the signal continuous across chunk boundaries."""
+        if sr == 24000 or y.size == 0:
+            return y, sr
+        n = int(round(y.size * 24000.0 / sr))
+        x_src = np.arange(y.size, dtype=np.float64)
+        x_dst = np.linspace(0.0, y.size - 1.0, n)
+        return np.interp(x_dst, x_src, y).astype(np.float32), 24000
+
+    async def _phrase_pipeline(self, tts_q: asyncio.Queue, my_gen: int):
+        """Two-stage TTS pipeline shared by both reply paths (local LLM + backend RAG).
+
+        The old single consumer awaited synth AND send per phrase, so Piper synthesis
+        of phrase N+1 only started after phrase N's audio was fully enqueued — every
+        synth latency landed directly in the playback gap (measured up to ~3 s of
+        client starvation on long replies). Here a synth stage runs one phrase ahead
+        (audio_q maxsize=1 → at most one synthesized phrase waiting) while the emit
+        stage streams the previous phrase."""
+        audio_q: asyncio.Queue = asyncio.Queue(maxsize=1)
+
+        async def synth_stage():
+            loop = asyncio.get_running_loop()
+            while True:
+                item = await tts_q.get()
+                if item is None:
+                    await audio_q.put(None)
+                    return
+                if my_gen != self.generation_id:
+                    continue
+                phrase = strip_markdown_for_speech((item or "").strip())
+                if not phrase:
+                    continue
+                # The assistant is "speaking" from the first phrase onward, including
+                # synth-only windows — barge-in thresholds and the barge-in ack both
+                # key off this flag (the old serial consumer held it through synth).
+                self._assistant_is_speaking = True
+                await self.send({"type": "assistant_phrase", "generation_id": my_gen,
+                                 "text": phrase, "loop": "L_G"})
+                if self.moshi and SETTINGS.MOSHI_SUPPORTS_TEXT_INJECT:
+                    await self.moshi.text_inject(phrase, my_gen)
+                    continue
+                try:
+                    y = await loop.run_in_executor(None, self.tts.synth, phrase)
+                    sr = self.tts.sr
+                except Exception as e:
+                    await self.send({"type": "error", "where": "tts",
+                                     "message": str(e), "generation_id": my_gen})
+                    continue
+                await audio_q.put((phrase, y, sr))
+
+        synth_task = asyncio.create_task(synth_stage())
+        try:
+            while True:
+                got = await audio_q.get()
+                if got is None:
+                    return
+                if my_gen != self.generation_id:
+                    continue
+                phrase, y, sr = got
+                await self._emit_phrase_audio(my_gen, phrase, y, sr, is_filler=False)
+        finally:
+            if self.generation_id == my_gen:
+                self._assistant_is_speaking = False
+            if not synth_task.done():
+                synth_task.cancel()
+                try:
+                    await synth_task
+                except asyncio.CancelledError:
+                    pass
 
     async def _speak_phrase(self, my_gen: int, phrase: str, is_filler: bool = False):
+        """Single-shot synth+emit: fillers, acks, backchannels, intro fallback, and
+        the non-streaming reply fallbacks. Streaming replies go through
+        _phrase_pipeline instead."""
         if my_gen != self.generation_id:
             return
         phrase = strip_markdown_for_speech(phrase or "")
@@ -1650,10 +1826,6 @@ class OmniSessionA:
                 pass
         self._assistant_is_speaking = True
         try:
-            rate = 1.0
-            if SETTINGS.EMOTION_MODE and not is_filler:
-                rate = detect_emotion_playback_rate(phrase)
-
             try:
                 loop = asyncio.get_running_loop()
                 y = await loop.run_in_executor(None, self.tts.synth, phrase)
@@ -1661,45 +1833,59 @@ class OmniSessionA:
             except Exception as e:
                 await self.send({"type": "error", "where": "tts", "message": str(e), "generation_id": my_gen})
                 return
-
-            # Controlled inter-phrase pause: synth() trims Piper's baked-in edge silence
-            # (which stacked into 200-300 ms of dead air at every phrase join); re-add a
-            # short, CONSISTENT pause so speech flows naturally — longer at sentence ends,
-            # brief at clause splits, none after fillers (the reply follows immediately).
-            if not is_filler and y.size:
-                pause_ms = 160.0 if phrase.rstrip().endswith((".", "!", "?", ":")) else 90.0
-                y = np.concatenate([y, np.zeros(int(sr * pause_ms / 1000.0), dtype=np.float32)])
-
-            # Larger chunks = fewer boundaries = fewer clicks; 0.35s at 22kHz ~= 7700 samples
-            chunk_samples = int(sr * 0.35)
-            chunk_samples = max(chunk_samples, 256)
-            n_chunks = (y.size + chunk_samples - 1) // chunk_samples
-            i = 0
-            idx = 0
-            while i < y.size:
-                if my_gen != self.generation_id:
-                    return
-                part = y[i : i + chunk_samples].astype(np.float32)
-                i += chunk_samples
-                # Fade only the PHRASE edges (first chunk in, last chunk out). The client
-                # schedules chunks gaplessly on the audio clock, so fading every chunk just
-                # dipped the volume to zero every 0.35 s — audible flutter inside a phrase.
-                _fade_chunk_edges(
-                    part, sr, fade_ms=4.0,
-                    fade_in=(idx == 0), fade_out=(idx == n_chunks - 1),
-                )
-                idx += 1
-                await self.send({
-                    "type": "audio_out",
-                    "generation_id": my_gen,
-                    "sample_rate": sr,
-                    "playback_rate": rate,
-                    "pcm16_raw": float32_to_pcm16_bytes(part),
-                })
-                await asyncio.sleep(0.0)
+            await self._emit_phrase_audio(my_gen, phrase, y, sr, is_filler=is_filler)
         finally:
             if self.generation_id == my_gen:
                 self._assistant_is_speaking = False
+
+    async def _emit_phrase_audio(self, my_gen: int, phrase: str, y: np.ndarray, sr: int,
+                                 is_filler: bool = False):
+        """Pause + resample + chunk + fade + send one synthesized phrase."""
+        if my_gen != self.generation_id:
+            return
+        rate = self._rate_for(my_gen, phrase, is_filler)
+
+        # Controlled inter-phrase pause: synth() trims Piper's baked-in edge silence
+        # (which stacked into 200-300 ms of dead air at every phrase join); re-add a
+        # short, CONSISTENT pause. Phrases are now whole sentences, so the sentence
+        # pause dominates; non-sentence joins (overflow/stall cuts) get a brief gap.
+        # None after fillers — the reply follows immediately.
+        if not is_filler and y.size:
+            if phrase.rstrip().rstrip("\"'").endswith((".", "!", "?", ":")):
+                pause_ms = float(getattr(SETTINGS, "PHRASE_SENT_PAUSE_MS", 120))
+            else:
+                pause_ms = float(getattr(SETTINGS, "PHRASE_JOIN_PAUSE_MS", 40))
+            y = np.concatenate([y, np.zeros(int(sr * pause_ms / 1000.0), dtype=np.float32)])
+
+        # One resample for the whole phrase (see _resample_24k docstring).
+        y, sr = self._resample_24k(y, sr)
+
+        # Larger chunks = fewer boundaries; 0.35 s per audio_out message.
+        chunk_samples = max(int(sr * 0.35), 256)
+        n_chunks = (y.size + chunk_samples - 1) // chunk_samples
+        i = 0
+        idx = 0
+        while i < y.size:
+            if my_gen != self.generation_id:
+                return
+            part = y[i : i + chunk_samples].astype(np.float32)
+            i += chunk_samples
+            # Fade only the PHRASE edges (first chunk in, last chunk out). The client
+            # schedules chunks gaplessly on the audio clock, so fading every chunk just
+            # dipped the volume to zero every 0.35 s — audible flutter inside a phrase.
+            _fade_chunk_edges(
+                part, sr, fade_ms=4.0,
+                fade_in=(idx == 0), fade_out=(idx == n_chunks - 1),
+            )
+            idx += 1
+            await self.send({
+                "type": "audio_out",
+                "generation_id": my_gen,
+                "sample_rate": sr,
+                "playback_rate": rate,
+                "pcm16_raw": float32_to_pcm16_bytes(part),
+            })
+            await asyncio.sleep(0.0)
 
     async def _moshi_recv_loop(self):
         while not self._closed and self.moshi:

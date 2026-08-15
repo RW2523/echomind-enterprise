@@ -43,14 +43,30 @@ class Settings:
     # Log full LLM JSON body (set LLM_LOG_PAYLOAD=1). Timing lines always log at INFO (VOICE_LLM stream start/done).
     LLM_LOG_PAYLOAD: bool = os.getenv("LLM_LOG_PAYLOAD", "0").lower() in ("1", "true", "yes")
 
-    # Phrase chunking for streaming TTS: lower values = more frequent Piper calls (lower latency, slightly choppier).
-    PHRASE_MIN_CHARS: int = int(os.getenv("PHRASE_MIN_CHARS", "18"))
-    PHRASE_MAX_CHARS: int = int(os.getenv("PHRASE_MAX_CHARS", "96"))
-    PHRASE_COMMIT_PAUSE_MS: int = int(os.getenv("PHRASE_COMMIT_PAUSE_MS", "120"))
+    # ── Phrase chunking for streaming TTS ─────────────────────────────────────────
+    # Phrases after the first are cut ONLY at sentence ends (session.phrase_split_point):
+    # Piper renders whole sentences — commas intact — with natural intonation, instead
+    # of the old ~20-char fragments that reset prosody at every join.
+    # Sentence-merge floor: a sentence end commits only once at least this much is
+    # buffered, so very short sentences ride along with the next one.
+    PHRASE_MIN_CHARS: int = int(os.getenv("PHRASE_MIN_CHARS", "40"))
+    # Hard cap per TTS phrase (~1-2 sentences); overflow cuts snap to sentence > clause > word.
+    PHRASE_MAX_CHARS: int = int(os.getenv("PHRASE_MAX_CHARS", "280"))
+    # Cap for the FIRST phrase (latency-sensitive): big enough for one full sentence.
+    PHRASE_FIRST_MAX_CHARS: int = int(os.getenv("PHRASE_FIRST_MAX_CHARS", "100"))
+    # Stall commit: speak the buffer early only when the token stream itself has
+    # stopped growing for this long (measured from the last APPENDED token — the old
+    # 120 ms timer measured from the last COMMIT and chopped continuously-streaming
+    # replies into arbitrary fragments).
+    PHRASE_STALL_MS: int = int(os.getenv("PHRASE_STALL_MS", "350"))
     # First spoken phrase: commit on sentence end with this lower minimum so TTS starts right after the first sentence.
     FIRST_SENTENCE_MIN_CHARS: int = int(os.getenv("FIRST_SENTENCE_MIN_CHARS", "8"))
-    # Commit on comma/semicolon/colon when buffer is at least this long (natural clause breaks for earlier audio).
-    PHRASE_CLAUSE_MIN_CHARS: int = int(os.getenv("PHRASE_CLAUSE_MIN_CHARS", "18"))
+    # First phrase only: commit on comma/semicolon/colon at this length for earlier audio.
+    PHRASE_CLAUSE_MIN_CHARS: int = int(os.getenv("PHRASE_CLAUSE_MIN_CHARS", "30"))
+    # Inserted inter-phrase pause after trimming Piper's edge silence: sentence-final
+    # joins vs. rare non-sentence joins (overflow/stall cuts).
+    PHRASE_SENT_PAUSE_MS: int = int(os.getenv("PHRASE_SENT_PAUSE_MS", "120"))
+    PHRASE_JOIN_PAUSE_MS: int = int(os.getenv("PHRASE_JOIN_PAUSE_MS", "40"))
 
     # Piper TTS (model path; voices dir for download is VOICES_DIR, default /voices)
     PIPER_MODEL: str = os.getenv("PIPER_MODEL", "/voices/en_US-lessac-medium.onnx")

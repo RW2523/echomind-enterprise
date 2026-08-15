@@ -117,14 +117,20 @@ function resampleLinear(input: Float32Array, srcSr: number, dstSr: number): Floa
   return out;
 }
 
-/** Apply short fade-in/fade-out to reduce clicks at chunk boundaries. Modifies in place. */
-function fadeBufferEdges(f32: Float32Array, sampleRate: number, fadeMs: number = 3): void {
+/** Apply a short fade at the requested edges to avoid onset/offset clicks. Modifies in place. */
+function fadeBufferEdges(
+  f32: Float32Array,
+  sampleRate: number,
+  fadeMs: number = 3,
+  fadeIn: boolean = true,
+  fadeOut: boolean = true
+): void {
   const n = Math.min(Math.floor((sampleRate * fadeMs) / 1000), Math.floor(f32.length / 2));
   if (n <= 0) return;
   for (let i = 0; i < n; i++) {
     const t = (i + 1) / (n + 1);
-    f32[i] *= t;
-    f32[f32.length - 1 - i] *= t;
+    if (fadeIn) f32[i] *= t;
+    if (fadeOut) f32[f32.length - 1 - i] *= t;
   }
 }
 
@@ -232,6 +238,13 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   // (nextStartRef) instead of chained via onended, so there are no clicks/gaps between phrases.
   const nextStartRef = useRef(0);
   const scheduledSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+  // Grace timer: when the scheduled set empties, wait briefly before declaring the
+  // turn over — a mid-reply synthesis hiccup must not reset the playback timeline.
+  const idleGraceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Audio-clock time until which the shared gain node may still be ramped down by a
+  // barge-in fade; new sources schedule no earlier than this so they are never
+  // attenuated by the tail of the ramp or hit by the gain-restore step.
+  const gainHoldUntilRef = useRef(0);
   const backchannelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const micAboveCountRef = useRef(0);
   const micBelowCountRef = useRef(0);
@@ -251,31 +264,40 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
   const stopAllPlayback = useCallback((fade: boolean = true) => {
     const ctx = playbackCtxRef.current;
     const gain = playbackGainRef.current;
-    if (ctx && gain && fade) {
-      const now = ctx.currentTime;
-      try {
-        gain.gain.cancelScheduledValues(now);
-        gain.gain.setValueAtTime(gain.gain.value, now);
-        gain.gain.linearRampToValueAtTime(0.0001, now + 0.05);
-      } catch (_) {}
+    if (idleGraceRef.current) {
+      clearTimeout(idleGraceRef.current);
+      idleGraceRef.current = null;
     }
-    // Detach onended (so a stopped source can't trigger more playback) and stop each source.
-    scheduledSourcesRef.current.forEach((s) => {
-      try { s.onended = null; s.stop(); } catch (_) {}
+    // Detach onended first so a stopped source can't trigger more playback.
+    const toStop = Array.from(scheduledSourcesRef.current);
+    toStop.forEach((s) => {
+      try { s.onended = null; } catch (_) {}
     });
     scheduledSourcesRef.current.clear();
     playQueueRef.current = [];
     currentSourceRef.current = null;
     nextStartRef.current = 0;
     playingRef.current = false;
-    // Restore gain just after the fade so subsequent audio is audible.
-    if (ctx && gain) {
+    if (ctx && gain && fade) {
+      // Ramp the gain down FIRST, stop the sources after the ramp completes, then
+      // restore gain. (Stopping synchronously used to cut audio mid-sample — the
+      // 50 ms fade never actually played, so every barge-in ended with a click.)
+      const now = ctx.currentTime;
+      gainHoldUntilRef.current = now + 0.07;
+      try {
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setValueAtTime(gain.gain.value, now);
+        gain.gain.linearRampToValueAtTime(0.0001, now + 0.05);
+      } catch (_) {}
       setTimeout(() => {
+        toStop.forEach((s) => { try { s.stop(); } catch (_) {} });
         try {
           gain.gain.cancelScheduledValues(ctx.currentTime);
           gain.gain.setValueAtTime(1, ctx.currentTime);
         } catch (_) {}
       }, 60);
+    } else {
+      toStop.forEach((s) => { try { s.stop(); } catch (_) {} });
     }
     setState((prev) => ({ ...prev, assistantOrb: "idle" }));
   }, []);
@@ -287,7 +309,14 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       if (!ctx || !analyser) return;
       const targetSr = ctx.sampleRate;
       const f32 = resampleLinear(pcmF32, sr, targetSr);
-      fadeBufferEdges(f32, targetSr, 3);
+      // Chunks join gaplessly on the audio clock, and the server already fades the
+      // real phrase edges — fading EVERY chunk here dipped the volume to zero every
+      // 0.35 s (audible flutter at each seam). Fade in only when this chunk starts a
+      // FRESH playback run (first audio of a turn, or resume after an underrun),
+      // where a hard onset would otherwise click.
+      const now = ctx.currentTime;
+      const fresh = nextStartRef.current <= now + 0.005;
+      if (fresh) fadeBufferEdges(f32, targetSr, 4, true, false);
       const buf = ctx.createBuffer(1, f32.length, targetSr);
       buf.copyToChannel(f32 as Float32Array, 0);
       const src = ctx.createBufferSource();
@@ -296,8 +325,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       src.connect(analyser);
 
       // Schedule this phrase right after whatever is already queued on the audio clock.
-      const now = ctx.currentTime;
-      const startAt = Math.max(now + 0.02, nextStartRef.current);
+      const startAt = Math.max(now + 0.02, nextStartRef.current, gainHoldUntilRef.current);
       const playDur = buf.duration / (rate || 1);
       try {
         src.start(startAt);
@@ -307,6 +335,10 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       nextStartRef.current = startAt + playDur;
       currentSourceRef.current = src;
       scheduledSourcesRef.current.add(src);
+      if (idleGraceRef.current) {
+        clearTimeout(idleGraceRef.current);
+        idleGraceRef.current = null;
+      }
 
       if (!playingRef.current) {
         playingRef.current = true;
@@ -315,11 +347,20 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       src.onended = () => {
         scheduledSourcesRef.current.delete(src);
         if (scheduledSourcesRef.current.size === 0) {
-          // Nothing left scheduled -> assistant finished this turn.
-          playingRef.current = false;
-          nextStartRef.current = 0;
-          currentSourceRef.current = null;
-          setState((prev) => ({ ...prev, assistantOrb: "idle" }));
+          // Nothing left scheduled. Wait a beat before declaring the turn over:
+          // if the next phrase is only slightly behind (synthesis hiccup), keep the
+          // timeline and orb state so playback resumes seamlessly instead of
+          // resetting mid-reply.
+          if (idleGraceRef.current) clearTimeout(idleGraceRef.current);
+          idleGraceRef.current = setTimeout(() => {
+            idleGraceRef.current = null;
+            if (scheduledSourcesRef.current.size === 0) {
+              playingRef.current = false;
+              nextStartRef.current = 0;
+              currentSourceRef.current = null;
+              setState((prev) => ({ ...prev, assistantOrb: "idle" }));
+            }
+          }, 250);
         }
       };
     },
@@ -542,6 +583,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
       scheduledSourcesRef.current.forEach((s) => { try { s.onended = null; s.stop(); } catch (_) {} });
       scheduledSourcesRef.current.clear();
       if (backchannelTimerRef.current) { clearTimeout(backchannelTimerRef.current); backchannelTimerRef.current = null; }
+      if (idleGraceRef.current) { clearTimeout(idleGraceRef.current); idleGraceRef.current = null; }
       playQueueRef.current = [];
       playingRef.current = false;
       nextStartRef.current = 0;
@@ -612,6 +654,7 @@ export function useVoiceConnection(options?: UseVoiceConnectionOptions): UseVoic
     }
     scheduledSourcesRef.current.forEach((s) => { try { s.onended = null; s.stop(); } catch (_) {} });
     scheduledSourcesRef.current.clear();
+    if (idleGraceRef.current) { clearTimeout(idleGraceRef.current); idleGraceRef.current = null; }
     playQueueRef.current = [];
     playingRef.current = false;
     nextStartRef.current = 0;
