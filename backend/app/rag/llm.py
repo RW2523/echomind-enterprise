@@ -42,6 +42,90 @@ def _log_chat_request(url: str, payload: dict, stream: bool) -> None:
 _ENABLE_THINKING = (__import__("os").getenv("LLM_ENABLE_THINKING", "0").strip().lower() in ("1", "true", "yes"))
 _EXTRA = {} if _ENABLE_THINKING else {"chat_template_kwargs": {"enable_thinking": False}}
 
+# Greedy-ish decoding (temp 0.2) with no repetition suppression let Qwen3 fall into exact
+# repetition loops — observed as an answer tail of "page 22, " repeated hundreds of times
+# while emitting inline citations. A gentle frequency penalty makes the loop unlikely;
+# the tail-loop guard below removes it when it still happens. TRT-LLM's OpenAI endpoint
+# accepts both penalty fields (verified against trtllm-serve 1.2.0rc6).
+_FREQ_PENALTY = float(os.getenv("ECHOMIND_LLM_FREQ_PENALTY", "0.2"))
+_PRES_PENALTY = float(os.getenv("ECHOMIND_LLM_PRES_PENALTY", "0.0"))
+if _FREQ_PENALTY:
+    _EXTRA["frequency_penalty"] = _FREQ_PENALTY
+if _PRES_PENALTY:
+    _EXTRA["presence_penalty"] = _PRES_PENALTY
+
+
+# ── Repetition-loop guard ───────────────────────────────────────────────────────
+# Detects a short unit repeated verbatim at the tail of the text (the signature of a
+# decode-time degeneration loop). The unit must contain a letter or digit so that
+# legitimate runs of dashes/pipes (tables, rules) never trigger it.
+
+def _find_tail_loop(text: str, min_unit: int = 4, max_unit: int = 60,
+                    min_reps: int = 4, min_span: int = 24):
+    """Return (unit, reps) if text ends with `unit` repeated >= min_reps times
+    covering >= min_span chars, else None."""
+    tail = text[-600:]
+    n = len(tail)
+    for unit_len in range(min_unit, min(max_unit, n // min_reps) + 1):
+        unit = tail[n - unit_len:]
+        if not any(ch.isalnum() for ch in unit):
+            continue
+        reps = 1
+        i = n - unit_len
+        while i - unit_len >= 0 and tail[i - unit_len:i] == unit:
+            reps += 1
+            i -= unit_len
+        if reps >= min_reps and reps * unit_len >= min_span:
+            return unit, reps
+    return None
+
+
+_SENT_TAIL_RE = re.compile(r'[.!?:]["\'\u201d\u2019)\]]*\s')
+
+
+def trim_to_sentence_end(text: str) -> str:
+    """If an answer stops mid-sentence (token cap, stream cut), trim back to the last
+    complete sentence — provided that loses at most ~15% of the answer. A truncated
+    answer that ends on a full stop reads finished; one that stops mid-word reads broken."""
+    t = (text or "").rstrip()
+    if not t or t[-1] in '.!?:"\'\u201d\u2019)]':
+        return text
+    last = None
+    for m in _SENT_TAIL_RE.finditer(t):
+        last = m.end()
+    if last and (len(t) - last) <= max(200, int(len(t) * 0.15)):
+        cut = t[:last].rstrip()
+        logger.warning("LLM: mid-sentence tail trimmed — removed %d chars", len(t) - len(cut))
+        return cut
+    return text
+
+
+def finalize_answer(text: str) -> str:
+    """Post-generation cleanup applied to every final answer: collapse degeneration
+    loops, then land the ending on a sentence boundary."""
+    return trim_to_sentence_end(trim_tail_repetition(text))
+
+
+def trim_tail_repetition(text: str) -> str:
+    """Collapse a degeneration loop at the end of an answer to a single occurrence."""
+    if not text:
+        return text
+    hit = _find_tail_loop(text)
+    if not hit:
+        return text
+    unit, _ = hit
+    # Unwind EVERY trailing occurrence (the detector's 600-char window under-counts
+    # long loops), then keep exactly one so the sentence still reads naturally.
+    cut = len(text)
+    while cut >= len(unit) and text[cut - len(unit):cut] == unit:
+        cut -= len(unit)
+    cleaned = (text[:cut] + unit).rstrip(" ,;·-")
+    logger.warning(
+        "LLM: repetition loop trimmed — unit=%r removed %d trailing chars",
+        unit[:40], len(text) - len(cleaned),
+    )
+    return cleaned
+
 
 # ── Reasoning-leak guard ────────────────────────────────────────────────────────
 # Qwen3-30B on TRT-LLM intermittently (~6% of short answers, sampling-dependent) fails to
@@ -90,7 +174,7 @@ class OpenAICompatChat:
             r = await client.post(f"{self.base_url}/chat/completions", json=payload)
             r.raise_for_status()
             j=r.json()
-            out = strip_reasoning_leak((j["choices"][0]["message"]["content"] or "").strip())
+            out = finalize_answer(strip_reasoning_leak((j["choices"][0]["message"]["content"] or "").strip()))
         elapsed_ms = (time.monotonic() - t0) * 1000
         usage = j.get("usage") or {}
         logger.info(
@@ -139,6 +223,9 @@ class OpenAICompatChat:
                                 _acc += content
                                 if _LEAK_RE.search(_acc[-400:]):
                                     logger.warning("LLM stream: reasoning leak detected — cutting stream")
+                                    break
+                                if _find_tail_loop(_acc):
+                                    logger.warning("LLM stream: repetition loop detected — cutting stream")
                                     break
                                 if ttft_mono is None:
                                     ttft_mono = time.monotonic()

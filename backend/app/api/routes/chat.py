@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from ...utils.ids import new_id, now_iso
 from ...core.config import settings
 from ...core.db import get_conn
+from ...rag.advanced import set_speech_style
 from ...rag.advanced import (
     answer as answer_with_citations,
     answer_stream,
@@ -322,6 +323,7 @@ def _fetch_transcripts_since_hours(last_hours: float) -> list[dict]:
 @router.post("/ask-voice")
 async def ask_voice(inp: AskVoiceIn, request: Request):
     set_active_namespace(_effective_ns(request, inp.namespace))
+    set_speech_style(True)
     msg = (inp.message or "").strip()
     last_hours = _parse_transcript_time_query(msg)
     if last_hours is not None:
@@ -357,6 +359,7 @@ async def ask_voice_stream(inp: AskVoiceIn, request: Request):
 
     async def gen():
         set_active_namespace(_effective_ns(request, inp.namespace))
+        set_speech_style(True)
         msg = (inp.message or "").strip()
         last_hours = _parse_transcript_time_query(msg)
         if last_hours is not None:
