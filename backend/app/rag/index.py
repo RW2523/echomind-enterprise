@@ -627,8 +627,65 @@ class FaissIndex:
             await self.glossary_index.add_entries(glossary_entries)
             logger.info("index: added %d glossary entries for doc_id=%s", len(glossary_entries), doc_id)
 
-    async def add_text(self, title: str, text: str, meta: dict) -> dict:
-        return await self.add_document(title, "text", text, meta)
+    async def add_text(self, title: str, text: str, meta: dict, namespace: Optional[str] = None) -> dict:
+        # Live transcripts used to land in 'default' regardless of the session's vertical
+        # namespace, making them unreachable from a namespaced live-check. Honor an explicit
+        # namespace, else one carried in meta, else default.
+        ns = (namespace or (meta or {}).get("namespace") or "default").strip() or "default"
+        return await self.add_document(title, "text", text, meta, namespace=ns)
+
+    def search_chunks_exact(
+        self,
+        terms: List[str],
+        k: int = 10,
+        include_transcripts: bool = True,
+    ) -> List[Dict]:
+        """Exact / normalized substring lookup of identifiers and names straight in SQLite.
+
+        Dense and BM25 search cannot find 'policy 44821' or a phone number reliably (numbers
+        are IDF-poor and embed weakly). For record pulls we need the literal token. Each term
+        is matched two ways: as typed (case-insensitive) and with spaces/hyphens/slashes/dots
+        removed on both sides, so '4482-1', '44 821' and '44821' all hit. Namespace-safe."""
+        clean = [t.strip() for t in (terms or []) if t and len(t.strip()) >= 3]
+        if not clean:
+            return []
+        out: List[Dict] = []
+        seen: set = set()
+        norm_expr = "REPLACE(REPLACE(REPLACE(REPLACE(LOWER(c.text),' ',''),'-',''),'/',''),'.','')"
+        with get_conn() as conn:
+            for term in clean:
+                low = term.lower()
+                norm = re.sub(r"[\s\-/.]", "", low)
+                conds = ["LOWER(c.text) LIKE ?"]
+                params: list = [f"%{low}%"]
+                if norm and norm != low and len(norm) >= 3:
+                    conds.append(f"{norm_expr} LIKE ?")
+                    params.append(f"%{norm}%")
+                if not include_transcripts:
+                    conds_sql = "(" + " OR ".join(conds) + ") AND d.filename NOT LIKE 'transcript_%'"
+                else:
+                    conds_sql = "(" + " OR ".join(conds) + ")"
+                rows = conn.execute(
+                    f"""SELECT c.id, c.text, c.source_json FROM chunks c
+                        JOIN documents d ON c.doc_id = d.id
+                        WHERE {conds_sql} LIMIT ?""",
+                    (*params, max(k * 4, 20)),
+                ).fetchall()
+                for cid, text, sj in rows:
+                    if cid in seen:
+                        continue
+                    try:
+                        src = json.loads(sj) if sj else {}
+                    except Exception:
+                        src = {}
+                    if not _ns_ok(src):
+                        continue
+                    seen.add(cid)
+                    src = {**src, "match_term": term}
+                    out.append({"chunk_id": cid, "score": 1.0, "score_kind": "exact", "text": text, "source": src})
+                    if len(out) >= k * len(clean):
+                        break
+        return out[: max(k, 1) * max(1, len(clean))]
 
     def clear_all(self) -> None:
         """Clear all indexes and persisted files (no re-embedding)."""

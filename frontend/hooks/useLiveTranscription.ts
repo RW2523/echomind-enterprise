@@ -1,7 +1,25 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { transcribeWsUrl, getTranscriptTags, updateTranscript, createBoardroomSession, uploadBoardroomChunk, finalizeBoardroomSession, getBoardroomSession, linkBoardroomTranscript } from "../services/backend";
-import type { AnalysisCard, TranscriptSegment, BoardroomSession } from "../types";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { transcribeWsUrl, getTranscriptTags, updateTranscript, createBoardroomSession, uploadBoardroomChunk, finalizeBoardroomSession, getBoardroomSession, linkBoardroomTranscript, getScenarios } from "../services/backend";
+import type {
+  AnalysisCard, TranscriptSegment, BoardroomSession,
+  ScenarioId, Scenario, AnalysisMode, Role, TagSpec, SentenceCheck, CheckStatus,
+  DetectedEntity, Subject, RecordHit, ActionItem, SessionAck, WsWarning, ScenarioSuggestion,
+} from "../types";
 import { getActiveNamespace } from "../packs";
+import { FALLBACK_SCENARIOS, findScenario, deriveActionItems, deriveLegacyLabel, asCheck } from "../utils/silentAssistant";
+
+const SCENARIO_STORAGE_KEY = "echomind.scenario";
+const WARNING_TTL_MS = 25000;
+
+function loadScenarioPref(): ScenarioId {
+  try {
+    const v = localStorage.getItem(SCENARIO_STORAGE_KEY);
+    return (v && v.trim()) ? (v as ScenarioId) : "auto";
+  } catch { return "auto"; }
+}
+function saveScenarioPref(v: ScenarioId) {
+  try { localStorage.setItem(SCENARIO_STORAGE_KEY, v); } catch {}
+}
 
 /** Kyutai STT sample rate (24kHz). Backend sends this in ready message. */
 const KYUTAI_SAMPLE_RATE = 24000;
@@ -65,13 +83,57 @@ export interface UseLiveTranscriptionReturn {
   setBoardroomSession: (s: BoardroomSession | null) => void;
   boardroomUploading: boolean;
   endBoardroomSession: () => Promise<void>;
+
+  // ── Silent Assistant v2 ────────────────────────────────────────────────────
+  /** User's scenario preference ('auto' = let the server detect). Persisted in localStorage. */
+  scenario: ScenarioId;
+  /** Set scenario; when live also sends {type:'scenario'} so the server switches profile. */
+  setScenario: (id: ScenarioId) => void;
+  /** Scenario profiles from GET /api/transcribe/scenarios (static fallback until loaded). */
+  scenarios: Scenario[];
+  /** Server-detected scenario suggestion (accept -> setScenario, dismiss -> hide). */
+  scenarioSuggestion: ScenarioSuggestion | null;
+  acceptScenarioSuggestion: () => void;
+  dismissScenarioSuggestion: () => void;
+  /** KB namespace to search ('' = all documents). Default = active vertical pack. */
+  kbNamespace: string;
+  setKbNamespace: (ns: string) => void;
+  analysisMode: AnalysisMode;
+  /** Set analysis mode; when live also sends {type:'analysis_mode'} (see PROTOCOL notes). */
+  setAnalysisMode: (m: AnalysisMode) => void;
+  /** Optional 'who is on the call' name -> start.subject_hint.name */
+  subjectHint: string;
+  setSubjectHint: (v: string) => void;
+  /** Role currently speaking (role id from session.roles) or null = unknown. */
+  myRole: Role | null;
+  /** Sends {type:'speaker', role}. */
+  setSpeakerRole: (role: Role | null) => void;
+  /** Tag vocabulary + role ids from the `session` ack (fallback: profile defaults). */
+  tagVocab: TagSpec[];
+  roles: { me: Role; other: Role };
+  sessionAck: SessionAck | null;
+  /** Sentence checks keyed by sentence_id (legacy analysis payloads fall back to segment_id). */
+  checks: Record<string, SentenceCheck>;
+  /** Per-sentence lifecycle (pending / checked / skipped / timeout / no_tags). */
+  sentenceStatus: Record<string, CheckStatus>;
+  entities: DetectedEntity[];
+  subjects: Subject[];
+  records: RecordHit[];
+  /** Derived from checks tagged action-item / commitment / decision. */
+  actionItems: ActionItem[];
+  wsWarning: WsWarning | null;
+  clearWarning: () => void;
+  confirmSubject: (subjectId: string) => void;
+  rejectSubject: (subjectId: string) => void;
+  /** Sentence id selected in the transcript / checks (bidirectional highlight). */
+  selectedSentenceId: string | null;
+  setSelectedSentenceId: (id: string | null) => void;
 }
 
 export function useLiveTranscription(defaultName: () => string): UseLiveTranscriptionReturn {
   const [fullTranscript, setFullTranscript] = useState("");
   const [partial, setPartial] = useState("");
   const [transcriptSegments, setTranscriptSegments] = useState<TranscriptSegment[]>([]);
-  const [analysisCards, setAnalysisCards] = useState<AnalysisCard[]>([]);
   const [analyzingSegmentIds, setAnalyzingSegmentIds] = useState<Set<string>>(new Set());
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
@@ -88,6 +150,42 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [newTagInput, setNewTagInput] = useState("");
   const [micMuted, setMicMuted] = useState(false);
+
+  // ── Silent Assistant v2 state ─────────────────────────────────────────────
+  const [scenario, setScenarioState] = useState<ScenarioId>(() => loadScenarioPref());
+  const [scenarios, setScenarios] = useState<Scenario[]>(FALLBACK_SCENARIOS);
+  const [scenarioSuggestion, setScenarioSuggestion] = useState<ScenarioSuggestion | null>(null);
+  const [kbNamespace, setKbNamespaceState] = useState<string>(() => getActiveNamespace());
+  const [analysisMode, setAnalysisModeState] = useState<AnalysisMode>(() =>
+    loadScenarioPref() === "general" ? "flags_only" : "flags_and_records"
+  );
+  const [subjectHint, setSubjectHint] = useState("");
+  const [myRole, setMyRole] = useState<Role | null>(null);
+  const [sessionAck, setSessionAck] = useState<SessionAck | null>(null);
+  const [checks, setChecks] = useState<Record<string, SentenceCheck>>({});
+  const [sentenceStatus, setSentenceStatus] = useState<Record<string, CheckStatus>>({});
+  const [entities, setEntities] = useState<DetectedEntity[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [records, setRecords] = useState<RecordHit[]>([]);
+  const [wsWarning, setWsWarning] = useState<WsWarning | null>(null);
+  const [selectedSentenceId, setSelectedSentenceId] = useState<string | null>(null);
+  const scenarioRef = useRef<ScenarioId>(scenario);
+  scenarioRef.current = scenario;
+  const scenariosRef = useRef<Scenario[]>(scenarios);
+  scenariosRef.current = scenarios;
+  const kbNamespaceRef = useRef(kbNamespace);
+  kbNamespaceRef.current = kbNamespace;
+  const analysisModeRef = useRef(analysisMode);
+  analysisModeRef.current = analysisMode;
+  const analysisModeTouchedRef = useRef(false);
+  const subjectHintRef = useRef("");
+  subjectHintRef.current = subjectHint;
+  const myRoleRef = useRef<Role | null>(null);
+  myRoleRef.current = myRole;
+  const dismissedSuggestionsRef = useRef<Set<string>>(new Set());
+  const resolvedScenarioRef = useRef<string | null>(null); // server-side scenario from the last `session` ack
+  const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkOrderRef = useRef<string[]>([]); // insertion order of check keys (for analysisCards)
 
   // Boardroom mode state
   const [boardroomMode, setBoardroomMode] = useState(false);
@@ -139,6 +237,68 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     setListening(false);
   }, []);
 
+  /** Send a JSON control message if the socket is open. Returns true when sent. */
+  const wsSend = useCallback((payload: Record<string, unknown>): boolean => {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+      return true;
+    }
+    return false;
+  }, []);
+
+  /** Clear all Silent Assistant v2 state (new session / clear). */
+  const resetAssistantState = useCallback(() => {
+    setChecks({});
+    checkOrderRef.current = [];
+    setSentenceStatus({});
+    setEntities([]);
+    setSubjects([]);
+    setRecords([]);
+    setSessionAck(null);
+    resolvedScenarioRef.current = null;
+    setScenarioSuggestion(null);
+    dismissedSuggestionsRef.current = new Set();
+    setMyRole(null);
+    setSelectedSentenceId(null);
+    setWsWarning(null);
+    if (warningTimerRef.current) { clearTimeout(warningTimerRef.current); warningTimerRef.current = null; }
+  }, []);
+
+  const showWarning = useCallback((code: string, message: string) => {
+    setWsWarning({ code, message, at: Date.now() });
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    warningTimerRef.current = setTimeout(() => setWsWarning(null), WARNING_TTL_MS);
+  }, []);
+
+  /** Upsert a check (keyed by sentence_id, falling back to segment_id for legacy payloads). */
+  const upsertCheck = useCallback((raw: any): SentenceCheck => {
+    const key: string = raw.sentence_id || raw.segment_id;
+    // Defensive normalisation: tags may arrive as plain ids, evidence may omit `kind`.
+    const tags = Array.isArray(raw.tags)
+      ? raw.tags.map((t: any) => (typeof t === "string" ? { tag: t } : t)).filter((t: any) => t && t.tag)
+      : [];
+    const evidence = Array.isArray(raw.evidence)
+      ? raw.evidence.filter((e: any) => e && typeof e.quote === "string").map((e: any) => ({ ...e, kind: e.kind ?? (e.rule_id ? "rule" : "document") }))
+      : [];
+    const check: SentenceCheck = asCheck({
+      ...raw,
+      tags,
+      evidence,
+      id: raw.id ?? key,
+      segment_id: raw.segment_id ?? key,
+      segment_text: raw.segment_text ?? raw.sentence_text ?? "",
+      sentence_id: key,
+      sentence_text: raw.sentence_text ?? raw.segment_text ?? "",
+      label: raw.label ?? deriveLegacyLabel({ ...raw, tags }),
+      status: "checked",
+    });
+    if (!checkOrderRef.current.includes(key)) checkOrderRef.current = [...checkOrderRef.current, key];
+    setChecks((prev) => ({ ...prev, [key]: check }));
+    setSentenceStatus((prev) => ({ ...prev, [key]: "checked" }));
+    return check;
+  }, []);
+
   const doStart = useCallback(
     async (name: string, location: string, isReconnect = false) => {
       if (listeningRef.current && !isReconnect) return;
@@ -150,8 +310,15 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         setFullTranscript("");
         setPartial("");
         setTranscriptSegments([]);
-        setAnalysisCards([]);
         setSelectedSegmentId(null);
+        resetAssistantState();
+      } else {
+        // The new server session has no memory of pending sentences from before the drop.
+        setSentenceStatus((prev) => {
+          const next: Record<string, CheckStatus> = {};
+          for (const [k, v] of Object.entries(prev)) if (v !== "pending") next[k] = v;
+          return next;
+        });
       }
       // Always clear in-flight analysis spinners: the new connection is a fresh server session
       // and will never emit analysis_done for paragraph ids from before the drop. (audit M)
@@ -182,42 +349,57 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             // partial_text = text of the current live paragraph (not yet committed as a segment).
             // Falls back to full text when no segments exist yet (first ~2 s of speech).
             setPartial(msg.partial_text ?? "");
-            // Update segment texts from partial payload
+            // Update segment texts from partial payload (preserve v1 label + v2 role/sentences)
             if (Array.isArray(msg.segments)) {
               setTranscriptSegments((prev) => {
                 const prevMap = new Map(prev.map((s) => [s.paragraph_id, s]));
-                return msg.segments.map((s: { paragraph_id: string; text: string }) => ({
-                  paragraph_id: s.paragraph_id,
-                  text: s.text,
-                  label: prevMap.get(s.paragraph_id)?.label,
-                  confidence: prevMap.get(s.paragraph_id)?.confidence,
-                }));
+                return msg.segments.map((s: { paragraph_id: string; text: string; role?: string | null; sentences?: any[] }) => {
+                  const p = prevMap.get(s.paragraph_id);
+                  return {
+                    paragraph_id: s.paragraph_id,
+                    text: s.text,
+                    label: p?.label,
+                    confidence: p?.confidence,
+                    role: s.role ?? p?.role,
+                    sentences: Array.isArray(s.sentences) ? s.sentences : p?.sentences,
+                  };
+                });
               });
             }
           }
           if (msg.type === "segment") {
-            // A paragraph has been completed — add/update in segments list
+            // A paragraph has been completed — add/update in segments list (+ v2 role/sentences)
+            const patch: Partial<TranscriptSegment> = { text: msg.text };
+            if (msg.role !== undefined) patch.role = msg.role;
+            if (Array.isArray(msg.sentences)) patch.sentences = msg.sentences;
             setTranscriptSegments((prev) => {
               const exists = prev.find((s) => s.paragraph_id === msg.paragraph_id);
               if (exists) {
                 return prev.map((s) =>
-                  s.paragraph_id === msg.paragraph_id ? { ...s, text: msg.text } : s
+                  s.paragraph_id === msg.paragraph_id ? { ...s, ...patch } : s
                 );
               }
-              return [...prev, { paragraph_id: msg.paragraph_id, text: msg.text }];
+              return [...prev, { paragraph_id: msg.paragraph_id, text: msg.text, ...patch }];
             });
           }
           if (msg.type === "analysis_start") {
-            // Silent Assistant started analyzing this segment — show spinner
+            // Silent Assistant started analyzing this segment/sentence — show spinner
             setAnalyzingSegmentIds((prev) => new Set([...prev, msg.segment_id]));
+            const key: string | undefined = msg.sentence_id || msg.segment_id;
+            if (key) setSentenceStatus((prev) => (prev[key] === "checked" ? prev : { ...prev, [key]: "pending" }));
           }
           if (msg.type === "analysis_done") {
-            // Analysis finished (no result to show) — clear spinner
+            // Analysis finished (no result to show) — clear spinner, record status
             setAnalyzingSegmentIds((prev) => {
               const next = new Set(prev);
               next.delete(msg.segment_id);
               return next;
             });
+            const key: string | undefined = msg.sentence_id || msg.segment_id;
+            const status: CheckStatus =
+              msg.status === "checked" || msg.status === "skipped" || msg.status === "timeout" || msg.status === "no_tags"
+                ? msg.status : "checked";
+            if (key) setSentenceStatus((prev) => (prev[key] === "checked" && status !== "checked" ? prev : { ...prev, [key]: status }));
           }
           if (msg.type === "analysis") {
             // Silent Assistant result — add card, annotate segment, clear spinner
@@ -226,33 +408,83 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
               next.delete(msg.segment_id);
               return next;
             });
-            const card: AnalysisCard = {
-              id: msg.id,
-              segment_id: msg.segment_id,
-              segment_text: msg.segment_text,
-              label: msg.label,
-              confidence: msg.confidence,
-              explanation: msg.explanation,
-              source_chunks: msg.source_chunks || [],
+            const check = upsertCheck(msg);
+            // Legacy annotate: segment-level label (only when the payload is segment-scoped, i.e. v1)
+            if (!msg.sentence_id || msg.sentence_id === msg.segment_id) {
+              setTranscriptSegments((prev) =>
+                prev.map((s) =>
+                  s.paragraph_id === msg.segment_id
+                    ? { ...s, label: check.label, confidence: check.confidence }
+                    : s
+                )
+              );
+            }
+          }
+          if (msg.type === "session") {
+            const ack: SessionAck = {
+              session_id: msg.session_id,
+              scenario: msg.scenario,
+              scenario_label: msg.scenario_label ?? msg.scenario,
+              namespace: msg.namespace ?? "",
+              analysis_mode: msg.analysis_mode ?? analysisModeRef.current,
+              kb_docs: typeof msg.kb_docs === "number" ? msg.kb_docs : 0,
+              roles: msg.roles ?? { me: "me", other: "other" },
+              tag_vocab: Array.isArray(msg.tag_vocab) ? msg.tag_vocab : [],
             };
-            setAnalysisCards((prev) => {
-              // Replace if same segment already has a card
-              const exists = prev.findIndex((c) => c.segment_id === msg.segment_id);
-              if (exists >= 0) {
-                const next = [...prev];
-                next[exists] = card;
-                return next;
-              }
-              return [...prev, card];
+            setSessionAck(ack);
+            resolvedScenarioRef.current = ack.scenario ?? null;
+            // Adopt the server's effective analysis mode unless the user explicitly picked one.
+            if (!analysisModeTouchedRef.current && ack.analysis_mode) setAnalysisModeState(ack.analysis_mode);
+            // A suggestion for the scenario we now run is moot.
+            setScenarioSuggestion((s) => (s && s.scenario === ack.scenario ? null : s));
+            // Keep the chosen speaker role valid across a profile switch (role ids change per profile).
+            const cur = myRoleRef.current;
+            if (cur && cur !== ack.roles.me && cur !== ack.roles.other) {
+              setMyRole(null);
+            }
+          }
+          if (msg.type === "warning") {
+            showWarning(msg.code ?? "warning", msg.message ?? "");
+          }
+          if (msg.type === "overloaded") {
+            showWarning("overloaded", msg.message ?? "Server is overloaded — analysis may lag.");
+          }
+          if (msg.type === "entity" && msg.id) {
+            const ent: DetectedEntity = msg;
+            setEntities((prev) => {
+              const i = prev.findIndex((e) => e.id === ent.id);
+              if (i >= 0) { const next = [...prev]; next[i] = ent; return next; }
+              return [...prev, ent];
             });
-            // Annotate the matching segment with the label
-            setTranscriptSegments((prev) =>
-              prev.map((s) =>
-                s.paragraph_id === msg.segment_id
-                  ? { ...s, label: msg.label, confidence: msg.confidence }
-                  : s
-              )
-            );
+          }
+          if (msg.type === "subject" && msg.id) {
+            const sub: Subject = {
+              id: msg.id, kind: msg.kind ?? "person", display_name: msg.display_name ?? "Unknown",
+              matched_fields: Array.isArray(msg.matched_fields) ? msg.matched_fields : [],
+              entity_ids: Array.isArray(msg.entity_ids) ? msg.entity_ids : [],
+              confidence: msg.confidence, status: msg.status ?? "candidate", records_count: msg.records_count,
+            };
+            setSubjects((prev) => {
+              const i = prev.findIndex((s) => s.id === sub.id);
+              if (i >= 0) { const next = [...prev]; next[i] = sub; return next; }
+              return [...prev, sub];
+            });
+          }
+          if (msg.type === "record" && msg.id) {
+            const rec: RecordHit = { ...msg, quotes: Array.isArray(msg.quotes) ? msg.quotes : [], title: msg.title ?? msg.doc_title ?? "Record" };
+            setRecords((prev) => {
+              const i = prev.findIndex((r) => r.id === rec.id);
+              if (i >= 0) { const next = [...prev]; next[i] = rec; return next; }
+              return [...prev, rec];
+            });
+          }
+          if (msg.type === "scenario_suggest" && msg.scenario) {
+            const sid: string = msg.scenario;
+            const dismissed = dismissedSuggestionsRef.current.has(sid);
+            const alreadyRunning = sid === resolvedScenarioRef.current || sid === (scenarioRef.current === "auto" ? null : scenarioRef.current);
+            if (!dismissed && !alreadyRunning) {
+              setScenarioSuggestion({ scenario: sid, confidence: Number(msg.confidence) || 0, reason: msg.reason });
+            }
           }
           if (msg.type === "final") {
             const t = (msg.text ?? "").trim();
@@ -264,12 +496,17 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             if (Array.isArray(msg.segments)) {
               setTranscriptSegments((prev) => {
                 const prevMap = new Map(prev.map((s) => [s.paragraph_id, s]));
-                return msg.segments.map((s: { paragraph_id: string; text: string }) => ({
-                  paragraph_id: s.paragraph_id,
-                  text: s.text,
-                  label: prevMap.get(s.paragraph_id)?.label,
-                  confidence: prevMap.get(s.paragraph_id)?.confidence,
-                }));
+                return msg.segments.map((s: { paragraph_id: string; text: string; role?: string | null; sentences?: any[] }) => {
+                  const p = prevMap.get(s.paragraph_id);
+                  return {
+                    paragraph_id: s.paragraph_id,
+                    text: s.text,
+                    label: p?.label,
+                    confidence: p?.confidence,
+                    role: s.role ?? p?.role,
+                    sentences: Array.isArray(s.sentences) ? s.sentences : p?.sentences,
+                  };
+                });
               });
             }
           }
@@ -392,6 +629,16 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       // Send the AudioContext's ACTUAL sample rate, not the requested 16k. The {sampleRate} hint
       // is not always honored (Safari/Android frequently stay at 48k); the backend resamples to
       // 16k, but only if told the true rate — otherwise audio is fed in 3x too fast = garbled. (audit H2)
+      // Silent Assistant v2 start fields (additive; old servers ignore unknown keys).
+      const chosenScenario = scenarioRef.current;
+      const profile = chosenScenario !== "auto" ? findScenario(scenariosRef.current, chosenScenario) : undefined;
+      const hintName = (subjectHintRef.current || "").trim();
+      const participants = profile
+        ? [
+            { role: profile.roles.me },
+            hintName ? { role: profile.roles.other, name: hintName } : { role: profile.roles.other },
+          ]
+        : undefined;
       ws.send(
         JSON.stringify({
           type: "start",
@@ -400,10 +647,18 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
           language: "en",
           name: name || undefined,
           location: location || undefined,
-          namespace: getActiveNamespace() || undefined,
+          namespace: kbNamespaceRef.current || undefined,
           analysis_always_surface: true,
+          scenario: chosenScenario || "auto",
+          participants,
+          subject_hint: hintName ? { name: hintName } : undefined,
+          analysis_mode: analysisModeRef.current,
         })
       );
+      // Re-assert the speaker role after a reconnect (new server session starts as 'unknown').
+      if (isReconnect && myRoleRef.current) {
+        ws.send(JSON.stringify({ type: "speaker", role: myRoleRef.current }));
+      }
 
       // NOTE: do NOT reset reconnectAttemptsRef here. Resetting right after the handshake means a
       // server that accepts then immediately drops the socket never reaches MAX_RECONNECT_ATTEMPTS
@@ -462,7 +717,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         }
       }
     },
-    [stopMic]
+    [stopMic, resetAssistantState, showWarning, upsertCheck]
   );
 
   const clearAndReset = useCallback(() => {
@@ -473,7 +728,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     setFullTranscript("");
     setPartial("");
     setTranscriptSegments([]);
-    setAnalysisCards([]);
+    resetAssistantState();
     setAnalyzingSegmentIds(new Set());
     setSelectedSegmentId(null);
     setSessionName("");
@@ -495,7 +750,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     boardroomChunkIndexRef.current = 0;
     boardroomSessionIdRef.current = null;
     setBoardroomSession(null);
-  }, [stopMic]);
+  }, [stopMic, resetAssistantState]);
 
   const startSession = useCallback(
     async (name: string, location: string) => {
@@ -506,7 +761,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       setSessionStartedAt(new Date());
       setCustomTags([]);
       setTranscriptSegments([]);
-      setAnalysisCards([]);
+      resetAssistantState();
       setAnalyzingSegmentIds(new Set());
       setSelectedSegmentId(null);
       transcriptForTagsRef.current = "";
@@ -527,7 +782,96 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
 
       await doStart(name, location);
     },
-    [doStart]
+    [doStart, resetAssistantState]
+  );
+
+  // ── Silent Assistant v2 controls ──────────────────────────────────────────
+
+  // Load scenario profiles once (static fallback keeps the UI usable if the endpoint is missing).
+  useEffect(() => {
+    let cancelled = false;
+    getScenarios()
+      .then((list) => { if (!cancelled && Array.isArray(list) && list.length) setScenarios(list); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const setScenario = useCallback((id: ScenarioId) => {
+    const next = (id || "auto") as ScenarioId;
+    setScenarioState(next);
+    saveScenarioPref(next);
+    setScenarioSuggestion((s) => (s && s.scenario === next ? null : s));
+    // Default analysis mode follows the profile unless the user picked one explicitly.
+    if (!analysisModeTouchedRef.current) {
+      const prof = next === "auto" ? undefined : findScenario(scenariosRef.current, next);
+      setAnalysisModeState(prof ? prof.analysis_mode_default : "flags_and_records");
+    }
+    // Live: ask the server to switch profile (it re-sends `session`).
+    wsSend({ type: "scenario", scenario: next });
+  }, [wsSend]);
+
+  const acceptScenarioSuggestion = useCallback(() => {
+    const s = scenarioSuggestion;
+    if (!s) return;
+    setScenario(s.scenario);
+    setScenarioSuggestion(null);
+  }, [scenarioSuggestion, setScenario]);
+
+  const dismissScenarioSuggestion = useCallback(() => {
+    if (scenarioSuggestion) dismissedSuggestionsRef.current.add(String(scenarioSuggestion.scenario));
+    setScenarioSuggestion(null);
+  }, [scenarioSuggestion]);
+
+  const setKbNamespace = useCallback((ns: string) => {
+    setKbNamespaceState(ns ?? "");
+  }, []);
+
+  const setAnalysisMode = useCallback((m: AnalysisMode) => {
+    analysisModeTouchedRef.current = true;
+    setAnalysisModeState(m);
+    // Not in PROTOCOL.md yet: mid-session mode switch. Harmless if the server ignores it.
+    wsSend({ type: "analysis_mode", analysis_mode: m });
+  }, [wsSend]);
+
+  const setSpeakerRole = useCallback((role: Role | null) => {
+    setMyRole(role);
+    wsSend({ type: "speaker", role: role ?? null });
+  }, [wsSend]);
+
+  const answerSubject = useCallback((subjectId: string, action: "confirm" | "reject") => {
+    setSubjects((prev) => prev.map((s) => (s.id === subjectId ? { ...s, status: action === "confirm" ? "confirmed" : "rejected" } : s)));
+    wsSend({ type: "subject", subject_id: subjectId, action });
+  }, [wsSend]);
+  const confirmSubject = useCallback((id: string) => answerSubject(id, "confirm"), [answerSubject]);
+  const rejectSubject = useCallback((id: string) => answerSubject(id, "reject"), [answerSubject]);
+
+  const clearWarning = useCallback(() => {
+    setWsWarning(null);
+    if (warningTimerRef.current) { clearTimeout(warningTimerRef.current); warningTimerRef.current = null; }
+  }, []);
+
+  // Cards list = checks in arrival order (legacy consumers: AnalysisPanel, TTS summary, Boardroom).
+  const analysisCards: AnalysisCard[] = useMemo(
+    () => checkOrderRef.current.map((k) => checks[k]).filter(Boolean),
+    [checks]
+  );
+  const actionItems = useMemo(() => deriveActionItems(analysisCards as SentenceCheck[]), [analysisCards]);
+
+  const activeProfile = useMemo(() => {
+    const sid = sessionAck?.scenario ?? (scenario === "auto" ? undefined : scenario);
+    return sid ? findScenario(scenarios, sid) : undefined;
+  }, [sessionAck, scenario, scenarios]);
+  const tagVocab: TagSpec[] = useMemo(() => {
+    if (sessionAck?.tag_vocab?.length) return sessionAck.tag_vocab;
+    if (activeProfile?.tag_vocab?.length) return activeProfile.tag_vocab;
+    // 'auto' before the ack: union of every profile's vocab so chips still render with colour.
+    const seen = new Map<string, TagSpec>();
+    for (const p of scenarios) for (const t of p.tag_vocab ?? []) if (!seen.has(t.id)) seen.set(t.id, t);
+    return [...seen.values()];
+  }, [sessionAck, activeProfile, scenarios]);
+  const roles = useMemo(
+    () => sessionAck?.roles ?? activeProfile?.roles ?? { me: "me", other: "other" },
+    [sessionAck, activeProfile]
   );
 
   const endBoardroomSession = useCallback(async () => {
@@ -697,5 +1041,35 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     setBoardroomSession,
     boardroomUploading,
     endBoardroomSession,
+    // Silent Assistant v2
+    scenario,
+    setScenario,
+    scenarios,
+    scenarioSuggestion,
+    acceptScenarioSuggestion,
+    dismissScenarioSuggestion,
+    kbNamespace,
+    setKbNamespace,
+    analysisMode,
+    setAnalysisMode,
+    subjectHint,
+    setSubjectHint,
+    myRole,
+    setSpeakerRole,
+    tagVocab,
+    roles,
+    sessionAck,
+    checks,
+    sentenceStatus,
+    entities,
+    subjects,
+    records,
+    actionItems,
+    wsWarning,
+    clearWarning,
+    confirmSubject,
+    rejectSubject,
+    selectedSentenceId,
+    setSelectedSentenceId,
   };
 }

@@ -32,6 +32,25 @@ def create_session(inp: CreateSessionIn = CreateSessionIn()):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class SessionMetaIn(BaseModel):
+    scenario: Optional[str] = None
+    namespace: Optional[str] = None
+    speaker_map: Optional[dict] = None   # {"Speaker 1": "banker", "Speaker 2": "client"}
+
+
+@router.patch("/sessions/{session_id}/speakers")
+def set_session_meta(session_id: str, inp: SessionMetaIn):
+    """Set the scenario, knowledge namespace and speaker->role map used by the statement
+    checks in /analyse (Silent Assistant v2)."""
+    from ...silent_assistant.profiles import SCENARIOS
+    if inp.scenario is not None and inp.scenario not in SCENARIOS:
+        raise HTTPException(status_code=400, detail=f"unknown scenario {inp.scenario!r}")
+    ok = br.set_session_meta(session_id, scenario=inp.scenario, namespace=inp.namespace, speaker_map=inp.speaker_map)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Session not found or nothing to update")
+    return {"ok": True}
+
+
 @router.get("/sessions")
 def list_sessions(limit: int = 20):
     """List recent boardroom sessions."""

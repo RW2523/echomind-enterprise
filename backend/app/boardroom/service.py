@@ -92,13 +92,19 @@ def get_session(session_id: str) -> Optional[dict]:
     with get_conn() as conn:
         row = conn.execute(
             """SELECT id, transcript_id, status, chunk_count, audio_format,
-                      diarized_json, report_json, created_at, updated_at
+                      diarized_json, report_json, created_at, updated_at,
+                      scenario, namespace, speaker_map_json
                FROM boardroom_sessions WHERE id = ?""",
             (session_id,),
         ).fetchone()
     if not row:
         return None
-    sid, tid, status, chunk_count, afmt, diar_json, report_json, created_at, updated_at = row
+    (sid, tid, status, chunk_count, afmt, diar_json, report_json, created_at, updated_at,
+     scenario, namespace, speaker_map_json) = row
+    try:
+        speaker_map = json.loads(speaker_map_json) if speaker_map_json else {}
+    except Exception:
+        speaker_map = {}
     return {
         "id": sid,
         "transcript_id": tid,
@@ -109,7 +115,29 @@ def get_session(session_id: str) -> Optional[dict]:
         "report": json.loads(report_json) if report_json else None,
         "created_at": created_at,
         "updated_at": updated_at,
+        "scenario": scenario,
+        "namespace": namespace or "",
+        "speaker_map": speaker_map,
     }
+
+
+def set_session_meta(session_id: str, scenario: Optional[str] = None, namespace: Optional[str] = None,
+                     speaker_map: Optional[dict] = None) -> bool:
+    """Operator-set scenario / KB namespace / speaker->role map for a boardroom session."""
+    sets, params = [], []
+    if scenario is not None:
+        sets.append("scenario=?"); params.append(scenario)
+    if namespace is not None:
+        sets.append("namespace=?"); params.append(namespace)
+    if speaker_map is not None:
+        sets.append("speaker_map_json=?"); params.append(json.dumps(speaker_map))
+    if not sets:
+        return False
+    params.append(session_id)
+    with get_conn() as conn:
+        cur = conn.execute(f"UPDATE boardroom_sessions SET {', '.join(sets)} WHERE id=?", params)
+        conn.commit()
+        return cur.rowcount > 0
 
 
 def list_sessions(limit: int = 20) -> list[dict]:
@@ -806,6 +834,45 @@ async def analyse_meeting(session_id: str) -> dict:
 
     report["raw_transcript"] = full_transcript
 
+    # ── Silent Assistant v2: per-statement checks with quoted evidence + record pulls ──
+    # Same engine as the live transcript (sentence tiers, hybrid+CE retrieval, batched verify),
+    # run offline over the diarized turns. Speaker -> role mapping comes from the session's
+    # speaker_map_json (PATCH /sessions/{id}/speakers) when the operator set one.
+    try:
+        from ..silent_assistant.service import check_turns
+        from ..silent_assistant.profiles import profile_for
+        scenario = session.get("scenario") or None
+        namespace = session.get("namespace") or ""
+        speaker_map = session.get("speaker_map") or {}
+        profile = profile_for(scenario, namespace)
+        sa = await check_turns(
+            [{"speaker": s.get("speaker"), "text": s.get("text"), "start": s.get("start"), "end": s.get("end")} for s in segments],
+            profile, namespace=namespace, session_id=f"br-{session_id}", speaker_map=speaker_map,
+        )
+        report["statement_checks"] = sa.get("checks", [])
+        report["records"] = sa.get("records", [])
+        report["entities"] = sa.get("entities", [])
+        report["subjects"] = sa.get("subjects", [])
+        # merge programmatic action items with the LLM's list (dedupe by text prefix)
+        llm_items = report.get("action_items") or []
+        seen = {str(a.get("text") or a)[:60].lower() for a in llm_items if a}
+        for it in sa.get("action_items", []):
+            key = (it.get("text") or "")[:60].lower()
+            if key and key not in seen:
+                llm_items.append({"text": it.get("text"), "owner": it.get("role"), "source": "silent_assistant"})
+                seen.add(key)
+        report["action_items"] = llm_items
+        report["scenario"] = profile.id
+        report["check_summary"] = {
+            "total": len(report["statement_checks"]),
+            "contradicted": sum(1 for c in report["statement_checks"] if c.get("verdict") == "contradicted"),
+            "supported": sum(1 for c in report["statement_checks"] if c.get("verdict") == "supported"),
+            "flags": sum(1 for c in report["statement_checks"] if any(t.get("tag") in ("violating", "risk", "disclosure-missing") for t in c.get("tags", []))),
+            "records": len(report["records"]),
+        }
+    except Exception as e:
+        logger.warning("Boardroom statement checks failed (report still produced): %s", e)
+
     report_json = json.dumps(report)
     _update_status(session_id, "analysed", report_json=report_json)
     return report
@@ -884,6 +951,40 @@ def export_pdf(session_id: str) -> bytes:
             story.append(Paragraph("Recommendations", h2))
             for rec in report["recommendations"]:
                 story.append(Paragraph(f"→ {esc(rec)}", body))
+            story.append(Spacer(1, 12))
+
+        # Silent Assistant v2: statement checks with quoted evidence (problems first)
+        checks = report.get("statement_checks") or []
+        if checks:
+            story.append(Paragraph("Statement Checks with Evidence", h2))
+            cs = report.get("check_summary") or {}
+            story.append(Paragraph(
+                esc(f"{cs.get('total', len(checks))} statements checked · {cs.get('contradicted', 0)} contradicted · "
+                    f"{cs.get('supported', 0)} supported · {cs.get('flags', 0)} compliance/risk flags · {cs.get('records', 0)} records pulled"),
+                tag_style))
+            story.append(Spacer(1, 4))
+            _order = {"contradicted": 0, "supported": 2, "unverified": 3, None: 3}
+            def _rank(c):
+                flag = any(t.get("tag") in ("violating", "risk", "disclosure-missing") for t in c.get("tags", []))
+                return (0 if flag else 1) if c.get("verdict") != "contradicted" else -1, _order.get(c.get("verdict"), 3)
+            for c in sorted(checks, key=_rank)[:40]:
+                tags = ", ".join(t.get("label") or t.get("tag") for t in c.get("tags", [])) or (c.get("verdict") or "")
+                who = f"[{esc(c.get('role') or c.get('speaker') or '')}] " if (c.get("role") or c.get("speaker")) else ""
+                story.append(Paragraph(f"<b>{esc(tags)}</b> — {who}“{esc(c.get('sentence_text') or '')}”", body))
+                if c.get("explanation"):
+                    story.append(Paragraph(f"  {esc(c['explanation'])}", tag_style))
+                for ev in (c.get("evidence") or [])[:2]:
+                    where = esc(ev.get("doc_title") or "Rule") + (f", p.{ev.get('page')}" if ev.get("page") else "")
+                    story.append(Paragraph(f"  ▸ <i>“{esc((ev.get('quote') or '')[:300])}”</i> — {where}", tag_style))
+                story.append(Spacer(1, 3))
+            story.append(Spacer(1, 8))
+        recs = report.get("records") or []
+        if recs:
+            story.append(Paragraph("Records Pulled", h2))
+            for r in recs[:20]:
+                where = esc(r.get("doc_title") or "") + (f", p.{r.get('page')}" if r.get("page") else "")
+                q0 = ((r.get("quotes") or [{}])[0].get("text") or "")[:220]
+                story.append(Paragraph(f"<b>{esc(r.get('kind') or 'record')}</b> · {where}: <i>“{esc(q0)}”</i>", body))
             story.append(Spacer(1, 12))
 
         if segments:

@@ -101,6 +101,181 @@ export interface TranscriptSegment {
   /** Set when an analysis card exists for this segment */
   label?: AnalysisLabel;
   confidence?: number;
+  /** v2: role id of the speaker (from session.roles), null/undefined = unknown */
+  role?: Role | null;
+  /** v2: sentence split of this segment (char offsets relative to `text`) */
+  sentences?: TranscriptSentence[];
+}
+
+// ── Silent Assistant v2 (scenario / sentence checks / records) ───────────────
+
+/** Scenario ids known to the backend profiles (+ 'auto' = let the server pick). */
+export type ScenarioId = 'auto' | 'customer_care' | 'legal' | 'banking' | 'general' | (string & {});
+
+export type AnalysisMode = 'flags_only' | 'flags_and_records';
+
+/** Role id used on the wire, e.g. 'agent' | 'caller' | 'lawyer' | 'client' | 'banker' | 'speaker_a'. */
+export type Role = string;
+
+export type TagTone =
+  | 'green' | 'red' | 'yellow' | 'blue' | 'violet' | 'indigo'
+  | 'teal' | 'orange' | 'amber' | 'grey' | 'cyan' | (string & {});
+
+export type TagProof = 'quote' | 'record' | 'rule' | 'span' | 'none' | (string & {});
+
+export interface TagSpec {
+  id: string;
+  label: string;
+  tone: TagTone;
+  proof: TagProof;
+  description?: string;
+}
+
+export interface Scenario {
+  id: ScenarioId;
+  label: string;
+  description: string;
+  default_namespace: string;
+  roles: { me: Role; other: Role };
+  analysis_mode_default: AnalysisMode;
+  tag_vocab: TagSpec[];
+}
+
+export type EvidenceKind = 'document' | 'transcript' | 'rule' | (string & {});
+
+export interface EvidenceQuote {
+  quote: string;
+  chunk_id?: string | null;
+  doc_id?: string | null;
+  doc_title?: string | null;
+  page?: number | null;
+  section_path?: string | null;
+  kind: EvidenceKind;
+  rule_id?: string | null;
+}
+
+export interface CheckTag {
+  tag: string;
+  label?: string;
+  tone?: TagTone;
+  confidence?: number;
+}
+
+export type CheckVerdict = 'supported' | 'contradicted' | 'unverified' | null;
+export type CheckKind = 'claim' | 'personal_detail' | 'commitment' | 'question' | 'filler' | (string & {});
+/** Per-sentence lifecycle: pending (analysis_start) -> checked | skipped | timeout | no_tags (analysis_done). */
+export type CheckStatus = 'pending' | 'checked' | 'skipped' | 'timeout' | 'no_tags';
+
+/** Superset of AnalysisCard — the v2 `analysis` payload. Legacy fields stay populated by the server. */
+export interface SentenceCheck extends AnalysisCard {
+  session_id?: string;
+  sentence_id: string;
+  sentence_text: string;
+  char_start?: number;
+  char_end?: number;
+  role?: Role | null;
+  kind?: CheckKind;
+  verdict?: CheckVerdict;
+  tags: CheckTag[];
+  evidence: EvidenceQuote[];
+  record_ids: string[];
+  searched_docs: string[];
+  llm_skipped?: boolean;
+  latency_ms?: number;
+  /** TTS-ready phrase for the hand-raise readout */
+  phrase?: string;
+  status?: CheckStatus;
+}
+
+export interface DetectedEntity {
+  id: string;
+  kind: string;
+  value: string;
+  normalized?: string;
+  sentence_id?: string;
+  segment_id?: string;
+  role?: Role | null;
+  confidence?: number;
+  subject_id?: string | null;
+}
+
+export type SubjectKind = 'customer' | 'client' | 'account_holder' | 'counterparty' | 'person' | (string & {});
+export type SubjectStatus = 'candidate' | 'confirmed' | 'rejected';
+
+export interface Subject {
+  id: string;
+  kind: SubjectKind;
+  display_name: string;
+  matched_fields: string[];
+  entity_ids: string[];
+  confidence?: number;
+  status: SubjectStatus;
+  records_count?: number;
+}
+
+export type RecordKind =
+  | 'customer_file' | 'contract' | 'ticket' | 'previous_call' | 'matter' | 'related_case'
+  | 'account' | 'product' | 'policy' | 'kyc' | 'document' | (string & {});
+
+export interface RecordHit {
+  id: string;
+  subject_id?: string | null;
+  entity_id?: string | null;
+  sentence_id?: string;
+  kind: RecordKind;
+  title: string;
+  doc_id?: string | null;
+  doc_title?: string | null;
+  page?: number | null;
+  section_path?: string | null;
+  quotes: { text: string; chunk_id?: string | null }[];
+  score?: number;
+  match?: 'exact' | 'fuzzy' | 'semantic' | (string & {});
+  namespace?: string;
+  source_transcript_id?: string | null;
+}
+
+export interface TranscriptSentence {
+  sentence_id: string;
+  text: string;
+  char_start: number;
+  char_end: number;
+  role?: Role | null;
+}
+
+export interface SessionAck {
+  session_id: string;
+  scenario: ScenarioId;
+  scenario_label: string;
+  namespace: string;
+  analysis_mode: AnalysisMode;
+  kb_docs: number;
+  roles: { me: Role; other: Role };
+  tag_vocab: TagSpec[];
+}
+
+export type WsWarningCode = 'namespace_empty' | 'llm_slow' | 'overloaded' | 'stt_dropped' | (string & {});
+export interface WsWarning { code: WsWarningCode; message: string; at: number }
+
+export interface ScenarioSuggestion { scenario: ScenarioId; confidence: number; reason?: string }
+
+/** Derived from checks tagged action-item / commitment / decision. */
+export interface ActionItem {
+  id: string;
+  sentence_id: string;
+  tag: 'action-item' | 'commitment' | 'decision' | (string & {});
+  role?: Role | null;
+  text: string;
+  check: SentenceCheck;
+}
+
+/** GET /api/transcribe/transcripts/{id}/assistant */
+export interface TranscriptAssistantData {
+  checks: SentenceCheck[];
+  entities: DetectedEntity[];
+  subjects: Subject[];
+  records: RecordHit[];
+  segments: TranscriptSegment[];
 }
 
 export interface DiarizedSegment {

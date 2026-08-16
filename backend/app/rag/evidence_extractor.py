@@ -63,6 +63,10 @@ class EvidenceSentence:
     has_policy_word: bool = False
     has_section_id: bool = False
     chunk_rerank_score: float = 0.0
+    # Provenance (Silent Assistant proof quotes need to point back at the exact chunk/document)
+    chunk_id: str = ""
+    doc_id: str = ""
+    doc_title: str = ""
 
 
 def _get_section_id_for_hit(h: dict) -> str:
@@ -202,6 +206,9 @@ def extract_evidence_sentences(
                 has_policy_word=has_policy,
                 has_section_id=has_section,
                 chunk_rerank_score=chunk_score,
+                chunk_id=str(h.get("chunk_id") or ""),
+                doc_id=str(src.get("doc_id") or ""),
+                doc_title=str(src.get("filename") or src.get("doc_name") or src.get("name") or ""),
             )
             if sid not in by_section:
                 by_section[sid] = []

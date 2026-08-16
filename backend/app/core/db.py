@@ -109,6 +109,65 @@ def init_db():
             conn.execute("CREATE INDEX IF NOT EXISTS idx_ta_transcript ON transcript_analysis(transcript_id)")
         except Exception:
             pass
+        # ── Silent Assistant v2 (sentence-level checks with proof, entities, records) ──
+        # Additive: legacy readers of transcript_analysis keep working (label/confidence/
+        # explanation/source_refs are still written), new columns carry the richer check.
+        for col, typ in (
+            ("sentence_id", "TEXT"), ("paragraph_id", "TEXT"), ("char_start", "INTEGER"),
+            ("char_end", "INTEGER"), ("role", "TEXT"), ("speaker", "TEXT"), ("scenario", "TEXT"),
+            ("namespace", "TEXT"), ("kind", "TEXT"), ("verdict", "TEXT"), ("tags_json", "TEXT"),
+            ("evidence_json", "TEXT"), ("entities_json", "TEXT"), ("record_ids_json", "TEXT"),
+            ("retrieval_meta_json", "TEXT"), ("latency_ms", "INTEGER"), ("model", "TEXT"),
+        ):
+            try:
+                conn.execute(f"ALTER TABLE transcript_analysis ADD COLUMN {col} {typ}")
+            except Exception:
+                pass
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_ta_sentence ON transcript_analysis(session_id, sentence_id)")
+        except Exception:
+            pass
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS transcript_segments(
+                id TEXT PRIMARY KEY, session_id TEXT, transcript_id TEXT, idx INTEGER,
+                text TEXT, role TEXT, speaker TEXT, start_ms INTEGER, end_ms INTEGER,
+                sentences_json TEXT, created_at TEXT)"""
+        )
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS assistant_entities(
+                id TEXT PRIMARY KEY, session_id TEXT, transcript_id TEXT, sentence_id TEXT,
+                kind TEXT, value TEXT, normalized TEXT, role TEXT, confidence REAL,
+                subject_id TEXT, created_at TEXT)"""
+        )
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS assistant_subjects(
+                id TEXT PRIMARY KEY, session_id TEXT, transcript_id TEXT, kind TEXT,
+                display_name TEXT, matched_fields_json TEXT, entity_ids_json TEXT,
+                confidence REAL, status TEXT, created_at TEXT, updated_at TEXT)"""
+        )
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS assistant_records(
+                id TEXT PRIMARY KEY, session_id TEXT, transcript_id TEXT, sentence_id TEXT,
+                subject_id TEXT, entity_id TEXT, kind TEXT, title TEXT, doc_id TEXT,
+                doc_title TEXT, page INTEGER, section_path TEXT, quotes_json TEXT,
+                score REAL, match TEXT, namespace TEXT, source_transcript_id TEXT, created_at TEXT)"""
+        )
+        for tbl in ("transcript_segments", "assistant_entities", "assistant_subjects", "assistant_records"):
+            try:
+                conn.execute(f"CREATE INDEX IF NOT EXISTS idx_{tbl}_session ON {tbl}(session_id)")
+                conn.execute(f"CREATE INDEX IF NOT EXISTS idx_{tbl}_transcript ON {tbl}(transcript_id)")
+            except Exception:
+                pass
+        for col in ("namespace", "scenario"):
+            try:
+                conn.execute(f"ALTER TABLE transcripts ADD COLUMN {col} TEXT")
+            except Exception:
+                pass
+        for col in ("scenario", "namespace", "speaker_map_json"):
+            try:
+                conn.execute(f"ALTER TABLE boardroom_sessions ADD COLUMN {col} TEXT")
+            except Exception:
+                pass
         # session_id on transcripts — lets us always correlate a transcript back to its live session.
         try:
             conn.execute("ALTER TABLE transcripts ADD COLUMN session_id TEXT")

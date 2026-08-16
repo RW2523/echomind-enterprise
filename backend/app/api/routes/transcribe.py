@@ -293,6 +293,68 @@ def get_transcript_analysis(transcript_id: str):
     return {"cards": cards}
 
 
+# ── Silent Assistant v2 ────────────────────────────────────────────────────────
+
+@router.get("/scenarios")
+def list_scenarios():
+    """Scenario profiles the live transcript can run under (customer_care / legal / banking / general)."""
+    from ...silent_assistant.profiles import public_profiles
+    return {"scenarios": public_profiles()}
+
+
+def _rows_where(conn, table: str, cols: str, transcript_id: str, session_id: str | None, order: str = "created_at ASC"):
+    if session_id:
+        return conn.execute(
+            f"SELECT {cols} FROM {table} WHERE transcript_id = ? OR (COALESCE(transcript_id,'')='' AND session_id = ?) ORDER BY {order}",
+            (transcript_id, session_id),
+        ).fetchall()
+    return conn.execute(f"SELECT {cols} FROM {table} WHERE transcript_id = ? ORDER BY {order}", (transcript_id,)).fetchall()
+
+
+def _j(s, default):
+    try:
+        return json.loads(s) if s else default
+    except Exception:
+        return default
+
+
+@router.get("/transcripts/{transcript_id}/assistant")
+def get_transcript_assistant(transcript_id: str):
+    """Everything the Silent Assistant produced for a transcript: sentence checks (with
+    evidence), entities, subjects, pulled records, and segments with sentence offsets."""
+    with get_conn() as conn:
+        trow = conn.execute("SELECT session_id FROM transcripts WHERE id = ?", (transcript_id,)).fetchone()
+        session_id = trow[0] if trow else None
+        chk_rows = _rows_where(conn, "transcript_analysis",
+            "id, session_id, segment_id, segment_text, label, confidence, explanation, source_refs, created_at, "
+            "sentence_id, paragraph_id, char_start, char_end, role, kind, verdict, tags_json, evidence_json, entities_json, "
+            "record_ids_json, retrieval_meta_json, latency_ms, scenario",
+            transcript_id, session_id)
+        ent_rows = _rows_where(conn, "assistant_entities", "id, sentence_id, kind, value, normalized, role, confidence, subject_id", transcript_id, session_id)
+        sub_rows = _rows_where(conn, "assistant_subjects", "id, kind, display_name, matched_fields_json, entity_ids_json, confidence, status", transcript_id, session_id, "updated_at ASC")
+        rec_rows = _rows_where(conn, "assistant_records", "id, sentence_id, subject_id, entity_id, kind, title, doc_id, doc_title, page, section_path, quotes_json, score, match, namespace, source_transcript_id", transcript_id, session_id)
+        seg_rows = _rows_where(conn, "transcript_segments", "id, idx, text, role, start_ms, end_ms, sentences_json", transcript_id, session_id, "idx ASC")
+    checks = []
+    for r in chk_rows:
+        (aid, sid, seg_id, seg_text, label, conf, expl, src_refs, created_at, sentence_id, paragraph_id, cs, ce, role, kind,
+         verdict, tags_json, ev_json, ents_json, rec_json, meta_json, latency_ms, scenario) = r
+        checks.append({
+            "type": "analysis", "id": aid, "session_id": sid, "segment_id": seg_id, "sentence_id": sentence_id or seg_id,
+            "sentence_text": seg_text, "segment_text": seg_text, "char_start": cs, "char_end": ce, "role": role,
+            "kind": kind or "claim", "label": label, "verdict": verdict, "confidence": conf, "explanation": expl,
+            "tags": _j(tags_json, []), "evidence": _j(ev_json, []), "entities": _j(ents_json, []),
+            "record_ids": _j(rec_json, []), "retrieval_meta": _j(meta_json, {}), "latency_ms": latency_ms,
+            "source_chunks": _j(src_refs, []), "scenario": scenario, "created_at": created_at,
+        })
+    return {
+        "checks": checks,
+        "entities": [{"id": r[0], "sentence_id": r[1], "kind": r[2], "value": r[3], "normalized": r[4], "role": r[5], "confidence": r[6], "subject_id": r[7]} for r in ent_rows],
+        "subjects": [{"id": r[0], "kind": r[1], "display_name": r[2], "matched_fields": _j(r[3], []), "entity_ids": _j(r[4], []), "confidence": r[5], "status": r[6]} for r in sub_rows],
+        "records": [{"id": r[0], "sentence_id": r[1], "subject_id": r[2], "entity_id": r[3], "kind": r[4], "title": r[5], "doc_id": r[6], "doc_title": r[7], "page": r[8], "section_path": r[9], "quotes": _j(r[10], []), "score": r[11], "match": r[12], "namespace": r[13], "source_transcript_id": r[14]} for r in rec_rows],
+        "segments": [{"paragraph_id": r[0], "idx": r[1], "text": r[2], "role": r[3], "start_ms": r[4], "end_ms": r[5], "sentences": _j(r[6], [])} for r in seg_rows],
+    }
+
+
 @router.get("/chunks/{chunk_id}/preview")
 def get_chunk_preview(chunk_id: str):
     """Return source chunk text and document metadata for analysis card source preview."""

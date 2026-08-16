@@ -44,6 +44,9 @@ from .store_to_db import (
     update_transcript_tags_and_echotag,
 )
 from .analyzer import analyze_segment
+from ..silent_assistant import service as sa_service
+from ..silent_assistant.profiles import profile_for, SCENARIOS
+from ..silent_assistant.state import SessionAssistantState, Sentence as SASentence
 
 SAMPLE_RATE = NEMOTRON_SAMPLE_RATE
 EMIT_MIN_INTERVAL = 1.0 / max(0.1, getattr(settings, "TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC", 15))
@@ -104,6 +107,10 @@ class _Ctx:
         "periodic_auto_store_task", "consumer_task", "analysis_tasks",
         "emitted_paragraph_ids", "dropped_frames", "last_overload_notify", "store_lock",
         "analysis_sem", "kb_namespace", "analysis_always",
+        # Silent Assistant v2
+        "scenario_id", "profile", "analysis_mode", "participants", "subject_hint",
+        "assistant", "pending", "pending_meta", "batch_task", "idle_task", "last_piece_wall",
+        "segment_idx", "audio_base_ms",
     )
 
     def __init__(self, ws: WebSocket, loop, asr_adapter, stream_ctx):
@@ -130,6 +137,20 @@ class _Ctx:
         self.client_sample_rate: Optional[int] = None
         self.kb_namespace: str = ""          # active vertical KB namespace ("" = whole KB)
         self.analysis_always: bool = False   # Parakeet-style: always surface relevant KB info per paragraph
+        # Silent Assistant v2
+        self.scenario_id: str = "auto"
+        self.profile = profile_for(None, "")
+        self.analysis_mode: str = self.profile.analysis_mode_default
+        self.participants: list = []
+        self.subject_hint: Optional[dict] = None
+        self.assistant: Optional[SessionAssistantState] = None
+        self.pending: list = []               # SASentence awaiting the batched verify
+        self.pending_meta: dict = {}          # sentence_id -> {'records': [...], 'entities': [...]}
+        self.batch_task: Optional[asyncio.Task] = None
+        self.idle_task: Optional[asyncio.Task] = None
+        self.last_piece_wall: float = 0.0
+        self.segment_idx: int = 0
+        self.audio_base_ms: int = 0           # STT clock offset accumulated across mid-session stream resets
 
         self.asr_stream_lock: asyncio.Lock = asyncio.Lock()
         self.pcm_queue: asyncio.Queue = asyncio.Queue(
@@ -163,6 +184,7 @@ def _backfill_analysis_cards(session_id: str, tid: str) -> None:
                 (tid, session_id),
             )
             conn.commit()
+        sa_service.backfill_transcript_id(session_id, tid)
     except Exception as exc:
         logger.debug("Analysis backfill error (session=%s): %s", session_id, exc)
 
@@ -197,6 +219,7 @@ def _drain_pcm_queue(ctx: _Ctx) -> None:
             ctx.pcm_queue.get_nowait()
         except asyncio.QueueEmpty:
             break
+    ctx.audio_base_ms = 0
 
 
 # ── Shared store-to-KB logic (used by periodic auto-store and EOS) ────────────
@@ -245,8 +268,12 @@ async def _store_chunk_to_kb(
         "location": location,
         "echodate": echodate_iso,
         "epoch": int(time.time()),
+        "scenario": ctx.scenario_id,
+        "namespace": ctx.kb_namespace or "default",
     }
-    kid = await kb.kb_add_text(to_store, meta)
+    kid = await kb.kb_add_text(to_store, meta, namespace=ctx.kb_namespace or "default")
+    if ctx.assistant is not None:
+        ctx.assistant.transcript_id = tid
     ctx.interval_buffer.append((to_store, now_iso()))
     if len(ctx.interval_buffer) > INTERVAL_BUFFER_MAX:
         ctx.interval_buffer.pop(0)
@@ -341,6 +368,225 @@ async def _run_segment_analysis(ctx: _Ctx, paragraph_id: str, paragraph_text: st
             pass
 
 
+def _sa_emit(ctx: _Ctx):
+    async def _emit(obj: dict) -> None:
+        if "session_id" not in obj:
+            obj = {**obj, "session_id": ctx.session_id}
+        try:
+            await _send(ctx.ws, obj)
+        except Exception:
+            pass
+    return _emit
+
+
+def _ensure_assistant(ctx: _Ctx) -> SessionAssistantState:
+    if ctx.assistant is None or ctx.assistant.session_id != ctx.session_id:
+        ctx.assistant = SessionAssistantState(
+            ctx.session_id or "", ctx.profile, ctx.kb_namespace, ctx.analysis_mode,
+            transcript_id=ctx.transcript_id, subject_hint=ctx.subject_hint, participants=ctx.participants,
+        )
+        ctx.assistant.scenario_confirmed = ctx.scenario_id != "auto"
+    return ctx.assistant
+
+
+async def _emit_closed_paragraph(ctx: _Ctx, new_p) -> None:
+    """A paragraph closed: flush its dangling sentence fragment, send the rich `segment`."""
+    # sentences popped BEFORE _close_current_paragraph reset the cursor are already in new_p.sentences;
+    # nothing else to pop here (close happens right after a commit+pop). Persist + emit.
+    st = _ensure_assistant(ctx)
+    ctx.segment_idx += 1
+    payload = {
+        "type": "segment",
+        "session_id": ctx.session_id,
+        "paragraph_id": new_p.paragraph_id,
+        "text": new_p.raw_text,
+        "role": new_p.role,
+        "start_ms": int(new_p.start_ts * 1000) if new_p.start_ts else None,
+        "end_ms": int(new_p.end_ts * 1000) if new_p.end_ts else None,
+        "sentences": new_p.sentences,
+    }
+    await _send(ctx.ws, payload)
+    ctx.emitted_paragraph_ids.add(new_p.paragraph_id)
+    ctx.loop.run_in_executor(
+        None, sa_service.persist_segment, st, new_p.paragraph_id, ctx.segment_idx, new_p.raw_text,
+        new_p.role, payload["start_ms"], payload["end_ms"], new_p.sentences,
+    )
+    if not new_p.sentences:
+        # Legacy path (should be rare): paragraph closed with no sentence bookkeeping — analyze whole.
+        t = asyncio.create_task(_run_segment_analysis(ctx, new_p.paragraph_id, new_p.raw_text))
+        ctx.analysis_tasks.append(t)
+        ctx.analysis_tasks = [x for x in ctx.analysis_tasks if not x.done()]
+
+
+async def _enqueue_sentence(ctx: _Ctx, sd: dict) -> None:
+    """T0/T1 immediately (entities/records), then debounce into the batched verify (T2/T3)."""
+    st = _ensure_assistant(ctx)
+    s = SASentence(sentence_id=sd["sentence_id"], paragraph_id=sd["paragraph_id"], text=sd["text"],
+                   char_start=sd["char_start"], char_end=sd["char_end"], role=sd.get("role"),
+                   ts_ms=0, wall_ms=time.monotonic())
+    emit = _sa_emit(ctx)
+    try:
+        fast = await sa_service.on_sentence_fast(st, s, emit)
+    except Exception as e:
+        logger.warning("SA fast tier failed for %s: %s", s.sentence_id, e)
+        fast = {"checkable": True, "entities": [], "records": []}
+    if fast.get("dup"):
+        return
+    if fast.get("entities") or fast.get("records"):
+        subj = st.active_subject()
+        ctx.loop.run_in_executor(None, sa_service.persist_entities_records, st, fast.get("entities") or [], fast.get("records") or [], subj)
+    sug = sa_service.maybe_suggest_scenario(st)
+    if sug:
+        await emit(sug)
+    if not fast.get("checkable"):
+        return
+    ctx.pending.append(s)
+    ctx.pending_meta[s.sentence_id] = {"records": fast.get("records") or [], "entities": fast.get("entities") or []}
+    max_batch = max(1, int(getattr(settings, "TRANSCRIPT_SENTENCE_BATCH_MAX", 4)))
+    if len(ctx.pending) >= max_batch:
+        await _flush_pending(ctx)
+        return
+    if ctx.batch_task is not None and not ctx.batch_task.done():
+        ctx.batch_task.cancel()
+    ctx.batch_task = asyncio.create_task(_debounced_flush(ctx))
+
+
+async def _debounced_flush(ctx: _Ctx) -> None:
+    try:
+        await asyncio.sleep(max(0.05, int(getattr(settings, "TRANSCRIPT_SENTENCE_BATCH_MS", 1200)) / 1000.0))
+    except asyncio.CancelledError:
+        return
+    await _flush_pending(ctx)
+
+
+async def _flush_pending(ctx: _Ctx) -> None:
+    if not ctx.pending:
+        return
+    batch, ctx.pending = ctx.pending, []
+    meta = {s.sentence_id: ctx.pending_meta.pop(s.sentence_id, {}) for s in batch}
+    st = _ensure_assistant(ctx)
+
+    async def _run():
+        try:
+            async with ctx.analysis_sem:
+                await sa_service.run_batch(
+                    st, batch, _sa_emit(ctx),
+                    records_by_sid={k: v.get("records", []) for k, v in meta.items()},
+                    entities_by_sid={k: v.get("entities", []) for k, v in meta.items()},
+                )
+        except Exception as e:
+            logger.warning("SA batch failed: %s", e)
+            for s in batch:
+                try:
+                    await _send(ctx.ws, {"type": "analysis_done", "segment_id": s.paragraph_id,
+                                         "sentence_id": s.sentence_id, "status": "timeout", "result": None})
+                except Exception:
+                    pass
+    t = asyncio.create_task(_run())
+    ctx.analysis_tasks.append(t)
+    ctx.analysis_tasks = [x for x in ctx.analysis_tasks if not x.done()]
+
+
+async def _stt_silent_flush(ctx: _Ctx) -> int:
+    """Drain Nemotron's lookahead: flush + one silent chunk with keep_all_outputs, then reset
+    the stream. Returns the number of pieces appended. Used at speaker turns and at natural
+    pauses — VAD drops silence, so without this the tail of an utterance only surfaces when
+    the NEXT speech arrives (and landed in the next paragraph)."""
+    if ctx.stream_ctx is None or ctx.session is None:
+        return 0
+    if ctx.use_cuda:
+        await _get_gpu_sem().acquire()
+    deltas = []
+    try:
+        async with get_nemotron_process_lock():
+            if ctx.stream_ctx.stream_step_num == 0 and ctx.stream_ctx.buffer_samples == 0:
+                return 0     # nothing decoded since last reset
+            try:
+                deltas.extend(await ctx.stream_ctx.flush(ctx.loop))
+            except Exception as e:
+                logger.debug("silent-flush flush error: %s", e)
+            try:
+                from .stt_streaming import _run_chunk_sync, _hypothesis_delta, _get_asr_executor
+                sil = np.zeros(ctx.stream_ctx._chunk_samples(), dtype=np.float32)
+                text, ts_ms = await ctx.loop.run_in_executor(
+                    _get_asr_executor(), lambda: _run_chunk_sync(ctx.stream_ctx, sil, True))
+                piece = _hypothesis_delta(ctx.stream_ctx.last_hypothesis, text)
+                ctx.stream_ctx.last_hypothesis = text
+                if piece.strip():
+                    deltas.append((piece, ts_ms))
+            except Exception as e:
+                logger.debug("silent-flush chunk error: %s", e)
+            base_bump = int((ctx.stream_ctx.audio_offset_samples / NEMOTRON_SAMPLE_RATE) * 1000)
+            ctx.stream_ctx.reset()
+    finally:
+        if ctx.use_cuda:
+            _get_gpu_sem().release()
+    n = 0
+    for piece, ts_ms in deltas:
+        if piece.strip() and _is_valid_english_piece(piece):
+            ctx.session.append_piece(piece, ts_ms + ctx.audio_base_ms)
+            n += 1
+    ctx.audio_base_ms += base_bump
+    return n
+
+
+async def _idle_flush_loop(ctx: _Ctx) -> None:
+    """Wall-clock driven: the STT clock only advances on voiced audio, so a speaker who
+    simply stops talking never triggered a commit/paragraph close. Every 400 ms: after
+    TRANSCRIPT_SENTENCE_FORCE_MS idle -> force-commit + flush sentences; after
+    TRANSCRIPT_IDLE_CLOSE_MS -> close the paragraph."""
+    force_ms = int(getattr(settings, "TRANSCRIPT_SENTENCE_FORCE_MS", 1200))
+    close_ms = int(getattr(settings, "TRANSCRIPT_IDLE_CLOSE_MS", 2000))
+    stt_flush_ms = int(getattr(settings, "TRANSCRIPT_STT_FLUSH_MS", 900))
+    forced_for: float = -1.0
+    closed_for: float = -1.0
+    flushed_for: float = -1.0
+    try:
+        while True:
+            await asyncio.sleep(0.3)
+            if ctx.session is None or ctx.last_piece_wall <= 0:
+                continue
+            idle_ms = (time.monotonic() - ctx.last_piece_wall) * 1000
+            if idle_ms >= stt_flush_ms and flushed_for != ctx.last_piece_wall:
+                flushed_for = ctx.last_piece_wall
+                async with ctx.asr_stream_lock:
+                    n = await _stt_silent_flush(ctx)
+                if n:
+                    # new tail text arrived: treat as activity so force/close timers restart from here
+                    ctx.last_piece_wall = time.monotonic() - stt_flush_ms / 1000.0
+                    forced_for = closed_for = -1.0
+                    async with ctx.asr_stream_lock:
+                        if ctx.session.maybe_commit(ctx.session.last_piece_ts_ms or 0):
+                            sents = ctx.session.pop_completed_sentences()
+                        else:
+                            sents = []
+                    for sd in sents:
+                        await _enqueue_sentence(ctx, sd)
+                    await _maybe_emit_partial(ctx, ctx.session.last_piece_ts_ms or 0)
+                    continue
+            if idle_ms >= force_ms and forced_for != ctx.last_piece_wall:
+                forced_for = ctx.last_piece_wall
+                async with ctx.asr_stream_lock:
+                    committed = ctx.session.force_commit()
+                    sents = ctx.session.pop_completed_sentences(force=True)
+                for sd in sents:
+                    await _enqueue_sentence(ctx, sd)
+                if committed or sents:
+                    await _maybe_emit_partial(ctx, ctx.session.last_piece_ts_ms or 0)
+            if idle_ms >= close_ms and closed_for != ctx.last_piece_wall:
+                closed_for = ctx.last_piece_wall
+                async with ctx.asr_stream_lock:
+                    ctx.session.force_commit()
+                    ctx.session.pop_completed_sentences(force=True)
+                    new_p = ctx.session.close_paragraph_now(ctx.session.last_piece_ts_ms or 0)
+                if new_p:
+                    await _emit_closed_paragraph(ctx, new_p)
+    except asyncio.CancelledError:
+        return
+    except Exception as e:
+        logger.warning("SA idle loop error: %s", e)
+
+
 async def _run_nemotron_frames(ctx: _Ctx, pcm_float32: np.ndarray, sr: int) -> None:
     if ctx.stream_ctx is None:
         return
@@ -358,27 +604,20 @@ async def _run_nemotron_frames(ctx: _Ctx, pcm_float32: np.ndarray, sr: int) -> N
             _get_gpu_sem().release()
     last_ts = 0
     for piece, ts_ms in deltas:
+        ts_ms = ts_ms + ctx.audio_base_ms
         last_ts = ts_ms
         if not piece.strip() or not _is_valid_english_piece(piece):
             continue
         _ensure_session(ctx)
         ctx.session.append_piece(piece, ts_ms)
+        ctx.last_piece_wall = time.monotonic()
         if ctx.session.maybe_commit(ts_ms):
+            # Silent Assistant v2: every completed SENTENCE is checked as soon as it commits.
+            for sd in ctx.session.pop_completed_sentences():
+                await _enqueue_sentence(ctx, sd)
             new_p = ctx.session.maybe_new_paragraph(ts_ms)
             if new_p:
-                await _send(ctx.ws, {
-                    "type": "segment",
-                    "session_id": ctx.session_id,
-                    "paragraph_id": new_p.paragraph_id,
-                    "text": new_p.raw_text,
-                })
-                ctx.emitted_paragraph_ids.add(new_p.paragraph_id)
-                t = asyncio.create_task(
-                    _run_segment_analysis(ctx, new_p.paragraph_id, new_p.raw_text)
-                )
-                ctx.analysis_tasks.append(t)
-                # Prune finished tasks so the list doesn't grow unbounded over a long session.
-                ctx.analysis_tasks = [x for x in ctx.analysis_tasks if not x.done()]
+                await _emit_closed_paragraph(ctx, new_p)
     if deltas:
         await _maybe_emit_partial(ctx, last_ts)
 
@@ -388,6 +627,14 @@ async def _pcm_consumer(ctx: _Ctx) -> None:
         item = await ctx.pcm_queue.get()
         if item is None:
             break
+        if isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], str) and item[0] == "ROLE":
+            try:
+                async with ctx.asr_stream_lock:
+                    await _apply_speaker_turn(ctx, item[1])
+            except Exception as e:
+                logger.warning("PCM consumer speaker-turn error (continuing): %s", e)
+            ctx.pcm_queue.task_done()
+            continue
         pcm_float32, sr = item
         try:
             async with ctx.asr_stream_lock:
@@ -418,12 +665,133 @@ async def _handle_start(ctx: _Ctx, data: dict) -> None:
         ctx.client_sample_rate = data.get("sample_rate")
         ctx.kb_namespace = (data.get("namespace") or "").strip()
         ctx.analysis_always = bool(data.get("analysis_always_surface", False))
+        # ── Silent Assistant v2 session config ──
+        known_ns = {"", "default", "health", "law", "bank", "meetings", "retail"}
+        ns_warning = None
+        if ctx.kb_namespace not in known_ns:
+            ns_warning = f"Unknown knowledge namespace '{ctx.kb_namespace}' — using all documents."
+            ctx.kb_namespace = ""
+        ctx.scenario_id = (data.get("scenario") or "auto").strip().lower()
+        if ctx.scenario_id not in SCENARIOS and ctx.scenario_id != "auto":
+            ctx.scenario_id = "auto"
+        ctx.profile = profile_for(None if ctx.scenario_id == "auto" else ctx.scenario_id, ctx.kb_namespace)
+        mode = (data.get("analysis_mode") or "").strip()
+        if mode not in ("flags_only", "flags_and_records"):
+            mode = "flags_and_records" if (ctx.analysis_always or ctx.profile.analysis_mode_default == "flags_and_records") else "flags_only"
+        ctx.analysis_mode = mode
+        ctx.participants = [p for p in (data.get("participants") or []) if isinstance(p, dict)][:6]
+        sh = data.get("subject_hint")
+        ctx.subject_hint = sh if isinstance(sh, dict) else None
+        ctx.assistant = None
+        ctx.pending, ctx.pending_meta = [], {}
+        ctx.segment_idx = 0
+        ctx.last_piece_wall = 0.0
+        ctx.session.current_role = None
         ctx.last_auto_stored_length = 0
         ctx.interval_buffer.clear()
         _drain_pcm_queue(ctx)
         _start_periodic_auto_store(ctx)
         async with get_nemotron_process_lock():
             ctx.stream_ctx.reset()
+    _ensure_assistant(ctx)
+    await _send_session_ack(ctx)
+    if ns_warning:
+        await _send(ctx.ws, {"type": "warning", "code": "namespace_unknown", "message": ns_warning})
+    try:
+        ns_key = ctx.kb_namespace or "default"
+        with get_conn() as conn:
+            n_docs = conn.execute(
+                "SELECT COUNT(*) FROM documents WHERE COALESCE(json_extract(meta_json,'$.namespace'),'default')=?", (ns_key,)
+            ).fetchone()[0]
+        if n_docs == 0:
+            await _send(ctx.ws, {"type": "warning", "code": "namespace_empty",
+                                 "message": f"No documents in the '{ns_key}' knowledge base yet — checks will find nothing to cite."})
+    except Exception:
+        pass
+    if ctx.idle_task is not None and not ctx.idle_task.done():
+        ctx.idle_task.cancel()
+    ctx.idle_task = asyncio.create_task(_idle_flush_loop(ctx))
+
+
+async def _send_session_ack(ctx: _Ctx) -> None:
+    prof = ctx.profile
+    n_docs = 0
+    try:
+        ns_key = ctx.kb_namespace or "default"
+        with get_conn() as conn:
+            n_docs = conn.execute(
+                "SELECT COUNT(*) FROM documents WHERE COALESCE(json_extract(meta_json,'$.namespace'),'default')=?", (ns_key,)
+            ).fetchone()[0]
+    except Exception:
+        pass
+    await _send(ctx.ws, {
+        "type": "session",
+        "session_id": ctx.session_id,
+        "scenario": prof.id if ctx.scenario_id != "auto" else "auto",
+        "scenario_resolved": prof.id,
+        "scenario_label": prof.label,
+        "namespace": ctx.kb_namespace,
+        "analysis_mode": ctx.analysis_mode,
+        "kb_docs": n_docs,
+        "roles": dict(prof.roles),
+        "tag_vocab": prof.public()["tag_vocab"],
+    })
+
+
+async def _handle_scenario(ctx: _Ctx, data: dict) -> None:
+    sid = (data.get("scenario") or "").strip().lower()
+    if sid not in SCENARIOS:
+        return
+    ctx.scenario_id = sid
+    ctx.profile = SCENARIOS[sid]
+    if ctx.assistant is not None:
+        ctx.assistant.profile = ctx.profile
+        ctx.assistant.scenario_confirmed = True
+        ctx.assistant.suggested = None
+    await _send_session_ack(ctx)
+
+
+async def _handle_speaker(ctx: _Ctx, data: dict) -> None:
+    """Speaker turn. The marker travels through the PCM queue so it is applied IN ORDER with
+    the audio already queued for the previous speaker (text arrives from STT ~1-2 s after the
+    audio; switching the role immediately mis-attributed every utterance tail)."""
+    role = data.get("role")
+    role = str(role).strip() if role else None
+    if ctx.session is None:
+        return
+    try:
+        ctx.pcm_queue.put_nowait(("ROLE", role))
+    except asyncio.QueueFull:
+        ctx.session.current_role = role
+
+
+async def _apply_speaker_turn(ctx: _Ctx, role: Optional[str]) -> None:
+    """Called by the PCM consumer when the ROLE marker is dequeued: drain the STT for the
+    previous speaker (flush + one silent chunk with keep_all_outputs so lookahead tokens are
+    emitted, then reset the stream), close the paragraph, then switch roles."""
+    if ctx.session is None:
+        return
+    if role == ctx.session.current_role and ctx.session.current_role is not None:
+        return
+    if ctx.stream_ctx is not None and (ctx.session.raw_text.strip() or ctx.session.recent_buffer.strip() or ctx.stream_ctx.stream_step_num > 0):
+        await _stt_silent_flush(ctx)
+        last_ts = ctx.session.last_piece_ts_ms or 0
+        ctx.session.force_commit()
+        for sd in ctx.session.pop_completed_sentences(force=True):
+            await _enqueue_sentence(ctx, sd)
+        new_p = ctx.session.close_paragraph_now(last_ts)
+        if new_p:
+            await _emit_closed_paragraph(ctx, new_p)
+        await _maybe_emit_partial(ctx, last_ts)
+    ctx.session.current_role = role
+
+
+async def _handle_subject(ctx: _Ctx, data: dict) -> None:
+    if ctx.assistant is None:
+        return
+    subj = sa_service.on_subject_action(ctx.assistant, str(data.get("subject_id") or ""), str(data.get("action") or ""))
+    if subj:
+        await _send(ctx.ws, {"type": "subject", "session_id": ctx.session_id, **subj.public()})
 
 
 async def _handle_eos(ctx: _Ctx) -> None:
@@ -439,13 +807,16 @@ async def _handle_eos(ctx: _Ctx) -> None:
         finally:
             if ctx.use_cuda:
                 _get_gpu_sem().release()
-        ts_flush_ms = int((ctx.stream_ctx.audio_offset_samples / NEMOTRON_SAMPLE_RATE) * 1000)
+        ts_flush_ms = int((ctx.stream_ctx.audio_offset_samples / NEMOTRON_SAMPLE_RATE) * 1000) + ctx.audio_base_ms
         for piece, ts_ms in flush_deltas:
-            tsm = ts_ms if ts_ms else ts_flush_ms
+            tsm = (ts_ms + ctx.audio_base_ms) if ts_ms else ts_flush_ms
             if piece.strip() and _is_valid_english_piece(piece):
                 ctx.session.append_piece(piece, tsm)
         async with get_nemotron_process_lock():
             ctx.stream_ctx.reset()
+        # Sentence-level: pop everything (incl. the trailing fragment) BEFORE finalize closes the paragraph.
+        ctx.session.force_commit()
+        tail_sents = ctx.session.pop_completed_sentences(force=True)
         ctx.session.finalize()
         final_text = ctx.session.get_display_text()
         segments_payload = [
@@ -464,15 +835,16 @@ async def _handle_eos(ctx: _Ctx) -> None:
         "segments": segments_payload,
     })
 
+    for sd in tail_sents:
+        await _enqueue_sentence(ctx, sd)
     for p in final_paragraphs:
-        ctx.emitted_paragraph_ids.add(p.paragraph_id)
-        await _send(ctx.ws, {
-            "type": "segment", "session_id": ctx.session_id,
-            "paragraph_id": p.paragraph_id, "text": p.raw_text,
-        })
-        ctx.analysis_tasks.append(
-            asyncio.create_task(_run_segment_analysis(ctx, p.paragraph_id, p.raw_text))
-        )
+        await _emit_closed_paragraph(ctx, p)
+    # Flush the batched verify now (no debounce at EOS) so the last statements get checked.
+    if ctx.batch_task is not None and not ctx.batch_task.done():
+        ctx.batch_task.cancel()
+    await _flush_pending(ctx)
+    if ctx.idle_task is not None and not ctx.idle_task.done():
+        ctx.idle_task.cancel()
 
     if ctx.auto_store and final_text.strip():
         try:
@@ -742,6 +1114,15 @@ async def handler(ws: WebSocket):
             if t == "eos":
                 await _handle_eos(ctx)
                 break
+            if t == "speaker":
+                await _handle_speaker(ctx, data)
+                continue
+            if t == "scenario":
+                await _handle_scenario(ctx, data)
+                continue
+            if t == "subject":
+                await _handle_subject(ctx, data)
+                continue
             if t == "refine":
                 await _handle_refine(ctx, data)
                 continue
@@ -765,6 +1146,9 @@ async def handler(ws: WebSocket):
         # never fact-checked (measured: mid-stream card arrived in 3.5s, trailing card
         # never arrived even after 45s). The socket is still open in `finally`, so the
         # card can still be delivered. Cancel only stragglers past the deadline.
+        for _t in (ctx.idle_task, ctx.batch_task):
+            if _t is not None and not _t.done():
+                _t.cancel()
         pending = [at for at in ctx.analysis_tasks if not at.done()]
         if pending:
             drain_s = float(os.getenv("TRANSCRIPT_ANALYSIS_DRAIN_SEC", "35"))

@@ -96,6 +96,18 @@ class Settings(BaseSettings):
     TRANSCRIPT_SILENCE_COMMIT_MS: int = int(os.getenv("TRANSCRIPT_SILENCE_COMMIT_MS", "800"))
     TRANSCRIPT_PARAGRAPH_SILENCE_MS: int = int(os.getenv("TRANSCRIPT_PARAGRAPH_SILENCE_MS", "2000"))
     TRANSCRIPT_MAX_PARAGRAPH_CHARS: int = int(os.getenv("TRANSCRIPT_MAX_PARAGRAPH_CHARS", "700"))
+    # ── Silent Assistant v2 (sentence-level live checks) ──
+    TRANSCRIPT_SENTENCE_BATCH_MS: int = int(os.getenv("TRANSCRIPT_SENTENCE_BATCH_MS", "1200"))   # debounce before one batched LLM call
+    TRANSCRIPT_SENTENCE_BATCH_MAX: int = int(os.getenv("TRANSCRIPT_SENTENCE_BATCH_MAX", "4"))    # flush at N sentences
+    TRANSCRIPT_SENTENCE_FORCE_MS: int = int(os.getenv("TRANSCRIPT_SENTENCE_FORCE_MS", "1200"))   # wall-clock idle -> commit buffer
+    TRANSCRIPT_IDLE_CLOSE_MS: int = int(os.getenv("TRANSCRIPT_IDLE_CLOSE_MS", "2000"))           # wall-clock idle -> close paragraph
+    TRANSCRIPT_STT_FLUSH_MS: int = int(os.getenv("TRANSCRIPT_STT_FLUSH_MS", "900"))              # wall-clock idle -> flush STT lookahead
+    ASSISTANT_LLM_CONCURRENCY: int = int(os.getenv("ASSISTANT_LLM_CONCURRENCY", "3"))            # global cap across sessions
+    ASSISTANT_CE_CANDIDATES: int = int(os.getenv("ASSISTANT_CE_CANDIDATES", "25"))
+    ASSISTANT_CE_FINAL: int = int(os.getenv("ASSISTANT_CE_FINAL", "6"))
+    ASSISTANT_LLM_TIMEOUT_SEC: float = float(os.getenv("ASSISTANT_LLM_TIMEOUT_SEC", "14"))
+    ASSISTANT_MIN_VERDICT_CONF: float = float(os.getenv("ASSISTANT_MIN_VERDICT_CONF", "60"))
+    ASSISTANT_MIN_TAG_CONF: float = float(os.getenv("ASSISTANT_MIN_TAG_CONF", "50"))
     TRANSCRIPT_RECENT_BUFFER_MAX_CHARS: int = int(os.getenv("TRANSCRIPT_RECENT_BUFFER_MAX_CHARS", "120"))
     TRANSCRIPT_OVERLAP_K: int = int(os.getenv("TRANSCRIPT_OVERLAP_K", "200"))
     TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC: float = float(os.getenv("TRANSCRIPT_EMIT_RATE_LIMIT_PER_SEC", "15"))

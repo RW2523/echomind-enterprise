@@ -467,6 +467,35 @@ export async function getTranscriptAnalysis(transcriptId: string): Promise<{ car
   return r.json();
 }
 
+/** Silent Assistant v2: scenario profiles (labels, roles, tag vocab). */
+export async function getScenarios(): Promise<import('../types').Scenario[]> {
+  const r = await fetch(`${API_BASE}/api/transcribe/scenarios`);
+  if (!r.ok) throw new Error(`scenarios fetch failed: ${r.status}`);
+  const d = await r.json();
+  // Accept either a bare array or {scenarios: [...]}
+  return (Array.isArray(d) ? d : d?.scenarios ?? []) as import('../types').Scenario[];
+}
+
+/** Silent Assistant v2: everything the assistant produced for a stored transcript. */
+export async function getTranscriptAssistant(transcriptId: string): Promise<import('../types').TranscriptAssistantData> {
+  const r = await fetch(`${API_BASE}/api/transcribe/transcripts/${encodeURIComponent(transcriptId)}/assistant`);
+  if (!r.ok) throw new Error(`assistant fetch failed: ${r.status}`);
+  const d = await r.json();
+  return {
+    checks: d?.checks ?? [],
+    entities: d?.entities ?? [],
+    subjects: d?.subjects ?? [],
+    records: d?.records ?? [],
+    segments: d?.segments ?? [],
+  };
+}
+
+/** URL of the stored document (opens the PDF viewer at a page) — same route KnowledgeChat's "View in Document" uses. */
+export function documentFileUrl(docId: string, page?: number | null): string {
+  const base = `${API_BASE}/api/docs/${encodeURIComponent(docId)}/file`;
+  return page != null && page > 0 ? `${base}#page=${page}` : base;
+}
+
 /** Fetch source chunk text for an analysis card source preview. */
 export async function getChunkPreview(chunkId: string): Promise<{ chunk_id: string; text: string; doc_title: string; doc_id: string }> {
   const r = await fetch(`${API_BASE}/api/transcribe/chunks/${encodeURIComponent(chunkId)}/preview`);
@@ -486,7 +515,14 @@ export async function speakText(
       mode,
       text: options.text ?? null,
       cards: options.cards
-        ? options.cards.map(c => ({ label: c.label, segment_text: c.segment_text, explanation: c.explanation }))
+        ? options.cards.map(c => ({
+            label: c.label,
+            segment_text: c.segment_text,
+            explanation: c.explanation,
+            // v2 (additive): TTS-ready phrase + sentence text when the card is a SentenceCheck
+            phrase: (c as { phrase?: string }).phrase ?? undefined,
+            sentence_text: (c as { sentence_text?: string }).sentence_text ?? undefined,
+          }))
         : null,
       transcript_id: options.transcript_id ?? null,
     }),

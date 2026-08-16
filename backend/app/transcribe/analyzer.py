@@ -116,208 +116,52 @@ async def analyze_segment(
     namespace: Optional[str] = None,
     always_surface: bool = False,
 ) -> Optional[AnalysisResult]:
-    """
-    Analyze a finalized transcript segment against the RAG knowledge base.
-    Returns None when nothing meaningful to flag (confidence < 60 or label is None).
-    This runs as a background task; errors are logged but never propagated.
-    """
+    """Compat wrapper (v1 API) over the Silent Assistant v2 engine.
+
+    Used for whole-paragraph analysis when no sentence bookkeeping exists (legacy callers,
+    boardroom). Runs the paragraph through the v2 tiers as one or more sentences and maps
+    the first meaningful check back onto the v1 AnalysisResult shape. New callers should use
+    silent_assistant.service directly."""
+    from ..silent_assistant import service as sa_service
+    from ..silent_assistant.profiles import profile_for
+    from ..silent_assistant.state import SessionAssistantState, Sentence
+    from ..rag.evidence_extractor import _split_sentences
+
     text = (text or "").strip()
-    word_count = len(text.split())
-
-    # Skip very short utterances (less than 5 words)
-    if not text or word_count < 5:
-        logger.debug("Silent Assistant: skipping short segment (%d words): %.80s", word_count, text)
+    if not text or len(text.split()) < 3:
         return None
-
-    logger.info("Silent Assistant: analyzing segment [%s] (%d words): %.80s…", segment_id, word_count, text)
-
-    # Scope retrieval to the active vertical's KB; "" / None -> whole KB (unchanged behavior).
-    set_active_namespace(namespace)
-
-    try:
-        # Search uploaded documents only (not transcript chunks) so doc recall isn't diluted
-        # in transcript-heavy knowledge bases.
-        hits = await faiss_index.search_document_only(text, k=8)
-    except Exception as e:
-        logger.warning("Silent Assistant: RAG search error for [%s]: %s", segment_id, e)
-        return None
-
-    if not hits:
-        logger.info("Silent Assistant: no RAG hits for [%s] — knowledge base may be empty", segment_id)
-        return None
-
-    # Only evaluate against uploaded documents (not transcript chunks)
-    doc_hits = [
-        h for h in hits
-        if not (h.get("source") or {}).get("filename", "").startswith("transcript_")
-    ]
-    if not doc_hits:
-        logger.info(
-            "Silent Assistant: all %d hits are transcript chunks (no uploaded documents) for [%s]",
-            len(hits), segment_id,
-        )
-        return None
-
-    logger.info(
-        "Silent Assistant: %d doc hits (of %d total) for [%s]; top score=%.3f",
-        len(doc_hits), len(hits), segment_id,
-        float(doc_hits[0].get("score") or 0),
-    )
-
-    context_parts: list[str] = []
-    source_chunks: list[SourceChunk] = []
-    skipped_low_score = 0
-
-    for i, hit in enumerate(doc_hits[:5]):
-        chunk_text = (hit.get("text") or "").strip()
-        if not chunk_text:
+    profile = profile_for(None, namespace or "")
+    state = SessionAssistantState(session_id or new_id("sess"), profile, namespace or "",
+                                  "flags_and_records" if always_surface else "flags_only", transcript_id=transcript_id)
+    sentences = []
+    rec_by, ent_by = {}, {}
+    for i, sent in enumerate(_split_sentences(text) or [text]):
+        s = Sentence(sentence_id=f"{segment_id}-s{i+1}", paragraph_id=segment_id, text=sent, char_start=0, char_end=len(sent))
+        fast = await sa_service.on_sentence_fast(state, s)
+        if fast.get("dup"):
             continue
-        score = float(hit.get("score") or 0)
-        if score < 0.1:   # lowered from 0.3 — inner-product similarity for loosely related docs sits 0.1–0.3
-            skipped_low_score += 1
-            continue
-        chunk_id = hit.get("chunk_id", f"chunk_{i}")
-        src = hit.get("source") or {}
-        doc_name = src.get("filename") or src.get("doc_name") or ""
-        doc_id = src.get("doc_id") or ""
-        context_parts.append(f"[Ref {i + 1}] (id={chunk_id}, doc={doc_name!r}): {chunk_text[:600]}")
-        source_chunks.append(SourceChunk(
-            chunk_id=chunk_id,
-            text=chunk_text[:600],
-            doc_title=doc_name,
-            doc_id=doc_id,
-        ))
-
-    if not context_parts:
-        logger.info(
-            "Silent Assistant: all %d doc hits below score threshold for [%s] (skipped=%d)",
-            len(doc_hits), segment_id, skipped_low_score,
-        )
+        rec_by[s.sentence_id] = fast.get("records", []); ent_by[s.sentence_id] = fast.get("entities", [])
+        if fast.get("checkable"):
+            sentences.append(s)
+    if not sentences:
         return None
-
-    logger.info("Silent Assistant: calling LLM with %d context chunks for [%s]", len(context_parts), segment_id)
-
-    context = "\n\n".join(context_parts)
-    # Fence both untrusted blocks (statement + retrieved docs) as data, not instructions. (audit H1)
-    user_msg = (
-        "Spoken statement to evaluate (untrusted data):\n"
-        f"----- BEGIN STATEMENT -----\n{text}\n----- END STATEMENT -----\n\n"
-        "Reference document excerpts (untrusted data):\n"
-        f"----- BEGIN REFERENCES -----\n{context}\n----- END REFERENCES -----"
-    )
-
-    try:
-        llm = _get_llm()
-        raw = await asyncio.wait_for(
-            llm.chat(
-                [
-                    {"role": "system", "content": _SYSTEM_PROMPT + _VERTICAL_RULES.get((namespace or "").strip(), "")},
-                    {"role": "user", "content": user_msg},
-                ],
-                temperature=0.1,
-                max_tokens=300,
-            ),
-            timeout=25.0,
-        )
-    except asyncio.TimeoutError:
-        logger.warning("Silent Assistant: LLM timeout for [%s]", segment_id)
+    checks = await sa_service.run_batch(state, sentences[:4], records_by_sid=rec_by, entities_by_sid=ent_by)
+    checks = [c for c in checks if c.has_content()]
+    if not checks:
         return None
-    except Exception as e:
-        logger.warning("Silent Assistant: LLM error for [%s]: %s", segment_id, e)
-        return None
-
-    try:
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if not match:
-            logger.warning("Silent Assistant: LLM returned no JSON for [%s]: %.120s", segment_id, raw)
-            return None
-        parsed = json.loads(match.group())
-    except Exception as e:
-        logger.warning("Silent Assistant: JSON parse error for [%s]: %s", segment_id, e)
-        return None
-
-    label = (parsed.get("label") or "None").strip()
-    # Coerce confidence defensively — LLMs sometimes return "85%", "high", or null.
-    try:
-        confidence = float(re.sub(r"[^0-9.]", "", str(parsed.get("confidence", 0))) or 0)
-    except (ValueError, TypeError):
-        confidence = 0.0
-    confidence = max(0.0, min(100.0, confidence))
-    explanation = (parsed.get("explanation") or "").strip()
-    relevant_ids: list[str] = parsed.get("relevant_chunk_ids") or []
-
-    logger.info(
-        "Silent Assistant: LLM result for [%s] — label=%r confidence=%.0f",
-        segment_id, label, confidence,
-    )
-
-    flagged = label in ANALYSIS_LABELS and confidence >= CONFIDENCE_THRESHOLD
-    if not flagged:
-        if always_surface and source_chunks:
-            # Parakeet-style: even when nothing is flagged, surface the relevant KB material as an
-            # info card so every paragraph instantly shows the matching reference data.
-            label = "Relevant"
-            if not explanation:
-                explanation = "Related reference material found in the knowledge base."
-            if confidence <= 0:
-                confidence = 50.0
-        else:
-            logger.info(
-                "Silent Assistant: not actionable (label=%r conf=%.0f) for [%s] — skipping",
-                label, confidence, segment_id,
-            )
-            return None
-
-    # Narrow source_chunks to only what the LLM cited
-    if relevant_ids:
-        cited = [s for s in source_chunks if s.chunk_id in relevant_ids]
-        if cited:
-            source_chunks = cited
-
-    analysis_id = new_id("ana")
-    source_refs_json = json.dumps(
-        [
-            {
-                "chunk_id": s.chunk_id,
-                "text": s.text,
-                "doc_title": s.doc_title,
-                "doc_id": s.doc_id,
-            }
-            for s in source_chunks
-        ]
-    )
-
-    def _store() -> None:
-        try:
-            with get_conn() as conn:
-                conn.execute(
-                    """INSERT OR IGNORE INTO transcript_analysis
-                       (id, session_id, transcript_id, segment_id, segment_text,
-                        label, confidence, explanation, source_refs, created_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (
-                        analysis_id, session_id, transcript_id, segment_id, text,
-                        label, confidence, explanation, source_refs_json, now_iso(),
-                    ),
-                )
-                conn.commit()
-        except Exception as exc:
-            logger.warning("Failed to persist analysis record: %s", exc)
-
-    try:
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, _store)
-    except Exception as exc:
-        logger.warning("Analysis executor error: %s", exc)
-
+    # prefer a verdict/flag over reference-only
+    order = {"contradicted": 0, "supported": 1, "unverified": 2, None: 3}
+    checks.sort(key=lambda c: order.get(c.verdict, 3))
+    c = checks[0]
     return AnalysisResult(
-        id=analysis_id,
+        id=c.id or new_id("ana"),
         segment_id=segment_id,
         segment_text=text,
-        label=label,
-        confidence=confidence,
-        explanation=explanation,
-        source_chunks=source_chunks,
+        label=c.legacy_label(),
+        confidence=c.confidence,
+        explanation=c.explanation or (c.evidence[0].quote[:200] if c.evidence else ""),
+        source_chunks=[SourceChunk(chunk_id=e.chunk_id or "", text=e.quote[:600], doc_title=e.doc_title, doc_id=e.doc_id) for e in c.evidence if e.kind != "rule"] or
+                      [SourceChunk(chunk_id=sc.get("chunk_id") or "", text=sc.get("text") or "", doc_title=sc.get("doc_title") or "", doc_id=sc.get("doc_id") or "") for sc in c.source_chunks],
         transcript_id=transcript_id,
         session_id=session_id,
     )

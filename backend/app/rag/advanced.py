@@ -2865,6 +2865,79 @@ class _RagPipelineResult:
     context_irrelevant: bool = False
 
 
+def ce_context_relevant(hits: List[Dict], pre_ce_best: float) -> bool:
+    """Two-tier CE relevance gate (shared by the chat pipeline and the Silent Assistant).
+    ms-marco logits: relevant ≈ +5..+10, unrelated ≈ -11.
+      - below the HARD floor: irrelevant unconditionally;
+      - below the SOFT floor: irrelevant only when the dense signal is ALSO weak (the CE has
+        blind spots on symbol-heavy text; a confident bi-encoder overrides it)."""
+    if not hits:
+        return False
+    soft_floor = float(getattr(settings, "RAG_CE_RELEVANCE_FLOOR", -8.0))
+    hard_floor = float(getattr(settings, "RAG_CE_HARD_FLOOR", -10.5))
+    dense_override = float(getattr(settings, "RAG_CE_DENSE_OVERRIDE", 0.5))
+    top_ce = max(float(h.get("score") or 0) for h in hits)
+    return not (top_ce < hard_floor or (top_ce < soft_floor and pre_ce_best < dense_override))
+
+
+@dataclass
+class RetrievalResult:
+    """Reranked retrieval WITHOUT answer generation — for callers that need evidence, not prose
+    (Silent Assistant sentence checks, boardroom statement checks)."""
+    source_type: str                 # 'document' | 'transcript' | 'general' | 'insufficient'
+    hits: List[Dict]                 # CE-reranked (score = ce_logit for documents), final_n
+    pre_ce_best: float = 0.0         # best fused/dense score before rerank
+    top_ce: float = 0.0
+    gated: bool = True               # True => nothing relevant, do not spend an LLM call
+    namespace_fallback: bool = False
+
+
+async def retrieve_reranked(
+    question: str,
+    *,
+    k_candidates: int = 25,
+    final_n: int = 6,
+    source_options: Optional[Dict[str, bool]] = None,
+    namespace: Optional[str] = None,
+    allow_default_fallback: bool = True,
+) -> RetrievalResult:
+    """Hybrid retrieve (dense+BM25 RRF, keyword fallback) -> CE rerank -> relevance gate.
+    Same stack the chat answer path uses, minus prompt building. Namespace-scoped; when the
+    scoped search finds nothing and allow_default_fallback, retries once against the whole KB."""
+    from .index import set_active_namespace  # local import: avoids cycles at module import
+    q = (question or "").strip()
+    if not q:
+        return RetrievalResult(source_type="insufficient", hits=[])
+    opts = {"transcript": False, "document": True, "general": False}
+    opts.update(source_options or {})
+    used_fallback = False
+    set_active_namespace(namespace)
+    source_type, hits = await retrieve_semantic_first(q, k=k_candidates, source_options=opts)
+    if (not hits or source_type in ("general", "insufficient")) and allow_default_fallback and namespace:
+        set_active_namespace(None)
+        source_type, hits = await retrieve_semantic_first(q, k=k_candidates, source_options=opts)
+        used_fallback = bool(hits)
+    if not hits or source_type in ("general", "insufficient"):
+        return RetrievalResult(source_type=source_type or "insufficient", hits=[], namespace_fallback=used_fallback)
+    pre_ce_best = max((float(h.get("score") or 0) for h in hits), default=0.0)
+    if source_type == "document":
+        # Rerank the WHOLE fused pool. The fused list is (re)sorted by dense score, so a chunk
+        # that BM25 ranked #1 for an exact phrase can sit at fused position 17+; reranking only
+        # a dense-ordered prefix silently dropped it (observed: refund-policy clause missed).
+        hits = await _apply_reranker(q, hits, max(len(hits), k_candidates), final_n)
+        top_ce = max((float(h.get("score") or 0) for h in hits), default=0.0)
+        gated = not ce_context_relevant(hits, pre_ce_best)
+    else:
+        # transcript hits carry cosine scores; keep the caller's k and treat as relevant
+        hits = hits[:final_n]
+        top_ce = pre_ce_best
+        gated = not hits
+    return RetrievalResult(
+        source_type=source_type, hits=hits, pre_ce_best=pre_ce_best,
+        top_ce=top_ce, gated=gated, namespace_fallback=used_fallback,
+    )
+
+
 async def _run_rag_pipeline(
     question: str,
     hits: List[Dict],
@@ -2899,9 +2972,8 @@ async def _run_rag_pipeline(
     if source_type == "document" and hits:
         soft_floor = float(getattr(settings, "RAG_CE_RELEVANCE_FLOOR", -8.0))
         hard_floor = float(getattr(settings, "RAG_CE_HARD_FLOOR", -10.5))
-        dense_override = float(getattr(settings, "RAG_CE_DENSE_OVERRIDE", 0.5))
         top_ce = max(float(h.get("score") or 0) for h in hits)
-        gated = top_ce < hard_floor or (top_ce < soft_floor and pre_ce_best < dense_override)
+        gated = not ce_context_relevant(hits, pre_ce_best)
         if gated:
             logger.info(
                 "CE relevance gate: top_ce=%.2f (hard=%.2f soft=%.2f dense_best=%.2f) → context irrelevant, answering without it",

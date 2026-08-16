@@ -5,11 +5,12 @@
  * Clicking a session loads its full text and Silent Assistant analysis cards.
  * Boardroom sessions linked to a transcript are surfaced inline.
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   listTranscripts,
   getTranscript,
   getTranscriptAnalysis,
+  getTranscriptAssistant,
   deleteTranscript,
   listBoardroomSessions,
   getBoardroomSession,
@@ -17,10 +18,15 @@ import {
   type TranscriptListItem,
   type BoardroomSessionListItem,
 } from '../services/backend';
-import type { AnalysisCard } from '../types';
-import { LABEL_CONFIG } from './AnalysisCardModal';
+import type { AnalysisCard, SentenceCheck, TranscriptAssistantData, TranscriptSegment } from '../types';
+import AnalysisCardModal, { checkStyle } from './AnalysisCardModal';
+import AssistantSidebar, { useAssistantUnread, type AssistantTab } from './AssistantSidebar';
+import { TranscriptSegmentLine } from './TranscriptSentences';
+import TagChip from './TagChip';
+import ProofPopover from './ProofPopover';
 import BoardroomView from './BoardroomView';
 import type { BoardroomSession } from '../types';
+import { asCheck, deriveActionItems, roleLabel } from '../utils/silentAssistant';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -35,20 +41,76 @@ function fmtDate(iso: string): string {
   }
 }
 
-function labelBadge(card: AnalysisCard) {
-  const cfg = LABEL_CONFIG[card.label];
-  if (!cfg) return null;
-  return (
-    <span
-      key={card.id}
-      className={`inline-flex items-center gap-1 text-[10px] font-semibold rounded-full px-2 py-0.5 border ${cfg.badge} ${cfg.border}`}
-    >
-      {cfg.icon} {card.label}
-    </span>
-  );
+// ── sub-components ────────────────────────────────────────────────────────────
+
+/** Ranges of checked sentences inside the raw transcript text (char offsets, else indexOf of sentence_text). */
+function locateChecks(rawText: string, checks: SentenceCheck[], segments: TranscriptSegment[]): { start: number; end: number; check: SentenceCheck }[] {
+  const out: { start: number; end: number; check: SentenceCheck }[] = [];
+  if (!rawText) return out;
+  const segOffset = new Map<string, number>();
+  for (const seg of segments) {
+    if (!seg.text) continue;
+    const i = rawText.indexOf(seg.text);
+    if (i >= 0) segOffset.set(seg.paragraph_id, i);
+  }
+  const lower = rawText.toLowerCase();
+  let searchFrom = 0;
+  for (const c of checks) {
+    const so = segOffset.get(c.segment_id);
+    if (so != null && typeof c.char_start === 'number' && typeof c.char_end === 'number' && c.char_end > c.char_start) {
+      const start = so + c.char_start, end = so + c.char_end;
+      if (end <= rawText.length) { out.push({ start, end, check: c }); continue; }
+    }
+    const needle = (c.sentence_text || c.segment_text || '').trim();
+    if (!needle) continue;
+    let i = lower.indexOf(needle.toLowerCase(), searchFrom);
+    if (i < 0) i = lower.indexOf(needle.toLowerCase());
+    if (i >= 0) { out.push({ start: i, end: i + needle.length, check: c }); searchFrom = i + needle.length; }
+  }
+  // sort + drop overlaps (keep the earlier one)
+  out.sort((a, b) => a.start - b.start || b.end - a.end);
+  const clean: typeof out = [];
+  let lastEnd = -1;
+  for (const r of out) { if (r.start >= lastEnd) { clean.push(r); lastEnd = r.end; } }
+  return clean;
 }
 
-// ── sub-components ────────────────────────────────────────────────────────────
+const HighlightedTranscriptText: React.FC<{
+  rawText: string;
+  checks: SentenceCheck[];
+  segments: TranscriptSegment[];
+  selectedId: string | null;
+  onSelect: (c: SentenceCheck) => void;
+}> = ({ rawText, checks, segments, selectedId, onSelect }) => {
+  const ranges = useMemo(() => locateChecks(rawText, checks, segments), [rawText, checks, segments]);
+  if (!ranges.length) return <p className="text-sm text-white/85 leading-relaxed whitespace-pre-wrap break-words">{rawText}</p>;
+  const nodes: React.ReactNode[] = [];
+  let cursor = 0;
+  ranges.forEach((r, i) => {
+    if (r.start > cursor) nodes.push(<span key={`t-${i}`}>{rawText.slice(cursor, r.start)}</span>);
+    const st = checkStyle(r.check);
+    const first = r.check.evidence?.[0];
+    const span = (
+      <span
+        key={r.check.id}
+        onClick={() => onSelect(r.check)}
+        className={`rounded px-0.5 border-b cursor-pointer ${st.bg} ${st.border} hover:brightness-125 ${selectedId === r.check.sentence_id ? 'ring-1 ring-white/40 brightness-125' : ''}`}
+        title={r.check.tags?.map((t) => t.label ?? t.tag).join(', ') || r.check.label}
+      >
+        {rawText.slice(r.start, r.end)}
+        {r.check.tags?.length ? (
+          <span className="inline-flex items-center gap-1 ml-1 align-middle">
+            {r.check.tags.slice(0, 2).map((t) => <TagChip key={t.tag} tag={t} />)}
+          </span>
+        ) : null}
+      </span>
+    );
+    nodes.push(first ? <ProofPopover key={`p-${r.check.id}`} evidence={first} note={r.check.explanation} trigger="hover">{span}</ProofPopover> : span);
+    cursor = r.end;
+  });
+  if (cursor < rawText.length) nodes.push(<span key="tail">{rawText.slice(cursor)}</span>);
+  return <p className="text-sm text-white/85 leading-loose whitespace-pre-wrap break-words">{nodes}</p>;
+};
 
 interface DetailViewProps {
   item: TranscriptListItem;
@@ -58,26 +120,74 @@ interface DetailViewProps {
 
 const DetailView: React.FC<DetailViewProps> = ({ item, boardroomId, onBack }) => {
   const [rawText, setRawText] = useState('');
-  const [cards, setCards] = useState<AnalysisCard[]>([]);
+  const [legacyCards, setLegacyCards] = useState<AnalysisCard[]>([]);
+  const [assistant, setAssistant] = useState<TranscriptAssistantData | null>(null);
   const [boardroomSession, setBoardroomSession] = useState<BoardroomSession | null>(null);
   const [showBoardroom, setShowBoardroom] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedCard, setSelectedCard] = useState<AnalysisCard | null>(null);
+  const [modalCheck, setModalCheck] = useState<SentenceCheck | null>(null);
+  const [selectedSentenceId, setSelectedSentenceId] = useState<string | null>(null);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
+  const [tab, setTab] = useState<AssistantTab>('checks');
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setAssistant(null);
+    setLegacyCards([]);
     Promise.all([
       getTranscript(item.id)
         .then(d => { if (!cancelled) setRawText(d.raw_text || ''); })
         .catch(() => { if (!cancelled) setRawText('Failed to load transcript.'); }),  // avoid unhandled rejection (L32)
-      getTranscriptAnalysis(item.id).then(d => { if (!cancelled) setCards(d.cards || []); }).catch(() => {}),
+      getTranscriptAnalysis(item.id).then(d => { if (!cancelled) setLegacyCards(d.cards || []); }).catch(() => {}),
+      getTranscriptAssistant(item.id).then(d => { if (!cancelled) setAssistant(d); }).catch(() => {}),
       boardroomId
         ? getBoardroomSession(boardroomId).then(s => { if (!cancelled) setBoardroomSession(s); }).catch(() => {})
         : Promise.resolve(),
     ]).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [item.id, boardroomId]);
+
+  // Prefer the richer /assistant checks; fall back to legacy /analysis cards.
+  const checks: SentenceCheck[] = useMemo(() => {
+    const src = assistant?.checks?.length ? assistant.checks : legacyCards;
+    return src.map(asCheck);
+  }, [assistant, legacyCards]);
+  const checksById = useMemo(() => Object.fromEntries(checks.map((c) => [c.sentence_id, c])) as Record<string, SentenceCheck>, [checks]);
+  const records = assistant?.records ?? [];
+  const subjects = assistant?.subjects ?? [];
+  const segments = assistant?.segments ?? [];
+  const actionItems = useMemo(() => deriveActionItems(checks), [checks]);
+  const hasSentenceSegments = segments.some((s) => s.sentences && s.sentences.length > 0);
+  const counts = useMemo(() => ({ records: records.length, checks: checks.length, actions: actionItems.length }), [records.length, checks.length, actionItems.length]);
+  const { unread } = useAssistantUnread(counts, tab);
+
+  const openCheck = useCallback((c: SentenceCheck) => {
+    setSelectedSentenceId(c.sentence_id);
+    setSelectedSegmentId(c.segment_id);
+    setModalCheck(c);
+  }, []);
+
+  const sidebar = (
+    <AssistantSidebar
+      cards={checks}
+      records={records}
+      actionItems={actionItems}
+      subjects={subjects}
+      selectedSegmentId={selectedSegmentId}
+      onSelectSegment={setSelectedSegmentId}
+      selectedSentenceId={selectedSentenceId}
+      onSelectSentence={setSelectedSentenceId}
+      onOpenCard={openCheck}
+      tab={tab}
+      onTabChange={setTab}
+      unread={unread}
+      showRecords={records.length > 0 || subjects.length > 0}
+      namespaceEmptyHint="No records were pulled during this session."
+      onClose={sheetOpen ? () => setSheetOpen(false) : undefined}
+    />
+  );
 
   if (showBoardroom && boardroomSession) {
     return (
@@ -123,62 +233,79 @@ const DetailView: React.FC<DetailViewProps> = ({ item, boardroomId, onBack }) =>
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">Loading…</div>
       ) : (
-        <div className="flex-1 min-h-0 flex overflow-hidden">
-          {/* Left: transcript text */}
+        <div className="flex-1 min-h-0 flex overflow-hidden relative">
+          {/* Left: transcript text (checked sentences highlighted) */}
           <div className="flex-1 min-w-0 overflow-auto p-4">
             <div className="rounded-xl border border-white/10 bg-black/20 p-4 min-h-full">
-              <div className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wide">Transcript</div>
-              {rawText ? (
-                <p className="text-sm text-white/85 leading-relaxed whitespace-pre-wrap break-words">{rawText}</p>
+              <div className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wide flex items-center gap-2 flex-wrap">
+                Transcript
+                {checks.length > 0 && <span className="text-[10px] normal-case font-normal text-slate-600">highlighted = checked · hover for proof · click for details</span>}
+              </div>
+              {hasSentenceSegments ? (
+                <div className="space-y-1 text-sm">
+                  {segments.map((seg) => (
+                    <TranscriptSegmentLine
+                      key={seg.paragraph_id}
+                      segment={seg}
+                      checks={checksById}
+                      sentenceStatus={{}}
+                      selectedSentenceId={selectedSentenceId}
+                      onSelectSentence={(id, c) => { setSelectedSentenceId(id); if (c) openCheck(c); }}
+                      isSelected={selectedSegmentId === seg.paragraph_id}
+                      onSelectSegment={() => setSelectedSegmentId(seg.paragraph_id === selectedSegmentId ? null : seg.paragraph_id)}
+                    />
+                  ))}
+                </div>
+              ) : rawText ? (
+                <HighlightedTranscriptText
+                  rawText={rawText}
+                  checks={checks}
+                  segments={segments}
+                  selectedId={selectedSentenceId}
+                  onSelect={openCheck}
+                />
               ) : (
                 <p className="text-sm text-slate-500">No transcript text saved.</p>
+              )}
+              {subjects.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-white/10 text-[11px] text-slate-400 flex flex-wrap gap-x-3 gap-y-1">
+                  {subjects.filter((s) => s.status !== 'rejected').map((s) => (
+                    <span key={s.id}><span className="text-slate-500">{roleLabel(s.kind)}:</span> <span className="text-white/90">{s.display_name}</span>{s.status === 'confirmed' ? ' ✓' : ''}</span>
+                  ))}
+                </div>
               )}
             </div>
           </div>
 
-          {/* Right: analysis cards */}
-          <div className="w-64 lg:w-72 shrink-0 border-l border-white/10 overflow-auto p-3">
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 px-1">
-              Silent Assistant
-              {cards.length > 0 && (
-                <span className="ml-1.5 text-cyan-400 font-bold">{cards.length}</span>
-              )}
-            </div>
-            {cards.length === 0 ? (
-              <div className="text-xs text-slate-600 px-1">No analysis cards for this session.</div>
-            ) : (
-              <div className="space-y-2">
-                {cards.map(card => {
-                  const cfg = LABEL_CONFIG[card.label];
-                  if (!cfg) return null;
-                  const isSelected = selectedCard?.id === card.id;
-                  return (
-                    <button
-                      key={card.id}
-                      type="button"
-                      onClick={() => setSelectedCard(isSelected ? null : card)}
-                      className={`w-full text-left rounded-xl border p-3 transition-all ${cfg.bg} ${cfg.border} ${isSelected ? 'ring-1 ring-white/20' : 'hover:brightness-110'}`}
-                    >
-                      <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-                        <span className={`text-[10px] font-bold uppercase tracking-wide ${cfg.text}`}>
-                          {cfg.icon} {card.label}
-                        </span>
-                        <span className="text-[10px] text-slate-500 ml-auto">{card.confidence.toFixed(0)}%</span>
-                      </div>
-                      <p className="text-xs text-slate-200 leading-relaxed line-clamp-2">{card.segment_text}</p>
-                      {isSelected && (
-                        <div className="mt-2 pt-2 border-t border-white/10">
-                          <p className="text-[11px] text-slate-300 leading-relaxed">{card.explanation}</p>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          {/* Right: Silent Assistant (records / checks / actions) */}
+          <div className="hidden md:block w-72 lg:w-80 shrink-0 border-l border-white/10 min-h-0">
+            {sidebar}
           </div>
+
+          {/* Mobile bottom sheet */}
+          {(checks.length > 0 || records.length > 0) && (
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              className="md:hidden absolute bottom-4 right-4 z-30 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-slate-900/95 backdrop-blur px-4 py-2.5 text-xs font-semibold text-cyan-300 shadow-xl touch-manipulation min-h-[44px]"
+            >
+              Assistant
+              <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] tabular-nums">{checks.length + records.length}</span>
+            </button>
+          )}
+          {sheetOpen && (
+            <>
+              <div className="fixed inset-0 z-40 md:hidden bg-black/60 backdrop-blur-sm" onClick={() => setSheetOpen(false)} aria-hidden />
+              <div className="fixed inset-x-0 bottom-0 z-50 md:hidden h-[78vh] rounded-t-2xl border-t border-white/15 bg-slate-900 shadow-2xl flex flex-col overflow-hidden">
+                <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/20 shrink-0" />
+                <div className="flex-1 min-h-0">{sidebar}</div>
+              </div>
+            </>
+          )}
         </div>
       )}
+
+      {modalCheck && <AnalysisCardModal card={modalCheck} onClose={() => setModalCheck(null)} />}
     </div>
   );
 };
