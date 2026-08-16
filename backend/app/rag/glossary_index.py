@@ -84,7 +84,7 @@ class GlossaryIndex:
         if not entries:
             return
         texts = [(e.get("text") or "")[:_GLOSSARY_EMBED_MAX_CHARS] for e in entries]
-        vecs = await self.emb.embed(texts)
+        vecs = await self.emb.embed(texts, kind="document")
         vecs = np.array(vecs, dtype=np.float32)
         faiss.normalize_L2(vecs)
 

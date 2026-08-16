@@ -38,13 +38,17 @@ def _normalize_hf_line(line: str) -> str:
     """
     t = line.strip()
     t = re.sub(r"\b\d{1,5}\b", "#", t)
+    # Collapse masked-number chains ("#.#", "#-#", "# / #") to one "#": 'DoD 7000.14-R'
+    # otherwise normalizes to 'DoD #.#-R' on some pages and 'DoD #-R' on others, splitting
+    # the frequency count so neither variant crossed the detection threshold.
+    t = re.sub(r"#(?:\s*[.\-–—/]\s*#)+", "#", t)
     t = re.sub(r"\s+", " ", t).strip()
     return t
 
 
 def detect_header_footer_patterns(
     pages_text: List[str],
-    n_lines: int = 3,
+    n_lines: int = 4,
 ) -> Tuple[List[str], List[str]]:
     """Detect repeated header and footer lines across pages.
 
@@ -69,11 +73,13 @@ def detect_header_footer_patterns(
         bottom = lines[-n_lines:] if len(lines) > n_lines else []
         for line in top:
             norm = _normalize_hf_line(line)
-            if len(norm) >= 5:
+            # len >= 3 (was 5): DoD-style page numbers like "2-45" mask to "#-#" (3 chars)
+            # and were silently exempt from detection, so they survived into every chunk.
+            if len(norm) >= 3:
                 header_counter[norm] += 1
         for line in bottom:
             norm = _normalize_hf_line(line)
-            if len(norm) >= 5:
+            if len(norm) >= 3:
                 footer_counter[norm] += 1
 
     threshold = int(n_sample * _HF_MIN_FREQ_RATIO)
@@ -87,23 +93,43 @@ def detect_header_footer_patterns(
     return (headers, footers)
 
 
+# A line that is nothing but a page marker: bare number ("45"), roman numeral,
+# DoD-style compound page number ("2-45", "02a-3"), or a change-marker like
+# "* June 2017". These are stripped at the outermost content lines of every page
+# even when frequency detection missed them (short docs, <55%-frequency variants).
+_PAGE_MARKER_RE = re.compile(
+    r"^\s*(?:"
+    r"\d{1,4}"                                  # 45
+    r"|[ivxlcdm]{1,7}"                          # xiv
+    r"|\d{1,3}[A-Za-z]?-\d{1,4}[a-z]?"          # 2-45, 02a-3
+    r"|\*?\s*(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}"
+    r")\s*\*?\s*$",
+    re.IGNORECASE,
+)
+
+
 def strip_header_footer_lines(
     page_text: str,
     header_patterns: List[str],
     footer_patterns: List[str],
-    n_lines: int = 3,
+    n_lines: int = 4,
 ) -> str:
-    """Remove header/footer lines from a single page's text."""
-    if not header_patterns and not footer_patterns:
-        return page_text
+    """Remove header/footer lines from a single page's text.
+
+    Windows are measured in CONTENT (non-empty) lines. The old version indexed raw
+    lines, but block extraction joins blocks with blank lines, so a 3-line header
+    occupied raw indices 0..4 and its tail escaped the window — measured on the FMR
+    corpus: 86/159 pages kept their 'DoD 7000.14-R' header, and every page kept its
+    '2-45'-style page number (also exempted by the old 5-char detection filter)."""
     lines = page_text.split("\n")
     if not lines:
         return page_text
 
     patterns = set(header_patterns + footer_patterns)
-
-    def _is_hf(line: str) -> bool:
-        return _normalize_hf_line(line) in patterns
+    content_idx = [i for i, l in enumerate(lines) if l.strip()]
+    top_set = set(content_idx[:n_lines])
+    bottom_set = set(content_idx[-n_lines:]) if content_idx else set()
+    edge_set = set(content_idx[:2]) | set(content_idx[-2:])  # outermost 2 content lines
 
     clean: List[str] = []
     for i, line in enumerate(lines):
@@ -111,9 +137,9 @@ def strip_header_footer_lines(
         if not stripped:
             clean.append(line)
             continue
-        in_top = i < n_lines
-        in_bottom = i >= len(lines) - n_lines
-        if (in_top or in_bottom) and _is_hf(stripped):
+        if (i in top_set or i in bottom_set) and _normalize_hf_line(stripped) in patterns:
+            continue
+        if i in edge_set and _PAGE_MARKER_RE.match(stripped):
             continue
         clean.append(line)
     return "\n".join(clean)

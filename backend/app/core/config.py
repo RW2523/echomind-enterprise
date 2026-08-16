@@ -28,7 +28,10 @@ class Settings(BaseSettings):
     OLLAMA_EMBED_MODEL: str = os.getenv("ECHOMIND_EMBED_MODEL", "nomic-embed-text")
     # Max characters per chunk sent to embedding API. nomic-embed-text context varies by Ollama build;
     # 2000 chars (~500 tokens) is safe for all configurations. Set higher only if your model supports it.
-    EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "2000"))
+    # 4000 chars ≈ 1000 tokens — comfortably inside nomic-embed-text's 8192-token
+    # context. The old 2000 default was 4-16x over-conservative and, combined with
+    # contextual headers, would have truncated the body of >50% of chunks at embed time.
+    EMBED_MAX_CHARS: int = int(os.getenv("ECHOMIND_EMBED_MAX_CHARS", "4000"))
     CHUNK_SIZE: int = int(os.getenv("ECHOMIND_CHUNK_SIZE", "450"))
     CHUNK_OVERLAP: int = int(os.getenv("ECHOMIND_CHUNK_OVERLAP", "120"))
     TOP_K: int = int(os.getenv("ECHOMIND_TOP_K", "15"))

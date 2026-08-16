@@ -10,6 +10,7 @@ Only evidence sentences are sent to the LLM — NOT full chunks.
 from __future__ import annotations
 
 import logging
+import math
 import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
@@ -147,6 +148,14 @@ def extract_evidence_sentences(
             continue
         meta = _extract_metadata(src)
         chunk_score = float(h.get("score") or 0)
+        # Post-rerank chunk scores are CE logits (~[-11,+11]); the per-sentence bonuses
+        # below are small (0.5-3.0). Adding a raw logit made the chunk score dominate
+        # sentence ranking entirely (and negative logits suppressed every sentence in a
+        # chunk). Normalize to 0..1 and scale to the same magnitude as the other bonuses.
+        if h.get("score_kind") == "ce_logit" or chunk_score < 0.0 or chunk_score > 1.0:
+            chunk_rel = 1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, chunk_score))))
+        else:
+            chunk_rel = chunk_score
         sid = _get_section_id_for_hit(h)
 
         for sent in _split_sentences(text):
@@ -177,7 +186,7 @@ def extract_evidence_sentences(
                 + (3.0 if has_section else 0.0)
                 + (2.0 if has_policy else 0.0)
                 + policy_token_hits * 0.5
-                + chunk_score
+                + 2.0 * chunk_rel
             )
 
             seen.add(sent_norm)

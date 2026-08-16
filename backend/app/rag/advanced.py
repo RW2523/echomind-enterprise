@@ -871,9 +871,16 @@ def _trim_hits_to_context_budget(hits: List[Dict]) -> List[Dict]:
         return hits
     verbatim = getattr(settings, "RAG_VERBATIM_MAX_CHARS", 1600)
     parent_max = _parent_context_max_chars()
-    # Rough: each hit ~verbatim + 150 metadata; assume ~1 parent per 4 hits
+    # Rough: each hit ~verbatim + 150 metadata; assume ~1 parent per 4 hits.
+    # Only charge for parent expansion when any hit actually HAS a parent — flat-chunked
+    # corpora (BookRAG off) have none, and the phantom charge was trimming ~1/4 of the
+    # hits that would have fit in the real budget.
+    has_parents = any(
+        (h.get("source") or {}).get("parent_chunk_id") or (h.get("source") or {}).get("is_parent")
+        for h in hits
+    )
     est_per_hit = verbatim + 150
-    est_parent_per_hit = parent_max / 4
+    est_parent_per_hit = (parent_max / 4) if has_parents else 0
     est_total = len(hits) * (est_per_hit + est_parent_per_hit)
     if est_total <= max_chars:
         return hits
@@ -1515,6 +1522,11 @@ async def retrieve_semantic_first(
 
     q = question.strip()
     k_per = max(k, 4)
+    # When the cross-encoder reranker is on, retrieve/fuse a DEEPER candidate pool so
+    # the rerank actually prunes. Previously every stage was capped at TOP_K=15, so the
+    # "25 -> 15" rerank ran as a 15 -> 15 no-op reorder (live logs: "reduced 15 → 15").
+    if getattr(settings, "RAG_USE_RERANKER", True):
+        k_per = max(k_per, int(getattr(settings, "RAG_RERANK_TOP_K", 25)))
 
     # [Step 3] Dynamic RRF weights via query classifier
     use_classifier = getattr(settings, "RAG_USE_QUERY_CLASSIFIER", True)
@@ -1649,7 +1661,9 @@ async def retrieve_semantic_first(
             document_hits = _apply_time_decay(document_hits, doc_created_d, doc_halflife)
         if getattr(settings, "RAG_PREFER_AUTHORITATIVE", False):
             document_hits = _prefer_authoritative_sort(document_hits)
-        document_hits = document_hits[:k]
+        # Keep the deep pool for the CE reranker (it prunes to RAG_RERANK_FINAL_N);
+        # without a reranker, cap at k as before.
+        document_hits = document_hits[:k_per if getattr(settings, "RAG_USE_RERANKER", True) else k]
 
         # 4b. Keyword/grep fallback when semantic/BM25 scores are weak (e.g. acronyms like DDRS)
         if getattr(settings, "RAG_USE_KEYWORD_FALLBACK", True):
@@ -1665,7 +1679,7 @@ async def retrieve_semantic_first(
                         cur = by_id.get(kh["chunk_id"])
                         if cur is None or float(kh["score"]) > float(cur["score"]):
                             by_id[kh["chunk_id"]] = kh
-                    document_hits = sorted(by_id.values(), key=lambda h: h["score"], reverse=True)[:k]
+                    document_hits = sorted(by_id.values(), key=lambda h: h["score"], reverse=True)[:k_per if getattr(settings, "RAG_USE_RERANKER", True) else k]
                     logger.info(
                         "RAG keyword fallback: merged %d grep hits (doc_best=%.3f < %.3f)",
                         len(keyword_hits), doc_best_so_far, fallback_threshold,
@@ -2246,6 +2260,31 @@ _IRRELEVANT_CONTEXT_NOTE = (
 )
 
 
+def _display_score(hit: Dict) -> Optional[float]:
+    """Normalize a hit's internal score to the 0-1 relevance contract the frontend
+    declares (types.ts: 'Relevance score 0-1'). Internal scales differ by stage:
+      - post-CE-rerank hits carry raw ms-marco logits (~[-11, +11]) tagged score_kind
+        ='ce_logit'  -> sigmoid
+      - transcript/dense hits carry cosine-ish scores in [0, 1]                -> as-is
+      - the LLM-rerank fallback scores 0-10                                    -> /10
+      - untagged negatives can only be logits (cosine of L2-normalized nomic
+        vectors is non-negative in practice)                                   -> sigmoid
+    Raw logits MUST NOT leave the backend: rendered as a percentage they produce
+    nonsense like '-1025% relevance'."""
+    s = hit.get("score")
+    if s is None:
+        return None
+    try:
+        s = float(s)
+    except (TypeError, ValueError):
+        return None
+    if hit.get("score_kind") == "ce_logit" or s < 0:
+        return round(1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, s)))), 4)
+    if s > 1.0:
+        return round(min(1.0, s / 10.0), 4)
+    return round(s, 4)
+
+
 def _select_citation_hits(enriched: List[Dict]) -> List[Dict]:
     """Citations should reflect what plausibly supports the answer — not everything that
     happened to be in the context window (a cystitis answer must not cite an H-1B checklist).
@@ -2262,6 +2301,17 @@ def _select_citation_hits(enriched: List[Dict]) -> List[Dict]:
     floor = float(getattr(settings, "RAG_CITATION_CE_FLOOR", 0.0))
     cap = int(getattr(settings, "RAG_MAX_CITATIONS", 6))
     kept = [e for e in enriched if float(e.get("score") or 0) >= floor]
+    # Relative window: on regulatory corpora the CE routinely scores ALL supporting
+    # chunks slightly negative, which collapsed citations to exactly one (the fallback
+    # below). When the absolute floor keeps <=1 hit, also keep anything within
+    # RAG_CITATION_CE_WINDOW nats of the best hit — co-evidence near the top is cited,
+    # wildly-worse chunks still are not.
+    if len(kept) <= 1 and len(enriched) > 1:
+        top = max(float(e.get("score") or 0) for e in enriched)
+        window = float(getattr(settings, "RAG_CITATION_CE_WINDOW", 2.0))
+        rel = [e for e in enriched if float(e.get("score") or 0) >= top - window]
+        if len(rel) > len(kept):
+            kept = rel
     if not kept:
         kept = sorted(enriched, key=lambda e: float(e.get("score") or 0), reverse=True)[:1]
     kept = sorted(kept, key=lambda e: float(e.get("score") or 0), reverse=True)
@@ -2578,7 +2628,7 @@ def _build_citation(enriched_hit: Dict) -> Dict:
     citation = {
         "filename": filename or "Unknown document",
         "chunk_index": src.get("chunk_index"),
-        "score": enriched_hit.get("score"),
+        "score": _display_score(enriched_hit),
         "snippet": snippet,
     }
     if src.get("doc_id"):
@@ -2866,7 +2916,10 @@ async def _run_rag_pipeline(
     # [Step 4] Graph expansion (only when top section confidence is low)
     t0 = time.monotonic()
     if source_type == "document":
-        top_score = max((float(h.get("score") or 0) for h in hits), default=0.0)
+        # Post-rerank scores are CE logits; the threshold is a 0..1 confidence.
+        # Normalize per-hit (sigmoid for logits, pass-through for cosines) so the
+        # gate compares like with like — raw logits vs 0.5 was always/never true.
+        top_score = max((_display_score(h) or 0.0 for h in hits), default=0.0)
         threshold = getattr(settings, "RAG_GRAPH_EXPANSION_CONFIDENCE_THRESHOLD", 0.5)
         if threshold <= 0 or top_score < threshold:
             max_additions = getattr(settings, "RAG_GRAPH_MAX_ADDITIONS", 3)

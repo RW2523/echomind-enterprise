@@ -12,9 +12,26 @@ from ..core.config import settings
 from ..core.db import get_conn
 
 
+# Structural references ("Chapter 1", "Volume 2A", "Section 3-2"): the base tokenizer
+# drops single characters, so 'chapter 1' and 'chapter 2' tokenized identically and
+# BM25 could not distinguish them ("volume 2A chapter 1" queries retrieved Volume 11
+# chunks). Keeping bare digits does NOT fix it — '1' occurs in ~74% of chunks, so its
+# IDF floors to epsilon. Compound tokens ('chapter_1') are rare => high IDF.
+_REF_COMPOUND_RE = re.compile(
+    r"\b(volume|vol|chapter|chap|ch|section|sec|part|appendix|annex|table|figure|fig|exhibit|page)"
+    r"\.?\s+(\d{1,4}[a-z]?(?:-\d{1,4}[a-z]?)?)\b"
+)
+_REF_CANON = {"vol": "volume", "chap": "chapter", "ch": "chapter", "sec": "section", "fig": "figure"}
+
+
 def _tokenize(text: str) -> List[str]:
-    """Simple tokenizer: lowercase, split on non-alphanumeric, min length 2."""
-    tokens = re.findall(r"[a-z0-9]{2,}", (text or "").lower())
+    """Lowercase, split on non-alphanumeric (min length 2), plus compound tokens for
+    structural references so chapter/volume digits survive into the index."""
+    low = (text or "").lower()
+    tokens = re.findall(r"[a-z0-9]{2,}", low)
+    for m in _REF_COMPOUND_RE.finditer(low):
+        kw = _REF_CANON.get(m.group(1), m.group(1))
+        tokens.append(f"{kw}_{m.group(2)}")
     return tokens
 
 

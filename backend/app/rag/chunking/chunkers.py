@@ -384,13 +384,39 @@ def _group_sentences_to_size(
     target_min: int,
     target_max: int,
     overlap_sentences: int = 0,
+    overlap_tokens: int = 0,
 ) -> List[str]:
     """
     Group sentences into chunks by token count (target_min/target_max in tokens).
     Never splits a sentence; uses token_len() for all size checks.
+
+    Overlap: when overlap_tokens > 0, carry trailing sentences into the next chunk
+    until >= overlap_tokens are covered (capped at 4 sentences and at half the chunk),
+    so the configured token overlap is actually honored. The older overlap_sentences
+    mode (fixed sentence count) delivered ~55 tokens median against a 120-token
+    config. overlap_tokens wins when both are set.
     """
     if not sentences:
         return []
+
+    def _carry(cur: List[str]) -> List[str]:
+        if overlap_tokens > 0 and len(cur) > 1:
+            tail: List[str] = []
+            t_tok = 0
+            for s2 in reversed(cur):
+                if tail and (t_tok >= overlap_tokens or len(tail) >= 4):
+                    break
+                tail.insert(0, s2)
+                t_tok += token_len(s2)
+            # never carry most of the chunk forward (near-duplicate chunks)
+            max_carry = max(1, len(cur) // 2)
+            if len(tail) > max_carry:
+                tail = tail[-max_carry:]
+            return tail
+        if overlap_sentences > 0 and len(cur) > overlap_sentences:
+            return cur[-overlap_sentences:]
+        return []
+
     chunks = []
     current: List[str] = []
     current_tokens = 0
@@ -400,12 +426,8 @@ def _group_sentences_to_size(
         if current_tokens + space_tokens + s_tokens > target_max and current:
             chunk_text = " ".join(current)
             chunks.append(chunk_text)
-            if overlap_sentences > 0 and len(current) > overlap_sentences:
-                current = current[-overlap_sentences:]
-                current_tokens = token_len(" ".join(current))
-            else:
-                current = []
-                current_tokens = 0
+            current = _carry(current)
+            current_tokens = token_len(" ".join(current)) if current else 0
         current.append(s)
         current_tokens += (space_tokens + s_tokens) if current_tokens else s_tokens
     if current:
@@ -630,12 +652,11 @@ def chunk_unstructured(
         return []
     csize, coverlap = _get_chunk_size_overlap()
     sentences = _sentences(text)
-    overlap_sentences = 1 if coverlap < 120 else 2
     chunk_texts = _group_sentences_to_size(
         sentences,
         target_min=csize // 2,
         target_max=csize,
-        overlap_sentences=overlap_sentences,
+        overlap_tokens=coverlap,
     )
     if not chunk_texts:
         chunk_texts = [_truncate_to_tokens(text, csize * 2)]

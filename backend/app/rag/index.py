@@ -143,6 +143,22 @@ def _is_transcript_doc(filename: str, meta: dict) -> bool:
     return (meta or {}).get("type") == "transcript"
 
 
+def _doc_title_line(doc_text: str, max_len: int = 140) -> str:
+    """Deterministic document descriptor for contextual chunk headers: the first few
+    non-empty lines of the document (e.g. 'DoD 7000.14-R · Financial Management
+    Regulation · Volume 2A, Chapter 2'). No LLM involved; identical across re-ingests."""
+    lines = []
+    for raw in (doc_text or "").splitlines():
+        s = " ".join(raw.split()).strip()
+        if not s:
+            continue
+        lines.append(s[:100])
+        if len(lines) >= 3:
+            break
+    out = " · ".join(lines)
+    return out[:max_len].strip()
+
+
 def _build_book_sections_from_chunks(chunks, doc_id: str) -> List[Dict]:
     """Reconstruct section-level entries from parent chunks (grouped by section_path).
 
@@ -322,7 +338,7 @@ class FaissIndex:
                 logger.warning("_rebuild_transcript_index: reconstruct failed (%s); re-embedding", e)
                 vecs = None
         if vecs is None:
-            vecs = await self.emb.embed(transcript_texts)
+            vecs = await self.emb.embed(transcript_texts, kind="document")
             faiss.normalize_L2(vecs)
             vecs = vecs.astype(np.float32)
         dim = vecs.shape[1]
@@ -466,10 +482,36 @@ class FaissIndex:
                         (c.text or "")[:80],
                         (ctx_text or "")[:120],
                     )
+        elif not _is_transcript_doc(filename, meta):
+            # Non-book documents (BookRAG off => has_parents is False, so the LLM-contextual
+            # path above never runs). Previously these chunks were embedded as BARE text —
+            # with 35 near-identical regulation volumes in one index, chunks lose all
+            # document/page identity in the vector space and retrieval routinely lands in
+            # the wrong volume. Build a cheap DETERMINISTIC header instead (no LLM cost):
+            # document title line(s) + page. Stored in contextualized_text, so BM25
+            # (sparse rebuild COALESCEs it) and dense search both gain doc-identity tokens,
+            # while CE rerank and the prompt keep using the raw chunk text.
+            doc_title = (filename or "").rsplit(".", 1)[0].replace("_", " ")
+            doc_title_line = _doc_title_line(text)
+            for c in embed_chunks:
+                hdr = f"[Document: {doc_title}" + (f" — {doc_title_line}]" if doc_title_line else "]")
+                page = getattr(c, "page_number", None)
+                if page is not None:
+                    hdr += f"\n[Page {page}]"
+                ctx_text = build_contextualized_text(hdr, c.text)
+                contextualized_by_chunk[c.chunk_id] = ctx_text
+                texts_to_embed.append(ctx_text)
         else:
             texts_to_embed = [c.text for c in embed_chunks]
 
-        vecs = await self.emb.embed(texts_to_embed)
+        # Document-identity line stored per chunk so downstream consumers that see only
+        # raw chunk text (notably the cross-encoder reranker) can recover which document
+        # a chunk belongs to. Without it, "what does volume 2A chapter 1 cover?" ranked
+        # cross-REFERENCES to chapter 1 above chapter 1's own body chunks, because only
+        # the cross-references literally contain the phrase.
+        doc_title_line_for_src = "" if _is_transcript_doc(filename, meta) else _doc_title_line(text)
+
+        vecs = await self.emb.embed(texts_to_embed, kind="document")
         faiss.normalize_L2(vecs)
         await self._ensure_index(int(vecs.shape[1]))
 
@@ -487,11 +529,14 @@ class FaissIndex:
                     src, _ = validate_and_fix_source(src, doc_type=src.get("doc_type", ""))
                     src["metadata_valid"] = True
                 src["namespace"] = ns
+                if doc_title_line_for_src:
+                    src["doc_title_line"] = doc_title_line_for_src
                 validated_sources[c.chunk_id] = src
                 ctx_text = contextualized_by_chunk.get(c.chunk_id) if c.chunk_id in contextualized_by_chunk else None
+                page = src.get("page_number")
                 conn.execute(
-                    "INSERT INTO chunks (id, doc_id, chunk_index, text, source_json, contextualized_text) VALUES (?,?,?,?,?,?)",
-                    (c.chunk_id, doc_id, c.chunk_index, c.text, json.dumps(src), ctx_text),
+                    "INSERT INTO chunks (id, doc_id, chunk_index, text, source_json, contextualized_text, page_start, page_end) VALUES (?,?,?,?,?,?,?,?)",
+                    (c.chunk_id, doc_id, c.chunk_index, c.text, json.dumps(src), ctx_text, page, page),
                 )
             conn.commit()
 
@@ -716,7 +761,7 @@ class FaissIndex:
                 logger.warning("delete_document: vector reconstruct failed (%s); re-embedding", e)
                 vecs = None
         if vecs is None:
-            vecs = await self.emb.embed(remaining_texts)
+            vecs = await self.emb.embed(remaining_texts, kind="document")
             faiss.normalize_L2(vecs)
             vecs = vecs.astype(np.float32)
         dim = vecs.shape[1]

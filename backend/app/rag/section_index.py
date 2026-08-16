@@ -83,7 +83,7 @@ class SectionIndex:
             (s.get("full_section_text") or s.get("section_title") or "")[:_SECTION_EMBED_MAX_CHARS]
             for s in sections
         ]
-        vecs = await self.emb.embed(texts)
+        vecs = await self.emb.embed(texts, kind="document")
         vecs = np.array(vecs, dtype=np.float32)
         faiss.normalize_L2(vecs)
 

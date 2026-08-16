@@ -126,10 +126,12 @@ function uniqueFileNames(citations: DocumentChunk[]): string[] {
 
 /** Relevance score 0–1 → percentage label with colour class */
 function scoreLabel(score?: number): { text: string; cls: string } | null {
-  if (score == null) return null;
-  const pct = Math.round(score * 100);
+  if (score == null || !Number.isFinite(score)) return null;
+  // Contract is 0–1, but clamp defensively: a raw model score slipping through must
+  // never render as something like "-1025%".
+  const pct = Math.round(Math.min(1, Math.max(0, score)) * 100);
   const cls = pct >= 80 ? 'text-emerald-400' : pct >= 60 ? 'text-cyan-400' : pct >= 40 ? 'text-amber-400' : 'text-slate-400';
-  return { text: `${pct}%`, cls };
+  return { text: score > 0 && pct === 0 ? '<1%' : `${pct}%`, cls };
 }
 
 /** Doc-type badge colour */

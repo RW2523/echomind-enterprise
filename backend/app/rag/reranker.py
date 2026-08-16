@@ -93,18 +93,35 @@ async def rerank_hits(
 
 
 async def _rerank_ce(encoder: Any, query: str, hits: List[Dict], top_k: int) -> List[Dict]:
-    """Score (query, passage) pairs with cross-encoder; sort descending; return top_k."""
+    """Score (query, passage) pairs with cross-encoder; sort descending; return top_k.
+
+    Passages are prefixed with the chunk's document-identity line (when ingested) so the
+    CE can rank "which document is this from" queries correctly: a body chunk of Volume
+    2A Chapter 1 does not literally say "Volume 2A Chapter 1", but chunks in OTHER
+    volumes cross-referencing it do — without the identity prefix those cross-references
+    outranked the chapter's own content."""
     max_chars = _get_ce_max_chars()
-    pairs = [(query, (h.get("text") or "")[:max_chars]) for h in hits]
+
+    def _passage(h: Dict) -> str:
+        text = h.get("text") or ""
+        title = ((h.get("source") or {}).get("doc_title_line") or "").strip()
+        if title:
+            return f"{title} — {text}"[:max_chars]
+        return text[:max_chars]
+
+    pairs = [(query, _passage(h)) for h in hits]
     try:
         scores = await asyncio.to_thread(encoder.predict, pairs)
         scored = sorted(zip(scores, hits), key=lambda x: float(x[0]), reverse=True)
+        # Spread the original hit so auxiliary fields survive the rerank, and TAG the
+        # score scale: ms-marco CE scores are raw logits in roughly [-11, +11]. Anything
+        # that surfaces a score to users (citations/UI) must normalize via this tag —
+        # a raw logit rendered as a percentage once reached the UI as "-1025% relevance".
         return [
             {
-                "chunk_id": h["chunk_id"],
+                **h,
                 "score": float(s),
-                "text": h["text"],
-                "source": h["source"],
+                "score_kind": "ce_logit",
             }
             for s, h in scored[:top_k]
         ]

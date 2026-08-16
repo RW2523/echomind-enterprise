@@ -125,7 +125,7 @@ async def _ensure_prototypes() -> bool:
             texts.extend(protos)
             slices[name] = slice(start, start + len(protos))
             start += len(protos)
-        vecs = await _emb.embed(texts)
+        vecs = await _emb.embed(texts, kind="raw")
         _proto_slices.update(slices)
         _proto_matrix = _l2(np.asarray(vecs, dtype=np.float32))
         logger.info("Intent classifier: embedded %d prototypes", len(texts))
@@ -153,7 +153,7 @@ async def classify_conversational(question: str, timeout_s: float = 4.0) -> Opti
         async def _run() -> Optional[str]:
             if not await _ensure_prototypes():
                 return None
-            qv = await _emb.embed([q])  # single-text → LRU-cached, reused by retrieval
+            qv = await _emb.embed([q], kind="raw")  # raw: thresholds calibrated on un-prefixed vectors
             qn = _l2(np.asarray(qv, dtype=np.float32))[0]
             sims = _proto_matrix @ qn
             best = {name: float(sims[sl].max()) for name, sl in _proto_slices.items()}

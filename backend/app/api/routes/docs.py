@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import hashlib
 import shutil
 from datetime import datetime, timezone, timedelta
 
@@ -148,6 +149,21 @@ async def upload(file: UploadFile = File(...), namespace: str = Form("default"),
         if tenant:
             namespace = tenant
     data = await file.read()
+    # Exact-duplicate guard: the same bytes ingested twice doubles every chunk in the
+    # index (observed: BUDGET-2027-BUD.pdf uploaded 2x -> duplicate retrieval hits and
+    # wasted context window). Same content + same namespace = return the existing doc.
+    content_hash = hashlib.sha256(data).hexdigest()
+    with get_conn() as conn:
+        dup = conn.execute(
+            "SELECT id, filename FROM documents WHERE json_extract(meta_json,'$.content_hash')=? "
+            "AND COALESCE(json_extract(meta_json,'$.namespace'),'default')=?",
+            (content_hash, (namespace or "default").strip() or "default"),
+        ).fetchone()
+    if dup:
+        logger.info("upload: duplicate content (%s == existing %s/%s) — skipping re-ingest",
+                    file.filename, dup[0], dup[1])
+        return {"ok": True, "doc_id": dup[0], "filename": dup[1], "duplicate_of": dup[0],
+                "detail": "Identical file already in the knowledge base; not ingested again."}
     filetype, text, estimated_pages, page_offsets = parse_any(file.filename, data)
     if not (text or "").strip():
         raise HTTPException(
@@ -159,7 +175,7 @@ async def upload(file: UploadFile = File(...), namespace: str = Form("default"),
             file.filename,
             filetype,
             text,
-            {"filename": file.filename, "filetype": filetype},
+            {"filename": file.filename, "filetype": filetype, "content_hash": content_hash},
             estimated_pages=estimated_pages,
             page_offsets=page_offsets,
             namespace=namespace,

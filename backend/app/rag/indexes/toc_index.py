@@ -104,7 +104,7 @@ class TocIndex:
             self._save()
             return
         texts = [n.get("text_for_embedding") or n.get("title") or "" for n in nodes]
-        vecs = await self.emb.embed(texts)
+        vecs = await self.emb.embed(texts, kind="document")
         vecs = np.array(vecs, dtype=np.float32)
         faiss.normalize_L2(vecs)
         self._index = faiss.IndexFlatIP(vecs.shape[1])

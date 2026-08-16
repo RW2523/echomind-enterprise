@@ -106,7 +106,7 @@ class SectionSummaryIndex:
                 "section_summary": summary,
             })
 
-        vecs = await self.emb.embed(texts)
+        vecs = await self.emb.embed(texts, kind="document")
         vecs = np.array(vecs, dtype=np.float32)
         faiss.normalize_L2(vecs)
 
