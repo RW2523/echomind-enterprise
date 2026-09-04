@@ -824,12 +824,26 @@ async def analyse_meeting(session_id: str) -> dict:
     import re
     report: dict = {}
     match = re.search(r"\{.*\}", raw, re.DOTALL)
+    report = None
     if match:
+        txt = match.group()
         try:
-            report = json.loads(match.group())
+            report = json.loads(txt)
         except Exception:
-            report = {"executive_summary": raw}  # dropped unused raw_llm key (P10)
-    else:
+            # Truncated/imperfect JSON (max_tokens cut, trailing comma): trim to the last
+            # complete object, then last resort pull the summary string out by regex —
+            # storing the raw JSON text as executive_summary rendered as JSON in the PDF/UI.
+            last = txt.rfind("}", 0, len(txt) - 1)
+            while last > 0 and report is None:
+                try:
+                    report = json.loads(txt[: last + 1] + "}")
+                except Exception:
+                    last = txt.rfind("}", 0, last)
+            if report is None:
+                m2 = re.search(r'"executive_summary"\s*:\s*"((?:[^"\\]|\\.)*)"', txt, re.DOTALL)
+                if m2:
+                    report = {"executive_summary": json.loads(f'"{m2.group(1)}"')}
+    if not isinstance(report, dict):
         report = {"executive_summary": raw}
 
     report["raw_transcript"] = full_transcript

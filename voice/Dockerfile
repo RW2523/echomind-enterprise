@@ -64,16 +64,19 @@ RUN mkdir -p /voices && cd /voices && \
 
 # Kokoro-82M TTS (selectable alternative to Piper) — install + bake model/voice/G2P caches for offline runtime.
 RUN pip install --no-cache-dir kokoro soundfile
+# NOTE: a heredoc cannot sit inside a `RUN ... \` continuation (its body lines parse as
+# Dockerfile instructions) — this block previously broke every `docker compose build voice`.
 RUN if [ "$SKIP_MODEL_DOWNLOAD" != "1" ]; then \
-      python - <<'PY' ; \
-from kokoro import KPipeline
-p = KPipeline(lang_code="a")
-for v in ["af_heart","af_bella","af_nicole","af_sarah","am_michael","am_fenrir","am_adam"]:
-    for _ in p("Warming up the Kokoro voice cache.", voice=v):
-        pass
-print("kokoro baked")
-PY
+      python -c "\
+from kokoro import KPipeline; \
+p = KPipeline(lang_code='a'); \
+[list(p('Warming up the Kokoro voice cache.', voice=v)) for v in ['af_heart','af_bella','af_nicole','af_sarah','am_michael','am_fenrir','am_adam']]; \
+print('kokoro baked')"; \
     fi
+
+# Re-pin setuptools LAST: kokoro/nemo/torchvision installs above pull in setuptools>=82,
+# which removed pkg_resources — but webrtcvad imports it at runtime (crash-loop on boot).
+RUN pip install --no-cache-dir "setuptools>=70,<82" wheel
 
 COPY voice /workspace
 

@@ -27,6 +27,10 @@ RUN pip install --no-cache-dir "numpy>=1.26.4,<2.0" --force-reinstall \
 COPY nemotron_asr /app/nemotron_asr
 RUN pip install --no-cache-dir /app/nemotron_asr
 
+# librosa (via NeMo) imports pkg_resources, which setuptools >=82 removed — NeMo installs
+# from git@main, so rebuilds drift and dropped it. Same pin as voice/Dockerfile line 12.
+RUN pip install --no-cache-dir "setuptools>=70,<82" wheel
+
 # Pre-download Nemotron weights during build (offline runs use HF_HUB_OFFLINE=1 and local cache only).
 ARG SKIP_MODEL_DOWNLOAD=0
 ARG SKIP_NEMOTRON_WARMUP=0
