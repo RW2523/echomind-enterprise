@@ -10,6 +10,7 @@ import base64
 import json
 import logging
 import os
+import re
 import time
 import uuid
 from typing import Optional
@@ -35,7 +36,7 @@ from .stt_streaming import (
     get_shared_asr_adapter,
 )
 from ..refine import refine_text
-from ..tagging import get_metadata
+from ..tagging import get_metadata, topic_for_title
 from .. import kb
 from .store_to_db import (
     store_transcript_to_db,
@@ -110,7 +111,7 @@ class _Ctx:
         # Silent Assistant v2
         "scenario_id", "profile", "analysis_mode", "participants", "subject_hint",
         "assistant", "pending", "pending_meta", "batch_task", "idle_task", "last_piece_wall",
-        "segment_idx", "audio_base_ms",
+        "segment_idx", "audio_base_ms", "auto_title", "session_title",
     )
 
     def __init__(self, ws: WebSocket, loop, asr_adapter, stream_ctx):
@@ -151,6 +152,8 @@ class _Ctx:
         self.last_piece_wall: float = 0.0
         self.segment_idx: int = 0
         self.audio_base_ms: int = 0           # STT clock offset accumulated across mid-session stream resets
+        self.auto_title: bool = True          # name was generic -> we generate "<Scenario> — <Topic>"
+        self.session_title: str = ""
 
         self.asr_stream_lock: asyncio.Lock = asyncio.Lock()
         self.pcm_queue: asyncio.Queue = asyncio.Queue(
@@ -224,6 +227,35 @@ def _drain_pcm_queue(ctx: _Ctx) -> None:
 
 # ── Shared store-to-KB logic (used by periodic auto-store and EOS) ────────────
 
+_GENERIC_NAME_RE = re.compile(r"^\s*(?:transcript|session|recording|untitled)?[\s_\-]*\d{4}[\-_]\d{2}[\-_]\d{2}|^\s*$", re.IGNORECASE)
+
+
+def _auto_title_for(ctx: _Ctx, full_text: str) -> str:
+    """Readable session title: '<Scenario label> — <Topic>' (topic from the curated taxonomy)."""
+    label = getattr(ctx.profile, "label", "") or "Session"
+    topic = topic_for_title(full_text or "")
+    return f"{label} — {topic}" if topic else f"{label} — Session"
+
+
+async def _maybe_update_title(ctx: _Ctx, tid: Optional[str], full_text: str) -> None:
+    if not ctx.auto_title:
+        return
+    title = _auto_title_for(ctx, full_text)
+    if title == ctx.session_title:
+        return
+    ctx.session_title = title
+    if tid:
+        def _upd():
+            try:
+                with get_conn() as conn:
+                    conn.execute("UPDATE transcripts SET name = ? WHERE id = ?", (title, tid))
+                    conn.commit()
+            except Exception as e:
+                logger.debug("title update failed: %s", e)
+        await ctx.loop.run_in_executor(None, _upd)
+    await _send(ctx.ws, {"type": "session_title", "session_id": ctx.session_id, "transcript_id": tid, "title": title, "auto": True})
+
+
 async def _store_chunk_to_kb(
     ctx: _Ctx,
     to_store: str,
@@ -233,6 +265,9 @@ async def _store_chunk_to_kb(
     echodate_iso: str,
 ) -> tuple:
     """Create/append the transcript row, backfill analysis cards, add chunk to RAG KB."""
+
+    if ctx.auto_title:
+        name = ctx.session_title or _auto_title_for(ctx, full_text)
 
     def _do_db():
         tid = ctx.transcript_id
@@ -253,6 +288,7 @@ async def _store_chunk_to_kb(
 
     tid, conv_type, tags = await ctx.loop.run_in_executor(None, _do_db)
     ctx.transcript_id = tid
+    await _maybe_update_title(ctx, tid, full_text)
 
     await ctx.loop.run_in_executor(None, lambda: _backfill_analysis_cards(ctx.session_id, tid))
 
@@ -657,6 +693,8 @@ async def _handle_start(ctx: _Ctx, data: dict) -> None:
         ctx.started_at = time.time()
         ctx.started_at_iso = now_iso()
         ctx.session_name = (data.get("name") or "").strip() or ""
+        ctx.auto_title = bool(_GENERIC_NAME_RE.match(ctx.session_name))
+        ctx.session_title = "" if ctx.auto_title else ctx.session_name
         ctx.session_location = (data.get("location") or "").strip() or "default"
         ctx.transcript_id = None
         ctx.mode = data.get("mode", "transcribe")
@@ -695,6 +733,7 @@ async def _handle_start(ctx: _Ctx, data: dict) -> None:
             ctx.stream_ctx.reset()
     _ensure_assistant(ctx)
     await _send_session_ack(ctx)
+    await _maybe_update_title(ctx, None, "")
     if ns_warning:
         await _send(ctx.ws, {"type": "warning", "code": "namespace_unknown", "message": ns_warning})
     try:

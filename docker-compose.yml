@@ -148,9 +148,12 @@ services:
       # Nemotron STT (same model as backend live transcript; gated HF — set HF_TOKEN in .env if needed)
       - ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
       # DGX / Spark: keep ASR on GPU (PyTorch). Use ECHOMIND_ASR_DEVICE=cpu only for CPU-only hosts.
-      - ECHOMIND_ASR_DEVICE=cuda
+      - ECHOMIND_ASR_DEVICE=${VOICE_ASR_DEVICE:-cuda}   # cpu when the GPU is shared with other stacks
       # Fail startup if the voice container cannot see a GPU (no silent CPU fallback for ASR).
-      - ECHOMIND_ASR_REQUIRE_CUDA=${ECHOMIND_ASR_REQUIRE_CUDA:-1}
+      - ECHOMIND_ASR_REQUIRE_CUDA=${VOICE_ASR_REQUIRE_CUDA:-1}
+      # Set VOICE_CUDA_VISIBLE_DEVICES= (empty) in .env to hide the GPU from voice entirely when another
+      # stack owns it; NeMo initialises a CUDA context on load even with ASR_DEVICE=cpu.
+      - CUDA_VISIBLE_DEVICES=${VOICE_CUDA_VISIBLE_DEVICES-0}
       - HF_TOKEN=${HF_TOKEN:-}
       - HF_HUB_OFFLINE=${HF_HUB_OFFLINE:-1}
       # Utterance chunking for voice STT (ms); optional override
@@ -228,7 +231,7 @@ services:
     image: echomind-ollama:setup
     container_name: echomind-ollama
     restart: unless-stopped
-    ports: ["11434:11434"]
+    ports: ["${OLLAMA_HOST_PORT:-11434}:11434"]   # host port only; containers use ollama:11434 on the docker network
     environment:
       - OLLAMA_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
       - OLLAMA_EMBED_MODEL=nomic-embed-text

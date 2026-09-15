@@ -124,6 +124,27 @@ function uniqueFileNames(citations: DocumentChunk[]): string[] {
   return (citations || []).map(c => c.docName).filter(name => { if (seen.has(name)) return false; seen.add(name); return true; });
 }
 
+/** Inline locator refs "(Section 3.1, page 5)" / "(page 6, section 8)" are removed from the
+ *  visible answer — attribution lives in the Sources panel. Mirrors the backend strip
+ *  (rag/advanced.py strip_inline_refs) so streaming text matches the final text and the
+ *  citations never flash in mid-stream. Applied to ACCUMULATED text: a reference routinely
+ *  straddles two deltas. Only parentheticals whose whole content is locator tokens are cut,
+ *  so "(BAH)", "(2024)", "(e.g., ...)" and "(37 U.S.C. § 403)" survive. */
+const INLINE_REF_RE =
+  /[ \t]*\((?=[^()]*(?:§|\b(?:sections?|sect|secs?|pages?|pgs?|pp|p|paras?|paragraphs?|clauses?|articles?|chapters?|volumes?|vols?)\b))\s*(?:(?:see|as\s+(?:described|prescribed|noted|set\s+out|defined)\s+in|per|cf\.?)\s+)?(?:(?:§+|<?(?:sections?|sect|secs?|pages?|pgs?|pp|p|paras?|paragraphs?|clauses?|articles?|chapters?|volumes?|vols?)>?)\.?\s*\d+(?:[.\u2013\u2014-]\d+)*[a-z]?|\d+(?:[.\u2013\u2014-]\d+)*[a-z]?)(?:(?:\s*[,;&>\u2013\u2014-]\s*|\s+)(?:(?:and|to|through)\s+)?(?:(?:§+|<?(?:sections?|sect|secs?|pages?|pgs?|pp|p|paras?|paragraphs?|clauses?|articles?|chapters?|volumes?|vols?)>?)\.?\s*\d+(?:[.\u2013\u2014-]\d+)*[a-z]?|\d+(?:[.\u2013\u2014-]\d+)*[a-z]?))*\s*\)/gi;
+const TEMPLATE_REF_RE = /[ \t]*\(\s*<[^()<>]{1,40}>(?:\s*[\u2014,\u2013-]\s*<?[^()<>]{0,40}>?)*\s*\)/g;
+const SEE_ALSO_RE = /\n{0,2}\*See also:?\s*Section [^\n]*\*\s*$/i;
+
+export function stripInlineRefs(text: string): string {
+  if (!text) return text;
+  return text
+    .replace(INLINE_REF_RE, '')
+    .replace(TEMPLATE_REF_RE, '')
+    .replace(SEE_ALSO_RE, '')
+    .replace(/[ \t]+([,.;:!?])/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ');
+}
+
 /** Relevance score 0–1 → percentage label with colour class */
 function scoreLabel(score?: number): { text: string; cls: string } | null {
   if (score == null || !Number.isFinite(score)) return null;
@@ -499,7 +520,12 @@ const KnowledgeChat: React.FC<KnowledgeChatProps> = ({ settings, knowledgeChat }
       const delta = streamBufRef.current;
       streamBufRef.current = '';
       if (!delta || !mountedRef.current) return;
-      setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, content: m.content + delta } : m)));
+      // Strip on the ACCUMULATED text: an incomplete "(Section 3" has no closing paren so it
+      // is left alone, then removed once the delta completes it. onDone still overwrites with
+      // the backend's authoritative stripped answer.
+      setMessages(prev => prev.map(m => (m.id === assistantId
+        ? { ...m, content: stripInlineRefs(m.content + delta) }
+        : m)));
     };
 
     try {

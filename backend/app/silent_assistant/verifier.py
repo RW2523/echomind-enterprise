@@ -253,6 +253,90 @@ def evidence_grounds_claim(claim: str, quotes: List[str], verdict: str = "suppor
     return False, f"cited evidence shares only {len(overlap)} key word(s) with the claim"
 
 
+_QUESTION_RE = re.compile(
+    r"^\s*(?:can|could|would|will|shall|do|does|did|is|are|was|were|have|has|what|how|when|where|why|which|who|whom|whose|should|may|any)\b",
+    re.IGNORECASE)
+_CONVO_RE = re.compile(
+    r"\b(can you (?:see|hear)|see (?:my|the|your) screen|share (?:my|the) screen|screen share|hear me|are you there|"
+    r"let me (?:check|see|know|think|share|pull|look|find)|hold on|one (?:moment|second|sec)|bear with|give me a (?:second|moment|minute)|"
+    r"i (?:think|guess|believe|feel|mean|suppose|hope|wonder)|as you know|everybody knows|everyone knows|you know|sounds good|no problem|"
+    r"thank you|thanks|good (?:morning|afternoon|evening)|nice to meet|how are you|talk (?:to you|soon)|take care|make sense|"
+    r"does that (?:make sense|help)|okay so|so basically|basically|anyway|by the way|just (?:checking|wanted|to confirm|a moment)|"
+    r"quick question|got it|i see|understood|sure thing|of course|welcome to|how (?:can|may) i help|is there anything else|"
+    r"have a (?:good|great|nice)|let's (?:start|begin|get started|move on)|before we (?:start|begin)|as i (?:said|mentioned)|"
+    r"like i said|to be honest|honestly|i'm (?:not sure|sorry)|sorry about|apologies|my apologies|no worries)\b",
+    re.IGNORECASE)
+_INTRO_RE = re.compile(
+    r"^\s*(?:hi|hello|hey|good (?:morning|afternoon|evening))?[,.\s]*(?:this is|my name is|i am|i'm|it's|speaking with|you're speaking (?:with|to))\s+[A-Z][a-z]+"
+    r"|^\s*(?:my|the) (?:account|customer|case|policy|ticket|phone|reference|member|order|file|matter) (?:number|id|no\.?)?\s*(?:is|:)",
+    re.IGNORECASE)
+_GENERIC_CLAIM_TERMS = {
+    "fee", "fees", "refund", "policy", "contract", "clause", "rate", "deadline", "limit", "guarantee", "guaranteed", "entitled",
+    "covers", "covered", "required", "must", "cannot", "never", "always", "interest", "deposit", "balance", "term", "terms",
+    "notice", "penalty", "liability", "warranty", "coverage", "premium", "tax", "percent", "dollars", "price", "cost", "charge",
+    "charged", "approved", "budget", "eligible", "not allowed", "prohibited", "permitted", "maximum", "minimum", "capped", "cap",
+    "expires", "expiry", "valid", "due", "owed", "owe", "waive", "waived", "exempt", "exception",
+}
+
+
+def classify_utterance(text: str, profile=None) -> str:
+    """question | filler | personal | claim. Only 'claim' is ever fact-verified.
+
+    A claim is a proposition a document could confirm or refute: it carries a number/amount/date
+    or a domain term (profile.claim_terms weighted 1.0, generic policy words 0.5), and it is not
+    a question, a conversational aside ("can you see my screen", "let me check"), a greeting, or
+    a self-introduction (those are lookup keys, not claims)."""
+    t = (text or "").strip()
+    if not t:
+        return "filler"
+    low = f" {t.lower()} "
+    if t.endswith("?") or _QUESTION_RE.match(t):
+        return "question"
+    if _INTRO_RE.match(t):
+        return "personal"
+    has_num = bool(re.search(r"\d", t))
+    prof_terms = {w.lower() for w in (getattr(profile, "claim_terms", ()) or ())}
+    score = 0.0
+    for w in prof_terms:
+        if re.search(rf"\b{re.escape(w)}\b", low):
+            score += 1.0
+    for w in _GENERIC_CLAIM_TERMS:
+        if w not in prof_terms and re.search(rf"\b{re.escape(w)}\b", low):
+            score += 0.5          # generic words ("must", "required") are weak on their own
+    if _CONVO_RE.search(t) and not has_num and score < 2.0:
+        return "filler"
+    # A SHORT sentence is still a claim when it carries a number or a domain term
+    # ("there is no deadline." / "the fee is 150").
+    if has_num or score >= 1.0:
+        return "claim"
+    if len(re.findall(r"[A-Za-z0-9']+", t)) < 5:
+        return "filler"
+    if re.match(r"^\s*(i|i'm|i've|i'll|i'd|we|we're|we've|we'll|my|our)\b", t, re.IGNORECASE):
+        return "personal"
+    return "filler"
+
+
+def is_verifiable_claim(text: str, profile=None) -> bool:
+    return classify_utterance(text, profile) == "claim"
+
+
+_COMMIT_RE = re.compile(r"\b(i will|i'll|we will|we'll|i am going to|i'm going to|let me (?:send|email|schedule|book|arrange|set up|follow up|get back|call you)|i can (?:send|email|arrange|schedule)|i shall|we shall|will (?:send|email|call|schedule|follow up|get back|update|share)\b)", re.IGNORECASE)
+_ACTION_RE = re.compile(r"\b(needs? to|must|has to|have to|by (?:end of|next|the end|monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|\d)|deadline|due (?:on|by)|action item|next step|before (?:the )?\d|no later than)\b", re.IGNORECASE)
+_DECISION_RE = re.compile(r"\b(we (?:decided|agreed|approved|confirmed)|decision(?: is|:)|it's decided|let's go with|we'll go with|approved)\b", re.IGNORECASE)
+
+
+def speech_acts(text: str) -> List[str]:
+    """Deterministic speech-act tags (no LLM): commitment / action-item / decision."""
+    out = []
+    if _COMMIT_RE.search(text or ""):
+        out.append("commitment")
+    if _ACTION_RE.search(text or "") and not (text or "").strip().endswith("?"):
+        out.append("action-item")
+    if _DECISION_RE.search(text or ""):
+        out.append("decision")
+    return out
+
+
 def _has_claim_signal(text: str) -> bool:
     return bool(re.search(
         r"\d|\b(is|are|was|were|will|must|should|can|cannot|can't|covers?|includes?|says?|states?|requires?|allows?|entitled|"
@@ -333,6 +417,10 @@ async def verify_batch(sentences: List[Sentence], ev_by_sid: Dict[str, ClaimEvid
             chk.kind = str(obj.get("kind") or "claim").strip().lower()
             if chk.kind not in ("claim", "personal_detail", "commitment", "question", "filler"):
                 chk.kind = "claim"
+            # Server-side authority: our classifier decides what is verifiable, not the model.
+            local_kind = classify_utterance(s.query_text, profile)
+            if local_kind in ("question", "filler", "personal"):
+                chk.kind = "question" if local_kind == "question" else "filler"
             v = obj.get("verdict")
             v = str(v).strip().lower() if v not in (None, "", "null") else None
             try:
@@ -379,11 +467,16 @@ async def verify_batch(sentences: List[Sentence], ev_by_sid: Dict[str, ClaimEvid
                 v = "unverified" if _has_claim_signal(s.query_text) else None
                 if v is None:
                     chk.kind = "filler"
+            if chk.kind in ("question", "filler"):
+                v = None                    # conversational lines are never fact-checked
+                cited = []
+                raw_tags = []
             chk.verdict = v
             chk.confidence = round(conf, 0)
             chk.evidence = cited[:4]
             # tags from the LLM (filtered to vocab + proof rules)
-            raw_tags = obj.get("tags") or []
+            if chk.kind not in ("question", "filler"):
+                raw_tags = obj.get("tags") or []
             for t in raw_tags:
                 tid = str(t).strip().lower()
                 spec = profile.tag(tid)
@@ -399,20 +492,11 @@ async def verify_batch(sentences: List[Sentence], ev_by_sid: Dict[str, ClaimEvid
             for ent in obj.get("entities") or []:
                 if isinstance(ent, dict) and ent.get("kind") and ent.get("value"):
                     chk.entities.append({"kind": str(ent["kind"]).lower(), "value": str(ent["value"])[:80], "source": "llm"})
-        # programmatic speech-act tags (deterministic, proof = the spoken span)
-        low = f" {s.text.lower()} "
-        if re.search(r"\b(i will|i'll|we will|we'll|i am going to|i'm going to|let me|i can do that|i shall)\b", low) and s.role in (profile.roles.get("me"), None) or re.search(r"\b(i will|i'll|we will|we'll)\b", low):
-            spec = profile.tag("commitment")
-            if spec and not any(t["tag"] == "commitment" for t in chk.tags):
+        # programmatic speech-act tags (deterministic, proof = the spoken span). No 'question' cards.
+        for act in speech_acts(s.text):
+            spec = profile.tag(act)
+            if spec and not any(t["tag"] == act for t in chk.tags):
                 _push_tag(chk, spec, 75.0)
-        if s.text.strip().endswith("?") or re.match(r"^\s*(can|could|would|will|is|are|do|does|did|what|how|when|where|why|which|who|shall|may|should)\b", low.strip()):
-            spec = profile.tag("question")
-            if spec and not any(t["tag"] == "question" for t in chk.tags) and chk.kind in ("question", "filler", "claim") and not chk.verdict:
-                _push_tag(chk, spec, 70.0)
-        if re.search(r"\b(needs? to|must|has to|have to|by (?:end of|next|the end|monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|\d)|deadline|due (?:on|by)|action item|next step)\b", low) and not s.text.strip().endswith("?"):
-            spec = profile.tag("action-item")
-            if spec and not any(t["tag"] == "action-item" for t in chk.tags):
-                _push_tag(chk, spec, 65.0)
         # programmatic tags
         if chk.verdict:
             spec = profile.tag(chk.verdict)

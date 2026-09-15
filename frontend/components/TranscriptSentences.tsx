@@ -1,181 +1,202 @@
-import React from 'react';
-import type { CheckStatus, Role, SentenceCheck, TagSpec, TranscriptSegment, TranscriptSentence } from '../types';
-import { LABEL_CONFIG, checkStyle } from './AnalysisCardModal';
-import TagChip from './TagChip';
-import ProofPopover from './ProofPopover';
-import { legacyLabelToTag, roleLabel, statusGlyph } from '../utils/silentAssistant';
+/**
+ * Transcript renderer — speaker blocks.
+ *
+ *   Lawyer · 10:14:32
+ *   Utterance text… (consecutive segments from the same role are merged into one block)
+ *
+ * Inside a block every sentence is its own span. The ONLY highlighting:
+ *   • the sentence currently being checked -> pulsing cyan left rule (while `analysis_start` is pending)
+ *   • flagged sentences -> thin coloured left rule (red = contradicted, dark red = violating, orange = risk)
+ * No chips, underlines or checkmarks. Clicking a sentence selects it (its details show in the right panel).
+ * Partial (in-progress) text renders muted inside the current block.
+ */
+import React, { useMemo } from 'react';
+import type { CheckStatus, Role, SentenceCheck, TranscriptSegment } from '../types';
+import { flagTone, formatClock, speakerLabel, type FlagTone } from '../utils/silentAssistant';
 
-/** Small speaker chip; "me" role = cyan, "other" = violet, unknown = slate. */
-export const RoleChip: React.FC<{ role?: Role | null; roles?: { me: Role; other: Role }; className?: string }> = ({ role, roles, className = '' }) => {
-  if (!role) return null;
-  const isMe = roles && role === roles.me;
-  const isOther = roles && role === roles.other;
-  const cls = isMe ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' : isOther ? 'bg-violet-500/15 text-violet-300 border-violet-500/30' : 'bg-white/10 text-slate-300 border-white/15';
-  return (
-    <span className={`inline-flex items-center align-middle rounded-md border px-1.5 py-px text-[9px] font-bold uppercase tracking-widest leading-none mr-1.5 ${cls} ${className}`}>
-      {roleLabel(role)}
-    </span>
-  );
-};
+// ── Block model ───────────────────────────────────────────────────────────────
 
-interface SentenceSpanProps {
-  sentence: TranscriptSentence;
+export interface SentenceUnit {
+  /** sentence_id (v2) or paragraph_id (v1 segments without sentences) — the key used by checks/sentenceStatus */
+  key: string;
+  segmentId: string;
+  /** Verbatim text between the previous unit and this one (whitespace / punctuation gaps). */
+  lead: string;
   text: string;
-  check?: SentenceCheck;
-  status?: CheckStatus;
-  vocab?: TagSpec[];
-  selected: boolean;
-  onSelect: () => void;
-  showRole?: boolean;
-  roles?: { me: Role; other: Role };
+  role: Role | null;
 }
 
-const SentenceSpan: React.FC<SentenceSpanProps> = ({ sentence, text, check, status, vocab, selected, onSelect, showRole, roles }) => {
-  const st = check ? checkStyle(check, vocab) : null;
-  const glyph = statusGlyph(check ? 'checked' : status);
-  const first = check?.evidence?.[0];
-  const clickable = !!check;
+export interface SpeakerBlock {
+  key: string;
+  role: Role | null;
+  /** Wall-clock (epoch ms) when the first utterance of the block started. */
+  startedAt?: number;
+  units: SentenceUnit[];
+}
 
-  const inner = (
-    <span
-      onClick={clickable ? (e) => { e.stopPropagation(); onSelect(); } : undefined}
-      className={`rounded px-0.5 transition-colors ${
-        st ? `${st.bg} border-b ${st.border} cursor-pointer hover:brightness-125` : 'text-white/90'
-      } ${selected ? 'ring-1 ring-white/40 brightness-125' : ''}`}
-      title={check ? `${check.tags?.map((t) => t.label ?? t.tag).join(', ') || check.label} · ${Math.round(check.confidence)}%` : glyph.title || undefined}
-      data-sentence-id={sentence.sentence_id}
-    >
-      {showRole && <RoleChip role={sentence.role} roles={roles} />}
-      {glyph.glyph && (
-        <span className={`text-[10px] font-bold mr-1 align-middle ${glyph.cls}`} aria-label={glyph.title}>{glyph.glyph}</span>
-      )}
-      <span className={st ? 'text-white' : ''}>{text}</span>
-      {check && check.tags?.length > 0 && (
-        <span className="inline-flex items-center gap-1 ml-1.5 align-middle">
-          {check.tags.slice(0, 2).map((t) => <TagChip key={t.tag} tag={t} vocab={vocab} />)}
-          {check.tags.length > 2 && <span className="text-[9px] text-slate-400">+{check.tags.length - 2}</span>}
-        </span>
-      )}
-      {check && !check.tags?.length && (
-        <span className="inline-flex items-center ml-1.5 align-middle">
-          <TagChip tag={{ tag: legacyLabelToTag(check.label) ?? 'reference', label: check.label }} vocab={vocab} />
-        </span>
-      )}
-    </span>
-  );
+function segmentStartedAt(seg: TranscriptSegment): number | undefined {
+  if (typeof seg.started_at === 'number') return seg.started_at;
+  // Server timing is only trusted when it is unmistakably an epoch timestamp (ms since 1970).
+  if (typeof seg.start_ms === 'number' && seg.start_ms > 1e12) return seg.start_ms;
+  return undefined;
+}
 
-  if (first) {
-    return (
-      <ProofPopover evidence={first} note={check?.explanation} trigger="hover">
-        {inner}
-      </ProofPopover>
-    );
+/** Merge consecutive same-role sentences (across segments) into speaker blocks. */
+export function buildSpeakerBlocks(segments: TranscriptSegment[]): SpeakerBlock[] {
+  const blocks: SpeakerBlock[] = [];
+  const push = (unit: SentenceUnit, startedAt: number | undefined, firstOfSegment: boolean) => {
+    const last = blocks[blocks.length - 1];
+    if (last && last.role === unit.role) {
+      // Joining a new segment onto an existing block: make sure the texts do not run together.
+      if (firstOfSegment && !unit.lead) unit.lead = ' ';
+      last.units.push(unit);
+      return;
+    }
+    if (!last) unit.lead = unit.lead.trimStart();
+    blocks.push({ key: unit.key, role: unit.role, startedAt, units: [unit] });
+  };
+
+  for (const seg of segments) {
+    const text = seg.text ?? '';
+    const at = segmentStartedAt(seg);
+    const sentences = seg.sentences;
+    if (sentences && sentences.length > 0) {
+      let cursor = 0;
+      sentences.forEach((s, i) => {
+        const cs = s.char_start, ce = s.char_end;
+        const valid = Number.isFinite(cs) && Number.isFinite(ce) && cs >= 0 && ce > cs && ce <= text.length && cs >= cursor;
+        let lead = '';
+        let sText = s.text;
+        if (valid) { lead = text.slice(cursor, cs); sText = text.slice(cs, ce); cursor = ce; }
+        else if (i > 0) lead = ' ';
+        push({ key: s.sentence_id, segmentId: seg.paragraph_id, lead, text: sText, role: s.role ?? seg.role ?? null }, at, i === 0);
+      });
+      if (cursor < text.length) {
+        const tail = text.slice(cursor);
+        const last = blocks[blocks.length - 1];
+        if (last && tail.trim()) last.units.push({ key: `${seg.paragraph_id}:tail`, segmentId: seg.paragraph_id, lead: '', text: tail, role: last.role });
+      }
+    } else if (text.trim()) {
+      push({ key: seg.paragraph_id, segmentId: seg.paragraph_id, lead: '', text, role: seg.role ?? null }, at, true);
+    }
   }
-  return inner;
+  return blocks;
+}
+
+/** Plain-text export: "Lawyer [10:14:32]: …" per block. */
+export function blocksToText(blocks: SpeakerBlock[]): string {
+  return blocks
+    .map((b) => {
+      const when = b.startedAt ? ` [${formatClock(b.startedAt)}]` : '';
+      const text = b.units.map((u) => u.lead + u.text).join('').trim();
+      return `${speakerLabel(b.role)}${when}: ${text}`;
+    })
+    .join('\n\n');
+}
+
+// ── Styling helpers ───────────────────────────────────────────────────────────
+
+const RULE: Record<FlagTone, string> = {
+  red: 'border-rose-500/80 bg-rose-500/[0.06]',
+  darkred: 'border-red-800 bg-red-900/[0.14]',
+  orange: 'border-orange-400/80 bg-orange-500/[0.06]',
 };
 
-interface SegmentLineProps {
-  segment: TranscriptSegment;
+/** Classes for one sentence span: neutral unless being checked (pulsing) or flagged (coloured rule). */
+export function sentenceMarkClass(check?: SentenceCheck, status?: CheckStatus, selected?: boolean): string {
+  const parts = ['rounded-sm transition-colors'];
+  const flag = check ? flagTone(check) : null;
+  if (flag) parts.push(`sentence-rule border-l-2 pl-1.5 ${RULE[flag]}`);
+  else if (status === 'pending' && !check) parts.push('sentence-rule border-l-2 pl-1.5 border-cyan-400/60 animate-checking');
+  if (check) parts.push('cursor-pointer hover:bg-white/[0.05]');
+  if (selected) parts.push('bg-white/[0.08] ring-1 ring-white/20');
+  return parts.join(' ');
+}
+
+/** Speaker label colour: "me" role cyan, "other" violet, unknown slate. */
+export function roleTextClass(role: Role | null | undefined, roles?: { me: Role; other: Role }): string {
+  if (!role) return 'text-slate-400';
+  if (roles && role === roles.me) return 'text-cyan-300';
+  if (roles && role === roles.other) return 'text-violet-300';
+  return 'text-slate-300';
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+interface TranscriptBlocksProps {
+  segments: TranscriptSegment[];
   checks: Record<string, SentenceCheck>;
-  sentenceStatus: Record<string, CheckStatus>;
-  vocab?: TagSpec[];
+  sentenceStatus?: Record<string, CheckStatus>;
   roles?: { me: Role; other: Role };
   selectedSentenceId: string | null;
   onSelectSentence: (id: string, check?: SentenceCheck) => void;
-  /** Legacy (v1) segment-level selection */
-  isSelected: boolean;
-  onSelectSegment: () => void;
+  /** Live partial (in-progress) text, rendered muted inside the current block. */
+  partial?: string;
+  /** Role the partial belongs to (the currently selected speaker); null/undefined = unknown. */
+  partialRole?: Role | null;
+  /** Show the HH:MM:SS start time in block headers (default true; times need `started_at`). */
+  showTimes?: boolean;
+  className?: string;
 }
 
-/**
- * One transcript paragraph. With v2 `sentences[]` each sentence is its own span
- * (role chip, status glyph, tag chips, proof popover); otherwise falls back to the
- * v1 segment-level highlight.
- */
-export const TranscriptSegmentLine: React.FC<SegmentLineProps> = ({
-  segment, checks, sentenceStatus, vocab, roles, selectedSentenceId, onSelectSentence, isSelected, onSelectSegment,
+const BlockHeader: React.FC<{ role: Role | null; startedAt?: number; roles?: { me: Role; other: Role }; showTimes: boolean }> = ({ role, startedAt, roles, showTimes }) => (
+  <div className="flex items-baseline gap-2 mb-1 select-none">
+    <span className={`text-[12px] font-semibold tracking-wide ${roleTextClass(role, roles)}`}>{speakerLabel(role)}</span>
+    {showTimes && startedAt != null && (
+      <span className="text-[11px] text-slate-500 tabular-nums">· {formatClock(startedAt)}</span>
+    )}
+  </div>
+);
+
+export const TranscriptBlocks: React.FC<TranscriptBlocksProps> = ({
+  segments, checks, sentenceStatus = {}, roles, selectedSentenceId, onSelectSentence, partial, partialRole, showTimes = true, className = '',
 }) => {
-  const sentences = segment.sentences;
+  const blocks = useMemo(() => buildSpeakerBlocks(segments), [segments]);
+  const partialText = (partial ?? '').trim();
+  const last = blocks[blocks.length - 1];
+  const partialInLast = !!partialText && !!last && (partialRole === undefined || last.role === (partialRole ?? null));
+  const partialAsNewBlock = !!partialText && !partialInLast;
 
-  if (sentences && sentences.length > 0) {
-    const text = segment.text ?? '';
-    const parts: React.ReactNode[] = [];
-    let cursor = 0;
-    let lastRole: Role | null | undefined = undefined;
-    sentences.forEach((s, i) => {
-      const cs = s.char_start, ce = s.char_end;
-      const validOffsets = Number.isFinite(cs) && Number.isFinite(ce) && cs >= 0 && ce > cs && ce <= text.length && cs >= cursor;
-      let sText = s.text;
-      if (validOffsets) {
-        if (cs > cursor) parts.push(<span key={`gap-${i}`} className="text-white/90">{text.slice(cursor, cs)}</span>);
-        sText = text.slice(cs, ce);
-        cursor = ce;
-      } else if (i > 0) {
-        parts.push(<span key={`sp-${i}`}> </span>);
-      }
-      const check = checks[s.sentence_id];
-      const role = s.role ?? segment.role;
-      const showRole = role != null && role !== lastRole;
-      lastRole = role;
-      parts.push(
-        <SentenceSpan
-          key={s.sentence_id}
-          sentence={{ ...s, role }}
-          text={sText}
-          check={check}
-          status={sentenceStatus[s.sentence_id]}
-          vocab={vocab}
-          roles={roles}
-          showRole={showRole}
-          selected={selectedSentenceId === s.sentence_id}
-          onSelect={() => onSelectSentence(s.sentence_id, check)}
-        />
-      );
-    });
-    if (cursor < text.length) parts.push(<span key="tail" className="text-white/90">{text.slice(cursor)}</span>);
-    return <p className="leading-loose">{parts}</p>;
-  }
-
-  // ── v1 fallback: whole-segment highlight ──
-  const segCheck = checks[segment.paragraph_id];
-  const cfg = segment.label ? LABEL_CONFIG[segment.label] : segCheck ? LABEL_CONFIG[segCheck.label] : null;
-  const st = segCheck ? checkStyle(segCheck, vocab) : null;
-  const status = sentenceStatus[segment.paragraph_id];
-  const glyph = statusGlyph(segCheck ? 'checked' : status);
-
-  if (!cfg && !st) {
-    return (
-      <p className="text-white/90">
-        <RoleChip role={segment.role} roles={roles} />
-        {glyph.glyph && <span className={`text-[10px] font-bold mr-1 ${glyph.cls}`}>{glyph.glyph}</span>}
-        {segment.text}
-      </p>
-    );
-  }
-  const border = st?.border ?? cfg!.border;
-  const bg = st?.bg ?? cfg!.bg;
-  const textCls = st?.text ?? cfg!.text;
-  const icon = cfg?.icon ?? '•';
-  const body = (
-    <div
-      onClick={() => { onSelectSegment(); if (segCheck) onSelectSentence(segment.paragraph_id, segCheck); }}
-      className={`cursor-pointer transition-all duration-200 rounded px-1 py-0.5 border-l-2 ${border} ${
-        isSelected || selectedSentenceId === segment.paragraph_id ? `${bg} brightness-125` : `${bg} opacity-90 hover:opacity-100`
-      }`}
-      title={`${segCheck?.tags?.map((t) => t.label ?? t.tag).join(', ') || segment.label} (${(segCheck?.confidence ?? segment.confidence ?? 0).toFixed(0)}%)`}
-    >
-      <RoleChip role={segment.role} roles={roles} />
-      <span className={`text-[10px] font-bold mr-1.5 ${textCls}`}>{icon}</span>
-      <span className="text-white/90">{segment.text}</span>
-      {segCheck?.tags?.length ? (
-        <span className="inline-flex items-center gap-1 ml-1.5 align-middle">
-          {segCheck.tags.slice(0, 2).map((t) => <TagChip key={t.tag} tag={t} vocab={vocab} />)}
-        </span>
-      ) : null}
+  return (
+    <div className={`space-y-4 ${className}`}>
+      {blocks.map((b, bi) => {
+        const isLast = bi === blocks.length - 1;
+        return (
+          <section key={b.key} data-block-role={b.role ?? 'unknown'}>
+            <BlockHeader role={b.role} startedAt={b.startedAt} roles={roles} showTimes={showTimes} />
+            <p className="text-[13.5px] leading-7 text-slate-100/90 break-words">
+              {b.units.map((u) => {
+                const check = checks[u.key];
+                const status = sentenceStatus[u.key];
+                const selected = selectedSentenceId === u.key;
+                const cls = sentenceMarkClass(check, status, selected);
+                return (
+                  <React.Fragment key={u.key}>
+                    {u.lead}
+                    <span
+                      data-sentence-id={u.key}
+                      onClick={check ? (e) => { e.stopPropagation(); onSelectSentence(u.key, check); } : undefined}
+                      className={cls}
+                      title={check ? `${check.tags?.map((t) => t.label ?? t.tag).join(', ') || check.label} · ${Math.round(check.confidence)}%` : undefined}
+                    >
+                      {u.text}
+                    </span>
+                  </React.Fragment>
+                );
+              })}
+              {isLast && partialInLast && <span className="text-slate-400/80"> {partialText}</span>}
+            </p>
+          </section>
+        );
+      })}
+      {partialAsNewBlock && (
+        <section data-block-role={partialRole ?? 'unknown'}>
+          <BlockHeader role={partialRole ?? null} roles={roles} showTimes={false} />
+          <p className="text-[13.5px] leading-7 text-slate-400/80 break-words">{partialText}</p>
+        </section>
+      )}
     </div>
   );
-  const first = segCheck?.evidence?.[0];
-  return first ? <ProofPopover evidence={first} note={segCheck?.explanation} trigger="hover" block>{body}</ProofPopover> : body;
 };
 
-export default TranscriptSegmentLine;
+export default TranscriptBlocks;

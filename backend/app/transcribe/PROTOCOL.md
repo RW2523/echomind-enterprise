@@ -29,11 +29,15 @@ Additive over the v1 protocol. Old clients that only understand `partial/segment
 | **`subject`** | `id, kind: customer\|client\|account_holder\|counterparty\|person, display_name, matched_fields:[], entity_ids:[], confidence, status: candidate\|confirmed\|rejected, records_count` |
 | **`record`** | `id, subject_id?, entity_id?, sentence_id, kind: customer_file\|contract\|ticket\|previous_call\|matter\|related_case\|account\|product\|policy\|kyc\|document, title, doc_id, doc_title, page, section_path, quotes:[{text,chunk_id}], score (0-1), match: exact\|fuzzy\|semantic, namespace, source_transcript_id?` |
 | **`scenario_suggest`** | `scenario, confidence, reason` |
+| **`session_title`** | `title, transcript_id?, auto:true` — readable auto-generated title ("Legal consultation — Contract Review") sent after `start` and whenever the detected topic changes; only when the client's `name` was empty/generic |
 | `final`, `stored`, `stored_combined`, `refined` | unchanged |
 
 ## REST additions
 - `GET /api/transcribe/scenarios` → `[{id,label,description,default_namespace,roles,analysis_mode_default,tag_vocab}]`
 - `GET /api/transcribe/transcripts/{id}/assistant` → `{checks:[analysis payloads], entities, subjects, records, segments}`
+
+## Verification gating (v2.1)
+Only **verifiable claims** are fact-checked: a sentence with a number/amount/date or a domain term (per-scenario `claim_terms` + generic policy words), that is not a question, conversational aside ("can you see my screen", "let me check"), or first-person statement of intent/feeling. Questions, greetings and filler produce `analysis_done{status:'skipped'}` and never an `analysis` card. Commitments / action items / decisions produce a lightweight `analysis` card (tags only, no verdict, no LLM). Auto-tags on stored transcripts come only from the curated topic taxonomy (`tagging.TOPIC_TAXONOMY`), never from raw words.
 
 ## Legacy `label` mapping (for old renderers)
 verdict supported → `Supported`; contradicted → `Contradicted`; tag violating → `Violating`; tag risk/disclosure-missing → `Risky Statement`; verdict unverified → `Unverified`; else (records/reference only) → `Relevant`.

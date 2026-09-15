@@ -30,7 +30,11 @@ export interface ToneClasses {
 export const TONE_CLASSES: Record<string, ToneClasses> = {
   green:  { bg: 'bg-emerald-500/10', border: 'border-emerald-500/40', text: 'text-emerald-300', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', bar: 'bg-emerald-500', mark: 'bg-emerald-400/30 text-emerald-100' },
   red:    { bg: 'bg-rose-500/10',    border: 'border-rose-500/40',    text: 'text-rose-300',    badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',          bar: 'bg-rose-500',    mark: 'bg-rose-400/30 text-rose-100' },
-  yellow: { bg: 'bg-amber-300/5',    border: 'border-amber-300/50',   text: 'text-amber-200',   badge: 'bg-transparent text-amber-200 border-amber-300/60',        bar: 'bg-amber-300',   mark: 'bg-amber-300/30 text-amber-50' },
+  // 'yellow' is what the backend vocab still sends for `unverified`; the product rule is that
+  // unverified looks NEUTRAL (slate outline, no fill, no warning glyph), so it maps to grey here.
+  yellow: { bg: 'bg-white/[0.03]',   border: 'border-slate-500/40',   text: 'text-slate-300',   badge: 'bg-transparent text-slate-300 border-slate-500/50',        bar: 'bg-slate-500',   mark: 'bg-slate-400/25 text-slate-100' },
+  // Dark red: reserved for `violating` (a rule/policy was broken).
+  darkred:{ bg: 'bg-red-950/40',     border: 'border-red-700/60',     text: 'text-red-300',     badge: 'bg-red-900/40 text-red-200 border-red-700/60',            bar: 'bg-red-700',     mark: 'bg-red-700/40 text-red-100' },
   blue:   { bg: 'bg-sky-500/10',     border: 'border-sky-500/40',     text: 'text-sky-300',     badge: 'bg-sky-500/20 text-sky-300 border-sky-500/40',             bar: 'bg-sky-500',     mark: 'bg-sky-400/30 text-sky-100' },
   violet: { bg: 'bg-violet-500/10',  border: 'border-violet-500/40',  text: 'text-violet-300',  badge: 'bg-violet-500/20 text-violet-300 border-violet-500/40',    bar: 'bg-violet-500',  mark: 'bg-violet-400/30 text-violet-100' },
   indigo: { bg: 'bg-indigo-500/10',  border: 'border-indigo-500/40',  text: 'text-indigo-300',  badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',    bar: 'bg-indigo-500',  mark: 'bg-indigo-400/30 text-indigo-100' },
@@ -167,6 +171,27 @@ export function isProblem(check: SentenceCheck): boolean {
   return PROBLEM_LABELS.has(check.label);
 }
 
+/** "Flagged" in the UI = contradicted / violating / risk / disclosure-missing (same set as isProblem). */
+export const isFlagged = isProblem;
+
+export type FlagTone = 'red' | 'darkred' | 'orange';
+
+/** Strong colour for a flagged check (null = not flagged -> neutral rendering). */
+export function flagTone(check: SentenceCheck): FlagTone | null {
+  const ids = checkTagIds(check);
+  if (ids.includes('violating') || check.label === 'Violating') return 'darkred';
+  if (check.verdict === 'contradicted' || ids.includes('contradicted') || check.label === 'Contradicted') return 'red';
+  if (ids.includes('risk') || ids.includes('disclosure-missing') || check.label === 'Risky Statement') return 'orange';
+  return null;
+}
+
+export function isSupported(check: SentenceCheck): boolean {
+  return check.verdict === 'supported' || checkTagIds(check).includes('supported') || check.label === 'Supported';
+}
+
+/** Tag ids covered by the quick filters (All | Supported | Flagged); everything else goes behind the filter popover. */
+export const QUICK_FILTER_TAGS = new Set(['supported', 'contradicted', 'violating', 'risk', 'disclosure-missing']);
+
 /** Problems first, then supported, then unverified/reference/other. Lower = earlier. */
 export function checkRank(check: SentenceCheck): number {
   if (check.verdict === 'contradicted' || checkTagIds(check).includes('contradicted') || check.label === 'Contradicted') return 0;
@@ -285,6 +310,73 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       return false;
     }
   }
+}
+
+// ── Session metadata helpers ──────────────────────────────────────────────────
+
+/**
+ * Mirrors the backend's `_GENERIC_NAME_RE`: names like "transcript_2026-09-14_10-14", "session 2026-09-14",
+ * or an empty string are placeholders -> the server auto-titles the session and the UI never shows them.
+ */
+export function isGenericSessionName(name?: string | null): boolean {
+  if (!name || !name.trim()) return true;
+  return /^\s*(?:transcript|session|recording|untitled)?[\s_\-]*\d{4}[\-_]\d{2}[\-_]\d{2}/i.test(name);
+}
+
+export const UNTITLED_SESSION = 'Untitled session';
+
+/** Screen title: explicit (non-generic) name > auto title from `session_title` > "Untitled session". */
+export function sessionDisplayTitle(sessionName?: string | null, autoTitle?: string | null): string {
+  const explicit = (sessionName ?? '').trim();
+  if (explicit && !isGenericSessionName(explicit)) return explicit;
+  const auto = (autoTitle ?? '').trim();
+  return auto || UNTITLED_SESSION;
+}
+
+/** The backend's default location value and how the UI presents it. */
+export const LOCATION_DEFAULT_VALUE = 'default';
+export const LOCATION_DEFAULT_LABEL = 'Remote call';
+
+export function displayLocation(location?: string | null): string {
+  const v = (location ?? '').trim();
+  return !v || v.toLowerCase() === LOCATION_DEFAULT_VALUE ? LOCATION_DEFAULT_LABEL : v;
+}
+
+/** Inverse of displayLocation for the editable field: "Remote call" / empty -> backend 'default'. */
+export function normalizeLocationInput(value: string): string {
+  const v = value.trim();
+  return !v || v.toLowerCase() === LOCATION_DEFAULT_LABEL.toLowerCase() ? LOCATION_DEFAULT_VALUE : v;
+}
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** Wall-clock HH:MM:SS for a block header. */
+export function formatClock(epochMs: number): string {
+  const d = new Date(epochMs);
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+}
+
+/** HH:MM (no seconds) for "started at" hints. */
+export function formatClockShort(epochMs: number): string {
+  const d = new Date(epochMs);
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/** Elapsed mm:ss (h:mm:ss past an hour). */
+export function formatElapsed(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+  return h > 0 ? `${h}:${pad2(m)}:${pad2(s)}` : `${pad2(m)}:${pad2(s)}`;
+}
+
+/** Full date & time for the Session details drawer. */
+export function formatDateTime(d: Date): string {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/** Speaker label for a block header: role id -> "Lawyer"; unknown -> "Speaker". */
+export function speakerLabel(role?: string | null): string {
+  return role ? roleLabel(role) : 'Speaker';
 }
 
 /** Format "Doc title · p.3 · Section" for evidence/record rows. */

@@ -1,17 +1,24 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { TopBar } from "./TopBar";
-import { VoiceOrb } from "./VoiceOrb";
+import { VoiceStatusBar } from "./VoiceStatusBar";
 import { ControlBar } from "./ControlBar";
+import { TranscriptPanel } from "./TranscriptPanel";
 import type { ConversationState } from "./ChatState";
+import { PersonaType } from "../../types";
 
+/**
+ * Compact orb size: capped by viewport height so the status strip never
+ * takes more than ~20vh, and shrinks further on small screens.
+ */
 function useOrbSize(): number {
-  const [size, setSize] = useState(200);
+  const [size, setSize] = useState(96);
   useEffect(() => {
     const update = () => {
-      const w = typeof window !== "undefined" ? window.innerWidth : 768;
-      if (w >= 768) setSize(240);
-      else if (w >= 640) setSize(200);
-      else setSize(168);
+      const w = typeof window !== "undefined" ? window.innerWidth : 1024;
+      const h = typeof window !== "undefined" ? window.innerHeight : 800;
+      const byWidth = w >= 1024 ? 104 : w >= 640 ? 92 : 76;
+      const byHeight = Math.round(h * 0.11);
+      setSize(Math.max(60, Math.min(byWidth, byHeight)));
     };
     update();
     window.addEventListener("resize", update);
@@ -20,15 +27,23 @@ function useOrbSize(): number {
   return size;
 }
 
-function resolveOrbColor(element: HTMLElement | null, cssVar: string, fallbackHex: string): string {
-  if (!element) return fallbackHex;
-  const match = cssVar.match(/var\s*\(\s*(--[^,]+)\s*,\s*([^)]+)\s*\)/);
-  if (!match) return fallbackHex;
-  const [, varName] = match;
-  const value = getComputedStyle(element).getPropertyValue(varName).trim();
-  if (value && /^#?[0-9A-Fa-f]{6}$/.test(value)) return value.startsWith("#") ? value : `#${value}`;
-  const hex = fallbackHex.trim();
-  return /^#?[0-9A-Fa-f]{6}$/.test(hex) ? (hex.startsWith("#") ? hex : `#${hex}`) : fallbackHex;
+/** Read a CSS custom property as a #rrggbb string (accepts hex or an "r g b" triplet). */
+function cssVarToHex(element: HTMLElement | null, varName: string): string | null {
+  if (!element) return null;
+  const raw = getComputedStyle(element).getPropertyValue(varName).trim();
+  if (!raw) return null;
+  if (/^#?[0-9A-Fa-f]{6}$/.test(raw)) return raw.startsWith("#") ? raw : `#${raw}`;
+  const nums = raw.match(/\d{1,3}/g);
+  if (nums && nums.length >= 3) {
+    return (
+      "#" +
+      nums
+        .slice(0, 3)
+        .map((n) => Math.max(0, Math.min(255, Number(n))).toString(16).padStart(2, "0"))
+        .join("")
+    );
+  }
+  return null;
 }
 
 export interface VoiceMessage {
@@ -57,12 +72,16 @@ export interface ConversationStageProps {
   onSettingsClick?: () => void;
   /** Streaming partial transcript shown while user is still speaking */
   partialTranscript?: string;
-  /** Latest backchannel word from assistant ("Mm-hmm", "I see" …) */
+  /** Latest backchannel word from assistant */
   backchannelText?: string;
+  /** Secondary controls (••• menu) */
+  persona?: PersonaType;
+  onPersonaChange?: (persona: PersonaType) => void;
+  onApplyContext?: () => void;
+  /** Speaker labels in the transcript */
+  userLabel?: string;
+  assistantLabel?: string;
 }
-
-const ASSISTANT_COLOR_VAR = "var(--assistant-color, #14b8a6)";
-const USER_COLOR_VAR = "var(--user-color, #94a3b8)";
 
 export const ConversationStage: React.FC<ConversationStageProps> = ({
   state,
@@ -83,29 +102,25 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
   onSettingsClick,
   partialTranscript = "",
   backchannelText = "",
+  persona,
+  onPersonaChange,
+  onApplyContext,
+  userLabel = "You",
+  assistantLabel = "EchoMind",
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [resolvedAssistantColor, setResolvedAssistantColor] = useState("#14b8a6");
+  const [resolvedAssistantColor, setResolvedAssistantColor] = useState("#22d3ee");
   const [resolvedUserColor, setResolvedUserColor] = useState("#94a3b8");
   const orbSize = useOrbSize();
-  const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    setResolvedAssistantColor(resolveOrbColor(el, ASSISTANT_COLOR_VAR, "#14b8a6"));
-    setResolvedUserColor(resolveOrbColor(el, USER_COLOR_VAR, "#94a3b8"));
+    setResolvedAssistantColor(
+      cssVarToHex(el, "--assistant-color") ?? cssVarToHex(el, "--accent-rgb") ?? "#22d3ee"
+    );
+    setResolvedUserColor(cssVarToHex(el, "--user-color") ?? "#94a3b8");
   }, []);
-
-  useEffect(() => {
-    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [voiceMessages, pendingAssistantText]);
-
-  const showTranscript =
-    voiceMessages.length > 0 ||
-    !!pendingAssistantText ||
-    listenOnly ||
-    !!partialTranscript;
 
   return (
     <div
@@ -114,72 +129,37 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
     >
       <TopBar onSettingsClick={onSettingsClick} />
 
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        <VoiceOrb
-          orbState={state.assistantOrb}
-          isConnected={state.isConnected}
-          userOrb={state.userOrb}
-          assistantAnalyser={assistantAnalyser}
-          userAnalyser={userAnalyser}
-          interruptedAt={state.interruptedAt}
-          assistantColor={resolvedAssistantColor}
-          userColor={resolvedUserColor}
-          size={orbSize}
-        />
+      {/* 1 — Logo + status (top centre) */}
+      <VoiceStatusBar
+        assistantOrb={state.assistantOrb}
+        userOrb={state.userOrb}
+        isConnected={state.isConnected}
+        connecting={connecting}
+        micMuted={micMuted}
+        listenOnly={listenOnly}
+        assistantAnalyser={assistantAnalyser}
+        userAnalyser={userAnalyser}
+        interruptedAt={state.interruptedAt}
+        assistantColor={resolvedAssistantColor}
+        userColor={resolvedUserColor}
+        orbSize={orbSize}
+        className="border-b border-white/[0.05]"
+      />
 
-        {showTranscript && (
-          <div className="shrink-0 flex flex-col max-h-[36vh] min-h-0 border-t border-white/[0.04]">
-            <div className="px-4 py-2.5 text-[13px] font-medium text-slate-500 uppercase tracking-wider">
-              {listenOnly ? "Listening — say EchoMind when done" : "Live transcript"}
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-3 space-y-1.5">
-              {listenOnly && listenBufferText ? (
-                <div className="rounded-2xl px-4 py-3 text-[15px] bg-white/[0.06] text-slate-300 border border-white/10 whitespace-pre-wrap break-words">
-                  {listenBufferText}
-                  <span className="inline-block w-2 h-4 ml-1 bg-teal-400/80 rounded-sm animate-pulse align-middle" aria-hidden />
-                </div>
-              ) : null}
-              {!listenOnly &&
-                voiceMessages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`rounded-2xl px-4 py-2.5 text-[15px] max-w-[85%] animate-[fadeIn_0.4s_cubic-bezier(0.25,0.1,0.25,1)] ${
-                      msg.role === "user"
-                        ? "ml-auto bg-white/[0.06] text-slate-400"
-                        : "mr-auto bg-teal-500/[0.08] text-teal-200/90"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                ))}
-              {pendingAssistantText && (
-                <div className="mr-auto rounded-2xl px-4 py-2.5 text-[15px] max-w-[85%] bg-teal-500/[0.08] text-teal-200/90 border border-teal-500/15 animate-[fadeIn_0.4s_cubic-bezier(0.25,0.1,0.25,1)]">
-                  {pendingAssistantText}
-                  <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse rounded-sm opacity-80" aria-hidden />
-                </div>
-              )}
+      {/* 2 — Conversation (hero, scrolls internally) */}
+      <TranscriptPanel
+        messages={voiceMessages}
+        pendingAssistantText={pendingAssistantText}
+        partialTranscript={partialTranscript}
+        listenOnly={listenOnly}
+        listenBufferText={listenBufferText}
+        backchannelText={backchannelText}
+        isConnected={state.isConnected}
+        userLabel={userLabel}
+        assistantLabel={assistantLabel}
+      />
 
-              {/* Partial transcript from streaming STT — shown while user is still speaking */}
-              {!listenOnly && partialTranscript && !pendingAssistantText && (
-                <div className="ml-auto rounded-2xl px-4 py-2.5 text-[15px] max-w-[85%] bg-white/[0.04] text-slate-400/70 border border-white/[0.06] italic animate-[fadeIn_0.3s_ease]">
-                  {partialTranscript}
-                  <span className="inline-block w-1.5 h-3.5 ml-1 bg-slate-400/60 rounded-sm animate-pulse align-middle" aria-hidden />
-                </div>
-              )}
-
-              {/* Backchannel flash — briefly shows "Mm-hmm", "I see" etc. */}
-              {backchannelText && (
-                <div className="mr-auto rounded-2xl px-3 py-1.5 text-[13px] max-w-[50%] bg-teal-500/[0.05] text-teal-300/60 border border-teal-500/10 animate-[fadeIn_0.25s_ease]">
-                  {backchannelText}
-                </div>
-              )}
-
-              <div ref={transcriptEndRef} />
-            </div>
-          </div>
-        )}
-      </div>
-
+      {/* 3 — Controls */}
       <ControlBar
         isConnected={state.isConnected}
         connecting={connecting}
@@ -192,6 +172,10 @@ export const ConversationStage: React.FC<ConversationStageProps> = ({
         onDisconnect={onDisconnect}
         onMicMutedToggle={onMicMutedToggle ?? (() => {})}
         onClearMemory={onClearMemory}
+        persona={persona}
+        onPersonaChange={onPersonaChange}
+        onApplyContext={onApplyContext}
+        onSettingsClick={onSettingsClick}
       />
     </div>
   );

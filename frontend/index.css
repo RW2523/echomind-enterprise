@@ -10,3 +10,11 @@
   --glow-1: rgba(34, 211, 238, 0.10);
   --glow-2: rgba(139, 92, 246, 0.10);
 }
+
+/* Live transcript: sentence currently being checked (pulsing left rule) + wrapped-line rules. */
+@keyframes checking-rule {
+  0%, 100% { border-color: rgb(34 211 238 / 0.25); background-color: rgb(34 211 238 / 0.03); }
+  50%      { border-color: rgb(34 211 238 / 0.85); background-color: rgb(34 211 238 / 0.10); }
+}
+.animate-checking { animation: checking-rule 1.4s ease-in-out infinite; }
+.sentence-rule { -webkit-box-decoration-break: clone; box-decoration-break: clone; }

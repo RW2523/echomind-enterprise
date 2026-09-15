@@ -17,6 +17,18 @@ class Settings:
     # Utterance looks INCOMPLETE (trailing 'and', 'because', filler, comma...) -> wait longer.
     ENDPOINT_SILENCE_INCOMPLETE_MS: int = int(os.getenv("ENDPOINT_SILENCE_INCOMPLETE_MS", "950"))
     MIN_SPEECH_MS: int = int(os.getenv("MIN_SPEECH_MS", "250"))
+    # ── Meaningful-speech gate (a turn must clear ALL of these before the model is called) ──
+    # Voiced audio in the utterance (ms). Below this it is a cough/click/echo, not speech.
+    MIN_VOICED_MS: int = int(os.getenv("MIN_VOICED_MS", "500"))
+    # Minimum real words in the final transcript (fillers/stopwords do not count).
+    MIN_UTTERANCE_WORDS: int = int(os.getenv("MIN_UTTERANCE_WORDS", "2"))
+    # Minimum characters in the final transcript.
+    MIN_UTTERANCE_CHARS: int = int(os.getenv("MIN_UTTERANCE_CHARS", "4"))
+    # Ignore a repeat of the previous utterance inside this window (STT double-fire / echo).
+    DUP_UTTERANCE_WINDOW_S: float = float(os.getenv("DUP_UTTERANCE_WINDOW_S", "6.0"))
+    # Lead phrases ("Let me check that for you") while the model runs. Kept, but never for
+    # greetings/short turns; set 0 to disable entirely.
+    LEAD_PHRASE_ENABLED: bool = os.getenv("LEAD_PHRASE_ENABLED", "1") in ("1", "true", "yes")
     END_TAIL_MS: int = int(os.getenv("END_TAIL_MS", "120"))
     # Barge-in: require this many consecutive speech frames before treating as user speech (reduces false triggers from noise)
     BARGE_IN_SPEECH_LEAD_IDLE: int = int(os.getenv("BARGE_IN_SPEECH_LEAD_IDLE", "2"))   # when assistant idle
@@ -84,7 +96,9 @@ class Settings:
     LEAD_PHRASE_ENABLED: bool = os.getenv("LEAD_PHRASE_ENABLED", "1") in ("1", "true", "yes")
 
     # Backchannel injection: "Mm-hmm", "I see" etc. during long user speech.
-    BACKCHANNEL_ENABLED: bool = os.getenv("BACKCHANNEL_ENABLED", "1") in ("1", "true", "yes")
+    # Off by default: filler backchannels ("Interesting.", "I see.", "Okay.") spoken while the user
+    # talks read as the assistant answering nothing. Enterprise tone = stay silent until the user finishes.
+    BACKCHANNEL_ENABLED: bool = os.getenv("BACKCHANNEL_ENABLED", "0") in ("1", "true", "yes")
     # Minimum continuous speech before a backchannel may fire (seconds).
     BACKCHANNEL_MIN_SPEECH_S: float = float(os.getenv("BACKCHANNEL_MIN_SPEECH_S", "3.0"))
     # Minimum gap between two backchannels (seconds).

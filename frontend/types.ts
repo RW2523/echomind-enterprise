@@ -105,6 +105,11 @@ export interface TranscriptSegment {
   role?: Role | null;
   /** v2: sentence split of this segment (char offsets relative to `text`) */
   sentences?: TranscriptSentence[];
+  /** Client-side wall-clock (epoch ms) when this paragraph was first heard — drives the `Lawyer · 10:14:32` block header. */
+  started_at?: number;
+  /** Optional server timing on the `segment` message (not in PROTOCOL.md; used only when it is clearly epoch ms). */
+  start_ms?: number | null;
+  end_ms?: number | null;
 }
 
 // ── Silent Assistant v2 (scenario / sentence checks / records) ───────────────
@@ -258,6 +263,9 @@ export type WsWarningCode = 'namespace_empty' | 'llm_slow' | 'overloaded' | 'stt
 export interface WsWarning { code: WsWarningCode; message: string; at: number }
 
 export interface ScenarioSuggestion { scenario: ScenarioId; confidence: number; reason?: string }
+
+/** `session_title` server message: readable auto-generated title, sent when the client's name was empty/generic. */
+export interface SessionTitleMsg { title: string; transcript_id?: string | null; auto?: boolean }
 
 /** Derived from checks tagged action-item / commitment / decision. */
 export interface ActionItem {

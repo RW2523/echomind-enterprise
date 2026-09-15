@@ -39,41 +39,51 @@ def get_conversation_type(text: str) -> str:
     return best[0] if best[1] > 0 else "casual"
 
 
-def get_tags(text: str, max_tags: int = 12) -> List[str]:
-    """
-    Lightweight keyphrase extraction: tokenize, remove stopwords, count, return top terms.
-    RAKE-like: prefer longer phrases (bigrams then unigrams).
-    """
-    if not text or not text.strip():
+# Curated topic taxonomy. Auto-tags are ONLY ever drawn from these labels — never from raw
+# transcript words (the old keyphrase extractor produced "everybody knows", "my", "language").
+# A tag fires when enough of its cue phrases occur; at most 3 tags; none if nothing is confident.
+TOPIC_TAXONOMY = {
+    "Contract Review": ["contract", "clause", "agreement", "terms and conditions", "liquidated damages", "arbitration", "breach", "indemnity", "termination clause", "signed agreement", "amendment"],
+    "Compliance": ["compliance", "regulation", "regulatory", "disclosure", "conduct policy", "audit", "must not", "policy 4", "suitability", "aml", "anti-money", "sanction"],
+    "KYC": ["kyc", "know your customer", "identity verification", "verify your identity", "date of birth", "proof of address", "account number", "id number", "passport"],
+    "Refund & Cancellation": ["refund", "cancel", "cancellation", "early termination", "cooling-off", "cooling off", "pro-rated", "money back", "chargeback"],
+    "Billing": ["invoice", "billing", "late fee", "charged", "overcharged", "payment due", "autopay", "statement", "balance due", "installment"],
+    "Technical Support": ["ticket", "outage", "disconnect", "not working", "technician", "router", "reset", "troubleshoot", "error message", "install"],
+    "Complaint": ["complaint", "escalate", "unacceptable", "frustrated", "supervisor", "compensation", "dissatisfied", "formal complaint"],
+    "Litigation": ["court", "hearing", "lawsuit", "sue", "litigation", "plaintiff", "defendant", "judgment", "precedent", "file a claim", "limitation period", "statute of limitations"],
+    "Investment Advice": ["investment", "fund", "equity", "portfolio", "returns", "risk profile", "market-linked", "guaranteed return", "fixed deposit", "interest rate", "capital protected"],
+    "Loan & Credit": ["loan", "mortgage", "credit card", "credit limit", "emi", "repayment", "interest", "collateral", "pre-approved"],
+    "Account Services": ["transfer", "wire", "withdrawal", "deposit", "online banking", "transfer limit", "beneficiary", "savings account", "current account"],
+    "Onboarding": ["onboarding", "sign up", "activate", "activation", "new customer", "welcome pack", "set up your account", "getting started"],
+    "Scheduling": ["schedule", "appointment", "reschedule", "available on", "calendar", "book a", "slot", "next week", "follow-up call"],
+    "Budget & Planning": ["budget", "approved", "roadmap", "milestone", "launch date", "headcount", "forecast", "quarter", "q1", "q2", "q3", "q4", "allocation"],
+    "Hiring": ["hire", "hiring", "candidate", "interview", "offer letter", "salary", "recruit", "position", "role"],
+    "Product Demo": ["demo", "walkthrough", "show you", "feature", "screen share", "let me share", "presentation"],
+}
+_TOPIC_MIN_HITS = 2          # distinct cue phrases needed
+_TOPIC_MIN_WORDS = 30        # do not tag tiny transcripts
+_TOPIC_MAX_TAGS = 3
+
+
+def get_tags(text: str, max_tags: int = _TOPIC_MAX_TAGS) -> List[str]:
+    """Topic tags from the curated taxonomy only (never raw transcript words)."""
+    if not text or len(text.split()) < _TOPIC_MIN_WORDS:
         return []
-    lower = text.lower()
-    words = re.findall(r"[a-z0-9]+", lower)
-    words = [w for w in words if len(w) > 1 and w not in STOP]
-    if not words:
-        return []
-    unigrams = Counter(words)
-    bigrams = Counter(f"{words[i]} {words[i+1]}" for i in range(len(words) - 1))
+    lower = " " + re.sub(r"\s+", " ", text.lower()) + " "
     scored = []
-    for bigram, c in bigrams.most_common(max_tags * 2):
-        scored.append((bigram, c * 1.5))
-    added_phrases = set(scored[i][0] for i in range(len(scored)))
-    for w, c in unigrams.most_common(max_tags * 2):
-        # Skip a unigram only if it is one of the WORDS of an added bigram — not a mere substring,
-        # which wrongly dropped legitimate unigrams (e.g. "cat" inside "category"). (L20)
-        if any(w in p.split() for p in added_phrases if " " in p):
-            continue
-        scored.append((w, c))
-    scored.sort(key=lambda x: -x[1])
-    seen = set()
-    tags = []
-    for phrase, _ in scored:
-        if phrase in seen:
-            continue
-        seen.add(phrase)
-        tags.append(phrase)
-        if len(tags) >= max_tags:
-            break
-    return tags[:max_tags]
+    for topic, cues in TOPIC_TAXONOMY.items():
+        hits = {c for c in cues if c in lower}
+        if len(hits) >= _TOPIC_MIN_HITS:
+            weight = sum(lower.count(c) for c in hits)
+            scored.append((topic, len(hits), weight))
+    scored.sort(key=lambda x: (-x[1], -x[2]))
+    return [t for t, _, _ in scored[:max_tags]]
+
+
+def topic_for_title(text: str) -> str:
+    """Best single topic label for an auto-generated session title, or '' when unsure."""
+    tags = get_tags(text, max_tags=1)
+    return tags[0] if tags else ""
 
 
 def get_metadata(text: str) -> Tuple[str, List[str]]:

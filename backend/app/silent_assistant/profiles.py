@@ -53,6 +53,7 @@ class ScenarioProfile:
     prompt_rules: str
     analysis_mode_default: str      # 'flags_only' | 'flags_and_records'
     detect_cues: tuple              # regex fragments used by the scenario detector
+    claim_terms: tuple = ()         # domain words that make a sentence a VERIFIABLE claim (with numbers)
 
     def tag(self, tag_id: str) -> Optional[TagSpec]:
         for t in self.tag_vocab:
@@ -131,6 +132,9 @@ CUSTOMER_CARE = ScenarioProfile(
     prompt_rules="Verify what the AGENT tells the CALLER against policy, terms and product documents. Flag wrong information, promises not backed by policy, and missing steps. Treat the caller's stated personal details as lookup keys, not claims to verify.",
     analysis_mode_default="flags_and_records",
     detect_cues=(r"thank you for calling", r"how (can|may) i help", r"my (account|order|policy|ticket)", r"customer (service|care|support)", r"order number", r"reference number"),
+    claim_terms=("refund", "fee", "fees", "cancel", "cancellation", "contract", "plan", "ticket", "outage", "credit", "waive", "waived",
+                 "warranty", "policy", "terms", "entitled", "charge", "charged", "billing", "invoice", "late", "discount", "upgrade",
+                 "technician", "visit", "scheduled", "appointment", "eligible", "guarantee", "cooling", "termination", "pro-rated", "prorated"),
 )
 
 LEGAL = ScenarioProfile(
@@ -157,6 +161,9 @@ LEGAL = ScenarioProfile(
     prompt_rules="Verify statements about the client's matter, contract terms, deadlines and legal positions against the matter files, contracts and case references. Flag clauses that are quoted or paraphrased, related cases, promised outcomes, and anything conflicting with the records.",
     analysis_mode_default="flags_and_records",
     detect_cues=(r"\bcase\b", r"\bhearing\b", r"\bcounsel\b", r"\bclause\b", r"my client", r"\bcourt\b", r"\bplaintiff|defendant\b", r"\bcontract\b"),
+    claim_terms=("clause", "contract", "agreement", "deadline", "limitation", "arbitration", "damages", "liability", "breach", "notice",
+                 "file", "filing", "court", "hearing", "precedent", "case", "statute", "section", "cap", "capped", "penalty", "terminate",
+                 "indemnity", "jurisdiction", "settlement", "evidence", "claim", "seated", "arbitrator", "completion", "delay", "held", "ruled"),
 )
 
 BANKING = ScenarioProfile(
@@ -185,6 +192,9 @@ BANKING = ScenarioProfile(
     prompt_rules="Verify what the BANKER tells the CLIENT against product terms, fee schedules, KYC/AML policy and disclosure rules. Flag mis-selling, missing risk disclosures, guaranteed-return language and anything conflicting with the account or product records.",
     analysis_mode_default="flags_and_records",
     detect_cues=(r"account (balance|number)", r"\bloan\b", r"interest rate", r"\bdeposit\b", r"\bkyc\b", r"\bcredit card\b", r"\bmortgage\b", r"\bbranch\b"),
+    claim_terms=("rate", "interest", "deposit", "account", "balance", "transfer", "limit", "fee", "fees", "fund", "guaranteed", "guarantee",
+                 "risk", "disclosure", "loan", "mortgage", "credit", "card", "wire", "withdrawal", "investment", "return", "returns", "capital",
+                 "protected", "kyc", "compliance", "policy", "product", "term", "maturity", "penalty", "savings", "recommend", "lose"),
 )
 
 GENERAL = ScenarioProfile(
@@ -205,6 +215,8 @@ GENERAL = ScenarioProfile(
     prompt_rules="Check each factual claim against the sources. Capture action items (who does what by when), decisions and commitments. Do not treat small talk as claims.",
     analysis_mode_default="flags_only",
     detect_cues=(r"\bagenda\b", r"\bnext steps\b", r"\baction item\b", r"let's (decide|move on)", r"\bmeeting\b"),
+    claim_terms=("budget", "launch", "launches", "deadline", "decided", "decision", "approved", "owner", "owns", "hire", "deliver", "ship",
+                 "ships", "migrate", "migration", "revenue", "cost", "price", "pricing", "plan", "milestone", "target", "defer", "deferred", "goes live"),
 )
 
 SCENARIOS: Dict[str, ScenarioProfile] = {p.id: p for p in (CUSTOMER_CARE, LEGAL, BANKING, GENERAL)}

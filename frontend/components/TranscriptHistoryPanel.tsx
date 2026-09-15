@@ -18,15 +18,13 @@ import {
   type TranscriptListItem,
   type BoardroomSessionListItem,
 } from '../services/backend';
-import type { AnalysisCard, SentenceCheck, TranscriptAssistantData, TranscriptSegment } from '../types';
-import AnalysisCardModal, { checkStyle } from './AnalysisCardModal';
+import type { AnalysisCard, Role, SentenceCheck, TranscriptAssistantData, TranscriptSegment } from '../types';
+import AnalysisCardModal from './AnalysisCardModal';
 import AssistantSidebar, { useAssistantUnread, type AssistantTab } from './AssistantSidebar';
-import { TranscriptSegmentLine } from './TranscriptSentences';
-import TagChip from './TagChip';
-import ProofPopover from './ProofPopover';
+import { TranscriptBlocks, sentenceMarkClass } from './TranscriptSentences';
 import BoardroomView from './BoardroomView';
 import type { BoardroomSession } from '../types';
-import { asCheck, deriveActionItems, roleLabel } from '../utils/silentAssistant';
+import { asCheck, deriveActionItems, displayLocation, roleLabel } from '../utils/silentAssistant';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -88,29 +86,32 @@ const HighlightedTranscriptText: React.FC<{
   let cursor = 0;
   ranges.forEach((r, i) => {
     if (r.start > cursor) nodes.push(<span key={`t-${i}`}>{rawText.slice(cursor, r.start)}</span>);
-    const st = checkStyle(r.check);
-    const first = r.check.evidence?.[0];
-    const span = (
+    nodes.push(
       <span
         key={r.check.id}
         onClick={() => onSelect(r.check)}
-        className={`rounded px-0.5 border-b cursor-pointer ${st.bg} ${st.border} hover:brightness-125 ${selectedId === r.check.sentence_id ? 'ring-1 ring-white/40 brightness-125' : ''}`}
-        title={r.check.tags?.map((t) => t.label ?? t.tag).join(', ') || r.check.label}
+        className={sentenceMarkClass(r.check, undefined, selectedId === r.check.sentence_id)}
+        title={`${r.check.tags?.map((t) => t.label ?? t.tag).join(', ') || r.check.label} · ${Math.round(r.check.confidence)}%`}
       >
         {rawText.slice(r.start, r.end)}
-        {r.check.tags?.length ? (
-          <span className="inline-flex items-center gap-1 ml-1 align-middle">
-            {r.check.tags.slice(0, 2).map((t) => <TagChip key={t.tag} tag={t} />)}
-          </span>
-        ) : null}
       </span>
     );
-    nodes.push(first ? <ProofPopover key={`p-${r.check.id}`} evidence={first} note={r.check.explanation} trigger="hover">{span}</ProofPopover> : span);
     cursor = r.end;
   });
   if (cursor < rawText.length) nodes.push(<span key="tail">{rawText.slice(cursor)}</span>);
-  return <p className="text-sm text-white/85 leading-loose whitespace-pre-wrap break-words">{nodes}</p>;
+  return <p className="text-[13.5px] text-slate-100/90 leading-7 whitespace-pre-wrap break-words">{nodes}</p>;
 };
+
+/** Stored sessions carry role ids but no roles map; colour the first two distinct roles as me/other. */
+function inferRoles(segments: TranscriptSegment[]): { me: Role; other: Role } | undefined {
+  const seen: Role[] = [];
+  for (const seg of segments) {
+    const ids = [seg.role, ...(seg.sentences ?? []).map((s) => s.role)];
+    for (const r of ids) if (r && !seen.includes(r)) seen.push(r);
+    if (seen.length >= 2) break;
+  }
+  return seen.length >= 2 ? { me: seen[0], other: seen[1] } : seen.length === 1 ? { me: seen[0], other: '' } : undefined;
+}
 
 interface DetailViewProps {
   item: TranscriptListItem;
@@ -160,6 +161,7 @@ const DetailView: React.FC<DetailViewProps> = ({ item, boardroomId, onBack }) =>
   const segments = assistant?.segments ?? [];
   const actionItems = useMemo(() => deriveActionItems(checks), [checks]);
   const hasSentenceSegments = segments.some((s) => s.sentences && s.sentences.length > 0);
+  const roles = useMemo(() => inferRoles(segments), [segments]);
   const counts = useMemo(() => ({ records: records.length, checks: checks.length, actions: actionItems.length }), [records.length, checks.length, actionItems.length]);
   const { unread } = useAssistantUnread(counts, tab);
 
@@ -217,7 +219,7 @@ const DetailView: React.FC<DetailViewProps> = ({ item, boardroomId, onBack }) =>
         </button>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold text-white truncate">{item.name || item.title}</div>
-          <div className="text-[10px] text-slate-500">{fmtDate(item.created_at)}{item.location ? ` · ${item.location}` : ''}</div>
+          <div className="text-[10px] text-slate-500">{fmtDate(item.created_at)} · {displayLocation(item.location)}</div>
         </div>
         {boardroomSession && (
           <button
@@ -239,23 +241,16 @@ const DetailView: React.FC<DetailViewProps> = ({ item, boardroomId, onBack }) =>
             <div className="rounded-xl border border-white/10 bg-black/20 p-4 min-h-full">
               <div className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wide flex items-center gap-2 flex-wrap">
                 Transcript
-                {checks.length > 0 && <span className="text-[10px] normal-case font-normal text-slate-600">highlighted = checked · hover for proof · click for details</span>}
+                {checks.length > 0 && <span className="text-[10px] normal-case font-normal text-slate-600">flagged sentences are marked · click a checked sentence for details</span>}
               </div>
               {hasSentenceSegments ? (
-                <div className="space-y-1 text-sm">
-                  {segments.map((seg) => (
-                    <TranscriptSegmentLine
-                      key={seg.paragraph_id}
-                      segment={seg}
-                      checks={checksById}
-                      sentenceStatus={{}}
-                      selectedSentenceId={selectedSentenceId}
-                      onSelectSentence={(id, c) => { setSelectedSentenceId(id); if (c) openCheck(c); }}
-                      isSelected={selectedSegmentId === seg.paragraph_id}
-                      onSelectSegment={() => setSelectedSegmentId(seg.paragraph_id === selectedSegmentId ? null : seg.paragraph_id)}
-                    />
-                  ))}
-                </div>
+                <TranscriptBlocks
+                  segments={segments}
+                  checks={checksById}
+                  roles={roles}
+                  selectedSentenceId={selectedSentenceId}
+                  onSelectSentence={(id, c) => { setSelectedSentenceId(id); if (c) { setSelectedSegmentId(c.segment_id); openCheck(c); } }}
+                />
               ) : rawText ? (
                 <HighlightedTranscriptText
                   rawText={rawText}
@@ -500,8 +495,7 @@ const TranscriptHistoryPanel: React.FC<TranscriptHistoryPanelProps> = ({ onClose
                             {t.name || t.title}
                           </div>
                           <div className="text-[11px] text-slate-500 mt-0.5">
-                            {fmtDate(t.created_at)}
-                            {t.location ? ` · ${t.location}` : ''}
+                            {fmtDate(t.created_at)} · {displayLocation(t.location)}
                           </div>
                           <div className="flex flex-wrap gap-1 mt-1.5">
                             {(t.tags || []).map(tag => (

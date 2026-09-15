@@ -101,6 +101,10 @@ class Settings(BaseSettings):
     TRANSCRIPT_SENTENCE_BATCH_MAX: int = int(os.getenv("TRANSCRIPT_SENTENCE_BATCH_MAX", "4"))    # flush at N sentences
     TRANSCRIPT_SENTENCE_FORCE_MS: int = int(os.getenv("TRANSCRIPT_SENTENCE_FORCE_MS", "1200"))   # wall-clock idle -> commit buffer
     TRANSCRIPT_IDLE_CLOSE_MS: int = int(os.getenv("TRANSCRIPT_IDLE_CLOSE_MS", "2000"))           # wall-clock idle -> close paragraph
+    # Wall-clock gap below which two STT chunk results belong to the SAME breath, so a period
+    # between them is a chunk artifact, not a sentence end (streaming STT ends ~every chunk with
+    # '.'). Real pauses arrive later because VAD drops silence entirely.
+    TRANSCRIPT_SAME_BREATH_MS: int = int(os.getenv("TRANSCRIPT_SAME_BREATH_MS", "900"))
     TRANSCRIPT_STT_FLUSH_MS: int = int(os.getenv("TRANSCRIPT_STT_FLUSH_MS", "900"))              # wall-clock idle -> flush STT lookahead
     ASSISTANT_LLM_CONCURRENCY: int = int(os.getenv("ASSISTANT_LLM_CONCURRENCY", "3"))            # global cap across sessions
     ASSISTANT_CE_CANDIDATES: int = int(os.getenv("ASSISTANT_CE_CANDIDATES", "25"))

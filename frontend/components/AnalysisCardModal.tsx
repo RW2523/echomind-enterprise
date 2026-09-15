@@ -4,17 +4,22 @@ import { ICONS } from '../constants';
 import { documentFileUrl } from '../services/backend';
 import TagChip from './TagChip';
 import {
-  asCheck, copyToClipboard, primaryTagId, roleLabel, sourceLine, tagSpecFor, toneClasses,
+  asCheck, copyToClipboard, flagTone, isSupported, primaryTagId, roleLabel, sourceLine, tagSpecFor, toneClasses,
 } from '../utils/silentAssistant';
+import { useHandraise } from '../hooks/useHandraise';
 
-/** Legacy v1 label styling — still used as a fallback for cards without tags/verdict. */
+/**
+ * Legacy v1 label styling — fallback for cards without tags/verdict.
+ * Colour rules: strong colour ONLY for Contradicted (red), Violating (dark red), Risky (orange);
+ * Supported = subtle green; Unverified / Relevant = neutral slate (no yellow, no warning glyph).
+ */
 export const LABEL_CONFIG: Record<AnalysisLabel, { bg: string; border: string; text: string; badge: string; icon: string }> = {
-  Supported:         { bg: 'bg-emerald-500/10', border: 'border-emerald-500/40', text: 'text-emerald-300', badge: 'bg-emerald-500/20 text-emerald-300', icon: '✓' },
-  Contradicted:      { bg: 'bg-red-500/10',     border: 'border-red-500/40',     text: 'text-red-300',     badge: 'bg-red-500/20 text-red-300',     icon: '✗' },
-  Unverified:        { bg: 'bg-yellow-500/10',  border: 'border-yellow-400/40',  text: 'text-yellow-300',  badge: 'bg-yellow-500/20 text-yellow-300',  icon: '?' },
-  Violating:         { bg: 'bg-orange-600/10',  border: 'border-orange-500/40',  text: 'text-orange-300',  badge: 'bg-orange-500/20 text-orange-300',  icon: '⚠' },
-  'Risky Statement': { bg: 'bg-amber-500/10',   border: 'border-amber-400/40',   text: 'text-amber-300',   badge: 'bg-amber-500/20 text-amber-300',   icon: '⚡' },
-  Relevant:          { bg: 'bg-cyan-500/10',    border: 'border-cyan-500/40',    text: 'text-cyan-300',    badge: 'bg-cyan-500/20 text-cyan-300',    icon: 'ℹ' },
+  Supported:         { bg: 'bg-emerald-500/[0.06]', border: 'border-emerald-500/25', text: 'text-emerald-300', badge: 'bg-emerald-500/15 text-emerald-300', icon: '✓' },
+  Contradicted:      { bg: 'bg-rose-500/10',        border: 'border-rose-500/40',    text: 'text-rose-300',    badge: 'bg-rose-500/20 text-rose-300',       icon: '✗' },
+  Unverified:        { bg: 'bg-white/[0.03]',       border: 'border-slate-500/40',   text: 'text-slate-400',   badge: 'bg-transparent text-slate-300',      icon: '?' },
+  Violating:         { bg: 'bg-red-950/40',         border: 'border-red-700/60',     text: 'text-red-300',     badge: 'bg-red-900/40 text-red-200',         icon: '⊘' },
+  'Risky Statement': { bg: 'bg-orange-500/10',      border: 'border-orange-500/40',  text: 'text-orange-300',  badge: 'bg-orange-500/20 text-orange-300',   icon: '⚡' },
+  Relevant:          { bg: 'bg-white/[0.03]',       border: 'border-white/10',       text: 'text-cyan-300',    badge: 'bg-cyan-500/15 text-cyan-300',       icon: 'ℹ' },
 };
 
 /** Icon glyph for a check (by primary tag, falling back to legacy label). */
@@ -24,7 +29,7 @@ export function checkGlyph(check: SentenceCheck): string {
     case 'supported': return '✓';
     case 'contradicted': return '✗';
     case 'unverified': return '?';
-    case 'violating': return '⚠';
+    case 'violating': return '⊘';
     case 'risk': case 'disclosure-missing': return '⚡';
     case 'record-found': return '🗂';
     case 'personal-detail': return '👤';
@@ -40,16 +45,26 @@ export function checkGlyph(check: SentenceCheck): string {
   }
 }
 
-/** Colour classes for a check: primary tag tone from the vocab, else legacy LABEL_CONFIG. */
+/**
+ * Colour classes for a check card. Strong colour only when flagged (contradicted = red, violating = dark red,
+ * risk / disclosure-missing = orange); supported = subtle green; everything else (unverified, records,
+ * references, actions…) renders neutral — the small tag chips carry the per-tag colour.
+ */
 export function checkStyle(check: SentenceCheck, vocab?: TagSpec[]): { bg: string; border: string; text: string; bar: string; badge: string } {
-  const p = primaryTagId(check);
-  if (p) {
-    const spec = tagSpecFor(vocab, p, check.tags?.find((t) => t.tag === p));
-    const t = toneClasses(spec.tone);
+  const flag = flagTone(check);
+  if (flag) {
+    const t = toneClasses(flag);
     return { bg: t.bg, border: t.border, text: t.text, bar: t.bar, badge: t.badge };
   }
-  const cfg = LABEL_CONFIG[check.label] ?? LABEL_CONFIG['Unverified'];
-  return { bg: cfg.bg, border: cfg.border, text: cfg.text, bar: cfg.text.replace('text-', 'bg-').replace('-300', '-500'), badge: `${cfg.badge} ${cfg.border}` };
+  if (isSupported(check)) {
+    const cfg = LABEL_CONFIG.Supported;
+    return { bg: cfg.bg, border: cfg.border, text: cfg.text, bar: 'bg-emerald-500', badge: `${cfg.badge} border-emerald-500/30` };
+  }
+  const p = primaryTagId(check);
+  const spec = p ? tagSpecFor(vocab, p, check.tags?.find((t) => t.tag === p)) : undefined;
+  const t = toneClasses(spec?.tone);
+  const neutralText = !spec || p === 'unverified' || p === 'question';
+  return { bg: 'bg-white/[0.03]', border: 'border-white/10', text: neutralText ? 'text-slate-400' : t.text, bar: neutralText ? 'bg-slate-500' : t.bar, badge: t.badge };
 }
 
 /** Render `text` with `quote` wrapped in <mark> (case/whitespace-insensitive). Falls back to plain text. */
@@ -104,6 +119,7 @@ const AnalysisCardModal: React.FC<AnalysisCardModalProps> = ({ card, vocab, onCl
   const glyph = checkGlyph(check);
   const overlayRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const { speaking, speakCard, stop: stopSpeaking } = useHandraise();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -298,11 +314,22 @@ const AnalysisCardModal: React.FC<AnalysisCardModalProps> = ({ card, vocab, onCl
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 px-5 py-3 border-t border-white/10 flex justify-end gap-2">
+        <div className="shrink-0 px-5 py-3 border-t border-white/10 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => (speaking ? stopSpeaking() : speakCard(check))}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${
+              speaking ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-white/10 text-slate-300 hover:bg-white/15'
+            }`}
+            title="Read this check out loud (Handraise)"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+            {speaking ? 'Stop reading' : 'Read out'}
+          </button>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 text-slate-300 hover:bg-white/15 transition-colors"
+            className="ml-auto rounded-xl px-4 py-2 text-sm font-semibold bg-white/10 text-slate-300 hover:bg-white/15 transition-colors"
           >
             Close
           </button>

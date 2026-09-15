@@ -6,7 +6,7 @@ import type {
   DetectedEntity, Subject, RecordHit, ActionItem, SessionAck, WsWarning, ScenarioSuggestion,
 } from "../types";
 import { getActiveNamespace } from "../packs";
-import { FALLBACK_SCENARIOS, findScenario, deriveActionItems, deriveLegacyLabel, asCheck } from "../utils/silentAssistant";
+import { FALLBACK_SCENARIOS, findScenario, deriveActionItems, deriveLegacyLabel, asCheck, isGenericSessionName } from "../utils/silentAssistant";
 
 const SCENARIO_STORAGE_KEY = "echomind.scenario";
 const WARNING_TTL_MS = 25000;
@@ -128,6 +128,14 @@ export interface UseLiveTranscriptionReturn {
   /** Sentence id selected in the transcript / checks (bidirectional highlight). */
   selectedSentenceId: string | null;
   setSelectedSentenceId: (id: string | null) => void;
+
+  // ── Session identity (v2.1) ────────────────────────────────────────────────
+  /** Auto-generated readable title from the `session_title` message (null until it arrives / when the user named the session). */
+  sessionTitle: string | null;
+  /** Id of the stored transcript row for this session (from `stored` / `session_title`), null before the first store. */
+  transcriptId: string | null;
+  /** PATCH name/location/tags edited in "Session details" to the stored transcript (queued until the first store). */
+  saveSessionDetails: () => Promise<void>;
 }
 
 export function useLiveTranscription(defaultName: () => string): UseLiveTranscriptionReturn {
@@ -169,6 +177,13 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const [records, setRecords] = useState<RecordHit[]>([]);
   const [wsWarning, setWsWarning] = useState<WsWarning | null>(null);
   const [selectedSentenceId, setSelectedSentenceId] = useState<string | null>(null);
+  const [sessionTitle, setSessionTitle] = useState<string | null>(null);
+  const [transcriptId, setTranscriptId] = useState<string | null>(null);
+  // Wall-clock stamps for block headers: when the live partial for a paragraph first appeared, and per paragraph id.
+  const liveParagraphStartRef = useRef<number | null>(null);
+  const paragraphStartRef = useRef<Map<string, number>>(new Map());
+  const customTagsRef = useRef<string[]>([]);
+  const detailsDirtyRef = useRef(false);
   const scenarioRef = useRef<ScenarioId>(scenario);
   scenarioRef.current = scenario;
   const scenariosRef = useRef<Scenario[]>(scenarios);
@@ -219,6 +234,43 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   sessionNameRef.current = sessionName;
   sessionLocationRef.current = sessionLocation;
+  customTagsRef.current = customTags;
+
+  /** First time a paragraph id is seen: stamp it with the moment its live text started (else now). */
+  const stampParagraph = useCallback((id: string) => {
+    if (!id || paragraphStartRef.current.has(id)) return;
+    paragraphStartRef.current.set(id, liveParagraphStartRef.current ?? Date.now());
+    liveParagraphStartRef.current = null;
+  }, []);
+  const startedAtFor = (id: string): number | undefined => paragraphStartRef.current.get(id);
+  const resetParagraphClock = useCallback(() => {
+    paragraphStartRef.current = new Map();
+    liveParagraphStartRef.current = null;
+  }, []);
+
+  /** Persist edited session details (name/location/tags) to the stored transcript row. */
+  const persistDetails = useCallback(async (tid: string) => {
+    detailsDirtyRef.current = false;
+    const name = (sessionNameRef.current || "").trim();
+    try {
+      await updateTranscript(tid, {
+        // Never push a placeholder name: the server keeps auto-titling those.
+        name: name && !isGenericSessionName(name) ? name : undefined,
+        location: sessionLocationRef.current || "default",
+        tags: customTagsRef.current,
+      });
+    } catch { /* offline / older backend: keep the local state */ }
+  }, []);
+
+  const saveSessionDetails = useCallback(async () => {
+    const tid = lastStoredTranscriptIdRef.current;
+    if (!tid) { detailsDirtyRef.current = true; return; }
+    await persistDetails(tid);
+  }, [persistDetails]);
+
+  // Setters that update the mirror refs synchronously, so saveSessionDetails() right after an edit sees the new value.
+  const setSessionNameSync = useCallback((v: string) => { sessionNameRef.current = v; setSessionName(v); }, []);
+  const setSessionLocationSync = useCallback((v: string) => { sessionLocationRef.current = v; setSessionLocation(v); }, []);
 
   const stopMic = useCallback((sendStop: boolean) => {
     heartbeatIntervalRef.current && clearInterval(heartbeatIntervalRef.current);
@@ -262,6 +314,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     setMyRole(null);
     setSelectedSentenceId(null);
     setWsWarning(null);
+    setSessionTitle(null);
     if (warningTimerRef.current) { clearTimeout(warningTimerRef.current); warningTimerRef.current = null; }
   }, []);
 
@@ -312,6 +365,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         setTranscriptSegments([]);
         setSelectedSegmentId(null);
         resetAssistantState();
+        resetParagraphClock();
       } else {
         // The new server session has no memory of pending sentences from before the drop.
         setSentenceStatus((prev) => {
@@ -348,12 +402,14 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             transcriptForTagsRef.current = t;
             // partial_text = text of the current live paragraph (not yet committed as a segment).
             // Falls back to full text when no segments exist yet (first ~2 s of speech).
-            setPartial(msg.partial_text ?? "");
+            const partialText: string = msg.partial_text ?? "";
+            setPartial(partialText);
             // Update segment texts from partial payload (preserve v1 label + v2 role/sentences)
             if (Array.isArray(msg.segments)) {
+              for (const s of msg.segments) if (s && s.paragraph_id) stampParagraph(s.paragraph_id);
               setTranscriptSegments((prev) => {
                 const prevMap = new Map(prev.map((s) => [s.paragraph_id, s]));
-                return msg.segments.map((s: { paragraph_id: string; text: string; role?: string | null; sentences?: any[] }) => {
+                return msg.segments.map((s: { paragraph_id: string; text: string; role?: string | null; sentences?: any[]; start_ms?: number | null; end_ms?: number | null }) => {
                   const p = prevMap.get(s.paragraph_id);
                   return {
                     paragraph_id: s.paragraph_id,
@@ -362,24 +418,34 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
                     confidence: p?.confidence,
                     role: s.role ?? p?.role,
                     sentences: Array.isArray(s.sentences) ? s.sentences : p?.sentences,
+                    started_at: p?.started_at ?? startedAtFor(s.paragraph_id),
+                    start_ms: s.start_ms ?? p?.start_ms,
+                    end_ms: s.end_ms ?? p?.end_ms,
                   };
                 });
               });
             }
+            // The live paragraph's first partial marks when that utterance started.
+            if (partialText) { if (liveParagraphStartRef.current == null) liveParagraphStartRef.current = Date.now(); }
+            else liveParagraphStartRef.current = null;
           }
           if (msg.type === "segment") {
             // A paragraph has been completed — add/update in segments list (+ v2 role/sentences)
             const patch: Partial<TranscriptSegment> = { text: msg.text };
             if (msg.role !== undefined) patch.role = msg.role;
             if (Array.isArray(msg.sentences)) patch.sentences = msg.sentences;
+            if (typeof msg.start_ms === "number") patch.start_ms = msg.start_ms;
+            if (typeof msg.end_ms === "number") patch.end_ms = msg.end_ms;
+            stampParagraph(msg.paragraph_id);
+            const startedAt = startedAtFor(msg.paragraph_id);
             setTranscriptSegments((prev) => {
               const exists = prev.find((s) => s.paragraph_id === msg.paragraph_id);
               if (exists) {
                 return prev.map((s) =>
-                  s.paragraph_id === msg.paragraph_id ? { ...s, ...patch } : s
+                  s.paragraph_id === msg.paragraph_id ? { ...s, ...patch, started_at: s.started_at ?? startedAt } : s
                 );
               }
-              return [...prev, { paragraph_id: msg.paragraph_id, text: msg.text, ...patch }];
+              return [...prev, { paragraph_id: msg.paragraph_id, text: msg.text, started_at: startedAt, ...patch }];
             });
           }
           if (msg.type === "analysis_start") {
@@ -443,6 +509,15 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
               setMyRole(null);
             }
           }
+          if (msg.type === "session_title" && typeof msg.title === "string") {
+            // Readable auto title ("Legal consultation — Contract Review"); only sent when our name was empty/generic.
+            const t = msg.title.trim();
+            if (t) setSessionTitle(t);
+            if (msg.transcript_id) {
+              lastStoredTranscriptIdRef.current = msg.transcript_id;
+              setTranscriptId(msg.transcript_id);
+            }
+          }
           if (msg.type === "warning") {
             showWarning(msg.code ?? "warning", msg.message ?? "");
           }
@@ -494,9 +569,10 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
             // Merge the final segments (incl. the trailing paragraph closed at EOS) so the last
             // spoken sentence doesn't vanish from the segment list, preserving any labels. (audit H3)
             if (Array.isArray(msg.segments)) {
+              for (const s of msg.segments) if (s && s.paragraph_id) stampParagraph(s.paragraph_id);
               setTranscriptSegments((prev) => {
                 const prevMap = new Map(prev.map((s) => [s.paragraph_id, s]));
-                return msg.segments.map((s: { paragraph_id: string; text: string; role?: string | null; sentences?: any[] }) => {
+                return msg.segments.map((s: { paragraph_id: string; text: string; role?: string | null; sentences?: any[]; start_ms?: number | null; end_ms?: number | null }) => {
                   const p = prevMap.get(s.paragraph_id);
                   return {
                     paragraph_id: s.paragraph_id,
@@ -505,16 +581,23 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
                     confidence: p?.confidence,
                     role: s.role ?? p?.role,
                     sentences: Array.isArray(s.sentences) ? s.sentences : p?.sentences,
+                    started_at: p?.started_at ?? startedAtFor(s.paragraph_id),
+                    start_ms: s.start_ms ?? p?.start_ms,
+                    end_ms: s.end_ms ?? p?.end_ms,
                   };
                 });
               });
             }
+            liveParagraphStartRef.current = null;
           }
           if (msg.type === "stored") {
             setWsError(null);
             const tid = msg.transcript_id;
             if (tid) {
               lastStoredTranscriptIdRef.current = tid;
+              setTranscriptId(tid);
+              // Details edited before the first store (name / location / tags) are pushed now.
+              if (detailsDirtyRef.current) persistDetails(tid).catch(() => {});
               if (pendingTagsRef.current?.length) {
                 updateTranscript(tid, { tags: pendingTagsRef.current }).catch(() => {});
                 pendingTagsRef.current = null;
@@ -717,7 +800,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
         }
       }
     },
-    [stopMic, resetAssistantState, showWarning, upsertCheck]
+    [stopMic, resetAssistantState, showWarning, upsertCheck, stampParagraph, resetParagraphClock, persistDetails]
   );
 
   const clearAndReset = useCallback(() => {
@@ -738,6 +821,9 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     setNewTagInput("");
     transcriptForTagsRef.current = "";
     lastStoredTranscriptIdRef.current = null;
+    setTranscriptId(null);
+    detailsDirtyRef.current = false;
+    resetParagraphClock();
     pendingTagsRef.current = null;
     setWsError(null);
     boardroomPollCancelRef.current = true;
@@ -750,7 +836,7 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     boardroomChunkIndexRef.current = 0;
     boardroomSessionIdRef.current = null;
     setBoardroomSession(null);
-  }, [stopMic, resetAssistantState]);
+  }, [stopMic, resetAssistantState, resetParagraphClock]);
 
   const startSession = useCallback(
     async (name: string, location: string) => {
@@ -766,6 +852,8 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
       setSelectedSegmentId(null);
       transcriptForTagsRef.current = "";
       lastStoredTranscriptIdRef.current = null;
+      setTranscriptId(null);
+      detailsDirtyRef.current = false;
       pendingTagsRef.current = null;
       setShowStartModal(false);
 
@@ -969,16 +1057,22 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
   }, [defaultName]);
 
   const removeTag = useCallback((tag: string) => {
-    setCustomTags((prev) => prev.filter((x) => x !== tag));
-  }, []);
+    const next = customTagsRef.current.filter((x) => x !== tag);
+    customTagsRef.current = next;
+    setCustomTags(next);
+    void saveSessionDetails();
+  }, [saveSessionDetails]);
 
   const addTagFromInput = useCallback(() => {
     const t = newTagInput.trim();
     if (t && !customTags.includes(t)) {
-      setCustomTags((prev) => [...prev, t].slice(0, 20));
+      const next = [...customTagsRef.current, t].slice(0, 20);
+      customTagsRef.current = next;
+      setCustomTags(next);
       setNewTagInput("");
+      void saveSessionDetails();
     }
-  }, [newTagInput, customTags]);
+  }, [newTagInput, customTags, saveSessionDetails]);
 
   // Resume AudioContext when tab becomes visible (browser suspends it when backgrounded).
   useEffect(() => {
@@ -1017,8 +1111,8 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     sessionStartedAt,
     customTags,
     newTagInput,
-    setSessionName,
-    setSessionLocation,
+    setSessionName: setSessionNameSync,
+    setSessionLocation: setSessionLocationSync,
     setNewTagInput,
     openStartModal,
     startSession,
@@ -1071,5 +1165,9 @@ export function useLiveTranscription(defaultName: () => string): UseLiveTranscri
     rejectSubject,
     selectedSentenceId,
     setSelectedSentenceId,
+    // Session identity (v2.1)
+    sessionTitle,
+    transcriptId,
+    saveSessionDetails,
   };
 }

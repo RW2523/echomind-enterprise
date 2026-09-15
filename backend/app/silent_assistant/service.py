@@ -23,7 +23,7 @@ from .entities import PERSONAL_DETAIL_KINDS, LOOKUP_KINDS, Entity, extract_entit
 from .profiles import ScenarioProfile, profile_for, suggest_scenario
 from .retrieval import ClaimEvidence, lookup_records, related_case_hop, retrieve_for_claim
 from .state import RecordHit, SessionAssistantState, Sentence, Subject
-from .verifier import SentenceCheck, phrase_for, verify_batch, _has_claim_signal, _rule_hits
+from .verifier import SentenceCheck, phrase_for, verify_batch, _has_claim_signal, _rule_hits, classify_utterance, speech_acts
 
 logger = logging.getLogger(__name__)
 
@@ -100,11 +100,30 @@ async def on_sentence_fast(state: SessionAssistantState, s: Sentence, emit: Emit
             records = records + reused
         if subj:
             await emit({"type": "subject", **subj.public()})
-    checkable = bool(
-        (s.role is None or s.role in profile.verify_roles)
-        and (_has_claim_signal(s.query_text) or _rule_hits(s, profile) or ents or words >= 6)
-    )
-    if not checkable and not ents:
+    # Only VERIFIABLE claims (or rule hits) go to retrieval + LLM. Questions, greetings, filler and
+    # personal statements are never fact-checked — "can you see the screen?" must not become a card.
+    role_ok = (s.role is None or s.role in profile.verify_roles)
+    kind = classify_utterance(s.query_text, profile)
+    rules = _rule_hits(s, profile)
+    checkable = bool(role_ok and (kind == "claim" or rules))
+    if not checkable:
+        acts = speech_acts(s.text) if role_ok and kind != "question" else []
+        if acts:
+            # LLM-free commitment / action-item / decision card (proof = the spoken span)
+            chk = SentenceCheck(sentence=s, kind="commitment" if "commitment" in acts else "claim")
+            for act in acts:
+                spec = profile.tag(act)
+                if spec:
+                    chk.tags.append({"tag": spec.id, "label": spec.label, "tone": spec.tone, "confidence": 75.0})
+            chk.record_ids = [r.id for r in records]
+            if chk.tags:
+                chk.id = new_id("ana")
+                payload = to_payload(chk, state)
+                state.checks_by_sentence[s.sentence_id] = payload
+                state.action_items.append({"sentence_id": s.sentence_id, "text": s.text, "role": s.role, "tags": [t["tag"] for t in chk.tags]})
+                await emit(payload)
+                asyncio.get_running_loop().run_in_executor(None, persist_check, chk, payload, state)
+                return {"checkable": False, "entities": ents, "records": records}
         await emit({"type": "analysis_done", "segment_id": s.paragraph_id, "sentence_id": s.sentence_id,
                     "status": "skipped", "result": None})
     return {"checkable": checkable, "entities": ents, "records": records}
@@ -140,10 +159,9 @@ async def run_batch(state: SessionAssistantState, sentences: List[Sentence], emi
         recs = records_by_sid.get(s.sentence_id, [])
         rules = _rule_hits(s, state.profile)
         ents = entities_by_sid.get(s.sentence_id, [])
-        speech_act = bool(re.search(r"\b(i will|i'll|we will|we'll|let me|i can|i'm going to|make sure|by (?:monday|tuesday|wednesday|thursday|friday|tomorrow|next|end of)|action item|decided|decision|agreed)\b", s.text, re.IGNORECASE)) or s.text.strip().endswith("?")
         if not s.norm_text:
             s.norm_text = normalize_spoken_numbers(s.text)
-        if ce.result.gated and not recs and not rules and not ents and not speech_act:
+        if ce.result.gated and not recs and not rules:
             # nothing in the KB relates to it and nothing programmatic — checked, nothing to say
             await emit({"type": "analysis_done", "segment_id": s.paragraph_id, "sentence_id": s.sentence_id,
                         "status": "checked", "searched_docs": ce.searched_docs, "result": None})

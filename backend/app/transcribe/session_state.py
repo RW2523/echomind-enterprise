@@ -50,6 +50,9 @@ _DANGLING_END = {
     "as", "per", "versus", "vs", "between", "through", "during", "against", "toward", "towards", "like",
     "hundred", "thousand", "million", "billion", "point", "double", "triple", "dot", "slash", "dash",
     "number", "id", "mr", "mrs", "ms", "dr",
+    # quantifiers / determiners that never end a sentence ("But some." / "and then the.")
+    "some", "any", "every", "each", "both", "few", "many", "much", "more", "most", "several", "such",
+    "only", "quite", "really", "rather", "still", "then", "either", "neither", "whichever", "whatever",
 }
 _CONTINUATION_START = {
     "and", "or", "but", "nor", "unless", "until", "even", "than",
@@ -68,6 +71,33 @@ _MAX_MERGED_WORDS = 45
 
 def _words(t: str):
     return re.findall(r"[A-Za-z0-9']+", t)
+
+
+
+# Short utterances that ARE complete sentences even though they are under _MIN_SENTENCE_WORDS —
+# the boundary repair must not glue "Thank you." onto "Let me check."
+_SHORT_COMPLETE = {
+    "thank you", "thanks", "okay", "ok", "no problem", "yes", "no", "sure", "alright", "all right", "got it",
+    "i see", "right", "great", "perfect", "hello", "hi", "hey", "bye", "goodbye", "good morning",
+    "good afternoon", "good evening", "that's all", "that is all", "sounds good", "of course", "exactly",
+    "correct", "absolutely", "understood", "one moment", "one second", "hold on", "please go ahead",
+    "go ahead", "not really", "not yet", "me too", "same here", "fair enough", "will do", "you're welcome",
+    "no worries", "take care", "see you", "talk soon", "cheers",
+}
+_SENTENCE_OPENERS = {
+    "i", "we", "you", "let", "so", "okay", "ok", "thank", "thanks", "yes", "no", "please", "can", "could",
+    "do", "does", "is", "are", "what", "how", "when", "where", "why", "which", "who", "this", "that",
+    "there", "here", "now", "my", "our", "your", "it", "he", "she", "they", "hello", "hi", "hey", "sure",
+    "right", "well", "actually", "basically", "first", "also", "then", "next", "great", "perfect",
+    "a", "an", "the",          # "…the ticket." + "A technician visit…" is a real sentence break
+}
+_COMMON_LOWERCASE = _CONTINUATION_START | _DANGLING_END | _SENTENCE_OPENERS | {
+    "because", "if", "while", "since", "though", "although", "maybe", "probably", "just", "still",
+    "like", "means", "meaning", "including", "regarding", "according", "based", "due", "except",
+}
+def _last_fragment(text: str) -> str:
+    parts = re.split(r"(?<=[.!?])\s+", text.strip())
+    return parts[-1] if parts else text
 
 
 def _fragment_incomplete(a: str) -> bool:
@@ -215,6 +245,8 @@ class SessionState:
         self._current_paragraph_sentences: List[dict] = []
         self.current_role: Optional[str] = None
         self.last_piece_wall: float = 0.0
+        self._prev_piece_wall: float = 0.0
+        self.same_breath_ms = getattr(settings, "TRANSCRIPT_SAME_BREATH_MS", 900)
 
         self.silence_commit_ms = settings.TRANSCRIPT_SILENCE_COMMIT_MS
         self.paragraph_silence_ms = settings.TRANSCRIPT_PARAGRAPH_SILENCE_MS
@@ -370,11 +402,67 @@ class SessionState:
             piece = piece[overlap:]
         if not piece:
             return
+        # Nemotron ends most ~560 ms chunk hypotheses with a period and capitalizes the next chunk
+        # ("But some. Let me check."). Repair the boundary AT APPEND TIME so raw_text, partials,
+        # segments and sentence checks all see whole utterances.
+        now_wall = time.monotonic() * 1000.0
+        gap_ms = (now_wall - self._prev_piece_wall) if self._prev_piece_wall else 1e9
+        self._prev_piece_wall = now_wall
+        piece = self._repair_chunk_boundary(tail, piece, same_breath=gap_ms <= self.same_breath_ms)
         # Pieces from STT already include word-boundary spaces (▁→" "); concatenate directly.
         self.recent_buffer += piece
         # Remember the previous piece's ts so silence_gap reflects the real inter-piece pause. (M12)
         self.prev_piece_ts_ms = self.last_piece_ts_ms
         self.last_piece_ts_ms = ts_ms
+
+    def _repair_chunk_boundary(self, tail: str, piece: str, same_breath: bool = False) -> str:
+        """Drop a chunk-boundary '.'/'?' between `tail` and `piece` when the previous fragment
+        cannot end a sentence (dangling word / too short and not a known short utterance) or the
+        new piece obviously continues it (lowercase / continuation word / number). The
+        continuation's capital is lowered only for common words (never 'I', names, acronyms)."""
+        t = tail.rstrip()
+        if not t or t[-1] not in ".?" or t.endswith(".."):
+            return piece
+        m_prev = re.search(r"([A-Za-z0-9']+)[.?]$", t)
+        m_next = re.match(r"^(\s*)([A-Za-z0-9']+)", piece)
+        if not m_prev or not m_next:
+            return piece
+        prev_w = m_prev.group(1).lower()
+        lead, next_w = m_next.group(1), m_next.group(2)
+        frag = _last_fragment(t[:-1])
+        frag_words = _words(frag)
+        short_frag = len(frag_words) < _MIN_SENTENCE_WORDS and " ".join(w.lower() for w in frag_words) not in _SHORT_COMPLETE
+        next_continues = next_w[0].islower() or next_w.lower() in _CONTINUATION_START or next_w.isdigit()
+        if t[-1] == "?":
+            strip = next_continues                      # "confirm?" + "the phone number on file"
+        else:
+            strip = (prev_w in _DANGLING_END) or next_continues or (short_frag and next_w.lower() not in _SENTENCE_OPENERS)
+        # Timing beats wording: two results inside the same breath cannot be separated by a real
+        # sentence end ("...the liquid." + "Aided damages..."). Merge unless the previous fragment
+        # is already a full sentence AND the next token clearly opens a new one.
+        if same_breath and not strip:
+            # Keep the break only when the fragment already reads as a finished sentence AND the
+            # next token is a capitalised word that normally STARTS one. A capitalised word that
+            # is not a sentence opener ("…the liquid." + "Aided damages") is a split word.
+            already_complete = (len(frag_words) >= 6 and next_w[:1].isupper()
+                                and next_w.lower() in _SENTENCE_OPENERS)
+            strip = not already_complete
+        if not strip:
+            return piece
+        # remove the boundary punctuation from the buffer/raw_text tail
+        if self.recent_buffer.rstrip().endswith(t[-1]):
+            rb = self.recent_buffer.rstrip()
+            self.recent_buffer = rb[:-1] + self.recent_buffer[len(rb):]
+        elif self.raw_text.rstrip().endswith(t[-1]):
+            rt = self.raw_text.rstrip()
+            self.raw_text = rt[:-1] + self.raw_text[len(rt):]
+        else:
+            return piece
+        if next_w != "I" and not next_w.isupper() and not any(c.isdigit() for c in next_w) and next_w.lower() in _COMMON_LOWERCASE:
+            piece = (lead or " ") + next_w[0].lower() + next_w[1:] + piece[m_next.end():]
+        elif not lead:
+            piece = " " + piece
+        return piece
 
     def get_display_text(self) -> str:
         """Full text to send to client (raw + recent buffer)."""

@@ -75,6 +75,133 @@ _PERSONA_INTRO_PHRASES: dict = {
     ),
 }
 
+# ── Enterprise voice tone ─────────────────────────────────────────────────────
+# Short, professional, no emoji, no "I'm just a virtual assistant", no repeated greetings.
+_BASE_SYSTEM_PROMPT = (
+    "You are EchoMind, a professional enterprise voice assistant. This is a spoken conversation.\n"
+    "TONE: concise, businesslike and warm. Answer in 1-3 short sentences unless the user asks for detail. "
+    "Plain spoken prose only.\n"
+    "NEVER: use emoji or emoticons; describe yourself as an AI, bot, language model or 'just a virtual "
+    "assistant'; talk about your feelings or lack of them; use exclamation-heavy filler ('Interesting!', "
+    "'Great question!', 'I'm here and ready to help!'); repeat a greeting once the conversation has "
+    "started; end every turn with 'How can I help you today?' or 'Let me know if I can help'.\n"
+    "GREETINGS: if the user only greets you or asks how you are, reply in one short line such as "
+    "\"Hello. How can I help you today?\" and nothing more.\n"
+    "SUBSTANCE: answer the user's actual request directly. Cite the section or document when answering "
+    "from sources. Give numbered steps for procedures. Never invent facts, section numbers or pages.\n"
+    "GUARDRAIL: politely decline harmful or clearly illegal requests in one sentence, then offer to help "
+    "with something else."
+)
+
+# Persona-specific tone appended to the base prompt (the selected mode drives the voice).
+_PERSONA_TONE = {
+    "legal": "DOMAIN: legal consultation. Speak like a solicitor briefing a client: precise, measured, "
+             "task-focused. Reference clauses, deadlines and case records exactly. Never guarantee an outcome.",
+    "law": "DOMAIN: legal consultation. Speak like a solicitor briefing a client: precise, measured, "
+           "task-focused. Reference clauses, deadlines and case records exactly. Never guarantee an outcome.",
+    "bank": "DOMAIN: banking. Speak like a licensed bank officer: precise about rates, fees, limits and "
+            "eligibility. State required risk disclosures. Never call a market-linked product guaranteed.",
+    "banking": "DOMAIN: banking. Speak like a licensed bank officer: precise about rates, fees, limits and "
+               "eligibility. State required risk disclosures. Never call a market-linked product guaranteed.",
+    "customer_care": "DOMAIN: customer care. Speak like an experienced support agent: acknowledge the issue "
+                     "in one line, then give the concrete answer or next step. Quote policy accurately.",
+    "health": "DOMAIN: clinical support. Speak precisely and cautiously; cite guidance; never give a "
+              "diagnosis or treatment instruction beyond the sources.",
+    "retail": "DOMAIN: retail support. Be brief and concrete about products, prices, stock and returns.",
+    "meetings": "DOMAIN: meetings. Be brief and factual; surface decisions, owners and dates.",
+}
+
+
+def _persona_system_prompt(persona: str) -> str:
+    tone = _PERSONA_TONE.get((persona or "").strip().lower(), "")
+    return _BASE_SYSTEM_PROMPT + ("\n" + tone if tone else "")
+
+
+# Emoji / pictographs — stripped from every spoken and displayed assistant string.
+_EMOJI_RE = re.compile(
+    "[" "\U0001F300-\U0001FAFF" "\U00002600-\U000027BF" "\U0001F1E6-\U0001F1FF"
+    "\U00002190-\U000021FF" "\U00002B00-\U00002BFF" "\uFE0F" "\u2764" "]+"
+)
+# Openers the model still slips in; removed from the start of a reply.
+_FILLER_OPENER_RE = re.compile(
+    r"^\s*(?:interesting[!.]*|great question[!.]*|good question[!.]*|awesome[!.]*|wonderful[!.]*|"
+    r"absolutely[!,.]*|certainly[!,.]*|of course[!,.]*|sure thing[!,.]*|i see[!.]*|i understand[!.]*|"
+    r"thanks for (?:asking|sharing)[!.]*|happy to help[!.]*|i'm here (?:and )?(?:ready )?to help[!.]*)\s*",
+    re.IGNORECASE)
+# Self-description the enterprise product must never speak.
+_AI_SELF_RE = re.compile(
+    r"\b(?:i'?m|i am)\s+(?:just\s+)?(?:an?\s+)?(?:ai|a\.i\.|artificial intelligence|bot|chatbot|"
+    r"language model|virtual assistant|digital assistant)\b[^.!?]*[.!?]\s*", re.IGNORECASE)
+_TRAILING_OFFER_RE = re.compile(
+    r"\s*(?:how (?:can|may) i (?:help|assist) you(?: today)?\?|let me know if (?:i can help|you need "
+    r"anything(?: else)?)\.?|is there anything else(?: i can help with)?\??)\s*$", re.IGNORECASE)
+
+
+_SMALL_TALK_RE = re.compile(
+    r"^[\s,.!?'-]*(?:(?:hi|hello|hey|good (?:morning|afternoon|evening)|how are you(?: doing)?|"
+    r"how's it going|how do you do|are you there|can you hear me|nice to meet you|thanks|thank you|"
+    r"good to (?:see|hear) you)[\s,.!?'-]*){1,3}$", re.IGNORECASE)
+
+
+def _is_small_talk(text: str) -> bool:
+    """Greeting-only turns: answer directly in one line; no lead filler, no document lookup."""
+    return bool(_SMALL_TALK_RE.match((text or "").strip()))
+
+
+def clean_assistant_text(text: str, is_first_turn: bool = False) -> str:
+    """Enterprise tone filter applied to every assistant reply before TTS/display."""
+    t = _EMOJI_RE.sub("", text or "")
+    t = _AI_SELF_RE.sub("", t)
+    prev = None
+    while prev != t:
+        prev = t
+        t = _FILLER_OPENER_RE.sub("", t)
+    if not is_first_turn:                       # keep one closing offer on the very first reply only
+        t = _TRAILING_OFFER_RE.sub("", t)
+    t = re.sub(r"[ \t]{2,}", " ", t).strip()
+    t = re.sub(r"^[\s,;:.!-]+", "", t)
+    if not t:
+        # The whole reply was filler/self-description. Never go silent: fall back to the
+        # emoji-free original, or a single professional line if nothing substantive remains.
+        bare = _EMOJI_RE.sub("", text or "").strip()
+        bare = _AI_SELF_RE.sub("", bare).strip()
+        prev2 = None
+        while prev2 != bare:
+            prev2 = bare
+            bare = _FILLER_OPENER_RE.sub("", bare).strip()
+        bare = re.sub(r"^[\s,;:.!-]+", "", bare).strip()
+        t = bare or "Hello. How can I help you today?"
+    return t
+
+
+# Filler-only utterances that must never trigger a reply.
+_FILLER_ONLY_RE = re.compile(
+    r"^[\s,.!?'-]*(?:(?:u+h+m*|e+r+m*|h+m+|m+h+m*|a+h+|o+h+|mm+|hmm+|huh|eh|um+|uhh+|ah+|oh+|"
+    r"yeah|yep|yup|nah|okay|ok|so|well|like|right|sure|hi|hello|hey|thanks|thank you|bye)"
+    r"[\s,.!?'-]*){1,3}$", re.IGNORECASE)
+_STOPWORDS_FOR_COUNT = {
+    "the", "a", "an", "and", "or", "but", "of", "to", "in", "on", "at", "is", "are", "was", "were",
+    "be", "it", "this", "that", "so", "well", "like", "just", "um", "uh", "er", "hmm", "mm", "ah", "oh",
+    "yeah", "yep", "okay", "ok", "right", "sure", "you", "i", "we", "my", "me",
+}
+
+
+def is_meaningful_utterance(text: str, *, min_words: int, min_chars: int) -> bool:
+    """True only when the transcript is real, substantive speech worth answering."""
+    t = (text or "").strip()
+    if len(t) < min_chars:
+        return False
+    if _FILLER_ONLY_RE.match(t):
+        return False
+    words = [w for w in re.findall(r"[A-Za-z0-9']+", t.lower())]
+    if not words:
+        return False
+    if len(words) < min_words:
+        # a single content word is allowed only if it is not a stopword/filler and reasonably long
+        return len(words) == 1 and words[0] not in _STOPWORDS_FOR_COUNT and len(words[0]) >= 4
+    return any(w not in _STOPWORDS_FOR_COUNT for w in words)
+
+
 _DEFAULT_INTRO_PHRASE = "Hi! I'm EchoMind, your AI assistant. How can I help you today?"
 
 # Backchannels spoken quietly while the user is talking (full-duplex feel)
@@ -537,15 +664,7 @@ class OmniSessionA:
         self.moshi = MoshiWsAdapter(SETTINGS.MOSHI_URL) if SETTINGS.USE_MOSHI_CORE else None
 
         # ---- Conversation memory (LLM turn history) ----
-        self.system_prompt: str = (
-            "You are EchoMind, a helpful, knowledgeable voice assistant. "
-            "Be concise, natural, and conversational—this is a voice interface, so keep responses clear and well-paced. "
-            "Cite sections or sources when answering from documents. "
-            "For procedural questions, give numbered steps. For comparisons, use clear bullet points. "
-            "Never invent facts, section numbers, or page references.\n\n"
-            "GUARDRAIL: Be genuinely helpful. Refuse harmful, offensive, or clearly illegal requests politely: "
-            "'I can't help with that, but I'm happy to assist with something constructive. What else can I do for you?'"
-        )
+        self.system_prompt: str = _BASE_SYSTEM_PROMPT
         self.history: List[Dict] = []  # [{"role":"user"/"assistant","content":...}, ...]
         self.max_history_turns: int = 12
         self.max_history_tokens: int = 1400  # keep prompt reasonable
@@ -576,6 +695,9 @@ class OmniSessionA:
         }
         self.pending_wake_word_change: Optional[str] = None
         self._last_user_utterance: Optional[str] = None
+        self._last_utt_norm: str = ""            # dedupe: normalized previous utterance
+        self._last_utt_ts: float = 0.0
+        self._assistant_turns: int = 0           # first reply may keep a closing offer; later ones may not
         self._logged_first_audio_frame = False
 
     async def start(self, session_id: str):
@@ -657,6 +779,17 @@ class OmniSessionA:
             await self.moshi.close()
 
     async def send(self, msg: dict):
+        # Central enterprise-tone filter: every assistant string that reaches the client
+        # (and the transcript) is stripped of emoji, AI self-description and filler openers.
+        try:
+            if isinstance(msg, dict) and msg.get("type") in ("assistant_text", "assistant_phrase"):
+                txt = msg.get("text")
+                if isinstance(txt, str) and txt:
+                    cleaned = clean_assistant_text(txt, is_first_turn=(self._assistant_turns <= 1))
+                    if cleaned != txt:
+                        msg = {**msg, "text": cleaned}
+        except Exception:
+            pass
         await self.out_q.put(msg)
 
 
@@ -804,6 +937,11 @@ class OmniSessionA:
                     logger.info("Voice TTS engine -> Piper")
                 except Exception:
                     pass
+            # Persona drives the spoken tone (legal/banking/customer care...).
+            try:
+                self.system_prompt = _persona_system_prompt(self.persona)
+            except Exception:
+                pass
             # Fire persona-specific intro on the first set_context (deferred from start())
             if self._pending_intro:
                 self._pending_intro = False
@@ -1027,7 +1165,12 @@ class OmniSessionA:
         await self.send({"type": "event", "event": "THINKING", "generation_id": my_gen})
 
         audio = self.utt.to_audio_f32()
-        if audio.size < int(0.25 * self.sr):
+        # Silence / accidental audio must never reach the model: require enough VOICED audio.
+        min_voiced = max(int(0.25 * self.sr), int(SETTINGS.MIN_VOICED_MS / 1000.0 * self.sr))
+        if audio.size < min_voiced:
+            logger.info("Voice: ignoring turn — only %.2fs of audio (< %.2fs voiced minimum)",
+                        audio.size / max(1, self.sr), min_voiced / max(1, self.sr))
+            await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
             return
 
         try:
@@ -1051,6 +1194,26 @@ class OmniSessionA:
         if not user_text:
             return
 
+        # Filler-only / too-short speech ("uh", "hmm", "okay") -> stay listening, no reply.
+        if not is_meaningful_utterance(user_text,
+                                       min_words=SETTINGS.MIN_UTTERANCE_WORDS,
+                                       min_chars=SETTINGS.MIN_UTTERANCE_CHARS):
+            logger.info("Voice: ignoring non-substantive utterance %r", user_text[:60])
+            await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
+            return
+
+        # One user input -> one response: drop an identical repeat inside the dedupe window
+        # (STT double-fire, speaker echo) instead of answering twice.
+        now = time.time()
+        norm = re.sub(r"[^a-z0-9 ]", "", user_text.lower()).strip()
+        if (norm and norm == getattr(self, "_last_utt_norm", "")
+                and (now - getattr(self, "_last_utt_ts", 0.0)) < SETTINGS.DUP_UTTERANCE_WINDOW_S):
+            logger.info("Voice: ignoring duplicate utterance %r within dedupe window", user_text[:60])
+            await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
+            return
+        self._last_utt_norm, self._last_utt_ts = norm, now
+
+        self._assistant_turns += 1
         try:
             return await self._finalize_and_reply_impl(my_gen, user_text)
         finally:
@@ -1413,7 +1576,7 @@ class OmniSessionA:
             asyncio.create_task(self._speak_phrase(my_gen, _spec, is_filler=True))
             await self.send({"type": "event", "event": "FILLER_SPEAKING",
                              "text": _spec, "generation_id": my_gen})
-        elif SETTINGS.LEAD_PHRASE_ENABLED:
+        elif SETTINGS.LEAD_PHRASE_ENABLED and not _is_small_talk(user_text):
             lead = pick_lead_phrase(user_text, needs_rag=_needs_knowledge)
             asyncio.create_task(self._speak_phrase(my_gen, lead, is_filler=True))
             await self.send({
@@ -1767,6 +1930,9 @@ class OmniSessionA:
                 if my_gen != self.generation_id:
                     continue
                 phrase = strip_markdown_for_speech((item or "").strip())
+                phrase = clean_assistant_text(phrase, is_first_turn=(self._assistant_turns <= 1))
+                if not phrase.strip():
+                    continue
                 if not phrase:
                     continue
                 # The assistant is "speaking" from the first phrase onward, including

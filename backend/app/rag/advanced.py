@@ -3292,7 +3292,65 @@ async def debug_retrieval(question: str, k: int = 15) -> Dict:
     }
 
 
+# ── Inline locator references in the ANSWER BODY ──────────────────────────────
+# The persona prompts ask the model to cite inline, which produced "(Section 3.1, page 5)"
+# after nearly every bullet. Attribution is already carried by the Sources panel/button, so
+# in prose these are clutter. Retrieval, the citations payload and the Sources UI are
+# untouched — only the visible answer text is cleaned.
+#
+# A parenthetical is removed ONLY when it contains a page/section-style label AND its whole
+# content is locator tokens. So "(BAH)", "(2024)", "(e.g., overseas)", "(02a_03.pdf)" and
+# "(37 U.S.C. § 403)" all survive.
+_REF_LABEL = (r"(?:§+|<?(?:sections?|sect|secs?|pages?|pgs?|pp|p|paras?|paragraphs?"
+              r"|clauses?|articles?|chapters?|volumes?|vols?)>?)")
+_REF_NUM = r"\d+(?:[.\u2013\u2014-]\d+)*[a-z]?"
+_REF_TOKEN = rf"(?:{_REF_LABEL}\.?\s*{_REF_NUM}|{_REF_NUM})"
+_REF_SEP = r"(?:\s*[,;&>\u2013\u2014-]\s*|\s+)(?:(?:and|to|through)\s+)?"
+_INLINE_REF_RE = re.compile(
+    rf"""[ \t]*\(\s*
+        (?=[^()]*(?:§|\b(?:sections?|sect|secs?|pages?|pgs?|pp|p|paras?|paragraphs?
+                          |clauses?|articles?|chapters?|volumes?|vols?)\b))
+        (?:(?:see|as\s+(?:described|prescribed|noted|set\s+out|defined)\s+in|per|cf\.?)\s+)?
+        {_REF_TOKEN}(?:{_REF_SEP}{_REF_TOKEN})*
+        \s*\)""",
+    re.IGNORECASE | re.VERBOSE,
+)
+# Unfilled prompt-template leaks: "(<section> 7.2, page 5)" / "(<document> — <heading>)".
+_TEMPLATE_REF_RE = re.compile(r"[ \t]*\(\s*<[^()<>]{1,40}>(?:\s*[\u2014,\u2013-]\s*<?[^()<>]{0,40}>?)*\s*\)")
+# Trailing footer appended by improve_citation_accuracy when the model cited nothing.
+_SEE_ALSO_RE = re.compile(r"\n{0,2}\*See also:?\s*Section [^\n]*\*\s*$", re.IGNORECASE)
+
+
+def strip_inline_refs(ans: str) -> str:
+    """Remove inline (page N, Section X) locators from the DISPLAYED answer text."""
+    if not ans:
+        return ans
+    out = _INLINE_REF_RE.sub("", ans)
+    out = _TEMPLATE_REF_RE.sub("", out)
+    out = _SEE_ALSO_RE.sub("", out)
+    out = re.sub(r"[ \t]+([,.;:!?])", r"\1", out)       # tidy space left before punctuation
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    return out.rstrip()
+
+
 async def _postprocess_answer_text(
+    ans: str,
+    question: str,
+    enriched: List[Dict],
+    resolved: Optional[ResolveResult],
+    doc_ids: List[str],
+    source_type: str,
+) -> str:
+    """Shared citation postprocessing, then strip inline locators from the displayed text.
+
+    The strip runs LAST on purpose: improve_citation_accuracy() below only fires when the
+    answer has NO inline citation, so stripping first would make it append a
+    "*See also Section X*" footer to every document answer."""
+    out = await _postprocess_answer_text_inner(ans, question, enriched, resolved, doc_ids, source_type)
+    return strip_inline_refs(out)
+
+
+async def _postprocess_answer_text_inner(
     ans: str,
     question: str,
     enriched: List[Dict],

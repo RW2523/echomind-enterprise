@@ -75,42 +75,56 @@ const ScenarioPill: React.FC<{
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
   }, [open]);
 
+  // The pill is THE mode selector of the session bar: one accent colour, icon + label + chevron.
   return (
     <div ref={ref} className={`relative ${className}`}>
       <button
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors touch-manipulation min-h-[32px] disabled:opacity-50"
-        title="Change scenario"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-500/15 pl-2.5 pr-2 py-1.5 text-[13px] font-semibold text-cyan-100 hover:bg-cyan-500/25 hover:border-cyan-300/60 transition-colors touch-manipulation min-h-[38px] disabled:opacity-50 shadow-[0_0_24px_-10px_rgba(34,211,238,0.6)]"
+        title="Conversation type — drives who is on the call, which records are pulled and which rules apply"
       >
-        <span>{SCENARIO_ICONS[shown.id] ?? '💬'}</span>
-        <span className="truncate max-w-[9rem]">{shown.label}</span>
-        {value === 'auto' && <span className="text-[9px] uppercase tracking-wider text-cyan-400/70">auto</span>}
-        <svg className="w-3 h-3 opacity-70" viewBox="0 0 20 20" fill="currentColor"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+        <span className="text-base leading-none">{SCENARIO_ICONS[shown.id] ?? '💬'}</span>
+        <span className="truncate max-w-[11rem] text-left leading-tight">
+          {shown.label}
+          {value === 'auto' && <span className="block text-[9px] font-bold uppercase tracking-wider text-cyan-300/70 leading-none mt-0.5">{resolved ? 'auto-detected' : 'auto-detect'}</span>}
+        </span>
+        <svg className={`w-3.5 h-3.5 opacity-80 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 w-64 rounded-xl border border-white/15 bg-slate-800 shadow-xl overflow-hidden">
-          {[AUTO_SCENARIO, ...list].map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => { onChange(s.id); setOpen(false); }}
-              className={`w-full flex items-start gap-2.5 px-3 py-2.5 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0 ${s.id === value ? 'bg-cyan-500/10' : ''}`}
-            >
-              <span className="text-base leading-none mt-0.5">{SCENARIO_ICONS[s.id] ?? '💬'}</span>
-              <span className="min-w-0">
-                <span className={`block text-xs font-semibold ${s.id === value ? 'text-cyan-300' : 'text-white'}`}>{s.label}</span>
-                <span className="block text-[10px] text-slate-400 leading-snug line-clamp-2">
-                  {s.id === 'auto' ? s.description : `${roleLabel(s.roles.me)} · ${roleLabel(s.roles.other)}`}
+        <div role="listbox" className="absolute left-0 top-full mt-1.5 z-50 w-72 rounded-xl border border-white/15 bg-slate-900 shadow-2xl overflow-hidden">
+          <div className="px-3 pt-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">Conversation type</div>
+          {[AUTO_SCENARIO, ...list].map((s) => {
+            const active = s.id === value;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                role="option"
+                aria-selected={active}
+                onClick={() => { onChange(s.id); setOpen(false); }}
+                className={`w-full flex items-start gap-2.5 px-3 py-2.5 text-left hover:bg-white/[0.07] transition-colors ${active ? 'bg-cyan-500/10' : ''}`}
+              >
+                <span className="text-base leading-none mt-0.5">{SCENARIO_ICONS[s.id] ?? '💬'}</span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block text-xs font-semibold ${active ? 'text-cyan-300' : 'text-white'}`}>{s.label}</span>
+                  <span className="block text-[11px] text-slate-400 leading-snug line-clamp-2">
+                    {s.id === 'auto' ? s.description : `${roleLabel(s.roles.me)} · ${roleLabel(s.roles.other)}`}
+                  </span>
                 </span>
-              </span>
-            </button>
-          ))}
+                {active && <svg className="w-4 h-4 text-cyan-300 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.5 7.5a1 1 0 01-1.42 0l-3.5-3.5a1 1 0 111.42-1.42L8.5 12.09l6.79-6.8a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

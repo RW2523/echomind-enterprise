@@ -1,5 +1,7 @@
 import React from "react";
 import { ICONS } from "../../constants";
+import { OverflowMenu } from "./OverflowMenu";
+import { PersonaType } from "../../types";
 
 export interface ControlBarProps {
   isConnected: boolean;
@@ -14,95 +16,116 @@ export interface ControlBarProps {
   onDisconnect: () => void;
   onMicMutedToggle: () => void;
   onClearMemory: () => void;
+  /** Secondary controls, shown in the ••• menu */
+  persona?: PersonaType;
+  onPersonaChange?: (persona: PersonaType) => void;
+  onApplyContext?: () => void;
+  onSettingsClick?: () => void;
   className?: string;
 }
 
+/** Single compact row: primary voice controls left, ••• overflow right. */
 export const ControlBar: React.FC<ControlBarProps> = ({
   isConnected,
   connecting,
   connectionError,
   micMuted,
-  assistantOrb,
   listenOnly = false,
   onListenOnlyToggle,
   onConnect,
   onDisconnect,
   onMicMutedToggle,
   onClearMemory,
+  persona,
+  onPersonaChange,
+  onApplyContext,
+  onSettingsClick,
   className = "",
 }) => {
   return (
     <div
-      className={`shrink-0 border-t border-white/[0.04] px-4 py-3 flex flex-col items-center gap-3 ${className}`}
-      style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      className={`shrink-0 border-t border-white/[0.05] px-3 sm:px-4 py-2.5 ${className}`}
+      style={{ paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom))" }}
     >
       {connectionError && (
         <p
-          className="text-[13px] text-amber-400/80 text-center max-w-md px-2"
+          className="mb-2 text-[12px] leading-snug text-amber-400/80 text-center px-2"
           role="alert"
         >
           {connectionError}
         </p>
       )}
-      {isConnected && listenOnly && (
-        <p className="text-[12px] text-teal-400/90 font-medium uppercase tracking-wider">
-          Listening mode — say &quot;EchoMind&quot; or &quot;now you can speak&quot; to respond
-        </p>
-      )}
-      <div className="flex flex-wrap items-center justify-center gap-2.5">
-        {!isConnected ? (
-          <button
-            type="button"
-            onClick={onConnect}
-            disabled={connecting}
-            className="rounded-2xl px-7 py-3.5 min-h-[48px] text-[15px] font-medium text-slate-900 bg-teal-400/95 hover:bg-teal-400 active:scale-[0.97] disabled:opacity-50 transition-all duration-300 touch-manipulation shadow-[0_4px_24px_-4px_rgba(20,184,166,0.25)]"
-            style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)" }}
-          >
-            {connecting ? "Starting…" : "Start"}
-          </button>
-        ) : (
-          <>
+
+      {/* Primary controls sit in the horizontal centre; the ••• menu stays flush right.
+          The two flex-1 rails keep the centre group optically centred at any width. */}
+      <div className="flex items-center justify-center gap-2">
+        <div className="flex-1 min-w-0" aria-hidden />
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          {!isConnected ? (
             <button
               type="button"
-              onClick={onMicMutedToggle}
-              title={micMuted ? "Unmute mic" : "Mute mic"}
-              className={`rounded-2xl p-3.5 min-h-[48px] min-w-[48px] flex items-center justify-center transition-all duration-300 touch-manipulation active:scale-[0.97] ${
-                micMuted
-                  ? "bg-rose-500/15 text-rose-400/90 border border-rose-500/20 hover:bg-rose-500/25"
-                  : "bg-teal-500/15 text-teal-400/90 border border-teal-500/20 hover:bg-teal-500/25"
-              }`}
-              style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)" }}
+              onClick={onConnect}
+              disabled={connecting}
+              className="rounded-xl px-5 h-11 text-[13px] font-medium text-slate-900 bg-accent hover:brightness-110 active:scale-[0.98] disabled:opacity-50 transition-all duration-200 touch-manipulation"
             >
-              <span className="relative inline-flex items-center justify-center w-6 h-6">
-                <ICONS.Mic className="w-5 h-5" strokeWidth={2} />
-                {micMuted && (
-                  <span
-                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    aria-hidden
-                  >
-                    <span className="block w-7 h-0.5 bg-current rounded-full origin-center rotate-45 opacity-90" />
-                  </span>
-                )}
-              </span>
+              {connecting ? "Starting…" : "Start"}
             </button>
-            <button
-              type="button"
-              onClick={onClearMemory}
-              className="rounded-2xl px-4 py-3.5 min-h-[48px] text-[15px] font-medium text-slate-500 bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:text-slate-400 active:scale-[0.97] transition-all duration-300 touch-manipulation"
-              style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)" }}
-            >
-              Clear memory
-            </button>
-            <button
-              type="button"
-              onClick={onDisconnect}
-              className="rounded-2xl px-4 py-3.5 min-h-[48px] text-[15px] font-medium text-rose-400/80 bg-rose-500/[0.08] border border-rose-500/15 hover:bg-rose-500/15 active:scale-[0.97] transition-all duration-300 touch-manipulation"
-              style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)" }}
-            >
-              Stop
-            </button>
-          </>
-        )}
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onMicMutedToggle}
+                title={micMuted ? "Unmute microphone" : "Mute microphone"}
+                aria-label={micMuted ? "Unmute microphone" : "Mute microphone"}
+                aria-pressed={micMuted}
+                className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center transition-colors duration-200 touch-manipulation active:scale-[0.98] ${
+                  micMuted
+                    ? "bg-rose-500/15 text-rose-400/90 hover:bg-rose-500/25"
+                    : "bg-accent/15 text-accent hover:bg-accent/25"
+                }`}
+              >
+                <span className="relative inline-flex items-center justify-center w-5 h-5">
+                  <ICONS.Mic className="w-5 h-5" strokeWidth={2} />
+                  {micMuted && (
+                    <span
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      aria-hidden
+                    >
+                      <span className="block w-6 h-0.5 bg-current rounded-full origin-center rotate-45 opacity-90" />
+                    </span>
+                  )}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={onClearMemory}
+                className="h-11 px-3 sm:px-3.5 rounded-xl text-[13px] font-medium text-slate-400 bg-white/[0.04] hover:bg-white/[0.08] hover:text-slate-200 active:scale-[0.98] transition-colors duration-200 touch-manipulation whitespace-nowrap"
+              >
+                Clear<span className="hidden sm:inline"> memory</span>
+              </button>
+              <button
+                type="button"
+                onClick={onDisconnect}
+                className="h-11 px-3 sm:px-3.5 rounded-xl text-[13px] font-medium text-rose-400/90 bg-rose-500/[0.1] hover:bg-rose-500/20 active:scale-[0.98] transition-colors duration-200 touch-manipulation whitespace-nowrap"
+              >
+                Stop
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 flex justify-end">
+          <OverflowMenu
+            persona={persona}
+            onPersonaChange={onPersonaChange}
+            listenOnly={listenOnly}
+            onListenOnlyToggle={onListenOnlyToggle}
+            onApplyContext={onApplyContext}
+            onSettingsClick={onSettingsClick}
+            isConnected={isConnected}
+            className="shrink-0"
+          />
+        </div>
       </div>
     </div>
   );
