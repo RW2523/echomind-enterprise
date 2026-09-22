@@ -13,6 +13,12 @@
 #   ./scripts/backup_data.sh /mnt/nas/echomind    # backup to a chosen directory
 #   BACKUP_KEEP=14 ./scripts/backup_data.sh       # keep 14 generations (default 7)
 #
+# Off-host copy (strongly recommended — an archive on the same disk survives nothing):
+#   BACKUP_REMOTE=user@nas:/srv/echomind ./scripts/backup_data.sh      # rsync/scp over SSH
+#   BACKUP_REMOTE=/mnt/nas/echomind      ./scripts/backup_data.sh      # mounted share
+# Install as a nightly timer:
+#   sudo ./scripts/install_backup_timer.sh
+#
 # A backup you have never restored is not a backup. Run scripts/restore_data.sh against a
 # throwaway volume at least every six months and record the result in REG-08 / the management
 # review. See "Verifying" at the foot of this file.
@@ -108,6 +114,26 @@ else
   log "  WARNING: no echomind.sqlite in archive (empty deployment?)"
 fi
 log "  ${ENTRIES} entries, archive reads cleanly ✓"
+
+# ── Off-host copy ────────────────────────────────────────────────────────────────────────────
+# A backup written beside the data it protects does not survive the failure it guards against.
+# BACKUP_REMOTE may be an rsync/ssh target (user@host:/path) or a mounted directory.
+if [ -n "${BACKUP_REMOTE:-}" ]; then
+  log "replicating off-host to ${BACKUP_REMOTE}…"
+  if command -v rsync >/dev/null; then
+    rsync -a --partial "${DEST}/${ARCHIVE}" "${DEST}/${ARCHIVE}.sha256" "${BACKUP_REMOTE}/" \
+      || die "off-host replication FAILED — the backup exists only on this host"
+  elif case "$BACKUP_REMOTE" in *:*) true;; *) false;; esac; then
+    scp -q "${DEST}/${ARCHIVE}" "${DEST}/${ARCHIVE}.sha256" "${BACKUP_REMOTE}/" \
+      || die "off-host replication FAILED — the backup exists only on this host"
+  else
+    mkdir -p "$BACKUP_REMOTE" && cp "${DEST}/${ARCHIVE}" "${DEST}/${ARCHIVE}.sha256" "$BACKUP_REMOTE/" \
+      || die "off-host replication FAILED — the backup exists only on this host"
+  fi
+  log "  replicated ✓"
+else
+  log "NOTE: BACKUP_REMOTE is not set — this archive exists only on this host."
+fi
 
 # Retention
 if [ "$KEEP" -gt 0 ]; then

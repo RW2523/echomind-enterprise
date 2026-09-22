@@ -71,6 +71,19 @@ app = FastAPI(title="(Context + Memory)", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
+# ── Release identification (ISO 9001 8.5.2 traceability) ──────────────────────
+# BUILD_* are baked into the image by voice/Dockerfile (docker compose build args,
+# set by scripts/release.sh), and can also be supplied as plain container
+# environment variables so an image built before this mechanism existed can still
+# be told which revision it came from.
+def build_info() -> dict:
+    return {
+        "version": os.getenv("BUILD_VERSION", "0.0.0-dev"),
+        "commit": os.getenv("BUILD_COMMIT", "unknown"),
+        "date": os.getenv("BUILD_DATE", "unknown"),
+    }
+
+
 @app.get("/health")
 def health():
     """Liveness + STT health. Returns 503 once a fatal GPU/CUDA fault poisons the STT context
@@ -79,7 +92,7 @@ def health():
 
     if not stt_healthy():
         raise HTTPException(status_code=503, detail="STT unhealthy: GPU/CUDA fault — restart required")
-    return {"ok": True}
+    return {"ok": True, "build": build_info()}
 
 
 class DownloadVoiceBody(BaseModel):

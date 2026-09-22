@@ -58,6 +58,10 @@ services:
         USE_FAISS_GPU: "1"   # set to "1" for FAISS GPU (faster RAG search; needs GPU)
         HF_TOKEN: ${HF_TOKEN:-}
         ECHOMIND_ASR_MODEL_NAME: ${ECHOMIND_ASR_MODEL_NAME:-nvidia/nemotron-speech-streaming-en-0.6b}
+        # Release identification (ISO 9001 8.5.2) — exported by scripts/release.sh.
+        BUILD_VERSION: ${BUILD_VERSION:-0.0.0-dev}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
         # SKIP_MODEL_DOWNLOAD: "1"  # uncomment if build fails with "file already closed"; incompatible with offline
         # SKIP_NEMOTRON_WARMUP: "1"  # skip NeMo load during build (faster CI; colder first runtime load)
     container_name: echomind-backend
@@ -72,6 +76,13 @@ services:
       retries: 3
       start_period: 180s
     environment:
+      # ── Release identification (ISO 9001 8.5.2) ──────────────────────────────
+      # Normally baked into the image by the build args above. Repeated here so a
+      # container started from a PREVIOUSLY built image can still be told which
+      # revision it is; the runtime value wins over the baked-in default.
+      - BUILD_VERSION=${BUILD_VERSION:-0.0.0-dev}
+      - BUILD_COMMIT=${BUILD_COMMIT:-unknown}
+      - BUILD_DATE=${BUILD_DATE:-unknown}
       # Chat LLM: Qwen3-30B-A3B (MoE, NVFP4) served by TensorRT-LLM — driver 580.159.03 fixed
       # the GB10 worker-spawn CUDA bug (CVD ordinal masking; verified spawn/fork workers OK).
       # Prefill ~3000 tok/s (vs ~340 on ollama) => ~10x faster RAG TTFT at 30B quality.
@@ -128,6 +139,10 @@ services:
       args:
         HF_TOKEN: ${HF_TOKEN:-}
         ECHOMIND_ASR_MODEL_NAME: ${ECHOMIND_ASR_MODEL_NAME:-nvidia/nemotron-speech-streaming-en-0.6b}
+        # Release identification (ISO 9001 8.5.2) — exported by scripts/release.sh.
+        BUILD_VERSION: ${BUILD_VERSION:-0.0.0-dev}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
         # SKIP_NEMOTRON_WARMUP: "1"  # optional: skip build-time NeMo warmup
     volumes:
        - ./voice/voices:/voices
@@ -145,6 +160,13 @@ services:
       retries: 3
       start_period: 120s
     environment:
+      # ── Release identification (ISO 9001 8.5.2) ──────────────────────────────
+      # Normally baked into the image by the build args above. Repeated here so a
+      # container started from a PREVIOUSLY built image can still be told which
+      # revision it is; the runtime value wins over the baked-in default.
+      - BUILD_VERSION=${BUILD_VERSION:-0.0.0-dev}
+      - BUILD_COMMIT=${BUILD_COMMIT:-unknown}
+      - BUILD_DATE=${BUILD_DATE:-unknown}
       # TensorRT-LLM in compose (OpenAI-compatible); dialogue uses stream=true for TTFT.
       - LLM_URL=http://trtllm:8355/v1/chat/completions
       - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
@@ -221,6 +243,12 @@ services:
       context: ./frontend
       args:
         - VITE_API_BASE=
+        # Release identification (ISO 9001 8.5.2) — written into the web root as
+        # /build.json at build time; the served assets are static, so there is no
+        # runtime environment fallback for the front end.
+        - BUILD_VERSION=${BUILD_VERSION:-0.0.0-dev}
+        - BUILD_COMMIT=${BUILD_COMMIT:-unknown}
+        - BUILD_DATE=${BUILD_DATE:-unknown}
     container_name: echomind-frontend
     restart: unless-stopped
     ports: ["3000:80", "3443:443"]

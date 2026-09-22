@@ -122,6 +122,20 @@ init_db()
 seed_admin()  # ensure an admin login exists when auth is (or will be) enabled; no-op otherwise
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
+
+# ── Release identification (ISO 9001 8.5.2 traceability) ──────────────────────
+# BUILD_* are baked into the image by backend/Dockerfile (docker compose build
+# args, set by scripts/release.sh). They can also be supplied as plain container
+# environment variables, so an image built before this mechanism existed can
+# still be told which revision it came from. Reported by /health and
+# /api/version so an auditor can trace a running instance to its source.
+def build_info() -> dict:
+    return {
+        "version": os.getenv("BUILD_VERSION", "0.0.0-dev"),
+        "commit": os.getenv("BUILD_COMMIT", "unknown"),
+        "date": os.getenv("BUILD_DATE", "unknown"),
+    }
+
 _cors_origins = [o.strip() for o in (settings.CORS_ALLOW_ORIGINS or "*").split(",") if o.strip()] or ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -133,7 +147,7 @@ app.add_middleware(
 
 # ── Auth guard (Phase 0b) — enforced only when AUTH_ENABLED; pass-through otherwise. ──
 # HTTP-only (WebSocket endpoints are not gated here yet). Login/config stay public.
-_AUTH_PUBLIC_PATHS = {"/health", "/api/auth/login", "/api/auth/config", "/api/auth/logout", "/api/client-error"}
+_AUTH_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/config", "/api/auth/logout", "/api/client-error"}
 
 
 @app.middleware("http")
@@ -193,7 +207,14 @@ def health():
         unhealthy = False
     if unhealthy:
         raise HTTPException(status_code=503, detail="GPU/CUDA fault — restart required")
-    return {"ok": True, "app": settings.APP_NAME}
+    return {"ok": True, "app": settings.APP_NAME, "build": build_info()}
+
+
+@app.get("/api/version")
+def version():
+    """Release identification: which source revision this instance was built from.
+    Public (unauthenticated) so monitoring and audit checks can read it."""
+    return {"app": settings.APP_NAME, **build_info()}
 
 @app.post("/api/client-error")
 async def client_error(request: Request):

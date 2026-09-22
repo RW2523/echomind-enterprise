@@ -15,7 +15,11 @@ COPY voice/requirements.txt /workspace/requirements.txt
 RUN pip install --no-cache-dir -r /workspace/requirements.txt
 
 RUN pip install --no-cache-dir Cython packaging sentencepiece \
- && pip install --no-cache-dir "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@main"
+# Pinned to an explicit commit, NOT @main. A branch is not a release: every rebuild pulled
+# different code, and on 2026-09-04 it pulled setuptools>=82 (which removed pkg_resources),
+# breaking librosa at build and webrtcvad at runtime — commit 724fb98. This sha is the build
+# verified in production (NeMo 3.1.0+60ce9407e). QMS risk R-01 / objective QO-6.
+ && pip install --no-cache-dir "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@60ce9407ef60a3327ffaf2c15931b9b3b834afc2"
 
 RUN pip install --no-cache-dir "numpy>=1.26.4,<2.0" --force-reinstall \
  && pip install --no-cache-dir --upgrade torchvision
@@ -79,6 +83,17 @@ print('kokoro baked')"; \
 RUN pip install --no-cache-dir "setuptools>=70,<82" wheel
 
 COPY voice /workspace
+
+# ── Release identification (ISO 9001 8.5.2 traceability) ──────────────────────
+# Stamped by scripts/release.sh at build time and reported by GET /health, so a
+# running instance can always be traced to its source revision. Kept as the last
+# layers so a version bump does not invalidate the model layers above.
+ARG BUILD_VERSION=0.0.0-dev
+ARG BUILD_COMMIT=unknown
+ARG BUILD_DATE=unknown
+ENV BUILD_VERSION=${BUILD_VERSION} \
+    BUILD_COMMIT=${BUILD_COMMIT} \
+    BUILD_DATE=${BUILD_DATE}
 
 EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
