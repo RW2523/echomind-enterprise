@@ -13,7 +13,12 @@ from ..core.config import settings
 # Commit when recent_buffer ends with strong punctuation
 PUNCT_END = re.compile(r".*[.?!]\s*$")
 # No space before punctuation
-NO_SPACE_BEFORE = re.compile(r"\s+([.,?!:;)])\s*")
+# Removes whitespace BEFORE punctuation only. The previous pattern ended in `\s*`, which also
+# swallowed the space AFTER it — "world , and" became "world,and".
+NO_SPACE_BEFORE = re.compile(r"\s+([.,?!:;)])")
+# A comma/semicolon/colon glued to the next word is always wrong. Not applied to . ! ? because
+# "U.S.C" and "3.5" must survive.
+_SPACE_AFTER_PUNCT = re.compile(r"([,;:])(?=[A-Za-z])")
 
 
 @dataclass
@@ -91,6 +96,16 @@ _SENTENCE_OPENERS = {
     "right", "well", "actually", "basically", "first", "also", "then", "next", "great", "perfect",
     "a", "an", "the",          # "…the ticket." + "A technician visit…" is a real sentence break
 }
+# Words that keep their capital even mid-sentence. Deliberately small: days, months, and the
+# product/organisation names that appear in this corpus. Anything not here is lowercased when a
+# chunk-boundary period is removed, which is the right default for ordinary English prose.
+_PROPER_NOUNS = {
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+    "January", "February", "March", "April", "May", "June", "July", "August",
+    "September", "October", "November", "December",
+    "EchoMind", "Ajace", "NVIDIA", "Meridian", "God", "English",
+}
+
 _COMMON_LOWERCASE = _CONTINUATION_START | _DANGLING_END | _SENTENCE_OPENERS | {
     "because", "if", "while", "since", "though", "although", "maybe", "probably", "just", "still",
     "like", "means", "meaning", "including", "regarding", "according", "based", "due", "except",
@@ -192,6 +207,7 @@ def _normalize_whitespace(text: str) -> str:
         return ""
     t = re.sub(r"\s+", " ", text).strip()
     t = NO_SPACE_BEFORE.sub(r"\1", t)
+    t = _SPACE_AFTER_PUNCT.sub(r"\1 ", t)
     return t
 
 
@@ -202,6 +218,7 @@ def _normalize_piece(piece: str) -> str:
     # Collapse internal multiple spaces, fix no-space-before-punct
     t = re.sub(r"\s+", " ", piece)
     t = NO_SPACE_BEFORE.sub(r"\1", t)
+    t = _SPACE_AFTER_PUNCT.sub(r"\1 ", t)
     # Strip trailing but preserve leading (word boundary)
     return t.rstrip() if t.startswith(" ") else t.strip()
 
@@ -405,12 +422,41 @@ class SessionState:
         # Nemotron ends most ~560 ms chunk hypotheses with a period and capitalizes the next chunk
         # ("But some. Let me check."). Repair the boundary AT APPEND TIME so raw_text, partials,
         # segments and sentence checks all see whole utterances.
+        # Same-breath test on the AUDIO clock, not the wall clock. Two chunks separated by a real
+        # pause in the speech cannot be one breath; two chunks 560 ms apart in the audio are one
+        # breath however long the GPU took to decode them. The previous wall-clock version flipped
+        # under GPU contention, so the repair fired inconsistently between runs.
+        audio_gap_ms = (ts_ms - self.last_piece_ts_ms) if self.last_piece_ts_ms else 0
         now_wall = time.monotonic() * 1000.0
-        gap_ms = (now_wall - self._prev_piece_wall) if self._prev_piece_wall else 1e9
         self._prev_piece_wall = now_wall
-        piece = self._repair_chunk_boundary(tail, piece, same_breath=gap_ms <= self.same_breath_ms)
-        # Pieces from STT already include word-boundary spaces (▁→" "); concatenate directly.
-        self.recent_buffer += piece
+        piece = self._repair_chunk_boundary(tail, piece, same_breath=0 <= audio_gap_ms <= self.same_breath_ms)
+        # Concatenate directly. The piece carries its own word boundary: _hypothesis_delta cuts the
+        # cumulative hypothesis at a SPACE, so a piece that starts a new word begins with " ", and a
+        # piece with no leading space is the continuation of a partially-decoded word
+        # ("terminat" + "ion"). Inserting a separator unconditionally would break the latter.
+        #
+        # One exception: after a silent flush the STT stream is reset, so the next hypothesis starts
+        # fresh with no leading space and would glue onto the previous word ("among" + "The" ->
+        # "amongThe"). A partially-decoded word is never capitalised mid-word, so an uppercase start
+        # against an alphanumeric tail is unambiguously a new word.
+        if piece[:1].isupper():
+            tail_char = self.recent_buffer[-1:] or self.raw_text.rstrip()[-1:]
+            if tail_char.isalnum():
+                piece = " " + piece
+        # A mid-word continuation while recent_buffer is empty must complete the word IN raw_text.
+        # get_display_text() joins raw_text and recent_buffer with a space when neither side has
+        # one, which would split the word it is completing ("stud" + "ied" -> "stud ied"). The
+        # word's prefix is already committed, so completing it there is correct.
+        continues_word = (
+            not self.recent_buffer
+            and not piece[:1].isspace()
+            and self.raw_text[-1:].isalnum()
+            and piece[:1].isalnum()
+        )
+        if continues_word:
+            self.raw_text += piece
+        else:
+            self.recent_buffer += piece
         # Remember the previous piece's ts so silence_gap reflects the real inter-piece pause. (M12)
         self.prev_piece_ts_ms = self.last_piece_ts_ms
         self.last_piece_ts_ms = ts_ms
@@ -441,12 +487,12 @@ class SessionState:
         # sentence end ("...the liquid." + "Aided damages..."). Merge unless the previous fragment
         # is already a full sentence AND the next token clearly opens a new one.
         if same_breath and not strip:
-            # Keep the break only when the fragment already reads as a finished sentence AND the
-            # next token is a capitalised word that normally STARTS one. A capitalised word that
-            # is not a sentence opener ("…the liquid." + "Aided damages") is a split word.
-            already_complete = (len(frag_words) >= 6 and next_w[:1].isupper()
-                                and next_w.lower() in _SENTENCE_OPENERS)
-            strip = not already_complete
+            # No pause in the audio between these two chunks. A speaker does not end a sentence
+            # and start the next without drawing breath, so the period is a chunk artefact.
+            # Keep the break only for a stock complete utterance ("Thank you." / "Okay.") which
+            # genuinely can be followed immediately by new speech.
+            frag_norm = " ".join(w.lower() for w in frag_words)
+            strip = frag_norm not in _SHORT_COMPLETE
         if not strip:
             return piece
         # remove the boundary punctuation from the buffer/raw_text tail
@@ -458,7 +504,19 @@ class SessionState:
             self.raw_text = rt[:-1] + self.raw_text[len(rt):]
         else:
             return piece
-        if next_w != "I" and not next_w.isupper() and not any(c.isdigit() for c in next_w) and next_w.lower() in _COMMON_LOWERCASE:
+        # The boundary punctuation has been removed, so this word is now mid-sentence and must not
+        # keep the capital the recogniser gave it. The old rule only lowercased words on a closed
+        # list (_COMMON_LOWERCASE), which left every content word capitalised mid-sentence —
+        # "Just be Really CuriousAbout", "Behavior reward", "Smoke to be cool". Lower it unless it
+        # is genuinely a proper noun or an acronym: "I", ALL-CAPS, anything containing a digit, or
+        # a known proper noun.
+        keep_capital = (
+            next_w == "I"
+            or next_w.isupper()
+            or any(c.isdigit() for c in next_w)
+            or next_w in _PROPER_NOUNS
+        )
+        if not keep_capital and next_w[:1].isupper():
             piece = (lead or " ") + next_w[0].lower() + next_w[1:] + piece[m_next.end():]
         elif not lead:
             piece = " " + piece

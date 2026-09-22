@@ -142,6 +142,18 @@ def _sliding_window_rms(audio: np.ndarray, window_samples: int, step_samples: in
 
 
 def _hypothesis_delta(prev: str, curr: str) -> str:
+    """New text in `curr` that is not already in `prev`, cut at a WORD boundary.
+
+    The recogniser returns a cumulative hypothesis for the whole utterance, and it may *revise*
+    earlier tokens (RNNT with right context rewrites what it already emitted). Diffing the two
+    strings character by character therefore cuts mid-word whenever a revision lands, and the
+    fragment is then glued onto already-committed text — this is what produced "CuriousAbout" and
+    "amongWorld" in real transcripts.
+
+    Cutting on the last shared SPACE instead means a piece always begins at a word boundary. The
+    partially-retyped word is re-emitted whole and `append_piece`'s suffix/prefix dedup removes the
+    duplicate, so no word is ever split and none is doubled.
+    """
     prev = (prev or "").strip()
     curr = (curr or "").strip()
     if not curr:
@@ -149,12 +161,15 @@ def _hypothesis_delta(prev: str, curr: str) -> str:
     if not prev:
         return curr
     if curr.startswith(prev):
-        return curr[len(prev) :]
+        # Pure extension. Keep the leading space so the word boundary survives _normalize_piece.
+        return curr[len(prev):]
+    # Diverged: find the common prefix, then retreat to the last word boundary inside it.
     n = min(len(prev), len(curr))
     i = 0
     while i < n and prev[i] == curr[i]:
         i += 1
-    return curr[i:]
+    cut = curr.rfind(" ", 0, i)
+    return curr[cut:] if cut > 0 else curr
 
 
 def get_shared_asr_adapter() -> "ASRModelAdapter":

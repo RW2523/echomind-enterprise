@@ -104,7 +104,7 @@ class Settings(BaseSettings):
     # Wall-clock gap below which two STT chunk results belong to the SAME breath, so a period
     # between them is a chunk artifact, not a sentence end (streaming STT ends ~every chunk with
     # '.'). Real pauses arrive later because VAD drops silence entirely.
-    TRANSCRIPT_SAME_BREATH_MS: int = int(os.getenv("TRANSCRIPT_SAME_BREATH_MS", "900"))
+    TRANSCRIPT_SAME_BREATH_MS: int = int(os.getenv("TRANSCRIPT_SAME_BREATH_MS", "700"))
     TRANSCRIPT_STT_FLUSH_MS: int = int(os.getenv("TRANSCRIPT_STT_FLUSH_MS", "900"))              # wall-clock idle -> flush STT lookahead
     ASSISTANT_LLM_CONCURRENCY: int = int(os.getenv("ASSISTANT_LLM_CONCURRENCY", "3"))            # global cap across sessions
     ASSISTANT_CE_CANDIDATES: int = int(os.getenv("ASSISTANT_CE_CANDIDATES", "25"))

@@ -154,7 +154,13 @@ export const TranscriptBlocks: React.FC<TranscriptBlocksProps> = ({
   const blocks = useMemo(() => buildSpeakerBlocks(segments), [segments]);
   const partialText = (partial ?? '').trim();
   const last = blocks[blocks.length - 1];
-  const partialInLast = !!partialText && !!last && (partialRole === undefined || last.role === (partialRole ?? null));
+  // Keep the live text flowing inside the last block. A detached block appears only when the
+  // speaker has genuinely changed — i.e. the last block carries a role and it differs from the
+  // current one. Previously any role mismatch split it off, so selecting a speaker mid-session
+  // tore the live text away from the sentence it was continuing, mid-clause.
+  const partialInLast =
+    !!partialText && !!last &&
+    (partialRole === undefined || last.role == null || last.role === (partialRole ?? null));
   const partialAsNewBlock = !!partialText && !partialInLast;
 
   return (

@@ -154,7 +154,11 @@ def append_transcript_chunk(transcript_id: str, chunk_text: str) -> None:
         if not row:
             return
         existing = (row[0] or "").strip()
-        new_raw = (existing + "\n\n" + chunk_text.strip()).strip() if existing else chunk_text.strip()
+        # Join with a space, not a blank line: the auto-store interval is an artefact of the
+        # 60 s timer, not a paragraph break in the speech. Hard newlines here were rendered
+        # verbatim by the history view (whitespace-pre-wrap), chopping replayed transcripts
+        # every 60 seconds.
+        new_raw = (existing.rstrip() + " " + chunk_text.strip()).strip() if existing else chunk_text.strip()
         conn.execute(
             "UPDATE transcripts SET raw_text = ?, updated_at = ? WHERE id = ?",
             (new_raw, updated, transcript_id),
