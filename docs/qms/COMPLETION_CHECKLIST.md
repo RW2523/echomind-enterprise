@@ -4,7 +4,7 @@
 |---|---|
 | Document ID | (working checklist — not a controlled QMS document) |
 | Revision | 1.0 |
-| Basis | `docs/qms/` at revision 1.0, assessed 2026-09-21 |
+| Basis | `docs/qms/` at revision 1.0, assessed 2026-09-21; **progress updated 2026-09-22** (D1, D2, D6 closed) |
 | Companion documents | `ADOPTION_GUIDE.md` (the six-step path) · `ISO9001_Gap_Analysis.md` (the findings) |
 
 ---
@@ -25,6 +25,9 @@ decomposing, because most of them are not "missing":
 | Registers and core documents | ~162 | **Yes** — categories A, B, C |
 
 ---
+
+> **The questions in categories A and B are laid out as a fillable form in [`INTAKE_FORM.md`](INTAKE_FORM.md).**
+> Answer that one document and everything below in A and B is covered.
 
 ## A. Information only you have
 
@@ -73,8 +76,9 @@ These are the gaps in `ISO9001_Gap_Analysis.md`. Ordered by consequence, not by 
 
 | # | Work | Gap / risk | Effort |
 |---|---|---|---|
-| D1 | **Backup and restore for the `echomind_data` volume, with a restore actually tested** | G-03 / R-02 / QO-4 | 1–2 days |
-| D2 | **Log rotation** — add `logging:` with `max-size` and `max-file` to all six compose services | G-11 / R-07 | Under an hour |
+| ~~D1~~ | ~~Backup and restore for `echomind_data`, with a restore actually tested~~ — **DONE 2026-09-22.** `scripts/backup_data.sh` / `restore_data.sh`; restore verified (integrity_check ok, 32 tables). **Residual: it is manual and written to the same host — see D14.** | G-03 / R-02 / QO-4 | done |
+| ~~D2~~ | ~~Log rotation on all six services~~ — **DONE 2026-09-22** (50 MB × 5). **Applies on the next `docker compose up -d`; running containers keep the old config until recreated.** | G-11 / R-07 | done |
+| ~~D14~~ | ~~Schedule the backup and send it off-host~~ — **DONE 2026-09-22.** `install_backup_timer.sh` (nightly systemd timer) + `BACKUP_REMOTE` off-host replication, tested. **You must choose the destination and run the installer on each deployment.** | G-22 / R-02 | done |
 | D3 | **Extend the auth middleware to WebSocket endpoints**; decide the CORS default | G-06 / R-04 | 2–3 days |
 
 ### Do before a certification attempt
@@ -83,10 +87,10 @@ These are the gaps in `ISO9001_Gap_Analysis.md`. Ordered by consequence, not by 
 |---|---|---|---|
 | D4 | **Release identification** — git tag, image tags, and a build identifier the running system can report | G-01 / R-09 / QO-3 | 1 day |
 | D5 | **Re-run the golden evaluation against HEAD** and record the true current score; correct any quoted figure | G-10 / QO-2 | 1 hour |
-| D6 | **Retain evaluation reports as records** — `eval/.gitignore` currently excludes `reports/` | G-12 | Minutes |
+| ~~D6~~ | ~~Retain evaluation reports as records~~ — **DONE 2026-09-22**; 24 historical reports now tracked | G-12 | done |
 | D7 | **CI** running the unit suites at minimum; wire in `scripts/verify_offline_readiness.sh`, which exists and is called by nothing | G-02 / R-08 | 1 day |
 | D8 | **`LICENSE`, `NOTICE`, and an SBOM** for the three images | G-05 / R-10 | 2–3 days |
-| D9 | **Pin `nemo_toolkit` to a release or commit sha** (currently the moving branch `@main`) | R-01 | 1 hour |
+| ~~D9~~ | ~~Pin `nemo_toolkit`~~ — **DONE 2026-09-22**, pinned to `60ce9407` (the build verified in production). Risk R-01 residual 20 → 4. | R-01 | done |
 | D10 | **Implement the retention policy decided in B3**, including `activity_log` pruning | G-04 / R-06 | 1–2 days |
 
 ### Worth doing, lower urgency

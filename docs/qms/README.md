@@ -43,6 +43,8 @@ derived from code and configuration.
 | ID | Document | Covers |
 |---|---|---|
 | — | [Adoption Guide](ADOPTION_GUIDE.md) | What must happen for this to become a real management system |
+| — | [**Audit Pack 2026**](AUDIT_PACK_2026_EchoMind.md) | **Surveillance audit 14 Oct 2026** — evidence for the EchoMind Product area, mapped to the 2025 findings |
+| — | [**Intake Form**](INTAKE_FORM.md) | **Start here** — the 43 details only you can supply, as a form to fill in |
 | — | [Completion Checklist](COMPLETION_CHECKLIST.md) | Every outstanding item — your information, your decisions, licences to verify, engineering work, and the records that must accumulate |
 | QM-01 | [Quality Manual](QM-01_Quality_Manual.md) | Context, interested parties, scope, process map, implementation status |
 | QP-01 | [Quality Policy](QP-01_Quality_Policy.md) | 5.2 — the organisation's quality commitments |
@@ -90,7 +92,9 @@ report · `FRM-07` management review minutes · `FRM-08` customer feedback and c
 | REG-05 | [Competence and Training](registers/REG-05_Competence_and_Training_Record.md) | Empty |
 | REG-06 | [Customer Feedback and Complaints](registers/REG-06_Customer_Feedback_and_Complaints_Log.md) | Empty |
 | REG-07 | [Design and Change Register](registers/REG-07_Design_and_Change_Register.md) | Empty |
-| REG-08 | [Release and Deployment Register](registers/REG-08_Release_and_Deployment_Register.md) | Empty — cannot be completed until release identification exists |
+| REG-08 | [Release and Deployment Register](registers/REG-08_Release_and_Deployment_Register.md) | Mechanism now exists (`scripts/release.sh`); first release outstanding |
+| REG-09 | [NFR Register](registers/REG-09_NFR_Register.md) | **Seeded — 20 NFRs with real measurements.** Closes 2025 finding #6 |
+| REG-10 | [Review Feedback and Action Log](registers/REG-10_Review_Feedback_Action_Log.md) | **Seeded — 3 retrospective reviews.** Closes 2025 finding #7 |
 
 ### Records
 

@@ -53,7 +53,7 @@ Ratings: **Conformant** · **Partial** — the substance exists but the record o
 | 6.2 | Quality objectives | Partial | QO-01 with 7 objectives; only two have real baselines, both stale | G-10 |
 | 6.3 | Planning of changes | Partial | SOP-02 §7; historically changes were planned in commit bodies, sometimes very well, but never against criteria | — |
 | 7.1.1–7.1.4 | Resources, people, infrastructure, environment | Partial | Infrastructure well documented (compose, Dockerfiles, deployment docs); people resource is one person | G-08 |
-| 7.1.5.1 | Monitoring and measuring resources | Partial | The measuring instrument is the evaluation harness; `eval/golden/*.jsonl` and `eval/run_eval.py` are version-controlled, but **results are not retained** (`eval/.gitignore` excludes `reports/`) | G-12 |
+| 7.1.5.1 | Monitoring and measuring resources | **Conformant** | The measuring instrument is the evaluation harness; `eval/golden/*.jsonl` and `eval/run_eval.py` are version-controlled, and results are now retained as records (2026-09-22, 24 historical reports committed) | ~~G-12~~ closed |
 | 7.1.5.2 | Measurement traceability | Not applicable | No physical measuring equipment; justified in QM-01 §4.1 | — |
 | 7.1.6 | Organisational knowledge | Partial | Unusually good written rationale in `docs/` and commit bodies — a real strength — but concentrated in one person | G-08 |
 | 7.2 | Competence | Gap | No competence matrix, no records. REG-05 created and empty. | G-13 |
@@ -75,7 +75,7 @@ Ratings: **Conformant** · **Partial** — the substance exists but the record o
 | 8.5.1 | Control of production and service provision | Partial | Deployment procedures documented and repeatable (`OFFLINE_DEPLOYMENT.md`, `scripts/`); no release authorisation step | G-01 |
 | 8.5.2 | **Identification and traceability** | **Gap** | No tags, no changelog, `package.json` is `0.0.0`, images untagged, no build identifier. A running instance cannot be traced to a source revision. | **G-01** |
 | 8.5.3 | **Property belonging to customers** | **Partial — with a critical gap** | Isolation is designed and enforced (namespace predicate, tenant forcing) but has failed twice in the same way; **no backup of the only customer-data volume**; no retention policy; no encryption at rest; auth off by default and WebSockets outside the auth middleware | **G-03, G-04, G-06** |
-| 8.5.4 | Preservation | Gap | Model volumes are preserved across upgrades by design; customer data has no backup or preservation procedure | G-03 |
+| 8.5.4 | Preservation | **Partial** | Model volumes preserved by design; customer data now has a backup and restore procedure with a verified restore (2026-09-22) — outstanding: it is manual and on-host | ~~G-03~~ closed; see G-22 |
 | 8.5.5 | Post-delivery activities | Partial | User manual and troubleshooting exist; no support process, SLA or escalation defined | G-17 |
 | 8.5.6 | Control of changes | Partial | Git is the mechanism and commit discipline is good; no change register, no significance criteria, no impact assessment | G-18 |
 | 8.6 | **Release of products and services** | **Gap** | No release records, no authorisation, no retained verification evidence. `scripts/verify_offline_readiness.sh` exists and is called by nothing. | **G-02** |
@@ -98,8 +98,9 @@ differ the operational consequence wins.
 
 | Ref | Gap | Clause | Consequence if left | Effort |
 |---|---|---|---|---|
-| **G-03** | No backup or restore procedure for `echomind_data`, the only volume holding customer data. `scripts/export_offline_bundle.sh` covers the two reproducible model volumes and not this one. | 8.5.3, 8.5.4 | Permanent loss of all customer documents, transcripts, chat history and indexes on a single disk failure. This is the one gap that can end a customer relationship outright. | 1–2 days including a tested restore |
-| **G-11** | Container logs unbounded — no `logging:` options on any service, default `json-file` | 8.5.1 | Disk fills; every service including the database stops | < 1 hour |
+| ~~G-03~~ | **CLOSED 2026-09-22** — `scripts/backup_data.sh` / `restore_data.sh`; restore verified into a throwaway volume (integrity_check ok, 32 tables). Superseded by G-22 below. | 8.5.3, 8.5.4 | — | done |
+| ~~G-11~~ | **CLOSED 2026-09-22** — bounded `json-file` logging (50 MB x 5) on all six services. Applies on the next `docker compose up -d`; running containers keep their original config until recreated. | 8.5.1 | — | done |
+| ~~G-22~~ | **CLOSED 2026-09-22** — nightly systemd timer (`scripts/install_backup_timer.sh`) and off-host replication via `BACKUP_REMOTE`, tested; a failed off-host copy aborts the run rather than silently leaving one on-host copy. **Operator must set `BACKUP_REMOTE` and install the timer on each deployment.** | 8.5.4 | — | done |
 | **G-06** | Auth off by default; WebSocket endpoints outside the auth middleware (`backend/app/main.py:135`); tenant isolation only enforced when auth is on; CORS `*` | 8.5.3 | Cross-tenant exposure in any deployment not perfectly network-isolated | 2–3 days |
 
 ### Priority 2 — close before a certification attempt
@@ -120,7 +121,7 @@ differ the operational consequence wins.
 |---|---|---|
 | G-09 | Risk ratings proposed but not confirmed; no treatment owners or dates | 6.1 |
 | G-10 | Objectives lack current baselines — re-measure the evaluation against HEAD | 6.2, 9.1.1 |
-| G-12 | Measurement not scheduled, results not retained (`eval/.gitignore` excludes `reports/`), no trend data | 9.1.1, 9.1.3 |
+| G-12 | Measurement not scheduled and no trend data yet. Retention of results is now in place. | 9.1.1, 9.1.3 |
 | G-15 | No customer communication, requirements-review or satisfaction mechanism | 8.2, 9.1.2 |
 | G-16 | No design review records, no recorded design inputs or acceptance criteria, no requirement-to-test traceability | 8.3 |
 | G-18 | No change register or significance criteria | 8.5.6 |

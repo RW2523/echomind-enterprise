@@ -62,8 +62,8 @@ Historical measurements available at the time of writing:
 | **Objective** | Every release is preceded by a recorded, retained verification run: unit suites and the 52-question golden evaluation. |
 | **Measure** | Percentage of releases with a completed `FRM-03 Release Record` carrying test and evaluation results, and a retained evaluation report. |
 | **Target** | 100% |
-| **Baseline** | 0% — no release record has ever been produced; evaluation reports are excluded from version control by `eval/.gitignore`, so past results are not retained as records |
-| **How achieved** | SOP-07 verification levels; SOP-08 release procedure; retain evaluation reports (requires a change to `eval/.gitignore`) |
+| **Baseline** | 0% — no release record has ever been produced. (Retention of evaluation reports was fixed on 2026-09-22; 24 historical reports are now held as records, so the *retention* half of this objective is in place and only the release record itself is missing.) |
+| **How achieved** | SOP-07 verification levels; SOP-08 release procedure; ~~retain evaluation reports~~ done 2026-09-22 |
 | **Monitored** | Per release |
 | **First action** | Re-run the golden evaluation against HEAD, retain the report, and record the true current score. Until that is done, no score should be quoted anywhere, including in `README.md`. |
 
@@ -90,10 +90,11 @@ Historical measurements available at the time of writing:
 | **Objective** | Customer data held by a deployment is backed up on a defined schedule, and a restore has been demonstrated. |
 | **Measure** | (a) A documented, tested backup procedure for the `echomind_data` volume exists; (b) date of the most recent successful restore test. |
 | **Target** | (a) yes; (b) a successful restore test within the last 6 months |
-| **Baseline** | (a) **no** — no backup procedure or script exists for `echomind_data`, the only volume containing customer data; `scripts/export_offline_bundle.sh` deliberately skips it; (b) never tested |
+| **Baseline** | (a) **yes, as of 2026-09-22** — `scripts/backup_data.sh` and `scripts/restore_data.sh`; (b) **restore exercised 2026-09-22** into a throwaway volume: 351 MB archive, `PRAGMA integrity_check` returned `ok`, 32 tables present |
+| **Status** | **Target met.** Next restore test due within 6 months of 2026-09-22. Outstanding: schedule the backup (it is manual today) and decide the off-host destination. |
 | **How achieved** | SOP-11 §8 |
 | **Monitored** | At each management review |
-| **First action** | This is the highest-consequence gap in the system. Write and test the backup and restore procedure before any further customer deployment. |
+| **First action** | ~~Write and test the backup and restore procedure~~ — done 2026-09-22. Now: put it on a schedule and send the archive off-host; an archive beside the data it protects survives nothing. |
 
 ### QO-5 — Nonconformities are closed with verified effectiveness
 
@@ -142,7 +143,7 @@ Historical measurements available at the time of writing:
 | QO-1 | No grounding failures at release | 0 S1; precision ≥ 0.98 | precision 0.98 (2026-08-06, stale) | Partly measurable today |
 | QO-2 | Verified and recorded before release | 100% | 0% | Not started |
 | QO-3 | Instance traceable to source | 100% | No mechanism exists | Not started |
-| QO-4 | Customer data backed up and restorable | Tested within 6 months | No procedure exists | **Highest priority** |
+| QO-4 | Customer data backed up and restorable | Tested within 6 months | Restore verified 2026-09-22 | **Met** — needs scheduling |
 | QO-5 | NCs closed with verified effectiveness | 100% | Not measured | Not started |
 | QO-6 | Dependencies pinned and licensed | 0 unpinned; 100% licensed | ≥5 unpinned; 0% licensed | Not started |
 | QO-7 | QMS operating, not just written | Approved, audited, reviewed | Nothing approved | Not started |

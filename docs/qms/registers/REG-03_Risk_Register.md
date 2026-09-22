@@ -45,9 +45,9 @@ and set Revision 1.1.
 | Category | External provider / supply chain |
 | Description | `nemo_toolkit[asr]` is installed as `git+https://github.com/NVIDIA/NeMo.git@main` in `backend/Dockerfile:22` and `voice/Dockerfile`. A branch is not a release: every rebuild can pull different code, and the resulting image is not reproducible. |
 | Evidence | The risk has **already materialised**: commit `724fb98` (2026-09-04) records NeMo@main pulling `setuptools>=82`, which removed `pkg_resources`, breaking librosa at build (backend) and webrtcvad at runtime (voice crash-loop on boot). |
-| Likelihood / Impact / Rating | 5 / 4 / **20 — Critical** (likelihood 5 because it has already occurred) |
-| Existing controls | `setuptools>=70,<82` re-pinned as the last install step in both Dockerfiles (`backend/Dockerfile:34`) — this treats one symptom, not the cause. |
-| Treatment | **Reduce.** Pin NeMo to a release tag or an explicit commit sha. |
+| Likelihood / Impact / Rating | 5 / 4 / **20 — Critical** (likelihood 5 because it has already occurred) — **residual after pinning: 1 / 4 / 4 Low** |
+| Existing controls | **Pinned to commit `60ce9407ef60a3327ffaf2c15931b9b3b834afc2` in both Dockerfiles (2026-09-22)** — the exact build verified running in production (NeMo 3.1.0+60ce9407e). `setuptools>=70,<82` re-pin retained as defence in depth. |
+| Treatment | **Treated — cause removed.** The build is now reproducible. Residual: review the pin when a NeMo upgrade is wanted, and re-verify before adopting it. |
 | Owner / due | `________` / `________` |
 | Residual (after treatment) | 2 / 4 / 8 — Medium |
 | Linked | NC-2026-006; QO-6; SOP-09 |
@@ -60,8 +60,8 @@ and set Revision 1.1.
 | Description | Docker volume `echomind_data` holds the SQLite database, the FAISS indexes, uploaded source files, boardroom audio and the generated auth secret. There is **no backup script and no documented backup procedure**. `scripts/export_offline_bundle.sh` exports the two *reproducible* model volumes and deliberately skips this one. `docs/USER_MANUAL.md:1158` correctly identifies `echomind_data` as the operator's real backup priority but gives no procedure. |
 | Evidence | Repository contains no backup tooling; the bundle script's contents; the user manual statement. |
 | Likelihood / Impact / Rating | 3 / 5 / **15 — Critical** |
-| Existing controls | None. |
-| Treatment | **Reduce.** Write, document and test a backup and restore procedure before any further customer deployment. A restore that has never been tested is not a backup. |
+| Existing controls | **`scripts/backup_data.sh` / `restore_data.sh` (2026-09-22).** Consistent SQLite snapshot via the online backup API; reproducible model caches excluded (351 MB rather than 23 GB); checksummed; archive verified readable. **Restore exercised 2026-09-22** into a throwaway volume — `integrity_check` ok, 32 tables. |
+| Treatment | **Treated (2026-09-22).** `install_backup_timer.sh` installs a nightly systemd timer; `BACKUP_REMOTE` replicates off-host by rsync/scp or to a mounted share, and a failed replication aborts loudly rather than leaving a single on-host copy. Residual: the operator must set `BACKUP_REMOTE` and confirm the destination. |
 | Owner / due | `________` / `________` |
 | Residual | 2 / 3 / 6 — Medium |
 | Linked | QO-4 (highest-priority objective); SOP-11 §8 |
@@ -130,8 +130,8 @@ and set Revision 1.1.
 | Description | `docker-compose.yml` sets no `logging:` driver or options on any service, so Docker's default `json-file` driver applies with no `max-size` or `max-file`. Logs grow until the disk fills, which would take down every service including the database. |
 | Evidence | Absence of any `logging:` block in `docker-compose.yml`. |
 | Likelihood / Impact / Rating | 4 / 4 / **16 — Critical** on a long-running deployment |
-| Existing controls | None. |
-| Treatment | **Reduce.** Add `logging: driver: json-file, options: {max-size, max-file}` to every service. This is a one-line-per-service change and the cheapest high-value item in this register. |
+| Existing controls | **Bounded logging (50 MB x 5) on all six services (2026-09-22).** Takes effect on the next `docker compose up -d`; running containers keep their original config until recreated. |
+| Treatment | **Reduced.** Residual: verify after the next recreate that the running containers carry the new LogConfig. |
 | Owner / due | `________` / `________` |
 | Residual | 1 / 4 / 4 — Low |
 | Linked | SOP-12 §6 |
