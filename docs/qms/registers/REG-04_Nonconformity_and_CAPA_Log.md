@@ -147,9 +147,32 @@ Severity scale (defined in SOP-10 §3):
 
 ## Section B — Contemporaneous entries
 
+### NC-2026-008 — Golden evaluation corpus absent; the quality instrument cannot measure
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-09-22 |
+| Raised by | `________` (detected by re-running the evaluation for audit evidence) |
+| Source | Scheduled measurement ahead of the October surveillance audit |
+| Severity | **S2** — the organisation's primary quality instrument is inoperable, so product conformity cannot currently be evidenced (ISO 9001:2015 9.1.1) |
+| Description | `python3 eval/run_eval.py` against HEAD returned **9/52**, down from 49/52 (2026-08-06). All **43 retrieval questions failed with zero citations** and document precision 0.00. Non-corpus categories were unaffected: smalltalk 6/6, refusal 2/2, off-corpus 1/1. |
+| Investigation | **Not a code regression.** Retrieval works when exercised directly (`retrieve_reranked` returns 6 ranked hits). The cause is the corpus: the knowledge base holds only **5 Meridian Bank demo PDFs**, while the golden set expects **15 documents** — the DoD FMR volumes (`01_01`, `06a_02`, `14_02`, `14_03`) and the vertical demo documents (Product Catalog, Dealership Inventory, Formulary, KYC-AML, Playbook, Visit Note, Company Policy Handbook, Q3 Product Strategy, Banking Products). Their source files are absent from `/data/uploads` (5 files present), so they were removed rather than merely de-indexed. Every retrieval question therefore fails by construction. |
+| Root cause | The evaluation corpus is **not version-controlled and not reproducible**. The golden question set is tracked in git (`eval/golden/*.jsonl`), but the documents those questions are asked *about* live only in a mutable runtime volume. Any re-ingest, clear-down or environment rebuild silently invalidates the entire instrument, with no signal until someone runs it. Contributing factor: auto-store has grown the corpus to 9,602 documents of which only 5 are content, so a content document's absence is invisible in aggregate counts. |
+| Immediate correction | None yet — the source documents must be recovered or re-obtained. |
+| Corrective action (proposed) | (a) Treat the evaluation corpus as a controlled configuration item: store the source documents, or a manifest with checksums, under version control alongside the questions. (b) Add a corpus pre-flight check to `run_eval.py` that asserts every `expect_docs` entry is present and **aborts with a clear message** rather than reporting a misleading score. (c) Re-ingest and re-measure. |
+| Effectiveness verification | Pending — the suite must return a score comparable to the 2026-08-06 baseline on a restored corpus. |
+| Customer impact | None. This is an internal measurement capability; no customer deployment is affected. |
+| Evidence | `eval/reports/eval_20260922-135322.json` (retained); this investigation |
+| Status | **OPEN** |
+| Audit relevance | Must be disclosed at the 7 October dry run. It is a genuine gap, but it is also evidence of the management system working: a scheduled measurement detected an instrument failure that aggregate statistics concealed. |
+
+---
+
+## Section B (continued) — summary table
+
 | NC ID | Date raised | Source | Severity | Description | Owner | Status | Closed (effectiveness verified) |
 |---|---|---|---|---|---|---|---|
-| NC-2026-008 | | | | | | | |
+| NC-2026-008 | 2026-09-22 | Measurement | S2 | Golden evaluation corpus absent — instrument inoperable | `________` | **Open** | — |
 
 *(Add rows using `forms/FRM-05_Nonconformity_and_CAPA_Record.md`; keep the full record in the form and summarise it here.)*
 
@@ -175,4 +198,4 @@ Severity scale (defined in SOP-10 §3):
 | Retrospective NCs recorded here | 7 | 2026-09-21 |
 | Of which S1 | 2 | |
 | Closed with effectiveness verified | 3 | |
-| Open | 1 (NC-2026-007) | |
+| Open | 2 (NC-2026-007, NC-2026-008) | |

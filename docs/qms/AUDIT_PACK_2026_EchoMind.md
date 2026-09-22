@@ -188,8 +188,8 @@ into evidence that the management system is working.
 |---|---|---|---|
 | W-1 | The 2025 closure evidence names a toolchain not present in this codebase | 10.2 | §0 — resolve before the dry run |
 | W-2 | Most NFRs have no formally agreed target | 8.2.2 | REG-09 action A-1, due before 14 Oct |
-| W-3 | The golden evaluation has never reached 52/52, and the last recorded run (49/52, 2026-08-06) predates current HEAD | 9.1.1 | Re-run before the audit — REG-09 A-2 |
-| W-4 | No release has yet been cut with the new mechanism | 8.5.2, 8.6 | Cut `v1.4.0` before the dry run so a real release record exists |
+| W-3 | **The golden evaluation is currently inoperable.** Re-run against HEAD on 2026-09-22 it returned **9/52** — not a product regression, but because the evaluation corpus is absent from the knowledge base. Until it is restored the organisation has no current measurement of retrieval quality | 9.1.1 | Raised as `REG-04` NC-2026-008. **Disclose at the dry run.** Restore the corpus and re-measure — REG-09 A-8 |
+| W-4 | ~~No release has yet been cut with the new mechanism~~ — **closed 2026-09-22.** `v1.4.0` cut with `scripts/release.sh`: annotated tag carrying commit `eaa7b1a` and build date `2026-09-22T17:53:08Z`, `CHANGELOG.md` regenerated from the commit record | 8.5.2, 8.6 | Closed — a real release record now exists |
 | W-5 | Product-level QMS documents are draft and unapproved | 7.5 | Either approve them or present them explicitly as supporting documentation under the corporate QMS |
 | W-6 | Independent review and internal audit are not achievable at current headcount | 9.2.2 c | Declared; corporate-level decision |
 | W-7 | No data-retention policy; no encryption at rest | 8.5.3 | Declared and risk-assessed (R-06, R-13) |
@@ -203,7 +203,9 @@ into evidence that the management system is working.
 |---|---|---|---|
 | 1 | **Resolve §0** — decide reading A or B and brief Sheryl | Alexander / Richard | ☐ |
 | 2 | **Set NFR targets** (REG-09 A-1) | Lead Engineer | ☐ |
-| 3 | **Re-run the golden evaluation against HEAD**, retain the report, update QO-1/NFR-Q05 | Lead Engineer | ☐ |
+| 3 | ~~Re-run the golden evaluation against HEAD~~ — **done 2026-09-22.** Result **9/52**; report retained at `eval/reports/eval_20260922-135322.json`; `REG-09` NFR-Q05 updated | Lead Engineer | ☑ |
+| 3a | **Restore the evaluation corpus** (the 15 documents the golden set targets) and re-measure. This is now the single highest-value pre-audit task: without it QO-1, QO-2 and NFR-Q01–Q05 have no current evidence | Lead Engineer | ☐ |
+| 3b | Add a corpus pre-flight assertion to `eval/run_eval.py` so a missing corpus **aborts** rather than reporting a misleading score | Lead Engineer | ☐ |
 | 4 | **Cut release `v1.4.0`** with `scripts/release.sh` so a tagged release and a completed `FRM-03` exist | Lead Engineer | ☐ |
 | 5 | Rebuild images with build args so `/api/version` reports the real build, then verify on the running stack | Lead Engineer | ☐ |
 | 6 | Install the backup timer with an off-host destination | Lead Engineer | ☐ |

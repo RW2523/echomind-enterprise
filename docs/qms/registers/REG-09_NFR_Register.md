@@ -64,7 +64,7 @@ agreed target · **Monitored** — observed continuously, no discrete measuremen
 | NFR-Q02 | Citation recall | `not formally set` | **0.8256** (CI 0.713–0.938, n=43) | same | 2026-08 | Measured |
 | NFR-Q03 | Fact support rate — required gold facts present in the answer | `not formally set` | **0.8152** (75 of 92 fact groups) | same | 2026-08 | Measured |
 | NFR-Q04 | Abstention accuracy — correctly declines when the corpus cannot answer | `not formally set` | **0.7826** (CI 0.581–0.903, n=23) | same | 2026-08 | Measured — **weakest accuracy figure; directly tied to the product's central claim** |
-| NFR-Q05 | Functional regression suite (52 golden questions, binary gate) | 52/52 (gate at `eval/run_eval.py:281`) | best **50/52** (2026-07-30), most recent **49/52** (2026-08-06) | `eval/reports/*.json` — 24 runs now retained as records | 2026-08-06 | **Gap** — never reached 52/52; and the last run predates current HEAD |
+| NFR-Q05 | Functional regression suite (52 golden questions, binary gate) | 52/52 (gate at `eval/run_eval.py:281`) | **9/52 on 2026-09-22** — 43/43 retrieval questions fail with 0 citations because the evaluation corpus is absent; smalltalk 6/6, refusal 2/2, off-corpus 1/1. Historic: best 50/52 (2026-07-30), 49/52 (2026-08-06) | `eval/reports/eval_20260922-135322.json` | 2026-09-22 | **Gap — instrument inoperable.** Raised as `REG-04` NC-2026-008. Not a product regression; retrieval works when exercised directly |
 
 ### 2.3 Security and tenant isolation
 
@@ -132,7 +132,8 @@ Evidence that NFR monitoring produces action, not just numbers:
 | Ref | Action | Priority | Owner | Due |
 |---|---|---|---|---|
 | **A-1** | **Agree a target for every `not formally set` NFR above.** Measurement without an agreed threshold cannot show conformity, only activity. This is the substantive remainder of finding #6. | **High — before 14 Oct** | `________` | `________` |
-| A-2 | Re-run the golden evaluation against current HEAD and record the score (NFR-Q05 figures predate HEAD by six weeks and three feature commits) | **High — before 14 Oct** | `________` | `________` |
+| A-2 | ~~Re-run the golden evaluation against HEAD~~ — **done 2026-09-22; result 9/52, corpus absent.** Superseded by A-8 | — | — | done |
+| **A-8** | **Restore the evaluation corpus and re-measure** (`REG-04` NC-2026-008). Until this is done the organisation has **no current measurement of retrieval quality** and cannot evidence NFR-Q01–Q05 | **Critical — before 7 Oct dry run** | `________` | `________` |
 | A-3 | Reconcile the 2025 closure evidence (Confluence / Jenkins / build v1.3.27) with this codebase, or state plainly to the auditor that the product has been rebuilt since | **High — before 7 Oct dry run** | `________` | `________` |
 | A-4 | Add health checks to `frontend` and `cloudflared` (NFR-R01) | Medium | `________` | `________` |
 | A-5 | Improve NFR-Q04 abstention accuracy (0.78) — it underwrites the product's central claim | Medium | `________` | `________` |
