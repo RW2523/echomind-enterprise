@@ -10,10 +10,11 @@ source revision that each released image is built from (ISO 9001:2015, 8.5.2).
 
 History covered: 2026-02-05 to 2026-09-22.
 
-## Unreleased
+## [1.4.0] - 2026-09-22
 
 ### Added
 
+- **build**: release identification, off-host backup scheduling, pinned NeMo (`51fd3bc`)
 - **voice**: speculative replies, LLM tool routing, dynamic hold phrases, GPU final STT (`ff29843`)
 - **transcript,voice,chat**: cleaner utterances, gated checks, enterprise voice tone, focused UI (`15f3c96`)
 - **silent-assistant**: sentence-level live checks with quoted proof, record pull, scenarios (`7f2658a`)
@@ -80,6 +81,7 @@ History covered: 2026-02-05 to 2026-09-22.
 
 ### Documentation
 
+- **qms**: October surveillance audit pack for the EchoMind Product area (`4a43773`)
 - **qms**: ISO 9001:2015 quality management system, repo tidy-up, data backup (`9efb134`)
 - **paper**: camera-ready v4 with updated author list and ajace.com emails (`bc9aa33`)
 - add pitch deck PPTX and consolidate collateral into marketing_doc/ (`9360f69`)
@@ -113,6 +115,7 @@ History covered: 2026-02-05 to 2026-09-22.
 
 ### Other changes
 
+- chore(release): v1.4.0 (`b0ba848`)
 - eval: QASC 2026 paper experiment harness and frozen results (`cbc57d1`)
 - Add files via upload (`01b203c`)
 - Add Document Studio: AI document generation with on-device images + PDF/PPTX export (`2d23f40`)
