@@ -19,11 +19,14 @@ from .conversation_memory import ConversationMemory
 from .echo_commands import parse_and_route, strip_wake_word
 from .wake_word_storage import load_wake_word, save_wake_word
 from .adapters.stt_nemotron import NemotronUtteranceSTT, NemotronStreamingSTT
-from .adapters.llm_openai_stream import OpenAICompatLLMStream
+from .adapters.llm_openai_stream import OpenAICompatLLMStream, StreamHandle, ToolCall, ToolStart, strip_tool_markup
 from .adapters.tts_piper import PiperTTS
 from .adapters.tts_kokoro import KokoroTTS
 from .adapters.moshi_ws import MoshiWsAdapter
 from .lead_phrases import pick_lead_phrase
+from .tools import VOICE_TOOLS, ROUTER_RULES, source_options_for, tool_topic_arg, cites_a_reference
+from .hold_phrases import pick_hold_phrase, pick_ack, tone_key, topic_from_query
+import difflib
 
 
 def _SPECULATIVE_LEAD(user_text: str) -> str:
@@ -40,6 +43,7 @@ def _SPECULATIVE_LEAD(user_text: str) -> str:
     return "I believe the answer is yes, based on what I remember."
 
 logger = logging.getLogger(__name__)
+_tlog = logging.getLogger("app.session.turn")   # INFO in server.py: one line per turn with timings
 
 # ---------------------------------------------------------------------------
 # Persona-specific intro phrases (keyed by PersonaType value from frontend)
@@ -87,8 +91,8 @@ _BASE_SYSTEM_PROMPT = (
     "started; end every turn with 'How can I help you today?' or 'Let me know if I can help'.\n"
     "GREETINGS: if the user only greets you or asks how you are, reply in one short line such as "
     "\"Hello. How can I help you today?\" and nothing more.\n"
-    "SUBSTANCE: answer the user's actual request directly. Cite the section or document when answering "
-    "from sources. Give numbered steps for procedures. Never invent facts, section numbers or pages.\n"
+    "SUBSTANCE: answer the user's actual request directly. Give numbered steps for procedures. Never "
+    "invent facts, section numbers, pages or document names.\n"
     "GUARDRAIL: politely decline harmful or clearly illegal requests in one sentence, then offer to help "
     "with something else."
 )
@@ -113,7 +117,10 @@ _PERSONA_TONE = {
 
 
 def _persona_system_prompt(persona: str) -> str:
-    tone = _PERSONA_TONE.get((persona or "").strip().lower(), "")
+    # Persona labels arrive as "Lawyer", "Financial Advisor", "law", "bank"… — normalise to a tone key
+    # (before this the lookup silently missed every label and the persona tone was never applied).
+    key = tone_key(persona)
+    tone = _PERSONA_TONE.get(key, "") if key != "neutral" else _PERSONA_TONE.get((persona or "").strip().lower(), "")
     return _BASE_SYSTEM_PROMPT + ("\n" + tone if tone else "")
 
 
@@ -136,6 +143,131 @@ _TRAILING_OFFER_RE = re.compile(
     r"\s*(?:how (?:can|may) i (?:help|assist) you(?: today)?\?|let me know if (?:i can help|you need "
     r"anything(?: else)?)\.?|is there anything else(?: i can help with)?\??)\s*$", re.IGNORECASE)
 
+
+# Citations are for the screen, not the speaker: "(Section 2.3, page 5)", "(02a_03.pdf)".
+_SPOKEN_REF_RE = re.compile(
+    r"[ \t]*\((?=[^()]*(?:§|\b(?:sections?|sect|pages?|pp?|paras?|paragraphs?|clauses?|articles?|chapters?|"
+    r"volumes?|vols?)\b|\.(?:pdf|docx?|txt|md|csv)\b))[^()]{0,120}\)", re.IGNORECASE)
+
+
+_SPOKEN_TEMPLATE_RE = re.compile(r"[ \t]*\(\s*<[^()<>]{1,40}>(?:\s*[\u2014,\u2013-]\s*<?[^()<>]{0,40}>?)*\s*\)")
+
+
+def strip_spoken_refs(text: str) -> str:
+    out = _SPOKEN_REF_RE.sub("", text or "")
+    out = _SPOKEN_TEMPLATE_RE.sub("", out)
+    return re.sub(r"[ \t]+([,.;:!?])", r"\1", out)
+
+
+# Follow-ups that need the previous turns to be understood ("and the fee for that?").
+_FOLLOW_UP_RE = re.compile(
+    r"^\s*(?:and|also|what about|how about|is that|does that|was that|did that|can it|could it|would that|"
+    r"the same|that one|those|it|they|he|she|his|her|their|its|then|so|but|why|when|where|which)\b", re.I)
+
+
+_BAD_TOPIC_WORDS = frozenset(
+    "today tomorrow yesterday now please thanks thank hello hi hey off up out down over back away kevin "
+    "of many much long often far old do does did is are was were am be been get got have has had can could "
+    "would should will shall may might to for in on at with by from about you your me my we our they i it "
+    "this that these those there here what which who whom whose when where why how".split())
+
+
+def _clean_topic(topic: Optional[str]) -> Optional[str]:
+    """A topic guessed from the USER'S OWN words (before the model's tool query exists) must read like
+    a noun phrase — "the refund policy", "48213" — never "the many days of". Otherwise use no topic."""
+    if not topic:
+        return None
+    inner = re.sub(r"^(?:the|a|an)\s+", "", topic.strip(), flags=re.I)
+    words = inner.split()
+    if not words or len(words) > 4:
+        return None
+    if any(w.lower().strip(",.?!") in _BAD_TOPIC_WORDS for w in words):
+        return None
+    if not re.search(r"[a-z0-9]", inner, re.I):
+        return None
+    return topic
+
+
+# Questions about the organisation's own facts must be answered from its material, even when the
+# router model feels confident enough to answer from general knowledge ("Employees are entitled
+# to 14 days of annual leave" was invented for a KB that says nothing about leave).
+_ORG_NOUN_RE = re.compile(
+    r"\b(?:polic(?:y|ies)|procedures?|process(?:es)?|agreements?|contracts?|clauses?|terms|conditions|"
+    r"fees?|rates?|pric(?:e|es|ing)|costs?|charges?|refunds?|cancellations?|notice|deadlines?|penalt(?:y|ies)|"
+    r"leave|holidays?|vacation|sick|benefits?|salar(?:y|ies)|payroll|pay|bonus(?:es)?|overtime|probation|"
+    r"employees?|staff|customers?|clients?|accounts?|invoices?|orders?|tickets?|cases?|matters?|claims?|"
+    r"coverage|premiums?|limits?|eligib(?:le|ility)|requirements?|compliance|regulations?|audits?|sla|uptime|"
+    r"availability|credits?|support|warrant(?:y|ies)|returns?|deliver(?:y|ies)|shipping|subscriptions?|plans?|"
+    r"products?|services?|data|retention|security|breach(?:es)?|incidents?|escalations?|approvals?|budgets?|"
+    r"expenses?|reimburse(?:ment|d)?|travel|allowances?|terminat(?:ion|e|ed)|resign(?:ation)?|onboarding|"
+    r"training|protocols?|dosage|patients?|appointments?|prescriptions?|meetings?|decisions?|action items?|"
+    r"minutes|transcripts?|discount|liabilit(?:y|ies)|indemnit(?:y|ies)|renewal|exclusivity|confidentialit(?:y)?|"
+    r"governance|change control|statement of work|sow|msa|kyc|aml|interest|loan|mortgage|deposit|withdrawal|"
+    r"transfer|card|overdraft|balance|statement)\b", re.I)
+_QUESTION_RE = re.compile(
+    r"^\s*(?:what|what's|whats|how|when|where|which|who|why|is|are|does|do|did|can|could|would|should|will|"
+    r"tell me|explain|describe|list|give me|find|look up|pull up|check|show me|remind me|summari[sz]e)\b", re.I)
+
+
+def _is_org_question(text: str) -> bool:
+    t = (text or "").strip()
+    if not t or _is_small_talk(t):
+        return False
+    return bool(_ORG_NOUN_RE.search(t)) and (bool(_QUESTION_RE.match(t)) or t.endswith("?") or bool(re.search(r"\b\d{3,}\b", t)))
+
+
+def _guess_tool(text: str) -> str:
+    if re.search(r"\b\d{3,}\b", text or "") or re.search(r"\b(?:pull up|look up|open|bring up)\b.*\b(?:account|record|case|ticket|order|file|customer|client)\b", text or "", re.I):
+        return "lookup_record"
+    if re.search(r"\b(?:meeting|call|transcript|discuss(?:ed|ion)?|decid(?:e|ed|ing)|decision|said|agreed|minutes|last week|yesterday)\b", text or "", re.I):
+        return "search_transcripts"
+    return "search_knowledge_base"
+
+
+def _ablation_mode() -> str:
+    """E10 ablation arm (evaluation only); production is dual_i1."""
+    mode = os.getenv("VOICE_ABLATION_MODE", "dual_i1")
+    try:
+        ov = "/tmp/echomind_ablation_mode"
+        if os.path.exists(ov):
+            v = open(ov).read().strip()
+            if v in ("dual_i1", "single_loop", "dual_no_i1"):
+                mode = v
+    except Exception:
+        pass
+    return mode
+
+
+def _is_follow_up(text: str) -> bool:
+    t = (text or "").strip()
+    return bool(t) and (len(t.split()) <= 6 or bool(_FOLLOW_UP_RE.match(t)))
+
+
+# A first sentence that asserts the material lacks something, without any tool having run.
+_UNSUPPORTED_ABSENCE_RE = re.compile(
+    r"(?:\bnot (?:specified|available|provided|mentioned|covered|included|stated|defined|listed|found)\b|"
+    r"\bisn'?t (?:specified|available|provided|mentioned|covered)\b|"
+    r"\b(?:no|without) (?:specific )?(?:information|details|mention)\b|"
+    r"\bdepend(?:s)? on the specific (?:terms|details|agreement|contract)\b|"
+    r"\bi recommend (?:reviewing|checking|consulting|referring)\b|"
+    r"\b(?:knowledge base|documents?|materials?|records?) (?:i have|available)\b.*\bnot\b|"
+    r"\bnot in the (?:documents?|knowledge base|materials?|records?)\b)", re.I)
+
+
+# Direct-answer openers that mean "this should have been a tool call".
+_NARRATED_LOOKUP_RE = re.compile(
+    r"^\s*(?:(?:sure|okay|ok|certainly|of course|alright|well)[,.!]?\s*)?"
+    r"(?:i(?:'ll| will| can| would|'m going to| am going to)\s+(?:just\s+|quickly\s+|briefly\s+)?(?:look|check|pull|find|search|see|verify|review|get|try|take|have|need to)\b|"
+    r"bear with me\b|just a (?:moment|second|sec)\b|"
+    r"let me\s+(?:look|check|pull|find|search|see|verify|review|get|try)\b|"
+    r"(?:i'm|i am)\s+(?:checking|looking|searching|pulling|retrieving)\b|"
+    r"(?:checking|looking|searching|retrieving|pulling)\s+(?:that|this|the|it|up|into|for)\b|"
+    r"one (?:moment|second|sec)\b|give me a (?:moment|second)\b|hold on\b|"
+    r"i(?:'m| am) (?:unable|not able) to (?:access|provide|see|find)\b|"
+    r"i (?:do not|don't) have (?:access|that|this|specific|the|any)\b|"
+    r"i (?:cannot|can't|could not|couldn't) (?:provide|access|see|find|locate)\b|"
+    r"i (?:was|am) (?:unable|not able) to (?:find|locate)\b)",
+    re.IGNORECASE)
 
 _SMALL_TALK_RE = re.compile(
     r"^[\s,.!?'-]*(?:(?:hi|hello|hey|good (?:morning|afternoon|evening)|how are you(?: doing)?|"
@@ -517,8 +649,10 @@ def preprocess_english_only(raw: str) -> Optional[str]:
     if not (raw or "").strip():
         return None
     s = (raw or "").strip()
-    # Keep only a-z, A-Z, apostrophe (for "don't"), space, and basic punctuation
-    cleaned = re.sub(r"[^a-zA-Z\s'.,?!\-]", " ", s)
+    # Keep letters, DIGITS, apostrophe (for "don't"), space, basic punctuation and the symbols that
+    # carry meaning in speech ($ % &). Digits were being stripped, which turned "customer ID 48213"
+    # into "customer ID ?" before the model ever saw it.
+    cleaned = re.sub(r"[^a-zA-Z0-9\s'.,?!\-$%&/:]", " ", s)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
     if not cleaned or len(cleaned) < _MIN_ENGLISH_INPUT_LEN:
         return None
@@ -530,7 +664,7 @@ def preprocess_english_only(raw: str) -> Optional[str]:
         return None
     # Reject consonant-only short strings (common STT noise)
     letters = re.sub(r"[^a-zA-Z]", "", cleaned)
-    if len(letters) <= 4 and letters and not re.search(r"[aeiouAEIOU]", letters):
+    if len(letters) <= 4 and letters and not re.search(r"[aeiouAEIOU]", letters) and not re.search(r"\d", cleaned):
         return None
     return cleaned
 
@@ -641,6 +775,11 @@ class OmniSessionA:
         # Streaming STT for partial transcript during user speech (intent pre-detection)
         self._stream_stt = NemotronStreamingSTT() if SETTINGS.STREAMING_STT_ENABLED else None
         self._partial_transcript: str = ""   # latest partial from streaming STT
+        # Pre-roll: the last ~600 ms of frames before speech onset. Fed to the streaming STT (and the
+        # utterance buffer) at speech start so the recogniser is not cold on the first word — cold
+        # starts were dropping "What does…" / "How many…", which made the speculative partial a
+        # different question from the final and got it rejected every time.
+        self._preroll: Deque[Frame] = deque(maxlen=max(1, int(600 / max(1, getattr(self, "frame_ms", 20)))))
 
         # Backchannel state (full-duplex-like acknowledgments during user speech)
         self._last_backchannel_ts: float = 0.0
@@ -671,6 +810,17 @@ class OmniSessionA:
         self.use_knowledge_base: bool = True  # always-on: voice is RAG-connected to the knowledge base by default
         self.kb_namespace: str = ""  # KB namespace (vertical pack); "" = whole KB
         self.persona: str = ""
+        # Speculative reply: {gen, text, messages, tools, tok_q, handle, task, t0} for the LLM stream
+        # started on the flushed partial while Parakeet is still decoding; adopted or aborted when
+        # the final transcript arrives (see _maybe_start_speculation / _stream_reply).
+        self._spec: Optional[dict] = None
+        self._spec_seq: int = 0
+        self._llm_handle: Optional[StreamHandle] = None      # abort handle of the live LLM stream
+        self._backend_handle: Optional[StreamHandle] = None  # abort handle of the live backend NDJSON stream
+        self._recent_hold: Deque[str] = deque(maxlen=3)      # hold-phrase template ids (no repeats)
+        self._recent_ack: Deque[str] = deque(maxlen=3)
+        self._hold_spoken_gen: int = -1                      # generation that already heard a hold phrase
+        self._deferred_hold: Optional[str] = None            # caption to show once asr_final is out
         self.context_window: str = "all"
         self.voice_bot_name: str = ""
         self.voice_user_name: str = ""
@@ -771,6 +921,16 @@ class OmniSessionA:
 
     async def close(self):
         self._closed = True
+        # WebSocket gone: stop every in-flight generation (LLM, speculation, backend stream).
+        for h in (self._llm_handle, getattr(self, "_backend_handle", None)):
+            if h is not None:
+                try:
+                    h.abort()
+                except Exception:
+                    pass
+        self._llm_handle = None
+        self._backend_handle = None
+        self._discard_spec("closed")
         if self._finalize_task and not self._finalize_task.done():
             self._finalize_task.cancel()
         for t in self._tasks:
@@ -804,6 +964,16 @@ class OmniSessionA:
             for t in [self._reply_task, self._llm_prod_task, self._kickoff_task, self._finalize_task, self._tts_phrase_task]:
                 if t and (not t.done()):
                     t.cancel()
+            # Close the HTTP stream(s) too: cancelling the asyncio task alone left the producer
+            # thread — and TRT-LLM — generating until max_tokens.
+            if self._llm_handle is not None:
+                self._llm_handle.abort()
+                self._llm_handle = None
+            bh = getattr(self, "_backend_handle", None)
+            if bh is not None:
+                bh.abort()
+                self._backend_handle = None
+            self._discard_spec("barge_in")
 
             self._reply_task = None
             self._llm_prod_task = None
@@ -1065,6 +1235,8 @@ class OmniSessionA:
 
             e = rms_energy(fr.pcm16)
             is_speech = False if e < 0.004 else self.vad.is_speech(fr.pcm16, self.sr)
+            if not self.in_speech:
+                self._preroll.append(fr)
 
             if is_speech:
                 self.silence_count = 0
@@ -1087,9 +1259,23 @@ class OmniSessionA:
                             if self._stream_stt:
                                 self._stream_stt.reset()
                                 self._partial_transcript = ""
-                            for _pf in self._pending_lead_frames:
+                            # pre-roll (mostly silence + the soft onset) then the lead frames
+                            lead_ids = {id(x) for x in self._pending_lead_frames}
+                            prime = [x for x in self._preroll if id(x) not in lead_ids] + list(self._pending_lead_frames)
+                            for _pf in prime:
                                 self.utt.push(_pf)
+                            if self._stream_stt is not None and prime:
+                                _pcm = b"".join(x.pcm16 for x in prime)
+
+                                def _prime(stt=self._stream_stt, audio=pcm16_bytes_to_float32(_pcm)):
+                                    return stt.push_chunk(audio)
+
+                                try:
+                                    await loop.run_in_executor(None, _prime)
+                                except Exception:
+                                    pass
                             self._pending_lead_frames.clear()
+                            self._preroll.clear()
                             self._speech_frames_since_backchannel = 0
                             self._backchannel_silence_count = 0
                             await self._cancel_assistant_pipeline(keep_listening=True, send_cancel=True)
@@ -1173,25 +1359,57 @@ class OmniSessionA:
             await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
             return
 
+        t_endpoint = time.monotonic()
+        # Accurate final decode (Parakeet, CPU, ~1 s) runs in parallel with a speculative LLM
+        # stream started on the flushed streaming partial. Nothing is spoken until the final text
+        # confirms the partial, so a mismatch costs one aborted request and no audio.
+        final_task = asyncio.create_task(self.stt.transcribe(audio))
+        spec = None
         try:
-            user_text = await self.stt.transcribe(audio)
+            partial = ""
+            if self._stream_stt is not None:
+                partial = await asyncio.get_running_loop().run_in_executor(None, self._stream_stt.flush)
+                if partial and partial != self._partial_transcript:
+                    self._partial_transcript = partial
+                    await self.send({"type": "partial_transcript", "text": partial, "generation_id": my_gen})
+            spec = self._maybe_start_speculation(my_gen, partial or self._partial_transcript)
+            if spec is not None and spec.get("tools") and _is_org_question(spec["text"]):
+                await self._speak_early_hold(my_gen, spec["text"])
         except Exception as e:
+            logger.debug("speculation launch skipped: %s", e)
+
+        try:
+            if spec is not None:
+                watcher = asyncio.create_task(spec["handle"].first_evt.wait())
+                done, _ = await asyncio.wait({final_task, watcher}, return_when=asyncio.FIRST_COMPLETED)
+                if watcher in done and not final_task.done() and spec["handle"].first_kind == "tool":
+                    await self._speak_early_hold(my_gen, spec["text"])
+                if not watcher.done():
+                    watcher.cancel()
+            user_text = await final_task
+        except Exception as e:
+            self._discard_spec("stt_error")
             await self.send({"type": "error", "where": "stt", "message": str(e), "generation_id": my_gen})
             return
+        t_final = time.monotonic()
 
         if my_gen != self.generation_id:
+            self._discard_spec("stale_gen")
             logger.info("Voice STT: dropped result after barge-in/cancel gen=%s current=%s", my_gen, self.generation_id)
             return
 
         user_text = (user_text or "").strip()
         if not user_text:
+            self._discard_spec("empty_final")
             return
         user_text = strip_markdown_for_speech(user_text)
         if not user_text:
+            self._discard_spec("empty_final")
             return
         # English-only preprocessing: retain only English words, reject noise (do not send garbage to LLM)
         user_text = preprocess_english_only(user_text)
         if not user_text:
+            self._discard_spec("empty_final")
             return
 
         # Filler-only / too-short speech ("uh", "hmm", "okay") -> stay listening, no reply.
@@ -1199,6 +1417,7 @@ class OmniSessionA:
                                        min_words=SETTINGS.MIN_UTTERANCE_WORDS,
                                        min_chars=SETTINGS.MIN_UTTERANCE_CHARS):
             logger.info("Voice: ignoring non-substantive utterance %r", user_text[:60])
+            self._discard_spec("not_meaningful")
             await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
             return
 
@@ -1209,15 +1428,59 @@ class OmniSessionA:
         if (norm and norm == getattr(self, "_last_utt_norm", "")
                 and (now - getattr(self, "_last_utt_ts", 0.0)) < SETTINGS.DUP_UTTERANCE_WINDOW_S):
             logger.info("Voice: ignoring duplicate utterance %r within dedupe window", user_text[:60])
+            self._discard_spec("duplicate")
             await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
             return
         self._last_utt_norm, self._last_utt_ts = norm, now
 
         self._assistant_turns += 1
+        self._turn_t = {"endpoint": t_endpoint, "final": t_final, "spec": bool(spec)}
         try:
             return await self._finalize_and_reply_impl(my_gen, user_text)
         finally:
             self._last_user_utterance = user_text
+            self._discard_spec("unused")      # no-op if the stream was adopted
+
+    _NOT_FOUND_RE = re.compile(r"^\s*i couldn'?t find|^\s*i could not find|couldn'?t find (?:that|anything)", re.I)
+
+    def _history_text(self, final: str) -> str:
+        """What goes into self.history: the reply as it was spoken (same cleaning as the TTS stage,
+        first-turn rule included). A cleaned reply that collapses to a word or two — "Hello." —
+        must not be stored: one such turn taught the model to answer every question with "Hello."."""
+        spoken = clean_assistant_text(final, is_first_turn=(self._assistant_turns <= 1))
+        return spoken if len(spoken.split()) >= 3 else (final or spoken)
+
+    def _remember_turn(self, user_text: str, final: str) -> None:
+        """Append the exchange to the model-facing history. A "couldn't find" reply is kept out of
+        it: two such turns in a row taught the router to stop calling tools and to declare the next
+        topic "not specified in the documents" by itself. The on-screen transcript and memory still
+        record it (conversation_memory is written by the caller)."""
+        if not (final or "").strip() or self._NOT_FOUND_RE.search(final or ""):
+            return
+        self.history.append({"role": "user", "content": user_text})
+        self.history.append({"role": "assistant", "content": self._history_text(final)})
+        self._trim_history()
+
+    def _grounded_payload(self, user_text: str, tool: str, topic: Optional[str]) -> dict:
+        """Request body for /api/chat/ask-voice-stream. The tool decides the retrieval scope;
+        the last turns go along so follow-ups ("and the fee for that?") stay grounded."""
+        # Prior turns only when this looks like a follow-up: on a fresh question they primed the
+        # answer model to repeat the previous "the documents do not contain…" verdict.
+        hist = ([m for m in self.history[-4:] if m.get("role") in ("user", "assistant") and m.get("content")]
+                if _is_follow_up(user_text) else [])
+        return {
+            "message": user_text,
+            "persona": self.persona or None,
+            "context_window": self.context_window or "all",
+            "use_knowledge_base": True,
+            "advanced_rag": True,
+            "voice_max_tokens": getattr(SETTINGS, "VOICE_RAG_MAX_TOKENS", 640),
+            "namespace": self.kb_namespace or None,
+            "source_options": source_options_for(tool),
+            "history": [{"role": m["role"], "content": str(m["content"])[:1200]} for m in hist],
+            "tool": tool,
+            "tool_query": topic,
+        }
 
     async def _reply_from_backend_rag_stream(
         self,
@@ -1225,24 +1488,39 @@ class OmniSessionA:
         user_text: str,
         backend_url: str,
         payload: dict,
-    ) -> None:
-        """Stream NDJSON from POST /api/chat/ask-voice-stream; phrase-commit + TTS like local LLM stream."""
+        tts_q: Optional[asyncio.Queue] = None,
+        hold: Optional[dict] = None,
+        preface_text: str = "",
+    ) -> str:
+        """Stream NDJSON from POST /api/chat/ask-voice-stream; phrase-commit + TTS like the local
+        LLM stream. ``tts_q``: reuse the caller's running phrase pipeline (tool-routed turns, where
+        the router stream may already have spoken a preface). ``hold``: {tool, topic, tone} — a hold
+        phrase is enqueued only if no evidence/chunk has arrived within HOLD_PHRASE_DELAY_MS."""
         phrase_buf = ""
         assistant_text = ""
         last_growth = time.time()
         phrases_enqueued = 0
-
-        tts_q: asyncio.Queue = asyncio.Queue()
+        own_pipeline = tts_q is None
+        if own_pipeline:
+            tts_q = asyncio.Queue()
         chunk_q: asyncio.Queue = asyncio.Queue()
         loop_c = asyncio.get_running_loop()
         base = backend_url.rstrip("/")
         stream_url = f"{base}/api/chat/ask-voice-stream"
+        first_evidence = asyncio.Event()
+        t_req = time.monotonic()
+        hold_state = {"spoken": None}
+
+        backend_handle = StreamHandle()
+        self._backend_handle = backend_handle
 
         def run_backend_ndjson():
             def put(it):
                 loop_c.call_soon_threadsafe(chunk_q.put_nowait, it)
 
             try:
+                if backend_handle.stop.is_set():
+                    return
                 with requests.post(
                     stream_url,
                     json=payload,
@@ -1250,8 +1528,11 @@ class OmniSessionA:
                     timeout=180,
                     headers={"Content-Type": "application/json"},
                 ) as r:
+                    backend_handle.response = r
                     r.raise_for_status()
                     for line in r.iter_lines(decode_unicode=True):
+                        if backend_handle.stop.is_set():
+                            return
                         if not line:
                             continue
                         try:
@@ -1263,17 +1544,40 @@ class OmniSessionA:
                             tx = obj.get("text") or ""
                             if tx:
                                 put(tx)
+                        elif t == "sources":
+                            put({"__sources__": obj.get("sources") or obj.get("citations") or []})
                         elif t == "done":
                             put({"__done__": True, "answer": (obj.get("answer") or "")})
                         elif t == "error":
                             put({"__error__": str(obj.get("message") or "error")})
             except Exception as e:
-                put({"__error__": str(e)})
+                if not backend_handle.stop.is_set():
+                    put({"__error__": str(e)})
             finally:
                 put(None)
 
+        async def hold_after():
+            delay = max(0, int(getattr(SETTINGS, "HOLD_PHRASE_DELAY_MS", 350))) / 1000.0
+            try:
+                await asyncio.wait_for(first_evidence.wait(), delay)
+                return                                  # answer is already here: say nothing
+            except asyncio.TimeoutError:
+                pass
+            if first_evidence.is_set() or my_gen != self.generation_id or not hold:
+                return                                  # evidence landed in the same loop tick
+            text, tid = pick_hold_phrase(hold.get("tool") or "search_knowledge_base",
+                                         hold.get("tone") or "neutral", hold.get("topic"), self._recent_hold)
+            self._recent_hold.append(tid)
+            hold_state["spoken"] = text
+            await tts_q.put(("filler", text))
+            await self.send({"type": "event", "event": "FILLER_SPEAKING", "text": text, "generation_id": my_gen})
+
+        hold_task = asyncio.create_task(hold_after()) if (hold and SETTINGS.LEAD_PHRASE_ENABLED) else None
+
         _abort_tts = False
-        self._tts_phrase_task = asyncio.create_task(self._phrase_pipeline(tts_q, my_gen))
+        if own_pipeline:
+            self._tts_phrase_task = asyncio.create_task(self._phrase_pipeline(tts_q, my_gen))
+        t_first_chunk = None
         try:
 
             async def producer():
@@ -1285,7 +1589,7 @@ class OmniSessionA:
             while True:
                 if my_gen != self.generation_id:
                     prod_task.cancel()
-                    return
+                    return assistant_text
 
                 try:
                     # Bounded wait so the stall rule is observable DURING a stall:
@@ -1303,28 +1607,30 @@ class OmniSessionA:
                     break
                 if isinstance(item, dict) and item.get("__error__"):
                     raise RuntimeError(item["__error__"])
+                if isinstance(item, dict) and "__sources__" in item:
+                    first_evidence.set()
+                    await self.send({"type": "assistant_sources", "generation_id": my_gen,
+                                     "sources": item["__sources__"][:6]})
+                    continue
                 if isinstance(item, dict) and item.get("__done__"):
                     server_ans = (item.get("answer") or "").strip()
                     if server_ans and len(server_ans) > len(assistant_text.strip()):
                         assistant_text = server_ans
                     continue
 
+                if t_first_chunk is None:
+                    t_first_chunk = time.monotonic()
+                    first_evidence.set()
                 assistant_text += item
                 phrase_buf += item
                 await self.send(
                     {
                         "type": "assistant_text_partial",
                         "generation_id": my_gen,
-                        "text": strip_markdown_for_speech(assistant_text),
-                        # Loop provenance (additive, ignored by existing clients). Lets an
-                        # evaluator separate interaction-loop speech (L_I) from grounded-loop
-                        # output (L_G) — without it, invariant I1 is unmeasurable because
-                        # streamed answer deltas are indistinguishable from lead phrases.
+                        "text": strip_markdown_for_speech(preface_text + assistant_text),
                         "loop": "L_G",
                     }
                 )
-                # Evaluate the split against the PREVIOUS growth time, then stamp:
-                # stamping first made the stall clock always read ~0 (dead rule).
                 cut = phrase_split_point(phrase_buf, phrases_enqueued, last_growth)
                 last_growth = time.time()
                 if cut:
@@ -1333,40 +1639,53 @@ class OmniSessionA:
                     phrase_buf = phrase_buf[cut:].lstrip()
 
             if my_gen != self.generation_id:
-                return
+                return assistant_text
             if phrase_buf.strip():
                 await tts_q.put(phrase_buf.strip())
-            final = strip_markdown_for_speech(assistant_text.strip())
+            final = strip_spoken_refs(strip_markdown_for_speech((preface_text + " " + assistant_text).strip()))
             _log_llm_response(user_text, final)
             if final:
                 await self.send({"type": "assistant_text", "generation_id": my_gen, "text": final})
-            self.history.append({"role": "user", "content": user_text})
-            self.history.append({"role": "assistant", "content": final})
-            self._trim_history()
+            self._remember_turn(user_text, final)
             try:
                 self.conversation_memory.add_text(final, speaker="assistant")
             except Exception:
                 pass
+            _tlog.info("[GROUNDED] tool=%s topic=%r hold=%r first_chunk_ms=%s total_ms=%.0f",
+                       payload.get("tool"), payload.get("tool_query"), hold_state["spoken"],
+                       f"{(t_first_chunk - t_req) * 1000:.0f}" if t_first_chunk else "none",
+                       (time.monotonic() - t_req) * 1000)
+            return final
 
         except Exception as e:
-            _abort_tts = True
-            try:
-                while True:
-                    tts_q.get_nowait()
-            except asyncio.QueueEmpty:
-                pass
-            try:
-                await tts_q.put(None)
-            except Exception:
-                pass
-            wtx = self._tts_phrase_task
-            self._tts_phrase_task = None
-            if wtx and not wtx.done():
-                wtx.cancel()
+            first_evidence.set()
+            if t_first_chunk is not None and assistant_text.strip():
+                # part of the grounded answer was already spoken: close the turn honestly, no replay
+                apology = "Sorry, I lost the connection there. Could you ask that again?"
+                if own_pipeline:
+                    await self._speak_phrase(my_gen, apology)
+                else:
+                    await tts_q.put(apology)
+                return assistant_text
+            _abort_tts = own_pipeline
+            if own_pipeline:
                 try:
-                    await wtx
-                except asyncio.CancelledError:
+                    while True:
+                        tts_q.get_nowait()
+                except asyncio.QueueEmpty:
                     pass
+                try:
+                    await tts_q.put(None)
+                except Exception:
+                    pass
+                wtx = self._tts_phrase_task
+                self._tts_phrase_task = None
+                if wtx and not wtx.done():
+                    wtx.cancel()
+                    try:
+                        await wtx
+                    except asyncio.CancelledError:
+                        pass
             # One-shot fallback: full answer then speak (offline / proxy issues)
             try:
                 def _post_oneshot() -> str:
@@ -1383,12 +1702,15 @@ class OmniSessionA:
                 # other voice session sharing this process. (H8)
                 answer = await asyncio.get_running_loop().run_in_executor(None, _post_oneshot)
                 if my_gen != self.generation_id:
-                    return
+                    return assistant_text
                 reply_clean = strip_markdown_for_speech(answer)
                 _log_llm_response(user_text, reply_clean or answer)
                 if reply_clean:
                     await self.send({"type": "assistant_text", "generation_id": my_gen, "text": reply_clean})
-                await self._speak_phrase(my_gen, answer)
+                if own_pipeline:
+                    await self._speak_phrase(my_gen, answer)
+                else:
+                    await tts_q.put(answer)
                 self.history.append({"role": "user", "content": user_text})
                 self.history.append({"role": "assistant", "content": reply_clean or answer})
                 self._trim_history()
@@ -1396,6 +1718,7 @@ class OmniSessionA:
                     self.conversation_memory.add_text(reply_clean or answer, speaker="assistant")
                 except Exception:
                     pass
+                return reply_clean or answer
             except Exception as e2:
                 await self.send(
                     {
@@ -1405,10 +1728,17 @@ class OmniSessionA:
                         "generation_id": my_gen,
                     }
                 )
+                # Never leave the user in silence: one honest sentence, no invented facts.
+                apology = "I couldn't reach the documents just now. Please ask again in a moment."
+                if own_pipeline:
+                    await self._speak_phrase(my_gen, apology)
+                else:
+                    await tts_q.put(apology)
+                return apology
         finally:
-            if _abort_tts:
-                pass
-            else:
+            if hold_task and not hold_task.done():
+                hold_task.cancel()
+            if own_pipeline and not _abort_tts:
                 try:
                     await tts_q.put(None)
                 except Exception:
@@ -1500,6 +1830,7 @@ class OmniSessionA:
         # Handled command with direct response (e.g. "Your name is X", "Start listening", "Stop listening")
         # Must run BEFORE listen-only accumulate so "Start listening" / "Stop listening" get spoken
         if handled and response_text and not extra.get("fact_check") and not extra.get("memory_query_type"):
+            self._discard_spec("command_turn")
             self.turn_id += 1
             await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
             await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
@@ -1549,48 +1880,32 @@ class OmniSessionA:
         await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
         await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
         self._assistant_active_gen = my_gen
+        if self._deferred_hold and self._hold_spoken_gen == my_gen:
+            await self.send({"type": "assistant_phrase", "generation_id": my_gen, "text": self._deferred_hold, "loop": "L_I"})
+            await self.send({"type": "event", "event": "FILLER_SPEAKING", "text": self._deferred_hold, "generation_id": my_gen})
+        self._deferred_hold = None
 
-        # ── Lead phrase: speak immediately while LLM/RAG generates (MoshiRAG pattern) ──
-        # This eliminates the dead-silence gap and makes the conversation feel alive.
-        _needs_knowledge = _user_asks_about_knowledge(user_text)
+        # ── Lead / hold phrases ──────────────────────────────────────────────
+        # Production ("dual_i1"): NOT spoken up front any more. A hold phrase is spoken only if a
+        # tool call's grounded answer has not started within HOLD_PHRASE_DELAY_MS, and a one-word
+        # acknowledgement only if a direct answer's first token is later than LEAD_PHRASE_DELAY_MS
+        # (both inside _stream_reply). With the speculative stream the first token is usually
+        # already waiting, so most turns now start with the answer itself.
         # E10 ablation (evaluation only). VOICE_ABLATION_MODE:
-        #   dual_i1   (default) = production: L_I speaks a non-asserting lead phrase
+        #   dual_i1   (default) = production, as above
         #   single_loop         = no L_I at all; assistant speaks only when grounded
         #   dual_no_i1          = L_I speaks a SPECULATIVE answer before evidence arrives
-        # Evaluation-only override file lets the E10 harness switch arms without recreating the
-        # container. Absent in normal deployment, so production always resolves to the env value
-        # (default "dual_i1" = shipped behaviour).
-        _ablation = os.getenv("VOICE_ABLATION_MODE", "dual_i1")
-        try:
-            _ov = "/tmp/echomind_ablation_mode"
-            if os.path.exists(_ov):
-                _v = open(_ov).read().strip()
-                if _v in ("dual_i1", "single_loop", "dual_no_i1"):
-                    _ablation = _v
-        except Exception:
-            pass
-        if _ablation == "single_loop":
-            pass                      # suppress the interaction loop entirely
-        elif _ablation == "dual_no_i1":
+        _ablation = _ablation_mode()
+        if _ablation == "dual_no_i1":
+            self._hold_spoken_gen = my_gen           # its speculative lead is the turn's only L_I
             _spec = _SPECULATIVE_LEAD(user_text)
             asyncio.create_task(self._speak_phrase(my_gen, _spec, is_filler=True))
             await self.send({"type": "event", "event": "FILLER_SPEAKING",
                              "text": _spec, "generation_id": my_gen})
-        elif SETTINGS.LEAD_PHRASE_ENABLED and not _is_small_talk(user_text):
-            lead = pick_lead_phrase(user_text, needs_rag=_needs_knowledge)
-            asyncio.create_task(self._speak_phrase(my_gen, lead, is_filler=True))
-            await self.send({
-                "type": "event",
-                "event": "FILLER_SPEAKING",
-                "text": lead,
-                "generation_id": my_gen,
-            })
-
-        # Compiled context for LLM (recent memory + optional topic)
-        compiled_context = self.conversation_memory.get_entries_for_context(15, max_chars=3500)
 
         # Fact-check flow: use recent memory, LLM with fact-check instruction, optional RAG
         if extra.get("fact_check"):
+            self._discard_spec("fact_check_turn")
             fc_context = self.conversation_memory.get_entries_for_context(10, max_chars=3000)
             fc_prompt = (
                 "You are a fact-checking assistant for financial and regulatory discussions. "
@@ -1642,6 +1957,7 @@ class OmniSessionA:
 
         # Memory query: recap / summarize / when mentioned / timestamps
         if extra.get("memory_query_type"):
+            self._discard_spec("memory_turn")
             minutes = extra.get("memory_query_minutes") or 5.0
             query_type = extra.get("memory_query_type")
             if query_type == "recap":
@@ -1715,120 +2031,432 @@ class OmniSessionA:
             self._assistant_active_gen = None
             return
 
-        # RAG path: only when user message indicates document/transcript/resources/book/pdf/file (otherwise general conversation)
+        # ── Reply: one LLM stream that either answers directly or calls a tool ──
         backend_url = (getattr(SETTINGS, "BACKEND_CHAT_URL", None) or "").strip().rstrip("/")
-        if self.use_knowledge_base and backend_url and _user_asks_about_knowledge(user_text):
-            payload = {
-                "message": user_text,
-                "persona": self.persona or None,
-                "context_window": self.context_window or "all",
-                "use_knowledge_base": True,
-                "advanced_rag": True,
-                "voice_max_tokens": getattr(SETTINGS, "VOICE_RAG_MAX_TOKENS", 640),
-                "namespace": self.kb_namespace or None,
-            }
-            await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload)
-            if reenter_listen_only:
-                self.listen_only = True
-                await self.send({"type": "memory_event", "event": "listening_mode_on"})
+        tools_on = bool(SETTINGS.TOOL_ROUTING_ENABLED and self.use_knowledge_base and backend_url)
+        if not tools_on and self.use_knowledge_base and backend_url and _user_asks_about_knowledge(user_text):
+            # Legacy keyword routing (TOOL_ROUTING_ENABLED=0): straight to the grounded path.
+            self._discard_spec("legacy_route")
+            payload = self._grounded_payload(user_text, "search_knowledge_base", None)
+            payload["source_options"] = {"document": True, "transcript": True, "general": True}
+            payload["tool"] = None
+            hold = None if _ablation != "dual_i1" else {"tool": "search_knowledge_base",
+                                                        "topic": _clean_topic(topic_from_query(user_text)),
+                                                        "tone": tone_key(self.persona)}
+            await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload, hold=hold)
+        else:
+            await self._stream_reply(my_gen, user_text, tools_on=tools_on, backend_url=backend_url,
+                                     ablation=_ablation)
+        if reenter_listen_only:
+            self.listen_only = True
+            await self.send({"type": "memory_event", "event": "listening_mode_on"})
+        if my_gen == self.generation_id:
             await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
             self._assistant_active_gen = None
-            return
 
-        # LLM stream path with compiled context in system prompt
+    # ── Speculative reply + tool-routed stream ─────────────────────────────────
+    def _turn_messages(self, user_text: str, tools_on: bool) -> List[Dict]:
+        """The exact message list a reply turn uses (shared by the speculative launch and the
+        confirmed turn so an adopted stream was produced from the same prompt)."""
         messages = self._build_messages(user_text)
-        if compiled_context:
-            sys_with_ctx = self._build_system_prompt_with_profile(compiled_context=compiled_context)
-            messages[0]["content"] = sys_with_ctx
+        compiled_context = self.conversation_memory.get_entries_for_context(15, max_chars=3500)
+        sys_prompt = self._build_system_prompt_with_profile(compiled_context=compiled_context or None)
+        if tools_on:
+            sys_prompt = ROUTER_RULES + sys_prompt      # first: the model weighs it most
+        messages[0]["content"] = sys_prompt
+        return messages
 
+    def _start_producer(self, messages: List[Dict], tools: Optional[List[Dict]], max_tokens: Optional[int] = None):
+        """Run the LLM stream in a worker thread, forwarding events into an asyncio queue.
+        Returns (tok_q, handle, task). ``handle.abort()`` closes the socket so the engine stops."""
+        tok_q: asyncio.Queue = asyncio.Queue()
+        handle = StreamHandle()
+        loop = asyncio.get_running_loop()
+
+        first_evt = asyncio.Event()
+        handle.first_evt = first_evt          # set once the first event is queued (speculation watcher)
+
+        def run_iter():
+            try:
+                seen = False
+                for ev in self.llm.stream_events(messages, tools=tools, handle=handle, max_tokens=max_tokens):
+                    loop.call_soon_threadsafe(tok_q.put_nowait, ev)
+                    if not seen:
+                        seen = True
+                        loop.call_soon_threadsafe(first_evt.set)
+            except Exception as e:
+                if not handle.stop.is_set():
+                    loop.call_soon_threadsafe(tok_q.put_nowait, {"__error__": str(e)})
+            finally:
+                loop.call_soon_threadsafe(tok_q.put_nowait, None)
+                loop.call_soon_threadsafe(first_evt.set)
+
+        async def producer():
+            await loop.run_in_executor(None, run_iter)
+
+        return tok_q, handle, asyncio.create_task(producer())
+
+    def _tools_for_turn(self, user_text: str = "") -> Optional[List[Dict]]:
+        backend_url = (getattr(SETTINGS, "BACKEND_CHAT_URL", None) or "").strip()
+        if not (SETTINGS.TOOL_ROUTING_ENABLED and self.use_knowledge_base and backend_url):
+            return None
+        # Greetings / thanks never need the knowledge base — offering tools here once produced a
+        # hallucinated dialogue plus lookup_record("my account") for "Hello, how are you today?".
+        if _is_small_talk(user_text):
+            return None
+        return VOICE_TOOLS
+
+    def _maybe_start_speculation(self, my_gen: int, partial: str) -> Optional[dict]:
+        """Start the reply stream on the (flushed) streaming partial while Parakeet decodes.
+        Only launched when the partial already looks like a complete, substantive, non-command
+        utterance; nothing is spoken or recorded until the final transcript confirms it."""
+        self._discard_spec("superseded")
+        if not SETTINGS.SPECULATIVE_REPLY_ENABLED or self.listen_only or not partial:
+            return None
+        text = preprocess_english_only(strip_markdown_for_speech(partial))
+        if not text:
+            return None
+        words = text.split()
+        if len(words) < max(1, SETTINGS.SPEC_MIN_WORDS):
+            return None
+        if not is_meaningful_utterance(text, min_words=SETTINGS.MIN_UTTERANCE_WORDS, min_chars=SETTINGS.MIN_UTTERANCE_CHARS):
+            return None
+        if classify_utterance_end(text) == "incomplete":
+            return None
+        norm = re.sub(r"[^a-z0-9 ]", "", text.lower()).strip()
+        if norm and norm == getattr(self, "_last_utt_norm", "") and (time.time() - getattr(self, "_last_utt_ts", 0.0)) < SETTINGS.DUP_UTTERANCE_WINDOW_S:
+            return None                # the final will be dropped as a duplicate: no stream, no hold
+        try:
+            handled, _, extra = parse_and_route(
+                text, self.global_profile,
+                self.conversation_memory.get_entries_for_context(5, max_chars=500),
+                self.listen_only, self.trigger_phrases,
+                pending_wake_word_change=self.pending_wake_word_change,
+                last_utterance=self._last_user_utterance,
+            )
+            if handled or extra.get("fact_check") or extra.get("memory_query_type"):
+                return None            # command / memory turns are cheap and text-sensitive: no speculation
+        except Exception:
+            return None
+        tools = self._tools_for_turn(text)
+        if tools is None and self.use_knowledge_base and not SETTINGS.TOOL_ROUTING_ENABLED and _user_asks_about_knowledge(text):
+            return None                # legacy keyword route will go straight to the backend
+        messages = self._turn_messages(text, tools_on=bool(tools))
+        tok_q, handle, task = self._start_producer(messages, tools, max_tokens=(48 if _is_small_talk(text) else None))
+        self._spec_seq += 1
+        self._spec = {"id": self._spec_seq, "gen": my_gen, "text": text, "messages": messages, "tools": tools,
+                      "tok_q": tok_q, "handle": handle, "task": task, "t0": time.monotonic(), "adopted": False}
+        return self._spec
+
+    def _discard_spec(self, reason: str) -> None:
+        spec = self._spec
+        if not spec:
+            return
+        self._spec = None
+        if spec.get("adopted"):
+            return
+        try:
+            spec["handle"].abort()
+            t = spec.get("task")
+            if t and not t.done():
+                t.cancel()
+        except Exception:
+            pass
+        _tlog.info("[SPEC] discarded id=%s reason=%s partial=%r", spec.get("id"), reason, spec.get("text", "")[:80])
+
+    # Words whose absence/presence in the final tail should not veto adoption.
+    _SPEC_STOP = frozenset(
+        "a an the of to in on at for and or but is are was were be been it its this that these those i you we "
+        "they he she me my your our their his her them us do does did have has had can could would should will "
+        "shall may might please just so then than very really also too um uh hmm okay ok yes yeah no".split())
+
+    _NUM_WORDS = {"zero": "0", "one": "1", "two": "2", "three": "3", "four": "4", "five": "5", "six": "6",
+                  "seven": "7", "eight": "8", "nine": "9", "ten": "10", "eleven": "11", "twelve": "12",
+                  "thirteen": "13", "fourteen": "14", "fifteen": "15", "sixteen": "16", "seventeen": "17",
+                  "eighteen": "18", "nineteen": "19", "twenty": "20", "thirty": "30", "forty": "40",
+                  "fifty": "50", "sixty": "60", "seventy": "70", "eighty": "80", "ninety": "90",
+                  "hundred": "100", "thousand": "1000"}
+
+    @classmethod
+    def _spec_words(cls, text: str) -> List[str]:
+        out = []
+        for w in re.findall(r"[a-z0-9']+", (text or "").lower()):
+            w = cls._NUM_WORDS.get(w, w)
+            if len(w) > 4 and w.endswith("s") and not w.endswith("ss"):
+                w = w[:-1]                      # cancellations ~ cancellation
+            out.append(w)
+        return out
+
+    def _spec_matches(self, spec_text: str, final_text: str):
+        """(match, ratio, missing_content_words).
+
+        Adopt the speculative stream only when the final transcript says nothing the partial did
+        not: every content word of the final must already be in the partial (catches an appended
+        tail — "…termination for [convenience]" — AND a mid-sentence substitution — "savings" vs
+        "current" account), and the word-level SequenceMatcher ratio must clear SPEC_MATCH_RATIO
+        (catches reordering / many small differences). Extra words in the partial are fine: the
+        model answered a superset. Number words are folded to digits and plurals stemmed so the
+        two STT models' surface forms do not cause needless rejections."""
+        p = self._spec_words(spec_text)
+        f = self._spec_words(final_text)
+        if not p or not f:
+            return False, 0.0, f
+        ratio = difflib.SequenceMatcher(None, p, f, autojunk=False).ratio()
+        p_set = set(p)
+        missing = [w for w in f if w not in self._SPEC_STOP and w not in p_set]
+        ok = ratio >= float(SETTINGS.SPEC_MATCH_RATIO) and not missing
+        return ok, ratio, missing
+
+    async def _stream_reply(self, my_gen: int, user_text: str, *, tools_on: bool, backend_url: str,
+                            ablation: str = "dual_i1") -> None:
+        """One LLM stream per turn. The model either answers directly (that stream IS the reply) or
+        emits one tool call, which becomes the grounded backend answer with a delay-gated hold
+        phrase. Adopts the speculative stream when the final transcript confirms the partial."""
+        t_turn = time.monotonic()
+        tt = getattr(self, "_turn_t", {}) or {}
+        tools = self._tools_for_turn(user_text) if tools_on else None
+        spec = self._spec
+        adopted = False
+        ratio = 0.0
+        tail: List[str] = []
+        if spec and spec.get("gen") == my_gen and not spec.get("adopted") and bool(spec.get("tools")) == bool(tools):
+            ok, ratio, tail = self._spec_matches(spec["text"], user_text)
+            if ok:
+                adopted = True
+                spec["adopted"] = True
+                self._spec = None
+        if adopted:
+            messages, tok_q, handle, prod_task = spec["messages"], spec["tok_q"], spec["handle"], spec["task"]
+        else:
+            self._discard_spec("mismatch" if spec else "none")
+            messages = self._turn_messages(user_text, tools_on=bool(tools))
+            tok_q, handle, prod_task = self._start_producer(messages, tools, max_tokens=(48 if _is_small_talk(user_text) else None))
+        _tlog.info("[SPEC] %s ratio=%.2f tail=%r partial=%r final=%r parakeet_ms=%.0f",
+                   "adopted" if adopted else ("rejected" if spec else "none"), ratio, tail,
+                   (spec or {}).get("text", "")[:80], user_text[:80],
+                   ((tt.get("final") or t_turn) - (tt.get("endpoint") or t_turn)) * 1000)
+        self._llm_prod_task = prod_task
+        self._llm_handle = handle
+
+        tone = tone_key(self.persona)
         phrase_buf = ""
         assistant_text = ""
         last_growth = time.time()
         phrases_enqueued = 0
+        first_token_at: Optional[float] = None
+        ack_spoken = False
+        tool_call: Optional[ToolCall] = None
+        forced_tool: Optional[str] = None
+        saw_tool_start = False
+        # On tool-enabled turns the FIRST phrase of a direct answer is held for up to 300 ms (or
+        # until a second phrase / end of stream): a model that narrates ("The policy isn't in the
+        # knowledge base, let me check…") emits its tool call right after that sentence, and the
+        # sentence must not be spoken. Real answers are delayed by at most that window.
+        pending_first: Optional[str] = None
+        pending_first_at: float = 0.0
+        spoken_text = ""                 # exactly what has been handed to TTS this turn
+        FIRST_HOLD_S = 0.3
+        lead_delay = max(0, int(getattr(SETTINGS, "LEAD_PHRASE_DELAY_MS", 450))) / 1000.0
+        ack_allowed = (SETTINGS.LEAD_PHRASE_ENABLED and ablation != "single_loop" and not _is_small_talk(user_text))
 
-        # Pipelined TTS: main loop drains LLM tokens; _phrase_pipeline synthesizes one
-        # phrase ahead while the previous phrase's audio streams to the client.
         tts_q: asyncio.Queue = asyncio.Queue()
-
         self._tts_phrase_task = asyncio.create_task(self._phrase_pipeline(tts_q, my_gen))
         _abort_tts = False
+
+        async def speak(text: str) -> None:
+            nonlocal spoken_text
+            await tts_q.put(text)
+            spoken_text = (spoken_text + " " + text).strip()
+
         try:
-            tok_q: asyncio.Queue = asyncio.Queue()
-
-            async def producer():
-                loop = asyncio.get_running_loop()
-
-                def run_iter():
-                    for t in self.llm.stream_messages(messages):
-                        tok_q.put_nowait(t)
-                    tok_q.put_nowait(None)
-
-                await loop.run_in_executor(None, run_iter)
-
-            self._llm_prod_task = asyncio.create_task(producer())
-            prod_task = self._llm_prod_task
-
             while True:
                 if my_gen != self.generation_id:
+                    handle.abort()
                     prod_task.cancel()
                     return
-
                 try:
-                    # Bounded wait so the stall rule is observable DURING a stall
-                    # (see the backend-RAG loop for the rationale).
-                    tok = await asyncio.wait_for(tok_q.get(), timeout=0.2)
+                    ev = await asyncio.wait_for(tok_q.get(), timeout=0.1)
                 except asyncio.TimeoutError:
-                    cut = phrase_split_point(phrase_buf, phrases_enqueued, last_growth)
-                    if cut:
-                        await tts_q.put(phrase_buf[:cut].strip())
+                    if (first_token_at is None and ack_allowed and not ack_spoken
+                            and (time.monotonic() - t_turn) >= lead_delay):
+                        text, tid = pick_ack(tone, self._recent_ack)
+                        self._recent_ack.append(tid)
+                        ack_spoken = True
+                        await tts_q.put(("filler", text))
+                        await self.send({"type": "event", "event": "FILLER_SPEAKING", "text": text, "generation_id": my_gen})
+                    if pending_first is not None and (time.monotonic() - pending_first_at) >= FIRST_HOLD_S:
+                        if tools and _UNSUPPORTED_ABSENCE_RE.search(pending_first):
+                            forced_tool = "search_knowledge_base"
+                            assistant_text = ""; phrase_buf = ""; pending_first = None
+                            handle.abort(); prod_task.cancel()
+                            break
+                        await speak(pending_first)
                         phrases_enqueued += 1
+                        pending_first = None
+                    cut = phrase_split_point(phrase_buf, phrases_enqueued + (1 if pending_first else 0), last_growth)
+                    if cut:
+                        if pending_first is None and phrases_enqueued == 0 and tools:
+                            pending_first, pending_first_at = phrase_buf[:cut].strip(), time.monotonic()
+                        else:
+                            if pending_first is not None:
+                                await speak(pending_first); phrases_enqueued += 1; pending_first = None
+                            await speak(phrase_buf[:cut].strip())
+                            phrases_enqueued += 1
                         phrase_buf = phrase_buf[cut:].lstrip()
                     continue
-                if tok is None:
+                if ev is None:
                     break
-
-                assistant_text += tok
-                phrase_buf += tok
-                await self.send(
-                    {
-                        "type": "assistant_text_partial",
-                        "generation_id": my_gen,
-                        "text": strip_markdown_for_speech(assistant_text),
-                        # Loop provenance (additive, ignored by existing clients). Lets an
-                        # evaluator separate interaction-loop speech (L_I) from grounded-loop
-                        # output (L_G) — without it, invariant I1 is unmeasurable because
-                        # streamed answer deltas are indistinguishable from lead phrases.
-                        "loop": "L_G",
-                    }
-                )
-
-                # Evaluate the split against the PREVIOUS growth time, then stamp
-                # (stamping first made the stall clock always read ~0).
-                cut = phrase_split_point(phrase_buf, phrases_enqueued, last_growth)
+                if isinstance(ev, dict) and ev.get("__error__"):
+                    raise RuntimeError(ev["__error__"])
+                if isinstance(ev, ToolStart):
+                    saw_tool_start = True
+                    if phrases_enqueued == 0:
+                        # nothing has been spoken yet: any prose so far was narration ("Sure, let
+                        # me check…") - never spoken, never shown, never a preface
+                        assistant_text = ""
+                        phrase_buf = ""
+                        pending_first = None
+                    else:
+                        # something WAS spoken: keep exactly the spoken part as the preface
+                        assistant_text = spoken_text
+                        phrase_buf = ""
+                        pending_first = None
+                    if first_token_at is None:
+                        first_token_at = time.monotonic()
+                    if ablation != "single_loop" and self._hold_spoken_gen != my_gen and SETTINGS.LEAD_PHRASE_ENABLED:
+                        # A tool call is coming, so a backend round trip (>= ~1 s) is certain: speak now.
+                        self._hold_spoken_gen = my_gen
+                        tool_guess = "lookup_record" if re.search(r"\b\d{3,}\b", user_text) else "search_knowledge_base"
+                        text, tid = pick_hold_phrase(tool_guess, tone, _clean_topic(topic_from_query(user_text)), self._recent_hold)
+                        self._recent_hold.append(tid)
+                        await tts_q.put(("filler", text))
+                        await self.send({"type": "event", "event": "FILLER_SPEAKING", "text": text, "generation_id": my_gen})
+                    continue
+                if isinstance(ev, ToolCall):
+                    tool_call = ev
+                    break
+                # text token
+                if first_token_at is None:
+                    first_token_at = time.monotonic()
+                    if tools and not assistant_text and (cites_a_reference(user_text) or _is_org_question(user_text)):
+                        # An organisational question must be grounded even if the model started
+                        # answering from memory. Abort the direct answer before a word is spoken.
+                        forced_tool = _guess_tool(user_text)
+                        handle.abort()
+                        prod_task.cancel()
+                        break
+                assistant_text += ev
+                phrase_buf += ev
+                if tools and phrases_enqueued == 0 and pending_first is None and len(assistant_text) <= 80 and _NARRATED_LOOKUP_RE.match(assistant_text):
+                    # The model SAID it would look something up ("I'll check that. One moment.") or
+                    # claimed it has no access — instead of calling the tool. Nothing has reached TTS
+                    # yet, so do what it meant: abort and run the knowledge-base tool.
+                    forced_tool = "search_knowledge_base"
+                    assistant_text = ""
+                    phrase_buf = ""
+                    handle.abort()
+                    prod_task.cancel()
+                    break
+                if pending_first is not None and (time.monotonic() - pending_first_at) >= FIRST_HOLD_S:
+                    # hold expired while tokens kept flowing (no gap to hit the timeout branch)
+                    if _UNSUPPORTED_ABSENCE_RE.search(pending_first):
+                        forced_tool = "search_knowledge_base"
+                        assistant_text = ""; phrase_buf = ""; pending_first = None
+                        handle.abort(); prod_task.cancel()
+                        break
+                    await speak(pending_first); phrases_enqueued += 1; pending_first = None
+                if not (tools and phrases_enqueued == 0 and pending_first is None):
+                    await self.send({"type": "assistant_text_partial", "generation_id": my_gen,
+                                     "text": strip_markdown_for_speech(strip_tool_markup(assistant_text)), "loop": "L_G"})
+                cut = phrase_split_point(phrase_buf, phrases_enqueued + (1 if pending_first else 0), last_growth)
                 last_growth = time.time()
                 if cut:
-                    await tts_q.put(phrase_buf[:cut].strip())
-                    phrases_enqueued += 1
+                    if pending_first is None and phrases_enqueued == 0 and tools:
+                        pending_first, pending_first_at = phrase_buf[:cut].strip(), time.monotonic()
+                        if _UNSUPPORTED_ABSENCE_RE.search(pending_first):
+                            forced_tool = "search_knowledge_base"
+                            assistant_text = ""; phrase_buf = ""; pending_first = None
+                            handle.abort(); prod_task.cancel()
+                            break
+                    else:
+                        if pending_first is not None:
+                            await speak(pending_first); phrases_enqueued += 1; pending_first = None
+                        await speak(phrase_buf[:cut].strip())
+                        phrases_enqueued += 1
                     phrase_buf = phrase_buf[cut:].lstrip()
 
             if my_gen != self.generation_id:
                 return
+
+            if tool_call is None and forced_tool is None and saw_tool_start:
+                # The model started a tool call that never parsed: do the lookup anyway rather
+                # than leave the user in silence.
+                forced_tool = "search_knowledge_base"
+                assistant_text = ""; phrase_buf = ""; pending_first = None
+
+            if tool_call is not None or forced_tool is not None:
+                # ── grounded path ──
+                name = forced_tool or tool_call.name
+                if name not in ("search_knowledge_base", "search_transcripts", "lookup_record"):
+                    name = "search_knowledge_base"
+                if forced_tool and name == "search_knowledge_base":
+                    name = _guess_tool(user_text)
+                arg = tool_topic_arg(tool_call.name, tool_call.arguments) if tool_call else None
+                topic = topic_from_query(arg) if arg else _clean_topic(topic_from_query(user_text))
+                preface = strip_markdown_for_speech(strip_tool_markup(spoken_text)).strip()
+                phrase_buf = ""
+                _tlog.info("[ROUTE] tool=%s arg=%r topic=%r forced=%s first_token_ms=%.0f",
+                           name, arg, topic, bool(forced_tool),
+                           ((first_token_at or time.monotonic()) - t_turn) * 1000)
+                hold = None if (ablation == "single_loop" or self._hold_spoken_gen == my_gen) else {"tool": name, "topic": topic, "tone": tone}
+                payload = self._grounded_payload(user_text, name, arg)
+                await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload,
+                                                          tts_q=tts_q, hold=hold, preface_text=preface)
+                _tlog.info("[TURN] kind=grounded spec=%s first_token_ms=%.0f endpoint_to_reply_ms=%.0f",
+                           adopted, ((first_token_at or t_turn) - t_turn) * 1000,
+                           (time.monotonic() - (tt.get("endpoint") or t_turn)) * 1000)
+                return
+
+            # ── direct answer ──
+            if pending_first is not None and tools and _UNSUPPORTED_ABSENCE_RE.search(pending_first) and not phrases_enqueued:
+                forced_tool = "search_knowledge_base"
+                assistant_text = ""; phrase_buf = ""; pending_first = None
+            if forced_tool is not None:
+                # (claim of absence detected at end of a short stream) — run the lookup after all
+                name = forced_tool
+                topic = _clean_topic(topic_from_query(user_text))
+                _tlog.info("[ROUTE] tool=%s arg=None topic=%r forced=True (absence claim at end)", name, topic)
+                hold = None if (ablation == "single_loop" or self._hold_spoken_gen == my_gen) else {"tool": name, "topic": topic, "tone": tone}
+                payload = self._grounded_payload(user_text, name, None)
+                await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, payload,
+                                                          tts_q=tts_q, hold=hold, preface_text="")
+                return
+            if pending_first is not None:
+                await speak(pending_first); phrases_enqueued += 1; pending_first = None
             if phrase_buf.strip():
-                await tts_q.put(phrase_buf.strip())
-            final = strip_markdown_for_speech(assistant_text.strip())
-            _log_llm_response(user_text, final)
-            if final:
+                await speak(phrase_buf.strip())
+            final = strip_markdown_for_speech(strip_tool_markup(assistant_text).strip())
+            if not final:
+                # empty / non-SSE 200: say something honest instead of nothing
+                final = "Sorry, I didn't catch a reply for that. Could you say it again?"
+                await speak(final)
                 await self.send({"type": "assistant_text", "generation_id": my_gen, "text": final})
-            self.history.append({"role": "user", "content": user_text})
-            self.history.append({"role": "assistant", "content": final})
-            self._trim_history()
+                _log_llm_response(user_text, final)
+            else:
+                _log_llm_response(user_text, final)
+                await self.send({"type": "assistant_text", "generation_id": my_gen, "text": final})
+                self._remember_turn(user_text, final)
             try:
                 self.conversation_memory.add_text(final, speaker="assistant")
             except Exception:
                 pass
+            _tlog.info("[TURN] kind=direct spec=%s ack=%s first_token_ms=%.0f endpoint_to_first_token_ms=%.0f",
+                       adopted, ack_spoken, ((first_token_at or t_turn) - t_turn) * 1000,
+                       ((first_token_at or t_turn) - (tt.get("endpoint") or t_turn)) * 1000)
 
         except Exception as e:
             _abort_tts = True
+            handle.abort()
             try:
                 while True:
                     tts_q.get_nowait()
@@ -1847,10 +2475,18 @@ class OmniSessionA:
                 except asyncio.CancelledError:
                     pass
             await self.send({"type": "error", "where": "llm_stream", "message": str(e), "generation_id": my_gen})
+            if spoken_text:
+                # The client already played part of the answer: don't replay it from scratch.
+                await self._speak_phrase(my_gen, "Sorry, I lost the connection there for a moment. Could you ask that again?")
+                self._assistant_active_gen = None
+                return
+            # Plain (tool-less) non-streaming retry so the user is never left in silence.
             try:
-                reply = await asyncio.get_running_loop().run_in_executor(None, self.llm.complete_messages, messages)  # (H8)
+                plain = self._turn_messages(user_text, tools_on=False)
+                reply = await asyncio.get_running_loop().run_in_executor(None, self.llm.complete_messages, plain)  # (H8)
             except Exception as e2:
                 await self.send({"type": "error", "where": "llm", "message": str(e2), "generation_id": my_gen})
+                await self._speak_phrase(my_gen, "I'm having trouble reaching the assistant right now. Please try again in a moment.")
                 self._assistant_active_gen = None
                 return
             reply_clean = strip_markdown_for_speech(reply)
@@ -1866,9 +2502,9 @@ class OmniSessionA:
             except Exception:
                 pass
         finally:
-            if _abort_tts:
-                pass
-            else:
+            if self._llm_handle is handle:
+                self._llm_handle = None
+            if not _abort_tts:
                 try:
                     await tts_q.put(None)
                 except Exception:
@@ -1880,9 +2516,6 @@ class OmniSessionA:
                         await wt
                     except asyncio.CancelledError:
                         pass
-
-        await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
-        self._assistant_active_gen = None
 
     def _rate_for(self, my_gen: int, phrase: str, is_filler: bool) -> float:
         """Playback rate for a phrase. Latched once per reply generation so adjacent
@@ -1929,18 +2562,22 @@ class OmniSessionA:
                     return
                 if my_gen != self.generation_id:
                     continue
-                phrase = strip_markdown_for_speech((item or "").strip())
-                phrase = clean_assistant_text(phrase, is_first_turn=(self._assistant_turns <= 1))
+                is_filler = isinstance(item, tuple) and len(item) == 2 and item[0] == "filler"
+                if is_filler:
+                    # Hold / ack phrase: already curated, so only the emoji strip — the reply
+                    # cleaner would erase "Sure." or "Okay." and fall back to a greeting.
+                    phrase = _EMOJI_RE.sub("", strip_markdown_for_speech((item[1] or "").strip())).strip()
+                else:
+                    phrase = strip_spoken_refs(strip_markdown_for_speech((item or "").strip()))
+                    phrase = clean_assistant_text(phrase, is_first_turn=(self._assistant_turns <= 1))
                 if not phrase.strip():
-                    continue
-                if not phrase:
                     continue
                 # The assistant is "speaking" from the first phrase onward, including
                 # synth-only windows — barge-in thresholds and the barge-in ack both
                 # key off this flag (the old serial consumer held it through synth).
                 self._assistant_is_speaking = True
                 await self.send({"type": "assistant_phrase", "generation_id": my_gen,
-                                 "text": phrase, "loop": "L_G"})
+                                 "text": phrase, "loop": "L_I" if is_filler else "L_G"})
                 if self.moshi and SETTINGS.MOSHI_SUPPORTS_TEXT_INJECT:
                     await self.moshi.text_inject(phrase, my_gen)
                     continue
@@ -1951,7 +2588,7 @@ class OmniSessionA:
                     await self.send({"type": "error", "where": "tts",
                                      "message": str(e), "generation_id": my_gen})
                     continue
-                await audio_q.put((phrase, y, sr))
+                await audio_q.put((phrase, y, sr, is_filler))
 
         synth_task = asyncio.create_task(synth_stage())
         try:
@@ -1961,8 +2598,8 @@ class OmniSessionA:
                     return
                 if my_gen != self.generation_id:
                     continue
-                phrase, y, sr = got
-                await self._emit_phrase_audio(my_gen, phrase, y, sr, is_filler=False)
+                phrase, y, sr, is_filler = got
+                await self._emit_phrase_audio(my_gen, phrase, y, sr, is_filler=is_filler)
         finally:
             if self.generation_id == my_gen:
                 self._assistant_is_speaking = False
@@ -1973,7 +2610,25 @@ class OmniSessionA:
                 except asyncio.CancelledError:
                     pass
 
-    async def _speak_phrase(self, my_gen: int, phrase: str, is_filler: bool = False):
+    async def _speak_early_hold(self, my_gen: int, user_text_hint: str) -> None:
+        """Hold phrase spoken as soon as we KNOW a knowledge lookup is coming — the speculative
+        stream's first token was '<tool_call>' — typically ~0.2 s after the user stops, while the
+        final transcript is still decoding. Its caption is deferred until asr_final is sent so the
+        on-screen order stays user line, then assistant line."""
+        if my_gen != self.generation_id or self._hold_spoken_gen == my_gen or not SETTINGS.LEAD_PHRASE_ENABLED:
+            return
+        if _ablation_mode() != "dual_i1":
+            return                       # single_loop: no L_I at all; dual_no_i1 speaks its own lead
+        self._hold_spoken_gen = my_gen
+        tool = _guess_tool(user_text_hint)
+        topic = _clean_topic(topic_from_query(user_text_hint)) if user_text_hint else None
+        text, tid = pick_hold_phrase(tool, tone_key(self.persona), topic, self._recent_hold)
+        self._recent_hold.append(tid)
+        self._deferred_hold = text
+        _tlog.info("[HOLD] early text=%r tool_guess=%s", text, tool)
+        asyncio.create_task(self._speak_phrase(my_gen, text, is_filler=True, announce=False))
+
+    async def _speak_phrase(self, my_gen: int, phrase: str, is_filler: bool = False, announce: bool = True):
         """Single-shot synth+emit: fillers, acks, backchannels, intro fallback, and
         the non-streaming reply fallbacks. Streaming replies go through
         _phrase_pipeline instead."""
@@ -1982,7 +2637,7 @@ class OmniSessionA:
         phrase = strip_markdown_for_speech(phrase or "")
         if not phrase:
             return
-        if is_filler:
+        if is_filler and announce:
             # L_I utterance: spoken before any grounded increment exists. Emitted as its own
             # event so invariant I1 (no novel assertion ahead of evidence) is checkable.
             try:

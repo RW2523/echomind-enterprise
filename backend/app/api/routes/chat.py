@@ -2,6 +2,7 @@ import json
 import logging
 import re
 from datetime import datetime, timezone, timedelta
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -192,6 +193,62 @@ class AskVoiceIn(BaseModel):
     # Voice service sends this to cap the RAG LLM response length and prevent 10-20s GPU freezes.
     voice_max_tokens: int | None = None
     namespace: str | None = None  # KB namespace (vertical/tenant); None = whole KB (default)
+    # Sent by the voice service's LLM tool selection (all optional — the older keyword-routed
+    # payload without them still works and behaves exactly as before).
+    source_options: SourceOptionsIn | None = None  # None = transcript+document+general (old behaviour)
+    history: list[dict[str, Any]] | None = None  # prior turns [{role: user|assistant, content}]
+    tool: str | None = None  # search_knowledge_base | search_transcripts | lookup_record
+    tool_query: str | None = None  # the tool's short query / record identifier
+
+
+_VOICE_HISTORY_MAX_TURNS = 6
+_VOICE_HISTORY_MAX_CHARS = 1200
+_VOICE_DEFAULT_SOURCE_OPTIONS = {"transcript": True, "document": True, "general": True}
+
+
+def _voice_source_options(inp: AskVoiceIn) -> dict[str, bool]:
+    opts = inp.source_options
+    if opts is None:
+        return dict(_VOICE_DEFAULT_SOURCE_OPTIONS)
+    return {"transcript": opts.transcript, "document": opts.document, "general": opts.general}
+
+
+def _voice_history(raw: list[dict[str, Any]] | None) -> list[dict[str, str]]:
+    """Sanitise voice-supplied prior turns: keep only user/assistant roles with non-empty string
+    content (capped), then the last few turns. The voice service is untrusted-ish input here, so
+    nothing else (system turns, tool blobs, oversized content) reaches the LLM prompt."""
+    out: list[dict[str, str]] = []
+    for item in raw or []:
+        if not isinstance(item, dict):
+            continue
+        role = str(item.get("role") or "").strip().lower()
+        if role not in ("user", "assistant"):
+            continue
+        content = item.get("content")
+        if content is None:
+            continue
+        content = str(content).strip()[:_VOICE_HISTORY_MAX_CHARS]
+        if not content:
+            continue
+        out.append({"role": role, "content": content})
+    return out[-_VOICE_HISTORY_MAX_TURNS:]
+
+
+def _voice_retrieval_message(inp: AskVoiceIn, msg: str) -> str:
+    """For lookup_record, make sure the identifier the voice model extracted (e.g. an account or
+    case number) is literally present in the retrieval query so hybrid BM25 can match it."""
+    tq = (inp.tool_query or "").strip()
+    if (inp.tool or "").strip() == "lookup_record" and tq and tq.lower() not in (msg or "").lower():
+        return f"Record lookup for {tq}. {msg}"
+    return msg
+
+
+def _log_voice_tool(route: str, inp: AskVoiceIn, history: list, source_opts: dict) -> None:
+    logger.info(
+        "voice tool=%s query=%r route=%s history=%d sources=%s ns=%s",
+        inp.tool, inp.tool_query, route, len(history),
+        ",".join(k for k, v in source_opts.items() if v) or "-", inp.namespace,
+    )
 
 
 # Default hours when user asks for "recent summary of the transcript" with no explicit time (voice/conversation bot).
@@ -325,6 +382,9 @@ async def ask_voice(inp: AskVoiceIn, request: Request):
     set_active_namespace(_effective_ns(request, inp.namespace))
     set_speech_style(True)
     msg = (inp.message or "").strip()
+    source_opts = _voice_source_options(inp)
+    history = _voice_history(inp.history)
+    _log_voice_tool("ask-voice", inp, history, source_opts)
     last_hours = _parse_transcript_time_query(msg)
     if last_hours is not None:
         transcripts = _fetch_transcripts_since_hours(last_hours)
@@ -342,13 +402,14 @@ async def ask_voice(inp: AskVoiceIn, request: Request):
         return {"answer": out["answer"]}
 
     out = await answer_with_citations(
-        inp.message,
-        history=[],
+        _voice_retrieval_message(inp, msg),
+        history=history,
         persona=inp.persona,
         context_window=inp.context_window or "all",
         conversation_summary=None,
         use_knowledge_base=inp.use_knowledge_base,
         advanced_rag=inp.advanced_rag,
+        source_options=source_opts,
     )
     return {"answer": out["answer"]}
 
@@ -361,6 +422,9 @@ async def ask_voice_stream(inp: AskVoiceIn, request: Request):
         set_active_namespace(_effective_ns(request, inp.namespace))
         set_speech_style(True)
         msg = (inp.message or "").strip()
+        source_opts = _voice_source_options(inp)
+        history = _voice_history(inp.history)
+        _log_voice_tool("ask-voice-stream", inp, history, source_opts)
         last_hours = _parse_transcript_time_query(msg)
         if last_hours is not None:
             transcripts = _fetch_transcripts_since_hours(last_hours)
@@ -393,15 +457,16 @@ async def ask_voice_stream(inp: AskVoiceIn, request: Request):
 
         try:
             async for kind, text, citations in answer_stream(
-                inp.message,
-                [],
+                _voice_retrieval_message(inp, msg),
+                history,
                 persona=inp.persona,
                 context_window=inp.context_window or "all",
                 conversation_summary=None,
                 use_knowledge_base=inp.use_knowledge_base,
                 advanced_rag=inp.advanced_rag,
-                source_options={"transcript": True, "document": True, "general": True},
+                source_options=source_opts,
                 max_tokens=inp.voice_max_tokens,
+                must_mention=(inp.tool_query if inp.tool in ("search_knowledge_base", "search_transcripts", "lookup_record") else None),
             ):
                 if kind == "chunk":
                     yield json.dumps({"type": "chunk", "text": text or ""}) + "\n"

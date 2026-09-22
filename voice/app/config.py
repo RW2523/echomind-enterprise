@@ -26,9 +26,31 @@ class Settings:
     MIN_UTTERANCE_CHARS: int = int(os.getenv("MIN_UTTERANCE_CHARS", "4"))
     # Ignore a repeat of the previous utterance inside this window (STT double-fire / echo).
     DUP_UTTERANCE_WINDOW_S: float = float(os.getenv("DUP_UTTERANCE_WINDOW_S", "6.0"))
-    # Lead phrases ("Let me check that for you") while the model runs. Kept, but never for
-    # greetings/short turns; set 0 to disable entirely.
+    # Hold / lead phrases are spoken ONLY to cover a real gap (see HOLD_PHRASE_DELAY_MS /
+    # LEAD_PHRASE_DELAY_MS below); set 0 to disable them entirely.
     LEAD_PHRASE_ENABLED: bool = os.getenv("LEAD_PHRASE_ENABLED", "1") in ("1", "true", "yes")
+
+    # ── Speculative reply ──────────────────────────────────────────────────
+    # At the endpoint the streaming partial is flushed and the LLM starts on it immediately,
+    # in parallel with the accurate (CPU, ~1 s) Parakeet final decode. When the final text
+    # arrives it is compared with the partial: match -> the already-running stream is adopted
+    # (nothing was spoken yet, so a mismatch costs nothing beyond one aborted request).
+    SPECULATIVE_REPLY_ENABLED: bool = os.getenv("SPECULATIVE_REPLY_ENABLED", "1") in ("1", "true", "yes")
+    # Word-level SequenceMatcher ratio required between partial and final (0.85 tolerates one
+    # substituted word on a 7-word utterance and none on a short one). Any CONTENT word the
+    # final adds after the aligned prefix rejects regardless of ratio.
+    SPEC_MATCH_RATIO: float = float(os.getenv("SPEC_MATCH_RATIO", "0.85"))
+    SPEC_MIN_WORDS: int = int(os.getenv("SPEC_MIN_WORDS", "3"))
+
+    # ── Tool routing ───────────────────────────────────────────────────────
+    # The model decides (via tool calls) whether a turn needs the knowledge base; the old
+    # keyword list stays as the fallback when this is off or the LLM errors.
+    TOOL_ROUTING_ENABLED: bool = os.getenv("TOOL_ROUTING_ENABLED", "1") in ("1", "true", "yes")
+    # Hold phrase ("Let me check the refund policy.") is spoken only if the grounded answer has
+    # not started within this many ms of the tool call; lead/ack for a direct answer only if
+    # its first token has not arrived within LEAD_PHRASE_DELAY_MS of the final transcript.
+    HOLD_PHRASE_DELAY_MS: int = int(os.getenv("HOLD_PHRASE_DELAY_MS", "350"))
+    LEAD_PHRASE_DELAY_MS: int = int(os.getenv("LEAD_PHRASE_DELAY_MS", "450"))
     END_TAIL_MS: int = int(os.getenv("END_TAIL_MS", "120"))
     # Barge-in: require this many consecutive speech frames before treating as user speech (reduces false triggers from noise)
     BARGE_IN_SPEECH_LEAD_IDLE: int = int(os.getenv("BARGE_IN_SPEECH_LEAD_IDLE", "2"))   # when assistant idle
@@ -50,7 +72,9 @@ class Settings:
     LLM_MODEL: str = os.getenv("LLM_MODEL", "qwen2.5:7b-instruct-q4_K_M")
 
     # LLM streaming / phrase commit knobs. Main dialogue uses stream=true via OpenAICompatLLMStream.stream_messages.
-    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.7"))
+    # 0.5: at 0.7 the model sometimes narrated a lookup ("I'll check that. One moment.") instead of
+    # calling the tool; 0.5 keeps replies natural and makes the tool decision far more consistent.
+    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.5"))
     LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "220"))
     # Log full LLM JSON body (set LLM_LOG_PAYLOAD=1). Timing lines always log at INFO (VOICE_LLM stream start/done).
     LLM_LOG_PAYLOAD: bool = os.getenv("LLM_LOG_PAYLOAD", "0").lower() in ("1", "true", "yes")
@@ -92,9 +116,6 @@ class Settings:
     EMOTION_MODE: bool = os.getenv("EMOTION_MODE", "1") == "1"
 
     # ── Full-duplex upgrades ───────────────────────────────────────────────
-    # Lead phrase: speak a short filler immediately while LLM/RAG runs async.
-    LEAD_PHRASE_ENABLED: bool = os.getenv("LEAD_PHRASE_ENABLED", "1") in ("1", "true", "yes")
-
     # Backchannel injection: "Mm-hmm", "I see" etc. during long user speech.
     # Off by default: filler backchannels ("Interesting.", "I see.", "Okay.") spoken while the user
     # talks read as the assistant answering nothing. Enterprise tone = stay silent until the user finishes.
@@ -124,7 +145,8 @@ class Settings:
     # Example: http://backend:8000 (no trailing slash).
     BACKEND_CHAT_URL: str = os.getenv("BACKEND_CHAT_URL", "")
     # Cap streamed RAG completion length for voice (shorter = faster TTS); backend default LLM max is often 2048.
-    VOICE_RAG_MAX_TOKENS: int = int(os.getenv("VOICE_RAG_MAX_TOKENS", "640"))
+    # Spoken answers: ~3-4 sentences. 640 produced 45-second monologues with bullet lists.
+    VOICE_RAG_MAX_TOKENS: int = int(os.getenv("VOICE_RAG_MAX_TOKENS", "200"))
 
     # EchoMind Conversation Intelligence
     MEMORY_WINDOW_MINUTES: float = float(os.getenv("MEMORY_WINDOW_MINUTES", "30"))

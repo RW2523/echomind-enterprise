@@ -121,6 +121,18 @@ def ensure_nemotron_loaded_at_startup() -> None:
 # streaming model. Any failure falls back to the streaming model automatically.
 _parakeet_lock = threading.Lock()
 _parakeet_model: Optional[object] = None
+_parakeet_device: str = "cpu"
+
+
+def _parakeet_fallback_to_cpu(reason: str) -> None:
+    """Parakeet is optional (the streaming model can produce the final). A GPU failure in ITS
+    path must not exit the whole service via the CUDA watchdog: reload it on CPU instead."""
+    global _parakeet_model, _parakeet_device
+    logger.warning("Voice Parakeet: falling back to CPU (%s)", reason)
+    os.environ["VOICE_PARAKEET_DEVICE"] = "cpu"
+    with _parakeet_lock:
+        _parakeet_model = None
+        _parakeet_device = "cpu"
 
 
 def _parakeet_enabled() -> bool:
@@ -136,31 +148,87 @@ def _get_parakeet():
             logger.info("Voice Parakeet: loading final-decode model=%s", name)
             t0 = time.monotonic()
             m = ASRModel.from_pretrained(name)
-            # Default to CPU: a fatal CUDA illegal-memory-access occurred when Parakeet's GPU
-            # CUDA-graph decoding ran on the same context as trtllm. CPU final-decode (once per
-            # turn, on the strong Grace CPU) avoids the conflict entirely. Set VOICE_PARAKEET_DEVICE=cuda
-            # to opt back into GPU if a future stack proves stable.
-            dev = os.getenv("VOICE_PARAKEET_DEVICE", "cpu").strip().lower()
+            # GPU by default, with Parakeet's CUDA-graph decoder DISABLED. The historic fatal
+            # "illegal memory access" was not GPU-vs-TRT-LLM: it was Parakeet's full-graph label-
+            # looping decoder replaying on one executor thread while the Nemotron streaming model's
+            # own CUDA-graph decoder replayed on another, in this same process. Measured on the
+            # GB10 with graphs off: 100/100 clean turns while Nemotron streams and TRT-LLM generates,
+            # ~170 ms per utterance versus ~1.5 s on the CPU path. A second, warm-up-only race in
+            # NeMo's shared Triton autotuner is closed by fuse_triton=False plus the sequential
+            # warm-up in ensure_parakeet_loaded_at_startup(). VOICE_PARAKEET_DEVICE=cpu restores the
+            # old behaviour; VOICE_PARAKEET_CUDA_GRAPHS=1 re-enables graphs (not recommended).
+            dev = os.getenv("VOICE_PARAKEET_DEVICE", "cuda").strip().lower()
             if dev == "cuda":
                 try:
+                    import torch
+                    if not torch.cuda.is_available():
+                        raise RuntimeError("CUDA not available")
                     m = m.to("cuda")
-                except Exception:
+                    if os.getenv("VOICE_PARAKEET_CUDA_GRAPHS", "0").strip().lower() not in ("1", "true", "yes"):
+                        _disable_cuda_graphs(m)
+                    try:
+                        m.encoder.pre_encode.conv.fuse_triton = False
+                    except Exception:
+                        pass
+                except Exception as e:
+                    logger.warning("Voice Parakeet: GPU setup failed (%s); using CPU", e)
                     dev = "cpu"
+                    m = m.to("cpu")
             else:
                 try:
                     m = m.to("cpu")
                 except Exception:
                     pass
             m.eval()
+            global _parakeet_device
+            _parakeet_device = dev
             logger.info("Voice Parakeet: ready device=%s load_wall_s=%.2f", dev, time.monotonic() - t0)
             _parakeet_model = m
         return _parakeet_model
 
 
+def _disable_cuda_graphs(m) -> None:
+    """Switch Parakeet to the eager label-looping decoder (keeps loop_labels, drops the graph)."""
+    import copy
+    from omegaconf import OmegaConf
+    dc = copy.deepcopy(m.cfg.decoding)
+    OmegaConf.set_struct(dc, False)
+    dc.greedy.use_cuda_graph_decoder = False
+    m.change_decoding_strategy(dc)
+    mode = getattr(getattr(getattr(m.decoding, "decoding", None), "decoding_computer", None), "cuda_graphs_mode", "?")
+    logger.info("Voice Parakeet: CUDA graphs disabled (decoder cuda_graphs_mode=%s)", mode)
+    if mode not in (None, "?"):
+        # Never run the crash-prone configuration silently: the caller falls back to CPU.
+        raise RuntimeError(f"CUDA graphs still active after disable (mode={mode})")
+
+
 def _transcribe_final_parakeet(audio_f32: np.ndarray, sample_rate: int) -> str:
+    try:
+        return _transcribe_final_parakeet_impl(audio_f32, sample_rate)
+    except Exception as e:
+        if _parakeet_device == "cuda" and is_fatal_gpu_error(e) and "illegal memory" not in str(e).lower():
+            # OOM / kernel / driver hiccup confined to Parakeet: retry once on CPU. An illegal
+            # memory access poisons the shared context and is left to the watchdog.
+            _parakeet_fallback_to_cpu(str(e)[:160])
+            return _transcribe_final_parakeet_impl(audio_f32, sample_rate)
+        raise
+
+
+def _transcribe_final_parakeet_impl(audio_f32: np.ndarray, sample_rate: int) -> str:
     import tempfile
     import wave
     m = _get_parakeet()
+    if int(sample_rate) == 16000:
+        # NeMo >= 2 accepts the float32 array directly: no temp wav write/read per turn.
+        try:
+            out = m.transcribe([np.ascontiguousarray(audio_f32, dtype=np.float32)], batch_size=1, verbose=False)
+            h = out[0] if out else ""
+            if isinstance(h, (list, tuple)):
+                h = h[0] if h else ""
+            text = getattr(h, "text", h)
+            return (text if isinstance(text, str) else str(text or "")).strip()
+        except TypeError:
+            pass                                   # older NeMo: fall through to the wav path
     pcm16 = (np.clip(audio_f32, -1.0, 1.0) * 32767.0).astype("<i2")
     fd, path = tempfile.mkstemp(suffix=".wav")
     os.close(fd)
@@ -188,12 +256,28 @@ def _transcribe_final_parakeet(audio_f32: np.ndarray, sample_rate: int) -> str:
 
 def ensure_parakeet_loaded_at_startup() -> None:
     """Pre-warm the Parakeet final-decode model so the first utterance isn't slow. Non-fatal:
-    on failure the streaming model handles the final decode (fallback in transcribe())."""
+    on failure the streaming model handles the final decode (fallback in transcribe()).
+    The warm-up transcribe runs here, BEFORE any session exists, so Triton's first-call autotune
+    never overlaps a Nemotron streaming step."""
     if not _parakeet_enabled():
         return
     try:
         _get_parakeet()
+        t0 = time.monotonic()
+        warm = np.zeros(int(SETTINGS.SR * 1.2), dtype=np.float32)
+        warm[::400] = 0.05                           # not pure silence: exercises the full decoder path
+        _transcribe_final_parakeet(warm, SETTINGS.SR)
+        logger.info("Voice Parakeet: warm-up transcribe done in %.0f ms", (time.monotonic() - t0) * 1000)
     except Exception as e:
+        if os.getenv("VOICE_PARAKEET_DEVICE", "cuda").strip().lower() == "cuda":
+            _parakeet_fallback_to_cpu(f"warm-up failed: {str(e)[:160]}")
+            try:
+                _get_parakeet()
+                _transcribe_final_parakeet(np.zeros(int(SETTINGS.SR * 0.6), dtype=np.float32), SETTINGS.SR)
+                logger.info("Voice Parakeet: CPU fallback ready")
+                return
+            except Exception as e2:
+                e = e2
         logger.warning("Voice Parakeet: startup pre-warm failed (%s); will lazy-load / fall back", e)
 
 
@@ -261,6 +345,7 @@ class NemotronStreamingSTT:
 
     def __init__(self):
         self.sample_rate = SETTINGS.SR
+        self._lock = threading.Lock()      # push_chunk / flush / reset never overlap
         # Nemotron streaming chunk: 560ms default, same as live transcript
         frame_ms = int(os.getenv("VOICE_STREAMING_CHUNK_MS", "560"))
         self._frame_samples = int(self.sample_rate * frame_ms / 1000)
@@ -271,10 +356,11 @@ class NemotronStreamingSTT:
 
     def reset(self) -> None:
         """Call at the start of each new utterance."""
-        self._buf = np.zeros(0, dtype=np.float32)
-        self._state = None
-        self._step = 0
-        self._last_hyp = ""
+        with self._lock:
+            self._buf = np.zeros(0, dtype=np.float32)
+            self._state = None
+            self._step = 0
+            self._last_hyp = ""
 
     def push_chunk(self, audio_f32: np.ndarray) -> str:
         """
@@ -282,6 +368,10 @@ class NemotronStreamingSTT:
         Returns the latest partial hypothesis (may be empty string).
         Safe to call from a thread-pool executor.
         """
+        with self._lock:
+            return self._push_chunk_locked(audio_f32)
+
+    def _push_chunk_locked(self, audio_f32: np.ndarray) -> str:
         try:
             adapter = get_shared_asr_adapter()
             if self._state is None:
@@ -314,4 +404,40 @@ class NemotronStreamingSTT:
 
     def latest_partial(self) -> str:
         """Return the most recent partial hypothesis without feeding new audio."""
+        return self._last_hyp
+
+    def flush(self) -> str:
+        """Decode everything still held back and return the caught-up hypothesis.
+
+        Called once at the endpoint. Two things lag the true end of speech: up to one
+        unprocessed frame (< 560 ms) still in ``_buf``, and the encoder's right context
+        (att_context_right) that ``keep_all_outputs=False`` withholds on every normal
+        step. Zero-padding to a full frame and running one step with
+        ``keep_all_outputs=True`` releases both, so the partial the speculative reply
+        is built on usually contains the last words the user actually said. One GPU
+        step; safe from the executor thread like push_chunk. Never raises."""
+        with self._lock:
+            return self._flush_locked()
+
+    def _flush_locked(self) -> str:
+        try:
+            adapter = get_shared_asr_adapter()
+            if self._state is None:
+                return self._last_hyp
+            pad = self._frame_samples - (len(self._buf) % self._frame_samples or self._frame_samples)
+            frame = np.concatenate([self._buf, np.zeros(max(pad, 0), dtype=np.float32)])
+            # Always feed at least one full frame so the right context is drained even when
+            # the buffer happened to be exactly empty.
+            if frame.size == 0:
+                frame = np.zeros(self._frame_samples, dtype=np.float32)
+            self._buf = np.zeros(0, dtype=np.float32)
+            hyp, self._state = adapter.process_chunk(
+                frame, self._state, keep_all_outputs=True, step_num=self._step,
+            )
+            self._step += 1
+            if hyp and hyp.strip():
+                self._last_hyp = hyp
+        except Exception as e:
+            note_stt_error(e)
+            logger.debug("NemotronStreamingSTT flush error: %s", e)
         return self._last_hyp

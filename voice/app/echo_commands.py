@@ -121,12 +121,16 @@ def parse_and_route(
 
     # ----- Confirm wake word change (user said "yes" after we proposed a change) -----
     if pending_wake_word_change:
-        if _match_any(user_text, ["yes", "yeah", "confirm", "change it", "do it", "sure", "ok", "okay"]):
+        # Only a short, whole-word answer counts; anything else drops the proposal (a substring
+        # "yes" inside the next real question must never persist a name to disk).
+        short = re.sub(r"[^a-z' ]", " ", u).split()
+        if len(short) <= 3 and short and short[0] in ("yes", "yeah", "yep", "confirm", "sure", "ok", "okay", "please"):
             extra["confirm_wake_word_change"] = True
             return True, f"Done. Wake word is now {pending_wake_word_change}. Say '{pending_wake_word_change}' when you want me to respond.", extra
-        if _match_any(user_text, ["no", "cancel", "never mind", "forget it", "nope"]):
-            extra["clear_pending_wake_word_change"] = True
+        extra["clear_pending_wake_word_change"] = True
+        if len(short) <= 4 and short and short[0] in ("no", "nope", "cancel", "never", "forget", "don't"):
             return True, "Okay, I won't change the wake word.", extra
+        # not an answer: fall through and handle the utterance normally (proposal expired)
 
     # ----- Change wake word (requires confirmation) -----
     new_wake = _extract_new_wake_word(user_text, profile.get("wake_word") or "", last_utterance)
@@ -134,12 +138,18 @@ def parse_and_route(
         extra["pending_wake_word_change"] = new_wake
         return True, f"Do you want to change the wake word to {new_wake}? Say yes to confirm.", extra
 
-    # ----- Assistant name (immediate, no confirmation) -----
+    # ----- Assistant name (confirmation required) -----
+    # This used to persist immediately: one mis-heard utterance saved "accommod" as the assistant
+    # name and it was then injected into every system prompt as "Assistant name: accommod".
+    # A name must be one or two plain words and is confirmed like a wake-word change.
     for pattern in ["your name is ", "call yourself ", "wake word is ", "you're called "]:
         name = _extract_after(user_text, [pattern])
-        if name and len(name) < 80:
-            extra["set_assistant_name"] = name.strip()
-            return True, f"Got it. I'll respond to the name {name.strip()}.", extra
+        if name:
+            name = name.strip().strip(".,!?").strip()
+            words = name.split()
+            if 1 <= len(words) <= 2 and all(w.replace("-", "").isalpha() for w in words) and len(name) <= 20:
+                extra["pending_wake_word_change"] = name
+                return True, f"Do you want me to respond to the name {name}? Say yes to confirm.", extra
 
     # ----- User name ----- (avoid "i'm"/"i am" so "I'm in X" is not parsed as name)
     for pattern in ["my name is ", "call me "]:

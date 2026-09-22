@@ -184,9 +184,13 @@ services:
       # mishearing ("DoD FMR"->"DODFMA"). Live partials stay on the streaming model. Falls back on error.
       - VOICE_USE_PARAKEET=${VOICE_USE_PARAKEET:-1}
       - VOICE_FINAL_ASR_MODEL=${VOICE_FINAL_ASR_MODEL:-nvidia/parakeet-tdt-0.6b-v2}
-      # Parakeet on CPU (Grace) — avoids the CUDA-graph illegal-memory-access seen when it ran
-      # on the GPU alongside trtllm. Set to cuda only if a future stack proves stable.
-      - VOICE_PARAKEET_DEVICE=${VOICE_PARAKEET_DEVICE:-cpu}
+      # Parakeet on the GPU with its CUDA-graph decoder disabled (see stt_nemotron._get_parakeet):
+      # the old illegal-memory-access was Parakeet's graph decoder colliding with the Nemotron
+      # streaming decoder in-process, not the GPU. ~170 ms per final decode vs ~1.5 s on CPU.
+      # VOICE_PARAKEET_DEVICE=cpu restores the CPU path.
+      # Follows VOICE_ASR_DEVICE when that is set to cpu (a CPU-only host), else cuda.
+      - VOICE_PARAKEET_DEVICE=${VOICE_PARAKEET_DEVICE:-${VOICE_ASR_DEVICE:-cuda}}
+      - VOICE_PARAKEET_CUDA_GRAPHS=${VOICE_PARAKEET_CUDA_GRAPHS:-0}
     depends_on:
       # No hard trtllm dependency (slow cold start; LLM calls retry). Embeddings need ollama.
       ollama:

@@ -12,6 +12,7 @@ from fastapi import FastAPI, WebSocket, HTTPException
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logging.getLogger("app.adapters.llm_openai_stream").setLevel(logging.INFO)
 logging.getLogger("app.adapters.stt_nemotron").setLevel(logging.INFO)
+logging.getLogger("app.session.turn").setLevel(logging.INFO)   # [SPEC]/[ROUTE]/[TURN] per-turn timing lines
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel

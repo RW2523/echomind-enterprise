@@ -80,6 +80,14 @@ INSUFFICIENT_CONTEXT_MSG = (
     "or ask me to search for related sections."
 )
 
+# Neutral variant: spoken aloud by the voice service and shown in the vertical packs (bank/law/
+# health/...), where "DoD FMR" / "paragraph 030201" wording is wrong for the corpus. Selected by
+# insufficient_context_msg() (defined next to the speech-style state below).
+NEUTRAL_INSUFFICIENT_CONTEXT_MSG = (
+    "I couldn't find that in the documents I have. "
+    "If you know which document it's in, I'll look again."
+)
+
 def _parse_iso_date(created_at: Optional[str]) -> Optional[datetime]:
     if not created_at:
         return None
@@ -955,7 +963,7 @@ async def _extract_key_differences_async(
 def _strict_citation_system_prompt(persona: Optional[str] = None) -> str:
     """System prompt with strict citation requirement for regulatory/technical documents."""
     key = _resolve_persona_key(persona)
-    return _PERSONA_STRICT_CITATION_PROMPTS[key] + _INJECTION_GUARD + _LENGTH_GUIDE + _speech_suffix()
+    return _speech_suffix() + _PERSONA_STRICT_CITATION_PROMPTS[key] + _INJECTION_GUARD + _LENGTH_GUIDE
 
 
 async def _answer_with_strict_citations(
@@ -2327,10 +2335,17 @@ def _select_citation_hits(enriched: List[Dict]) -> List[Dict]:
 _speech_style_var: ContextVar[bool] = ContextVar("speech_style", default=False)
 
 _SPEECH_STYLE = (
-    "\n\nVOICE MODE: Your answer will be spoken aloud by text-to-speech. Answer in "
-    "short, plain sentences of natural spoken English. Do NOT use markdown, bullet "
-    "points, numbered lists, headings, or tables — fold any enumeration into flowing "
-    "sentences. Keep it to a few sentences unless the user explicitly asked for detail."
+    "VOICE MODE (highest priority): Your answer will be spoken aloud by text-to-speech. Use plain "
+    "spoken sentences: no markdown, bullet points, numbered lists, headings or tables. Keep it to two "
+    "to four short sentences, about fifty words, unless the user explicitly asked for detail. State "
+    "only facts, figures, dates and names that appear in the provided material. If the material does "
+    "not answer the question, say so in one sentence such as \"I couldn't find anything about that in "
+    "the documents I have.\" - never guess a figure and never present a loosely related clause as the "
+    "answer. You may then add ONE short clause offering the closest related thing the material does "
+    "cover, e.g. \"The agreement does set service credits for low availability, if that helps.\" - "
+    "nothing more. Do not read out "
+    "section numbers, page numbers or file names; the sources are shown on screen. If there is more "
+    "to say, end with one short offer to go into it.\n\n"
 )
 
 
@@ -2339,7 +2354,73 @@ def set_speech_style(on: bool) -> None:
 
 
 def _speech_suffix() -> str:
-    return _SPEECH_STYLE if _speech_style_var.get() else ""
+    if not _speech_style_var.get():
+        return ""
+    return _SPEECH_STYLE + _topic_warning_var.get()
+
+
+def _neutral_fallback_active() -> bool:
+    """True when the user must not hear the default-KB (DoD FMR) fallback wording: voice mode
+    (speech style on) or a vertical/tenant namespace other than the default whole-KB view."""
+    return bool(_speech_style_var.get()) or _active_namespace.get() is not None
+
+
+_TOPIC_GENERIC = frozenset(
+    "policy policies agreement agreements document documents section sections clause clauses terms term "
+    "details detail information info record records account accounts data rules rule procedure procedures "
+    "process guidance requirements requirement contract contracts about regarding company organisation "
+    "organization what which how days day hours weeks months years number amount total current specific "
+    "after before during under with without between".split())
+
+
+def _topic_key(w: str) -> str:
+    """Prefix key so inflections match: cancellations/cancelled/cancel -> 'cance', refunds -> 'refun'."""
+    w = w.lower()
+    return w[:6] if len(w) > 6 else w
+
+
+_topic_warning_var: ContextVar[str] = ContextVar("rag_topic_warning", default="")
+
+
+def topic_presence(topic: str, hits: List[Dict]) -> str:
+    """'present' | 'partial' | 'absent_words' | 'absent_id' — how much of the caller's topic phrase
+    the retrieved text literally contains.
+
+    Only a missing IDENTIFIER (digits; "ACC-88213", "case 4,471" and "4471" all agree) is a hard
+    miss: a record that is not in the material cannot be answered. Words are never a hard miss —
+    the phrase is the router model's paraphrase, and real answers routinely use other wording
+    ("uptime guarantee" vs "99.9% availability", "holiday" vs "annual leave"); a lexical veto here
+    refused 15 of 20 legitimate questions in review. Word presence only shapes a caution to the
+    answer model (see _topic_warning_var)."""
+    toks = re.findall(r"[A-Za-z0-9][A-Za-z0-9'\-]*", topic or "")
+    ids = [t.lower() for t in toks if re.search(r"\d", t)]
+    words = [t for t in toks if not re.search(r"\d", t) and len(t) >= 4 and t.lower() not in _TOPIC_GENERIC]
+    if not ids and not words:
+        return "present"
+    blob = " ".join(str(h.get("text") or "") for h in hits[:12]).lower()
+    blob_digits = re.sub(r"[,\s]", "", blob)
+    for i in ids:
+        digits = re.sub(r"\D", "", i)
+        if i not in blob and not (len(digits) >= 3 and digits in blob_digits):
+            return "absent_id"
+    if not words:
+        return "present"
+    blob_keys = {_topic_key(w) for w in re.findall(r"[a-z][a-z'\-]*", blob)}
+    found = sum(1 for w in words if _topic_key(w) in blob_keys or _topic_key(w.split("-")[0]) in blob_keys)
+    if found == 0:
+        return "absent_words"
+    need = len(words) if len(words) <= 3 else -(-2 * len(words) // 3)
+    return "present" if found >= need else "partial"
+
+
+def _topic_present(topic: str, hits: List[Dict]) -> bool:
+    return topic_presence(topic, hits) != "absent_id"
+
+
+def insufficient_context_msg() -> str:
+    """Message for the 'retrieval insufficient' outcome. Knowledge Chat on the default KB keeps
+    the original FMR-specific guidance; voice and vertical packs get the neutral wording."""
+    return NEUTRAL_INSUFFICIENT_CONTEXT_MSG if _neutral_fallback_active() else INSUFFICIENT_CONTEXT_MSG
 
 
 # Without a sizing rule the model enumerates EVERYTHING the retrieved context
@@ -2357,7 +2438,7 @@ _LENGTH_GUIDE = (
 
 def _rag_system_prompt(persona: Optional[str] = None) -> str:
     key = _resolve_persona_key(persona)
-    return _PERSONA_RAG_PROMPTS[key] + _INJECTION_GUARD + _RELEVANCE_GUARD + _LENGTH_GUIDE + _speech_suffix()
+    return _speech_suffix() + _PERSONA_RAG_PROMPTS[key] + _INJECTION_GUARD + _RELEVANCE_GUARD + _LENGTH_GUIDE
 
 
 _MULTIPART_RE = re.compile(
@@ -2382,7 +2463,7 @@ def _build_response_format_hint(question: str) -> str:
 
 def _general_system_prompt(persona: Optional[str] = None) -> str:
     key = _resolve_persona_key(persona)
-    return _PERSONA_GENERAL_PROMPTS[key] + _GENERAL_CONDUCT + _DOMAIN_FIDELITY + _speech_suffix()
+    return _speech_suffix() + _PERSONA_GENERAL_PROMPTS[key] + _GENERAL_CONDUCT + _DOMAIN_FIDELITY
 
 # Conversation summary: structured, compressed context for RAG (goals, constraints, decisions, key facts)
 CONVERSATION_SUMMARY_SYSTEM = """You maintain a compressed, structured summary of an ongoing conversation.
@@ -3312,6 +3393,7 @@ _INLINE_REF_RE = re.compile(
                           |clauses?|articles?|chapters?|volumes?|vols?)\b))
         (?:(?:see|as\s+(?:described|prescribed|noted|set\s+out|defined)\s+in|per|cf\.?)\s+)?
         {_REF_TOKEN}(?:{_REF_SEP}{_REF_TOKEN})*
+        (?:\s+(?:of|in|under)\s+(?:the\s+|this\s+)?(?-i:[A-Z][A-Za-z0-9&'\-]*(?:\s+(?:of|and|the|for)\s+[A-Z][A-Za-z0-9&'\-]*|\s+[A-Z][A-Za-z0-9&'\-]*){{0,5}}))?
         \s*\)""",
     re.IGNORECASE | re.VERBOSE,
 )
@@ -3374,6 +3456,8 @@ async def _postprocess_answer_text_inner(
     )
     try:
         if information_missing(ans):
+            if _neutral_fallback_active():
+                return ans          # voice / vertical packs: the one-sentence reply stands alone
             fallback = await handle_missing_information(question, doc_ids=doc_ids or None)
             return f"{ans}\n\n{fallback}"
         if is_inferred(ans):
@@ -3557,8 +3641,13 @@ async def answer_stream(
     advanced_rag: bool = False,
     source_options: Optional[Dict[str, bool]] = None,
     max_tokens: Optional[int] = None,
+    must_mention: Optional[str] = None,
 ) -> AsyncIterator[Tuple[str, str | None, List[Dict] | None]]:
-    """Stream RAG response. Yields ("chunk", delta, None) then ("done", full_answer, citations)."""
+    """Stream RAG response. Yields ("chunk", delta, None) then ("done", full_answer, citations).
+
+    ``must_mention``: the caller's short topic phrase (the voice tool's query, e.g. "refund policy
+    cancellations"). If the retrieved chunks do not actually mention it, answer "couldn't find"
+    without generating — a loosely related clause must never be read out as the answer."""
     eff_max = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
     if not use_knowledge_base:
         async for ev in _answer_general_stream(
@@ -3616,18 +3705,44 @@ async def answer_stream(
         source_type, len(hits), retrieve_ms,
     )
 
+    _topic_warning_var.set("")
+    if hits and must_mention:
+        presence = topic_presence(must_mention, hits)
+        if presence == "absent_id":
+            logger.info("RAG (stream) topic gate: identifier in %r absent from %d hits -> not found", must_mention, len(hits))
+            msg = insufficient_context_msg()
+            yield ("sources", None, [])
+            yield ("chunk", msg, None)
+            yield ("done", msg, [])
+            return
+        if presence in ("partial", "absent_words"):
+            logger.info("RAG (stream) topic gate: %r %s -> fidelity caution", must_mention, presence)
+            how = "does not use the words" if presence == "absent_words" else "only partly uses the words"
+            _topic_warning_var.set(
+                f"\n\nNOTE: the retrieved material {how} \"{must_mention}\". Different wording for the same "
+                "thing is fine: answer from any passage that addresses this question in substance (for example "
+                "service credits are the answer to a question about downtime penalties). But do not attribute a "
+                "passage about a DIFFERENT subject to the topic the user named: if nothing actually addresses the "
+                "question, reply with the one-sentence not-found line."
+            )
+
     if source_type == "insufficient":
-        from .citation_utils import handle_missing_information
-        try:
-            msg = await handle_missing_information(question)
-            if msg and msg != INSUFFICIENT_CONTEXT_MSG:
-                yield ("chunk", msg, None)
-                yield ("done", msg, [])
-                return
-        except Exception as e:
-            logger.debug("handle_missing_information failed: %s", e)
-        yield ("chunk", INSUFFICIENT_CONTEXT_MSG, None)
-        yield ("done", INSUFFICIENT_CONTEXT_MSG, [])
+        if not _neutral_fallback_active():
+            # Default-KB Knowledge Chat only: the related-section suggestion comes from the
+            # global section index (not namespace-aware), so in voice mode / vertical packs it
+            # would read out FMR section paths — those get the neutral message instead.
+            from .citation_utils import handle_missing_information
+            try:
+                msg = await handle_missing_information(question)
+                if msg and msg != INSUFFICIENT_CONTEXT_MSG:
+                    yield ("chunk", msg, None)
+                    yield ("done", msg, [])
+                    return
+            except Exception as e:
+                logger.debug("handle_missing_information failed: %s", e)
+        msg = insufficient_context_msg()
+        yield ("chunk", msg, None)
+        yield ("done", msg, [])
         return
     if source_type == "general":
         async for ev in _answer_general_stream(
