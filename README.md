@@ -11,7 +11,7 @@ Chat, live meeting intelligence, voice, and document generation — running enti
   <img alt="Backend" src="https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white">
   <img alt="Frontend" src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61dafb?style=flat-square&logo=react&logoColor=black">
   <img alt="Orchestration" src="https://img.shields.io/badge/Runs%20on-Docker%20Compose-2496ed?style=flat-square&logo=docker&logoColor=white">
-  <img alt="Eval" src="https://img.shields.io/badge/Golden%20Eval-48%2F52-8b5cf6?style=flat-square">
+  <img alt="Eval" src="https://img.shields.io/badge/Golden%20Eval-49%2F52%20(2026--08--06)-8b5cf6?style=flat-square">
   <img alt="License" src="https://img.shields.io/badge/License-Proprietary-555?style=flat-square">
 </p>
 
@@ -123,7 +123,13 @@ Retrieval and conversation quality are measured, not eyeballed. A **52-question 
 python3 eval/run_eval.py          # exit code 0 = all pass; JSON report in eval/reports/
 ```
 
-Scored: routing (small talk / refusals / off-corpus must never cite), expected-document hit-rate, **citation precision (0.98)**, answer facts, hallucination canaries, latency. Current: **48/52** — the remainder are deliberate hard sentinels (cross-volume enumeration, cross-document comparison). Run it after any retrieval/prompt/model change. See [eval/README.md](eval/README.md).
+Scored: routing (small talk / refusals / off-corpus must never cite), expected-document hit-rate, citation precision, answer facts, hallucination canaries, latency. Run it after any retrieval/prompt/model change. See [eval/README.md](eval/README.md).
+
+> **Last recorded run: 49/52 with citation precision 0.98, on 2026-08-06.** That run predates the
+> current HEAD by several feature commits, so it is the last known score rather than the present
+> one — re-run the suite before quoting a figure. The best score recorded to date is 50/52
+> (2026-07-30); no run has yet reached 52/52, the remainder being deliberate hard sentinels
+> (cross-volume enumeration, cross-document comparison).
 
 ## 🔐 Privacy & Security
 
@@ -142,6 +148,9 @@ Scored: routing (small talk / refusals / off-corpus must never cite), expected-d
 | 🌐 **[Public deployment](docs/PUBLIC_DEPLOYMENT.md)** | Cloudflare Tunnel + Access runbook |
 | 📕 **Generated showcase** | [Marketing Book](docs/EchoMind_Marketing_Book.pdf) · [User Guide](docs/EchoMind_User_Guide.pdf) — produced *in* Document Studio |
 | 🔒 **HTTPS** | [Trusted cert (prod)](docs/HTTPS_TRUSTED_CERTIFICATE.md) · [Local (mkcert)](docs/HTTPS_LOCAL_TRUSTED.md) |
+| ✅ **[Quality Management System](docs/qms/)** | ISO 9001:2015 document set — policy, 15 procedures, registers, [clause mapping](docs/qms/ISO9001_Clause_Mapping.md) and an honest [gap analysis](docs/qms/ISO9001_Gap_Analysis.md). **Documented, not yet adopted** — see the [adoption guide](docs/qms/ADOPTION_GUIDE.md). |
+| 🔌 **[API endpoints](docs/reference/ENDPOINTS.md)** | Endpoint ↔ frontend call reference |
+| 📄 **[Conference paper](docs/paper/)** | QASC 2026 camera-ready (v4), with v3 archived |
 | 🔎 **Internals** | [RAG & chunking](docs/RAG_AND_CHUNKING_EXPLAINED.md) · [RAG flow](docs/RAG_FLOW.md) · [Chat flow](docs/CHAT_AND_RAG_FLOW.md) · [Voice flow](docs/CONVERSATION_AI_AND_WAKE_WORD_FLOW.md) · [Transcript storage](docs/TRANSCRIPT_STORAGE_FLOW.md) |
 
 ## 🛠️ Tech Stack

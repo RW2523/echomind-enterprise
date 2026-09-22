@@ -1,0 +1,160 @@
+{
+  "run_id": "20260729-195914",
+  "base": "http://localhost:3000/api",
+  "passed": 0,
+  "total": 7,
+  "results": [
+    {
+      "id": "default-jv-approval-officials",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": false
+      },
+      "notes": [
+        "expected docs not cited: ['06a_02']; cited=['14_01.pdf']",
+        "missing fact groups: [['Branch Chief', 'branch chief'], ['Site Director', 'site director']]"
+      ],
+      "doc_precision": 0.0,
+      "latency_s": 20.59,
+      "n_citations": 1,
+      "cited": [
+        "14_01.pdf"
+      ],
+      "answer_head": "The approval authority for DoD journal vouchers (JVs) is determined by the amount of the transaction, as outlined in the DoD Financial Management Regulation (FMR). However, the specific section addressing approval thresh"
+    },
+    {
+      "id": "default-jv-component-coordination",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": false
+      },
+      "notes": [
+        "expected docs not cited: ['06a_02']; cited=['14_01.pdf']",
+        "missing fact groups: [['$1 billion', '1 billion', '$1B']]"
+      ],
+      "doc_precision": 0.0,
+      "latency_s": 18.75,
+      "n_citations": 1,
+      "cited": [
+        "14_01.pdf"
+      ],
+      "answer_head": "The specific dollar amount at which a journal voucher must be coordinated with the affected DoD Component is not explicitly stated in the provided document excerpts. However, the guidance related to obligations, expendit"
+    },
+    {
+      "id": "default-dfas-reconciliation-threshold",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": false
+      },
+      "notes": [
+        "expected docs not cited: ['06a_02']; cited=['06a_04.pdf']",
+        "missing fact groups: [['monthly'], ['$1 million', '1 million']]"
+      ],
+      "doc_precision": 0.0,
+      "latency_s": 19.56,
+      "n_citations": 1,
+      "cited": [
+        "06a_04.pdf"
+      ],
+      "answer_head": "The question has multiple parts \u2014 answer every part explicitly, none may be skipped.\n\n1. **How often must DFAS perform reconciliations between the general ledger and subsidiary records?**  \n   DFAS must ensure that accou"
+    },
+    {
+      "id": "default-ada-statute-sections",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": false
+      },
+      "notes": [
+        "expected docs not cited: ['14_02']; cited=['06a_04.pdf']",
+        "missing fact groups: [['1341'], ['1517']]"
+      ],
+      "doc_precision": 0.0,
+      "latency_s": 12.96,
+      "n_citations": 1,
+      "cited": [
+        "06a_04.pdf"
+      ],
+      "answer_head": "The Antideficiency Act is not explicitly detailed in the provided document excerpts. However, the text references 31 U.S.C. \u00a7 3512, which is part of the Antideficiency Act. This section is mentioned in the context of ens"
+    },
+    {
+      "id": "default-purpose-statute",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": false,
+        "docs": false,
+        "facts": false
+      },
+      "notes": [
+        "expected >=1 citation, got 0",
+        "expected docs not cited: ['14_02']; cited=[]",
+        "missing fact groups: [['objects']]"
+      ],
+      "doc_precision": null,
+      "latency_s": 5.24,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "The Purpose Statute, also known as the \"Purpose Clause,\" is a provision in U.S. law that requires federal agencies to use appropriated funds only for the purposes for which they were specifically authorized. It is intend"
+    },
+    {
+      "id": "default-ada-investigation-timeframes",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": false
+      },
+      "notes": [
+        "expected docs not cited: ['14_03']; cited=['14_01.pdf']",
+        "missing fact groups: [['four months', '4 months'], ['nine months', '9 months']]"
+      ],
+      "doc_precision": 0.0,
+      "latency_s": 9.13,
+      "n_citations": 1,
+      "cited": [
+        "14_01.pdf"
+      ],
+      "answer_head": "The DoD Component must complete the preliminary review of a suspected Antideficiency Act (ADA) violation within 30 days of becoming aware of the potential violation (2.9.2, page 13). \n\nFor the formal investigation, the D"
+    },
+    {
+      "id": "default-dod-cfo-appointment",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": true
+      },
+      "notes": [
+        "expected docs not cited: ['01_01']; cited=['06a_02.pdf']"
+      ],
+      "doc_precision": 0.0,
+      "latency_s": 12.73,
+      "n_citations": 1,
+      "cited": [
+        "06a_02.pdf"
+      ],
+      "answer_head": "The question has multiple parts \u2014 answer every part explicitly, none may be skipped.\n\n1. **Who serves as the Chief Financial Officer (CFO) of the Department of Defense (DoD)?**  \n   The Chief Financial Officer (CFO) of t"
+    }
+  ]
+}

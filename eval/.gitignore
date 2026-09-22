@@ -1,1 +1,7 @@
-reports/
+# Golden-evaluation reports are RETAINED as quality records (ISO 9001:2015 9.1.1 —
+# see docs/qms/procedures/SOP-12). They were previously excluded wholesale, which meant
+# no measurement result was ever kept. Keep them.
+#
+# Only transient scratch output is ignored.
+reports/*.tmp
+reports/*.partial

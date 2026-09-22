@@ -39,3 +39,27 @@ BookRAG/
 # PPTX exports temporarily hidden — Document Studio PPTX export is WIP (kept locally, not published)
 docs/EchoMind_Marketing_Book.pptx
 docs/EchoMind_User_Guide.pptx
+
+# ── Test / tool caches ────────────────────────────────────────────────
+# pytest escapes git only via its own self-written .pytest_cache/.gitignore ("*"),
+# which is implicit and fragile. Make it explicit.
+.pytest_cache/
+
+# ── Personal legal documents — MUST NEVER BE COMMITTED ────────────────
+# QASC 2026 publishing licence: personal, signed, stays local only.
+LicenceToPublish_*.docx
+LicenceToPublish_*.pdf
+
+# ── Dead local experiments ────────────────────────────────────────────
+# rag-platform/ held only stale __pycache__ bytecode of deleted sources.
+# Ignored explicitly so a rebuilt venv cannot resurrect it into git.
+rag-platform/
+
+# ── Offline bundle output ─────────────────────────────────────────────
+# scripts/export_offline_bundle.sh writes large tarballs; never commit them.
+/offline_bundle/
+*.tar.zst
+
+# ── Data backups (scripts/backup_data.sh) ─────────────────────────────
+# Contain CUSTOMER DATA. Never commit; store off-host per SOP-11 §8.
+/backups/

@@ -1,5 +1,8 @@
 services:
   trtllm:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
     build:
       context: ./docker/trtllm
     image: echomind-trtllm:1.2.0rc6
@@ -45,6 +48,9 @@ services:
     gpus: all
 
   backend:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -113,6 +119,9 @@ services:
     gpus: all
 
   voice:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
     build:
       context: .
       dockerfile: voice/Dockerfile
@@ -205,6 +214,9 @@ services:
     gpus: all
 
   frontend:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
     build:
       context: ./frontend
       args:
@@ -218,9 +230,13 @@ services:
   # Domain: echomind-ajace.com. Create a *remote-managed* tunnel in the Cloudflare
   # Zero Trust dashboard, put its token in .env as TUNNEL_TOKEN, then route the public
   # hostname echomind-ajace.com -> http://frontend:80 (cloudflared shares this network).
-  # ⚠️ GATE IT WITH CLOUDFLARE ACCESS (login) FIRST — EchoMind has no built-in auth.
+  # ⚠️ GATE IT WITH CLOUDFLARE ACCESS (login) FIRST — app auth (AUTH_ENABLED) is OFF by default,
+    #    and WebSocket endpoints are not covered by the auth middleware even when it is on.
   # Full runbook: docs/PUBLIC_DEPLOYMENT.md   Start: docker compose --profile public up -d cloudflared
   cloudflared:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
     image: cloudflare/cloudflared:latest
     container_name: echomind-cloudflared
     restart: unless-stopped
@@ -229,6 +245,9 @@ services:
     depends_on: [frontend]
 
   ollama:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
     build:
       context: ./docker/ollama
       dockerfile: Dockerfile
