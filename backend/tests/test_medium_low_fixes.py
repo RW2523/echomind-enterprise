@@ -35,12 +35,13 @@ def test_m7_toc_section_regex_accepts_nonzero():
     assert _SECTION_RE.match("5050 Reimbursements")
 
 
-# ── L20: tagging keeps unigrams that are substrings (not words) of a bigram ───
-def test_l20_tagging_keeps_substring_unigrams():
-    from app.tagging import get_tags
-    # "category" should not be dropped just because the bigram "cat report" exists.
-    text = ("category category category budget budget report report cat cat report "
-            "category report category report")
-    tags = get_tags(text, max_tags=10)
-    joined = " ".join(tags)
-    assert "category" in joined  # substring-of-bigram unigram retained
+# ── L20: tags come only from the curated taxonomy (keyphrase extractor removed) ─
+def test_l20_tagging_uses_curated_taxonomy_only():
+    from app.tagging import get_tags, TOPIC_TAXONOMY
+    text = ("We reviewed the budget for next quarter and the forecast looks approved. "
+            "The customer asked for a refund after the cancellation, and we explained the "
+            "cooling-off period and the pro-rated money back policy in detail today.")
+    tags = get_tags(text)
+    assert tags and all(t in TOPIC_TAXONOMY for t in tags)  # never raw transcript words
+    assert "Refund & Cancellation" in tags
+    assert get_tags("refund cancel budget forecast") == []  # tiny transcripts are not tagged

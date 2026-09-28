@@ -54,8 +54,13 @@ def test_intent_set_assistant_name():
     profile = {"assistant_name": "EchoMind", "wake_word": "EchoMind", "user_name": "", "timezone": "America/New_York", "location": ""}
     handled, response, extra = parse_and_route("Your name is Watson", profile, "", False, [])
     assert handled is True
-    assert extra.get("set_assistant_name") == "watson"
-    assert response and "watson" in response.lower()
+    # A new name is proposed, never persisted straight away: it needs a "yes" first.
+    assert extra.get("pending_wake_word_change") == "watson"
+    assert "set_assistant_name" not in extra
+    assert response and "watson" in response.lower() and "confirm" in response.lower()
+    # A long, mis-heard phrase is not accepted as a name at all.
+    handled, _, extra = parse_and_route("Your name is accommod something odd here", profile, "", False, [])
+    assert not extra.get("pending_wake_word_change")
 
 
 def test_intent_start_listening():

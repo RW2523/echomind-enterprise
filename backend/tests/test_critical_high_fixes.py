@@ -81,7 +81,7 @@ class _FakeEmb:
     def __init__(self, dim: int = 8):
         self.dim = dim
 
-    async def embed(self, texts):
+    async def embed(self, texts, kind: str = "query"):
         out = []
         for t in texts:
             v = [0.0] * self.dim

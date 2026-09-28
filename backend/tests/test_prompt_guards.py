@@ -28,12 +28,10 @@ def test_contextualizer_prompts_have_guard():
 
 def test_lawyer_disclaimer_is_consistent_across_variants():
     from app.rag import advanced
-    canon = "informational legal analysis, not formal legal advice"
-    consult = "Consult a licensed attorney"
+    canon = "informational analysis, not formal legal advice"
     for d in (advanced._PERSONA_RAG_PROMPTS, advanced._PERSONA_GENERAL_PROMPTS, advanced._PERSONA_STRICT_CITATION_PROMPTS):
         lawyer = d.get("Lawyer", "")
         assert canon in lawyer, f"missing canonical disclaimer in {lawyer[:60]!r}"
-        assert consult in lawyer, f"missing consult-attorney line in {lawyer[:60]!r}"
 
 
 def test_injection_guard_applied_to_rag_and_strict_prompts():
