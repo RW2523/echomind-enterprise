@@ -119,7 +119,7 @@ See §1. Two EchoMind findings addressed with new registers; one corporate findi
 | **Structured adversarial review** | 40 findings on one change set; each independently verified before action; 18 refuted | `REG-10` RF-2026-001 |
 | **Research-grade experiment harness (E1–E10)** | Independent measurement of latency, isolation, injection resistance and grounding | `eval/paper/results/` |
 | **Data backup with verified restore** | Customer data recoverable; restore proven, not assumed. Nightly off-host scheduling is built (`scripts/install_backup_timer.sh`) but **not yet installed on the reference host** — the only backup there is the manual one of 2026-09-22 (verified 2026-10-06; §5 task 6) | `scripts/backup_data.sh`, `restore_data.sh` |
-| **Release identification and traceability** | A running instance reports the source revision of its application code: the reference instance returns version `1.4.0`, commit `eaa7b1a` (live since 2026-10-06) | `scripts/release.sh`, `/api/version`, `CHANGELOG.md` |
+| **Release identification and traceability** | A running instance reports the source revision of its application code: the reference instance returns version `1.4.1`, commit `f1b8445` for backend, voice and front end (released and deployed 2026-10-06) | `scripts/release.sh`, `/api/version`, `CHANGELOG.md` |
 | **Speculative reply + GPU speech recognition** | Voice first-reply latency roughly halved; final STT decode ~10× faster | `ff29843`, NFR-P05/P06 |
 
 ### 2.4 Process changes since the last audit
@@ -169,7 +169,7 @@ Covered in §1.
 
 | Question | Answer | Where |
 |---|---|---|
-| "Show me which source revision this running instance was built from." | `GET /api/version` returns version, commit and build date; `CHANGELOG.md` and the annotated tag link it to the change set. Live on the reference instance since 2026-10-06: `1.4.0` / `eaa7b1a` | `scripts/release.sh`, `backend/app/main.py` |
+| "Show me which source revision this running instance was built from." | `GET /api/version` returns version, commit and build date; `CHANGELOG.md` and the annotated tag link it to the change set. Live on the reference instance: `1.4.1` / `f1b8445` (since 2026-10-06 22:17 UTC) | `scripts/release.sh`, `backend/app/main.py` |
 | "How do you know a change did not break retrieval quality?" | 52-question golden evaluation with a binary gate (currently inoperable — W-3), plus 78 unit-test functions (40 backend, 38 voice expanding to 127 parametrised cases). All pass since 2026-09-28; five had been failing unnoticed — `REG-04` NC-2026-010 | `eval/`, `backend/tests/`, `voice/tests/` |
 | "Show me a non-functional requirement and its measurement." | `REG-09`, any row | `docs/qms/registers/REG-09_NFR_Register.md` |
 | "Show me review feedback that produced an action and was closed." | `REG-10` RF-2026-001 — 22 confirmed findings actioned, effectiveness verified | `docs/qms/registers/REG-10_Review_Feedback_Action_Log.md` |
@@ -209,7 +209,7 @@ into evidence that the management system is working.
 | 3a | **Restore the evaluation corpus** (the 15 documents the golden set targets) and re-measure. This is now the single highest-value pre-audit task: without it QO-1, QO-2 and NFR-Q01–Q05 have no current evidence | Lead Engineer | ☐ |
 | 3b | Add a corpus pre-flight assertion to `eval/run_eval.py` so a missing corpus **aborts** rather than reporting a misleading score | Lead Engineer | ☐ |
 | 4 | ~~Cut release `v1.4.0`~~ — **tag cut 2026-09-22.** Retrospective `FRM-03` prepared 2026-10-06; **authorisation and the §4 concessions still need completing by the authoriser** | Lead Engineer | ◐ |
-| 5 | ~~Make `/api/version` report the real build on the running stack~~ — **done 2026-10-06:** `v1.4.0` application code deployed (`docker cp` + `docker commit` onto the existing images, `BUILD_*` set in `.env`); returns `1.4.0` / `eaa7b1a`. A from-scratch image build with `scripts/release.sh` is still to do | Lead Engineer | ☑ |
+| 5 | ~~Make `/api/version` report the real build on the running stack~~ — **done 2026-10-06:** `v1.4.0` application code deployed (`docker cp` + `docker commit` onto the existing images, `BUILD_*` set in `.env`); returns `1.4.0` / `eaa7b1a`; superseded the same evening by release **v1.4.1** (defect fixes NC-2026-012…015), which all three services report. Backend/voice images are the release source layered on existing images; a from-scratch build remains to do | Lead Engineer | ☑ |
 | 6 | Install the backup timer with an off-host destination — *verified not done 2026-10-06: no timer, `BACKUP_REMOTE` unset* | Lead Engineer | ☐ |
 | 6a | ~~Recreate the containers so log rotation takes effect~~ — **done 2026-10-06**; all six carry 50 MB × 5 | Lead Engineer | ☑ |
 | 6b | ~~Close the public exposure (NC-2026-009)~~ — **done 2026-10-06:** application auth enabled; unauthenticated calls return 401 from an external network | Lead Engineer | ☑ |

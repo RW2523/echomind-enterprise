@@ -85,7 +85,7 @@ These are the gaps in `ISO9001_Gap_Analysis.md`. Ordered by consequence, not by 
 
 | # | Work | Gap / risk | Effort |
 |---|---|---|---|
-| D4 | **Release identification** — git tag, image tags, and a build identifier the running system can report. *Mostly done: `v1.4.0` tagged (2026-09-22); its application code deployed and `/api/version` reporting `1.4.0` / `eaa7b1a` on the reference instance (2026-10-06). Remaining: a from-scratch image build via `scripts/release.sh` with recorded image tags.* | G-01 / R-09 / QO-3 | ½ day left |
+| D4 | **Release identification** — git tag, image tags, and a build identifier the running system can report. *Mostly done: `v1.4.0` tagged (2026-09-22); `v1.4.1` released and deployed 2026-10-06 with tagged images (`1.4.1`) — front end built from source, backend/voice layered on existing images; every service reports `1.4.1` / `f1b8445`. Remaining: a from-scratch backend/voice build.* | G-01 / R-09 / QO-3 | ½ day left |
 | ~~D5~~ | ~~Re-run the golden evaluation against HEAD~~ — **DONE 2026-09-22: 9/52, corpus absent** (`REG-04` NC-2026-008). Restoring the corpus is the follow-up | G-10 / QO-2 | done |
 | ~~D6~~ | ~~Retain evaluation reports as records~~ — **DONE 2026-09-22**; 24 historical reports now tracked | G-12 | done |
 | D7 | **CI** running the unit suites at minimum; wire in `scripts/verify_offline_readiness.sh`, which exists and is called by nothing | G-02 / R-08 | 1 day |

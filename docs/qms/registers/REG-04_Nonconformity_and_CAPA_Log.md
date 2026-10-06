@@ -230,10 +230,10 @@ Severity scale (defined in SOP-10 §3):
 | Severity | **S3** — a session control weaker than users would expect |
 | Description | After `POST /api/auth/logout`, replaying the same token returned **HTTP 200** on `/api/docs/list`. A token remains valid until it expires (`AUTH_TOKEN_TTL_MIN` = 720 minutes). |
 | Root cause (proposed) | Stateless JWT with no server-side revocation; logout only clears the browser cookie. |
-| Immediate correction | None yet. |
-| Corrective action (proposed) | Server-side revocation (token id deny-list checked on each request) or a short token lifetime with refresh. |
-| Effectiveness verification | Pending — AC-101.7 must return 401 for a replayed token. |
-| Status | **OPEN** |
+| Immediate correction | Logout now revokes the token server-side (hash stored until expiry, rejected by `decode_token`); the voice WebSocket confirms the session with the backend and fails closed — `e0ed4d0`. Re-testing found the logout itself logged as anonymous (the activity log resolved the user after revocation); fixed in `3feb5db`. |
+| Corrective action | Regression tests `test_nc012_*` (backend) and `test_auth_session.py` (voice) added to the suites. |
+| Effectiveness verification | Acceptance run 4 (2026-10-06 22:28 UTC, v1.4.1): AC-101.7 replayed token → **401**; AC-101.8 activity recorded for the user; AC-101.9 voice 403/101. |
+| Status | **Closed** 2026-10-06, effectiveness verified (release v1.4.1) |
 
 ### NC-2026-013 — Document upload accepts binary executables
 
@@ -245,10 +245,10 @@ Severity scale (defined in SOP-10 §3):
 | Severity | **S3** — input validation missing; garbage content can enter the knowledge base |
 | Description | A 4 KB binary file named `tool.exe` was **accepted (HTTP 200) and indexed** into namespace `qa-test`. The test document was deleted immediately afterwards. Empty files are correctly rejected (HTTP 422). |
 | Root cause (proposed) | No allow-list of file types; unknown types fall through to text extraction. |
-| Immediate correction | Test document deleted. |
-| Corrective action (proposed) | Allow-list supported types (PDF, DOCX, PPTX, TXT, MD and the other parsed formats) and reject binary content by signature. |
-| Effectiveness verification | Pending — DOC-102.5 must return 4xx with nothing stored. |
-| Status | **OPEN** |
+| Immediate correction | Upload limited to .pdf/.docx/.pptx/.txt/.md, checked by content signature; binary text rejected with HTTP 415 — `e0ed4d0`. |
+| Corrective action | Regression tests `test_nc013_*` added. |
+| Effectiveness verification | Acceptance run 4: DOC-102.5 `tool.exe` → **HTTP 415**, nothing stored; valid text upload still accepted (DOC-102.1). |
+| Status | **Closed** 2026-10-06, effectiveness verified (release v1.4.1) |
 
 ### NC-2026-014 — Small-talk and not-found answers carry document citations
 
@@ -260,10 +260,10 @@ Severity scale (defined in SOP-10 §3):
 | Severity | **S3** — contradicts the documented behaviour that greetings never trigger retrieval and that only relevant passages are cited |
 | Description | `POST /api/chat/ask` with *"Hello! How are you today?"* returned a correct greeting **with two Meridian document citations**. A question about something absent from the corpus was correctly answered as not found but still listed three citations. In the UI (Financial Advisor persona) an answer also pointed the user to *"FMR Volume 12, Chapter 14"*, which is not in the knowledge base. |
 | Root cause (proposed) | To be investigated — the rules/semantic routing and the citation relevance filter are not applied on this path or this persona. |
-| Immediate correction | None yet. |
-| Corrective action (proposed) | Investigate the `/api/chat/ask` path; add RAG-103.2/103.3 as automated API tests. |
-| Effectiveness verification | Pending. |
-| Status | **OPEN** |
+| Immediate correction | Greeting + small talk recognised by rule; semantic intent classifier warmed at start-up; Financial Advisor prompt no longer asks the model to guess an FMR chapter — `e0ed4d0`. |
+| Corrective action | Regression tests `test_nc014_*` added. |
+| Effectiveness verification | Acceptance run 4: RAG-103.3 small talk → **no citations**, answered in ~1 s. Residual observation: a not-found answer may still list the passages that were searched (RAG-103.2) — tracked, not a failed criterion. |
+| Status | **Closed** 2026-10-06, effectiveness verified (release v1.4.1) |
 
 ### NC-2026-015 — Export gateway does not detect an API-key format
 
@@ -275,10 +275,26 @@ Severity scale (defined in SOP-10 §3):
 | Severity | **S3** — a data-protection control partially not working |
 | Description | With synthetic test values, the gateway detected and redacted the email address, phone number and SSN, but **did not detect the `sk-test-…` API key**, which remained in the redacted copy. |
 | Root cause (proposed) | The secret patterns do not cover this key format. |
-| Immediate correction | None yet. |
-| Corrective action (proposed) | Extend the secret patterns and keep a regression corpus of key formats under test. |
-| Effectiveness verification | Pending — EXP-108.2 must show no sensitive value in the redacted copy. |
-| Status | **OPEN** |
+| Immediate correction | Key patterns extended (multi-segment `sk-`/`sk_`, `pk/rk_live/test`, `api_key=` assignments); overlapping matches merged before redaction — `e0ed4d0`. |
+| Corrective action | Regression tests `test_nc015_*` added (key formats, overlap, no false positives). |
+| Effectiveness verification | Acceptance run 4: EXP-108 → api_key, email, phone, SSN all detected; **no sensitive value** in the redacted copy. |
+| Status | **Closed** 2026-10-06, effectiveness verified (release v1.4.1) |
+
+### NC-2026-016 — Embedding service failed while its healthcheck reported healthy
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-10-06 |
+| Raised by | `________` (detected by acceptance run 3) |
+| Source | `TC-EM-DOC-102` and `TC-EM-RAG-103` returned HTTP 500 after the v1.4.1 deployment |
+| Severity | **S2** — loss of chat and document upload while every container reported healthy (silent failure, as NC-2026-003/004) |
+| Description | Ollama could not create a CUDA context to reload its embedding model (`ggml_cuda_init: out of memory`) because the shared GPU was full (another stack's two vLLM engines held ≈ 64.6 GB). Every embedding call returned 500, so upload and chat failed. The Ollama healthcheck only runs `ollama list`, so the service stayed "healthy". |
+| Root cause | Two causes: the GPU is shared with a stack outside EchoMind's control, and the healthcheck does not exercise the function it guards. |
+| Immediate correction | 2026-10-06 22:27 UTC: embeddings moved to the CPU (`OLLAMA_CUDA_VISIBLE_DEVICES=` — REG-07 DC-2026-005). Embedding call verified (768 dims). |
+| Correction verified | Acceptance run 4 (22:28 UTC): DOC-102 and RAG-103 pass. |
+| Corrective action (proposed) | (a) Healthcheck performs a real embedding call. (b) Decide a GPU-sharing policy for the host (REG-03). |
+| Effectiveness verification | Pending (a) and (b). |
+| Status | **OPEN** — correction verified; corrective actions pending |
 
 ---
 
@@ -290,10 +306,11 @@ Severity scale (defined in SOP-10 §3):
 | NC-2026-009 | 2026-10-06 | Health check | S2 | Public reference instance has no access control (no Access, `AUTH_ENABLED=0`) | `________` | **Open** — correction verified, actions pending | — |
 | NC-2026-010 | 2026-10-06 | Health check | S3 | Unit tests and type-check failing undetected; `v1.4.0` tagged with them failing | `________` | **Open** — correction verified, CI pending | — |
 | NC-2026-011 | 2026-10-06 | Change control | S3 | Deployed code only in container writable layers | `________` | **Open** — correction verified | — |
-| NC-2026-012 | 2026-10-06 | Test TC-EM-AUTH-101 | S3 | Logout does not revoke the session token | `________` | **Open** | — |
-| NC-2026-013 | 2026-10-06 | Test TC-EM-DOC-102 | S3 | Upload accepts binary executables | `________` | **Open** | — |
-| NC-2026-014 | 2026-10-06 | Test TC-EM-RAG-103 | S3 | Small-talk / not-found answers carry citations | `________` | **Open** | — |
-| NC-2026-015 | 2026-10-06 | Test TC-EM-EXP-108 | S3 | Export gateway misses an API-key format | `________` | **Open** | — |
+| NC-2026-012 | 2026-10-06 | Test TC-EM-AUTH-101 | S3 | Logout does not revoke the session token | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
+| NC-2026-013 | 2026-10-06 | Test TC-EM-DOC-102 | S3 | Upload accepts binary executables | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
+| NC-2026-014 | 2026-10-06 | Test TC-EM-RAG-103 | S3 | Small-talk / not-found answers carry citations | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
+| NC-2026-015 | 2026-10-06 | Test TC-EM-EXP-108 | S3 | Export gateway misses an API-key format | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
+| NC-2026-016 | 2026-10-06 | Test run 3 | S2 | Embedding service down while healthcheck green | `________` | **Open** — correction verified | — |
 
 *(Add rows using `forms/FRM-05_Nonconformity_and_CAPA_Record.md`; keep the full record in the form and summarise it here.)*
 
@@ -319,4 +336,4 @@ Severity scale (defined in SOP-10 §3):
 | Retrospective NCs recorded here | 7 | 2026-09-21 |
 | Of which S1 | 2 | |
 | Closed with effectiveness verified | 3 | |
-| Open | 9 (NC-2026-007 to NC-2026-015) | 2026-10-06 |
+| Open | 6 (NC-2026-007 to 011, NC-2026-016); NC-2026-012 to 015 closed 2026-10-06 | 2026-10-06 |

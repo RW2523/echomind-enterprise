@@ -13,7 +13,7 @@ map `00_Overview_and_Map/EM26-00_Evidence_Map_2025_to_2026.xlsx` (every 2025 fil
   2026-10-06 against the reference instance. Records summarising earlier work say so and give the original dates.
 - **No approvals, signatures, owners or meeting minutes are filled in.** Those are left blank for the
   responsible people (SOP-01 §6). Meeting documents are templates; the management-review file is an input pack.
-- **Failures are recorded as observed.** Four test cases failed; each is logged in REG-04 (NC-2026-012…015).
+- **Failures are recorded as observed.** Every failure is logged in REG-04 with its fix commit and the re-test that verified it.
 
 ## Contents
 
@@ -27,7 +27,7 @@ map `00_Overview_and_Map/EM26-00_Evidence_Map_2025_to_2026.xlsx` (every 2025 fil
 | `13_Acceptance_Criteria` | Acceptance-criteria mapping from executed tests | 13. Acceptance Criteria Review, Jira SCRUM-36 |
 | `14_Provider_Review` | Provider inventory and performance review (scores proposed) | 14, 14b |
 | `15_Testing` | 13 test cases with execution records, 5 failure records, defect linking, regression, summary | 15, 15a–c, QA-FAIL / DEF / REG |
-| `16_Lessons_Learnt` | 12 lessons, logbook, workbook | 16, 16b, Lessons Learned Log |
+| `16_Lessons_Learnt` | 14 lessons, logbook, workbook | 16, 16b, Lessons Learned Log |
 | `17_NFR_Register` | NFR register workbook (2025 finding #6) | NFR tracker |
 | `18_Review_Actions` | Review feedback → action log workbook (2025 finding #7) | Action tracking register |
 | `Screens` | 17 real screenshots: app, GitHub, test and service evidence | screencapture-*.pdf/png/jpg |
@@ -35,15 +35,20 @@ map `00_Overview_and_Map/EM26-00_Evidence_Map_2025_to_2026.xlsx` (every 2025 fil
 
 ## Test results (2026-10-06)
 
-7 pass · 4 fail (NC-2026-012 logout token not revoked, NC-2026-013 binary upload accepted,
-NC-2026-014 citations on small talk, NC-2026-015 API key not redacted) · 1 not executed
-(live transcription, needs a microphone) · 1 blocked (golden evaluation, NC-2026-008).
+| Run | Build | Outcome |
+|---|---|---|
+| 1 | v1.4.0 code | 7 pass · 4 fail → NC-2026-012 (logout token), -013 (binary upload), -014 (citations on small talk), -015 (API key not redacted) |
+| 2 | fixes `e0ed4d0` | the four fixes verified; the logout fix had made logouts log as anonymous → corrected `3feb5db` |
+| 3 | release v1.4.1 | embedding service down after redeploy while its healthcheck stayed green → NC-2026-016, embeddings moved to CPU |
+| 4 | release v1.4.1 | **all 11 executable cases pass**; 1 not executed (live transcription, needs a microphone), 1 blocked (golden evaluation, NC-2026-008) |
+
+All four runs are kept in `15_Testing/Execution_Records/run1…run4/`.
 
 ## Needs a person before the audit
 
-1. Approve or sign the release record `records/releases/2026-10-06_v1.4.0.md` and the documents here.
+1. Approve or sign the release records `records/releases/2026-10-06_v1.4.0.md` and `2026-10-06_v1.4.1.md`, and the documents here.
 2. Confirm or change the proposed provider scores (EM26-14b) and risk ratings (REG-03).
 3. Run TC-EM-TRN-112 (live transcription) manually.
 4. Hold the meetings the templates are for; record real minutes.
 5. Decide the §0 statement (2025 evidence vs rebuilt product) with the MR.
-6. Decide repository/board visibility (W-9) before publishing defect tickets.
+6. Decide repository/board visibility (W-9).

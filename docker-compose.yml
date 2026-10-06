@@ -290,6 +290,9 @@ services:
       - OLLAMA_EMBED_ONLY=1
       # Offline: do not pull at startup; require models in volume (populated by prepare step)
       - OLLAMA_OFFLINE=1
+      # Set OLLAMA_CUDA_VISIBLE_DEVICES= (empty) in .env to run embeddings on the CPU when the GPU is
+      # shared with other stacks and a new CUDA context cannot be created (REG-04 NC-2026-016).
+      - CUDA_VISIBLE_DEVICES=${OLLAMA_CUDA_VISIBLE_DEVICES-0}
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:

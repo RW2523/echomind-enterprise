@@ -29,7 +29,12 @@ Routine changes remain controlled by Git alone; the commit is the record.
 
 | Ref | Date raised | Class | Title | Design inputs / acceptance criteria | Review (date, FRM-01 ref) | Verification evidence | Implemented (commit) | Status |
 |---|---|---|---|---|---|---|---|---|
-| DC-2026-001 | | | | | | | | |
+| DC-2026-001 | 2026-10-06 | Runtime configuration | Application login enabled on the reference instance (`AUTH_ENABLED=1`, `VOICE_AUTH_ENABLED=1` in `.env`) | Correction for NC-2026-009 | Not reviewed — single developer (REG-03 R-03) | TC-EM-AUTH-101 (external 401, voice 403/101) | `.env` (untracked) | Done |
+| DC-2026-002 | 2026-10-06 | Code — defect fixes | Fixes for NC-2026-012…015 (token revocation, upload allow-list, small-talk routing, export key formats) | Acceptance criteria AC-101.7, DOC-102.5, RAG-103.3, EXP-108.2 | Not reviewed — single developer | Backend 50/50, voice 131/131, tsc 0; acceptance run 4 all pass | `e0ed4d0`, `3feb5db` | Done |
+| DC-2026-003 | 2026-10-06 | Release | Release v1.4.1 (tag on `f1b8445`) | FRM-03 §3 checks | FRM-03 authorisation pending | `records/releases/2026-10-06_v1.4.1.md` | `f1b8445` | Released — authorisation pending |
+| DC-2026-004 | 2026-10-06 | Runtime configuration | Voice speech recognition moved to the CPU (`VOICE_CUDA_VISIBLE_DEVICES=`, `VOICE_ASR_DEVICE=cpu`, `VOICE_ASR_REQUIRE_CUDA=0`) | GPU shared with another stack; voice could not create a CUDA context (22 restarts) | Not reviewed | Voice healthy first attempt; AC-101.9 pass | `.env` (untracked) | Done — revert when the GPU is not shared |
+| DC-2026-005 | 2026-10-06 | Configuration | Ollama embeddings on the CPU (`OLLAMA_CUDA_VISIBLE_DEVICES` in compose; empty in `.env`) | Correction for NC-2026-016 | Not reviewed | Embedding call 200 (768 dims); acceptance run 4 all pass | `docker-compose.yml` + `.env` | Done — revert when the GPU is not shared |
+| DC-2026-006 | 2026-10-06 | Release identification | `BUILD_VERSION`/`BUILD_COMMIT`/`BUILD_DATE` held in `.env` for the running images | ISO 8.5.2 | Not reviewed | TC-EM-REL-106 | `.env` (untracked) | Done |
 
 Use `forms/FRM-01_Design_Review_Record.md` for the review and `forms/FRM-02_Change_Request.md` for
 the change, then summarise here.
