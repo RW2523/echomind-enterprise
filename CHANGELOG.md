@@ -8,7 +8,26 @@ This file is generated from the git history by `scripts/gen_changelog.sh`; do
 not edit it by hand. Versions are cut by `scripts/release.sh`, which tags the
 source revision that each released image is built from (ISO 9001:2015, 8.5.2).
 
-History covered: 2026-02-05 to 2026-09-22.
+History covered: 2026-02-05 to 2026-10-06.
+
+## [1.4.1] - 2026-10-06
+
+### Fixed
+
+- **audit**: attribute activity to the caller before the request runs (`3feb5db`)
+- correct the four defects found by the 2026-10-06 acceptance tests (`e0ed4d0`)
+- **frontend**: type fadeUp as framer-motion Variants (`736ea61`)
+
+### Documentation
+
+- **qms**: 2026 EchoMind ISO 9001 evidence pack; raise NC-2026-011..015 (`bd44ade`)
+- **qms**: record 2026-10-06 deployment — login restored, v1.4.0 code live, log rotation applied (`1d7f154`)
+- **qms**: correct audit-pack claims against the running system; raise NC-2026-009/010 (`855bd80`)
+
+### Other changes
+
+- chore(release): v1.4.1 (`6ac7021`)
+- test: update 5 stale tests to match current behaviour (`5ddf8a6`)
 
 ## [1.4.0] - 2026-09-22
 
@@ -81,6 +100,7 @@ History covered: 2026-02-05 to 2026-09-22.
 
 ### Documentation
 
+- **changelog**: regenerate for v1.4.0 (`eaa7b1a`)
 - **qms**: October surveillance audit pack for the EchoMind Product area (`4a43773`)
 - **qms**: ISO 9001:2015 quality management system, repo tidy-up, data backup (`9efb134`)
 - **paper**: camera-ready v4 with updated author list and ajace.com emails (`bc9aa33`)
