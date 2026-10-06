@@ -205,6 +205,81 @@ Severity scale (defined in SOP-10 §3):
 | Evidence | Commits `5ddf8a6`, `736ea61` and their messages |
 | Status | **OPEN** — correction complete and verified; corrective action pending |
 
+### NC-2026-011 — Deployed code existed only in container writable layers (deployment drift)
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-10-06 |
+| Raised by | `________` (detected by a pre-restart `docker diff` check) |
+| Source | Change control before restarting services |
+| Severity | **S3** — configuration control silently not working; no customer impact because it was caught before the restart |
+| Description | The running backend (99 files under `/app/app`), voice (20 files) and frontend (web assets) carried code copied in with `docker cp` that had never been saved to any image. Their image tags pointed at 2026-09-04 builds, so a plain `docker compose up -d` would have silently reverted all three services by about a month. |
+| Root cause (proposed) | Deployments were made by `docker cp` into running containers rather than by building and tagging images, so the deployed state was not reproducible from any controlled artefact. |
+| Immediate correction | 2026-10-06: each container saved with `docker commit` (`:running-20261006`), previous tags kept (`:pre-20261006-tag`), then restarted from the saved images. Live code verified identical to repo HEAD except the release-identification change. |
+| Corrective action (proposed) | Deploy only from images built with `scripts/release.sh` and recorded in `REG-08`; check `docker diff` before any restart. |
+| Effectiveness verification | Pending — the next deployment must come from a built, tagged image. |
+| Status | **OPEN** — correction verified; corrective action pending |
+
+### NC-2026-012 — Logging out does not revoke the session token
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-10-06 |
+| Raised by | `________` (detected by test execution on 2026-10-06) |
+| Source | `TC-EM-AUTH-101` step AC-101.7 |
+| Severity | **S3** — a session control weaker than users would expect |
+| Description | After `POST /api/auth/logout`, replaying the same token returned **HTTP 200** on `/api/docs/list`. A token remains valid until it expires (`AUTH_TOKEN_TTL_MIN` = 720 minutes). |
+| Root cause (proposed) | Stateless JWT with no server-side revocation; logout only clears the browser cookie. |
+| Immediate correction | None yet. |
+| Corrective action (proposed) | Server-side revocation (token id deny-list checked on each request) or a short token lifetime with refresh. |
+| Effectiveness verification | Pending — AC-101.7 must return 401 for a replayed token. |
+| Status | **OPEN** |
+
+### NC-2026-013 — Document upload accepts binary executables
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-10-06 |
+| Raised by | `________` (detected by test execution on 2026-10-06) |
+| Source | `TC-EM-DOC-102` step DOC-102.5 |
+| Severity | **S3** — input validation missing; garbage content can enter the knowledge base |
+| Description | A 4 KB binary file named `tool.exe` was **accepted (HTTP 200) and indexed** into namespace `qa-test`. The test document was deleted immediately afterwards. Empty files are correctly rejected (HTTP 422). |
+| Root cause (proposed) | No allow-list of file types; unknown types fall through to text extraction. |
+| Immediate correction | Test document deleted. |
+| Corrective action (proposed) | Allow-list supported types (PDF, DOCX, PPTX, TXT, MD and the other parsed formats) and reject binary content by signature. |
+| Effectiveness verification | Pending — DOC-102.5 must return 4xx with nothing stored. |
+| Status | **OPEN** |
+
+### NC-2026-014 — Small-talk and not-found answers carry document citations
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-10-06 |
+| Raised by | `________` (detected by test execution on 2026-10-06) |
+| Source | `TC-EM-RAG-103` steps RAG-103.2 and RAG-103.3; UI screenshot SCR-04 |
+| Severity | **S3** — contradicts the documented behaviour that greetings never trigger retrieval and that only relevant passages are cited |
+| Description | `POST /api/chat/ask` with *"Hello! How are you today?"* returned a correct greeting **with two Meridian document citations**. A question about something absent from the corpus was correctly answered as not found but still listed three citations. In the UI (Financial Advisor persona) an answer also pointed the user to *"FMR Volume 12, Chapter 14"*, which is not in the knowledge base. |
+| Root cause (proposed) | To be investigated — the rules/semantic routing and the citation relevance filter are not applied on this path or this persona. |
+| Immediate correction | None yet. |
+| Corrective action (proposed) | Investigate the `/api/chat/ask` path; add RAG-103.2/103.3 as automated API tests. |
+| Effectiveness verification | Pending. |
+| Status | **OPEN** |
+
+### NC-2026-015 — Export gateway does not detect an API-key format
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-10-06 |
+| Raised by | `________` (detected by test execution on 2026-10-06) |
+| Source | `TC-EM-EXP-108` step EXP-108.2 |
+| Severity | **S3** — a data-protection control partially not working |
+| Description | With synthetic test values, the gateway detected and redacted the email address, phone number and SSN, but **did not detect the `sk-test-…` API key**, which remained in the redacted copy. |
+| Root cause (proposed) | The secret patterns do not cover this key format. |
+| Immediate correction | None yet. |
+| Corrective action (proposed) | Extend the secret patterns and keep a regression corpus of key formats under test. |
+| Effectiveness verification | Pending — EXP-108.2 must show no sensitive value in the redacted copy. |
+| Status | **OPEN** |
+
 ---
 
 ## Section B (continued) — summary table
@@ -214,6 +289,11 @@ Severity scale (defined in SOP-10 §3):
 | NC-2026-008 | 2026-09-22 | Measurement | S2 | Golden evaluation corpus absent — instrument inoperable | `________` | **Open** | — |
 | NC-2026-009 | 2026-10-06 | Health check | S2 | Public reference instance has no access control (no Access, `AUTH_ENABLED=0`) | `________` | **Open** — correction verified, actions pending | — |
 | NC-2026-010 | 2026-10-06 | Health check | S3 | Unit tests and type-check failing undetected; `v1.4.0` tagged with them failing | `________` | **Open** — correction verified, CI pending | — |
+| NC-2026-011 | 2026-10-06 | Change control | S3 | Deployed code only in container writable layers | `________` | **Open** — correction verified | — |
+| NC-2026-012 | 2026-10-06 | Test TC-EM-AUTH-101 | S3 | Logout does not revoke the session token | `________` | **Open** | — |
+| NC-2026-013 | 2026-10-06 | Test TC-EM-DOC-102 | S3 | Upload accepts binary executables | `________` | **Open** | — |
+| NC-2026-014 | 2026-10-06 | Test TC-EM-RAG-103 | S3 | Small-talk / not-found answers carry citations | `________` | **Open** | — |
+| NC-2026-015 | 2026-10-06 | Test TC-EM-EXP-108 | S3 | Export gateway misses an API-key format | `________` | **Open** | — |
 
 *(Add rows using `forms/FRM-05_Nonconformity_and_CAPA_Record.md`; keep the full record in the form and summarise it here.)*
 
@@ -239,4 +319,4 @@ Severity scale (defined in SOP-10 §3):
 | Retrospective NCs recorded here | 7 | 2026-09-21 |
 | Of which S1 | 2 | |
 | Closed with effectiveness verified | 3 | |
-| Open | 4 (NC-2026-007, NC-2026-008, NC-2026-009, NC-2026-010) | 2026-10-06 |
+| Open | 9 (NC-2026-007 to NC-2026-015) | 2026-10-06 |
