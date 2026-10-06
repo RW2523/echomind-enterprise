@@ -299,3 +299,28 @@ def parse_any(filename: str, data: bytes) -> Tuple[str, str, int, List[Tuple[int
     if f.endswith(".pptx"):
         return "pptx", parse_pptx(data), 0, []
     return "txt", data.decode("utf-8", errors="ignore"), 0, []
+
+
+# ── Upload validation (NC-2026-013) ───────────────────────────────────────────────
+# parse_any treats any unknown extension as text, so a binary file (e.g. an .exe) was accepted
+# and indexed. Uploads are now limited to the formats we parse, and checked by content signature.
+ALLOWED_UPLOAD_TYPES = (".pdf", ".docx", ".pptx", ".txt", ".md")
+
+
+def upload_rejection(filename: str, data: bytes) -> str:
+    """Return a reason to reject this upload, or '' when it is acceptable."""
+    f = (filename or "").lower()
+    if not f.endswith(ALLOWED_UPLOAD_TYPES):
+        return f"Unsupported file type. Allowed: {', '.join(ALLOWED_UPLOAD_TYPES)}."
+    head = data[:8192]
+    if f.endswith(".pdf") and b"%PDF" not in data[:1024]:
+        return "The file is not a valid PDF."
+    if f.endswith((".docx", ".pptx")) and not data.startswith(b"PK\x03\x04"):
+        return "The file is not a valid Office document."
+    if f.endswith((".txt", ".md")):
+        if b"\x00" in head:
+            return "The file contains binary data, not text."
+        ctrl = sum(1 for b in head if b < 32 and b not in (9, 10, 13))
+        if head and ctrl / len(head) > 0.05:
+            return "The file contains binary data, not text."
+    return ""

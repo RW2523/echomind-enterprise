@@ -14,7 +14,7 @@ from ...core.auth import user_from_request
 
 logger = logging.getLogger(__name__)
 from ...core.db import get_conn
-from ...rag.parse import parse_any
+from ...rag.parse import parse_any, upload_rejection
 from ...rag.index import index
 from ...utils.ids import new_id
 
@@ -164,6 +164,9 @@ async def upload(file: UploadFile = File(...), namespace: str = Form("default"),
                     file.filename, dup[0], dup[1])
         return {"ok": True, "doc_id": dup[0], "filename": dup[1], "duplicate_of": dup[0],
                 "detail": "Identical file already in the knowledge base; not ingested again."}
+    reason = upload_rejection(file.filename, data)
+    if reason:
+        raise HTTPException(status_code=415, detail=reason)
     filetype, text, estimated_pages, page_offsets = parse_any(file.filename, data)
     if not (text or "").strip():
         raise HTTPException(

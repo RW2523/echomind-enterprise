@@ -87,6 +87,14 @@ async def _warm_llm_and_embeddings():
                 logger.warning("Embeddings: warmup returned %s", r2.status_code)
     except Exception as e:
         logger.warning("Embedding warmup failed (first RAG may be slow): %s", e)
+    # Warm the semantic small-talk classifier too: cold, its first call outlives the 4 s budget and
+    # small talk falls through to retrieval (NC-2026-014).
+    try:
+        from .rag.intent import _ensure_prototypes
+        if await _ensure_prototypes():
+            logger.info("Intent classifier: warmup ok.")
+    except Exception as e:
+        logger.warning("Intent classifier warmup failed: %s", e)
 
 
 async def _stt_fatal_watchdog():

@@ -15,6 +15,8 @@ def init_db():
             pass
         # Phase 0b: activity log — powers the audit view + usage metering (admin only).
         conn.execute("CREATE TABLE IF NOT EXISTS activity_log(id TEXT PRIMARY KEY, ts TEXT, username TEXT, role TEXT, method TEXT, path TEXT, status INTEGER, ip TEXT)")
+        # Logged-out session tokens (sha256 of the token) until they would have expired (NC-2026-012).
+        conn.execute("CREATE TABLE IF NOT EXISTS revoked_tokens(token_hash TEXT PRIMARY KEY, exp INTEGER NOT NULL)")
         try:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_activity_ts ON activity_log(ts)")
         except Exception:

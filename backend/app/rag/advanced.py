@@ -178,6 +178,14 @@ _SHORT_QUERY_WORDS = frozenset({
 })
 
 
+# A greeting followed by more small talk ("hello how are you today", "good morning how's it going").
+_GREETING_PREFIX = re.compile(r"^(hi|hello|hey|yo|howdy|hiya|greetings|good (morning|afternoon|evening))( (there|all|everyone|echomind))? ")
+
+
+def _is_smalltalk_phrase(t: str) -> bool:
+    return t in _GENERAL_PHRASES or any(p.fullmatch(t) for p in _SMALLTALK_PATTERNS)
+
+
 def _is_general_conversation(question: str) -> bool:
     """
     True for obvious greetings, thanks, or small talk. Skip RAG—answer directly with LLM.
@@ -186,9 +194,10 @@ def _is_general_conversation(question: str) -> bool:
     t = _normalize_smalltalk(question)
     if not t:
         return True
-    if t in _GENERAL_PHRASES:
+    if _is_smalltalk_phrase(t):
         return True
-    if any(p.fullmatch(t) for p in _SMALLTALK_PATTERNS):
+    rest = _GREETING_PREFIX.sub("", t, count=1)
+    if rest != t and _is_smalltalk_phrase(rest):  # NC-2026-014: "Hello! How are you today?"
         return True
     words = t.split()
     if len(words) <= 2:
@@ -1915,7 +1924,7 @@ _PERSONA_RAG_PROMPTS: dict = {
         "2. Cite every factual regulatory claim inline: (<section>, page N) or (<document> — <heading>) or (Transcript: [date]).\n"
         "3. Lead with the direct answer, then provide the regulatory basis and supporting detail.\n"
         "4. Use numbered steps for procedures, bullets for lists, short paragraphs for explanations.\n"
-        "5. If the context does not contain the answer, say so clearly and specify which FMR Volume/Chapter likely covers it.\n"
+        "5. If the context does not contain the answer, say so clearly. Do not guess which other document, volume or chapter might cover it.\n"
         "6. For broad questions, synthesize a structured overview from the available context.\n"
         "7. Highlight compliance risks, exceptions, and obligations where relevant.\n\n"
         "GUARDRAIL: Your domain is DoD FMR, financial management, government regulations, compliance, "

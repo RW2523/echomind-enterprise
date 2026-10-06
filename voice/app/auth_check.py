@@ -10,9 +10,12 @@ import hmac
 import json
 import os
 import time
+import urllib.error
+import urllib.request
 
 _ENABLED = os.getenv("VOICE_AUTH_ENABLED", "0").lower() in ("1", "true", "yes")
 _SECRET = os.getenv("VOICE_AUTH_SECRET", "")
+_BACKEND = (os.getenv("BACKEND_CHAT_URL", "http://backend:8000") or "").rstrip("/")
 
 
 def auth_enabled() -> bool:
@@ -36,4 +39,17 @@ def valid_token(token: str) -> bool:
         payload = json.loads(_b64u_dec(p))
         return int(payload.get("exp", 0)) >= int(time.time())
     except Exception:
+        return False
+
+
+def session_active(token: str, timeout_s: float = 3.0) -> bool:
+    """Ask the backend whether the session is still active (it rejects logged-out tokens,
+    NC-2026-012). Fails closed: if the backend cannot confirm, the voice session is refused."""
+    if not valid_token(token):
+        return False
+    req = urllib.request.Request(f"{_BACKEND}/api/auth/me", headers={"Cookie": f"echomind_token={token}"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_s) as r:
+            return r.status == 200
+    except (urllib.error.URLError, OSError, ValueError):
         return False

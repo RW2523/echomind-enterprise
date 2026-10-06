@@ -12,7 +12,9 @@ from typing import Dict, List, Tuple
 # (type, severity, compiled regex)
 _DETECTORS: List[Tuple[str, str, "re.Pattern"]] = [
     ("ssn", "high", re.compile(r"\b\d{3}-\d{2}-\d{4}\b")),
-    ("api_key", "high", re.compile(r"\b(?:sk-[A-Za-z0-9]{16,}|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,})\b")),
+    # sk-/sk_ keys may carry segments (sk-proj-…, sk-ant-api03-…, sk_live_…, sk-test-…): NC-2026-015.
+    ("api_key", "high", re.compile(r"\b(?:sk[-_](?:[A-Za-z0-9]+[-_]){0,3}[A-Za-z0-9]{16,}|[pr]k_(?:live|test)_[A-Za-z0-9]{16,}|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,})\b")),
+    ("api_key", "high", re.compile(r"(?i)\b(?:api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[=:]\s*[\"']?[A-Za-z0-9_\-]{16,}")),
     ("aws_secret", "high", re.compile(r"(?i)aws_secret_access_key\s*[=:]\s*\S+")),
     ("private_key", "high", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
     ("jwt", "medium", re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")),
@@ -62,9 +64,16 @@ def evaluate_export(text: str) -> dict:
             findings.append({"type": "credit_card", "severity": "high", "preview": _mask(m.group()), "start": m.start(), "end": m.end()})
             spans.append((m.start(), m.end(), "credit_card"))
 
-    # Redact right-to-left so earlier offsets stay valid.
+    # Merge overlapping spans (two detectors can match the same secret), then redact right-to-left
+    # so earlier offsets stay valid.
+    merged: List[List] = []
+    for start, end, typ in sorted(spans):
+        if merged and start < merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end, typ])
     redacted = text
-    for start, end, typ in sorted(spans, key=lambda s: s[0], reverse=True):
+    for start, end, typ in reversed(merged):
         redacted = redacted[:start] + f"[REDACTED:{typ}]" + redacted[end:]
 
     risk = "none"

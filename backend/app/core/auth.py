@@ -92,9 +92,43 @@ def decode_token(token: str) -> Optional[dict]:
         payload = json.loads(_b64u_dec(p))
         if int(payload.get("exp", 0)) < int(time.time()):
             return None
+        if _is_revoked(token):
+            return None
         return payload
     except Exception:
         return None
+
+
+# ── Revocation (NC-2026-012) ─────────────────────────────────────────────────────
+# JWTs are stateless, so logging out only cleared the cookie and the token stayed valid until
+# expiry. Logout now records the token's hash until its expiry; decode_token rejects it.
+def _token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _ensure_revocation_table(conn) -> None:
+    conn.execute("CREATE TABLE IF NOT EXISTS revoked_tokens(token_hash TEXT PRIMARY KEY, exp INTEGER NOT NULL)")
+
+
+def revoke_token(token: str) -> bool:
+    """Revoke a valid token until it expires. Returns True if it was revoked."""
+    payload = decode_token(token) if token else None
+    if not payload:
+        return False
+    now = int(time.time())
+    with get_conn() as conn:
+        _ensure_revocation_table(conn)
+        conn.execute("DELETE FROM revoked_tokens WHERE exp < ?", (now,))
+        conn.execute("INSERT OR REPLACE INTO revoked_tokens(token_hash, exp) VALUES (?, ?)",
+                     (_token_hash(token), int(payload.get("exp", now))))
+        conn.commit()
+    return True
+
+
+def _is_revoked(token: str) -> bool:
+    with get_conn() as conn:
+        _ensure_revocation_table(conn)
+        return conn.execute("SELECT 1 FROM revoked_tokens WHERE token_hash=?", (_token_hash(token),)).fetchone() is not None
 
 
 # ── User store ───────────────────────────────────────────────────────────────────
@@ -196,9 +230,8 @@ def seed_admin() -> None:
 
 
 # ── Request helper ────────────────────────────────────────────────────────────────
-def user_from_request(request) -> Optional[dict]:
-    """Validate the bearer token from the Authorization header or the echomind_token cookie.
-    Returns the decoded token payload (sub/role/username/exp) or None."""
+def token_from_request(request) -> str:
+    """The session token from the Authorization header or the echomind_token cookie ('' if none)."""
     token = ""
     auth = request.headers.get("authorization") or request.headers.get("Authorization") or ""
     if auth.lower().startswith("bearer "):
@@ -208,6 +241,11 @@ def user_from_request(request) -> Optional[dict]:
             token = request.cookies.get("echomind_token", "")
         except Exception:
             token = ""
-    if not token:
-        return None
-    return decode_token(token)
+    return token
+
+
+def user_from_request(request) -> Optional[dict]:
+    """Validate the bearer token from the Authorization header or the echomind_token cookie.
+    Returns the decoded token payload (sub/role/username/exp) or None."""
+    token = token_from_request(request)
+    return decode_token(token) if token else None

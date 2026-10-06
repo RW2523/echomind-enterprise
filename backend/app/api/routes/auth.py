@@ -37,7 +37,9 @@ def login(inp: LoginIn, response: Response):
 
 
 @router.post("/logout")
-def logout(response: Response):
+def logout(request: Request, response: Response):
+    # Revoke server-side too: clearing the cookie alone left the token valid until expiry (NC-2026-012).
+    authmod.revoke_token(authmod.token_from_request(request))
     response.delete_cookie("echomind_token")
     return {"ok": True}
 
