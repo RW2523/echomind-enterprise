@@ -99,7 +99,7 @@ differ the operational consequence wins.
 | Ref | Gap | Clause | Consequence if left | Effort |
 |---|---|---|---|---|
 | ~~G-03~~ | **CLOSED 2026-09-22** — `scripts/backup_data.sh` / `restore_data.sh`; restore verified into a throwaway volume (integrity_check ok, 32 tables). Superseded by G-22 below. | 8.5.3, 8.5.4 | — | done |
-| ~~G-11~~ | **CLOSED 2026-09-22** — bounded `json-file` logging (50 MB x 5) on all six services. Applies on the next `docker compose up -d`; running containers keep their original config until recreated. *Not yet applied on the reference host (verified 2026-10-06).* | 8.5.1 | — | done |
+| ~~G-11~~ | **CLOSED 2026-09-22** — bounded `json-file` logging (50 MB x 5) on all six services. Applies on the next `docker compose up -d`; running containers keep their original config until recreated. *Applied on the reference host 2026-10-06 (verified).* | 8.5.1 | — | done |
 | ~~G-22~~ | **CLOSED 2026-09-22** — nightly systemd timer (`scripts/install_backup_timer.sh`) and off-host replication via `BACKUP_REMOTE`, tested; a failed off-host copy aborts the run rather than silently leaving one on-host copy. **Operator must set `BACKUP_REMOTE` and install the timer on each deployment.** *Not yet installed on the reference host (verified 2026-10-06).* | 8.5.4 | — | done |
 | **G-06** | Auth off by default; WebSocket endpoints outside the auth middleware (`backend/app/main.py:135`); tenant isolation only enforced when auth is on; CORS `*` | 8.5.3 | Cross-tenant exposure in any deployment not perfectly network-isolated | 2–3 days |
 

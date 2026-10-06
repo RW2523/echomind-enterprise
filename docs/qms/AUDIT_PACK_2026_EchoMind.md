@@ -9,7 +9,7 @@
 | Area | **EchoMind Product** |
 | Auditee | `________________` (2025 auditee for this area: Alexander Peter) |
 | Prepared by | `________________` |
-| Prepared | 2026-09-22 · **updated 2026-10-06** after re-verifying every claim against the running system (W-4, W-8, W-9, §2.3, §2.4, §3, §5) |
+| Prepared | 2026-09-22 · **updated 2026-10-06** after re-verifying every claim against the running system (W-4, W-8, W-9, §2.3, §2.4, §3, §5); services restarted the same day with login enabled, log rotation applied and `/api/version` live |
 | Surveillance window | 16 October 2025 → 14 October 2026 |
 | Corporate QMS | Ajace Inc. QMS, MR/Quality: Sheryl Nazareth. **This pack covers the EchoMind Product area only** and feeds the corporate QMS; it does not replace it. |
 
@@ -106,7 +106,7 @@ See §1. Two EchoMind findings addressed with new registers; one corporate findi
 | Migration to Qwen3-30B-A3B NVFP4 on TensorRT-LLM | `80375c6` |
 | Secure offline export gateway with PII/secret scan and redaction | `d19177d` |
 | Multi-tenant per-tenant scoping | `ef19d68` |
-| Public reference deployment via Cloudflare Tunnel (**currently ungated** — see W-8 and `REG-04` NC-2026-009) | `docs/PUBLIC_DEPLOYMENT.md` |
+| Public reference deployment via Cloudflare Tunnel, gated by application login (restored 2026-10-06 — see W-8 and `REG-04` NC-2026-009) | `docs/PUBLIC_DEPLOYMENT.md` |
 | A peer-reviewed conference paper (QASC 2026) with a reproducible experiment harness | `docs/paper/`, `eval/paper/` |
 
 ### 2.3 Process improvements — AI and technology
@@ -119,7 +119,7 @@ See §1. Two EchoMind findings addressed with new registers; one corporate findi
 | **Structured adversarial review** | 40 findings on one change set; each independently verified before action; 18 refuted | `REG-10` RF-2026-001 |
 | **Research-grade experiment harness (E1–E10)** | Independent measurement of latency, isolation, injection resistance and grounding | `eval/paper/results/` |
 | **Data backup with verified restore** | Customer data recoverable; restore proven, not assumed. Nightly off-host scheduling is built (`scripts/install_backup_timer.sh`) but **not yet installed on the reference host** — the only backup there is the manual one of 2026-09-22 (verified 2026-10-06; §5 task 6) | `scripts/backup_data.sh`, `restore_data.sh` |
-| **Release identification and traceability** | A rebuilt instance can report the exact source revision it was built from. **The reference instance predates the mechanism: `GET /api/version` returns 404 there** (verified 2026-10-06; §5 task 5) | `scripts/release.sh`, `/api/version`, `CHANGELOG.md` |
+| **Release identification and traceability** | A running instance reports the source revision of its application code: the reference instance returns version `1.4.0`, commit `eaa7b1a` (live since 2026-10-06) | `scripts/release.sh`, `/api/version`, `CHANGELOG.md` |
 | **Speculative reply + GPU speech recognition** | Voice first-reply latency roughly halved; final STT decode ~10× faster | `ff29843`, NFR-P05/P06 |
 
 ### 2.4 Process changes since the last audit
@@ -128,7 +128,7 @@ See §1. Two EchoMind findings addressed with new registers; one corporate findi
 |---|---|---|
 | Release identification introduced — semantic version, annotated git tag, build identifier reported at runtime, generated changelog | 2026-09-22 | No traceability from a deployed instance to its source existed (ISO 8.5.2) |
 | Data backup and restore procedure introduced and tested | 2026-09-22 | The only volume holding customer data had no backup |
-| Container log rotation configured in `docker-compose.yml` — takes effect when containers are recreated; **not yet applied on the reference host** (verified 2026-10-06) | 2026-09-22 | Unbounded logs would fill the disk and stop the database |
+| Container log rotation configured in `docker-compose.yml` — applied on the reference host 2026-10-06, when all six containers were recreated (verified) | 2026-09-22 | Unbounded logs would fill the disk and stop the database |
 | Dependency pinned to an immutable commit | 2026-09-22 | A moving upstream branch caused a production outage |
 | Evaluation reports retained as quality records | 2026-09-22 | Results were previously discarded, so no measurement history existed |
 | NFR register and review-action log introduced | 2026-09-22 | Closure of findings #6 and #7 |
@@ -157,8 +157,8 @@ reconciled with, the corporate Ajace QMS — see §4.
 ### 2.7 Organisational and process risks
 `REG-03` holds 14 risks derived from code and configuration evidence, each with likelihood, impact,
 existing controls and treatment. Four have been treated within the window (supplier pinning, backup,
-log rotation, evaluation retention); on the reference host the backup schedule and log rotation are
-built but **not yet applied** (verified 2026-10-06, §5 tasks 6 and 6a). Ratings are marked **proposed** pending management confirmation.
+log rotation, evaluation retention); on the reference host log rotation has been applied (2026-10-06) but the backup schedule is
+built and **not yet installed** (§5 task 6). Ratings are marked **proposed** pending management confirmation.
 
 ### 2.8 Previous audit items
 Covered in §1.
@@ -169,7 +169,7 @@ Covered in §1.
 
 | Question | Answer | Where |
 |---|---|---|
-| "Show me which source revision this running instance was built from." | `GET /api/version` returns version, commit and build date; `CHANGELOG.md` and the annotated tag link it to the change set. **Only true once the reference instance is rebuilt — it returns 404 today (§5 task 5)** | `scripts/release.sh`, `backend/app/main.py` |
+| "Show me which source revision this running instance was built from." | `GET /api/version` returns version, commit and build date; `CHANGELOG.md` and the annotated tag link it to the change set. Live on the reference instance since 2026-10-06: `1.4.0` / `eaa7b1a` | `scripts/release.sh`, `backend/app/main.py` |
 | "How do you know a change did not break retrieval quality?" | 52-question golden evaluation with a binary gate (currently inoperable — W-3), plus 78 unit-test functions (40 backend, 38 voice expanding to 127 parametrised cases). All pass since 2026-09-28; five had been failing unnoticed — `REG-04` NC-2026-010 | `eval/`, `backend/tests/`, `voice/tests/` |
 | "Show me a non-functional requirement and its measurement." | `REG-09`, any row | `docs/qms/registers/REG-09_NFR_Register.md` |
 | "Show me review feedback that produced an action and was closed." | `REG-10` RF-2026-001 — 22 confirmed findings actioned, effectiveness verified | `docs/qms/registers/REG-10_Review_Feedback_Action_Log.md` |
@@ -190,11 +190,11 @@ into evidence that the management system is working.
 | W-1 | The 2025 closure evidence names a toolchain not present in this codebase | 10.2 | §0 — resolve before the dry run |
 | W-2 | Most NFRs have no formally agreed target | 8.2.2 | REG-09 action A-1, due before 14 Oct |
 | W-3 | **The golden evaluation is currently inoperable.** Re-run against HEAD on 2026-09-22 it returned **9/52** — not a product regression, but because the evaluation corpus is absent from the knowledge base. Until it is restored the organisation has no current measurement of retrieval quality | 9.1.1 | Raised as `REG-04` NC-2026-008. **Disclose at the dry run.** Restore the corpus and re-measure — REG-09 A-8 |
-| W-4 | ~~No release has yet been cut with the new mechanism~~ — `v1.4.0` cut 2026-09-22 with `scripts/release.sh`: annotated tag carrying commit `eaa7b1a` and build date `2026-09-22T17:53:08Z`, `CHANGELOG.md` regenerated from the commit record. **Not fully closed:** no `FRM-03` or `REG-08` entry was made at release time; a retrospective record was prepared on 2026-10-06 (`records/releases/2026-10-06_v1.4.0.md`) and is **not yet authorised**. The release was tagged with five unit tests failing (NC-2026-010) and has not been deployed to the reference instance | 8.5.2, 8.6 | Tag and changelog exist; release record awaiting authorisation |
+| W-4 | ~~No release has yet been cut with the new mechanism~~ — `v1.4.0` cut 2026-09-22 with `scripts/release.sh`: annotated tag carrying commit `eaa7b1a` and build date `2026-09-22T17:53:08Z`, `CHANGELOG.md` regenerated from the commit record. **Not fully closed:** no `FRM-03` or `REG-08` entry was made at release time; a retrospective record was prepared on 2026-10-06 (`records/releases/2026-10-06_v1.4.0.md`) and is **not yet authorised**. The release was tagged with five unit tests failing (NC-2026-010). Its application code has run on the reference instance since 2026-10-06 (`REG-08` §3) — deployed before the record was authorised, which the record states | 8.5.2, 8.6 | Tag and changelog exist; release record awaiting authorisation |
 | W-5 | Product-level QMS documents are draft and unapproved | 7.5 | Either approve them or present them explicitly as supporting documentation under the corporate QMS |
 | W-6 | Independent review and internal audit are not achievable at current headcount | 9.2.2 c | Declared; corporate-level decision |
 | W-7 | No data-retention policy; no encryption at rest | 8.5.3 | Declared and risk-assessed (R-06, R-13) |
-| W-8 | Application authentication is off by default and WebSocket endpoints are not covered by the auth middleware | 8.5.3 | Declared. **The compensating control is not in place on the reference instance:** verified 2026-09-28 and 2026-10-06 that `echomind-ajace.com` is not behind Cloudflare Access and `AUTH_ENABLED=0`, so the site and its API answer without any login. Raised as `REG-04` NC-2026-009 — **resolve before the dry run** |
+| W-8 | Application authentication is off by default and WebSocket endpoints are not covered by the auth middleware | 8.5.3 | Declared. Cloudflare Access is not in front of the reference instance, and application auth had been switched off (found 2026-09-28; `REG-04` NC-2026-009). **Corrected 2026-10-06:** `AUTH_ENABLED=1` and `VOICE_AUTH_ENABLED=1`; verified from an external network that unauthenticated API calls return 401, and locally that the voice WebSocket returns 403 without a session and 101 with one. Corrective actions to stop a recurrence are still open |
 | W-9 | The GitHub repository `RW2523/echomind-enterprise` is **public**, although `README.md` describes the licence as proprietary. This QMS, including this pack, is readable by anyone | 7.5.3.1 b | Decide the intended visibility; if confidential, make the repository private |
 
 ---
@@ -209,10 +209,10 @@ into evidence that the management system is working.
 | 3a | **Restore the evaluation corpus** (the 15 documents the golden set targets) and re-measure. This is now the single highest-value pre-audit task: without it QO-1, QO-2 and NFR-Q01–Q05 have no current evidence | Lead Engineer | ☐ |
 | 3b | Add a corpus pre-flight assertion to `eval/run_eval.py` so a missing corpus **aborts** rather than reporting a misleading score | Lead Engineer | ☐ |
 | 4 | ~~Cut release `v1.4.0`~~ — **tag cut 2026-09-22.** Retrospective `FRM-03` prepared 2026-10-06; **authorisation and the §4 concessions still need completing by the authoriser** | Lead Engineer | ◐ |
-| 5 | Rebuild images with build args so `/api/version` reports the real build, then verify on the running stack — *verified not done 2026-10-06: 404* | Lead Engineer | ☐ |
+| 5 | ~~Make `/api/version` report the real build on the running stack~~ — **done 2026-10-06:** `v1.4.0` application code deployed (`docker cp` + `docker commit` onto the existing images, `BUILD_*` set in `.env`); returns `1.4.0` / `eaa7b1a`. A from-scratch image build with `scripts/release.sh` is still to do | Lead Engineer | ☑ |
 | 6 | Install the backup timer with an off-host destination — *verified not done 2026-10-06: no timer, `BACKUP_REMOTE` unset* | Lead Engineer | ☐ |
-| 6a | Recreate the containers so log rotation takes effect — *verified not applied 2026-10-06* | Lead Engineer | ☐ |
-| 6b | **Close the public exposure (NC-2026-009)** — enable application auth or restore Cloudflare Access, then verify the public URL returns a login challenge | Lead Engineer | ☐ |
+| 6a | ~~Recreate the containers so log rotation takes effect~~ — **done 2026-10-06**; all six carry 50 MB × 5 | Lead Engineer | ☑ |
+| 6b | ~~Close the public exposure (NC-2026-009)~~ — **done 2026-10-06:** application auth enabled; unauthenticated calls return 401 from an external network | Lead Engineer | ☑ |
 | 7 | Decide whether the product-level QMS documents are approved or presented as supporting material (W-5) | Richard / Sheryl | ☐ |
 | 8 | Confirm EchoMind risks are tabled at the next management review (finding #10) | Senior Management | ☐ |
 | 9 | Walk this pack end to end with Alexander | Both | ☐ |

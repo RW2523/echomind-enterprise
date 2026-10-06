@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-04 |
-| Revision | 1.1 |
+| Revision | 1.2 |
 | Status | **DRAFT — not yet approved** |
 | Owner | Managing Director |
 | Approved by | `________________________` |
@@ -196,7 +196,7 @@ statement is the most important line in the document and it is repeated here del
 
 **What does exist** is the commercial and technical basis on which the control will operate: a
 working, documented platform (`docs/CAPABILITIES.md`, `docs/USER_MANUAL.md`), a public demonstration
-deployment (`docs/PUBLIC_DEPLOYMENT.md`; currently ungated — `REG-04` NC-2026-009), a measurable acceptance
+deployment (`docs/PUBLIC_DEPLOYMENT.md`; gated by application login, not Cloudflare Access — `REG-04` NC-2026-009), a measurable acceptance
 mechanism that could be pointed at a customer corpus (`eval/run_eval.py`, 52 golden questions across
 the five packs plus a conversational set), and a published evaluation of the approach in the
 QASC 2026 paper with its harness at `eval/paper/`.

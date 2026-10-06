@@ -27,14 +27,16 @@ customer instance is running (8.5.2).
 
 | Instance | Customer | Environment | Release ID deployed | Deployed on | Deployed by | Post-deployment verification | Current |
 |---|---|---|---|---|---|---|---|
-| `echomind-ajace.com` — public reference instance on the DGX Spark | None — Ajace AI demonstration | Public via Cloudflare Tunnel (no access control — NC-2026-009) | **Untagged build that predates `v1.4.0`** — the backend container started 2026-09-22T04:55Z, before the tag at 17:53Z; `GET /api/version` returns 404 | Backend and voice 2026-09-22; other services 2026-09-10 | `________` | Not recorded | Yes |
+| `echomind-ajace.com` — public reference instance on the DGX Spark | None — Ajace AI demonstration | Public via Cloudflare Tunnel, application login (`AUTH_ENABLED=1`) | **`v1.4.0` application code** (`eaa7b1a`) for backend and voice, applied by `docker cp` + `docker commit` onto images first built 2026-09-04 (backend `2103b5467c9a`, voice `6e044f7842d0`); frontend is the previously running build re-saved as `17e8946f59fe`, not rebuilt. `GET /api/version` → `1.4.0` / `eaa7b1a` | 2026-10-06 | `________` | 2026-10-06 — see `records/releases/2026-10-06_v1.4.0.md` §7 | Yes |
+| `echomind-ajace.com` (previous) | — | Public via Cloudflare Tunnel, **no access control** (NC-2026-009) | Untagged build that predates `v1.4.0` (backend started 2026-09-22T04:55Z, before the tag at 17:53Z); `/api/version` → 404 | Backend and voice 2026-09-22; other services 2026-09-10 | `________` | Not recorded | No — replaced 2026-10-06 |
 
 ## 4. Current state
 
 Updated 2026-10-06. The first tag exists (`v1.4.0`, cut with `scripts/release.sh`), `frontend/package.json`
-carries `1.4.0`, and `GET /api/version` exists in the code (`backend/app/main.py:213`). Still missing:
-image tags or digests per release, a rebuild of the reference instance so it reports its build, and an
-`FRM-03` completed **before** tagging rather than afterwards.
+carries `1.4.0`, and `GET /api/version` exists in the code (`backend/app/main.py:213`). Since 2026-10-06
+the reference instance runs the `v1.4.0` application code and reports it. Still missing: a from-scratch
+image build per release (the instance carries `v1.4.0` code on older base images), and an `FRM-03`
+completed and authorised **before** tagging and deploying rather than afterwards.
 
 The original assessment, as at 2026-09-21:
 
