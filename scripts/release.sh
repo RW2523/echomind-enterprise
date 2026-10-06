@@ -115,8 +115,8 @@ Branch: $BRANCH
 $RANGE_LABEL:
 $CHANGES
 
-Released under ISO 9001:2015 clause 8.6 — release authorised by the person
-running this procedure. Build identity is reported at runtime by
+Prepared under ISO 9001:2015 clause 8.6. Release authorisation is recorded by
+a person in the FRM-03 release record (docs/qms/records/releases/). Build identity is reported at runtime by
 GET /health, GET /api/version (backend), GET /health (voice) and
 GET /build.json (front end)."
 

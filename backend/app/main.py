@@ -174,11 +174,16 @@ _ACTIVITY_EXCLUDE = {"/api/auth/config", "/api/client-error"}
 
 @app.middleware("http")
 async def _activity_log(request: Request, call_next):
+    # Identify the caller before the request runs: logout revokes the token, so resolving it
+    # afterwards recorded every logout as anonymous.
+    try:
+        payload = user_from_request(request)
+    except Exception:
+        payload = None
     response = await call_next(request)
     try:
         path = request.url.path
         if path.startswith("/api/") and request.method in ("POST", "PUT", "DELETE", "PATCH") and path not in _ACTIVITY_EXCLUDE:
-            payload = user_from_request(request)
             ip = request.client.host if request.client else ""
             record_activity((payload or {}).get("username"), (payload or {}).get("role"), request.method, path, response.status_code, ip)
     except Exception:
