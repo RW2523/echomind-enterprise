@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-02 |
-| Revision | 1.0 |
+| Revision | 1.1 |
 | Status | **DRAFT — not yet approved** |
 | Owner | Managing Director |
 | Approved by | `________________________` |
@@ -63,7 +63,7 @@ addition of a second person to the organisation.
 | Development is direct-to-main | There is no `.github/` directory, no CI configuration and no CODEOWNERS file in the repository. Only 2 of 202 commits are merges, both author-to-self on 2026-02-24. There is therefore no independent review gate. |
 | A material share of development is AI-assisted and declared | Many substantive commits carry a `Co-Authored-By: Claude …` trailer (for example `558eaae`, `4e27109`). Verification of that output is a control, not an option — see `SOP-05` §7. |
 | Strong written engineering rationale exists, in the wrong places for an auditor | Design reasoning lives in commit bodies and in inline comments (`docker-compose.yml:7-11`, `41-44`, `69-72`, `108-112`) rather than in decision records. |
-| The product is pre-/early-commercial | Live at echomind-ajace.com behind Cloudflare Access (`docs/PUBLIC_DEPLOYMENT.md` step 4, marked MANDATORY). There is no customer base over which to spread risk, and no contract register. |
+| The product is pre-/early-commercial | Live at echomind-ajace.com via Cloudflare Tunnel. The deployment guide makes a Cloudflare Access login mandatory (`docs/PUBLIC_DEPLOYMENT.md` step 4), but as of 2026-10-06 the instance has no access control (`REG-04` NC-2026-009). There is no customer base over which to spread risk, and no contract register. |
 
 ## 5. Interested parties and their requirements (4.2)
 

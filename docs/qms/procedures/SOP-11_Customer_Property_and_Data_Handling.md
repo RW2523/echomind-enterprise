@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-11 |
-| Revision | 1.0 |
+| Revision | 1.1 |
 | Status | **DRAFT — not yet approved** |
 | Owner | Managing Director |
 | Approved by | `________________________` |
@@ -193,7 +193,9 @@ Honest separation of what is in place from what is not.
 
 For a public deployment, Cloudflare Access is the compensating control and is described as
 **mandatory**, not optional, at `docs/PUBLIC_DEPLOYMENT.md` §"Step 4"; `docker-compose.yml:221`
-carries the same warning inline.
+carries the same warning inline. **It is not in place on the public reference instance:** verified
+on 2026-09-28 and 2026-10-06 that `echomind-ajace.com` is not behind Cloudflare Access and runs with
+`AUTH_ENABLED=0`, so it has no access control at all. Raised as `REG-04` NC-2026-009.
 
 > **Note on a stale comment.** `docker-compose.yml:221` and `docs/PUBLIC_DEPLOYMENT.md:5` state
 > that "EchoMind has no built-in auth". That is out of date and contradicts `README.md:133`, which

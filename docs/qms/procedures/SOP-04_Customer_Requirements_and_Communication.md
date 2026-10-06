@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-04 |
-| Revision | 1.0 |
+| Revision | 1.1 |
 | Status | **DRAFT — not yet approved** |
 | Owner | Managing Director |
 | Approved by | `________________________` |
@@ -195,8 +195,8 @@ statement is the most important line in the document and it is repeated here del
 | Acceptance criteria agreed with a customer | None recorded. The golden-question sets in `eval/golden/` were written by Ajace AI against demonstration material, not agreed with any customer. |
 
 **What does exist** is the commercial and technical basis on which the control will operate: a
-working, documented platform (`docs/CAPABILITIES.md`, `docs/USER_MANUAL.md`), a demonstration
-deployment gated by Cloudflare Access (`docs/PUBLIC_DEPLOYMENT.md`), a measurable acceptance
+working, documented platform (`docs/CAPABILITIES.md`, `docs/USER_MANUAL.md`), a public demonstration
+deployment (`docs/PUBLIC_DEPLOYMENT.md`; currently ungated — `REG-04` NC-2026-009), a measurable acceptance
 mechanism that could be pointed at a customer corpus (`eval/run_eval.py`, 52 golden questions across
 the five packs plus a conversational set), and a published evaluation of the approach in the
 QASC 2026 paper with its harness at `eval/paper/`.

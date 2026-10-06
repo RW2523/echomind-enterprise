@@ -166,6 +166,44 @@ Severity scale (defined in SOP-10 §3):
 | Status | **OPEN** |
 | Audit relevance | Must be disclosed at the 7 October dry run. It is a genuine gap, but it is also evidence of the management system working: a scheduled measurement detected an instrument failure that aggregate statistics concealed. |
 
+### NC-2026-009 — Public reference instance has no access control
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-10-06 (first observed 2026-09-28) |
+| Raised by | `________` (detected during a system health check) |
+| Source | Health check of the running system; re-verified while preparing the audit pack |
+| Severity | **S2** — a security control documented as mandatory and believed to be active was not active, placing any data in the instance at risk (the same class as NC-2026-003) |
+| Description | `https://echomind-ajace.com` returns **HTTP 200** with the application, not a 302 to a Cloudflare Access login — checked from the host and from an external network on 2026-09-28, and from the host on 2026-10-06. `/api/auth/config` returns `{"auth_enabled":false}` and `/api/docs/list` returns the knowledge-base document list with no credentials. `.env` sets `AUTH_ENABLED=0` and `VOICE_AUTH_ENABLED=0`. Anyone who finds the URL can read, upload and delete knowledge-base content and use the GPU. This contradicts `docs/PUBLIC_DEPLOYMENT.md` step 4 (Access "MANDATORY"), `SOP-11` §5, and the existing-controls entry of `REG-03` R-04. |
+| Investigation | Application auth was enforced on 2026-07-29 (`9810e98`, `73f0b4f`) and was the only gate on the public URL at that time. It has since been switched off in `.env`. **When, by whom and why is not recorded**, because `.env` is untracked and no change record exists. Access logs have not yet been reviewed to establish whether unknown parties used the instance. |
+| Root cause (proposed) | Security-relevant runtime configuration — `.env` and the Cloudflare dashboard — sits **outside version control and change control**, so a change to it leaves no record and triggers no review. The check that the public URL is gated (`docs/PUBLIC_DEPLOYMENT.md`, a manual `curl`) is not scheduled, so the regression was invisible until an unrelated health check. |
+| Immediate correction | None yet — requires an owner decision: enable application auth, restore Cloudflare Access, or stop the `cloudflared` service. |
+| Corrective action (proposed) | (a) Restore a gate and verify both the positive and negative case (`SOP-08` P-8). (b) Schedule an external check that the public URL returns a login challenge, alerting on HTTP 200. (c) Record changes to security-relevant runtime settings in `REG-07`. (d) Review access logs for the exposure window and record the outcome here. |
+| Effectiveness verification | Pending — the public URL must return a login challenge from an external network, and an unauthenticated API call must return 401. |
+| Customer impact | No customer deployment is affected. The reference instance holds demonstration documents (five Meridian Bank demo PDFs) and auto-stored transcripts from demo sessions. |
+| Evidence | This entry; `AUDIT_PACK_2026_EchoMind.md` W-8 |
+| Status | **OPEN** |
+| Audit relevance | Disclose at the dry run, ideally with the gate already restored. |
+
+### NC-2026-010 — Unit tests and frontend type-check failing undetected; v1.4.0 tagged with them failing
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-10-06 (detected and corrected 2026-09-28) |
+| Raised by | `________` (detected during a system health check) |
+| Source | Health check — running both unit suites and `tsc --noEmit` |
+| Severity | **S3** — a verification control silently not working |
+| Description | Running the suites against `b3f3a35` (code-identical to `v1.4.0` / `eaa7b1a` — the only non-document difference is one evaluation report) found **4 of 40 backend tests and 1 of 127 voice test cases failing**, and **20 TypeScript errors** in `frontend/verticals/`. `v1.4.0` was therefore tagged with a failing unit suite. |
+| Investigation | **No product defect.** Every failure was a test or type annotation left behind by an intentional change: the embedder's `kind=` argument (`7e582e1`), the curated-taxonomy tagger (`15f3c96`), the reworded Lawyer disclaimer (`343117f`), the confirmed wake-word rename (`e0ca515`), and a framer-motion easing type. The production build does not type-check, so the TypeScript errors had no runtime effect. |
+| Root cause | **Nothing runs the suites automatically** (gap G-02, risk R-08 — no CI), and no release check required them to pass before tagging (`FRM-03` §3 was not completed for `v1.4.0`). |
+| Immediate correction | `5ddf8a6` (tests) and `736ea61` (types), 2026-09-28. |
+| Correction verified | 2026-09-28: backend **40/40**, voice **127/127**, `tsc --noEmit` **0 errors**. |
+| Corrective action (proposed) | CI running both unit suites and the type-check on every push (`COMPLETION_CHECKLIST` D7), and `FRM-03` §3 completed from a real run before any tag. |
+| Effectiveness verification | Pending — CI must exist and fail a build on a deliberately broken test. |
+| Customer impact | None. |
+| Evidence | Commits `5ddf8a6`, `736ea61` and their messages |
+| Status | **OPEN** — correction complete and verified; corrective action pending |
+
 ---
 
 ## Section B (continued) — summary table
@@ -173,6 +211,8 @@ Severity scale (defined in SOP-10 §3):
 | NC ID | Date raised | Source | Severity | Description | Owner | Status | Closed (effectiveness verified) |
 |---|---|---|---|---|---|---|---|
 | NC-2026-008 | 2026-09-22 | Measurement | S2 | Golden evaluation corpus absent — instrument inoperable | `________` | **Open** | — |
+| NC-2026-009 | 2026-10-06 | Health check | S2 | Public reference instance has no access control (no Access, `AUTH_ENABLED=0`) | `________` | **Open** | — |
+| NC-2026-010 | 2026-10-06 | Health check | S3 | Unit tests and type-check failing undetected; `v1.4.0` tagged with them failing | `________` | **Open** — correction verified, CI pending | — |
 
 *(Add rows using `forms/FRM-05_Nonconformity_and_CAPA_Record.md`; keep the full record in the form and summarise it here.)*
 
@@ -198,4 +238,4 @@ Severity scale (defined in SOP-10 §3):
 | Retrospective NCs recorded here | 7 | 2026-09-21 |
 | Of which S1 | 2 | |
 | Closed with effectiveness verified | 3 | |
-| Open | 2 (NC-2026-007, NC-2026-008) | |
+| Open | 4 (NC-2026-007, NC-2026-008, NC-2026-009, NC-2026-010) | 2026-10-06 |

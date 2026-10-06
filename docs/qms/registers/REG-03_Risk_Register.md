@@ -61,7 +61,7 @@ and set Revision 1.1.
 | Evidence | Repository contains no backup tooling; the bundle script's contents; the user manual statement. |
 | Likelihood / Impact / Rating | 3 / 5 / **15 — Critical** |
 | Existing controls | **`scripts/backup_data.sh` / `restore_data.sh` (2026-09-22).** Consistent SQLite snapshot via the online backup API; reproducible model caches excluded (351 MB rather than 23 GB); checksummed; archive verified readable. **Restore exercised 2026-09-22** into a throwaway volume — `integrity_check` ok, 32 tables. |
-| Treatment | **Treated (2026-09-22).** `install_backup_timer.sh` installs a nightly systemd timer; `BACKUP_REMOTE` replicates off-host by rsync/scp or to a mounted share, and a failed replication aborts loudly rather than leaving a single on-host copy. Residual: the operator must set `BACKUP_REMOTE` and confirm the destination. |
+| Treatment | **Treated (2026-09-22).** `install_backup_timer.sh` installs a nightly systemd timer; `BACKUP_REMOTE` replicates off-host by rsync/scp or to a mounted share, and a failed replication aborts loudly rather than leaving a single on-host copy. Residual: the operator must set `BACKUP_REMOTE` and confirm the destination. *Verified 2026-10-06: not yet installed on the reference host and `BACKUP_REMOTE` unset — the treatment exists but is not operating there.* |
 | Owner / due | `________` / `________` |
 | Residual | 2 / 3 / 6 — Medium |
 | Linked | QO-4 (highest-priority objective); SOP-11 §8 |
@@ -88,11 +88,11 @@ and set Revision 1.1.
 | Description | `AUTH_ENABLED` defaults to `0` (`docker-compose.yml:79`, `backend/app/core/config.py:231`). The auth middleware is HTTP-only — the code states it plainly at `backend/app/main.py:135`: *"WebSocket endpoints are not gated here yet."* `CORS_ALLOW_ORIGINS` defaults to `*`; `RATE_LIMIT_PER_MIN` defaults to `0` (off). Critically, the tenant-isolation boundary in `_effective_ns()` (`backend/app/api/routes/chat.py:25-33`) **only applies when auth is enabled** — with auth off, the knowledge-base namespace is whatever the client sends, unverified. |
 | Evidence | The files cited; `docs/PUBLIC_DEPLOYMENT.md` step 4 titled "Put a login wall in front (MANDATORY)". |
 | Likelihood / Impact / Rating | 3 / 5 / **15 — Critical** (as deployed on a trusted LAN the likelihood is lower; the rating reflects the default configuration) |
-| Existing controls | Cloudflare Access in front of the public instance; the auth implementation itself is sound (PBKDF2-HMAC-SHA256, 200,000 iterations, constant-time verify). The deployment documentation is explicit that gating is mandatory. |
+| Existing controls | Cloudflare Access in front of the public instance — **not in place as of 2026-10-06: the public instance has neither Access nor application auth (NC-2026-009), so this risk has materialised there**; the auth implementation itself is sound (PBKDF2-HMAC-SHA256, 200,000 iterations, constant-time verify). The deployment documentation is explicit that gating is mandatory. |
 | Treatment | **Reduce.** Extend the auth middleware to WebSocket endpoints; decide whether `AUTH_ENABLED=1` should be the default for customer deployments; narrow the default CORS origin. |
 | Owner / due | `________` / `________` |
 | Residual | 2 / 4 / 8 — Medium |
-| Linked | SOP-11 §5; NC-2026-003 |
+| Linked | SOP-11 §5; NC-2026-003; NC-2026-009 |
 
 ### R-05 — Tenant isolation has failed twice in the same way
 
@@ -131,7 +131,7 @@ and set Revision 1.1.
 | Evidence | Absence of any `logging:` block in `docker-compose.yml`. |
 | Likelihood / Impact / Rating | 4 / 4 / **16 — Critical** on a long-running deployment |
 | Existing controls | **Bounded logging (50 MB x 5) on all six services (2026-09-22).** Takes effect on the next `docker compose up -d`; running containers keep their original config until recreated. |
-| Treatment | **Reduced.** Residual: verify after the next recreate that the running containers carry the new LogConfig. |
+| Treatment | **Reduced.** Residual: verify after the next recreate that the running containers carry the new LogConfig. *Verified 2026-10-06: no container has been recreated; all six still run with unbounded logs.* |
 | Owner / due | `________` / `________` |
 | Residual | 1 / 4 / 4 — Low |
 | Linked | SOP-12 §6 |

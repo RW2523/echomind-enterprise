@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-09 |
-| Revision | 1.0 |
+| Revision | 1.1 |
 | Status | **DRAFT — not yet approved** |
 | Owner | Engineering Lead |
 | Approved by | `________________________` |
@@ -71,7 +71,7 @@ starts it. That inverts the usual supply-chain picture in two ways.
 | Python packages | Exact version pins; upper bounds on any range | Partial — see §7 |
 | npm packages | Exact versions, or caret ranges with a committed lockfile and `npm ci` | All dependencies in `frontend/package.json` are caret-ranged; reproducibility rests entirely on `package-lock.json` and the `npm ci` in `frontend/Dockerfile:4` |
 | APT mirror | Identified as a supplier; documented; fallback available | **Undocumented before this procedure** — see §9 |
-| Infrastructure services | Understood scope; failure mode known; no customer data exposure | Cloudflare Access gates the public reference instance; note `docker-compose.yml:221` records that EchoMind itself has no built-in authentication |
+| Infrastructure services | Understood scope; failure mode known; no customer data exposure | Cloudflare Access is specified to gate the public reference instance but is not currently in front of it (`REG-04` NC-2026-009); note `docker-compose.yml:221` records that EchoMind itself has no built-in authentication |
 | Verification before use | A new or upgraded dependency is verified per SOP-07 §5 before it is relied on, and a from-scratch build must succeed | Practised but not enforced (no CI, SOP-07 §9.1) |
 
 ## 6. Current supplier inventory — models

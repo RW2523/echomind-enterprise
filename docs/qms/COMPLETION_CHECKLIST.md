@@ -4,7 +4,7 @@
 |---|---|
 | Document ID | (working checklist — not a controlled QMS document) |
 | Revision | 1.0 |
-| Basis | `docs/qms/` at revision 1.0, assessed 2026-09-21; **progress updated 2026-09-22** (D1, D2, D6 closed) |
+| Basis | `docs/qms/` at revision 1.0, assessed 2026-09-21; **progress updated 2026-09-22** (D1, D2, D6 closed); **re-verified against the running system 2026-10-06** — D2 and D14 are built but not yet applied on the reference host, D4 is partly done, D5 is done |
 | Companion documents | `ADOPTION_GUIDE.md` (the six-step path) · `ISO9001_Gap_Analysis.md` (the findings) |
 
 ---
@@ -77,16 +77,16 @@ These are the gaps in `ISO9001_Gap_Analysis.md`. Ordered by consequence, not by 
 | # | Work | Gap / risk | Effort |
 |---|---|---|---|
 | ~~D1~~ | ~~Backup and restore for `echomind_data`, with a restore actually tested~~ — **DONE 2026-09-22.** `scripts/backup_data.sh` / `restore_data.sh`; restore verified (integrity_check ok, 32 tables). **Residual: it is manual and written to the same host — see D14.** | G-03 / R-02 / QO-4 | done |
-| ~~D2~~ | ~~Log rotation on all six services~~ — **DONE 2026-09-22** (50 MB × 5). **Applies on the next `docker compose up -d`; running containers keep the old config until recreated.** | G-11 / R-07 | done |
-| ~~D14~~ | ~~Schedule the backup and send it off-host~~ — **DONE 2026-09-22.** `install_backup_timer.sh` (nightly systemd timer) + `BACKUP_REMOTE` off-host replication, tested. **You must choose the destination and run the installer on each deployment.** | G-22 / R-02 | done |
-| D3 | **Extend the auth middleware to WebSocket endpoints**; decide the CORS default | G-06 / R-04 | 2–3 days |
+| ~~D2~~ | ~~Log rotation on all six services~~ — **DONE 2026-09-22** (50 MB × 5). **Applies on the next `docker compose up -d`; running containers keep the old config until recreated.** *Verified 2026-10-06: not yet applied — no running container has the rotation config.* | G-11 / R-07 | built; apply |
+| ~~D14~~ | ~~Schedule the backup and send it off-host~~ — **DONE 2026-09-22.** `install_backup_timer.sh` (nightly systemd timer) + `BACKUP_REMOTE` off-host replication, tested. **You must choose the destination and run the installer on each deployment.** *Verified 2026-10-06: not installed on the reference host, `BACKUP_REMOTE` unset; the only backup is the manual one of 2026-09-22.* | G-22 / R-02 | built; install |
+| D3 | **Extend the auth middleware to WebSocket endpoints**; decide the CORS default. **More urgent since 2026-10-06:** the public reference instance currently has no access control at all (`REG-04` NC-2026-009) | G-06 / R-04 | 2–3 days |
 
 ### Do before a certification attempt
 
 | # | Work | Gap / risk | Effort |
 |---|---|---|---|
-| D4 | **Release identification** — git tag, image tags, and a build identifier the running system can report | G-01 / R-09 / QO-3 | 1 day |
-| D5 | **Re-run the golden evaluation against HEAD** and record the true current score; correct any quoted figure | G-10 / QO-2 | 1 hour |
+| D4 | **Release identification** — git tag, image tags, and a build identifier the running system can report. *Partly done: `v1.4.0` tagged and `/api/version` in the code (2026-09-22); image tags not recorded and the reference instance not rebuilt, so it returns 404 (verified 2026-10-06).* | G-01 / R-09 / QO-3 | ½ day left |
+| ~~D5~~ | ~~Re-run the golden evaluation against HEAD~~ — **DONE 2026-09-22: 9/52, corpus absent** (`REG-04` NC-2026-008). Restoring the corpus is the follow-up | G-10 / QO-2 | done |
 | ~~D6~~ | ~~Retain evaluation reports as records~~ — **DONE 2026-09-22**; 24 historical reports now tracked | G-12 | done |
 | D7 | **CI** running the unit suites at minimum; wire in `scripts/verify_offline_readiness.sh`, which exists and is called by nothing | G-02 / R-08 | 1 day |
 | D8 | **`LICENSE`, `NOTICE`, and an SBOM** for the three images | G-05 / R-10 | 2–3 days |

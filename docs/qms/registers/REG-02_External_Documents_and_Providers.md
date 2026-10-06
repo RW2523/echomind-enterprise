@@ -56,7 +56,7 @@ perimeter for months.
 
 | # | Provider | Used for | Dependency type | Notes |
 |---|---|---|---|---|
-| S-01 | **Cloudflare** | Zero Trust Tunnel and Access for the public reference instance `echomind-ajace.com` | Run-time, public instance only | Access is the **only** login wall on the public instance (`docs/PUBLIC_DEPLOYMENT.md` step 4, "MANDATORY"). Not used in customer on-premises deployments. |
+| S-01 | **Cloudflare** | Zero Trust Tunnel and Access for the public reference instance `echomind-ajace.com` | Run-time, public instance only | Access is specified as the login wall for the public instance (`docs/PUBLIC_DEPLOYMENT.md` step 4, "MANDATORY") but is **not currently configured** — only the Tunnel is in use (verified 2026-10-06; `REG-04` NC-2026-009). Not used in customer on-premises deployments. |
 | S-02 | **Hugging Face Hub** | All model weights | Build-time / prepare-time only | Offline at run time (`HF_HUB_OFFLINE=1`) |
 | S-03 | **GitHub** | Source hosting **and** a live build-time dependency on `NVIDIA/NeMo@main` | Both | See risk R-01 — the `@main` dependency is the highest-rated supplier risk |
 | S-04 | **Ollama registry** | Embedding and fallback chat models | Prepare-time only | |
