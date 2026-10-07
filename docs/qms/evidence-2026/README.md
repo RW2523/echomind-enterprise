@@ -7,6 +7,10 @@ Prepared 2026-10-06 for the pre-audit (2026-10-07) and the audit (2026-10-14).
 **Start with** `00_Overview_and_Map/EM26-00_ISO9001_Audit_Package_EchoMind_Enterprise.docx`, then the
 map `00_Overview_and_Map/EM26-00_Evidence_Map_2025_to_2026.xlsx` (every 2025 file → its 2026 counterpart).
 
+The whole set — this pack, the QMS documents and raw proof (commit history, release tags, GitHub issues,
+live-system snapshot, evaluation reports) — is also available as one download:
+[`docs/qms/ISO9001_EchoMind_2026.zip`](../ISO9001_EchoMind_2026.zip) (snapshot of 2026-10-07; open `00_START_HERE.docx` first).
+
 ## Rules this pack follows
 
 - **Nothing is invented.** Every record comes from a commit, a QMS register, or a test executed on
