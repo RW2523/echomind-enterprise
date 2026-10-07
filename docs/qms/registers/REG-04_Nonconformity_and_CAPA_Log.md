@@ -182,7 +182,7 @@ Severity scale (defined in SOP-10 §3):
 | Correction verified | 2026-10-06: from an external network, `/api/docs/list` → **401**; via the public URL, a wrong password → 401, the admin login → 200 and authenticated calls succeed; voice `/ws` → **403** without a session and 101 with one; `/api/auth/config` → `auth_enabled: true`. |
 | Corrective action (proposed) | (a) Restore a gate and verify both the positive and negative case (`SOP-08` P-8). (b) Schedule an external check that the public URL returns a login challenge, alerting on HTTP 200. (c) Record changes to security-relevant runtime settings in `REG-07`. (d) Review access logs for the exposure window and record the outcome here. |
 | Corrective actions implemented | 2026-10-07: (b) `.github/workflows/public-gate-check.yml` checks the public URL from outside every 6 hours; (c) SOP-06 §10.1 + `scripts/check_runtime_config.sh` + recorded baseline make runtime-setting changes visible and require a REG-07 entry; (d) access-log review done (record above). |
-| Effectiveness verification | Pending — the external check must keep passing over the coming weeks, and any `.env` drift must surface in the check before it reaches production. |
+| Effectiveness verification | First external check 2026-10-07 from GitHub's network: `/api/docs/list` → 401, `auth_enabled: true` (run 37561803121). Pending — the check must keep passing over the coming weeks, and any `.env` drift must surface in the check before it reaches production. |
 | Customer impact | No customer deployment is affected. The reference instance holds demonstration documents (five Meridian Bank demo PDFs) and auto-stored transcripts from demo sessions. |
 | Evidence | This entry; `AUDIT_PACK_2026_EchoMind.md` W-8 |
 | Status | **OPEN** — correction verified; corrective actions implemented 2026-10-07; effectiveness under observation |
@@ -203,10 +203,10 @@ Severity scale (defined in SOP-10 §3):
 | Correction verified | 2026-09-28: backend **40/40**, voice **127/127**, `tsc --noEmit` **0 errors**. |
 | Corrective action (proposed) | CI running both unit suites and the type-check on every push (`COMPLETION_CHECKLIST` D7), and `FRM-03` §3 completed from a real run before any tag. |
 | Corrective action implemented | 2026-10-07: `.github/workflows/ci.yml` runs the backend and voice unit suites and the front-end type-check on every push and pull request (recipe proven in clean environments: 50/50, 131/131). |
-| Effectiveness verification | CI must fail on a deliberately broken test — see the ticket for the run. |
+| Effectiveness verification | **Verified 2026-10-07.** First CI run on `main` passed all three jobs (run 37561379960). A deliberately failing test pushed to a throwaway branch turned CI red — backend job failed, "1 failed, 50 passed" (run 37561804619); the branch was then deleted. |
 | Customer impact | None. |
 | Evidence | Commits `5ddf8a6`, `736ea61` and their messages |
-| Status | **OPEN** — correction complete and verified; corrective action pending |
+| Status | **Closed** 2026-10-07 — correction and corrective action verified |
 
 ### NC-2026-011 — Deployed code existed only in container writable layers (deployment drift)
 
@@ -308,7 +308,7 @@ Severity scale (defined in SOP-10 §3):
 |---|---|---|---|---|---|---|---|
 | NC-2026-008 | 2026-09-22 | Measurement | S2 | Golden evaluation corpus absent — instrument inoperable | `________` | **Open** | — |
 | NC-2026-009 | 2026-10-06 | Health check | S2 | Public reference instance has no access control (no Access, `AUTH_ENABLED=0`) | `________` | **Open** — correction verified, actions pending | — |
-| NC-2026-010 | 2026-10-06 | Health check | S3 | Unit tests and type-check failing undetected; `v1.4.0` tagged with them failing | `________` | **Open** — correction verified, CI pending | — |
+| NC-2026-010 | 2026-10-06 | Health check | S3 | Unit tests and type-check failing undetected; `v1.4.0` tagged with them failing | `________` | **Closed** | 2026-10-07 (CI proven to fail on a broken test) |
 | NC-2026-011 | 2026-10-06 | Change control | S3 | Deployed code only in container writable layers | `________` | **Open** — correction verified | — |
 | NC-2026-012 | 2026-10-06 | Test TC-EM-AUTH-101 | S3 | Logout does not revoke the session token | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
 | NC-2026-013 | 2026-10-06 | Test TC-EM-DOC-102 | S3 | Upload accepts binary executables | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
@@ -340,4 +340,4 @@ Severity scale (defined in SOP-10 §3):
 | Retrospective NCs recorded here | 7 | 2026-09-21 |
 | Of which S1 | 2 | |
 | Closed with effectiveness verified | 3 | |
-| Open | 6 (NC-2026-007 to 011, NC-2026-016); NC-2026-012 to 015 closed 2026-10-06 | 2026-10-06 |
+| Open | 5 (NC-2026-007, 008, 009, 011, 016); NC-2026-010 closed 2026-10-07, NC-2026-012 to 015 closed 2026-10-06 | 2026-10-07 |
