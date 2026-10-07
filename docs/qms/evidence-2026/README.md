@@ -20,7 +20,7 @@ map `00_Overview_and_Map/EM26-00_Evidence_Map_2025_to_2026.xlsx` (every 2025 fil
 | Folder | What | 2025 counterpart |
 |---|---|---|
 | `00_Overview_and_Map` | Audit package (with §0 predecessor comparison), Clause 8 records, evidence map | 0. Project Documentation, Clause 8 Records |
-| `01_Privacy_Security` | Privacy, security and compliance overview — current state | 1. Privacy … Grambling State University |
+| `01_Privacy_Security` | Privacy, security and compliance overview — current state | 1. Privacy … overview (university pilot customer) |
 | `02_Meeting_Records` | Minutes templates (design, provider, QA/release) + management-review input pack | 0. Meeting Minutes …, QA Sprint minutes |
 | `11_Deliverables_Review` | Deliverables log Feb–Oct 2026 | 11. Deliverables Review |
 | `12_Scheduling_Review` | Actual timeline, milestones, SDLC record workbook | 12. Scheduling Review, SDLC plan |
