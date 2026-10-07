@@ -3,12 +3,18 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-05 |
-| Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Lead Engineer |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Revision | 1.1 |
+| Status | **APPROVED** |
+| Owner | Lead Engineer (Richard Watson Stephen Amudha) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 8.3.1, 8.3.2, 8.3.3, 8.3.4, 8.3.5, 8.3.6 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
+
+> **Revision note 2026-10-07.** Wording in this procedure about “one person” describes the engineering work, which is concentrated in the Lead Engineer. Within AJACE Inc. the roles are held by named people (QM-01 §7.1): independent review by the EchoMind Project Lead (Alexander Peter), verification and QMS maintenance by QA/MR (Sheryl Nazareth), approval and release authorisation by the Managing Director (Anita Johan); internal audit is provided by the AJACE Inc. corporate audit programme.
 
 ---
 
@@ -36,8 +42,9 @@ how this product is built and is treated explicitly in §7.
 | Managing Director | Approves the transition of a design output to release. Confirms that customer, statutory and regulatory inputs are complete before build starts. Chairs design reviews. |
 | Anyone contributing code | Applies this procedure to their own changes without exception, including small ones. |
 
-With one person holding all roles, the acts of designing, reviewing and approving are performed by
-the same person. §11 states what an auditor should take from that.
+Design is performed by the Lead Engineer (Richard Watson Stephen Amudha); design review is by the EchoMind Project Lead
+(Alexander Peter); approval by the Managing Director (Anita Johan). §11 records where reviews were performed by the
+author (AI-assisted adversarial review with independent verification).
 
 ## 4. Design and development planning (8.3.2)
 
@@ -131,13 +138,13 @@ acceptable:
 
 | Mandatory input | What it requires | Where the current implementation stands |
 |---|---|---|
-| **Grounding** | An assertion about the customer's material must be supported by retrieved content and must carry attribution | Citation handling in `backend/app/rag/citation_utils.py`; strict-citation retry path at `backend/app/rag/advanced.py:999`, which falls through to insufficient context when a second attempt still produces no citations |
-| **Abstention** | Where retrieval is insufficient, the system says so deterministically rather than answering from the model's own parameters | `backend/app/rag/advanced.py:74` — a deterministic insufficient-context message, with the comment stating its purpose: "no hallucination fallback to general chat"; source type `"insufficient"` is a first-class outcome at `backend/app/rag/advanced.py:1519` |
-| **No false abstention** | Abstention must not be so aggressive that valid cited answers are rejected | Recorded as a real defect already encountered and fixed — `backend/app/rag/advanced.py:919` notes that valid cited answers were previously rejected as "insufficient context" |
+| **Grounding** | An assertion about the customer's material must be supported by retrieved content and must carry attribution | Citation handling in `backend/app/rag/citation_utils.py`; strict-citation retry path at `backend/app/rag/advanced.py:1008`, which falls through to insufficient context when a second attempt still produces no citations |
+| **Abstention** | Where retrieval is insufficient, the system says so deterministically rather than answering from the model's own parameters | `backend/app/rag/advanced.py:74` — a deterministic insufficient-context message, with the comment stating its purpose: "no hallucination fallback to general chat"; source type `"insufficient"` is a first-class outcome at `backend/app/rag/advanced.py:1528` |
+| **No false abstention** | Abstention must not be so aggressive that valid cited answers are rejected | Recorded as a real defect already encountered and fixed — `backend/app/rag/advanced.py:928` notes that valid cited answers were previously rejected as "insufficient context" |
 | **Tenant isolation** | Every retrieval path must apply the namespace predicate; there must be no path that bypasses it | `backend/app/rag/index.py:36` (`_ns_ok`), applied at `:681`, `:855`, `:885`, `:920`. Commit `4e27109` records a path that bypassed it and returned 10/10 out-of-namespace chunks until fixed |
 | **Prompt-injection resistance** | Content retrieved from customer documents must not be able to redirect the system's instructions | Guards asserted by `backend/tests/test_prompt_guards.py:10`, `:17`, `:23`, `:39`; measured by `eval/paper/e4_injection.py` |
 | **Persona boundaries** | Sector personas must carry the disclaimers their sector requires, consistently | `backend/tests/test_prompt_guards.py:29` asserts the lawyer disclaimer is consistent across variants; the conversational golden set asserts the converse — a greeting must carry no disclaimer (`eval/README.md`) |
-| **Offline operation** | No runtime dependency on an outbound network call | `docker-compose.yml:170` disables the runtime Piper voice download from Hugging Face for offline deployments; ASR weights are pre-downloaded at build time (`backend/Dockerfile:34-41`) |
+| **Offline operation** | No runtime dependency on an outbound network call | `docker-compose.yml:192` disables the runtime Piper voice download from Hugging Face for offline deployments; ASR weights are pre-downloaded at build time (`backend/Dockerfile:38-45`) |
 
 ### 5.5 Adequacy of inputs
 
@@ -161,7 +168,7 @@ Three distinct activities, which must not be conflated.
 |---|---|---|---|
 | Unit test suites | Normalisation, prompt guards, RAG behaviour, transcript audit fixes, document-generation images, and named fix sets | `backend/tests/` — 40 test functions across 7 files | Run by the author; no automated gate (see §11) |
 | Voice unit tests | Hold phrases, STT health, echo memory | `voice/tests/` — 38 test functions across 3 files | As above |
-| Golden-question regression suite | 52 questions across the five vertical packs (7 each: bank, fmr, health, law, meetings, retail) plus 10 conversational items, scoring expected documents cited, expected facts present, forbidden strings absent, citation counts, and document precision | `eval/run_eval.py`, `eval/golden/*.jsonl`, `eval/README.md` | **Binary pass/fail.** `eval/run_eval.py:281` returns `0` only if every item passes, otherwise `1`. A JSON report is written to `eval/reports/` |
+| Golden-question regression suite | 52 questions across the five vertical packs (7 each: bank, fmr, health, law, meetings, retail) plus 10 conversational items, scoring expected documents cited, expected facts present, forbidden strings absent, citation counts, and document precision | `eval/run_eval.py`, `eval/golden/*.jsonl`, `eval/README.md` | **Binary pass/fail.** `eval/run_eval.py:309` returns `0` only if every item passes, otherwise `1`. A JSON report is written to `eval/reports/` |
 | Targeted measurement for the change at hand | Whatever demonstrates the specific claim of the change | Recorded in the commit body | Author judgement |
 | Chunk coverage check | Ingestion completeness | `eval/test_chunk_coverage.py` | Run on demand |
 | Voice end-to-end and cadence checks | Full-duplex behaviour and speech cadence | `eval/voice_e2e_test.py`, `eval/voice_cadence_test.py` | Run on demand |
@@ -257,7 +264,7 @@ Outputs are produced in a form that can be verified against inputs, and are appr
 |---|---|
 | (a) Meet the input requirements | Source code in `backend/`, `voice/`, `frontend/`; deployment configuration in `docker-compose.yml`, `backend/Dockerfile`, `voice/Dockerfile` |
 | (b) Adequate for the subsequent processes for provision of products and services | Deployment documentation: `OFFLINE_DEPLOYMENT.md`, `docs/PUBLIC_DEPLOYMENT.md`, `scripts/export_offline_bundle.sh`, `scripts/import_offline_bundle.sh`, `scripts/verify_offline_readiness.sh` |
-| (c) Include or reference monitoring and measuring requirements, and acceptance criteria | Golden-question sets in `eval/golden/*.jsonl` are the acceptance criteria in executable form; the binary gate is `eval/run_eval.py:281`. Unit tests in `backend/tests/` and `voice/tests/` |
+| (c) Include or reference monitoring and measuring requirements, and acceptance criteria | Golden-question sets in `eval/golden/*.jsonl` are the acceptance criteria in executable form; the binary gate is `eval/run_eval.py:309`. Unit tests in `backend/tests/` and `voice/tests/` |
 | (d) Specify the characteristics essential for the intended purpose and safe and proper provision | The architecture documentation in `docs/` listed in §5.2; the rationale comments carried inline where the configuration is easy to get wrong — `docker-compose.yml:7-11`, `:41-44`, `:69-72`, `:108-112`; the operating documentation `docs/USER_MANUAL.md` (1257 lines, 16 chapters) |
 
 Outputs are approved before release by the Managing Director, recorded in
@@ -317,10 +324,10 @@ and none of them is closed by this procedure alone.
 |---|---|
 | Documented architecture | Nine design documents in `docs/` plus `backend/app/transcribe/PROTOCOL.md`, totalling roughly 2,900 lines, covering retrieval, chunking, chat flow, sessions, wake word, transcript storage and a self-audit |
 | Design rationale and verification recorded per change | Commit bodies that state the defect mechanism, the fix, the blast radius and the measured verification — `558eaae` and `4e27109` are representative |
-| Executable acceptance criteria for the retrieval path | 52 golden questions across the five vertical packs and a conversational set, with a binary pass/fail gate at `eval/run_eval.py:281` |
+| Executable acceptance criteria for the retrieval path | 52 golden questions across the five vertical packs and a conversational set, with a binary pass/fail gate at `eval/run_eval.py:309` |
 | Unit test coverage of named risk areas | 40 test functions in `backend/tests/`, 38 in `voice/tests/` |
 | Independent-style validation of architectural claims | `eval/paper/` E1–E10, with results recorded including those that contradict the design intent |
-| Rationale preserved where configuration is easy to get wrong | `docker-compose.yml:7-11`, `:41-44`, `:69-72`, `:108-112`, `backend/Dockerfile:30-32` |
+| Rationale preserved where configuration is easy to get wrong | `docker-compose.yml:7-11`, `:41-44`, `:69-72`, `:108-112`, `backend/Dockerfile:34-36` |
 
 ### 11.2 What is missing
 
@@ -331,7 +338,7 @@ and none of them is closed by this procedure alone.
 | **No requirements or traceability document** | There is no document stating the platform's requirements, and no mapping from a requirement to the test that demonstrates it | It cannot currently be shown that every requirement is verified, only that many tests pass |
 | **No design review records** | No design review has been held or recorded. `forms/FRM-01_Design_Review_Record.md` is created by this QMS and is unused | 8.3.4(a) is not met today |
 | **No change-control register** | `registers/REG-07_Design_and_Change_Register.md` is created empty. Changes have been controlled through Git alone | Classification, review and authorisation of changes are not evidenced as distinct acts |
-| **No CI gate** | There is no `.github/` directory, no CI configuration, and no CODEOWNERS file. The golden-question suite returns a CI-friendly exit code at `eval/run_eval.py:281`, but nothing runs it automatically | Verification depends entirely on the author choosing to run it. A regression can reach `main` unmeasured |
+| **No CI gate** | There is no `.github/` directory, no CI configuration, and no CODEOWNERS file. The golden-question suite returns a CI-friendly exit code at `eval/run_eval.py:309`, but nothing runs it automatically | Verification depends entirely on the author choosing to run it. A regression can reach `main` unmeasured |
 | **No independent review** | Development is direct-to-`main`. Only 2 of 202 commits are merges, both author-to-self on 2026-02-24. 200 of 202 commits had no pull-request review | There is no second pair of eyes on any design decision, including AI-generated ones |
 | **Unit test results are not retained** | Test runs leave no stored artefact; only golden-eval runs write a report to `eval/reports/` | 8.3.4(f) requires documented information of the control activities; for unit testing there is none |
 | **Design review, verification and approval are performed by the same person** | One developer, two Git identities, one email, 202 commits from 2026-02-05 to `ff29843` (2026-09-21) | An auditor should weigh the objective artefacts — evaluation reports, test suites, commit bodies — above any statement of review, because the review is self-administered |

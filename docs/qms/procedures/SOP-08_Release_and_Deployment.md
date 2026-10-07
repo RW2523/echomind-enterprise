@@ -4,11 +4,15 @@
 |---|---|
 | Document ID | SOP-08 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Release Manager |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Release Manager — Lead Engineer (Richard Watson Stephen Amudha) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 8.5.1, 8.5.4, 8.6 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ---
 
@@ -69,7 +73,7 @@ terms, nor customer data migration.
 | R-5 | Golden evaluation report retained | `eval/reports/eval_<run_id>.json` copied to a tracked location | Report exists and is committed |
 | R-6 | All health-checked services healthy from a cold start | `docker compose up -d` then `docker compose ps` | `trtllm`, `backend`, `voice`, `ollama` healthy |
 | R-7 | Manual live verification | Chat with citation, Silent Assistant live check, one voice turn, boardroom analyse and export | Recorded in the release record, naming what was exercised |
-| R-8 | Secrets present and correctly named on the target | `.env` complete | In particular `VOICE_AUTH_SECRET` must be fed from the backend's `AUTH_SECRET` (`docker-compose.yml:143-146`) |
+| R-8 | Secrets present and correctly named on the target | `.env` complete | In particular `VOICE_AUTH_SECRET` must be fed from the backend's `AUTH_SECRET` (`docker-compose.yml:158-161`) |
 | R-9 | Model volumes populated | `docker volume ls` shows `trtllm_hf_cache`, `ollama_data`, `echomind_data` | Present and non-empty |
 | R-10 | Release identification recorded | Git tag, image tags, build identifier | **Cannot currently be satisfied — see §7** |
 
@@ -87,7 +91,7 @@ no compose hook invokes it; it is mentioned in `OFFLINE_DEPLOYMENT.md:122` and p
 the end of `scripts/prepare_offline.sh:49`, but neither of those runs it, so it executes only when a
 person types the command. **Check 7 is stale:** it greps `voice/Dockerfile` for `whisper.load_model`
 (`scripts/verify_offline_readiness.sh:57`), but Whisper is no longer in the voice image — the final
-STT is Parakeet-TDT (`voice/Dockerfile:50`) — so it emits `WARN: Voice Dockerfile may not
+STT is Parakeet-TDT (`voice/Dockerfile:54`) — so it emits `WARN: Voice Dockerfile may not
 pre-download all models` on a correct tree. Being a warning, it does not stop the script exiting 0;
 the assertion nonetheless no longer tests what it claims and should be updated to the current model
 set.
@@ -102,9 +106,9 @@ time, naming the release identifier, the source commit SHA, the authoriser and t
 pre-filled or completed on someone's behalf (SOP-01 §6). Release is not authorised while any
 release-blocking failure under SOP-07 §7 is open.
 
-## 7. Release identification — the central gap
+## 7. Release identification
 
-**Required scheme (to be adopted).**
+**Required scheme (adopted from v1.4.0, 2026-10-06).**
 
 | Element | Form | Purpose |
 |---|---|---|
@@ -114,23 +118,26 @@ release-blocking failure under SOP-07 §7 is open.
 | Runtime endpoint | A backend endpoint returning that identifier | Lets anyone with access to a running instance state what it is |
 | Deployment register entry | `registers/REG-08_Release_and_Deployment_Register.md`: customer, instance, release identifier, deployment date | Ties the customer to the build |
 
-**Present state: none of this exists.**
+**Present state (updated 2026-10-07): the scheme is in use from v1.4.0.** As at 2026-09-21 none of
+it existed — no tags across 202 commits, no `CHANGELOG`, `frontend/package.json` at `"0.0.0"`, untagged
+images and no build identifier. Now:
 
-- `git tag` returns nothing. The repository has **no tags at all** across 202 commits.
-- There is no `CHANGELOG`.
-- `frontend/package.json:4` is `"version": "0.0.0"`. There is no `__version__` in the backend, the
-  voice service or the vendored `nemotron_asr` package.
-- `backend`, `voice` and `frontend` are built by compose with no `image:` key
-  (`docker-compose.yml:47`, `:115`, `:207`), so they carry compose-default names and are effectively
-  `:latest`. Only two images in the stack are versioned at all: `echomind-trtllm:1.2.0rc6`
-  (`docker-compose.yml:5`) and `echomind-ollama:setup` (`:235`).
-- No endpoint reports a build identifier.
-- `docs/qms/registers/` is empty; no deployment register exists.
+- Annotated tags `v1.4.0` and `v1.4.1`, created by `scripts/release.sh`, which also regenerates
+  `CHANGELOG.md` and records the version in `frontend/package.json:4` (`"1.4.1"`).
+- `BUILD_VERSION`, `BUILD_COMMIT` and `BUILD_DATE` are build arguments baked into the backend, voice
+  and frontend images (`backend/Dockerfile:64`, `voice/Dockerfile:92`, `frontend/Dockerfile:19`).
+- The running system reports them: backend `/api/version`, voice `/health`, frontend `/build.json`.
+- Released images carry the version tag (`echomind-enterprise-backend:1.4.1`, `-voice:1.4.1`,
+  `-frontend:1.4.1`) beside the compose-default name; the previous release keeps a rollback tag.
+- `registers/REG-08_Release_and_Deployment_Register.md` records each deployment, and
+  `records/releases/` holds one `FRM-03` release record per release.
 
-**Consequence.** A deployed EchoMind Enterprise instance cannot be traced back to a source revision
-from the running system. If a customer reports a defect, there is no reliable way to establish which
-code they are running other than asking when they installed it. Every other control in this
-procedure is weakened by that, and closing it is the prerequisite for R-10.
+Remaining: compose still has no `image:` key for the three built services, so the version tag is
+applied at release time rather than declared in `docker-compose.yml`.
+
+**Consequence.** A deployed instance released from v1.4.0 onward can be traced to its source
+revision from the running system. Instances built before 2026-10-06 cannot, and are identified by
+deployment date and commit SHA only.
 
 ## 8. Deployment procedure (a) — on-premises customer install
 
@@ -171,9 +178,9 @@ records only an export timestamp.
 1. Transfer the bundle by the customer's approved medium.
 2. `./scripts/import_offline_bundle.sh <bundle>` — loads the images and restores the volumes.
 3. Place the customer's `.env` on the host. Confirm `AUTH_SECRET` and `VOICE_AUTH_SECRET` are
-   consistent (`docker-compose.yml:143-146`).
+   consistent (`docker-compose.yml:158-161`).
 4. `docker compose up -d`.
-5. Access on `http://<HOST>:3000` or `https://<HOST>:3443` (`docker-compose.yml:214`). The HTTPS
+5. Access on `http://<HOST>:3000` or `https://<HOST>:3443` (`docker-compose.yml:236`). The HTTPS
    certificate is self-signed at image build unless the customer supplies one, so a browser warning
    on first access is expected.
 6. Run the post-deployment verification in §10.
@@ -185,8 +192,8 @@ records only an export timestamp.
    `restart: unless-stopped`.
 3. To expose the instance publicly, start the tunnel explicitly:
    `docker compose --profile public up -d cloudflared`. The `cloudflared` service is behind the
-   `public` profile (`docker-compose.yml:227`) precisely so that public exposure is an opt-in act,
-   and `docker-compose.yml:221` carries the inline warning that it must be gated with Cloudflare
+   `public` profile (`docker-compose.yml:255`) precisely so that public exposure is an opt-in act,
+   and `docker-compose.yml:243` carries the inline warning that it must be gated with Cloudflare
    Access first because EchoMind has no built-in authentication of its own.
 4. Run the post-deployment verification in §10.
 
@@ -223,9 +230,9 @@ Two design features are evidence that a release degrades safely rather than sile
 
 **11.2 Self-recovery from a fatal GPU fault.** The backend and voice `/health` endpoints return 503
 once a fatal GPU or CUDA fault has poisoned the shared context. An in-process watchdog waits on the
-fatal event and calls `os._exit(1)` after a short grace period (`backend/app/main.py:104`, guarded by
+fatal event and calls `os._exit(1)` after a short grace period (`backend/app/main.py:112`, guarded by
 `ECHOMIND_EXIT_ON_FATAL_CUDA`), and `restart: unless-stopped` brings the container back with a fresh
-CUDA context. The inline comments at `docker-compose.yml:61-62` and `:131-132` record the intent.
+CUDA context. The inline comments at `docker-compose.yml:65-66` and `:131-132` record the intent.
 This matters in an offline deployment where no one may be watching: a class of fault that would
 otherwise require a manual container restart resolves itself.
 
@@ -268,7 +275,7 @@ Rules:
    command, and on an offline site the model volumes cannot be refetched.
 2. Confirm volume preservation as part of post-deployment verification. Commit `724fb98` records
    this being checked explicitly after a from-scratch rebuild: *"Data/model volumes preserved."*
-3. `./voice/voices` is a host bind mount (`docker-compose.yml:124`), not a volume; its contents live
+3. `./voice/voices` is a host bind mount (`docker-compose.yml:135`), not a volume; its contents live
    on the host filesystem and are preserved by not deleting them.
 4. Backup of `echomind_data` is the customer's responsibility under their own retention policy
    unless contracted otherwise. Ajace AI holds no copy — the data never leaves the customer
@@ -290,14 +297,14 @@ Rules:
 
 | # | Requirement of this procedure | Present state | Gap |
 |---|---|---|---|
-| G-1 | Releases are identifiable | No git tags, no changelog, no `__version__`, untagged service images, no build-identifier endpoint | **Open.** §7. Nothing in the scheme exists |
-| G-2 | Deployed instances are traceable to a release | No deployment register; `docs/qms/registers/` is empty | **Open** |
-| G-3 | Release record form | `forms/FRM-03_Release_Record.md` does not exist; only `FRM-00` is present | **Open.** Form to be created |
+| G-1 | Releases are identifiable | Tags `v1.4.0`, `v1.4.1`; `CHANGELOG.md`; build identity baked into images and reported at runtime (§7) | **Closed 2026-10-06** |
+| G-2 | Deployed instances are traceable to a release | `REG-08` records each deployment with release, SHA and image tags | **Closed 2026-10-06** for the reference instance; no customer installation yet |
+| G-3 | Release record form | `forms/FRM-03_Release_Record.md` exists and is in use (`records/releases/`) | **Closed** |
 | G-4 | Release-readiness check is enforced | `scripts/verify_offline_readiness.sh` is not invoked by any CI, build step or hook; it is only mentioned in `OFFLINE_DEPLOYMENT.md:122` and printed as advice by `scripts/prepare_offline.sh:49` | **Open** |
 | G-5 | Release-readiness checks are current | Check 7 greps for `whisper.load_model`, which the voice image no longer contains, so it warns on a correct tree | **Open.** Update the assertion to Parakeet-TDT and Piper |
-| G-6 | Rollback is reliably possible | Depends entirely on a previous bundle having been retained, because images are untagged and overwritten in place | **Open and partly mitigated** by the mandatory retention rule in §12 |
+| G-6 | Rollback is reliably possible | Released images are version-tagged and the previous release keeps a rollback tag (v1.4.1 record §8); rollback not yet rehearsed | **Partly closed.** Rollback test outstanding |
 | G-7 | All services are health-monitored | `frontend` and `cloudflared` have no healthcheck; `cloudflared` is the single point of failure for public access | **Open** |
-| G-8 | Release authorisation is recorded | No release has been recorded under this procedure; no prior release records exist | **Open.** Applies from approval |
+| G-8 | Release authorisation is recorded | v1.4.0 and v1.4.1 authorised by the Managing Director on 2026-10-07, after deployment (deviation recorded in each release record) | **Closed** — authorise before deployment from the next release |
 | G-9 | Customer acceptance evidence | No completed installation record exists in the repository | **Open** |
 
 All gaps above are to be carried into `ISO9001_Gap_Analysis.md`.

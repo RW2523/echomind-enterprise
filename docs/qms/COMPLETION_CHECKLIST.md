@@ -35,10 +35,10 @@ Nothing in the repository can supply these. Roughly one hour of work.
 
 | # | What | Where it goes | Notes |
 |---|---|---|---|
-| A1 | Registered company name, registered address, principal place of business, company registration number | `QM-01` §1 table | Also used in the scope statement |
-| A2 | The location from which the service is provided | `QM-01` §4 scope statement (line 82) | ISO requires the scope to state where |
-| A3 | Who holds each role: Managing Director, Lead Engineer, Quality representative, Data custodian | `QM-01` §6.1 | One person may hold all four — record the same name four times; the roles stay distinct in records |
-| A4 | Approver name + date on every document, and a signature on the policy | 36 header blocks; `QP-01` §signature | **Must be your own act.** Do not pre-fill, do not back-date. This is the single action that turns the set into a system. |
+| ~~A1~~ ✅ 2026-10-07 | Registered company name, registered address, principal place of business, company registration number | `QM-01` §1 table | Also used in the scope statement |
+| ~~A2~~ ✅ 2026-10-07 | The location from which the service is provided | `QM-01` §4 scope statement (line 82) | ISO requires the scope to state where |
+| ~~A3~~ ✅ 2026-10-07 | Who holds each role: Managing Director, Lead Engineer, Quality representative, Data custodian | `QM-01` §6.1 | One person may hold all four — record the same name four times; the roles stay distinct in records |
+| ~~A4~~ ✅ 2026-10-07 | Approver name + date on every document, and a signature on the policy | 36 header blocks; `QP-01` §signature | **Must be your own act.** Do not pre-fill, do not back-date. This is the single action that turns the set into a system. |
 | A5 | Personnel names for the competence matrix | `REG-05` §2, §3 | Nine competence rows already listed; add the person and the evidence for each |
 
 ## B. Decisions only you can make

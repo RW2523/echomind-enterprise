@@ -4,11 +4,15 @@
 |---|---|
 | Document ID | SOP-12 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Lead Engineer |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Lead Engineer (Richard Watson Stephen Amudha) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 9.1.1, 9.1.3, 7.1.5 (measurement resources) |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ---
 
@@ -48,17 +52,17 @@ the Frequency column says so rather than stating an intention as fact.
 
 | Metric | Source | Method | Frequency | Reviewed by |
 |---|---|---|---|---|
-| Golden-question pass count | 52 items across seven sets in `eval/golden/*.jsonl` (43 retrieval, 6 smalltalk, 2 refusal, 1 off-corpus) | `python3 eval/run_eval.py` against a running backend; binary gate at `eval/run_eval.py:281` returns non-zero unless every item passes | On demand today. **Required by this procedure:** before any release, and after any change to retrieval, prompting, chunking, embedding or namespacing | Lead Engineer; summary to management review |
-| Citation document-precision (average) | Same run | Computed per item at `eval/run_eval.py:171` and averaged per set at `:271-272` | With every golden run | Lead Engineer |
-| Median latency per question type | Same run | Printed per set at `eval/run_eval.py:273` | With every golden run | Lead Engineer |
+| Golden-question pass count | 52 items across seven sets in `eval/golden/*.jsonl` (43 retrieval, 6 smalltalk, 2 refusal, 1 off-corpus) | `python3 eval/run_eval.py` against a running backend; binary gate at `eval/run_eval.py:309` returns non-zero unless every item passes | On demand today. **Required by this procedure:** before any release, and after any change to retrieval, prompting, chunking, embedding or namespacing | Lead Engineer; summary to management review |
+| Citation document-precision (average) | Same run | Computed per item at `eval/run_eval.py:188` and averaged per set at `:271-272` | With every golden run | Lead Engineer |
+| Median latency per question type | Same run | Printed per set at `eval/run_eval.py:301` | With every golden run | Lead Engineer |
 | Unit-test pass rate | `backend/tests/` — 40 test functions across 7 files, including the 5 prompt-guard tests in `backend/tests/test_prompt_guards.py` | `pytest backend/tests` | On demand today. **Required:** before any release and before any change to prompt construction | Lead Engineer |
 | Grounding, isolation and injection-containment measures | `eval/paper/` harness, experiments E1–E10; results in `eval/paper/results/*.json`, consolidated in `SUMMARY.json` | Scripted experiments, each writing a JSON result | Per experiment campaign; not scheduled | Lead Engineer; management review |
 | Per-path namespace leakage | `eval/paper/e3b_path_isolation.py`, result in `eval/paper/results/e3b_path_isolation.json` | Counts out-of-namespace hits per retrieval path; last recorded result 0 of 359 across all five paths | Not scheduled. **Required:** after any change to a retrieval path or to `_ns_ok` | Lead Engineer |
 | Container health state | Docker healthchecks: `docker-compose.yml:31-36` (trtllm `GET /v1/models`), `:60-66` (backend `GET /health`), `:130-136` (voice `GET /health`), `:248-252` (ollama `ollama list \| grep -q nomic-embed-text`) | `docker compose ps`; the healthcheck itself runs on a 15–30 s interval | Continuous while running; observed on demand | Lead Engineer |
 | Voice per-turn latency | The `app.session.turn` logger (`voice/app/session.py:46`), raised to INFO at `voice/app/server.py:15`, emitting `[SPEC]`, `[ROUTE]` and `[TURN]` lines with `first_token_ms` and `endpoint_to_reply_ms` (`voice/app/session.py:2408, 2415, 2453`) | Read from `docker logs echomind-voice` | Emitted continuously; read on demand | Lead Engineer |
-| Application errors | Backend logs at INFO to stdout (`backend/app/main.py:25-32`); front-end crashes posted to `/api/client-error` and logged at ERROR (`backend/app/main.py:198-206`) | `docker logs`; grep for ERROR | Continuous; read on demand | Lead Engineer |
+| Application errors | Backend logs at INFO to stdout (`backend/app/main.py:25-32`); front-end crashes posted to `/api/client-error` and logged at ERROR (`backend/app/main.py:232-240`) | `docker logs`; grep for ERROR | Continuous; read on demand | Lead Engineer |
 | Errors surfaced to the user during live transcription | 14 `{"type": "error"}` emission sites in `backend/app/transcribe/ws.py` | Observed in the client; not aggregated anywhere | Not measured | — |
-| Activity volume and per-user usage | `activity_log` table (`backend/app/core/db.py:17`), written by `backend/app/main.py:154-163` | `recent_activity(limit)` and `usage_summary()` at `backend/app/core/audit.py:25,36` | On demand | Lead Engineer |
+| Activity volume and per-user usage | `activity_log` table (`backend/app/core/db.py:17`), written by `backend/app/main.py:175-192` | `recent_activity(limit)` and `usage_summary()` at `backend/app/core/audit.py:25,37` | On demand | Lead Engineer |
 | Defect count and defect rate | Git history | `git log --oneline` count; commits prefixed `fix:` as a share of all commits — currently 22 of 202 | Per management review | Managing Director |
 | Change volume | Git history | Commits and files changed per period | Per management review | Managing Director |
 | Nonconformities raised, closed and open, by severity | `registers/REG-04_Nonconformity_and_CAPA_Log.md` (created by this QMS; no history before adoption) | Count from the register | Per management review | Managing Director |
@@ -119,7 +123,7 @@ instrument must therefore be identified, version-controlled and change-controlle
 | Scoring logic and pass criteria | `eval/run_eval.py` | **Yes** — tracked in Git |
 | Paper experiment scripts | `eval/paper/*.py` (E1, E3, E3b, E4, E5, E7–E10 plus the corpus builders) | **Yes** — tracked in Git |
 | Recorded experiment results | `eval/paper/results/*.json`, including `SUMMARY.json`, `REGRESSION_AND_FIXES.json` and `config_manifest.json` | **Yes** — tracked in Git |
-| Per-run golden evaluation reports | `eval/reports/eval_<run_id>.json`, written at `eval/run_eval.py:275-276` | **No** — `eval/.gitignore` excludes `reports/`. See §10 |
+| Per-run golden evaluation reports | `eval/reports/eval_<run_id>.json`, written at `eval/run_eval.py:303-304` | **No** — `eval/.gitignore` excludes `reports/`. See §10 |
 
 **Rules for changing the instrument.**
 
@@ -153,7 +157,7 @@ section exists to preserve.
 | Namespace isolation | `python3 eval/paper/e3b_path_isolation.py`; record out-of-namespace hits and the number of checks, as `0/359` was recorded |
 | Container health | `docker compose ps`; every service that defines a healthcheck must read `healthy`. Note that `frontend` and `cloudflared` define none, so their state is `running`, not `healthy` — this is not evidence of health |
 | Voice latency | Run a set of turns; read `[TURN]` lines from `docker logs echomind-voice`; record `first_token_ms` and `endpoint_to_reply_ms` |
-| Activity volume | Call the endpoint backed by `usage_summary()` (`backend/app/core/audit.py:36`); record total events and events per user. Treat the figure as a lower bound: the logging middleware is best-effort and swallows its own failures (`backend/app/main.py:161-162`) |
+| Activity volume | Call the endpoint backed by `usage_summary()` (`backend/app/core/audit.py:37`); record total events and events per user. Treat the figure as a lower bound: the logging middleware is best-effort and swallows its own failures (`backend/app/main.py:189-190`) |
 | Defect and change counts | `git log --oneline \| wc -l`, and the count of commits whose subject begins `fix:` |
 
 A measurement is only a record if the result is written down where it can be found again. A
@@ -205,13 +209,13 @@ nothing is compared against a threshold except the single binary golden gate.
 | No metrics infrastructure | No Prometheus, no OpenTelemetry, no metrics endpoint, and no structured or JSON logging anywhere in `backend/` or `voice/` | Nothing is measured continuously. Every number in §4 is obtained by a person running something by hand |
 | No scheduled measurement | Nothing in the repository runs the golden evaluation, the tests or the isolation check on a timer or on merge; there is no `.github/` directory and no CI configuration (`SOP-02` §4) | Measurement depends entirely on someone remembering. A regression can sit undetected between runs, which is how the defect in commit `4e27109` grew from latent to observable |
 | No trend data | No measurement series is retained for any metric | Analysis under §8 can currently compare only against whatever figures happen to be quoted in commit bodies. There is no baseline for the first management review |
-| Evaluation reports are not retained | `eval/.gitignore` excludes `reports/`, the directory `eval/run_eval.py:275-276` writes to | The instrument is version-controlled but its readings are discarded. Verification evidence cited in a nonconformity record cannot be produced later (`SOP-10` §12) |
-| Doc-precision is computed but not thresholded | Calculated at `eval/run_eval.py:171` and averaged at `:271-272`, but the pass gate at `:281` uses only the binary per-item result | Citation quality can degrade materially without failing the gate |
+| Evaluation reports are not retained | `eval/.gitignore` excludes `reports/`, the directory `eval/run_eval.py:303-304` writes to | The instrument is version-controlled but its readings are discarded. Verification evidence cited in a nonconformity record cannot be produced later (`SOP-10` §12) |
+| Doc-precision is computed but not thresholded | Calculated at `eval/run_eval.py:188` and averaged at `:271-272`, but the pass gate at `:281` uses only the binary per-item result | Citation quality can degrade materially without failing the gate |
 | No log rotation or retention of any kind | `docker-compose.yml` sets no `logging:` driver or options on any service, so the default `json-file` driver applies with no `max-size` and no `max-file` | Container logs grow unbounded until the disk fills, taking the deployment down. The voice per-turn timing data and the backend error log are also the only record of several measurements, and they are neither shipped nor retained |
-| Health endpoints check almost nothing | `backend/app/main.py:185-195` returns 503 only on a fatal CUDA/STT fault and otherwise `{"ok": true}` — it does not check the database, the FAISS indexes, the LLM or the embedding service. `voice/app/server.py:74-82` has the same narrow scope | A backend can report healthy with an unreachable LLM, a missing index or a locked database. Health state is not evidence that the product works |
+| Health endpoints check almost nothing | `backend/app/main.py:212-222` returns 503 only on a fatal CUDA/STT fault and otherwise `{"ok": true}` — it does not check the database, the FAISS indexes, the LLM or the embedding service. `voice/app/server.py:87-95` has the same narrow scope | A backend can report healthy with an unreachable LLM, a missing index or a locked database. Health state is not evidence that the product works |
 | No readiness endpoint and no dependency aggregation | Only the single `/health` liveness endpoint per service | Nothing distinguishes "the process is up" from "the service can serve a request" |
-| Two services have no healthcheck at all | `frontend` (`docker-compose.yml:207`) and `cloudflared` (`:223`) define none | Their failure is invisible to `docker compose ps` |
-| The activity log is not a reliable measurement source | The middleware is wrapped in a bare `except Exception: pass` (`backend/app/main.py:161-162`) and the insert swallows failures at debug level (`backend/app/core/audit.py:21-22`) | Usage figures are a lower bound of unknown tightness and must be reported as such |
+| Two services have no healthcheck at all | `frontend` (`docker-compose.yml:229`) and `cloudflared` (`:223`) define none | Their failure is invisible to `docker compose ps` |
+| The activity log is not a reliable measurement source | The middleware is wrapped in a bare `except Exception: pass` (`backend/app/main.py:189-190`) and the insert swallows failures at debug level (`backend/app/core/audit.py:21-22`) | Usage figures are a lower bound of unknown tightness and must be reported as such |
 | No pruning of `activity_log` | No endpoint and no task deletes from it | The table grows without limit; see also `SOP-11` §10 |
 | No thresholds or objectives set | `QO-01` exists but no numeric threshold is bound to any metric in §4 apart from the binary golden gate | "Analysis and evaluation" under 9.1.3 currently has nothing to evaluate results against |
 | Errors surfaced to users are not aggregated | The 14 `{"type": "error"}` emission sites in `backend/app/transcribe/ws.py` are counted nowhere | The organisation cannot say how often users hit an error, or which one |

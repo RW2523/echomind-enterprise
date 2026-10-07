@@ -4,12 +4,16 @@
 |---|---|
 | Document ID | QP-01 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved.** Becomes effective only when signed by top management. |
-| Owner | Managing Director |
-| Approved by | `________________________` (name, role) |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | Next review | Annually, and on any significant change to the organisation or its services |
 | ISO 9001:2015 clauses | 5.2.1, 5.2.2 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 > **Adoption note.** This policy is a proposed text. It carries no authority until a member of top
 > management signs and dates it. Do not present it to a customer or auditor as an approved policy
@@ -86,7 +90,7 @@ work and for reporting anything that conflicts with it.
 
 | | |
 |---|---|
-| Name | `________________________` |
-| Role | `________________________` |
-| Signature | `________________________` |
-| Date | `____ / ____ / ________` |
+| Name | Anita Johan |
+| Role | Managing Director, AJACE Inc. |
+| Signature | Approved — `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
+| Date | 2026-10-07 |

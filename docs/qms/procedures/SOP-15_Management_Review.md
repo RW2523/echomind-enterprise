@@ -3,12 +3,18 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-15 |
-| Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Revision | 1.1 |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 5.1, 9.3.1, 9.3.2, 9.3.3 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
+
+> **Revision note 2026-10-07.** Wording in this procedure about “one person” describes the engineering work, which is concentrated in the Lead Engineer. Within AJACE Inc. the roles are held by named people (QM-01 §7.1): independent review by the EchoMind Project Lead (Alexander Peter), verification and QMS maintenance by QA/MR (Sheryl Nazareth), approval and release authorisation by the Managing Director (Anita Johan); internal audit is provided by the AJACE Inc. corporate audit programme.
 
 ---
 
@@ -123,7 +129,7 @@ review under 9.3.3 b.
 ### 5.5 Process performance and conformity of products and services (9.3.2 c 3)
 
 **Source:** `SOP-12`; the 52-question golden evaluation (`eval/run_eval.py`, whose suite gate is
-binary — `return 0 if total_pass == len(results) else 1` at `eval/run_eval.py:281`); the unit test
+binary — `return 0 if total_pass == len(results) else 1` at `eval/run_eval.py:309`); the unit test
 suites; container healthchecks; voice per-turn timing logs.
 
 Reported at each review:
@@ -181,9 +187,9 @@ measurements, and whether anything is being measured that no one uses.
 `FRM-04_Supplier_Evaluation.md` records.
 
 Reported: any provider failure in the period; any component whose version moved when it was relied
-on not to — the `nemo_toolkit[asr]` installation from the moving branch `@main` at
-`backend/Dockerfile:19` is a standing item under this heading, having already caused a real outage
-(commit `724fb98`); licence position of each model and component; and any provider due
+on not to — the `nemo_toolkit[asr]` installation at `backend/Dockerfile:23` (the moving branch
+`@main` until pinned in `51fd3bc`, after a real outage in commit `724fb98`) stays a standing item
+under this heading so that a moving reference does not return; licence position of each model and component; and any provider due
 re-evaluation.
 
 ### 5.11 Adequacy of resources (9.3.2 d)
@@ -279,7 +285,7 @@ results to report under §5.8.
 | Measurement is manual and intermittent | No CI; the golden evaluation runs when someone runs it (most recent recorded run 49/52 on 2026-08-06) | §5.5 reports on whatever happened to be measured, not on a continuous record |
 | Product conformity has never reached the organisation's own gate | The golden-question suite gate is binary and has never returned 52/52; best recorded is 50/52 | The gate as currently defined has never been passed; the first review must decide whether the gate or the product is wrong |
 | Top management, process owners and the workforce are the same person | `SOP-02` §4 | No challenge function inside the review; the evidence discipline in §3 is the only substitute |
-| No versioning to anchor a review period to | No git tags, no CHANGELOG; `frontend/package.json` is `"0.0.0"` | Review periods must be delimited by date and commit SHA rather than by release |
-| Resource gaps that will recur under §5.11 until resolved | No backup of the `echomind_data` volume; no data-retention policy; no log rotation; no LICENCE/NOTICE, model-licence inventory or SBOM; application authentication off by default with WebSocket endpoints outside the auth middleware (`backend/app/main.py:135`) | Each is a standing resource or control item for §5.11 and §6 c until closed |
+| Versioning to anchor a review period to | Resolved 2026-10-06: tags `v1.4.0`, `v1.4.1` and `CHANGELOG.md` | Periods before 2026-10-06 are delimited by date and commit SHA; later ones by release |
+| Resource gaps that will recur under §5.11 until resolved | No backup of the `echomind_data` volume; no data-retention policy; no log rotation; no LICENCE/NOTICE, model-licence inventory or SBOM; application authentication off by default with WebSocket endpoints outside the auth middleware (`backend/app/main.py:157`) | Each is a standing resource or control item for §5.11 and §6 c until closed |
 
 Each gap above is carried into `ISO9001_Gap_Analysis.md`.

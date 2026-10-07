@@ -4,11 +4,15 @@
 |---|---|
 | Document ID | SOP-06 |
 | Revision | 1.1 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Engineering Lead |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Lead Engineer (Richard Watson Stephen Amudha) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 8.1, 8.5.2, 8.5.6, 7.5.3 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ---
 
@@ -52,8 +56,8 @@ instance to be explicable. For EchoMind Enterprise these are:
 | CI-4 | Service topology and runtime configuration | `docker-compose.yml`, `docker-compose.prepare.yml` | Git |
 | CI-5 | Environment configuration and secrets | `.env` at the repository root | **Not in Git** (`.gitignore:25-28`); no template exists — see §9 |
 | CI-6 | Model weights and engines | Named volumes `trtllm_hf_cache`, `ollama_data`, and `/data/hf_cache` inside `echomind_data` | Populated once by `scripts/prepare_offline.sh`; no inventory of what a given volume contains |
-| CI-7 | Models baked into images at build time | Nemotron streaming STT (`backend/Dockerfile:42`, `voice/Dockerfile:44`), Parakeet-TDT (`voice/Dockerfile:50`), Piper voice files (`voice/Dockerfile:62-63`), Kokoro caches (`voice/Dockerfile:66-74`) | The image; changes only on rebuild |
-| CI-8 | Piper voice assets mounted at runtime | `./voice/voices` bind-mounted to `/voices` (`docker-compose.yml:124`) — the only source bind mount in the stack | Git, for the files that are tracked |
+| CI-7 | Models baked into images at build time | Nemotron streaming STT (`backend/Dockerfile:46`, `voice/Dockerfile:48`), Parakeet-TDT (`voice/Dockerfile:54`), Piper voice files (`voice/Dockerfile:66-67`), Kokoro caches (`voice/Dockerfile:70-78`) | The image; changes only on rebuild |
+| CI-8 | Piper voice assets mounted at runtime | `./voice/voices` bind-mounted to `/voices` (`docker-compose.yml:135`) — the only source bind mount in the stack | Git, for the files that are tracked |
 | CI-9 | The golden evaluation set | `eval/golden/*.jsonl` — 52 items across seven files | Git. A change to a golden item changes the acceptance criterion for the product and is itself a significant change (§6) |
 | CI-10 | Customer deployment record | Intended: `registers/REG-08_Release_and_Deployment_Register.md` | **Does not exist — see §9** |
 
@@ -127,7 +131,7 @@ the record.
 ## 8. Container hot-patching: a controlled exception
 
 Rebuilding the backend or voice image is slow, because the build downloads and warms large model
-weights (`backend/Dockerfile:42`, `voice/Dockerfile:44-50`) and `scripts/build.sh:2-4` deliberately
+weights (`backend/Dockerfile:46`, `voice/Dockerfile:48-54`) and `scripts/build.sh:2-4` deliberately
 serialises the backend build to avoid a BuildKit "file already closed" failure during that download.
 A `docker cp` of changed files into a running container, followed by `docker commit` and a restart,
 is therefore used for fast iteration — particularly on the voice service.
@@ -168,21 +172,22 @@ git commit SHA  →  annotated git tag  →  image tag carrying that version
                 →  the deployment register entry for that customer instance
 ```
 
-**Present state: none of this chain exists.**
+**Present state (updated 2026-10-07): the chain exists from v1.4.0.** As at 2026-09-21 none of it did.
 
 | Link | Present state | Evidence |
 |---|---|---|
-| Git tag | No tags exist at all | `git tag` returns nothing |
-| Changelog | None | No `CHANGELOG` in the tree |
-| Application version | `frontend/package.json:4` is `"version": "0.0.0"`; no `__version__` in backend, voice or the vendored `nemotron_asr` package | — |
-| Image tags | `backend`, `voice` and `frontend` are compose-default builds with no `image:` key, so they are effectively `:latest`. Only `echomind-trtllm:1.2.0rc6` (`docker-compose.yml:5`) and `echomind-ollama:setup` (`:235`) carry a tag | `docker-compose.yml:207-212`, `:47-57`, `:115-125` |
-| Build identifier at runtime | No endpoint reports a build or commit identifier | — |
-| Deployment register | Does not exist | `docs/qms/registers/` is empty |
+| Git tag | Annotated tags `v1.4.0`, `v1.4.1` | `git tag`; `scripts/release.sh` |
+| Changelog | Generated at each release | `CHANGELOG.md` |
+| Application version | `frontend/package.json:4` is `"1.4.1"`; `BUILD_VERSION` baked into every built image | `backend/Dockerfile:64`, `voice/Dockerfile:92`, `frontend/Dockerfile:19` |
+| Image tags | `backend`, `voice` and `frontend` are compose-default builds with no `image:` key, so they are effectively `:latest`. Only `echomind-trtllm:1.2.0rc6` (`docker-compose.yml:5`) and `echomind-ollama:setup` (`:235`) carry a tag | `docker-compose.yml:229-234`, `:47-57`, `:115-125` |
+| Build identifier at runtime | Version, commit and build date reported | backend `/api/version`, voice `/health`, frontend `/build.json` |
+| Deployment register | In use | `registers/REG-08_Release_and_Deployment_Register.md` |
 
-**Consequence to state plainly to an auditor:** given a running EchoMind Enterprise instance today,
-it is not possible to determine which source revision produced it. Closing this is the single most
-valuable configuration-management improvement available to the organisation, and it is a
-prerequisite for the release identification scheme in SOP-08 §7.
+Image tags: the release tags each built image with its version (`…:1.4.1`); compose still declares no
+`image:` key for them, so the compose-default name remains `:latest` alongside the version tag.
+
+**Consequence to state plainly to an auditor:** a running instance released from v1.4.0 onward
+reports its source revision. Instances built before 2026-10-06 cannot be traced this way.
 
 ## 10. Configuration of the deployed environment
 
@@ -190,13 +195,13 @@ The deployed configuration is the composition of `docker-compose.yml`, the host'
 contents of the three named volumes, and the bind-mounted voice assets.
 
 - **Six services** are defined: `trtllm`, `backend`, `voice`, `frontend`, `cloudflared` (only with
-  `--profile public`, `docker-compose.yml:227`) and `ollama`.
+  `--profile public`, `docker-compose.yml:255`) and `ollama`.
 - **Offline by default.** `HF_HUB_OFFLINE=1` and `TRTLLM_SKIP_DOWNLOAD=1` are the defaults for
   `trtllm` (`docker-compose.yml:27-28`); `OLLAMA_OFFLINE=1` is set for `ollama` (`:245`). A running
   instance therefore does not fetch models; the volumes must already hold them.
 - **Configuration drift risk in `.env`.** Because no `.env.example` is tracked, the required
   variable set is discoverable only by reading `docker-compose.yml`. A missing or misspelled
-  variable fails silently rather than loudly: `docker-compose.yml:143-146` carries an inline warning
+  variable fails silently rather than loudly: `docker-compose.yml:158-161` carries an inline warning
   that `VOICE_AUTH_SECRET` must be fed from the backend's `AUTH_SECRET`, placed there after commit
   `73f0b4f` fixed a defect in which the voice WebSocket auth gate loaded an empty secret and was
   effectively non-functional.
@@ -250,9 +255,9 @@ data.
 
 | # | Requirement of this procedure | Present state | Gap |
 |---|---|---|---|
-| G-1 | Source revision traceable to deployed instance | No git tags, no changelog, no `__version__`, no build identifier endpoint, untagged images | **Open.** Nothing in the chain exists (§9) |
-| G-2 | Change Request form for significant changes | `forms/FRM-02_Change_Request.md` does not exist; only `FRM-00` is present in `docs/qms/forms/` | **Open.** Form to be created |
-| G-3 | Deployment register | `docs/qms/registers/` is empty | **Open.** No record of which customers run which build |
+| G-1 | Source revision traceable to deployed instance | Tags, changelog, build identity at runtime, version-tagged images, `REG-08` (§9) | **Closed 2026-10-06** (v1.4.0) |
+| G-2 | Change Request form for significant changes | `forms/FRM-02_Change_Request.md` exists; significant changes are logged in `REG-07` | **Closed.** Form approved 2026-10-07 |
+| G-3 | Deployment register | `REG-08` in use | **Closed** — reference instance recorded; no customer installation yet |
 | G-4 | Independent review of changes | Single-developer, direct-to-main working; two merge commits in 202 | **Open and partly accepted.** A second reviewer is not available at current team size; compensating control is the commit-body verification record (§5) |
 | G-5 | Hot-patch reconciliation | The rule in §8 is stated here for the first time; it has not previously been a written control, and `724fb98` shows drift did occur | **Open.** Compliance from the date this procedure is approved |
 | G-6 | `.env` template and secret handling | No `.env.example`; `HF_TOKEN` baked into build layers via build args (`docker-compose.yml:53`, `:120`); no secret manager, no Docker secrets, no encryption at rest | **Open** |

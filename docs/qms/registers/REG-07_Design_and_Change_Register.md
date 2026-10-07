@@ -5,9 +5,10 @@
 | Document ID | REG-07 |
 | Revision | 1.0 |
 | Status | **LIVE REGISTER — currently empty** |
-| Owner | Lead Engineer |
+| Owner | Lead Engineer (Richard Watson Stephen Amudha) |
 | ISO 9001:2015 clauses | 8.3.2, 8.3.4, 8.3.6, 8.5.6 |
 | Governing procedures | SOP-05 (design), SOP-06 (change) |
+| Reviewed | 2026-10-07 — Alexander Peter (EchoMind Project Lead); QA Sheryl Nazareth |
 
 ---
 

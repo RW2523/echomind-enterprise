@@ -5,9 +5,10 @@
 | Document ID | REG-06 |
 | Revision | 1.0 |
 | Status | **LIVE REGISTER — currently empty** |
-| Owner | Managing Director |
+| Owner | Managing Director (Anita Johan) |
 | ISO 9001:2015 clauses | 8.2.1, 9.1.2, 10.2.1 a) |
 | Governing procedure | SOP-04 |
+| Reviewed | 2026-10-07 — Alexander Peter (EchoMind Project Lead); QA Sheryl Nazareth |
 
 ---
 

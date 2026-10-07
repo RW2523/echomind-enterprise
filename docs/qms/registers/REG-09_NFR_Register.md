@@ -5,10 +5,11 @@
 | Document ID | REG-09 |
 | Revision | 1.0 |
 | Status | **LIVE REGISTER** |
-| Owner | Lead Engineer, EchoMind Product |
+| Owner | Lead Engineer, EchoMind Product (Richard Watson Stephen Amudha) |
 | ISO 9001:2015 clauses | 8.2.2 (determining requirements), 8.3.3 (design inputs), 8.3.4 (design controls), 9.1.1 (monitoring and measurement) |
 | Raised in response to | **AFR Stage 2 audit finding #6 (16-Oct-2025, clause 8.2.2, Minor NC)** — *"No evidence could be seen for recording and monitoring of non functional requirements"* |
 | Applies to | The EchoMind Enterprise codebase in this repository (first commit 2026-02-05) |
+| Reviewed | 2026-10-07 — Alexander Peter (EchoMind Project Lead); QA Sheryl Nazareth |
 
 ---
 
@@ -41,59 +42,68 @@ Nothing here is estimated.
 
 ## 2. The register
 
-Status key: **Met** — measured against an agreed target and satisfied · **Measured** — measured, no
-agreed target · **Monitored** — observed continuously, no discrete measurement · **Gap** — not measured.
+Targets approved 2026-10-07 by Anita Johan (EM26-17 §3; `records/approvals/2026-10-07_AR-2026-001_document_approval.md`). Latest values as recorded in EM26-17.
 
 ### 2.1 Performance
 
-| ID | Requirement | Target | Measured | Method / source | Date | Status |
-|---|---|---|---|---|---|---|
-| NFR-P01 | End-to-end grounded answer latency (chat) | `not formally set` | median **3,313 ms**, p95 **15,171 ms** (concurrency 1, warm cache, n=30/cell) | `eval/paper/results/e1_latency.json` (harness `eval/paper/e1_latency.py`) | 2026-08 | Measured |
-| NFR-P02 | Retrieval share of total answer latency | `not formally set` | **2.8%** of grounded latency | same | 2026-08 | Measured — notable: contradicts the project's own published assumption, recorded honestly in `SUMMARY.json` |
-| NFR-P03 | Tenant permission filter overhead | Negligible | **0.08 ms** | same | 2026-08 | Met |
-| NFR-P04 | Voice: end of user speech → first audible reply | `not formally set` | median **635.8 ms**, p95 **894.0 ms** (n=10, arm `dual_i1`) | `eval/paper/results/e10_ablation.json` | 2026-08 | Measured |
-| NFR-P05 | Voice: first audible reply after the speculative-reply and GPU-STT work | `not formally set` | **0.14–0.49 s** across 12 turns, two personas | Session test `voice_e2e_v3.py`; commit `c2a6ed5` / `ff29843` | 2026-09-22 | Measured — ~2× improvement on NFR-P04 |
-| NFR-P06 | Final speech-to-text decode time | `not formally set` | **~70–130 ms** (GPU, CUDA graphs disabled), previously ~1.0–1.6 s (CPU) | Commit `ff29843`; measured in-session | 2026-09-21 | Measured |
-| NFR-P07 | Barge-in: user interrupt → assistant audio stops | `not formally set` | median **2,131 ms**, p95 **2,140.6 ms**, success **1.00** (n=8) | `eval/paper/results/e7_interaction.json` | 2026-08 | Measured — slowest NFR on record; candidate for a target and improvement |
+| ID | Requirement | Target | Measured | Method / source | Date | Owner | Status |
+|---|---|---|---|---|---|---|---|
+| NFR-P01 | Grounded chat answer latency | median ≤ 4 s; p95 ≤ 16 s | median 3.31 s; p95 15.17 s (n=30) | Paper harness E1 — eval/paper/results/e1_latency.json | 2026-08-07 | Richard Watson Stephen Amudha | Meets |
+| NFR-P02 | Retrieval share of answer latency | Monitor only (no target) | 2.8 % | E1 decomposition | 2026-08-07 | Richard Watson Stephen Amudha | Monitored |
+| NFR-P03 | Tenant permission-filter overhead | ≤ 1 ms | 0.08 ms | E1 | 2026-08-07 | Richard Watson Stephen Amudha | Meets |
+| NFR-P04 | Voice: end of speech → first audible reply (dual-loop) | median ≤ 1.0 s | median 636 ms; p95 894 ms (n=10) | E10 ablation — e10_ablation.json; paper | 2026-08-07 | Richard Watson Stephen Amudha | Meets |
+| NFR-P05 | Voice first reply after speculative-reply work | median ≤ 1.0 s | 0.14–0.49 s on GPU (12 turns, 2 personas); on CPU since 2026-10-06 — to re-measure | voice_e2e session test; commit ff29843 | 2026-09-21 | Richard Watson Stephen Amudha | Meets (GPU) — re-measure on CPU |
+| NFR-P06 | Final speech-to-text decode time | ≤ 300 ms (GPU) / ≤ 1.6 s (CPU mode) | 70–130 ms on GPU; CPU mode since 2026-10-06 — to re-measure | commit ff29843 | 2026-09-21 | Richard Watson Stephen Amudha | Re-measure |
+| NFR-P07 | Barge-in: interrupt → assistant audio stops | median ≤ 1.0 s | median 2.13 s, success 1.00 (n=8) | E7 — e7_interaction.json | 2026-08-07 | Richard Watson Stephen Amudha | Does not meet — action A-17-03 |
 
-### 2.2 Accuracy and grounding *(the product's primary quality characteristic)*
+### 2.2 Accuracy
 
-| ID | Requirement | Target | Measured | Method / source | Date | Status |
-|---|---|---|---|---|---|---|
-| NFR-Q01 | Citation precision — cited passages genuinely support the claim | ≥ 0.98 (set in `QO-01` QO-1, 2026-09-21) | **0.9792** (95% CI 0.938–1.02, n=36) | `eval/paper/results/e5_grounding.json` | 2026-08 | Met (at the target boundary) |
-| NFR-Q02 | Citation recall | `not formally set` | **0.8256** (CI 0.713–0.938, n=43) | same | 2026-08 | Measured |
-| NFR-Q03 | Fact support rate — required gold facts present in the answer | `not formally set` | **0.8152** (75 of 92 fact groups) | same | 2026-08 | Measured |
-| NFR-Q04 | Abstention accuracy — correctly declines when the corpus cannot answer | `not formally set` | **0.7826** (CI 0.581–0.903, n=23) | same | 2026-08 | Measured — **weakest accuracy figure; directly tied to the product's central claim** |
-| NFR-Q05 | Functional regression suite (52 golden questions, binary gate) | 52/52 (gate at `eval/run_eval.py:281`) | **9/52 on 2026-09-22** — 43/43 retrieval questions fail with 0 citations because the evaluation corpus is absent; smalltalk 6/6, refusal 2/2, off-corpus 1/1. Historic: best 50/52 (2026-07-30), 49/52 (2026-08-06) | `eval/reports/eval_20260922-135322.json` | 2026-09-22 | **Gap — instrument inoperable.** Raised as `REG-04` NC-2026-008. Not a product regression; retrieval works when exercised directly |
+| ID | Requirement | Target | Measured | Method / source | Date | Owner | Status |
+|---|---|---|---|---|---|---|---|
+| NFR-Q01 | Citation precision | ≥ 0.98 (set in QO-01) | 0.979 (n=36) | E5 — e5_grounding.json | 2026-08-07 | Richard Watson Stephen Amudha | At boundary |
+| NFR-Q02 | Citation recall | ≥ 0.80 | 0.826 (n=43) | E5 | 2026-08-07 | Richard Watson Stephen Amudha | Meets |
+| NFR-Q03 | Fact support rate | ≥ 0.80 | 0.815 (75/92) | E5 | 2026-08-07 | Richard Watson Stephen Amudha | Meets |
+| NFR-Q04 | Abstention when the corpus cannot answer | ≥ 0.80 | 0.783 (n=23) | E5 | 2026-08-07 | Richard Watson Stephen Amudha | Does not meet — action A-17-04 |
+| NFR-Q05 | Golden regression suite (52 questions) | ≥ 49/52 (baseline 2026-08-06) | Blocked — corpus absent (9/52 by construction, 2026-09-22); run now aborts with the missing list | eval/run_eval.py; NC-2026-008 | 2026-10-07 | Richard Watson Stephen Amudha | Blocked — action A-17-05 |
+| NFR-Q06 | Small talk answered without document citations | 100 % of acceptance probes | Pass on v1.4.1 (after fix e0ed4d0) | TC-EM-RAG-103 run 4 | 2026-10-06 | Richard Watson Stephen Amudha | Meets |
 
-### 2.3 Security and tenant isolation
+### 2.3 Security
 
-| ID | Requirement | Target | Measured | Method / source | Date | Status |
-|---|---|---|---|---|---|---|
-| NFR-S01 | No cross-tenant content leakage in answers | Zero | **0 / 50 probes** (CI 0–0.0714) | `eval/paper/results/e3_permission.json` | 2026-08 | Met |
-| NFR-S02 | No out-of-namespace hits on any retrieval path | Zero | **0 / 359** hits across all retrieval paths | `eval/paper/results/e3b_path_isolation.json`; fix commit `4e27109` | 2026-08-07 | Met — **after** a real defect; see §4 |
-| NFR-S03 | Prompt-injection containment | `not formally set` | attack success **0.102** with no defence (baseline arm), 98 attack documents | `eval/paper/results/e4_injection.json` | 2026-08 | Measured — partial; defended arms recorded in the file |
-| NFR-S04 | Injection guards present in every prompt path | All paths | 5 unit tests asserting guards in analyzer / compress / contextualizer / RAG / strict prompts | `backend/tests/test_prompt_guards.py` | continuous | Monitored |
+| ID | Requirement | Target | Measured | Method / source | Date | Owner | Status |
+|---|---|---|---|---|---|---|---|
+| NFR-S01 | No cross-tenant leakage in answers | 0 leaks | 0 / 50 probes | E3 — e3_permission.json | 2026-08-07 | Kishan Haravu Pradeep | Meets |
+| NFR-S02 | No out-of-namespace retrieval hits | 0 hits | 0 / 359 (all paths) after fix 4e27109 | e3b_path_isolation.json | 2026-08-07 | Kishan Haravu Pradeep | Meets |
+| NFR-S03 | Prompt-injection success rate | ≤ 5 % with defences | 10.2 % undefended → 5.1 % with evidence envelope | E4 — e4_injection.json; paper | 2026-08-07 | Richard Watson Stephen Amudha | At boundary |
+| NFR-S04 | Injection guards in every prompt path | All paths | 5 unit tests, run by CI on every push | test_prompt_guards.py; CI | 2026-10-07 | Richard Watson Stephen Amudha | Meets |
+| NFR-S05 | Public instance requires login | Unauthenticated API → 401, always | 401 from GitHub's network every 6 h; was off 2026-07-30 → 10-06 (NC-2026-009) | public-gate-check workflow run 37561803121 | 2026-10-07 | Kishan Haravu Pradeep | Meets since 2026-10-06 |
+| NFR-S06 | Logout ends the session | Replayed token → 401 | 401 (fix e0ed4d0) | TC-EM-AUTH-101 AC-101.7 run 4 | 2026-10-06 | Kishan Haravu Pradeep | Meets |
+| NFR-S07 | Only supported document types accepted | Binary/unsupported → 415 | 415 (fix e0ed4d0) | TC-EM-DOC-102 DOC-102.5 run 4 | 2026-10-06 | Kishan Haravu Pradeep | Meets |
+| NFR-S08 | Export gateway removes PII and keys | No sensitive value in redacted copy | Pass incl. sk-/pk- keys (fix e0ed4d0) | TC-EM-EXP-108 run 4 | 2026-10-06 | Kishan Haravu Pradeep | Meets |
 
-### 2.4 Reliability and availability
+### 2.4 Reliability
 
-| ID | Requirement | Target | Measured | Method / source | Date | Status |
-|---|---|---|---|---|---|---|
-| NFR-R01 | Service liveness monitored | All long-running services | Health checks on **4 of 6** services (`trtllm`, `backend`, `voice`, `ollama`); `frontend` and `cloudflared` have none | `docker-compose.yml` | continuous | **Partial gap** |
-| NFR-R02 | Automatic recovery from a fatal GPU fault | Unattended recovery | `/health` returns 503 on a poisoned CUDA context; in-process watchdog exits; `restart: unless-stopped` recreates with a fresh context | `backend/app/main.py:100-104`; `docker-compose.yml` | continuous | Monitored |
-| NFR-R03 | Disk exhaustion from unbounded logs | Bounded | Log rotation 50 MB × 5 on all six services | `docker-compose.yml` (2026-09-22) | 2026-09-22 | Met — **applies on next `docker compose up -d`** |
-| NFR-R04 | Customer data recoverable after loss | Tested restore within 6 months | Restore exercised into a clean volume: `integrity_check ok`, 32 tables, 351 MB archive | `scripts/backup_data.sh` / `restore_data.sh` | 2026-09-22 | Met |
-| NFR-R05 | Build reproducibility | Pinned dependencies | `nemo_toolkit` pinned to commit `60ce9407`, previously the moving branch `@main` which caused a production outage | `backend/Dockerfile`, `voice/Dockerfile`; outage commit `724fb98` | 2026-09-22 | Met |
+| ID | Requirement | Target | Measured | Method / source | Date | Owner | Status |
+|---|---|---|---|---|---|---|---|
+| NFR-R01 | Health checks that exercise the function | All long-running services | 4 of 6 services; Ollama check now makes a real embedding (2026-10-07); frontend/cloudflared none | docker-compose.yml; NC-2026-016 | 2026-10-07 | Richard Watson Stephen Amudha | Partial — action A-17-06 |
+| NFR-R02 | Automatic recovery from a fatal GPU fault | Unattended recovery | /health 503 + watchdog + restart policy | backend/app/main.py; docker-compose.yml | 2026-09-22 | Richard Watson Stephen Amudha | Meets |
+| NFR-R03 | Bounded logs | 50 MB × 5 per service | Applied to all six containers | docker inspect; REG-07 | 2026-10-06 | Richard Watson Stephen Amudha | Meets |
+| NFR-R04 | Customer data recoverable | Restore tested ≤ 6 months; nightly off-site copy | Restore verified 2026-09-22; checksum verified 2026-10-06; off-site schedule not installed | TC-EM-BKP-113 | 2026-10-06 | Kishan Haravu Pradeep | Partial — action A-17-07 |
+| NFR-R05 | Reproducible builds | All dependencies pinned | NeMo pinned (60ce9407); ollama/cloudflared images unpinned | Dockerfiles; REG-02 | 2026-09-22 | Richard Watson Stephen Amudha | Partial |
 
-### 2.5 Data protection *(ISO 9001 8.5.3 customer property)*
+### 2.5 Maintainability
 
-| ID | Requirement | Target | Measured | Source | Status |
-|---|---|---|---|---|---|
-| NFR-D01 | Customer data never leaves the customer perimeter | Absolute | All inference local; no cloud AI provider enabled; the single cloud image path (`DOCGEN_IMAGE_BACKEND=nim`) is disabled | `docker-compose.yml`; `REG-02` §4 | Monitored |
-| NFR-D02 | Encryption at rest | — | **None.** SQLite, uploads and FAISS indexes are unencrypted | `REG-03` risk R-13 | **Gap — accepted, disclosed** |
-| NFR-D03 | Data retention bounded | Per data class | **No retention policy exists**; auto-store grows the corpus continuously (97.6% of chunks were auto-saved transcript at one measurement) | `REG-03` risk R-06; `corpus_stats.json` | **Gap** |
+| ID | Requirement | Target | Measured | Method / source | Date | Owner | Status |
+|---|---|---|---|---|---|---|---|
+| NFR-M01 | Automated regression on every change | Every push | CI: backend 50, voice 131, type-check; proven to fail on a broken test | CI runs 37561379960 / 37561804619 | 2026-10-07 | Richard Watson Stephen Amudha | Meets |
+| NFR-M02 | Running instance traceable to source | Version + commit reported | 1.4.1 / f1b8445 on backend, voice and front end | /api/version; TC-EM-REL-106 | 2026-10-06 | Richard Watson Stephen Amudha | Meets |
 
----
+### 2.6 Data protection
+
+| ID | Requirement | Target | Measured | Method / source | Date | Owner | Status |
+|---|---|---|---|---|---|---|---|
+| NFR-D01 | Customer data never leaves the perimeter | Absolute | All inference local; no cloud AI path enabled | docker-compose.yml; REG-02 | 2026-10-07 | Kishan Haravu Pradeep | Meets |
+| NFR-D02 | Encryption at rest | Decision required | None (SQLite, uploads, indexes unencrypted) | REG-03 R-13 | 2026-09-21 | Kishan Haravu Pradeep | Gap — decision A-17-08 |
+| NFR-D03 | Retention bounded per data class | Per class, in days (decision) | No policy | REG-03 R-06 | 2026-09-21 | Kishan Haravu Pradeep | Gap — decision A-17-08 |
 
 ## 3. NFRs deliberately NOT measured, and why
 
@@ -131,14 +141,14 @@ Evidence that NFR monitoring produces action, not just numbers:
 
 | Ref | Action | Priority | Owner | Due |
 |---|---|---|---|---|
-| **A-1** | **Agree a target for every `not formally set` NFR above.** Measurement without an agreed threshold cannot show conformity, only activity. This is the substantive remainder of finding #6. | **High — before 14 Oct** | `________` | `________` |
+| ~~A-1~~ | ~~Agree a target for every NFR~~ — **done 2026-10-07**: targets approved in EM26-17 §3 | — | Anita Johan | done |
 | A-2 | ~~Re-run the golden evaluation against HEAD~~ — **done 2026-09-22; result 9/52, corpus absent.** Superseded by A-8 | — | — | done |
-| **A-8** | **Restore the evaluation corpus and re-measure** (`REG-04` NC-2026-008). Until this is done the organisation has **no current measurement of retrieval quality** and cannot evidence NFR-Q01–Q05 | **Critical — before 7 Oct dry run** | `________` | `________` |
-| A-3 | Reconcile the 2025 closure evidence (Confluence / Jenkins / build v1.3.27) with this codebase, or state plainly to the auditor that the product has been rebuilt since | **High — before 7 Oct dry run** | `________` | `________` |
-| A-4 | Add health checks to `frontend` and `cloudflared` (NFR-R01) | Medium | `________` | `________` |
-| A-5 | Improve NFR-Q04 abstention accuracy (0.78) — it underwrites the product's central claim | Medium | `________` | `________` |
-| A-6 | Investigate NFR-P07 barge-in stop time (~2.1 s) against a target | Medium | `________` | `________` |
-| A-7 | Set the retention policy (NFR-D03) and implement it | Medium | `________` | `________` |
+| **A-8** | **Restore the evaluation corpus and re-measure** (`REG-04` NC-2026-008). Until this is done the organisation has **no current measurement of retrieval quality** and cannot evidence NFR-Q01–Q05 | **Critical — before 7 Oct dry run** | Richard Watson Stephen Amudha | 2026-10-13 |
+| ~~A-3~~ | ~~Reconcile the 2025 closure evidence~~ — **addressed 2026-10-07**: the 2025 product is the predecessor; equivalent controls for the rebuilt product in EM26-00 §2 and EM26-17 §2 | — | Alexander Peter | done |
+| A-4 | Add health checks to `frontend` and `cloudflared` (NFR-R01) | Medium | Richard Watson Stephen Amudha | 2026-10-31 |
+| A-5 | Improve NFR-Q04 abstention accuracy (0.78) — it underwrites the product's central claim | Medium | Richard Watson Stephen Amudha | 2026-11-30 |
+| A-6 | Investigate NFR-P07 barge-in stop time (~2.1 s) against a target | Medium | Richard Watson Stephen Amudha | 2026-11-30 |
+| A-7 | Set the retention policy (NFR-D03) and implement it | Medium | Anita Johan / Kishan Haravu Pradeep | 2026-10-31 |
 
 ## 6. Review
 
@@ -147,4 +157,4 @@ NFR measurement moves outside its agreed target.
 
 | Review date | Reviewed by | Changes |
 |---|---|---|
-| `________` | `________` | Initial — set targets per action A-1 |
+| 2026-10-07 | Alexander Peter (review), Anita Johan (approval) | Targets set and approved — EM26-17 |

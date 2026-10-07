@@ -4,11 +4,15 @@
 |---|---|
 | Document ID | SOP-07 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Engineering Lead |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Lead Engineer (Richard Watson Stephen Amudha) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 8.3.4, 8.6, 9.1.1 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ---
 
@@ -196,7 +200,7 @@ release record and a corresponding entry raised for correction.
    what was run, and what it showed. This is the organisation's existing practice and it is
    retained.
 2. For a release, the checklist in §6 is completed on `forms/FRM-03_Release_Record.md` (SOP-08).
-3. **An evaluation run's JSON report is a record and is retained.** `eval/run_eval.py:276-279`
+3. **An evaluation run's JSON report is a record and is retained.** `eval/run_eval.py:304-307`
    writes `eval/reports/eval_<run_id>.json` containing the run identifier, the base URL, the score
    and the per-item result. Going forward, the report for any run used to support a release is
    committed to the repository as evidence under 8.6.
@@ -278,7 +282,7 @@ published figures to be reproducible from recorded evidence; this one is not.
 | G-6 | Published performance figures are current and evidenced | `README.md:126` quotes 48/52; latest retained report is 49/52 and predates three behaviour-changing commits | **Open.** Re-run and re-quote, or remove the figure |
 | G-7 | Static analysis and type checking | No ESLint, ruff, mypy or pre-commit; `vite build` runs no `tsc`; `tsconfig.json` is not `strict` | **Open** |
 | G-8 | Automated assertions on the voice path | `voice_e2e_test.py` and `voice_cadence_test.py` make no assertions | **Open.** Voice regressions are detectable only by a person reading output |
-| G-9 | Citation-precision threshold | Computed at `eval/run_eval.py:171`, never compared against a limit | **Open.** README claims a 0.98 precision criterion that the harness does not enforce |
+| G-9 | Citation-precision threshold | Computed at `eval/run_eval.py:188`, never compared against a limit | **Open.** README claims a 0.98 precision criterion that the harness does not enforce |
 | G-10 | Frontend verification | No frontend tests of any kind exist | **Open** |
 
 All gaps above are to be carried into `ISO9001_Gap_Analysis.md`.

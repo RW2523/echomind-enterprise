@@ -4,11 +4,15 @@
 |---|---|
 | Document ID | SOP-01 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 7.5.1, 7.5.2, 7.5.3 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ---
 
@@ -74,8 +78,8 @@ a MAJOR increment requires re-approval and re-communication.
 | `SUPERSEDED BY <ID>` | Replaced; retained for retention period only. |
 | `WITHDRAWN` | No longer part of the QMS; retained for retention period only. |
 
-> Every document in this initial set is `DRAFT — not yet approved`. That is deliberate and
-> accurate: the QMS has been authored but not yet adopted. See `ADOPTION_GUIDE.md`.
+> The initial set was `DRAFT — not yet approved` from 2026-09-21 until 2026-10-07, when it was approved by
+> Anita Johan (Managing Director) — approval record `records/approvals/2026-10-07_AR-2026-001_document_approval.md`.
 
 ## 6. Creation, review and approval
 

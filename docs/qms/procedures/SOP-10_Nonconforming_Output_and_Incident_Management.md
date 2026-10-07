@@ -3,12 +3,18 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-10 |
-| Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Lead Engineer |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Revision | 1.1 |
+| Status | **APPROVED** |
+| Owner | Lead Engineer (Richard Watson Stephen Amudha) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 8.7.1, 8.7.2, 10.2 (interface only) |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
+
+> **Revision note 2026-10-07.** Wording in this procedure about “one person” describes the engineering work, which is concentrated in the Lead Engineer. Within AJACE Inc. the roles are held by named people (QM-01 §7.1): independent review by the EchoMind Project Lead (Alexander Peter), verification and QMS maintenance by QA/MR (Sheryl Nazareth), approval and release authorisation by the Managing Director (Anita Johan); internal audit is provided by the AJACE Inc. corporate audit programme.
 
 ---
 
@@ -38,7 +44,7 @@ nonconformity could recur elsewhere, and verifying that a corrective action work
 | Managing Director | Authorises any disposition that releases nonconforming output to a customer — acceptance under concession, and every decision to inform or not inform a customer. Reviews all S1 and S2 records at management review (`SOP-15`). |
 | Anyone contributing code | Raises a nonconformity as soon as it is recognised, including one found incidentally while working on something else, and including one they caused themselves. |
 
-Ajace AI currently has one person, who holds all three roles (`SOP-02` §3). Where this procedure
+The roles are held by named people (QM-01 §7.1; `SOP-02` §3). Where this procedure
 requires authorisation by a different role from the one that proposed the action, that separation
 does not currently exist; the record must still be made, and the absence of independent
 authorisation is a recorded gap (§11).
@@ -63,8 +69,8 @@ Controls that exist today specifically against **N1**, cited so an auditor can r
 
 | Control | Where |
 |---|---|
-| Cross-encoder relevance reranking of the retrieved candidate pool | `backend/app/rag/advanced.py:616-644`, using `backend/app/rag/reranker.py` |
-| Relevance threshold below which no source is accepted as an answer basis | `backend/app/rag/advanced.py:1699-1712` (`settings.RAG_RELEVANCE_THRESHOLD`) |
+| Cross-encoder relevance reranking of the retrieved candidate pool | `backend/app/rag/advanced.py:625-653`, using `backend/app/rag/reranker.py` |
+| Relevance threshold below which no source is accepted as an answer basis | `backend/app/rag/advanced.py:1708-1721` (`settings.RAG_RELEVANCE_THRESHOLD`) |
 | Deterministic not-found response instead of falling back to ungrounded general chat | `backend/app/rag/advanced.py:74-80` (`INSUFFICIENT_CONTEXT_MSG`) |
 | Retrieved and recorded content fenced as untrusted data in every prompt | `backend/app/api/routes/chat.py:20` (`_fence_untrusted`); asserted by `backend/tests/test_prompt_guards.py` (5 tests over the analyser, compress, contextualiser, RAG and strict prompts, plus lawyer-persona disclaimer consistency) |
 | Namespace predicate applied inside every index search path | `backend/app/rag/index.py:37-40` (`_ns_ok`) |
@@ -91,13 +97,13 @@ produces, not what it could produce.
 
 | Channel | What it detects | Evidence path |
 |---|---|---|
-| Golden-question evaluation | N1 and N2 regressions — a retrieval item that stops being answered, a refusal item that stops refusing, a routing item that starts citing | `eval/run_eval.py`; 52 items across seven sets in `eval/golden/*.jsonl`; binary gate at `eval/run_eval.py:281` (`return 0 if total_pass == len(results) else 1`) |
+| Golden-question evaluation | N1 and N2 regressions — a retrieval item that stops being answered, a refusal item that stops refusing, a routing item that starts citing | `eval/run_eval.py`; 52 items across seven sets in `eval/golden/*.jsonl`; binary gate at `eval/run_eval.py:309` (`return 0 if total_pass == len(results) else 1`) |
 | Paper harness | Grounding, isolation and injection-containment measurement at experiment scale | `eval/paper/`, results in `eval/paper/results/` |
 | Unit tests | Prompt-guard and RAG behaviour regressions | `backend/tests/` — 40 test functions across 7 files |
-| Container healthchecks | N4 — fatal CUDA/STT fault, LLM server not serving, embedding model absent | `backend/app/main.py:185-195`; `voice/app/server.py:74-82`; `docker-compose.yml` healthchecks for `trtllm` and `ollama` |
-| Front-end crash reporting | N4 in the browser | `frontend/components/ErrorBoundary.tsx:27,36` posts to `/api/client-error`, logged at ERROR by `backend/app/main.py:198-206` |
+| Container healthchecks | N4 — fatal CUDA/STT fault, LLM server not serving, embedding model absent | `backend/app/main.py:212-222`; `voice/app/server.py:87-95`; `docker-compose.yml` healthchecks for `trtllm` and `ollama` |
+| Front-end crash reporting | N4 in the browser | `frontend/components/ErrorBoundary.tsx:27,36` posts to `/api/client-error`, logged at ERROR by `backend/app/main.py:232-240` |
 | Error surfaced to the user over the transcription WebSocket | N3 and N4 during live transcription | 14 `{"type": "error"}` emission sites in `backend/app/transcribe/ws.py`, e.g. `:1031` and `:1069` |
-| Activity log | Anomalous request volume or a pattern of failing status codes | `activity_log` table (`backend/app/core/db.py:17`), written by `backend/app/main.py:154-163`, read via `backend/app/core/audit.py:25,36` |
+| Activity log | Anomalous request volume or a pattern of failing status codes | `activity_log` table (`backend/app/core/db.py:17`), written by `backend/app/main.py:175-192`, read via `backend/app/core/audit.py:25,37` |
 | User or customer report | Anything the above miss — in particular N1, which no automated channel catches in production | No in-product feedback channel exists (§11) |
 | Own observation during development or deployment | Historically the largest source | Commit history; see the worked examples in §10 |
 
@@ -140,7 +146,7 @@ configuration, and the configuration points exist:
 | Containment | Mechanism |
 |---|---|
 | Disable a retrieval path or feature that is producing ungrounded output | Feature flags in `backend/app/core/config.py`; the pattern is commit `2decb99`, which gated BookRAG off by default because it measured worse |
-| Take a deployment off the public internet | Stop the `public` compose profile (`docker-compose.yml:218-228`) or disable the Cloudflare Access application (`docs/PUBLIC_DEPLOYMENT.md` §"Rolling back") |
+| Take a deployment off the public internet | Stop the `public` compose profile (`docker-compose.yml:240-250`) or disable the Cloudflare Access application (`docs/PUBLIC_DEPLOYMENT.md` §"Rolling back") |
 | Suspend a module | Stop the owning container; the frontend degrades rather than the whole stack failing |
 | Withhold a release | The release is not tagged or distributed under `SOP-08` |
 
@@ -225,11 +231,11 @@ build time and `webrtcvad` at runtime; and the boardroom module stored raw JSON 
 summary when the LLM report JSON was truncated. Verification was a from-scratch rebuild: all six
 containers healthy, chat, Silent Assistant, voice and boardroom passing, volumes preserved. The
 mitigation for the dependency drift is pinned in place with its reason at
-`backend/Dockerfile:32-33`.
+`backend/Dockerfile:36-37`.
 
 **Example D — `73f0b4f` (2026-07-29): a control that was not working.**
 The voice WebSocket authentication gate was silently non-functional because `AUTH_SECRET` was
-passed where `VOICE_AUTH_SECRET` was expected (`docker-compose.yml:143-146`). A control believed to
+passed where `VOICE_AUTH_SECRET` was expected (`docker-compose.yml:158-161`). A control believed to
 be in place was not. This class always escalates under §9.
 
 **Example E — `eval/paper/results/REGRESSION_AND_FIXES.json`: the nearest existing thing to a
@@ -268,12 +274,12 @@ events, and nothing at all governs telling a customer.
 |---|---|---|
 | No incident or nonconformity register before this QMS | `docs/qms/registers/` contained no register at the time of writing; `registers/REG-04` is created by this QMS and seeded only from the evidence in §10 | Defects were corrected but never counted, aged or reviewed as a set; recurrence cannot be demonstrated either way |
 | No in-repo issue tracker | No `ISSUES.md`, no `TODO.md`, no `.github/` directory; a repository-wide search for `TODO`, `FIXME` and `HACK` returns zero matches | There is no list of known-open problems. An auditor asking "what is currently wrong?" cannot be answered from the repository |
-| Known issues are recorded in configuration comments | For example `docker-compose.yml:7-11` (GB10 worker-spawn CUDA bug and its rollback plan), `:41-44` (`gpus: all` versus the `deploy` form breaking NVML, "Verified: same image works with --gpus all, fails via the deploy form"), `:86-89`, `:164-166` (onnxruntime CUDA EP unavailable on ARM), `backend/Dockerfile:32-33` (setuptools drift) | The content is real, specific and verified — but it is distributed across configuration files with no list, no owner, no status and no closure evidence. It is knowledge, not a record |
+| Known issues are recorded in configuration comments | For example `docker-compose.yml:7-11` (GB10 worker-spawn CUDA bug and its rollback plan), `:41-44` (`gpus: all` versus the `deploy` form breaking NVML, "Verified: same image works with --gpus all, fails via the deploy form"), `:86-89`, `:164-166` (onnxruntime CUDA EP unavailable on ARM), `backend/Dockerfile:36-37` (setuptools drift) | The content is real, specific and verified — but it is distributed across configuration files with no list, no owner, no status and no closure evidence. It is knowledge, not a record |
 | No customer-notification procedure | Nothing in `docs/` defines who tells a customer what, within what time, after an N1 or N2 event | §8.3 is currently an obligation with no mechanism. This is the highest-priority gap in this procedure |
 | No separation between proposer and authoriser | One person holds all roles (`SOP-02` §3) | Acceptance under concession is self-authorised. The record must still be written, and the absence noted at management review |
 | No in-product feedback channel | The front end has a single `ErrorBoundary` (`frontend/App.tsx:156`) and no toast or notification component at all; there is no "report a bad answer" affordance | N1 — the most severe class — has no production detection channel whatsoever. It can only be found by evaluation, and the evaluation runs against a fixed question set |
 | Raw exception text leaks to the client | Four bare `str(e)` passthroughs in `backend/app/transcribe/ws.py` at `:353`, `:905`, `:963` and `:1178` | Internal detail reaches a user in a regulated environment; the message is also useless to that user |
-| Evaluation reports are not retained | `eval/.gitignore` excludes `reports/`, which is where `eval/run_eval.py:275-276` writes each run | Verification evidence cited in a nonconformity record cannot be produced later. See `SOP-12` §6 |
+| Evaluation reports are not retained | `eval/.gitignore` excludes `reports/`, which is where `eval/run_eval.py:303-304` writes each run | Verification evidence cited in a nonconformity record cannot be produced later. See `SOP-12` §6 |
 | No severity or classification has ever been assigned | The 22 `fix:` commits among 202 carry no severity field | Trend analysis by severity is not possible from the existing record and will begin only from adoption of this procedure |
 
 Each gap above is carried into `registers/REG-03_Risk_Register.md` and into `ISO9001_Gap_Analysis.md`.

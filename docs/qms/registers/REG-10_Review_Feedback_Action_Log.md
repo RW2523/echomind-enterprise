@@ -5,9 +5,10 @@
 | Document ID | REG-10 |
 | Revision | 1.0 |
 | Status | **LIVE REGISTER** |
-| Owner | Lead Engineer, EchoMind Product |
+| Owner | Lead Engineer, EchoMind Product (Richard Watson Stephen Amudha) |
 | ISO 9001:2015 clauses | 9.1.1, 8.3.4 (design review), 10.2 |
 | Raised in response to | **AFR Stage 2 audit finding #7 (16-Oct-2025, clause 9.1.1, Observation)** — *"No actions were available from review feedback of deliverables"* |
+| Reviewed | 2026-10-07 — Alexander Peter (EchoMind Project Lead); QA Sheryl Nazareth |
 
 ---
 
@@ -92,6 +93,21 @@ nonconformities in `REG-04` under SOP-10.
 
 ---
 
+## 3a. Review log 2026 (summary of EM26-18)
+
+All 40 actions, with owner, due date and closure evidence, are in `evidence-2026/18_Review_Actions/EM26-18_Deliverable_Review_Feedback_and_Action_Log.docx` and on the project board. Reviewed by Alexander Peter, approved by Anita Johan on 2026-10-07.
+
+| Review | Date | Deliverable | Performed by | Findings | Actions | Closed | Record |
+|---|---|---|---|---|---|---|---|
+| RV-2026-01 | 2026-07-29 → 08-07 | Retrieval pipeline | Richard Watson Stephen Amudha | 5 defects + 1 isolation regression | 2 | 2 | ebd232f, 4e27109 — REG-10 RF-2026-003 |
+| RV-2026-02 | 2026-08-07 | Research paper experiment campaign (E1–E10) | Richard Watson Stephen Amudha | 4 substantive (2 contradict published claims) | 1 | 0 | eval/paper/results/SUMMARY.json — RF-2026-002 |
+| RV-2026-03 | 2026-09-21 | Voice change set (speculative reply, tool routing, GPU STT) | Richard Watson Stephen Amudha (AI-assisted, independent verification) | 40 raised; 22 confirmed; 18 refuted | 22 | 22 | ff29843 — RF-2026-001 |
+| RV-2026-04 | 2026-09-22 | Golden evaluation re-run for audit evidence | Richard Watson Stephen Amudha | Corpus absent (9/52) | 2 | 1 | NC-2026-008; eval_20260922-135322.json |
+| RV-2026-05 | 2026-09-28 | Repository health check | Richard Watson Stephen Amudha | 5 failing tests, 20 type errors | 2 | 2 | 5ddf8a6, 736ea61 — NC-2026-010 |
+| RV-2026-06 | 2026-10-06 | October audit pack | Richard Watson Stephen Amudha | 6 statements wrong (incl. no login on the public site) | 2 | 2 | 855bd80, 1d7f154 — NC-2026-009 |
+| RV-2026-07 | 2026-10-06 | Release candidate (13 acceptance test cases) | Richard Watson Stephen Amudha | 4 defects; re-tests found 2 more | 5 | 3 | e0ed4d0, 3feb5db, f1b8445 — NC-2026-012…016 |
+| RV-2026-08 | 2026-10-07 | Public instance access logs | Richard Watson Stephen Amudha | Ungated 68 days; 64 scanner probes; no data change outside engineering work | 4 | 2 | records/capa/2026-10-07_NC-2026-009_access_log_review.md |
+
 ## 4. Contemporaneous entries
 
 | Ref | Date | Deliverable | Review type | Finding | Severity | Owner | Due | Closed (effectiveness verified) |
@@ -104,6 +120,6 @@ nonconformities in `REG-04` under SOP-10.
 
 | Ref | Observation | Action |
 |---|---|---|
-| **O-1** | Review rigour is high but **concentrated in one person**, who is also the author of the work being reviewed. Independent review is not achievable internally at current headcount — the same constraint that prevents impartial internal audit (SOP-13 §4). The adversarial-review method in RF-2026-001 is a partial mitigation, not a substitute for a second reviewer. | Carried as risk R-03 in `REG-03` |
+| **O-1** | Review rigour is high but **concentrated in one person** (from 2026-10-07: independent review of deliverables by the EchoMind Project Lead, Alexander Peter), who is also the author of the work being reviewed. Independent review is not achievable internally at current headcount — the same constraint that prevents impartial internal audit (SOP-13 §4). The adversarial-review method in RF-2026-001 is a partial mitigation, not a substitute for a second reviewer. | Carried as risk R-03 in `REG-03` |
 | **O-2** | Of the three retrospective entries, **two record explicit effectiveness verification and one does not** (RF-2026-002, where verification is not yet applicable). | Tracked by objective QO-5 |
 | **O-3** | Review findings that are *refuted* are as valuable as those confirmed — 18 of 40 in RF-2026-001. Recording the refutation prevents re-raising them. | Retained in the workflow journal |

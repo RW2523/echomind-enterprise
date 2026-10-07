@@ -2,13 +2,14 @@
 
 **Ajace AI · ISO 9001:2015 · Revision 1.0 · authored 2026-09-21**
 
-> ### Status: documented, not yet adopted
+> ### Status: approved 2026-10-07 — operating within the AJACE Inc. corporate QMS
 >
-> Every document in this set is **`DRAFT — not yet approved`**. No document has been signed, no
-> internal audit has been conducted, and no management review has been held. This is an accurate
-> statement of position, not a disclaimer.
+> All controlled documents were approved on 2026-10-07 by Anita Johan (Managing Director), reviewed by Alexander Peter
+> (EchoMind Project Lead) with QA by Sheryl Nazareth — approval record
+> [`records/approvals/2026-10-07_AR-2026-001_document_approval.md`](records/approvals/2026-10-07_AR-2026-001_document_approval.md). An internal audit of the EchoMind area and a management review covering
+> it are still to be held through the corporate programme.
 >
-> **Do not present this set as an implemented or certified quality management system.** Read
+> Read
 > [`ADOPTION_GUIDE.md`](ADOPTION_GUIDE.md) first — it explains exactly what is needed to make it
 > real, and it is short.
 
@@ -130,7 +131,7 @@ For balance, and because these are the foundations the system is built on:
 
 - **Documented-information control is properly solved** by Git — versioned, attributed, replicated.
 - **A real, version-controlled measuring instrument**: 52 golden questions across seven domains with
-  a binary pass gate (`eval/run_eval.py:281`), plus 78 unit test functions.
+  a binary pass gate (`eval/run_eval.py:309`), plus 78 unit test functions.
 - **Measurement honesty**: `eval/paper/results/SUMMARY.json` records findings that contradict the
   organisation's own published paper, and marks an unrun experiment `"not_run"` rather than
   estimating it. That culture is the hardest part of a QMS to create and it already exists here.

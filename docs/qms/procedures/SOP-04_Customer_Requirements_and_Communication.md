@@ -3,12 +3,18 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-04 |
-| Revision | 1.2 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Revision | 1.3 |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 8.2.1, 8.2.2, 8.2.3, 8.2.4, 9.1.2 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
+
+> **Revision note 2026-10-07.** Wording in this procedure about “one person” describes the engineering work, which is concentrated in the Lead Engineer. Within AJACE Inc. the roles are held by named people (QM-01 §7.1): independent review by the EchoMind Project Lead (Alexander Peter), verification and QMS maintenance by QA/MR (Sheryl Nazareth), approval and release authorisation by the Managing Director (Anita Johan); internal audit is provided by the AJACE Inc. corporate audit programme.
 
 ---
 
@@ -124,7 +130,7 @@ A change accepted informally and not recorded is a nonconformity under `SOP-14`.
 | Information about the product and services | `docs/CAPABILITIES.md` is the internal source of truth for what the platform does; anything stated externally must be consistent with it. `docs/USER_MANUAL.md` (1257 lines, 16 chapters) is the user-facing operating documentation issued with a deployment. |
 | Enquiries, contracts, order handling and amendments | Directed to the Managing Director. Every enquiry is logged in `registers/REG-06_Customer_Feedback_and_Complaints_Log.md` on receipt, whether or not it progresses, so that the pipeline and the response times are visible. Amendments follow §6. |
 | Customer feedback, including complaints | Logged in `registers/REG-06_Customer_Feedback_and_Complaints_Log.md` — see §8. |
-| Handling or controlling customer property | Customer documents, transcripts and audio are customer property under ISO 9001:2015 8.5.3 and are handled under `SOP-11`. They are held only in the deployment's data volumes and are never committed to this repository (`SOP-01` §9). The customer is told in writing where their data resides, that `docker-compose.yml:101-102` mounts volume `echomind_data` as the single store for it, and — while the gap in `SOP-02` §12 remains open — that no backup of that volume is provided by Ajace AI. |
+| Handling or controlling customer property | Customer documents, transcripts and audio are customer property under ISO 9001:2015 8.5.3 and are handled under `SOP-11`. They are held only in the deployment's data volumes and are never committed to this repository (`SOP-01` §9). The customer is told in writing where their data resides, that `docker-compose.yml:112-113` mounts volume `echomind_data` as the single store for it, and — while the gap in `SOP-02` §12 remains open — that no backup of that volume is provided by Ajace AI. |
 | Specific requirements for contingency actions | Where the engagement warrants it, the requirements record states what happens on a model-serving failure, a hardware failure and an Ajace AI availability failure. The last of these must be stated honestly given the single-person constraint. |
 
 **Public-facing deployment.** A demonstration instance runs at echomind-ajace.com behind Cloudflare
@@ -191,7 +197,7 @@ statement is the most important line in the document and it is repeated here del
 | Complaint records | None. No complaint has been recorded; this is not the same as none having been received. |
 | Customer satisfaction monitoring | Not performed. No satisfaction review has taken place and no method was in operation before this procedure. |
 | CRM or enquiry tracking | None. Enquiries, to the extent they have occurred, are not logged in any system inside the repository. |
-| Named customers | None are recorded, and none are named in this QMS. Where an auditor expects a customer name, the field is `________`. |
+| Named customers | None are recorded, and none are named in this QMS. Where an auditor expects a customer name: none yet for the rebuilt product — requirements come from the banking and law-firm use cases (vertical packs) and are recorded in EM26-17. |
 | Acceptance criteria agreed with a customer | None recorded. The golden-question sets in `eval/golden/` were written by Ajace AI against demonstration material, not agreed with any customer. |
 
 **What does exist** is the commercial and technical basis on which the control will operate: a

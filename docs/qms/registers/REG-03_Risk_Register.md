@@ -5,9 +5,10 @@
 | Document ID | REG-03 |
 | Revision | 1.0 |
 | Status | **LIVE REGISTER — ratings are PROPOSED and require management confirmation** |
-| Owner | Managing Director |
+| Owner | Managing Director (Anita Johan) |
 | ISO 9001:2015 clauses | 6.1.1, 6.1.2, 9.3.2 e), 10.2.1 e) |
 | Governing procedure | SOP-02 |
+| Reviewed | 2026-10-07 — Alexander Peter (EchoMind Project Lead); QA Sheryl Nazareth |
 
 ---
 
@@ -17,7 +18,7 @@ Every risk below is **derived from evidence already in the repository** — code
 comments, commit history or evaluation results — not from a generic risk checklist. The evidence
 column cites where each came from, so any entry can be checked.
 
-**The likelihood and impact scores are a proposal.** They are one person's reading of the evidence
+**The likelihood and impact scores were proposed on 2026-09-21 and confirmed at approval on 2026-10-07** (`records/approvals/2026-10-07_AR-2026-001_document_approval.md`). They are one person's reading of the evidence
 and they have not been agreed by management. They are recorded so that the first management review
 has something concrete to challenge rather than a blank page. Confirm or change them at that review
 and set Revision 1.1.
@@ -43,13 +44,13 @@ and set Revision 1.1.
 | | |
 |---|---|
 | Category | External provider / supply chain |
-| Description | `nemo_toolkit[asr]` is installed as `git+https://github.com/NVIDIA/NeMo.git@main` in `backend/Dockerfile:22` and `voice/Dockerfile`. A branch is not a release: every rebuild can pull different code, and the resulting image is not reproducible. |
+| Description | Until 2026-09-22 `nemo_toolkit[asr]` was installed as `git+https://github.com/NVIDIA/NeMo.git@main` in both the backend and voice Dockerfiles. A branch is not a release: every rebuild could pull different code, and the resulting image was not reproducible. Now pinned at `backend/Dockerfile:23` and `voice/Dockerfile:22`. |
 | Evidence | The risk has **already materialised**: commit `724fb98` (2026-09-04) records NeMo@main pulling `setuptools>=82`, which removed `pkg_resources`, breaking librosa at build (backend) and webrtcvad at runtime (voice crash-loop on boot). |
 | Likelihood / Impact / Rating | 5 / 4 / **20 — Critical** (likelihood 5 because it has already occurred) — **residual after pinning: 1 / 4 / 4 Low** |
 | Existing controls | **Pinned to commit `60ce9407ef60a3327ffaf2c15931b9b3b834afc2` in both Dockerfiles (2026-09-22)** — the exact build verified running in production (NeMo 3.1.0+60ce9407e). `setuptools>=70,<82` re-pin retained as defence in depth. |
 | Treatment | **Treated — cause removed.** The build is now reproducible. Residual: review the pin when a NeMo upgrade is wanted, and re-verify before adopting it. |
-| Owner / due | `________` / `________` |
-| Residual (after treatment) | 2 / 4 / 8 — Medium |
+| Owner / due | Richard Watson Stephen Amudha / Closed — pinned 2026-09-22 |
+| Residual (after treatment) | 1 / 4 / 4 — Low |
 | Linked | NC-2026-006; QO-6; SOP-09 |
 
 ### R-02 — No backup of the only volume containing customer data
@@ -62,7 +63,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 3 / 5 / **15 — Critical** |
 | Existing controls | **`scripts/backup_data.sh` / `restore_data.sh` (2026-09-22).** Consistent SQLite snapshot via the online backup API; reproducible model caches excluded (351 MB rather than 23 GB); checksummed; archive verified readable. **Restore exercised 2026-09-22** into a throwaway volume — `integrity_check` ok, 32 tables. |
 | Treatment | **Treated (2026-09-22).** `install_backup_timer.sh` installs a nightly systemd timer; `BACKUP_REMOTE` replicates off-host by rsync/scp or to a mounted share, and a failed replication aborts loudly rather than leaving a single on-host copy. Residual: the operator must set `BACKUP_REMOTE` and confirm the destination. *Verified 2026-10-06: not yet installed on the reference host and `BACKUP_REMOTE` unset — the treatment exists but is not operating there.* |
-| Owner / due | `________` / `________` |
+| Owner / due | Kishan Haravu Pradeep / 2026-10-13 |
 | Residual | 2 / 3 / 6 — Medium |
 | Linked | QO-4 (highest-priority objective); SOP-11 §8 |
 
@@ -76,7 +77,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 3 / 5 / **15 — Critical** |
 | Existing controls | Unusually good written rationale in commit bodies and `docs/` — a genuine partial mitigation. |
 | Treatment | **Reduce.** Maintain the documentation discipline deliberately rather than incidentally; identify a second competent person, at minimum on contract, for audit independence and continuity. |
-| Owner / due | `________` / `________` |
+| Owner / due | Anita Johan / 2026-12-31 |
 | Residual | 3 / 3 / 9 — Medium |
 | Linked | SOP-03 §7; SOP-13 §4; QO-7 |
 
@@ -85,12 +86,12 @@ and set Revision 1.1.
 | | |
 |---|---|
 | Category | Customer data / access control |
-| Description | `AUTH_ENABLED` defaults to `0` (`docker-compose.yml:79`, `backend/app/core/config.py:231`). The auth middleware is HTTP-only — the code states it plainly at `backend/app/main.py:135`: *"WebSocket endpoints are not gated here yet."* `CORS_ALLOW_ORIGINS` defaults to `*`; `RATE_LIMIT_PER_MIN` defaults to `0` (off). Critically, the tenant-isolation boundary in `_effective_ns()` (`backend/app/api/routes/chat.py:25-33`) **only applies when auth is enabled** — with auth off, the knowledge-base namespace is whatever the client sends, unverified. |
+| Description | `AUTH_ENABLED` defaults to `0` (`docker-compose.yml:90`, `backend/app/core/config.py:231`). The auth middleware is HTTP-only — the code states it plainly at `backend/app/main.py:157`: *"WebSocket endpoints are not gated here yet."* `CORS_ALLOW_ORIGINS` defaults to `*`; `RATE_LIMIT_PER_MIN` defaults to `0` (off). Critically, the tenant-isolation boundary in `_effective_ns()` (`backend/app/api/routes/chat.py:27-35`) **only applies when auth is enabled** — with auth off, the knowledge-base namespace is whatever the client sends, unverified. |
 | Evidence | The files cited; `docs/PUBLIC_DEPLOYMENT.md` step 4 titled "Put a login wall in front (MANDATORY)". |
 | Likelihood / Impact / Rating | 3 / 5 / **15 — Critical** (as deployed on a trusted LAN the likelihood is lower; the rating reflects the default configuration) |
 | Existing controls | Cloudflare Access in front of the public instance — **not in place** — the public instance is gated by application auth instead, which had been switched off until 2026-10-06 (NC-2026-009): this risk materialised there; the auth implementation itself is sound (PBKDF2-HMAC-SHA256, 200,000 iterations, constant-time verify). The deployment documentation is explicit that gating is mandatory. |
 | Treatment | **Reduce.** Extend the auth middleware to WebSocket endpoints; decide whether `AUTH_ENABLED=1` should be the default for customer deployments; narrow the default CORS origin. |
-| Owner / due | `________` / `________` |
+| Owner / due | Kishan Haravu Pradeep / 2026-10-31 |
 | Residual | 2 / 4 / 8 — Medium |
 | Linked | SOP-11 §5; NC-2026-003; NC-2026-009 |
 
@@ -104,7 +105,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 3 / 5 / **15 — Critical** — a recurrence of a defect class is evidence the cause was not removed |
 | Existing controls | Post-fix audit of all five retrieval paths: 0/359 out-of-namespace hits. Candidate-pool widening so namespace filtering does not starve small tenants. |
 | Treatment | **Reduce.** Make the filter structural so a newly added retrieval path cannot bypass it (a single enforced entry point rather than a convention). |
-| Owner / due | `________` / `________` |
+| Owner / due | Richard Watson Stephen Amudha / 2026-11-30 |
 | Residual | 2 / 5 / 10 — High |
 | Linked | REG-04 observation O-2 |
 
@@ -118,7 +119,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 4 / 3 / **12 — High** |
 | Existing controls | Six manual delete endpoints exist. |
 | Treatment | **Reduce.** Define a retention policy per data class; implement scheduled deletion; prune `activity_log`. |
-| Owner / due | `________` / `________` |
+| Owner / due | Kishan Haravu Pradeep / 2026-10-31 |
 | Residual | 2 / 2 / 4 — Low |
 | Linked | SOP-11 §7 |
 
@@ -132,7 +133,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 4 / 4 / **16 — Critical** on a long-running deployment |
 | Existing controls | **Bounded logging (50 MB x 5) on all six services (2026-09-22).** Takes effect on the next `docker compose up -d`; running containers keep their original config until recreated. |
 | Treatment | **Reduced.** Residual: verify after the next recreate that the running containers carry the new LogConfig. *Applied 2026-10-06: all six containers recreated and verified to carry the 50 MB × 5 LogConfig.* |
-| Owner / due | `________` / `________` |
+| Owner / due | Richard Watson Stephen Amudha / Closed — applied 2026-10-06 |
 | Residual | 1 / 4 / 4 — Low |
 | Linked | SOP-12 §6 |
 
@@ -146,7 +147,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 4 / 3 / **12 — High** |
 | Existing controls | A strong manual verification habit evidenced in commit bodies; the golden evaluation and unit suites exist and are run — just not automatically. |
 | Treatment | **Reduce.** Add CI running the unit suites at minimum; wire in `scripts/verify_offline_readiness.sh`, which already exists and is currently called by nothing. |
-| Owner / due | `________` / `________` |
+| Owner / due | Richard Watson Stephen Amudha / Closed — CI 2026-10-07 |
 | Residual | 2 / 3 / 6 — Medium |
 | Linked | QO-2; SOP-07 |
 
@@ -155,12 +156,12 @@ and set Revision 1.1.
 | | |
 |---|---|
 | Category | Configuration control |
-| Description | No git tags, no changelog, `frontend/package.json` is `"version": "0.0.0"`, backend/voice/frontend images are untagged, and no endpoint reports a build identifier. If a customer reports a defect, the exact code they are running cannot be established from the running system. |
-| Evidence | `git tag` is empty; the files cited. |
+| Description | As at 2026-09-21: no git tags, no changelog, `frontend/package.json` was `"version": "0.0.0"`, backend/voice/frontend images are untagged, and no endpoint reports a build identifier. If a customer reports a defect, the exact code they are running cannot be established from the running system. |
+| Evidence | As at 2026-09-21: `git tag` was empty; the files cited. |
 | Likelihood / Impact / Rating | 4 / 3 / **12 — High** |
-| Existing controls | None. |
+| Existing controls | Since 2026-10-06: annotated tags `v1.4.0`/`v1.4.1`, `CHANGELOG.md`, version `1.4.1` in `frontend/package.json`, build identity in each image and at `/api/version`, voice `/health`, `/build.json`; `REG-08`. |
 | Treatment | **Reduce.** Adopt the release-identification scheme in SOP-08 §6. |
-| Owner / due | `________` / `________` |
+| Owner / due | Richard Watson Stephen Amudha / Closed — v1.4.1 2026-10-06 |
 | Residual | 1 / 3 / 3 — Low |
 | Linked | QO-3; ISO 9001:2015 8.5.2 |
 
@@ -174,7 +175,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 3 / 4 / **12 — High** |
 | Existing controls | None. |
 | Treatment | **Reduce.** Complete `REG-02`, add a `NOTICE` file, generate an SBOM. |
-| Owner / due | `________` / `________` |
+| Owner / due | Richard Watson Stephen Amudha / 2026-10-31 |
 | Residual | 1 / 4 / 4 — Low |
 | Linked | QO-6; SOP-09 §7 |
 
@@ -188,7 +189,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 4 / 3 / **12 — High** |
 | Existing controls | A functioning fallback path — which is what makes the failure silent. |
 | Treatment | **Reduce.** Pre-download the model in the Dockerfile; log a WARNING when the fallback engages. |
-| Owner / due | `________` / `________` |
+| Owner / due | Richard Watson Stephen Amudha / 2026-11-30 |
 | Residual | 1 / 2 / 2 — Low |
 | Linked | REG-04 observation O-3 (silent failure class) |
 
@@ -202,7 +203,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 3 / 3 / **9 — Medium** (rises with concurrent users per deployment) |
 | Existing controls | The migration runbook is written. |
 | Treatment | **Accept for now, monitor.** Define the concurrency threshold that triggers execution of the migration. |
-| Owner / due | `________` / `________` |
+| Owner / due | Richard Watson Stephen Amudha / 2026-12-31 |
 | Residual | 3 / 3 / 9 — Medium |
 
 ### R-13 — No encryption at rest
@@ -215,7 +216,7 @@ and set Revision 1.1.
 | Likelihood / Impact / Rating | 2 / 5 / **10 — High** (the customer controls the host, which is the principal mitigation) |
 | Existing controls | On-premises deployment on customer-controlled hardware; the customer's own disk encryption if any. |
 | Treatment | **Reduce / transfer.** State the position explicitly to customers so their own controls can cover it; evaluate volume-level encryption as a deployment option. |
-| Owner / due | `________` / `________` |
+| Owner / due | Kishan Haravu Pradeep / 2026-10-31 |
 | Residual | 2 / 3 / 6 — Medium |
 | Linked | SOP-11 §6 |
 
@@ -227,9 +228,9 @@ and set Revision 1.1.
 | Description | The GB10 / Grace-Blackwell software stack is new, and real defects have originated below the application. |
 | Evidence | Extensive inline rationale in `docker-compose.yml:7-11` (worker-spawn CUDA bug and rollback), `:41-44` (`gpus: all` versus the `deploy.resources` form breaking NVML — "Verified: same image works with --gpus all, fails via the deploy form"), `:86-89`, `:164-166` (onnxruntime CUDA execution provider unavailable on ARM); plus a CUDA-graph decoder conflict diagnosed and worked around in the voice service. |
 | Likelihood / Impact / Rating | 4 / 3 / **12 — High** |
-| Existing controls | Health endpoints returning 503 on a fatal CUDA fault, an in-process watchdog (`backend/app/main.py:100-104`) and `restart: unless-stopped` — an effective self-recovery design. Workarounds and their rollbacks are documented inline. |
+| Existing controls | Health endpoints returning 503 on a fatal CUDA fault, an in-process watchdog (`backend/app/main.py:108-112`) and `restart: unless-stopped` — an effective self-recovery design. Workarounds and their rollbacks are documented inline. |
 | Treatment | **Accept with controls.** Keep the inline rationale discipline; move these known issues into this register so they have owners and review dates rather than living only in configuration comments. |
-| Owner / due | `________` / `________` |
+| Owner / due | Richard Watson Stephen Amudha / 2026-10-31 (GPU-sharing decision) |
 | Residual | 4 / 2 / 8 — Medium |
 
 ---
@@ -249,4 +250,4 @@ and set Revision 1.1.
 
 | Review date | Reviewed by | Changes |
 |---|---|---|
-| `________` | `________` | Initial confirmation of proposed ratings — **due at the first management review** |
+| — | — | Initial confirmation of proposed ratings — **due at the first management review** |

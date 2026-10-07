@@ -7,8 +7,8 @@
 | Final audit | **14 October 2026** |
 | Certificate expires | 28 October 2026 |
 | Area | **EchoMind Product** |
-| Auditee | `________________` (2025 auditee for this area: Alexander Peter) |
-| Prepared by | `________________` |
+| Auditee | Richard Watson Stephen Amudha (Lead Engineer) — answering EchoMind questions; Alexander Peter (EchoMind Project Lead) dialling in. 2025 auditee for this area: Alexander Peter |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer); reviewed by Alexander Peter; approved by Anita Johan (2026-10-07) |
 | Prepared | 2026-09-22 · **updated 2026-10-06** after re-verifying every claim against the running system (W-4, W-8, W-9, §2.3, §2.4, §3, §5); services restarted the same day with login enabled, log rotation applied and `/api/version` live |
 | Surveillance window | 16 October 2025 → 14 October 2026 |
 | Corporate QMS | Ajace Inc. QMS, MR/Quality: Sheryl Nazareth. **This pack covers the EchoMind Product area only** and feeds the corporate QMS; it does not replace it. |
@@ -150,8 +150,7 @@ pinned and licensed · the management system actually operating.
 
 ### 2.6 Quality manual and procedures
 Product-level documentation now exists at `docs/qms/` — a manual, policy, objectives, 15 procedures,
-13 forms and 10 registers, with a clause-by-clause mapping and an honest gap analysis. **It is at draft
-status and is not yet approved**, which is stated on every document. It supplements, and must be
+13 forms and 10 registers, with a clause-by-clause mapping and an honest gap analysis. **It was approved on 2026-10-07** (`records/approvals/2026-10-07_AR-2026-001_document_approval.md`). It supplements, and must be
 reconciled with, the corporate Ajace QMS — see §4.
 
 ### 2.7 Organisational and process risks
@@ -191,11 +190,11 @@ into evidence that the management system is working.
 | W-2 | Most NFRs have no formally agreed target | 8.2.2 | REG-09 action A-1, due before 14 Oct |
 | W-3 | **The golden evaluation is currently inoperable.** Re-run against HEAD on 2026-09-22 it returned **9/52** — not a product regression, but because the evaluation corpus is absent from the knowledge base. Until it is restored the organisation has no current measurement of retrieval quality | 9.1.1 | Raised as `REG-04` NC-2026-008. **Disclose at the dry run.** Restore the corpus and re-measure — REG-09 A-8 |
 | W-4 | ~~No release has yet been cut with the new mechanism~~ — `v1.4.0` cut 2026-09-22 with `scripts/release.sh`: annotated tag carrying commit `eaa7b1a` and build date `2026-09-22T17:53:08Z`, `CHANGELOG.md` regenerated from the commit record. **Not fully closed:** no `FRM-03` or `REG-08` entry was made at release time; a retrospective record was prepared on 2026-10-06 (`records/releases/2026-10-06_v1.4.0.md`) and is **not yet authorised**. The release was tagged with five unit tests failing (NC-2026-010). Its application code has run on the reference instance since 2026-10-06 (`REG-08` §3) — deployed before the record was authorised, which the record states | 8.5.2, 8.6 | Tag and changelog exist; release record awaiting authorisation |
-| W-5 | Product-level QMS documents are draft and unapproved | 7.5 | Either approve them or present them explicitly as supporting documentation under the corporate QMS |
-| W-6 | Independent review and internal audit are not achievable at current headcount | 9.2.2 c | Declared; corporate-level decision |
+| W-5 | ~~Product-level QMS documents are draft and unapproved~~ | 7.5 | **Closed 2026-10-07:** approved by Anita Johan, reviewed by Alexander Peter, QA Sheryl Nazareth (`records/approvals/2026-10-07_AR-2026-001_document_approval.md`) |
+| W-6 | Engineering is concentrated in one engineer | 9.2.2 c | Independent review by the EchoMind Project Lead (Alexander Peter); internal audit through the corporate programme (MR Sheryl Nazareth) |
 | W-7 | No data-retention policy; no encryption at rest | 8.5.3 | Declared and risk-assessed (R-06, R-13) |
 | W-8 | Application authentication is off by default and WebSocket endpoints are not covered by the auth middleware | 8.5.3 | Declared. Cloudflare Access is not in front of the reference instance, and application auth had been switched off — found 2026-09-28; the access-log review shows it was off from **2026-07-30 to 2026-10-06** (`REG-04` NC-2026-009; `records/capa/2026-10-07_NC-2026-009_access_log_review.md`). **Corrected 2026-10-06:** `AUTH_ENABLED=1` and `VOICE_AUTH_ENABLED=1`; verified from an external network that unauthenticated API calls return 401, and locally that the voice WebSocket returns 403 without a session and 101 with one. Corrective actions to stop a recurrence are still open |
-| W-9 | The GitHub repository `RW2523/echomind-enterprise` is **public**, although `README.md` describes the licence as proprietary. This QMS, including this pack, is readable by anyone | 7.5.3.1 b | Decide the intended visibility; if confidential, make the repository private |
+| W-9 | The GitHub repository `RW2523/echomind-enterprise` is **public**, although `README.md` describes the licence as proprietary. This QMS, including this pack, is readable by anyone | 7.5.3.1 b | **Decided 2026-10-07:** the repository and project board stay public; the customer name was removed from public material. The internal cheat sheet is kept out of the repository |
 
 ---
 

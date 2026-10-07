@@ -5,9 +5,10 @@
 | Document ID | REG-01 |
 | Revision | 1.0 |
 | Status | **LIVE REGISTER** |
-| Owner | Managing Director |
+| Owner | Managing Director (Anita Johan) |
 | ISO 9001:2015 clauses | 7.5.1, 7.5.2, 7.5.3 |
 | Governing procedure | SOP-01 |
+| Reviewed | 2026-10-07 — Alexander Peter (EchoMind Project Lead); QA Sheryl Nazareth |
 
 ---
 
@@ -18,62 +19,64 @@ history itself is not duplicated here — it is the Git history of each file (SO
 
 ## 2. Controlled documents
 
-> **Every document is at Revision 1.0 with status `DRAFT — not yet approved`.** Approval is the
+> **Approved 2026-10-07** by Anita Johan (Managing Director); reviewed by Alexander Peter; QA Sheryl Nazareth — approval record `records/approvals/2026-10-07_AR-2026-001_document_approval.md`. Before that, approval was the
 > single action that turns this document set into a management system; see `ADOPTION_GUIDE.md`.
 > Complete the *Approved by* and *Approval date* columns only when the named person has actually
 > approved the document.
 
 | ID | Title | Rev | Status | Owner (role) | Approved by | Approval date |
 |---|---|---|---|---|---|---|
-| QM-01 | Quality Manual | 1.0 | DRAFT | Managing Director | `________` | `________` |
-| QP-01 | Quality Policy | 1.0 | DRAFT | Managing Director | `________` | `________` |
-| QO-01 | Quality Objectives | 1.0 | DRAFT | Managing Director | `________` | `________` |
-| SOP-01 | Control of Documented Information | 1.0 | DRAFT | Managing Director | `________` | `________` |
-| SOP-02 | Context, Interested Parties and Risk | 1.2 | DRAFT | Managing Director | `________` | `________` |
-| SOP-03 | Competence, Training and Awareness | 1.0 | DRAFT | Managing Director | `________` | `________` |
-| SOP-04 | Customer Requirements and Communication | 1.2 | DRAFT | Managing Director | `________` | `________` |
-| SOP-05 | Design and Development Control | 1.0 | DRAFT | Lead Engineer | `________` | `________` |
-| SOP-06 | Configuration and Change Management | 1.1 | DRAFT | Lead Engineer | `________` | `________` |
-| SOP-07 | Verification, Validation and Testing | 1.0 | DRAFT | Lead Engineer | `________` | `________` |
-| SOP-08 | Release and Deployment | 1.0 | DRAFT | Lead Engineer | `________` | `________` |
-| SOP-09 | External Providers and Open Source | 1.1 | DRAFT | Lead Engineer | `________` | `________` |
-| SOP-10 | Nonconforming Output and Incident Management | 1.0 | DRAFT | Quality representative | `________` | `________` |
-| SOP-11 | Customer Property and Data Handling | 1.2 | DRAFT | Data custodian | `________` | `________` |
-| SOP-12 | Monitoring, Measurement and Analysis | 1.0 | DRAFT | Quality representative | `________` | `________` |
-| SOP-13 | Internal Audit | 1.0 | DRAFT | Quality representative | `________` | `________` |
-| SOP-14 | Nonconformity and Corrective Action | 1.0 | DRAFT | Quality representative | `________` | `________` |
-| SOP-15 | Management Review | 1.0 | DRAFT | Managing Director | `________` | `________` |
+| QM-01 | Quality Manual | 2.0 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
+| QP-01 | Quality Policy | 1.0 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
+| QO-01 | Quality Objectives | 1.0 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
+| SOP-01 | Control of Documented Information | 1.0 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
+| SOP-02 | Context, Interested Parties and Risk | 1.3 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
+| SOP-03 | Competence, Training and Awareness | 1.0 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
+| SOP-04 | Customer Requirements and Communication | 1.3 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
+| SOP-05 | Design and Development Control | 1.1 | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
+| SOP-06 | Configuration and Change Management | 1.1 | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
+| SOP-07 | Verification, Validation and Testing | 1.0 | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
+| SOP-08 | Release and Deployment | 1.0 | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
+| SOP-09 | External Providers and Open Source | 1.1 | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
+| SOP-10 | Nonconforming Output and Incident Management | 1.1 | APPROVED | Quality representative (Sheryl Nazareth) | Anita Johan | 2026-10-07 |
+| SOP-11 | Customer Property and Data Handling | 1.2 | APPROVED | Data custodian (Kishan Haravu Pradeep) | Anita Johan | 2026-10-07 |
+| SOP-12 | Monitoring, Measurement and Analysis | 1.0 | APPROVED | Quality representative (Sheryl Nazareth) | Anita Johan | 2026-10-07 |
+| SOP-13 | Internal Audit | 1.1 | APPROVED | Quality representative (Sheryl Nazareth) | Anita Johan | 2026-10-07 |
+| SOP-14 | Nonconformity and Corrective Action | 1.1 | APPROVED | Quality representative (Sheryl Nazareth) | Anita Johan | 2026-10-07 |
+| SOP-15 | Management Review | 1.1 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
 
 ## 3. Forms (blank templates)
 
-| ID | Title | Rev |
-|---|---|---|
-| FRM-00 | QMS Document Template | 1.0 |
-| FRM-01 | Design Review Record | 1.0 |
-| FRM-02 | Change Request | 1.0 |
-| FRM-03 | Release Record | 1.0 |
-| FRM-04 | Supplier Evaluation | 1.0 |
-| FRM-05 | Nonconformity and CAPA Record | 1.0 |
-| FRM-06 | Internal Audit Report | 1.0 |
-| FRM-07 | Management Review Minutes | 1.0 |
-| FRM-08 | Customer Feedback and Complaint Record | 1.0 |
-| FRM-09 | Competence and Training Record | 1.0 |
-| FRM-10 | Risk Assessment Record | 1.0 |
-| FRM-11 | Requirements Review Record | 1.0 |
-| FRM-12 | Customer Satisfaction Review | 1.0 |
+| ID | Title | Rev | Status | Approved by | Date |
+|---|---|---|---|---|---|
+| FRM-00 | QMS Document Template | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-01 | Design Review Record | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-02 | Change Request | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-03 | Release Record | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-04 | Supplier Evaluation | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-05 | Nonconformity and CAPA Record | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-06 | Internal Audit Report | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-07 | Management Review Minutes | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-08 | Customer Feedback and Complaint Record | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-09 | Competence and Training Record | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-10 | Risk Assessment Record | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-11 | Requirements Review Record | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
+| FRM-12 | Customer Satisfaction Review | 1.0 | APPROVED (template) | Anita Johan | 2026-10-07 |
 
 ## 4. Registers (live records)
 
-| ID | Title | State at revision 1.0 |
-|---|---|---|
-| REG-01 | Document Control Register | This document |
-| REG-02 | External Documents and Providers | Seeded from the actual dependency inventory; **licence column incomplete** |
-| REG-03 | Risk and Opportunity Register | Seeded with 14 evidenced risks and 4 opportunities; **ratings proposed, not confirmed** |
-| REG-04 | Nonconformity and CAPA Log | Seeded with 7 retrospective entries transcribed from Git history |
-| REG-05 | Competence and Training Record | Empty |
-| REG-06 | Customer Feedback and Complaints Log | Empty |
-| REG-07 | Design and Change Register | Empty |
-| REG-08 | Release and Deployment Register | First entry `v1.4.0` (retrospective, 2026-10-06) — **not yet authorised**; reference instance running the `v1.4.0` application code since 2026-10-06 |
+| ID | Title | Owner | State at 2026-10-07 |
+|---|---|---|---|
+| REG-01 | Document Control Register | Quality representative (Sheryl Nazareth) | This document — all controlled documents approved 2026-10-07 |
+| REG-02 | External Documents and Providers | Lead Engineer (Richard Watson Stephen Amudha) | Inventory complete; **licence column to be verified** (board #56) |
+| REG-03 | Risk and Opportunity Register | Managing Director (Anita Johan) | 14 risks; ratings confirmed 2026-10-07; owners and due dates assigned |
+| REG-04 | Nonconformity and CAPA Log | Quality representative (Sheryl Nazareth) | 16 nonconformities — 11 closed with effectiveness verified, 5 open |
+| REG-05 | Competence and Training Record | Quality representative (Sheryl Nazareth) | Role holders and competence evidence recorded 2026-10-07 |
+| REG-06 | Customer Feedback and Complaints Log | Quality representative (Sheryl Nazareth) | No customer feedback for the rebuilt product yet |
+| REG-07 | Design and Change Register | Lead Engineer (Richard Watson Stephen Amudha) | 7 entries (DC-2026-001 … 007) |
+| REG-08 | Release and Deployment Register | Lead Engineer (Richard Watson Stephen Amudha) | v1.4.0 and v1.4.1 — authorised 2026-10-07 by Anita Johan; reference instance runs v1.4.1 |
+| REG-09 | Non-Functional Requirements Register | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs, targets approved 2026-10-07 (EM26-17) |
+| REG-10 | Review Feedback and Action Log | Quality representative (Sheryl Nazareth) | 8 reviews, 40 actions, 34 closed (EM26-18) |
 
 ## 4a. Completed records
 
@@ -85,8 +88,10 @@ Completed records are filed as dated Markdown files under `docs/qms/records/`:
 | `records/capa/` | Nonconformity and corrective action records | FRM-05 |
 | `records/management-review/` | Management review minutes | FRM-07 |
 | `records/releases/` | Release records | FRM-03 |
+| `records/approvals/` | Document approval records | — |
+| `records/runtime/` | Runtime-settings baseline (SOP-06 §10.1) | — |
 
-All four are empty at revision 1.0.
+At 2026-10-07: `records/approvals/` (AR-2026-001), `records/releases/` (v1.4.0, v1.4.1), `records/capa/` (NC-2026-009 access-log review), `records/runtime/` (runtime-settings baseline). `records/audits/` and `records/management-review/` are still empty.
 
 ## 5. Supporting engineering documentation relied on as QMS evidence
 

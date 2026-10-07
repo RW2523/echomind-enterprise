@@ -4,9 +4,15 @@
 |---|---|
 | Document ID | FRM-12 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
 | ISO 9001:2015 clauses | 9.1.2, 9.1.3 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 **When to use.** At the end of each engagement, and on the review cycle defined in SOP-04 §7.
 Clause 9.1.2 requires monitoring of the customer's *perception* of whether their needs were met —

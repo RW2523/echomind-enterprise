@@ -4,11 +4,15 @@
 |---|---|
 | Document ID | SOP-03 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 7.1.2, 7.1.6, 7.2, 7.3 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ---
 
@@ -57,11 +61,11 @@ repository that demands it, so that the requirement is verifiable rather than as
 | React and TypeScript front-end development | `frontend/` |
 | Docker and Docker Compose, including GPU device plumbing | `docker-compose.yml:41-47` and `:108-113`, which record that the `deploy.resources.reservations.devices` form yields a broken NVML on GB10 and that `gpus: all` must be used instead |
 | NVIDIA GPU, CUDA driver and TensorRT-LLM serving | `docker-compose.yml:5-11` (NVFP4 serving, the GB10 worker-spawn CUDA bug and the driver version that fixed it) |
-| NeMo ASR (streaming and offline models) | `backend/Dockerfile:19`, `voice/Dockerfile:18`, `docker-compose.yml:186-188` (Parakeet-TDT with its CUDA-graph decoder disabled to avoid an illegal memory access) |
+| NeMo ASR (streaming and offline models) | `backend/Dockerfile:23`, `voice/Dockerfile:22`, `docker-compose.yml:208-210` (Parakeet-TDT with its CUDA-graph decoder disabled to avoid an illegal memory access) |
 | Retrieval and RAG engineering — chunking, hybrid retrieval, reranking, namespace isolation | `docs/RAG_FLOW.md` (281 lines), `docs/RAG_AND_CHUNKING_EXPLAINED.md` (315 lines), `backend/app/rag/index.py:36` (`_ns_ok` namespace predicate) |
 | Prompt engineering, including injection resistance and abstention | `backend/app/rag/advanced.py:74` (deterministic insufficient-context message, explicitly to prevent a hallucinated fallback), `backend/tests/test_prompt_guards.py` |
 | Data protection for regulated sectors | The whole offline deployment model; `docs/PUBLIC_DEPLOYMENT.md`; `SOP-11` |
-| Python dependency and supply-chain management | `backend/Dockerfile:21-32`, which records three separate cross-package conflicts and their resolutions |
+| Python dependency and supply-chain management | `backend/Dockerfile:25-36`, which records three separate cross-package conflicts and their resolutions |
 
 Competence is judged against the work, not against a certificate. The question asked is: *can this
 person make a change in this area and leave behind evidence that it works?*
@@ -225,8 +229,8 @@ who could:
 This is recorded in `registers/REG-03_Risk_Register.md` under `SOP-02` §7 and is, on that scale, a
 high-impact risk with no current treatment beyond the written documentation listed in §8.
 
-**Awareness has not been formally delivered or recorded**, because the quality policy `QP-01` is
-itself still `DRAFT — not yet approved`. Awareness activity begins when the policy is approved.
+The quality policy `QP-01` was approved on 2026-10-07. **Awareness of the policy is now to be delivered and
+recorded** for each EchoMind role holder (`REG-05`).
 
 **Self-assessment is the only assessment available.** With one person, the determination of
 competence, the judgement that it is sufficient, and the record of it are all made by the same

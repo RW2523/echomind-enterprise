@@ -5,7 +5,7 @@
 | Document ID | MAP-01 |
 | Revision | 1.0 |
 | Status | Reference document — accurate as at 2026-09-21, HEAD `ff29843` |
-| Owner | Managing Director |
+| Owner | Managing Director (Anita Johan) |
 | Purpose | For an auditor: where each requirement is addressed, and what objective evidence exists in this repository |
 
 ---
@@ -79,16 +79,16 @@ and read.
 | 8.3.1 | Design and development — general | SOP-05 §4 | Design happens and is documented; stages not planned in advance | Partial |
 | 8.3.2 | Design planning | SOP-05 §5 | None recorded | Gap |
 | 8.3.3 | Design inputs | SOP-05 §6 | Implicit and clearly deliberate (grounding, abstention, tenant isolation) but never recorded as inputs | Partial |
-| 8.3.4 | Design controls (review, verification, validation) | SOP-05 §7; SOP-07 | **Strong in substance:** 78 unit test functions (`backend/tests/` 40, `voice/tests/` 38); 52-question golden evaluation with a binary gate (`eval/run_eval.py:281`); the E1–E10 harness in `eval/paper/`; manual verification recorded in commit bodies. **No design review records.** | Partial |
+| 8.3.4 | Design controls (review, verification, validation) | SOP-05 §7; SOP-07 | **Strong in substance:** 78 unit test functions (`backend/tests/` 40, `voice/tests/` 38); 52-question golden evaluation with a binary gate (`eval/run_eval.py:309`); the E1–E10 harness in `eval/paper/`; manual verification recorded in commit bodies. **No design review records.** | Partial |
 | 8.3.5 | Design outputs | SOP-05 §8 | Source; `docs/RAG_FLOW.md`, `docs/CHAT_AND_RAG_FLOW.md`, `docs/CONVERSATION_AI_AND_WAKE_WORD_FLOW.md`, `docs/TRANSCRIPT_STORAGE_FLOW.md`, `docs/CAPABILITIES.md`; `backend/app/transcribe/PROTOCOL.md`; `docs/USER_MANUAL.md` | Conformant |
 | 8.3.6 | Design changes | SOP-05 §9; SOP-06 | Complete change history in Git with rationale; no impact assessment against recorded requirements | Partial |
-| 8.4.1 | Control of externally provided items | SOP-09 §4; `REG-02` | Pinning: backend 14/20 exact; offline pre-caching of all models into volumes/images; **`nemo_toolkit[asr]` from a moving branch** (`backend/Dockerfile:19`, `voice/Dockerfile:18`) | Partial |
-| 8.4.2 | Type and extent of control | SOP-09 §5 | `setuptools>=70,<82` corrective re-pin (`backend/Dockerfile:32`, `voice/Dockerfile:79`) following the `724fb98` outage; **no licence inventory, no LICENSE/NOTICE, no SBOM** | Partial |
+| 8.4.1 | Control of externally provided items | SOP-09 §4; `REG-02` | Pinning: backend 14/20 exact; offline pre-caching of all models into volumes/images; `nemo_toolkit[asr]` pinned to NeMo commit `60ce9407` since `51fd3bc` (2026-09-22) — it was the moving branch `@main` before that (R-01, closed) (`backend/Dockerfile:23`, `voice/Dockerfile:22`); remaining unpinned items listed in SOP-09 §7 | Partial |
+| 8.4.2 | Type and extent of control | SOP-09 §5 | `setuptools>=70,<82` corrective re-pin (`backend/Dockerfile:36`, `voice/Dockerfile:83`) following the `724fb98` outage; **no licence inventory, no LICENSE/NOTICE, no SBOM** | Partial |
 | 8.4.3 | Information for external providers | SOP-09 §6 | No subcontracted work — providers are upstream only | N/A |
 | 8.5.1 | Control of provision | SOP-08 §4 | `OFFLINE_DEPLOYMENT.md`; `scripts/export_offline_bundle.sh` / `import_offline_bundle.sh`; healthchecks on trtllm, backend, voice, ollama | Partial |
-| 8.5.2 | **Identification and traceability** | SOP-06 §7 | **None.** No git tags; `frontend/package.json` `"version": "0.0.0"`; backend/voice/frontend images untagged; no build identifier surfaced by any endpoint | **Gap** |
-| 8.5.3 | **Property belonging to customers** | SOP-11 | Isolation designed and enforced: `_ns_ok` predicate (`backend/app/rag/index.py:36`), tenant forcing (`backend/app/api/routes/chat.py:25-33`), applied at every retrieval path after the `4e27109` audit (0/359 out-of-namespace hits). **But:** no backup of `echomind_data`; no retention policy; no encryption at rest; auth off by default; WebSockets outside the auth middleware (`backend/app/main.py:135`) | **Partial — critical gaps** |
-| 8.5.4 | Preservation | SOP-08 §9; SOP-11 §8 | Model volumes preserved across rebuilds (verified in `724fb98`); **customer data has no backup procedure** | Gap |
+| 8.5.2 | **Identification and traceability** | SOP-06 §9; SOP-08 §7 | Annotated tags `v1.4.0`/`v1.4.1`; `CHANGELOG.md`; `frontend/package.json` `"1.4.1"`; build identity baked into images and reported by `/api/version`, voice `/health`, `/build.json`; `REG-08` (closed G-01, 2026-10-06) | Met |
+| 8.5.3 | **Property belonging to customers** | SOP-11 | Isolation designed and enforced: `_ns_ok` predicate (`backend/app/rag/index.py:36`), tenant forcing (`backend/app/api/routes/chat.py:27-35`), applied at every retrieval path after the `4e27109` audit (0/359 out-of-namespace hits). **But:** no backup of `echomind_data`; no retention policy; no encryption at rest; auth off by default; WebSockets outside the auth middleware (`backend/app/main.py:157`) | **Partial — critical gaps** |
+| 8.5.4 | Preservation | SOP-08 §9; SOP-11 §8 | Model volumes preserved across rebuilds (verified in `724fb98`); customer-data backup and restore procedure with a verified restore, nightly timer and off-host copy (G-03/G-22 closed 2026-09-22) | Partial |
 | 8.5.5 | Post-delivery activities | SOP-08 §10 | `docs/USER_MANUAL.md` §13 troubleshooting; `OFFLINE_DEPLOYMENT.md:129-160` five named failure modes; no support process or escalation defined | Partial |
 | 8.5.6 | Control of changes | SOP-06 §5 | Git history; no change register or significance criteria | Partial |
 | 8.6 | **Release of products and services** | SOP-07 §7; SOP-08 §5 | **No release records, no authorisation step, no retained verification evidence.** `scripts/verify_offline_readiness.sh` exists but is invoked by nothing. | **Gap** |

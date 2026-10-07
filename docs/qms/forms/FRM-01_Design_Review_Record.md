@@ -4,9 +4,15 @@
 |---|---|
 | Document ID | FRM-01 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
 | ISO 9001:2015 clauses | 8.3.4 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ## When to use this form
 

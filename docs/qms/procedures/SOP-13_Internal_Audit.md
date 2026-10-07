@@ -3,12 +3,18 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-13 |
-| Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Revision | 1.1 |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 9.2.1, 9.2.2 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
+
+> **Revision note 2026-10-07.** Wording in this procedure about “one person” describes the engineering work, which is concentrated in the Lead Engineer. Within AJACE Inc. the roles are held by named people (QM-01 §7.1): independent review by the EchoMind Project Lead (Alexander Peter), verification and QMS maintenance by QA/MR (Sheryl Nazareth), approval and release authorisation by the Managing Director (Anita Johan); internal audit is provided by the AJACE Inc. corporate audit programme.
 
 ---
 
@@ -62,7 +68,7 @@ table in §4.1, because a failure in them has a direct customer or data conseque
 | Process | Why it is audited every time |
 |---|---|
 | Tenant / namespace isolation of retrieved content | A failure crosses a customer boundary. It has failed before: commit `4e27109` records a real isolation breach on the sparse transcript path. |
-| Control of externally provided components (models, base images, packages) | The dependency chain is a moving target; `backend/Dockerfile:19` installs `nemo_toolkit[asr]` from the moving branch `@main`, which has already caused a real build and runtime outage (`724fb98`). |
+| Control of externally provided components (models, base images, packages) | The dependency chain is a moving target; `backend/Dockerfile:23` installed `nemo_toolkit[asr]` from the moving branch `@main` until it was pinned in `51fd3bc` (2026-09-22), after it had caused a real build and runtime outage (`724fb98`). Check that no new moving reference has appeared. |
 | Release and change control | The organisation deploys direct-to-main with no CI; the control is entirely procedural, so its operation must be checked. |
 | Nonconformity and corrective action | Verification of effectiveness is the step most often skipped anywhere; see `SOP-14` §8. |
 
@@ -73,32 +79,31 @@ audit programme table below and the reason stated.
 
 ### 4.1 Audit schedule — clause and process coverage
 
-Planned periods are placeholders until the programme is approved. They are completed by the
-Managing Director when the programme is set, and not before.
+Programme set by the Managing Director at approval on 2026-10-07 (`records/approvals/2026-10-07_AR-2026-001_document_approval.md`). Audits are performed through the AJACE Inc. corporate audit programme by an auditor independent of the EchoMind work (MR: Sheryl Nazareth).
 
 | ISO 9001:2015 clause | Process / procedure audited | Principal evidence the auditor will seek | Planned period |
 |---|---|---|---|
-| 4.1, 4.2 | Context and interested parties — `SOP-02` §4, §5 | Current determination; date last reviewed; traceability into `QO-01` | `__________` |
-| 4.3, 4.4 | Scope and QMS processes — `QM-01` | Stated scope matches what is actually delivered; justified exclusions | `__________` |
-| 5.1, 5.2, 5.3 | Leadership, policy, roles — `QP-01` | Policy communicated and current; roles assigned in each procedure §3 | `__________` |
-| 6.1 | Risk and opportunity — `SOP-02` §6–§8, `REG-03` | Register live; treatments evidenced by path; residual acceptances dated and signed | `__________` |
-| 6.2 | Quality objectives — `QO-01` | Objectives measurable; measurement actually taken; source data exists | `__________` |
-| 6.3 | Planning of changes — `SOP-02` §9 | Commit bodies show purpose, consequences, integrity, resources | `__________` |
-| 7.1 | Resources, infrastructure, monitoring resources | Hardware and GPU capacity adequate for the stated workload; calibration not applicable — no measuring instrumentation | `__________` |
-| 7.2, 7.3 | Competence and awareness — `SOP-03`, `REG-05` | `FRM-09` records; evidence behind each claimed competence | `__________` |
-| 7.4 | Communication | How changes reach customers; release notes or their absence | `__________` |
-| 7.5 | Documented information — `SOP-01` | Header tables complete; status values honest; nothing prohibited by `SOP-01` §9 in the repository | `__________` |
-| 8.1 | Operational planning and control | Deployment procedure matches what is actually run | `__________` |
-| 8.2 | Customer requirements — `SOP-04` | Requirements recorded and reviewed before commitment; `FRM-08` records | `__________` |
-| 8.3 | Design and development — `SOP-05` | Design reviews (`FRM-01`), verification and validation results, design changes | `__________` |
-| 8.4 | Externally provided processes, products and services — `SOP-09`, `REG-02` | `FRM-04` evaluations; licence obligations identified; pinned versions | `__________` |
-| 8.5 | Production and service provision, change control, customer property — `SOP-11`, `SOP-06` | `FRM-02` change requests; handling of customer data and documents | `__________` |
-| 8.6 | Release of products and services — `SOP-06` | `FRM-03` release records; evidence that verification actually passed before release | `__________` |
-| 8.7 | Control of nonconforming outputs — `SOP-14` §4–§5 | Containment recorded; affected deployments identified | `__________` |
-| 9.1 | Monitoring, measurement, analysis and evaluation — `SOP-12` | Golden-evaluation runs; unit-test runs; healthcheck coverage; what is done with the numbers | `__________` |
-| 9.2 | Internal audit — this procedure | Programme exists and has been followed; auditor competence and independence | `__________` |
-| 9.3 | Management review — `SOP-15` | Minutes exist, cover every 9.3.2 input, and produce 9.3.3 outputs | `__________` |
-| 10.1, 10.2, 10.3 | Improvement, nonconformity and corrective action — `SOP-14`, `REG-04` | Effectiveness verification present and evidenced on closed records | `__________` |
+| 4.1, 4.2 | Context and interested parties — `SOP-02` §4, §5 | Current determination; date last reviewed; traceability into `QO-01` | Nov 2026 |
+| 4.3, 4.4 | Scope and QMS processes — `QM-01` | Stated scope matches what is actually delivered; justified exclusions | Nov 2026 |
+| 5.1, 5.2, 5.3 | Leadership, policy, roles — `QP-01` | Policy communicated and current; roles assigned in each procedure §3 | Nov 2026 |
+| 6.1 | Risk and opportunity — `SOP-02` §6–§8, `REG-03` | Register live; treatments evidenced by path; residual acceptances dated and signed | Nov 2026 |
+| 6.2 | Quality objectives — `QO-01` | Objectives measurable; measurement actually taken; source data exists | Nov 2026 |
+| 6.3 | Planning of changes — `SOP-02` §9 | Commit bodies show purpose, consequences, integrity, resources | Nov 2026 |
+| 7.1 | Resources, infrastructure, monitoring resources | Hardware and GPU capacity adequate for the stated workload; calibration not applicable — no measuring instrumentation | Nov 2026 |
+| 7.2, 7.3 | Competence and awareness — `SOP-03`, `REG-05` | `FRM-09` records; evidence behind each claimed competence | Nov 2026 |
+| 7.4 | Communication | How changes reach customers; release notes or their absence | Nov 2026 |
+| 7.5 | Documented information — `SOP-01` | Header tables complete; status values honest; nothing prohibited by `SOP-01` §9 in the repository | Nov 2026 |
+| 8.1 | Operational planning and control | Deployment procedure matches what is actually run | Dec 2026 |
+| 8.2 | Customer requirements — `SOP-04` | Requirements recorded and reviewed before commitment; `FRM-08` records | Dec 2026 |
+| 8.3 | Design and development — `SOP-05` | Design reviews (`FRM-01`), verification and validation results, design changes | Dec 2026 |
+| 8.4 | Externally provided processes, products and services — `SOP-09`, `REG-02` | `FRM-04` evaluations; licence obligations identified; pinned versions | Dec 2026 |
+| 8.5 | Production and service provision, change control, customer property — `SOP-11`, `SOP-06` | `FRM-02` change requests; handling of customer data and documents | Dec 2026 |
+| 8.6 | Release of products and services — `SOP-06` | `FRM-03` release records; evidence that verification actually passed before release | Dec 2026 |
+| 8.7 | Control of nonconforming outputs — `SOP-14` §4–§5 | Containment recorded; affected deployments identified | Dec 2026 |
+| 9.1 | Monitoring, measurement, analysis and evaluation — `SOP-12` | Golden-evaluation runs; unit-test runs; healthcheck coverage; what is done with the numbers | Jan 2027 |
+| 9.2 | Internal audit — this procedure | Programme exists and has been followed; auditor competence and independence | Jan 2027 |
+| 9.3 | Management review — `SOP-15` | Minutes exist, cover every 9.3.2 input, and produce 9.3.3 outputs | Jan 2027 |
+| 10.1, 10.2, 10.3 | Improvement, nonconformity and corrective action — `SOP-14`, `REG-04` | Effectiveness verification present and evidenced on closed records | Jan 2027 |
 
 Clause 8.5.1 f (validation of processes where output cannot be verified by subsequent monitoring)
 and clause 7.1.5.2 (measurement traceability) are examined for applicability at each audit rather
@@ -193,7 +198,7 @@ The criteria are stated in the audit plan before the audit starts, and reproduce
 
 A finding is written as: the **requirement**, the **evidence examined**, and the **discrepancy**
 between them. "Poor configuration management" is not a finding. "Clause 8.5.1: the release
-`__________` was deployed with no record of the source revision; `FRM-03` for that release has no
+sampled was deployed with no record of the source revision; `FRM-03` for that release has no
 git SHA recorded" is a finding.
 
 ## 9. Reporting (9.2.2 d, 9.2.2 f)

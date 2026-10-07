@@ -5,9 +5,10 @@
 | Document ID | REG-04 |
 | Revision | 1.0 |
 | Status | **LIVE REGISTER** (the register is live; the procedure governing it, SOP-14, is draft) |
-| Owner | Quality representative |
+| Owner | Quality representative (Sheryl Nazareth) |
 | ISO 9001:2015 clauses | 8.7.2, 10.2.2 |
 | Governing procedures | SOP-10 (nonconforming output), SOP-14 (corrective action) |
+| Reviewed | 2026-10-07 — Alexander Peter (EchoMind Project Lead); QA Sheryl Nazareth |
 
 ---
 
@@ -79,7 +80,7 @@ Severity scale (defined in SOP-10 §3):
 | Severity | **S2** — a security control believed to be active was not active |
 | Description | The voice service's WebSocket auth gate was passed `AUTH_SECRET` where it expected `VOICE_AUTH_SECRET`, so every handshake validation failed open/closed incorrectly and the gate did not work as intended. |
 | Root cause | Cross-service configuration coupling with no test covering it; the two services must share a secret under different variable names. |
-| Correction | Correct variable passed; the coupling is now documented inline at `docker-compose.yml:142-144`. |
+| Correction | Correct variable passed; the coupling is now documented inline at `docker-compose.yml:157-159`. |
 | Effectiveness verification | Not recorded as an explicit verification step. |
 | Evidence | commit `73f0b4f` (2026-07-29) |
 | Status | **Closed** (effectiveness evidence incomplete — see §C observation O-1) |
@@ -122,11 +123,11 @@ Severity scale (defined in SOP-10 §3):
 | Description | (a) A Python heredoc placed inside a `RUN … \` continuation in `voice/Dockerfile` caused every `docker compose build voice` to fail with "unknown instruction: fi". (b) `nemo_toolkit[asr]` installed from `git@main` pulled `setuptools>=82`, which removed `pkg_resources`; librosa failed at build (backend) and webrtcvad at runtime (voice crash-loop on boot). (c) Boardroom stored raw JSON text as the executive summary when the LLM's report JSON was truncated. |
 | Root cause | (a) and (c) are local defects. (b) is a **supplier-risk realisation**: a production dependency installed from a moving Git branch rather than a release. |
 | Correction | Heredoc restructured; `setuptools>=70,<82` re-pinned as the last install step in both Dockerfiles; a salvage parser added for truncated report JSON. |
-| Corrective action | The underlying supplier risk — NeMo installed from `@main` — is **mitigated but not removed**. It remains open as risk R-01 in `REG-03`. |
+| Corrective action | The underlying supplier risk — NeMo installed from `@main` — was mitigated at the time and **removed on 2026-09-22**: both Dockerfiles now pin NeMo to commit `60ce9407` (commit `51fd3bc`; risk R-01 in `REG-03` closed). |
 | Effectiveness verification | **Yes — verified on a from-scratch rebuild: all six containers healthy; chat, Silent Assistant live checks, voice turn, and boardroom analyse/export all pass; data and model volumes preserved.** |
 | Latent condition exposed | Running containers had previously been updated by `docker cp` rather than by rebuild, so the images had drifted from source and the breakages were invisible until a clean rebuild. This is addressed as a control in SOP-06 §6. |
 | Evidence | commit `724fb98` (2026-09-04) |
-| Status | **Closed** for the three defects; **root supplier risk remains open** (REG-03 R-01) |
+| Status | **Closed** — the three defects on 2026-09-04; the root supplier risk on 2026-09-22 (REG-03 R-01) |
 
 ### NC-2026-007 (R) — Published claims contradicted by the organisation's own measurements
 
@@ -152,7 +153,7 @@ Severity scale (defined in SOP-10 §3):
 | Field | Entry |
 |---|---|
 | Date raised | 2026-09-22 |
-| Raised by | `________` (detected by re-running the evaluation for audit evidence) |
+| Raised by | Richard Watson Stephen Amudha (Lead Engineer) (detected by re-running the evaluation for audit evidence) |
 | Source | Scheduled measurement ahead of the October surveillance audit |
 | Severity | **S2** — the organisation's primary quality instrument is inoperable, so product conformity cannot currently be evidenced (ISO 9001:2015 9.1.1) |
 | Description | `python3 eval/run_eval.py` against HEAD returned **9/52**, down from 49/52 (2026-08-06). All **43 retrieval questions failed with zero citations** and document precision 0.00. Non-corpus categories were unaffected: smalltalk 6/6, refusal 2/2, off-corpus 1/1. |
@@ -172,7 +173,7 @@ Severity scale (defined in SOP-10 §3):
 | Field | Entry |
 |---|---|
 | Date raised | 2026-10-06 (first observed 2026-09-28) |
-| Raised by | `________` (detected during a system health check) |
+| Raised by | Richard Watson Stephen Amudha (Lead Engineer) (detected during a system health check) |
 | Source | Health check of the running system; re-verified while preparing the audit pack |
 | Severity | **S2** — a security control documented as mandatory and believed to be active was not active, placing any data in the instance at risk (the same class as NC-2026-003) |
 | Description | `https://echomind-ajace.com` returns **HTTP 200** with the application, not a 302 to a Cloudflare Access login — checked from the host and from an external network on 2026-09-28, and from the host on 2026-10-06. `/api/auth/config` returns `{"auth_enabled":false}` and `/api/docs/list` returns the knowledge-base document list with no credentials. `.env` sets `AUTH_ENABLED=0` and `VOICE_AUTH_ENABLED=0`. Anyone who finds the URL can read, upload and delete knowledge-base content and use the GPU. This contradicts `docs/PUBLIC_DEPLOYMENT.md` step 4 (Access "MANDATORY"), `SOP-11` §5, and the existing-controls entry of `REG-03` R-04. |
@@ -193,7 +194,7 @@ Severity scale (defined in SOP-10 §3):
 | Field | Entry |
 |---|---|
 | Date raised | 2026-10-06 (detected and corrected 2026-09-28) |
-| Raised by | `________` (detected during a system health check) |
+| Raised by | Richard Watson Stephen Amudha (Lead Engineer) (detected during a system health check) |
 | Source | Health check — running both unit suites and `tsc --noEmit` |
 | Severity | **S3** — a verification control silently not working |
 | Description | Running the suites against `b3f3a35` (code-identical to `v1.4.0` / `eaa7b1a` — the only non-document difference is one evaluation report) found **4 of 40 backend tests and 1 of 127 voice test cases failing**, and **20 TypeScript errors** in `frontend/verticals/`. `v1.4.0` was therefore tagged with a failing unit suite. |
@@ -213,7 +214,7 @@ Severity scale (defined in SOP-10 §3):
 | Field | Entry |
 |---|---|
 | Date raised | 2026-10-06 |
-| Raised by | `________` (detected by a pre-restart `docker diff` check) |
+| Raised by | Richard Watson Stephen Amudha (Lead Engineer) (detected by a pre-restart `docker diff` check) |
 | Source | Change control before restarting services |
 | Severity | **S3** — configuration control silently not working; no customer impact because it was caught before the restart |
 | Description | The running backend (99 files under `/app/app`), voice (20 files) and frontend (web assets) carried code copied in with `docker cp` that had never been saved to any image. Their image tags pointed at 2026-09-04 builds, so a plain `docker compose up -d` would have silently reverted all three services by about a month. |
@@ -228,7 +229,7 @@ Severity scale (defined in SOP-10 §3):
 | Field | Entry |
 |---|---|
 | Date raised | 2026-10-06 |
-| Raised by | `________` (detected by test execution on 2026-10-06) |
+| Raised by | Richard Watson Stephen Amudha (Lead Engineer) (detected by test execution on 2026-10-06) |
 | Source | `TC-EM-AUTH-101` step AC-101.7 |
 | Severity | **S3** — a session control weaker than users would expect |
 | Description | After `POST /api/auth/logout`, replaying the same token returned **HTTP 200** on `/api/docs/list`. A token remains valid until it expires (`AUTH_TOKEN_TTL_MIN` = 720 minutes). |
@@ -243,7 +244,7 @@ Severity scale (defined in SOP-10 §3):
 | Field | Entry |
 |---|---|
 | Date raised | 2026-10-06 |
-| Raised by | `________` (detected by test execution on 2026-10-06) |
+| Raised by | Richard Watson Stephen Amudha (Lead Engineer) (detected by test execution on 2026-10-06) |
 | Source | `TC-EM-DOC-102` step DOC-102.5 |
 | Severity | **S3** — input validation missing; garbage content can enter the knowledge base |
 | Description | A 4 KB binary file named `tool.exe` was **accepted (HTTP 200) and indexed** into namespace `qa-test`. The test document was deleted immediately afterwards. Empty files are correctly rejected (HTTP 422). |
@@ -258,7 +259,7 @@ Severity scale (defined in SOP-10 §3):
 | Field | Entry |
 |---|---|
 | Date raised | 2026-10-06 |
-| Raised by | `________` (detected by test execution on 2026-10-06) |
+| Raised by | Richard Watson Stephen Amudha (Lead Engineer) (detected by test execution on 2026-10-06) |
 | Source | `TC-EM-RAG-103` steps RAG-103.2 and RAG-103.3; UI screenshot SCR-04 |
 | Severity | **S3** — contradicts the documented behaviour that greetings never trigger retrieval and that only relevant passages are cited |
 | Description | `POST /api/chat/ask` with *"Hello! How are you today?"* returned a correct greeting **with two Meridian document citations**. A question about something absent from the corpus was correctly answered as not found but still listed three citations. In the UI (Financial Advisor persona) an answer also pointed the user to *"FMR Volume 12, Chapter 14"*, which is not in the knowledge base. |
@@ -273,7 +274,7 @@ Severity scale (defined in SOP-10 §3):
 | Field | Entry |
 |---|---|
 | Date raised | 2026-10-06 |
-| Raised by | `________` (detected by test execution on 2026-10-06) |
+| Raised by | Richard Watson Stephen Amudha (Lead Engineer) (detected by test execution on 2026-10-06) |
 | Source | `TC-EM-EXP-108` step EXP-108.2 |
 | Severity | **S3** — a data-protection control partially not working |
 | Description | With synthetic test values, the gateway detected and redacted the email address, phone number and SSN, but **did not detect the `sk-test-…` API key**, which remained in the redacted copy. |
@@ -288,7 +289,7 @@ Severity scale (defined in SOP-10 §3):
 | Field | Entry |
 |---|---|
 | Date raised | 2026-10-06 |
-| Raised by | `________` (detected by acceptance run 3) |
+| Raised by | Richard Watson Stephen Amudha (Lead Engineer) (detected by acceptance run 3) |
 | Source | `TC-EM-DOC-102` and `TC-EM-RAG-103` returned HTTP 500 after the v1.4.1 deployment |
 | Severity | **S2** — loss of chat and document upload while every container reported healthy (silent failure, as NC-2026-003/004) |
 | Description | Ollama could not create a CUDA context to reload its embedding model (`ggml_cuda_init: out of memory`) because the shared GPU was full (another stack's two vLLM engines held ≈ 64.6 GB). Every embedding call returned 500, so upload and chat failed. The Ollama healthcheck only runs `ollama list`, so the service stayed "healthy". |
@@ -306,15 +307,15 @@ Severity scale (defined in SOP-10 §3):
 
 | NC ID | Date raised | Source | Severity | Description | Owner | Status | Closed (effectiveness verified) |
 |---|---|---|---|---|---|---|---|
-| NC-2026-008 | 2026-09-22 | Measurement | S2 | Golden evaluation corpus absent — instrument inoperable | `________` | **Open** | — |
-| NC-2026-009 | 2026-10-06 | Health check | S2 | Public reference instance has no access control (no Access, `AUTH_ENABLED=0`) | `________` | **Open** — correction verified, actions pending | — |
-| NC-2026-010 | 2026-10-06 | Health check | S3 | Unit tests and type-check failing undetected; `v1.4.0` tagged with them failing | `________` | **Closed** | 2026-10-07 (CI proven to fail on a broken test) |
-| NC-2026-011 | 2026-10-06 | Change control | S3 | Deployed code only in container writable layers | `________` | **Open** — correction verified | — |
-| NC-2026-012 | 2026-10-06 | Test TC-EM-AUTH-101 | S3 | Logout does not revoke the session token | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
-| NC-2026-013 | 2026-10-06 | Test TC-EM-DOC-102 | S3 | Upload accepts binary executables | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
-| NC-2026-014 | 2026-10-06 | Test TC-EM-RAG-103 | S3 | Small-talk / not-found answers carry citations | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
-| NC-2026-015 | 2026-10-06 | Test TC-EM-EXP-108 | S3 | Export gateway misses an API-key format | `________` | **Closed** | 2026-10-06 (run 4, v1.4.1) |
-| NC-2026-016 | 2026-10-06 | Test run 3 | S2 | Embedding service down while healthcheck green | `________` | **Open** — correction verified | — |
+| NC-2026-008 | 2026-09-22 | Measurement | S2 | Golden evaluation corpus absent — instrument inoperable | Richard Watson Stephen Amudha | **Open** | — |
+| NC-2026-009 | 2026-10-06 | Health check | S2 | Public reference instance has no access control (no Access, `AUTH_ENABLED=0`) | Kishan Haravu Pradeep | **Open** — correction verified, actions pending | — |
+| NC-2026-010 | 2026-10-06 | Health check | S3 | Unit tests and type-check failing undetected; `v1.4.0` tagged with them failing | Richard Watson Stephen Amudha | **Closed** | 2026-10-07 (CI proven to fail on a broken test) |
+| NC-2026-011 | 2026-10-06 | Change control | S3 | Deployed code only in container writable layers | Richard Watson Stephen Amudha | **Open** — correction verified | — |
+| NC-2026-012 | 2026-10-06 | Test TC-EM-AUTH-101 | S3 | Logout does not revoke the session token | Richard Watson Stephen Amudha | **Closed** | 2026-10-06 (run 4, v1.4.1) |
+| NC-2026-013 | 2026-10-06 | Test TC-EM-DOC-102 | S3 | Upload accepts binary executables | Richard Watson Stephen Amudha | **Closed** | 2026-10-06 (run 4, v1.4.1) |
+| NC-2026-014 | 2026-10-06 | Test TC-EM-RAG-103 | S3 | Small-talk / not-found answers carry citations | Richard Watson Stephen Amudha | **Closed** | 2026-10-06 (run 4, v1.4.1) |
+| NC-2026-015 | 2026-10-06 | Test TC-EM-EXP-108 | S3 | Export gateway misses an API-key format | Richard Watson Stephen Amudha | **Closed** | 2026-10-06 (run 4, v1.4.1) |
+| NC-2026-016 | 2026-10-06 | Test run 3 | S2 | Embedding service down while healthcheck green | Richard Watson Stephen Amudha | **Open** — correction verified | — |
 
 *(Add rows using `forms/FRM-05_Nonconformity_and_CAPA_Record.md`; keep the full record in the form and summarise it here.)*
 

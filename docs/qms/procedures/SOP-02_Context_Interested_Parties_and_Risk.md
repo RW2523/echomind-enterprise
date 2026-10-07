@@ -3,12 +3,18 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-02 |
-| Revision | 1.2 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Revision | 1.3 |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 4.1, 4.2, 6.1, 6.3 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
+
+> **Revision note 2026-10-07.** Wording in this procedure about “one person” describes the engineering work, which is concentrated in the Lead Engineer. Within AJACE Inc. the roles are held by named people (QM-01 §7.1): independent review by the EchoMind Project Lead (Alexander Peter), verification and QMS maintenance by QA/MR (Sheryl Nazareth), approval and release authorisation by the Managing Director (Anita Johan); internal audit is provided by the AJACE Inc. corporate audit programme.
 
 ---
 
@@ -33,7 +39,7 @@ infrastructure and its own data; where the two meet, the boundary is stated in �
 | Lead Engineer | Identifies technical risks arising from the architecture, the dependency chain and the deployment model. Proposes and implements treatments. Records verification of a treatment in the commit that applies it. |
 | Anyone contributing code | Raises a risk as soon as it is recognised, including risks found while fixing something else. |
 
-Ajace AI currently has one person, who holds all three roles. This is itself a recorded risk
+Within AJACE Inc. these roles are held by named people (QM-01 §7.1); engineering is concentrated in the Lead Engineer. That concentration is itself a recorded risk
 (§6 and `registers/REG-03_Risk_Register.md`).
 
 ## 4. Determining the context of the organisation (4.1)
@@ -50,7 +56,7 @@ addition of a second person to the organisation.
 |---|---|
 | Customers are in regulated sectors — defence, government, legal, finance, healthcare | Their own regulators constrain what they may deploy and where data may reside. A defect in tenant isolation or in grounding is a compliance event for the customer, not only a bug for us. |
 | Data sovereignty is the reason the product exists | The platform is built to run fully offline on customer-controlled hardware. Any design decision that reintroduces an outbound dependency undermines the core value proposition. |
-| The AI model supply chain moves quickly and without stability guarantees | Weights, inference runtimes and ASR toolkits change under us. `backend/Dockerfile:19` installs `nemo_toolkit[asr]` from `git+https://github.com/NVIDIA/NeMo.git@main` — a moving branch, not a release. |
+| The AI model supply chain moves quickly and without stability guarantees | Weights, inference runtimes and ASR toolkits change under us. `backend/Dockerfile:23` installed `nemo_toolkit[asr]` from `git+https://github.com/NVIDIA/NeMo.git@main` — a moving branch, not a release — until it was pinned to a commit in `51fd3bc` (R-01, closed). |
 | Hardware platform maturity | The reference platform is NVIDIA DGX Spark (GB10). Driver- and kernel-level defects have directly broken the stack; the rationale and the verification are recorded inline at `docker-compose.yml:7-11` and `docker-compose.yml:41-44`. |
 | Ajace AI does not sell hardware | We advise on hardware and cloud fit by security posture. We depend on the customer procuring suitable hardware, and on our advice being sound. |
 | Emerging AI-specific regulation and customer assurance expectations | Customers increasingly ask for a management system, not only a product. This QMS is the response. |
@@ -76,9 +82,9 @@ reviewed at each management review.
 | Customer organisations in defence, government, legal, finance and healthcare | Data never leaves their perimeter; answers grounded in their own material with attribution; tenant isolation between vertical packs; deployability on hardware they control; an auditable supplier | Requirements review under `SOP-04`; grounding and isolation measured by the golden-question harness (`eval/run_eval.py`) and by the paper harness (`eval/paper/`) |
 | End users inside those organisations (analysts, clinicians, lawyers, meeting participants) | Answers that are correct or honestly absent; the system to say "I could not find that" rather than fill a gap; usable live transcription and voice; documentation they can follow | Abstention behaviour implemented at `backend/app/rag/advanced.py:74` and asserted by golden items of type `offcorpus` and `refusal` (`eval/README.md`); `docs/USER_MANUAL.md` (1257 lines) |
 | Ajace AI itself — the Managing Director / Lead Engineer as owner and sole worker | Sustainable workload; the ability to be away without the product failing; knowledge retained outside one head | This procedure; `SOP-03` §6; the bus-factor risk in `registers/REG-03_Risk_Register.md` |
-| NVIDIA — GPU hardware, driver, CUDA, TensorRT-LLM, NeMo ASR | Stable, released versions; compatibility of the driver, the runtime and the model kernels | `docker-compose.yml:5` (TensorRT-LLM image tag), `backend/Dockerfile:19` and `voice/Dockerfile:18` (NeMo from `@main`), `docker-compose.yml:186` (Parakeet-TDT final ASR) |
-| Open-weight model providers (Qwen chat weights; `nomic-embed-text` embeddings; Piper TTS voices) | Licence terms that permit on-premises commercial deployment; model behaviour stable across versions | `docker-compose.yml:73-76`; licences to be recorded in `registers/REG-02_External_Documents_and_Providers.md` |
-| Infrastructure and platform suppliers (Docker, Ollama, Cloudflare Tunnel and Access, Hugging Face as a weight distribution channel) | Availability where used; and, for an offline deployment, the ability to be removed from the runtime path entirely | `docker-compose.yml:223-227` (cloudflared, `public` profile only); `docker-compose.yml:170` (runtime Piper voice download from Hugging Face disabled for offline) |
+| NVIDIA — GPU hardware, driver, CUDA, TensorRT-LLM, NeMo ASR | Stable, released versions; compatibility of the driver, the runtime and the model kernels | `docker-compose.yml:5` (TensorRT-LLM image tag), `backend/Dockerfile:23` and `voice/Dockerfile:22` (NeMo pinned to commit `60ce9407`), `docker-compose.yml:208` (Parakeet-TDT final ASR) |
+| Open-weight model providers (Qwen chat weights; `nomic-embed-text` embeddings; Piper TTS voices) | Licence terms that permit on-premises commercial deployment; model behaviour stable across versions | `docker-compose.yml:77-80`; licences to be recorded in `registers/REG-02_External_Documents_and_Providers.md` |
+| Infrastructure and platform suppliers (Docker, Ollama, Cloudflare Tunnel and Access, Hugging Face as a weight distribution channel) | Availability where used; and, for an offline deployment, the ability to be removed from the runtime path entirely | `docker-compose.yml:245-249` (cloudflared, `public` profile only); `docker-compose.yml:192` (runtime Piper voice download from Hugging Face disabled for offline) |
 | Open-source Python and JavaScript library maintainers | Correct attribution and licence compliance; our defect reports where we find defects | `registers/REG-02_External_Documents_and_Providers.md` |
 | Conference and academic reviewers (QASC 2026) | Claims that are reproducible from recorded evidence; experiments reported as run only when run | `eval/paper/results/SUMMARY.json`, which records E2 as `not_run` with the reason, and records where measurements contradict the paper text |
 | Regulators of the customers' sectors (indirect party) | That the product does not put the customer in breach — data residency, record-keeping, professional-advice boundaries | Requirements capture under `SOP-04` §4; the lawyer-persona disclaimer consistency test at `backend/tests/test_prompt_guards.py:29` |
@@ -93,7 +99,7 @@ two are periodic.
 
 1. **Engineering work.** Anything a contributor recognises while building, debugging or deploying.
    The historical record shows this is where most real risks have surfaced — for example the
-   dependency drift recorded at `backend/Dockerfile:30-32`.
+   dependency drift recorded at `backend/Dockerfile:34-36`.
 2. **Incidents.** Any production or build failure. Commit `724fb98` records a real outage of this
    kind: NeMo installed from `@main` pulled `setuptools>=82`, which removed `pkg_resources`,
    breaking `librosa` at build time and `webrtcvad` at runtime.
@@ -158,7 +164,7 @@ the score after treatment.
 | Accept | Cost of treatment exceeds the exposure | Dated written acceptance by the Managing Director in the register |
 
 **The treatment must be verifiable.** A register entry that says "we are careful about X" is not a
-treatment. `backend/Dockerfile:32` — re-pinning `setuptools>=70,<82` as the last install step, with
+treatment. `backend/Dockerfile:36` — re-pinning `setuptools>=70,<82` as the last install step, with
 the reason in the comment immediately above it — is a treatment, because an auditor can read the
 file and see it.
 
@@ -208,7 +214,7 @@ Changes that alter a design output are additionally controlled under `SOP-05` §
 **Stated plainly: risk management at Ajace AI has been practised informally and is genuinely
 evidenced — but no risk register existed before this QMS.** The evidence of practice is real: the
 inline rationale at `docker-compose.yml:7-11`, `41-44`, `69-72` and `108-112` records what was
-tried, what failed, how the failure presented and how the fix was verified; `backend/Dockerfile:30-32`
+tried, what failed, how the failure presented and how the fix was verified; `backend/Dockerfile:34-36`
 records a dependency risk and its mitigation next to the mitigation itself; `eval/paper/results/SUMMARY.json`
 records where measurement contradicted an assumption rather than hiding it. What was missing was a
 single place where those risks are listed, scored, owned and reviewed. `registers/REG-03_Risk_Register.md`
@@ -219,8 +225,8 @@ is seeded from exactly this documented evidence and from nothing else.
 | No risk register before this QMS | `registers/` contained no register at the time of writing | Risks were treated but never aggregated, scored or reviewed as a set |
 | No documented context or interested-party determination before this QMS | §4 and §5 are the first written determination | Requirements of interested parties were understood but not traceable |
 | No management review has yet taken place | `SOP-15` is drafted; no minutes exist | No review cycle has run; the register has never been formally reviewed |
-| No backup of the only volume holding customer data | `docker-compose.yml:101-102` mounts volume `echomind_data` at `/data`; `scripts/export_offline_bundle.sh` exports the Ollama and TensorRT-LLM model-cache volumes only and does not reference `echomind_data`; no other script in `scripts/` backs it up | Total, unrecoverable loss of customer data on volume loss. Impact 5. |
-| Application authentication is off by default and does not cover WebSockets | `backend/app/core/config.py:230` (`AUTH_ENABLED` default `0`), `:235` (`CORS_ALLOW_ORIGINS` default `*`), `:236` (`RATE_LIMIT_PER_MIN` default `0`); `backend/app/main.py:135` states in the code that WebSocket endpoints are not gated | Public exposure depends entirely on Cloudflare Access (`docs/PUBLIC_DEPLOYMENT.md` step 4) |
+| No backup of the only volume holding customer data | `docker-compose.yml:112-113` mounts volume `echomind_data` at `/data`; `scripts/export_offline_bundle.sh` exports the Ollama and TensorRT-LLM model-cache volumes only and does not reference `echomind_data`; no other script in `scripts/` backs it up | Total, unrecoverable loss of customer data on volume loss. Impact 5. |
+| Application authentication is off by default and does not cover WebSockets | `backend/app/core/config.py:230` (`AUTH_ENABLED` default `0`), `:235` (`CORS_ALLOW_ORIGINS` default `*`), `:236` (`RATE_LIMIT_PER_MIN` default `0`); `backend/app/main.py:157` states in the code that WebSocket endpoints are not gated | Public exposure depends entirely on Cloudflare Access (`docs/PUBLIC_DEPLOYMENT.md` step 4) |
 | No encryption at rest | No encryption-at-rest mechanism is configured in `docker-compose.yml` for `echomind_data` | Physical or volume-level access exposes customer content |
 | Unbounded container logs | `docker-compose.yml` sets no `logging:` options, so the default `json-file` driver applies with no `max-size` or `max-file` | Logs grow until the disk fills, taking the deployment down |
 | Unbounded knowledge-base growth from auto-stored transcripts | `backend/app/core/config.py:95` sets `AUTO_STORE_INTERVAL_SEC` to 60 by default; `eval/paper/results/SUMMARY.json` (E2) records that at one point only 421 of 17,514 chunks were content, the remainder auto-saved transcripts | Retrieval quality degrades and evaluation becomes unrepresentative |

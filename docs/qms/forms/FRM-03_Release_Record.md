@@ -4,9 +4,15 @@
 |---|---|
 | Document ID | FRM-03 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
 | ISO 9001:2015 clauses | 8.6, 8.5.1 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ## When to use this form
 
@@ -120,8 +126,8 @@ acceptance criteria and traceability to the person authorising release.
   than the single result, and `SOP-15` §5.5 reports it.
 - **§4 is the concession record required by clause 8.7.2** where a known nonconformity is shipped.
   Every entry needs an NC reference and a named authorising role — not a shrug.
-- **Git tags and versioning:** the repository currently has no tags and `frontend/package.json` is
-  `"0.0.0"`. Until that changes, the source revision SHA in the header is the authoritative
-  identifier and the tag field is completed `none`.
+- **Git tags and versioning:** from v1.4.0 every release is an annotated tag created by
+  `scripts/release.sh`. The source revision SHA in the header stays the authoritative identifier;
+  the tag field is completed `none` only for a deployment made without a release.
 - **A rollback plan that has never been tested is a hypothesis.** Record honestly whether it has
   been.

@@ -4,12 +4,16 @@
 |---|---|
 | Document ID | QO-01 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved.** Targets are proposed and require management agreement. |
-| Owner | Managing Director |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | Review frequency | At every management review (SOP-15); at minimum annually |
 | ISO 9001:2015 clauses | 6.2.1, 6.2.2, 9.1.1, 9.1.3 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ---
 
@@ -121,7 +125,7 @@ Historical measurements available at the time of writing:
 | **Baseline** | (a) at least five — `nemo_toolkit[asr] @ git+…NeMo.git@main` (a moving branch, which caused a real build-and-runtime outage, commit `724fb98`), `torchvision` unpinned, `accelerate` with no upper bound, `ollama/ollama:latest`, `cloudflare/cloudflared:latest`; (b) 0% — no licence inventory exists; (c) no |
 | **How achieved** | SOP-09 |
 | **Monitored** | At each management review, and whenever an image is rebuilt |
-| **First action** | Pin NeMo to a release or a commit sha. It is the single dependency with a demonstrated production impact. |
+| **First action** | Pin NeMo to a release or a commit sha. It is the single dependency with a demonstrated production impact. **Done 2026-09-22** — pinned to commit `60ce9407` (commit `51fd3bc`); (a) is now four. |
 
 ### QO-7 — The management system actually operates
 
@@ -131,8 +135,8 @@ Historical measurements available at the time of writing:
 |---|---|
 | **Objective** | The QMS is approved, audited and reviewed on schedule rather than existing only as documents. |
 | **Measure** | (a) All QMS documents approved and dated; (b) internal audit conducted in the period; (c) management review held in the period. |
-| **Target** | (a) 100% within `____` of adoption; (b) at least one audit per 12 months covering all clauses; (c) at least one review per 12 months, quarterly preferred |
-| **Baseline** | (a) 0% — every document is `DRAFT — not yet approved`; (b) none conducted; (c) none held |
+| **Target** | (a) 100% within 30 days of adoption — **met 2026-10-07**; (b) at least one audit per 12 months covering all clauses; (c) at least one review per 12 months, quarterly preferred |
+| **Baseline** | (a) 0% on 2026-09-21 — every document was `DRAFT`; **2026-10-07: 100% of controlled documents approved (`records/approvals/2026-10-07_AR-2026-001_document_approval.md`)**; (b) none conducted; (c) none held |
 | **How achieved** | ADOPTION_GUIDE.md, SOP-13, SOP-15 |
 | **Monitored** | At each management review |
 

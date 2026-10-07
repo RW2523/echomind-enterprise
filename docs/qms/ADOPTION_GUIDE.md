@@ -30,7 +30,7 @@ Three things are therefore true at once, and all three should be said plainly to
 
 | Do not | Why |
 |---|---|
-| Present this set as an *implemented* QMS | Every document says `DRAFT — not yet approved`. Saying otherwise is a misrepresentation an auditor will detect immediately, and it would undermine the honesty that the quality policy itself commits to. |
+| Present this set as an *implemented* QMS | Superseded 2026-10-07: the documents are approved (`records/approvals/2026-10-07_AR-2026-001_document_approval.md`). Internal audit and management review records are still to come — say so. |
 | Claim or imply ISO 9001 certification | Certification requires an accredited certification body to audit you. Nothing here confers it. |
 | Fill in approval names, signatures or dates on someone's behalf | An approval is a person's act. A pre-filled signature block is a fabricated record. |
 | Back-date anything | Same reason, worse consequence. |
@@ -84,7 +84,7 @@ actions with real owners and dates in FRM-07. This is the first genuine QMS reco
 ### Step 6 — Arrange the first internal audit
 
 This is the one step you cannot do alone. ISO 9001:2015 9.2.2 c requires that auditors do not audit
-their own work, and there is currently one person in the organisation. SOP-13 §4 sets out the
+their own work; EchoMind engineering is concentrated in one engineer, so the auditor comes from the AJACE Inc. corporate audit programme. SOP-13 §4 sets out the
 options; the realistic one for a small organisation is a contract auditor for one or two days a
 year. Until it happens, the gap stands as an open nonconformity of the QMS itself — which is exactly
 how SOP-13 records it.

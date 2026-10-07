@@ -4,9 +4,13 @@
 |---|---|
 | Document ID | FRM-00 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
 | ISO 9001:2015 clauses | 7.5.2 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 Copy the block below when creating a new QMS document. Keep the heading order; delete sections
 that genuinely do not apply rather than leaving them empty with "N/A".
@@ -22,8 +26,8 @@ that genuinely do not apply rather than leaving them empty with "N/A".
 | Revision | 1.0 |
 | Status | **DRAFT — not yet approved** |
 | Owner | <role, not a person's name> |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | <clauses> |
 
 ## 1. Purpose
@@ -54,7 +58,7 @@ gap carried into ISO9001_Gap_Analysis.md. Never describe an aspiration in the pr
    as a gap. A procedure that describes an imaginary process is worse than no procedure: it fails
    the first audit and it misleads our own people.
 2. **Roles, not names.** Personnel change; documents should not need reissuing when they do.
-3. **Cite evidence by path.** `backend/app/main.py:185` is verifiable. "The system has health
+3. **Cite evidence by path.** `backend/app/main.py:212` is verifiable. "The system has health
    checks" is not.
 4. **No fabricated records.** Approval names, signatures, dates, audit findings and review minutes
    are completed by the people who actually did the thing, at the time they did it.

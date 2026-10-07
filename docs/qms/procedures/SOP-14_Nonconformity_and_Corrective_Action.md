@@ -3,12 +3,18 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-14 |
-| Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Revision | 1.1 |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 10.1, 10.2.1, 10.2.2, 10.3 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
+
+> **Revision note 2026-10-07.** Wording in this procedure about “one person” describes the engineering work, which is concentrated in the Lead Engineer. Within AJACE Inc. the roles are held by named people (QM-01 §7.1): independent review by the EchoMind Project Lead (Alexander Peter), verification and QMS maintenance by QA/MR (Sheryl Nazareth), approval and release authorisation by the Managing Director (Anita Johan); internal audit is provided by the AJACE Inc. corporate audit programme.
 
 ---
 
@@ -54,9 +60,9 @@ the first without the second being tracked.
 | Lead Engineer | Performs containment and correction. Conducts root-cause analysis. Implements corrective action and records the evidence in the commit. |
 | Verifier | Verifies effectiveness (§8). Where more than one person exists, the verifier is not the person who implemented the action. |
 
-Ajace AI currently has one person holding all of these roles. The consequence — that implementation
-and verification of effectiveness are performed by the same person — is recorded in §11 and must be
-stated on each record in the *verified by* field of `FRM-05`.
+Implementation is normally by the Lead Engineer (Richard Watson Stephen Amudha); verification of effectiveness is by QA/MR
+(Sheryl Nazareth) or the EchoMind Project Lead (Alexander Peter). Where implementer and verifier are the same person, that
+must be stated on the record in the *verified by* field of `FRM-05` (§11).
 
 ## 5. Raising a nonconformity (10.2.1)
 
@@ -65,7 +71,7 @@ Any of the following **shall** result in a nonconformity record:
 | Source | Trigger |
 |---|---|
 | Internal audit (`SOP-13`) | Any major or minor nonconformity finding |
-| Evaluation | A drop in the 52-question golden evaluation against the previous recorded run, or any failing item that was previously passing (`eval/run_eval.py`; the suite gate is binary — `return 0 if total_pass == len(results) else 1` at `eval/run_eval.py:281`) |
+| Evaluation | A drop in the 52-question golden evaluation against the previous recorded run, or any failing item that was previously passing (`eval/run_eval.py`; the suite gate is binary — `return 0 if total_pass == len(results) else 1` at `eval/run_eval.py:309`) |
 | Test failure | Any failing test in `backend/tests/` or `voice/tests/` that reaches `main` |
 | Build or deployment failure | Any failure of a clean rebuild, or any container failing its healthcheck in a deployed environment |
 | Customer complaint | Any complaint recorded under `SOP-08` on `forms/FRM-08_Customer_Feedback_and_Complaint_Record.md` |
@@ -298,7 +304,7 @@ worked.
 | No customer complaints process has yet been exercised | `SOP-08` and `FRM-08` are drafted; no complaint has been received | The customer-sourced branch of §5 is untested |
 | No CI, so test and evaluation failures are not automatically detected | No `.github/` directory and no CI configuration in the repository | Detection depends on someone choosing to run `eval/run_eval.py` and the test suites; a regression can sit undetected, exactly as recorded in `eval/paper/results/REGRESSION_AND_FIXES.json` ("PRE-EXISTING and latent") |
 | Container healthchecks cover 4 of 6 services | `docker-compose.yml` | Two services can fail without the failure being surfaced as a detection source under §5 |
-| No release versioning to attach a nonconformity to | No git tags, no CHANGELOG; `frontend/package.json` is `"0.0.0"` | The *affected releases* field on `FRM-05` cannot currently be completed precisely; it must reference a commit SHA instead |
+| Release versioning to attach a nonconformity to | Resolved 2026-10-06: releases are tagged from `v1.4.0` | The *affected releases* field on `FRM-05` names the release; for code before 2026-10-06 it references a commit SHA |
 | The QMS's own known nonconformity — auditor impartiality | `SOP-13` §5 and §12 | Must be raised as `NC-____-___` in `REG-04` on adoption and remain open until resolved |
 
 Each gap above is carried into `ISO9001_Gap_Analysis.md` and, where it is a risk rather than only a

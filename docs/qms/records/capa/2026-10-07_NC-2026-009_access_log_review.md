@@ -4,7 +4,7 @@
 |---|---|
 | Record | CAPA evidence for NC-2026-009, corrective action (d) |
 | Performed | 2026-10-07, from the `activity_log` table (SQLite, `echomind_data` volume) |
-| Reviewed by | `________________` |
+| Reviewed by | Kishan Haravu Pradeep (Data custodian) — 2026-10-07 |
 | Source data | 2,032 logged API calls, 2026-06-27 → 2026-10-07. The log records every POST/PUT/DELETE/PATCH under `/api/` with time, user, path, status and source address. GET requests are not logged. |
 
 ## 1. How long the instance was ungated

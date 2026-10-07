@@ -4,11 +4,15 @@
 |---|---|
 | Document ID | SOP-11 |
 | Revision | 1.2 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 8.5.3, 8.5.4, 7.5.3.2 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ---
 
@@ -72,7 +76,7 @@ deletion or a retention period.
 ## 5. Inventory: what is held, and where
 
 Everything below lives inside one Docker volume, `echomind_data`, mounted at `/data`
-(`docker-compose.yml:101-102`; base path `backend/app/core/config.py:5,10`). The single-volume
+(`docker-compose.yml:112-113`; base path `backend/app/core/config.py:5,10`). The single-volume
 design is deliberate and is stated to operators at `docs/USER_MANUAL.md:1150-1158`.
 
 **SQLite database — `/data/echomind.sqlite`** (`backend/app/core/config.py:11`). Seventeen tables
@@ -101,9 +105,9 @@ are created at startup in `backend/app/core/db.py`. Those holding customer prope
 | `/data/uploads/` | The original uploaded source files, retained so the front end can render them | A | `backend/app/api/routes/docs.py:24,30-32` |
 | `/data/boardroom/{session_id}/` | Raw meeting audio chunks, up to `BOARDROOM_MAX_CHUNKS` 4000 × `BOARDROOM_MAX_CHUNK_BYTES` 25 MB — roughly 5.5 hours per session | A | `backend/app/boardroom/service.py:37,79`; `backend/app/core/config.py:146,148` |
 | `/data/faiss.index`, `faiss_transcript.index`, `faiss_section.index`, `faiss_glossary.index` and the matching `*_meta.json` and `sparse_*_meta.json` | Embedded customer text and its provenance | C | `backend/app/core/config.py:12-18,198-202` |
-| `/data/docgen_images/`, generated documents | Output produced from customer prompts and material | B | `backend/app/docgen/images.py:46` |
+| `/data/docgen_images/`, generated documents | Output produced from customer prompts and material | B | `backend/app/docgen/images.py:45` |
 | `/data/auth_secret.key` | The JWT signing secret, auto-generated and persisted | — (not customer property, but a secret protecting it) | `backend/app/core/auth.py:58` |
-| `/data/hf_cache/`, `/data/docgen_models/` | Model weights. **Not** customer property | — | `backend/app/boardroom/service.py:41`; `docker-compose.yml:96` |
+| `/data/hf_cache/`, `/data/docgen_models/` | Model weights. **Not** customer property | — | `backend/app/boardroom/service.py:41`; `docker-compose.yml:107` |
 
 **Live voice audio** is streamed over a WebSocket and processed in memory. The persisted artefacts
 are the transcripts and, for boardroom sessions, the audio chunk files above.
@@ -119,13 +123,13 @@ mechanism exactly, because its limits matter more than its presence.
 | `_active_namespace` context variable | `backend/app/rag/index.py:29`, setter at `:32-33` | Holds the namespace for the current request; async-safe |
 | `_ns_ok` predicate | `backend/app/rag/index.py:37-40` | `((src or {}).get("namespace") or "default") == ns` — applied inside every index search path |
 | Per-request namespace binding | `backend/app/api/routes/chat.py:382, 422, 498, 560` | `set_active_namespace(_effective_ns(request, inp.namespace))` |
-| **The actual security boundary** | `backend/app/api/routes/chat.py:25-33` (`_effective_ns`) | When authentication is on and the user is bound to a tenant, the user's tenant namespace is **forced**, so a tenant user cannot read another tenant's knowledge base by sending a different namespace |
+| **The actual security boundary** | `backend/app/api/routes/chat.py:27-35` (`_effective_ns`) | When authentication is on and the user is bound to a tenant, the user's tenant namespace is **forced**, so a tenant user cannot read another tenant's knowledge base by sending a different namespace |
 | Ingest-side tagging | `backend/app/api/routes/docs.py:144-181`, tenant forcing at `:145-150` | An uploaded document is tagged with the uploader's tenant namespace |
 | Candidate-pool widening | `backend/app/rag/index.py:44-57` | Searches rank globally and then filter; a fixed pool starved small namespaces as the corpus grew, so the pool scales with index size |
 
 **Stated plainly: the tenant boundary is only enforced when `AUTH_ENABLED` is true.** With
 authentication off — which is the default (`backend/app/core/config.py:230`;
-`docker-compose.yml:79`) — `_effective_ns` returns whatever namespace the client sent, unverified.
+`docker-compose.yml:90`) — `_effective_ns` returns whatever namespace the client sent, unverified.
 In that configuration the namespace is a *partition*, not a *security boundary*: it keeps knowledge
 bases separate for users who ask honestly, and stops nothing else.
 
@@ -148,17 +152,17 @@ layered over a connected product; it is how the runtime is built.
 |---|---|
 | All inference is local — chat, embeddings, speech-to-text and text-to-speech all run in containers on the customer's host | `docker-compose.yml` service definitions for `trtllm`, `ollama`, `backend` and `voice`; `README.md:130` |
 | No telemetry, analytics or usage reporting of any kind | `README.md:130`; the only usage record is the local `activity_log` table |
-| Open-weight models served locally, not called as a hosted API | `docker-compose.yml:73-76` (`nomic-embed-text` via Ollama), `:5` and `:140` (Qwen3-30B-A3B-FP4 via TensorRT-LLM at `http://trtllm:8355`) |
-| Offline model resolution — no runtime downloads | `docker-compose.yml:84-85` sets `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`; `:170-171` disables the runtime Piper voice download |
-| Front-end crash reports go to the local backend, not to a third party | `frontend/components/ErrorBoundary.tsx:36` posts to `/api/client-error`, handled at `backend/app/main.py:198-206` |
-| The one outbound path in the product is disabled | Document Studio image generation supports a `nim` backend that calls an NVIDIA-hosted endpoint (`backend/app/docgen/images.py:14-15`). It is **not enabled**: the shipped configuration is `DOCGEN_IMAGE_BACKEND=diffusers` (`docker-compose.yml:94`), on-device SDXL-Turbo. A `comfyui` backend also exists and points at a local server by default |
+| Open-weight models served locally, not called as a hosted API | `docker-compose.yml:77-80` (`nomic-embed-text` via Ollama), `:5` and `:140` (Qwen3-30B-A3B-FP4 via TensorRT-LLM at `http://trtllm:8355`) |
+| Offline model resolution — no runtime downloads | `docker-compose.yml:95-96` sets `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`; `:170-171` disables the runtime Piper voice download |
+| Front-end crash reports go to the local backend, not to a third party | `frontend/components/ErrorBoundary.tsx:36` posts to `/api/client-error`, handled at `backend/app/main.py:232-240` |
+| The one outbound path in the product is disabled | Document Studio image generation supports a `nim` backend that calls an NVIDIA-hosted endpoint (`backend/app/docgen/images.py:14-15`). It is **not enabled**: the shipped configuration is `DOCGEN_IMAGE_BACKEND=diffusers` (`docker-compose.yml:105`), on-device SDXL-Turbo. A `comfyui` backend also exists and points at a local server by default |
 
 **Consequence for change control.** Setting `DOCGEN_IMAGE_BACKEND=nim` would send a document prompt
 derived from customer material to a third-party endpoint. Any change that enables it, or that adds
 a new outbound call, is a change to the core value proposition and to this procedure, and must be
 raised under `SOP-02` §9 and approved by the Managing Director before it is made.
 
-`cloudflared` (`docker-compose.yml:218-228`) is the one component that intentionally reaches
+`cloudflared` (`docker-compose.yml:240-250`) is the one component that intentionally reaches
 outward, and it runs only under the `public` compose profile. It is not part of an on-premises
 customer deployment.
 
@@ -178,27 +182,27 @@ Honest separation of what is in place from what is not.
 | Duplicate-upload guard, preventing the same customer bytes being indexed twice | `backend/app/api/routes/docs.py:152-166` |
 | Boardroom chunk directory path containment against traversal | `backend/app/boardroom/service.py:238-239` |
 | Customer data is never committed to version control | `SOP-01` §9 |
-| Activity log records who did what, from which IP, for every API mutation | `backend/app/main.py:154-163`; `backend/app/core/audit.py:13-23` |
+| Activity log records who did what, from which IP, for every API mutation | `backend/app/main.py:175-192`; `backend/app/core/audit.py:13-23` |
 
 **Not in place:**
 
 | Absent control | Current state | Consequence |
 |---|---|---|
 | **Encryption at rest** | None anywhere. The SQLite database is plain, `/data/uploads` is plain, the FAISS indexes and their metadata are plain. No encryption mechanism is configured for `echomind_data` in `docker-compose.yml` | Anyone with host, volume or disk access reads all customer content directly. The customer's own full-disk encryption is the only mitigation, and it is outside Ajace AI's control |
-| Authentication on by default | `AUTH_ENABLED` defaults to `0` (`backend/app/core/config.py:230`; `docker-compose.yml:79`) | With the default configuration there is no user identity, so §6's tenant boundary does not apply and `activity_log` records `"anonymous"` (`backend/app/core/audit.py:18`) |
-| Authentication over WebSockets | The enforcement middleware at `backend/app/main.py:138-147` is HTTP-only; the comment at `:135` states "WebSocket endpoints are not gated here yet". The voice service has its own gate, `VOICE_AUTH_ENABLED`, also defaulting to `0` (`voice/app/auth_check.py:14`; `docker-compose.yml:145`) | The live-transcription WebSocket is not covered by the HTTP auth guard even when auth is enabled |
+| Authentication on by default | `AUTH_ENABLED` defaults to `0` (`backend/app/core/config.py:230`; `docker-compose.yml:90`) | With the default configuration there is no user identity, so §6's tenant boundary does not apply and `activity_log` records `"anonymous"` (`backend/app/core/audit.py:18`) |
+| Authentication over WebSockets | The enforcement middleware at `backend/app/main.py:161-168` is HTTP-only; the comment at `:157` states "WebSocket endpoints are not gated here yet". The voice service has its own gate, `VOICE_AUTH_ENABLED`, also defaulting to `0` (`voice/app/auth_check.py:16`; `docker-compose.yml:160`) | The live-transcription WebSocket is not covered by the HTTP auth guard even when auth is enabled |
 | Restrictive CORS | `CORS_ALLOW_ORIGINS` defaults to `*` (`backend/app/core/config.py:235`) | Any origin may call the API from a browser |
 | Rate limiting | `RATE_LIMIT_PER_MIN` defaults to `0`, i.e. off (`backend/app/core/config.py:236`) | No protection against bulk extraction or resource exhaustion |
-| Activity-log integrity | The middleware is best-effort inside a bare `except Exception: pass` (`backend/app/main.py:161-162`), and the insert itself swallows failures at debug level (`backend/app/core/audit.py:1,21-22`) — deliberately, so logging "never breaks a request" | The audit trail is not guaranteed complete. This is a defensible engineering trade-off and an undefensible audit record; it must be stated to any customer who relies on the log |
+| Activity-log integrity | The middleware is best-effort inside a bare `except Exception: pass` (`backend/app/main.py:189-190`), and the insert itself swallows failures at debug level (`backend/app/core/audit.py:1,21-22`) — deliberately, so logging "never breaks a request" | The audit trail is not guaranteed complete. This is a defensible engineering trade-off and an undefensible audit record; it must be stated to any customer who relies on the log |
 
 For a public deployment, Cloudflare Access is the compensating control and is described as
-**mandatory**, not optional, at `docs/PUBLIC_DEPLOYMENT.md` §"Step 4"; `docker-compose.yml:221`
+**mandatory**, not optional, at `docs/PUBLIC_DEPLOYMENT.md` §"Step 4"; `docker-compose.yml:243`
 carries the same warning inline. **It is not in place on the public reference instance.** Application authentication had also been
 switched off there (found 2026-09-28, `REG-04` NC-2026-009); since 2026-10-06 the instance runs with
 `AUTH_ENABLED=1` and `VOICE_AUTH_ENABLED=1`, and that is its only gate.
 
-> **Note on a stale comment.** `docker-compose.yml:221` and `docs/PUBLIC_DEPLOYMENT.md:5` state
-> that "EchoMind has no built-in auth". That is out of date and contradicts `README.md:133`, which
+> **Note on a stale comment.** `docker-compose.yml:243` and `docs/PUBLIC_DEPLOYMENT.md:5` state
+> that "EchoMind has no built-in auth". That is out of date and contradicts `README.md:139`, which
 > states that authentication is opt-in and that local accounts and JWT ship in the box. The README
 > is accurate. The stale comments are a class N6 nonconformity under `SOP-10` §4.
 
@@ -210,12 +214,12 @@ and no scheduled deletion.
 
 | Endpoint | Deletes | Evidence |
 |---|---|---|
-| `DELETE /api/docs/{doc_id}` | The document, its chunks and embeddings from the index, and the stored source file (best-effort; a failure to remove the file is logged at WARNING) | `backend/app/api/routes/docs.py:220-235` |
+| `DELETE /api/docs/{doc_id}` | The document, its chunks and embeddings from the index, and the stored source file (best-effort; a failure to remove the file is logged at WARNING) | `backend/app/api/routes/docs.py:223-238` |
 | `DELETE /api/transcribe/transcripts/{id}` | The transcript row **and** its knowledge-base documents, chunks and embeddings. Matches both identifier forms, because auto-stored transcripts are indexed under a different filename — "else embeddings are orphaned (audit H1)" | `backend/app/api/routes/transcribe.py:213-246` |
 | `DELETE /api/boardroom/sessions/{id}` | The session row and the whole `/data/boardroom/{id}/` audio chunk directory | `backend/app/api/routes/boardroom.py:73-79`; `backend/app/boardroom/service.py:163-176` |
 | `DELETE /api/chat/{chat_id}` | A chat and its messages | `backend/app/api/routes/chat.py:156` |
 | `DELETE /api/docgen/jobs/{job_id}` | A Document Studio job | `backend/app/api/routes/docgen.py:209` |
-| `DELETE /api/auth/users/{username}` | A user account | `backend/app/api/routes/auth.py:87` |
+| `DELETE /api/auth/users/{username}` | A user account | `backend/app/api/routes/auth.py:89` |
 
 **What a deletion request must cover.** Because of §4 category C, deleting a document is not
 complete unless the chunks and the index entries go with it. The transcript endpoint is the model
@@ -302,7 +306,7 @@ what occurred.
 | Customer data lost, corrupted or irrecoverable | Immediately, by the Managing Director, stating what was affected, over what period, and what can be recovered | `FRM-05` at severity S1 under `SOP-10` §5 |
 | Content crossing a namespace or tenant boundary | Immediately — the customer cannot detect this themselves | `FRM-05` at severity S1; see `SOP-10` §10 Example A |
 | Customer material reaching any destination outside their perimeter | Immediately, with the destination, the volume and the period named | `FRM-05` at severity S1 |
-| Uploaded material found unsuitable — for example a scanned PDF from which no text can be extracted | To the user at the point of upload; a 422 with an explanatory message is returned today (`backend/app/api/routes/docs.py:168-172`) | No further record required |
+| Uploaded material found unsuitable — for example a scanned PDF from which no text can be extracted | To the user at the point of upload; a 422 with an explanatory message is returned today (`backend/app/api/routes/docs.py:171-175`) | No further record required |
 | Customer material handled by Ajace AI during support or customisation, and then lost or disclosed | Immediately, by the Managing Director | `FRM-05` at severity S1 |
 
 **There is no customer-notification procedure today** — no defined recipient, timescale, content or
@@ -336,13 +340,13 @@ little else is in place, and the organisation should not claim otherwise.**
 | No retention policy | §10 | Everything is kept for ever, including material auto-accumulated without a user decision |
 | No data-subject-request or bulk-erasure process | Deletion is per-object and manual (§9) | A customer cannot demonstrate erasure to their own regulator using the platform alone |
 | `activity_log` has no deletion or pruning path | No endpoint and no scheduled task touches it (`backend/app/core/db.py:17`; `backend/app/core/audit.py`) | Usernames and IP addresses accumulate indefinitely with no way to remove them |
-| Tenant boundary conditional on an off-by-default setting | `_effective_ns` applies only when `AUTH_ENABLED` is true (`backend/app/api/routes/chat.py:25-33`); default is `0` | In the default configuration, namespace is a partition and not a security boundary. Must be stated in writing to every customer |
-| WebSocket endpoints not covered by the HTTP auth guard | `backend/app/main.py:135,138-147` | Live transcription is reachable without the HTTP session check even when auth is on |
+| Tenant boundary conditional on an off-by-default setting | `_effective_ns` applies only when `AUTH_ENABLED` is true (`backend/app/api/routes/chat.py:27-35`); default is `0` | In the default configuration, namespace is a partition and not a security boundary. Must be stated in writing to every customer |
+| WebSocket endpoints not covered by the HTTP auth guard | `backend/app/main.py:157,161-168` | Live transcription is reachable without the HTTP session check even when auth is on |
 | Wildcard CORS and no rate limiting by default | `backend/app/core/config.py:235,236` | Bulk extraction is unimpeded on a network-reachable deployment |
-| Activity log is best-effort | `backend/app/main.py:161-162`; `backend/app/core/audit.py:21-22` | The audit trail cannot be asserted to be complete |
+| Activity log is best-effort | `backend/app/main.py:189-190`; `backend/app/core/audit.py:21-22` | The audit trail cannot be asserted to be complete |
 | No customer-notification procedure | §12 | The 8.5.3 reporting obligation has no mechanism behind it |
 | Unbounded knowledge-base growth from auto-stored transcripts | `AUTO_STORE_INTERVAL_SEC` 60 (`backend/app/core/config.py:95`); `eval/paper/results/SUMMARY.json` E2 records 421 content chunks of 17,514 | Retention, storage and retrieval quality all degrade together |
-| Stale security statements in shipped files | `docker-compose.yml:221` and `docs/PUBLIC_DEPLOYMENT.md:5` contradict `README.md:133` | An operator may under- or over-estimate the protection in place |
+| Stale security statements in shipped files | `docker-compose.yml:243` and `docs/PUBLIC_DEPLOYMENT.md:5` contradict `README.md:139` | An operator may under- or over-estimate the protection in place |
 
 Each gap above is carried into `registers/REG-03_Risk_Register.md` with a score, and into
 `ISO9001_Gap_Analysis.md`.

@@ -4,11 +4,15 @@
 |---|---|
 | Document ID | SOP-09 |
 | Revision | 1.1 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Engineering Lead |
-| Approved by | `________________________` |
-| Approval date | `____ / ____ / ________` |
+| Status | **APPROVED** |
+| Owner | Lead Engineer (Richard Watson Stephen Amudha) |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
 | ISO 9001:2015 clauses | 8.4.1, 8.4.2, 8.4.3, 8.1(e) |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ---
 
@@ -52,7 +56,7 @@ that the running system needs must already be inside an image or a named volume 
 starts it. That inverts the usual supply-chain picture in two ways.
 
 1. **Pre-caching is the control.** Baking model weights into images at build
-   (`backend/Dockerfile:42`, `voice/Dockerfile:44`, `:50`, `:62-63`, `:66-74`) and populating the
+   (`backend/Dockerfile:46`, `voice/Dockerfile:48`, `:50`, `:62-63`, `:66-74`) and populating the
    `trtllm_hf_cache` and `ollama_data` volumes once via `scripts/prepare_offline.sh` means the
    deployed system has no runtime dependency on any provider. A provider that deletes a model,
    changes its licence or goes offline cannot break a running customer instance. `HF_HUB_OFFLINE=1`
@@ -67,7 +71,7 @@ starts it. That inverts the usual supply-chain picture in two ways.
 | Provision type | Control required | Present state |
 |---|---|---|
 | Model weights | Pinned model identifier; pre-downloaded into an image or volume; licence reviewed and recorded; model card retained | Identifiers are pinned and pre-caching is in place, except the reranker (§6). **Licence review is not performed** (§8) |
-| Base container images | Pinned to an immutable tag or digest | Partial. `nvcr.io/nvidia/pytorch:25.01-py3`, `nginx:1.27-alpine` and `node:20-alpine` are pinned; `ollama/ollama:latest` (`docker/ollama/Dockerfile:2`) and `cloudflare/cloudflared:latest` (`docker-compose.yml:224`) are not |
+| Base container images | Pinned to an immutable tag or digest | Partial. `nvcr.io/nvidia/pytorch:25.01-py3`, `nginx:1.27-alpine` and `node:20-alpine` are pinned; `ollama/ollama:latest` (`docker/ollama/Dockerfile:2`) and `cloudflare/cloudflared:latest` (`docker-compose.yml:252`) are not |
 | Python packages | Exact version pins; upper bounds on any range | Partial — see §7 |
 | npm packages | Exact versions, or caret ranges with a committed lockfile and `npm ci` | All dependencies in `frontend/package.json` are caret-ranged; reproducibility rests entirely on `package-lock.json` and the `npm ci` in `frontend/Dockerfile:4` |
 | APT mirror | Identified as a supplier; documented; fallback available | **Undocumented before this procedure** — see §9 |
@@ -84,11 +88,11 @@ maintained with it.
 | Chat LLM (production) | `nvidia/Qwen3-30B-A3B-FP4` | NVIDIA (Qwen base, NVFP4 quantisation) | Hugging Face Hub into the `trtllm_hf_cache` volume, once; runtime `HF_HUB_OFFLINE=1` |
 | Chat LLM (fallback) | `qwen2.5:7b-instruct-q4_K_M` | Alibaba Qwen, via Ollama | Ollama registry |
 | Embeddings | `nomic-embed-text` | Nomic AI, via Ollama | Ollama registry into `ollama_data` |
-| Streaming STT | `nvidia/nemotron-speech-streaming-en-0.6b` | NVIDIA — **gated model, requires `HF_TOKEN`** | Baked into both images at build (`backend/Dockerfile:42`, `voice/Dockerfile:44`) |
-| Final STT (voice) | `nvidia/parakeet-tdt-0.6b-v2` | NVIDIA | Baked into the voice image (`voice/Dockerfile:47-50`) |
+| Streaming STT | `nvidia/nemotron-speech-streaming-en-0.6b` | NVIDIA — **gated model, requires `HF_TOKEN`** | Baked into both images at build (`backend/Dockerfile:46`, `voice/Dockerfile:48`) |
+| Final STT (voice) | `nvidia/parakeet-tdt-0.6b-v2` | NVIDIA | Baked into the voice image (`voice/Dockerfile:51-54`) |
 | Boardroom diarised ASR | `microsoft/VibeVoice-ASR-HF` (~18 GB) | Microsoft | Hugging Face Hub into `echomind_data:/data/hf_cache` during prepare |
-| TTS (default) | Piper `en_US-lessac-medium` | Rhasspy | `wget` from `huggingface.co/rhasspy/piper-voices` at build (`voice/Dockerfile:62-63`) |
-| TTS (option) | Kokoro-82M | hexgrad | `pip install kokoro`, caches baked at build (`voice/Dockerfile:66-74`) |
+| TTS (default) | Piper `en_US-lessac-medium` | Rhasspy | `wget` from `huggingface.co/rhasspy/piper-voices` at build (`voice/Dockerfile:66-67`) |
+| TTS (option) | Kokoro-82M | hexgrad | `pip install kokoro`, caches baked at build (`voice/Dockerfile:70-78`) |
 | Reranker | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Microsoft / sentence-transformers | Hugging Face Hub — **not pre-downloaded; see below** |
 | Image generation | `stabilityai/sdxl-turbo`, via diffusers | Stability AI | Hugging Face Hub into `/data/docgen_models` |
 
@@ -115,11 +119,11 @@ surface:
 
 | Install | Location | Risk |
 |---|---|---|
-| `nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@main` | `backend/Dockerfile:19`, `voice/Dockerfile:18` | **A moving branch, not a release.** See §8 |
-| `pip install --upgrade torchvision` | `backend/Dockerfile:25`, `voice/Dockerfile:21` | Unpinned upgrade, required because NeMo upgrades torch and the NGC torchvision targets the old one |
-| `pip install kokoro soundfile` | `voice/Dockerfile:66` | Unpinned; reinstalls over the pinned `soundfile==0.12.1` from `voice/requirements.txt` |
+| `nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@60ce9407…` | `backend/Dockerfile:23`, `voice/Dockerfile:22` | Pinned to an exact commit since `51fd3bc` (2026-09-22); it was the moving branch `@main` before that. See §8 |
+| `pip install --upgrade torchvision` | `backend/Dockerfile:29`, `voice/Dockerfile:25` | Unpinned upgrade, required because NeMo upgrades torch and the NGC torchvision targets the old one |
+| `pip install kokoro soundfile` | `voice/Dockerfile:70` | Unpinned; reinstalls over the pinned `soundfile==0.12.1` from `voice/requirements.txt` |
 | `ollama/ollama:latest` | `docker/ollama/Dockerfile:2` | Unpinned base image |
-| `cloudflare/cloudflared:latest` | `docker-compose.yml:224` | Unpinned base image on the component that fronts public access |
+| `cloudflare/cloudflared:latest` | `docker-compose.yml:252` | Unpinned base image on the component that fronts public access |
 
 **Rule going forward.** A new dependency is added with an exact version, or with a range that has
 both bounds and a stated reason. A `git+…@main` reference, an `--upgrade` with no version, and a
@@ -128,16 +132,21 @@ body explaining why the pinned alternative was not viable.
 
 ## 8. Flagship supplier-risk case: NeMo on `main`
 
-Both the backend and voice images install NVIDIA NeMo from the tip of its `main` branch:
+Until commit `51fd3bc` (2026-09-22) both the backend and voice images installed NVIDIA NeMo from the
+tip of its `main` branch:
 
 ```
 pip install --no-cache-dir "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@main"
 ```
-(`backend/Dockerfile:19`, `voice/Dockerfile:18`)
 
-This is the single largest supplier risk in the product. The dependency is not a release; it is
-whatever NVIDIA last pushed. Two builds of the same EchoMind commit, minutes apart, can install
-different code.
+That was the single largest supplier risk in the product. The dependency was not a release; it was
+whatever NVIDIA last pushed. Two builds of the same EchoMind commit, minutes apart, could install
+different code. Both images now install the exact commit verified in production
+(`backend/Dockerfile:23`, `voice/Dockerfile:22`):
+
+```
+pip install --no-cache-dir "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@60ce9407ef60a3327ffaf2c15931b9b3b834afc2"
+```
 
 **Evidenced failure.** Commit `724fb98` records the outage this caused. NeMo on `main` began pulling
 `setuptools>=82`, which removed `pkg_resources`. `librosa` imports `pkg_resources` at build time, so
@@ -149,22 +158,18 @@ failure surfaced only when the images were finally rebuilt from source after a p
 **Mitigation in place.** Both Dockerfiles now re-pin setuptools as the **last** install step, after
 everything that could raise it:
 
-- `backend/Dockerfile:30-32` — with the inline comment recording the cause: *"librosa (via NeMo)
+- `backend/Dockerfile:34-36` — with the inline comment recording the cause: *"librosa (via NeMo)
   imports pkg_resources, which setuptools >=82 removed — NeMo installs from git@main, so rebuilds
   drift and dropped it."*
-- `voice/Dockerfile:77-79` — *"Re-pin setuptools LAST: kokoro/nemo/torchvision installs above pull
+- `voice/Dockerfile:81-83` — *"Re-pin setuptools LAST: kokoro/nemo/torchvision installs above pull
   in setuptools>=82."*
 
-**Assessment.** The mitigation addresses the symptom that was observed. It does not address the
-cause, which is that the dependency has no fixed version. The residual risk is that the next
-incompatible change from `main` will be a different one, and will be discovered the same way — by a
-build or a runtime crash. The controls that would close it are, in ascending order of effort:
-pinning to a NeMo release tag; pinning to a specific commit SHA; or vendoring the subset actually
-used (a `nemotron_asr` package is already vendored in the tree, so the pattern exists).
-
-Until one of those is adopted, **every image build is a live, unversioned dependency on a
-third-party branch**, and this must be stated as such to any customer who asks how the product is
-built.
+**Assessment.** The setuptools re-pin addressed the symptom that was observed. The cause — a
+dependency with no fixed version — was closed on 2026-09-22 by pinning to a specific commit SHA
+(commit `51fd3bc`, risk R-01 closed). Moving to a NeMo release tag, or vendoring the subset actually
+used (a `nemotron_asr` package is already vendored in the tree), remain options for a later
+release. A NeMo upgrade is now a deliberate change: new SHA, rebuild, and the release checks in
+`SOP-08`. The remaining unpinned items are the ones in the §7 table.
 
 ## 9. `mirrors.mit.edu` — an undocumented supplier
 
@@ -182,7 +187,7 @@ unavailable. The backend build has a crude resilience measure — a retry after 
 
 Recorded here so that it is at least identified. It is entered in
 `registers/REG-02_External_Documents_and_Providers.md` as a supplier, with the rationale to be
-completed by the Engineering Lead: `________________________`.
+completed by the Engineering Lead: workaround for transient `ports.ubuntu.com` mirror-sync failures during builds; to be replaced by an official mirror or removed (Richard Watson Stephen Amudha, 2026-10-07).
 
 ## 10. Selection, evaluation and re-evaluation (8.4.1)
 
@@ -225,8 +230,7 @@ retrospectively at the next review.
 Provider performance is recorded as it is observed, not invented. The NeMo incident in §8 is the
 first such record and is the template: what happened, what it cost, what was changed.
 
-**No formal supplier assessment has been carried out for any provider.** Scores, ratings and
-approved-supplier status: `________________________`.
+A first assessment of the critical providers is `evidence-2026/14_Provider_Review/EM26-14b` (approved 2026-10-07). Procurement suppliers are governed by the AJACE Inc. approved supplier list; model and software providers are inventoried in `REG-02`.
 
 ## 11. Licence obligations — an unmet control
 
@@ -244,7 +248,7 @@ The following is the state of the repository.
 | An inventory of model licences | **None.** No model card, licence text or licence reference is held in-repo for any of the ten models in §6 |
 | A software bill of materials | **None.** No SBOM is generated at build or shipped with the offline bundle |
 | Evidence for public claims | `README.md` asserts *"Models (all local, all open-weight)"*. The statement may well be correct, but **no licence evidence supporting it exists in the repository**, so it cannot presently be substantiated on request |
-| Gated-model terms | `nvidia/nemotron-speech-streaming-en-0.6b` is an acceptance-gated model requiring `HF_TOKEN` (`docker-compose.yml:20-21`, `:148`). The weights are then **baked into images** (`backend/Dockerfile:42`, `voice/Dockerfile:44`) and **shipped in the offline bundle** (`scripts/export_offline_bundle.sh:41`) to customers who never accepted those terms. Whether that redistribution is permitted has not been assessed, and the assessment is: `________________________` |
+| Gated-model terms | `nvidia/nemotron-speech-streaming-en-0.6b` is an acceptance-gated model requiring `HF_TOKEN` (`docker-compose.yml:20-21`, `:148`). The weights are then **baked into images** (`backend/Dockerfile:46`, `voice/Dockerfile:48`) and **shipped in the offline bundle** (`scripts/export_offline_bundle.sh:41`) to customers who never accepted those terms. Whether that redistribution is permitted has not been assessed, and the assessment is: `________________________` |
 
 QP-01 §2.3 commits the organisation to claims that are reproducible from recorded evidence. The
 open-weight claim currently is not. Closing this needs four artefacts: a `LICENSE`, a `NOTICE`, a
@@ -282,7 +286,7 @@ REG-02.
 
 | # | Requirement of this procedure | Present state | Gap |
 |---|---|---|---|
-| G-1 | Build-time dependencies are pinned to something immutable | `nemo_toolkit @ git+…@main` in both images; `torchvision --upgrade`; `kokoro`/`soundfile` reinstall; `ollama/ollama:latest`; `cloudflare/cloudflared:latest` | **Open.** NeMo on `main` is the highest-severity item and has already caused one evidenced outage (§8) |
+| G-1 | Build-time dependencies are pinned to something immutable | `nemo_toolkit` pinned to a commit in both images since `51fd3bc` (2026-09-22); still unpinned: `torchvision --upgrade`; `kokoro`/`soundfile` reinstall; `ollama/ollama:latest`; `cloudflare/cloudflared:latest` | **Partly closed.** NeMo — the highest-severity item, with one evidenced outage (§8) — is pinned; the rest remain open |
 | G-2 | Unbounded version ranges are avoided | `accelerate>=0.26.0` and `huggingface_hub>=0.20.0` have no upper bound | **Open** |
 | G-3 | Every model used at runtime is pre-cached | The reranker `cross-encoder/ms-marco-MiniLM-L-6-v2` is not pre-downloaded despite the requirements comment saying it should be; with `HF_HUB_OFFLINE=1` the code silently falls back to the LLM rerank | **Open.** Functional and performance impact today |
 | G-4 | Repository carries a licence | No `LICENSE` file | **Open** |
@@ -292,7 +296,7 @@ REG-02.
 | G-8 | Gated-model redistribution assessed | Nemotron STT is acceptance-gated, baked into images and shipped in the offline bundle; permissibility unassessed | **Open.** Assess before the next customer delivery |
 | G-9 | Suppliers are identified | `mirrors.mit.edu` was an undocumented dependency of every image build until this procedure | **Partly closed** by §9; rationale and fallback still to be recorded |
 | G-10 | Formal provider evaluation and re-evaluation | No supplier has been formally assessed; no re-evaluation cycle has run | **Open.** First review due on approval of this procedure |
-| G-11 | External providers register exists | `docs/qms/registers/` is empty; `REG-02` does not yet exist | **Open.** REG-02 is a prerequisite for most of the controls above |
+| G-11 | External providers register exists | `REG-02` exists: providers, models, base images and dependencies | **Closed** for the register; licence column for 19 items still to be filled (ticket #56) |
 | G-12 | Verification of external items before use is enforced | Practised manually; no CI, so a dependency change can reach `main` unverified (SOP-07 §9.1) | **Open** |
 
 All gaps above are to be carried into `ISO9001_Gap_Analysis.md`.

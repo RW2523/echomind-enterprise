@@ -4,9 +4,15 @@
 |---|---|
 | Document ID | FRM-04 |
 | Revision | 1.0 |
-| Status | **DRAFT — not yet approved** |
-| Owner | Managing Director |
+| Status | **APPROVED** |
+| Owner | Managing Director (Anita Johan) |
 | ISO 9001:2015 clauses | 8.4.1, 8.4.2 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Approved by | Anita Johan (Managing Director) |
+| Approval date | 2026-10-07 |
+| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 ## When to use this form
 
@@ -95,8 +101,9 @@ component. Summarised in `registers/REG-02_External_Documents_and_Providers.md`.
 
 - **Version stability is a real criterion here, not a formality.** A dependency installed from a
   moving branch rather than a release can change under the build with no action by anyone;
-  `backend/Dockerfile:19` installs `nemo_toolkit[asr]` from `git+…NeMo.git@main`, and that has
-  already produced a real build and runtime outage (commit `724fb98`). Where a moving reference
+  `backend/Dockerfile:23` installed `nemo_toolkit[asr]` from `git+…NeMo.git@main` until it was
+  pinned to a commit in `51fd3bc`, and that had already produced a real build and runtime outage
+  (commit `724fb98`). Where a moving reference
   cannot be avoided, mark the criterion *Partial* and record the compensating control in §5.
 - **Offline operability matters more than for most products.** Any component that reaches outside
   the customer perimeter at runtime undermines the reason the product exists. Test it, do not assume
