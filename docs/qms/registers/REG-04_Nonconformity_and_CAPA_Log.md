@@ -158,7 +158,8 @@ Severity scale (defined in SOP-10 §3):
 | Description | `python3 eval/run_eval.py` against HEAD returned **9/52**, down from 49/52 (2026-08-06). All **43 retrieval questions failed with zero citations** and document precision 0.00. Non-corpus categories were unaffected: smalltalk 6/6, refusal 2/2, off-corpus 1/1. |
 | Investigation | **Not a code regression.** Retrieval works when exercised directly (`retrieve_reranked` returns 6 ranked hits). The cause is the corpus: the knowledge base holds only **5 Meridian Bank demo PDFs**, while the golden set expects **15 documents** — the DoD FMR volumes (`01_01`, `06a_02`, `14_02`, `14_03`) and the vertical demo documents (Product Catalog, Dealership Inventory, Formulary, KYC-AML, Playbook, Visit Note, Company Policy Handbook, Q3 Product Strategy, Banking Products). Their source files are absent from `/data/uploads` (5 files present), so they were removed rather than merely de-indexed. Every retrieval question therefore fails by construction. |
 | Root cause | The evaluation corpus is **not version-controlled and not reproducible**. The golden question set is tracked in git (`eval/golden/*.jsonl`), but the documents those questions are asked *about* live only in a mutable runtime volume. Any re-ingest, clear-down or environment rebuild silently invalidates the entire instrument, with no signal until someone runs it. Contributing factor: auto-store has grown the corpus to 9,602 documents of which only 5 are content, so a content document's absence is invisible in aggregate counts. |
-| Immediate correction | None yet — the source documents must be recovered or re-obtained. |
+| Further investigation (2026-10-07) | The activity log shows 46 document deletions on 2026-09-15 03:31–05:47 UTC, minutes after commit `15f3c96`, while the Meridian Bank demo set was loaded — the probable point at which the evaluation corpus left the knowledge base (`records/capa/2026-10-07_NC-2026-009_access_log_review.md` §3). |
+| Immediate correction | None yet — the source documents must be recovered or re-obtained. Corrective action (b) implemented 2026-10-07: `run_eval.py` now aborts, listing the missing documents (verified: 15 listed, exit code 2). |
 | Corrective action (proposed) | (a) Treat the evaluation corpus as a controlled configuration item: store the source documents, or a manifest with checksums, under version control alongside the questions. (b) Add a corpus pre-flight check to `run_eval.py` that asserts every `expect_docs` entry is present and **aborts with a clear message** rather than reporting a misleading score. (c) Re-ingest and re-measure. |
 | Effectiveness verification | Pending — the suite must return a score comparable to the 2026-08-06 baseline on a restored corpus. |
 | Customer impact | None. This is an internal measurement capability; no customer deployment is affected. |
@@ -175,15 +176,16 @@ Severity scale (defined in SOP-10 §3):
 | Source | Health check of the running system; re-verified while preparing the audit pack |
 | Severity | **S2** — a security control documented as mandatory and believed to be active was not active, placing any data in the instance at risk (the same class as NC-2026-003) |
 | Description | `https://echomind-ajace.com` returns **HTTP 200** with the application, not a 302 to a Cloudflare Access login — checked from the host and from an external network on 2026-09-28, and from the host on 2026-10-06. `/api/auth/config` returns `{"auth_enabled":false}` and `/api/docs/list` returns the knowledge-base document list with no credentials. `.env` sets `AUTH_ENABLED=0` and `VOICE_AUTH_ENABLED=0`. Anyone who finds the URL can read, upload and delete knowledge-base content and use the GPU. This contradicts `docs/PUBLIC_DEPLOYMENT.md` step 4 (Access "MANDATORY"), `SOP-11` §5, and the existing-controls entry of `REG-03` R-04. |
-| Investigation | Application auth was enforced on 2026-07-29 (`9810e98`, `73f0b4f`) and was the only gate on the public URL at that time. It has since been switched off in `.env`. **When, by whom and why is not recorded**, because `.env` is untracked and no change record exists. Access logs have not yet been reviewed to establish whether unknown parties used the instance. |
+| Investigation | Application auth was enforced on 2026-07-30 (`9810e98`, `73f0b4f`) and was the only gate on the public URL. **The access-log review (2026-10-07) shows it was enforced for about 1¼ hours: unauthenticated calls succeeded again from 2026-07-30 02:56 UTC until 2026-10-06 ~20:00 UTC — about 68 days.** Who switched it off and why is not recorded (`.env` is untracked). The review found 64 automated internet-scanner probes in that period (all 404) and no data change outside recorded engineering work — `records/capa/2026-10-07_NC-2026-009_access_log_review.md`. |
 | Root cause (proposed) | Security-relevant runtime configuration — `.env` and the Cloudflare dashboard — sits **outside version control and change control**, so a change to it leaves no record and triggers no review. The check that the public URL is gated (`docs/PUBLIC_DEPLOYMENT.md`, a manual `curl`) is not scheduled, so the regression was invisible until an unrelated health check. |
 | Immediate correction | 2026-10-06, about 20:00 UTC: `AUTH_ENABLED=1` and `VOICE_AUTH_ENABLED=1` set in `.env` and the backend and voice services recreated. Cloudflare Access was not restored; application auth is the gate. |
 | Correction verified | 2026-10-06: from an external network, `/api/docs/list` → **401**; via the public URL, a wrong password → 401, the admin login → 200 and authenticated calls succeed; voice `/ws` → **403** without a session and 101 with one; `/api/auth/config` → `auth_enabled: true`. |
 | Corrective action (proposed) | (a) Restore a gate and verify both the positive and negative case (`SOP-08` P-8). (b) Schedule an external check that the public URL returns a login challenge, alerting on HTTP 200. (c) Record changes to security-relevant runtime settings in `REG-07`. (d) Review access logs for the exposure window and record the outcome here. |
-| Effectiveness verification | Correction verified (above). Effectiveness of the corrective action is pending: actions (b)–(d) must be in place so that switching auth off again would be detected and recorded. |
+| Corrective actions implemented | 2026-10-07: (b) `.github/workflows/public-gate-check.yml` checks the public URL from outside every 6 hours; (c) SOP-06 §10.1 + `scripts/check_runtime_config.sh` + recorded baseline make runtime-setting changes visible and require a REG-07 entry; (d) access-log review done (record above). |
+| Effectiveness verification | Pending — the external check must keep passing over the coming weeks, and any `.env` drift must surface in the check before it reaches production. |
 | Customer impact | No customer deployment is affected. The reference instance holds demonstration documents (five Meridian Bank demo PDFs) and auto-stored transcripts from demo sessions. |
 | Evidence | This entry; `AUDIT_PACK_2026_EchoMind.md` W-8 |
-| Status | **OPEN** — correction verified 2026-10-06; corrective actions (b)–(d) pending |
+| Status | **OPEN** — correction verified; corrective actions implemented 2026-10-07; effectiveness under observation |
 | Audit relevance | Disclose at the dry run, with the gate already restored. |
 
 ### NC-2026-010 — Unit tests and frontend type-check failing undetected; v1.4.0 tagged with them failing
@@ -200,7 +202,8 @@ Severity scale (defined in SOP-10 §3):
 | Immediate correction | `5ddf8a6` (tests) and `736ea61` (types), 2026-09-28. |
 | Correction verified | 2026-09-28: backend **40/40**, voice **127/127**, `tsc --noEmit` **0 errors**. |
 | Corrective action (proposed) | CI running both unit suites and the type-check on every push (`COMPLETION_CHECKLIST` D7), and `FRM-03` §3 completed from a real run before any tag. |
-| Effectiveness verification | Pending — CI must exist and fail a build on a deliberately broken test. |
+| Corrective action implemented | 2026-10-07: `.github/workflows/ci.yml` runs the backend and voice unit suites and the front-end type-check on every push and pull request (recipe proven in clean environments: 50/50, 131/131). |
+| Effectiveness verification | CI must fail on a deliberately broken test — see the ticket for the run. |
 | Customer impact | None. |
 | Evidence | Commits `5ddf8a6`, `736ea61` and their messages |
 | Status | **OPEN** — correction complete and verified; corrective action pending |
@@ -293,7 +296,8 @@ Severity scale (defined in SOP-10 §3):
 | Immediate correction | 2026-10-06 22:27 UTC: embeddings moved to the CPU (`OLLAMA_CUDA_VISIBLE_DEVICES=` — REG-07 DC-2026-005). Embedding call verified (768 dims). |
 | Correction verified | Acceptance run 4 (22:28 UTC): DOC-102 and RAG-103 pass. |
 | Corrective action (proposed) | (a) Healthcheck performs a real embedding call. (b) Decide a GPU-sharing policy for the host (REG-03). |
-| Effectiveness verification | Pending (a) and (b). |
+| Corrective action (a) implemented | 2026-10-07: the Ollama healthcheck makes a real embedding call (`docker-compose.yml`); verified healthy, and the same probe returns exit 1 when embedding fails. |
+| Effectiveness verification | Pending (b) — GPU-sharing policy. |
 | Status | **OPEN** — correction verified; corrective actions pending |
 
 ---

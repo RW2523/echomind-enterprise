@@ -33,7 +33,7 @@ history itself is not duplicated here — it is the Git history of each file (SO
 | SOP-03 | Competence, Training and Awareness | 1.0 | DRAFT | Managing Director | `________` | `________` |
 | SOP-04 | Customer Requirements and Communication | 1.2 | DRAFT | Managing Director | `________` | `________` |
 | SOP-05 | Design and Development Control | 1.0 | DRAFT | Lead Engineer | `________` | `________` |
-| SOP-06 | Configuration and Change Management | 1.0 | DRAFT | Lead Engineer | `________` | `________` |
+| SOP-06 | Configuration and Change Management | 1.1 | DRAFT | Lead Engineer | `________` | `________` |
 | SOP-07 | Verification, Validation and Testing | 1.0 | DRAFT | Lead Engineer | `________` | `________` |
 | SOP-08 | Release and Deployment | 1.0 | DRAFT | Lead Engineer | `________` | `________` |
 | SOP-09 | External Providers and Open Source | 1.1 | DRAFT | Lead Engineer | `________` | `________` |

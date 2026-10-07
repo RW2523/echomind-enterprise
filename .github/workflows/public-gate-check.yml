@@ -1,0 +1,37 @@
+# Checks from outside the network that the public reference instance still requires a login
+# (REG-04 NC-2026-009 corrective action (b)). Fails — and GitHub notifies the repository owner —
+# if the API answers without authentication or reports auth disabled.
+name: Public login gate check
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Protected API must not answer without a login
+        run: |
+          set -u
+          URL=https://echomind-ajace.com
+          UA="Mozilla/5.0 (EchoMind public gate check; +https://github.com/RW2523/echomind-enterprise)"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -m 30 -A "$UA" "$URL/api/docs/list")
+          cfg=$(curl -s -m 30 -A "$UA" "$URL/api/auth/config" || true)
+          echo "GET /api/docs/list without a session -> HTTP $code"
+          echo "GET /api/auth/config -> $cfg"
+          if [ "$code" = "200" ]; then
+            echo "::error::Public instance answered a protected API call WITHOUT a login (NC-2026-009 recurrence)"; exit 1
+          fi
+          if echo "$cfg" | grep -q '"auth_enabled":false'; then
+            echo "::error::Public instance reports auth_enabled=false"; exit 1
+          fi
+          case "$code" in
+            401|403) echo "Gate in place." ;;
+            000|5*) echo "::warning::Public instance unreachable (HTTP $code) — gate not verifiable this run" ;;
+            *) echo "::warning::Unexpected HTTP $code — check manually" ;;
+          esac

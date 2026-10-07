@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-06 |
-| Revision | 1.0 |
+| Revision | 1.1 |
 | Status | **DRAFT — not yet approved** |
 | Owner | Engineering Lead |
 | Approved by | `________________________` |
@@ -203,6 +203,21 @@ contents of the three named volumes, and the bind-mounted voice assets.
 - **Change to deployed configuration** is a change to CI-4 or CI-5 and is subject to §6; changing a
   port, a volume, an auth variable or a model identifier on a customer instance meets S-3, S-4 or
   S-5 and requires a Change Request.
+
+### 10.1 Security-relevant runtime settings (added 2026-10-07 — REG-04 NC-2026-009)
+
+Application login on the public reference instance was switched off in `.env` with no record, and
+stayed off for about ten weeks. Settings in `.env` and the Cloudflare dashboard are outside version
+control, so this section makes their changes visible:
+
+1. The recorded values of the security-relevant, **non-secret** settings live in
+   `docs/qms/records/runtime/runtime-config-baseline.env` (login flags, CORS, rate limit, token
+   lifetime, release identity, GPU/CPU placement). Secrets are never recorded.
+2. **Before and after** changing any of them, run `scripts/check_runtime_config.sh`. Any drift is a
+   change: add a `REG-07` entry with the reason, then update the baseline in the same commit.
+3. Changes to Cloudflare settings (tunnel routes, Access policies) are recorded in `REG-07` the same way.
+4. Independently of this, `.github/workflows/public-gate-check.yml` checks from outside the network,
+   every six hours, that the public instance still requires a login, and fails visibly if it does not.
 
 ## 11. Emergency and hotfix changes
 

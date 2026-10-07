@@ -73,6 +73,23 @@ def _login(base: str, user: str, password: str) -> None:
                  "Set ECHOMIND_EVAL_USER / ECHOMIND_EVAL_PASSWORD, or disable auth.")
 
 
+def _get(base: str, path: str, timeout: int = 60) -> dict:
+    headers = {"Authorization": f"Bearer {_AUTH_TOKEN}"} if _AUTH_TOKEN else {}
+    with urllib.request.urlopen(urllib.request.Request(f"{base}{path}", headers=headers), timeout=timeout) as r:
+        return json.loads(r.read())
+
+
+def corpus_preflight(base: str, items: list[dict]) -> list[str]:
+    """Return the expected documents that are absent from the knowledge base.
+
+    The golden questions are tracked in git, but the documents they ask about live only in the
+    runtime volume. If those documents are gone, every retrieval question fails by construction
+    and the score measures the corpus, not the product (REG-04 NC-2026-008)."""
+    expected = sorted({d for it in items for d in (it.get("expect_docs") or [])})
+    names = [d.get("filename") or "" for d in (_get(base, "/docs/list").get("documents") or [])]
+    return [d for d in expected if not any(_ci(n, d) for n in names)]
+
+
 def _auth_required(base: str) -> bool:
     try:
         with urllib.request.urlopen(f"{base}/auth/config", timeout=10) as r:
@@ -229,6 +246,8 @@ def main() -> int:
     ap.add_argument("--set", dest="only_set", default=None, help="run one golden set (file stem)")
     ap.add_argument("--judge", action="store_true", help="add LLM-as-judge grading via ollama")
     ap.add_argument("--judge-base", default="http://localhost:11434/v1", help="OpenAI-compatible base for --judge")
+    ap.add_argument("--skip-corpus-check", action="store_true",
+                    help="run even when expected documents are missing (the score will not be comparable)")
     args = ap.parse_args()
 
     # Authenticate when the backend requires it (AUTH_ENABLED=1).
@@ -241,6 +260,15 @@ def main() -> int:
         )
 
     items = load_items(args.only_set)
+    missing = corpus_preflight(args.base, items)
+    if missing and not args.skip_corpus_check:
+        print(f"ABORTED: {len(missing)} document(s) the golden questions depend on are not in the knowledge base:")
+        for d in missing:
+            print(f"  - {d}")
+        print("\nRestore the evaluation corpus and re-ingest it, then run again. A score taken without it\n"
+              "measures the missing corpus, not retrieval quality (REG-04 NC-2026-008).\n"
+              "Use --skip-corpus-check to run anyway; the result will not be comparable with earlier runs.")
+        return 2
     run_id = time.strftime("%Y%m%d-%H%M%S")
     print(f"golden-eval run {run_id}: {len(items)} questions against {args.base}\n")
 

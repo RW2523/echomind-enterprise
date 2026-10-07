@@ -296,8 +296,9 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
-      # Embed model only (see OLLAMA_EMBED_ONLY)
-      test: ["CMD", "sh", "-c", "ollama list | grep -q nomic-embed-text"]
+      # A real embedding call: listing models stayed "healthy" while every embedding failed
+      # (REG-04 NC-2026-016).
+      test: ["CMD", "sh", "-c", "curl -sf -m 30 http://localhost:11434/api/embeddings -d '{\"model\":\"nomic-embed-text\",\"prompt\":\"healthcheck\"}' | grep -q embedding"]
       interval: 15s
       timeout: 10s
       retries: 80
