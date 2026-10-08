@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EchoMind Law — Design Prototype</title>
+<meta name="description" content="Static design prototype of the EchoMind Law workspace ('Paper & Glass'). Fictional data. Not functional.">
+<style>
+/* ───────────── Tokens (DESIGN_SYSTEM.md §4) ───────────── */
+:root, :root[data-theme="light"] {
+  --canvas-a:#F4F1EA; --canvas-b:#E3E8F0; --canvas-c:rgba(196,210,232,.55);
+  --paper:#FFFFFF; --paper-2:#FAF9F6; --ink:#15171C; --ink-2:#4A4F59; --ink-3:#757A85; --rule:rgba(21,23,28,.10);
+  --accent:#24467A; --accent-ink:#FFFFFF; --accent-soft:rgba(36,70,122,.10);
+  --verified:#2E7A55; --attention:#9A6412; --conflict:#A8382B; --privileged:#6A3D7C; --hold:#1F6B74; --recording:#D1342F; --draft:#6B7280;
+  --glass-fill:rgba(255,255,255,.60); --glass-fill-strong:rgba(255,255,255,.80); --glass-fallback:rgba(250,249,246,.97);
+  --glass-outline:rgba(21,23,28,.08); --glass-specular:rgba(255,255,255,.9); --glass-shade:rgba(21,23,28,.05); --glass-sheen:rgba(255,255,255,.55);
+  --glass-shadow:0 12px 32px rgba(17,24,39,.10), 0 1px 2px rgba(17,24,39,.06);
+  --fill-1:rgba(21,23,28,.04); --fill-2:rgba(21,23,28,.07); --fill-3:rgba(21,23,28,.11);
+  --paper-shadow:0 1px 2px rgba(17,24,39,.05), 0 0 0 1px rgba(21,23,28,.06);
+  --hl:rgba(36,70,122,.14); --hl-edge:rgba(36,70,122,.55);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --canvas-a:#0E1014; --canvas-b:#151B27; --canvas-c:rgba(56,78,120,.30);
+  --paper:#171A20; --paper-2:#1C2027; --ink:#ECEDEF; --ink-2:#B4B9C2; --ink-3:#8A909B; --rule:rgba(236,237,239,.10);
+  --accent:#8DB0E6; --accent-ink:#0E1014; --accent-soft:rgba(141,176,230,.14);
+  --verified:#5CC392; --attention:#E0A447; --conflict:#EE7A6B; --privileged:#C19BD6; --hold:#63BCC6; --recording:#FF5A52; --draft:#9AA1AC;
+  --glass-fill:rgba(30,34,42,.56); --glass-fill-strong:rgba(30,34,42,.78); --glass-fallback:rgba(28,32,39,.97);
+  --glass-outline:rgba(255,255,255,.08); --glass-specular:rgba(255,255,255,.14); --glass-shade:rgba(0,0,0,.25); --glass-sheen:rgba(255,255,255,.07);
+  --glass-shadow:0 12px 32px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.4);
+  --fill-1:rgba(255,255,255,.04); --fill-2:rgba(255,255,255,.07); --fill-3:rgba(255,255,255,.11);
+  --paper-shadow:0 1px 2px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.06);
+  --hl:rgba(141,176,230,.18); --hl-edge:rgba(141,176,230,.6);
+  color-scheme: dark;
+}
+:root { --blur:24px; --sat:170%; --dur-1:120ms; --dur-2:200ms; --dur-3:320ms; --ease:cubic-bezier(.2,.8,.2,1);
+  --sans: "Inter", "Inter Variable", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --serif: "Source Serif 4", "Source Serif Pro", "Iowan Old Style", "Charter", "Georgia", serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+* { box-sizing:border-box; }
+html, body { height:100%; margin:0; }
+body { font-family:var(--sans); font-size:14px; line-height:20px; color:var(--ink); -webkit-font-smoothing:antialiased;
+  background: radial-gradient(900px 600px at 100% 100%, var(--canvas-c), transparent 70%), radial-gradient(1200px 700px at 8% -10%, var(--canvas-a), transparent 70%), linear-gradient(135deg, var(--canvas-a), var(--canvas-b)); background-attachment: fixed; }
+button { font:inherit; color:inherit; }
+.tnum { font-variant-numeric: tabular-nums; }
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:8px; }
+
+/* ───────────── Glass (DESIGN_SYSTEM.md §2.2) ───────────── */
+.glass { background:var(--glass-fill); -webkit-backdrop-filter:blur(var(--blur)) saturate(var(--sat)); backdrop-filter:blur(var(--blur)) saturate(var(--sat));
+  border:1px solid var(--glass-outline); box-shadow: inset 0 1px 0 var(--glass-specular), inset 0 -1px 0 var(--glass-shade), var(--glass-shadow);
+  position:relative; isolation:isolate; }
+.glass::before { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(180deg, var(--glass-sheen) 0%, transparent 45%); opacity:.7; z-index:-1; }
+.glass[data-over="text"] { background:var(--glass-fill-strong); }
+:root[data-transparency="reduced"] .glass, .no-blur .glass { -webkit-backdrop-filter:none; backdrop-filter:none; background:var(--glass-fallback); }
+@media (prefers-reduced-transparency: reduce) { .glass { -webkit-backdrop-filter:none; backdrop-filter:none; background:var(--glass-fallback); } }
+@media (prefers-reduced-motion: reduce) { * { transition-duration:1ms !important; animation:none !important; } }
+
+/* ───────────── Layout ───────────── */
+.app { display:grid; grid-template-columns: 264px 1fr; height:100dvh; }
+.sidebar { margin:12px 0 12px 12px; border-radius:20px; display:flex; flex-direction:column; padding:12px; gap:4px; z-index:5; }
+.main { position:relative; overflow:auto; scroll-padding-top:84px; }
+.toolbar-wrap { position:sticky; top:0; z-index:4; padding:12px 16px 0 16px; pointer-events:none; }
+.toolbar { pointer-events:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.cluster { display:flex; align-items:center; gap:4px; padding:4px; border-radius:999px; }
+.title-cap { padding:6px 14px 6px 12px; font-weight:600; font-size:15px; display:flex; gap:10px; align-items:center; }
+.title-cap .crumb { color:var(--ink-3); font-weight:500; }
+.workspace { display:grid; grid-template-columns: minmax(0,1fr) 380px; gap:16px; padding:16px; align-items:start; }
+.paper { background:var(--paper); border-radius:14px; box-shadow:var(--paper-shadow); }
+
+/* ───────────── Sidebar parts ───────────── */
+.switcher { display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:14px; background:var(--fill-1); border:none; width:100%; text-align:left; cursor:pointer; transition:background var(--dur-1) var(--ease); }
+.switcher:hover { background:var(--fill-2); }
+.switcher .mono { width:34px; height:34px; border-radius:10px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-weight:650; font-size:12px; letter-spacing:.02em; flex:none; }
+.switcher .t1 { font-size:13px; font-weight:600; line-height:17px; }
+.switcher .t2 { font-size:12px; color:var(--ink-3); line-height:16px; display:flex; gap:6px; align-items:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-label { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); padding:14px 10px 6px; font-weight:600; }
+.nav a { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:10px; color:var(--ink-2); text-decoration:none; font-weight:500; cursor:pointer; transition:background var(--dur-1) var(--ease), color var(--dur-1); }
+.nav a:hover { background:var(--fill-1); color:var(--ink); }
+.nav a[aria-current="page"] { background:var(--fill-2); color:var(--ink); }
+.nav a .count { margin-left:auto; font-size:12px; color:var(--ink-3); }
+.nav svg, .ico { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+.sb-foot { margin-top:auto; display:flex; align-items:center; gap:10px; padding:10px; border-top:1px solid var(--rule); }
+.initials { width:28px; height:28px; border-radius:50%; background:var(--fill-2); display:grid; place-items:center; font-size:11px; font-weight:600; color:var(--ink-2); }
+
+/* popover */
+.popover { position:absolute; left:12px; top:64px; width:320px; border-radius:16px; padding:8px; display:none; z-index:20; }
+.popover.open { display:block; animation:pop var(--dur-2) var(--ease); transform-origin: 40px 0; }
+@keyframes pop { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
+.pop-search { width:100%; border:none; background:var(--fill-1); border-radius:10px; padding:8px 10px; outline:none; color:var(--ink); }
+.pop-item { display:flex; gap:10px; align-items:center; padding:8px 10px; border-radius:10px; cursor:pointer; }
+.pop-item:hover { background:var(--fill-2); }
+.pop-note { font-size:12px; color:var(--ink-3); padding:8px 10px 4px; }
+
+/* ───────────── Buttons & pills ───────────── */
+.btn { display:inline-flex; align-items:center; gap:8px; border:none; background:transparent; padding:7px 12px; border-radius:999px; cursor:pointer; color:var(--ink-2); font-weight:500; transition:background var(--dur-1) var(--ease), transform var(--dur-1) var(--ease); }
+.btn:hover { background:var(--fill-2); color:var(--ink); }
+.btn:active { transform:scale(1.02); }
+.btn.primary { background:var(--accent); color:var(--accent-ink); }
+.btn.primary:hover { filter:brightness(1.08); }
+.btn[disabled] { opacity:.5; cursor:not-allowed; }
+.btn.sm { padding:5px 10px; font-size:13px; }
+.toggle { border:none; background:transparent; display:inline-flex; align-items:center; gap:8px; padding:7px 12px; border-radius:999px; color:var(--ink-2); font-weight:500; cursor:pointer; }
+.toggle .dot { width:28px; height:16px; border-radius:999px; background:var(--fill-3); position:relative; transition:background var(--dur-2); }
+.toggle .dot::after { content:""; position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:var(--paper); box-shadow:0 1px 2px rgba(0,0,0,.2); transition:transform var(--dur-2) var(--ease); }
+.toggle[aria-pressed="true"] .dot { background:var(--accent); }
+.toggle[aria-pressed="true"] .dot::after { transform:translateX(12px); }
+.pill { display:inline-flex; align-items:center; gap:5px; font-size:12px; line-height:16px; font-weight:600; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+.pill.verified { color:var(--verified); background:color-mix(in srgb, var(--verified) 12%, transparent); }
+.pill.attention { color:var(--attention); background:color-mix(in srgb, var(--attention) 14%, transparent); }
+.pill.conflict { color:var(--conflict); background:color-mix(in srgb, var(--conflict) 12%, transparent); }
+.pill.privileged { color:var(--privileged); background:color-mix(in srgb, var(--privileged) 12%, transparent); }
+.pill.hold { color:var(--hold); background:color-mix(in srgb, var(--hold) 12%, transparent); }
+.pill.draft { color:var(--draft); background:var(--fill-2); }
+.pill svg { width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2; }
+
+/* ───────────── Research (findings) ───────────── */
+.sheet { padding:28px 36px 24px; }
+.q { font-size:17px; line-height:24px; font-weight:600; letter-spacing:-.005em; margin:0 0 12px; }
+.steps { display:flex; flex-wrap:wrap; gap:6px 14px; color:var(--ink-3); font-size:12.5px; margin-bottom:22px; }
+.steps span { display:inline-flex; gap:6px; align-items:center; }
+.steps svg { width:13px; height:13px; stroke:var(--verified); fill:none; stroke-width:2.2; }
+.h-label { font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); font-weight:650; margin:0 0 8px; }
+.findings { font-family:var(--serif); font-size:16.5px; line-height:27px; color:var(--ink); max-width:68ch; }
+.findings p { margin:0 0 14px; }
+.pin { font-family:var(--sans); font-size:10.5px; font-weight:650; vertical-align:super; line-height:0; margin-left:1px; color:var(--accent); background:var(--accent-soft); border:none; border-radius:5px; padding:2px 4px; cursor:pointer; }
+.pin:hover, .pin.active { background:var(--accent); color:var(--accent-ink); }
+.callout { display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:color-mix(in srgb, var(--attention) 9%, transparent); color:var(--ink); font-family:var(--sans); font-size:13.5px; line-height:20px; margin:4px 0 18px; }
+.callout svg { width:16px; height:16px; stroke:var(--attention); fill:none; stroke-width:1.8; flex:none; margin-top:2px; }
+.sources { border-top:1px solid var(--rule); margin-top:18px; padding-top:16px; }
+.src { display:grid; grid-template-columns: 26px 1fr auto; gap:10px; padding:10px 8px; border-radius:10px; cursor:pointer; }
+.src:hover, .src.active { background:var(--fill-1); }
+.src > .pill { align-self:start; margin-top:2px; }
+.src .n { font-size:12px; font-weight:650; color:var(--accent); background:var(--accent-soft); border-radius:6px; height:20px; display:grid; place-items:center; }
+.src .ref { font-weight:600; font-size:13.5px; }
+.src .ref small { font-weight:500; color:var(--ink-3); font-size:12.5px; }
+.src .quote { font-family:var(--serif); color:var(--ink-2); font-size:14.5px; line-height:22px; margin-top:2px; }
+.prov { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-top:20px; padding-top:14px; border-top:1px solid var(--rule); }
+.prov .meta { color:var(--ink-3); font-size:12.5px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.history { padding:6px; }
+.history a { display:block; padding:8px 10px; border-radius:10px; color:var(--ink-2); text-decoration:none; font-size:13px; line-height:18px; }
+.history a:hover { background:var(--fill-1); }
+.history a.cur { background:var(--fill-2); color:var(--ink); font-weight:500; }
+.ask { display:flex; gap:8px; align-items:center; padding:6px 6px 6px 14px; margin:16px 16px 0; border-radius:999px; }
+.ask input { flex:1; border:none; background:transparent; outline:none; color:var(--ink); font-size:14px; padding:6px 0; }
+.ask input::placeholder { color:var(--ink-3); }
+
+/* ───────────── Inspector ───────────── */
+.inspector { position:sticky; top:76px; max-height:calc(100dvh - 92px); display:flex; flex-direction:column; overflow:hidden; }
+.tabs { display:flex; gap:2px; padding:8px; border-bottom:1px solid var(--rule); }
+.tab { border:none; background:transparent; padding:6px 10px; border-radius:8px; color:var(--ink-3); font-weight:500; cursor:pointer; }
+.tab[aria-selected="true"] { background:var(--fill-2); color:var(--ink); }
+.ins-body { padding:16px; overflow:auto; }
+.ins-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px; }
+.ins-head .t { font-weight:600; }
+.ins-head .s { font-size:12.5px; color:var(--ink-3); }
+.versions { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+.ver { border:1px solid var(--rule); background:transparent; border-radius:8px; padding:4px 8px; font-size:12.5px; color:var(--ink-2); cursor:pointer; }
+.ver[aria-pressed="true"] { border-color:var(--accent); color:var(--ink); background:var(--accent-soft); }
+.page { background:var(--paper-2); border:1px solid var(--rule); border-radius:8px; padding:18px 18px 22px; font-family:var(--serif); font-size:13.5px; line-height:21px; color:var(--ink-2); }
+.page h4 { font-family:var(--sans); font-size:12px; color:var(--ink-3); margin:0 0 10px; font-weight:600; letter-spacing:.02em; }
+.page .cl { margin:0 0 10px; }
+.page mark { background:var(--hl); color:var(--ink); box-shadow: inset 2px 0 0 var(--hl-edge); padding:1px 2px; border-radius:2px; transition:background var(--dur-3); }
+.page .pg { font-family:var(--sans); font-size:11.5px; color:var(--ink-3); text-align:right; margin-top:12px; }
+
+/* ───────────── Meetings ───────────── */
+.two { display:grid; grid-template-columns: minmax(0,1fr) 340px; gap:16px; padding:16px; align-items:start; }
+.card-h { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--rule); }
+.card-h h3 { margin:0; font-size:15px; }
+.roster { padding:6px 12px 14px; }
+.person { display:grid; grid-template-columns: 30px 1fr auto; gap:12px; align-items:center; padding:10px 8px; border-bottom:1px solid var(--rule); }
+.person:last-child { border-bottom:none; }
+.person .nm { font-weight:600; }
+.person .rl { color:var(--ink-3); font-size:12.5px; }
+.gate { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 20px; background:var(--paper-2); border-top:1px solid var(--rule); border-radius:0 0 14px 14px; }
+.gate .why { color:var(--ink-2); font-size:13px; }
+.seg { display:grid; grid-template-columns: 120px 1fr; gap:14px; padding:12px 20px; border-bottom:1px solid var(--rule); }
+.seg .who { font-weight:600; font-size:13px; }
+.seg .tc { color:var(--ink-3); font-size:12px; }
+.seg .tx { font-family:var(--serif); font-size:15.5px; line-height:24px; }
+.seg .tx .flagged { background:color-mix(in srgb, var(--conflict) 10%, transparent); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--conflict) 55%, transparent); }
+.alert { padding:14px 16px; border-bottom:1px solid var(--rule); }
+.alert .ttl { display:flex; gap:8px; align-items:center; font-weight:600; margin-bottom:6px; }
+.alert .ttl svg { width:16px; height:16px; stroke:var(--conflict); fill:none; stroke-width:1.8; }
+.alert .q2 { font-family:var(--serif); font-size:14px; line-height:21px; color:var(--ink-2); border-left:2px solid var(--rule); padding-left:10px; margin:6px 0; }
+.alert .mt { font-size:12px; color:var(--ink-3); margin-bottom:10px; }
+.alert .acts { display:flex; gap:6px; }
+.btn.ghost { border:1px solid var(--rule); }
+
+/* recording capsule */
+.rec { position:fixed; left:50%; transform:translateX(-50%); bottom:20px; z-index:30; display:none; align-items:center; gap:12px; padding:6px 6px 6px 14px; border-radius:999px; font-weight:500; }
+.rec.on { display:flex; animation:pop var(--dur-3) var(--ease); }
+.rec .live { width:9px; height:9px; border-radius:50%; background:var(--recording); box-shadow:0 0 0 4px color-mix(in srgb, var(--recording) 22%, transparent); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow:0 0 0 7px color-mix(in srgb, var(--recording) 8%, transparent); } }
+.rec .sep { width:1px; height:16px; background:var(--rule); }
+
+/* ───────────── Documents table ───────────── */
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); font-weight:600; padding:12px 16px; border-bottom:1px solid var(--rule); }
+td { padding:12px 16px; border-bottom:1px solid var(--rule); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tbody tr:hover { background:var(--fill-1); }
+.dname { display:flex; gap:10px; align-items:center; font-weight:600; }
+.dname small { display:block; color:var(--ink-3); font-weight:500; font-size:12px; }
+
+/* banner */
+.proto { position:fixed; right:16px; bottom:16px; z-index:40; font-size:12px; color:var(--ink-3); padding:6px 12px; border-radius:999px; }
+.view { display:none; } .view.on { display:block; }
+
+/* responsive */
+@media (max-width: 1180px) { #askbar { max-width:none !important; } .workspace, .two { grid-template-columns: 1fr; } .inspector { position:relative; top:0; max-height:none; } }
+@media (max-width: 860px) {
+  .app { grid-template-columns: 72px 1fr; }
+  .sidebar .t1, .sidebar .t2, .sidebar .nav-label, .nav a span, .nav a .count, .sb-foot div:not(.initials), .sb-chev { display:none; }
+  .switcher { justify-content:center; padding:8px; } .nav a { justify-content:center; }
+  .sheet { padding:20px 18px; } .seg { grid-template-columns: 1fr; gap:4px; }
+  .title-cap .crumb { display:none; }
+}
+@media (max-width: 560px) { .cluster.right .hide-sm { display:none; } .proto { display:none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4l2 2.5h9A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5M8.5 13h7M8.5 16.5h5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 7h14"/><path d="m5 7-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m14.5 7.5 3 3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-check-list" viewBox="0 0 24 24"><path d="m4 7 1.5 1.5L8.5 5.5M4 13l1.5 1.5 3-3M11.5 7.5H20M11.5 13.5H20M11.5 19H20"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3.5 13.5 6 5h12l2.5 8.5V19a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"/><path d="M3.5 13.5h5l1.5 2.5h4l1.5-2.5h5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5.5c0 4.3 3 8 7 9.5 4-1.5 7-5.2 7-9.5V6z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.3"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4.5 15v3.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V15"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- ═════════ Glass sidebar (navigation layer) ═════════ -->
+  <aside class="sidebar glass" aria-label="Workspace navigation">
+    <button class="switcher" id="switcher" aria-haspopup="dialog" aria-expanded="false">
+      <span class="mono">VL</span>
+      <span style="min-width:0;flex:1">
+        <span class="t1" style="display:block">Voss-Lindqvist AB</span>
+        <span class="t2"><svg class="ico" style="width:12px;height:12px"><use href="#i-lock"/></svg>M-101 · MSA renewal</span>
+      </span>
+      <svg class="ico sb-chev" style="color:var(--ink-3)"><use href="#i-chev"/></svg>
+    </button>
+
+    <div class="popover glass" id="pop" role="dialog" aria-label="Switch matter">
+      <input class="pop-search" placeholder="Find a matter…" aria-label="Find a matter">
+      <div class="pop-note">Your matters</div>
+      <div class="pop-item"><span class="mono" style="width:26px;height:26px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:10px;font-weight:650">VL</span><div><div style="font-weight:600;font-size:13px">M-101 · MSA renewal</div><div style="font-size:12px;color:var(--ink-3)">Voss-Lindqvist AB · Commercial</div></div></div>
+      <div class="pop-item"><span class="mono" style="width:26px;height:26px;border-radius:8px;background:var(--fill-3);display:grid;place-items:center;font-size:10px;font-weight:650">AF</span><div><div style="font-weight:600;font-size:13px">M-114 · Series B diligence</div><div style="font-size:12px;color:var(--ink-3)">Alder Finch Ltd · Corporate</div></div></div>
+      <div class="pop-note" style="border-top:1px solid var(--rule);margin-top:6px">Only matters you're a member of appear here.</div>
+    </div>
+
+    <div class="nav-label">Matter</div>
+    <nav class="nav" id="nav">
+      <a data-view="overview"><svg><use href="#i-home"/></svg><span>Overview</span></a>
+      <a data-view="documents"><svg><use href="#i-folder"/></svg><span>Documents</span><span class="count">38</span></a>
+      <a data-view="research" aria-current="page"><svg><use href="#i-search"/></svg><span>Research</span></a>
+      <a data-view="meetings"><svg><use href="#i-mic"/></svg><span>Meetings</span></a>
+      <a data-view="review"><svg><use href="#i-scale"/></svg><span>Contract review</span></a>
+      <a data-view="drafting"><svg><use href="#i-pen"/></svg><span>Drafting</span></a>
+      <a data-view="obligations"><svg><use href="#i-clock"/></svg><span>Obligations</span><span class="count">4</span></a>
+    </nav>
+    <div class="nav-label">Firm</div>
+    <nav class="nav">
+      <a><svg><use href="#i-inbox"/></svg><span>Reviews</span><span class="count">3</span></a>
+      <a><svg><use href="#i-check-list"/></svg><span>Matters</span></a>
+      <a><svg><use href="#i-shield"/></svg><span>Audit &amp; admin</span></a>
+    </nav>
+    <div class="sb-foot">
+      <div class="initials">AR</div>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">Amira Rahman</div><div style="font-size:12px;color:var(--ink-3)">Attorney · Lead on M-101</div></div>
+    </div>
+  </aside>
+
+  <!-- ═════════ Main (content layer) ═════════ -->
+  <main class="main" id="main">
+    <div class="toolbar-wrap">
+      <div class="toolbar">
+        <div class="cluster glass" id="titlecap"><div class="title-cap"><span class="crumb">M-101</span><span id="vtitle">Research</span></div></div>
+        <div class="cluster glass right" id="toolcap">
+          <button class="toggle hide-sm" id="signed" aria-pressed="true"><span class="dot"></span>Signed only</button>
+          <button class="btn hide-sm" id="theme" title="Theme"><svg class="ico"><use href="#i-sun"/></svg><span>Theme</span></button>
+          <button class="btn hide-sm" id="transp" aria-pressed="false" title="Reduce transparency">Reduce transparency</button>
+          <button class="btn primary" id="primaryAct"><svg class="ico"><use href="#i-plus"/></svg><span>New question</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Research ── -->
+    <section class="view on" id="v-research" aria-label="Research">
+      <div class="ask glass" style="max-width:calc(100% - 412px)" id="askbar">
+        <svg class="ico" style="color:var(--ink-3)"><use href="#i-search"/></svg>
+        <input placeholder="Find in M-101… e.g. what is the change-of-control notice period?" aria-label="Find in matter">
+        <button class="btn sm">Find in matter</button>
+      </div>
+      <div class="workspace">
+        <div>
+          <article class="paper sheet">
+            <h1 class="q">What is the change-of-control notice period in the signed agreement?</h1>
+            <div class="steps tnum">
+              <span><svg><use href="#i-check"/></svg>Searched 38 documents in M-101</span>
+              <span><svg><use href="#i-check"/></svg>Read 6 passages</span>
+              <span><svg><use href="#i-check"/></svg>Quotes checked against source</span>
+            </div>
+
+            <div class="h-label">Findings</div>
+            <div class="findings">
+              <p>The signed Master Services Agreement requires Provider to give Client no less than thirty (30) days' prior written notice of any change of control<button class="pin" data-src="1">1</button>. Notice must be delivered to Client's General Counsel at the address in Schedule 4<button class="pin" data-src="2">2</button>.</p>
+              <div class="callout"><svg><use href="#i-alert"/></svg><div><strong>Conflicting versions.</strong> The v4 draft (not signed) proposes sixty (60) days<button class="pin" data-src="3">3</button>. The signed v3 governs unless and until v4 is executed.</div></div>
+              <p>Failure to give notice entitles Client to terminate for cause within ninety (90) days of learning of the change<button class="pin" data-src="1">1</button>.</p>
+            </div>
+
+            <div class="sources">
+              <div class="h-label">Sources (3)</div>
+              <div class="src active" data-src="1"><span class="n">1</span><div><div class="ref">Master Services Agreement <small>· v3 signed · §14.2 · p. 11</small></div><div class="quote">“…shall provide no less than thirty (30) days' prior written notice of any Change of Control…”</div></div><span class="pill verified"><svg><use href="#i-check"/></svg>Verbatim</span></div>
+              <div class="src" data-src="2"><span class="n">2</span><div><div class="ref">Master Services Agreement <small>· v3 signed · §22.1 · p. 19</small></div><div class="quote">“…addressed to the General Counsel of Client at the address set out in Schedule 4…”</div></div><span class="pill verified"><svg><use href="#i-check"/></svg>Verbatim</span></div>
+              <div class="src" data-src="3"><span class="n">3</span><div><div class="ref">Master Services Agreement <small>· v4 draft · §14.2 · p. 11</small></div><div class="quote">“…no less than sixty (60) days' prior written notice…”</div></div><span class="pill draft">Draft version</span></div>
+            </div>
+
+            <div class="prov">
+              <div class="meta tnum"><span class="pill draft">Unreviewed</span><span>Prepared from 3 sources · Qwen3-30B · on-device · 14:02</span></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="btn sm ghost"><svg class="ico"><use href="#i-copy"/></svg>Copy with citations</button>
+                <button class="btn sm ghost">Add to draft</button>
+                <button class="btn sm ghost"><svg class="ico"><use href="#i-check"/></svg>Mark reviewed</button>
+              </div>
+            </div>
+          </article>
+
+          <div class="paper history" style="margin-top:16px">
+            <div class="h-label" style="padding:8px 10px 2px">Earlier in this matter</div>
+            <a class="cur">What is the change-of-control notice period in the signed agreement?</a>
+            <a>Does the auto-renewal notice in the MSA meet our playbook fallback?</a>
+            <a>Summarize the limitation of liability and carve-outs.</a>
+          </div>
+        </div>
+
+        <aside class="paper inspector" aria-label="Inspector">
+          <div class="tabs" role="tablist"><button class="tab" role="tab" aria-selected="true">Source</button><button class="tab" role="tab" aria-selected="false">Versions</button><button class="tab" role="tab" aria-selected="false">Activity</button></div>
+          <div class="ins-body">
+            <div class="ins-head"><div><div class="t" id="insT">Master Services Agreement</div><div class="s tnum" id="insS">§14.2 Change of Control · page 11</div></div><span class="pill privileged">Confidential</span></div>
+            <div class="versions" id="vers"><button class="ver" aria-pressed="true" data-v="3">v3 · Signed 02 Mar 2026</button><button class="ver" aria-pressed="false" data-v="4">v4 · Draft</button></div>
+            <div class="page" id="pageBox">
+              <h4>14. ASSIGNMENT AND CHANGE OF CONTROL</h4>
+              <p class="cl">14.1 Neither party may assign this Agreement without the prior written consent of the other party, such consent not to be unreasonably withheld.</p>
+              <p class="cl">14.2 Provider <mark id="hl">shall provide no less than thirty (30) days' prior written notice of any Change of Control</mark> to Client in accordance with Clause 22.</p>
+              <p class="cl">14.3 If Provider fails to give notice under Clause 14.2, Client may terminate this Agreement for cause by written notice within ninety (90) days of becoming aware of the Change of Control.</p>
+              <div class="pg tnum">Page 11 of 24 · text layer (not OCR)</div>
+            </div>
+            <button class="btn sm ghost" style="margin-top:12px"><svg class="ico"><use href="#i-file"/></svg>Open full document</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── Meetings ── -->
+    <section class="view" id="v-meetings" aria-label="Meetings">
+      <div class="two">
+        <div>
+          <div class="paper">
+            <div class="card-h"><h3>Board meeting · 08 Oct · Consent</h3><span class="pill attention" id="consentPill">1 consent pending</span></div>
+            <div class="roster">
+              <div class="person"><div class="initials">AR</div><div><div class="nm">Amira Rahman</div><div class="rl">Counsel · Ajace Law LLP</div></div><span class="pill verified"><svg><use href="#i-check"/></svg>Verbal, on record · 10:02</span></div>
+              <div class="person"><div class="initials">MB</div><div><div class="nm">Mats Berg</div><div class="rl">Director · Voss-Lindqvist AB</div></div><span class="pill verified"><svg><use href="#i-check"/></svg>Written · 09:58</span></div>
+              <div class="person"><div class="initials">JO</div><div><div class="nm">Jade Okafor</div><div class="rl">CFO · Voss-Lindqvist AB</div></div><button class="btn sm ghost" id="grant">Record consent</button></div>
+            </div>
+            <div class="gate"><div class="why" id="why">Recording needs consent from 1 more participant. Policy: all-party consent · v1 <em>(awaiting counsel approval)</em></div><button class="btn primary" id="startRec" disabled><svg class="ico"><use href="#i-mic"/></svg>Start recording</button></div>
+          </div>
+
+          <div class="paper" style="margin-top:16px">
+            <div class="card-h"><h3>Transcript</h3><span style="color:var(--ink-3);font-size:12.5px">Verbatim · speaker labels from roster</span></div>
+            <div class="seg"><div><div class="who">Mats Berg</div><div class="tc tnum">10:04:12</div></div><div class="tx">Item three is the Harrowgate renewal. My understanding is we can walk away with thirty days' notice if they're acquired.</div></div>
+            <div class="seg"><div><div class="who">Jade Okafor</div><div class="tc tnum">10:04:31</div></div><div class="tx">And the liability cap — <span class="flagged">I believe it's capped at fifty thousand</span>, which is why finance is comfortable.</div></div>
+            <div class="seg"><div><div class="who">Amira Rahman</div><div class="tc tnum">10:04:49</div></div><div class="tx">Let me check that against the signed agreement before we minute it.</div></div>
+          </div>
+        </div>
+        <aside class="paper">
+          <div class="tabs"><button class="tab" aria-selected="true">Flags (1)</button><button class="tab" aria-selected="false">Actions (2)</button><button class="tab" aria-selected="false">Records</button></div>
+          <div class="alert">
+            <div class="ttl"><svg><use href="#i-alert"/></svg>Differs from signed agreement</div>
+            <div style="font-size:13px;color:var(--ink-2)">Said: “capped at fifty thousand”</div>
+            <div class="q2">“…total liability shall not exceed the greater of USD 250,000 or the fees paid in the prior twelve (12) months…”</div>
+            <div class="mt tnum">MSA v3 signed · §8.1 · p. 6 · match confidence high · 10:04:33</div>
+            <div class="acts"><button class="btn sm ghost">Confirm</button><button class="btn sm ghost">Dismiss…</button></div>
+          </div>
+          <div style="padding:14px 16px;color:var(--ink-3);font-size:12.5px">Flags are advisory. They compare what was said with this matter's documents; they do not decide what is true.</div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── Documents ── -->
+    <section class="view" id="v-documents" aria-label="Documents">
+      <div style="padding:16px">
+        <div class="paper">
+          <table>
+            <thead><tr><th>Document</th><th>Version</th><th>Label</th><th>Source</th><th>Updated</th></tr></thead>
+            <tbody class="tnum">
+              <tr><td><div class="dname"><svg class="ico"><use href="#i-file"/></svg><div>Master Services Agreement<small>Contract · 24 pages</small></div></div></td><td><span class="pill verified">v3 Signed</span> <span class="pill draft">v4 Draft</span></td><td><span class="pill privileged">Confidential</span></td><td>Local import</td><td>07 Oct 2026</td></tr>
+              <tr><td><div class="dname"><svg class="ico"><use href="#i-file"/></svg><div>Board pack — 08 Oct<small>Board pack · 41 pages · 6 pages OCR</small></div></div></td><td><span class="pill verified">Final</span></td><td><span class="pill draft">Unreviewed</span></td><td>Local import</td><td>06 Oct 2026</td></tr>
+              <tr><td><div class="dname"><svg class="ico"><use href="#i-file"/></svg><div>Advice memo — renewal options<small>Memo · 5 pages</small></div></div></td><td><span class="pill verified">Final</span></td><td><span class="pill privileged">Privileged</span> <span class="pill hold">On hold</span></td><td>Local import</td><td>03 Oct 2026</td></tr>
+              <tr><td><div class="dname"><svg class="ico"><use href="#i-file"/></svg><div>Vendor MSA playbook (2026)<small>Firm library · Playbook</small></div></div></td><td><span class="pill verified">Approved</span></td><td><span class="pill draft">Internal</span></td><td>Firm library</td><td>12 Sep 2026</td></tr>
+              <tr><td><div class="dname"><svg class="ico"><use href="#i-file"/></svg><div>Scanned side letter<small>Correspondence · 2 pages</small></div></div></td><td><span class="pill verified">Signed</span></td><td><span class="pill attention">OCR · low confidence p.2</span></td><td>Local import</td><td>01 Oct 2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Placeholder views ── -->
+    <section class="view" id="v-other" aria-label="Not in prototype">
+      <div style="padding:16px"><div class="paper" style="padding:40px;text-align:center;color:var(--ink-2)">
+        <div style="font-weight:600;color:var(--ink);margin-bottom:6px" id="otherT">Not in this prototype</div>
+        This screen is specified in DESIGN_SYSTEM.md §7.3 and will be built in its slice.
+      </div></div>
+    </section>
+  </main>
+</div>
+
+<div class="rec glass" id="rec" role="status" aria-live="assertive">
+  <span class="live" aria-hidden="true"></span><span class="tnum" id="recT">Recording · 00:00 · M-101 · 3/3 consented</span><span class="sep"></span>
+  <button class="btn sm"><svg class="ico"><use href="#i-pause"/></svg>Pause</button>
+  <button class="btn sm" id="stopRec"><svg class="ico"><use href="#i-stop"/></svg>Stop</button>
+</div>
+
+<div class="proto glass">Design prototype · static · fictional data</div>
+
+<script>
+(() => {
+  const $ = (s, r=document) => r.querySelector(s), $$ = (s, r=document) => [...r.querySelectorAll(s)];
+  const root = document.documentElement;
+  // theme (follows system first)
+  try { if (matchMedia('(prefers-color-scheme: dark)').matches) root.dataset.theme = 'dark'; } catch(e) {}
+  $('#theme').onclick = () => root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+  $('#transp').onclick = e => { const on = root.dataset.transparency !== 'reduced'; root.dataset.transparency = on ? 'reduced' : ''; e.currentTarget.setAttribute('aria-pressed', on); };
+  $('#signed').onclick = e => { const b = e.currentTarget; b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'); };
+
+  // matter switcher popover
+  const pop = $('#pop'), sw = $('#switcher');
+  sw.onclick = e => { e.stopPropagation(); const o = !pop.classList.contains('open'); pop.classList.toggle('open', o); sw.setAttribute('aria-expanded', o); if (o) $('.pop-search').focus(); };
+  document.addEventListener('click', e => { if (!pop.contains(e.target)) { pop.classList.remove('open'); sw.setAttribute('aria-expanded', false); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { pop.classList.remove('open'); sw.setAttribute('aria-expanded', false); } });
+
+  // views
+  const titles = { research:'Research', meetings:'Meetings', documents:'Documents', overview:'Overview', review:'Contract review', drafting:'Drafting', obligations:'Obligations' };
+  const actions = { research:['#i-plus','New question'], meetings:['#i-plus','New meeting'], documents:['#i-upload','Import'] };
+  $$('#nav a').forEach(a => a.onclick = () => {
+    const v = a.dataset.view; $$('#nav a').forEach(x => x.removeAttribute('aria-current')); a.setAttribute('aria-current','page');
+    $$('.view').forEach(x => x.classList.remove('on'));
+    const el = $('#v-' + v) || $('#v-other'); el.classList.add('on'); if (!$('#v-' + v)) $('#otherT').textContent = titles[v] + ' — not in this prototype';
+    $('#vtitle').textContent = titles[v];
+    const act = actions[v]; const pa = $('#primaryAct'); pa.style.display = act ? '' : 'none';
+    if (act) pa.innerHTML = `<svg class="ico"><use href="${act[0]}"/></svg><span>${act[1]}</span>`;
+    $('#signed').style.display = v === 'research' ? '' : 'none';
+  });
+
+  // pinpoints ↔ sources ↔ inspector
+  const SRC = {
+    1:{t:'Master Services Agreement', s:'§14.2 Change of Control · page 11', v:'3'},
+    2:{t:'Master Services Agreement', s:'§22.1 Notices · page 19', v:'3'},
+    3:{t:'Master Services Agreement', s:'§14.2 Change of Control · page 11', v:'4'} };
+  const PAGE_V3 = $('#pageBox').innerHTML;
+  const PAGE_V4 = PAGE_V3.replace('<mark id="hl">shall provide no less than thirty (30) days\' prior written notice of any Change of Control</mark>', '<mark id="hl">shall provide no less than sixty (60) days\' prior written notice of any Change of Control</mark>').replace('text layer (not OCR)', 'text layer (not OCR) · draft');
+  const PAGE_22 = `<h4>22. NOTICES</h4><p class="cl">22.1 Any notice under this Agreement shall be in writing and <mark id="hl">addressed to the General Counsel of Client at the address set out in Schedule 4</mark>, or such other address as Client may notify.</p><p class="cl">22.2 Notices are deemed received on delivery by hand or two Business Days after posting.</p><div class="pg tnum">Page 19 of 24 · text layer (not OCR)</div>`;
+  function show(n) {
+    const s = SRC[n]; $('#insT').textContent = s.t; $('#insS').textContent = s.s;
+    $$('.ver').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === s.v));
+    $('#pageBox').innerHTML = n == 2 ? PAGE_22 : (s.v === '4' ? PAGE_V4 : PAGE_V3);
+    $$('.src').forEach(x => x.classList.toggle('active', x.dataset.src == n));
+    $$('.pin').forEach(x => x.classList.toggle('active', x.dataset.src == n));
+    const hl = $('#hl'); if (hl) { hl.style.background = 'var(--hl-edge)'; setTimeout(() => hl.style.background = '', 320); }
+  }
+  $$('[data-src]').forEach(el => el.addEventListener('click', () => show(el.dataset.src)));
+  $$('.ver').forEach(b => b.onclick = () => { $$('.ver').forEach(x => x.setAttribute('aria-pressed', x === b)); $('#pageBox').innerHTML = b.dataset.v === '4' ? PAGE_V4 : PAGE_V3; });
+
+  // consent → start recording → capsule
+  let t0, timer;
+  $('#grant').onclick = e => {
+    e.currentTarget.outerHTML = '<span class="pill verified"><svg><use href="#i-check"/></svg>Verbal, on record · 10:03</span>';
+    $('#consentPill').className = 'pill verified'; $('#consentPill').textContent = 'All 3 consented';
+    $('#why').innerHTML = 'All participants have consented. Policy: all-party consent · v1 <em>(awaiting counsel approval)</em>';
+    $('#startRec').disabled = false;
+  };
+  $('#startRec').onclick = () => { $('#rec').classList.add('on'); t0 = Date.now(); clearInterval(timer);
+    timer = setInterval(() => { const s = Math.floor((Date.now()-t0)/1000); $('#recT').textContent = `Recording · ${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')} · M-101 · 3/3 consented`; }, 1000); };
+  $('#stopRec').onclick = () => { $('#rec').classList.remove('on'); clearInterval(timer); };
+
+  // review deep links: #dark #meetings #documents #recording (combinable, e.g. #dark-meetings-recording)
+  const h = location.hash.toLowerCase();
+  if (h.includes('dark')) root.dataset.theme = 'dark';
+  if (h.includes('light')) root.dataset.theme = 'light';
+  ['meetings','documents'].forEach(v => { if (h.includes(v)) $(`#nav a[data-view="${v}"]`).click(); });
+  if (h.includes('recording')) { $('#grant').click(); $('#startRec').click(); }
+
+  // glass adapts when text scrolls beneath (DESIGN_SYSTEM §2.1)
+  const main = $('#main');
+  main.addEventListener('scroll', () => { const over = main.scrollTop > 8; ['#titlecap','#toolcap','#askbar'].forEach(sel => { const el = $(sel); if (over) el.dataset.over = 'text'; else delete el.dataset.over; }); }, { passive:true });
+})();
+</script>
+</body>
+</html>
