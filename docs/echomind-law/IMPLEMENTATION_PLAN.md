@@ -33,7 +33,7 @@
 ## 2. Target architecture
 
 ```
-                       ┌──────────────────────── frontend (nginx, :3100/:3543 for Law) ────────────────────────┐
+                       ┌──────────────────────── frontend (nginx, :3110/:3553 for Law) ────────────────────────┐
  Browser ─TLS──────────▶  React 19 SPA · frontend/law/ (router, MatterContext, "Paper & Glass" design system)    │
                        └──────────────┬───────────────────────────────────────────────┬─────────────────────────┘
                                 /api/legal/* + legacy /api/* (law-hardened)        /voice/ws (session + OBO token)
@@ -65,8 +65,8 @@
 
 | Environment | How it runs | Data |
 |---|---|---|
-| **Dev (this DGX Spark, shared with production)** | Native backend via `scripts/law/dev_backend.sh` (uvicorn, port 8100, CPU, no ASR) and native frontend via `scripts/law/dev_frontend.sh` (Vite :5174). Both reuse production's `trtllm:8355` and `ollama:11435` read-only. ASR/voice tests run in container `echomind-law-backend` (image `echomind-enterprise-backend:1.4.1`, code bind-mounted, memory checked first). | `<clone>/.law-data/` (gitignored), fictional data only |
-| **Law compose (integration / demo)** | `docker compose -p echomind-law -f docker-compose.yml -f docker-compose.law.yml --env-file .env.law up -d backend voice frontend`. Distinct container names, ports 3100/3543 and volume `echomind_law_data`. Joins `echomind-enterprise_default` as an external network for the LLM and embeddings. No `cloudflared`. 🔒 First run needs approval. | `echomind_law_data` |
+| **Dev (this DGX Spark, shared with production)** | Native backend via `scripts/law/dev_backend.sh` (uvicorn, port 8110, CPU, no ASR) and native frontend via `scripts/law/dev_frontend.sh` (Vite :5174). Both reuse production's `trtllm:8355` and `ollama:11435` read-only. ASR/voice tests run in container `echomind-law-backend` (image `echomind-enterprise-backend:1.4.1`, code bind-mounted, memory checked first). | `<clone>/.law-data/` (gitignored), fictional data only |
+| **Law compose (integration / demo)** | `docker compose -p echomind-law -f docker-compose.yml -f docker-compose.law.yml --env-file .env.law up -d backend voice frontend`. Distinct container names, ports 3110/3553 and volume `echomind_law_data`. Joins `echomind-enterprise_default` as an external network for the LLM and embeddings. No `cloudflared`. 🔒 First run needs approval. | `echomind_law_data` |
 | **Firm deployment (pilot)** | Dedicated host: full stack, Law edition, LUKS volume, no public ingress, model servers not published on the host. Runbook in OPS-01. 🔒 | Firm-owned |
 
 ## 3. Data model (new tables; SQLite, versioned migrations)
@@ -694,8 +694,8 @@ docs/echomind-law/PROGRESS.md, TEST_RESULTS.md      (edit)
 cd backend && ECHOMIND_DATA_DIR="$(mktemp -d)" python3 -m pytest tests -q
 cd voice && python3 -m pytest tests -q
 cd frontend && npx tsc --noEmit -p . && npx vitest run
-scripts/law/dev_backend.sh   # boots Law dev backend on :8100 against .law-data (fictional fixtures)
-python3 eval/run_eval.py --base http://localhost:8100/api --set law   # existing flags (eval/run_eval.py:245-246)
+scripts/law/dev_backend.sh   # boots Law dev backend on :8110 against .law-data (fictional fixtures)
+python3 eval/run_eval.py --base http://localhost:8110/api --set law   # existing flags (eval/run_eval.py:245-246)
 ```
 
 **Needs approval before PR-1 starts:** D-001 (branch), D-002 (dev runtime), D-003 (edition guard), D-004 (migration approach). New dev dependencies: vitest, @testing-library/react, jsdom.
