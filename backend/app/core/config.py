@@ -226,6 +226,33 @@ class Settings(BaseSettings):
     # Max concurrent LLM calls for section/chunk summarization during ingestion.
     RAG_CONTEXTUAL_SUMMARY_CONCURRENCY: int = int(os.getenv("RAG_CONTEXTUAL_SUMMARY_CONCURRENCY", "3"))
 
+    # ── Knobs the code already read via getattr() but never declared, so env overrides were
+    # silently ignored (audit R-13). Defaults are identical to the in-code fallbacks; guarded by
+    # tests/law/test_law_settings_declared.py.
+    # Cross-encoder relevance gate (advanced.py): context dropped below the hard floor, or below the
+    # soft floor while the best dense score is under the dense override.
+    RAG_CE_RELEVANCE_FLOOR: float = float(os.getenv("RAG_CE_RELEVANCE_FLOOR", "-8.0"))
+    RAG_CE_HARD_FLOOR: float = float(os.getenv("RAG_CE_HARD_FLOOR", "-10.5"))
+    RAG_CE_DENSE_OVERRIDE: float = float(os.getenv("RAG_CE_DENSE_OVERRIDE", "0.5"))
+    # Citation selection: keep reranker score >= floor; if <=1 survives, keep hits within window of best; cap.
+    RAG_CITATION_CE_FLOOR: float = float(os.getenv("RAG_CITATION_CE_FLOOR", "0.0"))
+    RAG_CITATION_CE_WINDOW: float = float(os.getenv("RAG_CITATION_CE_WINDOW", "2.0"))
+    RAG_MAX_CITATIONS: int = int(os.getenv("RAG_MAX_CITATIONS", "6"))
+    # Time decay for document hits (0 = off; transcripts use RAG_TIME_DECAY_HALFLIFE_DAYS).
+    RAG_DOC_TIME_DECAY_HALFLIFE_DAYS: float = float(os.getenv("RAG_DOC_TIME_DECAY_HALFLIFE_DAYS", "0.0"))
+    # Namespace-filtered search widens the FAISS/BM25 fetch to this fraction of the index (min floor).
+    RAG_NS_FETCH_FRACTION: float = float(os.getenv("RAG_NS_FETCH_FRACTION", "0.5"))
+    RAG_GLOBAL_FETCH_FLOOR: int = int(os.getenv("RAG_GLOBAL_FETCH_FLOOR", "0"))
+    # Section restriction only when the section index covers at least this share of documents.
+    RAG_SECTION_MIN_DOC_COVERAGE: float = float(os.getenv("RAG_SECTION_MIN_DOC_COVERAGE", "0.6"))
+    # Semantic small-talk / refusal classifier (rag/intent.py).
+    RAG_INTENT_SEMANTIC: bool = os.getenv("RAG_INTENT_SEMANTIC", "1").lower() in ("1", "true", "yes")
+    RAG_INTENT_SIM_FLOOR: float = float(os.getenv("RAG_INTENT_SIM_FLOOR", "0.68"))
+    RAG_INTENT_MARGIN: float = float(os.getenv("RAG_INTENT_MARGIN", "0.05"))
+    RAG_INTENT_SMALLTALK_MAX_WORDS: int = int(os.getenv("RAG_INTENT_SMALLTALK_MAX_WORDS", "12"))
+    # Parallel Silent Assistant analyses per live-transcript session.
+    TRANSCRIPT_ANALYSIS_CONCURRENCY: int = int(os.getenv("TRANSCRIPT_ANALYSIS_CONCURRENCY", "2"))
+
     # ── Auth (Phase 0b) — opt-in. AUTH_ENABLED=0 (default) keeps the app open (demo unaffected). ──
     AUTH_ENABLED: bool = os.getenv("AUTH_ENABLED", "0").lower() in ("1", "true", "yes")
     AUTH_SECRET: str = os.getenv("AUTH_SECRET", "")  # HS256 signing key; auto-generated + persisted under DATA_DIR if empty
