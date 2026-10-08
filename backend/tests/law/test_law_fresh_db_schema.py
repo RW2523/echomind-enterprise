@@ -32,8 +32,9 @@ def test_fresh_boardroom_table_has_meta_columns(fresh_db, legacy_edition):
     assert {"scenario", "namespace", "speaker_map_json"} <= _columns(fresh_db, "boardroom_sessions")
 
 
-def test_every_insert_in_the_code_matches_the_fresh_schema(fresh_db, legacy_edition):
-    """Static guard against schema drift: each INSERT's column list must exist on a fresh DB."""
+def test_every_insert_in_the_code_matches_the_fresh_schema(fresh_db, law_edition):
+    """Static guard against schema drift: each INSERT's column list must exist on a fresh DB.
+    Runs in the Law edition, whose schema is the legacy tables plus the Law migrations."""
     from app.core.db import init_db
     init_db()
     problems = []

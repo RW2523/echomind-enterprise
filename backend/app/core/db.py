@@ -1,6 +1,7 @@
 import os, sqlite3
 from contextlib import contextmanager
 from .config import settings
+from .edition import is_law
 
 def init_db():
     os.makedirs(settings.DATA_DIR, exist_ok=True)
@@ -236,6 +237,10 @@ def init_db():
             )"""
         )
         conn.commit()
+    if is_law():
+        # EchoMind Law tables are versioned migrations (D-004), applied only in the Law edition.
+        from ..legal.migrations.runner import apply_legal_migrations
+        apply_legal_migrations(settings.DB_PATH)
 
 @contextmanager
 def get_conn():

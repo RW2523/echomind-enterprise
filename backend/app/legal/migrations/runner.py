@@ -1,0 +1,144 @@
+"""Versioned SQL migrations for the EchoMind Law schema (decision D-004).
+
+Files live next to this module as ``NNNN_name.up.sql`` with a paired ``NNNN_name.down.sql``.
+Each applied migration is recorded in ``schema_migrations`` with the SHA-256 of its up script.
+At boot the runner refuses to continue if an applied script was edited, if the database
+records a version the code does not know (database newer than code), or if the files have a
+gap. Each migration runs in a single transaction together with its bookkeeping row, so a
+failing script leaves no partial schema behind.
+
+Legacy tables are still created by ``core.db.init_db``; this runner only owns Law tables and
+additive changes made for the Law edition.
+"""
+from __future__ import annotations
+
+import hashlib
+import re
+import sqlite3
+from contextlib import closing
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+MIGRATIONS_DIR = Path(__file__).resolve().parent
+_FILE_RE = re.compile(r"^(\d{4})_([a-z0-9_]+)\.up\.sql$")
+_TXN_RE = re.compile(r"^\s*(BEGIN|COMMIT|END|ROLLBACK|SAVEPOINT|RELEASE)\b", re.IGNORECASE | re.MULTILINE)
+_COMMENT_RE = re.compile(r"--[^\n]*")
+# Trigger bodies legitimately contain BEGIN ... END; (e.g. append-only audit triggers).
+_TRIGGER_RE = re.compile(r"CREATE\s+(?:TEMP\s+|TEMPORARY\s+)?TRIGGER\b.*?\bEND\s*;", re.IGNORECASE | re.DOTALL)
+
+
+def _manages_transactions(sql: str) -> bool:
+    return bool(_TXN_RE.search(_TRIGGER_RE.sub("", _COMMENT_RE.sub("", sql))))
+
+
+class MigrationError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True)
+class Migration:
+    version: int
+    name: str
+    up_sql: str
+    down_sql: str
+    checksum: str
+
+
+def discover(directory: Optional[Path] = None) -> list[Migration]:
+    directory = Path(directory or MIGRATIONS_DIR)
+    found: list[Migration] = []
+    for up in sorted(directory.glob("*.up.sql")):
+        m = _FILE_RE.match(up.name)
+        if not m:
+            raise MigrationError(f"bad migration file name: {up.name}")
+        version, name = int(m.group(1)), m.group(2)
+        down = up.with_name(f"{m.group(1)}_{name}.down.sql")
+        if not down.exists():
+            raise MigrationError(f"migration {up.name} has no down script ({down.name})")
+        up_sql, down_sql = up.read_text(encoding="utf-8"), down.read_text(encoding="utf-8")
+        for label, sql in (("up", up_sql), ("down", down_sql)):
+            if _manages_transactions(sql):
+                raise MigrationError(f"{up.name} ({label}): scripts must not manage transactions; the runner wraps each one")
+        found.append(Migration(version, name, up_sql, down_sql, hashlib.sha256(up_sql.encode("utf-8")).hexdigest()))
+    for expected, mig in enumerate(found, start=1):
+        if mig.version != expected:
+            raise MigrationError(f"migration version gap: expected {expected:04d}, found {mig.version:04d}_{mig.name}")
+    return found
+
+
+def _ensure_table(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS schema_migrations("
+        "version INTEGER PRIMARY KEY, name TEXT NOT NULL, checksum TEXT NOT NULL, applied_at TEXT NOT NULL)"
+    )
+    conn.commit()
+
+
+def applied_versions(conn: sqlite3.Connection) -> dict[int, tuple[str, str]]:
+    _ensure_table(conn)
+    return {v: (n, c) for v, n, c in conn.execute("SELECT version, name, checksum FROM schema_migrations")}
+
+
+def _verify(applied: dict[int, tuple[str, str]], migrations: list[Migration]) -> None:
+    known = {m.version: m for m in migrations}
+    for version, (name, checksum) in sorted(applied.items()):
+        mig = known.get(version)
+        if mig is None:
+            raise MigrationError(f"database has migration {version:04d}_{name} that this code does not know (database newer than code)")
+        if mig.checksum != checksum:
+            raise MigrationError(f"checksum mismatch for applied migration {version:04d}_{mig.name}: the script was edited after it was applied")
+
+
+def _run_atomic(conn: sqlite3.Connection, sql: str, bookkeeping: str, label: str) -> None:
+    # executescript() commits any open transaction first, then runs the text as-is; the explicit
+    # BEGIN/COMMIT makes the script and its schema_migrations row one atomic unit. Values in
+    # `bookkeeping` come only from validated file names, hex digests and timestamps.
+    try:
+        conn.executescript(f"BEGIN;\n{sql}\n;\n{bookkeeping}\nCOMMIT;")
+    except sqlite3.Error as e:
+        if conn.in_transaction:
+            conn.execute("ROLLBACK")
+        raise MigrationError(f"migration {label} failed and was rolled back: {e}") from e
+
+
+def migrate_up(conn: sqlite3.Connection, directory: Optional[Path] = None, target: Optional[int] = None) -> list[int]:
+    migrations = discover(directory)
+    applied = applied_versions(conn)
+    _verify(applied, migrations)
+    done: list[int] = []
+    for mig in migrations:
+        if mig.version in applied or (target is not None and mig.version > target):
+            continue
+        ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        row = (f"INSERT INTO schema_migrations(version, name, checksum, applied_at) "
+               f"VALUES ({mig.version}, '{mig.name}', '{mig.checksum}', '{ts}');")
+        _run_atomic(conn, mig.up_sql, row, f"{mig.version:04d}_{mig.name}")
+        done.append(mig.version)
+    return done
+
+
+def migrate_down(conn: sqlite3.Connection, target: int, directory: Optional[Path] = None) -> list[int]:
+    migrations = {m.version: m for m in discover(directory)}
+    applied = applied_versions(conn)
+    _verify(applied, list(migrations.values()))
+    done: list[int] = []
+    for version in sorted((v for v in applied if v > target), reverse=True):
+        mig = migrations[version]
+        _run_atomic(conn, mig.down_sql, f"DELETE FROM schema_migrations WHERE version = {version};", f"{version:04d}_{mig.name} (down)")
+        done.append(version)
+    return done
+
+
+def status(conn: sqlite3.Connection, directory: Optional[Path] = None) -> list[dict]:
+    applied = applied_versions(conn)
+    return [{"version": m.version, "name": m.name, "state": "applied" if m.version in applied else "pending"}
+            for m in discover(directory)]
+
+
+def apply_legal_migrations(db_path: str) -> list[int]:
+    """Bring the Law schema up to date. Called from init_db() when the edition is `law`."""
+    with closing(sqlite3.connect(db_path)) as conn:
+        conn.execute("PRAGMA journal_mode=WAL")
+        return migrate_up(conn)
