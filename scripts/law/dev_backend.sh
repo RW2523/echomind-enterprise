@@ -6,7 +6,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DATA="${LAW_DATA_DIR:-$ROOT/.law-data}"
-PORT="${LAW_BACKEND_PORT:-8100}"
+PORT="${LAW_BACKEND_PORT:-8110}"
 
 umask 077
 mkdir -p "$DATA"

@@ -46,7 +46,7 @@ services:
       - AUTH_SECRET=${LAW_AUTH_SECRET:?set LAW_AUTH_SECRET in .env.law (openssl rand -hex 32)}
       - AUTH_ADMIN_USER=${LAW_ADMIN_USER:-admin}
       - AUTH_ADMIN_PASSWORD=${LAW_ADMIN_PASSWORD:?set LAW_ADMIN_PASSWORD in .env.law}
-      - CORS_ALLOW_ORIGINS=${LAW_CORS_ORIGINS:-https://localhost:3543,http://localhost:3100}
+      - CORS_ALLOW_ORIGINS=${LAW_CORS_ORIGINS:-https://localhost:3553,http://localhost:3110}
       - LLM_BASE_URL=http://host.docker.internal:${LAW_LLM_HOST_PORT:-8355}/v1
       - OLLAMA_EMBED_URL=http://host.docker.internal:${LAW_OLLAMA_HOST_PORT:-11435}/api/embeddings
       - VOICE_TTS_URL=http://voice:8000/speak
@@ -84,8 +84,8 @@ services:
   frontend:
     container_name: echomind-law-frontend
     ports: !override
-      - "${LAW_HTTP_PORT:-3100}:80"
-      - "${LAW_HTTPS_PORT:-3543}:443"
+      - "${LAW_HTTP_PORT:-3110}:80"
+      - "${LAW_HTTPS_PORT:-3553}:443"
 
 volumes:
   echomind_law_data: {}
