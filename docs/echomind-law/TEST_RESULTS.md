@@ -60,3 +60,20 @@
 | Live: log scan | grep the dev backend log | **0** hits for party names, amounts and clause terms, admin password, TOTP key, recovery codes and OBO tokens |
 
 **Not exercised:** an in-browser walkthrough of the new sign-in screen (covered by component tests and the live API; the browser walkthrough comes with the S1.3 shell); the voice WebSocket with real audio (needs the isolated compose stack, which has not been started); OIDC (blocked, P-011).
+
+## Run 3 — S1.2 Matters, memberships, policy engine, 2026-10-08
+
+- **Branch / commit:** `law/s1.2-matters` @ `3b8574f` (base `feature/echomind-law@0caea7e`)
+
+| Suite | Command | Result |
+|---|---|---|
+| Backend unit (all) | `cd backend && ECHOMIND_DATA_DIR=$(mktemp -d) python3 -m pytest tests -q` | **562 passed** (50 legacy + 512 Law) |
+| Policy matrix | `pytest tests/law/test_law_policy.py` | **398 passed**. Every matter action × matter role × open/closed/archived; non-member and missing identical for every action; every firm action × firm role; export right; unknown actions fail closed. Expectations are written from the plan's §4.1 tables, independently of the engine. |
+| T01 over HTTP | `pytest tests/law/test_law_matters_api.py` | **20 passed**. Each user sees exactly their live matters; hidden ≡ missing on GET/PATCH/memberships (same 404 body); hidden and missing run the same 2 queries; revoked and expired memberships grant nothing; firm admin sees no matter content; clients visible only through matters; another organisation invisible even with a stray membership row; members lacking a right get 403; removal takes effect at once; history kept on role change; last lead protected; inactive colleagues refused; creation rights; no matter under an invisible client; optimistic concurrency; closed matters accept only reopening; firm-role removal signs the user out; role management is firm-admin only, without self-lockout. |
+| Route table | `pytest tests/law/test_law_route_table.py` | The 12 new `/api/legal` routes are covered automatically: all **401** anonymously |
+| Voice / frontend | as before | **150 passed**; tsc clean, **13 passed** (unchanged by this slice) |
+| Live: upgrade | dev backend on the S1.1 dev DB | `0003` applied; 1 organisation created; 0 users without an organisation |
+| Live: API walk-through | `law_client` as `admin` and a new colleague `a.rahman` | Adding a role revoked 0 sessions. Matter M-101 created (creator = lead). The colleague saw `[]`. Hidden vs random matter id: **identical** `404 {"detail":"Not Found"}`. After being added the colleague saw `M-101/attorney`. Managing members as attorney: **403**. After removal: **404**. Firm-role removal: **1 session revoked**, then **401**. `acl_epoch` 3. |
+| Live: log scan | grep the dev backend log | **0** hits for the client name, matter title, practice area, jurisdiction and the new user's password |
+
+**Honesty note:** the 20 API tests were written before the routes existed, but they were not executed in a failing state first; the policy matrix was written alongside the engine. The S1.0/S1.1 tests-first evidence stands as recorded above.

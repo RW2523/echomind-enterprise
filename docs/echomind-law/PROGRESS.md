@@ -8,9 +8,9 @@
 |---|---|
 | Date | 2026-10-08 |
 | Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); slice branch `law/s1.0-foundations` |
-| Phase | Phase 1: S1.0 merged (`2a91cf2`); **S1.1 complete** on `law/s1.1-identity` (not yet merged) |
+| Phase | Phase 1: S1.0 (`2a91cf2`) and S1.1 (`0caea7e`) merged; **S1.2 complete** on `law/s1.2-matters` (not yet merged) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001_foundation`, `0002_identity` (Law edition only; applied in local `.law-data` dev DB) |
+| Migrations | `0001_foundation`, `0002_identity`, `0003_matters` (Law edition only; applied in local `.law-data` dev DB) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -85,6 +85,23 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Anyone holding a new user's initial password can enrol their own authenticator at first sign-in. Planned mitigation (S1.3 admin UX): an admin-issued one-time enrolment link and a forced password change on first sign-in.
   - Throttling is per account (lockout); there is no per-IP sign-in throttle. `RATE_LIMIT_PER_MIN` exists but is off.
 
+### Session 1 (continued) — S1.2 Matters, memberships, policy engine
+- 2026-10-08: owner approved merging S1.1 → merged `0caea7e`.
+- Commit `3b8574f` on `law/s1.2-matters`.
+- **Delivered:**
+  - Migration `0003_matters`.
+  - `legal/policy.py`: deny-by-default `decide()`/`authorize()`, with hidden matters answering exactly like missing ones.
+  - `legal/matters/` repo and routes, `legal/identity/routes.py` for firm roles, `legal/orgs.py` for the default organisation.
+  - Principals now carry `org_id`; in the Law edition, admin routes use the `firm_admin` firm role.
+  - **Completes S1.1's revoke-on-role-change.**
+- **As built vs. plan (S1.2):**
+  - **Matter-level changes:** membership changes bump `matters.acl_epoch` but do not revoke sessions. Every request re-evaluates the policy, so removal is immediate for HTTP. Open streams and sockets will compare the epoch from S1.6 on.
+  - **Firm-role changes:** removing a firm role revokes all of that person's sessions; adding one does not.
+  - **Single organisation:** created on first boot (`LEGAL_ORG_NAME`). Everything is org-scoped, but there is no API to create more organisations; it is not needed for a single-firm pilot.
+  - **Who can see a client:** its creator, or anyone through a visible matter. Firm-wide client lists (conflict checks) are deliberately not offered; that is OPT-01.
+  - **Audit events** for matter, membership and role changes are not written yet. They come with the hash-chained audit trail in **S1.5**, which instruments these routes.
+  - **Ethical walls and break-glass** are not in the engine yet; they come in S1.4. No UI yet; that is S1.3.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -100,7 +117,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | ID | Status | Slice | Notes |
 |---|---|---|---|
 | SEC-01 | PARTIAL (local accounts complete) | S1.1 | Local accounts: sessions, TOTP MFA, lockout, CSRF, deny-by-default, WS gating, voice OBO. All tested, plus live API checks. OIDC BLOCKED (P-011). Revoke-on-role-change → S1.2. In-browser walkthrough → S1.3 shell |
-| SEC-02 | MISSING | S1.2–S1.4 | |
+| SEC-02 | PARTIAL | S1.2–S1.4 | S1.2: clients, matters, memberships, policy engine, non-disclosure, firm roles: done and tested (T01 backend). Walls and break-glass → S1.4; UI → S1.3; audit events → S1.5 |
 | SEC-03 | INCOMPATIBLE | S1.6–S1.7 | |
 | SEC-04 | PARTIAL | S1.5 | S1.0: content-free logs in the Law edition (backend and voice, verified by log scan) |
 | SEC-05 | MISSING | S1.8 | Policy values need counsel (P-001) |
@@ -134,7 +151,9 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-1. Owner reviews S1.1 (`git log feature/echomind-law..law/s1.1-identity`) and approves merging it.
-2. Start **S1.2 Matters, memberships, policy engine** on `law/s1.2-matters`:
-   - First failing test: `backend/tests/law/test_law_policy.py`, the role × membership-validity × matter-status × sensitivity matrix for `legal/policy.py::authorize()`.
-   - Then the T01 fixture (2 clients, 4 matters, walled matter M-202), migration `0003_matters`, the `/api/legal/clients|matters|memberships` routes with non-disclosing 404s, and wiring revoke-on-role-change.
+1. Owner reviews S1.2 (`git log feature/echomind-law..law/s1.2-matters`) and approves merging it.
+2. Start **S1.3 Law workspace shell and design system** on `law/s1.3-workspace`.
+   - 🔒 It needs approval of the new frontend packages: `react-router`, `@tanstack/react-query`, `lucide-react`, `@fontsource-variable/inter`, `@fontsource-variable/source-serif-4`, `qrcode`, and dev-only `@playwright/test` and `axe-core`.
+   - First failing test: `frontend/law/app/MatterSwitcher.test.tsx` (switching matter purges matter-keyed caches and asks for confirmation during an active capture).
+   - Then the tokens and glass layer, router, sign-in restyle with an authenticator QR code, Home, the Matters list, Matter overview and Members, the non-disclosing "not available" page, and `/__design`.
+   - Also build the S1.1 hardening (D-021): admin-issued one-time enrolment links and a forced password change at first sign-in.
