@@ -57,7 +57,14 @@ rag-platform/
 
 # ── Offline bundle output ─────────────────────────────────────────────
 # scripts/export_offline_bundle.sh writes large tarballs; never commit them.
+# Its default output dir is ./offline-bundle-YYYYMMDD (hyphen), which /offline_bundle/ missed.
 /offline_bundle/
+/offline-bundle-*/
+
+# ── EchoMind Law local development ────────────────────────────────────
+# Dev data (fictional fixtures, dev secrets) and the isolated stack's secrets file.
+/.law-data/
+.env.law
 *.tar.zst
 
 # ── Data backups (scripts/backup_data.sh) ─────────────────────────────

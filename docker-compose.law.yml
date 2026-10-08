@@ -1,0 +1,91 @@
+# EchoMind Law — isolated stack override (decision D-002, docs/echomind-law/DECISIONS.md).
+#
+# ALWAYS use it together with its own project name, e.g.:
+#   scripts/law/compose.sh config           # render and check, starts nothing
+#   scripts/law/compose.sh up -d backend voice frontend
+# which runs: docker compose -p echomind-law -f docker-compose.yml -f docker-compose.law.yml --env-file .env.law …
+#
+# Why: this repository's folder is named like the production checkout on the same DGX Spark, so a
+# plain `docker compose up` here would reuse production's project name, containers and data volume.
+# This override gives every service its own container name, ports and volume, never starts a
+# second LLM / embedding server (it reuses the host-published ones read-only), never starts the
+# public Cloudflare tunnel, keeps the backend and voice off the GPU by default, and runs the
+# existing 1.4.1 images with this checkout's code mounted read-only (no 30+ GB rebuild).
+
+x-law-host-gateway: &law_host_gateway
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  # ── Shared with production: never started by this project ─────────────────────────────────
+  trtllm:
+    profiles: ["never"]
+    container_name: echomind-law-trtllm-disabled
+    ports: !reset []
+  ollama:
+    profiles: ["never"]
+    container_name: echomind-law-ollama-disabled
+    ports: !reset []
+  cloudflared:
+    profiles: ["never"]          # no public ingress for the Law edition (THREAT_MODEL T-17)
+    container_name: echomind-law-cloudflared-disabled
+
+  backend:
+    <<: *law_host_gateway
+    build: !reset null
+    image: ${LAW_BACKEND_IMAGE:-echomind-enterprise-backend:1.4.1}
+    pull_policy: never
+    container_name: echomind-law-backend
+    depends_on: !reset {}
+    volumes: !override
+      - echomind_law_data:/data
+      - ./backend/app:/app/app:ro
+    environment:
+      - ECHOMIND_EDITION=law
+      - AUTH_ENABLED=1
+      - AUTH_SECRET=${LAW_AUTH_SECRET:?set LAW_AUTH_SECRET in .env.law (openssl rand -hex 32)}
+      - AUTH_ADMIN_USER=${LAW_ADMIN_USER:-admin}
+      - AUTH_ADMIN_PASSWORD=${LAW_ADMIN_PASSWORD:?set LAW_ADMIN_PASSWORD in .env.law}
+      - CORS_ALLOW_ORIGINS=${LAW_CORS_ORIGINS:-https://localhost:3543,http://localhost:3100}
+      - LLM_BASE_URL=http://host.docker.internal:${LAW_LLM_HOST_PORT:-8355}/v1
+      - OLLAMA_EMBED_URL=http://host.docker.internal:${LAW_OLLAMA_HOST_PORT:-11435}/api/embeddings
+      - VOICE_TTS_URL=http://voice:8000/speak
+      - DOCGEN_IMAGE_BACKEND=none
+      - ECHOMIND_ASR_DEVICE=${LAW_ASR_DEVICE:-cpu}
+      - CUDA_VISIBLE_DEVICES=${LAW_BACKEND_CUDA_VISIBLE_DEVICES-}
+      - ECHOMIND_EXIT_ON_FATAL_CUDA=0
+
+  voice:
+    <<: *law_host_gateway
+    build: !reset null
+    image: ${LAW_VOICE_IMAGE:-echomind-enterprise-voice:1.4.1}
+    pull_policy: never
+    container_name: echomind-law-voice
+    ports: !reset []             # reached only through the Law frontend's /voice/ proxy
+    depends_on: !override
+      backend:
+        condition: service_started
+    volumes: !override
+      - ./voice/voices:/voices:ro
+      - ./voice/app:/workspace/app:ro
+    environment:
+      - ECHOMIND_EDITION=law
+      - VOICE_AUTH_ENABLED=1
+      - VOICE_AUTH_SECRET=${LAW_AUTH_SECRET:?set LAW_AUTH_SECRET in .env.law (openssl rand -hex 32)}
+      - VOICE_OFFLINE=1
+      - LLM_URL=http://host.docker.internal:${LAW_LLM_HOST_PORT:-8355}/v1/chat/completions
+      - BACKEND_CHAT_URL=http://backend:8000
+      - ECHOMIND_ASR_DEVICE=${LAW_ASR_DEVICE:-cpu}
+      - ECHOMIND_ASR_REQUIRE_CUDA=0
+      - VOICE_PARAKEET_DEVICE=${LAW_ASR_DEVICE:-cpu}
+      - CUDA_VISIBLE_DEVICES=${LAW_VOICE_CUDA_VISIBLE_DEVICES-}
+      - VOICE_NEMOTRON_STARTUP_LOAD=${LAW_VOICE_STARTUP_LOAD:-0}
+
+  frontend:
+    container_name: echomind-law-frontend
+    ports: !override
+      - "${LAW_HTTP_PORT:-3100}:80"
+      - "${LAW_HTTPS_PORT:-3543}:443"
+
+volumes:
+  echomind_law_data: {}
