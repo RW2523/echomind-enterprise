@@ -77,7 +77,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - Cross-matter "firm-wide search" exists only as an explicitly authorized union.
   - Memory grows per loaded partition, so an LRU of loaded partitions is needed.
 
-### D-006 Sessions: server-side, revocable — PROPOSED
+### D-006 Sessions: server-side, revocable — IMPLEMENTED (S1.1, 2026-10-08; part of the approved plan)
 - **Decision:**
   - In the Law edition, replace stateless JWT cookies with an **opaque session token**. Only its SHA-256 is stored, in a `sessions` table.
   - Cookie settings: `HttpOnly`, `Secure`, `SameSite=Strict`, `__Host-` prefix.
@@ -86,7 +86,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - WebSockets re-validate the session at least every 60 s and immediately on an ACL-epoch bump.
   - Bearer tokens are allowed only for internal service-to-service calls with a short-lived signed **on-behalf-of** token (see D-013).
 
-### D-007 MFA — PROPOSED
+### D-007 MFA — IMPLEMENTED (S1.1, 2026-10-08; part of the approved plan)
 - **Decision:**
   - TOTP (RFC 6238), implemented with the stdlib (`hmac`/`hashlib`/`base64`). It needs no new dependency and works offline.
   - Users get 10 one-time recovery codes, stored hashed. MFA is required for every Law role when the firm policy says so (default **on**).
@@ -140,7 +140,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - Legacy verticals keep the current behaviour.
 - **Risk:** Sensitive identifiers become searchable inside an authorized matter. That is the intended behaviour for legal work and stays inside the matter's ethical wall.
 
-### D-013 Service-to-service identity (voice → backend, jobs) — PROPOSED
+### D-013 Service-to-service identity (voice → backend, jobs) — IMPLEMENTED (S1.1, 2026-10-08; part of the approved plan)
 - **Decision:**
   - At the WS handshake, the voice service captures the user's session and obtains a **short-lived (5 min), audience-bound on-behalf-of token** from the backend.
   - It sends that token on every RAG call and refreshes it while the session lives.
@@ -189,6 +189,18 @@ Every entry records the options considered, the recommendation, the consequence 
 - Full spec in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md). A visual prototype (`design/prototype.html`) is offered for approval before the build.
 
 ---
+
+### D-020 MFA secret storage until encryption at rest lands — RECORDED (S1.1)
+- TOTP secrets are stored base32 in `users.mfa_secret`, protected by database access only.
+- They become encrypted at rest with D-014: LUKS on the host now, and app-level AES-GCM once the `cryptography` dependency is approved (planned S1.6).
+- Until then, a database copy would expose second factors, so backups must stay encrypted (OPS-01).
+
+### D-021 First-sign-in authenticator enrolment — RECORDED (S1.1), hardening planned
+- An account without an enrolled authenticator enrols one at its first sign-in. Whoever holds the initial password can therefore bind their own authenticator.
+- **Planned (S1.3 admin UX):**
+  - admin-issued one-time enrolment links that expire;
+  - a forced password change at first sign-in;
+  - an admin "reset authenticator" action (re-enrolment is refused today: 409).
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
