@@ -2,6 +2,8 @@
 character classes, but no short, repetitive, username-based or well-known passwords."""
 from __future__ import annotations
 
+import re
+
 from ...core.config import settings
 
 # A short built-in list is enough to stop the worst choices offline; length does the rest.
@@ -22,10 +24,11 @@ def problems(password: str, username: str = "") -> list[str]:
     user = (username or "").strip().lower()
     if user and (user in low or low in user):
         out.append("username")
-    stripped = "".join(ch for ch in low if ch.isalnum())
-    if low in _COMMON or any(low == c * (len(low) // len(c)) for c in _COMMON if len(low) >= len(c) and len(low) % len(c) == 0):
-        out.append("common")
-    elif stripped in _COMMON:
+    # A common word padded with digits or symbols ("password1234", "Welcome!2026") is still common.
+    letters = re.sub(r"[^a-z]", "", low)
+    alnum = re.sub(r"[^a-z0-9]", "", low)
+    if low in _COMMON or alnum in _COMMON or letters in _COMMON or any(
+            letters == c * (len(letters) // len(c)) for c in _COMMON if letters and len(letters) % len(c) == 0):
         out.append("common")
     if pw and len(set(pw)) <= 2:
         out.append("repetitive")
