@@ -262,4 +262,15 @@ class Settings(BaseSettings):
     CORS_ALLOW_ORIGINS: str = os.getenv("CORS_ALLOW_ORIGINS", "*")  # comma-separated origins; "*" = open (default, demo)
     RATE_LIMIT_PER_MIN: int = int(os.getenv("RATE_LIMIT_PER_MIN", "0"))  # per-IP API requests/min; 0 = off (default)
 
+    # ── EchoMind Law identity (S1.1; D-006, D-007, D-013). Used only when ECHOMIND_EDITION=law. ──
+    LEGAL_SESSION_IDLE_MIN: int = int(os.getenv("LEGAL_SESSION_IDLE_MIN", "30"))          # sliding idle timeout
+    LEGAL_SESSION_ABSOLUTE_HOURS: float = float(os.getenv("LEGAL_SESSION_ABSOLUTE_HOURS", "10"))
+    LEGAL_MFA_PENDING_MIN: int = int(os.getenv("LEGAL_MFA_PENDING_MIN", "10"))            # password ok, code not yet
+    LEGAL_MFA_REQUIRED: bool = os.getenv("LEGAL_MFA_REQUIRED", "1").lower() in ("1", "true", "yes")
+    LEGAL_LOCKOUT_THRESHOLD: int = int(os.getenv("LEGAL_LOCKOUT_THRESHOLD", "5"))
+    LEGAL_LOCKOUT_MINUTES: int = int(os.getenv("LEGAL_LOCKOUT_MINUTES", "15"))
+    LEGAL_PASSWORD_MIN_LENGTH: int = int(os.getenv("LEGAL_PASSWORD_MIN_LENGTH", "12"))
+    LEGAL_WS_RECHECK_SEC: float = float(os.getenv("LEGAL_WS_RECHECK_SEC", "60"))          # re-validate open WebSockets
+    LEGAL_OBO_TTL_SEC: int = int(os.getenv("LEGAL_OBO_TTL_SEC", "300"))                   # voice → backend token lifetime
+
 settings = Settings()
