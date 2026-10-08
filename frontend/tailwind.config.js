@@ -7,6 +7,10 @@ export default {
     "./hooks/**/*.{js,ts,jsx,tsx}",
     "./services/**/*.{js,ts,jsx,tsx}",
     "./utils/**/*.{js,ts,jsx,tsx}",
+    // Vertical pages and the Law workspace: without these globs their classes were never generated
+    // and the bespoke vertical pages rendered partly unstyled in production builds (audit R-12).
+    "./verticals/**/*.{js,ts,jsx,tsx}",
+    "./law/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
