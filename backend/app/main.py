@@ -293,3 +293,8 @@ app.include_router(boardroom_router, prefix="/api")
 app.include_router(docgen_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(export_router, prefix="/api")
+# EchoMind Law (S1.2+): /api/legal/*. Every route 404s outside the Law edition.
+from .legal.matters.routes import router as legal_matters_router  # noqa: E402
+from .legal.identity.routes import router as legal_users_router  # noqa: E402
+app.include_router(legal_matters_router, prefix="/api")
+app.include_router(legal_users_router, prefix="/api")

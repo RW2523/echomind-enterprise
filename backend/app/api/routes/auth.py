@@ -80,6 +80,12 @@ def _require_admin(request: Request) -> dict:
     payload = authmod.user_from_request(request)
     if not payload:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if is_law():
+        # Law edition: administration is the firm_admin firm role (S1.2), not the legacy flag.
+        from ...legal.policy import firm_roles_of
+        if "firm_admin" not in firm_roles_of(payload["sub"]):
+            raise HTTPException(status_code=403, detail="Admin privileges required")
+        return payload
     if (payload.get("role") or "") != "admin":
         raise HTTPException(status_code=403, detail="Admin privileges required")
     return payload
@@ -93,10 +99,23 @@ def admin_list_users(request: Request):
 
 @router.post("/users")
 def admin_create_user(request: Request, inp: CreateUserIn):
-    _require_admin(request)
-    role = inp.role if inp.role in ("admin", "user") else "user"
+    admin = _require_admin(request)
     if is_law():
+        # Law edition: `role` names a firm role ("admin" is accepted as firm_admin); the legacy
+        # users.role flag is kept only for compatibility.
+        from ...legal.identity import accounts
+        firm_role = "firm_admin" if inp.role == "admin" else inp.role
+        if firm_role not in accounts.FIRM_ROLES and firm_role != "user":
+            raise HTTPException(status_code=400, detail=f"Unknown role. Use one of: {', '.join(accounts.FIRM_ROLES)}")
         _enforce_password_policy(inp.password, inp.username)
+        try:
+            user = authmod.create_user(inp.username, inp.password, role="admin" if firm_role == "firm_admin" else "user")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        if firm_role != "user":
+            accounts.grant_role(user["id"], firm_role, granted_by=admin["sub"])
+        return {"user": {**user, "roles": accounts.roles_of(user["id"])}}
+    role = inp.role if inp.role in ("admin", "user") else "user"
     try:
         user = authmod.create_user(inp.username, inp.password, role=role, tenant=inp.tenant)
     except ValueError as e:

@@ -67,11 +67,15 @@ def client(law_app):
     return TestClient(law_app, base_url=LAW_TEST_ORIGIN)
 
 
-def make_user(username, password="correct horse battery staple", role="user", mfa=False):
-    """Create a Law user; with mfa=True also enrol TOTP and return its secret."""
+def make_user(username, password="correct horse battery staple", role="user", mfa=False, firm_roles=()):
+    """Create a Law user; with mfa=True also enrol TOTP and return its secret.
+    role="admin" also grants the firm_admin firm role (Law administration, S1.2)."""
     from app.core import auth
+    from app.legal.identity import accounts
     from app.legal.identity import mfa as mfamod
     u = auth.create_user(username, password, role=role)
+    for r in set(firm_roles) | ({"firm_admin"} if role == "admin" else set()):
+        accounts.grant_role(u["id"], r)
     secret = None
     if mfa:
         secret = mfamod.begin_enrollment(u["id"])

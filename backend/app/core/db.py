@@ -241,6 +241,8 @@ def init_db():
         # EchoMind Law tables are versioned migrations (D-004), applied only in the Law edition.
         from ..legal.migrations.runner import apply_legal_migrations
         apply_legal_migrations(settings.DB_PATH)
+        from ..legal.orgs import ensure_default_org
+        ensure_default_org()
 
 @contextmanager
 def get_conn():
