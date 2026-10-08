@@ -13,6 +13,8 @@ import logging
 import re
 from typing import Dict, List, Optional, Tuple
 
+from ..core.edition import content_for_log, is_law
+
 logger = logging.getLogger(__name__)
 
 
@@ -100,7 +102,7 @@ def gate_context(
         )
         logger.info(
             "AnswerGate: FAIL section_ids=%s not in context, q=%s",
-            explicit_section_ids[:3], question[:80],
+            explicit_section_ids[:3], content_for_log(question),
         )
         return (False, msg, top3)
 
@@ -115,7 +117,7 @@ def gate_context(
         found_tokens = [t for t in tokens if t in ctx_lower]
         logger.info(
             "AnswerGate: FAIL tokens (%d/%d) found=%s q=%s",
-            len(found_tokens), len(tokens), found_tokens, question[:80],
+            len(found_tokens), len(tokens), len(found_tokens) if is_law() else found_tokens, content_for_log(question),
         )
         return (False, msg, top3)
 
