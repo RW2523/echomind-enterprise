@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import httpx
 from .core.config import settings
-from .core.edition import api_docs_enabled, validate_law_posture
+from .core.edition import api_docs_enabled, install_log_redaction, is_law, validate_law_posture
 
 # EchoMind Law (D-003): refuse to start with an insecure configuration — before anything below
 # imports routers, opens the database or seeds an admin.
@@ -36,6 +36,8 @@ logging.basicConfig(
 )
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
+if is_law():
+    install_log_redaction()  # keep matter content (questions, titles, quotes) out of the logs
 
 
 def _warm_nemotron_stt():

@@ -111,3 +111,52 @@ def test_legacy_backend_is_unchanged(tmp_path):
     r = _import_main(tmp_path)
     assert r.returncode == 0, r.stderr[-2000:]
     assert "DOCS /docs /openapi.json" in r.stdout
+
+
+# ── Logs never carry matter content in the Law edition (THREAT_MODEL T-11) ──────
+def test_free_text_log_arguments_are_redacted_in_law(monkeypatch):
+    import logging
+    from app.core.edition import ContentRedactingFilter
+    monkeypatch.setenv("ECHOMIND_EDITION", "law")
+    rec = logging.LogRecord("app.rag.advanced", logging.INFO, __file__, 1,
+                            "RAG semantic-first: document wins (score=%.3f) question=%s",
+                            (0.691, "What is the liability cap in the MSA between Harrowgate and Voss-Lindqvist?"), None)
+    ContentRedactingFilter().filter(rec)
+    line = rec.getMessage()
+    assert "Harrowgate" not in line and "liability" not in line
+    assert "0.691" in line and "chars>" in line
+
+
+def test_identifiers_and_urls_stay_readable(monkeypatch):
+    import logging
+    from app.core.edition import ContentRedactingFilter
+    monkeypatch.setenv("ECHOMIND_EDITION", "law")
+    rec = logging.LogRecord("httpx", logging.INFO, __file__, 1, 'HTTP Request: %s %s "%s %d %s"',
+                            ("POST", "http://localhost:11435/api/embeddings", "HTTP/1.1", 200, "OK"), None)
+    ContentRedactingFilter().filter(rec)
+    assert rec.getMessage() == 'HTTP Request: POST http://localhost:11435/api/embeddings "HTTP/1.1 200 OK"'
+
+
+def test_log_filter_is_inert_outside_law(monkeypatch):
+    import logging
+    from app.core.edition import ContentRedactingFilter
+    monkeypatch.delenv("ECHOMIND_EDITION", raising=False)
+    rec = logging.LogRecord("x", logging.INFO, __file__, 1, "question=%s", ("what is the cap",), None)
+    ContentRedactingFilter().filter(rec)
+    assert rec.getMessage() == "question=what is the cap"
+
+
+def test_law_backend_installs_the_log_filter(tmp_path):
+    r = _import_main(tmp_path, ECHOMIND_EDITION="law", AUTH_ENABLED="1", AUTH_SECRET=STRONG_SECRET,
+                     AUTH_ADMIN_PASSWORD="test-admin-password-1", CORS_ALLOW_ORIGINS="http://localhost:5174")
+    assert r.returncode == 0, r.stderr[-2000:]
+    probe = subprocess.run(
+        [sys.executable, "-c",
+         "import logging, app.main; logging.getLogger('app.rag.advanced').info('question=%s', 'Voss-Lindqvist liability cap')"],
+        cwd=BACKEND_DIR, capture_output=True, text=True, timeout=120,
+        env={**{k: v for k, v in os.environ.items() if not k.startswith(("AUTH_", "CORS_", "ECHOMIND_"))},
+             "ECHOMIND_DATA_DIR": str(tmp_path), "ECHOMIND_EDITION": "law", "AUTH_ENABLED": "1",
+             "AUTH_SECRET": STRONG_SECRET, "AUTH_ADMIN_PASSWORD": "test-admin-password-1",
+             "CORS_ALLOW_ORIGINS": "http://localhost:5174", "PYTHONWARNINGS": "ignore"})
+    assert probe.returncode == 0, probe.stderr[-2000:]
+    assert "question=<28 chars>" in probe.stdout and "Voss" not in probe.stdout + probe.stderr

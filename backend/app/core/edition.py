@@ -10,6 +10,7 @@ long-running workers always see the current value.
 """
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from typing import Mapping, Optional
@@ -92,3 +93,31 @@ def api_docs_enabled() -> bool:
     if not is_law():
         return True
     return (os.getenv("LEGAL_DEV_OPENAPI") or "").strip().lower() in _TRUE
+
+
+def _redact(value):
+    # Free text (anything with whitespace, or long) is a question, quote, title or path derived
+    # from matter content. Short single tokens — ids, URLs, model names, reasons — stay readable.
+    if isinstance(value, str) and (any(c.isspace() for c in value) or len(value) > 64):
+        return f"<{len(value)} chars>"
+    return value
+
+
+class ContentRedactingFilter(logging.Filter):
+    """In the Law edition, replace free-text log arguments with their length (THREAT_MODEL T-11)."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if not is_law() or not record.args:
+            return True
+        if isinstance(record.args, Mapping):
+            record.args = {k: _redact(v) for k, v in record.args.items()}
+        else:
+            record.args = tuple(_redact(a) for a in record.args)
+        return True
+
+
+def install_log_redaction() -> None:
+    """Attach the filter to every root handler; child loggers propagate through them."""
+    for handler in logging.getLogger().handlers:
+        if not any(isinstance(f, ContentRedactingFilter) for f in handler.filters):
+            handler.addFilter(ContentRedactingFilter())
