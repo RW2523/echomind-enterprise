@@ -17,7 +17,7 @@ import sys
 import pytest
 
 VOICE_DIR = pathlib.Path(__file__).resolve().parents[1]
-SECURE = {"VOICE_AUTH_ENABLED": "1", "VOICE_AUTH_SECRET": "s" * 48, "VOICE_OFFLINE": "1", "LLM_LOG_PAYLOAD": "0"}
+SECURE = {"VOICE_AUTH_ENABLED": "1", "VOICE_ALLOWED_ORIGINS": "https://localhost:3553", "VOICE_OFFLINE": "1", "LLM_LOG_PAYLOAD": "0"}
 
 
 def _codes(env):
@@ -31,7 +31,8 @@ def test_secure_voice_configuration_passes():
 
 @pytest.mark.parametrize("override, code", [
     ({"VOICE_AUTH_ENABLED": "0"}, "auth_disabled"),
-    ({"VOICE_AUTH_SECRET": "short"}, "weak_secret"),
+    ({"VOICE_ALLOWED_ORIGINS": ""}, "origins_open"),
+    ({"VOICE_ALLOWED_ORIGINS": "*"}, "origins_open"),
     ({"VOICE_OFFLINE": "0"}, "cloud_egress"),
     ({"LLM_LOG_PAYLOAD": "1"}, "content_logging"),
     ({"VOICE_ABLATION_MODE": "dual_no_i1"}, "eval_mode"),

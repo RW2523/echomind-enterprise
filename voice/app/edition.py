@@ -1,7 +1,9 @@
 """Product edition switch for the voice service (EchoMind Law, decisions D-003 and D-016).
 
-`ECHOMIND_EDITION=law` makes the voice service refuse to start without WebSocket auth, a strong
-shared secret and offline mode, or with LLM payload logging or an evaluation ablation arm on.
+`ECHOMIND_EDITION=law` makes the voice service refuse to start without WebSocket auth, an explicit
+list of allowed browser origins and offline mode, or with LLM payload logging or an evaluation
+ablation arm on. (In this edition the browser session is validated by the backend, not by a
+shared secret.)
 In that edition spoken content is also kept out of the logs: free-text log arguments are
 replaced by their length. Any other value (or unset) keeps today's behaviour.
 """
@@ -13,7 +15,6 @@ from dataclasses import dataclass
 from typing import Mapping, Optional
 
 LAW = "law"
-_MIN_SECRET_BYTES = 32
 _TRUE = ("1", "true", "yes")
 
 
@@ -37,8 +38,9 @@ def posture_violations(env: Optional[Mapping[str, str]] = None) -> list[Violatio
     out: list[Violation] = []
     if not flag("VOICE_AUTH_ENABLED"):
         out.append(Violation("auth_disabled", "VOICE_AUTH_ENABLED must be 1"))
-    if len((e.get("VOICE_AUTH_SECRET") or "").encode()) < _MIN_SECRET_BYTES:
-        out.append(Violation("weak_secret", f"VOICE_AUTH_SECRET must equal the backend AUTH_SECRET (at least {_MIN_SECRET_BYTES} bytes)"))
+    origins = [o.strip() for o in (e.get("VOICE_ALLOWED_ORIGINS") or "").split(",") if o.strip()]
+    if not origins or any("*" in o for o in origins):
+        out.append(Violation("origins_open", "VOICE_ALLOWED_ORIGINS must list the Law frontend origins explicitly"))
     if not flag("VOICE_OFFLINE", "1"):
         out.append(Violation("cloud_egress", "VOICE_OFFLINE must be 1 (no runtime voice downloads)"))
     if flag("LLM_LOG_PAYLOAD"):
