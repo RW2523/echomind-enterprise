@@ -26,6 +26,7 @@ from .adapters.moshi_ws import MoshiWsAdapter
 from .lead_phrases import pick_lead_phrase
 from .tools import VOICE_TOOLS, ROUTER_RULES, source_options_for, tool_topic_arg, cites_a_reference
 from .hold_phrases import pick_hold_phrase, pick_ack, tone_key, topic_from_query
+from .edition import is_law
 import difflib
 
 
@@ -225,7 +226,10 @@ def _guess_tool(text: str) -> str:
 
 
 def _ablation_mode() -> str:
-    """E10 ablation arm (evaluation only); production is dual_i1."""
+    """E10 ablation arm (evaluation only); production is dual_i1. Hard-wired to dual_i1 in the
+    EchoMind Law edition (D-016): the dual_no_i1 arm deliberately speaks invented facts."""
+    if is_law():
+        return "dual_i1"
     mode = os.getenv("VOICE_ABLATION_MODE", "dual_i1")
     try:
         ov = "/tmp/echomind_ablation_mode"

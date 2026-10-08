@@ -9,13 +9,31 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 from ..config import SETTINGS
+from ..edition import is_law
 
 logger = logging.getLogger(__name__)
+
+# Debug tap: `touch /tmp/dump_payload` inside the container to record the last requests.
+# Never active in the EchoMind Law edition (D-016): payloads carry privileged content.
+_DUMP_FLAG = "/tmp/dump_payload"
+_DUMP_FILE = "/tmp/last_payloads.jsonl"
+
+
+def _maybe_dump_payload(payload: dict) -> None:
+    if is_law():
+        return
+    try:
+        import os as _os
+        if _os.path.exists(_DUMP_FLAG):
+            with open(_DUMP_FILE, "a") as _f:
+                _f.write(json.dumps(payload) + "\n")
+    except Exception:
+        pass
 
 
 def _log_chat_request(url: str, payload: dict, stream: bool) -> None:
     """Log full LLM request payload when LLM_LOG_PAYLOAD is enabled. Uses WARNING so it shows with default log level."""
-    if not getattr(SETTINGS, "LLM_LOG_PAYLOAD", False):
+    if not getattr(SETTINGS, "LLM_LOG_PAYLOAD", False) or is_law():
         return
     mode = "stream" if stream else "sync"
     payload_json = json.dumps(payload, ensure_ascii=False, indent=2)
@@ -177,13 +195,7 @@ class OpenAICompatLLMStream:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"      # 'required' -> HTTP 400, 'none' is not honoured
         _log_chat_request(self.url, payload, stream=True)
-        try:  # debug tap: `touch /tmp/dump_payload` inside the container to record the last requests
-            import os as _os
-            if _os.path.exists("/tmp/dump_payload"):
-                with open("/tmp/last_payloads.jsonl", "a") as _f:
-                    _f.write(json.dumps(payload) + "\n")
-        except Exception:
-            pass
+        _maybe_dump_payload(payload)
         logger.info(
             "VOICE_LLM stream start url=%s model=%s stream=true prompt_msgs=%d max_tokens=%d temperature=%s tools=%d",
             self.url, self.model, len(messages), payload["max_tokens"], payload["temperature"], len(tools or []),
