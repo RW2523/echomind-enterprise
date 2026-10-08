@@ -71,7 +71,10 @@ services:
     environment:
       - ECHOMIND_EDITION=law
       - VOICE_AUTH_ENABLED=1
-      - VOICE_AUTH_SECRET=${LAW_AUTH_SECRET:?set LAW_AUTH_SECRET in .env.law (openssl rand -hex 32)}
+      # The voice service validates browser sessions through the backend and uses on-behalf-of
+      # tokens (D-013); it does not need the backend's signing secret, so it is not given it.
+      - VOICE_AUTH_SECRET=
+      - VOICE_ALLOWED_ORIGINS=${LAW_CORS_ORIGINS:-https://localhost:3553,http://localhost:3110}
       - VOICE_OFFLINE=1
       - LLM_URL=http://host.docker.internal:${LAW_LLM_HOST_PORT:-8355}/v1/chat/completions
       - BACKEND_CHAT_URL=http://backend:8000

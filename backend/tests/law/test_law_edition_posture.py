@@ -47,6 +47,8 @@ def test_secure_configuration_has_no_violations():
         ({"DOCGEN_IMAGE_BACKEND": " NIM "}, "cloud_egress"),
         ({"ECHOMIND_LOG_FULL_PROMPTS": "1"}, "content_logging"),
         ({"ECHOMIND_LOG_FULL_PROMPTS": "true"}, "content_logging"),
+        ({"AUTH_ADMIN_PASSWORD": "admin12345"}, "weak_admin_password"),
+        ({"AUTH_ADMIN_PASSWORD": "password1234"}, "weak_admin_password"),
     ],
 )
 def test_each_insecure_setting_is_a_violation(override, code):
@@ -102,7 +104,7 @@ def test_law_backend_refuses_to_start_when_insecure(tmp_path):
 
 def test_law_backend_starts_when_secure_and_hides_api_docs(tmp_path):
     r = _import_main(tmp_path, ECHOMIND_EDITION="law", AUTH_ENABLED="1", AUTH_SECRET=STRONG_SECRET,
-                     AUTH_ADMIN_PASSWORD="test-admin-password-1", CORS_ALLOW_ORIGINS="http://localhost:5174")
+                     AUTH_ADMIN_PASSWORD="seven brave otters swim", CORS_ALLOW_ORIGINS="http://localhost:5174")
     assert r.returncode == 0, r.stderr[-2000:]
     assert "DOCS None None" in r.stdout
 
@@ -148,7 +150,7 @@ def test_log_filter_is_inert_outside_law(monkeypatch):
 
 def test_law_backend_installs_the_log_filter(tmp_path):
     r = _import_main(tmp_path, ECHOMIND_EDITION="law", AUTH_ENABLED="1", AUTH_SECRET=STRONG_SECRET,
-                     AUTH_ADMIN_PASSWORD="test-admin-password-1", CORS_ALLOW_ORIGINS="http://localhost:5174")
+                     AUTH_ADMIN_PASSWORD="seven brave otters swim", CORS_ALLOW_ORIGINS="http://localhost:5174")
     assert r.returncode == 0, r.stderr[-2000:]
     probe = subprocess.run(
         [sys.executable, "-c",
@@ -156,7 +158,33 @@ def test_law_backend_installs_the_log_filter(tmp_path):
         cwd=BACKEND_DIR, capture_output=True, text=True, timeout=120,
         env={**{k: v for k, v in os.environ.items() if not k.startswith(("AUTH_", "CORS_", "ECHOMIND_"))},
              "ECHOMIND_DATA_DIR": str(tmp_path), "ECHOMIND_EDITION": "law", "AUTH_ENABLED": "1",
-             "AUTH_SECRET": STRONG_SECRET, "AUTH_ADMIN_PASSWORD": "test-admin-password-1",
+             "AUTH_SECRET": STRONG_SECRET, "AUTH_ADMIN_PASSWORD": "seven brave otters swim",
              "CORS_ALLOW_ORIGINS": "http://localhost:5174", "PYTHONWARNINGS": "ignore"})
     assert probe.returncode == 0, probe.stderr[-2000:]
     assert "question=<28 chars>" in probe.stdout and "Voss" not in probe.stdout + probe.stderr
+
+
+def test_unset_admin_password_is_not_a_violation():
+    assert "weak_admin_password" not in _codes({**SECURE, "AUTH_ADMIN_PASSWORD": ""})
+
+
+def test_first_admin_password_goes_to_a_private_file_not_the_log(fresh_db, law_edition, monkeypatch, caplog):
+    import logging
+    import os
+    import stat
+    from app.core import auth
+    from app.core.config import settings
+    from app.core.db import init_db
+    monkeypatch.setattr(settings, "AUTH_ENABLED", True)
+    monkeypatch.setattr(settings, "AUTH_SECRET", STRONG_SECRET)
+    monkeypatch.setattr(settings, "AUTH_ADMIN_PASSWORD", "")
+    init_db()
+    with caplog.at_level(logging.DEBUG):
+        auth.seed_admin()
+    path = os.path.join(settings.DATA_DIR, "legal", "bootstrap_admin_password")
+    pw = open(path).read().strip()
+    assert len(pw) >= 20 and stat.S_IMODE(os.stat(path).st_mode) == 0o600
+    assert pw not in caplog.text and "legal/bootstrap_admin_password" in caplog.text
+    assert auth.authenticate("admin", pw)
+    from app.legal.identity import accounts
+    assert "firm_admin" in accounts.roles_of(auth.get_user_by_username("admin")["id"])

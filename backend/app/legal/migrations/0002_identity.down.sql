@@ -1,0 +1,13 @@
+DROP TABLE mfa_recovery_codes;
+DROP TABLE sessions;
+DROP TABLE user_roles;
+ALTER TABLE users DROP COLUMN password_changed_at;
+ALTER TABLE users DROP COLUMN locked_until;
+ALTER TABLE users DROP COLUMN failed_logins;
+ALTER TABLE users DROP COLUMN mfa_last_step;
+ALTER TABLE users DROP COLUMN mfa_enabled;
+ALTER TABLE users DROP COLUMN mfa_secret;
+ALTER TABLE users DROP COLUMN status;
+ALTER TABLE users DROP COLUMN email;
+ALTER TABLE users DROP COLUMN display_name;
+ALTER TABLE users DROP COLUMN org_id;

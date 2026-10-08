@@ -176,15 +176,54 @@ def root():
     with open("static/index.html", "r", encoding="utf-8") as f:
         return HTMLResponse(f.read())
 
+async def _law_ws_gate(ws: WebSocket):
+    """EchoMind Law (S1.1): allowed Origin + live backend session, exchanged for on-behalf-of
+    tokens. Returns the BackendAuth, or None to refuse the handshake."""
+    from .auth_check import BackendAuth, law_origin_ok, law_session_user
+    cookie = ws.headers.get("cookie", "")
+    if not law_origin_ok(ws.headers.get("origin", "")):
+        return None
+    if not await asyncio.to_thread(law_session_user, cookie):
+        return None
+    backend_auth = BackendAuth(cookie)
+    return backend_auth if await asyncio.to_thread(backend_auth.refresh) else None
+
+
+async def _law_ws_watch(ws: WebSocket, backend_auth) -> None:
+    """Close the socket (4401) once the user's session is revoked or expires."""
+    interval = float(os.getenv("VOICE_WS_RECHECK_SEC", "60"))
+    try:
+        while True:
+            await asyncio.sleep(interval)
+            if not await asyncio.to_thread(backend_auth.still_valid):
+                try:
+                    await ws.close(code=4401)
+                except Exception:
+                    pass
+                return
+    except asyncio.CancelledError:
+        return
+
+
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
-    # Auth gate (Phase 0b, opt-in via VOICE_AUTH_ENABLED): validate the backend session cookie.
-    from .auth_check import auth_enabled, session_active
-    if auth_enabled() and not await asyncio.to_thread(session_active, ws.cookies.get("echomind_token", "")):
-        await ws.close(code=1008)
-        return
+    backend_auth, watcher = None, None
+    if is_law():
+        backend_auth = await _law_ws_gate(ws)
+        if backend_auth is None:
+            await ws.close(code=1008)
+            return
+    else:
+        # Auth gate (Phase 0b, opt-in via VOICE_AUTH_ENABLED): validate the backend session cookie.
+        from .auth_check import auth_enabled, session_active
+        if auth_enabled() and not await asyncio.to_thread(session_active, ws.cookies.get("echomind_token", "")):
+            await ws.close(code=1008)
+            return
     await ws.accept()
     sess = OmniSessionA(ws)
+    sess.backend_auth = backend_auth
+    if backend_auth is not None:
+        watcher = asyncio.create_task(_law_ws_watch(ws, backend_auth))
     await sess.start(str(uuid.uuid4()))
     try:
         while True:
@@ -219,4 +258,6 @@ async def ws_endpoint(ws: WebSocket):
     except Exception:
         pass
     finally:
+        if watcher is not None:
+            watcher.cancel()
         await sess.close()

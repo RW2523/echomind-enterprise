@@ -729,6 +729,9 @@ class OmniSessionA:
 
     def __init__(self, ws):
         self.ws = ws
+        # EchoMind Law: set by the server to an auth_check.BackendAuth; every backend RAG call then
+        # carries a short-lived on-behalf-of token for the signed-in user (D-013).
+        self.backend_auth = None
 
         self.sr = SETTINGS.SR
         self.frame_ms = SETTINGS.FRAME_MS
@@ -1486,6 +1489,12 @@ class OmniSessionA:
             "tool_query": topic,
         }
 
+    def _backend_headers(self) -> dict:
+        headers = {"Content-Type": "application/json"}
+        if self.backend_auth is not None:
+            headers.update(self.backend_auth.headers())
+        return headers
+
     async def _reply_from_backend_rag_stream(
         self,
         my_gen: int,
@@ -1530,7 +1539,7 @@ class OmniSessionA:
                     json=payload,
                     stream=True,
                     timeout=180,
-                    headers={"Content-Type": "application/json"},
+                    headers=self._backend_headers(),
                 ) as r:
                     backend_handle.response = r
                     r.raise_for_status()
@@ -1697,7 +1706,7 @@ class OmniSessionA:
                         f"{base}/api/chat/ask-voice",
                         json=payload,
                         timeout=120,
-                        headers={"Content-Type": "application/json"},
+                        headers=self._backend_headers(),
                     )
                     rr.raise_for_status()
                     return (rr.json().get("answer") or "").strip()

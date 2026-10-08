@@ -42,7 +42,8 @@ def test_every_insert_in_the_code_matches_the_fresh_schema(fresh_db, law_edition
         src = py.read_text(encoding="utf-8")
         for m in _INSERT_RE.finditer(src):
             table = m.group(1)
-            cols = {c.strip() for c in m.group(2).split(",") if c.strip()}
+            # Column lists may span implicitly concatenated string literals ("a, " "b"): drop quotes/whitespace.
+            cols = {re.sub(r"[\"'\s]", "", c) for c in m.group(2).split(",")} - {""}
             existing = _columns(fresh_db, table)
             if not existing:
                 problems.append(f"{py.relative_to(APP_DIR)}: table {table} missing")

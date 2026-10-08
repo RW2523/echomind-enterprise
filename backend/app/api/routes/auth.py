@@ -1,5 +1,11 @@
-"""Phase 0b auth routes: /api/auth/{config,login,logout,me}. Active only when AUTH_ENABLED."""
+"""Phase 0b auth routes: /api/auth/{config,login,logout,me}. Active only when AUTH_ENABLED.
+
+In the EchoMind Law edition (S1.1, SEC-01) the same routes run on server-side sessions with
+mandatory MFA, lockout and CSRF, and the Law-only routes below (MFA, sessions, password,
+on-behalf-of tokens, account disable/enable) become available. Legacy editions are unchanged.
+"""
 import logging
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
@@ -7,6 +13,7 @@ from pydantic import BaseModel
 from ...core.config import settings
 from ...core import auth as authmod
 from ...core import audit as auditmod
+from ...core.edition import is_law
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -24,7 +31,9 @@ def auth_config():
 
 
 @router.post("/login")
-def login(inp: LoginIn, response: Response):
+def login(inp: LoginIn, request: Request, response: Response):
+    if is_law():
+        return _law_login(inp, request, response)
     user = authmod.authenticate(inp.username, inp.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -38,6 +47,11 @@ def login(inp: LoginIn, response: Response):
 
 @router.post("/logout")
 def logout(request: Request, response: Response):
+    if is_law():
+        from ...legal.identity import SESSION_COOKIE, sessions
+        sessions.revoke(request.cookies.get(SESSION_COOKIE, ""), reason="logout")
+        _clear_law_cookies(response)
+        return {"ok": True}
     # Revoke server-side too: clearing the cookie alone left the token valid until expiry (NC-2026-012).
     authmod.revoke_token(authmod.token_from_request(request))
     response.delete_cookie("echomind_token")
@@ -49,6 +63,8 @@ def me(request: Request):
     payload = authmod.user_from_request(request)
     if not payload:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if is_law():
+        return _law_me(payload)
     return {"user": {"id": payload.get("sub"), "username": payload.get("username"), "role": payload.get("role"), "tenant": payload.get("tenant", "")}}
 
 
@@ -79,6 +95,8 @@ def admin_list_users(request: Request):
 def admin_create_user(request: Request, inp: CreateUserIn):
     _require_admin(request)
     role = inp.role if inp.role in ("admin", "user") else "user"
+    if is_law():
+        _enforce_password_policy(inp.password, inp.username)
     try:
         user = authmod.create_user(inp.username, inp.password, role=role, tenant=inp.tenant)
     except ValueError as e:
@@ -91,6 +109,11 @@ def admin_delete_user(request: Request, username: str):
     payload = _require_admin(request)
     if username == payload.get("username"):
         raise HTTPException(status_code=400, detail="You cannot delete your own account")
+    if is_law():
+        from ...legal.identity import accounts, sessions
+        acct = accounts.get_by_username(username)
+        if acct:
+            sessions.revoke_all_for_user(acct["id"], reason="account_deleted")
     authmod.delete_user(username)
     return {"ok": True, "deleted": username}
 
@@ -107,3 +130,235 @@ def admin_usage(request: Request):
     """Admin-only: usage metering summary (per-user request counts)."""
     _require_admin(request)
     return auditmod.usage_summary()
+
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# EchoMind Law edition (S1.1, SEC-01)
+# ═════════════════════════════════════════════════════════════════════════════════
+_SIGN_IN_FAILED = "Sign-in failed. Check your username and password, or try again later."
+# Verified against for unknown usernames so a miss costs the same time as a wrong password.
+_DUMMY_HASH = authmod.hash_password("echomind-law-timing-equaliser")
+
+
+def _require_law() -> None:
+    if not is_law():
+        raise HTTPException(status_code=404, detail="Not Found")
+
+
+def _client_meta(request: Request) -> tuple[str, str]:
+    return (request.client.host if request.client else ""), (request.headers.get("user-agent") or "")
+
+
+def _set_law_cookies(response: Response, token: str, csrf: str, mfa_verified: bool) -> None:
+    from ...legal.identity import CSRF_COOKIE, SESSION_COOKIE
+    max_age = int(settings.LEGAL_SESSION_ABSOLUTE_HOURS * 3600) if mfa_verified else settings.LEGAL_MFA_PENDING_MIN * 60
+    # __Host- prefix: Secure, Path=/, no Domain. The CSRF cookie is readable by the SPA, which echoes
+    # it in X-CSRF-Token; the session cookie is HttpOnly and never visible to scripts.
+    response.set_cookie(SESSION_COOKIE, token, max_age=max_age, path="/", secure=True, httponly=True, samesite="strict")
+    response.set_cookie(CSRF_COOKIE, csrf, max_age=max_age, path="/", secure=True, httponly=False, samesite="strict")
+
+
+def _clear_law_cookies(response: Response) -> None:
+    from ...legal.identity import CSRF_COOKIE, SESSION_COOKIE
+    for name, http_only in ((SESSION_COOKIE, True), (CSRF_COOKIE, False)):
+        response.delete_cookie(name, path="/", secure=True, httponly=http_only, samesite="strict")
+
+
+def _public_user(acct: dict) -> dict:
+    from ...legal.identity import accounts
+    return {"id": acct["id"], "username": acct["username"], "role": acct["role"], "tenant": acct.get("tenant", ""),
+            "roles": accounts.roles_of(acct["id"])}
+
+
+def _enforce_password_policy(password: str, username: str) -> None:
+    from ...legal.identity import passwords
+    problems = passwords.problems(password, username)
+    if problems:
+        raise HTTPException(status_code=400, detail=passwords.describe(problems))
+
+
+def _law_login(inp: LoginIn, request: Request, response: Response) -> dict:
+    from ...legal.identity import accounts, sessions
+    acct = accounts.get_by_username(inp.username)
+    if acct is None:
+        authmod.verify_password(inp.password, _DUMMY_HASH)
+        raise HTTPException(status_code=401, detail=_SIGN_IN_FAILED)
+    if accounts.is_locked(acct) or acct["status"] != "active":
+        authmod.verify_password(inp.password, acct["password_hash"])
+        logger.warning("Auth: sign-in refused for locked or disabled account %s", acct["id"])
+        raise HTTPException(status_code=401, detail=_SIGN_IN_FAILED)
+    if not authmod.verify_password(inp.password, acct["password_hash"]):
+        accounts.register_failure(acct["id"])
+        raise HTTPException(status_code=401, detail=_SIGN_IN_FAILED)
+    ip, ua = _client_meta(request)
+    # Failure counters reset only once sign-in is complete, so knowing the password does not buy
+    # unlimited guesses at the MFA code.
+    if acct["mfa_enabled"] or settings.LEGAL_MFA_REQUIRED:
+        token, csrf = sessions.create(acct["id"], mfa_verified=False, ip=ip, user_agent=ua)
+        _set_law_cookies(response, token, csrf, mfa_verified=False)
+        return {"status": "mfa_required" if acct["mfa_enabled"] else "mfa_enrollment_required"}
+    accounts.register_success(acct["id"])
+    token, csrf = sessions.create(acct["id"], mfa_verified=True, ip=ip, user_agent=ua)
+    _set_law_cookies(response, token, csrf, mfa_verified=True)
+    return {"status": "ok", "user": _public_user(acct)}
+
+
+def _law_me(payload: dict) -> dict:
+    from ...legal.identity import accounts
+    acct = accounts.get(payload["sub"])
+    s = payload["session"]
+    return {"user": _public_user(acct),
+            "session": {"auth": payload["auth"], "mfa_enrolled": acct["mfa_enabled"],
+                        "idle_expires_at": s["idle_expires_at"], "abs_expires_at": s["abs_expires_at"]}}
+
+
+def _complete_sign_in(request: Request, response: Response, user_id: str) -> dict:
+    """Upgrade a partial session to a full one under a fresh token (no session fixation)."""
+    from ...legal.identity import SESSION_COOKIE, accounts, sessions
+    accounts.register_success(user_id)
+    current = request.cookies.get(SESSION_COOKIE, "")
+    s = sessions.lookup(current, slide=False)
+    if s and s["mfa_verified"]:
+        return {"status": "ok", "user": _public_user(accounts.get(user_id))}
+    token, csrf = sessions.rotate(current, mfa_verified=True)
+    _set_law_cookies(response, token, csrf, mfa_verified=True)
+    return {"status": "ok", "user": _public_user(accounts.get(user_id))}
+
+
+def _failed_code(request: Request, user_id: str) -> None:
+    from ...legal.identity import SESSION_COOKIE, accounts, sessions
+    accounts.register_failure(user_id)
+    if accounts.is_locked(accounts.get(user_id)):
+        sessions.revoke(request.cookies.get(SESSION_COOKIE, ""), reason="locked_out")
+    raise HTTPException(status_code=401, detail="That code was not accepted.")
+
+
+class CodeIn(BaseModel):
+    code: str
+
+
+@router.post("/mfa/verify")
+def mfa_verify(inp: CodeIn, request: Request, response: Response):
+    """Second sign-in step: a current authenticator code, or an unused recovery code."""
+    _require_law()
+    from ...legal.identity import mfa
+    p = authmod.user_from_request(request, allow_partial=True)
+    if not mfa.verify_login_code(p["sub"], inp.code):
+        _failed_code(request, p["sub"])
+    return _complete_sign_in(request, response, p["sub"])
+
+
+@router.post("/mfa/enroll")
+def mfa_enroll(request: Request):
+    """Start authenticator enrolment; returns the shared secret once."""
+    _require_law()
+    from ...legal.identity import mfa
+    p = authmod.user_from_request(request, allow_partial=True)
+    if mfa.is_enrolled(p["sub"]):
+        raise HTTPException(status_code=409, detail="An authenticator is already enrolled for this account.")
+    secret = mfa.begin_enrollment(p["sub"])
+    return {"secret": secret, "otpauth_uri": mfa.otpauth_uri(secret, p["username"])}
+
+
+@router.post("/mfa/confirm")
+def mfa_confirm(inp: CodeIn, request: Request, response: Response):
+    """Finish enrolment with a code from the new authenticator; returns recovery codes once."""
+    _require_law()
+    from ...legal.identity import mfa
+    p = authmod.user_from_request(request, allow_partial=True)
+    if not mfa.confirm_enrollment(p["sub"], inp.code):
+        _failed_code(request, p["sub"])
+    codes = mfa.issue_recovery_codes(p["sub"])
+    return {**_complete_sign_in(request, response, p["sub"]), "recovery_codes": codes}
+
+
+@router.get("/sessions")
+def list_sessions(request: Request):
+    _require_law()
+    from ...legal.identity import sessions
+    p = authmod.user_from_request(request)
+    current = p["sid"][:16]
+    return {"sessions": [{**s, "current": s["id"] == current} for s in sessions.list_for_user(p["sub"])]}
+
+
+@router.delete("/sessions/{session_id}")
+def revoke_session(session_id: str, request: Request, response: Response):
+    _require_law()
+    from ...legal.identity import sessions
+    p = authmod.user_from_request(request)
+    if not sessions.revoke_by_public_id(p["sub"], session_id, reason="revoked_by_user"):
+        raise HTTPException(status_code=404, detail="Not Found")
+    if session_id == p["sid"][:16]:
+        _clear_law_cookies(response)
+    return {"ok": True}
+
+
+class PasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/password")
+def change_password(inp: PasswordIn, request: Request):
+    _require_law()
+    from ...legal.identity import SESSION_COOKIE, accounts
+    p = authmod.user_from_request(request)
+    acct = accounts.get(p["sub"])
+    if not authmod.verify_password(inp.current_password, acct["password_hash"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect.")
+    _enforce_password_policy(inp.new_password, acct["username"])
+    revoked = accounts.change_password(acct["id"], inp.new_password, keep_token=request.cookies.get(SESSION_COOKIE, ""))
+    return {"ok": True, "revoked_sessions": revoked}
+
+
+class OboIn(BaseModel):
+    audience: str
+
+
+@router.post("/obo-token")
+def obo_token(inp: OboIn, request: Request):
+    """Exchange a browser session for a short-lived token a service (voice) uses on the user's behalf."""
+    _require_law()
+    from ...legal.identity import obo
+    p = authmod.user_from_request(request)
+    if p["auth"] != "session":
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if inp.audience != "voice":
+        raise HTTPException(status_code=400, detail="Unknown audience")
+    return {"token": obo.issue(p["session"], audience="voice"), "expires_in": settings.LEGAL_OBO_TTL_SEC}
+
+
+def _admin_target(request: Request, username: str) -> dict:
+    _require_law()
+    from ...legal.identity import accounts
+    _require_admin(request)
+    acct = accounts.get_by_username(username)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Not Found")
+    return acct
+
+
+@router.post("/users/{username}/revoke-sessions")
+def admin_revoke_sessions(username: str, request: Request):
+    from ...legal.identity import sessions
+    acct = _admin_target(request, username)
+    return {"ok": True, "revoked": sessions.revoke_all_for_user(acct["id"], reason="revoked_by_admin")}
+
+
+@router.post("/users/{username}/disable")
+def admin_disable_user(username: str, request: Request):
+    from ...legal.identity import accounts
+    acct = _admin_target(request, username)
+    if acct["id"] == authmod.user_from_request(request)["sub"]:
+        raise HTTPException(status_code=400, detail="You cannot disable your own account")
+    accounts.set_status(username, "disabled")
+    return {"ok": True}
+
+
+@router.post("/users/{username}/enable")
+def admin_enable_user(username: str, request: Request):
+    from ...legal.identity import accounts
+    _admin_target(request, username)
+    accounts.set_status(username, "active")
+    accounts.register_success(accounts.get_by_username(username)["id"])  # clear any lockout
+    return {"ok": True}

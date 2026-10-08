@@ -3,7 +3,7 @@ import { getActiveNamespace } from '../packs';
 export const API_BASE = (import.meta as any).env?.VITE_API_BASE || "";
 
 /** auth (Phase 0b) — cookie-based; same-origin requests carry the httpOnly session automatically. */
-export interface AuthUser { id: string; username: string; role: string; tenant?: string; }
+export interface AuthUser { id: string; username: string; role: string; tenant?: string; roles?: string[]; }
 
 export async function getAuthConfig(): Promise<{ auth_enabled: boolean }> {
   try {
@@ -22,19 +22,43 @@ export async function getMe(): Promise<AuthUser | null> {
   } catch (_) { return null; }
 }
 
-export async function login(username: string, password: string): Promise<AuthUser> {
-  const r = await fetch(`${API_BASE}/api/auth/login`, {
+/** Sign-in outcome. Legacy editions always return "ok"; the Law edition (S1.1) first asks for an
+ *  authenticator code, or for authenticator set-up on first sign-in. */
+export type LoginStatus = 'ok' | 'mfa_required' | 'mfa_enrollment_required';
+export interface LoginResult { status: LoginStatus; user?: AuthUser; }
+
+async function authPost<T>(path: string, body?: unknown, fallback = "Sign-in failed"): Promise<T> {
+  const r = await fetch(`${API_BASE}/api/auth/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (!r.ok) {
-    let msg = "Login failed";
+    let msg = fallback;
     try { const e = await r.json(); msg = e.detail || msg; } catch (_) {}
     throw new Error(msg);
   }
-  const d = await r.json();
-  return d.user as AuthUser;
+  return (await r.json()) as T;
+}
+
+export async function login(username: string, password: string): Promise<LoginResult> {
+  const d = await authPost<{ status?: LoginStatus; user?: AuthUser }>("login", { username, password }, "Login failed");
+  return { status: d.status ?? 'ok', user: d.user };
+}
+
+/** Second sign-in step: a current authenticator code or an unused recovery code. */
+export async function mfaVerify(code: string): Promise<AuthUser> {
+  return (await authPost<{ user: AuthUser }>("mfa/verify", { code })).user;
+}
+
+/** Start authenticator set-up; the secret is shown once. */
+export async function mfaEnroll(): Promise<{ secret: string; otpauth_uri: string }> {
+  return authPost("mfa/enroll", undefined, "Could not start authenticator set-up");
+}
+
+/** Finish set-up with a code from the new authenticator; recovery codes are returned once. */
+export async function mfaConfirm(code: string): Promise<{ user: AuthUser; recovery_codes: string[] }> {
+  return authPost("mfa/confirm", { code });
 }
 
 export async function logout(): Promise<void> {

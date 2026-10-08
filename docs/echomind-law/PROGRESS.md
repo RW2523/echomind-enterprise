@@ -8,9 +8,9 @@
 |---|---|
 | Date | 2026-10-08 |
 | Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); slice branch `law/s1.0-foundations` |
-| Phase | Phase 1: **S1.0 complete** (branch `law/s1.0-foundations`, not yet merged into `feature/echomind-law`) |
+| Phase | Phase 1: S1.0 merged (`2a91cf2`); **S1.1 complete** on `law/s1.1-identity` (not yet merged) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001_foundation` (Law edition only; applied in local `.law-data` dev DB) |
+| Migrations | `0001_foundation`, `0002_identity` (Law edition only; applied in local `.law-data` dev DB) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -52,6 +52,39 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - read-only reuse of the host-published LLM (:8355) and embeddings (:11435), for about 14 questions and 5 chunk embeddings;
 - one public model download into the host HF cache: `cross-encoder/ms-marco-MiniLM-L-6-v2`, the same model production uses.
 
+### Session 1 (continued) — S1.1 Identity and sessions
+- 2026-10-08: owner approved merging S1.0 → merged `2a91cf2`. No cherry-pick to `main` and no compose `up` (not approved).
+- Commits on `law/s1.1-identity`:
+  - `4a88f02` identity building blocks
+  - `1be9500` backend wiring
+  - `c2ac0cd` voice
+  - `b052424` frontend
+  - `acf6904` dev tooling
+- **Delivered:**
+  - Server-side sessions: hashed tokens, 30 min idle / 10 h absolute, rotation after MFA.
+  - TOTP MFA with recovery codes.
+  - Lockout (MFA guesses count) and the password policy.
+  - Uniform sign-in failures.
+  - `__Host-` cookies and CSRF.
+  - Deny-by-default guard (the client-error sink now needs a session).
+  - Session list and revoke; password change signs out elsewhere.
+  - Admin disable, enable and revoke.
+  - Law-safe admin bootstrap (never logged).
+  - WebSocket session, Origin check and 60 s revocation re-check (transcribe and voice).
+  - Voice on-behalf-of tokens, **fixing the audit's voice→RAG 401**.
+  - Frontend MFA sign-in, CSRF fetch wrapper and session-expiry return to sign-in.
+  - Dev tooling with MFA.
+- **As built vs. plan (S1.1):**
+  - **OIDC not built.** It is BLOCKED (P-011), and verifying the IdP's RS256 tokens needs a crypto library that is not yet approved. The plan's "stub IdP" tests were skipped rather than shipping a fake.
+  - **Revoke-on-role-change** is not wired: there is no role-change API until S1.2. Disable, delete, password change and admin password reset do revoke sessions.
+  - **MFA secret** is stored base32 in `users.mfa_secret`. Encryption at rest follows D-014 (LUKS on the host, plus app-level encryption once `cryptography` is approved).
+  - The voice service in the Law edition no longer receives `AUTH_SECRET` (least privilege). Its posture requires `VOICE_ALLOWED_ORIGINS` instead of a shared secret.
+  - Admin routes still check the legacy `role == "admin"`. The S1.2 policy engine replaces this with firm roles.
+- **Found while building:** backend app shutdown hangs because the CUDA-fault watchdog's thread never finishes. This is pre-existing and unrelated to Law. It was raised as a separate task (chip "Fix backend shutdown hang from CUDA watchdog"), and tests avoid running the app lifespan meanwhile.
+- **Residual risks to address later:**
+  - Anyone holding a new user's initial password can enrol their own authenticator at first sign-in. Planned mitigation (S1.3 admin UX): an admin-issued one-time enrolment link and a forced password change on first sign-in.
+  - Throttling is per account (lockout); there is no per-IP sign-in throttle. `RATE_LIMIT_PER_MIN` exists but is off.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -66,7 +99,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 | ID | Status | Slice | Notes |
 |---|---|---|---|
-| SEC-01 | PARTIAL | S1.1 | S1.0: Law edition refuses insecure startup (backend and voice); API docs hidden. OIDC BLOCKED on P-011 |
+| SEC-01 | PARTIAL (local accounts complete) | S1.1 | Local accounts: sessions, TOTP MFA, lockout, CSRF, deny-by-default, WS gating, voice OBO. All tested, plus live API checks. OIDC BLOCKED (P-011). Revoke-on-role-change → S1.2. In-browser walkthrough → S1.3 shell |
 | SEC-02 | MISSING | S1.2–S1.4 | |
 | SEC-03 | INCOMPATIBLE | S1.6–S1.7 | |
 | SEC-04 | PARTIAL | S1.5 | S1.0: content-free logs in the Law edition (backend and voice, verified by log scan) |
@@ -101,5 +134,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-1. Owner reviews S1.0 (diff `feature/echomind-law..law/s1.0-foundations`) and approves merging it into `feature/echomind-law`, and optionally cherry-picking the shared fixes to `main`.
-2. Start **S1.1 Identity and sessions** on branch `law/s1.1-identity`. First failing test: `backend/tests/law/test_law_auth_routes.py::test_every_law_route_and_ws_denies_anonymous`, generated from the route table, HTTP and WebSocket. Then server-side sessions (`0002_identity`), MFA (TOTP, stdlib), CSRF, lockout, WebSocket session checks, voice on-behalf-of token.
+1. Owner reviews S1.1 (`git log feature/echomind-law..law/s1.1-identity`) and approves merging it.
+2. Start **S1.2 Matters, memberships, policy engine** on `law/s1.2-matters`:
+   - First failing test: `backend/tests/law/test_law_policy.py`, the role × membership-validity × matter-status × sensitivity matrix for `legal/policy.py::authorize()`.
+   - Then the T01 fixture (2 clients, 4 matters, walled matter M-202), migration `0003_matters`, the `/api/legal/clients|matters|memberships` routes with non-disclosing 404s, and wiring revoke-on-role-change.

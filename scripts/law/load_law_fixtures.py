@@ -58,9 +58,10 @@ def main() -> int:
         password = pw_file.read_text().strip() if pw_file.exists() else ""
     headers = {}
     if _request(f"{args.base}/auth/config").get("auth_enabled"):
-        token = _request(f"{args.base}/auth/login", json.dumps({"username": user, "password": password}).encode(),
-                         {"Content-Type": "application/json"}).get("token")
-        headers["Authorization"] = f"Bearer {token}"
+        # Law edition: cookie session + CSRF + TOTP (S1.1). The opener carries them for every request.
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        import law_client
+        urllib.request.install_opener(law_client.open_session(args.base, user, password))
 
     files = sorted(p for p in FIXTURES.glob("*.md") if p.name != "PROVENANCE.md")
     for path in files:

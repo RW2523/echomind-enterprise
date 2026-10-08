@@ -49,6 +49,8 @@ def posture_inputs(settings=None, env: Optional[Mapping[str, str]] = None) -> di
         "CORS_ALLOW_ORIGINS": settings.CORS_ALLOW_ORIGINS or "",
         "DOCGEN_IMAGE_BACKEND": e.get("DOCGEN_IMAGE_BACKEND", "none"),
         "ECHOMIND_LOG_FULL_PROMPTS": e.get("ECHOMIND_LOG_FULL_PROMPTS", "0"),
+        "AUTH_ADMIN_USER": settings.AUTH_ADMIN_USER or "admin",
+        "AUTH_ADMIN_PASSWORD": settings.AUTH_ADMIN_PASSWORD or "",
     }
 
 
@@ -67,6 +69,11 @@ def posture_violations(inputs: Mapping) -> list[Violation]:
         out.append(Violation("cloud_egress", "DOCGEN_IMAGE_BACKEND=nim sends prompts to a cloud API"))
     if str(inputs.get("ECHOMIND_LOG_FULL_PROMPTS") or "").strip().lower() in _TRUE:
         out.append(Violation("content_logging", "ECHOMIND_LOG_FULL_PROMPTS must be off"))
+    admin_pw = str(inputs.get("AUTH_ADMIN_PASSWORD") or "")
+    if admin_pw:
+        from ..legal.identity.passwords import problems
+        if problems(admin_pw, str(inputs.get("AUTH_ADMIN_USER") or "admin")):
+            out.append(Violation("weak_admin_password", "AUTH_ADMIN_PASSWORD does not meet the Law password policy"))
     return out
 
 

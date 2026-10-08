@@ -167,8 +167,36 @@ app.add_middleware(
 _AUTH_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/config", "/api/auth/logout", "/api/client-error"}
 
 
+# Law edition (S1.1, SEC-01): deny by default. Only these are reachable without a session; the
+# client-error sink is not (it would let anyone write into the logs).
+_LAW_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/config", "/api/auth/logout"}
+_MUTATING = {"POST", "PUT", "PATCH", "DELETE"}
+
+
+def _law_guard(request: Request):
+    """None to let the request through, or the error response to return."""
+    from .legal.identity import CSRF_HEADER
+    from .legal.identity.principal import PARTIAL_PATHS
+    from .legal.identity.sessions import csrf_ok
+    path = request.url.path
+    if request.method == "OPTIONS" or path in _LAW_PUBLIC_PATHS or not path.startswith("/api/"):
+        return None
+    principal = user_from_request(request, allow_partial=path in PARTIAL_PATHS)
+    if not principal:
+        return JSONResponse({"detail": "Not authenticated"}, status_code=401)
+    # Cookie sessions must echo the per-session CSRF token on state-changing requests. Bearer
+    # (on-behalf-of) callers are services, never driven by a browser, so CSRF does not apply.
+    if request.method in _MUTATING and principal["auth"] == "session" \
+            and not csrf_ok(principal["session"], request.headers.get(CSRF_HEADER)):
+        return JSONResponse({"detail": "CSRF check failed"}, status_code=403)
+    return None
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
+    if is_law():
+        denied = _law_guard(request)
+        return denied if denied is not None else await call_next(request)
     if settings.AUTH_ENABLED and request.method != "OPTIONS":
         path = request.url.path
         if path.startswith("/api/") and path not in _AUTH_PUBLIC_PATHS:

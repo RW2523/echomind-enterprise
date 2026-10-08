@@ -67,6 +67,11 @@ def _login(base: str, user: str, password: str) -> None:
     try:
         r = _post(base, "/auth/login", {"username": user, "password": password}, timeout=30)
         _AUTH_TOKEN = r.get("token")
+        if not _AUTH_TOKEN and r.get("status"):
+            # EchoMind Law edition: no bearer token; a cookie session with CSRF and TOTP instead.
+            sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "law"))
+            import law_client
+            urllib.request.install_opener(law_client.open_session(base, user, password))
         print(f"authenticated as {user}\n")
     except Exception as e:
         sys.exit(f"login failed for user '{user}': {e}\n"

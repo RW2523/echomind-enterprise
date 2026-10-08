@@ -17,6 +17,7 @@ from typing import Optional
 
 from .config import settings
 from .db import get_conn
+from .edition import is_law
 from ..utils.ids import new_id, now_iso
 
 logger = logging.getLogger(__name__)
@@ -207,8 +208,12 @@ def seed_admin() -> None:
     """Ensure an admin login exists once auth is in play.
     - AUTH_ADMIN_PASSWORD set -> (re)set the admin password every boot.
     - else, on first run with no users -> create admin with a random password and log it once.
-    Skipped entirely when auth is off and no admin password is configured (keeps the demo DB clean)."""
+    Skipped entirely when auth is off and no admin password is configured (keeps the demo DB clean).
+    The Law edition never logs a password (see _seed_admin_law)."""
     if not settings.AUTH_ENABLED and not settings.AUTH_ADMIN_PASSWORD:
+        return
+    if is_law():
+        _seed_admin_law()
         return
     try:
         admin = settings.AUTH_ADMIN_USER or "admin"
@@ -229,6 +234,38 @@ def seed_admin() -> None:
         logger.warning("Auth: seed_admin failed: %s", e)
 
 
+def _seed_admin_law() -> None:
+    """Law edition: the admin also gets the firm_admin role; a changed AUTH_ADMIN_PASSWORD revokes
+    the admin's sessions; a generated first password goes to a 0600 file, never to the log."""
+    from ..legal.identity import accounts, sessions as law_sessions
+    admin = settings.AUTH_ADMIN_USER or "admin"
+    try:
+        acct = accounts.get_by_username(admin)
+        if settings.AUTH_ADMIN_PASSWORD:
+            if acct is None:
+                uid = create_user(admin, settings.AUTH_ADMIN_PASSWORD, role="admin")["id"]
+            else:
+                uid = acct["id"]
+                if not verify_password(settings.AUTH_ADMIN_PASSWORD, acct["password_hash"]):
+                    set_password(admin, settings.AUTH_ADMIN_PASSWORD)
+                    law_sessions.revoke_all_for_user(uid, reason="admin_password_reset")
+            accounts.grant_role(uid, "firm_admin")
+            logger.info("Auth: admin user ready (password from env).")
+        elif count_users() == 0:
+            pw = secrets.token_urlsafe(18)
+            uid = create_user(admin, pw, role="admin")["id"]
+            accounts.grant_role(uid, "firm_admin")
+            path = os.path.join(settings.DATA_DIR, "legal", "bootstrap_admin_password")
+            os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, "w") as fh:
+                fh.write(pw + "\n")
+            logger.warning("Auth: created initial admin; one-time password written to "
+                           "$ECHOMIND_DATA_DIR/legal/bootstrap_admin_password (delete it after first sign-in)")
+    except Exception as e:
+        logger.warning("Auth: seed_admin failed: %s", type(e).__name__)
+
+
 # ── Request helper ────────────────────────────────────────────────────────────────
 def token_from_request(request) -> str:
     """The session token from the Authorization header or the echomind_token cookie ('' if none)."""
@@ -244,8 +281,15 @@ def token_from_request(request) -> str:
     return token
 
 
-def user_from_request(request) -> Optional[dict]:
+def user_from_request(request, allow_partial: bool = False) -> Optional[dict]:
     """Validate the bearer token from the Authorization header or the echomind_token cookie.
-    Returns the decoded token payload (sub/role/username/exp) or None."""
+    Returns the decoded token payload (sub/role/username/exp) or None.
+
+    In the Law edition the caller is a server-side session (or an on-behalf-of token on the voice
+    routes) and the legacy JWT is ignored; the returned dict keeps the same sub/role/username/tenant
+    keys so existing routes work unchanged. allow_partial admits a session still waiting for MFA."""
+    if is_law():
+        from ..legal.identity.principal import from_request
+        return from_request(request, allow_partial=allow_partial)
     token = token_from_request(request)
     return decode_token(token) if token else None

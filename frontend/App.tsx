@@ -16,6 +16,7 @@ import { useVoiceConnection } from './hooks/useVoiceConnection';
 import { useLiveTranscription } from './hooks/useLiveTranscription';
 import { useKnowledgeChat } from './hooks/useKnowledgeChat';
 import { defaultTranscriptName, getAuthConfig, getMe, logout as apiLogout, AuthUser } from './services/backend';
+import { SESSION_EXPIRED_EVENT } from './services/session';
 
 const SETTINGS_KEY = "echomind_settings";
 
@@ -92,6 +93,13 @@ const App: React.FC = () => {
       voiceConnection.disconnect();
     }
   }, [activeView, voiceConnection]);
+
+  // A 401 from the app API mid-session (idle timeout, revocation) returns to the sign-in screen.
+  useEffect(() => {
+    const onExpired = () => setAuth((a) => (a.required ? { ...a, user: null } : a));
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, []);
 
   // Auth gate (Phase 0b): only enforced when the backend reports auth_enabled (else app stays open).
   useEffect(() => {

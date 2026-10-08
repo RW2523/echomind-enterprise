@@ -39,3 +39,24 @@
 | Dev frontend proxy | `scripts/law/dev_frontend.sh` (127.0.0.1:5174) | SPA 200 at `/?vertical=law`; `/api/auth/config` proxied to the Law backend |
 
 **Not exercised in S1.0:** the Law compose stack (`up` is gated on approval, D-002), ASR, voice and Boardroom inside the Law edition, and CI on GitHub (nothing pushed).
+
+## Run 2 — S1.1 Identity and sessions, 2026-10-08
+
+- **Branch / commit:** `law/s1.1-identity` @ `acf6904` (base `feature/echomind-law@2a91cf2`)
+
+| Suite | Command | Result |
+|---|---|---|
+| Backend unit (all) | `cd backend && ECHOMIND_DATA_DIR=$(mktemp -d) python3 -m pytest tests -q` | **144 passed** (50 legacy + 94 Law) |
+| Backend Law only | `… pytest tests/law -q` | **94 passed**. New in S1.1: identity units 21 (incl. RFC 6238 vectors), auth API 21, route table 4, posture +4 |
+| Voice unit | `cd voice && python3 -m pytest tests -q` | **150 passed** (131 legacy + 19 Law) |
+| Frontend | `npx tsc --noEmit -p . && npx vitest run` | tsc **clean**; Vitest **13 passed** (4 files: session fetch 4, Login 4, packs 4, tailwind 1) |
+| Tests-first evidence | new API/route tests before the wiring | **24 failed, 1 passed** before; all pass after |
+| Deny by default | `test_every_http_route_denies_anonymous_callers` | Every API route in the live route table (>60 method/path pairs) returns **401** anonymously except login, logout, config, version, health. Every WebSocket closes **1008** anonymously. |
+| Live: upgrade path | dev backend on the S1.0 `.law-data` DB | Migration `0002_identity` applied on boot; admin gained `firm_admin` |
+| Live: anonymous | `curl` | `/api/docs/list`, `/api/chat/list`, `/api/auth/me`, `/api/transcribe/list`, `POST /api/client-error`: all **401** |
+| Live: login | `curl -i` | `__Host-echomind_s`: HttpOnly, Secure, SameSite=strict, Path=/, Max-Age=600 (pending MFA). `__Host-echomind_csrf`: Secure, SameSite=strict, not HttpOnly. Body `{"status":"mfa_enrollment_required"}` (no token). Wrong password: generic message. |
+| Live: dev loop with MFA | `load_law_fixtures.py`, then `run_eval.py --set law` | First sign-in enrolled TOTP (key and recovery codes saved 0600); fixtures already present (dedup); law set **6/7** (`eval/reports/eval_20261008-180831.json`), unchanged |
+| Live: voice → backend (D-013) | voice `auth_check.BackendAuth` against the dev backend, real LLM | Session seen; OBO minted; `POST /api/chat/ask-voice` with OBO → **200**, answer contains "250,000"; same token on `/api/docs/list` → **401**; no token → **401**; after sign-out → **401** and `still_valid()` False. **The audit's voice-401 defect is fixed.** |
+| Live: log scan | grep the dev backend log | **0** hits for party names, amounts and clause terms, admin password, TOTP key, recovery codes and OBO tokens |
+
+**Not exercised:** an in-browser walkthrough of the new sign-in screen (covered by component tests and the live API; the browser walkthrough comes with the S1.3 shell); the voice WebSocket with real audio (needs the isolated compose stack, which has not been started); OIDC (blocked, P-011).
