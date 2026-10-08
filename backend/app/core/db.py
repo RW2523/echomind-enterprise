@@ -1,6 +1,7 @@
 import os, sqlite3
 from contextlib import contextmanager
 from .config import settings
+from .edition import is_law
 
 def init_db():
     os.makedirs(settings.DATA_DIR, exist_ok=True)
@@ -21,10 +22,13 @@ def init_db():
             conn.execute("CREATE INDEX IF NOT EXISTS idx_activity_ts ON activity_log(ts)")
         except Exception:
             pass
-        try:
-            conn.execute("ALTER TABLE chunks ADD COLUMN contextualized_text TEXT")
-        except Exception:
-            pass
+        # contextualized_text: contextual-retrieval header text. page_start/page_end: written by
+        # ingestion (rag/index.py) — previously never created, so uploads failed on a fresh DB (DB-1).
+        for col, typ in (("contextualized_text", "TEXT"), ("page_start", "INTEGER"), ("page_end", "INTEGER")):
+            try:
+                conn.execute(f"ALTER TABLE chunks ADD COLUMN {col} {typ}")
+            except Exception:
+                pass
         conn.execute("CREATE TABLE IF NOT EXISTS chats(id TEXT PRIMARY KEY, title TEXT, created_at TEXT, conversation_summary TEXT)")
         try:
             conn.execute("ALTER TABLE chats ADD COLUMN conversation_summary TEXT")
@@ -165,11 +169,6 @@ def init_db():
                 conn.execute(f"ALTER TABLE transcripts ADD COLUMN {col} TEXT")
             except Exception:
                 pass
-        for col in ("scenario", "namespace", "speaker_map_json"):
-            try:
-                conn.execute(f"ALTER TABLE boardroom_sessions ADD COLUMN {col} TEXT")
-            except Exception:
-                pass
         # session_id on transcripts — lets us always correlate a transcript back to its live session.
         try:
             conn.execute("ALTER TABLE transcripts ADD COLUMN session_id TEXT")
@@ -206,6 +205,13 @@ def init_db():
                 updated_at TEXT
             )"""
         )
+        # Must run AFTER the CREATE above: on a fresh DB the table did not exist yet when these
+        # ALTERs ran, so first boot lacked the columns and Boardroom reads failed (DB-2).
+        for col in ("scenario", "namespace", "speaker_map_json"):
+            try:
+                conn.execute(f"ALTER TABLE boardroom_sessions ADD COLUMN {col} TEXT")
+            except Exception:
+                pass
         conn.execute(
             """CREATE TABLE IF NOT EXISTS docgen_jobs(
                 id TEXT PRIMARY KEY,
@@ -231,6 +237,10 @@ def init_db():
             )"""
         )
         conn.commit()
+    if is_law():
+        # EchoMind Law tables are versioned migrations (D-004), applied only in the Law edition.
+        from ..legal.migrations.runner import apply_legal_migrations
+        apply_legal_migrations(settings.DB_PATH)
 
 @contextmanager
 def get_conn():

@@ -12,6 +12,7 @@ import re
 from typing import Dict, List, Optional
 
 from ..core.config import settings
+from ..core.edition import content_for_log
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +129,7 @@ async def generate_section_summary(section_text: str, section_path: str) -> Opti
         )
         return (out or "").strip() or None
     except Exception as e:
-        logger.warning("contextualizer: section summary failed for %s: %s", section_path[:50], e)
+        logger.warning("contextualizer: section summary failed for %s: %s", content_for_log(section_path, 50), e)
         return None
 
 

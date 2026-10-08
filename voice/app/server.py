@@ -13,6 +13,13 @@ logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(n
 logging.getLogger("app.adapters.llm_openai_stream").setLevel(logging.INFO)
 logging.getLogger("app.adapters.stt_nemotron").setLevel(logging.INFO)
 logging.getLogger("app.session.turn").setLevel(logging.INFO)   # [SPEC]/[ROUTE]/[TURN] per-turn timing lines
+
+from .edition import install_log_redaction, is_law, validate_law_posture
+
+# EchoMind Law (D-003): refuse to start insecurely, and keep spoken content out of the logs.
+validate_law_posture()
+if is_law():
+    install_log_redaction()
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel

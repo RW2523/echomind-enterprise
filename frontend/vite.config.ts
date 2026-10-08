@@ -29,13 +29,20 @@ const httpsConfig = getHttpsConfig();
 /** Match docker-compose voice host port (default 8002); set VOICE_HOST_PORT when running Vite against compose. */
 const voiceDevPort = process.env.VOICE_HOST_PORT || '8002';
 
+/** Dev server bind + backend target. Defaults unchanged; the EchoMind Law dev script
+ *  (scripts/law/dev_frontend.sh) moves them so they never collide with a running stack. */
+const devPort = Number(process.env.ECHOMIND_DEV_PORT || 3000);
+const devHost = process.env.ECHOMIND_DEV_HOST || '0.0.0.0';
+const apiTarget = process.env.ECHOMIND_DEV_API_TARGET || 'http://127.0.0.1:8000';
+
 export default defineConfig(() => ({
   server: {
-    port: 3000,
-    host: '0.0.0.0',
+    port: devPort,
+    strictPort: !!process.env.ECHOMIND_DEV_PORT,
+    host: devHost,
     ...(httpsConfig || {}),
     proxy: {
-      '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true, ws: true },
+      '/api': { target: apiTarget, changeOrigin: true, ws: true },
       '/voice': { target: `http://127.0.0.1:${voiceDevPort}`, changeOrigin: true, ws: true, rewrite: (p) => p.replace(/^\/voice/, '') },
     },
   },

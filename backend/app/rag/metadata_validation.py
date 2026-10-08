@@ -10,6 +10,8 @@ import logging
 import re
 from typing import Optional, Tuple
 
+from ..core.edition import content_for_log
+
 logger = logging.getLogger(__name__)
 
 # DoD-style: 4-6 digits, optional .1-3 sub (e.g. 030201, 0705.12)
@@ -217,7 +219,7 @@ def validate_book_chunk_for_indexing(source: dict) -> Tuple[dict, bool]:
     sp = src.get("section_path") or ""
     path_ok, _ = validate_section_path(sp, reject_segment_fallback=True)
     if not path_ok:
-        logger.warning("metadata_validation: BOOK chunk invalid section_path, skipping: %s", sp[:60])
+        logger.warning("metadata_validation: BOOK chunk invalid section_path, skipping: %s", content_for_log(sp, 60))
         return src, False
 
     # page_number: preferred for BOOK but not a hard rejection (DoD sections from regex may miss pages)

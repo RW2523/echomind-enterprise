@@ -10,6 +10,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import httpx
 from .core.config import settings
+from .core.edition import api_docs_enabled, install_log_redaction, is_law, validate_law_posture
+
+# EchoMind Law (D-003): refuse to start with an insecure configuration — before anything below
+# imports routers, opens the database or seeds an admin.
+validate_law_posture()
+
 from .core.db import init_db
 from .api.routes.docs import router as docs_router
 from .api.routes.chat import router as chat_router
@@ -30,6 +36,8 @@ logging.basicConfig(
 )
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
+if is_law():
+    install_log_redaction()  # keep matter content (questions, titles, quotes) out of the logs
 
 
 def _warm_nemotron_stt():
@@ -128,7 +136,8 @@ async def lifespan(app: FastAPI):
 
 init_db()
 seed_admin()  # ensure an admin login exists when auth is (or will be) enabled; no-op otherwise
-app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+_docs_off = {} if api_docs_enabled() else {"docs_url": None, "redoc_url": None, "openapi_url": None}
+app = FastAPI(title=settings.APP_NAME, lifespan=lifespan, **_docs_off)
 
 
 # ── Release identification (ISO 9001 8.5.2 traceability) ──────────────────────
