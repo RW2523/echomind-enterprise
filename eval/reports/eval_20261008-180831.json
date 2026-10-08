@@ -1,0 +1,146 @@
+{
+  "run_id": "20261008-180831",
+  "base": "http://127.0.0.1:8110/api",
+  "passed": 6,
+  "total": 7,
+  "results": [
+    {
+      "id": "law-msa-base-fee-payment",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 4.78,
+      "n_citations": 1,
+      "cited": [
+        "Master Services Agreement (DEMO).md"
+      ],
+      "answer_head": "The Harrowgate platform subscription costs **USD 18,500 per month**, as stated in the document excerpt (Master Services Agreement (DEMO).md) and. Invoices for this subscription are due **net thirty (30) days from the inv"
+    },
+    {
+      "id": "law-msa-liability-cap",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 9.7,
+      "n_citations": 2,
+      "cited": [
+        "Master Services Agreement (DEMO).md",
+        "Master Services Agreement (DEMO).md"
+      ],
+      "answer_head": "The liability cap in the Master Services Agreement (MSA) between Harrowgate and Voss-Lindqvist is **the greater of USD 250,000 or the Fees paid by the Client in the twelve (12) months preceding the event giving rise to t"
+    },
+    {
+      "id": "law-msa-term-governing-law",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 6.35,
+      "n_citations": 2,
+      "cited": [
+        "Master Services Agreement (DEMO).md",
+        "Master Services Agreement (DEMO).md"
+      ],
+      "answer_head": "The initial term of the Master Services Agreement is thirty-six (36) months, as stated in the document excerpt: \"This Agreement begins on the Effective Date and continues for an initial term of thirty-six (36) months (th"
+    },
+    {
+      "id": "law-playbook-payment-fallback",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 7.71,
+      "n_citations": 1,
+      "cited": [
+        "Contract Review Playbook (DEMO).md"
+      ],
+      "answer_head": "When redlining a vendor contract's payment terms, you should push for **Net 45 payment terms from the invoice date** as the standard position, according to the provided playbook. If the counterparty resists, the fallback"
+    },
+    {
+      "id": "law-playbook-breach-notice-data-return",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 15.07,
+      "n_citations": 1,
+      "cited": [
+        "Contract Review Playbook (DEMO).md"
+      ],
+      "answer_head": "The question involves two distinct legal requirements: (1) the time frame for reporting a breach of regulated data, and (2) the time frame for returning or destroying data after contract termination.\n\n**1. Breach Reporti"
+    },
+    {
+      "id": "law-playbook-liability-escalation",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 11.47,
+      "n_citations": 2,
+      "cited": [
+        "Contract Review Playbook (DEMO).md",
+        "Contract Review Playbook (DEMO).md"
+      ],
+      "answer_head": "1. **Identify the condition triggering approval requirements:** \n The documents state that if the liability cap drops below six (6) months' fees, the deal requires \"Deal Desk approval before signature.\" This is explicitl"
+    },
+    {
+      "id": "law-msa-renewal-vs-playbook",
+      "set": "law",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": true
+      },
+      "notes": [
+        "expected docs not cited: ['Master Services']; cited=['Contract Review Playbook (DEMO).md']"
+      ],
+      "doc_precision": 1.0,
+      "latency_s": 11.45,
+      "n_citations": 1,
+      "cited": [
+        "Contract Review Playbook (DEMO).md"
+      ],
+      "answer_head": "The auto-renewal notice period in the Harrowgate MSA (90 days) does **not** meet the playbook's standard fallback for non-renewal notice, which requires at least 60 days' notice.\n\n**Rule:** The playbook's fallback positi"
+    }
+  ]
+}
