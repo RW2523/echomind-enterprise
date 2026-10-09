@@ -137,3 +137,15 @@ export interface RetentionRun {
   id: string; mode: 'dry_run' | 'apply'; run_by: string; run_at: string;
   report: { candidates: number; held_skipped: number; draft_preview: number; requests_created: number };
 }
+
+/** Exports (S1.10). */
+export interface PlanItem { id: string; kind: string; text: string; count: number; redact: boolean; reason: string; source: 'detector' | 'person' }
+export interface LawExport {
+  id: string; object_type: 'document' | 'meeting_transcript'; object_id: string; title: string; format: 'pdf' | 'docx'; purpose: string;
+  status: 'draft' | 'pending_approval' | 'ready' | 'failed' | 'rejected' | 'expired';
+  plan: { items: PlanItem[]; source: 'pdf' | 'docx' | 'text'; warnings: { image_pages: number[] } };
+  label?: string | null; requested_by?: string | null; requested_at: string; submitted_at?: string | null;
+  decided_by?: string | null; decided_at?: string | null; decision_note?: string | null; watermark?: string | null;
+  output_bytes?: number | null; output_sha256?: string | null;
+  verification?: { ok: boolean; checks: Record<string, boolean>; pages?: number } | null; expires_at?: string | null; downloads: number;
+}

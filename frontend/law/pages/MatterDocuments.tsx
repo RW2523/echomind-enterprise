@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Download, FileUp, RotateCcw, Search, Trash2, X } from 'lucide-react';
+import { Download, FileOutput, FileUp, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { documentsPath, keys, useDocument, useDocuments, useMatterDeletions } from '../api/queries';
@@ -8,6 +8,7 @@ import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Field, Skeleton, StatusPill, type Tone } from '../ui/primitives';
 import { DeleteDialog, HoldNotice, LabelControl, LabelPill } from '../ui/records';
+import { ExportDialog } from './MatterExports';
 
 const KINDS: [DocKind, string][] = [['contract', 'Contract'], ['correspondence', 'Correspondence'], ['pleading', 'Pleading'],
   ['evidence', 'Evidence'], ['memo', 'Memo'], ['note', 'Note'], ['other', 'Other']];
@@ -161,6 +162,8 @@ function Inspector({ matterId, docId, canEdit, perms, onClose }: { matterId: str
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const matter = useMatter();
   const [error, setError] = useState('');
   const base = `${documentsPath(matterId)}/${encodeURIComponent(docId)}`;
   const reindex = async () => {
@@ -213,6 +216,8 @@ function Inspector({ matterId, docId, canEdit, perms, onClose }: { matterId: str
               {v && <a className="lw-btn lw-btn-sm" href={`${base}/versions/${encodeURIComponent(v.id)}/file`} download><Download />Download</a>}
               {canEdit && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => setEditing(true)}>Edit details</button>}
               {canEdit && v?.index_status === 'failed' && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={reindex}><RotateCcw />Try again</button>}
+              {['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && v?.index_status !== 'queued' &&
+                <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => setExporting(true)}><FileOutput />Export…</button>}
               {perms.canDelete && <button type="button" className="lw-btn lw-btn-sm lw-btn-danger" onClick={() => setDeleting(true)}><Trash2 />Delete…</button>}
             </div>
             <div>
@@ -230,6 +235,7 @@ function Inspector({ matterId, docId, canEdit, perms, onClose }: { matterId: str
           </div>
         )}
       {editing && d && <EditDialog matterId={matterId} doc={d} onClose={() => setEditing(false)} onSaved={() => doc.refetch()} />}
+      {exporting && d && <ExportDialog matterId={matterId} number={matter.number} objectType="document" objectId={d.id} title={d.title} onClose={() => setExporting(false)} />}
       {deleting && d && (
         <DeleteDialog title={`Delete “${d.title}”`} previewUrl={`${base}/deletion-preview`} deleteUrl={`${base}/delete`}
           onClose={() => setDeleting(false)}

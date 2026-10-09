@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Deletion, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -26,6 +26,8 @@ export const keys = {
   deletions: ['records', 'deletions'] as const,
   holds: ['records', 'holds'] as const,
   retention: ['records', 'retention'] as const,
+  exports: (id: string) => ['matter', id, 'exports'] as const,
+  export: (id: string, exportId: string) => ['matter', id, 'exports', exportId] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false });
@@ -138,3 +140,13 @@ export const useHolds = (enabled: boolean) =>
 export const useRetention = (enabled: boolean) =>
   useQuery({ queryKey: keys.retention, enabled,
     queryFn: () => api.get<{ policies: RetentionPolicy[]; runs: RetentionRun[]; apply_enabled: boolean }>(legal('/retention')) });
+
+export const exportsPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/exports`;
+export const useExports = (matterId: string) =>
+  useQuery({ queryKey: keys.exports(matterId), queryFn: async () => (await api.get<{ exports: LawExport[] }>(exportsPath(matterId))).exports });
+export const useExport = (matterId: string, exportId: string) =>
+  useQuery({ queryKey: keys.export(matterId, exportId), refetchOnWindowFocus: false,
+    queryFn: async () => (await api.get<{ export: LawExport }>(`${exportsPath(matterId)}/${encodeURIComponent(exportId)}`)).export });
+export const useExportPreview = (matterId: string, exportId: string, planKey: string) =>
+  useQuery({ queryKey: [...keys.export(matterId, exportId), 'preview', planKey], refetchOnWindowFocus: false,
+    queryFn: () => api.get<{ pages: number }>(`${exportsPath(matterId)}/${encodeURIComponent(exportId)}/preview`) });

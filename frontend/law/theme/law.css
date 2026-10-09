@@ -272,3 +272,17 @@
 [data-edition="law"] .lw-pending { list-style: none; margin: 0; padding: 0; }
 [data-edition="law"] .lw-pending li { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--rule); }
 [data-edition="law"] .lw-pending li:first-child { border-top: none; }
+
+/* ── Exports (S1.10) ──────────────────────────────────────────────────────────── */
+[data-edition="law"] .lw-export { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 16px; max-width: 1240px; }
+[data-edition="law"] .lw-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+[data-edition="law"] .lw-pages img { width: 100%; border: 1px solid var(--rule); border-radius: 6px; background: #fff; box-shadow: var(--paper-shadow); }
+[data-edition="law"] .lw-plan-group { border: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+[data-edition="law"] .lw-plan-item { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border-radius: 8px; font-size: 13.5px; cursor: pointer; }
+[data-edition="law"] .lw-plan-item:hover { background: var(--fill-1); }
+[data-edition="law"] .lw-plan-item[data-on] .lw-plan-text { background: var(--ink); color: var(--paper); border-radius: 3px; padding: 0 3px; }
+[data-edition="law"] .lw-plan-text { overflow-wrap: anywhere; }
+[data-edition="law"] .lw-approve { display: grid; gap: 10px; padding: 12px; border-radius: 10px; background: var(--paper-2); border: 1px solid var(--rule); }
+[data-edition="law"] .lw-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
+[data-edition="law"] .lw-checks li { display: flex; gap: 8px; align-items: center; }
+@media (max-width: 1000px) { [data-edition="law"] .lw-export { grid-template-columns: minmax(0, 1fr); } }

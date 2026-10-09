@@ -361,6 +361,31 @@ Every entry records the options considered, the recommendation, the consequence 
   - Backups keep purged data until they rotate (OPS runbook).
   - Research answers keep their own wording, which may paraphrase a purged document; only quotes are removed.
 
+### D-028 The export gateway as built — RECORDED (S1.10; P-006 safe defaults)
+- **The only way out.** In Law, a matter's documents and meeting transcripts leave as files only through `/api/legal/matters/{m}/exports`. The old export and studio routes are closed (D-025). Source downloads stay inside the firm: `no-store`, audited, members only.
+- **Flow:**
+  - *Request:* `export.request` plus the membership's `can_export`.
+  - *Redaction plan:* adjustable by the requester only, and only while a draft.
+  - *Submit.*
+  - *Approval:* by a lead or attorney other than the requester. Privileged and work-product documents need an explicit acknowledgement.
+  - *Then:* render, verify, watermark "CONFIDENTIAL — <matter> — <requester> — <time>".
+  - *Release:* stored encrypted for `LEGAL_EXPORT_TTL_HOURS` (24), downloadable by the requester and the approver only.
+- **Plan defaults:**
+  - Redacted: personal data, IBANs, credentials, card numbers (Luhn-checked) and other matters' numbers, which would reveal that those matters exist.
+  - Flagged but kept: this matter's number (it is in the watermark), party names, and privilege markers.
+- **Rendering:**
+  - PDF to PDF: the planned strings are found on every page and removed with applied redactions. Annotations, form fields, attachments, scripts, links, metadata and XMP are scrubbed.
+  - Everything else is rebuilt from the readable content: tracked insertions are accepted; deletions, hidden runs and comments are dropped. It is then written as a new Word file (python-docx's own template stripped of its custom XML and thumbnail) or a new PDF, with a black "[REDACTED]" mark.
+- **Verification:**
+  - The file is opened again and checked: no planned string in text, metadata or any package part; clean properties; clean structure; a watermark on every page or in the Word header.
+  - Any failed check means the export is `failed` and nothing is released.
+  - The preview is the same rendering as page images, made on request and never stored.
+- **Records:** purging a document or transcript also purges its exports (S1.9 verification gained an `exports` check). Audit events carry counts, the format and outcomes, never the purpose or the plan's strings.
+- **Known limits:**
+  - Text inside images cannot be found until OCR (S2.1); the plan warns on image-heavy pages.
+  - A string split across a PDF line break is not found by search, so verification fails closed and the export is not released.
+  - Word output keeps paragraph styles, bold, italic, underline and tables, but not complex layout.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

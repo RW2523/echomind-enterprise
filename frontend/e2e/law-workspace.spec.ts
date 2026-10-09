@@ -333,3 +333,51 @@ test('records: a label, a deletion approved by records and verified, and a two-p
   await bob.goto('/m/M-215/overview');
   await expect(bob.getByText(/Nothing in this matter can be deleted while the hold is in force/)).toBeVisible();
 });
+
+test('exports: redactions reviewed, approved by a second lawyer, checked, watermarked and downloaded', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const letter = path.join(HERE, '..', 'test-results', 'settlement-letter.txt');
+  fs.mkdirSync(path.dirname(letter), { recursive: true });
+  fs.writeFileSync(letter, 'Settlement letter (fictional).\n\nPlease pay into account 4410098812 and send notices to legal@harrowgate.example.\n'
+    + 'This settles the dispute in M-101; see also file M-114.\n');
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/members');
+  await alice.getByRole('button', { name: /Add member/ }).first().click();
+  await alice.getByLabel('Username').fill('bob');
+  await alice.getByRole('dialog').getByRole('button', { name: 'Add member' }).click();
+  await expect(alice.getByRole('dialog')).toHaveCount(0);
+  await alice.goto('/m/M-101/documents');
+  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+  await dialog.getByLabel('File').setInputFiles(letter);
+  await dialog.getByRole('button', { name: /^Import$/ }).click();
+  await expect(alice.getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  await alice.getByRole('button', { name: 'settlement-letter', exact: true }).click();
+  await alice.getByRole('complementary', { name: 'Document details' }).getByRole('button', { name: /Export…/ }).click();
+  const ask = alice.getByRole('dialog', { name: /Export “settlement-letter”/ });
+  await ask.getByLabel('Purpose').fill('Disclosure to the landlord’s counsel');
+  await ask.getByRole('button', { name: /Prepare export/ }).click();
+  const plan = alice.getByRole('region', { name: 'Redactions' });
+  await expect(plan.getByText('legal@harrowgate.example')).toBeVisible();
+  await expect(plan.getByText('M-114')).toBeVisible();
+  await alice.getByRole('button', { name: 'Submit for approval' }).click();
+  await expect(alice.getByText(/Waiting for another lead or attorney/)).toBeVisible();
+  const exportUrl = new URL(alice.url()).pathname;
+
+  const bob = await (await browser.newContext()).newPage();
+  await signIn(bob, 'bob');
+  await bob.goto(exportUrl);
+  await expect(bob.getByRole('img', { name: /Page 1 as it will be released/ })).toBeVisible();
+  await bob.getByRole('button', { name: 'Approve and release' }).click();
+  await expect(bob.getByText('Ready to download')).toBeVisible({ timeout: 60_000 });
+  await expect(bob.getByText(/Redacted text is gone/)).toBeVisible();
+  await shot(bob, '18-export-released-light');
+
+  await alice.reload();
+  const download = alice.waitForEvent('download');
+  await alice.getByRole('link', { name: /Download/ }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe('settlement-letter.pdf');
+  expect(fs.statSync(await file.path()).size).toBeGreaterThan(500);
+});
