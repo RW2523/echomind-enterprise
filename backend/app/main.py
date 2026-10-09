@@ -129,10 +129,16 @@ async def lifespan(app: FastAPI):
     # Warm LLM + embed backends so first chat/RAG is responsive
     asyncio.create_task(_warm_llm_and_embeddings())
     watchdog = asyncio.create_task(_stt_fatal_watchdog())
+    if is_law():
+        # S1.6: background indexing of matter documents (jobs survive restarts in the database).
+        from .legal.jobs import worker as law_jobs
+        law_jobs.start()
     try:
         yield
     finally:
         watchdog.cancel()
+        if is_law():
+            law_jobs.stop()
 
 
 init_db()
@@ -318,3 +324,5 @@ from .legal.walls.routes import router as legal_walls_router  # noqa: E402
 app.include_router(legal_walls_router, prefix="/api")
 from .legal.audit.routes import router as legal_audit_router  # noqa: E402
 app.include_router(legal_audit_router, prefix="/api")
+from .legal.documents.routes import router as legal_documents_router  # noqa: E402
+app.include_router(legal_documents_router, prefix="/api")

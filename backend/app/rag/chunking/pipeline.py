@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Tuple
 from ...utils.ids import new_id
 
 from ..normalize import normalize_extracted_text
-from .models import Chunk, DocType
+from .models import Chunk, DocType, SensitivityLevel
 from .detect import detect_document_type
 from .sanitize import sanitize_text
 from .chunkers import (
@@ -144,6 +144,7 @@ def chunk_document(
     estimated_pages: int = 0,
     page_offsets: Optional[List[Tuple[int, int]]] = None,
     already_normalized: bool = False,
+    redact_pii: bool = True,
 ) -> List[Chunk]:
     """Full pipeline: detect document type, sanitize, chunk by strategy, assign IDs.
 
@@ -157,6 +158,8 @@ def chunk_document(
         already_normalized: when True (PDFs, normalized per-page in parse_pdf so page_offsets
             stay aligned), skip re-normalization here — re-running it would shift every offset
             relative to page_offsets and corrupt page citations. (H3)
+        redact_pii: False indexes the original text (EchoMind Law, D-012: contracts, Bates and
+            account numbers must stay intact and quotable; findings are recorded separately).
     """
     if not (text or "").strip():
         return []
@@ -184,7 +187,10 @@ def chunk_document(
         )
         doc_type = DocType.USER
 
-    clean_text, redacted, sensitivity_level = sanitize_text(text)
+    if redact_pii:
+        clean_text, redacted, sensitivity_level = sanitize_text(text)
+    else:
+        clean_text, redacted, sensitivity_level = text, False, SensitivityLevel.LOW
     total_chars = len(clean_text)
 
     if doc_type == DocType.FAQ:

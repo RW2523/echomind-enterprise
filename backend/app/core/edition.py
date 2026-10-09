@@ -51,7 +51,34 @@ def posture_inputs(settings=None, env: Optional[Mapping[str, str]] = None) -> di
         "ECHOMIND_LOG_FULL_PROMPTS": e.get("ECHOMIND_LOG_FULL_PROMPTS", "0"),
         "AUTH_ADMIN_USER": settings.AUTH_ADMIN_USER or "admin",
         "AUTH_ADMIN_PASSWORD": settings.AUTH_ADMIN_PASSWORD or "",
+        "LEGAL_MASTER_KEY_FILE": settings.LEGAL_MASTER_KEY_FILE or "",
+        "DATA_DIR": settings.DATA_DIR or "",
     }
+
+
+def master_key_problem(path: str, data_dir: str) -> Optional[tuple[str, str]]:
+    """D-014: the key that wraps every stored file's key. It must exist, hold 32 bytes (base64),
+    be readable by its owner only, and live outside the data folder (so a copy of the data alone
+    cannot be decrypted)."""
+    if not path or not os.path.isfile(path):
+        return "master_key_missing", "LEGAL_MASTER_KEY_FILE must name an existing key file"
+    if os.stat(path).st_mode & 0o077:
+        return "master_key_insecure", "LEGAL_MASTER_KEY_FILE must be readable by its owner only (chmod 600)"
+    import base64
+    import binascii
+    try:
+        with open(path, "rb") as f:
+            raw = f.read().strip()
+        key = base64.b64decode(raw, validate=True)
+    except (OSError, binascii.Error, ValueError):
+        key = b""
+    if len(key) != 32:
+        return "master_key_invalid", "LEGAL_MASTER_KEY_FILE must contain 32 random bytes, base64-encoded"
+    if data_dir:
+        real, data = os.path.realpath(path), os.path.realpath(data_dir)
+        if os.path.commonpath([real, data]) == data:
+            return "master_key_in_data", "LEGAL_MASTER_KEY_FILE must live outside the data folder"
+    return None
 
 
 def posture_violations(inputs: Mapping) -> list[Violation]:
@@ -69,6 +96,9 @@ def posture_violations(inputs: Mapping) -> list[Violation]:
         out.append(Violation("cloud_egress", "DOCGEN_IMAGE_BACKEND=nim sends prompts to a cloud API"))
     if str(inputs.get("ECHOMIND_LOG_FULL_PROMPTS") or "").strip().lower() in _TRUE:
         out.append(Violation("content_logging", "ECHOMIND_LOG_FULL_PROMPTS must be off"))
+    key_problem = master_key_problem(str(inputs.get("LEGAL_MASTER_KEY_FILE") or ""), str(inputs.get("DATA_DIR") or ""))
+    if key_problem:
+        out.append(Violation(*key_problem))
     admin_pw = str(inputs.get("AUTH_ADMIN_PASSWORD") or "")
     if admin_pw:
         from ..legal.identity.passwords import problems

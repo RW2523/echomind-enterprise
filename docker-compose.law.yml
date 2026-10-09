@@ -40,8 +40,11 @@ services:
     volumes: !override
       - echomind_law_data:/data
       - ./backend/app:/app/app:ro
+      # D-014: the master key stays outside the data volume (chmod 600 on the host).
+      - ${LAW_MASTER_KEY_FILE:?set LAW_MASTER_KEY_FILE in .env.law (see .env.law.example)}:/run/secrets/law_master_key:ro
     environment:
       - ECHOMIND_EDITION=law
+      - LEGAL_MASTER_KEY_FILE=/run/secrets/law_master_key
       - AUTH_ENABLED=1
       - AUTH_SECRET=${LAW_AUTH_SECRET:?set LAW_AUTH_SECRET in .env.law (openssl rand -hex 32)}
       - AUTH_ADMIN_USER=${LAW_ADMIN_USER:-admin}

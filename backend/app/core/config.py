@@ -275,5 +275,15 @@ class Settings(BaseSettings):
     # D-021: binding an authenticator needs an administrator-issued one-time link (firm may relax).
     LEGAL_ENROLLMENT_LINK_REQUIRED: bool = os.getenv("LEGAL_ENROLLMENT_LINK_REQUIRED", "1").lower() in ("1", "true", "yes")
     LEGAL_ENROLLMENT_LINK_HOURS: float = float(os.getenv("LEGAL_ENROLLMENT_LINK_HOURS", "72"))
+    # Matter documents and partitioned retrieval (S1.6; D-005, D-012, D-014).
+    LEGAL_MASTER_KEY_FILE: str = os.getenv("LEGAL_MASTER_KEY_FILE", "")                # 32-byte key, base64; outside DATA_DIR, mode 0600
+    LEGAL_UPLOAD_MAX_MB: int = int(os.getenv("LEGAL_UPLOAD_MAX_MB", "100"))
+    LEGAL_UPLOAD_MAX_PAGES: int = int(os.getenv("LEGAL_UPLOAD_MAX_PAGES", "2000"))
+    LEGAL_DOCX_MAX_UNCOMPRESSED_MB: int = int(os.getenv("LEGAL_DOCX_MAX_UNCOMPRESSED_MB", "200"))
+    LEGAL_PARTITION_CACHE: int = int(os.getenv("LEGAL_PARTITION_CACHE", "32"))          # loaded matter indexes kept in memory
+    LEGAL_SEARCH_CANDIDATES: int = int(os.getenv("LEGAL_SEARCH_CANDIDATES", "40"))      # per channel, before fusion
+    LEGAL_RERANK_MIN_SCORE: float = float(os.getenv("LEGAL_RERANK_MIN_SCORE", "0.0"))    # cross-encoder logit floor
+    LEGAL_JOB_POLL_SEC: float = float(os.getenv("LEGAL_JOB_POLL_SEC", "2"))
+    LEGAL_JOB_MAX_ATTEMPTS: int = int(os.getenv("LEGAL_JOB_MAX_ATTEMPTS", "3"))
 
 settings = Settings()
