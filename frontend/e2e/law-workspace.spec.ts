@@ -244,3 +244,45 @@ test('research: an answer from M-101 only, tied to the clause it relies on', asy
   await expect(alice.getByText('The documents in this matter do not answer that.')).toBeVisible({ timeout: 120_000 });
   await expect(alice.getByRole('complementary', { name: 'Your earlier questions' }).getByText(/aggregate liability/)).toBeVisible();
 });
+
+test('meetings: recording waits for everyone’s consent and stops the moment one is withdrawn', async ({ browser }) => {
+  test.setTimeout(180_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/meetings');
+  await alice.getByRole('button', { name: /Plan a meeting/ }).click();
+  await alice.getByRole('dialog', { name: 'Plan a meeting' }).getByLabel('Title').fill('Call with Voss-Lindqvist');
+  await alice.getByRole('button', { name: 'Create' }).click();
+  await alice.getByRole('link', { name: 'Call with Voss-Lindqvist' }).click();
+  await alice.getByRole('tab', { name: 'Prepare' }).click();
+  for (const [name, role] of [['Alice Hart', 'host'], ['Petra Voss', 'client']]) {
+    await alice.getByLabel('Name').fill(name);
+    await alice.getByLabel('Role').selectOption(role);
+    await alice.getByRole('button', { name: 'Add' }).click();
+    await expect(alice.getByText(name, { exact: true })).toBeVisible();
+  }
+  await alice.getByRole('tab', { name: 'Record' }).click();
+  await expect(alice.getByText('Still needed from: Alice Hart, Petra Voss.')).toBeVisible();
+  await expect(alice.getByRole('button', { name: /Start recording/ })).toBeDisabled();
+  await alice.getByRole('tab', { name: /Consent/ }).click();
+  for (const name of ['Alice Hart', 'Petra Voss']) {
+    await alice.getByRole('row', { name: new RegExp(name) }).getByRole('button', { name: 'Record consent' }).click();
+    const dialog = alice.getByRole('dialog', { name: `Consent of ${name}` });
+    await dialog.getByRole('checkbox').check();
+    await dialog.getByRole('button', { name: 'Record consent' }).click();
+    await expect(dialog).toHaveCount(0);
+  }
+  await alice.getByRole('tab', { name: 'Record' }).click();
+  await alice.getByRole('button', { name: /Start recording/ }).click();
+  await expect(alice.getByRole('status').getByText(/^Recording \d\d:\d\d/)).toBeVisible({ timeout: 20_000 });
+  await alice.waitForTimeout(1500);                                         // a little synthetic audio
+  await shot(alice, '16-meeting-recording-light');
+
+  const carol = await (await browser.newContext()).newPage();
+  await signIn(carol, 'carol');
+  await carol.goto(new URL(alice.url()).pathname);
+  await carol.getByRole('row', { name: /Petra Voss/ }).getByRole('button', { name: 'Withdraw' }).click();
+  await expect(alice.getByText(/a participant withdrew consent\. Nothing after that moment was captured\./)).toBeVisible({ timeout: 10_000 });
+  await expect(alice.getByRole('region', { name: 'Recording history' }).getByText(/audio receipt/)).toBeVisible();
+  await expect(alice.getByText('Still needed from: Petra Voss.')).toBeVisible();
+});

@@ -81,3 +81,26 @@ export interface ResearchTurn {
   id: string; question: string; answer: string | null; citations: ResearchSource[];
   status: 'answered' | 'abstained' | 'scope_revoked' | 'error'; created_at: string;
 }
+
+/** Meetings, consent and capture (S1.8). */
+export type MeetingKind = 'client_call' | 'internal' | 'negotiation' | 'interview' | 'board' | 'hearing' | 'other';
+export type ParticipantRole = 'host' | 'attorney' | 'client' | 'counterparty' | 'witness' | 'expert' | 'other';
+export type ConsentMethod = 'verbal_on_record' | 'written' | 'host_attestation';
+export interface MeetingSummary {
+  id: string; title: string; kind: MeetingKind; scheduled_at?: string | null; status: 'planned' | 'ended';
+  created_at: string; ended_at?: string | null; consent: { granted: number; needed: number };
+}
+export interface Participant {
+  id: string; name: string; role: ParticipantRole;
+  consent: { state: 'granted' | 'withdrawn' | 'missing' | 'stale'; method?: ConsentMethod | null; at?: string | null; by?: string | null };
+}
+export interface CaptureRecord {
+  id: string; started_at: string; started_by?: string | null; consent_snapshot: string; transcription: 'available' | 'unavailable';
+  custody_records: number; audio_bytes: number; segments: number;
+  events: { kind: 'started' | 'paused' | 'resumed' | 'stopped' | 'frame_rejected'; reason?: string | null; at: string; by?: string | null }[];
+}
+export interface MeetingDetail extends MeetingSummary {
+  policy: { mode: string; methods: ConsentMethod[]; max_age_hours: number; statement: string; source: string };
+  participants: Participant[]; captures: CaptureRecord[];
+}
+export interface Segment { id: string; capture_id?: string; seq: number; t_start_ms?: number | null; t_end_ms?: number | null; text: string }

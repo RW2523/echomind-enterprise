@@ -1,0 +1,11 @@
+DROP TABLE legal_transcript_segments;
+DROP TABLE legal_capture_custody;
+DROP TRIGGER capture_events_no_delete;
+DROP TRIGGER capture_events_no_update;
+DROP TABLE legal_capture_events;
+DROP TABLE legal_captures;
+DROP TRIGGER consent_no_delete;
+DROP TRIGGER consent_no_update;
+DROP TABLE legal_consent_events;
+DROP TABLE legal_meeting_participants;
+DROP TABLE legal_meetings;

@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, DocVersion, LawDocument, ResearchTurn, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, DocVersion, LawDocument, MeetingDetail, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -19,6 +19,8 @@ export const keys = {
   documents: (id: string) => ['matter', id, 'documents'] as const,
   document: (id: string, docId: string) => ['matter', id, 'documents', docId] as const,
   research: (id: string) => ['matter', id, 'research'] as const,
+  meetings: (id: string) => ['matter', id, 'meetings'] as const,
+  meeting: (id: string, meetingId: string) => ['matter', id, 'meetings', meetingId] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false });
@@ -100,3 +102,17 @@ export const documentsPath = docsBase;
 export const useResearchHistory = (matterId: string) =>
   useQuery({ queryKey: keys.research(matterId), refetchOnWindowFocus: false,
     queryFn: async () => (await api.get<{ turns: ResearchTurn[] }>(`/api/legal/matters/${encodeURIComponent(matterId)}/research`)).turns });
+
+export const meetingsPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/meetings`;
+export const useMeetings = (matterId: string) =>
+  useQuery({ queryKey: keys.meetings(matterId), queryFn: async () => (await api.get<{ meetings: MeetingSummary[] }>(meetingsPath(matterId))).meetings });
+/** A meeting with its participants' consent and its capture timeline. */
+export const useMeeting = (matterId: string, meetingId: string) =>
+  useQuery({
+    queryKey: keys.meeting(matterId, meetingId), refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const base = `${meetingsPath(matterId)}/${encodeURIComponent(meetingId)}`;
+      const [m, t] = await Promise.all([api.get<{ meeting: MeetingDetail }>(base), api.get<{ segments: Segment[] }>(`${base}/transcript`)]);
+      return { ...m.meeting, transcript: t.segments };
+    },
+  });
