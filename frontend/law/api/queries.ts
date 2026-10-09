@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, DocVersion, LawDocument, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -16,6 +16,8 @@ export const keys = {
   breakGlass: ['admin', 'break-glass'] as const,
   audit: ['admin', 'audit'] as const,
   activity: (id: string) => ['matter', id, 'activity'] as const,
+  documents: (id: string) => ['matter', id, 'documents'] as const,
+  document: (id: string, docId: string) => ['matter', id, 'documents', docId] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false });
@@ -68,3 +70,27 @@ export const useMatterActivity = (matterId: string) =>
     getNextPageParam: (last) => last.next_before ?? undefined,
   });
 export const verifyAuditTrail = () => api.get<AuditVerification>('/api/legal/audit/verify');
+
+const docsBase = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/documents`;
+const busy = (d: LawDocument) => d.current_version?.index_status === 'queued' || d.current_version?.index_status === 'indexing';
+
+/** The matter's library; polls while anything is still being read. */
+export const useDocuments = (matterId: string) =>
+  useQuery({
+    queryKey: keys.documents(matterId),
+    queryFn: async () => (await api.get<{ documents: LawDocument[] }>(docsBase(matterId))).documents,
+    refetchInterval: (q) => (q.state.data?.some(busy) ? 2000 : false),
+  });
+/** Opening a document's details is a recorded read. */
+export const useDocument = (matterId: string, docId: string | null) =>
+  useQuery({
+    queryKey: keys.document(matterId, docId ?? ''), enabled: !!docId, refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const [d, v] = await Promise.all([
+        api.get<{ document: LawDocument }>(`${docsBase(matterId)}/${encodeURIComponent(docId!)}`),
+        api.get<{ versions: DocVersion[] }>(`${docsBase(matterId)}/${encodeURIComponent(docId!)}/versions`),
+      ]);
+      return { ...d.document, versions: v.versions };
+    },
+  });
+export const documentsPath = docsBase;

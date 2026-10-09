@@ -200,3 +200,27 @@ test('the audit trail shows the emergency access, intact, and the lead sees it o
   await alice.goto('/admin/audit');
   await expect(alice.getByText("This item isn't available.")).toBeVisible();
 });
+
+test('documents: imported into M-101, read in the background, searchable only inside M-101', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  await alice.getByRole('button', { name: /Import a document/ }).click();
+  const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+  await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law/Master Services Agreement (DEMO).md'));
+  await dialog.getByRole('button', { name: /^Import$/ }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(alice.getByText('Searchable')).toBeVisible({ timeout: 180_000 });     // real embeddings, real worker
+  await alice.getByLabel('Search this matter’s documents').fill('cap on aggregate liability');
+  await alice.getByRole('button', { name: 'Search', exact: true }).click();
+  await expect(alice.getByText(/total aggregate liability/).first()).toBeVisible({ timeout: 60_000 });
+  await alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true }).click();
+  await expect(alice.getByRole('complementary', { name: 'Document details' }).getByText('Versions')).toBeVisible();
+  await shot(alice, '14-documents-light');
+
+  const bob = await (await browser.newContext()).newPage();
+  await signIn(bob, 'bob');
+  await bob.goto('/m/M-101/documents');
+  await expect(bob.getByText("This item isn't available.")).toBeVisible();
+});

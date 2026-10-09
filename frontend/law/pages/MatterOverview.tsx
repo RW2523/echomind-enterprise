@@ -43,10 +43,13 @@ export default function MatterOverview() {
           <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '10px 24px', margin: 0 }}>
             {rows.map(([k, v]) => (<React.Fragment key={k}><dt className="lw-meta" style={{ fontSize: 13 }}>{k}</dt><dd style={{ margin: 0 }}>{v}</dd></React.Fragment>))}
           </dl>
-          <div><Link to="../members" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Members</Link></div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Link to="../documents" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Documents</Link>
+            <Link to="../members" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Members</Link>
+          </div>
         </section>
         <p className="lw-meta" style={{ margin: 0 }}>
-          Documents, research, meetings and drafting for this matter arrive in later releases of EchoMind Law.
+          Research answers, meetings and drafting for this matter arrive in later releases of EchoMind Law.
         </p>
       </div>
       {editing && <EditMatterDialog matter={matter} onClose={() => setEditing(false)} />}
