@@ -98,3 +98,15 @@
 - Production build served by nginx (dev server used).
 - Mobile widths. The rail layout below 860 px is styled but not screenshot-tested.
 - Colour-contrast measurement (jsdom cannot compute it; to be checked with Playwright and axe on real rendering in a later slice).
+
+## Run 5 — S1.4 Ethical walls and break-glass, 2026-10-08
+
+- **Branch / commit:** `law/s1.4-walls` @ `3dbb6f5`
+
+| Suite | Result |
+|---|---|
+| Backend (all) | **591 passed** after the backend commit, then re-run green with the frontend commit. `test_law_walls.py` (18): **17 failed before** the implementation, **all pass after**. Covers: a wall hides a matter even from its lead (GET, list, memberships); a client wall covers every matter of the client and the client itself; no effect until a second managing partner approves (requester and attorneys refused); release needs two people; exceptions only once approved by someone else, end on expiry or revocation, at most 90 days; walls visible only to managing partners; an attorney can only protect what they can see; break-glass gives time-limited read-only access (no edits, no membership changes), cannot be self-approved, ends early or on expiry, never reaches highly restricted matters, never crosses a wall, is capped at 240 minutes, reveals nothing about the requested number, and is limited to firm admins (request) and managing partners (approve); walled, hidden and missing matters still run the same 2 policy statements. |
+| Bug found by the new tests | A client's creator could still see a client they were walled from. Fixed. |
+| Frontend | tsc **clean**; Vitest **32 passed** (+4: walls/emergency screens absent without the role; approval offered only to the other managing partner; emergency-access banner with "End now"; break-glass request body). |
+| Accessibility bug found | Field hints were part of the label's accessible name. Fixed with `aria-describedby`. |
+| Browser E2E | **5 passed**. New: (4) morgan requests a wall screening alice from M-114, sees no approve button, nakamura approves, and alice — the matter's lead — no longer sees M-114 (list and URL); (5) fiona requests emergency access to M-215 by number, morgan sees the resolved matter and approves, fiona sees the read-only banner and no edit controls, ends it, and the matter becomes "not available" again. Screenshots 10 and 11 added. |

@@ -210,6 +210,12 @@ Every entry records the options considered, the recommendation, the consequence 
   - an admin "reset two-step" action, which signs the person out and issues a new link;
   - the first administrator's link is written 0600 next to the data.
 
+### D-022 Managing partners see the matter directory for walls — RECORDED (S1.4)
+- To screen someone from a matter they cannot see themselves, a managing partner needs to find it. The walls authority (the `walls.read` firm action, held by managing partners) can therefore list the firm's matters (number, title, client) at `/api/legal/walls/matter-directory`, and only there.
+- This exposes no content (documents, transcripts, members) and does not grant access to any matter.
+- Attorneys requesting a wall can only protect matters and clients they can already see.
+- Break-glass requesters (firm admins) never see the directory: they name the matter by number, and only the approving managing partner sees what it resolves to.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
