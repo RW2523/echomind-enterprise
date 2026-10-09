@@ -43,7 +43,8 @@ describe('Ethical walls and emergency access screens', () => {
       'POST /api/legal/break-glass/g1/end': () => [200, { request: {} }],
     });
     renderLaw('/m/M-215/overview');
-    expect(await screen.findByText('Emergency access.')).toBeTruthy();
+    expect(await screen.findByText("Emergency access.")).toBeTruthy();
+    expect(screen.getByText(/Everything you open is recorded/)).toBeTruthy();
     expect(screen.queryByText('Edit details')).toBeNull();
     fireEvent.click(await screen.findByRole('button', { name: 'End now' }));
     await waitFor(() => expect(calls.some((c) => c.path === '/api/legal/break-glass/g1/end')).toBe(true));

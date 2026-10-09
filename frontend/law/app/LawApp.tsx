@@ -17,6 +17,8 @@ import Security from '../pages/Security';
 import AdminUsers from '../pages/AdminUsers';
 import Walls from '../pages/Walls';
 import EmergencyAccess from '../pages/EmergencyAccess';
+import AuditTrail from '../pages/AuditTrail';
+import MatterActivity from '../pages/MatterActivity';
 import NotAvailable from '../pages/NotAvailable';
 import DesignCatalogue from '../pages/DesignCatalogue';
 
@@ -44,6 +46,7 @@ export const lawRoutes = [
               { index: true, element: <Navigate to="overview" replace /> },
               { path: 'overview', element: <MatterOverview /> },
               { path: 'members', element: <MatterMembers /> },
+              { path: 'activity', element: <MatterActivity /> },
               { path: '*', element: <NotAvailable /> },
             ],
           },
@@ -51,6 +54,7 @@ export const lawRoutes = [
           { path: '/admin/users', element: <AdminUsers /> },
           { path: '/admin/walls', element: <Walls /> },
           { path: '/admin/emergency-access', element: <EmergencyAccess /> },
+          { path: '/admin/audit', element: <AuditTrail /> },
           { path: '*', element: <NotAvailable /> },
         ],
       },

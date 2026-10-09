@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { BreakGlassRequest, Client, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -14,6 +14,8 @@ export const keys = {
   sessions: ['me', 'sessions'] as const,
   walls: ['admin', 'walls'] as const,
   breakGlass: ['admin', 'break-glass'] as const,
+  audit: ['admin', 'audit'] as const,
+  activity: (id: string) => ['matter', id, 'activity'] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false });
@@ -47,3 +49,22 @@ export const useMatterDirectory = (q: string, enabled: boolean) =>
 export const useBreakGlass = (enabled: boolean) =>
   useQuery({ queryKey: keys.breakGlass, enabled, refetchInterval: 30_000,
     queryFn: () => api.get<{ requests: BreakGlassRequest[]; can_approve: boolean }>('/api/legal/break-glass') });
+
+export interface AuditFilters { action?: string; actor?: string; outcome?: string }
+const qs = (o: Record<string, string | number | undefined>) =>
+  Object.entries(o).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&');
+
+/** The firm-wide trail, newest first, a page at a time. Not refetched behind the reader's back. */
+export const useAuditTrail = (filters: AuditFilters, enabled: boolean) =>
+  useInfiniteQuery({
+    queryKey: [...keys.audit, filters], enabled, refetchOnWindowFocus: false, initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam }) => api.get<AuditPage>(`/api/legal/audit?${qs({ ...filters, before: pageParam })}`),
+    getNextPageParam: (last) => last.next_before ?? undefined,
+  });
+export const useMatterActivity = (matterId: string) =>
+  useInfiniteQuery({
+    queryKey: keys.activity(matterId), refetchOnWindowFocus: false, initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam }) => api.get<AuditPage>(`/api/legal/matters/${encodeURIComponent(matterId)}/activity?${qs({ before: pageParam })}`),
+    getNextPageParam: (last) => last.next_before ?? undefined,
+  });
+export const verifyAuditTrail = () => api.get<AuditVerification>('/api/legal/audit/verify');

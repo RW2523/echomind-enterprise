@@ -173,3 +173,30 @@ test('emergency access: requested by a firm admin, approved by a managing partne
   await fiona.reload();
   await expect(fiona.getByText("This item isn't available.")).toBeVisible();
 });
+
+test('the audit trail shows the emergency access, intact, and the lead sees it on the matter', async ({ browser }) => {
+  test.setTimeout(120_000);
+  const morgan = await (await browser.newContext()).newPage();
+  await signIn(morgan, 'morgan');
+  await morgan.goto('/admin/audit');
+  await morgan.getByLabel('Activity').selectOption('breakglass');
+  await expect(morgan.getByText(/asked for emergency access to M-215/)).toBeVisible();
+  await expect(morgan.getByText(/approved emergency access to M-215/)).toBeVisible();
+  await morgan.getByLabel('Activity').selectOption('');
+  const integrity = morgan.getByRole('region', { name: 'Integrity' });
+  await integrity.getByRole('button', { name: 'Check now' }).click();
+  await expect(integrity.getByText('Intact')).toBeVisible();
+  await shot(morgan, '12-audit-trail-light');
+
+  const bob = await (await browser.newContext()).newPage();
+  await signIn(bob, 'bob');
+  await bob.goto('/m/M-215/activity');
+  await expect(bob.getByText(/fiona viewed M-215/).first()).toBeVisible();
+  await expect(bob.getByText('Emergency access').first()).toBeVisible();
+  await shot(bob, '13-matter-activity-light');
+
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/admin/audit');
+  await expect(alice.getByText("This item isn't available.")).toBeVisible();
+});

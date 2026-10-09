@@ -17,7 +17,14 @@ export function mockApi(handlers: Record<string, Handler>) {
     const method = (init?.method || 'GET').toUpperCase();
     const body = init?.body ? JSON.parse(String(init.body)) : undefined;
     calls.push({ method, path: url.pathname, body });
-    const h = handlers[`${method} ${url.pathname}`];
+    let h = handlers[`${method} ${url.pathname}`];
+    // Opening a matter (GET /api/legal/matters/:id) answers like the server: from the person's own list.
+    const open = /^\/api\/legal\/matters\/([^/]+)$/.exec(url.pathname);
+    if (!h && method === 'GET' && open && handlers['GET /api/legal/matters']) {
+      const [, list] = handlers['GET /api/legal/matters'](undefined) as [number, { matters: Matter[] }];
+      const found = list.matters.find((m) => m.id === decodeURIComponent(open[1]));
+      h = () => (found ? [200, { matter: found }] : [404, { detail: 'Not Found' }]);
+    }
     if (!h) return new Response(JSON.stringify({ detail: `unmocked ${method} ${url.pathname}` }), { status: 599 });
     const [status, json] = h(body);
     return new Response(JSON.stringify(json), { status, headers: { 'Content-Type': 'application/json' } });
