@@ -78,7 +78,9 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
                             versions).fetchone()[0] if versions else 0
     files = [v for v in versions if os.path.exists(_blob(matter_id, v))]
     in_index = set(registry.for_matter(matter_id).chunk_ids) & set(chunks)
+    from ..exports import service as exports
     return {"object": "document", "versions": len(versions), "passages": len(chunks), "findings": findings,
+            "exports": exports.count_for(conn, "document", document_id),
             "labels": conn.execute("SELECT COUNT(*) FROM legal_labels WHERE object_type='document' AND object_id=?", (document_id,)).fetchone()[0],
             "files": len(files), "file_bytes": sum(os.path.getsize(_blob(matter_id, v)) for v in files),
             "index_vectors": len(in_index), "research_citations": len(_citing_turns(conn, matter_id, document_id)),
@@ -87,7 +89,9 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
 
 def report_transcript(conn, matter_id: str, meeting_id: str) -> dict:
     n = conn.execute("SELECT COUNT(*) FROM legal_transcript_segments WHERE meeting_id=? AND matter_id=?", (meeting_id, matter_id)).fetchone()[0]
-    return {"object": "meeting_transcript", "segments": n, "kept": KEPT_TRANSCRIPT}
+    from ..exports import service as exports
+    return {"object": "meeting_transcript", "segments": n, "exports": exports.count_for(conn, "meeting_transcript", meeting_id),
+            "kept": KEPT_TRANSCRIPT}
 
 
 def preview(matter_id: str, object_type: str, object_id: str) -> dict:
@@ -195,10 +199,12 @@ def purge(deletion_id: str, approved_by: str, note: Optional[str] = None) -> dic
         try:
             if holds.matter_on_hold(conn, d["matter_id"]):
                 raise holds.Held(d["matter_id"])
+            from ..exports import service as exports
             if d["object_type"] == "document":
                 gone = _purge_document(conn, d)
             else:
                 gone = _purge_transcript(conn, d)
+            gone["exports"] = exports.purge_for(conn, d["object_type"], d["object_id"])
             conn.execute("UPDATE legal_deletions SET status='purged', purged_at=?, decided_by=?, decided_at=?, decision_note=?, "
                          "object_label=NULL WHERE id=?", (now_iso(), approved_by, now_iso(), note, deletion_id))
             conn.commit()
@@ -219,6 +225,9 @@ def purge(deletion_id: str, approved_by: str, note: Optional[str] = None) -> dic
             pass
     if gone.get("chunks"):
         registry.for_matter(d["matter_id"]).remove(gone["chunks"])
+    from ..documents import blobs
+    for matter_id, export_id in gone.get("exports", []):
+        blobs.remove(matter_id, export_id, "exports")
     verification = verify(d, gone)
     with get_conn() as conn:
         conn.execute("UPDATE legal_deletions SET verification_json=? WHERE id=?", (json.dumps(verification), deletion_id))
@@ -271,6 +280,9 @@ def verify(d: dict, gone: dict) -> dict:
         else:
             n = conn.execute("SELECT COUNT(*) FROM legal_transcript_segments WHERE meeting_id=?", (d["object_id"],)).fetchone()[0]
             checks = {"database": n == 0}
+        from ..exports import service as exports
+        checks["exports"] = exports.count_for(conn, d["object_type"], d["object_id"]) == 0 and not any(
+            exports.file_exists(m, e) for m, e in gone.get("exports", []))
     return {"ok": all(checks.values()), "checks": checks, "verified_at": now_iso()}
 
 

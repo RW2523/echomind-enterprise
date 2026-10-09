@@ -296,5 +296,7 @@ class Settings(BaseSettings):
     # Records (S1.9; P-002). Retention never deletes by itself: with this off (default) runs are
     # dry runs; with it on, approved policies only create deletion requests for a person to approve.
     LEGAL_RETENTION_APPLY: bool = os.getenv("LEGAL_RETENTION_APPLY", "0").lower() in ("1", "true", "yes")
+    # Exports (S1.10; P-006): released files are kept this long, then removed.
+    LEGAL_EXPORT_TTL_HOURS: float = float(os.getenv("LEGAL_EXPORT_TTL_HOURS", "24"))
 
 settings = Settings()

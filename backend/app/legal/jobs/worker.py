@@ -85,10 +85,13 @@ def wake() -> None:
 
 
 def _daily() -> None:
-    """Scheduled work: one retention dry run per day (S1.9; never deletes anything)."""
+    """Scheduled work: one retention dry run per day (S1.9; never deletes anything) and removing
+    released exports past their time (S1.10)."""
+    from ..exports import service as exports
     from ..orgs import default_org_id
     from ..records import retention
     retention.daily_dry_run(default_org_id())
+    exports.expire_due()
 
 
 def _loop() -> None:
