@@ -18,6 +18,7 @@ import AdminUsers from '../pages/AdminUsers';
 import Walls from '../pages/Walls';
 import EmergencyAccess from '../pages/EmergencyAccess';
 import AuditTrail from '../pages/AuditTrail';
+import Records from '../pages/Records';
 import MatterActivity from '../pages/MatterActivity';
 import MatterDocuments from '../pages/MatterDocuments';
 import MatterResearch from '../pages/MatterResearch';
@@ -63,6 +64,7 @@ export const lawRoutes = [
           { path: '/admin/walls', element: <Walls /> },
           { path: '/admin/emergency-access', element: <EmergencyAccess /> },
           { path: '/admin/audit', element: <AuditTrail /> },
+          { path: '/admin/records', element: <Records /> },
           { path: '*', element: <NotAvailable /> },
         ],
       },

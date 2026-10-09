@@ -286,3 +286,50 @@ test('meetings: recording waits for everyone’s consent and stops the moment on
   await expect(alice.getByRole('region', { name: 'Recording history' }).getByText(/audio receipt/)).toBeVisible();
   await expect(alice.getByText('Still needed from: Petra Voss.')).toBeVisible();
 });
+
+test('records: a label, a deletion approved by records and verified, and a two-person legal hold', async ({ browser }) => {
+  test.setTimeout(180_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  await alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true }).click();
+  const panel = alice.getByRole('complementary', { name: 'Document details' });
+  await panel.getByLabel('Set label').selectOption('confidential');
+  await expect(panel.getByText(/set by alice/)).toBeVisible();
+  await panel.getByRole('button', { name: /Delete…/ }).click();
+  const dialog = alice.getByRole('dialog', { name: /Delete “Master Services Agreement \(DEMO\)”/ });
+  await expect(dialog.getByText(/searchable passages?/)).toBeVisible();
+  await dialog.getByLabel('Reason').fill('Superseded by the signed copy');
+  await dialog.getByRole('button', { name: /Request deletion/ }).click();
+  await expect(alice.getByRole('region', { name: 'Waiting for deletion approval' })).toBeVisible();
+
+  const rhea = await (await browser.newContext()).newPage();
+  await signIn(rhea, 'rhea');
+  await rhea.goto('/admin/records');
+  const card = rhea.getByRole('region', { name: 'Master Services Agreement (DEMO)' });
+  await expect(card.getByText(/research answers? quoting it/)).toBeVisible();
+  await shot(rhea, '17-records-deletion-light');
+  await card.getByRole('button', { name: 'Approve deletion' }).click();
+  await expect(rhea.getByText('Nothing left')).toBeVisible({ timeout: 20_000 });
+
+  await rhea.getByRole('tab', { name: 'Legal holds' }).click();
+  await rhea.getByLabel('Name').fill('Beta Shipping litigation hold');
+  await rhea.getByLabel('Matters').fill('M-215');
+  await rhea.getByRole('button', { name: /\+ M-215/ }).click();
+  await rhea.getByLabel('Reason').fill('Claim anticipated from the landlord');
+  await rhea.getByRole('button', { name: /Request hold/ }).click();
+  await expect(rhea.getByText('Awaiting approval')).toBeVisible();
+  await expect(rhea.getByRole('button', { name: 'Approve hold' })).toHaveCount(0);
+
+  const morgan = await (await browser.newContext()).newPage();
+  await signIn(morgan, 'morgan');
+  await morgan.goto('/admin/records');
+  await morgan.getByRole('tab', { name: 'Legal holds' }).click();
+  await morgan.getByRole('button', { name: 'Approve hold' }).click();
+  await expect(morgan.getByText('In force')).toBeVisible();
+
+  const bob = await (await browser.newContext()).newPage();
+  await signIn(bob, 'bob');
+  await bob.goto('/m/M-215/overview');
+  await expect(bob.getByText(/Nothing in this matter can be deleted while the hold is in force/)).toBeVisible();
+});

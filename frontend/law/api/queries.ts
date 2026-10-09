@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, DocVersion, LawDocument, MeetingDetail, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Deletion, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -21,6 +21,11 @@ export const keys = {
   research: (id: string) => ['matter', id, 'research'] as const,
   meetings: (id: string) => ['matter', id, 'meetings'] as const,
   meeting: (id: string, meetingId: string) => ['matter', id, 'meetings', meetingId] as const,
+  labels: (id: string, type: string, objectId: string) => ['matter', id, 'labels', type, objectId] as const,
+  matterDeletions: (id: string) => ['matter', id, 'deletions'] as const,
+  deletions: ['records', 'deletions'] as const,
+  holds: ['records', 'holds'] as const,
+  retention: ['records', 'retention'] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false });
@@ -116,3 +121,20 @@ export const useMeeting = (matterId: string, meetingId: string) =>
       return { ...m.meeting, transcript: t.segments };
     },
   });
+
+const legal = (p: string) => `/api/legal${p}`;
+export const labelsPath = (matterId: string, type: string, objectId: string) =>
+  legal(`/matters/${encodeURIComponent(matterId)}/labels/${type}/${encodeURIComponent(objectId)}`);
+export const useLabels = (matterId: string, type: 'document' | 'meeting', objectId: string) =>
+  useQuery({ queryKey: keys.labels(matterId, type, objectId), refetchOnWindowFocus: false, queryFn: () => api.get<LabelState>(labelsPath(matterId, type, objectId)) });
+/** Deletions waiting for approval in one matter (for those who may request and restore them). */
+export const useMatterDeletions = (matterId: string, enabled: boolean) =>
+  useQuery({ queryKey: keys.matterDeletions(matterId), enabled,
+    queryFn: async () => (await api.get<{ deletions: Deletion[] }>(legal(`/matters/${encodeURIComponent(matterId)}/deletions`))).deletions });
+export const useDeletions = (enabled: boolean) =>
+  useQuery({ queryKey: keys.deletions, enabled, queryFn: async () => (await api.get<{ deletions: Deletion[] }>(legal('/deletions'))).deletions });
+export const useHolds = (enabled: boolean) =>
+  useQuery({ queryKey: keys.holds, enabled, queryFn: () => api.get<{ holds: Hold[]; can_request: boolean }>(legal('/holds')) });
+export const useRetention = (enabled: boolean) =>
+  useQuery({ queryKey: keys.retention, enabled,
+    queryFn: () => api.get<{ policies: RetentionPolicy[]; runs: RetentionRun[]; apply_enabled: boolean }>(legal('/retention')) });

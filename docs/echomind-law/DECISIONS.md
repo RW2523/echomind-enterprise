@@ -9,6 +9,8 @@
 >
 > It does **not** cover: pushing to GitHub or opening PRs; starting the compose stack on the shared host; anything touching production; network integrations (DMS, IdP, licensed sources); or counsel's policy decisions (P-items). Those are still asked for explicitly.
 
+> **2026-10-09 approval.** After the S1.5–S1.8 report, which listed D-025's change of approach and the three proposed decisions adopted in S1.6, the owner replied *"approved, merge and start S1.9"*. D-005, D-012, D-014 (as implemented), D-023, D-025 and D-026 are therefore APPROVED. The P-items (consent wording and rules, audio retention) stay with counsel.
+
 **Status values**
 - **PROPOSED**: Claude's engineering recommendation. Not yet approved; it needs the product owner's approval before the slice that depends on it starts.
 - **APPROVED**: confirmed by the product owner, with date.
@@ -68,7 +70,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - the firm requires DB-native RLS.
 - **Migration framework:** a small versioned runner (`backend/app/legal/migrations/NNNN_*.sql`) with a `schema_migrations(version, checksum, applied_at)` table, run at boot. Every migration is additive with a paired `down` script. Alembic is avoided because there is no ORM.
 
-### D-005 Retrieval isolation: per-matter index partitions — IMPLEMENTED (S1.6, 2026-10-08; option (a), part of the approved plan)
+### D-005 Retrieval isolation: per-matter index partitions — APPROVED 2026-10-09 (implemented S1.6, option (a))
 - **Context:** One global FAISS/BM25 index with a post-search namespace filter fails the spec ("post-filter alone is insufficient") and has a measured timing side channel.
 - **Options:**
   - (a) Per-matter physical partitions: one dense and one sparse index per matter, plus one firm-library partition.
@@ -178,7 +180,7 @@ Every entry records the options considered, the recommendation, the consequence 
   4. **Manual open in Microsoft Word by a human before it is called DONE.**
 - **Stop condition:** If the spike fails, the HTML side-by-side redline ships and DOCX tracked changes are marked **BLOCKED**, never "done". The timing question (pilot launch or Phase 3) is P-013.
 
-### D-012 Remove global PII redaction for Law ingestion — IMPLEMENTED (S1.6, 2026-10-08; part of the approved plan)
+### D-012 Remove global PII redaction for Law ingestion — APPROVED 2026-10-09 (implemented S1.6)
 - **Context:** `sanitize.py` rewrites emails, phone numbers and long numbers in **every** document. That destroys contract content, Bates numbers and e-discovery data, and makes citations quote altered text.
 - **Decision:**
   - For Law partitions, index the **original** text.
@@ -197,7 +199,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - There is no blanket service-account bypass.
 - **Fixes:** the current voice-to-backend 401 under auth (CODEBASE_AUDIT §4).
 
-### D-014 Encryption at rest — PARTLY IMPLEMENTED (S1.6: uploaded documents; volume encryption remains a deployment step)
+### D-014 Encryption at rest — APPROVED 2026-10-09; PARTLY IMPLEMENTED (S1.6: uploaded documents; volume encryption remains a deployment step)
 - **Decision (defence in depth):**
   1. **Volume level:** the Law data volume lives on a LUKS-encrypted disk. This is a deployment runbook step that needs root on the target host and is **not** done by the app.
   2. **Application level:** original uploads, Boardroom audio chunks, export outputs and connector credentials are encrypted with AES-256-GCM. Each file gets its own key, wrapped by a master key from `LEGAL_MASTER_KEY_FILE` (mode 0600, outside the data volume). This uses the `cryptography` library (Apache-2.0/BSD) and needs approval to add.
@@ -266,13 +268,13 @@ Every entry records the options considered, the recommendation, the consequence 
 - Attorneys requesting a wall can only protect matters and clients they can already see.
 - Break-glass requesters (firm admins) never see the directory: they name the matter by number, and only the approving managing partner sees what it resolves to.
 
-### D-023 Opening a matter is a recorded read — RECORDED (S1.5)
+### D-023 Opening a matter is a recorded read — APPROVED 2026-10-09 (S1.5)
 - The workspace resolves a matter from the person's own list, so a hidden matter and a missing one look the same (S1.3). That list alone left no trace of a visit, and a break-glass visit was invisible to the matter's lead; the S1.5 browser test caught this.
 - Entering a matter now calls `GET /api/legal/matters/{id}`, which records `matter.read`, with reason `break_glass` under emergency access. Nothing of the matter is shown until that succeeds.
 - One event per visit: leaving the matter drops its cache, so coming back is recorded again. Switching tabs inside the matter is not a new visit.
 - No new disclosure: the call is made only for a matter already in the person's visible list.
 
-### D-025 The Law edition closes the existing modules; their capabilities return matter-scoped — RECORDED (S1.7)
+### D-025 The Law edition closes the existing modules; their capabilities return matter-scoped — APPROVED 2026-10-09 (S1.7)
 - **Context:** The plan for S1.7 was to add matter scoping to each existing module: legacy chat, documents, transcripts, the Boardroom, the document studio and export evaluation. None of them knows about matters. Each reads from the shared global index or from unscoped tables, and in the Law edition they were still reachable by any signed-in person. For example, a legacy upload went into the shared index and was answerable for everyone.
 - **Decision:**
   - In the Law edition the backend serves only `/api/auth/*` and `/api/legal/*` (plus `/health` and `/api/version`).
@@ -300,7 +302,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - No relevant passage means an explicit abstention without calling the model.
   - Every question and its outcome are audited (the question only as length and SHA-256). History is private to its owner within the matter.
 
-### D-026 Consent-gated capture as built — RECORDED (S1.8)
+### D-026 Consent-gated capture as built — APPROVED 2026-10-09 (S1.8; P-001 values stay with counsel)
 - **A new Law capture socket.** The socket is `/api/legal/matters/{m}/meetings/{id}/capture`. It does not reuse the legacy live-transcript handler, which writes into the shared knowledge base (D-025).
   - The socket refuses before anything loads:
     - 4403: not a contributor;
@@ -328,6 +330,36 @@ Every entry records the options considered, the recommendation, the consequence 
   - Pluggable. The default wraps the live speech-recognition model when it is installed; the dev host has none, so it reports "unavailable" and capture control still works.
   - Segments are stored per matter and meeting; reading them is audited.
 - **Audit:** participant names and transcript text are matter content and never appear in the audit trail; tested.
+
+### D-027 Records as built: labels, holds, deletion, retention — RECORDED (S1.9)
+- **Labels (P-004 safe default):**
+  - The labels are advisory: Privileged, Work product, Confidential, Not privileged and Unreviewed. They never change who can see something.
+  - On documents and meetings, a lead, attorney or reviewer sets the label; a paralegal's choice is recorded as a suggestion.
+  - At indexing, a detector suggests a label from explicit markers in the text ("attorney-client privilege", "privileged and confidential", "legally privileged", "without prejudice", "work product"). "Confidential" alone is deliberately not a marker: it appears in most contracts.
+  - Every change is kept and audited.
+- **Legal holds (P-003 safe default):**
+  - A hold covers whole matters (document-level holds can come later).
+  - A records administrator requests it; it takes effect once a different records administrator or a managing partner approves. Release takes two people as well.
+  - Members see an "on hold" notice, not the hold's details.
+- **Matter directory (extends D-022):**
+  - Records administrators join managing partners in seeing the firm's matter directory (number, title, client) at `/api/legal/matter-directory`. They need it to place holds and judge deletions.
+  - No content is shown and no access is granted.
+- **Deletion:**
+  - One service (`legal/records/deletion.py`) handles documents and meeting transcripts.
+  - A person's request soft-deletes at once: the item is hidden from lists, search, research and downloads, and can be restored. A retention request is only proposed.
+  - The dry-run report counts versions, passages, files, index entries, findings, labels and the research answers quoting the item.
+  - Approval needs a records administrator or managing partner other than the requester.
+  - The purge deletes inside one transaction that re-checks holds; then stored files and index vectors are removed. Research answers keep their wording but lose quotes from the item.
+  - Verification re-checks the database, index, files and quotes, and is stored with the request.
+  - Consent records, capture timelines and audio receipts are kept when a transcript is deleted.
+  - The audit trail is never purged. The deletion record keeps only a hash of the title.
+- **Retention (P-002 safe default):**
+  - A records administrator drafts a policy ("documents / meeting transcripts, N days after the matter closed"); a managing partner approves it.
+  - Runs are dry runs: one is scheduled daily and they can also be run on demand. They count what approved policies select, preview what drafts would, and count held matters as skipped.
+  - `LEGAL_RETENTION_APPLY` (off) allows an "apply" run, and even that only creates deletion requests for a person to approve. **Nothing is ever deleted automatically.**
+- **Known limits:**
+  - Backups keep purged data until they rotate (OPS runbook).
+  - Research answers keep their own wording, which may paraphrase a purged document; only quotes are removed.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-08 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.9-records` |
-| Phase | Phase 1: S1.0–S1.8 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.10-exports` |
+| Phase | Phase 1: S1.0–S1.9 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0009` (Law edition only) |
+| Migrations | `0001`–`0010` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -183,10 +183,26 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Meetings screens: Prepare, Consent, Record.
 - **Counsel:** the consent statement, methods, 12-hour freshness and all-party rule are P-001 safe defaults.
 
+### Session 2 (continued) — S1.9 Labels, legal holds, deletion, retention
+- The owner approved the S1.5–S1.8 decisions (see Approvals).
+- **As built (D-027):**
+  - advisory privilege labels with a marker detector;
+  - matter-level legal holds with two-person approval and release;
+  - one deletion service: soft delete, report, second-person approval, purge with a hold re-check, verification;
+  - retention that only ever dry-runs or creates requests (migration `0010_records`).
+- Screens:
+  - labels and deletion in the document inspector;
+  - "waiting for deletion approval" with restore;
+  - hold notices;
+  - transcript deletion;
+  - Admin → Records (deletion requests, legal holds, retention).
+- **Counsel:** label set (P-004), hold workflow (P-003) and retention schedules (P-002) are safe defaults.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
 - 2026-10-08: each slice S1.0–S1.3 approved and merged in turn; then a **standing approval** to build and merge slices in order, as recorded at the top of DECISIONS.md.
+- 2026-10-09: **APPROVED** after the S1.5–S1.8 report: D-005, D-012, D-014 (as implemented), D-023, D-025 and D-026. S1.9 started.
 - Still 🔒:
   - the first `scripts/law/compose.sh up` on the shared host;
   - any push or PR to GitHub;
@@ -205,8 +221,8 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | SEC-03 | DONE | S1.6–S1.7 | Matter documents in separate encrypted storage and per-matter partitions; a scope capability re-checked per search and while streaming; every legacy module closed in Law (D-025); research and voice matter-scoped; canary suites v1 (search) and v2 (research and voice); T01, T02 and T06 pass, including streams and the model |
 | SEC-04 | DONE (forwarder awaits network approval) | S1.0, S1.5 | Content-free logs (S1.0). Hash-chained append-only trail with daily anchors, verifier CLI and endpoint, firm trail for governance roles, matter activity for leads, verifiable JSONL and CSV export; every Law route audited, enforced by a test. Off-host syslog/CEF forwarder not built (network approval) |
 | SEC-05 | DONE (mechanism) | S1.8 | All-party, explicit, per-participant consent before capture; withdrawal stops capture at once with a lock-ordered guarantee; pause and resume recorded; append-only consent and capture timelines; audio receipts; T03 in backend and browser. Wording and rules: P-001 (counsel) |
-| SEC-06 | PARTIAL (pre-existing) | S1.9–S1.10 | |
-| SEC-07 | MISSING | S1.9 | Policy values need counsel (P-002/P-003) |
+| SEC-06 | PARTIAL (labels DONE) | S1.9–S1.10 | S1.9: advisory privilege labels on documents and meetings, with detector suggestions, a paralegal suggestion path and audit. Redaction preview and safe exports: S1.10 |
+| SEC-07 | DONE (mechanism) | S1.9 | Holds with two-person approval and release; one deletion service (soft delete, report, approval, purge with a hold re-check, verification, restore); retention dry runs only, and requests at most; T04 in backend and browser. Schedules: P-002/P-003 (counsel) |
 | SEC-08 | MISSING | S1.11 | Provider BLOCKED (P-010) |
 | RAG-01 | PARTIAL | S1.6–S1.7, S2.1–S2.2 | Matter-scoped search (S1.6) and research answers with numbered citations to quoted clauses, abstention and owner-private history (S1.7, real-model E2E). Still to come: OCR, clause-aware ingestion, the PDF viewer with highlights and evaluation (S2.1–S2.3) |
 | RAG-02 | MISSING | S2.3 | |
@@ -241,11 +257,10 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S1.9 Labels, retention, legal hold, deletion (SEC-07, SEC-06 labels)** on `law/s1.9-records`:
-1. Migration `0010_records`.
-2. `legal/records/{labels,holds,retention,deletion}.py`. Privilege labels follow P-004 defaults (advisory: Privileged, Work product, Confidential, Not privileged, Unreviewed).
-3. Holds need a records-admin request plus a second approver (P-003). Held data is never purged by any path.
-4. Every Law delete path goes through `DeletionService`: soft delete → dry-run report (rows, passages, partition vectors, blobs, segments) → approval → purge with a hold re-check → verification.
-5. The retention runner stays dry-run until P-002 is approved.
-6. Screens: label editor in the document inspector, Admin → Retention and holds, the deletion request flow.
-7. T04 tests: every path refuses held items; a purge leaves no residue (DB, partition, blob); a soft delete can be restored.
+Start **S1.10 Export gateway v2 and redaction (SEC-06)** on `law/s1.10-exports`:
+1. Migration `0011_exports`.
+2. `legal/exports/{detect,plan,render_pdf,render_docx,sanitize,verify,watermark}.py`. Detectors: the existing PII patterns plus matter party names, matter numbers, account numbers and privilege markers.
+3. PDF redaction must really remove the text (PyMuPDF `add_redact_annot` + `apply_redactions`), then text-extraction verification. DOCX is rebuilt clean: comments, revisions, `docProps`, custom XML and hidden runs stripped.
+4. Flow: request (needs `export.request` and the membership's `can_export`) → preview with redaction boxes and reasons → approve (`export.approve`, a second person; P-006) → render → verify → watermark "CONFIDENTIAL — <matter> — <user> — <timestamp>" → download (`no-store`, audited). Exports of held matters are allowed (exporting is not deleting).
+5. The `ExportPreview` screen.
+6. T09: for each format, redacted strings are absent from extracted text, metadata, comments and revisions; unauthorized export is denied; the watermark is present; the audit chain is complete.

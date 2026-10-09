@@ -1,12 +1,13 @@
 import React, { useRef, useState } from 'react';
-import { Download, FileUp, RotateCcw, Search, X } from 'lucide-react';
+import { Download, FileUp, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
-import { documentsPath, keys, useDocument, useDocuments } from '../api/queries';
-import type { DocKind, DocStatus, DocVersion, LawDocument, SearchResult } from '../api/types';
+import { documentsPath, keys, useDocument, useDocuments, useMatterDeletions } from '../api/queries';
+import type { Deletion, DocKind, DocStatus, DocVersion, LawDocument, SearchResult } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Field, Skeleton, StatusPill, type Tone } from '../ui/primitives';
+import { DeleteDialog, HoldNotice, LabelControl, LabelPill } from '../ui/records';
 
 const KINDS: [DocKind, string][] = [['contract', 'Contract'], ['correspondence', 'Correspondence'], ['pleading', 'Pleading'],
   ['evidence', 'Evidence'], ['memo', 'Memo'], ['note', 'Note'], ['other', 'Other']];
@@ -38,7 +39,11 @@ export default function MatterDocuments() {
   const docs = useDocuments(matter.id);
   const [selected, setSelected] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
-  const canImport = ['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && matter.status === 'open';
+  const role = matter.my_role ?? '';
+  const canImport = ['lead', 'attorney', 'paralegal'].includes(role) && matter.status === 'open';
+  const mayDelete = ['lead', 'attorney'].includes(role);
+  const perms = { canSetLabel: ['lead', 'attorney', 'reviewer'].includes(role) && matter.status === 'open',
+    canSuggestLabel: role === 'paralegal' && matter.status === 'open', canDelete: mayDelete && !matter.on_hold, onHold: !!matter.on_hold && mayDelete };
   return (
     <>
       <Toolbar crumb={matter.number} title="Documents">
@@ -47,6 +52,7 @@ export default function MatterDocuments() {
       <div className="lw-content lw-docs" data-inspecting={selected ? 'true' : undefined}>
         <div style={{ display: 'grid', gap: 16, alignContent: 'start', minWidth: 0 }}>
           <MatterSearch matterId={matter.id} onOpen={setSelected} />
+          {mayDelete && <PendingDeletions matterId={matter.id} />}
           {docs.isPending ? <div className="lw-paper lw-sheet" aria-busy="true"><Skeleton /><Skeleton /></div>
             : docs.isError ? <ErrorNote>{docs.error instanceof ApiError ? docs.error.message : 'The documents could not be loaded.'}</ErrorNote>
             : docs.data.length === 0 ? (
@@ -64,7 +70,10 @@ export default function MatterDocuments() {
                       return (
                         <tr key={d.id} aria-selected={selected === d.id} className={selected === d.id ? 'lw-row-selected' : undefined}>
                           <td style={{ minWidth: 0 }}>
-                            <button type="button" className="lw-linklike" onClick={() => setSelected(d.id)}>{d.title}</button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                              <button type="button" className="lw-linklike" onClick={() => setSelected(d.id)}>{d.title}</button>
+                              <LabelPill label={d.label} suggested={d.label_suggested} />
+                            </div>
                             <div className="lw-meta lw-ellipsis">{v?.filename}</div>
                           </td>
                           <td>{kindLabel(d.kind)}<div className="lw-meta">{statusLabel(d.status)}</div></td>
@@ -79,7 +88,7 @@ export default function MatterDocuments() {
               </section>
             )}
         </div>
-        {selected && <Inspector matterId={matter.id} docId={selected} canEdit={canImport} onClose={() => setSelected(null)} />}
+        {selected && <Inspector matterId={matter.id} docId={selected} canEdit={canImport} perms={perms} onClose={() => setSelected(null)} />}
       </div>
       {importing && <ImportDialog matterId={matter.id} documents={docs.data ?? []} onClose={() => setImporting(false)} />}
     </>
@@ -145,10 +154,13 @@ function MatterSearch({ matterId, onOpen }: { matterId: string; onOpen: (docId: 
 }
 
 // ── Inspector ──────────────────────────────────────────────────────────────────
-function Inspector({ matterId, docId, canEdit, onClose }: { matterId: string; docId: string; canEdit: boolean; onClose: () => void }) {
+type Perms = { canSetLabel: boolean; canSuggestLabel: boolean; canDelete: boolean; onHold: boolean };
+
+function Inspector({ matterId, docId, canEdit, perms, onClose }: { matterId: string; docId: string; canEdit: boolean; perms: Perms; onClose: () => void }) {
   const doc = useDocument(matterId, docId);
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const base = `${documentsPath(matterId)}/${encodeURIComponent(docId)}`;
   const reindex = async () => {
@@ -190,11 +202,18 @@ function Inspector({ matterId, docId, canEdit, onClose }: { matterId: string; do
                 <div className="lw-meta">It stays searchable inside this matter only.</div>
               </div>
             )}
+            <div>
+              <h3 className="lw-eyebrow" style={{ margin: '0 0 6px' }}>Privilege label</h3>
+              <LabelControl matterId={matterId} type="document" objectId={d.id} canSet={perms.canSetLabel} canSuggest={perms.canSuggestLabel}
+                onChange={() => qc.invalidateQueries({ queryKey: keys.documents(matterId) })} />
+            </div>
+            {perms.onHold && <HoldNotice />}
             {error && <ErrorNote>{error}</ErrorNote>}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {v && <a className="lw-btn lw-btn-sm" href={`${base}/versions/${encodeURIComponent(v.id)}/file`} download><Download />Download</a>}
               {canEdit && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => setEditing(true)}>Edit details</button>}
               {canEdit && v?.index_status === 'failed' && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={reindex}><RotateCcw />Try again</button>}
+              {perms.canDelete && <button type="button" className="lw-btn lw-btn-sm lw-btn-danger" onClick={() => setDeleting(true)}><Trash2 />Delete…</button>}
             </div>
             <div>
               <h3 className="lw-eyebrow" style={{ margin: '4px 0 6px' }}>Versions</h3>
@@ -211,6 +230,14 @@ function Inspector({ matterId, docId, canEdit, onClose }: { matterId: string; do
           </div>
         )}
       {editing && d && <EditDialog matterId={matterId} doc={d} onClose={() => setEditing(false)} onSaved={() => doc.refetch()} />}
+      {deleting && d && (
+        <DeleteDialog title={`Delete “${d.title}”`} previewUrl={`${base}/deletion-preview`} deleteUrl={`${base}/delete`}
+          onClose={() => setDeleting(false)}
+          onDone={async () => {
+            setDeleting(false); onClose();
+            await Promise.all([qc.invalidateQueries({ queryKey: keys.documents(matterId) }), qc.invalidateQueries({ queryKey: keys.matterDeletions(matterId) })]);
+          }} />
+      )}
     </aside>
   );
 }
@@ -301,5 +328,39 @@ function ImportDialog({ matterId, documents, onClose }: { matterId: string; docu
         </div>
       </form>
     </Dialog>
+  );
+}
+
+/** Deletions requested in this matter that a records administrator or managing partner has not
+ *  approved yet: still restorable. */
+function PendingDeletions({ matterId }: { matterId: string }) {
+  const qc = useQueryClient();
+  const pending = useMatterDeletions(matterId, true);
+  const [error, setError] = useState('');
+  if (!pending.data?.length) return null;
+  const restore = async (d: Deletion) => {
+    setError('');
+    try {
+      await api.post(`/api/legal/deletions/${encodeURIComponent(d.id)}/restore`);
+      await Promise.all([qc.invalidateQueries({ queryKey: keys.matterDeletions(matterId) }), qc.invalidateQueries({ queryKey: keys.documents(matterId) })]);
+    } catch (e) { setError(e instanceof ApiError ? e.message : 'It could not be restored.'); }
+  };
+  return (
+    <section className="lw-paper" aria-label="Waiting for deletion approval">
+      <div className="lw-card-h"><h2 className="lw-h2">Waiting for deletion approval</h2></div>
+      <ul className="lw-pending">
+        {pending.data.map((d) => (
+          <li key={d.id}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontWeight: 600 }} className="lw-ellipsis">{d.object_label}</div>
+              <div className="lw-meta">Requested by {d.requested_by} · {when(d.requested_at)} — “{d.reason}”</div>
+            </div>
+            {d.status === 'blocked' && <StatusPill tone="hold">Blocked by legal hold</StatusPill>}
+            <button type="button" className="lw-btn lw-btn-sm" onClick={() => restore(d)}><RotateCcw />Restore</button>
+          </li>
+        ))}
+      </ul>
+      {error && <div style={{ padding: '0 20px 14px' }}><ErrorNote>{error}</ErrorNote></div>}
+    </section>
   );
 }
