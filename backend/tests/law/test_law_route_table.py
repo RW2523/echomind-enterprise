@@ -7,6 +7,7 @@ import re
 import threading
 
 import pytest
+from fastapi import WebSocket
 from fastapi.routing import APIRoute, APIWebSocketRoute
 from starlette.websockets import WebSocketDisconnect
 
@@ -30,7 +31,12 @@ def _concrete(path: str) -> str:
     return re.sub(r"\{[^}]+\}", "x", path)
 
 
+LAW_API = ("/api/auth/", "/api/legal/")
+
+
 def test_every_http_route_denies_anonymous_callers(law_app, client):
+    """Law routes answer 401 without a session; every other /api route is closed in the Law
+    edition (S1.7, D-025) and answers 404 to everyone."""
     checked, leaks = 0, []
     for route in law_app.routes:
         if not isinstance(route, APIRoute) or route.path in _FASTAPI_DOCS:
@@ -40,8 +46,9 @@ def test_every_http_route_denies_anonymous_callers(law_app, client):
                 continue
             r = client.request(method, _concrete(route.path), json={})
             checked += 1
-            if r.status_code != 401:
-                leaks.append(f"{method} {route.path} -> {r.status_code}")
+            expected = 401 if route.path.startswith(LAW_API) or not route.path.startswith("/api/") else 404
+            if r.status_code != expected:
+                leaks.append(f"{method} {route.path} -> {r.status_code} (expected {expected})")
     assert checked > 60, checked
     assert not leaks, "routes reachable without a session:\n" + "\n".join(leaks)
 
@@ -53,32 +60,44 @@ def test_every_websocket_denies_anonymous_callers(law_app, client):
         with pytest.raises(WebSocketDisconnect) as exc:
             with client.websocket_connect(f"{WSS}{_concrete(route.path)}") as ws:
                 ws.receive_text()
-        assert exc.value.code == 1008, route.path
+        # The only backend socket is live capture, closed in Law until S1.8 adds consent (4404).
+        assert exc.value.code == (4404 if route.path == "/api/transcribe/ws" else 1008), route.path
 
 
 @pytest.fixture
-def stub_ws_handler(monkeypatch):
-    """Replace the ASR-backed live-transcript handler; we test the gate, not speech recognition."""
-    from app.api.routes import transcribe
-
-    async def handler(ws):
-        await ws.accept()
-        await ws.send_text("ready")
-        while True:
-            msg = await ws.receive()
-            if msg["type"] == "websocket.disconnect":
+def probe_ws(law_app):
+    """The WebSocket gate (`from_websocket` + `watch_websocket`) that consent-gated capture will use
+    in S1.8, mounted on a probe socket so it stays tested while live capture is closed."""
+    from app.legal.identity.principal import from_websocket, watch_websocket
+    path = "/api/legal/_probe/ws"
+    if not any(getattr(r, "path", None) == path for r in law_app.routes):
+        @law_app.websocket(path)
+        async def _probe(ws: WebSocket):
+            principal = from_websocket(ws)
+            if not principal:
+                await ws.close(code=1008)
                 return
+            watcher = watch_websocket(ws, principal)
+            await ws.accept()
+            await ws.send_text("ready")
+            try:
+                while True:
+                    msg = await ws.receive()
+                    if msg["type"] == "websocket.disconnect":
+                        return
+            finally:
+                watcher.cancel()
+    yield path
+    law_app.router.routes[:] = [r for r in law_app.router.routes if getattr(r, "path", None) != path]
 
-    monkeypatch.setattr(transcribe, "ws_handler", handler)
 
-
-def test_live_transcript_ws_accepts_a_session_and_closes_on_revocation(client, stub_ws_handler, monkeypatch):
+def test_the_socket_gate_accepts_a_session_and_closes_on_revocation(client, probe_ws, monkeypatch):
     from app.core.config import settings
     from app.legal.identity import sessions
     monkeypatch.setattr(settings, "LEGAL_WS_RECHECK_SEC", 0.1)
     sign_in(client, make_user("a.rahman", mfa=True))
     token = client.cookies.get("__Host-echomind_s")
-    with client.websocket_connect(f"{WSS}/api/transcribe/ws", headers={"Origin": "https://testserver"}) as ws:
+    with client.websocket_connect(f"{WSS}{probe_ws}", headers={"Origin": "https://testserver"}) as ws:
         assert ws.receive_text() == "ready"
         threading.Timer(0.2, sessions.revoke, args=(token, "test")).start()
         with pytest.raises(WebSocketDisconnect) as exc:
@@ -86,11 +105,11 @@ def test_live_transcript_ws_accepts_a_session_and_closes_on_revocation(client, s
         assert exc.value.code == 4401
 
 
-def test_live_transcript_ws_refuses_a_foreign_origin(client, stub_ws_handler):
+def test_the_socket_gate_refuses_a_foreign_origin(client, probe_ws):
     sign_in(client, make_user("a.rahman", mfa=True))
-    with client.websocket_connect(f"{WSS}/api/transcribe/ws", headers={"Origin": "https://testserver"}) as ok:
+    with client.websocket_connect(f"{WSS}{probe_ws}", headers={"Origin": "https://testserver"}) as ok:
         assert ok.receive_text() == "ready"                      # same session, own origin: accepted
     with pytest.raises(WebSocketDisconnect) as exc:
-        with client.websocket_connect(f"{WSS}/api/transcribe/ws", headers={"Origin": "https://evil.example"}) as ws:
+        with client.websocket_connect(f"{WSS}{probe_ws}", headers={"Origin": "https://evil.example"}) as ws:
             ws.receive_text()
     assert exc.value.code == 1008

@@ -177,6 +177,10 @@ _AUTH_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/c
 # Law edition (S1.1, SEC-01): deny by default. Only these are reachable without a session; the
 # client-error sink is not (it would let anyone write into the logs).
 _LAW_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/config", "/api/auth/logout"}
+# S1.7 (decision D-025): only the Law API is served in the Law edition. The existing modules
+# (legacy chat, documents, transcripts, Boardroom, document studio, evaluation) are closed for
+# everyone — none of them is matter-scoped — and their capabilities return as /api/legal routes.
+_LAW_OPEN_PREFIXES = ("/api/auth/", "/api/legal/")
 _MUTATING = {"POST", "PUT", "PATCH", "DELETE"}
 
 
@@ -188,6 +192,8 @@ def _law_guard(request: Request):
     path = request.url.path
     if request.method == "OPTIONS" or path in _LAW_PUBLIC_PATHS or not path.startswith("/api/"):
         return None
+    if not path.startswith(_LAW_OPEN_PREFIXES):
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
     principal = user_from_request(request, allow_partial=path in PARTIAL_PATHS)
     if not principal:
         return JSONResponse({"detail": "Not authenticated"}, status_code=401)
@@ -326,3 +332,5 @@ from .legal.audit.routes import router as legal_audit_router  # noqa: E402
 app.include_router(legal_audit_router, prefix="/api")
 from .legal.documents.routes import router as legal_documents_router  # noqa: E402
 app.include_router(legal_documents_router, prefix="/api")
+from .legal.research.routes import router as legal_research_router  # noqa: E402
+app.include_router(legal_research_router, prefix="/api")

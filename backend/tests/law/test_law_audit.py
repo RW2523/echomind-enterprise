@@ -200,13 +200,33 @@ def test_invalid_input_and_csrf_failures_are_recorded(world, fresh_db):
     assert (last["action"], last["outcome"], last["reason"], last["actor"]) == ("request.refused", "deny", "csrf_failed", "alice")
 
 
-def test_other_state_changing_requests_get_a_generic_event(world, fresh_db):
+def test_closed_legacy_routes_do_nothing_and_write_nothing(world, fresh_db):
+    """S1.7 (D-025): the existing modules are closed in Law, so no unaudited route remains."""
     alice = as_user(world, "alice")
+    n = len(_events(fresh_db))
     r = alice.post("/api/chat/create", headers=csrf_headers(alice), json={"title": "ZEPHYR-CANARY chat"})
-    assert r.status_code == 200
-    generic = [e for e in _events(fresh_db) if e["action"] == "api.request"]
-    assert generic and json.loads(generic[-1]["details"]) == {"method": "POST", "route": "/api/chat/create", "status": 200}
-    assert "ZEPHYR-CANARY" not in json.dumps(_events(fresh_db))
+    assert r.status_code == 404 and len(_events(fresh_db)) == n
+    with sqlite3.connect(fresh_db) as c:
+        assert c.execute("SELECT COUNT(*) FROM chats").fetchone()[0] == 0
+
+
+def test_the_generic_fallback_still_names_the_route(world, monkeypatch, fresh_db):
+    """Defence in depth: should an unaudited state-changing route ever be reachable, the guard
+    still writes an api.request event naming it."""
+    from app.legal.audit import record
+
+    class Req:
+        method = "POST"
+        scope = {"route": type("R", (), {"path": "/api/legal/future"})(), "endpoint": None}
+        client = None
+        headers, cookies, url = {}, {}, type("U", (), {"path": "/api/legal/future"})()
+    token = record.begin(Req())
+    try:
+        record.request_finished(Req(), 200)
+    finally:
+        record.end(token)
+    last = _events(fresh_db)[-1]
+    assert last["action"] == "api.request" and json.loads(last["details"]) == {"method": "POST", "route": "/api/legal/future", "status": 200}
 
 
 def test_break_glass_reads_on_any_route_are_recorded(world, fresh_db):

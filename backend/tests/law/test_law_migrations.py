@@ -90,7 +90,8 @@ def test_missing_down_script_is_rejected(mig_dir):
 
 
 def test_version_gap_is_rejected(mig_dir):
-    _write(mig_dir, 9, "skips_ahead", "CREATE TABLE t9(x TEXT);")
+    gap = max(m.version for m in runner.discover(mig_dir)) + 2
+    _write(mig_dir, gap, "skips_ahead", "CREATE TABLE t_gap(x TEXT);")
     with pytest.raises(MigrationError, match="gap"):
         runner.discover(mig_dir)
 

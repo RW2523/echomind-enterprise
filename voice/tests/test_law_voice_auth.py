@@ -122,15 +122,15 @@ def law_server(monkeypatch, backend):
     return TestClient(server.app)
 
 
-def _connect(client, cookie=COOKIE, origin="https://law.example"):
+def _connect(client, cookie=COOKIE, origin="https://law.example", matter="m-101"):
     headers = {"origin": origin}
     if cookie:
         headers["cookie"] = cookie
-    return client.websocket_connect("/ws", headers=headers)
+    return client.websocket_connect(f"/ws?matter={matter}" if matter is not None else "/ws", headers=headers)
 
 
 def test_law_voice_ws_refuses_anonymous_and_foreign_origins(law_server):
-    for kwargs in ({"cookie": ""}, {"origin": "https://evil.example"}):
+    for kwargs in ({"cookie": ""}, {"origin": "https://evil.example"}, {"matter": None}, {"matter": "../x"}):
         with pytest.raises(WebSocketDisconnect) as exc:
             with _connect(law_server, **kwargs) as ws:
                 ws.receive_text()
@@ -145,3 +145,17 @@ def test_law_voice_ws_accepts_a_live_session_and_closes_when_it_ends(law_server,
         with pytest.raises(WebSocketDisconnect) as exc:
             ws.receive_text()
         assert exc.value.code == 4401
+
+
+# ── S1.7 (D-025): grounded answers come from the matter's research stream ────────
+def test_law_grounded_answers_use_the_matters_research_stream():
+    from app.session import OmniSessionA
+    law = SimpleNamespace(backend_auth=SimpleNamespace(headers=lambda: {}), law_matter_id="m-101")
+    payload = {"message": "What is the liability cap?", "persona": None, "namespace": "x", "source_options": {}}
+    assert OmniSessionA._rag_request(law, "http://backend:8000/", payload) == (
+        "http://backend:8000/api/legal/matters/m-101/research/query", {"question": "What is the liability cap?"})
+    # The one-shot fallback re-uses the already-rewritten body: the question must survive.
+    assert OmniSessionA._rag_request(law, "http://b", {"question": "Q?"}, stream=False)[1] == {"question": "Q?"}
+    legacy = SimpleNamespace(backend_auth=None, law_matter_id=None)
+    assert OmniSessionA._rag_request(legacy, "http://b", payload) == ("http://b/api/chat/ask-voice-stream", payload)
+    assert OmniSessionA._rag_request(legacy, "http://b", payload, stream=False)[0] == "http://b/api/chat/ask-voice"

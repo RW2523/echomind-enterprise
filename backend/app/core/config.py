@@ -285,5 +285,9 @@ class Settings(BaseSettings):
     LEGAL_RERANK_MIN_SCORE: float = float(os.getenv("LEGAL_RERANK_MIN_SCORE", "0.0"))    # cross-encoder logit floor
     LEGAL_JOB_POLL_SEC: float = float(os.getenv("LEGAL_JOB_POLL_SEC", "2"))
     LEGAL_JOB_MAX_ATTEMPTS: int = int(os.getenv("LEGAL_JOB_MAX_ATTEMPTS", "3"))
+    # Matter research (S1.7).
+    LEGAL_RESEARCH_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_PASSAGES", "6"))          # sources given to the model
+    LEGAL_RESEARCH_MAX_TOKENS: int = int(os.getenv("LEGAL_RESEARCH_MAX_TOKENS", "700"))
+    LEGAL_STREAM_RECHECK_SEC: float = float(os.getenv("LEGAL_STREAM_RECHECK_SEC", "2"))    # live scope check while streaming
 
 settings = Settings()

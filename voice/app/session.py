@@ -732,6 +732,9 @@ class OmniSessionA:
         # EchoMind Law: set by the server to an auth_check.BackendAuth; every backend RAG call then
         # carries a short-lived on-behalf-of token for the signed-in user (D-013).
         self.backend_auth = None
+        # EchoMind Law (S1.7, D-025): the matter this conversation is about. Grounded answers come only
+        # from that matter's research stream; the backend decides on every call whether the user may.
+        self.law_matter_id = None
 
         self.sr = SETTINGS.SR
         self.frame_ms = SETTINGS.FRAME_MS
@@ -1489,6 +1492,15 @@ class OmniSessionA:
             "tool_query": topic,
         }
 
+    def _rag_request(self, base: str, payload: dict, stream: bool = True) -> tuple:
+        """(url, body) for a grounded answer. Law edition: the matter's research stream, asked on the
+        user's behalf — the legacy knowledge-base routes are closed there."""
+        base = base.rstrip("/")
+        if self.backend_auth is None:
+            return (f"{base}/api/chat/ask-voice-stream" if stream else f"{base}/api/chat/ask-voice"), payload
+        question = payload.get("question") or payload.get("message") or ""
+        return f"{base}/api/legal/matters/{self.law_matter_id}/research/query", {"question": question}
+
     def _backend_headers(self) -> dict:
         headers = {"Content-Type": "application/json"}
         if self.backend_auth is not None:
@@ -1519,7 +1531,7 @@ class OmniSessionA:
         chunk_q: asyncio.Queue = asyncio.Queue()
         loop_c = asyncio.get_running_loop()
         base = backend_url.rstrip("/")
-        stream_url = f"{base}/api/chat/ask-voice-stream"
+        stream_url, payload = self._rag_request(base, payload, stream=True)
         first_evidence = asyncio.Event()
         t_req = time.monotonic()
         hold_state = {"spoken": None}
@@ -1563,6 +1575,9 @@ class OmniSessionA:
                             put({"__done__": True, "answer": (obj.get("answer") or "")})
                         elif t == "error":
                             put({"__error__": str(obj.get("message") or "error")})
+                        elif t == "scope_revoked":           # Law: access to the matter ended mid-answer
+                            put({"__error__": "scope_revoked"})
+                            return
             except Exception as e:
                 if not backend_handle.stop.is_set():
                     put({"__error__": str(e)})
@@ -1702,6 +1717,13 @@ class OmniSessionA:
             # One-shot fallback: full answer then speak (offline / proxy issues)
             try:
                 def _post_oneshot() -> str:
+                    if self.backend_auth is not None:
+                        # Law: the research stream is the only grounded route; read it to the end.
+                        url, body = self._rag_request(base, payload, stream=False)
+                        rr = requests.post(url, json=body, timeout=120, headers=self._backend_headers())
+                        rr.raise_for_status()
+                        done = [json.loads(x) for x in rr.text.splitlines() if x.strip().startswith("{")]
+                        return next((str(o.get("answer") or "") for o in done if o.get("type") == "done"), "").strip()
                     rr = requests.post(
                         f"{base}/api/chat/ask-voice",
                         json=payload,
