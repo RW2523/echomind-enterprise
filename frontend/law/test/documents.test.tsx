@@ -63,7 +63,7 @@ describe('Matter documents', () => {
     let abstain = false;
     world('lead', [doc()], {
       [`POST ${BASE}/search`]: () => [200, abstain ? { passages: [], abstained: true } : { abstained: false, passages: [{
-        chunk_id: 'c1', text: 'The aggregate liability of the Supplier shall not exceed two times the annual fees.', score: 4.2, score_kind: 'ce_logit',
+        chunk_id: 'c1', text: '## 9. Liability The aggregate liability of the Supplier shall not exceed two times the annual fees.', score: 4.2, score_kind: 'ce_logit',
         citation: { matter_id: 'id-M-101', document_id: 'd1', document_title: 'Harrowgate MSA', version_id: 'v2', version_number: 2, page_start: 9, page_end: 9 } }] }],
     });
     renderLaw('/m/M-101/documents');
@@ -71,7 +71,8 @@ describe('Matter documents', () => {
     fireEvent.change(box, { target: { value: 'liability cap' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     expect(await screen.findByText('1 passage from this matter')).toBeTruthy();
-    expect(screen.getByText('liability').tagName).toBe('MARK');
+    expect(screen.getAllByText(/^liability$/i)[0].tagName).toBe('MARK');
+    expect(screen.queryByText(/##/)).toBeNull();
     expect(screen.getByRole('button', { name: 'Harrowgate MSA · v2 · p. 9' })).toBeTruthy();
     abstain = true;
     fireEvent.change(box, { target: { value: 'board resolution' } });

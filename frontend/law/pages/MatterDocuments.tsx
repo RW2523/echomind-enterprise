@@ -87,7 +87,8 @@ export default function MatterDocuments() {
 }
 
 // ── Search ─────────────────────────────────────────────────────────────────────
-function highlight(text: string, query: string): React.ReactNode {
+function highlight(raw: string, query: string): React.ReactNode {
+  const text = raw.replace(/(^|\s)#{1,6}\s+/g, '$1');      // Markdown heading markers are syntax, not words
   const terms = Array.from(new Set(query.toLowerCase().match(/[\p{L}\p{N}@._-]{3,}/gu) ?? [])).sort((a, b) => b.length - a.length);
   if (!terms.length) return text;
   const re = new RegExp(`(${terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');

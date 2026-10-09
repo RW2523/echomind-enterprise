@@ -52,4 +52,5 @@
 
 | Date | Item | Reviewer | Result |
 |---|---|---|---|
-| — | — | — | — |
+| 2026-10-08 | `react-router` 7, `@tanstack/react-query`, `lucide-react`, `@fontsource-variable/inter`, `@fontsource-variable/source-serif-4`, `qrcode` (S1.1–S1.3) | Claude (from package metadata) | MIT / ISC / OFL-1.1 as listed in §2; added when the owner approved starting S1.3 |
+| 2026-10-08 | `cryptography` `>=44,<47` (S1.6; 46.0.3 on the dev host) | Claude (from package metadata) | Apache-2.0 OR BSD-3-Clause; added under the standing approval; offline, no network use |

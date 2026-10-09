@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-08 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.6-documents` |
-| Phase | Phase 1: S1.0–S1.5 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.7-scoping` |
+| Phase | Phase 1: S1.0–S1.6 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0006` (Law edition only) |
+| Migrations | `0001`–`0007` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -147,6 +147,21 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Migration numbers shift by one from the plan: documents become `0007`.
 - **Not built:** the syslog/CEF forwarder. It needs network approval.
 
+### Session 1 (continued) — S1.6 Matter documents and partitioned retrieval
+- S1.5 merged (`fd7cd96`).
+- Commits:
+  - `1d97e00` backend: migration `0007_documents`, `legal/documents`, `legal/retrieval`, `legal/jobs`, master-key posture
+  - `873981a` Documents screen
+- **As built:**
+  - D-005 (option a), D-012 and D-014 (uploaded documents) were implemented as part of the approved plan; details are in DECISIONS.md.
+  - **Deviation:** Law has its own tables and partition module instead of refactoring the legacy index, so legacy behaviour is untouched.
+  - Search scores sentence windows; the browser test with real models found why (see TEST_RESULTS run 7).
+- **Owner, please note:**
+  - D-005, D-012 and D-014 were PROPOSED. I treated the standing approval to build the slices in order as approval of the plan's recommendations for this slice, as with D-006, D-007 and D-013 in S1.1.
+  - D-012 is the security trade-off: personal data in a matter's documents is searchable by that matter's members.
+  - Say if any of the three should change.
+- **Not built (later slices):** OCR for scans (S2.1), the PDF viewer (S2.2), labels and export redaction (S1.9–S1.10), the firm library partition, ClamAV.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -166,13 +181,13 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 |---|---|---|---|
 | SEC-01 | PARTIAL (local accounts complete) | S1.1, S1.3 | Local accounts: sessions, TOTP MFA (enrolment by admin link), forced password change, lockout, CSRF, deny-by-default, WS gating, voice OBO, revoke-on-role-change; browser sign-in tested end to end. OIDC BLOCKED (P-011) |
 | SEC-02 | DONE | S1.2–S1.5 | Clients, matters, memberships, policy engine with non-disclosure, firm roles, ethical walls with two-person approval and exceptions, break-glass; UI; T01 in backend and browser, walls and break-glass in the browser; every action and refusal audited (S1.5) |
-| SEC-03 | INCOMPATIBLE | S1.6–S1.7 | |
+| SEC-03 | PARTIAL (matter documents DONE) | S1.6–S1.7 | Matter documents: separate encrypted storage, per-matter partitions, scope capability re-checked per search, canary suite v1, T02 and T06 at retrieval level. Existing chat, voice, Boardroom, docgen and transcript modules are scoped in S1.7 |
 | SEC-04 | DONE (forwarder awaits network approval) | S1.0, S1.5 | Content-free logs (S1.0). Hash-chained append-only trail with daily anchors, verifier CLI and endpoint, firm trail for governance roles, matter activity for leads, verifiable JSONL and CSV export; every Law route audited, enforced by a test. Off-host syslog/CEF forwarder not built (network approval) |
 | SEC-05 | MISSING | S1.8 | Policy values need counsel (P-001) |
 | SEC-06 | PARTIAL (pre-existing) | S1.9–S1.10 | |
 | SEC-07 | MISSING | S1.9 | Policy values need counsel (P-002/P-003) |
 | SEC-08 | MISSING | S1.11 | Provider BLOCKED (P-010) |
-| RAG-01 | PARTIAL (pre-existing) | S2.1–S2.2 | |
+| RAG-01 | PARTIAL | S1.6, S2.1–S2.2 | S1.6: matter-scoped passage search with quoted windows and citations (document, version, page, offsets); answers with the LLM in S1.7; OCR and the viewer in S2.1–S2.2 |
 | RAG-02 | MISSING | S2.3 | |
 | LIVE-01 | PARTIAL (pre-existing) | S2.4 | |
 | LIVE-02 | PARTIAL (pre-existing) | S2.5 | |
@@ -199,14 +214,20 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - Audit anchors sit on the same disk as the database until an off-host forwarder is approved.
 - No per-IP sign-in throttle. Failed sign-ins are recorded and per-account lockout works.
 - E2E is not in CI. It runs locally with Playwright (`cd frontend && npx playwright test`).
+- **The existing modules (chat `/ask*`, voice, Boardroom, docgen, transcripts) still use the global legacy index and are not matter-scoped** until S1.7. No Law document can reach them, but they must not be used for client work before S1.7.
+- The compose overlay reuses the 1.4.1 backend image, which may not contain `cryptography`. Check or rebuild at the first approved `compose.sh up`.
+- Back up the master key separately from the data: without it the stored documents cannot be opened.
 
 ## NEXT EXACT ACTION
 
-Start **S1.6 Matter documents and partitioned retrieval** on `law/s1.6-documents`. Implement D-005 option (a), the plan's recommendation:
-1. Migrations `0007_documents` and `0008_ownership`.
-2. `legal/retrieval/{partition_index,scope,registry}.py`, with `rag/index.py` and `rag/sparse.py` behind `PartitionIndex`; the legacy default stays.
-3. `legal/documents/{routes,ingest_job,blobs}.py` (AES-GCM blobs, D-014; `cryptography` is listed in LICENSE_REGISTER §2) and `legal/jobs/worker.py`.
-4. Law ingestion indexes the original text and stores PII findings as labels (D-012).
-5. Upload limits; file route `no-store`; every document action audited.
-6. Documents library screen and an Inspector shell.
-7. Tests: canary leakage suite v1, T02 revoke, T06 abstain, ingest rollback on lost rights, legacy golden eval unchanged.
+Start **S1.7 Matter-scoping of existing modules** on `law/s1.7-scoping` (the main security milestone):
+1. Migration `0008_ownership`: owner and matter stamping for chats, transcripts, Boardroom sessions and docgen artifacts.
+2. `chat.py`:
+   - in Law, `/ask*` require a matter and use the matter's partition through an `AuthorizedScope`;
+   - history is filtered by owner and matter;
+   - the time-window shortcut is off;
+   - debug and eval routes are off.
+3. `docs.py`: the legacy list, file, data-preview and delete-all routes return 404 in Law.
+4. Transcripts, `ws.py`, the Silent Assistant, Boardroom, docgen and voice: scope from the matter; no whole-KB fallback.
+5. `/api/legal/matters/{id}/research/query`: the existing answer pipeline over an `AuthorizedScope`, with streaming that ends with `scope_revoked` (completes T02 and T06 with the LLM). Research page v0.
+6. Canary suite v2 across every module, including WS and voice; T01 completed.
