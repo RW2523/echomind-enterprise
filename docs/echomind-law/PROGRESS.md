@@ -7,8 +7,8 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-09 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.12-gate` |
-| Phase | Phase 1: S1.0–S1.11 merged into `feature/echomind-law` (standing approval to build and merge slices in order); S1.12 gate next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.1-ingestion` |
+| Phase | Phase 1 complete: S1.0–S1.12 merged into `feature/echomind-law`; gate accepted by the owner on 2026-10-09. Phase 2 started (S2.1) |
 | Plan documents | Committed to `feature/echomind-law` |
 | Migrations | `0001`–`0012` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
@@ -250,6 +250,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
 - 2026-10-08: each slice S1.0–S1.3 approved and merged in turn; then a **standing approval** to build and merge slices in order, as recorded at the top of DECISIONS.md.
 - 2026-10-09: **APPROVED** after the S1.5–S1.8 report: D-005, D-012, D-014 (as implemented), D-023, D-025 and D-026. S1.9 started.
+- 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
 - Still 🔒:
   - the first `scripts/law/compose.sh up` on the shared host;
   - any push or PR to GitHub;

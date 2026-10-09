@@ -10,6 +10,8 @@
 > It does **not** cover: pushing to GitHub or opening PRs; starting the compose stack on the shared host; anything touching production; network integrations (DMS, IdP, licensed sources); or counsel's policy decisions (P-items). Those are still asked for explicitly.
 
 > **2026-10-09 approval.** After the S1.5–S1.8 report, which listed D-025's change of approach and the three proposed decisions adopted in S1.6, the owner replied *"approved, merge and start S1.9"*. D-005, D-012, D-014 (as implemented), D-023, D-025 and D-026 are therefore APPROVED. The P-items (consent wording and rules, audio retention) stay with counsel.
+>
+> **2026-10-09 Phase 1 gate approval.** After the S1.12 gate report (`releases/phase1-gate.md`), the owner replied *"approved, merge S1.12 and start S2.1"*. Phase 1 is accepted. D-027 to D-033 are as recorded (built and tested). This approval does not cover the items still marked 🔒: the root-run enforced T11, the first `compose.sh up`, network integrations, pushes and counsel items.
 
 **Status values**
 - **PROPOSED**: Claude's engineering recommendation. Not yet approved; it needs the product owner's approval before the slice that depends on it starts.

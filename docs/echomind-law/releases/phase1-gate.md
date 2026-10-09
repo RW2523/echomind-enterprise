@@ -109,4 +109,4 @@ scripts/law/stability_runs.sh 10                    # the Law browser suite 10 t
 
 | Role | Name | Decision | Date |
 |---|---|---|---|
-| Owner (Ajace AI) | | ☐ Phase 1 accepted ☐ Accepted with conditions ☐ Not accepted | |
+| Owner (Ajace AI) | Owner, in the build session | ☑ **Phase 1 accepted** ("approved, merge S1.12 and start S2.1"). Still 🔒 and not approved by this: the root-run enforced T11, the first `compose.sh up`, pushes or PRs, network integrations and counsel items | 2026-10-09 |
