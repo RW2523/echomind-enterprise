@@ -211,6 +211,9 @@ def test_firm_admin_manages_roles_and_removal_signs_the_user_out(world):
 def test_role_management_is_firm_admin_only_and_cannot_lock_out_the_admin(world):
     alice, admin = as_user(world, "alice"), as_user(world, "admin")
     assert alice.get("/api/legal/users").status_code == 403
+    assert as_user(world, "mp").get("/api/legal/users").status_code == 200          # walls authority may list
+    assert as_user(world, "mp").put("/api/legal/users/alice/roles", json={"roles": ["attorney"]},
+                                    headers=csrf_headers(as_user(world, "mp"))).status_code == 403
     assert alice.put("/api/legal/users/alice/roles", json={"roles": ["managing_partner"]}, headers=csrf_headers(alice)).status_code == 403
     assert admin.put("/api/legal/users/admin2/roles", json={"roles": []}, headers=csrf_headers(admin)).status_code == 400
     assert admin.put("/api/legal/users/alice/roles", json={"roles": ["wizard"]}, headers=csrf_headers(admin)).status_code == 422

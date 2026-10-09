@@ -29,9 +29,18 @@ async function signIn(page: Page, name: string) {
   await page.getByLabel('Username').fill(name);
   await page.getByLabel('Password').fill(c.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.getByLabel('Authenticator code').fill(totp(c.totp_secret));
-  await page.getByRole('button', { name: 'Verify' }).click();
-  await page.waitForURL('**/home');
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await page.getByLabel('Authenticator code').fill(totp(c.totp_secret));
+    await page.getByRole('button', { name: 'Verify' }).click();
+    const outcome = await Promise.race([
+      page.waitForURL('**/home').then(() => 'ok'),
+      page.getByRole('alert').waitFor().then(() => 'refused'),
+    ]);
+    if (outcome === 'ok') return;
+    // A code is single-use: if this person already signed in during this 30 s step, wait for the next one.
+    await page.waitForTimeout(31_000 - (Date.now() % 30_000));
+  }
+  throw new Error(`could not sign ${name} in`);
 }
 
 async function shot(page: Page, name: string) {
@@ -107,4 +116,60 @@ test('signing out ends the session for every tab', async ({ page, context }) => 
   await page.waitForURL('**/signin');
   await other.reload();
   await other.waitForURL('**/signin**');
+});
+
+test('a wall approved by a second managing partner hides a matter from its own lead', async ({ browser }) => {
+  test.setTimeout(120_000);
+  const morgan = await (await browser.newContext()).newPage();
+  await signIn(morgan, 'morgan');
+  await morgan.goto('/admin/walls');
+  await morgan.getByRole('button', { name: 'New wall' }).click();
+  await morgan.getByLabel('Name').fill('Series B conflict screen');
+  await morgan.getByLabel('Rationale').fill('Alice previously advised the investor.');
+  await morgan.getByLabel('Screened people').selectOption('alice');
+  await morgan.getByLabel('Protect').fill('M-114');
+  await morgan.getByRole('button', { name: 'Matter', exact: true }).click();
+  await morgan.getByRole('button', { name: 'Request wall' }).click();
+  await expect(morgan.getByText('Awaiting approval')).toBeVisible();
+  await expect(morgan.getByRole('button', { name: 'Approve' })).toHaveCount(0);       // not by the requester
+
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.goto('/admin/walls');
+  await nakamura.getByRole('button', { name: 'Approve' }).click();
+  await expect(nakamura.getByText('In force')).toBeVisible();
+  await shot(nakamura, '10-ethical-walls-light');
+
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/matters');
+  await expect(alice.getByText('Harrowgate MSA renewal')).toBeVisible();
+  await expect(alice.getByText('Series B due diligence')).toHaveCount(0);            // she leads it, but is walled
+  await alice.goto('/m/M-114/overview');
+  await expect(alice.getByText("This item isn't available.")).toBeVisible();
+});
+
+test('emergency access: requested by a firm admin, approved by a managing partner, read only', async ({ browser }) => {
+  const fiona = await (await browser.newContext()).newPage();
+  await signIn(fiona, 'fiona');
+  await fiona.goto('/admin/emergency-access');
+  await fiona.getByLabel('Matter number').fill('M-215');
+  await fiona.getByLabel('Reason').fill('Lead unreachable; landlord deadline today');
+  await fiona.getByRole('button', { name: /Request emergency access/ }).click();
+  await expect(fiona.getByText('Awaiting approval')).toBeVisible();
+
+  const morgan = await (await browser.newContext()).newPage();
+  await signIn(morgan, 'morgan');
+  await morgan.goto('/admin/emergency-access');
+  await expect(morgan.getByText('Warehouse lease dispute · Beta Shipping Corp')).toBeVisible();
+  await morgan.getByRole('button', { name: 'Approve' }).click();
+  await expect(morgan.getByText('Active')).toBeVisible();
+
+  await fiona.goto('/m/M-215/overview');
+  await expect(fiona.getByText('Emergency access.')).toBeVisible();
+  await expect(fiona.getByRole('button', { name: 'Edit details' })).toHaveCount(0);
+  await shot(fiona, '11-emergency-access-banner-light');
+  await fiona.getByRole('button', { name: 'End now' }).click();
+  await fiona.reload();
+  await expect(fiona.getByText("This item isn't available.")).toBeVisible();
 });

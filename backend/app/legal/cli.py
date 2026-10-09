@@ -21,6 +21,9 @@ DEMO_USERS = {  # username: firm roles
     "alice": ["attorney"],
     "bob": ["attorney"],
     "carol": ["paralegal"],
+    "morgan": ["managing_partner"],
+    "nakamura": ["managing_partner"],
+    "fiona": ["firm_admin"],
 }
 
 

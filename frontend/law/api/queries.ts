@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { Client, FirmUser, Matter, Membership, Me, SessionInfo } from './types';
+import type { BreakGlassRequest, Client, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -12,6 +12,8 @@ export const keys = {
   memberships: (id: string) => ['matter', id, 'memberships'] as const,
   users: ['admin', 'users'] as const,
   sessions: ['me', 'sessions'] as const,
+  walls: ['admin', 'walls'] as const,
+  breakGlass: ['admin', 'break-glass'] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false });
@@ -37,3 +39,11 @@ export function useApiMutation<TVars, TResult>(fn: (v: TVars) => Promise<TResult
     onSuccess: () => Promise.all(invalidate.map((k) => qc.invalidateQueries({ queryKey: k as unknown[] }))),
   });
 }
+export const useWalls = (enabled: boolean) =>
+  useQuery({ queryKey: keys.walls, enabled, queryFn: async () => (await api.get<{ walls: Wall[] }>('/api/legal/walls')).walls });
+export const useMatterDirectory = (q: string, enabled: boolean) =>
+  useQuery({ queryKey: ['admin', 'directory', q], enabled,
+    queryFn: async () => (await api.get<{ matters: DirectoryMatter[] }>(`/api/legal/walls/matter-directory?q=${encodeURIComponent(q)}`)).matters });
+export const useBreakGlass = (enabled: boolean) =>
+  useQuery({ queryKey: keys.breakGlass, enabled, refetchInterval: 30_000,
+    queryFn: () => api.get<{ requests: BreakGlassRequest[]; can_approve: boolean }>('/api/legal/break-glass') });

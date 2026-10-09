@@ -60,8 +60,9 @@ def _org_user_id(org_id: str, username: str) -> Optional[str]:
 
 @router.get("/users", response_model=UserList)
 def list_users(request: Request):
+    """Firm admins manage accounts; managing partners need the list to choose whom a wall screens."""
     p = principal_of(request)
-    require(p, "users.manage")
+    require(p, "users.read")
     with get_conn() as conn:
         ids = [r[0] for r in conn.execute("SELECT id FROM users WHERE org_id=? ORDER BY username", (p["org_id"],))]
     return {"users": [_user_out(i) for i in ids]}
