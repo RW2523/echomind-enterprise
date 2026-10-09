@@ -64,6 +64,9 @@ rag-platform/
 # ── EchoMind Law local development ────────────────────────────────────
 # Dev data (fictional fixtures, dev secrets) and the isolated stack's secrets file.
 /.law-data/
+/.law-data-e2e/
+/frontend/test-results/
+/frontend/playwright-report/
 .env.law
 *.tar.zst
 
