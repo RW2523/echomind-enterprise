@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 from contextlib import asynccontextmanager
+from starlette.concurrency import run_in_threadpool
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -190,6 +191,8 @@ def _law_guard(request: Request):
     # (on-behalf-of) callers are services, never driven by a browser, so CSRF does not apply.
     if request.method in _MUTATING and principal["auth"] == "session" \
             and not csrf_ok(principal["session"], request.headers.get(CSRF_HEADER)):
+        from .legal.audit.record import guard_refused
+        guard_refused(request, 403, "csrf_failed")
         return JSONResponse({"detail": "CSRF check failed"}, status_code=403)
     return None
 
@@ -197,8 +200,19 @@ def _law_guard(request: Request):
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if is_law():
-        denied = _law_guard(request)
-        return denied if denied is not None else await call_next(request)
+        # S1.5: every Law request runs inside an audit context; a state-changing request that wrote
+        # no event of its own gets a generic one when it finishes (legal/audit/record.py).
+        from .legal.audit import record as law_audit
+        token = law_audit.begin(request)
+        try:
+            denied = _law_guard(request)
+            if denied is not None:
+                return denied
+            response = await call_next(request)
+            await run_in_threadpool(law_audit.request_finished, request, response.status_code)
+            return response
+        finally:
+            law_audit.end(token)
     if settings.AUTH_ENABLED and request.method != "OPTIONS":
         path = request.url.path
         if path.startswith("/api/") and path not in _AUTH_PUBLIC_PATHS:
@@ -302,3 +316,5 @@ app.include_router(legal_matters_router, prefix="/api")
 app.include_router(legal_users_router, prefix="/api")
 from .legal.walls.routes import router as legal_walls_router  # noqa: E402
 app.include_router(legal_walls_router, prefix="/api")
+from .legal.audit.routes import router as legal_audit_router  # noqa: E402
+app.include_router(legal_audit_router, prefix="/api")

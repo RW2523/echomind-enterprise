@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from .. import policy
+from ..audit.record import audited, note
 from ..matters import repo as matters_repo
 from ..matters.routes import principal_of, require, require_law_edition
 from . import repo
@@ -76,9 +77,12 @@ def matter_directory(request: Request, q: str = ""):
 
 
 @router.post("/walls")
+@audited("wall.request", object_type="wall")
 def create_wall(inp: WallIn, request: Request):
     p = principal_of(request)
     require(p, "walls.request")
+    note(details={"name": inp.name, "rationale": inp.rationale, "screened": len(inp.screened),
+                  "protected_matters": len(inp.protected_matters), "protected_clients": len(inp.protected_clients)})
     if not inp.protected_matters and not inp.protected_clients:
         raise HTTPException(status_code=422, detail="A wall must protect at least one matter or client.")
     screened = []
@@ -100,6 +104,7 @@ def create_wall(inp: WallIn, request: Request):
                 raise _not_found()
     wid = repo.create_wall(p["org_id"], inp.name, inp.rationale, p["sub"], screened,
                            list(dict.fromkeys(inp.protected_matters)), list(dict.fromkeys(inp.protected_clients)))
+    note(object_id=wid)
     return {"wall": repo.get_wall(p["org_id"], wid)}
 
 
@@ -119,6 +124,7 @@ def _bump_wall(wall_id: str) -> None:
 
 
 @router.post("/walls/{wall_id}/approve")
+@audited("wall.approve", object_type="wall", object_param="wall_id")
 def approve_wall(wall_id: str, request: Request):
     p = principal_of(request)
     w = _wall_for_decision(p, wall_id, "requested")
@@ -130,6 +136,7 @@ def approve_wall(wall_id: str, request: Request):
 
 
 @router.post("/walls/{wall_id}/reject")
+@audited("wall.reject", object_type="wall", object_param="wall_id")
 def reject_wall(wall_id: str, request: Request):
     p = principal_of(request)
     _wall_for_decision(p, wall_id, "requested")
@@ -138,6 +145,7 @@ def reject_wall(wall_id: str, request: Request):
 
 
 @router.post("/walls/{wall_id}/release")
+@audited("wall.release.request", object_type="wall", object_param="wall_id")
 def request_release(wall_id: str, request: Request):
     p = principal_of(request)
     _wall_for_decision(p, wall_id, "active")
@@ -146,6 +154,7 @@ def request_release(wall_id: str, request: Request):
 
 
 @router.post("/walls/{wall_id}/release/approve")
+@audited("wall.release.approve", object_type="wall", object_param="wall_id")
 def approve_release(wall_id: str, request: Request):
     p = principal_of(request)
     w = _wall_for_decision(p, wall_id, "release_requested")
@@ -158,6 +167,7 @@ def approve_release(wall_id: str, request: Request):
 
 # ── Exceptions ───────────────────────────────────────────────────────────────────
 @router.post("/walls/{wall_id}/exceptions")
+@audited("wall.exception.request", object_type="wall_exception")
 def request_exception(wall_id: str, inp: ExceptionIn, request: Request):
     p = principal_of(request)
     require(p, "walls.request")
@@ -172,7 +182,9 @@ def request_exception(wall_id: str, inp: ExceptionIn, request: Request):
     if not uid or not repo.wall_covers(wall_id, uid, inp.matter_id):
         raise HTTPException(status_code=400, detail="That person is not screened from that matter by this wall.")
     iso = expires.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-    return {"exception": repo.create_exception(wall_id, uid, inp.matter_id, inp.reason, p["sub"], iso)}
+    e = repo.create_exception(wall_id, uid, inp.matter_id, inp.reason, p["sub"], iso)
+    note(object_id=e["id"], matter_id=inp.matter_id, details={"wall": wall_id, "username": inp.username, "reason": inp.reason})
+    return {"exception": e}
 
 
 def _exception(p: dict, wall_id: str, exc_id: str) -> dict:
@@ -186,6 +198,7 @@ def _exception(p: dict, wall_id: str, exc_id: str) -> dict:
 
 
 @router.post("/walls/{wall_id}/exceptions/{exc_id}/approve")
+@audited("wall.exception.approve", object_type="wall_exception", object_param="exc_id")
 def approve_exception(wall_id: str, exc_id: str, request: Request):
     p = principal_of(request)
     e = _exception(p, wall_id, exc_id)
@@ -195,15 +208,18 @@ def approve_exception(wall_id: str, exc_id: str, request: Request):
         raise HTTPException(status_code=409, detail="This exception was already decided.")
     repo.approve_exception(exc_id, p["sub"])
     matters_repo.bump_epochs([e["matter_id"]])
+    note(matter_id=e["matter_id"])
     return {"ok": True}
 
 
 @router.delete("/walls/{wall_id}/exceptions/{exc_id}")
+@audited("wall.exception.revoke", object_type="wall_exception", object_param="exc_id")
 def revoke_exception(wall_id: str, exc_id: str, request: Request):
     p = principal_of(request)
     e = _exception(p, wall_id, exc_id)
     repo.revoke_exception(exc_id, p["sub"])
     matters_repo.bump_epochs([e["matter_id"]])
+    note(matter_id=e["matter_id"])
     return {"ok": True}
 
 
@@ -215,10 +231,12 @@ def _public_request(g: dict) -> dict:
 
 
 @router.post("/break-glass")
+@audited("breakglass.request", object_type="break_glass")
 def request_break_glass(inp: BreakGlassIn, request: Request):
     p = principal_of(request)
     require(p, "breakglass.request")
     g = repo.create_break_glass(p["org_id"], p["sub"], inp.matter_number, inp.reason, inp.minutes)
+    note(object_id=g["id"], details={"number": inp.matter_number, "minutes": inp.minutes, "reason": inp.reason})
     return {"request": _public_request(g)}
 
 
@@ -251,10 +269,12 @@ def _bg_for_decision(p: dict, gid: str) -> dict:
 
 
 @router.post("/break-glass/{gid}/approve")
+@audited("breakglass.approve", object_type="break_glass", object_param="gid")
 def approve_break_glass(gid: str, request: Request, inp: Optional[DecisionIn] = None):
     p = principal_of(request)
     g = _bg_for_decision(p, gid)
     m = repo.matter_by_number(p["org_id"], g["requested_number"])
+    note(matter_id=m["id"] if m else None, details={"minutes": g["minutes"], "user_id": g["user_id"]})
     if not m:
         raise HTTPException(status_code=404, detail="No matter has that number.")
     if m["sensitivity"] == "highly_restricted":
@@ -268,6 +288,7 @@ def approve_break_glass(gid: str, request: Request, inp: Optional[DecisionIn] = 
 
 
 @router.post("/break-glass/{gid}/reject")
+@audited("breakglass.reject", object_type="break_glass", object_param="gid")
 def reject_break_glass(gid: str, request: Request, inp: Optional[DecisionIn] = None):
     p = principal_of(request)
     _bg_for_decision(p, gid)
@@ -276,6 +297,7 @@ def reject_break_glass(gid: str, request: Request, inp: Optional[DecisionIn] = N
 
 
 @router.post("/break-glass/{gid}/end")
+@audited("breakglass.end", object_type="break_glass", object_param="gid")
 def end_break_glass(gid: str, request: Request):
     """The requester, or any managing partner, ends emergency access early."""
     p = principal_of(request)
@@ -283,6 +305,7 @@ def end_break_glass(gid: str, request: Request):
     is_mp = "managing_partner" in policy.firm_roles_of(p["sub"])
     if not g or (g["user_id"] != p["sub"] and not is_mp):
         raise _not_found()
+    note(matter_id=g["matter_id"], details={"status": g["status"]})
     if g["status"] == "active":
         repo.end_break_glass(gid, p["sub"])
         if g["matter_id"]:

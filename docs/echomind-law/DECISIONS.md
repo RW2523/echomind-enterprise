@@ -100,7 +100,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - WebAuthn/passkeys are a later option.
 - **SSO/OIDC:** build an OIDC Authorization Code + PKCE client against a standard discovery URL. It can only work if the firm's IdP is reachable on the LAN, so it is **BLOCKED for verification** until the pilot IdP is known (P-011). Local accounts are the approved fallback.
 
-### D-008 Audit trail: hash-chained, append-only — PROPOSED
+### D-008 Audit trail: hash-chained, append-only — IMPLEMENTED (S1.5, 2026-10-08; part of the approved plan)
 - **Decision:**
   - A new `audit_events` table. Each row stores `prev_hash` and `hash = SHA-256(prev_hash ‖ canonical_json(row))`.
   - SQLite triggers abort any `UPDATE` or `DELETE`.
@@ -109,6 +109,24 @@ Every entry records the options considered, the recommendation, the consequence 
   - **Content policy:** log IDs, actions, outcomes, counts and hashes only. Prompts are logged as `{length, sha256}` by default; full-text prompt logging is a firm policy switch (P-005).
   - Reads (document open, citation resolve, transcript view, export) **are** logged, unlike today.
   - The existing `activity_log` stays as a request-level log.
+- **As built (S1.5):**
+  - Migration `0006_audit`. The hash rule is `SHA-256(prev_hash + canonical_json(fields))`: `json.dumps(sort_keys=True, separators=(",", ":"), ensure_ascii=False)` over the 16 stored fields (seq and the two hashes excluded), with 64 zeros before the first event. A JSONL export can be re-verified with this rule alone.
+  - Anchors are written to `DATA_DIR/legal/audit_anchor/YYYY-MM-DD.json` (0600): on a day's first event, then at most once a minute. `python -m app.legal.audit anchor` forces one.
+  - Verification (`python -m app.legal.audit verify`, `GET /api/legal/audit/verify`) reports these problems: an edited event, a broken link (removed or reordered), a chain rewritten after an anchor, a removed tail.
+  - Three recording paths, so every Law action leaves exactly one event:
+    - `@audited` on every Law route that changes state, plus matter open and audit reads. A test fails if a state-changing `/api/legal` or `/api/auth` route lacks it.
+    - Policy refusals (and any access under break-glass) on other routes.
+    - A generic `api.request` event, with method, route template and status, for state-changing requests on the existing modules until S1.7 scopes them.
+  - **Content:** `details` keeps strings only under named identifier keys; any other string is stored as `{"chars": n}`. Titles, rationales, reasons and typed usernames of unknown accounts are never stored. Tests plant canaries in each of these.
+  - **Fail closed:** if an event cannot be written, the request gets a 500. A read returns no data. The workspace opens a matter only after its recorded read succeeds (D-023).
+  - **Known limit:** the event is written after the change commits, in its own transaction. If the write fails, the change stands and is reported as failed (500). The gap is logged (`Audit: could not record <action>`) but is not in the chain. Joining audit and business writes in one transaction is planned with the Postgres move (D-004 gate).
+  - **Who sees what:**
+    - The firm-wide trail (`audit.read.org`) is open to firm admins, managing partners and records admins.
+    - Matter numbers and titles are shown only to roles that already hold the matter directory (managing partners, records admins). Firm admins see an opaque matter reference.
+    - A matter's own activity is for its lead.
+    - Reading, verifying and exporting the trail are themselves recorded.
+  - Anonymous refusals (no session) are not events: anyone could flood the trail with them. Failed sign-ins **are** recorded, so a per-IP sign-in throttle stays on the risk list.
+  - The syslog/CEF forwarder is not built: it needs network approval.
 
 ### D-009 Frontend foundations for the Law workspace — IMPLEMENTED (S1.3; react-router 7, not 8, because of Node 20)
 - **Decision:**
@@ -215,6 +233,12 @@ Every entry records the options considered, the recommendation, the consequence 
 - This exposes no content (documents, transcripts, members) and does not grant access to any matter.
 - Attorneys requesting a wall can only protect matters and clients they can already see.
 - Break-glass requesters (firm admins) never see the directory: they name the matter by number, and only the approving managing partner sees what it resolves to.
+
+### D-023 Opening a matter is a recorded read — RECORDED (S1.5)
+- The workspace resolves a matter from the person's own list, so a hidden matter and a missing one look the same (S1.3). That list alone left no trace of a visit, and a break-glass visit was invisible to the matter's lead; the S1.5 browser test caught this.
+- Entering a matter now calls `GET /api/legal/matters/{id}`, which records `matter.read`, with reason `break_glass` under emergency access. Nothing of the matter is shown until that succeeds.
+- One event per visit: leaving the matter drops its cache, so coming back is recorded again. Switching tabs inside the matter is not a new visit.
+- No new disclosure: the call is made only for a matter already in the person's visible list.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

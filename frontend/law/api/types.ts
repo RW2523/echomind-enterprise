@@ -36,3 +36,17 @@ export interface BreakGlassRequest {
   requested_at: string; expires_at?: string | null; requester?: string; decided_by?: string | null; decision_note?: string | null;
   matter?: { number: string; title: string; client: string; sensitivity: string } | null;
 }
+
+/** One audit event as the API shows it (S1.5). Identifiers, actions and outcomes only — never content. */
+export interface AuditEvent {
+  seq: number; ts: string; action: string; outcome: 'allow' | 'deny' | 'error'; reason?: string | null;
+  actor?: { username: string; roles: string[] } | null; auth?: string | null; session_ref?: string | null; ip?: string | null;
+  object_type?: string | null; object_id?: string | null;
+  matter?: { id: string; number?: string; title?: string } | null;
+  details?: Record<string, unknown> | null;
+}
+export interface AuditPage { events: AuditEvent[]; next_before: number | null; shows_matter_numbers?: boolean }
+export interface AuditVerification {
+  ok: boolean; events: number; head: string | null; head_seq: number | null; broken_at: number | null;
+  problem: string | null; anchors_checked: number; verified_at: string;
+}

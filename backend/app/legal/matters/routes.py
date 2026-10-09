@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from ...core import auth as authmod
 from ...core.edition import is_law
 from .. import policy
+from ..audit.record import audited, note, policy_decision
 from . import repo
 
 MatterRole = Literal["lead", "attorney", "paralegal", "reviewer", "read_only"]
@@ -44,6 +45,7 @@ def principal_of(request: Request) -> dict:
 
 def require(principal: dict, action: str, matter_id: Optional[str] = None) -> policy.Decision:
     d = policy.authorize(principal, action, matter_id)
+    policy_decision(principal, action, d, matter_id)
     if not d.allowed:
         raise HTTPException(status_code=d.status, detail=_DETAIL[d.reason])
     return d
@@ -179,13 +181,16 @@ def list_clients(request: Request):
 
 
 @router.post("/clients", response_model=ClientEnvelope)
+@audited("client.create", object_type="client")
 def create_client(inp: ClientIn, request: Request):
     p = principal_of(request)
     require(p, "clients.create")
     try:
-        return {"client": repo.create_client(p["org_id"], inp.name, inp.code, p["sub"])}
+        c = repo.create_client(p["org_id"], inp.name, inp.code, p["sub"])
     except repo.Conflict as e:
         raise HTTPException(status_code=409, detail=str(e))
+    note(object_id=c["id"], details={"code": c["code"]})
+    return {"client": c}
 
 
 @router.get("/clients/{client_id}", response_model=ClientEnvelope)
@@ -197,11 +202,13 @@ def get_client(client_id: str, request: Request):
 
 
 @router.patch("/clients/{client_id}", response_model=ClientEnvelope)
+@audited("client.update", object_type="client", object_param="client_id")
 def update_client(client_id: str, inp: ClientPatch, request: Request):
     p = principal_of(request)
     if not repo.get_visible_client(p, client_id):
         raise _not_found()
     require(p, "clients.update")
+    note(details={"fields": sorted(inp.model_dump(exclude={"version"}, exclude_none=True)), "status": inp.status})
     try:
         return {"client": repo.update_client(client_id, inp.model_dump(exclude={"version"}), inp.version)}
     except repo.Conflict as e:
@@ -215,6 +222,7 @@ def list_matters(request: Request):
 
 
 @router.post("/matters", response_model=MatterEnvelope)
+@audited("matter.create", object_type="matter")
 def create_matter(inp: MatterIn, request: Request):
     p = principal_of(request)
     require(p, "matters.create")
@@ -225,20 +233,24 @@ def create_matter(inp: MatterIn, request: Request):
                                practice_area=inp.practice_area, jurisdiction=inp.jurisdiction, sensitivity=inp.sensitivity)
     except repo.Conflict as e:
         raise HTTPException(status_code=409, detail=str(e))
+    note(object_id=m["id"], matter_id=m["id"], details={"sensitivity": m["sensitivity"]})
     return {"matter": m}
 
 
 @router.get("/matters/{matter_id}", response_model=MatterEnvelope)
+@audited("matter.read", object_type="matter", object_param="matter_id")
 def get_matter(matter_id: str, request: Request):
     d = require(principal_of(request), "matter.read", matter_id)
     return {"matter": repo.get_matter(matter_id, my_role=d.role)}
 
 
 @router.patch("/matters/{matter_id}", response_model=MatterEnvelope)
+@audited("matter.update", object_type="matter", object_param="matter_id")
 def update_matter(matter_id: str, inp: MatterPatch, request: Request):
     d = require(principal_of(request), "matter.update", matter_id)
     current = repo.get_matter(matter_id)
     changes = inp.model_dump(exclude={"version"}, exclude_none=True)
+    note(details={"fields": sorted(changes), "status": changes.get("status"), "sensitivity": changes.get("sensitivity")})
     if current["status"] != "open" and set(changes) - {"status"}:
         raise HTTPException(status_code=409, detail=_DETAIL["matter_closed"])
     try:
@@ -256,9 +268,11 @@ def list_memberships(matter_id: str, request: Request):
 
 
 @router.post("/matters/{matter_id}/memberships", response_model=MembershipEnvelope)
+@audited("membership.add", object_type="membership")
 def add_membership(matter_id: str, inp: MembershipIn, request: Request):
     p = principal_of(request)
     require(p, "members.manage", matter_id)
+    note(details={"username": inp.username, "role": inp.role, "can_export": inp.can_export})
     colleague = repo.active_colleague(p["org_id"], inp.username)
     if not colleague:
         raise HTTPException(status_code=400, detail="No active colleague with that username.")
@@ -267,13 +281,16 @@ def add_membership(matter_id: str, inp: MembershipIn, request: Request):
                                  can_export=inp.can_export, valid_to=_iso(inp.valid_to))
     except repo.Conflict as e:
         raise HTTPException(status_code=409, detail=str(e))
+    note(object_id=mm["id"])
     return {"membership": mm}
 
 
 @router.patch("/matters/{matter_id}/memberships/{membership_id}", response_model=MembershipEnvelope)
+@audited("membership.change", object_type="membership", object_param="membership_id")
 def change_membership(matter_id: str, membership_id: str, inp: MembershipPatch, request: Request):
     p = principal_of(request)
     require(p, "members.manage", matter_id)
+    note(details={"fields": sorted(inp.model_dump(exclude_none=True)), "role": inp.role, "can_export": inp.can_export})
     try:
         mm = repo.change_membership(matter_id, membership_id, by=p["sub"], role=inp.role,
                                     can_export=inp.can_export, valid_to=_iso(inp.valid_to))
@@ -281,10 +298,12 @@ def change_membership(matter_id: str, membership_id: str, inp: MembershipPatch, 
         raise _not_found()
     except repo.Conflict as e:
         raise HTTPException(status_code=409, detail=str(e))
+    note(details={"username": mm["username"]})
     return {"membership": mm}
 
 
 @router.delete("/matters/{matter_id}/memberships/{membership_id}", response_model=Ok)
+@audited("membership.revoke", object_type="membership", object_param="membership_id")
 def remove_membership(matter_id: str, membership_id: str, request: Request):
     p = principal_of(request)
     require(p, "members.manage", matter_id)
