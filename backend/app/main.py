@@ -300,3 +300,5 @@ from .legal.matters.routes import router as legal_matters_router  # noqa: E402
 from .legal.identity.routes import router as legal_users_router  # noqa: E402
 app.include_router(legal_matters_router, prefix="/api")
 app.include_router(legal_users_router, prefix="/api")
+from .legal.walls.routes import router as legal_walls_router  # noqa: E402
+app.include_router(legal_walls_router, prefix="/api")

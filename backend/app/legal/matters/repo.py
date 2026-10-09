@@ -10,7 +10,7 @@ import uuid
 from typing import Optional
 
 from ...core.db import get_conn
-from ..policy import _LIVE_MEMBERSHIP, now_iso, visible_matters_sql
+from ..policy import _CLIENT_WALLED, _LIVE_MEMBERSHIP, my_role_sql, now_iso, visible_matters_sql
 
 
 class Conflict(Exception):
@@ -50,9 +50,10 @@ def get_client(client_id: str) -> Optional[dict]:
 
 
 def _visible_clients_where() -> str:
-    # A client is visible to its creator, or through any matter the principal is a live member of.
-    return (f"c.org_id = :org AND (c.created_by = :uid OR EXISTS (SELECT 1 FROM matters m WHERE m.client_id = c.id "
-            f"AND {visible_matters_sql()}))")
+    # A client is visible to its creator (unless walled from that client), or through any matter the
+    # principal may see (which already accounts for walls and break-glass).
+    return (f"c.org_id = :org AND ((c.created_by = :uid AND NOT {_CLIENT_WALLED}) OR EXISTS (SELECT 1 FROM matters m "
+            f"WHERE m.client_id = c.id AND {visible_matters_sql()}))")
 
 
 def list_visible_clients(principal: dict) -> list[dict]:
@@ -133,8 +134,7 @@ def get_matter(matter_id: str, my_role: Optional[str] = None) -> Optional[dict]:
 def list_visible_matters(principal: dict) -> list[dict]:
     with get_conn() as conn:
         rows = conn.execute(
-            f"SELECT {_MATTER_COLS}, (SELECT mm.role FROM matter_memberships mm WHERE mm.matter_id = m.id "
-            f"AND mm.user_id = :uid AND {_LIVE_MEMBERSHIP}) FROM matters m JOIN clients c ON c.id = m.client_id "
+            f"SELECT {_MATTER_COLS}, {my_role_sql()} FROM matters m JOIN clients c ON c.id = m.client_id "
             f"WHERE {visible_matters_sql()} ORDER BY m.number",
             {"org": principal["org_id"], "uid": principal["sub"], "now": now_iso()}).fetchall()
     return [_matter(r, r[15]) for r in rows]
@@ -255,3 +255,13 @@ def active_colleague(org_id: str, username: str) -> Optional[dict]:
         row = conn.execute("SELECT id, username FROM users WHERE username=? AND org_id=? AND COALESCE(status,'active')='active'",
                            ((username or "").strip(), org_id)).fetchone()
     return {"id": row[0], "username": row[1]} if row else None
+
+
+def bump_epochs(matter_ids: list[str] = (), client_ids: list[str] = ()) -> None:
+    """Signal that access to these matters (or every matter of these clients) changed."""
+    with get_conn() as conn:
+        for mid in matter_ids:
+            conn.execute("UPDATE matters SET acl_epoch = acl_epoch + 1 WHERE id = ?", (mid,))
+        for cid in client_ids:
+            conn.execute("UPDATE matters SET acl_epoch = acl_epoch + 1 WHERE client_id = ?", (cid,))
+        conn.commit()
