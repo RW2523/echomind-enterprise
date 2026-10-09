@@ -77,3 +77,24 @@
 | Live: log scan | grep the dev backend log | **0** hits for the client name, matter title, practice area, jurisdiction and the new user's password |
 
 **Honesty note:** the 20 API tests were written before the routes existed, but they were not executed in a failing state first; the policy matrix was written alongside the engine. The S1.0/S1.1 tests-first evidence stands as recorded above.
+
+## Run 4 — S1.3 Law workspace shell, design system, onboarding hardening, 2026-10-08
+
+- **Branch / commit:** `law/s1.3-workspace` @ `6f8da72` (base `feature/echomind-law@ee67615`)
+
+| Suite | Command | Result |
+|---|---|---|
+| Backend unit (all) | `cd backend && ECHOMIND_DATA_DIR=$(mktemp -d) python3 -m pytest tests -q` | **573 passed** |
+| D-021 onboarding | `pytest tests/law/test_law_onboarding.py` | Before implementation: **9 failed** (8 new tests plus the updated S1.1 enrolment test). After: **8 passed**. Covers: link required (missing, guessed or another user's link → 403); single-use and 72 h expiry; a new link replaces older ones; firm may relax the requirement; admin-created account gets a link and must change its password (403 `password_change_required` elsewhere until done); admin reset of two-step signs the person out and issues a new link; no link for an already-enrolled account (409); bootstrap admin link written 0600. |
+| Demo seed | `pytest tests/law/test_law_demo_seed.py` | **2 passed**: refuses without `LEGAL_ALLOW_DEMO_SEED=1`; builds the T01 world (alice {M-101, M-114}, bob {M-202, M-215}, carol {M-101}); idempotent |
+| Voice | `cd voice && python3 -m pytest tests -q` | **150 passed** |
+| Frontend unit | `cd frontend && npx tsc --noEmit -p . && npx vitest run` | tsc **clean**; Vitest **28 passed** (5 files). Law workspace 15: only server-listed matters; hidden ≡ missing page; matter by number; absent controls for non-lead/non-admin; switching drops the previous matter's cache; confirmation while work is in progress; signed-out → `/signin?next=`; forced password change first; axe checks on Matters, Members and Sign-in (0 violations; colour contrast is not computable in jsdom); monograms. Sign-in 5: enrolment only through a link with QR and recovery codes; no-link explanation; no open redirect; server message on failure. |
+| Browser E2E (Chromium 1248) | `cd frontend && npx playwright test` | **3 passed**: alice sees exactly M-101/M-114 and never M-202/M-215; the hidden matter's page text is identical to a non-existent one; the switcher lists only her 2 matters; bob sees the highly restricted matter; sign-out ends the session in every tab. Real sign-in with TOTP; Secure `__Host-` cookies accepted on `http://localhost`. |
+| Bundle | `npx vite build` | The Law workspace is a separate lazy chunk (218 KB JS, 16 KB CSS); fonts are bundled woff2; **no external font or CDN references** in the bundle |
+| Visual review | screenshots in `docs/echomind-law/design/screens/` | The first pass found 3 defects: a black canvas (legacy `index.html` background), the switcher list trapped under the content (glass stacking context), and "VA" instead of "VL" monograms. All fixed and re-shot (`af501bc`). |
+
+**Not exercised:**
+- The compose stack.
+- Production build served by nginx (dev server used).
+- Mobile widths. The rail layout below 860 px is styled but not screenshot-tested.
+- Colour-contrast measurement (jsdom cannot compute it; to be checked with Playwright and axe on real rendering in a later slice).
