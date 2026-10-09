@@ -86,9 +86,15 @@ def open_session(base: str, username: str, password: str, data_dir: pathlib.Path
 
     status = post("/auth/login", {"username": username, "password": password}).get("status", "ok")
     if status == "mfa_enrollment_required":
-        secret = post("/auth/mfa/enroll")["secret"]
+        # D-021: binding an authenticator needs an administrator's one-time link. For the dev admin it
+        # is the bootstrap link written next to the data; for others pass LAW_ENROLLMENT_TOKEN.
+        link = os.getenv("LAW_ENROLLMENT_TOKEN") or ""
+        bootstrap = data_dir / "legal" / "bootstrap_enrollment_token"
+        if not link and bootstrap.exists():
+            link = bootstrap.read_text().strip()
+        secret = post("/auth/mfa/enroll", {"enrollment_token": link})["secret"]
         _write_private(secret_file, secret + "\n")
-        codes = post("/auth/mfa/confirm", {"code": totp(secret)})["recovery_codes"]
+        codes = post("/auth/mfa/confirm", {"code": totp(secret), "enrollment_token": link})["recovery_codes"]
         _write_private(data_dir / f"dev_{username}_recovery_codes", "\n".join(codes) + "\n")
     elif status == "mfa_required":
         secret = (os.getenv("LAW_TOTP_SECRET") or (secret_file.read_text().strip() if secret_file.exists() else ""))
@@ -103,4 +109,7 @@ def open_session(base: str, username: str, password: str, data_dir: pathlib.Path
                 if e.code != 401 or attempt:
                     raise
                 time.sleep(31 - (time.time() % 30))
+    with opener.open(urllib.request.Request(f"{base}/auth/me"), timeout=60) as r:
+        if json.loads(r.read() or b"{}").get("session", {}).get("must_change_password"):
+            raise SystemExit(f"{username} must change the administrator-set password first (sign in once in the browser)")
     return opener

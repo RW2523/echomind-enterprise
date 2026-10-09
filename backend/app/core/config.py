@@ -272,5 +272,8 @@ class Settings(BaseSettings):
     LEGAL_PASSWORD_MIN_LENGTH: int = int(os.getenv("LEGAL_PASSWORD_MIN_LENGTH", "12"))
     LEGAL_WS_RECHECK_SEC: float = float(os.getenv("LEGAL_WS_RECHECK_SEC", "60"))          # re-validate open WebSockets
     LEGAL_OBO_TTL_SEC: int = int(os.getenv("LEGAL_OBO_TTL_SEC", "300"))                   # voice → backend token lifetime
+    # D-021: binding an authenticator needs an administrator-issued one-time link (firm may relax).
+    LEGAL_ENROLLMENT_LINK_REQUIRED: bool = os.getenv("LEGAL_ENROLLMENT_LINK_REQUIRED", "1").lower() in ("1", "true", "yes")
+    LEGAL_ENROLLMENT_LINK_HOURS: float = float(os.getenv("LEGAL_ENROLLMENT_LINK_HOURS", "72"))
 
 settings = Settings()

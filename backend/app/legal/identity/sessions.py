@@ -60,7 +60,7 @@ def create(user_id: str, mfa_verified: bool, ip: Optional[str] = None, user_agen
 _SELECT = (
     "SELECT s.token_hash, s.user_id, s.created_at, s.last_seen_at, s.idle_expires_at, s.abs_expires_at, "
     "s.mfa_verified, s.csrf_hash, s.ip, s.user_agent, u.username, u.role, COALESCE(u.tenant,''), "
-    "COALESCE(u.status,'active'), COALESCE(u.org_id,'') FROM sessions s JOIN users u ON u.id = s.user_id "
+    "COALESCE(u.status,'active'), COALESCE(u.org_id,''), u.must_change_password FROM sessions s JOIN users u ON u.id = s.user_id "
     "WHERE s.token_hash = ? AND s.revoked_at IS NULL"
 )
 
@@ -74,7 +74,7 @@ def lookup_hash(token_hash: str, slide: bool = True) -> Optional[dict]:
         row = conn.execute(_SELECT, (token_hash,)).fetchone()
         if not row:
             return None
-        (th, uid, created, seen, idle, absolute, mfa, csrf_hash, ip, ua, username, role, tenant, status, org_id) = row
+        (th, uid, created, seen, idle, absolute, mfa, csrf_hash, ip, ua, username, role, tenant, status, org_id, must_change) = row
         if status != "active" or now >= absolute or now >= idle:
             return None
         if slide and mfa:
@@ -86,7 +86,8 @@ def lookup_hash(token_hash: str, slide: bool = True) -> Optional[dict]:
                 idle, seen = new_idle, _iso(now)
     return {"token_hash": th, "user_id": uid, "username": username, "role": role, "tenant": tenant, "org_id": org_id,
             "mfa_verified": bool(mfa), "csrf_hash": csrf_hash, "created_at": created, "last_seen_at": seen,
-            "idle_expires_at": idle, "abs_expires_at": absolute, "ip": ip, "user_agent": ua}
+            "idle_expires_at": idle, "abs_expires_at": absolute, "ip": ip, "user_agent": ua,
+            "must_change_password": bool(must_change)}
 
 
 def lookup(token: str, slide: bool = True) -> Optional[dict]:

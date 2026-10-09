@@ -239,6 +239,13 @@ def seed_admin() -> None:
         logger.warning("Auth: seed_admin failed: %s", e)
 
 
+def _write_private(path: str, text: str) -> None:
+    os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as fh:
+        fh.write(text + "\n")
+
+
 def _seed_admin_law() -> None:
     """Law edition: the admin also gets the firm_admin role; a changed AUTH_ADMIN_PASSWORD revokes
     the admin's sessions; a generated first password goes to a 0600 file, never to the log."""
@@ -260,13 +267,21 @@ def _seed_admin_law() -> None:
             pw = secrets.token_urlsafe(18)
             uid = create_user(admin, pw, role="admin")["id"]
             accounts.grant_role(uid, "firm_admin")
-            path = os.path.join(settings.DATA_DIR, "legal", "bootstrap_admin_password")
-            os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
-            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-            with os.fdopen(fd, "w") as fh:
-                fh.write(pw + "\n")
+            accounts.require_password_change(uid)
+            _write_private(os.path.join(settings.DATA_DIR, "legal", "bootstrap_admin_password"), pw)
             logger.warning("Auth: created initial admin; one-time password written to "
                            "$ECHOMIND_DATA_DIR/legal/bootstrap_admin_password (delete it after first sign-in)")
+        else:
+            acct = accounts.get_by_username(admin)
+            uid = acct["id"] if acct else None
+        # D-021: the first administrator binds an authenticator with a link written next to the data,
+        # since there is no other administrator to issue one.
+        from ..legal.identity import mfa
+        if uid and settings.LEGAL_ENROLLMENT_LINK_REQUIRED and not mfa.is_enrolled(uid):
+            token, _ = mfa.issue_enrollment_token(uid, created_by="bootstrap")
+            _write_private(os.path.join(settings.DATA_DIR, "legal", "bootstrap_enrollment_token"), token)
+            logger.warning("Auth: administrator has no authenticator yet; enrolment link token written to "
+                           "$ECHOMIND_DATA_DIR/legal/bootstrap_enrollment_token (sign in at /signin?enrol=<token>)")
     except Exception as e:
         logger.warning("Auth: seed_admin failed: %s", type(e).__name__)
 
