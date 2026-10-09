@@ -10,7 +10,7 @@
 | SEC-01 | Mandatory auth, SSO/OIDC, sessions, MFA | PARTIAL | S1.1 | OIDC verification needs the firm IdP (P-011) |
 | SEC-02 | Tenant/client/matter CRUD, RBAC+ABAC, ethical walls | MISSING | S1.2, S1.3, S1.4 | — |
 | SEC-03 | Matter-aware indexes, ACL before retrieval and jobs | INCOMPATIBLE | S1.6, S1.7 | — |
-| SEC-04 | Audit, admin reports, SIEM export | PARTIAL | S1.5 | — |
+| SEC-04 | Audit, admin reports, SIEM export | DONE (forwarder awaits network approval) | S1.5 | — |
 | SEC-05 | Consent, pause, revoke, provenance | MISSING | S1.8 | Policy text (P-001); mechanism not blocked |
 | SEC-06 | Privilege labels, redaction preview, safe exports | PARTIAL | S1.9, S1.10 | — |
 | SEC-07 | Retention, legal hold, approved deletion, restore | MISSING | S1.9 | Schedules (P-002/P-003); mechanism not blocked |

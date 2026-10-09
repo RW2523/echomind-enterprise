@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-08 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); slice branch `law/s1.0-foundations` |
-| Phase | Phase 1: S1.0–S1.4 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.6-documents` |
+| Phase | Phase 1: S1.0–S1.5 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0005` (Law edition only) |
+| Migrations | `0001`–`0006` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -136,24 +136,38 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Break-glass is requested by matter number with an identical response whether or not the number exists; it is resolved when a different managing partner approves.
   - The banner does not yet say actions are recorded: read-access audit lands in S1.5, and the copy will change then.
 
+### Session 1 (continued) — S1.5 Audit trail
+- S1.4 merged (`0b0fabd`).
+- Commits:
+  - `3fcf8a3` backend: migration `0006_audit`, `legal/audit` (chain, record, routes, CLI), every Law route instrumented
+  - `8080275` screens: Audit trail and Matter activity; recorded matter open; banner copy
+- **As built:**
+  - Hash rule, anchors, the three recording paths, the content policy, fail-closed behaviour and its one known limit (the event is written after the change commits) are in D-008.
+  - Entering a matter is now a recorded read (D-023).
+  - Migration numbers shift by one from the plan: documents become `0007`.
+- **Not built:** the syslog/CEF forwarder. It needs network approval.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
-- Still 🔒 per plan:
-  - the first `scripts/law/compose.sh up`;
+- 2026-10-08: each slice S1.0–S1.3 approved and merged in turn; then a **standing approval** to build and merge slices in order, as recorded at the top of DECISIONS.md.
+- Still 🔒:
+  - the first `scripts/law/compose.sh up` on the shared host;
   - any push or PR to GitHub;
-  - merging `law/s1.0-foundations` into `feature/echomind-law`;
-  - new runtime dependencies in S1.1+ (S1.1 needs none on the backend; `qrcode` for the MFA QR is S1.3);
-  - counsel items P-001…P-015.
+  - anything touching production;
+  - network integrations (DMS, IdP, licensed sources, syslog forwarding);
+  - counsel items P-001…P-015;
+  - destructive migrations on non-development data;
+  - the manual Microsoft Word check for tracked changes (S3.3).
 
 ## Feature checklist (one row per backlog ID)
 
 | ID | Status | Slice | Notes |
 |---|---|---|---|
 | SEC-01 | PARTIAL (local accounts complete) | S1.1, S1.3 | Local accounts: sessions, TOTP MFA (enrolment by admin link), forced password change, lockout, CSRF, deny-by-default, WS gating, voice OBO, revoke-on-role-change; browser sign-in tested end to end. OIDC BLOCKED (P-011) |
-| SEC-02 | DONE (audit events pending S1.5) | S1.2–S1.4 | Clients, matters, memberships, policy engine with non-disclosure, firm roles, ethical walls with two-person approval and exceptions, break-glass; UI; T01 in backend and browser, walls and break-glass in the browser. Audit trail for these actions → S1.5 |
+| SEC-02 | DONE | S1.2–S1.5 | Clients, matters, memberships, policy engine with non-disclosure, firm roles, ethical walls with two-person approval and exceptions, break-glass; UI; T01 in backend and browser, walls and break-glass in the browser; every action and refusal audited (S1.5) |
 | SEC-03 | INCOMPATIBLE | S1.6–S1.7 | |
-| SEC-04 | PARTIAL | S1.5 | S1.0: content-free logs in the Law edition (backend and voice, verified by log scan) |
+| SEC-04 | DONE (forwarder awaits network approval) | S1.0, S1.5 | Content-free logs (S1.0). Hash-chained append-only trail with daily anchors, verifier CLI and endpoint, firm trail for governance roles, matter activity for leads, verifiable JSONL and CSV export; every Law route audited, enforced by a test. Off-host syslog/CEF forwarder not built (network approval) |
 | SEC-05 | MISSING | S1.8 | Policy values need counsel (P-001) |
 | SEC-06 | PARTIAL (pre-existing) | S1.9–S1.10 | |
 | SEC-07 | MISSING | S1.9 | Policy values need counsel (P-002/P-003) |
@@ -180,14 +194,19 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## Known risks right now
 
-- **Production shares this host.** Never run `docker compose` in this clone without `-p echomind-law -f docker-compose.law.yml` (which does not exist yet; created in S1.0).
+- **Production shares this host.** Never run `docker compose` in this clone except through `scripts/law/compose.sh` (`-p echomind-law`).
 - Memory headroom is about 14 GB. ASR containers need a memory check first.
+- Audit anchors sit on the same disk as the database until an off-host forwarder is approved.
+- No per-IP sign-in throttle. Failed sign-ins are recorded and per-account lockout works.
+- E2E is not in CI. It runs locally with Playwright (`cd frontend && npx playwright test`).
 
 ## NEXT EXACT ACTION
 
-Start **S1.5 Audit v2** on `law/s1.5-audit`:
-1. Migration `0006_audit`: append-only, hash-chained `audit_events` with no-update/no-delete triggers.
-2. `legal/audit` modules: record, chain, verify, anchors, export.
-3. Instrument policy decisions (every deny and content read) and every Law mutation route.
-4. Screens: Admin → Audit (firm-wide metadata) and Matter → Activity (leads).
-5. Change the break-glass banner copy to say access is recorded.
+Start **S1.6 Matter documents and partitioned retrieval** on `law/s1.6-documents`. Implement D-005 option (a), the plan's recommendation:
+1. Migrations `0007_documents` and `0008_ownership`.
+2. `legal/retrieval/{partition_index,scope,registry}.py`, with `rag/index.py` and `rag/sparse.py` behind `PartitionIndex`; the legacy default stays.
+3. `legal/documents/{routes,ingest_job,blobs}.py` (AES-GCM blobs, D-014; `cryptography` is listed in LICENSE_REGISTER §2) and `legal/jobs/worker.py`.
+4. Law ingestion indexes the original text and stores PII findings as labels (D-012).
+5. Upload limits; file route `no-store`; every document action audited.
+6. Documents library screen and an Inspector shell.
+7. Tests: canary leakage suite v1, T02 revoke, T06 abstain, ingest rollback on lost rights, legacy golden eval unchanged.
