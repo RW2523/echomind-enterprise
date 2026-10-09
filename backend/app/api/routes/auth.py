@@ -14,6 +14,7 @@ from ...core.config import settings
 from ...core import auth as authmod
 from ...core import audit as auditmod
 from ...core.edition import is_law
+from ...legal.audit.record import audited, note
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -33,6 +34,7 @@ def auth_config():
 
 
 @router.post("/login")
+@audited("auth.login", session_actor=False)
 def login(inp: LoginIn, request: Request, response: Response):
     if is_law():
         return _law_login(inp, request, response)
@@ -48,6 +50,7 @@ def login(inp: LoginIn, request: Request, response: Response):
 
 
 @router.post("/logout")
+@audited("auth.logout")
 def logout(request: Request, response: Response):
     if is_law():
         from ...legal.identity import SESSION_COOKIE, sessions
@@ -100,6 +103,7 @@ def admin_list_users(request: Request):
 
 
 @router.post("/users")
+@audited("user.create", object_type="user")
 def admin_create_user(request: Request, inp: CreateUserIn):
     admin = _require_admin(request)
     if is_law():
@@ -116,6 +120,7 @@ def admin_create_user(request: Request, inp: CreateUserIn):
             raise HTTPException(status_code=400, detail=str(e))
         if firm_role != "user":
             accounts.grant_role(user["id"], firm_role, granted_by=admin["sub"])
+        note(object_id=user["id"], details={"username": user["username"], "role": firm_role})
         # D-021: the administrator chose this password, so the person must replace it; and binding
         # an authenticator needs this one-time link, not just the password.
         accounts.require_password_change(user["id"])
@@ -130,6 +135,7 @@ def admin_create_user(request: Request, inp: CreateUserIn):
 
 
 @router.delete("/users/{username}")
+@audited("user.delete", object_type="user")
 def admin_delete_user(request: Request, username: str):
     payload = _require_admin(request)
     if username == payload.get("username"):
@@ -137,6 +143,7 @@ def admin_delete_user(request: Request, username: str):
     if is_law():
         from ...legal.identity import accounts, sessions
         acct = accounts.get_by_username(username)
+        note(object_id=acct["id"] if acct else None, details={"username": username})
         if acct:
             sessions.revoke_all_for_user(acct["id"], reason="account_deleted")
     authmod.delete_user(username)
@@ -207,13 +214,17 @@ def _law_login(inp: LoginIn, request: Request, response: Response) -> dict:
     acct = accounts.get_by_username(inp.username)
     if acct is None:
         authmod.verify_password(inp.password, _DUMMY_HASH)
+        note(reason="unknown_user")               # the name typed is not recorded
         raise HTTPException(status_code=401, detail=_SIGN_IN_FAILED)
+    note(actor_user_id=acct["id"], actor_username=acct["username"])
     if accounts.is_locked(acct) or acct["status"] != "active":
+        note(reason="disabled" if acct["status"] != "active" else "locked")
         authmod.verify_password(inp.password, acct["password_hash"])
         logger.warning("Auth: sign-in refused for locked or disabled account %s", acct["id"])
         raise HTTPException(status_code=401, detail=_SIGN_IN_FAILED)
     if not authmod.verify_password(inp.password, acct["password_hash"]):
         accounts.register_failure(acct["id"])
+        note(reason="bad_password")
         raise HTTPException(status_code=401, detail=_SIGN_IN_FAILED)
     ip, ua = _client_meta(request)
     # Failure counters reset only once sign-in is complete, so knowing the password does not buy
@@ -221,10 +232,13 @@ def _law_login(inp: LoginIn, request: Request, response: Response) -> dict:
     if acct["mfa_enabled"] or settings.LEGAL_MFA_REQUIRED:
         token, csrf = sessions.create(acct["id"], mfa_verified=False, ip=ip, user_agent=ua)
         _set_law_cookies(response, token, csrf, mfa_verified=False)
-        return {"status": "mfa_required" if acct["mfa_enabled"] else "mfa_enrollment_required"}
+        status = "mfa_required" if acct["mfa_enabled"] else "mfa_enrollment_required"
+        note(details={"status": status})
+        return {"status": status}
     accounts.register_success(acct["id"])
     token, csrf = sessions.create(acct["id"], mfa_verified=True, ip=ip, user_agent=ua)
     _set_law_cookies(response, token, csrf, mfa_verified=True)
+    note(details={"status": "ok"})
     return {"status": "ok", "user": _public_user(acct)}
 
 
@@ -254,7 +268,9 @@ def _complete_sign_in(request: Request, response: Response, user_id: str) -> dic
 def _failed_code(request: Request, user_id: str) -> None:
     from ...legal.identity import SESSION_COOKIE, accounts, sessions
     accounts.register_failure(user_id)
+    note(reason="bad_code")
     if accounts.is_locked(accounts.get(user_id)):
+        note(reason="locked_out")
         sessions.revoke(request.cookies.get(SESSION_COOKIE, ""), reason="locked_out")
     raise HTTPException(status_code=401, detail="That code was not accepted.")
 
@@ -264,6 +280,7 @@ class CodeIn(BaseModel):
 
 
 @router.post("/mfa/verify")
+@audited("auth.mfa.verify")
 def mfa_verify(inp: CodeIn, request: Request, response: Response):
     """Second sign-in step: a current authenticator code, or an unused recovery code."""
     _require_law()
@@ -293,6 +310,7 @@ def _check_link(user_id: str, token: Optional[str]) -> None:
 
 
 @router.post("/mfa/enroll")
+@audited("auth.mfa.enroll")
 def mfa_enroll(request: Request, inp: Optional[EnrollIn] = None):
     """Start authenticator enrolment; returns the shared secret once. Needs a valid enrolment link
     unless the firm has relaxed that (D-021)."""
@@ -307,6 +325,7 @@ def mfa_enroll(request: Request, inp: Optional[EnrollIn] = None):
 
 
 @router.post("/mfa/confirm")
+@audited("auth.mfa.confirm")
 def mfa_confirm(inp: ConfirmIn, request: Request, response: Response):
     """Finish enrolment with a code from the new authenticator; returns recovery codes once.
     The enrolment link is used up only once the code is accepted."""
@@ -332,6 +351,7 @@ def list_sessions(request: Request):
 
 
 @router.delete("/sessions/{session_id}")
+@audited("session.revoke", object_type="session", object_param="session_id")
 def revoke_session(session_id: str, request: Request, response: Response):
     _require_law()
     from ...legal.identity import sessions
@@ -349,12 +369,14 @@ class PasswordIn(BaseModel):
 
 
 @router.post("/password")
+@audited("auth.password.change")
 def change_password(inp: PasswordIn, request: Request):
     _require_law()
     from ...legal.identity import SESSION_COOKIE, accounts
     p = authmod.user_from_request(request)
     acct = accounts.get(p["sub"])
     if not authmod.verify_password(inp.current_password, acct["password_hash"]):
+        note(reason="bad_password")
         raise HTTPException(status_code=400, detail="Current password is incorrect.")
     _enforce_password_policy(inp.new_password, acct["username"])
     revoked = accounts.change_password(acct["id"], inp.new_password, keep_token=request.cookies.get(SESSION_COOKIE, ""))
@@ -366,6 +388,7 @@ class OboIn(BaseModel):
 
 
 @router.post("/obo-token")
+@audited("auth.obo.issue")
 def obo_token(inp: OboIn, request: Request):
     """Exchange a browser session for a short-lived token a service (voice) uses on the user's behalf."""
     _require_law()
@@ -373,6 +396,7 @@ def obo_token(inp: OboIn, request: Request):
     p = authmod.user_from_request(request)
     if p["auth"] != "session":
         raise HTTPException(status_code=401, detail="Not authenticated")
+    note(details={"audience": inp.audience})
     if inp.audience != "voice":
         raise HTTPException(status_code=400, detail="Unknown audience")
     return {"token": obo.issue(p["session"], audience="voice"), "expires_in": settings.LEGAL_OBO_TTL_SEC}
@@ -385,6 +409,7 @@ def _admin_target(request: Request, username: str) -> dict:
     acct = accounts.get_by_username(username)
     if not acct:
         raise HTTPException(status_code=404, detail="Not Found")
+    note(object_type="user", object_id=acct["id"], details={"username": acct["username"]})
     return acct
 
 
@@ -395,6 +420,7 @@ def _enrollment_link(user_id: str, created_by: str) -> dict:
 
 
 @router.post("/users/{username}/enrollment-link")
+@audited("user.enrollment_link", object_type="user")
 def admin_enrollment_link(username: str, request: Request):
     """Issue a one-time authenticator enrolment link (shown once; replaces older links)."""
     from ...legal.identity import mfa
@@ -405,6 +431,7 @@ def admin_enrollment_link(username: str, request: Request):
 
 
 @router.post("/users/{username}/reset-mfa")
+@audited("user.mfa_reset", object_type="user")
 def admin_reset_mfa(username: str, request: Request):
     """Forget a lost authenticator: signs the person out everywhere and issues a new enrolment link."""
     from ...legal.identity import mfa, sessions
@@ -415,6 +442,7 @@ def admin_reset_mfa(username: str, request: Request):
 
 
 @router.post("/users/{username}/revoke-sessions")
+@audited("user.sessions_revoke", object_type="user")
 def admin_revoke_sessions(username: str, request: Request):
     from ...legal.identity import sessions
     acct = _admin_target(request, username)
@@ -422,6 +450,7 @@ def admin_revoke_sessions(username: str, request: Request):
 
 
 @router.post("/users/{username}/disable")
+@audited("user.disable", object_type="user")
 def admin_disable_user(username: str, request: Request):
     from ...legal.identity import accounts
     acct = _admin_target(request, username)
@@ -432,6 +461,7 @@ def admin_disable_user(username: str, request: Request):
 
 
 @router.post("/users/{username}/enable")
+@audited("user.enable", object_type="user")
 def admin_enable_user(username: str, request: Request):
     from ...legal.identity import accounts
     _admin_target(request, username)

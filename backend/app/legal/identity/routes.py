@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from ...core.db import get_conn
+from ..audit.record import audited, note
 from ..matters.routes import principal_of, require, require_law_edition
 from ..policy import firm_roles_of
 from . import sessions
@@ -69,6 +70,7 @@ def list_users(request: Request):
 
 
 @router.put("/users/{username}/roles", response_model=RolesOut)
+@audited("roles.set", object_type="user")
 def set_roles(username: str, inp: RolesIn, request: Request):
     p = principal_of(request)
     require(p, "roles.manage")
@@ -79,6 +81,7 @@ def set_roles(username: str, inp: RolesIn, request: Request):
     if target == p["sub"] and "firm_admin" not in new:
         raise HTTPException(status_code=400, detail="You cannot remove your own firm_admin role.")
     old = set(firm_roles_of(target))
+    note(object_id=target, details={"username": username, "added": sorted(new - old), "removed": sorted(old - new)})
     with get_conn() as conn:
         for role in old - new:
             conn.execute("DELETE FROM user_roles WHERE user_id=? AND role=?", (target, role))
