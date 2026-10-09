@@ -24,6 +24,7 @@ DEMO_USERS = {  # username: firm roles
     "morgan": ["managing_partner"],
     "nakamura": ["managing_partner"],
     "fiona": ["firm_admin"],
+    "rhea": ["records_admin"],
 }
 
 

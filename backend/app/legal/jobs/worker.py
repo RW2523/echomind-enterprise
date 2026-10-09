@@ -84,10 +84,18 @@ def wake() -> None:
     _wake.set()
 
 
+def _daily() -> None:
+    """Scheduled work: one retention dry run per day (S1.9; never deletes anything)."""
+    from ..orgs import default_org_id
+    from ..records import retention
+    retention.daily_dry_run(default_org_id())
+
+
 def _loop() -> None:
     while not _stop.is_set():
         try:
             run_pending()
+            _daily()
         except Exception as e:
             logger.error("Jobs: worker loop error (%s)", type(e).__name__)
         _wake.wait(settings.LEGAL_JOB_POLL_SEC)

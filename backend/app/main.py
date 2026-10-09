@@ -337,3 +337,5 @@ app.include_router(legal_research_router, prefix="/api")
 from .legal.meetings.routes import router as legal_meetings_router, ws_router as legal_capture_router  # noqa: E402
 app.include_router(legal_meetings_router, prefix="/api")
 app.include_router(legal_capture_router, prefix="/api")
+from .legal.records.routes import router as legal_records_router  # noqa: E402
+app.include_router(legal_records_router, prefix="/api")

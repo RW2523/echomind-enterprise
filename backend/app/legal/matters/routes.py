@@ -119,6 +119,7 @@ class MatterOut(BaseModel):
     updated_at: Optional[str] = None
     client: ClientRef
     my_role: Optional[str] = None
+    on_hold: bool = False
 
 
 class MembershipIn(BaseModel):
@@ -216,9 +217,16 @@ def update_client(client_id: str, inp: ClientPatch, request: Request):
 
 
 # ── Matters ──────────────────────────────────────────────────────────────────────
+def _with_hold(matters: list[dict]) -> list[dict]:
+    """Members see that a matter is under legal hold (S1.9), not the hold itself."""
+    from ..records import holds
+    held = holds.matters_on_hold([m["id"] for m in matters])
+    return [{**m, "on_hold": m["id"] in held} for m in matters]
+
+
 @router.get("/matters", response_model=MatterList)
 def list_matters(request: Request):
-    return {"matters": repo.list_visible_matters(principal_of(request))}
+    return {"matters": _with_hold(repo.list_visible_matters(principal_of(request)))}
 
 
 @router.post("/matters", response_model=MatterEnvelope)
@@ -241,7 +249,7 @@ def create_matter(inp: MatterIn, request: Request):
 @audited("matter.read", object_type="matter", object_param="matter_id")
 def get_matter(matter_id: str, request: Request):
     d = require(principal_of(request), "matter.read", matter_id)
-    return {"matter": repo.get_matter(matter_id, my_role=d.role)}
+    return {"matter": _with_hold([repo.get_matter(matter_id, my_role=d.role)])[0]}
 
 
 @router.patch("/matters/{matter_id}", response_model=MatterEnvelope)
@@ -257,7 +265,7 @@ def update_matter(matter_id: str, inp: MatterPatch, request: Request):
         m = repo.update_matter(matter_id, changes, inp.version)
     except repo.Conflict as e:
         raise HTTPException(status_code=409, detail=str(e))
-    return {"matter": {**m, "my_role": d.role}}
+    return {"matter": _with_hold([{**m, "my_role": d.role}])[0]}
 
 
 # ── Memberships ──────────────────────────────────────────────────────────────────

@@ -1,0 +1,11 @@
+DROP TABLE legal_retention_runs;
+DROP TABLE legal_retention_policies;
+DROP TABLE legal_deletions;
+DROP TABLE legal_hold_scopes;
+DROP TABLE legal_holds;
+DROP TABLE legal_labels;
+ALTER TABLE legal_meetings DROP COLUMN transcript_deletion_id;
+ALTER TABLE legal_meetings DROP COLUMN transcript_deleted_at;
+ALTER TABLE legal_documents DROP COLUMN deletion_id;
+ALTER TABLE legal_documents DROP COLUMN deleted_at;
+ALTER TABLE matters DROP COLUMN closed_at;

@@ -32,7 +32,8 @@ class IngestFailed(Exception):
 
 def _version(version_id: str) -> dict | None:
     with get_conn() as conn:
-        row = conn.execute("SELECT v.id, v.document_id, v.matter_id, v.filename, v.wrapped_key, d.current_version_id, d.org_id "
+        row = conn.execute("SELECT v.id, v.document_id, v.matter_id, v.filename, v.wrapped_key, "
+                           "CASE WHEN d.deleted_at IS NULL THEN d.current_version_id END, d.org_id "
                            "FROM legal_document_versions v JOIN legal_documents d ON d.id = v.document_id WHERE v.id=?",
                            (version_id,)).fetchone()
     keys = ("id", "document_id", "matter_id", "filename", "wrapped_key", "current_version_id", "org_id")
@@ -86,7 +87,9 @@ async def run(job: dict) -> str | None:
         if not still_allowed():
             raise IngestFailed("rights_revoked")      # lost access while we worked: write nothing
         _commit(v, chunks, vecs, findings, pages or None, offsets)
-        audit("allow", chunks=len(chunks), pages=pages or None, findings=len(findings))
+        from ..records import labels
+        suggested = labels.suggest_from_text(v["org_id"], v["matter_id"], v["document_id"], text)
+        audit("allow", chunks=len(chunks), pages=pages or None, findings=len(findings), label_suggestions=suggested)
         return None
     except IngestFailed as e:
         _set_status(v["id"], "failed", e.code)
