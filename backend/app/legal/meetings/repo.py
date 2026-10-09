@@ -65,7 +65,8 @@ def meeting_detail(matter_id: str, meeting_id: str, matter_number: str) -> Optio
         caps = conn.execute("SELECT c.id, c.started_at, (SELECT username FROM users WHERE id=c.started_by), c.consent_snapshot, "
                             "c.transcription, (SELECT COUNT(*) FROM legal_capture_custody k WHERE k.capture_id=c.id), "
                             "(SELECT COALESCE(SUM(bytes),0) FROM legal_capture_custody k WHERE k.capture_id=c.id), "
-                            "(SELECT COUNT(*) FROM legal_transcript_segments s WHERE s.capture_id=c.id) "
+                            "(SELECT COUNT(*) FROM legal_transcript_segments s JOIN legal_meetings mt ON mt.id = s.meeting_id "
+                            "WHERE s.capture_id=c.id AND mt.transcript_deleted_at IS NULL) "
                             "FROM legal_captures c WHERE c.meeting_id=? ORDER BY c.started_at", (meeting_id,)).fetchall()
         out["captures"] = []
         for cid, started, by, snap, tr, custody_n, audio_bytes, segs in caps:
@@ -138,7 +139,8 @@ def add_segment(capture_id: str, meeting_id: str, matter_id: str, seq: int, t0, 
 def segments(matter_id: str, meeting_id: str) -> list[dict]:
     with get_conn() as conn:
         rows = conn.execute("SELECT s.id, s.capture_id, s.seq, s.t_start_ms, s.t_end_ms, s.text, s.created_at FROM legal_transcript_segments s "
-                            "JOIN legal_captures c ON c.id = s.capture_id WHERE s.meeting_id=? AND s.matter_id=? "
+                            "JOIN legal_captures c ON c.id = s.capture_id JOIN legal_meetings mt ON mt.id = s.meeting_id "
+                            "WHERE s.meeting_id=? AND s.matter_id=? AND mt.transcript_deleted_at IS NULL "
                             "ORDER BY c.started_at, s.seq", (meeting_id, matter_id)).fetchall()
     return [{"id": r[0], "capture_id": r[1], "seq": r[2], "t_start_ms": r[3], "t_end_ms": r[4], "text": r[5], "created_at": r[6]}
             for r in rows]

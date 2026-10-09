@@ -115,19 +115,25 @@ def _document_out(conn, row) -> dict:
     return {"id": d["id"], "title": d["title"], "kind": d["kind"], "status": d["status"], "version": d["version"],
             "created_by": _username(conn, d["created_by"]), "created_at": d["created_at"], "updated_at": d["updated_at"],
             "current_version": _version_out(conn, cur) if cur else None,
-            "findings": _findings(conn, d["current_version_id"])}
+            "findings": _findings(conn, d["current_version_id"]), **_label(d["id"])}
+
+
+def _label(document_id: str) -> dict:
+    from ..records import labels
+    st = labels.state("document", document_id)
+    return {"label": st["current"]["label"] if st["current"] else None, "label_suggested": bool(st["suggestions"])}
 
 
 def list_documents(matter_id: str) -> list[dict]:
     with get_conn() as conn:
-        rows = conn.execute(f"SELECT {', '.join(_D_COLS)} FROM legal_documents WHERE matter_id=? "
+        rows = conn.execute(f"SELECT {', '.join(_D_COLS)} FROM legal_documents WHERE matter_id=? AND deleted_at IS NULL "
                             "ORDER BY COALESCE(updated_at, created_at) DESC", (matter_id,)).fetchall()
         return [_document_out(conn, r) for r in rows]
 
 
 def get_document(matter_id: str, document_id: str) -> Optional[dict]:
     with get_conn() as conn:
-        row = conn.execute(f"SELECT {', '.join(_D_COLS)} FROM legal_documents WHERE id=? AND matter_id=?",
+        row = conn.execute(f"SELECT {', '.join(_D_COLS)} FROM legal_documents WHERE id=? AND matter_id=? AND deleted_at IS NULL",
                            (document_id, matter_id)).fetchone()
         return _document_out(conn, row) if row else None
 
@@ -135,13 +141,15 @@ def get_document(matter_id: str, document_id: str) -> Optional[dict]:
 def list_versions(matter_id: str, document_id: str) -> list[dict]:
     with get_conn() as conn:
         rows = conn.execute(f"SELECT {', '.join(_V_COLS)} FROM legal_document_versions WHERE document_id=? AND matter_id=? "
+                            "AND document_id IN (SELECT id FROM legal_documents WHERE deleted_at IS NULL) "
                             "ORDER BY number DESC", (document_id, matter_id)).fetchall()
         return [_version_out(conn, r) for r in rows]
 
 
 def version_row(matter_id: str, document_id: str, version_id: str) -> Optional[dict]:
     with get_conn() as conn:
-        row = conn.execute(f"SELECT {', '.join(_V_COLS)} FROM legal_document_versions WHERE id=? AND document_id=? AND matter_id=?",
+        row = conn.execute(f"SELECT {', '.join(_V_COLS)} FROM legal_document_versions WHERE id=? AND document_id=? AND matter_id=? "
+                           "AND document_id IN (SELECT id FROM legal_documents WHERE deleted_at IS NULL)",
                            (version_id, document_id, matter_id)).fetchone()
     return dict(zip(_V_COLS, row)) if row else None
 
@@ -157,5 +165,6 @@ def same_content_in_matter(matter_id: str, sha256: str, exclude_document: Option
     """Title of another document in this matter whose current version has identical content."""
     with get_conn() as conn:
         row = conn.execute("SELECT d.title FROM legal_documents d JOIN legal_document_versions v ON v.id = d.current_version_id "
-                           "WHERE d.matter_id=? AND v.sha256=? AND d.id IS NOT ?", (matter_id, sha256, exclude_document)).fetchone()
+                           "WHERE d.matter_id=? AND v.sha256=? AND d.id IS NOT ? AND d.deleted_at IS NULL",
+                           (matter_id, sha256, exclude_document)).fetchone()
     return row[0] if row else None

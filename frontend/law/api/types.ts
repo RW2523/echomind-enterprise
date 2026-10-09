@@ -13,6 +13,7 @@ export interface Matter {
   id: string; number: string; title: string; practice_area?: string | null; jurisdiction?: string | null;
   status: MatterStatus; sensitivity: Sensitivity; version: number; created_at: string; updated_at?: string | null;
   client: { id: string; name: string; code?: string | null }; my_role?: MatterRole | 'break_glass' | null;
+  on_hold?: boolean;
 }
 export interface Membership {
   id: string; user_id: string; username: string; display_name: string; role: MatterRole; can_export: boolean;
@@ -64,6 +65,7 @@ export interface LawDocument {
   id: string; title: string; kind: DocKind; status: DocStatus; version: number;
   created_by?: string | null; created_at: string; updated_at?: string | null;
   current_version: DocVersion | null; findings: Record<string, number>;
+  label?: PrivilegeLabel | null; label_suggested?: boolean;
 }
 export interface Passage {
   chunk_id: string; text: string; score?: number | null; score_kind?: string | null;
@@ -104,3 +106,34 @@ export interface MeetingDetail extends MeetingSummary {
   participants: Participant[]; captures: CaptureRecord[];
 }
 export interface Segment { id: string; capture_id?: string; seq: number; t_start_ms?: number | null; t_end_ms?: number | null; text: string }
+
+/** Records (S1.9): labels, holds, deletions, retention. */
+export type PrivilegeLabel = 'privileged' | 'work_product' | 'confidential' | 'not_privileged' | 'unreviewed';
+export interface LabelEntry { label: PrivilegeLabel; kind: 'set' | 'suggested'; source: 'person' | 'detector'; reason_code?: string | null; by?: string | null; at: string }
+export interface LabelState { current: LabelEntry | null; suggestions: LabelEntry[]; history: LabelEntry[] }
+export interface DeletionReport {
+  object: 'document' | 'meeting_transcript'; versions?: number; passages?: number; findings?: number; labels?: number; files?: number;
+  file_bytes?: number; index_vectors?: number; research_citations?: number; segments?: number; kept: string[];
+}
+export interface Deletion {
+  id: string; object_type: 'document' | 'meeting_transcript'; object_id: string; object_label: string | null; reason: string;
+  origin: 'person' | 'retention'; status: 'requested' | 'purged' | 'rejected' | 'restored' | 'blocked';
+  requested_by?: string | null; requested_at: string; decided_by?: string | null; decided_at?: string | null; decision_note?: string | null;
+  purged_at?: string | null; report: DeletionReport;
+  verification: { ok: boolean; checks: Record<string, boolean>; verified_at: string } | null;
+  matter: { id: string; number: string; title: string } | null;
+}
+export interface Hold {
+  id: string; name: string; reason: string; status: 'requested' | 'active' | 'release_requested' | 'released' | 'rejected';
+  requested_by?: string | null; requested_at: string; approved_by?: string | null; approved_at?: string | null;
+  release_requested_by?: string | null; released_by?: string | null; released_at?: string | null;
+  matters: { id: string; number: string; title: string; client: string }[];
+}
+export interface RetentionPolicy {
+  id: string; object_type: 'document' | 'meeting_transcript'; days_after_close: number; note?: string | null;
+  status: 'draft' | 'approved' | 'retired'; drafted_by?: string | null; drafted_at: string; approved_by?: string | null; approved_at?: string | null;
+}
+export interface RetentionRun {
+  id: string; mode: 'dry_run' | 'apply'; run_by: string; run_at: string;
+  report: { candidates: number; held_skipped: number; draft_preview: number; requests_created: number };
+}

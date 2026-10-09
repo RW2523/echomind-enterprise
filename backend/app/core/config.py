@@ -293,5 +293,8 @@ class Settings(BaseSettings):
     LEGAL_CONSENT_MAX_AGE_HOURS: float = float(os.getenv("LEGAL_CONSENT_MAX_AGE_HOURS", "12"))   # older consent must be renewed
     LEGAL_CONSENT_RECHECK_SEC: float = float(os.getenv("LEGAL_CONSENT_RECHECK_SEC", "1"))        # database re-check while capturing
     LEGAL_CUSTODY_BATCH_BYTES: int = int(os.getenv("LEGAL_CUSTODY_BATCH_BYTES", "160000"))       # ~5 s of 16 kHz PCM16 per custody record
+    # Records (S1.9; P-002). Retention never deletes by itself: with this off (default) runs are
+    # dry runs; with it on, approved policies only create deletion requests for a person to approve.
+    LEGAL_RETENTION_APPLY: bool = os.getenv("LEGAL_RETENTION_APPLY", "0").lower() in ("1", "true", "yes")
 
 settings = Settings()

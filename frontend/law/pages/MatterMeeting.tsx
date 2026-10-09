@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
-import { Circle, Mic, Pause, Play, Square, UserPlus } from 'lucide-react';
+import { Circle, Mic, Pause, Play, Square, Trash2, UserPlus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { keys, meetingsPath, useMeeting } from '../api/queries';
@@ -10,6 +10,7 @@ import { startMic, type Mic as MicHandle } from '../app/mic';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, ErrorNote, Field, Skeleton, StatusPill, type Tone } from '../ui/primitives';
 import NotAvailable from './NotAvailable';
+import { DeleteDialog, HoldNotice, LabelControl } from '../ui/records';
 import { kindLabel } from './MatterMeetings';
 
 const ROLES: [ParticipantRole, string][] = [['host', 'Host'], ['attorney', 'Attorney'], ['client', 'Client'], ['counterparty', 'Counterparty'],
@@ -58,9 +59,12 @@ export default function MatterMeeting() {
           ))}
         </div>
         <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} style={{ display: 'grid', gap: 16 }}>
-          {tab === 'prepare' && <Prepare m={m} matterId={matter.id} canEdit={contributor} />}
+          {tab === 'prepare' && <Prepare m={m} matterId={matter.id} canEdit={contributor}
+            canSetLabel={['lead', 'attorney', 'reviewer'].includes(matter.my_role ?? '') && matter.status === 'open'}
+            canSuggestLabel={matter.my_role === 'paralegal' && matter.status === 'open'} />}
           {tab === 'consent' && <Consent m={m} matterId={matter.id} canRecord={contributor} />}
-          {tab === 'record' && <Record m={m} matterId={matter.id} canRecord={contributor} waiting={waiting} />}
+          {tab === 'record' && <Record m={m} matterId={matter.id} canRecord={contributor} waiting={waiting}
+            canDelete={['lead', 'attorney'].includes(matter.my_role ?? '')} onHold={!!matter.on_hold} />}
         </div>
       </div>
     </>
@@ -73,7 +77,7 @@ function useRefresh(matterId: string, meetingId: string) {
 }
 
 // ── Prepare ────────────────────────────────────────────────────────────────────
-function Prepare({ m, matterId, canEdit }: { m: MeetingDetail; matterId: string; canEdit: boolean }) {
+function Prepare({ m, matterId, canEdit, canSetLabel, canSuggestLabel }: { m: MeetingDetail; matterId: string; canEdit: boolean; canSetLabel: boolean; canSuggestLabel: boolean }) {
   const refresh = useRefresh(matterId, m.id);
   const [form, setForm] = useState({ name: '', role: 'client' as ParticipantRole });
   const [error, setError] = useState('');
@@ -113,6 +117,10 @@ function Prepare({ m, matterId, canEdit }: { m: MeetingDetail; matterId: string;
         </form>
       )}
       {error && <ErrorNote>{error}</ErrorNote>}
+      <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 14 }}>
+        <h3 className="lw-eyebrow" style={{ margin: '0 0 6px' }}>Privilege label</h3>
+        <LabelControl matterId={matterId} type="meeting" objectId={m.id} canSet={canSetLabel} canSuggest={canSuggestLabel} />
+      </div>
     </section>
   );
 }
@@ -197,8 +205,12 @@ function ConsentDialog({ m, matterId, p, onClose, onSaved }: { m: MeetingDetail;
 // ── Record ─────────────────────────────────────────────────────────────────────
 type Phase = 'idle' | 'connecting' | 'live' | 'paused' | 'stopped';
 
-function Record({ m, matterId, canRecord, waiting }: { m: MeetingDetail & { transcript?: Segment[] }; matterId: string; canRecord: boolean; waiting: Participant[] }) {
+function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
+  m: MeetingDetail & { transcript?: Segment[] }; matterId: string; canRecord: boolean; waiting: Participant[]; canDelete: boolean; onHold: boolean;
+}) {
   const refresh = useRefresh(matterId, m.id);
+  const [deleting, setDeleting] = useState(false);
+  const transcriptBase = `${meetingsPath(matterId)}/${encodeURIComponent(m.id)}/transcript`;
   const [phase, setPhase] = useState<Phase>('idle');
   const [note, setNote] = useState('');
   const [transcription, setTranscription] = useState<'available' | 'unavailable' | null>(null);
@@ -282,11 +294,20 @@ function Record({ m, matterId, canRecord, waiting }: { m: MeetingDetail & { tran
       </section>
       {(live.length > 0 || (m.transcript?.length ?? 0) > 0) && (
         <section className="lw-paper lw-sheet" aria-label="Transcript">
-          <h2 className="lw-h2" style={{ marginBottom: 8 }}>Transcript</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <h2 className="lw-h2">Transcript</h2>
+            {canDelete && !onHold && !recording && (m.transcript?.length ?? 0) > 0 &&
+              <button type="button" className="lw-btn lw-btn-sm lw-btn-danger" onClick={() => setDeleting(true)}><Trash2 />Delete transcript…</button>}
+          </div>
+          {canDelete && onHold && <HoldNotice />}
           <div className="lw-serif lw-transcript">{[...(recording || phase === 'stopped' ? [] : m.transcript ?? []), ...live].map((s) => <p key={s.id}>{s.text}</p>)}</div>
         </section>
       )}
       {m.captures.length > 0 && <Timeline captures={m.captures} />}
+      {deleting && (
+        <DeleteDialog title="Delete this meeting’s transcript" previewUrl={`${transcriptBase}/deletion-preview`} deleteUrl={`${transcriptBase}/delete`}
+          onClose={() => setDeleting(false)} onDone={() => { setDeleting(false); void refresh(); }} />
+      )}
     </>
   );
 }

@@ -143,7 +143,12 @@ def list_visible_matters(principal: dict) -> list[dict]:
 def update_matter(matter_id: str, fields: dict, expected_version: int) -> dict:
     allowed = ("title", "practice_area", "jurisdiction", "status", "sensitivity")
     sets = {k: v for k, v in fields.items() if k in allowed and v is not None}
-    assigns = ", ".join([f"{k} = :{k}" for k in sets] + ["version = version + 1", "updated_at = :now"])
+    extra = []
+    if sets.get("status") in ("closed", "archived"):
+        extra = ["closed_at = COALESCE(closed_at, :now)"]          # retention counts from the first closing
+    elif sets.get("status") == "open":
+        extra = ["closed_at = NULL"]
+    assigns = ", ".join([f"{k} = :{k}" for k in sets] + extra + ["version = version + 1", "updated_at = :now"])
     with get_conn() as conn:
         cur = conn.execute(f"UPDATE matters SET {assigns} WHERE id = :id AND version = :v",
                            {**sets, "now": now_iso(), "id": matter_id, "v": expected_version})

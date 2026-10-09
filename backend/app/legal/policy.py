@@ -75,6 +75,14 @@ ORG_ACTIONS: dict[str, frozenset] = {
     "breakglass.read": frozenset({"firm_admin", "managing_partner"}),
     "breakglass.approve": frozenset({"managing_partner"}),
     "users.read": frozenset({"firm_admin", "managing_partner"}),
+    # Records (S1.9; P-002/P-003). Records administrators and managing partners see the firm's
+    # matter directory to place holds and review deletions (D-027); content stays matter-only.
+    "matters.directory": frozenset({"managing_partner", "records_admin"}),
+    "holds.read": frozenset({"records_admin", "managing_partner"}),
+    "holds.request": frozenset({"records_admin"}),
+    "holds.approve": frozenset({"records_admin", "managing_partner"}),
+    "deletion.review": frozenset({"records_admin", "managing_partner"}),
+    "retention.approve": frozenset({"managing_partner"}),
 }
 
 

@@ -35,6 +35,11 @@ ORG_SPEC = {
     "system.settings": {"firm_admin"},
     "audit.read.org": {"firm_admin", "managing_partner", "records_admin"},
     "retention.manage": {"records_admin"},
+    # S1.9 records (P-002/P-003, D-027)
+    "matters.directory": {"managing_partner", "records_admin"},
+    "holds.read": {"records_admin", "managing_partner"}, "holds.request": {"records_admin"},
+    "holds.approve": {"records_admin", "managing_partner"},
+    "deletion.review": {"records_admin", "managing_partner"}, "retention.approve": {"managing_partner"},
 }
 
 OPEN = MatterFacts(status="open", sensitivity="restricted")

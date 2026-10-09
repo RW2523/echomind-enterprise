@@ -24,7 +24,7 @@ def test_seed_demo_builds_the_t01_world_once(fresh_db, law_edition, monkeypatch)
     assert main(["seed-demo"]) == 0
     path = os.path.join(settings.DATA_DIR, "legal", "demo_credentials.json")
     creds = json.load(open(path))
-    assert set(creds) == {"alice", "bob", "carol", "morgan", "nakamura", "fiona"} and stat.S_IMODE(os.stat(path).st_mode) == 0o600
+    assert set(creds) == {"alice", "bob", "carol", "morgan", "nakamura", "fiona", "rhea"} and stat.S_IMODE(os.stat(path).st_mode) == 0o600
     def visible(name):
         u = auth.get_user_by_username(name)
         from app.legal.orgs import default_org_id

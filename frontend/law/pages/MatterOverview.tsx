@@ -6,6 +6,7 @@ import type { Matter, Sensitivity } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, ErrorNote, Field, MatterStatusPill, roleLabel, SensitivityPill } from '../ui/primitives';
+import { HoldNotice } from '../ui/records';
 
 export default function MatterOverview() {
   const matter = useMatter();
@@ -39,6 +40,7 @@ export default function MatterOverview() {
             <h2 className="lw-h1 lw-serif" id="matter-title" style={{ marginTop: 4 }}>{matter.title}</h2>
           </div>
           {matter.status !== 'open' && <p className="lw-meta" style={{ margin: 0 }}>This matter is {matter.status}. Its content can be read but not changed until it is reopened.</p>}
+          {matter.on_hold && <HoldNotice />}
           {error && <ErrorNote>{error}</ErrorNote>}
           <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '10px 24px', margin: 0 }}>
             {rows.map(([k, v]) => (<React.Fragment key={k}><dt className="lw-meta" style={{ fontSize: 13 }}>{k}</dt><dd style={{ margin: 0 }}>{v}</dd></React.Fragment>))}
