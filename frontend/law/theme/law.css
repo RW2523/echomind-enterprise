@@ -289,3 +289,37 @@
 [data-edition="law"] .lw-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
 [data-edition="law"] .lw-checks li { display: flex; gap: 8px; align-items: center; }
 @media (max-width: 1000px) { [data-edition="law"] .lw-export { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── S2.1 What reading found, and the document reader ───────────────────────── */
+[data-edition="law"] .lw-found { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+[data-edition="law"] .lw-found li { position: relative; padding-left: 14px; }
+[data-edition="law"] .lw-found li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); }
+[data-edition="law"] .lw-found li[data-tone="attention"]::before { background: var(--attention); }
+[data-edition="law"] .lw-found li[data-tone="conflict"]::before { background: var(--conflict); }
+[data-edition="law"] .lw-reader { display: grid; grid-template-columns: 230px minmax(0, 1fr) 290px; gap: 16px; align-items: start; }
+[data-edition="law"] .lw-reader-outline, [data-edition="law"] .lw-reader-found { position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow: auto; padding: 16px; }
+[data-edition="law"] .lw-reader-outline ul, [data-edition="law"] .lw-reader-found ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+[data-edition="law"] .lw-reader-outline button { text-align: left; font-size: 13.5px; line-height: 19px; }
+[data-edition="law"] .lw-reader-sheet { padding: 24px 28px 32px; min-width: 0; }
+[data-edition="law"] .lw-reader-page + .lw-reader-page { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--rule); }
+[data-edition="law"] .lw-reader-page-h { font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin-bottom: 8px; }
+[data-edition="law"] .lw-reader-page-h.lw-reader-ocr { color: var(--attention); text-transform: none; letter-spacing: 0; font-size: 12.5px; }
+[data-edition="law"] .lw-reader-line { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; font-family: var(--serif); font-size: 15.5px; line-height: 25px; }
+[data-edition="law"] .lw-reader-no { color: var(--ink-3); font-family: var(--sans); font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; user-select: none; padding-top: 2px; }
+[data-edition="law"] .lw-reader-text { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
+[data-edition="law"] .lw-reader-gap { height: 10px; }
+[data-edition="law"] .lw-reader-focus { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent); }
+[data-edition="law"] .lw-reader-ins { text-decoration: underline; text-decoration-color: var(--verified); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+[data-edition="law"] .lw-reader-del { color: var(--conflict); opacity: .8; text-decoration-thickness: 1.5px; font-size: .92em; }
+[data-edition="law"] .lw-reader-comment { background: color-mix(in srgb, var(--privileged) 12%, transparent); border-radius: 2px; }
+[data-edition="law"] .lw-reader-ai { text-decoration: underline wavy var(--attention); text-underline-offset: 4px; }
+[data-edition="law"] .lw-reader-low { text-decoration: underline dotted var(--attention); text-underline-offset: 4px; }
+[data-edition="law"] .lw-reader-h3 { font-size: 13px; font-weight: 650; margin: 14px 0 6px; }
+[data-edition="law"] .lw-reader-item { padding: 8px 10px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper-2); font-size: 13.5px; display: grid; gap: 2px; }
+[data-edition="law"] .lw-reader-item-conflict { border-color: color-mix(in srgb, var(--conflict) 35%, transparent); }
+[data-edition="law"] .lw-reader-item-attention { border-color: color-mix(in srgb, var(--attention) 35%, transparent); }
+[data-edition="law"] .lw-reader-quote { font-family: var(--serif); }
+@media (max-width: 1180px) {
+  [data-edition="law"] .lw-reader { grid-template-columns: minmax(0, 1fr); }
+  [data-edition="law"] .lw-reader-outline, [data-edition="law"] .lw-reader-found { position: static; max-height: none; }
+}

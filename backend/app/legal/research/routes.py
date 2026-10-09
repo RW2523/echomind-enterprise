@@ -50,7 +50,7 @@ def _source(n: int, p: dict) -> dict:
     return {"n": n, "document_id": c["document_id"], "document_title": c["document_title"], "version_id": c["version_id"],
             "version_number": c["version_number"], "page_start": c["page_start"], "page_end": c["page_end"],
             "char_start": c["char_start"], "char_end": c["char_end"], "text": p["text"],
-            "clause": c.get("clause"), "line": c.get("line"),
+            "clause": c.get("clause"), "line": c.get("line"), "focus_start": c.get("focus_start"), "focus_end": c.get("focus_end"),
             "instructions": prompt.addressed_to_ai(p["text"])}       # withheld from the model's copy (T08)
 
 

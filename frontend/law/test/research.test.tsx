@@ -94,6 +94,20 @@ describe('Research', () => {
       .then((r) => r.violations.map((v) => v.id))).toEqual([]);
   });
 
+  it('names the clause and line of each source and opens the document at the cited sentence (S2.1)', async () => {
+    const pinned = { ...SRC[0], clause: '8.1', line: 4, focus_start: 120, focus_end: 188 };
+    world([
+      { type: 'sources', citations: [pinned] },
+      { type: 'done', answer: 'Liability is capped at USD 250,000 [1].', citations: [pinned], abstained: false, uncited: false, unsupported: [], turn_id: 't1' },
+    ]);
+    renderLaw('/m/M-101/research');
+    await askIt('What caps liability?');
+    const sources = await screen.findByRole('region', { name: 'Sources' });
+    expect(within(sources).getByText('Harrowgate MSA · v2 · p. 9 · cl. 8.1 · line 4')).toBeTruthy();
+    expect(within(sources).getByRole('link', { name: 'Open source 1 in the document' }).getAttribute('href'))
+      .toBe('/m/M-101/documents/d1/read?v=v2&at=120-188');
+  });
+
   it('lists only your own earlier questions and reopens one', async () => {
     world([], [{ id: 't0', question: 'What is the monthly fee?', answer: 'The fee is USD 18,500 per month [2].', citations: [SRC[1]], status: 'answered', created_at: '2026-10-08T10:00:00.000Z' }]);
     renderLaw('/m/M-101/research');

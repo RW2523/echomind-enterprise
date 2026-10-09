@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { Download, FileOutput, FileUp, FolderSync, RotateCcw, Search, Trash2, X } from 'lucide-react';
+import { BookOpen, Download, FileOutput, FileUp, FolderSync, RotateCcw, Search, Trash2, X } from 'lucide-react';
+import { Link } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { documentsPath, keys, useConnectorLinks, useDocument, useDocuments, useMatterDeletions } from '../api/queries';
-import type { Deletion, DocKind, DocStatus, DocVersion, LawDocument, SearchResult } from '../api/types';
+import type { Deletion, DocKind, DocStatus, DocVersion, LawDocument, SearchResult, VersionFlags } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Field, Skeleton, StatusPill, type Tone } from '../ui/primitives';
@@ -22,7 +23,9 @@ const INDEX: Record<DocVersion['index_status'], [string, Tone]> = {
 };
 const INDEX_ERRORS: Record<string, string> = {
   rights_revoked: 'The person who imported it lost access before it was read.',
-  no_text: 'No text layer — a scan. Text recognition arrives in a later release.',
+  no_text: 'No readable text, even with text recognition.',
+  needs_ocr: 'A scan with no text layer, and text recognition is switched off on this server.',
+  unreadable: 'The file could not be read.',
   integrity: 'The stored file failed its integrity check.',
   error: 'Reading failed. Try again, or tell your administrator.',
 };
@@ -33,6 +36,30 @@ const FINDINGS: Record<string, [string, string]> = {
 const size = (n: number) => (n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`);
 const when = (iso?: string | null) => (iso ? new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '');
 const pages = (a?: number | null, b?: number | null) => (a ? (b && b !== a ? `pp. ${a}–${b}` : `p. ${a}`) : '');
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** Where reading has got to (S2.1), while a version is queued or being read. */
+function progressText(v: DocVersion): string | null {
+  const p = v.progress;
+  if (!p || (v.index_status !== 'queued' && v.index_status !== 'indexing')) return null;
+  if (p.stage === 'ocr') return `Reading page ${p.page} of ${p.pages} with text recognition`;
+  if (p.stage === 'indexing') return `Indexing ${plural(p.passages ?? 0, 'passage', 'passages')}…`;
+  if (p.stage === 'reading') return 'Reading the file…';
+  return null;
+}
+
+/** What reading the file found (S2.1), as plain sentences. Counts only; the reader shows the details. */
+function foundLines(f?: VersionFlags): [string, Tone][] {
+  if (!f) return [];
+  const out: [string, Tone][] = [];
+  if (f.ocr_pages) out.push([`${plural(f.ocr_pages, 'page', 'pages')} read by text recognition — check ${f.ocr_pages === 1 ? 'it' : 'them'} against the scan`, 'attention']);
+  if (f.ocr_low_confidence) out.push([`${plural(f.ocr_low_confidence, 'word', 'words')} recognised with low confidence`, 'attention']);
+  if (f.hidden_text) out.push([f.hidden_text === 1 ? '1 piece of hidden text was left out' : `${f.hidden_text} pieces of hidden text were left out`, 'conflict']);
+  if (f.instructions) out.push([`${plural(f.instructions, 'passage', 'passages')} addressed to an AI assistant — withheld from answers`, 'attention']);
+  if (f.tracked_changes) out.push([`${plural(f.tracked_changes, 'tracked change', 'tracked changes')}, read as accepted`, 'neutral']);
+  if (f.comments) out.push([plural(f.comments, 'comment', 'comments'), 'neutral']);
+  return out;
+}
 
 /** The matter's documents: library, import, a quiet inspector, and search over this matter only. */
 export default function MatterDocuments() {
@@ -196,12 +223,21 @@ function Inspector({ matterId, docId, canEdit, perms, onClose }: { matterId: str
                 <dt>Size</dt><dd>{size(v.size_bytes)}{v.pages ? ` · ${v.pages} page${v.pages === 1 ? '' : 's'}` : ''}</dd>
                 <dt>Search</dt><dd><StatusPill tone={INDEX[v.index_status][1]}>{INDEX[v.index_status][0]}</StatusPill>
                   {v.index_status === 'indexed' && <span className="lw-meta"> · {v.chunk_count} passage{v.chunk_count === 1 ? '' : 's'}</span>}
-                  {v.index_status === 'failed' && <div className="lw-meta">{INDEX_ERRORS[v.index_error ?? 'error'] ?? INDEX_ERRORS.error}</div>}</dd>
+                  {v.index_status === 'failed' && <div className="lw-meta">{INDEX_ERRORS[v.index_error ?? 'error'] ?? INDEX_ERRORS.error}</div>}
+                  {progressText(v) && <div className="lw-meta" aria-live="polite">{progressText(v)}</div>}</dd>
                 <dt>{d.source?.kind === 'connector' ? 'Synced' : 'Imported'}</dt><dd>{d.source?.kind === 'connector' ? when(v.uploaded_at) : `${v.uploaded_by} · ${when(v.uploaded_at)}`}</dd>
                 {d.source?.kind === 'connector' && <><dt>Source</dt><dd className="lw-ellipsis" title={d.source.path}>{d.source.name} · {d.source.path}
                   {d.source.state === 'removed_in_source' && <div className="lw-meta">Removed at the source; kept because the matter is under a legal hold.</div>}</dd></>}
                 <dt>Fingerprint</dt><dd className="lw-mono" title={`SHA-256 ${v.sha256}`}>{v.sha256.slice(0, 16)}…</dd>
               </dl>
+            )}
+            {v && foundLines(v.flags).length > 0 && (
+              <section className="lw-note" aria-label="What reading found">
+                <b>What reading found</b>
+                <ul className="lw-found">
+                  {foundLines(v.flags).map(([line, tone]) => <li key={line} data-tone={tone}>{line}</li>)}
+                </ul>
+              </section>
             )}
             {findings.length > 0 && (
               <div className="lw-note">
@@ -217,6 +253,7 @@ function Inspector({ matterId, docId, canEdit, perms, onClose }: { matterId: str
             {perms.onHold && <HoldNotice />}
             {error && <ErrorNote>{error}</ErrorNote>}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {v?.index_status === 'indexed' && <Link className="lw-btn lw-btn-sm" to={`/m/${matter.number}/documents/${encodeURIComponent(d.id)}/read?v=${encodeURIComponent(v.id)}`}><BookOpen />Read</Link>}
               {v && <a className="lw-btn lw-btn-sm" href={`${base}/versions/${encodeURIComponent(v.id)}/file`} download><Download />Download</a>}
               {canEdit && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => setEditing(true)}>Edit details</button>}
               {canEdit && v?.index_status === 'failed' && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={reindex}><RotateCcw />Try again</button>}
@@ -226,10 +263,11 @@ function Inspector({ matterId, docId, canEdit, perms, onClose }: { matterId: str
             </div>
             <div>
               <h3 className="lw-eyebrow" style={{ margin: '4px 0 6px' }}>Versions</h3>
-              <ol className="lw-versions">
+              <ol className="lw-versions" aria-label="Versions">
                 {d.versions.map((ver) => (
                   <li key={ver.id}>
                     <span className="lw-tnum" style={{ fontWeight: 600 }}>v{ver.number}</span>
+                    {ver.status && <StatusPill tone={ver.status === 'executed' ? 'verified' : 'neutral'}>{statusLabel(ver.status)}</StatusPill>}
                     <span className="lw-meta lw-ellipsis" style={{ flex: 1 }}>{ver.uploaded_by} · {when(ver.uploaded_at)}</span>
                     <a className="lw-linklike lw-meta" href={`${base}/versions/${encodeURIComponent(ver.id)}/file`} download aria-label={`Download version ${ver.number}`}>Download</a>
                   </li>

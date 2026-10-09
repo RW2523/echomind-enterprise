@@ -22,6 +22,7 @@ import Records from '../pages/Records';
 import Connectors from '../pages/Connectors';
 import MatterActivity from '../pages/MatterActivity';
 import MatterDocuments from '../pages/MatterDocuments';
+import DocumentReader from '../pages/DocumentReader';
 import MatterResearch from '../pages/MatterResearch';
 import MatterMeetings from '../pages/MatterMeetings';
 import MatterMeeting from '../pages/MatterMeeting';
@@ -53,6 +54,7 @@ export const lawRoutes = [
               { index: true, element: <Navigate to="overview" replace /> },
               { path: 'overview', element: <MatterOverview /> },
               { path: 'documents', element: <MatterDocuments /> },
+              { path: 'documents/:docId/read', element: <DocumentReader /> },
               { path: 'research', element: <MatterResearch /> },
               { path: 'meetings', element: <MatterMeetings /> },
               { path: 'meetings/:meetingId', element: <MatterMeeting /> },

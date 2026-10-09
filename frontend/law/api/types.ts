@@ -60,6 +60,13 @@ export interface DocVersion {
   uploaded_by?: string | null; uploaded_at: string;
   index_status: 'queued' | 'indexing' | 'indexed' | 'failed' | 'superseded'; index_error?: string | null;
   chunk_count: number; indexed_at?: string | null;
+  /** S2.1: the version's own status, reading progress, and what reading found (counts only). */
+  status?: DocStatus | null;
+  progress?: { stage: 'reading' | 'ocr' | 'indexing' | 'done' | 'failed'; page?: number; pages?: number; passages?: number } | null;
+  flags?: VersionFlags;
+}
+export interface VersionFlags {
+  hidden_text: number; instructions: number; tracked_changes: number; comments: number; ocr_pages: number; ocr_low_confidence: number;
 }
 export interface LawDocument {
   id: string; title: string; kind: DocKind; status: DocStatus; version: number;
@@ -71,7 +78,20 @@ export interface LawDocument {
 export interface Passage {
   chunk_id: string; text: string; score?: number | null; score_kind?: string | null;
   citation: { matter_id: string; document_id: string; document_title: string; version_id: string; version_number: number;
-    page_start?: number | null; page_end?: number | null; char_start?: number | null; char_end?: number | null };
+    page_start?: number | null; page_end?: number | null; char_start?: number | null; char_end?: number | null;
+    clause?: string | null; line?: number | null; focus_start?: number | null; focus_end?: number | null };
+}
+
+/** The document reader (S2.1). Offsets are into `text`. */
+export interface ReaderPage { number: number; start: number; end: number; source: 'text' | 'ocr' | 'image' | 'empty'; confidence?: number | null }
+export interface ReaderClause { number: string; label: string; heading?: string | null; level: number; parent?: string | null; start: number; end: number; page?: number | null }
+export interface ReaderTerm { term: string; start: number; end: number; term_start: number; term_end: number }
+export type MarkKind = 'hidden_text' | 'instructions' | 'tracked_insert' | 'tracked_delete' | 'comment' | 'ocr_low_confidence';
+export interface ReaderMark { kind: MarkKind; start?: number | null; end?: number | null; page?: number | null; meta: Record<string, any> }
+export interface ReaderData {
+  text: string; pages: ReaderPage[]; lines: number[]; clauses: ReaderClause[]; terms: ReaderTerm[]; marks: ReaderMark[];
+  engines: Record<string, string>;
+  version: { id: string; number: number; filename: string; status?: DocStatus | null; index_status: DocVersion['index_status'] };
 }
 export interface SearchResult { passages: Passage[]; abstained: boolean }
 
@@ -79,6 +99,7 @@ export interface SearchResult { passages: Passage[]; abstained: boolean }
 export interface ResearchSource {
   n: number; document_id: string; document_title: string; version_id: string; version_number: number;
   page_start?: number | null; page_end?: number | null; char_start?: number | null; char_end?: number | null; text: string;
+  clause?: string | null; line?: number | null; focus_start?: number | null; focus_end?: number | null;
   /** The passage contains text addressed to an AI; it was withheld from the model (T08). */
   instructions?: boolean;
 }
