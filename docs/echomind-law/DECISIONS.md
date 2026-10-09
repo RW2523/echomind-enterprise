@@ -272,6 +272,34 @@ Every entry records the options considered, the recommendation, the consequence 
 - One event per visit: leaving the matter drops its cache, so coming back is recorded again. Switching tabs inside the matter is not a new visit.
 - No new disclosure: the call is made only for a matter already in the person's visible list.
 
+### D-025 The Law edition closes the existing modules; their capabilities return matter-scoped — RECORDED (S1.7)
+- **Context:** The plan for S1.7 was to add matter scoping to each existing module: legacy chat, documents, transcripts, the Boardroom, the document studio and export evaluation. None of them knows about matters. Each reads from the shared global index or from unscoped tables, and in the Law edition they were still reachable by any signed-in person. For example, a legacy upload went into the shared index and was answerable for everyone.
+- **Decision:**
+  - In the Law edition the backend serves only `/api/auth/*` and `/api/legal/*` (plus `/health` and `/api/version`).
+  - Every other `/api` route answers 404 to everyone, signed in or not, before any session lookup.
+  - The live-transcript socket closes with 4404.
+  - The capabilities come back as matter-scoped Law endpoints, each built on an `AuthorizedScope`:
+    - research (now);
+    - consent-gated capture and meetings (S1.8, S2.4–S2.7);
+    - drafting (S3.x);
+    - export (S1.10).
+- **Why this rather than patching each module:**
+  - It is deny-by-default and makes the canary suite hold for every module at once.
+  - No legacy code path can reach Law data, and Law content never enters the legacy stores.
+  - Legacy editions are unchanged: the gate is Law-only.
+- **Consequence:**
+  - Until each Law replacement ships, the Law workspace has no live transcription, Boardroom or document studio. The Law UI never offered them.
+  - The voice service in the Law edition needs a matter (`/ws?matter=<id>`). Its grounded answers come only from that matter's research stream, through an on-behalf-of token. The legacy `ask-voice` routes are closed.
+  - The on-behalf-of token is accepted on one route only: `/api/legal/matters/{id}/research/query`.
+- **Research (as built):**
+  - Answers come from the matter's partition only (S1.6 search, 6 passages).
+  - Sources are fenced as escaped, numbered quotations that the model is told never to treat as instructions.
+  - Wording is evidence-relative (D-015).
+  - The answer streams as `sources` → `chunk`… → `done`.
+  - The scope is re-checked every `LEGAL_STREAM_RECHECK_SEC` (2 s) and at the end. A revocation ends the stream with `scope_revoked` and nothing more is sent.
+  - No relevant passage means an explicit abstention without calling the model.
+  - Every question and its outcome are audited (the question only as length and SHA-256). History is private to its owner within the matter.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

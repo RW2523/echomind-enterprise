@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, DocVersion, LawDocument, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, DocVersion, LawDocument, ResearchTurn, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -18,6 +18,7 @@ export const keys = {
   activity: (id: string) => ['matter', id, 'activity'] as const,
   documents: (id: string) => ['matter', id, 'documents'] as const,
   document: (id: string, docId: string) => ['matter', id, 'documents', docId] as const,
+  research: (id: string) => ['matter', id, 'research'] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false });
@@ -94,3 +95,8 @@ export const useDocument = (matterId: string, docId: string | null) =>
     },
   });
 export const documentsPath = docsBase;
+
+/** The caller's own earlier questions in this matter. */
+export const useResearchHistory = (matterId: string) =>
+  useQuery({ queryKey: keys.research(matterId), refetchOnWindowFocus: false,
+    queryFn: async () => (await api.get<{ turns: ResearchTurn[] }>(`/api/legal/matters/${encodeURIComponent(matterId)}/research`)).turns });
