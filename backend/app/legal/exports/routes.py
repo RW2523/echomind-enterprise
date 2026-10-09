@@ -53,6 +53,14 @@ def _refused(e: service.Refused) -> HTTPException:
     return HTTPException(status_code=e.status, detail=e.message)
 
 
+def _sees(p: dict, matter_id: str, e: dict) -> bool:
+    """An export of a document is shown only to people who may see that document (S1.11)."""
+    if e["object_type"] != "document":
+        return True
+    from ..documents import repo as documents
+    return documents.visible(matter_id, e["object_id"], p["sub"])
+
+
 def _may_see(p: dict, matter_id: str) -> None:
     """Exports are visible to those who may ask for or approve them (lead, attorney, paralegal)."""
     if policy.authorize(p, "export.approve", matter_id).allowed:
@@ -81,15 +89,17 @@ def create_export(matter_id: str, inp: ExportIn, request: Request):
 
 @router.get(_BASE)
 def list_exports(matter_id: str, request: Request):
-    _may_see(principal_of(request), matter_id)
-    return {"exports": service.listing(matter_id)}
+    p = principal_of(request)
+    _may_see(p, matter_id)
+    return {"exports": [e for e in service.listing(matter_id) if _sees(p, matter_id, e)]}
 
 
 @router.get(_BASE + "/{export_id}")
 def get_export(matter_id: str, export_id: str, request: Request):
-    _may_see(principal_of(request), matter_id)
+    p = principal_of(request)
+    _may_see(p, matter_id)
     e = service.get(matter_id, export_id)
-    if not e:
+    if not e or not _sees(p, matter_id, e):
         raise HTTPException(status_code=404, detail="Not Found")
     return {"export": e}
 
@@ -171,7 +181,7 @@ def _preview_pdf(p: dict, matter_id: str, export_id: str) -> bytes:
     from . import render, source
     _may_see(p, matter_id)
     e = service.get(matter_id, export_id)
-    if not e:
+    if not e or not _sees(p, matter_id, e):
         raise HTTPException(status_code=404, detail="Not Found")
     strings = [i["text"] for i in e["plan"]["items"] if i["redact"]]
     key = (export_id, hashlib.sha256(_json.dumps(sorted(strings)).encode()).hexdigest())

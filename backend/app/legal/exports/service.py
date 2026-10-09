@@ -90,6 +90,10 @@ def listing(matter_id: str) -> list[dict]:
 
 
 def create(p: dict, matter_id: str, object_type: str, object_id: str, fmt: str, purpose: str) -> dict:
+    if object_type == "document":
+        from ..documents import repo as documents
+        if not documents.visible(matter_id, object_id, p["sub"]):
+            raise Refused(404, "Not Found")
     try:
         src = source.load(matter_id, object_type, object_id)
     except source.NotFound:
@@ -157,6 +161,10 @@ def approve(p: dict, matter_id: str, matter_number: str, export_id: str, acknowl
     with get_conn() as conn:
         e = _decide_checks(p, _row(conn, matter_id, export_id))
         requester = _name(conn, e["requested_by"])
+    if e["object_type"] == "document":
+        from ..documents import repo as documents
+        if not documents.visible(matter_id, e["object_id"], p["sub"]):
+            raise Refused(404, "Not Found")           # an approver must be able to see what they release
     lab = _label(e)
     if lab in PROTECTED_LABELS and not acknowledge_privilege:
         raise Refused(409, f"This document is labelled {lab.replace('_', ' ')}. Confirm that releasing it is intended.")
@@ -198,6 +206,10 @@ def file(p: dict, matter_id: str, export_id: str) -> tuple[dict, bytes]:
         e = _row(conn, matter_id, export_id)
         if not e or p["sub"] not in (e["requested_by"], e["decided_by"]):
             raise Refused(404, "Not Found")
+        if e["object_type"] == "document":
+            from ..documents import repo as documents
+            if not documents.visible(matter_id, e["object_id"], p["sub"]):
+                raise Refused(404, "Not Found")
         e = _expire_if_due(conn, e)
         if e["status"] == "expired":
             raise Refused(410, "This export has expired. Ask for a new one.")

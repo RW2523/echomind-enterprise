@@ -66,6 +66,7 @@ export interface LawDocument {
   created_by?: string | null; created_at: string; updated_at?: string | null;
   current_version: DocVersion | null; findings: Record<string, number>;
   label?: PrivilegeLabel | null; label_suggested?: boolean;
+  source?: { kind: 'upload' } | { kind: 'connector'; name: string | null; state: 'current' | 'removed_in_source'; path: string };
 }
 export interface Passage {
   chunk_id: string; text: string; score?: number | null; score_kind?: string | null;
@@ -148,4 +149,16 @@ export interface LawExport {
   decided_by?: string | null; decided_at?: string | null; decision_note?: string | null; watermark?: string | null;
   output_bytes?: number | null; output_sha256?: string | null;
   verification?: { ok: boolean; checks: Record<string, boolean>; pages?: number } | null; expires_at?: string | null; downloads: number;
+}
+
+/** Connectors (S1.11). */
+export interface ConnectorRun { started_at: string; finished_at?: string | null; status: 'ok' | 'partial' | 'failed'; report: Record<string, number | string | null> }
+export interface Connector {
+  id: string; kind: 'local_folder'; name: string; status: 'active' | 'disabled'; sync_minutes: number; stale_after_minutes: number;
+  last_sync_at?: string | null; last_ok_at?: string | null; last_status?: 'ok' | 'partial' | 'failed' | null; last_error?: string | null;
+  fresh: boolean; links: number; documents: number; runs: ConnectorRun[];
+}
+export interface ConnectorLink {
+  id: string; connector_id: string; connector_name: string; remote_path: string; created_by?: string | null; created_at: string;
+  connector_status: 'active' | 'disabled'; last_ok_at?: string | null; last_status?: string | null;
 }

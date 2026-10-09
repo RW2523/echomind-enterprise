@@ -66,6 +66,7 @@ rag-platform/
 /.law-data/
 /.law-data-e2e/
 /.law-secrets/
+/.law-dms-e2e/
 /frontend/test-results/
 /frontend/playwright-report/
 .env.law

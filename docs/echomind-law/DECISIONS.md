@@ -386,6 +386,43 @@ Every entry records the options considered, the recommendation, the consequence 
   - A string split across a PDF line break is not found by search, so verification fails closed and the export is not released.
   - Word output keeps paragraph styles, bold, italic, underline and tables, but not complex layout.
 
+### D-029 Connectors as built: fail-closed permissions and freshness — RECORDED (S1.11)
+- **Framework:**
+  - A `DmsConnector` contract: list a folder's items with their permissions, fetch bytes.
+  - A sync engine that imports through the normal path (type checks, AES-GCM storage, indexing job, audit).
+  - The only implementation is a **local-folder connector** (a folder on this server). Its root must lie inside `LEGAL_CONNECTOR_LOCAL_ROOTS`; paths are normalised; symlinks are never followed.
+  - Connector settings are sealed with the master key (AES-GCM, AAD = connector id).
+  - **No real DMS provider exists or is presented as working:** that needs the firm's choice of provider, credentials and network approval (P-010).
+- **Roles:**
+  - Firm administrators create, sync, disable and enable connectors, and see only counts (links, documents, last run). They never see which matters use them or what they hold.
+  - A matter's lead links a folder to the matter (`matter.update`). Members see the linked folders and each document's source.
+- **Permissions (fail closed):**
+  - A file needs a sidecar `<file>.acl.json` = `{"users": [...]}`. Without a valid one it is not imported, and an imported document that loses it becomes visible to nobody.
+  - The usernames that exist in the firm are stored as the document's permission list. Every read for a person — list, details, versions, file, search, labels, deletion, exports, export approval — requires them to be on that list **and** a live member of the matter (the policy engine).
+  - Documents of a disabled connector, or of one without a successful sync within its `stale_after_minutes`, are hidden from everyone until it syncs again.
+  - Exports of hidden documents are hidden too.
+- **Sync:**
+  - Runs on schedule (`sync_minutes`, through the job worker) or on demand.
+  - A changed file becomes a new version (people cannot upload versions of connector documents); permissions are replaced each run.
+  - A file gone from the source is hidden at once and queued for the S1.9 approved purge (origin `connector`; the deletions table was rebuilt to allow it). A legal hold keeps it, shown as "removed at source".
+  - A run that cannot read the source is `failed` and changes nothing.
+- **Known limits:**
+  - BM25 statistics are per matter, so restricted documents still contribute to term statistics; their passages are filtered out before ranking results are returned.
+  - Groups in source permissions are not supported yet; usernames only.
+
+### D-030 One idle SQLite connection held open per process — RECORDED (S1.11)
+- **Problem:**
+  - The backend opens and closes a SQLite connection for every database call (`get_conn`).
+  - In WAL mode, whichever connection closes last checkpoints the WAL, deletes it and tears down its shared-memory index; the next call rebuilds them. Under load this happened on nearly every request.
+  - In the S1.11 browser runs the backend stalled in three of five full runs. A Python stack dump (`LAW_DEBUG_STACKS=1`, SIGUSR1) showed every thread blocked inside SQLite: three in `sqlite3.connect` (request handler, job worker, audit writer) and one in `conn.close()`. All of them were in futex waits with no CPU use.
+- **Decision:**
+  - `get_conn` keeps one idle connection per process open on the current database. It is never used for queries; it only keeps the WAL and its index in place, so closing an ordinary connection no longer tears them down.
+  - Automatic checkpoints still run every 1000 pages.
+  - The idle connection is closed at process exit, which checkpoints the WAL into the file. It is also closed when `DB_PATH` changes, as it does between tests.
+  - Online backups (`scripts/backup_data.sh` uses the SQLite backup API) are unaffected. Nothing in the code needs exclusive access to the file.
+- **Not proven:** native stacks were not taken. Attaching a debugger to the running process needs a ptrace permission that this session was not granted, so the exact SQLite lock is not identified. The evidence is the stack dump and repeated clean full runs after the change (TEST_RESULTS run 12).
+- **Kept for the S1.12 gate:** `LAW_DEBUG_STACKS=1` (set only by `scripts/law/e2e_backend.sh`) makes SIGUSR1 dump every thread's Python stack to the server log.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
