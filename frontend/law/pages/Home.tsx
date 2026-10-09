@@ -41,7 +41,7 @@ export default function Home() {
             <span style={{ fontWeight: 600 }}>{me.user.username}</span>
             {me.user.roles.map((r) => <StatusPill key={r} tone="neutral">{roleLabel(r)}</StatusPill>)}
           </div>
-          {me.session.mfa_enrolled && <StatusPill tone="verified" icon={<ShieldCheck />}>Two-step sign-in on</StatusPill>}
+          {me.session.mfa_enrolled && <div><StatusPill tone="verified" icon={<ShieldCheck />}>Two-step sign-in on</StatusPill></div>}
           <Link to="/account/security" className="lw-btn lw-btn-ghost lw-btn-sm" style={{ justifySelf: 'start' }}>Sessions and password</Link>
         </section>
         {matters.data && matters.data.length === 0 && (

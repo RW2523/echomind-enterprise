@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, Copy, X } from 'lucide-react';
 
 export function Skeleton({ height = 16, width = '100%' }: { height?: number; width?: number | string }) {
@@ -64,7 +65,9 @@ export function Dialog({ title, onClose, children, footer }: {
     ref.current?.querySelector<HTMLElement>('input, select, textarea, button')?.focus();
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
-  return (
+  // Portalled to <body>: glass surfaces (the sidebar) create their own stacking context, so a
+  // dialog opened from inside one would otherwise sit underneath the content.
+  return createPortal(
     <div className="lw-scrim" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div ref={ref} className="lw-glass lw-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className="lw-paper">
@@ -76,7 +79,8 @@ export function Dialog({ title, onClose, children, footer }: {
           {footer && <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '0 20px 20px' }}>{footer}</div>}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

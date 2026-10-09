@@ -187,3 +187,13 @@ describe('Sign-in', () => {
     expect(await axeViolations(container)).toEqual([]);
   });
 });
+
+describe('monogram', () => {
+  it('uses the distinctive words of a client name', async () => {
+    const { monogram } = await import('../ui/MatterSwitcher');
+    expect(monogram('Voss-Lindqvist AB')).toBe('VL');
+    expect(monogram('Alder Finch Ltd')).toBe('AF');
+    expect(monogram('Beta Shipping Corp.')).toBe('BS');
+    expect(monogram('Acme')).toBe('A');
+  });
+});

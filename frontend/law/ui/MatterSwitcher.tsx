@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { ChevronsUpDown, Lock } from 'lucide-react';
@@ -8,8 +9,12 @@ import { useCurrentMatter } from '../app/matter';
 import { getBlockers } from '../app/navigationGuard';
 import { Dialog } from './primitives';
 
-export const monogram = (name: string) =>
-  name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join('') || '·';
+// Company-form suffixes carry no identity ("Voss-Lindqvist AB" → VL, not VA).
+const SUFFIXES = new Set(['ab', 'ag', 'as', 'bv', 'co', 'corp', 'gmbh', 'inc', 'llc', 'llp', 'lp', 'ltd', 'nv', 'oy', 'plc', 'pty', 'sa', 'sas', 'spa']);
+export const monogram = (name: string) => {
+  const words = name.split(/[\s\-–—&,.]+/).filter((w) => w && !SUFFIXES.has(w.toLowerCase()));
+  return words.slice(0, 2).map((w) => w[0]!.toUpperCase()).join('') || '·';
+};
 
 /**
  * Always-visible matter context. Lists only the person's own matters (server-filtered). Switching
@@ -25,10 +30,17 @@ export default function MatterSwitcher() {
   const [filter, setFilter] = useState('');
   const [pending, setPending] = useState<{ target: Matter; reasons: string[] } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => { if (!boxRef.current?.contains(e.target as Node)) setOpen(false); };
+    const r = boxRef.current?.getBoundingClientRect();
+    if (r) setAnchor({ top: r.bottom + 6, left: r.left });
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (!boxRef.current?.contains(t) && !popRef.current?.contains(t)) setOpen(false);
+    };
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
@@ -62,16 +74,19 @@ export default function MatterSwitcher() {
           <span style={{ display: 'block', fontWeight: 600, fontSize: 13, lineHeight: '17px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {current ? current.client.name : 'No matter selected'}
           </span>
-          <span className="lw-meta" style={{ display: 'flex', gap: 6, alignItems: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            {current?.sensitivity !== 'standard' && current && <Lock size={12} aria-label="Restricted" />}
-            {current ? `${current.number} · ${current.title}` : 'Choose a matter'}
+          <span className="lw-meta" style={{ display: 'flex', gap: 6, alignItems: 'center', minWidth: 0 }}>
+            {current?.sensitivity !== 'standard' && current && <Lock size={12} aria-label="Restricted" style={{ flex: 'none' }} />}
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {current ? `${current.number} · ${current.title}` : 'Choose a matter'}
+            </span>
           </span>
         </span>
         <ChevronsUpDown className="lw-hide-rail" size={16} style={{ color: 'var(--ink-3)' }} />
       </button>
 
-      {open && (
-        <div className="lw-glass lw-popover" style={{ top: 'calc(100% + 6px)', left: 0 }}>
+      {open && anchor && createPortal(
+        // Portalled with fixed positioning so it floats above the content, not inside the sidebar's glass.
+        <div ref={popRef} className="lw-glass lw-popover" style={{ position: 'fixed', top: anchor.top, left: anchor.left }}>
           <input className="lw-input" autoFocus placeholder="Find a matter…" aria-label="Find a matter"
             value={filter} onChange={(e) => setFilter(e.target.value)} />
           <div className="lw-eyebrow" style={{ padding: '10px 10px 4px' }}>Your matters</div>
@@ -90,7 +105,8 @@ export default function MatterSwitcher() {
           <p className="lw-meta" style={{ borderTop: '1px solid var(--rule)', margin: '6px 0 0', padding: '8px 10px 2px' }}>
             Only matters you're a member of appear here.
           </p>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {pending && (
