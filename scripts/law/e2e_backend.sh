@@ -15,5 +15,13 @@ printf 'Notice to quit (fictional demo). The landlord gives notice under clause 
 printf '{"users": ["bob"]}\n' > "$DMS/Beta/Lease/lease-notice.txt.acl.json"
 printf 'A draft with no permissions file; it must not be imported.\n' > "$DMS/Beta/Lease/draft.txt"
 export LEGAL_CONNECTOR_LOCAL_ROOTS="$DMS"
+# S2.1: fictional files for the reading journey — a scanned notice (no text layer) and a Word MSA with
+# numbering, tracked changes, a comment and a hidden instruction — from the backend test fixtures.
+FILES="$ROOT/.law-e2e-files"
+rm -rf "$FILES"; mkdir -p "$FILES"
+(cd "$ROOT/backend/tests/law" && python3 -c "
+from fixtures_s21 import contract_docx, scanned_pdf
+open('$FILES/termination-notice.pdf', 'wb').write(scanned_pdf())
+open('$FILES/harrowgate-msa.docx', 'wb').write(contract_docx())")
 export LAW_CORS_ORIGINS="http://localhost:5174"
 exec "$ROOT/scripts/law/dev_backend.sh"

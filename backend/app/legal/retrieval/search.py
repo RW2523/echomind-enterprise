@@ -177,10 +177,10 @@ _STOP = frozenset("the a an and or of to in on for by with is are be as at that 
 
 def _focus(text: str, query: str) -> tuple[int, int]:
     """The sentence of a quote that shares most words with the question (ties: the earliest)."""
-    from ..research.prompt import _spans
+    from ..research.prompt import document_sentences
     q = {w for w in re.findall(r"[a-z0-9%]{2,}", query.lower()) if w not in _STOP}
     best, score = (0, len(text)), -1
-    for a, b in _spans(text):
+    for a, b in document_sentences(text):
         n = len(q & set(re.findall(r"[a-z0-9%]{2,}", text[a:b].lower())))
         if n > score:
             best, score = (a, b), n

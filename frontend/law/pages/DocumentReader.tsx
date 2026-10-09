@@ -20,6 +20,7 @@ export const longDate = (iso?: string | null) => {
   return Number.isNaN(d.getTime()) ? '' : `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 };
 const STATUS: Record<string, string> = { draft: 'Draft', final: 'Final', executed: 'Executed', received: 'Received' };
+const PARTS: Record<string, string> = { footnote: 'Note', header: 'Header', footer: 'Footer' };
 const HIDDEN: Record<string, string> = {
   white: 'White text', tiny: 'Tiny text', invisible: 'Invisible text', off_page: 'Outside the page', hidden_run: 'Hidden in Word',
 };
@@ -45,8 +46,8 @@ export default function DocumentReader() {
       <Toolbar crumb={`${matter.number} · Documents`} title={title}>
         <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents`}><ArrowLeft />Documents</Link>
       </Toolbar>
-      {reader.isPending ? <div className="lw-paper" style={{ padding: 24 }}><Skeleton /><Skeleton /><Skeleton /></div>
-        : reader.isError ? <ErrorNote>{reader.error instanceof ApiError ? reader.error.message : 'This document cannot be opened.'}</ErrorNote>
+      {reader.isPending ? <div className="lw-content"><div className="lw-paper" style={{ padding: 24 }}><Skeleton /><Skeleton /><Skeleton /></div></div>
+        : reader.isError ? <div className="lw-content"><ErrorNote>{reader.error instanceof ApiError ? reader.error.message : 'This document cannot be opened.'}</ErrorNote></div>
         : <ReaderBody data={reader.data} focus={focus} />}
     </>
   );
@@ -64,7 +65,7 @@ function ReaderBody({ data, focus }: { data: ReaderData; focus: [number, number]
   };
   const v = data.version;
   return (
-    <div className="lw-reader">
+    <div className="lw-content lw-reader">
       <nav className="lw-paper lw-reader-outline" aria-label="Clauses">
         <h2 className="lw-eyebrow" style={{ margin: '0 0 8px' }}>Clauses</h2>
         {data.clauses.length === 0 ? <p className="lw-meta" style={{ margin: 0 }}>No numbered clauses found.</p> : (
@@ -105,6 +106,7 @@ function Text({ data, focus }: { data: ReaderData; focus: [number, number] | nul
   }, [data, focus]);
   const deletions = useMemo(() => data.marks.filter((m) => m.kind === 'tracked_delete' && m.start != null), [data]);
   const pages: ReaderPage[] = data.pages.length ? data.pages : [{ number: 0, start: 0, end: data.text.length, source: 'text' }];
+  const parts = useMemo(() => new Map((data.blocks ?? []).filter((b) => PARTS[b.kind]).map((b) => [b.start, PARTS[b.kind]])), [data]);
   return (
     <>
       {pages.map((p) => {
@@ -115,12 +117,16 @@ function Text({ data, focus }: { data: ReaderData; focus: [number, number] | nul
           pos += line.length + 1;
           if (!line.trim()) return <div key={a} className="lw-reader-gap" aria-hidden="true" />;
           n += 1;
+          const part = parts.get(a + line.length - line.trimStart().length);
           const label = p.number ? `${p.number}.${n}` : `${n}`;
           return (
-            <div key={a} className="lw-reader-line" data-line={label} data-a={a} data-b={a + line.length}>
+            <React.Fragment key={a}>
+            {part && <div className="lw-reader-part">{part}</div>}
+            <div className="lw-reader-line" data-line={label} data-a={a} data-b={a + line.length}>
               <span className="lw-reader-no" aria-hidden="true">{n}</span>
               <span className="lw-reader-text">{segments(data.text, a, a + line.length, ranges, deletions)}</span>
             </div>
+            </React.Fragment>
           );
         });
         return (

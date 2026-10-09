@@ -16,7 +16,7 @@
 | Piper TTS (`piper-tts>=1.4.2`, the `piper1-gpl` fork) + voices amy/joe/john/kusal/lessac | TTS | voice | Engine: GPL-3.0 (reported); **each voice has its own licence (verify per voice)** | GPL distribution implications; consider Kokoro-only for Law |
 | Kokoro-82M | TTS | voice | Apache-2.0 (verify) | — |
 | `stabilityai/sdxl-turbo` | Document Studio images | backend | Stability AI licence. **Historically non-commercial research; terms have changed over time. Verify current terms.** | **Proposed: disabled in Law edition** (images not needed for legal documents) |
-| Tesseract 5 + `eng` traineddata (proposed, D-010) | OCR | backend | Apache-2.0 (verify) | — |
+| Tesseract 5 + `eng` traineddata (D-010, used from S2.1) | OCR | backend | Apache-2.0 (verify) | Dev host: miniconda `tesseract 5.2.0`. Law image: add `tesseract-ocr tesseract-ocr-eng` at the first approved build |
 
 ## 2. New dependencies proposed by the plan (to approve before install)
 
@@ -31,7 +31,7 @@
 | `pdfjs-dist` | In-app document viewer with highlights | Apache-2.0 | S1.6/S2.2 |
 | `vitest`, `@testing-library/react`, `jsdom`, `@playwright/test`, `axe-core` | Tests (dev only) | MIT / MIT / MIT / Apache-2.0 / MPL-2.0 | S1.0/S1.3 |
 | `cryptography` (Python) | AES-GCM blobs, key wrapping | Apache-2.0 / BSD | S1.6 |
-| `pytesseract` (Python) | OCR wrapper | Apache-2.0 | S2.1 |
+| `pytesseract` (Python) | OCR wrapper | Apache-2.0 | S2.1 — **not needed**: the `tesseract` program is run directly (D-034) |
 | `python-docx` upgrade 1.1.2 → 1.2.x | Comments API for redlines | MIT | S3.3 |
 
 ## 3. Candidate evaluation datasets (spec §10). **None downloaded or integrated.**

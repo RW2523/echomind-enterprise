@@ -119,6 +119,15 @@ def addressed_to_ai(text: str) -> bool:
     return any(_ADDRESSED_TO_AI.search(text[a:b]) for a, b in _spans(text))
 
 
+_WRAP = re.compile(r"(?<!\n)\n(?!\n)")
+
+
+def document_sentences(text: str) -> list[tuple[int, int]]:
+    """Sentences of document text, where a single line break is only a visual wrap (PDF and OCR keep
+    their lines) and a blank line ends a paragraph. Offsets are those of `text`."""
+    return _spans(_WRAP.sub(" ", text or ""))
+
+
 def addressed_to_ai_spans(text: str) -> list[tuple[int, int]]:
     """Where in `text` the sentences addressed to an AI are (S2.1: flagged at import)."""
     return [(a, b) for a, b in _spans(text) if _ADDRESSED_TO_AI.search(text[a:b])]

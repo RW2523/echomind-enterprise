@@ -308,6 +308,7 @@
 [data-edition="law"] .lw-reader-no { color: var(--ink-3); font-family: var(--sans); font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; user-select: none; padding-top: 2px; }
 [data-edition="law"] .lw-reader-text { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
 [data-edition="law"] .lw-reader-gap { height: 10px; }
+[data-edition="law"] .lw-reader-part { margin: 14px 0 4px 44px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; border-top: 1px solid var(--rule); padding-top: 10px; }
 [data-edition="law"] .lw-reader-focus { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent); }
 [data-edition="law"] .lw-reader-ins { text-decoration: underline; text-decoration-color: var(--verified); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 [data-edition="law"] .lw-reader-del { color: var(--conflict); opacity: .8; text-decoration-thickness: 1.5px; font-size: .92em; }

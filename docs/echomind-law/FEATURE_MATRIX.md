@@ -15,7 +15,7 @@
 | SEC-06 | Privilege labels, redaction preview, safe exports | DONE (labels S1.9, export gateway S1.10; P-006 values await counsel) | S1.9, S1.10 | — |
 | SEC-07 | Retention, legal hold, approved deletion, restore | DONE (mechanism; schedules await counsel) | S1.9 | Schedules (P-002/P-003) |
 | SEC-08 | Firm DMS adapter with ACL/version sync | PARTIAL (framework DONE with the local-folder connector; real provider BLOCKED) | S1.11 | **Provider and credentials (P-010)** |
-| RAG-01 | Matter-scoped legal chat, clause ingestion, OCR, versions | PARTIAL | S2.1, S2.2 | — |
+| RAG-01 | Matter-scoped legal chat, clause ingestion, OCR, versions | PARTIAL (S2.1 ingestion DONE: OCR, Word structure, tracked changes and comments as metadata, hidden-text and injection flags, clauses, defined terms, exact offsets with page/line, per-version status, reader; S2.2 evidence contract next) | S2.1, S2.2 | — |
 | RAG-02 | Document comparison and contradiction analysis | MISSING | S2.3 | — |
 | LIVE-01 | Legal transcription: speakers, vocabulary, edits | PARTIAL | S2.4 | — |
 | LIVE-02 | Negotiation / client-call / governance Silent Assist packs | PARTIAL | S2.5 | Thresholds sign-off (P-008) |

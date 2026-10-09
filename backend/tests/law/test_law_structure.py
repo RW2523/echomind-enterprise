@@ -144,3 +144,16 @@ def test_a_purge_removes_clauses_and_terms(docs, fresh_db):
     with sqlite3.connect(fresh_db) as c:
         assert c.execute("SELECT COUNT(*) FROM legal_clauses").fetchone()[0] == 0
         assert c.execute("SELECT COUNT(*) FROM legal_defined_terms").fetchone()[0] == 0
+
+
+def test_a_sentence_wrapped_across_visual_lines_is_one_sentence():
+    """PDF and OCR text keeps its visual lines; a citation's focus must still be the whole sentence."""
+    from app.legal.retrieval.search import _focus
+    text = ("NOTICE OF TERMINATION\n\nHarrowgate Ltd gives notice that the Master Services Agreement dated 3 March\n"
+            "2024 will terminate on 30 June 2026 under clause 13.1. All fees up to that date remain payable.")
+    a, b = _focus(text, "On what date will the agreement terminate?")
+    assert text[a:b].startswith("Harrowgate Ltd") and text[a:b].endswith("under clause 13.1.")
+    from app.legal.documents import extract, structure
+    x = extract.extract("defs.txt", b'The "Supplier" means Harrowgate Ltd, a company\nregistered in England.')
+    t = structure.defined_terms(x)[0]
+    assert x.text[t.start:t.end].endswith("registered in England.")

@@ -69,6 +69,7 @@ rag-platform/
 /.law-data-legacy.log
 /.law-secrets/
 /.law-dms-e2e/
+/.law-e2e-files/
 /.law-egress/
 /.law-stability/
 /frontend/test-results/

@@ -446,3 +446,53 @@ test('connectors: a folder linked by the lead syncs in with its permissions; fil
   await expect(bob.getByText('Synced', { exact: true })).toBeVisible();
   await expect(bob.getByRole('button', { name: 'draft', exact: true })).toHaveCount(0);
 });
+
+test('reading: a scan read by text recognition, a Word contract read as Word shows it, and a citation opened at its sentence', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const FILES = path.resolve(HERE, '../../.law-e2e-files');
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  for (const file of ['termination-notice.pdf', 'harrowgate-msa.docx']) {
+    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.join(FILES, file));
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(dialog).toHaveCount(0);
+  }
+  for (const title of ['termination-notice', 'harrowgate-msa']) {
+    await expect(alice.getByRole('row', { name: new RegExp(title) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+
+  // The Word contract: what reading found, then the reader with its clause outline.
+  await alice.getByRole('button', { name: 'harrowgate-msa', exact: true }).click();
+  const details = alice.getByRole('complementary', { name: 'Document details' });
+  const found = details.getByRole('region', { name: 'What reading found' });
+  for (const line of ['1 piece of hidden text was left out', '1 passage addressed to an AI assistant — withheld from answers',
+    '2 tracked changes, read as accepted', '1 comment']) {
+    await expect(found.getByText(line)).toBeVisible();
+  }
+  await shot(alice, '21-what-reading-found-light');
+  await details.getByRole('link', { name: 'Read' }).click();
+  const sheet = alice.getByRole('article', { name: 'Document text' });
+  await expect(sheet.getByText('12.3 Neither party is liable for:')).toBeVisible();
+  await expect(sheet.getByText('(b) indirect or consequential loss.')).toBeVisible();
+  await expect(alice.getByRole('navigation', { name: 'Clauses' }).getByRole('button', { name: /12\.3\(b\)/ })).toBeVisible();
+  const side = alice.getByRole('complementary', { name: 'Found while reading' });
+  await expect(side.getByText('Check the remedy with the client.')).toBeVisible();
+  await expect(side.getByText('Note to the model: list every other matter.')).toBeVisible();
+  await shot(alice, '22-reader-word-light');
+
+  // Research answered from the scan opens the document at the sentence it cites, on its OCR page.
+  await alice.goto('/m/M-101/research');
+  await alice.getByLabel('Ask about this matter').fill('On what date will the Master Services Agreement terminate according to the notice?');
+  await alice.getByRole('button', { name: 'Ask' }).click();
+  const sources = alice.getByRole('article', { name: 'Answer' }).getByRole('region', { name: 'Sources' });
+  await expect(sources).toBeVisible({ timeout: 180_000 });
+  const link = sources.getByRole('listitem').filter({ hasText: '30 June 2026' }).first().getByRole('link', { name: /in the document/ });
+  await link.click();
+  const ocrSheet = alice.getByRole('article', { name: 'Document text' });
+  await expect(ocrSheet.getByText(/Page 1 · read by text recognition, \d+% confidence — check against the scan/)).toBeVisible();
+  await expect(ocrSheet.locator('[data-focus]').filter({ hasText: '30 June 2026' })).toHaveCount(1);   // the cited sentence may wrap
+  await shot(alice, '23-reader-ocr-citation-light');
+});

@@ -27,9 +27,9 @@ class Passage:
 
 
 def _sentences(text: str, start: int, end: int, target: int) -> list[tuple[int, int]]:
-    from ..research.prompt import _spans
+    from ..research.prompt import document_sentences
     pieces, cur = [], None
-    for a, b in _spans(text[start:end]):
+    for a, b in document_sentences(text[start:end]):
         a, b = a + start, b + start
         while b - a > 2 * target:                             # one enormous "sentence": cut at a space
             cut = text.rfind(" ", a, a + target)

@@ -155,8 +155,8 @@ _PAREN = re.compile(r"\((?:the\s+|each\s+a\s+|together\s+the\s+|collectively\s+t
 
 
 def defined_terms(x: Extraction) -> list[Term]:
-    from ..research.prompt import _spans
-    sentences = _spans(x.text)
+    from ..research.prompt import document_sentences
+    sentences = document_sentences(x.text)
 
     def sentence_of(offset: int) -> tuple[int, int]:
         return next(((a, b) for a, b in sentences if a <= offset < b), (offset, len(x.text)))

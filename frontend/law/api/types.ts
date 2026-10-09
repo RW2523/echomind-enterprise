@@ -90,6 +90,7 @@ export type MarkKind = 'hidden_text' | 'instructions' | 'tracked_insert' | 'trac
 export interface ReaderMark { kind: MarkKind; start?: number | null; end?: number | null; page?: number | null; meta: Record<string, any> }
 export interface ReaderData {
   text: string; pages: ReaderPage[]; lines: number[]; clauses: ReaderClause[]; terms: ReaderTerm[]; marks: ReaderMark[];
+  blocks?: { kind: string; start: number; end: number; label?: string | null; path?: string | null }[];
   engines: Record<string, string>;
   version: { id: string; number: number; filename: string; status?: DocStatus | null; index_status: DocVersion['index_status'] };
 }
