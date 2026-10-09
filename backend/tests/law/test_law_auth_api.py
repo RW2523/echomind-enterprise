@@ -39,16 +39,18 @@ def test_partial_session_cannot_use_the_app(client):
 
 
 def test_first_login_enrols_mfa_and_rotates_the_session(client, fresh_db):
+    from app.legal.identity import mfa
     u = make_user("p.okafor")
+    link, _ = mfa.issue_enrollment_token(u["id"], created_by="test-admin")
     client.post("/api/auth/login", json={"username": u["username"], "password": u["password"]})
     partial = client.cookies.get("__Host-echomind_s")
-    r = client.post("/api/auth/mfa/enroll", headers=csrf_headers(client))
+    r = client.post("/api/auth/mfa/enroll", json={"enrollment_token": link}, headers=csrf_headers(client))
     assert r.status_code == 200
     secret, uri = r.json()["secret"], r.json()["otpauth_uri"]
     assert uri.startswith("otpauth://totp/EchoMind%20Law:p.okafor?")
-    bad = client.post("/api/auth/mfa/confirm", json={"code": "000000"}, headers=csrf_headers(client))
+    bad = client.post("/api/auth/mfa/confirm", json={"code": "000000", "enrollment_token": link}, headers=csrf_headers(client))
     assert bad.status_code == 401
-    r = client.post("/api/auth/mfa/confirm", json={"code": current_code(secret)}, headers=csrf_headers(client))
+    r = client.post("/api/auth/mfa/confirm", json={"code": current_code(secret), "enrollment_token": link}, headers=csrf_headers(client))
     assert r.status_code == 200 and len(r.json()["recovery_codes"]) == 10
     assert client.cookies.get("__Host-echomind_s") != partial                       # rotated
     assert client.get("/api/auth/me").json()["user"]["username"] == "p.okafor"
@@ -240,3 +242,9 @@ def test_obo_token_cannot_mint_more_tokens(law_app, client):
 
 def test_client_error_reports_need_a_session(client):
     assert client.post("/api/client-error", json={"message": "x"}).status_code == 401
+
+
+def test_config_tells_the_frontend_which_edition_to_load(client, monkeypatch):
+    assert client.get("/api/auth/config").json() == {"auth_enabled": True, "edition": "law"}
+    monkeypatch.delenv("ECHOMIND_EDITION")
+    assert client.get("/api/auth/config").json()["edition"] == "standard"

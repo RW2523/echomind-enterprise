@@ -1,0 +1,87 @@
+import React, { useEffect } from 'react';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/source-serif-4';
+import '../theme/law.css';
+import { applyPreferences } from './preferences';
+import { RequireSession, useSessionExpiry } from './session';
+import { MatterLayout } from './matter';
+import Shell from './Shell';
+import SignIn from '../pages/SignIn';
+import Home from '../pages/Home';
+import Matters from '../pages/Matters';
+import MatterOverview from '../pages/MatterOverview';
+import MatterMembers from '../pages/MatterMembers';
+import Security from '../pages/Security';
+import AdminUsers from '../pages/AdminUsers';
+import NotAvailable from '../pages/NotAvailable';
+import DesignCatalogue from '../pages/DesignCatalogue';
+
+function Root() {
+  useSessionExpiry();
+  return <Outlet />;
+}
+
+export const lawRoutes = [
+  {
+    element: <Root />,
+    children: [
+      { path: '/signin', element: <SignIn /> },
+      { path: '/', element: <Navigate to="/home" replace /> },
+      ...(import.meta.env.DEV ? [{ path: '/__design', element: <DesignCatalogue /> }] : []),
+      {
+        element: <RequireSession><Shell /></RequireSession>,
+        children: [
+          { path: '/home', element: <Home /> },
+          { path: '/matters', element: <Matters /> },
+          {
+            path: '/m/:matterNo',
+            element: <MatterLayout />,
+            children: [
+              { index: true, element: <Navigate to="overview" replace /> },
+              { path: 'overview', element: <MatterOverview /> },
+              { path: 'members', element: <MatterMembers /> },
+              { path: '*', element: <NotAvailable /> },
+            ],
+          },
+          { path: '/account/security', element: <Security /> },
+          { path: '/admin/users', element: <AdminUsers /> },
+          { path: '*', element: <NotAvailable /> },
+        ],
+      },
+    ],
+  },
+];
+
+export function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 15_000,
+        refetchOnWindowFocus: true,
+        retry: (count, err: any) => err?.status !== 401 && err?.status !== 403 && err?.status !== 404 && count < 2,
+      },
+    },
+  });
+}
+
+/** The EchoMind Law workspace (S1.3). Loaded only when the backend reports the Law edition. */
+export default function LawApp() {
+  const [queryClient] = React.useState(makeQueryClient);
+  const [router] = React.useState(() => createBrowserRouter(lawRoutes));
+  useEffect(() => {
+    document.documentElement.dataset.edition = 'law';
+    document.title = 'EchoMind Law';
+    applyPreferences();
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
+    const onChange = () => applyPreferences();
+    mq?.addEventListener?.('change', onChange);
+    return () => mq?.removeEventListener?.('change', onChange);
+  }, []);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  );
+}

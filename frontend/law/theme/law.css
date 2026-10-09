@@ -1,0 +1,178 @@
+/* EchoMind Law — "Paper & Glass" design system (docs/echomind-law/DESIGN_SYSTEM.md).
+ * Everything is scoped under [data-edition="law"] so the other verticals are untouched.
+ * Glass is only for the navigation/control layer; content sits on solid paper. */
+
+[data-edition="law"] {
+  --canvas-a: #F4F1EA; --canvas-b: #E3E8F0; --canvas-c: rgba(196, 210, 232, .55);
+  --paper: #FFFFFF; --paper-2: #FAF9F6;
+  --ink: #15171C; --ink-2: #4A4F59; --ink-3: #6E737D; --rule: rgba(21, 23, 28, .10);
+  --accent: #24467A; --accent-ink: #FFFFFF; --accent-soft: rgba(36, 70, 122, .10);
+  --verified: #2E7A55; --attention: #8F5E10; --conflict: #A8382B; --privileged: #6A3D7C; --hold: #1F6B74;
+  --recording: #D1342F; --draft: #5F6672;
+  --glass-fill: rgba(255, 255, 255, .62); --glass-fill-strong: rgba(255, 255, 255, .80); --glass-fallback: rgba(250, 249, 246, .97);
+  --glass-outline: rgba(21, 23, 28, .08); --glass-specular: rgba(255, 255, 255, .9); --glass-shade: rgba(21, 23, 28, .05);
+  --glass-sheen: rgba(255, 255, 255, .55);
+  --glass-shadow: 0 12px 32px rgba(17, 24, 39, .10), 0 1px 2px rgba(17, 24, 39, .06);
+  --fill-1: rgba(21, 23, 28, .04); --fill-2: rgba(21, 23, 28, .07); --fill-3: rgba(21, 23, 28, .11);
+  --paper-shadow: 0 1px 2px rgba(17, 24, 39, .05), 0 0 0 1px rgba(21, 23, 28, .06);
+  --scrim: rgba(14, 16, 20, .28);
+  --blur: 24px; --sat: 170%;
+  --dur-1: 120ms; --dur-2: 200ms; --dur-3: 320ms; --ease: cubic-bezier(.2, .8, .2, 1);
+  --sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --serif: "Source Serif 4 Variable", "Source Serif 4", "Iowan Old Style", "Charter", Georgia, serif;
+  color-scheme: light;
+}
+
+[data-edition="law"][data-theme="dark"] {
+  --canvas-a: #0E1014; --canvas-b: #151B27; --canvas-c: rgba(56, 78, 120, .30);
+  --paper: #171A20; --paper-2: #1C2027;
+  --ink: #ECEDEF; --ink-2: #B4B9C2; --ink-3: #8F95A0; --rule: rgba(236, 237, 239, .10);
+  --accent: #8DB0E6; --accent-ink: #0E1014; --accent-soft: rgba(141, 176, 230, .14);
+  --verified: #5CC392; --attention: #E0A447; --conflict: #EE7A6B; --privileged: #C19BD6; --hold: #63BCC6;
+  --recording: #FF5A52; --draft: #A4AAB4;
+  --glass-fill: rgba(30, 34, 42, .56); --glass-fill-strong: rgba(30, 34, 42, .78); --glass-fallback: rgba(28, 32, 39, .97);
+  --glass-outline: rgba(255, 255, 255, .08); --glass-specular: rgba(255, 255, 255, .14); --glass-shade: rgba(0, 0, 0, .25);
+  --glass-sheen: rgba(255, 255, 255, .07);
+  --glass-shadow: 0 12px 32px rgba(0, 0, 0, .45), 0 1px 2px rgba(0, 0, 0, .4);
+  --fill-1: rgba(255, 255, 255, .04); --fill-2: rgba(255, 255, 255, .07); --fill-3: rgba(255, 255, 255, .11);
+  --paper-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .06);
+  --scrim: rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+/* The canvas is painted on <html>; index.html paints html/body/#root near-black for the legacy dark
+   theme, so the Law scope makes body and #root transparent and lets #root scroll (body is fixed). */
+[data-edition="law"] {
+  background:
+    radial-gradient(900px 600px at 100% 100%, var(--canvas-c), transparent 70%),
+    radial-gradient(1200px 700px at 8% -10%, var(--canvas-a), transparent 70%),
+    linear-gradient(135deg, var(--canvas-a), var(--canvas-b));
+  background-attachment: fixed;
+}
+[data-edition="law"] body, [data-edition="law"] #root { background: transparent; }
+[data-edition="law"] body {
+  margin: 0; font-family: var(--sans); font-size: 14px; line-height: 20px; color: var(--ink);
+  -webkit-font-smoothing: antialiased; font-feature-settings: "cv11", "ss01";
+}
+[data-edition="law"] #root { height: 100dvh; overflow: auto; }
+[data-edition="law"] ::-webkit-scrollbar-track { background: transparent; }
+[data-edition="law"] ::-webkit-scrollbar-thumb { background: var(--fill-3); }
+[data-edition="law"] * { scrollbar-color: var(--fill-3) transparent; }
+[data-edition="law"] :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+[data-edition="law"] .lw-tnum { font-variant-numeric: tabular-nums; }
+[data-edition="law"] .lw-serif { font-family: var(--serif); }
+
+/* ── Glass (navigation layer only) ───────────────────────────────────────────── */
+[data-edition="law"] .lw-glass {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(var(--sat)); backdrop-filter: blur(var(--blur)) saturate(var(--sat));
+  border: 1px solid var(--glass-outline);
+  box-shadow: inset 0 1px 0 var(--glass-specular), inset 0 -1px 0 var(--glass-shade), var(--glass-shadow);
+  position: relative; isolation: isolate;
+}
+[data-edition="law"] .lw-glass::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background: linear-gradient(180deg, var(--glass-sheen) 0%, transparent 45%); opacity: .7;
+}
+[data-edition="law"] .lw-glass[data-over="text"] { background: var(--glass-fill-strong); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  [data-edition="law"] .lw-glass { background: var(--glass-fallback); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  [data-edition="law"] .lw-glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--glass-fallback); }
+}
+[data-edition="law"][data-transparency="reduced"] .lw-glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--glass-fallback); }
+@media (prefers-contrast: more) {
+  [data-edition="law"] .lw-glass { backdrop-filter: none; background: var(--paper); border-color: var(--ink); box-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-edition="law"] * { transition-duration: 1ms !important; animation: none !important; }
+}
+
+/* ── Paper (content layer) ───────────────────────────────────────────────────── */
+[data-edition="law"] .lw-paper { background: var(--paper); border-radius: 14px; box-shadow: var(--paper-shadow); }
+[data-edition="law"] .lw-rule { border-color: var(--rule); }
+
+/* ── Shell layout ────────────────────────────────────────────────────────────── */
+[data-edition="law"] .lw-shell { display: grid; grid-template-columns: 264px minmax(0, 1fr); height: 100dvh; }
+[data-edition="law"] .lw-sidebar { margin: 12px 0 12px 12px; border-radius: 20px; display: flex; flex-direction: column; padding: 12px; gap: 2px; min-height: 0; }
+[data-edition="law"] .lw-main { position: relative; overflow: auto; min-width: 0; }
+[data-edition="law"] .lw-toolbar-wrap { position: sticky; top: 0; z-index: 4; padding: 12px 16px 0; pointer-events: none; }
+[data-edition="law"] .lw-toolbar { pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+[data-edition="law"] .lw-cluster { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; }
+[data-edition="law"] .lw-title-cap { padding: 6px 14px 6px 12px; font-weight: 600; font-size: 15px; display: flex; gap: 10px; align-items: center; }
+[data-edition="law"] .lw-crumb { color: var(--ink-3); font-weight: 500; }
+[data-edition="law"] .lw-content { padding: 16px; display: grid; gap: 16px; align-content: start; }
+@media (max-width: 860px) {
+  [data-edition="law"] .lw-shell { grid-template-columns: 72px minmax(0, 1fr); }
+  [data-edition="law"] .lw-sidebar .lw-hide-rail { display: none; }
+  [data-edition="law"] .lw-nav-link { justify-content: center; }
+}
+
+/* ── Navigation ──────────────────────────────────────────────────────────────── */
+[data-edition="law"] .lw-nav-label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding: 14px 10px 6px; font-weight: 600; }
+[data-edition="law"] .lw-nav-link { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; color: var(--ink-2); text-decoration: none; font-weight: 500; transition: background var(--dur-1) var(--ease), color var(--dur-1); }
+[data-edition="law"] .lw-nav-link:hover { background: var(--fill-1); color: var(--ink); }
+[data-edition="law"] .lw-nav-link[aria-current="page"] { background: var(--fill-2); color: var(--ink); }
+[data-edition="law"] .lw-nav-link svg { width: 16px; height: 16px; flex: none; }
+
+/* ── Matter switcher ─────────────────────────────────────────────────────────── */
+[data-edition="law"] .lw-switcher { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: var(--fill-1); border: none; width: 100%; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+[data-edition="law"] .lw-switcher:hover { background: var(--fill-2); }
+[data-edition="law"] .lw-monogram { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 650; font-size: 12px; flex: none; }
+[data-edition="law"] .lw-monogram.lw-muted { background: var(--fill-3); color: var(--ink-2); }
+/* Menus float over content (often over the sidebar's glass), so they use the stronger fill to stay legible. */
+[data-edition="law"] .lw-popover { z-index: 30; border-radius: 16px; padding: 8px; width: 320px; max-width: calc(100vw - 24px);
+  background: var(--glass-fill-strong); animation: lw-pop var(--dur-2) var(--ease); transform-origin: 24px 0; }
+@keyframes lw-pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+[data-edition="law"] .lw-option { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; cursor: pointer; width: 100%; border: none; background: none; text-align: left; color: inherit; font: inherit; }
+[data-edition="law"] .lw-option:hover, [data-edition="law"] .lw-option[aria-selected="true"] { background: var(--fill-2); }
+
+/* ── Controls ────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .lw-btn { display: inline-flex; align-items: center; gap: 8px; border: none; background: transparent; padding: 7px 12px; border-radius: 999px; cursor: pointer; color: var(--ink-2); font: inherit; font-weight: 500; transition: background var(--dur-1) var(--ease), transform var(--dur-1) var(--ease); }
+[data-edition="law"] .lw-btn:hover { background: var(--fill-2); color: var(--ink); }
+[data-edition="law"] .lw-btn:active { transform: scale(1.02); }
+[data-edition="law"] .lw-btn[disabled] { opacity: .5; cursor: not-allowed; }
+[data-edition="law"] .lw-btn-primary { background: var(--accent); color: var(--accent-ink); }
+[data-edition="law"] .lw-btn-primary:hover { background: var(--accent); color: var(--accent-ink); filter: brightness(1.08); }
+[data-edition="law"] .lw-btn-ghost { border: 1px solid var(--rule); }
+[data-edition="law"] .lw-btn-danger { color: var(--conflict); }
+[data-edition="law"] .lw-btn-sm { padding: 5px 10px; font-size: 13px; }
+[data-edition="law"] .lw-btn svg { width: 16px; height: 16px; }
+[data-edition="law"] .lw-input { width: 100%; box-sizing: border-box; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 10px; padding: 9px 12px; font: inherit; outline: none; }
+[data-edition="law"] .lw-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+[data-edition="law"] .lw-label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+[data-edition="law"] .lw-hint { font-size: 12.5px; color: var(--ink-3); font-weight: 400; }
+
+/* ── Pills and states ────────────────────────────────────────────────────────── */
+[data-edition="law"] .lw-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; line-height: 16px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+[data-edition="law"] .lw-pill svg { width: 12px; height: 12px; }
+[data-edition="law"] .lw-pill-verified { color: var(--verified); background: color-mix(in srgb, var(--verified) 12%, transparent); }
+[data-edition="law"] .lw-pill-attention { color: var(--attention); background: color-mix(in srgb, var(--attention) 14%, transparent); }
+[data-edition="law"] .lw-pill-conflict { color: var(--conflict); background: color-mix(in srgb, var(--conflict) 12%, transparent); }
+[data-edition="law"] .lw-pill-privileged { color: var(--privileged); background: color-mix(in srgb, var(--privileged) 12%, transparent); }
+[data-edition="law"] .lw-pill-hold { color: var(--hold); background: color-mix(in srgb, var(--hold) 12%, transparent); }
+[data-edition="law"] .lw-pill-neutral { color: var(--draft); background: var(--fill-2); }
+[data-edition="law"] .lw-pill-accent { color: var(--accent); background: var(--accent-soft); }
+
+/* ── Tables and sheets ───────────────────────────────────────────────────────── */
+[data-edition="law"] .lw-table { width: 100%; border-collapse: collapse; }
+[data-edition="law"] .lw-table th { text-align: left; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; padding: 12px 16px; border-bottom: 1px solid var(--rule); }
+[data-edition="law"] .lw-table td { padding: 12px 16px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+[data-edition="law"] .lw-table tr:last-child td { border-bottom: none; }
+[data-edition="law"] .lw-table tbody tr:hover { background: var(--fill-1); }
+[data-edition="law"] .lw-sheet { padding: 24px 28px; }
+[data-edition="law"] .lw-h1 { font-size: 24px; line-height: 30px; font-weight: 650; letter-spacing: -.01em; margin: 0; }
+[data-edition="law"] .lw-h2 { font-size: 16px; line-height: 22px; font-weight: 600; margin: 0; }
+[data-edition="law"] .lw-eyebrow { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); font-weight: 650; }
+[data-edition="law"] .lw-meta { color: var(--ink-3); font-size: 12.5px; }
+[data-edition="law"] .lw-card-h { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--rule); }
+[data-edition="law"] .lw-skeleton { background: linear-gradient(90deg, var(--fill-1), var(--fill-2), var(--fill-1)); background-size: 200% 100%; animation: lw-shimmer 1.4s ease-in-out infinite; border-radius: 8px; }
+@keyframes lw-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+[data-edition="law"] .lw-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; letter-spacing: .04em; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; word-break: break-all; user-select: all; }
+
+/* ── Dialogs and toasts ──────────────────────────────────────────────────────── */
+[data-edition="law"] .lw-scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; display: grid; place-items: center; padding: 16px; }
+[data-edition="law"] .lw-dialog { width: min(480px, 100%); border-radius: 20px; padding: 6px; }
+[data-edition="law"] .lw-dialog-body { padding: 20px; display: grid; gap: 14px; }
+[data-edition="law"] .lw-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50; padding: 8px 16px; border-radius: 999px; font-weight: 500; }

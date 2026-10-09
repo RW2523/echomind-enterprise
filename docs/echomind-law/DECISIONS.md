@@ -103,7 +103,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - Reads (document open, citation resolve, transcript view, export) **are** logged, unlike today.
   - The existing `activity_log` stays as a request-level log.
 
-### D-009 Frontend foundations for the Law workspace — PROPOSED
+### D-009 Frontend foundations for the Law workspace — IMPLEMENTED (S1.3; react-router 7, not 8, because of Node 20)
 - **Decision:**
   - **Routing:** add `react-router` (v7, data router) for the Law workspace only. This gives deep links like `/matters/M-101/documents/…`.
   - **State:** React Context for session and the active matter. TanStack Query (`@tanstack/react-query`) for server state with **matter-keyed caches**, purged when the matter changes or the user signs out.
@@ -195,12 +195,13 @@ Every entry records the options considered, the recommendation, the consequence 
 - They become encrypted at rest with D-014: LUKS on the host now, and app-level AES-GCM once the `cryptography` dependency is approved (planned S1.6).
 - Until then, a database copy would expose second factors, so backups must stay encrypted (OPS-01).
 
-### D-021 First-sign-in authenticator enrolment — RECORDED (S1.1), hardening planned
+### D-021 First-sign-in authenticator enrolment — IMPLEMENTED (S1.3, 2026-10-08)
 - An account without an enrolled authenticator enrols one at its first sign-in. Whoever holds the initial password can therefore bind their own authenticator.
-- **Planned (S1.3 admin UX):**
-  - admin-issued one-time enrolment links that expire;
-  - a forced password change at first sign-in;
-  - an admin "reset authenticator" action (re-enrolment is refused today: 409).
+- **Implemented in S1.3** (`da43cc3`):
+  - admin-issued one-time enrolment links that expire (72 h; `LEGAL_ENROLLMENT_LINK_REQUIRED` lets a firm relax this);
+  - a forced password change after an administrator sets someone's password;
+  - an admin "reset two-step" action, which signs the person out and issues a new link;
+  - the first administrator's link is written 0600 next to the data.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

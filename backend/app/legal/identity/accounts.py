@@ -73,7 +73,7 @@ def change_password(user_id: str, new_password: str, keep_token: Optional[str] =
         raise ValueError("unknown user")
     core_auth.set_password(acct["username"], new_password)
     with get_conn() as conn:
-        conn.execute("UPDATE users SET password_changed_at=? WHERE id=?", (_iso(time.time()), user_id))
+        conn.execute("UPDATE users SET password_changed_at=?, must_change_password=0 WHERE id=?", (_iso(time.time()), user_id))
         conn.commit()
     return sessions.revoke_all_for_user(user_id, reason="password_changed", keep_token=keep_token)
 
@@ -89,4 +89,11 @@ def grant_role(user_id: str, role: str, granted_by: Optional[str] = None) -> Non
     with get_conn() as conn:
         conn.execute("INSERT OR IGNORE INTO user_roles (user_id, role, granted_by, granted_at) VALUES (?,?,?,?)",
                      (user_id, role, granted_by, _iso(time.time())))
+        conn.commit()
+
+
+def require_password_change(user_id: str) -> None:
+    """After an administrator sets someone's password, they must choose their own at next sign-in."""
+    with get_conn() as conn:
+        conn.execute("UPDATE users SET must_change_password=1 WHERE id=?", (user_id,))
         conn.commit()

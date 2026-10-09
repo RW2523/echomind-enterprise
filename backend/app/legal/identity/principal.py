@@ -19,12 +19,15 @@ logger = logging.getLogger(__name__)
 OBO_PATHS = frozenset({"/api/chat/ask-voice", "/api/chat/ask-voice-stream"})
 # Routes a partial (password-only, MFA pending) session may call.
 PARTIAL_PATHS = frozenset({"/api/auth/mfa/verify", "/api/auth/mfa/enroll", "/api/auth/mfa/confirm"})
+# Routes still open to a signed-in person who must first replace an administrator-set password (D-021).
+PASSWORD_CHANGE_PATHS = frozenset({"/api/auth/me", "/api/auth/password", "/api/auth/logout"})
 WS_CLOSE_UNAUTHORIZED = 4401
 
 
 def _principal(s: dict, auth: str) -> dict:
     return {"sub": s["user_id"], "username": s["username"], "role": s["role"], "tenant": s["tenant"], "org_id": s["org_id"],
-            "sid": s["token_hash"], "mfa_verified": s["mfa_verified"], "auth": auth, "session": s}
+            "sid": s["token_hash"], "mfa_verified": s["mfa_verified"], "auth": auth, "session": s,
+            "must_change_password": s.get("must_change_password", False)}
 
 
 def from_request(request, allow_partial: bool = False) -> Optional[dict]:

@@ -36,6 +36,11 @@ export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 export CUDA_VISIBLE_DEVICES=""
 export ECHOMIND_EXIT_ON_FATAL_CUDA=0
 
+if [[ "${LAW_SEED_DEMO:-0}" == "1" ]]; then
+  # Fictional demo world for end-to-end tests and design reviews (refuses without the explicit flag).
+  (cd "$ROOT/backend" && LEGAL_ALLOW_DEMO_SEED=1 python3 -m app.legal.cli seed-demo)
+fi
+
 echo "EchoMind Law dev backend: http://127.0.0.1:${PORT}  data=${DATA}"
 echo "  sign in as ${AUTH_ADMIN_USER}; password in ${DATA}/dev_admin_password"
 cd "$ROOT/backend"

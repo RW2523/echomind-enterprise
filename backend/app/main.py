@@ -176,7 +176,7 @@ _MUTATING = {"POST", "PUT", "PATCH", "DELETE"}
 def _law_guard(request: Request):
     """None to let the request through, or the error response to return."""
     from .legal.identity import CSRF_HEADER
-    from .legal.identity.principal import PARTIAL_PATHS
+    from .legal.identity.principal import PARTIAL_PATHS, PASSWORD_CHANGE_PATHS
     from .legal.identity.sessions import csrf_ok
     path = request.url.path
     if request.method == "OPTIONS" or path in _LAW_PUBLIC_PATHS or not path.startswith("/api/"):
@@ -184,6 +184,8 @@ def _law_guard(request: Request):
     principal = user_from_request(request, allow_partial=path in PARTIAL_PATHS)
     if not principal:
         return JSONResponse({"detail": "Not authenticated"}, status_code=401)
+    if principal.get("must_change_password") and path not in PASSWORD_CHANGE_PATHS | PARTIAL_PATHS:
+        return JSONResponse({"detail": "password_change_required"}, status_code=403)
     # Cookie sessions must echo the per-session CSRF token on state-changing requests. Bearer
     # (on-behalf-of) callers are services, never driven by a browser, so CSRF does not apply.
     if request.method in _MUTATING and principal["auth"] == "session" \

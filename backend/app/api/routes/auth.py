@@ -26,8 +26,10 @@ class LoginIn(BaseModel):
 
 @router.get("/config")
 def auth_config():
-    """Public: lets the frontend decide whether to show the login gate."""
-    return {"auth_enabled": settings.AUTH_ENABLED}
+    """Public: lets the frontend decide whether to show the login gate, and which edition's
+    interface to load (the EchoMind Law workspace when the edition is "law")."""
+    from ...core.edition import current_edition
+    return {"auth_enabled": settings.AUTH_ENABLED, "edition": current_edition() or "standard"}
 
 
 @router.post("/login")
@@ -114,7 +116,11 @@ def admin_create_user(request: Request, inp: CreateUserIn):
             raise HTTPException(status_code=400, detail=str(e))
         if firm_role != "user":
             accounts.grant_role(user["id"], firm_role, granted_by=admin["sub"])
-        return {"user": {**user, "roles": accounts.roles_of(user["id"])}}
+        # D-021: the administrator chose this password, so the person must replace it; and binding
+        # an authenticator needs this one-time link, not just the password.
+        accounts.require_password_change(user["id"])
+        return {"user": {**user, "roles": accounts.roles_of(user["id"])},
+                "enrollment": _enrollment_link(user["id"], admin["sub"])}
     role = inp.role if inp.role in ("admin", "user") else "user"
     try:
         user = authmod.create_user(inp.username, inp.password, role=role, tenant=inp.tenant)
@@ -228,6 +234,7 @@ def _law_me(payload: dict) -> dict:
     s = payload["session"]
     return {"user": _public_user(acct),
             "session": {"auth": payload["auth"], "mfa_enrolled": acct["mfa_enabled"],
+                        "must_change_password": bool(payload.get("must_change_password")),
                         "idle_expires_at": s["idle_expires_at"], "abs_expires_at": s["abs_expires_at"]}}
 
 
@@ -267,26 +274,50 @@ def mfa_verify(inp: CodeIn, request: Request, response: Response):
     return _complete_sign_in(request, response, p["sub"])
 
 
+class EnrollIn(BaseModel):
+    enrollment_token: Optional[str] = None
+
+
+class ConfirmIn(BaseModel):
+    code: str
+    enrollment_token: Optional[str] = None
+
+
+_LINK_REQUIRED = "An enrolment link from your administrator is required to set up an authenticator."
+
+
+def _check_link(user_id: str, token: Optional[str]) -> None:
+    from ...legal.identity import mfa
+    if settings.LEGAL_ENROLLMENT_LINK_REQUIRED and not mfa.enrollment_token_valid(user_id, token or ""):
+        raise HTTPException(status_code=403, detail=_LINK_REQUIRED)
+
+
 @router.post("/mfa/enroll")
-def mfa_enroll(request: Request):
-    """Start authenticator enrolment; returns the shared secret once."""
+def mfa_enroll(request: Request, inp: Optional[EnrollIn] = None):
+    """Start authenticator enrolment; returns the shared secret once. Needs a valid enrolment link
+    unless the firm has relaxed that (D-021)."""
     _require_law()
     from ...legal.identity import mfa
     p = authmod.user_from_request(request, allow_partial=True)
     if mfa.is_enrolled(p["sub"]):
         raise HTTPException(status_code=409, detail="An authenticator is already enrolled for this account.")
+    _check_link(p["sub"], (inp or EnrollIn()).enrollment_token)
     secret = mfa.begin_enrollment(p["sub"])
     return {"secret": secret, "otpauth_uri": mfa.otpauth_uri(secret, p["username"])}
 
 
 @router.post("/mfa/confirm")
-def mfa_confirm(inp: CodeIn, request: Request, response: Response):
-    """Finish enrolment with a code from the new authenticator; returns recovery codes once."""
+def mfa_confirm(inp: ConfirmIn, request: Request, response: Response):
+    """Finish enrolment with a code from the new authenticator; returns recovery codes once.
+    The enrolment link is used up only once the code is accepted."""
     _require_law()
     from ...legal.identity import mfa
     p = authmod.user_from_request(request, allow_partial=True)
+    _check_link(p["sub"], inp.enrollment_token)
     if not mfa.confirm_enrollment(p["sub"], inp.code):
         _failed_code(request, p["sub"])
+    if settings.LEGAL_ENROLLMENT_LINK_REQUIRED:
+        mfa.consume_enrollment_token(p["sub"], inp.enrollment_token or "")
     codes = mfa.issue_recovery_codes(p["sub"])
     return {**_complete_sign_in(request, response, p["sub"]), "recovery_codes": codes}
 
@@ -355,6 +386,32 @@ def _admin_target(request: Request, username: str) -> dict:
     if not acct:
         raise HTTPException(status_code=404, detail="Not Found")
     return acct
+
+
+def _enrollment_link(user_id: str, created_by: str) -> dict:
+    from ...legal.identity import mfa
+    token, expires = mfa.issue_enrollment_token(user_id, created_by=created_by)
+    return {"token": token, "expires_at": expires, "path": f"/signin?enrol={token}"}
+
+
+@router.post("/users/{username}/enrollment-link")
+def admin_enrollment_link(username: str, request: Request):
+    """Issue a one-time authenticator enrolment link (shown once; replaces older links)."""
+    from ...legal.identity import mfa
+    acct = _admin_target(request, username)
+    if mfa.is_enrolled(acct["id"]):
+        raise HTTPException(status_code=409, detail="This account already has an authenticator. Reset it first.")
+    return {"enrollment": _enrollment_link(acct["id"], authmod.user_from_request(request)["sub"])}
+
+
+@router.post("/users/{username}/reset-mfa")
+def admin_reset_mfa(username: str, request: Request):
+    """Forget a lost authenticator: signs the person out everywhere and issues a new enrolment link."""
+    from ...legal.identity import mfa, sessions
+    acct = _admin_target(request, username)
+    mfa.reset(acct["id"])
+    sessions.revoke_all_for_user(acct["id"], reason="mfa_reset")
+    return {"ok": True, "enrollment": _enrollment_link(acct["id"], authmod.user_from_request(request)["sub"])}
 
 
 @router.post("/users/{username}/revoke-sessions")

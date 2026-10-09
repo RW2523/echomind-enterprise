@@ -66,7 +66,7 @@ function saveSettings(s: AppSettings) {
   } catch (_) {}
 }
 
-const App: React.FC = () => {
+const LegacyApp: React.FC = () => {
   const [activeView, setActiveView] = useState<AppView>(AppView.KNOWLEDGE_CHAT);
   const [settings, setSettingsState] = useState<AppSettings>(() => loadSettings());
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -169,6 +169,25 @@ const App: React.FC = () => {
       </main>
     </div>
   );
+};
+
+// EchoMind Law (S1.3): when the backend runs the Law edition, the whole interface is the Law
+// workspace, loaded on demand so other editions never download it. It mounts before any of the
+// legacy app's hooks (chat lists, transcription, voice) so none of them run in the Law edition.
+const LawApp = React.lazy(() => import('./law/app/LawApp'));
+
+const App: React.FC = () => {
+  const [edition, setEdition] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getAuthConfig().then((cfg: any) => { if (!cancelled) setEdition(cfg.edition || 'standard'); });
+    return () => { cancelled = true; };
+  }, []);
+  if (edition === null) return <div style={{ height: '100dvh' }} aria-busy="true" />;
+  if (edition === 'law') {
+    return <React.Suspense fallback={<div style={{ height: '100dvh' }} aria-busy="true" />}><LawApp /></React.Suspense>;
+  }
+  return <LegacyApp />;
 };
 
 export default App;
