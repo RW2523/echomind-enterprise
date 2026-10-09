@@ -23,7 +23,7 @@ from ...rag.parse import page_for_offset
 from .. import policy
 from ..audit.record import record
 from ..retrieval import embedder, registry
-from . import blobs, chunking, extract
+from . import blobs, chunking, extract, structure
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +156,16 @@ def _commit(v: dict, chunks, vecs: np.ndarray, findings, pages, offsets, x: "ext
                          "created_at) VALUES (?,?,?,?,?,?,?,?)",
                          (v["id"], v["matter_id"], x.text, json.dumps(maps["pages"]), json.dumps(maps["blocks"]),
                           json.dumps(maps["lines"]), json.dumps(maps["engines"]), policy.now_iso()))
+            conn.execute("DELETE FROM legal_clauses WHERE version_id=?", (v["id"],))
+            conn.execute("DELETE FROM legal_defined_terms WHERE version_id=?", (v["id"],))
+            conn.executemany("INSERT INTO legal_clauses (id, version_id, matter_id, number, label, heading, level, parent, char_start, "
+                             "char_end, page) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                             [(str(uuid.uuid4()), v["id"], v["matter_id"], c.number, c.label, c.heading, c.level, c.parent, c.start,
+                               c.end, c.page) for c in structure.clauses(x)])
+            conn.executemany("INSERT INTO legal_defined_terms (id, version_id, matter_id, term, char_start, char_end, term_start, "
+                             "term_end) VALUES (?,?,?,?,?,?,?,?)",
+                             [(str(uuid.uuid4()), v["id"], v["matter_id"], t.term, t.start, t.end, t.term_start, t.term_end)
+                              for t in structure.defined_terms(x)])
             conn.executemany("INSERT INTO legal_marks (id, version_id, matter_id, kind, char_start, char_end, page, meta_json) "
                              "VALUES (?,?,?,?,?,?,?,?)",
                              [(str(uuid.uuid4()), v["id"], v["matter_id"], m.kind, m.start, m.end, m.page, json.dumps(m.meta))

@@ -516,6 +516,29 @@ Every entry records the options considered, the recommendation, the consequence 
   - OCR accuracy is measured only on clean synthetic scans so far (character error rate 0.0 at 100–200 dpi). Real scans will be measured on pilot samples.
   - The Docker image needs `tesseract-ocr` and `tesseract-ocr-eng` (at the first approved build).
 
+### D-035 Clauses, defined terms and pinpointed citations — RECORDED (S2.1b; RAG-01)
+- **Clauses:**
+  - From Word's numbering when a paragraph has it (the full path, e.g. "12.3(b)").
+  - Otherwise from drafting markers at a line start:
+    - "Article IV", "Part 2", and "Schedule 2", "Exhibit A", "Annex" or "Appendix" (level 0);
+    - "Section 5.1", "Clause 4" and "§ 7";
+    - a bare "4.1" or "12." followed by a capital, a quote or a bracket;
+    - "(a)" and "(i)" under the last numbered clause.
+  - A four-digit year, an amount ("12,000") or a date ("1 January") is not a clause.
+  - A clause runs until the next clause at its level or higher, so it contains its sub-clauses.
+  - Headers, footers and footnotes are never clauses.
+  - Stored in `legal_clauses` (migration 0014).
+- **Defined terms:** `"Term" means …` (also "shall mean", "has the meaning", "includes", "refers to"), and `Name (the "Term")`, with straight or curly quotes. Stored in `legal_defined_terms` with the definition sentence. Usage checks come in S3.5.
+- **Pinpointed citations:**
+  - A search quote stays its ~600-character window. Its **focus** is the sentence in it that shares most words with the question.
+  - The citation gives the focus offsets and the clause, page and line where the focus is. Research sources pass the clause to the model (`clause="12.3(b)"`).
+  - Versions read before S2.1 have no maps and keep their passage pages.
+- **Purges** remove clauses and terms, with verification.
+- **Limits:**
+  - These are heuristics. Unusual numbering ("1-1", "A.1.a") is not recognised yet.
+  - The focus is lexical, not semantic.
+  - Definitions inside tables are found only when they use the patterns above.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

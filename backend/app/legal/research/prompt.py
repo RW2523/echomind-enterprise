@@ -45,8 +45,9 @@ def build(question: str, passages: list[dict]) -> list[dict]:
         pages = c.get("page_start") or ""
         if pages and c.get("page_end") and c["page_end"] != c["page_start"]:
             pages = f"{c['page_start']}-{c['page_end']}"
+        clause = f' clause="{_attr(c["clause"])}"' if c.get("clause") else ""
         blocks.append(f'<source n="{n}" document="{_attr(c["document_title"])}" version="{_attr(c["version_number"])}" '
-                      f'pages="{_attr(pages)}">\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
+                      f'pages="{_attr(pages)}"{clause}>\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
     user = f"Question: {question}\n\nSources:\n" + "\n\n".join(blocks) + "\n\n" + REMINDER
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
