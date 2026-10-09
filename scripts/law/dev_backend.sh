@@ -50,4 +50,6 @@ fi
 echo "EchoMind Law dev backend: http://127.0.0.1:${PORT}  data=${DATA}"
 echo "  sign in as ${AUTH_ADMIN_USER}; password in ${DATA}/dev_admin_password"
 cd "$ROOT/backend"
-exec python3 -m uvicorn app.main:app --host 127.0.0.1 --port "$PORT" ${LAW_RELOAD:+--reload}
+# LAW_UVICORN_LOOP=asyncio for the egress test (T11): uvloop connects in C, out of sight of the
+# Python recorder; the asyncio loop goes through the socket module, so every attempt is recorded.
+exec python3 -m uvicorn app.main:app --host 127.0.0.1 --port "$PORT" ${LAW_RELOAD:+--reload} ${LAW_UVICORN_LOOP:+--loop "$LAW_UVICORN_LOOP"}

@@ -264,8 +264,8 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | OPT-03 | MISSING | S4.3 | Needs business approval |
 | OPT-04 | BLOCKED | S4.4 | Licensed source plus network approval |
 | OPT-05 | MISSING | S4.5 | Needs business approval |
-| OPS-01 | PARTIAL | S1.0 + OPS | S1.0: versioned migrations with down scripts + CLI; isolated compose stack. LUKS needs host root |
-| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7 |
+| OPS-01 | PARTIAL | S1.0, S1.12 + OPS | S1.0: versioned migrations with down scripts + CLI; isolated compose stack. S1.12: encrypted backup and restore (`app.legal.backup`), rollback guard for audit, holds and source permissions, DR drill on real data (D-032). Runbooks and LUKS (host root) remain |
+| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7. S1.12: `security_suite.sh`, `injection_probe.py`, `egress_test.sh`, `dr_drill.sh`, `legacy_smoke.py` + legacy browser smoke, `stability_runs.sh`. Load test (T12) and CI remain |
 
 ## Known risks right now
 

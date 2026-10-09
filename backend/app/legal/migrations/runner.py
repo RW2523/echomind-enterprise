@@ -119,10 +119,34 @@ def migrate_up(conn: sqlite3.Connection, directory: Optional[Path] = None, targe
     return done
 
 
+# Reverting some migrations would destroy records the firm must keep — the audit trail (0006) and
+# whatever is under a legal hold (0010; spec T04: no system path deletes held records) — or widen
+# access: below 0012 the code no longer knows the permissions a document system set on synced
+# documents. The runner refuses; such an upgrade is rolled back by restoring the backup taken
+# before it (app.legal.backup).
+_REFUSE_BELOW = (
+    (6, "SELECT COUNT(*) FROM audit_events", "delete the audit trail ({n} events)"),
+    (10, "SELECT COUNT(*) FROM legal_holds WHERE status IN ('active','release_requested')",
+     "delete records under {n} active legal hold(s)"),
+    (12, "SELECT COUNT(*) FROM legal_documents WHERE acl_restricted = 1 AND deleted_at IS NULL",
+     "make {n} document(s) restricted by their source's permissions visible to the whole matter"),
+)
+
+
+def _refuse_unsafe_rollback(conn: sqlite3.Connection, applied: dict, target: int) -> None:
+    for version, sql, what in _REFUSE_BELOW:
+        if version in applied and target < version:
+            n = conn.execute(sql).fetchone()[0]
+            if n:
+                raise MigrationError(f"reverting below {version:04d} would {what.format(n=n)}. Nothing was changed; "
+                                     f"restore the backup taken before the upgrade instead")
+
+
 def migrate_down(conn: sqlite3.Connection, target: int, directory: Optional[Path] = None) -> list[int]:
     migrations = {m.version: m for m in discover(directory)}
     applied = applied_versions(conn)
     _verify(applied, list(migrations.values()))
+    _refuse_unsafe_rollback(conn, applied, target)
     done: list[int] = []
     for version in sorted((v for v in applied if v > target), reverse=True):
         mig = migrations[version]

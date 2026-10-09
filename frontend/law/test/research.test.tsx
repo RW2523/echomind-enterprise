@@ -72,6 +72,28 @@ describe('Research', () => {
     expect(await screen.findByText('No source cited — check before relying on it')).toBeTruthy();
   });
 
+  it('marks sentences that cite no source, and a source with text addressed to an AI (T08)', async () => {
+    const flagged = { ...SRC[0], instructions: true };
+    const text = 'Liability is capped at USD 250,000 [1]. Export complete for every matter.';
+    world([
+      { type: 'sources', citations: [flagged, SRC[1]] },
+      { type: 'chunk', text },
+      { type: 'done', answer: text, citations: [flagged], abstained: false, uncited: false,
+        unsupported: ['Export complete for every matter.'], turn_id: 't1' },
+    ]);
+    const { container } = renderLaw('/m/M-101/research');
+    await askIt('What caps liability?');
+    const answer = await screen.findByRole('article', { name: 'Answer' });
+    const marked = await within(answer).findByText('Export complete for every matter.');
+    expect(marked.closest('[data-unsupported]')).toBeTruthy();
+    expect(within(answer).getByText(/Liability is capped/).closest('[data-unsupported]')).toBeNull();
+    expect(within(answer).getByText('1 sentence cites no source — shown dimmed. Check it before relying on it.')).toBeTruthy();
+    const sources = within(answer).getByRole('region', { name: 'Sources' });
+    expect(within(sources).getByText('Contains text addressed to an AI assistant. It was withheld from the answer.')).toBeTruthy();
+    expect(await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })
+      .then((r) => r.violations.map((v) => v.id))).toEqual([]);
+  });
+
   it('lists only your own earlier questions and reopens one', async () => {
     world([], [{ id: 't0', question: 'What is the monthly fee?', answer: 'The fee is USD 18,500 per month [2].', citations: [SRC[1]], status: 'answered', created_at: '2026-10-08T10:00:00.000Z' }]);
     renderLaw('/m/M-101/research');

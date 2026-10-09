@@ -49,7 +49,8 @@ def _source(n: int, p: dict) -> dict:
     c = p["citation"]
     return {"n": n, "document_id": c["document_id"], "document_title": c["document_title"], "version_id": c["version_id"],
             "version_number": c["version_number"], "page_start": c["page_start"], "page_end": c["page_end"],
-            "char_start": c["char_start"], "char_end": c["char_end"], "text": p["text"]}
+            "char_start": c["char_start"], "char_end": c["char_end"], "text": p["text"],
+            "instructions": prompt.addressed_to_ai(p["text"])}       # withheld from the model's copy (T08)
 
 
 def _save(turn: dict) -> None:
@@ -82,14 +83,18 @@ async def _answer(scope, principal: dict, question: str, turn: dict) -> AsyncIte
                 await run_in_threadpool(scopemod.recheck, scope)        # raises ScopeRevoked
                 last_check = time.monotonic()
             text += piece
-            yield _event({"type": "chunk", "text": piece})
+            shown = piece.replace("<think>", "").replace("</think>", "")
+            if shown:
+                yield _event({"type": "chunk", "text": shown})
         await run_in_threadpool(scopemod.recheck, scope)
+        text = prompt.clean(text)
         numbers = prompt.cited_numbers(text, len(sources))
         abstained = prompt.is_abstention(text)
         status, answer = ("abstained" if abstained else "answered"), text
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         yield _event({"type": "done", "answer": text, "citations": citations, "abstained": abstained,
-                      "uncited": not abstained and not numbers, "turn_id": turn["id"]})
+                      "uncited": not abstained and not numbers, "unsupported": prompt.unsupported(text, len(sources)),
+                      "turn_id": turn["id"]})
     except scopemod.ScopeRevoked:
         status, answer, citations = "scope_revoked", None, []
         yield _event({"type": "scope_revoked"})
@@ -132,5 +137,12 @@ def research_history(matter_id: str, request: Request):
     with get_conn() as conn:
         rows = conn.execute("SELECT id, question, answer, citations_json, status, created_at FROM legal_research_turns "
                             "WHERE matter_id=? AND owner_id=? ORDER BY created_at DESC LIMIT 50", (matter_id, p["sub"])).fetchall()
-    return {"turns": [{"id": r[0], "question": r[1], "answer": r[2], "citations": json.loads(r[3] or "[]"), "status": r[4],
-                       "created_at": r[5]} for r in rows]}
+    return {"turns": [_turn(r) for r in rows]}
+
+
+def _turn(r) -> dict:
+    citations = json.loads(r[3] or "[]")
+    # Every valid number the answer cites was saved, so the highest saved one bounds the valid range.
+    unsupported = prompt.unsupported(r[2], max((c["n"] for c in citations), default=0)) if r[2] and r[4] == "answered" else []
+    return {"id": r[0], "question": r[1], "answer": r[2], "citations": citations, "status": r[4], "created_at": r[5],
+            "unsupported": unsupported}

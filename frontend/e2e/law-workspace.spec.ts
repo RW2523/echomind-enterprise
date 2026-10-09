@@ -23,6 +23,24 @@ function totp(secretB32: string): string {
   return String((h.readUInt32BE(o) & 0x7fffffff) % 1_000_000).padStart(6, '0');
 }
 
+/** Sends one authenticator code and reports what the server said (not what the page shows: an
+ *  earlier refusal's alert can still be on screen when the next code is sent). */
+async function sendCode(page: Page, code: string): Promise<boolean> {
+  const field = page.getByLabel('Authenticator code');
+  if (!(await field.waitFor({ state: 'visible', timeout: 15_000 }).then(() => true, () => false))) {
+    const shotPath = path.join(HERE, '..', 'test-results', `signin-${Date.now()}.png`);
+    await page.screenshot({ path: shotPath }).catch(() => undefined);
+    throw new Error(`no authenticator field (at ${page.url()}; screenshot ${shotPath})`);
+  }
+  await field.fill(code);
+  const [resp] = await Promise.all([
+    page.waitForResponse((r) => r.url().endsWith('/api/auth/mfa/verify') && r.request().method() === 'POST'),
+    page.getByRole('button', { name: 'Verify' }).click(),
+  ]);
+  if (resp.ok()) await page.waitForURL('**/home');
+  return resp.ok();
+}
+
 async function signIn(page: Page, name: string) {
   const c = creds()[name];
   await page.goto('/signin');
@@ -30,13 +48,7 @@ async function signIn(page: Page, name: string) {
   await page.getByLabel('Password').fill(c.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   for (let attempt = 0; attempt < 2; attempt++) {
-    await page.getByLabel('Authenticator code').fill(totp(c.totp_secret));
-    await page.getByRole('button', { name: 'Verify' }).click();
-    const outcome = await Promise.race([
-      page.waitForURL('**/home').then(() => 'ok'),
-      page.getByRole('alert').waitFor().then(() => 'refused'),
-    ]);
-    if (outcome === 'ok') return;
+    if (await sendCode(page, totp(c.totp_secret))) return;
     // A code is single-use: if this person already signed in during this 30 s step, wait for the next one.
     await page.waitForTimeout(31_000 - (Date.now() % 30_000));
   }
@@ -116,6 +128,25 @@ test('signing out ends the session for every tab', async ({ page, context }) => 
   await page.waitForURL('**/signin');
   await other.reload();
   await other.waitForURL('**/signin**');
+});
+
+test('a refused authenticator code keeps the code step, and the next code signs in', async ({ browser }) => {
+  test.setTimeout(120_000);
+  const page = await (await browser.newContext()).newPage();
+  const c = creds()['carol'];
+  await page.goto('/signin');
+  await page.getByLabel('Username').fill('carol');
+  await page.getByLabel('Password').fill(c.password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  expect(await sendCode(page, totp(c.totp_secret) === '000000' ? '111111' : '000000')).toBe(false);
+  await expect(page.getByRole('alert')).toContainText('not accepted');
+  await page.waitForTimeout(31_000 - (Date.now() % 30_000));           // as long as the sign-in helper waits
+  await expect(page.getByLabel('Authenticator code')).toBeVisible();   // still on the code step
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (await sendCode(page, totp(c.totp_secret))) return;
+    await page.waitForTimeout(31_000 - (Date.now() % 30_000));         // that code was already used this step
+  }
+  throw new Error('carol could not sign in after a refused code');
 });
 
 test('a wall approved by a second managing partner hides a matter from its own lead', async ({ browser }) => {

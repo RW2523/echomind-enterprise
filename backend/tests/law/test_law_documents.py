@@ -218,3 +218,18 @@ def test_law_documents_never_reach_the_legacy_index(docs, fresh_db):
         p = fresh_db.parent / name
         if p.is_file() and name != "echomind.sqlite" and not name.startswith("echomind.sqlite"):
             assert b"PELICAN" not in p.read_bytes(), name
+
+
+def test_t02_a_removed_member_cannot_download_what_they_could_a_moment_ago(docs):
+    """T02: removing a membership ends later downloads; the earlier one was never cacheable."""
+    alice, carol = as_user(docs, "alice"), as_user(docs, "carol")
+    mid = docs["matters"]["M-101"]["id"]
+    doc = upload(alice, mid, "engagement.txt", "Engagement letter (fictional).").json()["document"]
+    url = f"/api/legal/matters/{mid}/documents/{doc['id']}/versions/{doc['current_version']['id']}/file"
+    first = carol.get(url)
+    assert first.status_code == 200 and first.headers["cache-control"] == "no-store"
+    members = alice.get(f"/api/legal/matters/{mid}/memberships").json()["memberships"]
+    mine = next(m for m in members if m["username"] == "carol")
+    assert alice.delete(f"/api/legal/matters/{mid}/memberships/{mine['id']}", headers=csrf_headers(alice)).status_code == 200
+    assert carol.get(url).status_code == 404
+    assert carol.get(f"/api/legal/matters/{mid}/documents").status_code == 404

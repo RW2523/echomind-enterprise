@@ -8,7 +8,7 @@
 | ID | Feature | Status today | Slice(s) | Blocked by |
 |---|---|---|---|---|
 | SEC-01 | Mandatory auth, SSO/OIDC, sessions, MFA | PARTIAL | S1.1 | OIDC verification needs the firm IdP (P-011) |
-| SEC-02 | Tenant/client/matter CRUD, RBAC+ABAC, ethical walls | MISSING | S1.2, S1.3, S1.4 | — |
+| SEC-02 | Tenant/client/matter CRUD, RBAC+ABAC, ethical walls | DONE (S1.2–S1.5; this row was stale until S1.12) | S1.2, S1.3, S1.4 | — |
 | SEC-03 | Matter-aware indexes, ACL before retrieval and jobs | DONE (S1.6 documents and partitions; S1.7 existing modules closed, research and voice matter-scoped) | S1.6, S1.7 | — |
 | SEC-04 | Audit, admin reports, SIEM export | DONE (forwarder awaits network approval) | S1.5 | — |
 | SEC-05 | Consent, pause, revoke, provenance | DONE (mechanism; P-001 wording and rules await counsel) | S1.8 | Policy text (P-001) |
@@ -32,8 +32,8 @@
 | OPT-03 | Draft time entries | MISSING | S4.3 | Business approval |
 | OPT-04 | Regulatory monitoring via an approved source | MISSING | S4.4 | **Licensed source and network approval** |
 | OPT-05 | Four-perspective review panel | MISSING | S4.5 | Business approval, benchmark |
-| OPS-01 | Migrations, rollback, encrypted backups, runbooks | PARTIAL | S1.0 + OPS track | LUKS on target host (D-014) |
-| OPS-02 | Golden, legal, security, load and recovery test harness | PARTIAL | S1.0, S1.12, S2.8, S3.9 + OPS track | Load window approval (D-002) |
+| OPS-01 | Migrations, rollback, encrypted backups, runbooks | PARTIAL (S1.12: encrypted backup and restore, rollback guard, DR drill; runbooks and LUKS remain) | S1.0, S1.12 + OPS track | LUKS on target host (D-014) |
+| OPS-02 | Golden, legal, security, load and recovery test harness | PARTIAL (S1.12: security suite, injection probe, egress capture, DR drill, legacy smoke, stability runs; load test and CI remain) | S1.0, S1.12, S2.8, S3.9 + OPS track | Load window approval (D-002) |
 
 ### Spec section mapping
 - F1 → SEC-02. F2 → SEC-01 + SEC-04. F3 → SEC-05 + SEC-06 (labels) + SEC-07. F4 → SEC-06. F5 → SEC-08.
