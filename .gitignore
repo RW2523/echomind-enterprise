@@ -65,8 +65,12 @@ rag-platform/
 # Dev data (fictional fixtures, dev secrets) and the isolated stack's secrets file.
 /.law-data/
 /.law-data-e2e/
+/.law-data-legacy/
+/.law-data-legacy.log
 /.law-secrets/
 /.law-dms-e2e/
+/.law-egress/
+/.law-stability/
 /frontend/test-results/
 /frontend/playwright-report/
 .env.law

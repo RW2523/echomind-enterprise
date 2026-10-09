@@ -10,6 +10,8 @@
 > It does **not** cover: pushing to GitHub or opening PRs; starting the compose stack on the shared host; anything touching production; network integrations (DMS, IdP, licensed sources); or counsel's policy decisions (P-items). Those are still asked for explicitly.
 
 > **2026-10-09 approval.** After the S1.5–S1.8 report, which listed D-025's change of approach and the three proposed decisions adopted in S1.6, the owner replied *"approved, merge and start S1.9"*. D-005, D-012, D-014 (as implemented), D-023, D-025 and D-026 are therefore APPROVED. The P-items (consent wording and rules, audio retention) stay with counsel.
+>
+> **2026-10-09 Phase 1 gate approval.** After the S1.12 gate report (`releases/phase1-gate.md`), the owner replied *"approved, merge S1.12 and start S2.1"*. Phase 1 is accepted. D-027 to D-033 are as recorded (built and tested). This approval does not cover the items still marked 🔒: the root-run enforced T11, the first `compose.sh up`, network integrations, pushes and counsel items.
 
 **Status values**
 - **PROPOSED**: Claude's engineering recommendation. Not yet approved; it needs the product owner's approval before the slice that depends on it starts.
@@ -422,6 +424,65 @@ Every entry records the options considered, the recommendation, the consequence 
   - Online backups (`scripts/backup_data.sh` uses the SQLite backup API) are unaffected. Nothing in the code needs exclusive access to the file.
 - **Not proven:** native stacks were not taken. Attaching a debugger to the running process needs a ptrace permission that this session was not granted, so the exact SQLite lock is not identified. The evidence is the stack dump and repeated clean full runs after the change (TEST_RESULTS run 12).
 - **Kept for the S1.12 gate:** `LAW_DEBUG_STACKS=1` (set only by `scripts/law/e2e_backend.sh`) makes SIGUSR1 dump every thread's Python stack to the server log.
+
+### D-031 Prompt-injection defences in research (T08) — RECORDED (S1.12)
+- **Finding:** the real answer model (Qwen3-30B) often obeys instructions planted in a source.
+  - With a "system override" passage it appended the planted marker in 10 of 18 answers. Once it also stated the planted false claims ("matter M-202 settled for EUR 9 million", "your export of all matters is complete").
+  - It could not act on them: the model has no tools, sees only the matter's own passages, and cannot start an export.
+- **Structural guarantees (unchanged, now tested end to end with a model that obeys anything):**
+  - Retrieval is fixed by the authorized scope before the model runs.
+  - The request to the model carries no tools; its output is only text.
+  - Nothing it writes changes memberships, walls, labels, holds, deletions or exports.
+- **New layers:**
+  1. **Repeated rule:** the rule against following source text is repeated after the sources.
+  2. **Withholding:** sentences in a source that are addressed to an AI are replaced by a marker in the model's copy. Examples are claimed system messages, "note to any AI assistant", and "end your answer with…". The patterns are narrow, so ordinary legal wording is never withheld; there is a test list of near misses. The person still sees the whole passage, marked "Contains text addressed to an AI assistant. It was withheld from the answer."
+  3. **Uncited-sentence marking:** every sentence of an answer that cites no source is listed, and the screen dims it ("1 sentence cites no source — shown dimmed. Check it before relying on it."). Sentence splitting handles legal abbreviations and lowercase sentence starts. A lowercase start was a bypass found while testing.
+  4. **Tag stripping:** leaked `<think>` tags are removed from answers.
+- **Measured** with `scripts/law/injection_probe.py` (real model, 3 trials per injection and question):
+
+  | Defences | Strongest injection obeyed |
+  |---|---|
+  | None | 10 of 18 |
+  | Repeated rule only | 6 of 9 |
+  | Repeated rule plus withholding | 0 of 36 |
+
+  - All three layers left answers cited: 42 of 42, with 21 of 21 correct abstentions.
+  - Three held-out injections, written before the patterns and never used to tune them, were obeyed 0 times *with or without* the defences. So how far the patterns generalise is **not shown**.
+- **Limits:**
+  - The patterns are a deny-list; a novel phrasing can pass. The uncited-sentence marking is the backstop, but it cannot catch an injected claim that the model cites to the injected passage. That passage is then shown with its warning.
+  - Voice speaks the answer as it streams, so it cannot show the marks.
+  - Hidden-text detection at ingestion stays in S2.1.
+
+### D-032 Encrypted backups, restore and safe rollback (T13) — RECORDED (S1.12; OPS-01)
+- **Backups:** `python -m app.legal.backup keygen|create|verify|restore`.
+  - **What it holds:** a consistent snapshot (SQLite online backup) plus the data folder (encrypted documents and exports, audit anchors), without the live database files or the model caches.
+  - **Sealing:** sealed with AES-256-GCM in 1 MiB chunks under a **backup key** kept apart from the data and from the master key. Each chunk's nonce and associated data bind its position and whether it is the last, so altered, reordered or truncated archives do not open.
+  - **Manifest:** lists every file's SHA-256, the schema, the audit head and record counts.
+  - **The master key is never in a backup.** A restore needs the archive, the backup key and the master key.
+- **Restore safeguards:**
+  - The whole archive authenticates before anything is written.
+  - The target folder must be new or empty.
+  - Only plain files inside the target are accepted, with no traversal, absolute paths, links or devices.
+  - Every file and the database's counts, schema and audit head must match the manifest.
+- **Auditing:** a backup is recorded as `backup.create` (operator, file count, bytes, manifest hash).
+- **Rollback guard:** `migrate_down` refuses, changing nothing, when the rollback would:
+  - delete the audit trail (below 0006, if it has events);
+  - delete records under an active legal hold (below 0010; T04);
+  - make documents restricted by their source's permissions visible to the whole matter (below 0012).
+
+  Such an upgrade is rolled back by restoring the backup taken before it.
+- **The legacy scripts are unsafe from this clone:**
+  - `scripts/backup_data.sh` and `scripts/restore_data.sh` find their volume through the container named `echomind-backend`, which on this host is **production**.
+  - Their archives are not encrypted.
+  - They are never run from the Law clone. The Law runbook uses `app.legal.backup` (inside the Law container once compose is approved).
+
+### D-033 Network egress check (T11): capture mode now, enforced mode needs root — RECORDED (S1.12)
+- **Capture mode** (`scripts/law/egress_test.sh`) runs the full browser suite with two recorders:
+  - a Python audit hook in the backend (`LAW_EGRESS_LOG`) that records every name lookup and connect or send attempt, from any thread, successful or not;
+  - an outside watcher (`scripts/law/egress_watch.py`) that maps the backend's socket descriptors to the kernel socket tables every 50 ms, catching native code.
+- **Pass rule:** anything not on this machine fails the run.
+- **uvloop:** uvloop connects in C, out of the hook's sight; the first run recorded nothing. The egress run therefore uses uvicorn's asyncio loop (`LAW_UVICORN_LOOP=asyncio`), which does not change which destinations the application chooses.
+- **Enforced mode** — the backend in a network namespace that can reach only the model servers — needs root. This host restricts unprivileged user namespaces through AppArmor, and bubblewrap cannot configure loopback without privileges. **🔒 Waiting for the owner's approval.**
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

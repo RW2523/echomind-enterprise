@@ -8,7 +8,7 @@ import Toolbar from '../ui/Toolbar';
 import { ErrorNote, Skeleton, StatusPill } from '../ui/primitives';
 
 type Phase = 'idle' | 'reading' | 'writing' | 'done' | 'abstained' | 'revoked' | 'error';
-interface Answer { question: string; text: string; sources: ResearchSource[]; cited: number[]; phase: Phase; uncited?: boolean }
+interface Answer { question: string; text: string; sources: ResearchSource[]; cited: number[]; phase: Phase; uncited?: boolean; unsupported?: string[] }
 
 const pages = (s: ResearchSource) => (s.page_start ? (s.page_end && s.page_end !== s.page_start ? `pp. ${s.page_start}–${s.page_end}` : `p. ${s.page_start}`) : '');
 const plain = (t: string) => t.replace(/(^|\s)#{1,6}\s+/g, '$1');
@@ -44,7 +44,7 @@ export default function MatterResearch() {
         if (ev.type === 'sources') update({ sources: ev.citations ?? [] });
         else if (ev.type === 'chunk') update({ text: state.text + (ev.text ?? ''), phase: 'writing' });
         else if (ev.type === 'done') update({ text: ev.answer ?? state.text, cited: (ev.citations ?? []).map((c: ResearchSource) => c.n),
-          phase: ev.abstained ? 'abstained' : 'done', uncited: !!ev.uncited });
+          phase: ev.abstained ? 'abstained' : 'done', uncited: !!ev.uncited, unsupported: ev.unsupported ?? [] });
         else if (ev.type === 'scope_revoked') update({ text: '', sources: [], phase: 'revoked' });
         else if (ev.type === 'error') update({ phase: 'error' });
       }, ctrl.signal);
@@ -59,7 +59,7 @@ export default function MatterResearch() {
 
   const show = (t: ResearchTurn) => {
     setFocus(null);
-    setAnswer({ question: t.question, text: t.answer ?? '', sources: t.citations, cited: t.citations.map((c) => c.n),
+    setAnswer({ question: t.question, text: t.answer ?? '', sources: t.citations, cited: t.citations.map((c) => c.n), unsupported: t.unsupported ?? [],
       phase: t.status === 'answered' ? 'done' : t.status === 'abstained' ? 'abstained' : t.status === 'scope_revoked' ? 'revoked' : 'error' });
   };
 
@@ -122,9 +122,14 @@ function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; o
           </div>
         )}
         {(a.phase === 'writing' || a.phase === 'done') && (
-          <p className="lw-serif lw-answer-text">{withCitations(plain(a.text), a.sources, onFocus)}</p>
+          <p className="lw-serif lw-answer-text">{withMarks(a.text, a.phase === 'done' ? a.unsupported ?? [] : [], a.sources, onFocus)}</p>
         )}
         {a.phase === 'done' && a.uncited && <StatusPill tone="attention">No source cited — check before relying on it</StatusPill>}
+        {a.phase === 'done' && !a.uncited && (a.unsupported?.length ?? 0) > 0 && (
+          <StatusPill tone="attention">{a.unsupported!.length === 1
+            ? '1 sentence cites no source — shown dimmed. Check it before relying on it.'
+            : `${a.unsupported!.length} sentences cite no source — shown dimmed. Check them before relying on them.`}</StatusPill>
+        )}
       </div>
       {cited.length > 0 && (
         <section aria-label="Sources" style={{ marginTop: 18 }}>
@@ -140,6 +145,26 @@ function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; o
       )}
     </article>
   );
+}
+
+/** The answer with each sentence that cites no source dimmed (T08): anything a document talked
+ * the model into saying, or that it added itself, is not tied to the matter's documents. */
+function withMarks(text: string, unsupported: string[], sources: ResearchSource[], onFocus: (n: number) => void): React.ReactNode {
+  const out: React.ReactNode[] = [];
+  let at = 0;
+  unsupported.forEach((sentence, i) => {
+    const start = text.indexOf(sentence, at);
+    if (start < 0) return;
+    if (start > at) out.push(<React.Fragment key={`t${i}`}>{withCitations(plain(text.slice(at, start)), sources, onFocus)}</React.Fragment>);
+    out.push(
+      <span key={`u${i}`} className="lw-unsupported" data-unsupported="">
+        <span>{plain(sentence)}</span><span className="lw-sr"> (no source cited)</span>
+      </span>,
+    );
+    at = start + sentence.length;
+  });
+  if (at < text.length) out.push(<React.Fragment key="end">{withCitations(plain(text.slice(at)), sources, onFocus)}</React.Fragment>);
+  return out;
 }
 
 function withCitations(text: string, sources: ResearchSource[], onFocus: (n: number) => void): React.ReactNode {
@@ -163,6 +188,7 @@ function SourceItem({ s, active }: { s: ResearchSource; active: boolean }) {
       <div style={{ minWidth: 0 }}>
         <blockquote className="lw-serif">{plain(s.text)}</blockquote>
         <div className="lw-meta">{s.document_title} · v{s.version_number}{pages(s) ? ` · ${pages(s)}` : ''}</div>
+        {s.instructions && <div className="lw-meta lw-source-flag">Contains text addressed to an AI assistant. It was withheld from the answer.</div>}
       </div>
     </li>
   );

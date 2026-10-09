@@ -7,8 +7,8 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-09 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.12-gate` |
-| Phase | Phase 1: S1.0–S1.11 merged into `feature/echomind-law` (standing approval to build and merge slices in order); S1.12 gate next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.1-ingestion` |
+| Phase | Phase 1 complete: S1.0–S1.12 merged into `feature/echomind-law`; gate accepted by the owner on 2026-10-09. Phase 2 started (S2.1) |
 | Plan documents | Committed to `feature/echomind-law` |
 | Migrations | `0001`–`0012` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
@@ -221,11 +221,36 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - `get_conn` now keeps one idle WAL connection open, and the suite then passed 5 runs in a row (60/60).
   - Native stacks were not taken (no ptrace permission), so the exact SQLite lock is not proven. `LAW_DEBUG_STACKS=1` stack dumps stay on for E2E.
 
+### Session 2 (continued) — S1.12 Phase 1 gate
+- **Gate report:** `docs/echomind-law/releases/phase1-gate.md`, awaiting the owner's sign-off.
+- **T08 (D-031):**
+  - The real model obeyed a planted "system override" in 10 of 18 answers. It could only write text, never act.
+  - Now AI-directed text is withheld from the model (the person sees it marked), the rule is repeated after the sources, uncited sentences are dimmed, and think tags are stripped.
+  - Result: 0 of 36 obeyed. A lowercase-sentence bypass in the splitter was found and fixed.
+- **T13 (D-032):**
+  - `app.legal.backup`: chunked AES-256-GCM under a separate backup key; the restore authenticates first.
+  - `migrate_down` refuses to drop the audit trail, held records or source permissions.
+  - `dr_drill.sh` passed on real browser-suite data.
+  - The legacy backup scripts find production's container on this host: never run them from this clone.
+- **T11 (D-033), capture mode:**
+  - Every attempt went to this machine; 0 elsewhere.
+  - uvloop hides connections from the recorder, so the egress run uses the asyncio loop.
+  - Enforced mode needs root (🔒).
+- **T14:**
+  - Standard-edition API smoke 10/10 and browser smoke 9/9 with the real models; the voice service boots.
+  - Found a pre-existing defect, also on `main`: Knowledge Chat cannot send right after sign-in until a reload. It is marked as an expected failure and offered as a separate task.
+- **Also:**
+  - T02 download-after-removal test.
+  - The E2E sign-in helper decides from the server's reply (a stale alert race caused one failed run).
+  - `security_suite.sh` and `stability_runs.sh`.
+  - FEATURE_MATRIX SEC-02 corrected (it was stale).
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
 - 2026-10-08: each slice S1.0–S1.3 approved and merged in turn; then a **standing approval** to build and merge slices in order, as recorded at the top of DECISIONS.md.
 - 2026-10-09: **APPROVED** after the S1.5–S1.8 report: D-005, D-012, D-014 (as implemented), D-023, D-025 and D-026. S1.9 started.
+- 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
 - Still 🔒:
   - the first `scripts/law/compose.sh up` on the shared host;
   - any push or PR to GitHub;
@@ -264,8 +289,8 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | OPT-03 | MISSING | S4.3 | Needs business approval |
 | OPT-04 | BLOCKED | S4.4 | Licensed source plus network approval |
 | OPT-05 | MISSING | S4.5 | Needs business approval |
-| OPS-01 | PARTIAL | S1.0 + OPS | S1.0: versioned migrations with down scripts + CLI; isolated compose stack. LUKS needs host root |
-| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7 |
+| OPS-01 | PARTIAL | S1.0, S1.12 + OPS | S1.0: versioned migrations with down scripts + CLI; isolated compose stack. S1.12: encrypted backup and restore (`app.legal.backup`), rollback guard for audit, holds and source permissions, DR drill on real data (D-032). Runbooks and LUKS (host root) remain |
+| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7. S1.12: `security_suite.sh`, `injection_probe.py`, `egress_test.sh`, `dr_drill.sh`, `legacy_smoke.py` + legacy browser smoke, `stability_runs.sh`. Load test (T12) and CI remain |
 
 ## Known risks right now
 
@@ -276,15 +301,26 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - E2E is not in CI. It runs locally with Playwright (`cd frontend && npx playwright test`); the research test uses the host's model server.
 - The compose overlay reuses the 1.4.1 backend image, which may not contain `cryptography`. Check or rebuild at the first approved `compose.sh up`.
 - Back up the master key separately from the data: without it the stored documents cannot be opened.
-- **Browser-suite stall: fixed but not proven (D-030).** Before the fix, the backend stalled inside SQLite in 3 of 5 full runs; after it, 5 of 5 runs were clean. The exact lock is unproven without native stacks. S1.12 reruns the suite repeatedly with stack dumps on (`kill -USR1 <uvicorn pid>`). If it ever stalls again, the next step is native stacks, which need the owner's permission to attach a debugger.
+- **Browser-suite stall: fixed but not proven (D-030).** Before the fix, the backend stalled inside SQLite in 3 of 5 full runs. Since the fix, 15 consecutive full runs are clean (5 in S1.11, 10 in the S1.12 gate). The exact lock is unproven without native stacks. Stack dumps stay on for browser runs (`kill -USR1 <uvicorn pid>`). If it ever stalls again, the next step is native stacks, which need the owner's permission to attach a debugger.
+- **Injection residuals (D-031):**
+  - A novel phrasing can pass the deny-list.
+  - An injected claim that the model cites to the injected passage is not dimmed; that passage shows its warning.
+  - Voice cannot show the marks.
+- **Egress is observed, not enforced (D-033)** until the root-run namespace test is approved.
+- **Never run `scripts/backup_data.sh` or `scripts/restore_data.sh` from this clone.** They find their volume through the `echomind-backend` container, which on this host is production. Use `python -m app.legal.backup`.
+- **Pre-existing on `main`:** standard-edition Knowledge Chat cannot send right after sign-in until a reload. There is an expected-failure test in `frontend/e2e-legacy`, and a separate task was suggested.
 - In Law there is no Boardroom or document studio until their matter-scoped replacements ship (S2.6, S3.x); live transcription needs the speech model, which is not on the dev host (the capture path is tested with a stand-in). This is intended (D-025, D-026).
 
 ## NEXT EXACT ACTION
 
-Start **S1.12 Phase 1 gate** on `law/s1.12-gate` (the exit needs the owner's sign-off):
-1. A consolidated security suite run: T01, T02, T03, T04, T08 (injection fixtures: a hidden-text PDF and an instruction-laden DOCX), T09 and T15.
-2. **T11:** a network-denied E2E. Backend and frontend run in a network namespace that may reach only the model servers; outbound connections are captured and must be empty. This needs host tooling; if it needs root, ask first.
-3. **T13:** a seeded upgrade from the S1.0 schema to head, rollback (migration downs), and an encrypted restore of the data folder plus the master key.
-4. **T14:** a legacy smoke test showing the standard edition still runs chat, Boardroom, voice and Document Studio (no Law gate) against a fresh database.
-5. **Stability:** the full browser suite 10 times in a row with stack dumps on (D-030). A single stall blocks the gate; it is reported with its dump.
-6. Threat-model review, and a release-gate report in `docs/echomind-law/releases/phase1-gate.md` with the commit, models and test outputs.
+1. **Owner:** review `docs/echomind-law/releases/phase1-gate.md` and sign off (or set conditions). Decide on the 🔒 items, including the root-run network-namespace T11 and the first `compose.sh up`.
+2. After sign-off, merge `law/s1.12-gate` into `feature/echomind-law`.
+3. Then start **S2.1 Legal ingestion quality (RAG-01)** on `law/s2.1-ingestion`, per IMPLEMENTATION_PLAN §7:
+   - OCR with per-page provenance (D-010);
+   - DOCX structure: numbering, tables, footnotes, headers; comments and tracked changes as metadata;
+   - exact offsets and page/line maps;
+   - clause segmentation and defined terms;
+   - **hidden-text and injection detection flags at ingestion** (completes T-06);
+   - async ingestion progress.
+
+   Tests first: an OCR fixture with known text (CER), DOCX numbering, an offset round trip.

@@ -79,10 +79,14 @@ export interface SearchResult { passages: Passage[]; abstained: boolean }
 export interface ResearchSource {
   n: number; document_id: string; document_title: string; version_id: string; version_number: number;
   page_start?: number | null; page_end?: number | null; char_start?: number | null; char_end?: number | null; text: string;
+  /** The passage contains text addressed to an AI; it was withheld from the model (T08). */
+  instructions?: boolean;
 }
 export interface ResearchTurn {
   id: string; question: string; answer: string | null; citations: ResearchSource[];
   status: 'answered' | 'abstained' | 'scope_revoked' | 'error'; created_at: string;
+  /** Sentences of the answer that cite no source, exactly as they appear in it. */
+  unsupported?: string[];
 }
 
 /** Meetings, consent and capture (S1.8). */

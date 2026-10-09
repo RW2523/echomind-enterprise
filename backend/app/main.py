@@ -5,6 +5,10 @@ import sys
 import threading
 import time
 from contextlib import asynccontextmanager
+
+if os.getenv("LAW_EGRESS_LOG"):                              # T11 test runs only: record every outbound attempt
+    from .legal import egress as _egress                     # stdlib only; before anything else is imported
+    _egress.install(os.environ["LAW_EGRESS_LOG"])
 from starlette.concurrency import run_in_threadpool
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
