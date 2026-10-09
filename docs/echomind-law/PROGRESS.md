@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-09 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.1-ingestion` |
-| Phase | Phase 1 complete: S1.0–S1.12 merged into `feature/echomind-law`; gate accepted by the owner on 2026-10-09. Phase 2 started (S2.1) |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.2-research` |
+| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1 merged into `feature/echomind-law`; S2.2 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0012` (Law edition only) |
+| Migrations | `0001`–`0015` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -245,6 +245,27 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - `security_suite.sh` and `stability_runs.sh`.
   - FEATURE_MATRIX SEC-02 corrected (it was stale).
 
+### Session 3 — S2.1 Legal ingestion quality (RAG-01)
+- **Audit:**
+  - PDFs were read from the text layer only (a scan failed with `no_text`).
+  - Word files lost automatic numbering, tables, headers, footers and footnotes, and tracked insertions were silently dropped.
+  - Only search chunks were stored, and status was per document.
+- **S2.1a (D-034):**
+  - `documents/extract.py` stores one canonical text per version (`legal_version_text`) with page, line and block maps.
+  - Marks (`legal_marks`) record hidden text left out, AI-directed text, tracked changes, comments and low-confidence OCR words.
+  - OCR runs with the local Tesseract on pages without text (D-010).
+  - Law passages are exact slices (`documents/chunking.py`); the legacy chunker is not used.
+  - Progress is written while a version is read. Purges remove all of it. Migration 0013.
+- **S2.1b (D-035):**
+  - Clauses come from Word numbering or drafting markers; defined terms are found where they are defined. Migration 0014.
+  - Citations carry a focus sentence with its clause, page and line, and research sources pass the clause to the model.
+  - A single line break is a visual wrap when splitting document sentences.
+- **S2.1c:**
+  - The reader endpoint and page, and per-version status (migration 0015).
+  - The inspector shows "What reading found", progress and a Read button.
+  - Research sources show the clause and line and open the document at the cited sentence.
+- **S2.1d:** a browser journey (scan, Word, citation → reader) and screenshots 21–23.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -313,14 +334,22 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-1. **Owner:** review `docs/echomind-law/releases/phase1-gate.md` and sign off (or set conditions). Decide on the 🔒 items, including the root-run network-namespace T11 and the first `compose.sh up`.
-2. After sign-off, merge `law/s1.12-gate` into `feature/echomind-law`.
-3. Then start **S2.1 Legal ingestion quality (RAG-01)** on `law/s2.1-ingestion`, per IMPLEMENTATION_PLAN §7:
-   - OCR with per-page provenance (D-010);
-   - DOCX structure: numbering, tables, footnotes, headers; comments and tracked changes as metadata;
-   - exact offsets and page/line maps;
-   - clause segmentation and defined terms;
-   - **hidden-text and injection detection flags at ingestion** (completes T-06);
-   - async ingestion progress.
-
-   Tests first: an OCR fixture with known text (CER), DOCX numbering, an offset round trip.
+Start **S2.2 Legal research (RAG-01)** on `law/s2.2-research`, per IMPLEMENTATION_PLAN §7. S2.1 is merged into `feature/echomind-law`.
+1. **Evidence contract:** `{answer, status, evidence[{doc_id, version_id, version_status, section/clause, page, line, char_range, quote, verification: verbatim|normalized|failed}], conflicts[], abstention_reason}`. Use the S2.1 focus and clause data.
+2. **Quote verification after generation:** each cited quote must exist in the authorised passage text, otherwise the claim is dropped or flagged. This builds on D-031's uncited-sentence check.
+3. **Versions:**
+   - Abstain when the evidence is insufficient.
+   - Detect conflicts across versions using per-version status.
+   - Default to signed-only (`executed`) evidence, with a visible switch.
+4. **Retrieval fixes:**
+   - R-4: short legal terms.
+   - R-6: pinpoints kept; the off-by-one error.
+   - R-7: answers drawing on several sources.
+   - R-8: a server-side lawyer persona, with no FMR text.
+5. **Delivery and UI:**
+   - Paragraph-level streaming.
+   - FindingSheet, Pinpoint, and an Inspector with the highlighted quote (the S2.1 reader), a version switcher, and "Copy with citations".
+6. **Tests:**
+   - T05 and T06.
+   - A legal golden set of at least 60 items, plus a held-out set of at least 30 that is never used for tuning.
+   - Citation precision, abstention accuracy, and p50/p95 latency.

@@ -12,7 +12,7 @@ from typing import Literal, Optional
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
 from ..audit.record import audited, note
@@ -78,7 +78,7 @@ def import_document(matter_id: str, request: Request, file: UploadFile = File(..
     wrapped = blobs.store(matter_id, version_id, data)
     try:
         v = repo.add_version(version_id, document_id, matter_id, checked.filename, checked.mime, len(data), sha,
-                             checked.pages, wrapped, p["sub"])
+                             checked.pages, wrapped, p["sub"], status=status)
     except BaseException:
         blobs.remove(matter_id, version_id)
         raise
@@ -142,6 +142,25 @@ def download(matter_id: str, document_id: str, version_id: str, request: Request
         "Content-Security-Policy": "default-src 'none'; sandbox",
         "Content-Disposition": f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(name)}",
     })
+
+
+@router.get(_BASE + "/{document_id}/versions/{version_id}/reader")
+@audited("document.read_text", object_type="document_version", object_param="version_id")
+def read_version(matter_id: str, document_id: str, version_id: str, request: Request):
+    """The version's text with its pages, lines, clauses, defined terms and marks (S2.1), under the
+    same rules as downloading the file. Never cached; the audit record holds counts, not content."""
+    p = principal_of(request)
+    require(p, "documents.read", matter_id)
+    v = repo.version_row(matter_id, document_id, version_id, p["sub"])
+    if not v:
+        raise _not_found()
+    body = repo.reader(version_id)
+    if body is None:
+        raise HTTPException(status_code=409, detail="This version was read before the document reader existed. Read it again to open it here.")
+    note(details={"chars": len(body["text"]), "marks": len(body["marks"]), "clauses": len(body["clauses"])})
+    body["version"] = {"id": v["id"], "number": v["number"], "filename": v["filename"], "status": v["status"],
+                       "index_status": v["index_status"]}
+    return JSONResponse({"reader": body}, headers={"Cache-Control": "no-store"})
 
 
 # ── Changing ─────────────────────────────────────────────────────────────────────

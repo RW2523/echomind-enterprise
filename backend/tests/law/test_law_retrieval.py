@@ -192,8 +192,8 @@ def test_a_clause_beyond_the_rerankers_reading_window_is_found_and_quoted(docs, 
     from conftest import overlap_rerank
     from app.legal.retrieval import search
 
-    async def short_sighted(query, hits, top_k):           # reads only the first 300 characters
-        return await overlap_rerank(query, [{**h, "text": h["text"][:300]} for h in hits], top_k)
+    async def short_sighted(query, hits, top_k):           # reads one window, far less than the 2,000-character passage
+        return await overlap_rerank(query, [{**h, "text": h["text"][:search.WINDOW_CHARS]} for h in hits], top_k)
     monkeypatch.setattr(search, "rerank", short_sighted)
     alice = as_user(docs, "alice")
     mid = docs["matters"]["M-101"]["id"]

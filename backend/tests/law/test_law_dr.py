@@ -17,6 +17,12 @@ import pytest
 
 from conftest import as_user, csrf_headers, index_all, make_user, search_in, upload
 
+def _head() -> list[int]:
+    from app.legal.migrations import runner
+    return [m.version for m in runner.discover()]
+
+
+HEAD = _head()
 MEMO = "Settlement memo (fictional). The KESTREL-5150 figure is privileged and confidential."
 HELD = "Board minutes (fictional). The PETREL-2020 resolution approved the investigation budget."
 
@@ -70,7 +76,7 @@ def test_t13_an_encrypted_backup_restores_everything_with_the_hold_in_force(seed
     assert first.status_code == 200 and MEMO.encode() in first.content
     original = first.content
     made = backup.create(str(tmp_path / "backups" / "law.emlb"), backup_key)
-    assert made["files"] >= 3 and made["counts"]["active_holds"] == 1 and made["schema"] == list(range(1, 13))
+    assert made["files"] >= 3 and made["counts"]["active_holds"] == 1 and made["schema"] == HEAD
 
     sealed = open(made["archive"], "rb").read()
     for plain in (b"KESTREL-5150", b"PETREL-2020", b"Beta Corp", b"M-202", b"alice", b"SQLite format 3"):
@@ -225,10 +231,10 @@ def test_t13_rolling_back_the_latest_upgrades_keeps_held_records(seeded, fresh_d
     from app.legal.migrations import runner
     before = _kept(fresh_db)
     with closing(sqlite3.connect(fresh_db)) as c:
-        assert runner.migrate_down(c, target=10) == [12, 11]  # connectors and exports reverted
+        assert runner.migrate_down(c, target=10) == HEAD[:9:-1]   # everything after records (exports, connectors, …)
     assert _kept(fresh_db) == before
     with closing(sqlite3.connect(fresh_db)) as c:
-        assert runner.migrate_up(c) == [11, 12]
+        assert runner.migrate_up(c) == HEAD[10:]
     assert _kept(fresh_db) == before
     r = held_deletion(as_user(seeded, "bob"), seeded)
     assert r.status_code == 409 and "legal hold" in r.json()["detail"]

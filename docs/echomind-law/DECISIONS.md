@@ -163,7 +163,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - **Isolation:** Law UI code lives in `frontend/law/`, and its design tokens are scoped under `[data-edition="law"]`, so the other verticals are visually unchanged.
 - **Consequence:** New runtime dependencies are reviewed in LICENSE_REGISTER.md before install.
 
-### D-010 OCR engine — PROPOSED
+### D-010 OCR engine — ADOPTED in S2.1a (Tesseract 5 run as a local program, not through pytesseract; see D-034)
 - **Decision:**
   - Use Tesseract 5 (Apache-2.0) via `pytesseract` with an `eng` traineddata pre-cached for offline use.
   - Run OCR per page only when PyMuPDF finds no text layer, or the text layer is below a density threshold.
@@ -483,6 +483,61 @@ Every entry records the options considered, the recommendation, the consequence 
 - **Pass rule:** anything not on this machine fails the run.
 - **uvloop:** uvloop connects in C, out of the hook's sight; the first run recorded nothing. The egress run therefore uses uvicorn's asyncio loop (`LAW_UVICORN_LOOP=asyncio`), which does not change which destinations the application chooses.
 - **Enforced mode** — the backend in a network namespace that can reach only the model servers — needs root. This host restricts unprivileged user namespaces through AppArmor, and bubblewrap cannot configure loopback without privileges. **🔒 Waiting for the owner's approval.**
+
+### D-034 How a legal document is read — RECORDED (S2.1a; RAG-01, T-06)
+- **One canonical text per version, stored** (`legal_version_text`):
+  - Page, line and block maps go with it.
+  - Every search passage is an exact slice of it, so a citation's offsets point at the characters it quotes.
+  - Law passages are cut by paragraph from this text (`documents/chunking.py`, about `LEGAL_CHUNK_CHARS` each). The legacy chunker rewrote whitespace and gave short files no offsets, so Law no longer uses it.
+- **What a reader sees is what EchoMind reads:**
+  - **PDF:**
+    - Text that is white (unless on a dark fill or an image), under 2 pt, invisible (unless over an image, as a searchable scan's OCR layer is) or off the page is left out.
+    - It is recorded as a `hidden_text` mark with the text, so it can be reviewed.
+    - Visual lines are kept, so page and line citations match the page. Running headers and footers are still dropped as before.
+  - **Word:**
+    - Hidden (`w:vanish`), white or tiny runs are left out and marked.
+    - Automatic numbering is resolved as Word shows it ("12.3", "(b)", "Article I"), including numbering that comes through a heading style. Each numbered paragraph also records its full path ("12.3(b)").
+    - Tables are read row by row ("cell | cell").
+    - Footnotes, endnotes, headers and footers follow the body as their own blocks. References read "[fn 1]", which cannot be mistaken for an answer citation "[1]".
+- **Tracked changes are read as accepted.** Insertions are in and deletions out. Each change is recorded with author and date, and a deletion keeps its text at its position.
+- **Comments are never part of the text.** They are recorded beside the words they cover, with author, date and comment text.
+- **Text addressed to an AI is flagged where it is, at import** (`instructions` marks, the same patterns as D-031). Hidden text is checked too. The version's flags count both.
+- **OCR (D-010):**
+  - It runs only on pages with almost no text (under `LEGAL_OCR_MIN_CHARS`) that carry an image, one page at a time.
+  - It uses the local `tesseract` program with the English model, 300 dpi, a 120 s per-page timeout and at most `LEGAL_OCR_MAX_PAGES` pages.
+  - Each OCR page records its mean confidence. Words under `LEGAL_OCR_LOW_CONFIDENCE` are marked for checking.
+  - With OCR off, a scan is reported as `needs_ocr` rather than indexed empty.
+  - `pytesseract` was not needed.
+- **Progress** is written as a version is read (`reading`, `ocr` page n of N, `indexing`, `done` / `failed`).
+- **Purges** remove the stored text and marks and verify that they are gone.
+- **Known limits:**
+  - Text boxes and shapes in Word files are not read yet.
+  - Mixed pages (some text plus a scanned region) are not OCR'd.
+  - OCR accuracy is measured only on clean synthetic scans so far (character error rate 0.0 at 100–200 dpi). Real scans will be measured on pilot samples.
+  - The Docker image needs `tesseract-ocr` and `tesseract-ocr-eng` (at the first approved build).
+
+### D-035 Clauses, defined terms and pinpointed citations — RECORDED (S2.1b; RAG-01)
+- **Clauses:**
+  - From Word's numbering when a paragraph has it (the full path, e.g. "12.3(b)").
+  - Otherwise from drafting markers at a line start:
+    - "Article IV", "Part 2", and "Schedule 2", "Exhibit A", "Annex" or "Appendix" (level 0);
+    - "Section 5.1", "Clause 4" and "§ 7";
+    - a bare "4.1" or "12." followed by a capital, a quote or a bracket;
+    - "(a)" and "(i)" under the last numbered clause.
+  - A four-digit year, an amount ("12,000") or a date ("1 January") is not a clause.
+  - A clause runs until the next clause at its level or higher, so it contains its sub-clauses.
+  - Headers, footers and footnotes are never clauses.
+  - Stored in `legal_clauses` (migration 0014).
+- **Defined terms:** `"Term" means …` (also "shall mean", "has the meaning", "includes", "refers to"), and `Name (the "Term")`, with straight or curly quotes. Stored in `legal_defined_terms` with the definition sentence. Usage checks come in S3.5.
+- **Pinpointed citations:**
+  - A search quote stays its ~600-character window. Its **focus** is the sentence in it that shares most words with the question.
+  - The citation gives the focus offsets and the clause, page and line where the focus is. Research sources pass the clause to the model (`clause="12.3(b)"`).
+  - Versions read before S2.1 have no maps and keep their passage pages.
+- **Purges** remove clauses and terms, with verification.
+- **Limits:**
+  - These are heuristics. Unusual numbering ("1-1", "A.1.a") is not recognised yet.
+  - The focus is lexical, not semantic.
+  - Definitions inside tables are found only when they use the patterns above.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

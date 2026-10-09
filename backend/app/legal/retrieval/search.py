@@ -16,6 +16,8 @@ even a corrupted index could not surface another matter's passage.
 """
 from __future__ import annotations
 
+import bisect
+import json
 import re
 from typing import Iterable
 
@@ -170,6 +172,58 @@ def _passage(h: dict) -> dict:
     }
 
 
+_STOP = frozenset("the a an and or of to in on for by with is are be as at that this which shall may any all its it from".split())
+
+
+def _focus(text: str, query: str) -> tuple[int, int]:
+    """The sentence of a quote that shares most words with the question (ties: the earliest)."""
+    from ..research.prompt import document_sentences
+    q = {w for w in re.findall(r"[a-z0-9%]{2,}", query.lower()) if w not in _STOP}
+    best, score = (0, len(text)), -1
+    for a, b in document_sentences(text):
+        n = len(q & set(re.findall(r"[a-z0-9%]{2,}", text[a:b].lower())))
+        if n > score:
+            best, score = (a, b), n
+    return best
+
+
+def _located(passages: list[dict], query: str = "") -> list[dict]:
+    """Where each quote points (S2.1): the sentence that best answers the question (the focus), its
+    clause, and the page and line it is on, from the version's stored maps. Versions read before
+    S2.1 have no maps and keep the passage's pages."""
+    if not passages:
+        return passages
+    for p in passages:
+        c = p["citation"]
+        if c["char_start"] is not None:
+            a, b = _focus(p["text"], query)
+            c["focus_start"], c["focus_end"] = c["char_start"] + a, c["char_start"] + b
+    maps: dict[str, tuple] = {}
+    with get_conn() as conn:
+        for p in passages:
+            c = p["citation"]
+            vid, off = c["version_id"], c.get("focus_start", c["char_start"])
+            if off is None:
+                continue
+            if vid not in maps:
+                row = conn.execute("SELECT pages_json, lines_json FROM legal_version_text WHERE version_id=?", (vid,)).fetchone()
+                maps[vid] = (json.loads(row[0]), json.loads(row[1])) if row else None
+            clause = conn.execute("SELECT number FROM legal_clauses WHERE version_id=? AND char_start<=? AND ?<char_end "
+                                  "ORDER BY level DESC, char_start DESC LIMIT 1", (vid, off, off)).fetchone()
+            c["clause"] = clause[0] if clause else None
+            if not maps[vid]:
+                continue
+            pages, lines = maps[vid]
+            end = max(off, (c.get("focus_end") or c["char_end"] or off) - 1)
+            here = next((pg for pg in pages if pg["start"] <= off <= pg["end"]), None)
+            there = next((pg for pg in pages if pg["start"] <= end <= pg["end"]), here)
+            base = here["start"] if here else 0
+            c["line"] = max(1, bisect.bisect_right(lines, off) - bisect.bisect_left(lines, base))
+            if here:
+                c["page_start"], c["page_end"] = here["number"], (there or here)["number"]
+    return passages
+
+
 async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Iterable[str] = ALL_MODES) -> dict:
     recheck(scope)                                    # raises TypeError for anything but a real scope
     modes = [m for m in modes if m in ALL_MODES] or list(ALL_MODES)
@@ -194,4 +248,4 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
     if ranked and ranked[0].get("score_kind") == "ce_logit":
         ranked = [h for h in ranked if float(h["score"]) >= settings.LEGAL_RERANK_MIN_SCORE]
     recheck(scope)                                    # rights may have changed while this ran
-    return {"passages": [_passage(h) for h in ranked[:k]], "abstained": not ranked}
+    return {"passages": _located([_passage(h) for h in ranked[:k]], query), "abstained": not ranked}

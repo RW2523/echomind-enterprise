@@ -96,7 +96,7 @@ describe('Matter documents', () => {
     renderLaw('/m/M-101/documents');
     fireEvent.click(await screen.findByRole('button', { name: 'Harrowgate MSA' }));
     const panel = await screen.findByRole('complementary', { name: 'Document details' });
-    expect(await within(panel).findByText(/No text layer — a scan/)).toBeTruthy();
+    expect(await within(panel).findByText('No readable text, even with text recognition.')).toBeTruthy();   // S2.1: scans are now read
     fireEvent.click(within(panel).getByRole('button', { name: /Try again/ }));
     await waitFor(() => expect(calls.some((c) => c.path === `${BASE}/d1/reindex`)).toBe(true));
   });

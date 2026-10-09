@@ -45,8 +45,9 @@ def build(question: str, passages: list[dict]) -> list[dict]:
         pages = c.get("page_start") or ""
         if pages and c.get("page_end") and c["page_end"] != c["page_start"]:
             pages = f"{c['page_start']}-{c['page_end']}"
+        clause = f' clause="{_attr(c["clause"])}"' if c.get("clause") else ""
         blocks.append(f'<source n="{n}" document="{_attr(c["document_title"])}" version="{_attr(c["version_number"])}" '
-                      f'pages="{_attr(pages)}">\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
+                      f'pages="{_attr(pages)}"{clause}>\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
     user = f"Question: {question}\n\nSources:\n" + "\n\n".join(blocks) + "\n\n" + REMINDER
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
@@ -116,6 +117,20 @@ WITHHELD = "[Text addressed to an AI assistant was withheld here.]"
 
 def addressed_to_ai(text: str) -> bool:
     return any(_ADDRESSED_TO_AI.search(text[a:b]) for a, b in _spans(text))
+
+
+_WRAP = re.compile(r"(?<!\n)\n(?!\n)")
+
+
+def document_sentences(text: str) -> list[tuple[int, int]]:
+    """Sentences of document text, where a single line break is only a visual wrap (PDF and OCR keep
+    their lines) and a blank line ends a paragraph. Offsets are those of `text`."""
+    return _spans(_WRAP.sub(" ", text or ""))
+
+
+def addressed_to_ai_spans(text: str) -> list[tuple[int, int]]:
+    """Where in `text` the sentences addressed to an AI are (S2.1: flagged at import)."""
+    return [(a, b) for a, b in _spans(text) if _ADDRESSED_TO_AI.search(text[a:b])]
 
 
 def withhold(text: str) -> str:

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiError, postStream } from '../api/client';
 import { keys, useResearchHistory } from '../api/queries';
@@ -181,14 +182,20 @@ function withCitations(text: string, sources: ResearchSource[], onFocus: (n: num
 
 function SourceItem({ s, active }: { s: ResearchSource; active: boolean }) {
   const ref = useRef<HTMLLIElement>(null);
+  const matter = useMatter();
   useEffect(() => { if (active) ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' }); }, [active]);
+  const where = [pages(s), s.clause ? `cl. ${s.clause}` : '', s.line ? `line ${s.line}` : ''].filter(Boolean).join(' · ');
+  const a = s.focus_start ?? s.char_start, b = s.focus_end ?? s.char_end;
+  const href = `/m/${matter.number}/documents/${encodeURIComponent(s.document_id)}/read?v=${encodeURIComponent(s.version_id)}` +
+    (a != null && b != null ? `&at=${a}-${b}` : '');
   return (
     <li ref={ref} className="lw-source" data-active={active || undefined}>
       <span className="lw-cite lw-cite-static" aria-hidden="true">{s.n}</span>
       <div style={{ minWidth: 0 }}>
         <blockquote className="lw-serif">{plain(s.text)}</blockquote>
-        <div className="lw-meta">{s.document_title} · v{s.version_number}{pages(s) ? ` · ${pages(s)}` : ''}</div>
+        <div className="lw-meta">{s.document_title} · v{s.version_number}{where ? ` · ${where}` : ''}</div>
         {s.instructions && <div className="lw-meta lw-source-flag">Contains text addressed to an AI assistant. It was withheld from the answer.</div>}
+        <Link className="lw-linklike lw-meta" to={href} aria-label={`Open source ${s.n} in the document`}>Open in document</Link>
       </div>
     </li>
   );

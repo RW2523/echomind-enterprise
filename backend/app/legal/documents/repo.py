@@ -9,6 +9,7 @@ successfully within its freshness window (fail closed).
 """
 from __future__ import annotations
 
+import json
 import uuid
 from typing import Optional
 
@@ -19,7 +20,8 @@ KINDS = ("contract", "correspondence", "pleading", "evidence", "memo", "note", "
 STATUSES = ("draft", "final", "executed", "received")
 
 _V_COLS = ("id", "document_id", "matter_id", "number", "filename", "mime", "size_bytes", "sha256", "pages",
-           "wrapped_key", "uploaded_by", "uploaded_at", "index_status", "index_error", "chunk_count", "indexed_at")
+           "wrapped_key", "uploaded_by", "uploaded_at", "index_status", "index_error", "chunk_count", "indexed_at",
+           "progress_json", "status")
 _D_COLS = ("id", "org_id", "matter_id", "title", "kind", "status", "current_version_id", "created_by", "created_at",
            "updated_at", "version", "connector_id", "remote_id", "source_state")
 
@@ -62,19 +64,21 @@ def create_document(org_id: str, matter_id: str, title: str, kind: str, status: 
 
 
 def add_version(version_id: str, document_id: str, matter_id: str, filename: str, mime: str, size: int, sha256: str,
-                pages: Optional[int], wrapped_key: str, by: str) -> dict:
-    """Add the next version and make it current, and queue its indexing job — in one transaction."""
+                pages: Optional[int], wrapped_key: str, by: str, status: Optional[str] = None) -> dict:
+    """Add the next version and make it current, and queue its indexing job — in one transaction.
+    The version keeps its own status (default: the document's); the document's status follows it."""
     now = now_iso()
     with get_conn() as conn:
         conn.execute("BEGIN IMMEDIATE")
         try:
             number = conn.execute("SELECT COALESCE(MAX(number), 0) + 1 FROM legal_document_versions WHERE document_id=?",
                                   (document_id,)).fetchone()[0]
+            status = status or conn.execute("SELECT status FROM legal_documents WHERE id=?", (document_id,)).fetchone()[0]
             conn.execute("INSERT INTO legal_document_versions (id, document_id, matter_id, number, filename, mime, size_bytes, "
-                         "sha256, pages, wrapped_key, uploaded_by, uploaded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                         (version_id, document_id, matter_id, number, filename, mime, size, sha256, pages, wrapped_key, by, now))
-            conn.execute("UPDATE legal_documents SET current_version_id=?, updated_at=?, version=version+1 WHERE id=?",
-                         (version_id, now, document_id))
+                         "sha256, pages, wrapped_key, uploaded_by, uploaded_at, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                         (version_id, document_id, matter_id, number, filename, mime, size, sha256, pages, wrapped_key, by, now, status))
+            conn.execute("UPDATE legal_documents SET current_version_id=?, status=?, updated_at=?, version=version+1 WHERE id=?",
+                         (version_id, status, now, document_id))
             org = conn.execute("SELECT org_id FROM legal_documents WHERE id=?", (document_id,)).fetchone()[0]
             conn.execute("INSERT INTO legal_jobs (id, kind, org_id, matter_id, object_id, requested_by, created_at) "
                          "VALUES (?,?,?,?,?,?,?)", (new_id(), "document.index", org, matter_id, version_id, by, now))
@@ -94,6 +98,9 @@ def update_document(matter_id: str, document_id: str, changes: dict, expected_ve
         cur = conn.execute(f"UPDATE legal_documents SET {sets}, updated_at=?, version=version+1 "
                            "WHERE id=? AND matter_id=? AND version=?",
                            (*allowed.values(), now_iso(), document_id, matter_id, expected_version))
+        if cur.rowcount == 1 and "status" in allowed:            # the current version carries the status (S2.1c)
+            conn.execute("UPDATE legal_document_versions SET status=? WHERE id=(SELECT current_version_id FROM legal_documents "
+                         "WHERE id=?)", (allowed["status"], document_id))
         conn.commit()
     if cur.rowcount != 1:
         raise Conflict("This document was changed by someone else. Reload and try again.")
@@ -114,7 +121,21 @@ def _version_out(conn, row) -> dict:
     return {"id": v["id"], "number": v["number"], "filename": v["filename"], "mime": v["mime"], "size_bytes": v["size_bytes"],
             "sha256": v["sha256"], "pages": v["pages"], "uploaded_by": _username(conn, v["uploaded_by"]),
             "uploaded_at": v["uploaded_at"], "index_status": v["index_status"], "index_error": v["index_error"],
-            "chunk_count": v["chunk_count"], "indexed_at": v["indexed_at"]}
+            "chunk_count": v["chunk_count"], "indexed_at": v["indexed_at"],
+            "progress": json.loads(v["progress_json"]) if v["progress_json"] else None, "flags": _flags(conn, v["id"]),
+            "status": v["status"]}
+
+
+def _flags(conn, version_id: str) -> dict:
+    """What reading the file found (S2.1): counts only, the details are in the version's marks."""
+    kinds = dict(conn.execute("SELECT kind, COUNT(*) FROM legal_marks WHERE version_id=? GROUP BY kind", (version_id,)).fetchall())
+    hidden_ai = conn.execute("SELECT COUNT(*) FROM legal_marks WHERE version_id=? AND kind='hidden_text' "
+                             "AND json_extract(meta_json, '$.instructions') = 1", (version_id,)).fetchone()[0]
+    row = conn.execute("SELECT pages_json FROM legal_version_text WHERE version_id=?", (version_id,)).fetchone()
+    return {"hidden_text": kinds.get("hidden_text", 0), "instructions": kinds.get("instructions", 0) + hidden_ai,
+            "tracked_changes": kinds.get("tracked_insert", 0) + kinds.get("tracked_delete", 0), "comments": kinds.get("comment", 0),
+            "ocr_pages": sum(1 for p in json.loads(row[0]) if p["source"] == "ocr") if row else 0,
+            "ocr_low_confidence": kinds.get("ocr_low_confidence", 0)}
 
 
 def _findings(conn, version_id: Optional[str]) -> dict:
@@ -188,6 +209,27 @@ def version_row(matter_id: str, document_id: str, version_id: str, uid: Optional
         row = conn.execute(f"SELECT {', '.join(_V_COLS)} FROM legal_document_versions WHERE id=? AND document_id=? AND matter_id=?",
                            (version_id, document_id, matter_id)).fetchone()
     return dict(zip(_V_COLS, row)) if row else None
+
+
+def reader(version_id: str) -> Optional[dict]:
+    """A version's stored text and what reading it found (S2.1). None if it was read before S2.1."""
+    with get_conn() as conn:
+        row = conn.execute("SELECT text, pages_json, lines_json, blocks_json, engines_json FROM legal_version_text WHERE version_id=?",
+                           (version_id,)).fetchone()
+        if not row:
+            return None
+        clauses = [dict(zip(("number", "label", "heading", "level", "parent", "start", "end", "page"), r)) for r in conn.execute(
+            "SELECT number, label, heading, level, parent, char_start, char_end, page FROM legal_clauses WHERE version_id=? "
+            "ORDER BY char_start, level", (version_id,))]
+        terms = [dict(zip(("term", "start", "end", "term_start", "term_end"), r)) for r in conn.execute(
+            "SELECT term, char_start, char_end, term_start, term_end FROM legal_defined_terms WHERE version_id=? ORDER BY char_start",
+            (version_id,))]
+        marks = [{"kind": r[0], "start": r[1], "end": r[2], "page": r[3], "meta": json.loads(r[4] or "{}")} for r in conn.execute(
+            "SELECT kind, char_start, char_end, page, meta_json FROM legal_marks WHERE version_id=? ORDER BY COALESCE(char_start, -1)",
+            (version_id,))]
+    blocks = [{k: b[k] for k in ("kind", "start", "end", "label", "path")} for b in json.loads(row[3])]
+    return {"text": row[0], "pages": json.loads(row[1]), "lines": json.loads(row[2]), "blocks": blocks,
+            "engines": json.loads(row[4]), "clauses": clauses, "terms": terms, "marks": marks}
 
 
 def current_sha(matter_id: str, document_id: str) -> Optional[str]:

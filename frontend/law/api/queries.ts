@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -106,6 +106,15 @@ export const useDocument = (matterId: string, docId: string | null) =>
     },
   });
 export const documentsPath = docsBase;
+
+/** A version's text and what reading it found (S2.1). Opening it is a recorded read. */
+export const useReader = (matterId: string, docId: string, versionId: string | null) =>
+  useQuery({
+    queryKey: [...keys.document(matterId, docId), 'reader', versionId ?? ''] as const, enabled: !!versionId,
+    refetchOnWindowFocus: false, retry: false, staleTime: Infinity,
+    queryFn: async () => (await api.get<{ reader: ReaderData }>(
+      `${docsBase(matterId)}/${encodeURIComponent(docId)}/versions/${encodeURIComponent(versionId!)}/reader`)).reader,
+  });
 
 /** The caller's own earlier questions in this matter. */
 export const useResearchHistory = (matterId: string) =>
