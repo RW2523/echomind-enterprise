@@ -9,6 +9,7 @@ successfully within its freshness window (fail closed).
 """
 from __future__ import annotations
 
+import json
 import uuid
 from typing import Optional
 
@@ -19,7 +20,8 @@ KINDS = ("contract", "correspondence", "pleading", "evidence", "memo", "note", "
 STATUSES = ("draft", "final", "executed", "received")
 
 _V_COLS = ("id", "document_id", "matter_id", "number", "filename", "mime", "size_bytes", "sha256", "pages",
-           "wrapped_key", "uploaded_by", "uploaded_at", "index_status", "index_error", "chunk_count", "indexed_at")
+           "wrapped_key", "uploaded_by", "uploaded_at", "index_status", "index_error", "chunk_count", "indexed_at",
+           "progress_json")
 _D_COLS = ("id", "org_id", "matter_id", "title", "kind", "status", "current_version_id", "created_by", "created_at",
            "updated_at", "version", "connector_id", "remote_id", "source_state")
 
@@ -114,7 +116,20 @@ def _version_out(conn, row) -> dict:
     return {"id": v["id"], "number": v["number"], "filename": v["filename"], "mime": v["mime"], "size_bytes": v["size_bytes"],
             "sha256": v["sha256"], "pages": v["pages"], "uploaded_by": _username(conn, v["uploaded_by"]),
             "uploaded_at": v["uploaded_at"], "index_status": v["index_status"], "index_error": v["index_error"],
-            "chunk_count": v["chunk_count"], "indexed_at": v["indexed_at"]}
+            "chunk_count": v["chunk_count"], "indexed_at": v["indexed_at"],
+            "progress": json.loads(v["progress_json"]) if v["progress_json"] else None, "flags": _flags(conn, v["id"])}
+
+
+def _flags(conn, version_id: str) -> dict:
+    """What reading the file found (S2.1): counts only, the details are in the version's marks."""
+    kinds = dict(conn.execute("SELECT kind, COUNT(*) FROM legal_marks WHERE version_id=? GROUP BY kind", (version_id,)).fetchall())
+    hidden_ai = conn.execute("SELECT COUNT(*) FROM legal_marks WHERE version_id=? AND kind='hidden_text' "
+                             "AND json_extract(meta_json, '$.instructions') = 1", (version_id,)).fetchone()[0]
+    row = conn.execute("SELECT pages_json FROM legal_version_text WHERE version_id=?", (version_id,)).fetchone()
+    return {"hidden_text": kinds.get("hidden_text", 0), "instructions": kinds.get("instructions", 0) + hidden_ai,
+            "tracked_changes": kinds.get("tracked_insert", 0) + kinds.get("tracked_delete", 0), "comments": kinds.get("comment", 0),
+            "ocr_pages": sum(1 for p in json.loads(row[0]) if p["source"] == "ocr") if row else 0,
+            "ocr_low_confidence": kinds.get("ocr_low_confidence", 0)}
 
 
 def _findings(conn, version_id: Optional[str]) -> dict:

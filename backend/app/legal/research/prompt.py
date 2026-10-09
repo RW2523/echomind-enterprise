@@ -118,6 +118,11 @@ def addressed_to_ai(text: str) -> bool:
     return any(_ADDRESSED_TO_AI.search(text[a:b]) for a, b in _spans(text))
 
 
+def addressed_to_ai_spans(text: str) -> list[tuple[int, int]]:
+    """Where in `text` the sentences addressed to an AI are (S2.1: flagged at import)."""
+    return [(a, b) for a, b in _spans(text) if _ADDRESSED_TO_AI.search(text[a:b])]
+
+
 def withhold(text: str) -> str:
     """The passage with every sentence addressed to an AI replaced by one marker."""
     out, last, prev_withheld = [], 0, False

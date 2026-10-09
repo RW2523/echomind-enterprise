@@ -79,7 +79,11 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
     files = [v for v in versions if os.path.exists(_blob(matter_id, v))]
     in_index = set(registry.for_matter(matter_id).chunk_ids) & set(chunks)
     from ..exports import service as exports
+    qs = ",".join("?" * len(versions)) or "NULL"
+    stored = conn.execute(f"SELECT COUNT(*) FROM legal_version_text WHERE version_id IN ({qs})", versions).fetchone()[0] if versions else 0
+    marks = conn.execute(f"SELECT COUNT(*) FROM legal_marks WHERE version_id IN ({qs})", versions).fetchone()[0] if versions else 0
     return {"object": "document", "versions": len(versions), "passages": len(chunks), "findings": findings,
+            "stored_text": stored, "marks": marks,
             "exports": exports.count_for(conn, "document", document_id),
             "labels": conn.execute("SELECT COUNT(*) FROM legal_labels WHERE object_type='document' AND object_id=?", (document_id,)).fetchone()[0],
             "files": len(files), "file_bytes": sum(os.path.getsize(_blob(matter_id, v)) for v in files),
@@ -240,7 +244,10 @@ def _purge_document(conn, d: dict) -> dict:
     versions = [r[0] for r in conn.execute("SELECT id FROM legal_document_versions WHERE document_id=?", (doc,))]
     chunks = [r[0] for r in conn.execute("SELECT id FROM legal_chunks WHERE document_id=?", (doc,))]
     if versions:
-        conn.execute(f"DELETE FROM legal_findings WHERE version_id IN ({','.join('?' * len(versions))})", versions)
+        qs = ",".join("?" * len(versions))
+        conn.execute(f"DELETE FROM legal_findings WHERE version_id IN ({qs})", versions)
+        conn.execute(f"DELETE FROM legal_marks WHERE version_id IN ({qs})", versions)
+        conn.execute(f"DELETE FROM legal_version_text WHERE version_id IN ({qs})", versions)
     conn.execute("DELETE FROM legal_chunks WHERE document_id=?", (doc,))
     conn.execute("DELETE FROM legal_document_versions WHERE document_id=?", (doc,))
     labels.purge(conn, "document", doc)
@@ -268,8 +275,9 @@ def verify(d: dict, gone: dict) -> dict:
                 "SELECT COUNT(*) FROM legal_chunks WHERE document_id=?",
                 "SELECT COUNT(*) FROM legal_labels WHERE object_type='document' AND object_id=?"))
             if versions:
-                db_rows += conn.execute(f"SELECT COUNT(*) FROM legal_findings WHERE version_id IN ({','.join('?' * len(versions))})",
-                                        versions).fetchone()[0]
+                qs = ",".join("?" * len(versions))
+                for table in ("legal_findings", "legal_marks", "legal_version_text"):
+                    db_rows += conn.execute(f"SELECT COUNT(*) FROM {table} WHERE version_id IN ({qs})", versions).fetchone()[0]
             quotes = [c for _, cites in _citing_turns(conn, d["matter_id"], doc) for c in cites
                       if c.get("document_id") == doc and (c.get("text") or c.get("document_title"))]
             idx = registry.for_matter(d["matter_id"])

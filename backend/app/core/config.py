@@ -300,5 +300,16 @@ class Settings(BaseSettings):
     LEGAL_EXPORT_TTL_HOURS: float = float(os.getenv("LEGAL_EXPORT_TTL_HOURS", "24"))
     # Connectors (S1.11): folders a local-folder connector may read, separated by ":" (empty = none).
     LEGAL_CONNECTOR_LOCAL_ROOTS: str = os.getenv("LEGAL_CONNECTOR_LOCAL_ROOTS", "")
+    # Legal ingestion quality (S2.1; D-010 OCR with Tesseract, run as a local program — nothing leaves the host).
+    LEGAL_CHUNK_CHARS: int = int(os.getenv("LEGAL_CHUNK_CHARS", "1200"))              # passage size, packed by paragraph
+    LEGAL_OCR_ENABLED: bool = os.getenv("LEGAL_OCR_ENABLED", "1").lower() in ("1", "true", "yes")
+    LEGAL_TESSERACT_CMD: str = os.getenv("LEGAL_TESSERACT_CMD", "tesseract")
+    LEGAL_TESSDATA_DIR: str = os.getenv("LEGAL_TESSDATA_DIR", "")                   # empty: next to the tesseract program
+    LEGAL_OCR_LANG: str = os.getenv("LEGAL_OCR_LANG", "eng")
+    LEGAL_OCR_DPI: int = int(os.getenv("LEGAL_OCR_DPI", "300"))
+    LEGAL_OCR_MIN_CHARS: int = int(os.getenv("LEGAL_OCR_MIN_CHARS", "20"))           # a page with less text than this is OCR'd
+    LEGAL_OCR_MAX_PAGES: int = int(os.getenv("LEGAL_OCR_MAX_PAGES", "500"))           # beyond this, pages stay unread (reported)
+    LEGAL_OCR_TIMEOUT_S: int = int(os.getenv("LEGAL_OCR_TIMEOUT_S", "120"))           # per page
+    LEGAL_OCR_LOW_CONFIDENCE: int = int(os.getenv("LEGAL_OCR_LOW_CONFIDENCE", "60"))  # words below this are marked for checking
 
 settings = Settings()

@@ -245,6 +245,21 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - `security_suite.sh` and `stability_runs.sh`.
   - FEATURE_MATRIX SEC-02 corrected (it was stale).
 
+### Session 3 — S2.1 Legal ingestion quality (RAG-01), plan after the audit
+- **Audit:**
+  - PDFs are read from the text layer only: no OCR (a scan fails with `no_text`), no hidden-text check.
+  - Word files lose automatic numbering, tables, headers, footers and footnotes.
+  - Tracked insertions are silently dropped (python-docx skips runs inside `w:ins`).
+  - Only search chunks are stored, not a version's full text, so a citation cannot be shown in its document.
+  - Status is per document, not per version.
+- **S2.1a, extraction core:**
+  - `legal/documents/extract.py`: canonical text plus page, line and block maps, and marks (hidden text, AI-directed text, tracked changes, comments, low-confidence OCR).
+  - OCR runs per page with the Tesseract CLI (D-010).
+  - Migration 0013. Progress during ingestion. The deletion service purges the new tables.
+- **S2.1b:** clause segmentation and defined terms; chunks and citations carry the clause number.
+- **S2.1c:** reader screen (page and line, quote highlight, OCR, hidden-text and instruction warnings, revisions and comments, clause outline), per-version status, progress bar.
+- **S2.1d:** browser journey and docs.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).

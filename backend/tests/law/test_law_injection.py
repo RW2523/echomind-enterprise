@@ -173,13 +173,18 @@ def test_t08_an_obedient_model_still_cannot_leave_the_matter_or_change_anything(
     for injected_text in ("SYSTEM OVERRIDE", "administrator mode", "PINEAPPLE", "ACCESS GRANTED", "Ignore all previous"):
         assert injected_text not in shown, injected_text
     from app.legal.research import prompt
-    assert prompt.WITHHELD in shown
-
-    # The person sees the whole passage, marked as containing text addressed to an AI.
     flagged = [s for s in ev[0]["citations"] if s.get("instructions")]
-    assert any(s["document_title"].startswith(doc_title) for s in flagged)
-    assert all(s["document_title"].startswith(("msa-notices", "msa-term")) for s in flagged)
-    assert any(("SYSTEM OVERRIDE" in s["text"]) or ("Ignore all previous" in s["text"]) for s in flagged)
+    if doc_title == "msa-term":
+        # Visible instructions: withheld from the model, shown to the person with the passage marked.
+        assert prompt.WITHHELD in shown
+        assert flagged and all(s["document_title"].startswith("msa-term") for s in flagged)
+        assert any("Ignore all previous" in s["text"] for s in flagged)
+    else:
+        # S2.1: the PDF's instructions were white 1-point text — left out at import, so no source carries
+        # them at all; the document says it had hidden text addressed to an AI.
+        assert not any("SYSTEM OVERRIDE" in s["text"] for s in ev[0]["citations"])
+        flags = alice.get(f"/api/legal/matters/{mid}/documents/{injected['pdf_id']}").json()["document"]["current_version"]["flags"]
+        assert flags["hidden_text"] >= 1 and flags["instructions"] >= 1
 
     # Whatever the model wrote is only text: claims without a source are listed; nothing walled leaks.
     done = ev[-1]

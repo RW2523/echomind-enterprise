@@ -1,25 +1,29 @@
-"""Indexing one document version (the `document.index` job; S1.6).
+"""Indexing one document version (the `document.index` job; S1.6, reading rebuilt in S2.1).
 
 Runs with the authority of the person who imported the file: their right to import into the
 matter is checked before the work starts and again just before anything is written, so if they
 lose access mid-job nothing reaches the matter's index ("rights_revoked"). Only the document's
 current version is indexed; a newer version replaces the older one's passages in search.
+
+S2.1: the file is read by `extract` (OCR for scanned pages, Word numbering, tracked changes as
+accepted, hidden text left out and reported). Its canonical text is stored with page, line and block
+maps, and every passage is an exact slice of it. Progress is written as reading goes.
 """
 from __future__ import annotations
 
+import json
 import logging
 import uuid
 
 import numpy as np
 
 from ...core.db import get_conn
-from ...rag.chunking.pipeline import chunk_document
 from ...rag.chunking.sanitize import find_pii
-from ...rag.parse import page_for_offset, parse_any
+from ...rag.parse import page_for_offset
 from .. import policy
 from ..audit.record import record
 from ..retrieval import embedder, registry
-from . import blobs
+from . import blobs, chunking, extract
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +42,12 @@ def _version(version_id: str) -> dict | None:
                            (version_id,)).fetchone()
     keys = ("id", "document_id", "matter_id", "filename", "wrapped_key", "current_version_id", "org_id")
     return dict(zip(keys, row)) if row else None
+
+
+def _progress(version_id: str, state: dict) -> None:
+    with get_conn() as conn:
+        conn.execute("UPDATE legal_document_versions SET progress_json=? WHERE id=?", (json.dumps(state), version_id))
+        conn.commit()
 
 
 def _set_status(version_id: str, status: str, error: str | None = None, **extra) -> None:
@@ -73,25 +83,35 @@ async def run(job: dict) -> str | None:
             data = blobs.load(v["matter_id"], v["id"], v["wrapped_key"])
         except blobs.IntegrityError:
             raise IngestFailed("integrity")
-        filetype, text, pages, offsets = parse_any(v["filename"], data)
-        if filetype == "txt":
-            text = data.decode("utf-8-sig")
-        chunks = [c for c in chunk_document(text, doc_id=v["id"], estimated_pages=pages, page_offsets=offsets,
-                                            already_normalized=(filetype == "pdf"), redact_pii=False) if not c.is_parent]
+        _progress(v["id"], {"stage": "reading"})
+        try:
+            x = extract.extract(v["filename"], data, progress=lambda state: _progress(v["id"], state))
+        except (RuntimeError, OSError) as e:
+            logger.error("Documents: reading version %s failed (%s)", v["id"], type(e).__name__)
+            raise IngestFailed("unreadable")
+        text, offsets = x.text, x.page_offsets()
+        pages = len(x.pages) or None
+        if not text.strip():
+            raise IngestFailed("needs_ocr" if any(p.source == "image" for p in x.pages) else "no_text")
+        chunks = chunking.passages(x)
         if not chunks:
-            raise IngestFailed("no_text")              # e.g. a scan without a text layer (OCR arrives in S2.1)
+            raise IngestFailed("no_text")
+        _progress(v["id"], {"stage": "indexing", "passages": len(chunks)})
         vecs = (await embedder.get().embed([c.text for c in chunks], kind="document")).astype(np.float32)
         norms = np.linalg.norm(vecs, axis=1, keepdims=True)
         vecs = vecs / np.where(norms == 0, 1, norms)
         findings = find_pii(text)
         if not still_allowed():
             raise IngestFailed("rights_revoked")      # lost access while we worked: write nothing
-        _commit(v, chunks, vecs, findings, pages or None, offsets)
+        _commit(v, chunks, vecs, findings, pages, offsets, x)
         from ..records import labels
         suggested = labels.suggest_from_text(v["org_id"], v["matter_id"], v["document_id"], text)
-        audit("allow", chunks=len(chunks), pages=pages or None, findings=len(findings), label_suggestions=suggested)
+        flags = flag_counts(x)
+        audit("allow", chunks=len(chunks), pages=pages, findings=len(findings), label_suggestions=suggested,
+              **{k: n for k, n in flags.items() if n})
         return None
     except IngestFailed as e:
+        _progress(v["id"], {"stage": "failed"})
         _set_status(v["id"], "failed", e.code)
         audit("error", e.code)
         return e.code
@@ -102,7 +122,15 @@ async def run(job: dict) -> str | None:
         raise
 
 
-def _commit(v: dict, chunks, vecs: np.ndarray, findings, pages, offsets) -> None:
+def flag_counts(x: "extract.Extraction") -> dict:
+    kinds = [m.kind for m in x.marks]
+    return {"hidden_text": kinds.count("hidden_text"), "instructions": kinds.count("instructions"),
+            "tracked_changes": kinds.count("tracked_insert") + kinds.count("tracked_delete"), "comments": kinds.count("comment"),
+            "ocr_pages": sum(1 for p in x.pages if p.source == "ocr"),
+            "ocr_low_confidence": kinds.count("ocr_low_confidence")}
+
+
+def _commit(v: dict, chunks, vecs: np.ndarray, findings, pages, offsets, x: "extract.Extraction") -> None:
     rows = []
     for i, (c, vec) in enumerate(zip(chunks, vecs)):
         start, end = c.char_start, c.char_end
@@ -121,12 +149,24 @@ def _commit(v: dict, chunks, vecs: np.ndarray, findings, pages, offsets) -> None
                          "WHERE document_id=? AND id<>? AND index_status='indexed'", (v["document_id"], v["id"]))
             conn.execute("DELETE FROM legal_chunks WHERE version_id=?", (v["id"],))       # a re-index starts clean
             conn.execute("DELETE FROM legal_findings WHERE version_id=?", (v["id"],))
+            conn.execute("DELETE FROM legal_marks WHERE version_id=?", (v["id"],))
+            conn.execute("DELETE FROM legal_version_text WHERE version_id=?", (v["id"],))
+            maps = x.as_json()
+            conn.execute("INSERT INTO legal_version_text (version_id, matter_id, text, pages_json, blocks_json, lines_json, engines_json, "
+                         "created_at) VALUES (?,?,?,?,?,?,?,?)",
+                         (v["id"], v["matter_id"], x.text, json.dumps(maps["pages"]), json.dumps(maps["blocks"]),
+                          json.dumps(maps["lines"]), json.dumps(maps["engines"]), policy.now_iso()))
+            conn.executemany("INSERT INTO legal_marks (id, version_id, matter_id, kind, char_start, char_end, page, meta_json) "
+                             "VALUES (?,?,?,?,?,?,?,?)",
+                             [(str(uuid.uuid4()), v["id"], v["matter_id"], m.kind, m.start, m.end, m.page, json.dumps(m.meta))
+                              for m in x.marks])
             conn.executemany("INSERT INTO legal_chunks (id, version_id, document_id, matter_id, chunk_index, text, char_start, "
                              "char_end, page_start, page_end, vec) VALUES (?,?,?,?,?,?,?,?,?,?,?)", rows)
             conn.executemany("INSERT INTO legal_findings (id, version_id, matter_id, kind, char_start, char_end) VALUES (?,?,?,?,?,?)",
                              [(str(uuid.uuid4()), v["id"], v["matter_id"], k, a, b) for k, a, b in findings])
             conn.execute("UPDATE legal_document_versions SET index_status='indexed', index_error=NULL, chunk_count=?, pages=COALESCE(pages, ?), "
-                         "indexed_at=? WHERE id=?", (len(rows), pages, policy.now_iso(), v["id"]))
+                         "indexed_at=?, progress_json=? WHERE id=?",
+                         (len(rows), pages, policy.now_iso(), json.dumps({"stage": "done"}), v["id"]))
             conn.commit()
         except BaseException:
             conn.rollback()

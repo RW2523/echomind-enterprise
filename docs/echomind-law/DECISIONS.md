@@ -163,7 +163,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - **Isolation:** Law UI code lives in `frontend/law/`, and its design tokens are scoped under `[data-edition="law"]`, so the other verticals are visually unchanged.
 - **Consequence:** New runtime dependencies are reviewed in LICENSE_REGISTER.md before install.
 
-### D-010 OCR engine — PROPOSED
+### D-010 OCR engine — ADOPTED in S2.1a (Tesseract 5 run as a local program, not through pytesseract; see D-034)
 - **Decision:**
   - Use Tesseract 5 (Apache-2.0) via `pytesseract` with an `eng` traineddata pre-cached for offline use.
   - Run OCR per page only when PyMuPDF finds no text layer, or the text layer is below a density threshold.
@@ -483,6 +483,38 @@ Every entry records the options considered, the recommendation, the consequence 
 - **Pass rule:** anything not on this machine fails the run.
 - **uvloop:** uvloop connects in C, out of the hook's sight; the first run recorded nothing. The egress run therefore uses uvicorn's asyncio loop (`LAW_UVICORN_LOOP=asyncio`), which does not change which destinations the application chooses.
 - **Enforced mode** — the backend in a network namespace that can reach only the model servers — needs root. This host restricts unprivileged user namespaces through AppArmor, and bubblewrap cannot configure loopback without privileges. **🔒 Waiting for the owner's approval.**
+
+### D-034 How a legal document is read — RECORDED (S2.1a; RAG-01, T-06)
+- **One canonical text per version, stored** (`legal_version_text`):
+  - Page, line and block maps go with it.
+  - Every search passage is an exact slice of it, so a citation's offsets point at the characters it quotes.
+  - Law passages are cut by paragraph from this text (`documents/chunking.py`, about `LEGAL_CHUNK_CHARS` each). The legacy chunker rewrote whitespace and gave short files no offsets, so Law no longer uses it.
+- **What a reader sees is what EchoMind reads:**
+  - **PDF:**
+    - Text that is white (unless on a dark fill or an image), under 2 pt, invisible (unless over an image, as a searchable scan's OCR layer is) or off the page is left out.
+    - It is recorded as a `hidden_text` mark with the text, so it can be reviewed.
+    - Visual lines are kept, so page and line citations match the page. Running headers and footers are still dropped as before.
+  - **Word:**
+    - Hidden (`w:vanish`), white or tiny runs are left out and marked.
+    - Automatic numbering is resolved as Word shows it ("12.3", "(b)", "Article I"), including numbering that comes through a heading style. Each numbered paragraph also records its full path ("12.3(b)").
+    - Tables are read row by row ("cell | cell").
+    - Footnotes, endnotes, headers and footers follow the body as their own blocks. References read "[fn 1]", which cannot be mistaken for an answer citation "[1]".
+- **Tracked changes are read as accepted.** Insertions are in and deletions out. Each change is recorded with author and date, and a deletion keeps its text at its position.
+- **Comments are never part of the text.** They are recorded beside the words they cover, with author, date and comment text.
+- **Text addressed to an AI is flagged where it is, at import** (`instructions` marks, the same patterns as D-031). Hidden text is checked too. The version's flags count both.
+- **OCR (D-010):**
+  - It runs only on pages with almost no text (under `LEGAL_OCR_MIN_CHARS`) that carry an image, one page at a time.
+  - It uses the local `tesseract` program with the English model, 300 dpi, a 120 s per-page timeout and at most `LEGAL_OCR_MAX_PAGES` pages.
+  - Each OCR page records its mean confidence. Words under `LEGAL_OCR_LOW_CONFIDENCE` are marked for checking.
+  - With OCR off, a scan is reported as `needs_ocr` rather than indexed empty.
+  - `pytesseract` was not needed.
+- **Progress** is written as a version is read (`reading`, `ocr` page n of N, `indexing`, `done` / `failed`).
+- **Purges** remove the stored text and marks and verify that they are gone.
+- **Known limits:**
+  - Text boxes and shapes in Word files are not read yet.
+  - Mixed pages (some text plus a scanned region) are not OCR'd.
+  - OCR accuracy is measured only on clean synthetic scans so far (character error rate 0.0 at 100–200 dpi). Real scans will be measured on pilot samples.
+  - The Docker image needs `tesseract-ocr` and `tesseract-ocr-eng` (at the first approved build).
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
