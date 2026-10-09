@@ -11,7 +11,7 @@
 | SEC-02 | Tenant/client/matter CRUD, RBAC+ABAC, ethical walls | MISSING | S1.2, S1.3, S1.4 | — |
 | SEC-03 | Matter-aware indexes, ACL before retrieval and jobs | DONE (S1.6 documents and partitions; S1.7 existing modules closed, research and voice matter-scoped) | S1.6, S1.7 | — |
 | SEC-04 | Audit, admin reports, SIEM export | DONE (forwarder awaits network approval) | S1.5 | — |
-| SEC-05 | Consent, pause, revoke, provenance | MISSING | S1.8 | Policy text (P-001); mechanism not blocked |
+| SEC-05 | Consent, pause, revoke, provenance | DONE (mechanism; P-001 wording and rules await counsel) | S1.8 | Policy text (P-001) |
 | SEC-06 | Privilege labels, redaction preview, safe exports | PARTIAL | S1.9, S1.10 | — |
 | SEC-07 | Retention, legal hold, approved deletion, restore | MISSING | S1.9 | Schedules (P-002/P-003); mechanism not blocked |
 | SEC-08 | Firm DMS adapter with ACL/version sync | MISSING | S1.11 | **Provider and credentials (P-010)** |

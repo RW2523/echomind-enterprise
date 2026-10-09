@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-08 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.8-consent` |
-| Phase | Phase 1: S1.0–S1.7 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.9-records` |
+| Phase | Phase 1: S1.0–S1.8 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0008` (Law edition only) |
+| Migrations | `0001`–`0009` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -173,6 +173,16 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - The plan's `ownership` migration is not needed: the legacy tables are no longer reachable in Law.
 - **Owner, please note:** D-025 changes the plan's approach. The plan said to patch each legacy module; this closes them in Law instead. Legacy editions are unchanged.
 
+### Session 2 — S1.8 Consent and capture control
+- S1.7 merged (`9210cb3`).
+- **As built (D-026):**
+  - Meetings, participants and append-only consent and capture timelines (migration `0009_meetings`).
+  - A new consent-gated Law capture socket, with lock-ordered withdrawal.
+  - Audio is not stored, only SHA-256 receipts.
+  - Pluggable transcription, unavailable on the dev host.
+  - Meetings screens: Prepare, Consent, Record.
+- **Counsel:** the consent statement, methods, 12-hour freshness and all-party rule are P-001 safe defaults.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -194,7 +204,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | SEC-02 | DONE | S1.2–S1.5 | Clients, matters, memberships, policy engine with non-disclosure, firm roles, ethical walls with two-person approval and exceptions, break-glass; UI; T01 in backend and browser, walls and break-glass in the browser; every action and refusal audited (S1.5) |
 | SEC-03 | DONE | S1.6–S1.7 | Matter documents in separate encrypted storage and per-matter partitions; a scope capability re-checked per search and while streaming; every legacy module closed in Law (D-025); research and voice matter-scoped; canary suites v1 (search) and v2 (research and voice); T01, T02 and T06 pass, including streams and the model |
 | SEC-04 | DONE (forwarder awaits network approval) | S1.0, S1.5 | Content-free logs (S1.0). Hash-chained append-only trail with daily anchors, verifier CLI and endpoint, firm trail for governance roles, matter activity for leads, verifiable JSONL and CSV export; every Law route audited, enforced by a test. Off-host syslog/CEF forwarder not built (network approval) |
-| SEC-05 | MISSING | S1.8 | Policy values need counsel (P-001) |
+| SEC-05 | DONE (mechanism) | S1.8 | All-party, explicit, per-participant consent before capture; withdrawal stops capture at once with a lock-ordered guarantee; pause and resume recorded; append-only consent and capture timelines; audio receipts; T03 in backend and browser. Wording and rules: P-001 (counsel) |
 | SEC-06 | PARTIAL (pre-existing) | S1.9–S1.10 | |
 | SEC-07 | MISSING | S1.9 | Policy values need counsel (P-002/P-003) |
 | SEC-08 | MISSING | S1.11 | Provider BLOCKED (P-010) |
@@ -202,7 +212,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | RAG-02 | MISSING | S2.3 | |
 | LIVE-01 | PARTIAL (pre-existing) | S2.4 | |
 | LIVE-02 | PARTIAL | S1.7, S2.5 | S1.7: in Law, voice needs a matter and answers only from its research stream (on-behalf-of token). The Law voice UI arrives in S2.5 |
-| MEET-01 | PARTIAL (pre-existing) | S2.6–S2.7 | |
+| MEET-01 | PARTIAL | S1.8, S2.6–S2.7 | S1.8: matter meetings with participants, consent and consent-gated capture. Legal-mode Boardroom (before, during, after, minutes): S2.6–S2.7 |
 | DOC-01 | PARTIAL (pre-existing) | S3.1 | |
 | DOC-02 | MISSING | S3.2–S3.3 | Word tracked changes need a spike and a manual Word check |
 | DOC-03 | MISSING | S3.4 | External authority stays UNVERIFIED (P-009) |
@@ -227,13 +237,15 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - E2E is not in CI. It runs locally with Playwright (`cd frontend && npx playwright test`); the research test uses the host's model server.
 - The compose overlay reuses the 1.4.1 backend image, which may not contain `cryptography`. Check or rebuild at the first approved `compose.sh up`.
 - Back up the master key separately from the data: without it the stored documents cannot be opened.
-- In Law there is no live transcription, Boardroom or document studio until their matter-scoped replacements ship (S1.8 onward). This is intended (D-025).
+- In Law there is no Boardroom or document studio until their matter-scoped replacements ship (S2.6, S3.x); live transcription needs the speech model, which is not on the dev host (the capture path is tested with a stand-in). This is intended (D-025, D-026).
 
 ## NEXT EXACT ACTION
 
-Start **S1.8 Consent and capture control (SEC-05)** on `law/s1.8-consent`:
-1. Migration `0009_meetings`: meetings, participants, append-only `consent_events`, capture sessions.
-2. `legal/meetings/{routes,consent,capture}.py`. Consent policy defaults follow P-001: all-party, explicit, per participant, before any capture.
-3. Re-open live capture as a matter-scoped, consent-gated Law socket (reusing the S1.1 socket gate). `412 consent_required` before ASR loads; withdrawal stops capture within one frame batch; pause and resume are recorded.
-4. Meetings list and Meeting page (Prepare / Consent / Record), `ConsentPanel`, `RecordingCapsule`.
-5. T03 tests, including the start/withdraw race.
+Start **S1.9 Labels, retention, legal hold, deletion (SEC-07, SEC-06 labels)** on `law/s1.9-records`:
+1. Migration `0010_records`.
+2. `legal/records/{labels,holds,retention,deletion}.py`. Privilege labels follow P-004 defaults (advisory: Privileged, Work product, Confidential, Not privileged, Unreviewed).
+3. Holds need a records-admin request plus a second approver (P-003). Held data is never purged by any path.
+4. Every Law delete path goes through `DeletionService`: soft delete → dry-run report (rows, passages, partition vectors, blobs, segments) → approval → purge with a hold re-check → verification.
+5. The retention runner stays dry-run until P-002 is approved.
+6. Screens: label editor in the document inspector, Admin → Retention and holds, the deletion request flow.
+7. T04 tests: every path refuses held items; a purge leaves no residue (DB, partition, blob); a soft delete can be restored.

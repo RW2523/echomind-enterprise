@@ -300,6 +300,35 @@ Every entry records the options considered, the recommendation, the consequence 
   - No relevant passage means an explicit abstention without calling the model.
   - Every question and its outcome are audited (the question only as length and SHA-256). History is private to its owner within the matter.
 
+### D-026 Consent-gated capture as built — RECORDED (S1.8)
+- **A new Law capture socket.** The socket is `/api/legal/matters/{m}/meetings/{id}/capture`. It does not reuse the legacy live-transcript handler, which writes into the shared knowledge base (D-025).
+  - The socket refuses before anything loads:
+    - 4403: not a contributor;
+    - 4404: the meeting is not visible;
+    - 4409: the matter or meeting is closed;
+    - 4412: consent is missing, withdrawn or stale;
+    - 1008: no session or a foreign origin.
+  - It closes with 4401 if the session ends mid-capture.
+- **Consent (P-001 safe defaults, awaiting counsel):**
+  - all-party, explicit, per participant, before any capture;
+  - methods: spoken on the record, in writing, or confirmed by the host;
+  - the person recording consent confirms they read the statement, whose SHA-256 is stored;
+  - consent older than `LEGAL_CONSENT_MAX_AGE_HOURS` (12) must be asked again;
+  - a new or returning participant must consent;
+  - **anyone on the matter can record a withdrawal**, even read-only members and on a closed matter.
+- **Ordering guarantee:**
+  - One lock per meeting. A withdrawal stamps its time and flags running captures inside the lock. Frame acceptance and transcript storage check the flag and stamp their own time inside the same lock.
+  - So no accepted audio and no stored text is later than the withdrawal. A database re-check every `LEGAL_CONSENT_RECHECK_SEC` covers captures in another process.
+- **Audio:**
+  - Not stored by default; audio retention is P-002 and needs counsel.
+  - Each ~5 s batch leaves a SHA-256 custody record (size and time).
+  - Paused audio is discarded unread.
+  - The capture records the hash of the consent state it relied on.
+- **Transcription:**
+  - Pluggable. The default wraps the live speech-recognition model when it is installed; the dev host has none, so it reports "unavailable" and capture control still works.
+  - Segments are stored per matter and meeting; reading them is audited.
+- **Audit:** participant names and transcript text are matter content and never appear in the audit trail; tested.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

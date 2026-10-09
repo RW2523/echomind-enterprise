@@ -50,7 +50,7 @@ export default function MatterOverview() {
           </div>
         </section>
         <p className="lw-meta" style={{ margin: 0 }}>
-          Meetings, live transcription and drafting for this matter arrive in later releases of EchoMind Law.
+          Drafting and live assistance for this matter arrive in later releases of EchoMind Law.
         </p>
       </div>
       {editing && <EditMatterDialog matter={matter} onClose={() => setEditing(false)} />}
