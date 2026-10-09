@@ -171,6 +171,11 @@ def create_user(username: str, password: str, role: str = "user", tenant: str = 
             (uid, username, hash_password(password), role, tenant, now_iso()),
         )
         conn.commit()
+    if is_law():
+        from ..legal.orgs import default_org_id
+        with get_conn() as conn:
+            conn.execute("UPDATE users SET org_id=? WHERE id=?", (default_org_id(), uid))
+            conn.commit()
     return {"id": uid, "username": username, "role": role, "tenant": tenant}
 
 

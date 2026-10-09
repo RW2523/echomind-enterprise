@@ -23,7 +23,7 @@ WS_CLOSE_UNAUTHORIZED = 4401
 
 
 def _principal(s: dict, auth: str) -> dict:
-    return {"sub": s["user_id"], "username": s["username"], "role": s["role"], "tenant": s["tenant"],
+    return {"sub": s["user_id"], "username": s["username"], "role": s["role"], "tenant": s["tenant"], "org_id": s["org_id"],
             "sid": s["token_hash"], "mfa_verified": s["mfa_verified"], "auth": auth, "session": s}
 
 
