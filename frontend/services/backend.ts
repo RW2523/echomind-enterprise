@@ -5,7 +5,7 @@ export const API_BASE = (import.meta as any).env?.VITE_API_BASE || "";
 /** auth (Phase 0b) — cookie-based; same-origin requests carry the httpOnly session automatically. */
 export interface AuthUser { id: string; username: string; role: string; tenant?: string; roles?: string[]; }
 
-export async function getAuthConfig(): Promise<{ auth_enabled: boolean }> {
+export async function getAuthConfig(): Promise<{ auth_enabled: boolean; edition?: string }> {
   try {
     const r = await fetch(`${API_BASE}/api/auth/config`);
     if (!r.ok) return { auth_enabled: false };

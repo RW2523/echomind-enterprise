@@ -242,3 +242,9 @@ def test_obo_token_cannot_mint_more_tokens(law_app, client):
 
 def test_client_error_reports_need_a_session(client):
     assert client.post("/api/client-error", json={"message": "x"}).status_code == 401
+
+
+def test_config_tells_the_frontend_which_edition_to_load(client, monkeypatch):
+    assert client.get("/api/auth/config").json() == {"auth_enabled": True, "edition": "law"}
+    monkeypatch.delenv("ECHOMIND_EDITION")
+    assert client.get("/api/auth/config").json()["edition"] == "standard"

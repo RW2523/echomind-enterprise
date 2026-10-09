@@ -1,0 +1,44 @@
+import React from 'react';
+import { render } from '@testing-library/react';
+import { createMemoryRouter, RouterProvider } from 'react-router';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { vi } from 'vitest';
+import { lawRoutes, makeQueryClient } from '../app/LawApp';
+import type { Matter, Me } from '../api/types';
+
+type Reply = [number, unknown];
+type Handler = (body: any) => Reply;
+
+/** Route the app's fetch calls to in-memory handlers keyed "METHOD /path". Unknown calls fail loudly. */
+export function mockApi(handlers: Record<string, Handler>) {
+  const calls: { method: string; path: string; body: any }[] = [];
+  globalThis.fetch = vi.fn(async (input: any, init?: RequestInit) => {
+    const url = new URL(String(input), 'https://law.test');
+    const method = (init?.method || 'GET').toUpperCase();
+    const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+    calls.push({ method, path: url.pathname, body });
+    const h = handlers[`${method} ${url.pathname}`];
+    if (!h) return new Response(JSON.stringify({ detail: `unmocked ${method} ${url.pathname}` }), { status: 599 });
+    const [status, json] = h(body);
+    return new Response(JSON.stringify(json), { status, headers: { 'Content-Type': 'application/json' } });
+  }) as any;
+  return calls;
+}
+
+export function renderLaw(path: string) {
+  const queryClient = makeQueryClient();
+  queryClient.setDefaultOptions({ queries: { retry: false, staleTime: Infinity } });
+  const router = createMemoryRouter(lawRoutes, { initialEntries: [path] });
+  const utils = render(<QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider>);
+  return { ...utils, router, queryClient };
+}
+
+export const me = (roles: string[] = ['attorney'], extra: Partial<Me['session']> = {}): Me => ({
+  user: { id: 'usr_alice', username: 'alice', role: 'user', roles: roles as any },
+  session: { auth: 'session', mfa_enrolled: true, must_change_password: false, idle_expires_at: 0, abs_expires_at: 0, ...extra },
+});
+
+export const matter = (number: string, title: string, client = 'Alpha Holdings', extra: Partial<Matter> = {}): Matter => ({
+  id: `id-${number}`, number, title, status: 'open', sensitivity: 'restricted', version: 1, created_at: '2026-10-08T00:00:00.000Z',
+  client: { id: `c-${client}`, name: client }, my_role: 'lead', ...extra,
+});

@@ -26,8 +26,10 @@ class LoginIn(BaseModel):
 
 @router.get("/config")
 def auth_config():
-    """Public: lets the frontend decide whether to show the login gate."""
-    return {"auth_enabled": settings.AUTH_ENABLED}
+    """Public: lets the frontend decide whether to show the login gate, and which edition's
+    interface to load (the EchoMind Law workspace when the edition is "law")."""
+    from ...core.edition import current_edition
+    return {"auth_enabled": settings.AUTH_ENABLED, "edition": current_edition() or "standard"}
 
 
 @router.post("/login")
