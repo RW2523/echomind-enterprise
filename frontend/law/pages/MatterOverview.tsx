@@ -45,11 +45,12 @@ export default function MatterOverview() {
           </dl>
           <div style={{ display: 'flex', gap: 8 }}>
             <Link to="../documents" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Documents</Link>
+            <Link to="../research" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Research</Link>
             <Link to="../members" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Members</Link>
           </div>
         </section>
         <p className="lw-meta" style={{ margin: 0 }}>
-          Research answers, meetings and drafting for this matter arrive in later releases of EchoMind Law.
+          Meetings, live transcription and drafting for this matter arrive in later releases of EchoMind Law.
         </p>
       </div>
       {editing && <EditMatterDialog matter={matter} onClose={() => setEditing(false)} />}

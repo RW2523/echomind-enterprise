@@ -124,18 +124,9 @@ def list_transcripts(since: str | None = None, last_hours: float | None = None):
 async def ws(ws: WebSocket):
     from ...core.edition import is_law
     if is_law():
-        # Law edition (S1.1): live session + same-origin handshake, re-checked while the socket is
-        # open; the socket closes with 4401 once the session is revoked or expires.
-        from ...legal.identity.principal import from_websocket, watch_websocket
-        principal = from_websocket(ws)
-        if not principal:
-            await ws.close(code=1008)
-            return
-        watcher = watch_websocket(ws, principal)
-        try:
-            await ws_handler(ws)
-        finally:
-            watcher.cancel()
+        # Law edition (S1.7, D-025): live capture is closed until it can be tied to a matter and to
+        # recorded consent (S1.8). 4404 = not available in this edition.
+        await ws.close(code=4404)
         return
     # Auth gate (Phase 0b): when enabled, require a valid session cookie on the WS handshake.
     from ...core.config import settings as _settings

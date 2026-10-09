@@ -71,3 +71,13 @@ export interface Passage {
     page_start?: number | null; page_end?: number | null; char_start?: number | null; char_end?: number | null };
 }
 export interface SearchResult { passages: Passage[]; abstained: boolean }
+
+/** Matter research (S1.7). */
+export interface ResearchSource {
+  n: number; document_id: string; document_title: string; version_id: string; version_number: number;
+  page_start?: number | null; page_end?: number | null; char_start?: number | null; char_end?: number | null; text: string;
+}
+export interface ResearchTurn {
+  id: string; question: string; answer: string | null; citations: ResearchSource[];
+  status: 'answered' | 'abstained' | 'scope_revoked' | 'error'; created_at: string;
+}

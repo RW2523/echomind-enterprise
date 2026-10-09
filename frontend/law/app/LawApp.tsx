@@ -20,6 +20,7 @@ import EmergencyAccess from '../pages/EmergencyAccess';
 import AuditTrail from '../pages/AuditTrail';
 import MatterActivity from '../pages/MatterActivity';
 import MatterDocuments from '../pages/MatterDocuments';
+import MatterResearch from '../pages/MatterResearch';
 import NotAvailable from '../pages/NotAvailable';
 import DesignCatalogue from '../pages/DesignCatalogue';
 
@@ -47,6 +48,7 @@ export const lawRoutes = [
               { index: true, element: <Navigate to="overview" replace /> },
               { path: 'overview', element: <MatterOverview /> },
               { path: 'documents', element: <MatterDocuments /> },
+              { path: 'research', element: <MatterResearch /> },
               { path: 'members', element: <MatterMembers /> },
               { path: 'activity', element: <MatterActivity /> },
               { path: '*', element: <NotAvailable /> },

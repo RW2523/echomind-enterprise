@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from typing import Optional
 
 from ...core.config import settings
@@ -15,8 +16,13 @@ from . import SESSION_COOKIE, obo, sessions
 
 logger = logging.getLogger(__name__)
 
-# Routes a service may call with an on-behalf-of token instead of a browser session.
-OBO_PATHS = frozenset({"/api/chat/ask-voice", "/api/chat/ask-voice-stream"})
+# Routes a service may call with an on-behalf-of token instead of a browser session (S1.7: only
+# a matter's research query; the policy engine still decides whether that person may use it).
+_OBO_PATH = re.compile(r"^/api/legal/matters/[A-Za-z0-9-]{1,64}/research/query$")
+
+
+def obo_path(path: str) -> bool:
+    return bool(_OBO_PATH.match(path or ""))
 # Routes a partial (password-only, MFA pending) session may call.
 PARTIAL_PATHS = frozenset({"/api/auth/mfa/verify", "/api/auth/mfa/enroll", "/api/auth/mfa/confirm"})
 # Routes still open to a signed-in person who must first replace an administrator-set password (D-021).
@@ -38,7 +44,7 @@ def from_request(request, allow_partial: bool = False) -> Optional[dict]:
     principal = None
     authz = request.headers.get("authorization") or ""
     if authz[:7].lower() == "bearer ":
-        if request.url.path in OBO_PATHS:
+        if obo_path(request.url.path):
             v = obo.verify(authz[7:].strip(), audience="voice")
             principal = _principal(v["session"], "obo") if v else None
     else:

@@ -224,3 +224,23 @@ test('documents: imported into M-101, read in the background, searchable only in
   await bob.goto('/m/M-101/documents');
   await expect(bob.getByText("This item isn't available.")).toBeVisible();
 });
+
+test('research: an answer from M-101 only, tied to the clause it relies on', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/research');
+  await alice.getByLabel('Ask about this matter').fill('What is the cap on each party’s aggregate liability?');
+  await alice.getByRole('button', { name: 'Ask' }).click();
+  const answer = alice.getByRole('article', { name: 'Answer' });
+  const sources = answer.getByRole('region', { name: 'Sources' });
+  await expect(sources).toBeVisible({ timeout: 180_000 });                  // real model, real retrieval
+  await expect(sources.getByText(/aggregate liability/).first()).toBeVisible();
+  await expect(answer.getByRole('button', { name: /^Source \d$/ }).first()).toBeVisible();
+  await expect(answer.getByText(/250,000/).first()).toBeVisible();
+  await shot(alice, '15-research-light');
+  await alice.getByLabel('Ask about this matter').fill('Which merger did the board of Beta Shipping approve?');
+  await alice.getByRole('button', { name: 'Ask' }).click();
+  await expect(alice.getByText('The documents in this matter do not answer that.')).toBeVisible({ timeout: 120_000 });
+  await expect(alice.getByRole('complementary', { name: 'Your earlier questions' }).getByText(/aggregate liability/)).toBeVisible();
+});

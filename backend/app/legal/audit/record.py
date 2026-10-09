@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 SAFE_TEXT_KEYS = frozenset({
     "action", "code", "fields", "format", "method", "number", "outcome", "policy", "role", "roles",
     "route", "sensitivity", "status", "username", "user_id", "audience", "added", "removed", "wall",
-    "sha256", "kind", "mime", "modes",
+    "sha256", "kind", "mime", "modes", "citations",
 })
 _MAX_SAFE_TEXT = 120
 _IDENT = re.compile(r"^[A-Za-z0-9_.:@-]{1,64}$")

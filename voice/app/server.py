@@ -3,6 +3,7 @@ import base64
 import json
 import logging
 import os
+import re
 import uuid
 from contextlib import asynccontextmanager
 
@@ -205,10 +206,19 @@ async def _law_ws_watch(ws: WebSocket, backend_auth) -> None:
         return
 
 
+_MATTER_ID = re.compile(r"^[A-Za-z0-9-]{1,64}$")
+
+
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
-    backend_auth, watcher = None, None
+    backend_auth, watcher, matter_id = None, None, None
     if is_law():
+        # S1.7 (D-025): a Law voice conversation is about one matter (?matter=<id>); without one it
+        # is refused. Whether the user may use that matter is decided by the backend on every answer.
+        matter_id = ws.query_params.get("matter") or ""
+        if not _MATTER_ID.match(matter_id):
+            await ws.close(code=1008)
+            return
         backend_auth = await _law_ws_gate(ws)
         if backend_auth is None:
             await ws.close(code=1008)
@@ -222,6 +232,7 @@ async def ws_endpoint(ws: WebSocket):
     await ws.accept()
     sess = OmniSessionA(ws)
     sess.backend_auth = backend_auth
+    sess.law_matter_id = matter_id
     if backend_auth is not None:
         watcher = asyncio.create_task(_law_ws_watch(ws, backend_auth))
     await sess.start(str(uuid.uuid4()))

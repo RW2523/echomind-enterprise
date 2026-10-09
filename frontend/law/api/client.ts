@@ -35,3 +35,29 @@ export const api = {
   del: <T>(path: string) => request<T>('DELETE', path),
   upload: <T>(path: string, form: FormData) => request<T>('POST', path, form),
 };
+
+/** POST that answers with NDJSON (one JSON object per line); calls onEvent for each as it arrives. */
+export async function postStream(path: string, body: unknown, onEvent: (e: any) => void, signal?: AbortSignal): Promise<void> {
+  const r = await fetch(path, {
+    method: 'POST', credentials: 'same-origin', signal,
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    let data: any = null;
+    try { data = await r.json(); } catch { /* empty */ }
+    throw new ApiError(r.status, typeof data?.detail === 'string' ? data.detail : 'Something went wrong.');
+  }
+  const emit = (line: string) => { if (line.trim()) onEvent(JSON.parse(line)); };
+  if (!r.body) { (await r.text()).split('\n').forEach(emit); return; }
+  const reader = r.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let i: number;
+    while ((i = buf.indexOf('\n')) >= 0) { emit(buf.slice(0, i)); buf = buf.slice(i + 1); }
+  }
+  emit(buf);
+}

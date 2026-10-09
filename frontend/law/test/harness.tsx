@@ -29,6 +29,10 @@ export function mockApi(handlers: Record<string, Handler>) {
     }
     if (!h) return new Response(JSON.stringify({ detail: `unmocked ${method} ${url.pathname}` }), { status: 599 });
     const [status, json] = h(body);
+    if (json && typeof json === 'object' && Array.isArray((json as any).__ndjson)) {   // a streamed NDJSON answer
+      const text = (json as any).__ndjson.map((e: unknown) => JSON.stringify(e)).join('\n') + '\n';
+      return new Response(text, { status, headers: { 'Content-Type': 'application/x-ndjson' } });
+    }
     return new Response(JSON.stringify(json), { status, headers: { 'Content-Type': 'application/json' } });
   }) as any;
   return calls;

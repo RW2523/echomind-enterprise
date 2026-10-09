@@ -34,7 +34,7 @@ def test_login_sets_hardened_cookies_and_returns_no_token(client):
 def test_partial_session_cannot_use_the_app(client):
     u = make_user("p.okafor")
     client.post("/api/auth/login", json={"username": u["username"], "password": u["password"]})
-    assert client.get("/api/docs/list").status_code == 401
+    assert client.get("/api/legal/matters").status_code == 401
     assert client.get("/api/auth/me").status_code == 401
 
 
@@ -131,15 +131,15 @@ def test_legacy_jwt_cookie_is_ignored(client):
     from app.core import auth
     u = make_user("a.rahman", mfa=True)
     client.cookies.set("echomind_token", auth.make_token(u["id"], "admin", u["username"]))
-    assert client.get("/api/docs/list").status_code == 401
+    assert client.get("/api/legal/matters").status_code == 401
 
 
 # ── CSRF, logout, sessions ───────────────────────────────────────────────────────
 def test_mutations_require_the_csrf_token(client):
-    sign_in(client, make_user("a.rahman", mfa=True))
-    assert client.post("/api/chat/create", json={"title": "x"}).status_code == 403
-    assert client.post("/api/chat/create", json={"title": "x"}, headers={"X-CSRF-Token": "forged"}).status_code == 403
-    assert client.post("/api/chat/create", json={"title": "x"}, headers=csrf_headers(client)).status_code == 200
+    sign_in(client, make_user("a.rahman", mfa=True, firm_roles=["attorney"]))
+    assert client.post("/api/legal/clients", json={"name": "x"}).status_code == 403
+    assert client.post("/api/legal/clients", json={"name": "x"}, headers={"X-CSRF-Token": "forged"}).status_code == 403
+    assert client.post("/api/legal/clients", json={"name": "x"}, headers=csrf_headers(client)).status_code == 200
 
 
 def test_logout_revokes_server_side(client):
@@ -218,17 +218,19 @@ def test_new_users_must_meet_the_password_policy(client):
 
 
 # ── Service-to-service (voice) tokens ────────────────────────────────────────────
-def test_obo_token_works_only_on_voice_rag_routes(law_app, client):
+def test_obo_token_works_only_on_the_research_route(law_app, client):
     from fastapi.testclient import TestClient
     sign_in(client, make_user("a.rahman", mfa=True))
     r = client.post("/api/auth/obo-token", json={"audience": "voice"}, headers=csrf_headers(client))
     assert r.status_code == 200 and r.json()["expires_in"] == 300
     bearer = {"Authorization": f"Bearer {r.json()['token']}"}
     svc = TestClient(law_app, base_url="https://testserver")  # no cookies: a service
-    assert svc.get("/api/docs/list", headers=bearer).status_code == 401
-    assert svc.post("/api/chat/ask-voice", json={}, headers=bearer).status_code == 422  # authenticated; body invalid
+    research = "/api/legal/matters/x/research/query"
+    assert svc.get("/api/legal/matters", headers=bearer).status_code == 401
+    assert svc.get("/api/legal/matters/x/research", headers=bearer).status_code == 401
+    assert svc.post(research, json={}, headers=bearer).status_code == 422          # authenticated; body invalid
     client.post("/api/auth/logout")
-    assert svc.post("/api/chat/ask-voice", json={}, headers=bearer).status_code == 401  # session gone → token dead
+    assert svc.post(research, json={}, headers=bearer).status_code == 401          # session gone → token dead
 
 
 def test_obo_token_cannot_mint_more_tokens(law_app, client):
@@ -240,8 +242,9 @@ def test_obo_token_cannot_mint_more_tokens(law_app, client):
                     headers={"Authorization": f"Bearer {tok}"}).status_code == 401
 
 
-def test_client_error_reports_need_a_session(client):
-    assert client.post("/api/client-error", json={"message": "x"}).status_code == 401
+def test_client_error_reports_are_closed_in_law(client):
+    """S1.1 kept the client-error sink off the public list; S1.7 (D-025) closes it for everyone."""
+    assert client.post("/api/client-error", json={"message": "x"}).status_code == 404
 
 
 def test_config_tells_the_frontend_which_edition_to_load(client, monkeypatch):
