@@ -1,4 +1,4 @@
-import os, sqlite3
+import atexit, os, sqlite3, threading
 from contextlib import contextmanager
 from .config import settings
 from .edition import is_law
@@ -244,8 +244,50 @@ def init_db():
         from ..legal.orgs import ensure_default_org
         ensure_default_org()
 
+# One idle connection per process, never used for queries, keeps the WAL and its shared-memory
+# index in place. Without it the connection that closes last checkpoints the WAL, deletes it and
+# tears the index down, and the next request rebuilds them — on every request. Under concurrent
+# load that churn stalled the backend with every thread in sqlite3 connect/close (Law S1.11,
+# TEST_RESULTS run 12). Automatic checkpoints still run every 1000 pages; the anchor is closed
+# (checkpointing the WAL into the file) at exit or when DB_PATH changes, as it does in tests.
+_anchor_lock = threading.Lock()
+_anchor: dict = {"path": None, "conn": None}
+
+
+def _close_anchor() -> None:
+    with _anchor_lock:
+        conn, _anchor["conn"], _anchor["path"] = _anchor["conn"], None, None
+    if conn is not None:
+        try:
+            conn.close()
+        except sqlite3.Error:
+            pass
+
+
+def _hold_open(path: str) -> None:
+    if _anchor["path"] == path:
+        return
+    with _anchor_lock:
+        if _anchor["path"] == path:
+            return
+        old = _anchor["conn"]
+        conn = sqlite3.connect(path, check_same_thread=False)
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("SELECT COUNT(*) FROM sqlite_master").fetchone()   # a read opens the WAL and its index
+        _anchor["conn"], _anchor["path"] = conn, path
+    if old is not None:
+        try:
+            old.close()
+        except sqlite3.Error:
+            pass
+
+
+atexit.register(_close_anchor)
+
+
 @contextmanager
 def get_conn():
+    _hold_open(settings.DB_PATH)
     conn = sqlite3.connect(settings.DB_PATH)
     # WAL mode: concurrent readers + writers without blocking each other.
     # NORMAL sync: safe on power loss (WAL checkpoint handles durability).
