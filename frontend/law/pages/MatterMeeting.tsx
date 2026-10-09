@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
-import { Circle, Mic, Pause, Play, Square, Trash2, UserPlus } from 'lucide-react';
+import { Circle, FileOutput, Mic, Pause, Play, Square, Trash2, UserPlus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { keys, meetingsPath, useMeeting } from '../api/queries';
@@ -12,6 +12,7 @@ import { Dialog, ErrorNote, Field, Skeleton, StatusPill, type Tone } from '../ui
 import NotAvailable from './NotAvailable';
 import { DeleteDialog, HoldNotice, LabelControl } from '../ui/records';
 import { kindLabel } from './MatterMeetings';
+import { ExportDialog } from './MatterExports';
 
 const ROLES: [ParticipantRole, string][] = [['host', 'Host'], ['attorney', 'Attorney'], ['client', 'Client'], ['counterparty', 'Counterparty'],
   ['witness', 'Witness'], ['expert', 'Expert'], ['other', 'Other']];
@@ -210,6 +211,8 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
 }) {
   const refresh = useRefresh(matterId, m.id);
   const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const matter = useMatter();
   const transcriptBase = `${meetingsPath(matterId)}/${encodeURIComponent(m.id)}/transcript`;
   const [phase, setPhase] = useState<Phase>('idle');
   const [note, setNote] = useState('');
@@ -296,6 +299,8 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
         <section className="lw-paper lw-sheet" aria-label="Transcript">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <h2 className="lw-h2">Transcript</h2>
+            {['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && !recording && (m.transcript?.length ?? 0) > 0 &&
+              <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => setExporting(true)}><FileOutput />Export…</button>}
             {canDelete && !onHold && !recording && (m.transcript?.length ?? 0) > 0 &&
               <button type="button" className="lw-btn lw-btn-sm lw-btn-danger" onClick={() => setDeleting(true)}><Trash2 />Delete transcript…</button>}
           </div>
@@ -304,6 +309,7 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
         </section>
       )}
       {m.captures.length > 0 && <Timeline captures={m.captures} />}
+      {exporting && <ExportDialog matterId={matterId} number={matter.number} objectType="meeting_transcript" objectId={m.id} title={`Transcript of ${m.title}`} onClose={() => setExporting(false)} />}
       {deleting && (
         <DeleteDialog title="Delete this meeting’s transcript" previewUrl={`${transcriptBase}/deletion-preview`} deleteUrl={`${transcriptBase}/delete`}
           onClose={() => setDeleting(false)} onDone={() => { setDeleting(false); void refresh(); }} />

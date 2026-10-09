@@ -24,6 +24,7 @@ import MatterDocuments from '../pages/MatterDocuments';
 import MatterResearch from '../pages/MatterResearch';
 import MatterMeetings from '../pages/MatterMeetings';
 import MatterMeeting from '../pages/MatterMeeting';
+import MatterExports, { MatterExport } from '../pages/MatterExports';
 import NotAvailable from '../pages/NotAvailable';
 import DesignCatalogue from '../pages/DesignCatalogue';
 
@@ -54,6 +55,8 @@ export const lawRoutes = [
               { path: 'research', element: <MatterResearch /> },
               { path: 'meetings', element: <MatterMeetings /> },
               { path: 'meetings/:meetingId', element: <MatterMeeting /> },
+              { path: 'exports', element: <MatterExports /> },
+              { path: 'exports/:exportId', element: <MatterExport /> },
               { path: 'members', element: <MatterMembers /> },
               { path: 'activity', element: <MatterActivity /> },
               { path: '*', element: <NotAvailable /> },

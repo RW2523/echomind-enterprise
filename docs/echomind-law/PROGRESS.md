@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-08 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.10-exports` |
-| Phase | Phase 1: S1.0–S1.9 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.11-connectors` |
+| Phase | Phase 1: S1.0–S1.10 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0010` (Law edition only) |
+| Migrations | `0001`–`0011` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -198,6 +198,17 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Admin → Records (deletion requests, legal holds, retention).
 - **Counsel:** label set (P-004), hold workflow (P-003) and retention schedules (P-002) are safe defaults.
 
+### Session 2 (continued) — S1.10 Export gateway and redaction
+- **As built (D-028):**
+  - A matter's documents and transcripts leave as files only through the gateway: request (with the export right), redaction plan, approval by a second lawyer, render, verify, watermark, then a 24-hour encrypted release (migration `0011_exports`).
+  - PDF redaction removes the text. Word files are rebuilt clean.
+  - Purging a document purges its exports.
+- Screens:
+  - Export… on documents and transcripts;
+  - Exports list;
+  - the export page with page previews, the redaction plan, approval and the released file's checks.
+- **Counsel:** who may export, the redaction defaults and the watermark wording are P-006 safe defaults.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -221,7 +232,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | SEC-03 | DONE | S1.6–S1.7 | Matter documents in separate encrypted storage and per-matter partitions; a scope capability re-checked per search and while streaming; every legacy module closed in Law (D-025); research and voice matter-scoped; canary suites v1 (search) and v2 (research and voice); T01, T02 and T06 pass, including streams and the model |
 | SEC-04 | DONE (forwarder awaits network approval) | S1.0, S1.5 | Content-free logs (S1.0). Hash-chained append-only trail with daily anchors, verifier CLI and endpoint, firm trail for governance roles, matter activity for leads, verifiable JSONL and CSV export; every Law route audited, enforced by a test. Off-host syslog/CEF forwarder not built (network approval) |
 | SEC-05 | DONE (mechanism) | S1.8 | All-party, explicit, per-participant consent before capture; withdrawal stops capture at once with a lock-ordered guarantee; pause and resume recorded; append-only consent and capture timelines; audio receipts; T03 in backend and browser. Wording and rules: P-001 (counsel) |
-| SEC-06 | PARTIAL (labels DONE) | S1.9–S1.10 | S1.9: advisory privilege labels on documents and meetings, with detector suggestions, a paralegal suggestion path and audit. Redaction preview and safe exports: S1.10 |
+| SEC-06 | DONE | S1.9–S1.10 | Advisory labels (S1.9); export gateway (S1.10): plan, second-lawyer approval with a privilege acknowledgement, real PDF redaction, clean Word rebuild, verification of every output, watermark, 24 h encrypted release; T09 in backend and browser. Policy values: P-006 (counsel) |
 | SEC-07 | DONE (mechanism) | S1.9 | Holds with two-person approval and release; one deletion service (soft delete, report, approval, purge with a hold re-check, verification, restore); retention dry runs only, and requests at most; T04 in backend and browser. Schedules: P-002/P-003 (counsel) |
 | SEC-08 | MISSING | S1.11 | Provider BLOCKED (P-010) |
 | RAG-01 | PARTIAL | S1.6–S1.7, S2.1–S2.2 | Matter-scoped search (S1.6) and research answers with numbered citations to quoted clauses, abstention and owner-private history (S1.7, real-model E2E). Still to come: OCR, clause-aware ingestion, the PDF viewer with highlights and evaluation (S2.1–S2.3) |
@@ -257,10 +268,11 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S1.10 Export gateway v2 and redaction (SEC-06)** on `law/s1.10-exports`:
-1. Migration `0011_exports`.
-2. `legal/exports/{detect,plan,render_pdf,render_docx,sanitize,verify,watermark}.py`. Detectors: the existing PII patterns plus matter party names, matter numbers, account numbers and privilege markers.
-3. PDF redaction must really remove the text (PyMuPDF `add_redact_annot` + `apply_redactions`), then text-extraction verification. DOCX is rebuilt clean: comments, revisions, `docProps`, custom XML and hidden runs stripped.
-4. Flow: request (needs `export.request` and the membership's `can_export`) → preview with redaction boxes and reasons → approve (`export.approve`, a second person; P-006) → render → verify → watermark "CONFIDENTIAL — <matter> — <user> — <timestamp>" → download (`no-store`, audited). Exports of held matters are allowed (exporting is not deleting).
-5. The `ExportPreview` screen.
-6. T09: for each format, redacted strings are absent from extracted text, metadata, comments and revisions; unauthorized export is denied; the watermark is present; the audit chain is complete.
+Start **S1.11 DMS connector framework (SEC-08)** on `law/s1.11-connectors`:
+1. Migration `0012_connectors`.
+2. `legal/connectors/{base,local_folder,sync}.py`: the `DmsConnector` protocol; a `LocalFolderConnector` for a folder on this host with `*.acl.json` sidecars; config encrypted with the master key.
+3. Sync imports documents into the mapped matter through the existing ingest path (encrypted, partitioned, audited).
+4. The ACL rule fails closed: a document is searchable only if its sidecar names people who are also live members of the matter, and is intersected with membership at query time.
+5. A document removed in the DMS is purged from the partition.
+6. Admin → Connectors (firm admin). Documents show their source and stale or failed states.
+7. T15 with the local connector. **No real provider:** P-010 (provider and credentials) and network approval are still needed, and no mock is presented as working.

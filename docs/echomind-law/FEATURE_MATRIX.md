@@ -12,7 +12,7 @@
 | SEC-03 | Matter-aware indexes, ACL before retrieval and jobs | DONE (S1.6 documents and partitions; S1.7 existing modules closed, research and voice matter-scoped) | S1.6, S1.7 | — |
 | SEC-04 | Audit, admin reports, SIEM export | DONE (forwarder awaits network approval) | S1.5 | — |
 | SEC-05 | Consent, pause, revoke, provenance | DONE (mechanism; P-001 wording and rules await counsel) | S1.8 | Policy text (P-001) |
-| SEC-06 | Privilege labels, redaction preview, safe exports | PARTIAL (labels DONE in S1.9; exports S1.10) | S1.9, S1.10 | — |
+| SEC-06 | Privilege labels, redaction preview, safe exports | DONE (labels S1.9, export gateway S1.10; P-006 values await counsel) | S1.9, S1.10 | — |
 | SEC-07 | Retention, legal hold, approved deletion, restore | DONE (mechanism; schedules await counsel) | S1.9 | Schedules (P-002/P-003) |
 | SEC-08 | Firm DMS adapter with ACL/version sync | MISSING | S1.11 | **Provider and credentials (P-010)** |
 | RAG-01 | Matter-scoped legal chat, clause ingestion, OCR, versions | PARTIAL | S2.1, S2.2 | — |
