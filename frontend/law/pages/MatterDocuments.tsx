@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { Download, FileOutput, FileUp, RotateCcw, Search, Trash2, X } from 'lucide-react';
+import { Download, FileOutput, FileUp, FolderSync, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
-import { documentsPath, keys, useDocument, useDocuments, useMatterDeletions } from '../api/queries';
+import { documentsPath, keys, useConnectorLinks, useDocument, useDocuments, useMatterDeletions } from '../api/queries';
 import type { Deletion, DocKind, DocStatus, DocVersion, LawDocument, SearchResult } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
@@ -53,6 +53,7 @@ export default function MatterDocuments() {
       <div className="lw-content lw-docs" data-inspecting={selected ? 'true' : undefined}>
         <div style={{ display: 'grid', gap: 16, alignContent: 'start', minWidth: 0 }}>
           <MatterSearch matterId={matter.id} onOpen={setSelected} />
+          <LinkedFolders matterId={matter.id} isLead={role === 'lead' && matter.status === 'open'} />
           {mayDelete && <PendingDeletions matterId={matter.id} />}
           {docs.isPending ? <div className="lw-paper lw-sheet" aria-busy="true"><Skeleton /><Skeleton /></div>
             : docs.isError ? <ErrorNote>{docs.error instanceof ApiError ? docs.error.message : 'The documents could not be loaded.'}</ErrorNote>
@@ -74,6 +75,7 @@ export default function MatterDocuments() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                               <button type="button" className="lw-linklike" onClick={() => setSelected(d.id)}>{d.title}</button>
                               <LabelPill label={d.label} suggested={d.label_suggested} />
+                              {d.source?.kind === 'connector' && <StatusPill tone="neutral" icon={<FolderSync />}>{d.source.state === 'removed_in_source' ? 'Removed at source' : 'Synced'}</StatusPill>}
                             </div>
                             <div className="lw-meta lw-ellipsis">{v?.filename}</div>
                           </td>
@@ -195,7 +197,9 @@ function Inspector({ matterId, docId, canEdit, perms, onClose }: { matterId: str
                 <dt>Search</dt><dd><StatusPill tone={INDEX[v.index_status][1]}>{INDEX[v.index_status][0]}</StatusPill>
                   {v.index_status === 'indexed' && <span className="lw-meta"> · {v.chunk_count} passage{v.chunk_count === 1 ? '' : 's'}</span>}
                   {v.index_status === 'failed' && <div className="lw-meta">{INDEX_ERRORS[v.index_error ?? 'error'] ?? INDEX_ERRORS.error}</div>}</dd>
-                <dt>Imported</dt><dd>{v.uploaded_by} · {when(v.uploaded_at)}</dd>
+                <dt>{d.source?.kind === 'connector' ? 'Synced' : 'Imported'}</dt><dd>{d.source?.kind === 'connector' ? when(v.uploaded_at) : `${v.uploaded_by} · ${when(v.uploaded_at)}`}</dd>
+                {d.source?.kind === 'connector' && <><dt>Source</dt><dd className="lw-ellipsis" title={d.source.path}>{d.source.name} · {d.source.path}
+                  {d.source.state === 'removed_in_source' && <div className="lw-meta">Removed at the source; kept because the matter is under a legal hold.</div>}</dd></>}
                 <dt>Fingerprint</dt><dd className="lw-mono" title={`SHA-256 ${v.sha256}`}>{v.sha256.slice(0, 16)}…</dd>
               </dl>
             )}
@@ -315,7 +319,7 @@ function ImportDialog({ matterId, documents, onClose }: { matterId: string; docu
         {documents.length > 0 && (
           <Field label="This is">{(id) => <select id={id} className="lw-input" value={form.version_of} onChange={(e) => setForm({ ...form, version_of: e.target.value })}>
             <option value="">A new document</option>
-            {documents.map((d) => <option key={d.id} value={d.id}>A new version of “{d.title}”</option>)}</select>}</Field>
+            {documents.filter((d) => d.source?.kind !== 'connector').map((d) => <option key={d.id} value={d.id}>A new version of “{d.title}”</option>)}</select>}</Field>
         )}
         {!form.version_of && <>
           <Field label="Title">{(id) => <input id={id} className="lw-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />}</Field>
@@ -366,6 +370,58 @@ function PendingDeletions({ matterId }: { matterId: string }) {
           </li>
         ))}
       </ul>
+      {error && <div style={{ padding: '0 20px 14px' }}><ErrorNote>{error}</ErrorNote></div>}
+    </section>
+  );
+}
+
+/** Folders of the firm's document system linked to this matter. The lead links and unlinks;
+ *  everyone on the matter sees where documents come from. */
+function LinkedFolders({ matterId, isLead }: { matterId: string; isLead: boolean }) {
+  const qc = useQueryClient();
+  const data = useConnectorLinks(matterId);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ connector_id: '', remote_path: '' });
+  const [error, setError] = useState('');
+  if (!data.data || (data.data.links.length === 0 && (!isLead || data.data.connectors.length === 0))) return null;
+  const refresh = () => qc.invalidateQueries({ queryKey: keys.links(matterId) });
+  const add = async (e: React.FormEvent) => {
+    e.preventDefault(); setError('');
+    try {
+      await api.post(`/api/legal/matters/${encodeURIComponent(matterId)}/connector-links`, { connector_id: form.connector_id || data.data!.connectors[0]?.id, remote_path: form.remote_path.trim() });
+      setAdding(false); setForm({ connector_id: '', remote_path: '' }); await refresh();
+    } catch (err) { setError(err instanceof ApiError ? err.message : 'The folder could not be linked.'); }
+  };
+  const remove = async (id: string) => {
+    setError('');
+    try { await api.del(`/api/legal/matters/${encodeURIComponent(matterId)}/connector-links/${encodeURIComponent(id)}`); await refresh(); }
+    catch (err) { setError(err instanceof ApiError ? err.message : 'The folder could not be unlinked.'); }
+  };
+  return (
+    <section className="lw-paper" aria-label="Linked folders">
+      <div className="lw-card-h"><h2 className="lw-h2">Linked folders</h2>
+        {isLead && !adding && <button type="button" className="lw-btn lw-btn-sm" onClick={() => setAdding(true)}><FolderSync />Link a folder</button>}</div>
+      <ul className="lw-pending">
+        {data.data.links.map((l) => (
+          <li key={l.id}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="lw-mono lw-ellipsis">{l.remote_path}</div>
+              <div className="lw-meta">{l.connector_name} · linked by {l.created_by} · {l.last_ok_at ? `last synced ${when(l.last_ok_at)}` : 'not synced yet'}</div>
+            </div>
+            {l.connector_status !== 'active' && <StatusPill tone="neutral">Connector disabled</StatusPill>}
+            {isLead && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => remove(l.id)}>Unlink</button>}
+          </li>
+        ))}
+      </ul>
+      {adding && (
+        <form onSubmit={add} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto auto', gap: 8, alignItems: 'end', padding: '0 20px 16px' }}>
+          <Field label="Connector">{(id) => <select id={id} className="lw-input" value={form.connector_id} onChange={(e) => setForm({ ...form, connector_id: e.target.value })}>
+            {data.data!.connectors.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>}</Field>
+          <Field label="Folder" hint="Inside the connector, e.g. Clients/Harrowgate/MSA">{(id) => <input id={id} className="lw-input lw-mono" value={form.remote_path} onChange={(e) => setForm({ ...form, remote_path: e.target.value })} />}</Field>
+          <button type="submit" className="lw-btn lw-btn-primary" disabled={!form.remote_path.trim()}>Link</button>
+          <button type="button" className="lw-btn lw-btn-ghost" onClick={() => setAdding(false)}>Cancel</button>
+        </form>
+      )}
       {error && <div style={{ padding: '0 20px 14px' }}><ErrorNote>{error}</ErrorNote></div>}
     </section>
   );

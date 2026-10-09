@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, BookOpenText, Briefcase, CalendarClock, FileOutput, Files, FileText, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
+import { Archive, BookOpenText, Briefcase, CalendarClock, FileOutput, Files, FolderSync, FileText, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
 import { api } from '../api/client';
 import MatterSwitcher from '../ui/MatterSwitcher';
 import { hasFirmRole, useSession } from './session';
@@ -44,6 +44,7 @@ export default function Shell() {
           <NavItem to="/home" icon={<HomeIcon />}>Home</NavItem>
           <NavItem to="/matters" icon={<Briefcase />}>Matters</NavItem>
           {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/users" icon={<UserCog />}>Users &amp; roles</NavItem>}
+          {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/connectors" icon={<FolderSync />}>Connectors</NavItem>}
           {hasFirmRole(me, 'managing_partner') && <NavItem to="/admin/walls" icon={<ShieldOff />}>Ethical walls</NavItem>}
           {hasFirmRole(me, 'firm_admin', 'managing_partner') && <NavItem to="/admin/emergency-access" icon={<Siren />}>Emergency access</NavItem>}
           {hasFirmRole(me, 'records_admin', 'managing_partner') && <NavItem to="/admin/records" icon={<Archive />}>Records</NavItem>}

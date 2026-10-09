@@ -381,3 +381,37 @@ test('exports: redactions reviewed, approved by a second lawyer, checked, waterm
   expect(file.suggestedFilename()).toBe('settlement-letter.pdf');
   expect(fs.statSync(await file.path()).size).toBeGreaterThan(500);
 });
+
+test('connectors: a folder linked by the lead syncs in with its permissions; files without them stay out', async ({ browser }) => {
+  test.setTimeout(180_000);
+  const fiona = await (await browser.newContext()).newPage();
+  await signIn(fiona, 'fiona');
+  await fiona.goto('/admin/connectors');
+  await expect(fiona.getByText(/Needs the firm.s choice of provider/)).toBeVisible();
+  const form = fiona.getByRole('form', { name: 'Add a folder connector' });
+  await form.getByLabel('Name').fill('Firm DMS (demo folder)');
+  await form.getByLabel('Folder on this server').fill(path.resolve(HERE, '../../.law-dms-e2e'));
+  await form.getByRole('button', { name: 'Add connector' }).click();
+  await expect(fiona.getByRole('region', { name: 'Firm DMS (demo folder)' })).toBeVisible();
+
+  const bob = await (await browser.newContext()).newPage();
+  await signIn(bob, 'bob');
+  await bob.goto('/m/M-215/documents');
+  const panel = bob.getByRole('region', { name: 'Linked folders' });
+  await panel.getByRole('button', { name: /Link a folder/ }).click();
+  await panel.getByLabel('Folder').fill('Beta/Lease');
+  await panel.getByRole('button', { name: 'Link', exact: true }).click();
+  await expect(panel.getByText('Beta/Lease')).toBeVisible();
+
+  const card = fiona.getByRole('region', { name: 'Firm DMS (demo folder)' });
+  await card.getByRole('button', { name: /Sync now/ }).click();
+  await expect(card.getByText('1 imported')).toBeVisible({ timeout: 30_000 });
+  await expect(card.getByText('1 skipped: no permissions file')).toBeVisible();
+  await expect(card.getByText('1 linked folder', { exact: false })).toBeVisible();
+  await shot(fiona, '19-connectors-light');
+
+  await bob.reload();
+  await expect(bob.getByRole('button', { name: 'lease-notice', exact: true })).toBeVisible();
+  await expect(bob.getByText('Synced', { exact: true })).toBeVisible();
+  await expect(bob.getByRole('button', { name: 'draft', exact: true })).toHaveCount(0);
+});

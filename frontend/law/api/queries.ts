@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -28,6 +28,8 @@ export const keys = {
   retention: ['records', 'retention'] as const,
   exports: (id: string) => ['matter', id, 'exports'] as const,
   export: (id: string, exportId: string) => ['matter', id, 'exports', exportId] as const,
+  connectors: ['admin', 'connectors'] as const,
+  links: (id: string) => ['matter', id, 'connector-links'] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false });
@@ -150,3 +152,10 @@ export const useExport = (matterId: string, exportId: string) =>
 export const useExportPreview = (matterId: string, exportId: string, planKey: string) =>
   useQuery({ queryKey: [...keys.export(matterId, exportId), 'preview', planKey], refetchOnWindowFocus: false,
     queryFn: () => api.get<{ pages: number }>(`${exportsPath(matterId)}/${encodeURIComponent(exportId)}/preview`) });
+
+export const useConnectors = (enabled: boolean) =>
+  useQuery({ queryKey: keys.connectors, enabled,
+    queryFn: () => api.get<{ connectors: Connector[]; providers: { kind: string; name: string; available: boolean; note?: string }[] }>('/api/legal/connectors') });
+export const useConnectorLinks = (matterId: string) =>
+  useQuery({ queryKey: keys.links(matterId),
+    queryFn: () => api.get<{ links: ConnectorLink[]; connectors: { id: string; name: string; kind: string }[] }>(`/api/legal/matters/${encodeURIComponent(matterId)}/connector-links`) });

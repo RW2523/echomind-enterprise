@@ -6,11 +6,11 @@
 
 | Field | Value |
 |---|---|
-| Date | 2026-10-08 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.11-connectors` |
-| Phase | Phase 1: S1.0–S1.10 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
+| Date | 2026-10-09 |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s1.12-gate` |
+| Phase | Phase 1: S1.0–S1.11 merged into `feature/echomind-law` (standing approval to build and merge slices in order); S1.12 gate next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0011` (Law edition only) |
+| Migrations | `0001`–`0012` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -209,6 +209,18 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - the export page with page previews, the redaction plan, approval and the released file's checks.
 - **Counsel:** who may export, the redaction defaults and the watermark wording are P-006 safe defaults.
 
+### Session 2 (continued) — S1.11 DMS connector framework
+- **As built (D-029):**
+  - The connector contract and sync engine, with a local-folder connector; settings sealed with the master key.
+  - Fail closed: a permissions sidecar is required; source permissions are intersected with membership at every read; documents of a stale or disabled connector are hidden; removal at the source queues an approved purge, unless held.
+  - Migration `0012_connectors`, which rebuilds the deletions table to allow a `connector` origin.
+- Screens: Admin → Connectors; linked folders and source badges on Documents.
+- **Blocked:** a real DMS provider needs the firm's choice of provider, credentials and network approval (P-010). Nothing pretends otherwise.
+- **Backend stall found and fixed (D-030):**
+  - The full browser suite stalled the backend in 3 of 5 runs, with every thread blocked in SQLite connect/close.
+  - `get_conn` now keeps one idle WAL connection open, and the suite then passed 5 runs in a row (60/60).
+  - Native stacks were not taken (no ptrace permission), so the exact SQLite lock is not proven. `LAW_DEBUG_STACKS=1` stack dumps stay on for E2E.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -234,7 +246,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | SEC-05 | DONE (mechanism) | S1.8 | All-party, explicit, per-participant consent before capture; withdrawal stops capture at once with a lock-ordered guarantee; pause and resume recorded; append-only consent and capture timelines; audio receipts; T03 in backend and browser. Wording and rules: P-001 (counsel) |
 | SEC-06 | DONE | S1.9–S1.10 | Advisory labels (S1.9); export gateway (S1.10): plan, second-lawyer approval with a privilege acknowledgement, real PDF redaction, clean Word rebuild, verification of every output, watermark, 24 h encrypted release; T09 in backend and browser. Policy values: P-006 (counsel) |
 | SEC-07 | DONE (mechanism) | S1.9 | Holds with two-person approval and release; one deletion service (soft delete, report, approval, purge with a hold re-check, verification, restore); retention dry runs only, and requests at most; T04 in backend and browser. Schedules: P-002/P-003 (counsel) |
-| SEC-08 | MISSING | S1.11 | Provider BLOCKED (P-010) |
+| SEC-08 | PARTIAL (framework DONE) | S1.11 | Connector framework, local-folder connector, fail-closed permissions and freshness, sync and removal through the approved purge; T15 in backend and browser. Real provider BLOCKED (P-010) |
 | RAG-01 | PARTIAL | S1.6–S1.7, S2.1–S2.2 | Matter-scoped search (S1.6) and research answers with numbered citations to quoted clauses, abstention and owner-private history (S1.7, real-model E2E). Still to come: OCR, clause-aware ingestion, the PDF viewer with highlights and evaluation (S2.1–S2.3) |
 | RAG-02 | MISSING | S2.3 | |
 | LIVE-01 | PARTIAL (pre-existing) | S2.4 | |
@@ -264,15 +276,15 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - E2E is not in CI. It runs locally with Playwright (`cd frontend && npx playwright test`); the research test uses the host's model server.
 - The compose overlay reuses the 1.4.1 backend image, which may not contain `cryptography`. Check or rebuild at the first approved `compose.sh up`.
 - Back up the master key separately from the data: without it the stored documents cannot be opened.
+- **Browser-suite stall: fixed but not proven (D-030).** Before the fix, the backend stalled inside SQLite in 3 of 5 full runs; after it, 5 of 5 runs were clean. The exact lock is unproven without native stacks. S1.12 reruns the suite repeatedly with stack dumps on (`kill -USR1 <uvicorn pid>`). If it ever stalls again, the next step is native stacks, which need the owner's permission to attach a debugger.
 - In Law there is no Boardroom or document studio until their matter-scoped replacements ship (S2.6, S3.x); live transcription needs the speech model, which is not on the dev host (the capture path is tested with a stand-in). This is intended (D-025, D-026).
 
 ## NEXT EXACT ACTION
 
-Start **S1.11 DMS connector framework (SEC-08)** on `law/s1.11-connectors`:
-1. Migration `0012_connectors`.
-2. `legal/connectors/{base,local_folder,sync}.py`: the `DmsConnector` protocol; a `LocalFolderConnector` for a folder on this host with `*.acl.json` sidecars; config encrypted with the master key.
-3. Sync imports documents into the mapped matter through the existing ingest path (encrypted, partitioned, audited).
-4. The ACL rule fails closed: a document is searchable only if its sidecar names people who are also live members of the matter, and is intersected with membership at query time.
-5. A document removed in the DMS is purged from the partition.
-6. Admin → Connectors (firm admin). Documents show their source and stale or failed states.
-7. T15 with the local connector. **No real provider:** P-010 (provider and credentials) and network approval are still needed, and no mock is presented as working.
+Start **S1.12 Phase 1 gate** on `law/s1.12-gate` (the exit needs the owner's sign-off):
+1. A consolidated security suite run: T01, T02, T03, T04, T08 (injection fixtures: a hidden-text PDF and an instruction-laden DOCX), T09 and T15.
+2. **T11:** a network-denied E2E. Backend and frontend run in a network namespace that may reach only the model servers; outbound connections are captured and must be empty. This needs host tooling; if it needs root, ask first.
+3. **T13:** a seeded upgrade from the S1.0 schema to head, rollback (migration downs), and an encrypted restore of the data folder plus the master key.
+4. **T14:** a legacy smoke test showing the standard edition still runs chat, Boardroom, voice and Document Studio (no Law gate) against a fresh database.
+5. **Stability:** the full browser suite 10 times in a row with stack dumps on (D-030). A single stall blocks the gate; it is reported with its dump.
+6. Threat-model review, and a release-gate report in `docs/echomind-law/releases/phase1-gate.md` with the commit, models and test outputs.
