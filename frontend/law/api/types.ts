@@ -50,3 +50,24 @@ export interface AuditVerification {
   ok: boolean; events: number; head: string | null; head_seq: number | null; broken_at: number | null;
   problem: string | null; anchors_checked: number; verified_at: string;
 }
+
+/** Matter documents (S1.6). */
+export type DocKind = 'contract' | 'correspondence' | 'pleading' | 'evidence' | 'memo' | 'note' | 'other';
+export type DocStatus = 'draft' | 'final' | 'executed' | 'received';
+export interface DocVersion {
+  id: string; number: number; filename: string; mime: string; size_bytes: number; sha256: string; pages?: number | null;
+  uploaded_by?: string | null; uploaded_at: string;
+  index_status: 'queued' | 'indexing' | 'indexed' | 'failed' | 'superseded'; index_error?: string | null;
+  chunk_count: number; indexed_at?: string | null;
+}
+export interface LawDocument {
+  id: string; title: string; kind: DocKind; status: DocStatus; version: number;
+  created_by?: string | null; created_at: string; updated_at?: string | null;
+  current_version: DocVersion | null; findings: Record<string, number>;
+}
+export interface Passage {
+  chunk_id: string; text: string; score?: number | null; score_kind?: string | null;
+  citation: { matter_id: string; document_id: string; document_title: string; version_id: string; version_number: number;
+    page_start?: number | null; page_end?: number | null; char_start?: number | null; char_end?: number | null };
+}
+export interface SearchResult { passages: Passage[]; abstained: boolean }

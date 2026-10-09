@@ -15,7 +15,9 @@ export function mockApi(handlers: Record<string, Handler>) {
   globalThis.fetch = vi.fn(async (input: any, init?: RequestInit) => {
     const url = new URL(String(input), 'https://law.test');
     const method = (init?.method || 'GET').toUpperCase();
-    const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+    const body = init?.body instanceof FormData
+      ? Object.fromEntries(Array.from(init.body.entries()).map(([k, v]) => [k, typeof v === 'string' ? v : (v as File).name]))
+      : init?.body ? JSON.parse(String(init.body)) : undefined;
     calls.push({ method, path: url.pathname, body });
     let h = handlers[`${method} ${url.pathname}`];
     // Opening a matter (GET /api/legal/matters/:id) answers like the server: from the person's own list.

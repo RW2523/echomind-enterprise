@@ -10,11 +10,13 @@ export class ApiError extends Error {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const form = typeof FormData !== 'undefined' && body instanceof FormData;
   const r = await fetch(path, {
     method,
     credentials: 'same-origin',
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    // A FormData body sets its own multipart Content-Type (with the boundary).
+    headers: body === undefined || form ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : form ? (body as FormData) : JSON.stringify(body),
   });
   let data: any = null;
   try { data = await r.json(); } catch { /* empty body */ }
@@ -31,4 +33,5 @@ export const api = {
   patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
+  upload: <T>(path: string, form: FormData) => request<T>('POST', path, form),
 };

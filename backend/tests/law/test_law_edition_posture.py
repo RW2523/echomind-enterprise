@@ -15,12 +15,31 @@ import pytest
 BACKEND_DIR = pathlib.Path(__file__).resolve().parents[2]
 STRONG_SECRET = "x" * 48
 
+# D-014: a valid master key outside the data folder, readable by its owner only.
+import tempfile  # noqa: E402
+
+from conftest import write_master_key  # noqa: E402
+
+_KEYS = pathlib.Path(tempfile.mkdtemp(prefix="law_keys_"))
+_DATA = pathlib.Path(tempfile.mkdtemp(prefix="law_data_"))
+GOOD_KEY = write_master_key(_KEYS / "master.key")
+
+
+def _key_file(name: str, content: str, mode: int = 0o600, folder: pathlib.Path = _KEYS) -> str:
+    p = folder / name
+    p.write_text(content)
+    os.chmod(p, mode)
+    return str(p)
+
+
 SECURE = {
     "AUTH_ENABLED": True,
     "AUTH_SECRET": STRONG_SECRET,
     "CORS_ALLOW_ORIGINS": "https://law.firm.example,http://localhost:5174",
     "DOCGEN_IMAGE_BACKEND": "none",
     "ECHOMIND_LOG_FULL_PROMPTS": "0",
+    "LEGAL_MASTER_KEY_FILE": GOOD_KEY,
+    "DATA_DIR": str(_DATA),
 }
 
 
@@ -49,6 +68,11 @@ def test_secure_configuration_has_no_violations():
         ({"ECHOMIND_LOG_FULL_PROMPTS": "true"}, "content_logging"),
         ({"AUTH_ADMIN_PASSWORD": "admin12345"}, "weak_admin_password"),
         ({"AUTH_ADMIN_PASSWORD": "password1234"}, "weak_admin_password"),
+        ({"LEGAL_MASTER_KEY_FILE": ""}, "master_key_missing"),
+        ({"LEGAL_MASTER_KEY_FILE": str(_KEYS / "absent.key")}, "master_key_missing"),
+        ({"LEGAL_MASTER_KEY_FILE": _key_file("open.key", open(GOOD_KEY).read(), 0o644)}, "master_key_insecure"),
+        ({"LEGAL_MASTER_KEY_FILE": _key_file("short.key", "c2hvcnQ=\n")}, "master_key_invalid"),
+        ({"LEGAL_MASTER_KEY_FILE": _key_file("in-data.key", open(GOOD_KEY).read(), folder=_DATA)}, "master_key_in_data"),
     ],
 )
 def test_each_insecure_setting_is_a_violation(override, code):
@@ -88,7 +112,9 @@ def test_content_for_log_hides_text_in_law(monkeypatch):
 
 def _import_main(tmp_path, **env):
     child_env = {k: v for k, v in os.environ.items() if not k.startswith(("AUTH_", "CORS_", "ECHOMIND_", "DOCGEN_", "LEGAL_"))}
-    child_env.update({"ECHOMIND_DATA_DIR": str(tmp_path), "PYTHONWARNINGS": "ignore"})
+    (tmp_path / "data").mkdir(exist_ok=True)
+    child_env.update({"ECHOMIND_DATA_DIR": str(tmp_path / "data"), "PYTHONWARNINGS": "ignore",
+                      "LEGAL_MASTER_KEY_FILE": write_master_key(tmp_path / "master.key")})
     child_env.update(env)
     code = "import app.main as m; print('DOCS', m.app.docs_url, m.app.openapi_url)"
     return subprocess.run([sys.executable, "-c", code], cwd=BACKEND_DIR, env=child_env,
@@ -99,7 +125,7 @@ def test_law_backend_refuses_to_start_when_insecure(tmp_path):
     r = _import_main(tmp_path, ECHOMIND_EDITION="law", AUTH_ENABLED="0", CORS_ALLOW_ORIGINS="*")
     assert r.returncode != 0
     assert "refuses to start" in r.stderr and "auth_disabled" in r.stderr and "cors_open" in r.stderr
-    assert not (tmp_path / "echomind.sqlite").exists(), "nothing may be written before the posture check"
+    assert not (tmp_path / "data" / "echomind.sqlite").exists(), "nothing may be written before the posture check"
 
 
 def test_law_backend_starts_when_secure_and_hides_api_docs(tmp_path):
@@ -156,8 +182,9 @@ def test_law_backend_installs_the_log_filter(tmp_path):
         [sys.executable, "-c",
          "import logging, app.main; logging.getLogger('app.rag.advanced').info('question=%s', 'Voss-Lindqvist liability cap')"],
         cwd=BACKEND_DIR, capture_output=True, text=True, timeout=120,
-        env={**{k: v for k, v in os.environ.items() if not k.startswith(("AUTH_", "CORS_", "ECHOMIND_"))},
-             "ECHOMIND_DATA_DIR": str(tmp_path), "ECHOMIND_EDITION": "law", "AUTH_ENABLED": "1",
+        env={**{k: v for k, v in os.environ.items() if not k.startswith(("AUTH_", "CORS_", "ECHOMIND_", "LEGAL_"))},
+             "ECHOMIND_DATA_DIR": str(tmp_path / "data"), "LEGAL_MASTER_KEY_FILE": str(tmp_path / "master.key"),
+             "ECHOMIND_EDITION": "law", "AUTH_ENABLED": "1",
              "AUTH_SECRET": STRONG_SECRET, "AUTH_ADMIN_PASSWORD": "seven brave otters swim",
              "CORS_ALLOW_ORIGINS": "http://localhost:5174", "PYTHONWARNINGS": "ignore"})
     assert probe.returncode == 0, probe.stderr[-2000:]

@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Briefcase, FileText, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
+import { Briefcase, Files, FileText, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
 import { api } from '../api/client';
 import MatterSwitcher from '../ui/MatterSwitcher';
 import { hasFirmRole, useSession } from './session';
@@ -76,6 +76,7 @@ function ShellMatterBlock() {
           <div className="lw-nav-label lw-hide-rail">Matter</div>
           <nav aria-label="Matter" style={{ display: 'grid', gap: 2 }}>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/overview`} icon={<FileText />}>Overview</NavItem>
+            <NavItem to={`/m/${encodeURIComponent(matter.number)}/documents`} icon={<Files />}>Documents</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/members`} icon={<Users />}>Members</NavItem>
             {matter.my_role === 'lead' && <NavItem to={`/m/${encodeURIComponent(matter.number)}/activity`} icon={<History />}>Activity</NavItem>}
           </nav>

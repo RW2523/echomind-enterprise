@@ -40,6 +40,15 @@ LAW_TEST_SECRET = "t" * 48
 LAW_TEST_ORIGIN = "https://testserver"
 
 
+def write_master_key(path) -> str:
+    import base64
+    import secrets
+    fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(base64.b64encode(secrets.token_bytes(32)).decode() + "\n")
+    return str(path)
+
+
 @pytest.fixture
 def law_app(fresh_db, law_edition, monkeypatch):
     """The real FastAPI app in the Law edition against a fresh database.
@@ -53,6 +62,10 @@ def law_app(fresh_db, law_edition, monkeypatch):
     monkeypatch.setattr(settings, "CORS_ALLOW_ORIGINS", LAW_TEST_ORIGIN)
     monkeypatch.setattr(settings, "AUTH_ADMIN_PASSWORD", "")
     monkeypatch.setattr(settings, "LEGAL_MFA_REQUIRED", True)
+    # D-014: the master key lives outside the data folder, readable by the owner only.
+    key = fresh_db.parent.parent / "master.key"
+    write_master_key(key)
+    monkeypatch.setattr(settings, "LEGAL_MASTER_KEY_FILE", str(key))
     from app.core.db import init_db
     init_db()
     import app.main as main
@@ -157,3 +170,56 @@ def numbers(resp) -> set:
     return {m["number"] for m in resp.json()["matters"]}
 
 
+
+
+# ── Matter documents (S1.6) ──────────────────────────────────────────────────────
+import hashlib  # noqa: E402
+import re  # noqa: E402
+
+
+class HashEmbedder:
+    """Deterministic stand-in for the embedding server: a hashed bag of words, so passages that
+    share words with the query are near it. Tests never call the real model server."""
+    dim = 64
+
+    async def embed(self, texts, kind="query"):
+        import numpy as np
+        out = np.zeros((len(texts), self.dim), dtype=np.float32)
+        for i, t in enumerate(texts):
+            for tok in re.findall(r"[a-z0-9]{2,}", (t or "").lower()):
+                out[i, int(hashlib.md5(tok.encode()).hexdigest(), 16) % self.dim] += 1.0
+        return out
+
+
+async def overlap_rerank(query, hits, top_k):
+    """Stand-in for the cross-encoder: the share of query words found, minus a half, so a passage
+    sharing fewer than half of the query's words scores below zero (not relevant)."""
+    q = set(re.findall(r"[a-z0-9]{2,}", query.lower())) or {""}
+    scored = [{**h, "score": len(q & set(re.findall(r"[a-z0-9]{2,}", (h.get("text") or "").lower()))) / len(q) - 0.5,
+               "score_kind": "ce_logit"} for h in hits]
+    return sorted(scored, key=lambda h: h["score"], reverse=True)[:top_k]
+
+
+@pytest.fixture
+def docs(world, monkeypatch):
+    """The T01 world with the test embedder and reranker, plus helpers to import and index."""
+    from app.legal.retrieval import embedder, search
+    monkeypatch.setattr(embedder, "_override", HashEmbedder())
+    monkeypatch.setattr(search, "rerank", overlap_rerank)
+    return world
+
+
+def upload(c, matter_id, name, content, *, mime="text/plain", **form):
+    if isinstance(content, str):
+        content = content.encode()
+    return c.post(f"/api/legal/matters/{matter_id}/documents/import", headers=csrf_headers(c),
+                  files={"file": (name, content, mime)}, data={"kind": "contract", **form})
+
+
+def index_all() -> int:
+    from app.legal.jobs import worker
+    return worker.run_pending()
+
+
+def search_in(c, matter_id, query, **kw):
+    return c.post(f"/api/legal/matters/{matter_id}/documents/search", headers=csrf_headers(c), json={"query": query, **kw})

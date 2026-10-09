@@ -19,6 +19,7 @@ import Walls from '../pages/Walls';
 import EmergencyAccess from '../pages/EmergencyAccess';
 import AuditTrail from '../pages/AuditTrail';
 import MatterActivity from '../pages/MatterActivity';
+import MatterDocuments from '../pages/MatterDocuments';
 import NotAvailable from '../pages/NotAvailable';
 import DesignCatalogue from '../pages/DesignCatalogue';
 
@@ -45,6 +46,7 @@ export const lawRoutes = [
             children: [
               { index: true, element: <Navigate to="overview" replace /> },
               { path: 'overview', element: <MatterOverview /> },
+              { path: 'documents', element: <MatterDocuments /> },
               { path: 'members', element: <MatterMembers /> },
               { path: 'activity', element: <MatterActivity /> },
               { path: '*', element: <NotAvailable /> },

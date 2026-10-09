@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 SAFE_TEXT_KEYS = frozenset({
     "action", "code", "fields", "format", "method", "number", "outcome", "policy", "role", "roles",
     "route", "sensitivity", "status", "username", "user_id", "audience", "added", "removed", "wall",
+    "sha256", "kind", "mime", "modes",
 })
 _MAX_SAFE_TEXT = 120
 _IDENT = re.compile(r"^[A-Za-z0-9_.:@-]{1,64}$")
@@ -229,6 +230,17 @@ def audited(action: str, *, object_type: Optional[str] = None, object_param: Opt
             return "error", 500
 
         if inspect.iscoroutinefunction(fn):
+            async def _aclose(ctx, token, kwargs, principal, outcome, status):
+                from starlette.concurrency import run_in_threadpool
+                try:      # the database write runs off the event loop
+                    await run_in_threadpool(_finish, ctx, action, object_type, kwargs, object_param, principal, outcome, status)
+                except Exception as e:
+                    raise _audit_failed(action, e) from None
+                finally:
+                    ctx["action"] = None
+                    if token is not None:
+                        _ctx.reset(token)
+
             @functools.wraps(fn)
             async def inner(*args, **kwargs):
                 if not is_law():
@@ -237,9 +249,9 @@ def audited(action: str, *, object_type: Optional[str] = None, object_param: Opt
                 try:
                     result = await fn(*args, **kwargs)
                 except Exception as e:
-                    _close(ctx, token, kwargs, principal, *_outcome(e))
+                    await _aclose(ctx, token, kwargs, principal, *_outcome(e))
                     raise
-                _close(ctx, token, kwargs, principal, "allow", None)
+                await _aclose(ctx, token, kwargs, principal, "allow", None)
                 return result
         else:
             @functools.wraps(fn)

@@ -54,3 +54,31 @@ def sanitize_text(text: str) -> Tuple[str, bool, SensitivityLevel]:
         level = SensitivityLevel.LOW
 
     return out, redacted, level
+
+
+# ── Findings without redaction (EchoMind Law, decision D-012) ───────────────────
+# Law matters index the original text; personal data is recorded as findings (kind and offsets)
+# instead of being rewritten. Priority order resolves overlaps: a 10-digit run is a long number,
+# not a phone number written without separators.
+_FINDING_PATTERNS: list[Tuple[str, re.Pattern]] = [
+    ("email", _PII_PATTERNS[0][0]),
+    ("ssn", _PII_PATTERNS[2][0]),
+    ("card", _PII_PATTERNS[3][0]),
+    ("long_number", _PII_PATTERNS[5][0]),
+    ("phone", _PII_PATTERNS[1][0]),
+    ("id_number", _PII_PATTERNS[4][0]),
+]
+
+
+def find_pii(text: str) -> list[Tuple[str, int, int]]:
+    """Personal-data findings as (kind, start, end), non-overlapping, in text order."""
+    taken: list[Tuple[int, int]] = []
+    found: list[Tuple[str, int, int]] = []
+    for kind, pat in _FINDING_PATTERNS:
+        for m in pat.finditer(text or ""):
+            a, b = m.span()
+            if any(a < e and s < b for s, e in taken):
+                continue
+            taken.append((a, b))
+            found.append((kind, a, b))
+    return sorted(found, key=lambda f: f[1])

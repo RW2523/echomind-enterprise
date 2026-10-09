@@ -68,7 +68,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - the firm requires DB-native RLS.
 - **Migration framework:** a small versioned runner (`backend/app/legal/migrations/NNNN_*.sql`) with a `schema_migrations(version, checksum, applied_at)` table, run at boot. Every migration is additive with a paired `down` script. Alembic is avoided because there is no ORM.
 
-### D-005 Retrieval isolation: per-matter index partitions — PROPOSED (key security decision)
+### D-005 Retrieval isolation: per-matter index partitions — IMPLEMENTED (S1.6, 2026-10-08; option (a), part of the approved plan)
 - **Context:** One global FAISS/BM25 index with a post-search namespace filter fails the spec ("post-filter alone is insufficient") and has a measured timing side channel.
 - **Options:**
   - (a) Per-matter physical partitions: one dense and one sparse index per matter, plus one firm-library partition.
@@ -83,6 +83,27 @@ Every entry records the options considered, the recommendation, the consequence 
   - Small per-matter indexes give exact flat search and cheap deletes and rebuilds.
   - Cross-matter "firm-wide search" exists only as an explicitly authorized union.
   - Memory grows per loaded partition, so an LRU of loaded partitions is needed.
+- **As built (S1.6):**
+  - **Deviation from the plan, for safety.** The plan said to refactor `rag/index.py` and `rag/sparse.py` behind a `PartitionIndex`. Instead, Law documents have their own tables (`legal_documents`, `legal_document_versions`, `legal_chunks`) and their own partition module (`legal/retrieval/partition_index.py`), reusing only the BM25 tokenizer, the embedding client and the cross-encoder.
+    - The legacy global index is untouched, so the legacy golden eval cannot regress.
+    - No legacy rebuild can ever read a Law passage.
+    - A test checks that the legacy `documents`/`chunks` tables and index files stay free of Law text.
+  - **Partitions:**
+    - Each partition is `DATA_DIR/legal/partitions/m_<matter_id>/` and holds an exact FAISS `IndexFlatIP`, a BM25 corpus with its own statistics, and a meta file naming the partition.
+    - Files that name another partition, or disagree with each other, are never served: the partition is rebuilt from `legal_chunks`, which stores each passage's embedding.
+    - An LRU keeps `LEGAL_PARTITION_CACHE` partitions loaded and reloads one rewritten by another process.
+  - **Scope:**
+    - `AuthorizedScope` can only be minted by `scope.authorize()` after a policy allow; any other construction raises.
+    - `search()` re-checks it with the live policy before and after it runs.
+    - Every candidate is re-read with the scope's matter id in the WHERE clause.
+  - **Ranking:** dense, sparse and keyword channels are fused (RRF) and re-ranked by the cross-encoder in sentence windows of about 600 characters; the best window is what the result quotes.
+    - Why windows: the real browser test showed the cross-encoder reads only ~1,000 characters, so a clause deep in a long passage was scored irrelevant.
+    - A regression test reproduces that failure.
+    - The window floor is `LEGAL_RERANK_MIN_SCORE` (0.0, the legacy citation floor); below it the search abstains.
+  - **Not built yet:**
+    - the firm-library partition (`lib:<org>`; no feature uses it yet);
+    - the section, TOC and glossary auxiliary indexes, which do not exist for Law partitions;
+    - the `ownership` migration, which moves to S1.7 where it is used.
 
 ### D-006 Sessions: server-side, revocable — IMPLEMENTED (S1.1, 2026-10-08; part of the approved plan)
 - **Decision:**
@@ -157,13 +178,16 @@ Every entry records the options considered, the recommendation, the consequence 
   4. **Manual open in Microsoft Word by a human before it is called DONE.**
 - **Stop condition:** If the spike fails, the HTML side-by-side redline ships and DOCX tracked changes are marked **BLOCKED**, never "done". The timing question (pilot launch or Phase 3) is P-013.
 
-### D-012 Remove global PII redaction for Law ingestion — PROPOSED (security trade-off)
+### D-012 Remove global PII redaction for Law ingestion — IMPLEMENTED (S1.6, 2026-10-08; part of the approved plan)
 - **Context:** `sanitize.py` rewrites emails, phone numbers and long numbers in **every** document. That destroys contract content, Bates numbers and e-discovery data, and makes citations quote altered text.
 - **Decision:**
   - For Law partitions, index the **original** text.
   - Run PII and privilege detection as **labels** (stored findings with offsets) that drive access warnings, export redaction (S1.10) and log-scrubbing.
   - Legacy verticals keep the current behaviour.
 - **Risk:** Sensitive identifiers become searchable inside an authorized matter. That is the intended behaviour for legal work and stays inside the matter's ethical wall.
+- **As built (S1.6):** `chunk_document(..., redact_pii=False)` for Law. The default is unchanged for legacy.
+  - `find_pii()` records non-overlapping findings (email, phone, long number, card, SSN, ID number) as kind plus offsets in `legal_findings`. The value is never stored.
+  - The inspector shows the counts. Use by labels and export redaction comes in S1.9–S1.10.
 
 ### D-013 Service-to-service identity (voice → backend, jobs) — IMPLEMENTED (S1.1, 2026-10-08; part of the approved plan)
 - **Decision:**
@@ -173,12 +197,20 @@ Every entry records the options considered, the recommendation, the consequence 
   - There is no blanket service-account bypass.
 - **Fixes:** the current voice-to-backend 401 under auth (CODEBASE_AUDIT §4).
 
-### D-014 Encryption at rest — PROPOSED, with deployment dependency
+### D-014 Encryption at rest — PARTLY IMPLEMENTED (S1.6: uploaded documents; volume encryption remains a deployment step)
 - **Decision (defence in depth):**
   1. **Volume level:** the Law data volume lives on a LUKS-encrypted disk. This is a deployment runbook step that needs root on the target host and is **not** done by the app.
   2. **Application level:** original uploads, Boardroom audio chunks, export outputs and connector credentials are encrypted with AES-256-GCM. Each file gets its own key, wrapped by a master key from `LEGAL_MASTER_KEY_FILE` (mode 0600, outside the data volume). This uses the `cryptography` library (Apache-2.0/BSD) and needs approval to add.
   3. **Backups:** encrypted with `age` or AES-GCM before they leave the host.
 - **Not encrypted at the app level:** SQLite and FAISS (covered by LUKS). Re-evaluate with Postgres (D-004).
+- **As built (S1.6):** uploaded documents only.
+  - Each version gets AES-256-GCM with a random per-file key. The associated data is the version id, so a swapped or edited file fails to open (tested).
+  - The per-file key is wrapped by the master key (AES key wrap, RFC 3394).
+  - Posture refuses to start the Law edition unless `LEGAL_MASTER_KEY_FILE` exists, is mode 600, holds 32 base64 bytes and lies outside the data folder.
+  - Dev scripts create `.law-secrets/master.key` (gitignored). The compose overlay mounts it read-only at `/run/secrets/law_master_key`.
+  - `cryptography` is pinned in `backend/requirements.txt`. **The 1.4.1 image the compose overlay reuses may not contain it**: check or rebuild at the first approved `compose.sh up`.
+  - Downloads re-verify the SHA-256 recorded at import.
+  - Still to come: Boardroom audio, export outputs and connector credentials (S1.8, S1.10, S1.11); key rotation; LUKS (deployment runbook).
 
 ### D-015 Language of verdicts in legal mode — PROPOSED
 - **Decision:** Never label a spoken statement "true" or "false". The Silent Assistant uses evidence-relative wording:

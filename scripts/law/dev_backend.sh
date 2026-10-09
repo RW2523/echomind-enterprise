@@ -12,6 +12,11 @@ umask 077
 mkdir -p "$DATA"
 [[ -s "$DATA/dev_auth_secret" ]] || openssl rand -hex 32 > "$DATA/dev_auth_secret"
 [[ -s "$DATA/dev_admin_password" ]] || openssl rand -base64 24 | tr -d '/+=\n' > "$DATA/dev_admin_password"
+# D-014: the document master key lives outside the data folder.
+SECRETS="${LAW_SECRETS_DIR:-$ROOT/.law-secrets}"
+mkdir -p "$SECRETS"
+[[ -s "$SECRETS/master.key" ]] || openssl rand -base64 32 > "$SECRETS/master.key"
+chmod 600 "$SECRETS/master.key"
 
 python3 - <<'PY' || { echo "reranker model missing from the HF cache. Fetch it once (online):
   python3 -c \"from sentence_transformers import CrossEncoder; CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')\"" >&2; exit 4; }
@@ -23,6 +28,7 @@ PY
 
 export ECHOMIND_EDITION=law
 export ECHOMIND_DATA_DIR="$DATA"
+export LEGAL_MASTER_KEY_FILE="$SECRETS/master.key"
 export AUTH_ENABLED=1
 AUTH_SECRET="$(cat "$DATA/dev_auth_secret")"; export AUTH_SECRET
 export AUTH_ADMIN_USER="${LAW_ADMIN_USER:-admin}"
