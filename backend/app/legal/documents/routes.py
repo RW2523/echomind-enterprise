@@ -64,8 +64,11 @@ def import_document(matter_id: str, request: Request, file: UploadFile = File(..
         raise HTTPException(status_code=e.status, detail=e.message)
     sha = hashlib.sha256(data).hexdigest()
     if version_of:
-        if not repo.get_document(matter_id, version_of):
+        target = repo.get_document(matter_id, version_of, p["sub"])
+        if not target:
             raise _not_found()
+        if target["source"]["kind"] == "connector":
+            raise HTTPException(status_code=409, detail="This document is kept in the firm's document system; new versions come from there.")
         if repo.current_sha(matter_id, version_of) == sha:
             raise HTTPException(status_code=409, detail="This file is identical to the current version.")
         document_id = version_of
@@ -83,21 +86,23 @@ def import_document(matter_id: str, request: Request, file: UploadFile = File(..
     note(object_id=document_id, details={"kind": kind, "mime": checked.mime, "size_bytes": len(data), "number": v["number"],
                                          "sha256": sha})
     duplicate = None if version_of else repo.same_content_in_matter(matter_id, sha, exclude_document=document_id)
-    return {"document": repo.get_document(matter_id, document_id), "same_content_as": duplicate}
+    return {"document": repo.get_document(matter_id, document_id, p["sub"]), "same_content_as": duplicate}
 
 
 # ── Reading ──────────────────────────────────────────────────────────────────────
 @router.get(_BASE)
 def list_documents(matter_id: str, request: Request):
-    require(principal_of(request), "documents.read", matter_id)
-    return {"documents": repo.list_documents(matter_id)}
+    p = principal_of(request)
+    require(p, "documents.read", matter_id)
+    return {"documents": repo.list_documents(matter_id, p["sub"])}
 
 
 @router.get(_BASE + "/{document_id}")
 @audited("document.read", object_type="document", object_param="document_id")
 def get_document(matter_id: str, document_id: str, request: Request):
-    require(principal_of(request), "documents.read", matter_id)
-    d = repo.get_document(matter_id, document_id)
+    p = principal_of(request)
+    require(p, "documents.read", matter_id)
+    d = repo.get_document(matter_id, document_id, p["sub"])
     if not d:
         raise _not_found()
     return {"document": d}
@@ -105,17 +110,19 @@ def get_document(matter_id: str, document_id: str, request: Request):
 
 @router.get(_BASE + "/{document_id}/versions")
 def list_versions(matter_id: str, document_id: str, request: Request):
-    require(principal_of(request), "documents.read", matter_id)
-    if not repo.get_document(matter_id, document_id):
+    p = principal_of(request)
+    require(p, "documents.read", matter_id)
+    if not repo.get_document(matter_id, document_id, p["sub"]):
         raise _not_found()
-    return {"versions": repo.list_versions(matter_id, document_id)}
+    return {"versions": repo.list_versions(matter_id, document_id, p["sub"])}
 
 
 @router.get(_BASE + "/{document_id}/versions/{version_id}/file")
 @audited("document.file", object_type="document_version", object_param="version_id")
 def download(matter_id: str, document_id: str, version_id: str, request: Request):
-    require(principal_of(request), "documents.read", matter_id)
-    v = repo.version_row(matter_id, document_id, version_id)
+    p = principal_of(request)
+    require(p, "documents.read", matter_id)
+    v = repo.version_row(matter_id, document_id, version_id, p["sub"])
     if not v:
         raise _not_found()
     try:
@@ -141,8 +148,9 @@ def download(matter_id: str, document_id: str, version_id: str, request: Request
 @router.patch(_BASE + "/{document_id}")
 @audited("document.update", object_type="document", object_param="document_id")
 def update_document(matter_id: str, document_id: str, inp: DocPatch, request: Request):
-    require(principal_of(request), "documents.version", matter_id)
-    if not repo.get_document(matter_id, document_id):
+    p = principal_of(request)
+    require(p, "documents.version", matter_id)
+    if not repo.get_document(matter_id, document_id, p["sub"]):
         raise _not_found()
     changes = inp.model_dump(exclude={"version"}, exclude_none=True)
     note(details={"fields": sorted(changes), "kind": inp.kind, "status": inp.status})
@@ -150,7 +158,7 @@ def update_document(matter_id: str, document_id: str, inp: DocPatch, request: Re
         repo.update_document(matter_id, document_id, changes, inp.version)
     except repo.Conflict as e:
         raise HTTPException(status_code=409, detail=str(e))
-    return {"document": repo.get_document(matter_id, document_id)}
+    return {"document": repo.get_document(matter_id, document_id, p["sub"])}
 
 
 @router.post(_BASE + "/{document_id}/reindex", status_code=202)
@@ -158,12 +166,12 @@ def update_document(matter_id: str, document_id: str, inp: DocPatch, request: Re
 def reindex(matter_id: str, document_id: str, request: Request):
     p = principal_of(request)
     require(p, "documents.version", matter_id)
-    d = repo.get_document(matter_id, document_id)
+    d = repo.get_document(matter_id, document_id, p["sub"])
     if not d or not d["current_version"]:
         raise _not_found()
     repo.requeue(matter_id, d["current_version"]["id"], p["sub"], p["org_id"])
     worker.wake()
-    return {"document": repo.get_document(matter_id, document_id)}
+    return {"document": repo.get_document(matter_id, document_id, p["sub"])}
 
 
 # ── Search ───────────────────────────────────────────────────────────────────────

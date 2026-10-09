@@ -74,3 +74,20 @@ def remove(matter_id: str, version_id: str, folder: str = "blobs") -> None:
         os.remove(_path(matter_id, version_id, folder))
     except FileNotFoundError:
         pass
+
+
+# ── Small sealed values (S1.11: connector settings) ──────────────────────────────
+def seal(data: bytes, aad: str) -> str:
+    """Encrypt a small value under a fresh key wrapped by the master key; returns hex text."""
+    file_key = AESGCM.generate_key(bit_length=256)
+    nonce = secrets.token_bytes(12)
+    wrapped = aes_key_wrap(_master_key(), file_key)
+    return f"{wrapped.hex()}:{nonce.hex()}:{AESGCM(file_key).encrypt(nonce, data, aad.encode()).hex()}"
+
+
+def unseal(sealed: str, aad: str) -> bytes:
+    try:
+        wrapped, nonce, ct = (bytes.fromhex(x) for x in sealed.split(":"))
+        return AESGCM(aes_key_unwrap(_master_key(), wrapped)).decrypt(nonce, ct, aad.encode())
+    except (InvalidTag, InvalidUnwrap, ValueError) as e:
+        raise IntegrityError from e

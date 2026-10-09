@@ -92,6 +92,9 @@ def _daily() -> None:
     from ..records import retention
     retention.daily_dry_run(default_org_id())
     exports.expire_due()
+    from ..connectors import sync as connectors
+    for cid in connectors.due():                  # S1.11: scheduled connector syncs
+        connectors.sync(cid)
 
 
 def _loop() -> None:

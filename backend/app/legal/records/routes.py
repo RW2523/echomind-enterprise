@@ -59,17 +59,22 @@ class RunIn(BaseModel):
 
 
 # ── Labels ───────────────────────────────────────────────────────────────────────
-def _label_target(matter_id: str, object_type: str, object_id: str) -> None:
-    table, extra = ("legal_documents", " AND deleted_at IS NULL") if object_type == "document" else ("legal_meetings", "")
+def _label_target(matter_id: str, object_type: str, object_id: str, uid: str) -> None:
+    if object_type == "document":
+        from ..documents import repo as documents
+        if not documents.visible(matter_id, object_id, uid):
+            raise _not_found()
+        return
     with get_conn() as conn:
-        if not conn.execute(f"SELECT 1 FROM {table} WHERE id=? AND matter_id=?{extra}", (object_id, matter_id)).fetchone():
+        if not conn.execute("SELECT 1 FROM legal_meetings WHERE id=? AND matter_id=?", (object_id, matter_id)).fetchone():
             raise _not_found()
 
 
 @router.get("/matters/{matter_id}/labels/{object_type}/{object_id}")
 def get_labels(matter_id: str, object_type: ObjectType, object_id: str, request: Request):
-    require(principal_of(request), "matter.read", matter_id)
-    _label_target(matter_id, object_type, object_id)
+    p = principal_of(request)
+    require(p, "matter.read", matter_id)
+    _label_target(matter_id, object_type, object_id, p["sub"])
     return labels.state(object_type, object_id)
 
 
@@ -78,7 +83,7 @@ def get_labels(matter_id: str, object_type: ObjectType, object_id: str, request:
 def set_label(matter_id: str, object_type: ObjectType, object_id: str, inp: LabelIn, request: Request):
     p = principal_of(request)
     require(p, "matter.read", matter_id)
-    _label_target(matter_id, object_type, object_id)
+    _label_target(matter_id, object_type, object_id, p["sub"])
     if policy.authorize(p, "labels.set", matter_id).allowed:
         kind = "set"
     else:
@@ -92,6 +97,10 @@ def set_label(matter_id: str, object_type: ObjectType, object_id: str, inp: Labe
 # ── Deletion requests inside a matter ────────────────────────────────────────────
 def _request(p: dict, matter_id: str, object_type: str, object_id: str, reason: str) -> dict:
     require(p, "deletion.request", matter_id)
+    if object_type == "document":
+        from ..documents import repo as documents
+        if not documents.visible(matter_id, object_id, p["sub"]):
+            raise _not_found()
     try:
         d = deletion.request(p["org_id"], matter_id, object_type, object_id, reason.strip(), p["sub"])
     except holds.Held:
@@ -107,7 +116,11 @@ def _request(p: dict, matter_id: str, object_type: str, object_id: str, reason: 
 
 @router.get("/matters/{matter_id}/documents/{document_id}/deletion-preview")
 def preview_document_deletion(matter_id: str, document_id: str, request: Request):
-    require(principal_of(request), "deletion.request", matter_id)
+    p = principal_of(request)
+    require(p, "deletion.request", matter_id)
+    from ..documents import repo as documents
+    if not documents.visible(matter_id, document_id, p["sub"]):
+        raise _not_found()
     try:
         return {"report": deletion.preview(matter_id, "document", document_id)}
     except deletion.NotFound:

@@ -298,5 +298,7 @@ class Settings(BaseSettings):
     LEGAL_RETENTION_APPLY: bool = os.getenv("LEGAL_RETENTION_APPLY", "0").lower() in ("1", "true", "yes")
     # Exports (S1.10; P-006): released files are kept this long, then removed.
     LEGAL_EXPORT_TTL_HOURS: float = float(os.getenv("LEGAL_EXPORT_TTL_HOURS", "24"))
+    # Connectors (S1.11): folders a local-folder connector may read, separated by ":" (empty = none).
+    LEGAL_CONNECTOR_LOCAL_ROOTS: str = os.getenv("LEGAL_CONNECTOR_LOCAL_ROOTS", "")
 
 settings = Settings()

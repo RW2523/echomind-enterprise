@@ -144,7 +144,7 @@ def _undo_soft_delete(conn, d: dict) -> bool:
 def request(org_id: str, matter_id: str, object_type: str, object_id: str, reason: str, by: str,
             origin: str = "person") -> dict:
     """Raises holds.Held, NotFound or Conflict (already pending)."""
-    soft = origin == "person"
+    soft = origin in ("person", "connector")      # a person's request, or removal at the source: hidden at once
     did = str(uuid.uuid4())
     with get_conn() as conn:
         conn.execute("BEGIN IMMEDIATE")

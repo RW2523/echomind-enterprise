@@ -2,6 +2,10 @@
 
 Every read takes the matter id and filters by it: a document id is never resolved on its own, so
 an id copied from one matter cannot be opened through another.
+
+Reads made for a person also pass their id (S1.11): a document synced from a connector is
+visible only if its source names them, and only while its connector is enabled and has synced
+successfully within its freshness window (fail closed).
 """
 from __future__ import annotations
 
@@ -17,7 +21,19 @@ STATUSES = ("draft", "final", "executed", "received")
 _V_COLS = ("id", "document_id", "matter_id", "number", "filename", "mime", "size_bytes", "sha256", "pages",
            "wrapped_key", "uploaded_by", "uploaded_at", "index_status", "index_error", "chunk_count", "indexed_at")
 _D_COLS = ("id", "org_id", "matter_id", "title", "kind", "status", "current_version_id", "created_by", "created_at",
-           "updated_at", "version")
+           "updated_at", "version", "connector_id", "remote_id", "source_state")
+
+# Fragment over `legal_documents d` with ONE positional parameter: the person's user id.
+VISIBLE_TO = ("d.deleted_at IS NULL "
+              "AND (d.acl_restricted = 0 OR EXISTS (SELECT 1 FROM legal_document_acl a WHERE a.document_id = d.id AND a.user_id = ?)) "
+              "AND (d.connector_id IS NULL OR EXISTS (SELECT 1 FROM legal_connectors k WHERE k.id = d.connector_id "
+              "AND k.status = 'active' AND k.last_ok_at IS NOT NULL "
+              "AND (julianday('now') - julianday(k.last_ok_at)) * 1440 <= k.stale_after_minutes))")
+
+
+def _where(uid: Optional[str]) -> tuple[str, tuple]:
+    """Visibility for a person (uid), or for the system (None: only "not deleted")."""
+    return (VISIBLE_TO, (uid,)) if uid else ("d.deleted_at IS NULL", ())
 
 
 class Conflict(Exception):
@@ -112,10 +128,15 @@ def _document_out(conn, row) -> dict:
     d = dict(zip(_D_COLS, row))
     cur = conn.execute(f"SELECT {', '.join(_V_COLS)} FROM legal_document_versions WHERE id=?",
                        (d["current_version_id"],)).fetchone() if d["current_version_id"] else None
+    if d["connector_id"]:
+        k = conn.execute("SELECT name FROM legal_connectors WHERE id=?", (d["connector_id"],)).fetchone()
+        source = {"kind": "connector", "name": k[0] if k else None, "state": d["source_state"] or "current", "path": d["remote_id"]}
+    else:
+        source = {"kind": "upload"}
     return {"id": d["id"], "title": d["title"], "kind": d["kind"], "status": d["status"], "version": d["version"],
             "created_by": _username(conn, d["created_by"]), "created_at": d["created_at"], "updated_at": d["updated_at"],
             "current_version": _version_out(conn, cur) if cur else None,
-            "findings": _findings(conn, d["current_version_id"]), **_label(d["id"])}
+            "findings": _findings(conn, d["current_version_id"]), "source": source, **_label(d["id"])}
 
 
 def _label(document_id: str) -> dict:
@@ -124,32 +145,47 @@ def _label(document_id: str) -> dict:
     return {"label": st["current"]["label"] if st["current"] else None, "label_suggested": bool(st["suggestions"])}
 
 
-def list_documents(matter_id: str) -> list[dict]:
+_DSEL = ", ".join(f"d.{c}" for c in _D_COLS)
+
+
+def list_documents(matter_id: str, uid: Optional[str] = None) -> list[dict]:
+    where, args = _where(uid)
     with get_conn() as conn:
-        rows = conn.execute(f"SELECT {', '.join(_D_COLS)} FROM legal_documents WHERE matter_id=? AND deleted_at IS NULL "
-                            "ORDER BY COALESCE(updated_at, created_at) DESC", (matter_id,)).fetchall()
+        rows = conn.execute(f"SELECT {_DSEL} FROM legal_documents d WHERE d.matter_id=? AND {where} "
+                            "ORDER BY COALESCE(d.updated_at, d.created_at) DESC", (matter_id, *args)).fetchall()
         return [_document_out(conn, r) for r in rows]
 
 
-def get_document(matter_id: str, document_id: str) -> Optional[dict]:
+def get_document(matter_id: str, document_id: str, uid: Optional[str] = None) -> Optional[dict]:
+    where, args = _where(uid)
     with get_conn() as conn:
-        row = conn.execute(f"SELECT {', '.join(_D_COLS)} FROM legal_documents WHERE id=? AND matter_id=? AND deleted_at IS NULL",
-                           (document_id, matter_id)).fetchone()
+        row = conn.execute(f"SELECT {_DSEL} FROM legal_documents d WHERE d.id=? AND d.matter_id=? AND {where}",
+                           (document_id, matter_id, *args)).fetchone()
         return _document_out(conn, row) if row else None
 
 
-def list_versions(matter_id: str, document_id: str) -> list[dict]:
+def visible(matter_id: str, document_id: str, uid: str) -> bool:
+    where, args = _where(uid)
+    with get_conn() as conn:
+        return conn.execute(f"SELECT 1 FROM legal_documents d WHERE d.id=? AND d.matter_id=? AND {where}",
+                            (document_id, matter_id, *args)).fetchone() is not None
+
+
+def list_versions(matter_id: str, document_id: str, uid: Optional[str] = None) -> list[dict]:
+    if not get_document(matter_id, document_id, uid):
+        return []
     with get_conn() as conn:
         rows = conn.execute(f"SELECT {', '.join(_V_COLS)} FROM legal_document_versions WHERE document_id=? AND matter_id=? "
-                            "AND document_id IN (SELECT id FROM legal_documents WHERE deleted_at IS NULL) "
                             "ORDER BY number DESC", (document_id, matter_id)).fetchall()
         return [_version_out(conn, r) for r in rows]
 
 
-def version_row(matter_id: str, document_id: str, version_id: str) -> Optional[dict]:
+def version_row(matter_id: str, document_id: str, version_id: str, uid: Optional[str] = None) -> Optional[dict]:
+    ok = visible(matter_id, document_id, uid) if uid else get_document(matter_id, document_id) is not None
+    if not ok:
+        return None
     with get_conn() as conn:
-        row = conn.execute(f"SELECT {', '.join(_V_COLS)} FROM legal_document_versions WHERE id=? AND document_id=? AND matter_id=? "
-                           "AND document_id IN (SELECT id FROM legal_documents WHERE deleted_at IS NULL)",
+        row = conn.execute(f"SELECT {', '.join(_V_COLS)} FROM legal_document_versions WHERE id=? AND document_id=? AND matter_id=?",
                            (version_id, document_id, matter_id)).fetchone()
     return dict(zip(_V_COLS, row)) if row else None
 
@@ -168,3 +204,53 @@ def same_content_in_matter(matter_id: str, sha256: str, exclude_document: Option
                            "WHERE d.matter_id=? AND v.sha256=? AND d.id IS NOT ? AND d.deleted_at IS NULL",
                            (matter_id, sha256, exclude_document)).fetchone()
     return row[0] if row else None
+
+
+# ── Connector-synced documents (S1.11) ───────────────────────────────────────────
+def find_remote(link_id: str) -> dict[str, dict]:
+    """{remote_id: {id, remote_version, deleted}} for documents a connector link has synced."""
+    with get_conn() as conn:
+        rows = conn.execute("SELECT id, remote_id, remote_version, deleted_at, source_state FROM legal_documents WHERE link_id=?",
+                            (link_id,)).fetchall()
+    return {r[1]: {"id": r[0], "remote_version": r[2], "deleted": r[3] is not None, "state": r[4]} for r in rows}
+
+
+def create_synced_document(org_id: str, matter_id: str, title: str, by: str, connector_id: str, link_id: str,
+                           remote_id: str) -> str:
+    did = new_id()
+    with get_conn() as conn:
+        conn.execute("INSERT INTO legal_documents (id, org_id, matter_id, title, kind, status, created_by, created_at, connector_id, "
+                     "link_id, remote_id, acl_restricted, source_state) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                     (did, org_id, matter_id, title, "other", "received", by, now_iso(), connector_id, link_id, remote_id, 1, "current"))
+        conn.commit()
+    return did
+
+
+def set_remote_version(document_id: str, version: str, state: str = "current") -> None:
+    with get_conn() as conn:
+        conn.execute("UPDATE legal_documents SET remote_version=?, source_state=? WHERE id=?", (version, state, document_id))
+        conn.commit()
+
+
+def set_source_state(document_id: str, state: str) -> None:
+    with get_conn() as conn:
+        conn.execute("UPDATE legal_documents SET source_state=? WHERE id=?", (state, document_id))
+        conn.commit()
+
+
+def acl_of(document_id: str) -> set[str]:
+    with get_conn() as conn:
+        return {r[0] for r in conn.execute("SELECT user_id FROM legal_document_acl WHERE document_id=?", (document_id,))}
+
+
+def set_acl(document_id: str, user_ids: set[str]) -> bool:
+    """Replace who the source says may see the document; True if it changed. An empty set means
+    nobody (the document stays restricted)."""
+    if acl_of(document_id) == set(user_ids):
+        return False
+    with get_conn() as conn:
+        conn.execute("DELETE FROM legal_document_acl WHERE document_id=?", (document_id,))
+        conn.executemany("INSERT INTO legal_document_acl (document_id, user_id) VALUES (?,?)", [(document_id, u) for u in user_ids])
+        conn.execute("UPDATE legal_documents SET acl_restricted=1 WHERE id=?", (document_id,))
+        conn.commit()
+    return True

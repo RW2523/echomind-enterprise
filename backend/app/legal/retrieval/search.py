@@ -132,7 +132,10 @@ def _fuse(rankings: Iterable[list[tuple[str, float]]]) -> list[str]:
     return sorted(scores, key=lambda c: scores[c], reverse=True)
 
 
-def _load(matter_id: str, chunk_ids: list[str]) -> list[dict]:
+def _load(matter_id: str, chunk_ids: list[str], uid: str) -> list[dict]:
+    """Candidates re-read with the matter id AND the document's visibility for this person (source
+    permissions and connector freshness, S1.11)."""
+    from ..documents.repo import VISIBLE_TO
     if not chunk_ids:
         return []
     with get_conn() as conn:
@@ -140,8 +143,8 @@ def _load(matter_id: str, chunk_ids: list[str]) -> list[dict]:
             "SELECT c.id, c.text, c.page_start, c.page_end, c.char_start, c.char_end, c.document_id, c.version_id, "
             "d.title, v.number, v.filename FROM legal_chunks c JOIN legal_documents d ON d.id = c.document_id "
             "JOIN legal_document_versions v ON v.id = c.version_id "
-            f"WHERE c.matter_id = ? AND c.active = 1 AND c.id IN ({','.join('?' * len(chunk_ids))})",
-            (matter_id, *chunk_ids)).fetchall()
+            f"WHERE c.matter_id = ? AND c.active = 1 AND c.id IN ({','.join('?' * len(chunk_ids))}) AND {VISIBLE_TO}",
+            (matter_id, *chunk_ids, uid)).fetchall()
     by_id = {r[0]: r for r in rows}
     out = []
     for cid in chunk_ids:
@@ -181,7 +184,7 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
         rankings.append(idx.search_sparse(query, n))
     if "keyword" in modes:
         rankings.append(_keyword(scope.matter_id, query, n))
-    hits = _load(scope.matter_id, _fuse(rankings)[:n])
+    hits = _load(scope.matter_id, _fuse(rankings)[:n], scope.principal_id)
     subs = _windowed(hits)
     scored = await rerank(query, subs, len(subs)) if subs else []
     best: dict[str, dict] = {}

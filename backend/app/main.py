@@ -141,6 +141,12 @@ async def lifespan(app: FastAPI):
             law_jobs.stop()
 
 
+# Diagnostics (development only): `kill -USR1 <pid>` prints every thread's stack to stderr.
+if os.getenv("LAW_DEBUG_STACKS") == "1":
+    import faulthandler
+    import signal as _signal
+    faulthandler.register(_signal.SIGUSR1, all_threads=True)
+
 init_db()
 seed_admin()  # ensure an admin login exists when auth is (or will be) enabled; no-op otherwise
 _docs_off = {} if api_docs_enabled() else {"docs_url": None, "redoc_url": None, "openapi_url": None}
@@ -341,3 +347,5 @@ from .legal.records.routes import router as legal_records_router  # noqa: E402
 app.include_router(legal_records_router, prefix="/api")
 from .legal.exports.routes import router as legal_exports_router  # noqa: E402
 app.include_router(legal_exports_router, prefix="/api")
+from .legal.connectors.routes import router as legal_connectors_router  # noqa: E402
+app.include_router(legal_connectors_router, prefix="/api")
