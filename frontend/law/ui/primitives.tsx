@@ -26,14 +26,18 @@ export function ErrorNote({ children }: { children: React.ReactNode }) {
   return <p role="alert" style={{ color: 'var(--conflict)', margin: 0, fontSize: 13.5 }}>{children}</p>;
 }
 
-export function Field({ label, hint, children }: { label: string; hint?: string; children: (id: string) => React.ReactNode }) {
+/** A labelled control. The hint is linked with aria-describedby, so it is announced as a description
+ *  and does not become part of the field's accessible name. */
+export function Field({ label, hint, children }: { label: string; hint?: string; children: (id: string) => React.ReactElement }) {
   const id = useId();
+  const hintId = `${id}-hint`;
+  const control = children(id);
   return (
-    <label className="lw-label" htmlFor={id}>
-      <span>{label}</span>
-      {children(id)}
-      {hint && <span className="lw-hint">{hint}</span>}
-    </label>
+    <div className="lw-label">
+      <label htmlFor={id}>{label}</label>
+      {hint ? React.cloneElement(control as React.ReactElement<any>, { 'aria-describedby': hintId }) : control}
+      {hint && <span id={hintId} className="lw-hint">{hint}</span>}
+    </div>
   );
 }
 
@@ -86,7 +90,7 @@ export function Dialog({ title, onClose, children, footer }: {
 
 const ROLE_LABEL: Record<string, string> = {
   lead: 'Lead', attorney: 'Attorney', paralegal: 'Paralegal', reviewer: 'Reviewer', read_only: 'Read only',
-  firm_admin: 'Firm admin', managing_partner: 'Managing partner', records_admin: 'Records admin',
+  firm_admin: 'Firm admin', managing_partner: 'Managing partner', records_admin: 'Records admin', break_glass: 'Emergency access',
 };
 export const roleLabel = (r?: string | null) => (r ? ROLE_LABEL[r] ?? r : '');
 

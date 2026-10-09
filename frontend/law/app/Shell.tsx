@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Briefcase, FileText, Home as HomeIcon, KeyRound, LogOut, Moon, Sun, Users, UserCog } from 'lucide-react';
+import { Briefcase, FileText, Home as HomeIcon, KeyRound, LogOut, Moon, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
 import { api } from '../api/client';
 import MatterSwitcher from '../ui/MatterSwitcher';
 import { hasFirmRole, useSession } from './session';
@@ -44,6 +44,8 @@ export default function Shell() {
           <NavItem to="/home" icon={<HomeIcon />}>Home</NavItem>
           <NavItem to="/matters" icon={<Briefcase />}>Matters</NavItem>
           {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/users" icon={<UserCog />}>Users &amp; roles</NavItem>}
+          {hasFirmRole(me, 'managing_partner') && <NavItem to="/admin/walls" icon={<ShieldOff />}>Ethical walls</NavItem>}
+          {hasFirmRole(me, 'firm_admin', 'managing_partner') && <NavItem to="/admin/emergency-access" icon={<Siren />}>Emergency access</NavItem>}
         </nav>
         <div style={{ marginTop: 'auto', borderTop: '1px solid var(--rule)', paddingTop: 8, display: 'grid', gap: 2 }}>
           <NavItem to="/account/security" icon={<KeyRound />}>Security</NavItem>

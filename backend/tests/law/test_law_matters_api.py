@@ -9,52 +9,8 @@ from __future__ import annotations
 
 import sqlite3
 import uuid
-from datetime import datetime, timedelta, timezone
 
-import pytest
-from fastapi.testclient import TestClient
-
-from conftest import LAW_TEST_ORIGIN, csrf_headers, make_user, sign_in
-
-
-def _ts(days: int) -> str:
-    return (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-
-
-@pytest.fixture
-def world(law_app):
-    from app.legal.matters import repo
-    from app.legal.orgs import default_org_id
-    org = default_org_id()
-    u = {n: make_user(n, mfa=True, firm_roles=r) for n, r in {
-        "alice": ["attorney"], "bob": ["attorney"], "carol": ["paralegal"], "dave": ["attorney"],
-        "mp": ["managing_partner"]}.items()}
-    u["admin"] = make_user("admin2", role="admin", mfa=True)
-    alpha = repo.create_client(org, "Alpha Holdings", "ALPHA", u["alice"]["id"])
-    beta = repo.create_client(org, "Beta Corp", "BETA", u["bob"]["id"])
-    m = {
-        "M-101": repo.create_matter(org, alpha["id"], "M-101", "MSA renewal", u["alice"]["id"]),
-        "M-114": repo.create_matter(org, alpha["id"], "M-114", "Series B diligence", u["alice"]["id"], sensitivity="standard"),
-        "M-202": repo.create_matter(org, beta["id"], "M-202", "Board investigation", u["bob"]["id"], sensitivity="highly_restricted"),
-        "M-215": repo.create_matter(org, beta["id"], "M-215", "Lease dispute", u["bob"]["id"]),
-    }
-    repo.add_membership(m["M-101"]["id"], u["carol"]["id"], "read_only", granted_by=u["alice"]["id"])
-    gone = repo.add_membership(m["M-215"]["id"], u["carol"]["id"], "paralegal", granted_by=u["bob"]["id"])
-    repo.revoke_membership(m["M-215"]["id"], gone["id"], by=u["bob"]["id"], reason="left the team")
-    repo.add_membership(m["M-202"]["id"], u["dave"]["id"], "attorney", granted_by=u["bob"]["id"],
-                        valid_from=_ts(-30), valid_to=_ts(-1))
-    return {"users": u, "matters": m, "clients": {"Alpha": alpha, "Beta": beta}, "app": law_app}
-
-
-def as_user(world, name) -> TestClient:
-    c = TestClient(world["app"], base_url=LAW_TEST_ORIGIN)
-    sign_in(c, world["users"][name])
-    return c
-
-
-def numbers(resp) -> set:
-    assert resp.status_code == 200, resp.text
-    return {m["number"] for m in resp.json()["matters"]}
+from conftest import _ts, as_user, csrf_headers, numbers
 
 
 # ── Visibility ───────────────────────────────────────────────────────────────────
@@ -255,6 +211,9 @@ def test_firm_admin_manages_roles_and_removal_signs_the_user_out(world):
 def test_role_management_is_firm_admin_only_and_cannot_lock_out_the_admin(world):
     alice, admin = as_user(world, "alice"), as_user(world, "admin")
     assert alice.get("/api/legal/users").status_code == 403
+    assert as_user(world, "mp").get("/api/legal/users").status_code == 200          # walls authority may list
+    assert as_user(world, "mp").put("/api/legal/users/alice/roles", json={"roles": ["attorney"]},
+                                    headers=csrf_headers(as_user(world, "mp"))).status_code == 403
     assert alice.put("/api/legal/users/alice/roles", json={"roles": ["managing_partner"]}, headers=csrf_headers(alice)).status_code == 403
     assert admin.put("/api/legal/users/admin2/roles", json={"roles": []}, headers=csrf_headers(admin)).status_code == 400
     assert admin.put("/api/legal/users/alice/roles", json={"roles": ["wizard"]}, headers=csrf_headers(admin)).status_code == 422

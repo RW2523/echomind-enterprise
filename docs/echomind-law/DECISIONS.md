@@ -2,6 +2,13 @@
 
 > **2026-10-08 approval.** The owner replied *"approved, create the branch and start S1.0"* to the six-item approval list: D-001, D-002, D-003, D-004, D-019, and committing the plan documents. Those entries are marked APPROVED. All other D-entries stay PROPOSED until their slice, and the plan as a whole is the working baseline.
 
+> **2026-10-08 standing approval.** After approving the S1.3 design and merge, the owner wrote *"keep building one by one and build everything fully and tell me"*. This is read as standing approval to:
+> - build the slices in order;
+> - merge each completed, fully tested slice into `feature/echomind-law` without asking again;
+> - add the dependencies already listed in LICENSE_REGISTER §2.
+>
+> It does **not** cover: pushing to GitHub or opening PRs; starting the compose stack on the shared host; anything touching production; network integrations (DMS, IdP, licensed sources); or counsel's policy decisions (P-items). Those are still asked for explicitly.
+
 **Status values**
 - **PROPOSED**: Claude's engineering recommendation. Not yet approved; it needs the product owner's approval before the slice that depends on it starts.
 - **APPROVED**: confirmed by the product owner, with date.
@@ -202,6 +209,12 @@ Every entry records the options considered, the recommendation, the consequence 
   - a forced password change after an administrator sets someone's password;
   - an admin "reset two-step" action, which signs the person out and issues a new link;
   - the first administrator's link is written 0600 next to the data.
+
+### D-022 Managing partners see the matter directory for walls — RECORDED (S1.4)
+- To screen someone from a matter they cannot see themselves, a managing partner needs to find it. The walls authority (the `walls.read` firm action, held by managing partners) can therefore list the firm's matters (number, title, client) at `/api/legal/walls/matter-directory`, and only there.
+- This exposes no content (documents, transcripts, members) and does not grant access to any matter.
+- Attorneys requesting a wall can only protect matters and clients they can already see.
+- Break-glass requesters (firm admins) never see the directory: they name the matter by number, and only the approving managing partner sees what it resolves to.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

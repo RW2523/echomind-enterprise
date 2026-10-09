@@ -15,6 +15,8 @@ import MatterOverview from '../pages/MatterOverview';
 import MatterMembers from '../pages/MatterMembers';
 import Security from '../pages/Security';
 import AdminUsers from '../pages/AdminUsers';
+import Walls from '../pages/Walls';
+import EmergencyAccess from '../pages/EmergencyAccess';
 import NotAvailable from '../pages/NotAvailable';
 import DesignCatalogue from '../pages/DesignCatalogue';
 
@@ -47,6 +49,8 @@ export const lawRoutes = [
           },
           { path: '/account/security', element: <Security /> },
           { path: '/admin/users', element: <AdminUsers /> },
+          { path: '/admin/walls', element: <Walls /> },
+          { path: '/admin/emergency-access', element: <EmergencyAccess /> },
           { path: '*', element: <NotAvailable /> },
         ],
       },

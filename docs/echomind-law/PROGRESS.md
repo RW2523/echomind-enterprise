@@ -8,9 +8,9 @@
 |---|---|
 | Date | 2026-10-08 |
 | Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); slice branch `law/s1.0-foundations` |
-| Phase | Phase 1: S1.0, S1.1, S1.2 merged (`ee67615`); **S1.3 complete** on `law/s1.3-workspace` (not yet merged; design approval pending) |
+| Phase | Phase 1: S1.0–S1.4 merged into `feature/echomind-law` (standing approval to build and merge slices in order) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0004` (`0004_onboarding` new; Law edition only) |
+| Migrations | `0001`–`0005` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -126,6 +126,16 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - **E2E is not in CI yet.** It needs the backend's Python dependencies plus a Chromium download in the CI job; this is planned with OPS-02.
 - **Design approval (🔒 S1.3 acceptance):** screenshots are in `docs/echomind-law/design/screens/` and were sent to the owner for review.
 
+### Session 1 (continued) — S1.4 Ethical walls and break-glass
+- S1.3 merged (`10e3f6f`) after design approval. The owner's standing approval to build and merge in order is recorded in DECISIONS.md.
+- Commits:
+  - `3915f1e` backend: migration `0005_walls`, policy steps for walls and break-glass in the single query, `/api/legal/walls*`, `/api/legal/break-glass*`
+  - `3dbb6f5` screens, a11y fix, seed and E2E
+- **As built:**
+  - Managing partners are the walls authority and may see the firm's matter directory, but only on the walls screen (D-022).
+  - Break-glass is requested by matter number with an identical response whether or not the number exists; it is resolved when a different managing partner approves.
+  - The banner does not yet say actions are recorded: read-access audit lands in S1.5, and the copy will change then.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -141,7 +151,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | ID | Status | Slice | Notes |
 |---|---|---|---|
 | SEC-01 | PARTIAL (local accounts complete) | S1.1, S1.3 | Local accounts: sessions, TOTP MFA (enrolment by admin link), forced password change, lockout, CSRF, deny-by-default, WS gating, voice OBO, revoke-on-role-change; browser sign-in tested end to end. OIDC BLOCKED (P-011) |
-| SEC-02 | PARTIAL | S1.2–S1.4 | Clients, matters, memberships, policy engine, non-disclosure, firm roles, UI (matters, members, users & roles): done; T01 passes in backend and browser. Walls and break-glass → S1.4; audit events → S1.5 |
+| SEC-02 | DONE (audit events pending S1.5) | S1.2–S1.4 | Clients, matters, memberships, policy engine with non-disclosure, firm roles, ethical walls with two-person approval and exceptions, break-glass; UI; T01 in backend and browser, walls and break-glass in the browser. Audit trail for these actions → S1.5 |
 | SEC-03 | INCOMPATIBLE | S1.6–S1.7 | |
 | SEC-04 | PARTIAL | S1.5 | S1.0: content-free logs in the Law edition (backend and voice, verified by log scan) |
 | SEC-05 | MISSING | S1.8 | Policy values need counsel (P-001) |
@@ -175,7 +185,9 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-1. Owner reviews the design screenshots (`docs/echomind-law/design/screens/`) and S1.3 (`git log feature/echomind-law..law/s1.3-workspace`), then approves the design and the merge, or asks for changes.
-2. Start **S1.4 Ethical walls and break-glass** on `law/s1.4-walls`:
-   - First failing test: `backend/tests/law/test_law_walls.py`. A walled user is denied even as lead or firm admin; an exception grants access only while valid; break-glass never crosses a wall; approvals need two different people.
-   - Then migration `0005_walls` (walls, entries, exceptions, break-glass grants), policy steps 3 and 6, an `acl_epoch` bump, routes, and the admin UI (Ethical walls, break-glass banner).
+Start **S1.5 Audit v2** on `law/s1.5-audit`:
+1. Migration `0006_audit`: append-only, hash-chained `audit_events` with no-update/no-delete triggers.
+2. `legal/audit` modules: record, chain, verify, anchors, export.
+3. Instrument policy decisions (every deny and content read) and every Law mutation route.
+4. Screens: Admin → Audit (firm-wide metadata) and Matter → Activity (leads).
+5. Change the break-glass banner copy to say access is recorded.

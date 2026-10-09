@@ -11,7 +11,7 @@ export default function Toolbar({ title, crumb, children }: { title: string; cru
             <span>{title}</span>
           </h1>
         </div>
-        {children && <div className="lw-glass lw-cluster">{children}</div>}
+        {React.Children.toArray(children).length > 0 && <div className="lw-glass lw-cluster">{children}</div>}
       </div>
     </div>
   );
