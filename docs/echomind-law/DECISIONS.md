@@ -1034,6 +1034,70 @@ Every entry records the options considered, the recommendation, the consequence 
   - A document is matched by its title, not by how it is described ("the engagement letter dated 2 March").
   - An abbreviation is only understood when the document defines it.
   - "Malformed" catches citations that cannot exist, not ones that merely do not: a well-formed invented case is UNVERIFIED, like every other authority, until a person checks it in a licensed source (P-009).
+- **Later versions:**
+  - `citations-s3.4c` resolves clauses known only by a Markdown heading ("## 12. Termination"; S3.5's `documents.numbering`).
+  - `citations-s3.4d` follows that helper's schedule scoping.
+  - T07 was unchanged on both: golden 55/55, held-out 27/28.
+
+### D-049 Defined terms and cross-references: rules only, corrections only through a redline — RECORDED (S3.5; DOC-04)
+- **Audit:**
+  - The S2.1 reader keeps only a term's first definition, so the checker reads definitions again from the text.
+  - The reader does not see Markdown headings ("## 4. Fees") as clauses.
+  - It read "(c)" after "(a)" as roman c, nesting it under (a).
+  - Fixed in the reader: a roman list starts at (i) and counts on, and an item's roman status is tracked, so "(i)" under "(c)" nests.
+  - `documents.numbering` (new, used by both checkers) completes the clause list:
+    - clause 4 when only 4.1 and 4.2 were seen, with the heading from its heading line;
+    - Markdown schedules ("## Schedule 1 Products");
+    - a schedule's own "1." never hides clause 1 of the body.
+- **No model; any member who can see the document may run a check** (`research.query`; audit `check.definitions`). Notes are for lawyers.
+- **What is found (`definitions/check.py`), each with exact offsets and the clause it is in:**
+  - **Definitions:**
+    - every definition: "X" means / includes / has the meaning; (the "X"); each a "X";
+    - a term defined twice, saying whether the meanings differ. A signpost ("has the meaning given in clause 2.2") is not a second definition;
+    - a definition never used. Parties' short names and terms used only in another form are not reported;
+    - a defined term used in another form: "the fees" for "Fees" (a single word only after "the", "any", "such"…), "confidential information";
+    - a term used before it is defined, unless defined in a Definitions or Interpretation clause.
+  - **Undefined terms** (heuristic, advisory). A capitalised phrase reads as a term when:
+    - it ends with a word defined terms usually end with (Date, Period, Fee, Information…);
+    - or it starts with a defined term ("Shareholder Consent");
+    - or it is a single word used at least twice after "a", "the" or a number, standing as a noun ("five Directors", "a Director"; not "the Harrowgate platform").
+
+    Company names, documents ("Order Form"), headings, names defined in place and possessives are excluded.
+  - **Numbering:**
+    - gaps and repeats at every level: clauses, sub-clauses, items "(a)", roman items, schedules and articles;
+    - numbering is never changed automatically.
+  - **References:**
+    - this document's own references that point nowhere ("This document has no clause 12."), one finding per missing clause with every place;
+    - references whose named heading does not match ("Clause 4 is headed Confidentiality, not Liability.").
+
+    References to other documents are S3.4's.
+- **Corrections:**
+  - A finding may offer corrections:
+    - the defined form of a term;
+    - keeping a reference's number with the right heading, or pointing it to the clause with that heading;
+    - deleting an unused definition that is a clause of its own.
+  - A lawyer (`ai.draft`) picks at most one per finding. The picks become a **redline artifact** (S3.3): one change per clause, only the words named, with tracked changes and comments. A second lawyer approves it, and only then is it filed as the next version.
+  - The Word writer now deletes a clause whole when its revision is empty (T10 verification holds).
+  - The redline page says the redline came from the definitions check.
+- **Storage (migration 0027):** checks with the document, purged with it; append-only notes; rollback refused while notes exist.
+- **Evaluation (`eval/law/definitions/run_definitions_eval.py`, no model):** planted drafting errors and clean controls. Each held-out set was written and committed before its run, and became tuning data once it informed a change.
+  - **Golden on the first version:** the first complete run caught 26/26 but gave 7 false findings, including in the control. These were tuned away (plurals, party names, "each a", possessives, the reader's (i) under (c)): **26/26, fixes 4/4, false findings 0, control clean.**
+  - **Held-out 1 (s3.5): 8/12 caught.** Missed: undefined "Board", "Directors" and "Shareholder Consent"; Article 5 reported as "Clause 5".
+  - **Held-out 2 (s3.5b): 13/16 caught, 5 unexpected, control not clean.** The causes:
+    - a schedule's "1." hid the body's Definitions clause;
+    - a signpost definition was read as a second definition;
+    - "Brightline Data, Inc." was read as a term;
+    - a list's second item was shown as "7".
+
+    One unexpected finding was right: the control really does define a term it never uses, and its expectation was corrected when it moved to golden.
+  - **Held-out 3 (s3.5c): 12/12 caught, fixes 3/3, control clean.** One unexpected finding, "Clause 5.1 appears twice", is true but redundant: it follows from the planted duplicate clause 5.
+  - **Golden on s3.5c (G1–G10, both earlier held-out sets included): 52/55, fixes 8/8, false findings 0, controls clean.** The three misses are undefined terms the rules do not recognise: "Board" (used once), "Background IP" and "Statement of Work".
+- **Limits:**
+  - Undefined-term detection is a heuristic, recall about 8 in 11 on these sets. Terms not shaped like defined terms are missed.
+  - Ranges are not expanded.
+  - "Part 2 of Schedule 1" is not read.
+  - Definitions in tables are not read.
+  - A gap is reported, never renumbered.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

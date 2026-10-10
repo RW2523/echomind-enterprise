@@ -1,0 +1,626 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "5dc27a4",
+  "time": "20261010-085737",
+  "prompt_version": "citations-s3.4d",
+  "model": "none (rules only)",
+  "embeddings": "nomic-embed-text (indexing on import only)"
+ },
+ "summary": {
+  "items": 55,
+  "correct": "55/55",
+  "references": "22/22",
+  "missing_caught": "9/9",
+  "false_missing": 0,
+  "quotations": "9/9",
+  "altered_caught": "3/3",
+  "false_alarms": 0,
+  "authorities_found": "24/24",
+  "malformed_caught": "5/5",
+  "wrongly_flagged": 0,
+  "all_unverified": true,
+  "external_lookups": 0,
+  "extra_items": 0,
+  "ms_per_check": 36
+ },
+ "scenarios": [
+  {
+   "id": "G1-supply-memo",
+   "ms": 60,
+   "lines": [
+    {
+     "kind": "quote",
+     "text": "within fourteen (14) days of each Order",
+     "status": "accurate",
+     "clause": "5.1",
+     "in": "Supply Agreement",
+     "ok": true,
+     "got": "accurate, clause 5.1 of Supply Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "clause 5.2 of the Supply Agreement",
+     "status": "resolved",
+     "clause": "5.2",
+     "in": "Supply Agreement",
+     "ok": true,
+     "got": "resolved, clause 5.2 of Supply Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 5.3 of the Supply Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Supply Agreement has no clause 5.3.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "preceding six months",
+     "status": "altered",
+     "clause": "9.1",
+     "in": "Supply Agreement",
+     "ok": true,
+     "got": "altered, clause 9.1 of Supply Agreement",
+     "got_status": "altered",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 1 of the Supply Agreement",
+     "status": "resolved",
+     "clause": "Schedule 1",
+     "in": "Supply Agreement",
+     "ok": true,
+     "got": "resolved, clause Schedule 1 of Supply Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 2 of the Supply Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Supply Agreement has no Schedule 2.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "G2-services-self-references",
+   "ms": 33,
+   "lines": [
+    {
+     "kind": "reference",
+     "text": "clause 8",
+     "occurrence": 1,
+     "status": "resolved",
+     "clause": "8",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 8 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 1",
+     "status": "resolved",
+     "clause": "Schedule 1",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause Schedule 1 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "clause 2.4",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no clause 2.4.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "clause 8",
+     "occurrence": 2,
+     "status": "resolved",
+     "clause": "8",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 8 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 2.1",
+     "status": "resolved",
+     "clause": "2.1",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 2.1 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 9.3",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no clause 9.3.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "G3-brief-authorities",
+   "ms": 15,
+   "lines": [
+    {
+     "kind": "authority",
+     "text": "42 U.S.C. § 1983",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "28 U.S.C. § 1331",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Palmer v. Oakridge Freight, 544 F.3d 210 (7th Cir. 2008)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "87 F. Supp. 3d 455 (S.D.N.Y. 2015)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "310 F.4th 88 (12th Cir. 2022)",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: there is no 12th Cir.",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "45 F.6th 12 (9th Cir. 2019)",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: F.6th is not a known reporter",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "[2017] UKSC 59",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2008] UKHL 48",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2016] UKHL 7",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the House of Lords stopped sitting in 2009",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "(1854) 9 Exch 341",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EU) 2016/679",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Directive 2011/83/EU",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Case C-311/18",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "29 C.F.R. § 1910.1200",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "G4-lease-letter-quotes",
+   "ms": 48,
+   "lines": [
+    {
+     "kind": "quote",
+     "text": "shall pay the Rent quarterly",
+     "status": "accurate",
+     "clause": "3.1",
+     "in": "Lease",
+     "ok": true,
+     "got": "accurate, clause 3.1 of Lease",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "The Landlord shall keep the structure",
+     "status": "accurate",
+     "clause": "4.2",
+     "in": "Lease",
+     "note": "not clause 4.1",
+     "ok": true,
+     "got": "accurate, clause 4.2 of Lease — The words are in clause 4.2, not clause 4.1.",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "reviewed every five years",
+     "status": "altered",
+     "clause": "3.2",
+     "in": "Lease",
+     "ok": true,
+     "got": "altered, clause 3.2 of Lease",
+     "got_status": "altered",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "assign this lease freely",
+     "status": "not_found",
+     "ok": true,
+     "got": "not_found — These words were not found in the documents it points to that you can open.",
+     "got_status": "not_found",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "G5-spa-disclosure",
+   "ms": 43,
+   "lines": [
+    {
+     "kind": "quote",
+     "text": "within eighteen (18) months after Completion",
+     "status": "accurate",
+     "clause": "6.3",
+     "in": "Share Purchase Agreement",
+     "ok": true,
+     "got": "accurate, clause 6.3 of Share Purchase Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "clause 7.2",
+     "status": "resolved",
+     "clause": "7.2",
+     "in": "Share Purchase Agreement",
+     "ok": true,
+     "got": "resolved, clause 7.2 of Share Purchase Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "matters disclosed in the Disclosure Letter",
+     "status": "altered",
+     "clause": "6.2",
+     "in": "Share Purchase Agreement",
+     "ok": true,
+     "got": "altered, clause 6.2 of Share Purchase Agreement",
+     "got_status": "altered",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "paragraph 1 of Schedule 4",
+     "status": "resolved",
+     "clause": "1",
+     "in": "Share Purchase Agreement",
+     "ok": true,
+     "got": "resolved, clause 1 of Share Purchase Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 4 of the Share Purchase Agreement",
+     "status": "resolved",
+     "clause": "Schedule 4",
+     "in": "Share Purchase Agreement",
+     "ok": true,
+     "got": "resolved, clause Schedule 4 of Share Purchase Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 5 of the Share Purchase Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Share Purchase Agreement has no Schedule 5.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "the Purchase Price",
+     "status": "accurate",
+     "clause": "7.1",
+     "in": "Share Purchase Agreement",
+     "ok": true,
+     "got": "accurate, clause 7.1 of Share Purchase Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "clause 7.4 of the Share Purchase Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Share Purchase Agreement has no clause 7.4.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "G6-licence-internal",
+   "ms": 31,
+   "lines": [
+    {
+     "kind": "reference",
+     "text": "Article 3",
+     "occurrence": 1,
+     "status": "resolved",
+     "clause": "Article 3",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause Article 3 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Annex A",
+     "status": "resolved",
+     "clause": "Annex A",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause Annex A of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Annex B",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no Annex B.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Article 5",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no article 5.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 3.1",
+     "status": "resolved",
+     "clause": "3.1",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 3.1 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 2.1",
+     "status": "resolved",
+     "clause": "2.1",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 2.1 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Article 9",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no article 9.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "G7-opinion-authorities",
+   "ms": 19,
+   "lines": [
+    {
+     "kind": "authority",
+     "text": "11 U.S.C. § 362(a)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "15 U.S.C. §§ 1",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "901 F.3d 1100 (Fed. Cir. 2018)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "22 F.4th 301 (D.C. Cir. 2021)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "55 F.4th 120 (11th Cir. 2034)",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the year 2034 is in the future",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "[2022] EWCA Civ 1234",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2019] EWHC 2468 (Ch)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2012] UKHL 15",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the House of Lords stopped sitting in 2009",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EC) No 593/2008",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Case T-201/04",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  }
+ ]
+}
