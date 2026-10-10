@@ -1,83 +1,83 @@
 {
- "about": "S3.6 obligations and deadlines (DOC-05) — the HELD-OUT set (third): written for obligations-s3.6d before it was run, never used to change it, run once per version. Fictional documents only. Earlier held-out sets are G5–G10 in golden.json.",
+ "about": "S3.6 obligations and deadlines (DOC-05) — the HELD-OUT set (fourth): written for obligations-s3.6e (rules and checked model proposals) before it was run, never used to change it, run once per version. Fictional documents only. Earlier held-out sets are G5–G13 in golden.json.",
  "documents": [
   {
-   "id": "K1-distribution-uk",
-   "name": "distribution.txt",
-   "text": "DISTRIBUTION AGREEMENT (fictional)\n\nThis Agreement is made on 12 January 2026 between Calloway Instruments Ltd (the \"Supplier\") and Brenner Medical GmbH (the \"Distributor\").\n\n1. Term\n1.1 This Agreement shall remain in force for an initial period of five (5) years from the date of this Agreement and thereafter until terminated by either party giving not less than twelve (12) months' notice.\n\n2. Orders and payment\n2.1 The Distributor shall place a forecast with the Supplier by the fifth Business Day of each month.\n2.2 The Distributor shall pay each invoice within sixty (60) days of the end of the month in which it is issued.\n2.3 The Supplier may increase its prices once in each calendar year by giving the Distributor not less than ninety (90) days' written notice.\n\n3. Minimum purchases\n3.1 If the Distributor fails to meet the Minimum Purchase Target in any year, the Supplier may terminate this Agreement by giving thirty (30) days' notice within three (3) months after the end of that year.\n\n4. After termination\n4.1 Upon termination the Distributor shall cease to use the Supplier's trade marks.\n4.2 The Distributor may sell its remaining stock for six (6) months after termination.\n",
+   "id": "L1-lease-uk",
+   "name": "lease.txt",
+   "text": "LEASE (fictional)\n\nThis Lease is dated 1 June 2026 and made between Thornbury Estates Ltd (the \"Landlord\") and Lyle & Grant LLP (the \"Tenant\").\n\n1. Term\n1.1 The term of this Lease is fifteen (15) years from and including 24 June 2026.\n\n2. Rent\n2.1 The Tenant shall pay the rent by equal quarterly payments in advance on the usual quarter days.\n2.2 The rent shall be reviewed on 24 June 2031 and every fifth anniversary after that.\n\n3. Repair and decoration\n3.1 The Tenant shall redecorate the interior of the Premises in the last year of the term.\n3.2 The Tenant shall carry out any repairs specified in a notice from the Landlord within two (2) months after receiving it.\n\n4. Alienation\n4.1 The Tenant shall not assign the whole of the Premises without the Landlord's consent, which is not to be unreasonably withheld.\n",
    "expect": [
     {
      "clause": "1.1",
      "kind": "expiry",
-     "due": "2031-01-11"
-    },
-    {
-     "clause": "1.1",
-     "kind": "termination",
-     "when": "twelve (12) months"
+     "due": "2041-06-23"
     },
     {
      "clause": "2.1",
-     "kind": "duty",
-     "when": "fifth Business Day of each month"
+     "kind": "payment",
+     "when": "quarterly"
     },
     {
      "clause": "2.2",
-     "kind": "payment",
-     "when": "sixty (60) days"
-    },
-    {
-     "clause": "2.3",
-     "kind": "notice",
-     "when": "ninety (90) days"
+     "kind": "duty",
+     "due": "2031-06-24"
     },
     {
      "clause": "3.1",
-     "kind": "termination",
-     "when": "three (3) months after the end of that year"
+     "kind": "duty",
+     "when": "last year of the term"
+    },
+    {
+     "clause": "3.2",
+     "kind": "duty",
+     "when": "two (2) months after receiving it"
     },
     {
      "clause": "4.1",
-     "kind": "post_termination"
-    },
-    {
-     "clause": "4.2",
-     "kind": "post_termination",
-     "when": "six (6) months after termination"
+     "kind": "consent"
     }
    ]
   },
   {
-   "id": "K2-escrow-us",
-   "name": "escrow.txt",
-   "text": "ESCROW AGREEMENT (fictional)\n\nThis Escrow Agreement is dated as of March 3, 2026.\n\n1. Release\n1.1 The Escrow Agent shall release the Escrow Amount to the Seller on September 3, 2027, unless a Claim Notice has been delivered.\n1.2 The Buyer must deliver any Claim Notice no later than August 20, 2027.\n1.3 The Escrow Agent shall respond to joint written instructions within three (3) Business Days.\n\n2. Fees\n2.1 The Buyer and the Seller shall each pay one half of the Escrow Agent's annual fee on each anniversary of the date of this Agreement.\n",
+   "id": "L2-supply-us",
+   "name": "supply.txt",
+   "text": "MASTER SUPPLY AGREEMENT (fictional)\n\nThis Agreement is effective as of February 1, 2026 (the \"Effective Date\") between Kestrel Parts Co. (\"Supplier\") and Ardent Robotics, Inc. (\"Buyer\").\n\n1. Term\n1.1 This Agreement commences on the Effective Date and expires on January 31, 2029.\n\n2. Forecasts and orders\n2.1 Buyer shall provide a rolling six-month forecast no later than the tenth (10th) day of each calendar month.\n2.2 Supplier shall acknowledge each purchase order within two (2) business days following receipt.\n\n3. Quality\n3.1 Buyer shall inspect the goods within fifteen (15) days following delivery and notify Supplier of any defects.\n\n4. Termination\n4.1 Either party may terminate this Agreement upon ninety (90) days' prior written notice to the other party.\n4.2 Upon expiration or termination, Buyer shall pay for all goods delivered within thirty (30) days following the invoice date.\n",
    "expect": [
     {
      "clause": "1.1",
-     "kind": "duty",
-     "due": "2027-09-03"
-    },
-    {
-     "clause": "1.2",
-     "kind": "notice",
-     "due": "2027-08-20"
-    },
-    {
-     "clause": "1.3",
-     "kind": "duty",
-     "when": "three (3) Business Days"
+     "kind": "expiry",
+     "due": "2029-01-31"
     },
     {
      "clause": "2.1",
+     "kind": "duty",
+     "when": "tenth (10th) day of each calendar month"
+    },
+    {
+     "clause": "2.2",
+     "kind": "duty",
+     "when": "two (2) business days"
+    },
+    {
+     "clause": "3.1",
+     "kind": "notification",
+     "when": "fifteen (15) days following delivery"
+    },
+    {
+     "clause": "4.1",
+     "kind": "termination",
+     "when": "ninety (90) days"
+    },
+    {
+     "clause": "4.2",
      "kind": "payment",
-     "when": "each anniversary"
+     "when": "thirty (30) days following the invoice date"
     }
    ]
   },
   {
-   "id": "K3-matter-summary-control",
-   "name": "summary.txt",
-   "text": "MATTER SUMMARY (fictional)\n\n1. Facts\n1.1 The parties signed the supply agreement on 2 March 2026 for a term of three (3) years.\n1.2 The first delivery was made on 14 April 2026, thirty (30) days late.\n1.3 The client paid the first invoice in full.\n",
+   "id": "L3-engagement-letter-control",
+   "name": "engagement.txt",
+   "text": "ENGAGEMENT LETTER (fictional)\n\n1. Scope\n1.1 We will advise you on the sale of your shares in Tidewater Holdings Ltd.\n1.2 Our fees are based on the time spent at the hourly rates set out below.\n1.3 Partner: GBP 650 per hour; associate: GBP 380 per hour (fictional).\n",
    "expect": []
   }
  ]
