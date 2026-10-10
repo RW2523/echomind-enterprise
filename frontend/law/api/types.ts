@@ -197,6 +197,7 @@ export interface CaptureRecord {
   events: { kind: 'started' | 'paused' | 'resumed' | 'stopped' | 'frame_rejected'; reason?: string | null; at: string; by?: string | null }[];
 }
 export interface MeetingDetail extends MeetingSummary {
+  assist?: AssistState;
   policy: { mode: string; methods: ConsentMethod[]; max_age_hours: number; statement: string; source: string };
   participants: Participant[]; captures: CaptureRecord[];
 }
@@ -209,6 +210,23 @@ export interface Segment {
 export interface Revision {
   id: string; kind: 'text' | 'speaker'; text?: string | null; speaker_participant_id?: string | null; reason: string;
   source: 'person' | 'vocabulary'; provenance: Record<string, any>; by?: string | null; at: string;
+}
+/** Silent Assist (S2.5): evidence-relative alerts during a meeting (D-015, D-041). */
+export type AssistPack = 'legal_client_call' | 'legal_negotiation' | 'legal_governance';
+export interface AssistAlert {
+  id: string; meeting_id: string; segment_id: string; pack: AssistPack; rule: string; verdict: 'differs' | 'matches' | 'needs_review';
+  severity: 'critical' | 'notice'; title: string; explanation?: string | null; confidence: number; threshold: number; method: 'rule' | 'model';
+  status: 'open' | 'confirmed' | 'dismissed'; decided_by?: string | null; decided_at?: string | null; decision_reason?: string | null;
+  heard_at: string; raised_at: string;
+  said: { segment_id: string; start: number; end: number; quote: string };
+  source?: ({ document_id?: string; document_title?: string; version_id?: string; version_number?: number; version_status?: DocStatus | null;
+    signed?: boolean; clause?: string | null; page?: number | null; line?: number | null; start?: number; end?: number; quote?: string;
+    segment_id?: string } & { removed?: boolean }) | null;
+}
+export interface AssistState { pack: AssistPack | null; chosen: string | null; label: string | null; rules: { id: string; label: string; severity: string }[] }
+export interface AssistTelemetry {
+  alerts: number; critical: number; per_hour: number | null; confirmed: number; dismissed: number; dismiss_rate: number | null;
+  latency_p50_s: number | null; latency_max_s: number | null; threshold: number; thresholds_approved: boolean;
 }
 export interface CaptureMark { kind: 'speaker' | 'degraded' | 'recovered' | 'gap'; participant_id?: string | null; detail?: string | null; audio_ms?: number | null; at: string; capture_id: string }
 export interface TranscriptData {

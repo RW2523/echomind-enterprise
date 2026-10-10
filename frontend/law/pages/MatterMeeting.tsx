@@ -14,6 +14,9 @@ import { DeleteDialog, HoldNotice, LabelControl } from '../ui/records';
 import { kindLabel } from './MatterMeetings';
 import { ExportDialog } from './MatterExports';
 import { TranscriptRecord } from '../ui/transcript';
+import { AlertsPanel } from '../ui/alerts';
+import { useAlerts } from '../api/queries';
+import type { AssistAlert } from '../api/types';
 
 const ROLES: [ParticipantRole, string][] = [['host', 'Host'], ['attorney', 'Attorney'], ['client', 'Client'], ['counterparty', 'Counterparty'],
   ['witness', 'Witness'], ['expert', 'Expert'], ['other', 'Other']];
@@ -121,11 +124,39 @@ function Prepare({ m, matterId, canEdit, canSetLabel, canSuggestLabel }: { m: Me
         </form>
       )}
       {error && <ErrorNote>{error}</ErrorNote>}
+      <AssistChoice m={m} base={base} canEdit={canEdit} onDone={refresh} />
       <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 14 }}>
         <h3 className="lw-eyebrow" style={{ margin: '0 0 6px' }}>Privilege label</h3>
         <LabelControl matterId={matterId} type="meeting" objectId={m.id} canSet={canSetLabel} canSuggest={canSuggestLabel} />
       </div>
     </section>
+  );
+}
+
+const PACKS: [string, string][] = [['', 'The default for this kind of meeting'], ['legal_client_call', 'Client call'],
+  ['legal_negotiation', 'Negotiation'], ['legal_governance', 'Board or governance'], ['off', 'Off — no alerts']];
+
+/** Which Silent Assist pack listens to this meeting (S2.5). */
+function AssistChoice({ m, base, canEdit, onDone }: { m: MeetingDetail; base: string; canEdit: boolean; onDone: () => void }) {
+  const [error, setError] = useState('');
+  const set = async (pack: string) => {
+    setError('');
+    try { await api.patch(`${base}/assist`, { pack: pack || null }); onDone(); }
+    catch (err) { setError(err instanceof ApiError ? err.message : 'The choice could not be saved.'); }
+  };
+  return (
+    <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 14 }}>
+      <h3 className="lw-eyebrow" style={{ margin: '0 0 6px' }}>Silent Assist</h3>
+      <p className="lw-meta" style={{ margin: '0 0 8px' }}>While recording, what is said is compared with this matter’s documents and flagged for review: figures that differ from the signed terms or the board’s authority, commitments and privileged remarks with a counterparty on the call, actions, quorum and conflicts of interest.</p>
+      {canEdit ? (
+        <Field label="Pack">{(id) => (
+          <select id={id} className="lw-input" style={{ maxWidth: 360 }} value={m.assist?.chosen ?? ''} onChange={(e) => set(e.target.value)}>
+            {PACKS.map(([v, l]) => <option key={v} value={v}>{v === '' && m.assist?.pack && !m.assist?.chosen ? `${l} (${m.assist.label})` : l}</option>)}
+          </select>
+        )}</Field>
+      ) : <p className="lw-meta" style={{ margin: 0 }}>{m.assist?.pack ? `${m.assist.label} pack` : 'Off'}</p>}
+      {error && <ErrorNote>{error}</ErrorNote>}
+    </div>
   );
 }
 
@@ -224,6 +255,8 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
   const [live, setLive] = useState<Segment[]>([]);
   const [started, setStarted] = useState<number | null>(null);
   const [speaker, setSpeaker] = useState<string | null>(null);
+  const [liveAlerts, setLiveAlerts] = useState<AssistAlert[]>([]);
+  const alerts = useAlerts(matterId, m.id);
   const [warning, setWarning] = useState('');
   const [, tick] = useState(0);
   const ws = useRef<WebSocket | null>(null);
@@ -240,10 +273,10 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
   const end = (message: string) => {
     mic.current?.stop(); mic.current = null;
     setPhase('stopped'); setNote(message); setStarted(null);
-    void refresh();
+    void refresh(); void alerts.refetch();
   };
   const start = () => {
-    setNote(''); setLive([]); setPhase('connecting'); setSpeaker(null); setWarning('');
+    setNote(''); setLive([]); setPhase('connecting'); setSpeaker(null); setWarning(''); setLiveAlerts([]);
     const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const sock = new WebSocket(`${scheme}://${window.location.host}${meetingsPath(matterId)}/${encodeURIComponent(m.id)}/capture?sample_rate=16000`);
     sock.binaryType = 'arraybuffer';
@@ -267,6 +300,7 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
         ? `Transcription is ${msg.lag_s} s behind. Speech is still being received; the transcript will catch up, and this is noted in the record.`
         : 'A transcription error left a gap. It is marked in the transcript at this point, so nothing is lost silently.');
       else if (msg.type === 'recovered') setWarning('');
+      else if (msg.type === 'alert') setLiveAlerts((xs) => [...xs, msg as AssistAlert]);
       else if (msg.type === 'state') setPhase(msg.state === 'paused' ? 'paused' : 'live');
       else if (msg.type === 'stopped') { stopped = true; end(STOPPED[msg.reason] ?? 'Recording stopped.'); }
     };
@@ -331,6 +365,10 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
         {warning && recording && <p role="alert" className="lw-capture-warning">{warning}</p>}
         {note && <p role="alert" className="lw-meta" style={{ margin: recording ? '10px 0 0' : '12px 0 0', fontSize: 13.5, color: 'var(--ink-2)' }}>{note}</p>}
       </section>
+      {(recording ? m.assist?.pack : (alerts.data?.alerts.length ?? 0) > 0) && (
+        <AlertsPanel alerts={recording ? liveAlerts : alerts.data?.alerts ?? []} assist={recording ? m.assist : alerts.data?.assist}
+          telemetry={alerts.data?.telemetry} matterId={matterId} meetingId={m.id} canDecide={canCorrect} live={recording} />
+      )}
       {(live.length > 0 || (m.transcript?.length ?? 0) > 0) && (
         <section className="lw-paper lw-sheet" aria-label="Transcript">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>

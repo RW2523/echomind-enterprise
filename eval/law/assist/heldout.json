@@ -1,0 +1,59 @@
+{
+ "note": "FICTIONAL held-out calls for the Silent Assist legal packs (S2.5, D-041), against the evaluation corpus (the Unit 7 lease, the Northbridge NDA, the board minutes). Never used to adjust the packs; run once per system version.",
+ "scenarios": [
+  {
+   "id": "lease-negotiation",
+   "pack": "legal_negotiation",
+   "kind": "negotiation",
+   "speakers": [{"name": "Helena Marsh", "role": "attorney"}, {"name": "Gareth Pryce", "role": "counterparty"}],
+   "turns": [
+    {"speaker": "Gareth Pryce", "text": "My client reminds you that the rent under the lease is GBP 80,000 per year, payable quarterly."},
+    {"speaker": "Helena Marsh", "text": "The rent deposit under the lease is GBP 21,000 and is held until the end of the term."},
+    {"speaker": "Gareth Pryce", "text": "To break in 2030 your client must give at least three months' prior written notice."},
+    {"speaker": "Helena Marsh", "text": "Between us, the tenant's bottom line is to leave by the break date whatever happens."},
+    {"speaker": "Helena Marsh", "text": "We are prepared to pay the dilapidations claim in full if you drop the rent review."},
+    {"speaker": "Helena Marsh", "text": "I'll circulate a marked-up schedule of condition on Monday."}
+   ],
+   "planted": [
+    {"turn": 0, "rule": "signed_terms", "severity": "critical"},
+    {"turn": 2, "rule": "signed_terms", "severity": "critical"},
+    {"turn": 3, "rule": "disclosure", "severity": "critical"},
+    {"turn": 4, "rule": "commitment", "severity": "critical"},
+    {"turn": 5, "rule": "action", "severity": "notice"}
+   ],
+   "acceptable": [{"turn": 1, "rule": "signed_terms", "verdict": "matches"}]
+  },
+  {
+   "id": "nda-client-call",
+   "pack": "legal_client_call",
+   "kind": "client_call",
+   "speakers": [{"name": "David Okafor", "role": "attorney"}, {"name": "Petra Voss", "role": "client"}],
+   "turns": [
+    {"speaker": "Petra Voss", "text": "How long does the Northbridge non-disclosure agreement last?"},
+    {"speaker": "David Okafor", "text": "The agreement lasts for three years from the effective date."},
+    {"speaker": "David Okafor", "text": "The confidentiality obligations continue for two years after the agreement ends."},
+    {"speaker": "Petra Voss", "text": "Thank you, that is clear."}
+   ],
+   "planted": [
+    {"turn": 2, "rule": "signed_terms", "severity": "critical"}
+   ],
+   "acceptable": [{"turn": 1, "rule": "signed_terms", "verdict": "matches"}]
+  },
+  {
+   "id": "board-quorate-and-abstaining",
+   "pack": "legal_governance",
+   "kind": "board",
+   "speakers": [{"name": "Karin Lindqvist", "role": "host"}, {"name": "Anders Holm", "role": "other"}, {"name": "Erik Nyström", "role": "other"}],
+   "turns": [
+    {"speaker": "Karin Lindqvist", "text": "Five of the six directors are present, so the meeting is quorate."},
+    {"speaker": "Anders Holm", "text": "As before, I have an interest in the Northbridge Analytics project and I will not vote on it."},
+    {"speaker": "Erik Nyström", "text": "I vote in favour of the Northbridge Analytics budget."},
+    {"speaker": "Karin Lindqvist", "text": "The board approves a liability cap of USD 350,000 for the Harrowgate renewal."}
+   ],
+   "planted": [
+    {"turn": 3, "rule": "authority", "severity": "critical"}
+   ],
+   "acceptable": []
+  }
+ ]
+}

@@ -385,3 +385,14 @@
   [data-edition="law"] .lw-transcript-row { grid-template-columns: minmax(0, 1fr) auto; }
   [data-edition="law"] .lw-transcript-row > .lw-tnum { grid-column: 1 / -1; padding: 0; }
 }
+
+/* Silent Assist (S2.5): AlertCard (DESIGN_SYSTEM: evidence-relative, cited, decided). */
+[data-edition="law"] .lw-alert-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+[data-edition="law"] .lw-alert { display: grid; gap: 6px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rule); background: var(--paper-2); font-size: 14px; }
+[data-edition="law"] .lw-alert[data-severity="critical"][data-status="open"] { border-color: color-mix(in srgb, var(--conflict) 35%, transparent); }
+[data-edition="law"] .lw-alert[data-verdict="matches"] { background: var(--paper); }
+[data-edition="law"] .lw-alert[data-status="dismissed"] { opacity: .7; }
+[data-edition="law"] .lw-alert-h { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+[data-edition="law"] .lw-alert-f { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+[data-edition="law"] .lw-alert-dismiss { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+[data-edition="law"] .lw-alert-dismiss .lw-input { flex: 1; min-width: 160px; }

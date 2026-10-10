@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-09 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.5-assist` |
-| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.4 merged into `feature/echomind-law`; S2.5 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.6-boardroom` |
+| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.5 merged into `feature/echomind-law`; S2.6 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0018` (Law edition only) |
+| Migrations | `0001`–`0019` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -353,6 +353,30 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - `eval/law/transcription/`: four fictional scripted conversations and a harness (script, file and capture modes).
   - **The real-audio WER is not measured yet:** it needs the speech model, which is not installed here, and loading it on the shared host would risk production (D-040).
 
+### Session 3 (continued) — S2.5 Silent Assist legal packs (LIVE-02)
+- **Audit:**
+  - The legacy Silent Assistant (closed in Law) had 2 legal regex rules and a whole-knowledge-base fallback (T-03).
+  - It had no confirm or dismiss, no telemetry and no tests.
+  - Law capture had no assist layer.
+- **S2.5a — packs and engine (D-015 adopted, D-041):**
+  - `legal/assist/`: three packs by meeting kind.
+  - Signed terms and authority from the matter's facts, with the model checking subjects (agreements only, two closest counterparts).
+  - Narrow rules for commitment, disclosure, action, quorum and conflict.
+  - Evidence-relative wording with exact quotes.
+  - Thresholds marked unapproved (P-008).
+- **S2.5b — live and records:**
+  - Checks run in the background after each stored segment; alerts are stored (migration 0019) and sent.
+  - Confirm, or dismiss with a reason, decided once; telemetry.
+  - The pack is chosen per meeting.
+  - Purges remove alerts with the transcript and remove a purged document's quotes.
+- **S2.5c — UI:**
+  - The Silent Assist panel with AlertCards (said, source, method, confidence against the threshold, open passage).
+  - Confirm and Dismiss with a reason, and the pack choice in Prepare.
+  - The demo seed raises two alerts over its meeting; browser journey 18, screenshot 28.
+- **S2.5d — evaluation:**
+  - `eval/law/assist/` golden and held-out scripted calls through the real capture path and model.
+  - The tuning history and a held-out harness correction are reported in D-041.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -383,7 +407,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | RAG-01 | DONE for the pilot (lawyer review at S2.8) | S1.6–S1.7, S2.1–S2.2 | S2.1: OCR, Word structure, tracked changes and comments, hidden-text flags, clauses, defined terms, exact offsets, per-version status, reader. S2.2: answers from signed versions by default (switch to drafts), version conflicts, every quote verified, statuses with abstention reasons, paragraph streaming, Evidence and "Copy with citations"; golden 70 and held-out 32 evaluation (D-036–D-038). Firm-library scope deferred to S3.1–S3.2 |
 | RAG-02 | DONE for the pilot (lawyer review at S2.8) | S2.3 | Two versions clause by clause (renumbered, moved, added, removed, exact word diff, labelled changes); explanations quoting both wordings, verified; conflicts across documents between documents with the same parties; golden and held-out evaluation (D-039) |
 | LIVE-01 | PARTIAL: built; real-audio accuracy pending the speech stack (🔒) | S2.4 | Verbatim immutable record, roster speakers, wall-clock times, gaps and degradation shown, revisions with provenance, matter vocabulary, finalised transcripts in research and purges, accuracy harness (D-040) |
-| LIVE-02 | PARTIAL | S1.7, S2.5 | S1.7: in Law, voice needs a matter and answers only from its research stream (on-behalf-of token). The Law voice UI arrives in S2.5 |
+| LIVE-02 | DONE for the pilot; thresholds await P-008 | S1.7, S2.5 | Three legal packs with evidence-relative alerts, exact quotes, confirm or dismiss with a reason, telemetry, matter-only sources (D-041). The voice service's research stream is unchanged (S1.7) |
 | MEET-01 | PARTIAL | S1.8, S2.6–S2.7 | S1.8: matter meetings with participants, consent and consent-gated capture. Legal-mode Boardroom (before, during, after, minutes): S2.6–S2.7 |
 | DOC-01 | PARTIAL (pre-existing) | S3.1 | |
 | DOC-02 | MISSING | S3.2–S3.3 | Word tracked changes need a spike and a manual Word check |
@@ -423,18 +447,21 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S2.5 Silent Assist legal packs (LIVE-02)** on `law/s2.5-assist`, per IMPLEMENTATION_PLAN §7. S2.4 is merged into `feature/echomind-law`.
-1. **Audit first:** the legacy Silent Assist (packs, triggers, alert wording, the voice service's research stream) and how S1.7 scoped voice to a matter.
-2. **Three packs:**
-   - `legal_client_call`: inconsistency with the signed agreement, unauthorised commitment, privileged or sensitive disclosure, unresolved action;
-   - `legal_negotiation`: concessions against the signed terms, commitments, disclosure;
-   - `legal_governance`: quorum, conflict of interest, authority.
-
-   Each alert is evidence-relative (D-015): it quotes what was said and the clause or minute it differs from, and every quote is verified (D-037).
-3. **Conservative thresholds, settings only:** no alert without verified evidence. Thresholds are signed off by a lawyer (P-008); until then they are marked unapproved.
-4. **Confirm or Dismiss with a reason:**
-   - telemetry (alerts per hour, dismiss rate, latency), with no content in the audit;
-   - alerts saved with the transcript, purged with it.
-5. **UI:** an `AlertCard` beside the live transcript, with Confirm and Dismiss, opening the cited clause in the reader.
-6. **Evaluation:** scripted mock calls with planted issues (the S2.4 scenarios, extended), measuring precision, recall on critical items, false alerts per hour and latency, on the real model where text-only (no audio needed).
-7. **Tests and records:** D-041, TEST_RESULTS run 18, the docs, a browser journey; merge.
+Start **S2.6 Boardroom legal mode (MEET-01)** on `law/s2.6-boardroom`, per IMPLEMENTATION_PLAN §7. S2.5 is merged into `feature/echomind-law`.
+1. **Audit first:**
+   - the legacy Boardroom (closed in Law, D-025): the map-reduce minutes, the timestamp drop at `service.py:863`, speaker reconciliation across batches;
+   - Law meetings, transcripts (S2.4) and alerts (S2.5).
+2. **Before the meeting:** board-pack research (S2.2 research over the matter, scoped to the meeting's documents) and an agenda.
+3. **During:** consent, pause and flags already exist (S1.8, S2.4, S2.5). Add agenda items as segment markers.
+4. **After:**
+   - map-reduce over the **full** transcript as corrected (S2.4 revisions);
+   - minutes, resolutions, and actions with owner and deadline;
+   - unresolved items with timecode pinpoints;
+   - every statement verified against transcript quotes (D-037), with no invented specifics.
+5. **Approval before export:**
+   - minutes are an AI artifact, drafted then approved by a second person (ties into S2.7);
+   - custody hashes, hold and retention, purge with the transcript.
+6. **Tests:**
+   - a fixture board meeting: approval enforced, hold respected, timestamps kept, speakers reconciled;
+   - the real model on the seeded board scenario;
+   - D-042, TEST_RESULTS run 19, a browser journey; merge.

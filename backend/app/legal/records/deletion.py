@@ -119,7 +119,8 @@ def report_transcript(conn, matter_id: str, meeting_id: str) -> dict:
                              (meeting_id, matter_id)).fetchone()[0]
     from ..exports import service as exports
     doc = _transcript_document(conn, matter_id, meeting_id)
-    return {"object": "meeting_transcript", "segments": n, "revisions": revisions, "finalised_document": 1 if doc else 0,
+    alerts = conn.execute("SELECT COUNT(*) FROM legal_assist_alerts WHERE meeting_id=? AND matter_id=?", (meeting_id, matter_id)).fetchone()[0]
+    return {"object": "meeting_transcript", "segments": n, "revisions": revisions, "alerts": alerts, "finalised_document": 1 if doc else 0,
             "exports": exports.count_for(conn, "meeting_transcript", meeting_id), "kept": KEPT_TRANSCRIPT}
 
 
@@ -299,6 +300,10 @@ def _purge_document(conn, d: dict) -> dict:
         ev = [({**e, "quote": "", "document_title": "", "removed": True} if e.get("document_id") == doc else e) for e in ej]
         conn.execute("UPDATE legal_research_turns SET evidence_json=?, conflicts_json=? WHERE id=?",
                      (json.dumps(ev), json.dumps([c for c in cj if c.get("document_id") != doc]), tid))
+    # S2.5: alerts keep their decision, but the document's quote and name are removed from their source.
+    for (aid,) in conn.execute("SELECT a.id FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
+                               "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchall():
+        conn.execute("UPDATE legal_assist_alerts SET source_json=?, document_ids_json='[]' WHERE id=?", (json.dumps({"removed": True}), aid))
     # S2.3: comparisons and scans quote the document throughout; they are removed whole (each can be run again).
     for cid in _comparisons(conn, d["matter_id"], doc):
         conn.execute("DELETE FROM legal_comparisons WHERE id=?", (cid,))
@@ -308,6 +313,7 @@ def _purge_document(conn, d: dict) -> dict:
 def _purge_transcript(conn, d: dict) -> dict:
     doc = conn.execute("SELECT transcript_document_id FROM legal_meetings WHERE id=?", (d["object_id"],)).fetchone()
     doc = doc[0] if doc and doc[0] and conn.execute("SELECT 1 FROM legal_documents WHERE id=?", (doc[0],)).fetchone() else None
+    conn.execute("DELETE FROM legal_assist_alerts WHERE meeting_id=? AND matter_id=?", (d["object_id"], d["matter_id"]))   # S2.5
     conn.execute("DELETE FROM legal_transcript_revisions WHERE meeting_id=? AND matter_id=?", (d["object_id"], d["matter_id"]))
     conn.execute("DELETE FROM legal_transcript_segments WHERE meeting_id=? AND matter_id=?", (d["object_id"], d["matter_id"]))
     conn.execute("UPDATE legal_meetings SET transcript_deleted_at=NULL, transcript_deletion_id=NULL, transcript_document_id=NULL, "
@@ -338,6 +344,8 @@ def verify(d: dict, gone: dict) -> dict:
             quotes += [e for _, ev, cf in _evidence_turns(conn, d["matter_id"], doc) for e in ev + cf
                        if e.get("document_id") == doc and (e.get("quote") or e.get("document_title") or e.get("clause") and "other" in e)]
             db_rows += len(_comparisons(conn, d["matter_id"], doc))
+            db_rows += conn.execute("SELECT COUNT(*) FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
+                                    "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchone()[0]
             idx = registry.for_matter(d["matter_id"])
             checks = {"database": db_rows == 0,
                       "index": not (set(idx.chunk_ids) & set(gone.get("chunks", []))),
@@ -346,6 +354,7 @@ def verify(d: dict, gone: dict) -> dict:
         else:
             n = conn.execute("SELECT COUNT(*) FROM legal_transcript_segments WHERE meeting_id=?", (d["object_id"],)).fetchone()[0]
             n += conn.execute("SELECT COUNT(*) FROM legal_transcript_revisions WHERE meeting_id=?", (d["object_id"],)).fetchone()[0]
+            n += conn.execute("SELECT COUNT(*) FROM legal_assist_alerts WHERE meeting_id=?", (d["object_id"],)).fetchone()[0]
             checks = {"database": n == 0}
             if gone.get("document"):
                 doc, versions = gone["document"], gone.get("versions", [])
