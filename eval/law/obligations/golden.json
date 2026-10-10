@@ -1,0 +1,138 @@
+{
+ "about": "S3.6 obligations and deadlines (DOC-05) — the TUNING set. Fictional documents; expectations are what a careful lawyer building a deadlines list from each document would include. 'due' is given only where the document itself fixes the date; everything else must have no date. G3 2.3 was first written as 'confidentiality' and renamed 'survival' before tuning: it is the survival of clause 2's obligations, a naming choice.",
+ "documents": [
+  {
+   "id": "G1-demo-msa",
+   "name": "Master Services Agreement (DEMO).md",
+   "text": "# MASTER SERVICES AGREEMENT (DEMO)\n\n> FICTIONAL DEMO FIXTURE. Every party, amount and term below is invented for testing EchoMind Law. Not a real agreement and not legal advice.\n\nThis Master Services Agreement (\"Agreement\") is entered into as of 2 March 2026 (the \"Effective Date\") between **Harrowgate Systems Inc.**, a Delaware corporation (\"Provider\"), and **Voss-Lindqvist AB**, a Swedish limited company (\"Client\").\n\n## 1. Definitions\n\n1.1 \"Services\" means the Harrowgate platform subscription and related support described in Schedule 1.\n\n1.2 \"Fees\" means the amounts payable by Client under Clause 4.\n\n1.3 \"Change of Control\" means any transaction by which a person or group acquires more than fifty percent (50%) of the voting rights of Provider.\n\n1.4 \"Client Data\" means all data supplied by or on behalf of Client and processed by Provider under this Agreement.\n\n## 2. Term and Renewal\n\n2.1 This Agreement begins on the Effective Date and continues for an initial term of thirty-six (36) months (the \"Initial Term\").\n\n2.2 After the Initial Term, this Agreement renews automatically for successive twelve (12) month renewal terms unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.\n\n## 3. Services\n\n3.1 Provider shall provide the Services in accordance with the service levels in Schedule 2.\n\n3.2 Provider shall maintain an information-security programme no less protective than ISO/IEC 27001.\n\n## 4. Fees and Payment\n\n4.1 Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgate platform.\n\n4.2 Provider shall invoice monthly in advance. Invoices are payable net thirty (30) days from the invoice date.\n\n4.3 Undisputed amounts not paid when due accrue interest at one percent (1%) per month until paid.\n\n## 5. Confidentiality\n\n5.1 Each party shall keep the other party's Confidential Information confidential and use it only to perform this Agreement, for the term of this Agreement and five (5) years after it ends.\n\n## 6. Data Protection\n\n6.1 Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it.\n\n6.2 Within thirty (30) days after termination, Provider shall return or securely destroy all Client Data, at Client's option.\n\n## 7. Warranties\n\n7.1 Provider warrants that the Services will perform materially in accordance with Schedule 1.\n\n## 8. Limitation of Liability\n\n8.1 Each party's total aggregate liability arising out of or in connection with this Agreement shall not exceed the greater of USD 250,000 or the Fees paid by Client in the twelve (12) months preceding the event giving rise to the claim.\n\n8.2 Neither party is liable for any indirect, incidental or consequential damages, or for loss of profits.\n\n8.3 Clauses 8.1 and 8.2 do not limit liability for fraud, wilful misconduct, or breach of Clause 5.\n\n## 9. Indemnification\n\n9.1 Provider shall indemnify Client against third-party claims that the Services infringe any intellectual property right.\n\n## 12. Termination\n\n12.1 Either party may terminate this Agreement for convenience on thirty (30) days' written notice.\n\n12.2 Either party may terminate this Agreement immediately on written notice if the other party commits a material breach that is not remedied within thirty (30) days of notice.\n\n## 14. Assignment and Change of Control\n\n14.1 Neither party may assign this Agreement without the prior written consent of the other party, such consent not to be unreasonably withheld.\n\n14.2 Provider shall provide no less than thirty (30) days' prior written notice of any Change of Control to Client in accordance with Clause 22.\n\n14.3 If Provider fails to give notice under Clause 14.2, Client may terminate this Agreement for cause by written notice within ninety (90) days of becoming aware of the Change of Control.\n\n## 21. Governing Law\n\n21.1 This Agreement is governed by the laws of the State of Delaware, without regard to its conflict-of-laws rules.\n\n## 22. Notices\n\n22.1 Any notice under this Agreement shall be in writing and addressed to the General Counsel of the receiving party at the address set out in Schedule 4.\n\n*Signed for Harrowgate Systems Inc. and for Voss-Lindqvist AB on 2 March 2026 (fictional).*\n",
+   "expect": [
+    {
+     "clause": "2.1",
+     "kind": "expiry",
+     "due": "2029-03-01"
+    },
+    {
+     "clause": "2.2",
+     "kind": "renewal",
+     "due": "2028-12-01",
+     "when": "ninety (90) days before"
+    },
+    {
+     "clause": "4.2",
+     "kind": "payment",
+     "when": "thirty (30) days from the invoice date"
+    },
+    {
+     "clause": "5.1",
+     "kind": "confidentiality",
+     "when": "five (5) years"
+    },
+    {
+     "clause": "6.1",
+     "kind": "notification",
+     "when": "forty-eight (48) hours"
+    },
+    {
+     "clause": "6.2",
+     "kind": "post_termination",
+     "when": "thirty (30) days after termination"
+    },
+    {
+     "clause": "12.1",
+     "kind": "termination",
+     "when": "thirty (30) days"
+    },
+    {
+     "clause": "12.2",
+     "kind": "termination",
+     "when": "thirty (30) days"
+    },
+    {
+     "clause": "14.1",
+     "kind": "consent"
+    },
+    {
+     "clause": "14.2",
+     "kind": "change_of_control",
+     "when": "thirty (30) days"
+    },
+    {
+     "clause": "14.3",
+     "kind": "termination",
+     "when": "ninety (90) days"
+    }
+   ]
+  },
+  {
+   "id": "G2-office-lease",
+   "name": "lease.txt",
+   "text": "LEASE (fictional)\n\nThis Lease is made between Harbour Estates Limited (the \"Landlord\") and Pellow Studio Ltd (the \"Tenant\").\n\n1. Definitions\n1.1 \"Term Commencement Date\" means 25 March 2026.\n1.2 \"Term\" means ten (10) years from the Term Commencement Date.\n\n2. Rent\n2.1 The Tenant shall pay the Rent quarterly in advance on the usual quarter days.\n2.2 Any Rent not paid within fourteen (14) days of its due date bears interest at 4% above base rate.\n\n3. Break\n3.1 The Tenant may terminate this Lease on the fifth anniversary of the Term Commencement Date by giving the Landlord not less than six (6) months' written notice.\n\n4. Insurance\n4.1 The Landlord shall insure the Building and shall provide the Tenant with a copy of the policy within ten (10) Business Days of a written request.\n\n5. Yielding up\n5.1 At the end of the Term the Tenant shall remove its fixtures and make good any damage within twenty (20) Business Days.\n",
+   "expect": [
+    {
+     "clause": "1.2",
+     "kind": "expiry",
+     "due": "2036-03-24"
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "quarterly in advance"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "fourteen (14) days"
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "due": "2030-09-25",
+     "when": "six (6) months"
+    },
+    {
+     "clause": "4.1",
+     "kind": "duty",
+     "when": "ten (10) Business Days"
+    },
+    {
+     "clause": "5.1",
+     "kind": "duty",
+     "when": "twenty (20) Business Days"
+    }
+   ]
+  },
+  {
+   "id": "G3-mutual-nda",
+   "name": "nda.txt",
+   "text": "MUTUAL NON-DISCLOSURE AGREEMENT (fictional)\n\nThis Agreement is made on 4 May 2026 (the \"Effective Date\") between Corran Analytics Ltd and Bellhaven Foods Ltd.\n\n1. Term\n1.1 This Agreement continues for three (3) years from the Effective Date.\n\n2. Obligations\n2.1 The Recipient shall return or destroy all Confidential Information within fourteen (14) days of a written request.\n2.2 The Recipient shall notify the Discloser promptly, and in any event within five (5) Business Days, of any unauthorised disclosure.\n2.3 The obligations in this clause 2 survive for two (2) years after this Agreement ends.\n",
+   "expect": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2029-05-03"
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "fourteen (14) days"
+    },
+    {
+     "clause": "2.2",
+     "kind": "notification",
+     "when": "five (5) Business Days"
+    },
+    {
+     "clause": "2.3",
+     "kind": "survival",
+     "when": "two (2) years"
+    }
+   ]
+  },
+  {
+   "id": "G4-board-minutes-control",
+   "name": "minutes.txt",
+   "text": "MINUTES OF A BOARD MEETING (fictional)\n\nTidewater Holdings Ltd. Held on 2 June 2026.\n\n1. Present\n1.1 A. Moreau (chair), B. Lind, C. Osei.\n\n2. Accounts\n2.1 The board reviewed the accounts for the year ended 31 March 2026 and noted the auditor's report.\n\n3. Close\n3.1 There being no further business, the meeting closed.\n",
+   "expect": []
+  }
+ ]
+}
