@@ -1260,6 +1260,59 @@ Every entry records the options considered, the recommendation, the consequence 
   - A cited drafted sentence can narrow its quote.
   - Treaty articles and state codes are not read as authorities.
 
+### D-054 Intake assistant: scripted, screened against the firm's register, minimised, approved replies — RECORDED (S4.1; OPT-01, P-001, P-006)
+- **Audit:**
+  - The repository had no receptionist or intake code (the plan's "legacy Smart Receptionist" does not exist here).
+  - There was no register of matter parties to screen against; consent existed only for meetings (0009).
+  - Firm roles were fixed by a CHECK constraint.
+- **Off by default:**
+  - `LEGAL_INTAKE` turns intake on; every intake route answers 404 otherwise.
+  - Enquirer links need `LEGAL_INTAKE_LINKS` as well. They are the Law edition's only routes without a session: the Law guard lets `/api/intake-link/` through only with both flags on, and answers 404 otherwise.
+  - `/api/auth/me` reports `features` so the navigation shows "Enquiries" only when intake is on.
+- **Roles and permissions (migration 0031):**
+  - **Two new firm roles:** `intake` (front desk) and `conflicts` (the conflicts team). `user_roles` is rebuilt with the new CHECK.
+  - **`intake.manage`:** intake staff, paralegals, attorneys and managing partners.
+  - **`intake.approve`:** attorneys and managing partners approve replies.
+  - **`conflicts.review`:** the conflicts team and managing partners (the walls authority, D-022) see matches and decide.
+  - **`intake.purge`:** records administrators.
+  - **`parties.manage`:** a matter's lead and attorneys. It stays allowed on closed matters, because their parties still matter for conflicts.
+  - **Rollback guard:** rolling back below 0031 is refused while intakes, party records or grants of the new roles exist.
+- **The party register:** `legal_matter_parties` records adverse parties, related parties, the client's group and others per matter. Removal needs a reason and keeps the history. Always on: conflict searches read it.
+- **The script:**
+  - `intake-script-1` has nine fixed questions: name, organisation, email, telephone, kind of matter, other parties, a brief description, a date that matters, how they heard of us. Each has fixed wording and a fixed acknowledgement. At least an email or a telephone number is required.
+  - The disclaimer (`intake-disclaimer-1`: not legal advice, no lawyer-client relationship, no confidential information yet, a conflicts check first) is accepted before any question.
+  - **No model is called anywhere in intake** (a test fails if one is).
+- **Screening:** names given (the enquirer, their organisation, the other parties) are checked against every client (former ones too) and every live party on any matter (closed matters too). Names are folded (case, punctuation, a leading "the", legal forms such as Ltd and GmbH), then:
+  - equal names match;
+  - the same words in another order match;
+  - names of five or more letters at 88% likeness match ("Alfa Holdings" and "Alpha Holdings").
+- **Minimisation:**
+  - **Front desk and lawyers who are not conflicts officers:** see "Possible conflict: refer to the conflicts team", "No match found by the automatic check. The conflicts team confirms before we act", and then the team's decision.
+  - **The conflicts team:** sees each match (name given, name matched, as client or party, the client, the matter number), whatever the matter's sensitivity or walls, and records cleared or conflict with a note. Notes are shown only to them.
+  - **The enquirer:** never learns the screening.
+- **Consent before recording (P-001 default):**
+  - A telephone or in-person intake can attach a call recording only while the caller's consent (verbal or written) is recorded.
+  - Recordings are stored encrypted (D-014 blob store, `legal/intake/`).
+  - Withdrawing consent stops recording and deletes the recording.
+  - Transcribing recordings needs the speech stack (🔒 first `compose.sh up`) and is not built here.
+- **Replies:** from four templates: acknowledge; we can help (only once cleared); we cannot help (gives no reason); more information (with the firm's request). Each is approved by an attorney or managing partner who did not write it, for the exact text read (its hash).
+  - A reply naming another client or party of the firm (a name the enquirer did not give) is refused.
+  - A released reply appears on the enquirer's link page, and staff can copy it. Nothing is emailed: there is no network integration.
+- **Conversion:** a cleared intake becomes a client (new or existing) and a matter, with the converting lawyer as lead (`matters.create`). The other parties named go on the new matter's party register.
+- **Enquirer links:**
+  - A 32-byte random token, of which only the SHA-256 is stored. It is shown once and expires after `LEGAL_INTAKE_LINK_DAYS` (14).
+  - Answers are submitted once; the link closes when the intake is closed or purged.
+  - Rate-limited to 30 requests per link and 300 per address per 10 minutes.
+  - The page shows only the disclaimer, the questions and the approved reply.
+- **Tokens in logs:** link and sign-in enrolment tokens are masked in the backend's access log (`uvicorn.access` filter) and in nginx's access log (`echomind_masked` format, no referrer). The intake page sends `Referrer-Policy: no-referrer` and `Cache-Control: no-store`.
+  - **Residual:** nginx's error log, whose format is fixed, still prints the request line when the backend is unreachable.
+- **Records:** a records administrator purges an intake's personal data: answers, matches, replies, the recording and decision notes. The append-only trail of what was done, by whom and when, stays. The audit keeps flags and counts only.
+- **Limits:**
+  - Screening is by name only: no addresses, no company numbers, no corporate families beyond what lawyers record as "client's group".
+  - Names in other scripts (transliteration) are not matched.
+  - The register is only as complete as the matters' party lists.
+  - Single-word party names in replies are matched as the firm wrote them.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
