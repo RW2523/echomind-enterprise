@@ -26,7 +26,7 @@ from ..policy import now_iso
 from ..retrieval import registry
 from . import holds, labels
 
-KEPT_DOCUMENT = ["Research notes already filed as matter documents", "The audit trail (identifiers only, never content)",
+KEPT_DOCUMENT = ["Research notes and drafts already filed as matter documents", "The audit trail (identifiers only, never content)",
                  "This deletion record, without the document's title"]
 KEPT_TRANSCRIPT = ["Consent records and the recording timeline", "Audio receipts (hashes; the audio itself was never kept)",
                    "Minutes already filed as a matter document", "The audit trail (identifiers only, never content)", "This deletion record"]
@@ -77,12 +77,12 @@ def _citing_turns(conn, matter_id: str, document_id: str) -> list[tuple[str, lis
     return out
 
 
-def _notes(conn, matter_id: str, document_id: str) -> list[str]:
-    """Research notes (every version of each) that quote the document (S2.7): the turns they came from."""
+def _notes(conn, matter_id: str, document_id: str, kind_: str = "research_note") -> list[str]:
+    """Research notes (S2.7) or drafts (S3.1), every version of each, that quote the document: their subjects."""
     from .. import artifacts
     out = set()
     for aid, subject, kind, cj in conn.execute("SELECT id, subject_id, kind, content_json FROM legal_ai_artifacts WHERE matter_id=? "
-                                               "AND kind='research_note' AND content_json LIKE ?", (matter_id, f"%{document_id}%")).fetchall():
+                                               "AND kind=? AND content_json LIKE ?", (matter_id, kind_, f"%{document_id}%")).fetchall():
         if document_id in artifacts.cited_documents({"kind": kind, "content": json.loads(cj)}):
             out.add(subject)
     return sorted(out)
@@ -116,6 +116,7 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
             "index_vectors": len(in_index), "research_citations": len(_citing_turns(conn, matter_id, document_id)),
             "comparisons": len(_comparisons(conn, matter_id, document_id)),
             "research_notes": len(_notes(conn, matter_id, document_id)),
+            "drafts": len(_notes(conn, matter_id, document_id, "legal_draft")),
             "kept": KEPT_DOCUMENT}
 
 
@@ -320,11 +321,12 @@ def _purge_document(conn, d: dict) -> dict:
     conn.execute("DELETE FROM legal_artifact_filings WHERE document_id=?", (doc,))               # S2.7: the filing goes with it
     # S2.7: research notes quote the document; every version of each is removed with its decisions
     # (a note can be sent again from the answer, whose quotes are removed above). Filed notes stay.
-    for turn in _notes(conn, d["matter_id"], doc):
-        conn.execute("DELETE FROM legal_review_approvals WHERE artifact_id IN (SELECT id FROM legal_ai_artifacts "
-                     "WHERE subject_type='research_turn' AND subject_id=? AND matter_id=?)", (turn, d["matter_id"]))
-        conn.execute("DELETE FROM legal_ai_artifacts WHERE subject_type='research_turn' AND subject_id=? AND matter_id=?",
-                     (turn, d["matter_id"]))
+    for kind, subject_type in (("research_note", "research_turn"), ("legal_draft", "draft")):     # S3.1: drafts too
+        for subject in _notes(conn, d["matter_id"], doc, kind):
+            conn.execute("DELETE FROM legal_review_approvals WHERE artifact_id IN (SELECT id FROM legal_ai_artifacts "
+                         "WHERE subject_type=? AND subject_id=? AND matter_id=?)", (subject_type, subject, d["matter_id"]))
+            conn.execute("DELETE FROM legal_ai_artifacts WHERE subject_type=? AND subject_id=? AND matter_id=?",
+                         (subject_type, subject, d["matter_id"]))
     # S2.5: alerts keep their decision, but the document's quote and name are removed from their source.
     for (aid,) in conn.execute("SELECT a.id FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
                                "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchall():
@@ -373,7 +375,8 @@ def verify(d: dict, gone: dict) -> dict:
                       if c.get("document_id") == doc and (c.get("text") or c.get("document_title"))]
             quotes += [e for _, ev, cf in _evidence_turns(conn, d["matter_id"], doc) for e in ev + cf
                        if e.get("document_id") == doc and (e.get("quote") or e.get("document_title") or e.get("clause") and "other" in e)]
-            db_rows += len(_comparisons(conn, d["matter_id"], doc)) + len(_notes(conn, d["matter_id"], doc))
+            db_rows += len(_comparisons(conn, d["matter_id"], doc)) + len(_notes(conn, d["matter_id"], doc)) + \
+                len(_notes(conn, d["matter_id"], doc, "legal_draft"))
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_artifact_filings WHERE document_id=?", (doc,)).fetchone()[0]
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
                                     "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchone()[0]

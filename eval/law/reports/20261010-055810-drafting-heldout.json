@@ -1,0 +1,193 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "97bc690+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-055810",
+  "prompt_version": "drafting-s3.1"
+ },
+ "summary": {
+  "scenarios": 3,
+  "field_accuracy": "8/10",
+  "absent_left_open": "2/2",
+  "wrong_values": 0,
+  "invented_figures": 0,
+  "written_passages": 4,
+  "unsupported_sentences": 8,
+  "seconds_per_draft": 12.1
+ },
+ "scenarios": [
+  {
+   "id": "demand-northwind",
+   "template": "demand_letter",
+   "seconds": 14.8,
+   "fields": [
+    {
+     "field": "recipient",
+     "expected": "Northwind Logistics",
+     "value": "Northwind Logistics Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Northwind Logistics Ltd",
+     "suggestion": null
+    },
+    {
+     "field": "recipient_address",
+     "expected": "2 Harbour Road",
+     "value": "Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Notices to the Customer shall be sent to Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom.",
+     "suggestion": null
+    },
+    {
+     "field": "agreement",
+     "expected": "Supply Agreement",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "amount_claimed",
+     "expected": "42,750",
+     "value": "GBP 42,750",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The total outstanding is GBP 42,750.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The Supplier entered into a Supply Agreement with the Customer, Northwind Logistics Ltd. Notices to the Customer are to be sent to Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom. Under the terms of the agreement, the Customer is required to pay each invoice within thirty (30) days of its date.  \n\nThe Customer has failed to pay two invoices, HS-1041 and HS-1042, issued on 3 June 2026 and 1 July 2026 respectively. The total amount outstanding is GBP 42,750. The Client has instructed that this matter be pursued, and the amount claimed is GBP 42,750 [CONFIRMED DETAILS: Amount claimed: GBP 42,750]. The claim is being made on 10 October 2026 [CONFIRMED DETAILS: Date: 10 October 2026].",
+     "sources": 5,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 3
+  },
+  {
+   "id": "review-warehouse-lease",
+   "template": "contract_review",
+   "seconds": 17.1,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Lease",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Elmfield Estates",
+     "value": "Elmfield Estates Ltd and Alder Biotech AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Lease is made between Elmfield Estates Ltd (the Landlord) and Alder Biotech AB (the Tenant).",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "England and Wales",
+     "value": "the law of England and Wales",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Lease is governed by the law of England and Wales.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The term of the agreement is ten (10) years from 1 April 2025. The Tenant may terminate this Lease on 31 March 2030 by giving not less than six months' written notice. The governing law of the agreement is the law of England and Wales.",
+     "sources": 3,
+     "unsupported": []
+    },
+    {
+     "text": "The rent under the Lease is GBP 84,000 per year, payable quarterly in advance. The term of the Lease is ten (10) years from 1 April 2025. The Tenant may terminate the Lease on 31 March 2030 by giving not less than six months' written notice. The Landlord's total liability under the Lease shall not exceed the rent paid in the preceding twelve months. This Lease is governed by the law of England and Wales.",
+     "sources": 0,
+     "unsupported": [
+      "The rent under the Lease is GBP 84,000 per year, payable quarterly in advance.",
+      "The term of the Lease is ten (10) years from 1 April 2025.",
+      "The Tenant may terminate the Lease on 31 March 2030 by giving not less than six months' written notice.",
+      "The Landlord's total liability under the Lease shall not exceed the rent paid in the preceding twelve months.",
+      "This Lease is governed by the law of England and Wales."
+     ]
+    },
+    {
+     "text": "The Landlord's liability under this Lease is limited to the rent paid in the preceding twelve months. There are no other exclusions of liability specified in the Lease. The governing law of the Lease is the law of England and Wales. The matter number is EVAL-D2. The parties to the Lease are Elmfield Estates Ltd and Alder Biotech AB. The date of the Lease is 10 October 2026.",
+     "sources": 2,
+     "unsupported": [
+      "The matter number is EVAL-D2.",
+      "The parties to the Lease are Elmfield Estates Ltd and Alder Biotech AB.",
+      "The date of the Lease is 10 October 2026."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 2
+  },
+  {
+   "id": "nda-missing-period",
+   "template": "nda",
+   "seconds": 4.5,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Harrowgate",
+     "value": "Harrowgate Systems Inc.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Harrowgate Systems Inc. and Elmfield Estates Ltd will exchange confidential information to assess a possible warehouse automation project.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Elmfield",
+     "value": "Elmfield Estates Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Elmfield Estates Ltd",
+     "suggestion": null
+    },
+    {
+     "field": "purpose",
+     "expected": "warehouse automation",
+     "value": "to assess a possible warehouse automation project",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to assess a possible warehouse automation project",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "confidentiality_period",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    },
+    {
+     "field": "governing_law",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 2
+  }
+ ]
+}

@@ -112,7 +112,12 @@ def file_artifact(matter_id: str, artifact_id: str, request: Request):
         raise HTTPException(status_code=409, detail="Only an approved version can be filed.")
     if a.get("document_id") and docs.get_document(matter_id, a["document_id"]):
         return {"document_id": a["document_id"], "changed": False}
-    body, filename = _as_text(a, approval)
-    doc_id = artifacts.file(p, a, body, filename)
+    if a["kind"] == "legal_draft":                       # S3.1: a Word document in the firm's styles
+        from ..drafting.routes import filed
+        body, filename, mime, kind = filed(p, a, approval)
+        doc_id = artifacts.file(p, a, body, filename, mime, kind)
+    else:
+        body, filename = _as_text(a, approval)
+        doc_id = artifacts.file(p, a, body, filename)
     note(details={"kind": a["kind"], "version": a["version"], "content_sha256": approval["content_sha256"]})
     return {"document_id": doc_id, "changed": True}

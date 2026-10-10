@@ -32,19 +32,25 @@ class Conflict(Exception):
 
 # kind → (subject type, what it is called, the title of the document it is filed as)
 KINDS = {"minutes": ("meeting", "Minutes", "Minutes — {title}"),
-         "research_note": ("research_turn", "Research note", "Research note — {title}")}
+         "research_note": ("research_turn", "Research note", "Research note — {title}"),
+         "legal_draft": ("draft", "Draft", "{title}")}
 
 
 def title(a: dict) -> str:
     c = a["content"]
-    return (c.get("meeting") or {}).get("title") or "" if a["kind"] == "minutes" else c.get("question") or ""
+    if a["kind"] == "minutes":
+        return (c.get("meeting") or {}).get("title") or ""
+    return c.get("title") or "" if a["kind"] == "legal_draft" else c.get("question") or ""
 
 
 def cited_documents(a: dict) -> set[str]:
     """Documents an artifact quotes. Minutes quote the transcript only."""
+    c = a["content"]
+    if a["kind"] == "legal_draft":                       # S3.1: field quotes and written passages' sources
+        return {s["document_id"] for item in (c.get("fields") or []) + (c.get("blocks") or []) for s in item.get("sources") or []
+                if s.get("document_id")}
     if a["kind"] != "research_note":
         return set()
-    c = a["content"]
     return {x["document_id"] for key in ("evidence", "sources", "conflicts") for x in c.get(key) or [] if x.get("document_id")}
 
 
@@ -130,6 +136,10 @@ def decide(matter_id: str, artifact_id: str, decision: str, by: str, content_sha
                 raise Conflict("This draft changed since you opened it. Review the current version.")
             if decision == "approved" and by == author:
                 raise Conflict("A draft is approved by someone other than its author.")
+            if decision == "approved" and kind == "legal_draft":
+                gaps = json.loads(conn.execute("SELECT content_json FROM legal_ai_artifacts WHERE id=?", (artifact_id,)).fetchone()[0]).get("gaps", 0)
+                if gaps:
+                    raise Conflict(f"Fill every [[NEEDS INPUT]] gap before approving ({gaps} left).")
             conn.execute("INSERT INTO legal_review_approvals (id, artifact_id, matter_id, decision, content_sha256, reason, by, at) "
                          "VALUES (?,?,?,?,?,?,?,?)", (str(uuid.uuid4()), artifact_id, matter_id, decision, sha, reason, by, now_iso()))
             if decision == "approved":
@@ -163,7 +173,7 @@ def latest(matter_id: str, subject_type: str, subject_id: str, kind: str) -> Opt
     return found[0] if found else None
 
 
-def file(p: dict, artifact: dict, body: bytes, filename: str) -> str:
+def file(p: dict, artifact: dict, body: bytes, filename: str, mime: str = "text/markdown", doc_kind: str = "note") -> str:
     """An approved version becomes a matter document (status final) carrying its approval; the filing
     is recorded with the body's hash. Returns the document id."""
     import hashlib as _hashlib
@@ -174,12 +184,12 @@ def file(p: dict, artifact: dict, body: bytes, filename: str) -> str:
     if not approval:
         raise Conflict("Only an approved version can be filed.")
     name = KINDS[artifact["kind"]][2].format(title=artifact["title"])[:300]
-    doc_id = docs.create_document(p["org_id"], artifact["matter_id"], name, "note", "final", p["sub"])
+    doc_id = docs.create_document(p["org_id"], artifact["matter_id"], name, doc_kind, "final", p["sub"])
     version_id = docs.new_id()
     sha = _hashlib.sha256(body).hexdigest()
     wrapped = blobs.store(artifact["matter_id"], version_id, body)
     try:
-        docs.add_version(version_id, doc_id, artifact["matter_id"], filename, "text/markdown", len(body), sha, None, wrapped,
+        docs.add_version(version_id, doc_id, artifact["matter_id"], filename, mime, len(body), sha, None, wrapped,
                          p["sub"], status="final")
     except BaseException:
         blobs.remove(artifact["matter_id"], version_id)

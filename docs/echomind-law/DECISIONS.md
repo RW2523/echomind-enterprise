@@ -847,6 +847,55 @@ Every entry records the options considered, the recommendation, the consequence 
   - The system code under these suites did not change between the runs, so these are run-to-run variation of the model. They are reported, not tuned away: the held-out sets were not used to change anything.
 - **"+changes" on gate reports:** each suite marked its commit `+changes` because the earlier suites' new report files were untracked; the code was `e0f6415` throughout (checked with `git status`). The evaluation scripts now ignore `eval/law/reports` when checking for changes.
 
+### D-045 Legal drafting from approved firm templates, without invention — RECORDED (S3.1; DOC-01, P-008, T08)
+- **Audit:** the legacy Document Studio (closed in Law, D-025) cannot be adapted.
+  - Every section writer is told to "write finished, realistic prose with plausible specifics", and placeholders are banned (`docgen/pipeline.py:464-466`).
+  - Its templates push for "concrete numbers" and "real dates".
+  - Its sources are any document id in the global index, with no matter scope or permission check, cut to 6,000 characters.
+  - It keeps no provenance, versions, owners or approvals, and has no Word output.
+  Reusable pieces were limited to the ideas of the block schema and the fenced untrusted input. The Law code is new (`legal/drafting/`).
+- **Firm templates (migration 0023):**
+  - A small markup: `#` headings, paragraphs with `{{fields}}`, and `[[write: an instruction]]` for a passage written from the documents.
+  - Each field declares its source: `documents` (with the question to ask them), `matter` (number, title, client), `person`, or `today`. The template is checked: no undeclared or unused field.
+  - Versions are fixed (a trigger); firm styles (a Word file) may be attached while a version is a draft, and they are part of its hash.
+  - `templates.manage` (managing partner, attorney) writes; `templates.approve` (managing partner, not the author) approves exactly the hash read, retiring the previous version.
+  - Only approved versions are drafted from.
+  - Six standard presets (engagement letter, mutual NDA, letter before claim, memorandum, contract review report, board minutes) install as drafts for the firm to review (P-008). The demo seed approves them.
+- **Fields (`engine.extract`):**
+  - Matter fields come from the record, and `today` is the drafting date. Person fields are left for a lawyer.
+  - Document fields are asked of the passages the person can see (signed versions first, or only the chosen documents). The model answers with the bare fact and the exact words that state it.
+  - The quote must be found in a passage (D-037), and the value must be in the quote: every figure for amounts, dates, periods and percentages, every word for names and text. An amount, date or percentage must contain a figure.
+  - Otherwise the field is left `[[NEEDS INPUT]]`, and the model's suggestion is shown with the reason it was not used.
+- **Written passages (`engine.write`):**
+  - The model writes from the passages found and the confirmed fields only, citing each sentence with an exact quote, and writes `[[NEEDS INPUT: …]]` for anything missing.
+  - Quotes are checked and citation marks become the passage's sources. A citation labelled by its clause number is matched to the source that holds its quote.
+  - A sentence with no checked quote is marked `[[NEEDS INPUT: check against the documents]]`.
+  - A figure no source or field contains becomes `[[NEEDS INPUT: confirm "…" — not in the sources]]`.
+  - The model sees each matched passage in full (about 900 characters), not the narrow window search ranks by.
+  - Text addressed to an AI is withheld (T08).
+- **Review (S2.7):**
+  - A draft is an AI artifact, `legal_draft`. A lawyer's change (a field filled or corrected, a written passage rewritten) is a new version marked as theirs; the firm's template wording changes only in a new template version.
+  - A second lawyer approves a version only when no gap is left. The draft is shown only to people who can see every document it quotes.
+  - Filing makes a Word document in the firm's styles (gaps highlighted, metadata cleared, the footer naming the matter, template version and approval with its hash) and records the filing.
+  - A purge of a quoted document removes unfiled drafts.
+  - PDF and Word previews say "DRAFT — NOT APPROVED" until approval.
+- **Found while building it:**
+  - **The shared model client cut JSON answers.** Its prose tidy-up trims a reply that does not end on a sentence back to its last sentence, which cut the tail off every JSON object. It cut drafting fields to `"quote":`, and **the last minuted item of every minutes batch since S2.6**.
+  - Structured answers now use `llm.complete` (the reply as written, a new `chat_raw` on the client), with tests that fail without it. Minutes were re-measured: unchanged on these sets (golden recall 1.0, held-out 6/7, nothing invented).
+- **Evaluation** (`eval/law/drafting/run_drafting_eval.py`): fictional matters drafted from the presets by the real model.
+  - **Golden (tuning, 4 scenarios):** first run 0/9 fields (the JSON cut), then 6/9, 8/9 and 9/9. A contract-review scenario was added to the tuning set for written-passage citations. Final: fields 11/12, absent facts left open 2/2, **wrong values 0, invented figures 0**, unsupported sentences 0, about 9 s per draft.
+  - **Held-out (3 scenarios, never used to tune), run four times as defects in the code were fixed, and reported:**
+    - Run 1: fields 9/10, absent 2/2, wrong 0, invented 0. It exposed two parser defects: numbers joined across lines, so a stated date counted as invented; and clause-number citations not read.
+    - Run 2: 8/10. It showed uncited sentences left in the text (one wrong: "The date of the Lease is 10 October 2026"). That led to the rule that every unsupported sentence is a gap.
+    - Run 3: 9/10. It showed duplicate markers, and passages too narrow for the writer, which a new tuning scenario confirmed.
+    - **Final run (4):** fields 8/10 (the agreement title twice not stated: cautious, not wrong), absent 2/2, **wrong 0, invented 0**, 4 unsupported sentences, each marked for a lawyer.
+  - **Small sets.** The lawyer review measures quality.
+- **Limits:**
+  - The model sometimes declines a fact a document does state, which leaves a gap for a person: the safe side.
+  - Written passages can repeat themselves; the reviewer edits them.
+  - Field values are taken as the document words them (for example "14 Quay Street, Gothenburg 411 04, Sweden").
+  - Word round trips are checked automatically through LibreOffice. The manual Microsoft Word check belongs to S3.3 (🔒).
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

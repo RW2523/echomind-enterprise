@@ -18,7 +18,8 @@ from __future__ import annotations
 from ...core.db import get_conn
 from .. import artifacts, policy
 
-_KIND_PATH = {"minutes": "/m/{number}/meetings/{subject}?tab=minutes", "research_note": "/m/{number}/notes/{id}"}
+_KIND_PATH = {"minutes": "/m/{number}/meetings/{subject}?tab=minutes", "research_note": "/m/{number}/notes/{id}",
+              "legal_draft": "/m/{number}/drafting/{id}"}
 
 
 def _name(conn, uid):

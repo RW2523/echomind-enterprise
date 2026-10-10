@@ -167,6 +167,14 @@ class OpenAICompatChat:
         self.model = model
 
     async def chat(self, messages, temperature: float, max_tokens: int) -> str:
+        return await self._chat(messages, temperature, max_tokens, tidy=True)
+
+    async def chat_raw(self, messages, temperature: float, max_tokens: int) -> str:
+        """The reply as written, for structured answers (JSON): the prose tidy-up trims a reply that
+        does not end on a sentence back to its last sentence, which cuts the tail off a JSON object."""
+        return await self._chat(messages, temperature, max_tokens, tidy=False)
+
+    async def _chat(self, messages, temperature: float, max_tokens: int, tidy: bool) -> str:
         payload={"model":self.model,"messages":messages,"temperature":temperature,"max_tokens":max_tokens,"stream":False, **_EXTRA}
         _log_chat_request(self.base_url, payload, stream=False)
         t0 = time.monotonic()
@@ -174,7 +182,8 @@ class OpenAICompatChat:
             r = await client.post(f"{self.base_url}/chat/completions", json=payload)
             r.raise_for_status()
             j=r.json()
-            out = finalize_answer(strip_reasoning_leak((j["choices"][0]["message"]["content"] or "").strip()))
+            out = strip_reasoning_leak((j["choices"][0]["message"]["content"] or "").strip())
+            out = finalize_answer(out) if tidy else out
         elapsed_ms = (time.monotonic() - t0) * 1000
         usage = j.get("usage") or {}
         logger.info(

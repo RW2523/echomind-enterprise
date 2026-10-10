@@ -321,7 +321,7 @@ def test_a_filed_note_stays_when_its_source_is_purged(rv, fresh_db):
     doc_id = alice.post(f"{rv['base']}/artifacts/{a['id']}/file", headers=csrf_headers(alice)).json()["document_id"]
     org, users = rv["matters"]["M-101"]["org_id"], rv["users"]
     d = deletion.request(org, rv["mid"], "document", rv["msa"]["id"], "Duplicate", users["alice"]["id"])
-    assert "Research notes already filed as matter documents" in d["report"]["kept"]
+    assert "Research notes and drafts already filed as matter documents" in d["report"]["kept"]
     assert deletion.purge(d["id"], users["mp"]["id"])["verification"]["ok"]
     assert q(fresh_db, "SELECT COUNT(*) FROM legal_documents WHERE id=? AND deleted_at IS NULL", doc_id) == [(1,)]
     d2 = deletion.request(org, rv["mid"], "document", doc_id, "Superseded note", users["alice"]["id"])

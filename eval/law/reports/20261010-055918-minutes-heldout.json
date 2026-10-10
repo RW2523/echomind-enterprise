@@ -1,0 +1,335 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "97bc690+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-055918"
+ },
+ "summary": {
+  "items": 12,
+  "planted": 7,
+  "recall": 0.857,
+  "action_owners": "3/3",
+  "action_deadlines": "3/3",
+  "verified": 1.0,
+  "invented_specifics": 0,
+  "batches": 1,
+  "failed_batches": 0,
+  "lines": 12,
+  "turns": 12,
+  "seconds": 21.6
+ },
+ "planted": [
+  {
+   "planted": {
+    "kind": "decision",
+    "must": [
+     "break"
+    ]
+   },
+   "item": "The committee decided to keep the break option open and not to waive it in any negotiation."
+  },
+  {
+   "planted": {
+    "kind": "decision",
+    "must": [
+     "reject|roof"
+    ]
+   },
+   "item": "The committee agreed to reject the landlord's demand and ask them to repair the roof."
+  },
+  {
+   "planted": {
+    "kind": "action",
+    "must": [
+     "diar|notice"
+    ],
+    "owner": "Helena Marsh",
+    "deadline": "next week"
+   },
+   "item": "Helena Marsh will diarise the last date for serving notice and confirm it to the committee in writing next week."
+  },
+  {
+   "planted": {
+    "kind": "action",
+    "must": [
+     "photograph"
+    ],
+    "owner": "Lena Ekdahl",
+    "deadline": "fifteenth"
+   },
+   "item": "Lena Ekdahl will collect the photographs and repair invoices by the fifteenth."
+  },
+  {
+   "planted": {
+    "kind": "action",
+    "must": [
+     "landlord|write"
+    ],
+    "owner": "Helena Marsh"
+   },
+   "item": "Helena Marsh will write to the landlord about the roof once Lena sends her the photographs."
+  },
+  {
+   "planted": {
+    "kind": "unresolved",
+    "must": [
+     "insur"
+    ]
+   },
+   "item": "It is unclear whether the insurer will cover the stock damaged by the leak."
+  },
+  {
+   "planted": {
+    "kind": "unresolved",
+    "must": [
+     "cost|model"
+    ]
+   },
+   "item": null
+  }
+ ],
+ "invented": [],
+ "items": [
+  {
+   "deadline": null,
+   "id": "m1",
+   "kind": "discussion",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "985870bb-0178-47f1-8459-71d6160c8c6f",
+     "line": 1,
+     "quote": "The lease lets the tenant break on thirty-one March twenty thirty with six months' written notice.",
+     "segment_id": "d7982398-9f88-48f7-9bf0-ff7fbcdc636e",
+     "speaker": "Helena Marsh",
+     "time": "2026-10-10T09:58:56.575Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The lease allows the tenant to break on 31 March 2030 with six months' written notice.",
+   "section": "Break option"
+  },
+  {
+   "deadline": null,
+   "id": "m2",
+   "kind": "discussion",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "985870bb-0178-47f1-8459-71d6160c8c6f",
+     "line": 2,
+     "quote": "Operations want to leave at the break date if the new warehouse is ready.",
+     "segment_id": "c2260f7f-a355-4b9a-911a-dbc95f06a757",
+     "speaker": "Oskar Lund",
+     "time": "2026-10-10T09:58:56.579Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Operations want to leave at the break date if the new warehouse is ready.",
+   "section": "Break option"
+  },
+  {
+   "deadline": null,
+   "id": "m3",
+   "kind": "discussion",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "985870bb-0178-47f1-8459-71d6160c8c6f",
+     "line": 3,
+     "quote": "Finance has not yet modelled the cost of staying another five years.",
+     "segment_id": "951bf232-daa3-4b68-9d9f-77f8ca66a9ba",
+     "speaker": "Lena Ekdahl",
+     "time": "2026-10-10T09:58:56.581Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Finance has not yet modelled the cost of staying another five years.",
+   "section": "Break option"
+  },
+  {
+   "deadline": null,
+   "id": "m4",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "985870bb-0178-47f1-8459-71d6160c8c6f",
+     "line": 4,
+     "quote": "We decide today to keep the break option open and not to waive it in any negotiation.",
+     "segment_id": "76a8115e-4a3b-4211-b03b-ed95cc12eb44",
+     "speaker": "Oskar Lund",
+     "time": "2026-10-10T09:58:56.583Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The committee decided to keep the break option open and not to waive it in any negotiation.",
+   "section": "Break option"
+  },
+  {
+   "deadline": "next week",
+   "id": "m5",
+   "kind": "action",
+   "owner": "Helena Marsh",
+   "sources": [
+    {
+     "agenda_item": "985870bb-0178-47f1-8459-71d6160c8c6f",
+     "line": 5,
+     "quote": "Then I will diarise the last date for serving notice and confirm it to you in writing next week.",
+     "segment_id": "a149b1a8-25bc-44b2-aa09-285c8a0e9c96",
+     "speaker": "Helena Marsh",
+     "time": "2026-10-10T09:58:56.584Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Helena Marsh will diarise the last date for serving notice and confirm it to the committee in writing next week.",
+   "section": "Break option"
+  },
+  {
+   "deadline": null,
+   "id": "m6",
+   "kind": "discussion",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "f0534ba0-6ecc-4d6e-946d-b718f9e9a3cb",
+     "line": 6,
+     "quote": "The landlord says the roof leak is our responsibility.",
+     "segment_id": "e219bb58-bd54-4e05-a591-1a5c7ef26fa8",
+     "speaker": "Lena Ekdahl",
+     "time": "2026-10-10T09:58:56.588Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The landlord says the roof leak is the tenant's responsibility.",
+   "section": "Repairs"
+  },
+  {
+   "deadline": null,
+   "id": "m7",
+   "kind": "discussion",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "f0534ba0-6ecc-4d6e-946d-b718f9e9a3cb",
+     "line": 7,
+     "quote": "Clause six point two puts the structure and roof on the landlord, so we disagree.",
+     "segment_id": "34d0a702-fd3e-43e8-88bf-3cf8b8785ae1",
+     "speaker": "Helena Marsh",
+     "time": "2026-10-10T09:58:56.590Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Clause 6.2 puts the structure and roof on the landlord, so the committee disagrees with the landlord's claim.",
+   "section": "Repairs"
+  },
+  {
+   "deadline": null,
+   "id": "m8",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "f0534ba0-6ecc-4d6e-946d-b718f9e9a3cb",
+     "line": 8,
+     "quote": "We agree to reject the landlord's demand and ask them to repair the roof.",
+     "segment_id": "00c4f4cd-2a7f-4f8a-942e-493d40c83c82",
+     "speaker": "Oskar Lund",
+     "time": "2026-10-10T09:58:56.592Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The committee agreed to reject the landlord's demand and ask them to repair the roof.",
+   "section": "Repairs"
+  },
+  {
+   "deadline": "the fifteenth",
+   "id": "m9",
+   "kind": "action",
+   "owner": "Lena Ekdahl",
+   "sources": [
+    {
+     "agenda_item": "f0534ba0-6ecc-4d6e-946d-b718f9e9a3cb",
+     "line": 9,
+     "quote": "I will collect the photographs and repair invoices by the fifteenth.",
+     "segment_id": "1b1617ba-0dc5-465f-84bc-0a513116d036",
+     "speaker": "Lena Ekdahl",
+     "time": "2026-10-10T09:58:56.594Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Lena Ekdahl will collect the photographs and repair invoices by the fifteenth.",
+   "section": "Repairs"
+  },
+  {
+   "deadline": null,
+   "id": "m10",
+   "kind": "unresolved",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "f0534ba0-6ecc-4d6e-946d-b718f9e9a3cb",
+     "line": 10,
+     "quote": "It is unclear whether the insurer will cover the stock damaged by the leak.",
+     "segment_id": "ed41f2a1-35b1-46a1-8c14-2952f7a20dd8",
+     "speaker": "Oskar Lund",
+     "time": "2026-10-10T09:58:56.597Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "It is unclear whether the insurer will cover the stock damaged by the leak.",
+   "section": "Repairs"
+  },
+  {
+   "deadline": null,
+   "id": "m11",
+   "kind": "action",
+   "owner": "Helena Marsh",
+   "sources": [
+    {
+     "agenda_item": "09c71e20-55d5-4166-b55e-80d7ec9a3f79",
+     "line": 11,
+     "quote": "I will write to the landlord about the roof once Lena sends me the photographs.",
+     "segment_id": "da69e3b4-696a-4527-8c0d-0d08372214f6",
+     "speaker": "Helena Marsh",
+     "time": "2026-10-10T09:58:56.601Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Helena Marsh will write to the landlord about the roof once Lena sends her the photographs.",
+   "section": "Next steps"
+  },
+  {
+   "deadline": null,
+   "id": "m12",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "09c71e20-55d5-4166-b55e-80d7ec9a3f79",
+     "line": 12,
+     "quote": "Let's meet again in a month to decide on the break.",
+     "segment_id": "bf250472-7158-4a41-a8e1-6f1b9c7acb68",
+     "speaker": "Oskar Lund",
+     "time": "2026-10-10T09:58:56.603Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The committee decided to meet again in a month to decide on the break.",
+   "section": "Next steps"
+  }
+ ]
+}

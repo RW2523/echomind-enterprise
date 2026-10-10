@@ -1,0 +1,157 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "97bc690+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-055331",
+  "prompt_version": "drafting-s3.1"
+ },
+ "summary": {
+  "scenarios": 3,
+  "field_accuracy": "6/9",
+  "absent_left_open": "1/2",
+  "wrong_values": 1,
+  "invented_figures": 0,
+  "written_passages": 2,
+  "unsupported_sentences": 0,
+  "seconds_per_draft": 7.4
+ },
+ "scenarios": [
+  {
+   "id": "engagement-harrowgate",
+   "template": "engagement_letter",
+   "seconds": 11.4,
+   "fields": [
+    {
+     "field": "client_address",
+     "expected": "14 Quay Street",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    },
+    {
+     "field": "client_contact",
+     "expected": "Petra Voss",
+     "value": "Petra Voss",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Please direct all correspondence to Petra Voss."
+    },
+    {
+     "field": "fee_arrangement",
+     "expected": "18,000",
+     "value": "The agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments."
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The firm has been engaged to advise on the renewal of the Master Services Agreement between Harrowgate Systems Inc. and Northwind Logistics Ltd, including a review of the supplier's redline and the negotiation of the liability cap. The agreed fee for this work is a fixed fee of USD 18,000, payable in two instalments. The matter is assigned the matter number EVAL-D1, and all correspondence should be directed to Petra Voss, the client contact.",
+     "sources": 3,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 4
+  },
+  {
+   "id": "nda-lantern",
+   "template": "nda",
+   "seconds": 6.3,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Alder Biotech",
+     "value": "Alder Biotech AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Alder Biotech AB and Northbridge Analytics Ltd."
+    },
+    {
+     "field": "party_b",
+     "expected": "Northbridge Analytics",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    },
+    {
+     "field": "purpose",
+     "expected": "joint venture",
+     "value": "to evaluate a joint venture in clinical data analytics",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The parties intend to exchange confidential information to evaluate a joint venture in clinical data analytics."
+    },
+    {
+     "field": "confidentiality_period",
+     "expected": "three",
+     "value": "The information must be kept confidential for three (3) years from the date of the agreement.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Confidential information shall be protected for three (3) years from the date of the agreement."
+    },
+    {
+     "field": "governing_law",
+     "expected": "Sweden",
+     "value": "The agreement will be governed by the laws of Sweden.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The agreement will be governed by the laws of Sweden."
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 2
+  },
+  {
+   "id": "engagement-missing-fee",
+   "template": "engagement_letter",
+   "seconds": 4.6,
+   "fields": [
+    {
+     "field": "client_contact",
+     "expected": "Karin Lindqvist",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "fee_arrangement",
+     "status": "sourced",
+     "value": "We have not yet discussed fees.",
+     "ok": false
+    },
+    {
+     "field": "client_address",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [
+    "fee_arrangement"
+   ],
+   "written": [
+    {
+     "text": "The client has requested legal services to advise the board of Voss-Lindqvist AB on the proposed interim dividend and the directors' duties that apply to it. The scope of the engagement is limited to providing advice on these specific matters as outlined in the instruction email. The firm has not yet discussed fees with the client.",
+     "sources": 2,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 5
+  }
+ ]
+}

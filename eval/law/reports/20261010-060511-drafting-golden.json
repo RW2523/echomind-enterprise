@@ -1,0 +1,219 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "97bc690+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-060511",
+  "prompt_version": "drafting-s3.1"
+ },
+ "summary": {
+  "scenarios": 4,
+  "field_accuracy": "11/12",
+  "absent_left_open": "2/2",
+  "wrong_values": 0,
+  "invented_figures": 0,
+  "written_passages": 5,
+  "unsupported_sentences": 0,
+  "seconds_per_draft": 8.6
+ },
+ "scenarios": [
+  {
+   "id": "engagement-harrowgate",
+   "template": "engagement_letter",
+   "seconds": 9.4,
+   "fields": [
+    {
+     "field": "client_address",
+     "expected": "14 Quay Street",
+     "value": "14 Quay Street, Gothenburg 411 04, Sweden",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Our postal address is 14 Quay Street, Gothenburg 411 04, Sweden.",
+     "suggestion": null
+    },
+    {
+     "field": "client_contact",
+     "expected": "Petra Voss",
+     "value": "Petra Voss",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Please direct all correspondence to Petra Voss.",
+     "suggestion": null
+    },
+    {
+     "field": "fee_arrangement",
+     "expected": "18,000",
+     "value": "USD 18,000",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The firm is engaged to advise on the renewal of Harrowgate Systems Inc.'s Master Services Agreement with Northwind Logistics Ltd. This includes a review of the supplier's redline and the negotiation of the liability cap. The agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments.",
+     "sources": 3,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 3
+  },
+  {
+   "id": "nda-lantern",
+   "template": "nda",
+   "seconds": 5.0,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Alder Biotech",
+     "value": "Alder Biotech AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Alder Biotech AB and Northbridge Analytics Ltd.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Northbridge Analytics",
+     "value": "Northbridge Analytics Ltd.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Alder Biotech AB and Northbridge Analytics Ltd.",
+     "suggestion": null
+    },
+    {
+     "field": "purpose",
+     "expected": "joint venture",
+     "value": "to evaluate a joint venture in clinical data analytics",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to evaluate a joint venture in clinical data analytics",
+     "suggestion": null
+    },
+    {
+     "field": "confidentiality_period",
+     "expected": "three",
+     "value": "three years",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Confidential information shall be protected for three (3) years from the date of the agreement.",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "Sweden",
+     "value": "Sweden",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The agreement will be governed by the laws of Sweden.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 0
+  },
+  {
+   "id": "engagement-missing-fee",
+   "template": "engagement_letter",
+   "seconds": 6.0,
+   "fields": [
+    {
+     "field": "client_contact",
+     "expected": "Karin Lindqvist",
+     "value": "Karin Lindqvist",
+     "status": "sourced",
+     "ok": true,
+     "quote": "From: Karin Lindqvist, Chair, Voss-Lindqvist AB.",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "fee_arrangement",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    },
+    {
+     "field": "client_address",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The client has requested legal advice regarding the proposed interim dividend and the directors' duties that apply to it. The scope of the legal services includes providing guidance on the board's obligations in relation to the interim dividend. The matter is identified as Engagement letter — Voss-Lindqvist board advice, with the matter number EVAL-D3. [[NEEDS INPUT: The specific legal analysis or recommendations to be provided by the firm]].",
+     "sources": 2,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 6
+  },
+  {
+   "id": "review-software-licence",
+   "template": "contract_review",
+   "seconds": 13.8,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Software Licence Agreement",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Northbridge Analytics",
+     "value": "Northbridge Analytics Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Northbridge Analytics Ltd (the Licensor)",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "Sweden",
+     "value": "Sweden",
+     "status": "sourced",
+     "ok": true,
+     "quote": "14.1 This Agreement is governed by the laws of Sweden.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The Agreement has a term of three (3) years, commencing on 1 January 2026. Each party may terminate the Agreement for material breach upon thirty (30) days' written notice if the breach is not remedied.",
+     "sources": 2,
+     "unsupported": []
+    },
+    {
+     "text": "The Licence Fee is EUR 120,000 per annum, as stated in the Agreement. Payment is required annually in advance and must be made within forty-five (45) days of the invoice date.  \n\nThe total liability of either party under this Agreement is limited to the fees paid in the twelve (12) months preceding any claim. Neither party is liable for loss of profit or indirect loss.  \n\nThis Agreement is governed by the laws of Sweden.",
+     "sources": 5,
+     "unsupported": []
+    },
+    {
+     "text": "The limitation and exclusion of liability in the Agreement is set out as follows: \"Neither party's total liability under this Agreement shall exceed the fees paid in the twelve (12) months before the claim\". Additionally, \"Neither party is liable for loss of profit or indirect loss\".",
+     "sources": 2,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 2
+  }
+ ]
+}

@@ -436,3 +436,19 @@
 [data-edition="law"] .lw-eval-measures div { display: flex; gap: 6px; align-items: baseline; }
 [data-edition="law"] .lw-eval-measures dt { color: var(--ink-2); font-size: 12.5px; }
 [data-edition="law"] .lw-eval-measures dd { margin: 0; font-weight: 600; font-size: 13px; }
+/* S3.1 — drafting and firm templates */
+[data-edition="law"] .lw-draft-grid { grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); align-items: start; }
+@media (max-width: 960px) { [data-edition="law"] .lw-draft-grid { grid-template-columns: 1fr; } }
+[data-edition="law"] .lw-draft { padding: 32px 40px; }
+[data-edition="law"] .lw-draft-h1 { font-size: 22px; margin: 4px 0 14px; }
+[data-edition="law"] .lw-draft-h2, [data-edition="law"] .lw-draft-h3 { font-size: 16.5px; margin: 18px 0 6px; }
+[data-edition="law"] .lw-draft-p { font-size: 15px; line-height: 1.6; margin: 0 0 10px; }
+[data-edition="law"] .lw-gap { background: color-mix(in srgb, var(--attention) 22%, transparent); color: var(--ink); border-radius: 4px; padding: 0 4px; font-family: var(--sans); font-size: 13px; font-weight: 600; }
+[data-edition="law"] .lw-draft-written { border-left: 3px solid var(--accent-soft); padding-left: 12px; margin: 0 0 10px -15px; }
+[data-edition="law"] .lw-draft-written[data-origin="edited"] { border-left-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+[data-edition="law"] .lw-draft-written details ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+[data-edition="law"] .lw-draft-fields { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+[data-edition="law"] .lw-draft-fields li { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+[data-edition="law"] .lw-template-versions { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 12px; }
+[data-edition="law"] .lw-template-versions > li { padding: 10px 12px; border: 1px solid var(--rule); border-radius: 12px; }
+[data-edition="law"] .lw-template-pre { white-space: pre-wrap; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; margin: 6px 0; }
