@@ -594,6 +594,54 @@ Every entry records the options considered, the recommendation, the consequence 
   - A question that names a party ("Harrowgate's indemnity") can miss a clause written in defined roles ("Provider shall indemnify").
   - The model sometimes leaves out a fact that its cited passage contains. One held-out answer, "who chaired the meeting", opened with "not stated". It then quoted "Karin Lindqvist (Chair)" in its own text with a bare `[1]` citation to a weakly scored passage, so it was counted as an abstention.
 
+### D-039 Comparing versions and finding conflicts across documents — RECORDED (S2.3; RAG-02, T-06, T-07)
+- **Two versions, clause by clause** (`compare/align.py`):
+  - **Units.** A version is compared as the blocks reading found (paragraphs, headings, list items, table rows, footnotes). Headers and footers are left out because they repeat on every page. Each unit knows the clause it starts and the clause it sits in. A Markdown heading such as "## 7. Warranties" numbers itself.
+  - **Alignment in passes:**
+    1. Same wording, in order, with the clause number set aside. A clause renumbered by an insertion is "unchanged, renumbered 4.2 → 4.3".
+    2. Shared wording, in order, between the stretches matched in pass 1: at least `LEGAL_COMPARE_MATCH_MIN` (0.5), with a 0.1 bonus for the same number.
+    3. Moved: leftovers that share at least `LEGAL_COMPARE_MOVE_MIN` (0.8) of their wording.
+    4. Same meaning: leftovers whose embeddings are within `LEGAL_COMPARE_MEANING_MIN` (0.85, nomic-embed-text) and that still share some wording. This pass is skipped, and the result says so, when the embedding model is unavailable.
+
+    A pair outside the longest run in order is marked as moved. Results read in the right-hand version's order, with a removed clause shown after where its neighbour went.
+  - **Within a pair:** a word diff marks exactly the characters removed and inserted, as offsets into each version's text. Nearby pieces are grouped, so "thirty (30)" → "sixty (60)" is one change.
+  - **Labels:** a number changed, an obligation changed (shall, may, must, will …), a negation added or removed, or formatting only (case and quote style; a change in spacing alone is not a change).
+  - **Exact by construction:** nothing in a comparison is generated. It is computed from the stored text (S2.1), so it is repeatable.
+- **Explanations** (`compare/engine.py`):
+  - The model explains one change at a time. It sees source 1 (left) and source 2 (right), fenced, with text addressed to an AI withheld. The changed words given as a hint are withheld and escaped too: a test found that an inserted "note to the AI" reached the model through the hint, and that is fixed.
+  - It must quote inside its citations (with an example in the prompt), and every quote is verified as in research (D-037).
+  - An added or removed clause has only one source; a bare citation of the missing side is ignored, not counted as failed.
+  - The scope is re-checked while streaming. Explanations are saved with the comparison.
+- **Conflicts across documents** (`compare/facts.py`, `compare/scan.py`):
+  - **Documents:** the ones the person can see, in the version answers come from (signed by default, or the latest drafts).
+  - **Facts:** amounts, periods (years become months, weeks become days, business days kept apart), percentages, dates, the governing law, companies with their legal form, and references to another agreement by its date. Each keeps its exact characters.
+  - **Parties:** from the document's own words — "between", "To:", "From:", "Signed for", "Accepted for", "on behalf of", a defined role after the name ("Provider"), or the letterhead.
+  - **Candidates:**
+    - A company named with another legal form is compared between documents that name the same two companies or mention each other's title.
+    - Amounts, periods, percentages, dates and the governing law are compared only between documents with the same parties. A law firm's own invoice terms are therefore never set against a supplier's.
+    - Each statement is paired with its closest counterpart in the other document: by the eight words around the value (company names excluded), and only if that counterpart's own closest match is this statement. A counterpart with the same value means the documents agree. Dates are compared only when they mark the same kind of event.
+    - A reference such as "the Master Services Agreement dated 2 February 2026" is checked against the date the referenced agreement gives itself.
+  - **Reported as found:** a company's legal form, an agreement's date and the governing law each document chooses are self-contained statements. They are reported with their exact words, and whether they matter is the lawyer's call. In the tuning runs, the model talked itself out of both "Inc. vs Ltd" and a governing-law difference ("the order form supplements the MSA").
+  - **Checked by the model:** amounts, periods, percentages and dates depend on context. The model gets both passages and each document's parties, says first what each passage governs and between whom, then gives CONFLICT or NO CONFLICT, then quotes both.
+    - Findings are worded "the documents say different things", never which one is right.
+    - Rejected candidates are kept as "checked and not in conflict".
+    - If the model fails, a candidate is "unclear", never hidden.
+- **Access and records:**
+  - Comparisons and scans need `research.query`, read only versions the person may read, and are private to their owner (migration 0017).
+  - A saved comparison is shown again only while every document it quotes is still visible to its owner. A scan leaves out findings from a document the owner can no longer see, and says how many are hidden.
+  - A purge removes every comparison and scan that quotes the document, whole; the purge report counts them and the verification checks them.
+  - Audit records hold counts only.
+  - The API is `/api/legal/matters/{id}/compare` (plus `/scan` and `/{cid}/explain`), not the plan's `/contracts/compare`, since any two documents can be compared.
+- **Evaluation** (`eval/law/run_compare_eval.py`, real model and embeddings on the host; TEST_RESULTS run 16):
+  - **Golden (tuning) set:** the MSA v1 against v2 and against a restructured v3, plus an order form with five planted contradictions.
+    - Final: alignment 17/17 changes correct, with nothing extra; explanation quotes verified 0.947, both wordings quoted in 6/6 changed clauses, 1.95 s per change; scan 5/5 planted, precision 1.0, 8 candidates, 3.8 s.
+    - The first run was weaker, reported here for the record: scan precision 0.815, with 5 false conflicts from unrelated statements and a law firm's own invoices; explanation verification 0.81. The changes since are the ones described above: local context, mutual counterparts, same parties, facts reported as found, parties and reasoning in the prompt, missing sides, a citation example, and folding markup and quote style.
+  - **Held-out set:** a lease draft and a lease side letter, never used to adjust the system and run once: alignment 10/10, explanation quotes verified 1.0 (both wordings 6/6), scan 4/5 planted with precision 1.0 and no false conflicts. The miss is the limit recorded below before the run: "the Lease dated 20 March 2024" is a one-word title.
+- **Limits:**
+  - A one-word title ("the Lease dated …") is not matched to a document, so that reference is not checked.
+  - Facts outside the listed kinds (obligations in words, conditions, parties' roles) are not compared across documents; that is S3.5 and S3.8 work.
+  - The meaning pass is calibrated for nomic-embed-text only.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

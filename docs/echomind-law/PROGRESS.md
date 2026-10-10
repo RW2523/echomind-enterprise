@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-09 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.3-compare` |
-| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1 and S2.2 merged into `feature/echomind-law`; S2.3 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.4-transcription` |
+| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.3 merged into `feature/echomind-law`; S2.4 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0016` (Law edition only) |
+| Migrations | `0001`–`0017` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -297,6 +297,30 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Browser journeys updated for the Evidence region.
   - New journey 15: a signed MSA and a later draft, the conflict alert, then "Latest drafts" (screenshot 24).
 
+### Session 3 (continued) — S2.3 Compare and contradictions (RAG-02)
+- **Audit:** there was no compare feature, only a comparison block in prompt assembly. S2.2 reported conflicts only between versions of one cited clause.
+- **S2.3a — two versions (D-039):**
+  - `legal/compare/align.py` aligns units by wording (renumbering ignored), then by shared wording, moves and meaning (embeddings).
+  - Each pair has an exact word diff, labelled number, obligation, negation or formatting.
+  - Saved per person (migration 0017); access is the reader's; purges remove comparisons that quote the document.
+- **S2.3b — explanations:**
+  - The model explains each change, quoting both wordings, and the quotes are verified.
+  - Text addressed to an AI is withheld. A test caught an inserted note reaching the model through the change hint, and that is fixed.
+  - Outcome recorded with counts. A test caught the outcome event failing (missing `matter_id`), and that is fixed.
+- **S2.3c — conflicts across documents:**
+  - Facts with their exact characters, and parties by cue.
+  - Each statement paired with its closest counterpart, and only between documents with the same parties.
+  - A legal form, an agreement date and the governing law are reported as found; the model checks the rest in context.
+  - Signed versions by default; only documents the person can see.
+  - Quote verification now folds Markdown markup and quote style (all research benefits).
+- **S2.3d — UI:**
+  - A Compare page with "Two versions" (side by side, insertions and deletions, labels, explanations) and "Across documents" (findings with both quotes, rule or model, set-aside checks).
+  - Saved comparisons can be reopened; the deletion report counts them.
+  - Browser journey 16, screenshots 25–26.
+- **S2.3e — evaluation:**
+  - `eval/law/run_compare_eval.py` with a golden (tuning) set and a held-out set.
+  - The tuning history is reported in D-039, including the first, weaker run.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -325,7 +349,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | SEC-07 | DONE (mechanism) | S1.9 | Holds with two-person approval and release; one deletion service (soft delete, report, approval, purge with a hold re-check, verification, restore); retention dry runs only, and requests at most; T04 in backend and browser. Schedules: P-002/P-003 (counsel) |
 | SEC-08 | PARTIAL (framework DONE) | S1.11 | Connector framework, local-folder connector, fail-closed permissions and freshness, sync and removal through the approved purge; T15 in backend and browser. Real provider BLOCKED (P-010) |
 | RAG-01 | DONE for the pilot (lawyer review at S2.8) | S1.6–S1.7, S2.1–S2.2 | S2.1: OCR, Word structure, tracked changes and comments, hidden-text flags, clauses, defined terms, exact offsets, per-version status, reader. S2.2: answers from signed versions by default (switch to drafts), version conflicts, every quote verified, statuses with abstention reasons, paragraph streaming, Evidence and "Copy with citations"; golden 70 and held-out 32 evaluation (D-036–D-038). Firm-library scope deferred to S3.1–S3.2 |
-| RAG-02 | MISSING | S2.3 | |
+| RAG-02 | DONE for the pilot (lawyer review at S2.8) | S2.3 | Two versions clause by clause (renumbered, moved, added, removed, exact word diff, labelled changes); explanations quoting both wordings, verified; conflicts across documents between documents with the same parties; golden and held-out evaluation (D-039) |
 | LIVE-01 | PARTIAL (pre-existing) | S2.4 | |
 | LIVE-02 | PARTIAL | S1.7, S2.5 | S1.7: in Law, voice needs a matter and answers only from its research stream (on-behalf-of token). The Law voice UI arrives in S2.5 |
 | MEET-01 | PARTIAL | S1.8, S2.6–S2.7 | S1.8: matter meetings with participants, consent and consent-gated capture. Legal-mode Boardroom (before, during, after, minutes): S2.6–S2.7 |
@@ -366,17 +390,18 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S2.3 Compare and contradictions (RAG-02)** on `law/s2.3-compare`, per IMPLEMENTATION_PLAN §7. S2.2 is merged into `feature/echomind-law`.
-1. **S2.3a Two versions, clause by clause:**
-   - Units are the blocks reading found (no headers or footers), each with the clause it starts and the clause it sits in.
-   - Alignment: same wording in order (renumbering ignored); shared wording in order; moved clauses; and an optional meaning pass with embeddings.
-   - A word diff with exact offsets, and labels: number, obligation, negation, formatting only.
-   - Saved per person (migration 0017). Access is the reader's (matter plus source permissions), and a purge removes comparisons that quote the document.
-2. **S2.3b Explanations:** the model explains each change, quoting both wordings; every quote is verified (D-037); text addressed to an AI is withheld (T08); the scope is re-checked while streaming.
-3. **S2.3c Conflicts across documents:**
-   - Facts: amounts, periods, percentages, dates, governing law, company names and references by date.
-   - Candidates come only from related documents. The model checks each one (CONFLICT / NO CONFLICT) with verified quotes.
-   - Signed versions by default; only documents the person can see.
-4. **S2.3d Compare UI:** a side-by-side view with insertions and deletions, change labels and explanations, and an "Across documents" scan with findings linking into the reader. Vitest with axe, and browser journey 16.
-5. **S2.3e Evaluation:** a seeded contract pair (renumbered, moved, added, removed, changed) and a planted-conflict order form; report alignment precision and recall, and scan precision and recall on the real model.
-6. Write D-039, TEST_RESULTS run 16 and the docs; merge.
+Start **S2.4 Legal transcription (LIVE-01)** on `law/s2.4-transcription`, per IMPLEMENTATION_PLAN §7. S2.3 is merged into `feature/echomind-law`.
+1. **Audit first:** the live capture path (S1.8, `legal/meetings`), the legacy transcription normaliser (`transcribe/`, `session_state.py`) and the voice service's Nemotron client.
+2. **Verbatim mode (D-017, adopted under the standing approval):**
+   - raw ASR text stored immutably, with no lowercasing, punctuation stripping or token drops;
+   - frames never dropped silently: backpressure, with a visible "capture degraded" warning.
+3. **Speakers:** N speakers from the meeting roster, replacing the two-role toggle, with wall-clock anchors per segment and pause and resume gaps.
+4. **Corrections:**
+   - `transcript_revisions` (who, when, why); the display text is derived;
+   - matter-vocabulary suggestions (names, defined terms and amounts from the matter's documents) offered as revisions with their provenance, never applied silently.
+5. **Research:** a finalised transcript becomes a research source (R-7, D-037), with matter scope, holds and purges.
+6. **WER and entity harness:**
+   - Scripted legal dialogue (names, dates, amounts, negations) synthesised locally with the host's TTS, and transcribed by the host's Nemotron model.
+   - Check memory headroom before loading anything on the shared GPU; never touch production containers.
+   - AMI only after a licence check.
+7. **UI, tests and records:** transcript view with revisions and speakers; Vitest; a browser journey; D-040, TEST_RESULTS run 17; merge.
