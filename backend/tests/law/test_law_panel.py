@@ -34,7 +34,7 @@ class Panel:
     """Stands in for the model: each perspective answers with its line (citing the source that holds the quote), and
     the moderator answers with a matrix. Records every call with the role it was for."""
     def __init__(self):
-        self.calls, self.missing, self.moderator_extra, self.raw = [], {}, {}, {}
+        self.calls, self.missing, self.moderator_extra, self.raw, self.moderator_stop = [], {}, {}, {}, None
 
     async def chat(self, messages, temperature, max_tokens):
         system, user = messages[0]["content"], messages[-1]["content"]
@@ -54,7 +54,8 @@ class Panel:
         return json.dumps({"issues": [{"issue": "Whether the change-of-control right threatens the deal",
                                        "positions": {"deal": "low risk", "risk": "real risk", "litigation": "not addressed", "specialist": "standard"},
                                        "disagreement": True, **self.moderator_extra}],
-                           "missing_facts": [m for m in self.missing.values()], "stop": bool(self.missing)})
+                           "missing_facts": [m for m in self.missing.values()],
+                           "stop": bool(self.missing) if self.moderator_stop is None else self.moderator_stop})
     chat_raw = chat
 
 
@@ -219,3 +220,17 @@ def test_missing_facts_drop_an_echo_of_the_instruction_and_repeats(pn):
     c = ask(pn).json()["artifact"]["content"]
     assert c["missing_facts"] == ["Whether the sale closed"]
 
+
+
+def test_the_panel_stops_when_most_perspectives_lack_facts_even_if_the_moderator_does_not(pn):
+    """Held-out H1 (s4.5b): all four perspectives lacked the date of notice; the moderator did not stop the panel."""
+    pn["model"].missing = {"deal": "the completion date", "risk": "the date notice was given", "litigation": "the date notice was given"}
+    pn["model"].moderator_stop = False
+    c = ask(pn).json()["artifact"]["content"]
+    assert c["stopped"] is True
+
+
+def test_one_perspective_lacking_facts_does_not_stop_the_panel_on_its_own(pn):
+    pn["model"].missing = {"litigation": "the date notice was given"}
+    pn["model"].moderator_stop = False
+    assert ask(pn).json()["artifact"]["content"]["stopped"] is False

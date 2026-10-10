@@ -8,7 +8,8 @@ One question about a matter, answered four times:
 A moderator then reads the four answers, and only them, into a disagreement matrix. The moderator is told to add
 nothing, and a figure its summary gives that no answer gave is flagged.
 
-If the answers depend on facts the documents do not give, the panel stops and asks the lawyer. It runs again with
+If the answers depend on facts the documents do not give (the moderator says so, or three of the four perspectives
+say facts are missing), the panel stops and asks the lawyer. It runs again with
 those facts, marked as the lawyer's. A partner (the matter's lead or a managing partner) other than the person who
 asked approves the result.
 
@@ -28,7 +29,7 @@ from ..research import prompt as research_prompt
 from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 
-VERSION = "panel-s4.5b"
+VERSION = "panel-s4.5c"
 NOTICE = ("Four perspectives drafted by the same AI model to test the question from different angles. They are not independent "
           "experts and not legal advice; a partner reviews them before anyone relies on them.")
 SPECIALISMS = {"commercial": "commercial contracts", "corporate": "corporate law", "employment": "employment law", "ip": "intellectual property",
@@ -186,7 +187,8 @@ async def run(job: dict) -> Optional[str]:
             scopemod.recheck(scope)
             mod = await moderate(question, views, facts)
         missing = unique_facts([m for v in views for m in v["missing_facts"]] + mod["missing_facts"])
-        stopped = bool(mod["stop"] and missing)
+        lacking = sum(1 for v in views if v["missing_facts"])
+        stopped = bool(missing) and (mod["stop"] or lacking >= 3)       # s4.5c: most perspectives lacking facts also stops it
         content = {"title": f"Panel review — {question[:120]}", "question": question, "specialist": specialist, "area": area,
                    "perspectives": views, "matrix": mod["matrix"], "missing_facts": missing, "stopped": stopped, "facts_given": facts,
                    "notice": NOTICE, "sources": len(passages)}
