@@ -13,7 +13,7 @@
 | `nvidia/nemotron-speech-streaming-en-0.6b` | Live ASR | backend, voice | NVIDIA model licence (verify exact terms) | Verify on-prem commercial use |
 | `nvidia/parakeet-tdt-0.6b-v2` | Final STT (voice) | voice | CC-BY-4.0 (verify) | Attribution required |
 | VibeVoice-ASR-HF | Boardroom diarized ASR | backend `/data/hf_cache` | **Unknown. Verify.** | Must be resolved before MEET-01 pilot |
-| Piper TTS (`piper-tts>=1.4.2`, the `piper1-gpl` fork) + voices amy/joe/john/kusal/lessac | TTS | voice | Engine: GPL-3.0 (reported); **each voice has its own licence (verify per voice)** | GPL distribution implications; consider Kokoro-only for Law |
+| Piper TTS (`piper-tts>=1.4.2`, the `piper1-gpl` fork) + voices amy/joe/john/kusal/lessac | TTS | voice | Engine: GPL-3.0 (reported); **each voice has its own licence (verify per voice)** | GPL distribution implications; consider Kokoro-only for Law S2.4: the transcription harness can speak its fictional scripts with a Piper voice given on the command line (`--voice`); no voice is bundled or downloaded, and a voice's licence must be checked before its results are published. |
 | Kokoro-82M | TTS | voice | Apache-2.0 (verify) | — |
 | `stabilityai/sdxl-turbo` | Document Studio images | backend | Stability AI licence. **Historically non-commercial research; terms have changed over time. Verify current terms.** | **Proposed: disabled in Law edition** (images not needed for legal documents) |
 | Tesseract 5 + `eng` traineddata (D-010, used from S2.1) | OCR | backend | Apache-2.0 (verify) | Dev host: miniconda `tesseract 5.2.0`. Law image: add `tesseract-ocr tesseract-ocr-eng` at the first approved build |
@@ -40,7 +40,7 @@
 |---|---|---|---|
 | CUAD (Contract Understanding Atticus Dataset) | Clause extraction eval | CC BY 4.0 (verify) | Not downloaded; needs approval |
 | LegalBench | Legal reasoning tasks | **Per-task licences vary** | Only tasks with compatible licences, after review |
-| AMI Meeting Corpus | Diarization / WER eval | CC BY 4.0 (verify) | Not downloaded |
+| AMI Meeting Corpus | Diarization / WER eval | CC BY 4.0 (verify) | Not downloaded Still not downloaded (S2.4): the transcription harness uses its own fictional scripts. |
 | TREC 2010 Legal Track (privilege) | Privilege classification eval | **Usage agreement required; terms need review** | Not used |
 | CourtListener / Caselaw Access Project | Citation-format fixtures | Varies by source; verify | Not used; P-009 governs any authority use |
 | SEC EDGAR filings | Public contracts / exhibits | Public records (verify any terms of access) | Not downloaded |
