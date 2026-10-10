@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-"""Phase 2 lawyer review packet (S2.8; rubric: docs/echomind-law/releases/phase2-rubric.md).
+"""Lawyer review packets: Phase 2 (S2.8; docs/echomind-law/releases/phase2-rubric.md) and Phase 3 (S3.9;
+docs/echomind-law/releases/phase3-rubric.md).
 
 Builds a packet a practising lawyer scores, from the newest HELD-OUT reports (never used for tuning):
 research answers with their evidence, compare explanations and conflicts, Silent Assist alerts, and
 minutes items. Items are shuffled and labelled only by what they are (answer, explanation, alert,
 minutes item), not by suite, setting or model.
 
-    python3 eval/law/lawyer_review/make_packet.py                 # writes packet.html, sheet.csv, key.json here
+    python3 eval/law/lawyer_review/make_packet.py                 # Phase 2: writes packet.html, sheet.csv, key.json here
+    python3 eval/law/lawyer_review/make_packet.py --phase 3       # Phase 3: the same files in lawyer_review/phase3/
+
+Phase 3 takes the newest held-out report of each document tool (drafting, playbook checks, citations,
+definitions, obligations, due diligence, governance), grouped by the documents they were run on, with the
+documents themselves so the reviewer can say what was missed. The groups are shuffled.
 
 - packet.html: what the lawyer reads (fictional material only);
 - sheet.csv: one row per item with blank score columns, to fill in;
@@ -22,7 +28,8 @@ import random
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-REPORTS = HERE.parent / "reports"
+LAW = HERE.parent
+REPORTS = LAW / "reports"
 
 
 def newest(suffix: str, research: bool = False) -> Path:
@@ -32,7 +39,7 @@ def newest(suffix: str, research: bool = False) -> Path:
     return found[-1]
 
 
-def items() -> list[dict]:
+def items2() -> list[dict]:
     out = []
     r = newest("-heldout.json", research=True)
     for it in json.loads(r.read_text())["items"]:
@@ -62,12 +69,141 @@ def items() -> list[dict]:
     return out
 
 
+def _heldout(suite: str) -> dict:
+    return json.loads((LAW / suite / "heldout.json").read_text())
+
+
+def _needs(report: Path, rows: list[dict], key: str) -> None:
+    if any(key not in r for r in rows):
+        raise SystemExit(f"{report.name} has no {key!r}: it predates full outputs in the reports; run that suite's held-out set on the current runner")
+
+
+def groups3() -> list[dict]:
+    """One group per document set: its documents, and every item a tool produced on them."""
+    out = []
+    r = newest("-drafting-heldout.json")
+    sets = {s["id"]: s for s in _heldout("drafting")["scenarios"]}
+    for sc in json.loads(r.read_text())["scenarios"]:
+        src = sets[sc["id"]]
+        def shown(f: dict) -> str:
+            if f["value"]:
+                return f"{f['field']}: {f['value']}" + (f" — “{f['quote']}”" if f.get("quote") else "")
+            sug = f.get("suggestion")
+            return f"{f['field']}: [left for a person]" + (f" — the model suggested “{sug['value']}”, not used: {sug['reason']}" if sug else "")
+        fields = [shown(f) for f in sc["fields"] + sc.get("absent", [])]
+        unsupported = [f"marked as unsupported: {u}" for w in sc.get("written", []) for u in w["unsupported"]]
+        body = "\n\n".join(w["text"] for w in sc.get("written", [])) or "(no written passages)"
+        out.append({"group": f"drafting:{sc['id']}", "title": src["title"], "documents": [(d["name"], d["text"]) for d in src["documents"]],
+                    "items": [{"kind": "draft", "source": [r.name, sc["id"]], "title": f"Draft from the {src['template'].replace('_', ' ')} template",
+                               "body": body, "evidence": fields + unsupported}]})
+    r = newest("-playbook-heldout.json")
+    sets = {c["id"]: c for c in _heldout("playbook")["contracts"]}
+    for c in json.loads(r.read_text())["contracts"]:
+        out.append({"group": f"playbook:{c['id']}", "title": "Contract checked against the firm's playbook",
+                    "documents": [(c["id"], sets[c["id"]]["text"])],
+                    "items": [{"kind": "playbook_line", "source": [r.name, f"{c['id']} {x['topic']}"], "title": f"Playbook check — {x['topic'].replace('_', ' ')}",
+                               "body": f"{x['got']}: {x.get('reason') or ''}", "evidence": [f"“{x['quote']}”"] if x.get("quote") else []}
+                              for x in c["lines"]]})
+    r = newest("-citations-heldout.json")
+    sets = {s["id"]: s for s in _heldout("citations")["scenarios"]}
+    for sc in json.loads(r.read_text())["scenarios"]:
+        src = sets[sc["id"]]
+        found = [x for x in sc["lines"] if x.get("got_status")]
+        found += [{"kind": e.get("kind", "item"), "text": e.get("text", ""), "got": e.get("got") or e.get("status", "")} for e in sc.get("extra", [])]
+        out.append({"group": f"citations:{sc['id']}", "title": src["citing"]["title"],
+                    "documents": [(src["citing"]["title"] + " (the document checked)", src["citing"]["text"])] + [(d["title"], d["text"]) for d in src["sources"]],
+                    "items": [{"kind": "citation", "source": [r.name, f"{sc['id']} {x['text']}"], "title": f"{x['kind'].capitalize()}: {x['text']}",
+                               "body": x["got"], "evidence": []} for x in found]})
+    r = newest("-definitions-heldout.json")
+    sets = {d["id"]: d for d in _heldout("definitions")["documents"]}
+    for d in json.loads(r.read_text())["documents"]:
+        found = [{"text": x.get("text") or x.get("message", ""), "type": x["type"], "body": x["got"]} for x in d["lines"] if x["found"]]
+        found += [{"text": e.get("text") or "", "type": e["type"], "body": e["message"]} for e in d.get("extra", [])]
+        out.append({"group": f"definitions:{d['id']}", "title": sets[d["id"]]["name"], "documents": [(sets[d["id"]]["name"], sets[d["id"]]["text"])],
+                    "items": [{"kind": "definition", "source": [r.name, f"{d['id']} {x['type']} {x['text']}"], "title": f"Drafting check ({x['type']})",
+                               "body": x["body"], "evidence": []} for x in found]})
+    r = newest("-obligations-heldout.json")
+    rows = json.loads(r.read_text())["documents"]
+    _needs(r, rows, "outputs")
+    sets = {d["id"]: d for d in _heldout("obligations")["documents"]}
+    for d in rows:
+        out.append({"group": f"obligations:{d['id']}", "title": sets[d["id"]]["name"], "documents": [(sets[d["id"]]["name"], sets[d["id"]]["text"])],
+                    "items": [{"kind": "obligation", "source": [r.name, f"{d['id']} {o['clause']} {o['kind']}"],
+                               "title": f"Obligation ({o['kind']}), clause {o['clause'] or '—'}",
+                               "body": f"{o.get('party') or 'A party'}: {o['action']}" + (f" — {o['when']}" if o.get("when") else "")
+                                       + (f" — due {o['due_date']}" if o.get("due_date") else "") + (f" ({o['due_note']})" if o.get("due_note") else ""),
+                               "evidence": ([f"“{o['quote']}”"] if o.get("quote") else []) + [f"found by: {o['source']}"]} for o in d["outputs"]]})
+    for suite, key in (("diligence", "rooms"), ("governance", "companies")):
+        r = newest(f"-{suite}-heldout.json")
+        rows = json.loads(r.read_text())[key]
+        _needs(r, rows, "outputs")
+        sets = {x["id"]: x for x in _heldout(suite)[key]}
+        for g in rows:
+            items = [{"kind": f"{suite}_issue", "source": [r.name, f"{g['id']} {i['kind']} {i['title']}"], "title": f"{i['title']} ({i['document']})",
+                      "body": i.get("detail") or "", "evidence": [f"“{i['quote']}” — {i['document']}"] + [f"“{x['quote']}” — {x['document']}" for x in i.get("related", [])]}
+                     for i in g["outputs"]]
+            if suite == "diligence":
+                items.append({"kind": "dd_missing", "source": [r.name, f"{g['id']} missing"], "title": "Documents the checklist expects and the room lacks",
+                              "body": "; ".join(g.get("missing_titles") or g["missing_got"]) or "(none)", "evidence": []})
+            out.append({"group": f"{suite}:{g['id']}", "title": "Data room" if suite == "diligence" else "Company records",
+                        "documents": [(d["name"], d["text"]) for d in sets[g["id"]]["documents"]], "items": items})
+    return out
+
+
+def phase3(args) -> int:
+    groups = groups3()
+    random.Random(args.seed).shuffle(groups)
+    out = Path(args.out or HERE / "phase3")
+    out.mkdir(exist_ok=True)
+    n, key = 0, []
+    for gi, g in enumerate(groups, start=1):
+        g["id"] = f"G{gi:02d}"
+        for it in g["items"]:
+            n += 1
+            it["id"] = f"R{n:03d}"
+            key.append({"id": it["id"], "kind": it["kind"], "group": g["id"], "source": it["source"]})
+        key.append({"id": g["id"], "kind": "missed", "group": g["id"], "source": [g["group"]]})
+    (out / "key.json").write_text(json.dumps(key, indent=1, ensure_ascii=False))
+    with open(out / "sheet.csv", "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["id", "group", "kind", "score", "wrong_or_invented", "missed", "notes"])
+        for g in groups:
+            for it in g["items"]:
+                w.writerow([it["id"], g["id"], it["kind"], "", "", "", ""])
+            w.writerow([g["id"], g["id"], "missed", "", "", "", ""])
+    label = {"draft": "Draft", "playbook_line": "Playbook check", "citation": "Citation check", "definition": "Drafting check",
+             "obligation": "Obligation", "diligence_issue": "Diligence issue", "dd_missing": "Missing documents", "governance_issue": "Governance issue"}
+    parts = ["<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Phase 3 review packet</title>",
+             "<style>body{font:15px/1.55 Georgia,serif;max-width:860px;margin:40px auto;padding:0 16px;color:#15171C;background:#fff}"
+             "h1{font:600 22px system-ui}h2{font:600 18px system-ui;margin-top:36px}section{border-top:1px solid #ddd;padding:12px 0}"
+             ".k{font:600 12px system-ui;color:#4A4F59;text-transform:uppercase;letter-spacing:.04em}.e{font:13px system-ui;color:#4A4F59}"
+             "pre{white-space:pre-wrap;font:13px/1.5 ui-monospace,monospace;background:#f6f6f4;padding:10px;border-radius:6px}</style>",
+             "<h1>Phase 3 review packet — fictional material</h1><p class=e>Each group shows the documents, then what the system produced on them. "
+             "Score each item in sheet.csv using docs/echomind-law/releases/phase3-rubric.md; on the group's own row, list anything the system missed.</p>"]
+    for g in groups:
+        docs = "".join(f"<details><summary class=e>{html.escape(t)}</summary><pre>{html.escape(x)}</pre></details>" for t, x in g["documents"])
+        parts.append(f"<h2>{g['id']} · {html.escape(g['title'])}</h2>{docs}")
+        for it in g["items"]:
+            ev = "".join(f"<li>{html.escape(e)}</li>" for e in it["evidence"])
+            parts.append(f"<section><div class=k>{it['id']} · {label[it['kind']]}</div><h3 style='font-size:16px'>{html.escape(it['title'])}</h3>"
+                         f"<p>{html.escape(it['body']).replace(chr(10), '<br>')}</p>{f'<ul class=e>{ev}</ul>' if ev else ''}</section>")
+        if not g["items"]:
+            parts.append("<section class=e>Nothing was reported on these documents.</section>")
+    (out / "packet.html").write_text("\n".join(parts))
+    print(f"{n} items in {len(groups)} groups → {out / 'packet.html'}, {out / 'sheet.csv'}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--phase", type=int, choices=[2, 3], default=2)
     ap.add_argument("--seed", type=int, default=20261010)
-    ap.add_argument("--out", default=str(HERE))
+    ap.add_argument("--out", default=None)
     args = ap.parse_args()
-    rows = items()
+    if args.phase == 3:
+        return phase3(args)
+    args.out = args.out or str(HERE)
+    rows = items2()
     random.Random(args.seed).shuffle(rows)
     out = Path(args.out)
     for n, r in enumerate(rows, start=1):

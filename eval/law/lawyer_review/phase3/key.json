@@ -1,0 +1,748 @@
+[
+ {
+  "id": "G01",
+  "kind": "missed",
+  "group": "G01",
+  "source": [
+   "definitions:R3-clean-control"
+  ]
+ },
+ {
+  "id": "G02",
+  "kind": "missed",
+  "group": "G02",
+  "source": [
+   "governance:U3-orrin-control"
+  ]
+ },
+ {
+  "id": "R001",
+  "kind": "governance_issue",
+  "group": "G03",
+  "source": [
+   "20261010-133614-governance-heldout.json",
+   "U1-mercer-uk share_capital 100 ordinary shares in the register have no approval"
+  ]
+ },
+ {
+  "id": "R002",
+  "kind": "governance_issue",
+  "group": "G03",
+  "source": [
+   "20261010-133614-governance-heldout.json",
+   "U1-mercer-uk authority Signed above the signer's authority (clause 2.1)"
+  ]
+ },
+ {
+  "id": "G03",
+  "kind": "missed",
+  "group": "G03",
+  "source": [
+   "governance:U1-mercer-uk"
+  ]
+ },
+ {
+  "id": "R003",
+  "kind": "dd_missing",
+  "group": "G04",
+  "source": [
+   "20261010-133610-diligence-heldout.json",
+   "T2-corporate-control missing"
+  ]
+ },
+ {
+  "id": "G04",
+  "kind": "missed",
+  "group": "G04",
+  "source": [
+   "diligence:T2-corporate-control"
+  ]
+ },
+ {
+  "id": "R004",
+  "kind": "draft",
+  "group": "G05",
+  "source": [
+   "20261010-134751-drafting-heldout.json",
+   "nda-heron-short-note"
+  ]
+ },
+ {
+  "id": "G05",
+  "kind": "missed",
+  "group": "G05",
+  "source": [
+   "drafting:nda-heron-short-note"
+  ]
+ },
+ {
+  "id": "R005",
+  "kind": "playbook_line",
+  "group": "G06",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-negotiated payment"
+  ]
+ },
+ {
+  "id": "R006",
+  "kind": "playbook_line",
+  "group": "G06",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-negotiated liability_cap"
+  ]
+ },
+ {
+  "id": "R007",
+  "kind": "playbook_line",
+  "group": "G06",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-negotiated assignment"
+  ]
+ },
+ {
+  "id": "R008",
+  "kind": "playbook_line",
+  "group": "G06",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-negotiated data_protection"
+  ]
+ },
+ {
+  "id": "R009",
+  "kind": "playbook_line",
+  "group": "G06",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-negotiated governing_law"
+  ]
+ },
+ {
+  "id": "G06",
+  "kind": "missed",
+  "group": "G06",
+  "source": [
+   "playbook:licence-negotiated"
+  ]
+ },
+ {
+  "id": "R010",
+  "kind": "governance_issue",
+  "group": "G07",
+  "source": [
+   "20261010-133614-governance-heldout.json",
+   "U2-pike-us share_capital Series A preferred stock is not a class the articles create"
+  ]
+ },
+ {
+  "id": "R011",
+  "kind": "governance_issue",
+  "group": "G07",
+  "source": [
+   "20261010-133614-governance-heldout.json",
+   "U2-pike-us constitution Number of directors: at least one in the policy, two in the articles"
+  ]
+ },
+ {
+  "id": "G07",
+  "kind": "missed",
+  "group": "G07",
+  "source": [
+   "governance:U2-pike-us"
+  ]
+ },
+ {
+  "id": "G08",
+  "kind": "missed",
+  "group": "G08",
+  "source": [
+   "obligations:P-minutes-control"
+  ]
+ },
+ {
+  "id": "R012",
+  "kind": "definition",
+  "group": "G09",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R2-sha repeat Clause 4.2 appears twice"
+  ]
+ },
+ {
+  "id": "R013",
+  "kind": "definition",
+  "group": "G09",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R2-sha gap Item (c) of clause 4.1 is missing"
+  ]
+ },
+ {
+  "id": "R014",
+  "kind": "definition",
+  "group": "G09",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R2-sha gap Clauses 2 and 3 are missing"
+  ]
+ },
+ {
+  "id": "R015",
+  "kind": "definition",
+  "group": "G09",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R2-sha inconsistent shareholders"
+  ]
+ },
+ {
+  "id": "G09",
+  "kind": "missed",
+  "group": "G09",
+  "source": [
+   "definitions:R2-sha"
+  ]
+ },
+ {
+  "id": "R016",
+  "kind": "draft",
+  "group": "G10",
+  "source": [
+   "20261010-134751-drafting-heldout.json",
+   "review-heron-services-no-law"
+  ]
+ },
+ {
+  "id": "G10",
+  "kind": "missed",
+  "group": "G10",
+  "source": [
+   "drafting:review-heron-services-no-law"
+  ]
+ },
+ {
+  "id": "R017",
+  "kind": "playbook_line",
+  "group": "G11",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-aggressive payment"
+  ]
+ },
+ {
+  "id": "R018",
+  "kind": "playbook_line",
+  "group": "G11",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-aggressive liability_cap"
+  ]
+ },
+ {
+  "id": "R019",
+  "kind": "playbook_line",
+  "group": "G11",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-aggressive governing_law"
+  ]
+ },
+ {
+  "id": "R020",
+  "kind": "playbook_line",
+  "group": "G11",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-aggressive assignment"
+  ]
+ },
+ {
+  "id": "R021",
+  "kind": "playbook_line",
+  "group": "G11",
+  "source": [
+   "20261010-113438-playbook-heldout.json",
+   "licence-aggressive data_protection"
+  ]
+ },
+ {
+  "id": "G11",
+  "kind": "missed",
+  "group": "G11",
+  "source": [
+   "playbook:licence-aggressive"
+  ]
+ },
+ {
+  "id": "R022",
+  "kind": "obligation",
+  "group": "G12",
+  "source": [
+   "20261010-133606-obligations-heldout.json",
+   "P-guarantee 1.1 payment"
+  ]
+ },
+ {
+  "id": "R023",
+  "kind": "obligation",
+  "group": "G12",
+  "source": [
+   "20261010-133606-obligations-heldout.json",
+   "P-guarantee 2.1 payment"
+  ]
+ },
+ {
+  "id": "G12",
+  "kind": "missed",
+  "group": "G12",
+  "source": [
+   "obligations:P-guarantee"
+  ]
+ },
+ {
+  "id": "R024",
+  "kind": "diligence_issue",
+  "group": "G13",
+  "source": [
+   "20261010-133610-diligence-heldout.json",
+   "T1-software-company change_of_control Change of control (clause 1.1)"
+  ]
+ },
+ {
+  "id": "R025",
+  "kind": "diligence_issue",
+  "group": "G13",
+  "source": [
+   "20261010-133610-diligence-heldout.json",
+   "T1-software-company assignment Assignment needs consent (clause 2.1)"
+  ]
+ },
+ {
+  "id": "R026",
+  "kind": "diligence_issue",
+  "group": "G13",
+  "source": [
+   "20261010-133610-diligence-heldout.json",
+   "T1-software-company governing_law Governed by the laws of Ireland"
+  ]
+ },
+ {
+  "id": "R027",
+  "kind": "diligence_issue",
+  "group": "G13",
+  "source": [
+   "20261010-133610-diligence-heldout.json",
+   "T1-software-company liability Liability is capped (clause 3.1)"
+  ]
+ },
+ {
+  "id": "R028",
+  "kind": "diligence_issue",
+  "group": "G13",
+  "source": [
+   "20261010-133610-diligence-heldout.json",
+   "T1-software-company termination Termination right (clause 1.1)"
+  ]
+ },
+ {
+  "id": "R029",
+  "kind": "dd_missing",
+  "group": "G13",
+  "source": [
+   "20261010-133610-diligence-heldout.json",
+   "T1-software-company missing"
+  ]
+ },
+ {
+  "id": "G13",
+  "kind": "missed",
+  "group": "G13",
+  "source": [
+   "diligence:T1-software-company"
+  ]
+ },
+ {
+  "id": "R030",
+  "kind": "citation",
+  "group": "G14",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S2-distribution-memo-eu Regulation (EU) 2022/720"
+  ]
+ },
+ {
+  "id": "R031",
+  "kind": "citation",
+  "group": "G14",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S2-distribution-memo-eu Directive 2014/104/EU"
+  ]
+ },
+ {
+  "id": "R032",
+  "kind": "citation",
+  "group": "G14",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S2-distribution-memo-eu Case C-230/16"
+  ]
+ },
+ {
+  "id": "R033",
+  "kind": "citation",
+  "group": "G14",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S2-distribution-memo-eu Regulation (EU) 2031/45"
+  ]
+ },
+ {
+  "id": "R034",
+  "kind": "citation",
+  "group": "G14",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S2-distribution-memo-eu Case T-112/29"
+  ]
+ },
+ {
+  "id": "R035",
+  "kind": "citation",
+  "group": "G14",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S2-distribution-memo-eu paragraph 1.1"
+  ]
+ },
+ {
+  "id": "R036",
+  "kind": "citation",
+  "group": "G14",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S2-distribution-memo-eu Paragraph 3.4"
+  ]
+ },
+ {
+  "id": "G14",
+  "kind": "missed",
+  "group": "G14",
+  "source": [
+   "citations:S2-distribution-memo-eu"
+  ]
+ },
+ {
+  "id": "R037",
+  "kind": "citation",
+  "group": "G15",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S1-executive-exit-uk For twelve months after the Termination Date the Executive shall not solicit any Client"
+  ]
+ },
+ {
+  "id": "R038",
+  "kind": "citation",
+  "group": "G15",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S1-executive-exit-uk for up to three months"
+  ]
+ },
+ {
+  "id": "R039",
+  "kind": "citation",
+  "group": "G15",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S1-executive-exit-uk Clause 22.5 of the Service Agreement"
+  ]
+ },
+ {
+  "id": "R040",
+  "kind": "citation",
+  "group": "G15",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S1-executive-exit-uk section 98 of the Employment Rights Act 1996"
+  ]
+ },
+ {
+  "id": "R041",
+  "kind": "citation",
+  "group": "G15",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S1-executive-exit-uk Contracts (Rights of Third Parties) Act 1999"
+  ]
+ },
+ {
+  "id": "R042",
+  "kind": "citation",
+  "group": "G15",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S1-executive-exit-uk [2019] UKSC 32"
+  ]
+ },
+ {
+  "id": "R043",
+  "kind": "citation",
+  "group": "G15",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S1-executive-exit-uk [1916] 1 AC 688"
+  ]
+ },
+ {
+  "id": "R044",
+  "kind": "citation",
+  "group": "G15",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S1-executive-exit-uk [2003] UKSC 14"
+  ]
+ },
+ {
+  "id": "G15",
+  "kind": "missed",
+  "group": "G15",
+  "source": [
+   "citations:S1-executive-exit-uk"
+  ]
+ },
+ {
+  "id": "R045",
+  "kind": "definition",
+  "group": "G16",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R1-dpa inconsistent personal data"
+  ]
+ },
+ {
+  "id": "R046",
+  "kind": "definition",
+  "group": "G16",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R1-dpa unused Supervisory Authority"
+  ]
+ },
+ {
+  "id": "R047",
+  "kind": "definition",
+  "group": "G16",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R1-dpa outdated clause 6 (Audits)"
+  ]
+ },
+ {
+  "id": "R048",
+  "kind": "definition",
+  "group": "G16",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R1-dpa broken clause 14"
+  ]
+ },
+ {
+  "id": "R049",
+  "kind": "definition",
+  "group": "G16",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R1-dpa gap Clauses 3 to 5 are missing"
+  ]
+ },
+ {
+  "id": "R050",
+  "kind": "definition",
+  "group": "G16",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R1-dpa gap Clause 8 is missing"
+  ]
+ },
+ {
+  "id": "R051",
+  "kind": "definition",
+  "group": "G16",
+  "source": [
+   "20261010-131923-definitions-heldout.json",
+   "R1-dpa inconsistent personal data"
+  ]
+ },
+ {
+  "id": "G16",
+  "kind": "missed",
+  "group": "G16",
+  "source": [
+   "definitions:R1-dpa"
+  ]
+ },
+ {
+  "id": "R052",
+  "kind": "draft",
+  "group": "G17",
+  "source": [
+   "20261010-134751-drafting-heldout.json",
+   "engagement-calder-hourly"
+  ]
+ },
+ {
+  "id": "G17",
+  "kind": "missed",
+  "group": "G17",
+  "source": [
+   "drafting:engagement-calder-hourly"
+  ]
+ },
+ {
+  "id": "R053",
+  "kind": "citation",
+  "group": "G18",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S3-msa-memo-us within forty-five (45) days of receipt"
+  ]
+ },
+ {
+  "id": "R054",
+  "kind": "citation",
+  "group": "G18",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S3-msa-memo-us In no event shall either party's aggregate liability exceed the fees paid in the twelve (12) months preceding the claim"
+  ]
+ },
+ {
+  "id": "R055",
+  "kind": "citation",
+  "group": "G18",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S3-msa-memo-us Section 13.1 of the Master Services Agreement"
+  ]
+ },
+ {
+  "id": "R056",
+  "kind": "citation",
+  "group": "G18",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S3-msa-memo-us 9 U.S.C. § 2"
+  ]
+ },
+ {
+  "id": "R057",
+  "kind": "citation",
+  "group": "G18",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S3-msa-memo-us 29 C.F.R. Part 1630"
+  ]
+ },
+ {
+  "id": "R058",
+  "kind": "citation",
+  "group": "G18",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S3-msa-memo-us Fed. R. Civ. P. 26(b)(1)"
+  ]
+ },
+ {
+  "id": "R059",
+  "kind": "citation",
+  "group": "G18",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S3-msa-memo-us 245 A.3d 101 (Del. Ch. 2021)"
+  ]
+ },
+ {
+  "id": "R060",
+  "kind": "citation",
+  "group": "G18",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S3-msa-memo-us 54 U.S.C. § 100101"
+  ]
+ },
+ {
+  "id": "R061",
+  "kind": "citation",
+  "group": "G18",
+  "source": [
+   "20261010-133535-citations-heldout.json",
+   "S3-msa-memo-us 63 U.S.C. § 12"
+  ]
+ },
+ {
+  "id": "G18",
+  "kind": "missed",
+  "group": "G18",
+  "source": [
+   "citations:S3-msa-memo-us"
+  ]
+ },
+ {
+  "id": "R062",
+  "kind": "obligation",
+  "group": "G19",
+  "source": [
+   "20261010-133606-obligations-heldout.json",
+   "P-reseller 1.1 expiry"
+  ]
+ },
+ {
+  "id": "R063",
+  "kind": "obligation",
+  "group": "G19",
+  "source": [
+   "20261010-133606-obligations-heldout.json",
+   "P-reseller 2.1 duty"
+  ]
+ },
+ {
+  "id": "R064",
+  "kind": "obligation",
+  "group": "G19",
+  "source": [
+   "20261010-133606-obligations-heldout.json",
+   "P-reseller 2.2 payment"
+  ]
+ },
+ {
+  "id": "R065",
+  "kind": "obligation",
+  "group": "G19",
+  "source": [
+   "20261010-133606-obligations-heldout.json",
+   "P-reseller 3.1 notice"
+  ]
+ },
+ {
+  "id": "R066",
+  "kind": "obligation",
+  "group": "G19",
+  "source": [
+   "20261010-133606-obligations-heldout.json",
+   "P-reseller 4.1 termination"
+  ]
+ },
+ {
+  "id": "G19",
+  "kind": "missed",
+  "group": "G19",
+  "source": [
+   "obligations:P-reseller"
+  ]
+ }
+]

@@ -1,0 +1,189 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "ff23019",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-134751",
+  "prompt_version": "drafting-s3.1d"
+ },
+ "summary": {
+  "scenarios": 3,
+  "field_accuracy": "9/10",
+  "absent_left_open": "1/1",
+  "wrong_values": 0,
+  "invented_figures": 0,
+  "written_passages": 4,
+  "unsupported_sentences": 5,
+  "seconds_per_draft": 16.3
+ },
+ "scenarios": [
+  {
+   "id": "nda-heron-short-note",
+   "template": "nda",
+   "seconds": 6.5,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Heron Robotics",
+     "value": "Heron Robotics Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Heron Robotics Ltd and Calder Mining plc will share technical data to evaluate an autonomous drilling pilot.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Calder Mining",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": {
+      "quote": "Heron Robotics Ltd and Calder Mining plc will share technical data to evaluate an autonomous drilling pilot.",
+      "reason": "the same party is already given as First party",
+      "value": "Heron Robotics Ltd"
+     }
+    },
+    {
+     "field": "purpose",
+     "expected": "autonomous drilling",
+     "value": "to evaluate an autonomous drilling pilot",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to evaluate an autonomous drilling pilot",
+     "suggestion": null
+    },
+    {
+     "field": "confidentiality_period",
+     "expected": "three",
+     "value": "three (3) years",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Confidentiality to last three (3) years.",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "English",
+     "value": "English law",
+     "status": "sourced",
+     "ok": true,
+     "quote": "English law to govern.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 2
+  },
+  {
+   "id": "engagement-calder-hourly",
+   "template": "engagement_letter",
+   "seconds": 8.2,
+   "fields": [
+    {
+     "field": "client_address",
+     "expected": "3 Harbour Walk",
+     "value": "3 Harbour Walk, Aberdeen AB11 5BN",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Calder Mining plc, 3 Harbour Walk, Aberdeen AB11 5BN",
+     "suggestion": null
+    },
+    {
+     "field": "client_contact",
+     "expected": "Fiona Baird",
+     "value": "Fiona Baird",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Our contact for this work is Fiona Baird, Legal Director.",
+     "suggestion": null
+    },
+    {
+     "field": "fee_arrangement",
+     "expected": "450",
+     "value": "GBP 450 for partners and GBP 300 for associates",
+     "status": "sourced",
+     "ok": true,
+     "quote": "We agree to your hourly rates of GBP 450 for partners and GBP 300 for associates.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The client has requested legal services related to the preparation of pilot contracts with Heron Robotics Ltd, as specified in the engagement letter. The legal services include the drafting and review of these contracts, with the client confirming the fee arrangement for the work, which is GBP 450 for partners and GBP 300 for associates. [[NEEDS INPUT: check against the documents]] The matter number assigned to this engagement is EVAL-D2, and the client's contact is Fiona Baird, Legal Director, at 3 Harbour Walk, Aberdeen AB11 5BN.",
+     "sources": 2,
+     "unsupported": [
+      "The matter number assigned to this engagement is EVAL-D2, and the client's contact is Fiona Baird, Legal Director, at 3 Harbour Walk, Aberdeen AB11 5BN."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 4
+  },
+  {
+   "id": "review-heron-services-no-law",
+   "template": "contract_review",
+   "seconds": 34.2,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Services Agreement",
+     "value": "SERVICES AGREEMENT (fictional)",
+     "status": "sourced",
+     "ok": true,
+     "quote": "SERVICES AGREEMENT (fictional)",
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Heron Robotics",
+     "value": "Heron Robotics Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Heron Robotics Ltd (the Provider)",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "governing_law",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The agreement is a Services Agreement between Heron Robotics Ltd (the Provider) and Calder Mining plc (the Client). The term of the agreement is not specified in the provided text. The Provider shall supply the drilling automation services described in Schedule 1. Each party's total liability is limited to GBP 2,000,000. The manner in which each party may terminate the agreement is not specified in the provided text.",
+     "sources": 3,
+     "unsupported": []
+    },
+    {
+     "text": "The Services Agreement specifies that the Provider shall supply the drilling automation services described in Schedule 1. The total liability of each party is limited to GBP 2,000,000. [[NEEDS INPUT: check against the documents]] The fees and payment terms are not specified in the provided text. [[NEEDS INPUT: check against the documents]] The matter number is EVAL-D3, and the agreement is dated 10 October 2026.",
+     "sources": 2,
+     "unsupported": [
+      "The fees and payment terms are not specified in the provided text.",
+      "The matter number is EVAL-D3, and the agreement is dated 10 October 2026."
+     ]
+    },
+    {
+     "text": "The Services Agreement limits the liability of the Provider to GBP 2,000,000 in total. [[NEEDS INPUT: check against the documents]] This limitation applies to all claims arising under this Agreement, including but not limited to claims for breach of contract, negligence, or other tortious acts. The Provider is not liable for any indirect, special, incidental, or consequential damages, including but not limited to loss of profits, data, or business opportunities. [[NEEDS INPUT: check against the documents]] The Client acknowledges that the Provider has relied on this limitation of liability in entering into this Agreement. The Client also acknowledges that the Provider would not have entered into this Agreement without this limitation of liability. The limitation of liability set forth in this Section 9.1 shall survive the termination or expiration of this Agreement. The Client agrees that the limitation of liability is reasonable and reflects the nature of the services provided. The Client further agrees that the limitation of liability is not a failure of consideration or a breach of any implied or express warranty. The Client acknowledges that the limitation of liability is an essential term of this Agreement and that the Client has had the opportunity to negotiate its terms. The Client further acknowledges that the limitation of liability is not a bar to the Client's right to seek remedies for the Provider's willful misconduct or gross negligence. The Client agrees that the limitation of liability shall not apply to any claims for personal injury or death. The Client also agrees that the limitation of liability shall not apply to any claims for breach of confidentiality or intellectual property rights. The Client acknowledges that the limitation of liability is not a substitute for insurance and that the Client should maintain its own insurance coverage. The Client further acknowledges that the limitation of liability does not affect the Client's right to seek injunctive relief or other equitable remedies. The Client agrees that the limitation of liability is not a waiver of any rights the Client may have under applicable law. The Client also agrees that the limitation of liability does not affect the Client's right to claim damages for the Provider's failure to perform the services as described in Schedule 1. The Client acknowledges that the limitation of liability is not a limitation of the Provider's obligation to perform the services as described in Schedule 1. The Client further acknowledges that the limitation of liability does not affect the Provider's obligation to provide the services in a professional and workmanlike manner. The Client agrees that the limitation of liability is not a defense to any claim for breach of contract [9.1:",
+     "sources": 1,
+     "unsupported": [
+      "This limitation applies to all claims arising under this Agreement, including but not limited to claims for breach of contract, negligence, or other tortious acts.",
+      "The Client acknowledges that the Provider has relied on this limitation of liability in entering into this Agreement."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 6
+  }
+ ]
+}
