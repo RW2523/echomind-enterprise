@@ -396,3 +396,25 @@
 [data-edition="law"] .lw-alert-f { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
 [data-edition="law"] .lw-alert-dismiss { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 [data-edition="law"] .lw-alert-dismiss .lw-input { flex: 1; min-width: 160px; }
+
+/* Boardroom legal mode (S2.6): agenda, minutes, review. */
+[data-edition="law"] .lw-agenda { margin: 0 0 8px; padding-left: 0; list-style: none; display: grid; gap: 8px; }
+[data-edition="law"] .lw-agenda-docs { border: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+[data-edition="law"] .lw-minutes-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+[data-edition="law"] .lw-minutes-section { display: grid; gap: 6px; }
+[data-edition="law"] .lw-minutes-section .lw-h3 { margin: 6px 0 0; font-size: 15px; }
+[data-edition="law"] .lw-minutes-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+[data-edition="law"] .lw-minutes-items > li { padding: 8px 10px; border-radius: 10px; background: var(--paper-2); border: 1px solid var(--rule); display: grid; gap: 3px; }
+[data-edition="law"] .lw-minutes-items > li[data-status="not_verified"] { border-color: color-mix(in srgb, var(--attention) 45%, transparent); }
+[data-edition="law"] .lw-minutes-item-h { display: flex; gap: 8px; align-items: baseline; }
+[data-edition="law"] .lw-minutes-item-h .lw-serif { font-size: 15.5px; line-height: 24px; }
+[data-edition="law"] .lw-minutes-flag { color: var(--attention); }
+[data-edition="law"] .lw-minutes-sources summary { cursor: pointer; }
+[data-edition="law"] .lw-minutes-sources ul { margin: 4px 0 0; padding-left: 18px; }
+[data-edition="law"] .lw-minutes-sources li[data-verification="failed"] { text-decoration: line-through; }
+[data-edition="law"] .lw-minutes-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+[data-edition="law"] .lw-minutes-review { display: grid; gap: 6px; margin-top: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rule); }
+[data-edition="law"] .lw-minutes-decisions { margin: 10px 0 0; padding-left: 18px; }
+[data-edition="law"] .lw-minutes-edit { border: 1px solid var(--rule); border-radius: 10px; padding: 8px 10px; margin: 0; display: grid; gap: 6px; }
+[data-edition="law"] .lw-minutes-edit[data-removed] { opacity: .5; }
+[data-edition="law"] .lw-pack { margin: -4px 0 10px; padding: 6px 10px; border-radius: 10px; font-size: 13.5px; background: var(--accent-soft); }

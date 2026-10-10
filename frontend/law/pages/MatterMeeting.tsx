@@ -15,6 +15,8 @@ import { kindLabel } from './MatterMeetings';
 import { ExportDialog } from './MatterExports';
 import { TranscriptRecord } from '../ui/transcript';
 import { AlertsPanel } from '../ui/alerts';
+import { AgendaEditor } from '../ui/agenda';
+import MeetingMinutes from './MeetingMinutes';
 import { useAlerts } from '../api/queries';
 import type { AssistAlert } from '../api/types';
 
@@ -40,7 +42,7 @@ const REFUSED: Record<number, string> = {
 const time = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '');
 const day = (iso?: string | null) => (iso ? new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '');
 
-type Tab = 'prepare' | 'consent' | 'record';
+type Tab = 'prepare' | 'consent' | 'record' | 'minutes';
 
 /** One meeting: who takes part, their consent, and consent-gated recording. */
 export default function MatterMeeting() {
@@ -53,7 +55,8 @@ export default function MatterMeeting() {
   const m = meeting.data;
   const contributor = ['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && matter.status === 'open' && m.status === 'planned';
   const waiting = m.participants.filter((p) => p.consent.state !== 'granted');
-  const tabs: [Tab, string][] = [['prepare', 'Prepare'], ['consent', `Consent · ${m.consent.granted} of ${m.consent.needed}`], ['record', 'Record']];
+  const tabs: [Tab, string][] = [['prepare', 'Prepare'], ['consent', `Consent · ${m.consent.granted} of ${m.consent.needed}`], ['record', 'Record'],
+    ['minutes', 'Minutes']];
   return (
     <>
       <Toolbar crumb={`${matter.number} · Meetings`} title={m.title} />
@@ -72,6 +75,8 @@ export default function MatterMeeting() {
           {tab === 'record' && <Record m={m} matterId={matter.id} canRecord={contributor} waiting={waiting}
             canDelete={['lead', 'attorney'].includes(matter.my_role ?? '')} onHold={!!matter.on_hold}
             canCorrect={['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && matter.status === 'open'} />}
+          {tab === 'minutes' && <MeetingMinutes m={m} canDraft={['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && matter.status === 'open'}
+            canApprove={['lead', 'attorney', 'reviewer'].includes(matter.my_role ?? '') && matter.status === 'open'} />}
         </div>
       </div>
     </>
@@ -124,6 +129,7 @@ function Prepare({ m, matterId, canEdit, canSetLabel, canSuggestLabel }: { m: Me
         </form>
       )}
       {error && <ErrorNote>{error}</ErrorNote>}
+      <AgendaEditor base={base} agenda={m.agenda ?? []} canEdit={canEdit} onDone={refresh} />
       <AssistChoice m={m} base={base} canEdit={canEdit} onDone={refresh} />
       <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 14 }}>
         <h3 className="lw-eyebrow" style={{ margin: '0 0 6px' }}>Privilege label</h3>
@@ -256,6 +262,7 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
   const [started, setStarted] = useState<number | null>(null);
   const [speaker, setSpeaker] = useState<string | null>(null);
   const [liveAlerts, setLiveAlerts] = useState<AssistAlert[]>([]);
+  const [agendaItem, setAgendaItem] = useState<string | null>(null);
   const alerts = useAlerts(matterId, m.id);
   const [warning, setWarning] = useState('');
   const [, tick] = useState(0);
@@ -301,6 +308,7 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
         : 'A transcription error left a gap. It is marked in the transcript at this point, so nothing is lost silently.');
       else if (msg.type === 'recovered') setWarning('');
       else if (msg.type === 'alert') setLiveAlerts((xs) => [...xs, msg as AssistAlert]);
+      else if (msg.type === 'agenda') setAgendaItem(msg.item_id ?? null);
       else if (msg.type === 'state') setPhase(msg.state === 'paused' ? 'paused' : 'live');
       else if (msg.type === 'stopped') { stopped = true; end(STOPPED[msg.reason] ?? 'Recording stopped.'); }
     };
@@ -358,6 +366,17 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
             {[...speakers.map((x, i) => [x.id, x.name, `Alt+${i + 1}`] as const), [null, 'Not marked', 'Alt+0'] as const].map(([id, name, key]) => (
               <label key={id ?? 'none'} data-on={speaker === id || undefined} title={key}>
                 <input type="radio" name="speaking" checked={speaker === id} onChange={() => speaking(id)} />{name}
+              </label>
+            ))}
+          </fieldset>
+        )}
+        {recording && (m.agenda?.length ?? 0) > 0 && (
+          <fieldset className="lw-segment lw-speaking" aria-label="Agenda item">
+            <legend className="lw-sr">Agenda item now</legend>
+            {[...m.agenda!.map((a, i) => [a.id, `${i + 1}. ${a.title}`] as const), [null, 'None'] as const].map(([id, title]) => (
+              <label key={id ?? 'none'} data-on={agendaItem === id || undefined}>
+                <input type="radio" name="agenda-now" checked={agendaItem === id}
+                  onChange={() => ws.current?.send(JSON.stringify({ type: 'agenda', item_id: id }))} />{title}
               </label>
             ))}
           </fieldset>

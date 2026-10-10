@@ -1,0 +1,318 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "35cf78d+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-023128"
+ },
+ "summary": {
+  "items": 10,
+  "planted": 9,
+  "recall": 1.0,
+  "action_owners": "3/3",
+  "action_deadlines": "3/3",
+  "verified": 1.0,
+  "invented_specifics": 0,
+  "batches": 2,
+  "failed_batches": 0,
+  "lines": 26,
+  "turns": 26,
+  "seconds": 24.0
+ },
+ "planted": [
+  {
+   "planted": {
+    "kind": "decision",
+    "must": [
+     "negotiate",
+     "400,000|400000|four hundred thousand"
+    ]
+   },
+   "item": "The board authorised management to negotiate the Harrowgate renewal with a liability cap of at least four hundred thousand dollars."
+  },
+  {
+   "planted": {
+    "kind": "decision",
+    "must": [
+     "Maria Ek",
+     "Chief Financial Officer|CFO"
+    ]
+   },
+   "item": "The board resolved to appoint Maria Ek as Chief Financial Officer with effect from the first of June twenty twenty six."
+  },
+  {
+   "planted": {
+    "kind": "decision",
+    "must": [
+     "Lantern",
+     "2.4|two point four"
+    ]
+   },
+   "item": "The board approved a budget of two point four million kronor for Project Lantern."
+  },
+  {
+   "planted": {
+    "kind": "decision",
+    "must": [
+     "dividend"
+    ]
+   },
+   "item": "The board resolved not to propose an interim dividend and will revisit the issue at the September meeting."
+  },
+  {
+   "planted": {
+    "kind": "action",
+    "must": [
+     "Harrowgate|position"
+    ],
+    "owner": "Petra Voss",
+    "deadline": "Friday"
+   },
+   "item": "Petra Voss will send the board's position to Harrowgate by Friday."
+  },
+  {
+   "planted": {
+    "kind": "action",
+    "must": [
+     "service agreement"
+    ],
+    "owner": "Sofia Berg",
+    "deadline": "May"
+   },
+   "item": "Sofia Berg will prepare Maria Ek's service agreement for signature by the end of May."
+  },
+  {
+   "planted": {
+    "kind": "action",
+    "must": [
+     "shareholders"
+    ],
+    "owner": "Petra Voss",
+    "deadline": "June"
+   },
+   "item": "Petra Voss said: “I will draft a short note to shareholders explaining the decision before the end of June.”"
+  },
+  {
+   "planted": {
+    "kind": "unresolved",
+    "must": [
+     "fee"
+    ]
+   },
+   "item": "Whether the board will accept the fee increase for the Harrowgate renewal remains open."
+  },
+  {
+   "planted": {
+    "kind": "unresolved",
+    "must": [
+     "data|owns|ownership"
+    ]
+   },
+   "item": "The board discussed that the ownership of the data produced by Project Lantern has not been agreed upon and needs legal advice."
+  }
+ ],
+ "invented": [],
+ "items": [
+  {
+   "deadline": null,
+   "id": "m1",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "f1c2fd4d-d544-4d7f-b77e-37a4f1197dac",
+     "line": 9,
+     "quote": "the board authorises management to negotiate the renewal, provided the liability cap is not reduced below four hundred thousand dollars.",
+     "segment_id": "095c971b-391d-41e2-95aa-81d3225b435d",
+     "speaker": "Karin Lindqvist",
+     "time": "2026-10-10T06:31:04.926Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The board authorised management to negotiate the Harrowgate renewal with a liability cap of at least four hundred thousand dollars.",
+   "section": "Harrowgate renewal"
+  },
+  {
+   "deadline": null,
+   "id": "m2",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "f1c2fd4d-d544-4d7f-b77e-37a4f1197dac",
+     "line": 10,
+     "quote": "All in favour? That is carried unanimously.",
+     "segment_id": "e6c5181b-38e0-45e0-8c6d-fc3f6e12335d",
+     "speaker": "Karin Lindqvist",
+     "time": "2026-10-10T06:31:04.827Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The motion to authorise the Harrowgate renewal was carried unanimously.",
+   "section": "Harrowgate renewal"
+  },
+  {
+   "deadline": "Friday",
+   "id": "m3",
+   "kind": "action",
+   "owner": "Petra Voss",
+   "sources": [
+    {
+     "agenda_item": "f1c2fd4d-d544-4d7f-b77e-37a4f1197dac",
+     "line": 11,
+     "quote": "I will send the board's position to Harrowgate by Friday.",
+     "segment_id": "1d746f33-db88-4c47-9d10-8ceb4048dac5",
+     "speaker": "Petra Voss",
+     "time": "2026-10-10T06:31:04.929Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Petra Voss will send the board's position to Harrowgate by Friday.",
+   "section": "Harrowgate renewal"
+  },
+  {
+   "deadline": null,
+   "id": "m4",
+   "kind": "unresolved",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "f1c2fd4d-d544-4d7f-b77e-37a4f1197dac",
+     "line": 12,
+     "quote": "Whether we accept the fee increase at all is still open; we should come back to it once we see their answer.",
+     "segment_id": "2848a2f5-4eb6-47af-aabb-5d40922259d7",
+     "speaker": "Sofia Berg",
+     "time": "2026-10-10T06:31:04.932Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Whether the board will accept the fee increase for the Harrowgate renewal remains open.",
+   "section": "Harrowgate renewal"
+  },
+  {
+   "deadline": null,
+   "id": "m5",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "5ae2c4d2-0b2a-4fde-abe0-acedccfda437",
+     "line": 15,
+     "quote": "The board resolves to appoint Maria Ek as Chief Financial Officer with effect from the first of June twenty twenty six.",
+     "segment_id": "c8cea791-78a2-4c0e-aff4-d9ddbf523dd0",
+     "speaker": "Karin Lindqvist",
+     "time": "2026-10-10T06:31:04.942Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The board resolved to appoint Maria Ek as Chief Financial Officer with effect from the first of June twenty twenty six.",
+   "section": "Chief Financial Officer"
+  },
+  {
+   "deadline": "end of May",
+   "id": "m6",
+   "kind": "action",
+   "owner": "Sofia Berg",
+   "sources": [
+    {
+     "agenda_item": "5ae2c4d2-0b2a-4fde-abe0-acedccfda437",
+     "line": 16,
+     "quote": "I will prepare her service agreement for signature by the end of May.",
+     "segment_id": "a3fb3790-db3d-437e-ae31-b43007def4b0",
+     "speaker": "Sofia Berg",
+     "time": "2026-10-10T06:31:04.945Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Sofia Berg will prepare Maria Ek's service agreement for signature by the end of May.",
+   "section": "Chief Financial Officer"
+  },
+  {
+   "deadline": null,
+   "id": "m7",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "4cb29d40-b362-4fe2-ba3d-3029ab760b86",
+     "line": 20,
+     "quote": "The board approves a budget of two point four million kronor for Project Lantern.",
+     "segment_id": "1fa3a066-a26f-4300-9f0c-cc86e20c1b93",
+     "speaker": "Karin Lindqvist",
+     "time": "2026-10-10T06:31:04.960Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The board approved a budget of two point four million kronor for Project Lantern.",
+   "section": "Project Lantern"
+  },
+  {
+   "deadline": null,
+   "id": "m8",
+   "kind": "unresolved",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "4cb29d40-b362-4fe2-ba3d-3029ab760b86",
+     "line": 21,
+     "quote": "We still have not agreed who owns the data the project produces. That needs legal advice.",
+     "segment_id": "63bbcd01-a4d8-4fab-94db-067aec97daa2",
+     "speaker": "Erik Nyström",
+     "time": "2026-10-10T06:31:04.963Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The board discussed that the ownership of the data produced by Project Lantern has not been agreed upon and needs legal advice.",
+   "section": "Project Lantern"
+  },
+  {
+   "deadline": null,
+   "id": "m9",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "48eecf35-f4b6-4cff-a743-0b269486e011",
+     "line": 24,
+     "quote": "The board resolves not to propose an interim dividend. We will revisit it at the September meeting.",
+     "segment_id": "50969152-e817-478f-ba28-5ee71b9c700b",
+     "speaker": "Karin Lindqvist",
+     "time": "2026-10-10T06:31:04.974Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The board resolved not to propose an interim dividend and will revisit the issue at the September meeting.",
+   "section": "Dividend"
+  },
+  {
+   "by_rule": true,
+   "deadline": "before the end of June",
+   "id": "m10",
+   "kind": "action",
+   "owner": "Petra Voss",
+   "sources": [
+    {
+     "agenda_item": "48eecf35-f4b6-4cff-a743-0b269486e011",
+     "line": 25,
+     "quote": "I will draft a short note to shareholders explaining the decision before the end of June.",
+     "segment_id": "cc338cd6-1a05-489d-ad99-7a26d899532a",
+     "speaker": "Petra Voss",
+     "time": "2026-10-10T06:31:04.977Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Petra Voss said: “I will draft a short note to shareholders explaining the decision before the end of June.”",
+   "section": "Dividend"
+  }
+ ]
+}

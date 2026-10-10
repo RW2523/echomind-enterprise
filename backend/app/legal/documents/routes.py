@@ -156,6 +156,8 @@ def read_version(matter_id: str, document_id: str, version_id: str, request: Req
     if not v:
         raise _not_found()
     body = repo.reader(version_id)
+    if body is None and v["index_status"] in ("queued", "indexing"):
+        raise HTTPException(status_code=409, detail="This version is still being read.")        # the page waits and asks again
     if body is None:
         raise HTTPException(status_code=409, detail="This version was read before the document reader existed. Read it again to open it here.")
     note(details={"chars": len(body["text"]), "marks": len(body["marks"]), "clauses": len(body["clauses"])})

@@ -16,7 +16,7 @@ import json
 import logging
 import time
 import uuid
-from typing import AsyncIterator, Literal
+from typing import AsyncIterator, Literal, Optional
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
@@ -41,6 +41,7 @@ router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(requir
 class QueryIn(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     versions: Literal["signed", "current"] = "signed"     # S2.2a: answer from signed versions (default) or latest drafts
+    documents: Optional[list[str]] = Field(default=None, max_length=50)   # S2.6: only these documents (a board pack)
 
 
 def _event(obj: dict) -> str:
@@ -127,10 +128,11 @@ def _status(abstained: bool, claims: list, unsupported: list, failed: list) -> s
     return "partial" if failed or unsupported else "answered"
 
 
-async def _answer(scope, principal: dict, question: str, turn: dict, versions: str = "signed") -> AsyncIterator[str]:
+async def _answer(scope, principal: dict, question: str, turn: dict, versions: str = "signed",
+                  documents: Optional[list[str]] = None) -> AsyncIterator[str]:
     status, answer, citations, items, found, reason = "error", None, [], [], [], None
     try:
-        result = await searchmod.search(scope, question, k=settings.LEGAL_RESEARCH_PASSAGES, versions=versions)
+        result = await searchmod.search(scope, question, k=settings.LEGAL_RESEARCH_PASSAGES, versions=versions, documents=documents)
         passages = result["passages"]
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
         yield _event({"type": "sources", "citations": sources})
@@ -221,7 +223,7 @@ async def research_query(matter_id: str, inp: QueryIn, request: Request):
         raise HTTPException(status_code=404, detail="Not Found")
     turn = {"id": str(uuid.uuid4()), "org_id": p["org_id"], "matter_id": matter_id, "owner_id": p["sub"],
             "question": question, "auth": p["auth"], "created_at": policy.now_iso()}
-    return StreamingResponse(_answer(scope, p, question, turn, inp.versions), media_type="application/x-ndjson",
+    return StreamingResponse(_answer(scope, p, question, turn, inp.versions, inp.documents or None), media_type="application/x-ndjson",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 

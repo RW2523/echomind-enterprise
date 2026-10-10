@@ -46,7 +46,11 @@ export default function DocumentReader() {
       <Toolbar crumb={`${matter.number} · Documents`} title={title}>
         <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents`}><ArrowLeft />Documents</Link>
       </Toolbar>
-      {reader.isPending ? <div className="lw-content"><div className="lw-paper" style={{ padding: 24 }}><Skeleton /><Skeleton /><Skeleton /></div></div>
+      {reader.isPending && reader.failureCount > 0 && reader.failureReason instanceof ApiError && reader.failureReason.status === 409
+        ? <div className="lw-content"><div className="lw-paper" style={{ padding: 24 }}>
+            <p role="status" className="lw-meta" style={{ margin: '0 0 12px' }}>This version is still being read. It opens here when reading finishes.</p>
+            <Skeleton /><Skeleton /></div></div>
+        : reader.isPending ? <div className="lw-content"><div className="lw-paper" style={{ padding: 24 }}><Skeleton /><Skeleton /><Skeleton /></div></div>
         : reader.isError ? <div className="lw-content"><ErrorNote>{reader.error instanceof ApiError ? reader.error.message : 'This document cannot be opened.'}</ErrorNote></div>
         : <ReaderBody data={reader.data} focus={focus} />}
     </>

@@ -68,6 +68,16 @@ def test_a_version_read_before_the_reader_existed_asks_to_be_read_again(docs, fr
     assert r.status_code == 409 and "Read it again" in r.json()["detail"]
 
 
+def test_a_version_still_being_read_says_so_and_opens_once_read(docs):
+    alice = as_user(docs, "alice")
+    mid = docs["matters"]["M-101"]["id"]
+    doc = upload(alice, mid, "note.txt", "A short fictional note.").json()["document"]
+    r = alice.get(reader_url(mid, doc))                                   # queued: the page waits and asks again
+    assert r.status_code == 409 and r.json()["detail"] == "This version is still being read."
+    index_all()
+    assert alice.get(reader_url(mid, doc)).status_code == 200
+
+
 def test_each_version_keeps_its_own_status(docs):
     alice = as_user(docs, "alice")
     mid = docs["matters"]["M-101"]["id"]

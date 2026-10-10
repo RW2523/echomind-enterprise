@@ -132,6 +132,8 @@ _REFUSE_BELOW = (
      "make {n} document(s) restricted by their source's permissions visible to the whole matter"),
     (18, "SELECT COUNT(*) FROM legal_transcript_revisions",
      "delete {n} transcript correction(s) with who made them and why"),
+    (20, "SELECT COUNT(*) FROM legal_review_approvals",
+     "delete {n} review decision(s) on AI drafts, with who made them"),
 )
 
 

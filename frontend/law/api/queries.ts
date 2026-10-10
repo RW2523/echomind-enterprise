@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -119,7 +119,10 @@ export const useVersions = (matterId: string, docId: string | null) =>
 export const useReader = (matterId: string, docId: string, versionId: string | null) =>
   useQuery({
     queryKey: [...keys.document(matterId, docId), 'reader', versionId ?? ''] as const, enabled: !!versionId,
-    refetchOnWindowFocus: false, retry: false, staleTime: Infinity,
+    refetchOnWindowFocus: false, staleTime: Infinity,
+    // A version still being read (just imported or filed) opens when reading finishes.
+    retry: (count, err: any) => err?.status === 409 && /still being read/.test(err?.message ?? '') && count < 90,
+    retryDelay: 2000,
     queryFn: async () => (await api.get<{ reader: ReaderData }>(
       `${docsBase(matterId)}/${encodeURIComponent(docId)}/versions/${encodeURIComponent(versionId!)}/reader`)).reader,
   });
@@ -138,6 +141,10 @@ export const useAlerts = (matterId: string, meetingId: string) =>
   useQuery({ queryKey: [...keys.meeting(matterId, meetingId), 'alerts'] as const, refetchOnWindowFocus: false,
     queryFn: async () => api.get<{ alerts: AssistAlert[]; assist: AssistState; telemetry: AssistTelemetry }>(
       `/api/legal/matters/${encodeURIComponent(matterId)}/meetings/${encodeURIComponent(meetingId)}/alerts`) });
+export const useMinutes = (matterId: string, meetingId: string, enabled = true) =>
+  useQuery({ queryKey: [...keys.meeting(matterId, meetingId), 'minutes'] as const, enabled, refetchOnWindowFocus: false,
+    queryFn: async () => (await api.get<{ versions: MinutesVersion[] }>(
+      `/api/legal/matters/${encodeURIComponent(matterId)}/meetings/${encodeURIComponent(meetingId)}/minutes`)).versions });
 export const meetingsPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/meetings`;
 export const useMeetings = (matterId: string) =>
   useQuery({ queryKey: keys.meetings(matterId), queryFn: async () => (await api.get<{ meetings: MeetingSummary[] }>(meetingsPath(matterId))).meetings });

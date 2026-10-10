@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from ..audit.record import audited, note
 from ..matters import repo as matters_repo
 from ..matters.routes import principal_of, require, require_law_edition
+from . import agenda as agenda_mod
 from . import capture, consent, repo, vocabulary
 from . import transcript as transcript_mod
 
@@ -83,7 +84,7 @@ def get_meeting(matter_id: str, meeting_id: str, request: Request):
     d = repo.meeting_detail(matter_id, meeting_id, _number(matter_id))
     if not d:
         raise _not_found()
-    return {"meeting": {**d, "assist": _assist_state(d)}}
+    return {"meeting": {**d, "assist": _assist_state(d), "agenda": agenda_mod.items(matter_id, meeting_id, principal_of(request)["sub"])}}
 
 
 @router.post(_BASE + "/{meeting_id}/end")
@@ -315,3 +316,228 @@ def set_assist(matter_id: str, meeting_id: str, inp: AssistIn, request: Request)
         conn.commit()
     note(details={"pack": inp.pack or "default"})
     return {"assist": _assist_state(m)}
+
+
+# ── Agenda and board pack (S2.6; D-042) ──────────────────────────────────────────
+class AgendaIn(BaseModel):
+    title: str = Field(min_length=1, max_length=300)
+    document_ids: list[str] = Field(default_factory=list, max_length=50)
+
+
+@router.post(_BASE + "/{meeting_id}/agenda")
+@audited("meeting.agenda.add", object_type="meeting", object_param="meeting_id")
+def add_agenda_item(matter_id: str, meeting_id: str, inp: AgendaIn, request: Request):
+    p = principal_of(request)
+    require(p, "meetings.create", matter_id)
+    _meeting(matter_id, meeting_id)
+    try:
+        item = agenda_mod.add(matter_id, meeting_id, inp.title.strip(), inp.document_ids, p["sub"])
+    except agenda_mod.Invalid as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    note(details={"documents": len(item["documents"])})
+    return {"item": item}
+
+
+@router.delete(_BASE + "/{meeting_id}/agenda/{item_id}")
+@audited("meeting.agenda.remove", object_type="agenda_item", object_param="item_id")
+def remove_agenda_item(matter_id: str, meeting_id: str, item_id: str, request: Request):
+    p = principal_of(request)
+    require(p, "meetings.create", matter_id)
+    _meeting(matter_id, meeting_id)
+    if not agenda_mod.remove(matter_id, meeting_id, item_id):
+        raise _not_found()
+    return {"ok": True}
+
+
+# ── Minutes (S2.6; D-042): drafted from the full transcript, approved by a second person, then filed ──
+class ItemEdit(BaseModel):
+    id: str = Field(min_length=1, max_length=16)
+    text: Optional[str] = Field(default=None, min_length=1, max_length=2000)
+    owner: Optional[str] = Field(default=None, max_length=200)
+    deadline: Optional[str] = Field(default=None, max_length=200)
+    remove: bool = False
+
+
+class ItemAdd(BaseModel):
+    agenda_item: Optional[str] = Field(default=None, max_length=64)
+    kind: Literal["decision", "action", "unresolved", "discussion"]
+    text: str = Field(min_length=1, max_length=2000)
+    owner: Optional[str] = Field(default=None, max_length=200)
+    deadline: Optional[str] = Field(default=None, max_length=200)
+
+
+class MinutesEdit(BaseModel):
+    content_sha256: str = Field(min_length=64, max_length=64)
+    items: list[ItemEdit] = Field(default_factory=list, max_length=200)
+    add: list[ItemAdd] = Field(default_factory=list, max_length=50)
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class ReviewIn(BaseModel):
+    decision: Literal["approved", "changes_requested"]
+    content_sha256: str = Field(min_length=64, max_length=64)
+    reason: Optional[str] = Field(default=None, max_length=500)
+
+
+def _username(uid: str) -> str:
+    from ...core.db import get_conn
+    with get_conn() as conn:
+        r = conn.execute("SELECT username FROM users WHERE id=?", (uid,)).fetchone()
+    return r[0] if r else "someone"
+
+
+def _transcript_live(matter_id: str, meeting_id: str) -> bool:
+    from ...core.db import get_conn
+    with get_conn() as conn:
+        r = conn.execute("SELECT transcript_deleted_at FROM legal_meetings WHERE id=? AND matter_id=?", (meeting_id, matter_id)).fetchone()
+    return bool(r) and r[0] is None
+
+
+def _minutes(matter_id: str, meeting_id: str) -> list[dict]:
+    from .. import artifacts
+    return artifacts.versions(matter_id, "meeting", meeting_id, "minutes")
+
+
+@router.post(_BASE + "/{meeting_id}/minutes/draft")
+@audited("minutes.draft", object_type="meeting", object_param="meeting_id")
+async def draft_minutes(matter_id: str, meeting_id: str, request: Request):
+    """Minutes drafted by the model from the whole transcript as corrected, every item citing its lines."""
+    from starlette.concurrency import run_in_threadpool
+    from .. import artifacts
+    from . import minutes as minutes_mod
+    p = principal_of(request)
+    await run_in_threadpool(require, p, "ai.draft", matter_id)
+    m = await run_in_threadpool(_meeting, matter_id, meeting_id)
+    if m["status"] != "ended":
+        raise HTTPException(status_code=409, detail="End the meeting before drafting its minutes.")
+    if not await run_in_threadpool(_transcript_live, matter_id, meeting_id) or not await run_in_threadpool(repo.segments, matter_id, meeting_id):
+        raise HTTPException(status_code=409, detail="There is no transcript to draft minutes from.")
+    agenda = await run_in_threadpool(agenda_mod.items, matter_id, meeting_id, p["sub"])
+    content, inputs = await minutes_mod.draft(m, matter_id, agenda)
+    out = await run_in_threadpool(artifacts.create, matter_id, "minutes", "meeting", meeting_id, content, inputs, p["sub"], "model")
+    note(object_id=meeting_id, details={"version": out["version"], **content["summary"], "batches": inputs["batches"]})
+    return {"minutes": out}
+
+
+@router.get(_BASE + "/{meeting_id}/minutes")
+@audited("minutes.read", object_type="meeting", object_param="meeting_id")
+def read_minutes(matter_id: str, meeting_id: str, request: Request):
+    require(principal_of(request), "meetings.read", matter_id)
+    _meeting(matter_id, meeting_id)
+    versions = _minutes(matter_id, meeting_id) if _transcript_live(matter_id, meeting_id) else []
+    note(details={"versions": len(versions)})
+    return {"versions": versions}
+
+
+@router.post(_BASE + "/{meeting_id}/minutes/{artifact_id}/edit")
+@audited("minutes.edit", object_type="ai_artifact", object_param="artifact_id")
+def edit_minutes(matter_id: str, meeting_id: str, artifact_id: str, inp: MinutesEdit, request: Request):
+    """A person's changes make a new version. Items keep their cited lines; an edited item says who
+    edited it; an added item cites nothing and says so."""
+    import copy
+    from .. import artifacts
+    p = principal_of(request)
+    require(p, "ai.draft", matter_id)
+    _meeting(matter_id, meeting_id)
+    cur = artifacts.get(matter_id, artifact_id)
+    if not cur or cur["subject_id"] != meeting_id or cur["kind"] != "minutes":
+        raise _not_found()
+    if cur["content_sha256"] != inp.content_sha256 or cur["status"] not in ("draft", "approved"):
+        raise HTTPException(status_code=409, detail="These minutes changed since you opened them. Reload and try again.")
+    content = copy.deepcopy(cur["content"])
+    editor = _username(p["sub"])
+    by_id = {it["id"]: it for sec in content["sections"] for it in sec["items"]}
+    for e in inp.items:
+        it = by_id.get(e.id)
+        if not it:
+            raise HTTPException(status_code=422, detail=f"There is no item {e.id}.")
+        if e.remove:
+            for sec in content["sections"]:
+                sec["items"] = [x for x in sec["items"] if x["id"] != e.id]
+            continue
+        for field in ("text", "owner", "deadline"):
+            value = getattr(e, field)
+            if value is not None and value != it.get(field):
+                it[field] = value.strip() or None
+                it["edited_by"] = editor
+    sections = {sec["agenda_item"]: sec for sec in content["sections"]}
+    next_id = 1 + max((int(i["id"][1:]) for sec in content["sections"] for i in sec["items"] if i["id"][1:].isdigit()), default=0)
+    for a in inp.add:
+        sec = sections.get(a.agenda_item) or sections.get(None)
+        if sec is None:
+            sec = {"agenda_item": None, "title": "Other matters", "items": []}
+            content["sections"].append(sec)
+            sections[None] = sec
+        sec["items"].append({"id": f"m{next_id}", "kind": a.kind, "text": a.text.strip(), "owner": a.owner if a.kind == "action" else None,
+                             "deadline": a.deadline if a.kind == "action" else None, "sources": [], "status": "added_by_person",
+                             "edited_by": editor})
+        next_id += 1
+    items = [i for sec in content["sections"] for i in sec["items"]]
+    content["summary"] = {k + "s": sum(1 for i in items if i["kind"] == k) for k in ("decision", "action", "unresolved", "discussion")} | \
+        {"not_verified": sum(1 for i in items if i["status"] != "verified")}
+    out = artifacts.create(matter_id, "minutes", "meeting", meeting_id, content, {**cur["inputs"], "edited_from": cur["version"],
+                                                                                 "reason": inp.reason}, p["sub"], "person")
+    note(details={"version": out["version"], "edited": len(inp.items), "added": len(inp.add)})
+    return {"minutes": out}
+
+
+@router.post(_BASE + "/{meeting_id}/minutes/{artifact_id}/review")
+@audited("minutes.review", object_type="ai_artifact", object_param="artifact_id")
+def review_minutes(matter_id: str, meeting_id: str, artifact_id: str, inp: ReviewIn, request: Request):
+    """Approve the draft you read (by its content hash), or ask for changes. Not by its author."""
+    from .. import artifacts
+    p = principal_of(request)
+    require(p, "artifacts.approve", matter_id)
+    _meeting(matter_id, meeting_id)
+    cur = artifacts.get(matter_id, artifact_id)
+    if not cur or cur["subject_id"] != meeting_id:
+        raise _not_found()
+    if inp.decision == "changes_requested" and not (inp.reason or "").strip():
+        raise HTTPException(status_code=422, detail="Say what should change.")
+    try:
+        out = artifacts.decide(matter_id, artifact_id, inp.decision, p["sub"], inp.content_sha256, (inp.reason or "").strip() or None)
+    except artifacts.Conflict as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    note(details={"decision": inp.decision, "version": out["version"]})
+    return {"minutes": out}
+
+
+@router.post(_BASE + "/{meeting_id}/minutes/{artifact_id}/file")
+@audited("minutes.file", object_type="ai_artifact", object_param="artifact_id")
+def file_minutes(matter_id: str, meeting_id: str, artifact_id: str, request: Request):
+    """Approved minutes become a matter document, carrying the approval and the hash it bound."""
+    import hashlib
+    from ...core.db import get_conn
+    from .. import artifacts
+    from ..documents import blobs
+    from ..documents import repo as docs
+    from ..jobs import worker
+    from . import minutes as minutes_mod
+    p = principal_of(request)
+    require(p, "documents.import", matter_id)
+    m = _meeting(matter_id, meeting_id)
+    cur = artifacts.get(matter_id, artifact_id)
+    if not cur or cur["subject_id"] != meeting_id:
+        raise _not_found()
+    bound = artifacts.approved_hash(cur)
+    if not bound:
+        raise HTTPException(status_code=409, detail="Only approved minutes can be filed.")
+    if cur.get("document_id") and docs.get_document(matter_id, cur["document_id"]):
+        return {"document_id": cur["document_id"], "changed": False}
+    approval = next(d for d in reversed(cur["decisions"]) if d["decision"] == "approved")
+    body = minutes_mod.as_text(cur["content"], approval).encode("utf-8")
+    doc_id = docs.create_document(p["org_id"], matter_id, f"Minutes — {m['title']}"[:300], "note", "final", p["sub"])
+    version_id = docs.new_id()
+    wrapped = blobs.store(matter_id, version_id, body)
+    try:
+        docs.add_version(version_id, doc_id, matter_id, f"minutes-{meeting_id[:8]}-v{cur['version']}.md", "text/markdown", len(body),
+                         hashlib.sha256(body).hexdigest(), None, wrapped, p["sub"], status="final")
+    except BaseException:
+        blobs.remove(matter_id, version_id)
+        raise
+    with get_conn() as conn:
+        conn.execute("UPDATE legal_ai_artifacts SET document_id=? WHERE id=?", (doc_id, artifact_id))
+        conn.commit()
+    worker.wake()
+    note(details={"version": cur["version"], "content_sha256": bound})
+    return {"document_id": doc_id, "changed": True}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { Copy } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiError, postStream } from '../api/client';
@@ -40,6 +40,10 @@ export default function MatterResearch() {
   const history = useResearchHistory(matter.id);
   const [question, setQuestion] = useState('');
   const [versions, setVersions] = useState<VersionPolicy>('signed');
+  const [params, setParams] = useSearchParams();
+  // S2.6: opened from an agenda item, research reads only that item's board papers until widened.
+  const pack = (params.get('docs') ?? '').split(',').filter(Boolean);
+  const about = params.get('about');
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [error, setError] = useState('');
   const [focus, setFocus] = useState<number | null>(null);
@@ -60,7 +64,8 @@ export default function MatterResearch() {
     const update = (patch: Partial<Answer>) => { state = { ...state, ...patch }; setAnswer(state); };
     update({});
     try {
-      await postStream(`/api/legal/matters/${encodeURIComponent(matter.id)}/research/query`, { question: q, versions }, (ev) => {
+      await postStream(`/api/legal/matters/${encodeURIComponent(matter.id)}/research/query`,
+        pack.length ? { question: q, versions, documents: pack } : { question: q, versions }, (ev) => {
         if (ev.type === 'sources') update({ sources: ev.citations ?? [] });
         else if (ev.type === 'paragraph') {
           checked = true;
@@ -99,6 +104,12 @@ export default function MatterResearch() {
           <form onSubmit={ask} className="lw-paper lw-sheet lw-ask">
             <label htmlFor="research-q" className="lw-h2">Ask about this matter</label>
             <p className="lw-meta" style={{ margin: '2px 0 10px' }}>Answers come only from this matter’s documents, with the exact words each statement relies on.</p>
+            {pack.length > 0 && (
+              <p className="lw-pack" role="status">
+                {`Only the board papers for “${about ?? 'this agenda item'}” (${pack.length} ${pack.length === 1 ? 'document' : 'documents'}). `}
+                <button type="button" className="lw-linklike" onClick={() => setParams({}, { replace: true })}>Ask the whole matter instead</button>
+              </p>
+            )}
             <textarea id="research-q" rows={2} className="lw-input lw-serif" placeholder="e.g. What caps the supplier’s liability, and what is excluded?"
               value={question} onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask(e as unknown as React.FormEvent); }} />

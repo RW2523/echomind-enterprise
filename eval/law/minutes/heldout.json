@@ -1,0 +1,29 @@
+{
+ "note": "FICTIONAL steering committee for the minutes evaluation (S2.6, D-042). Held out: never used to adjust the minutes; run once per system version.",
+ "meeting": {"title": "Unit 7 lease steering committee", "kind": "internal"},
+ "speakers": [{"name": "Helena Marsh", "role": "attorney"}, {"name": "Oskar Lund", "role": "client"}, {"name": "Lena Ekdahl", "role": "client"}],
+ "agenda": ["Break option", "Repairs", "Next steps"],
+ "turns": [
+  {"item": 1, "speaker": "Helena Marsh", "text": "The lease lets the tenant break on thirty-one March twenty thirty with six months' written notice."},
+  {"item": 1, "speaker": "Oskar Lund", "text": "Operations want to leave at the break date if the new warehouse is ready."},
+  {"item": 1, "speaker": "Lena Ekdahl", "text": "Finance has not yet modelled the cost of staying another five years."},
+  {"item": 1, "speaker": "Oskar Lund", "text": "We decide today to keep the break option open and not to waive it in any negotiation."},
+  {"item": 1, "speaker": "Helena Marsh", "text": "Then I will diarise the last date for serving notice and confirm it to you in writing next week."},
+  {"item": 2, "speaker": "Lena Ekdahl", "text": "The landlord says the roof leak is our responsibility."},
+  {"item": 2, "speaker": "Helena Marsh", "text": "Clause six point two puts the structure and roof on the landlord, so we disagree."},
+  {"item": 2, "speaker": "Oskar Lund", "text": "We agree to reject the landlord's demand and ask them to repair the roof."},
+  {"item": 2, "speaker": "Lena Ekdahl", "text": "I will collect the photographs and repair invoices by the fifteenth."},
+  {"item": 2, "speaker": "Oskar Lund", "text": "It is unclear whether the insurer will cover the stock damaged by the leak."},
+  {"item": 3, "speaker": "Helena Marsh", "text": "I will write to the landlord about the roof once Lena sends me the photographs."},
+  {"item": 3, "speaker": "Oskar Lund", "text": "Let's meet again in a month to decide on the break."}
+ ],
+ "planted": [
+  {"kind": "decision", "must": ["break"]},
+  {"kind": "decision", "must": ["reject|roof"]},
+  {"kind": "action", "must": ["diar|notice"], "owner": "Helena Marsh", "deadline": "next week"},
+  {"kind": "action", "must": ["photograph"], "owner": "Lena Ekdahl", "deadline": "fifteenth"},
+  {"kind": "action", "must": ["landlord|write"], "owner": "Helena Marsh"},
+  {"kind": "unresolved", "must": ["insur"]},
+  {"kind": "unresolved", "must": ["cost|model"]}
+ ]
+}
