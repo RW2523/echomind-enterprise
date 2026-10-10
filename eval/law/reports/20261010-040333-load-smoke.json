@@ -1,0 +1,46 @@
+{
+ "meta": {
+  "set": "smoke",
+  "commit": "331c475",
+  "time": "20261010-040333",
+  "started": "20261010-040301",
+  "base": "http://127.0.0.1:8110",
+  "window": ""
+ },
+ "summary": {
+  "seconds": 30,
+  "research_users": 1,
+  "operations": {
+   "capture_open": {
+    "n": 1,
+    "p50_s": 0.06,
+    "p95_s": 0.06,
+    "max_s": 0.06
+   },
+   "search": {
+    "n": 137,
+    "p50_s": 0.21,
+    "p95_s": 0.24,
+    "max_s": 0.65
+   },
+   "research_answer": {
+    "n": 11,
+    "p50_s": 2.94,
+    "p95_s": 6.14,
+    "max_s": 6.14
+   },
+   "capture_stop": {
+    "n": 1,
+    "p50_s": 0.01,
+    "p95_s": 0.01,
+    "max_s": 0.01
+   }
+  },
+  "failures": {},
+  "last_error": {},
+  "database_busy": 0,
+  "capture_frames": 300,
+  "backend_rss_mb_max": 760.3,
+  "backend_rss_mb_start": 669.5
+ }
+}

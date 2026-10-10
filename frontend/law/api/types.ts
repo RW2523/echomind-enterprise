@@ -341,3 +341,9 @@ export interface ConnectorLink {
   id: string; connector_id: string; connector_name: string; remote_path: string; created_by?: string | null; created_at: string;
   connector_status: 'active' | 'disabled'; last_ok_at?: string | null; last_status?: string | null;
 }
+
+/** Evaluation runs (S2.8, D-044): what was measured, on which code, models and data. */
+export interface EvaluationRun {
+  id: string; suite: string; set: string; commit: string | null; models: Record<string, string>; dataset_sha256: string | null;
+  summary: Record<string, unknown>; report: string; report_sha256: string; run_at: string | null; imported_at: string;
+}

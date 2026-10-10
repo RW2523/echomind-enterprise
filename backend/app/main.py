@@ -357,3 +357,5 @@ from .legal.connectors.routes import router as legal_connectors_router  # noqa: 
 app.include_router(legal_connectors_router, prefix="/api")
 from .legal.reviews.routes import router as legal_reviews_router  # noqa: E402
 app.include_router(legal_reviews_router, prefix="/api")
+from .legal.evaluations.routes import router as legal_evaluations_router  # noqa: E402
+app.include_router(legal_evaluations_router, prefix="/api")

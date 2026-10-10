@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -152,6 +152,8 @@ export const artifactPath = (matterId: string, artifactId: string) =>
 export const useArtifact = <C,>(matterId: string, artifactId: string) =>
   useQuery({ queryKey: ['matter', matterId, 'artifact', artifactId] as const, refetchOnWindowFocus: false, retry: false,
     queryFn: () => api.get<ArtifactView<C>>(artifactPath(matterId, artifactId)) });
+export const useEvaluations = (enabled: boolean) =>
+  useQuery({ queryKey: ['evaluations'] as const, enabled, queryFn: async () => (await api.get<{ runs: EvaluationRun[] }>('/api/legal/evaluations')).runs });
 export const useReviews = () =>
   useQuery({ queryKey: ['reviews'] as const, refetchInterval: 120_000, retry: false, queryFn: () => api.get<ReviewQueue>('/api/legal/reviews') });
 export const useMeetings = (matterId: string) =>

@@ -6,6 +6,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 export LAW_DATA_DIR="$ROOT/.law-data-e2e"
 rm -rf "$LAW_DATA_DIR"
 export LAW_SEED_DEMO=1
+export LAW_IMPORT_EVALUATIONS=1      # S2.8: the newest gate run, for the Evaluations journey
 export LAW_DEBUG_STACKS=1           # kill -USR1 <backend pid> dumps all thread stacks into the test log
 # S1.11: a fictional document-system folder for the connector journey (fresh every run).
 DMS="$ROOT/.law-dms-e2e"

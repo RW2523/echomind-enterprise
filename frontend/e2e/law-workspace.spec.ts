@@ -748,3 +748,18 @@ test('reviews: a research answer sent for review, approved by a second lawyer fr
   const sheet = alice.getByRole('article', { name: 'Document text' });
   await expect(sheet.getByText(/Approved by nakamura on/)).toBeVisible({ timeout: 120_000 });
 });
+
+test('evaluations: the newest gate run, held-out and tuning sets, with the code and models measured', async ({ browser }) => {
+  const morgan = await (await browser.newContext()).newPage();
+  await signIn(morgan, 'morgan');
+  await morgan.getByRole('link', { name: 'Evaluations' }).click();
+  const runs = morgan.getByRole('table', { name: 'Evaluation runs' });
+  const heldout = runs.getByRole('row').filter({ hasText: 'Research answers' }).filter({ hasText: 'Held-out' });
+  await expect(heldout).toContainText('answer accuracy');
+  await expect(heldout).toContainText('nvidia/Qwen3-30B-A3B-FP4');
+  await expect(runs.getByRole('row').filter({ hasText: 'Minutes' }).first()).toContainText('invented specifics');
+  await shot(morgan, '32-evaluations-light');
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await expect(alice.getByRole('link', { name: 'Evaluations' })).toHaveCount(0);     // lawyers do not see it
+});

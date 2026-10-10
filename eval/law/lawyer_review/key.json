@@ -1,0 +1,602 @@
+[
+ {
+  "id": "R001",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m3"
+  ]
+ },
+ {
+  "id": "R002",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-t06-instalments"
+  ],
+  "versions": "signed",
+  "expect_abstain": true
+ },
+ {
+  "id": "R003",
+  "kind": "assist_alert",
+  "source": [
+   "20261010-041809-assist-heldout.json",
+   "lease-negotiation alert 4"
+  ]
+ },
+ {
+  "id": "R004",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-lease-premium-days"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R005",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-lease-landlord"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R006",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 7"
+  ]
+ },
+ {
+  "id": "R007",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-abstain-ceo"
+  ],
+  "versions": "signed",
+  "expect_abstain": true
+ },
+ {
+  "id": "R008",
+  "kind": "assist_alert",
+  "source": [
+   "20261010-041809-assist-heldout.json",
+   "lease-negotiation alert 2"
+  ]
+ },
+ {
+  "id": "R009",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 1"
+  ]
+ },
+ {
+  "id": "R010",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m1"
+  ]
+ },
+ {
+  "id": "R011",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-side-effective"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R012",
+  "kind": "conflict_finding",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "finding 2"
+  ]
+ },
+ {
+  "id": "R013",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-lease-interior"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R014",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-eng-fixed"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R015",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-msa-conf-cap"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R016",
+  "kind": "conflict_finding",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "finding 0"
+  ]
+ },
+ {
+  "id": "R017",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-min-secretary"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R018",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m11"
+  ]
+ },
+ {
+  "id": "R019",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 3"
+  ]
+ },
+ {
+  "id": "R020",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-nda-injunction"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R021",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 9"
+  ]
+ },
+ {
+  "id": "R022",
+  "kind": "assist_alert",
+  "source": [
+   "20261010-041809-assist-heldout.json",
+   "lease-negotiation alert 5"
+  ]
+ },
+ {
+  "id": "R023",
+  "kind": "assist_alert",
+  "source": [
+   "20261010-041809-assist-heldout.json",
+   "nda-client-call alert 0"
+  ]
+ },
+ {
+  "id": "R024",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 2"
+  ]
+ },
+ {
+  "id": "R025",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-eng-end"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R026",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-msa-late"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R027",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-eng-supervisor"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R028",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 10"
+  ]
+ },
+ {
+  "id": "R029",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-nda-law"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R030",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-min-chair"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R031",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m7"
+  ]
+ },
+ {
+  "id": "R032",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m2"
+  ]
+ },
+ {
+  "id": "R033",
+  "kind": "assist_alert",
+  "source": [
+   "20261010-041809-assist-heldout.json",
+   "nda-client-call alert 1"
+  ]
+ },
+ {
+  "id": "R034",
+  "kind": "conflict_finding",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "finding 3"
+  ]
+ },
+ {
+  "id": "R035",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-side-maintenance"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R036",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 5"
+  ]
+ },
+ {
+  "id": "R037",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-eng-senior-rate"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R038",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m9"
+  ]
+ },
+ {
+  "id": "R039",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-lease-location"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R040",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-coc-team"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R041",
+  "kind": "assist_alert",
+  "source": [
+   "20261010-041809-assist-heldout.json",
+   "lease-negotiation alert 0"
+  ]
+ },
+ {
+  "id": "R042",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m4"
+  ]
+ },
+ {
+  "id": "R043",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-nda-advisers"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R044",
+  "kind": "assist_alert",
+  "source": [
+   "20261010-041809-assist-heldout.json",
+   "board-quorate-and-abstaining alert 0"
+  ]
+ },
+ {
+  "id": "R045",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 6"
+  ]
+ },
+ {
+  "id": "R046",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-msa-fee-drafts"
+  ],
+  "versions": "current",
+  "expect_abstain": false
+ },
+ {
+  "id": "R047",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m5"
+  ]
+ },
+ {
+  "id": "R048",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-coc-signatory"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R049",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m8"
+  ]
+ },
+ {
+  "id": "R050",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 4"
+  ]
+ },
+ {
+  "id": "R051",
+  "kind": "assist_alert",
+  "source": [
+   "20261010-041809-assist-heldout.json",
+   "lease-negotiation alert 3"
+  ]
+ },
+ {
+  "id": "R052",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-min-attendance"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R053",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m10"
+  ]
+ },
+ {
+  "id": "R054",
+  "kind": "assist_alert",
+  "source": [
+   "20261010-041809-assist-heldout.json",
+   "lease-negotiation alert 1"
+  ]
+ },
+ {
+  "id": "R055",
+  "kind": "minutes_item",
+  "source": [
+   "20261010-041916-minutes-heldout.json",
+   "m6"
+  ]
+ },
+ {
+  "id": "R056",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-lease-start"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R057",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-nda-effective"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R058",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 8"
+  ]
+ },
+ {
+  "id": "R059",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-side-payment"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R060",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-msa-warranty"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R061",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-msa-effective"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R062",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-min-vote"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R063",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-msa-parties"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R064",
+  "kind": "compare_explanation",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "explanation 0"
+  ]
+ },
+ {
+  "id": "R065",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-eng-trainee-rate"
+  ],
+  "versions": "signed",
+  "expect_abstain": false
+ },
+ {
+  "id": "R066",
+  "kind": "research_answer",
+  "source": [
+   "20261010-041631-heldout.json",
+   "h-abstain-side-law"
+  ],
+  "versions": "signed",
+  "expect_abstain": true
+ },
+ {
+  "id": "R067",
+  "kind": "conflict_finding",
+  "source": [
+   "20261010-041743-compare-heldout.json",
+   "finding 1"
+  ]
+ }
+]

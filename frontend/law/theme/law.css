@@ -432,3 +432,7 @@
 [data-edition="law"] .lw-minutes-edit[data-removed] { opacity: .5; }
 [data-edition="law"] .lw-pack { margin: -4px 0 10px; padding: 6px 10px; border-radius: 10px; font-size: 13.5px; background: var(--accent-soft); }
 [data-edition="law"] .lw-send-review { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); }
+[data-edition="law"] .lw-eval-measures { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; }
+[data-edition="law"] .lw-eval-measures div { display: flex; gap: 6px; align-items: baseline; }
+[data-edition="law"] .lw-eval-measures dt { color: var(--ink-2); font-size: 12.5px; }
+[data-edition="law"] .lw-eval-measures dd { margin: 0; font-weight: 600; font-size: 13px; }
