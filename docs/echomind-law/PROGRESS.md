@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.4-citations` |
-| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.3 merged (S3.3's manual Word check 🔒); S3.4 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.5-definitions` |
+| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.4 merged (S3.3's manual Word check 🔒); S3.5 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0025` (Law edition only) |
+| Migrations | `0001`–`0026` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -511,6 +511,19 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Robustness evaluation:** 487/487 revisions placed and verified across 14 documents, LibreOffice 12/12.
 - **🔒 Pending:** the manual check in Microsoft Word by a person (D-011, P-013). The product says "Not yet verified by a person in Microsoft Word" until then.
 
+### Session 3 (continued) — S3.4 Citation and quote checker (DOC-03, T07)
+- **Audit:** D-037 checked the model's own quotes; nothing read a document for what it cites. S2.1 clauses (with schedules, articles, § and sub-clauses) and the S3.3 word diff were reused.
+- **Rules only, no model (D-048):**
+  - **References** (clause, section, §, paragraph, article, schedule, exhibit, annex, appendix; lists; "of the <agreement>"; defined short names; "paragraph 2 of Schedule 3") resolve to the exact clause of this document or of a matter document the person can open. Otherwise they are flagged **missing** (the clause does not exist) or **not found** (no such document for this person).
+  - **Quotations** (paired in order, UK single quotes included) are compared word for word: **accurate** or **altered**, with struck and inserted words, or **not found**.
+  - **External authorities** (US Code, CFR, US cases, UK neutral citations, reports and Acts, EU instruments, CJEU) are listed and always **UNVERIFIED** (P-009); citations that cannot be real are flagged.
+- **Storage (migration 0026):** a check keeps targets as offsets, never their words. Passages and diffs are read per viewer, so they are hidden from anyone who cannot open the target and nothing remains after a purge. Notes are append-only, with a rollback guard.
+- **UI:** "Check citations" on the reader. The page lists quotations, references and authorities with problems first, the P-009 notice, diffs, "Open at the citation" and "Open the passage", and notes. Journey 25, screenshot 38.
+- **T07 evaluation:**
+  - Golden 30/30. The first held-out run scored 20/25, and its defects were fixed (s3.4b); that set became tuning data and a new held-out set was committed blind.
+  - Golden 55/55; new held-out 27/28. The miss: court rules (Fed. R. Civ. P., CPR) are not recognised. This is recorded for S3.9.
+- **Permission:** `research.query`, as planned. A reviewer can check a memo before approving it. Notes are for lawyers.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -546,7 +559,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | MEET-01 | DONE for the pilot | S1.8, S2.6 | Agenda and board-pack research; agenda marks; minutes from the whole transcript with verified sources, guards and deterministic merging; versioned edits; second-lawyer approval bound to the content hash; filing; purge and hold (D-042). Reviews queue and export hash binding: S2.7. S2.7: Reviews queue and shared review components |
 | DOC-01 | DONE for the pilot | S3.1 | Firm templates (versions, approval by a managing partner, Word styles, presets); drafts with sourced fields and cited passages, gaps for anything unsupported; second-lawyer approval; filed as Word (D-045) |
 | DOC-02 | PARTIAL: built; manual Word check 🔒 | S3.2–S3.3 | Playbooks (D-046); redlines and Word tracked changes, T10 automated checks and LibreOffice round trips pass (D-047). The manual Microsoft Word check by a person is pending |
-| DOC-03 | MISSING | S3.4 | External authority stays UNVERIFIED (P-009) |
+| DOC-03 | DONE for the pilot (court rules not yet read) | S3.4 | References resolved to exact clauses or flagged missing; quotations compared word for word with diffs; external authorities listed and always UNVERIFIED (P-009), impossible ones flagged; per-viewer targets; T07 golden 55/55, held-out 27/28 (D-048) |
 | DOC-04 | MISSING | S3.5 | |
 | DOC-05 | MISSING | S3.6 | |
 | DOC-06 | MISSING | S3.7 | |
@@ -583,16 +596,23 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S3.4 Citation and quote checker (DOC-03, spec test T07)** on `law/s3.4-citations`, per IMPLEMENTATION_PLAN §7. S3.3 is merged into `feature/echomind-law`.
+Start **S3.5 Defined terms and cross-references (DOC-04)** on `law/s3.5-definitions`, per IMPLEMENTATION_PLAN §7 (`POST …/definitions/check`, `research.query`, audit `check.*`). S3.4 is merged into `feature/echomind-law`.
 1. **Audit first:**
-   - S2.2 quote verification (D-037), the S2.1 clause numbers and defined terms, and S2.3 references between documents;
-   - what P-009 allows: no licensed authority library, so every external citation stays UNVERIFIED.
-2. **Parser:**
-   - internal references (clause, section §, schedule, exhibit, annex, paragraph);
-   - external authorities (U.S.C., C.F.R., case reporters, EU instruments, UK statutes and cases);
-   - quotations in a document ("…" with a source named nearby).
-3. **Internal resolution:** each internal reference resolved to the exact passage of this document, or of another matter document it names. Missing or renumbered targets are flagged.
-4. **Altered quotes:** a quotation attributed to a matter document is compared with that document (normalized diff); changed words are shown.
-5. **External authorities:** listed, marked UNVERIFIED (P-009), never "checked" against anything.
-6. **Report UI:** on a document, "Check citations and quotes". Results with links to the passage. Advisory, with lawyers' notes.
-7. **Tests:** T07 with planted fictional authorities and altered quotes; a golden and held-out evaluation; journey 25; D-048, run 25; merge. Then S3.5 (defined terms and cross-references).
+   - S2.1 `structure.defined_terms` keeps only the first definition of a term, so duplicates need their own reading of the text.
+   - S2.1 clauses (numbers, levels, parents, offsets) give numbering.
+   - S3.4 `citations.parse` already reads internal references and flags missing ones.
+   - S3.3 redlines write Word tracked changes after a second lawyer's approval.
+2. **Checks, rules only, each with exact offsets:**
+   - **Definitions:** every definition (quoted "X" means…, (the "X")), with duplicates and conflicting duplicates; unused definitions; capitalised terms used but never defined; terms used before they are defined (advisory); inconsistent use (a lowercase or variant form of a defined term).
+   - **Numbering:** gaps (12 → 14), repeats (two 8.1s), sub-clause sequence ((a), (c)), at each level.
+   - **References:** broken (target missing, from S3.4); outdated (a reference that names a heading, "clause 9 (Confidentiality)", pointing at a clause with another heading); self-references to a clause's own number.
+3. **Proposed fixes, approval required:** each finding may carry a proposed change (the defined form of a term; the clause whose heading matches an outdated reference; renumbering is never automatic). A lawyer picks fixes; they become a redline artifact (S2.7/S3.3: second-lawyer approval, Word tracked changes, filed as the next version). Nothing is changed without approval.
+4. **UI:** "Check definitions and references" on the reader; findings grouped, with offsets, "Open at", "Propose fix", and the redline flow.
+5. **Tests:**
+   - planted errors in fictional contracts (red first);
+   - a golden and a held-out evaluation, written blind;
+   - journey 26 (the demo MSA has a real planted problem: Schedules 1, 2 and 4 are cited but absent);
+   - D-049, run 26; merge.
+6. **Carry-overs:**
+   - S3.4: court rules (Fed. R. Civ. P., CPR) are not read; fix them with a fresh held-out set at S3.9.
+   - S3.3: the manual Word check 🔒.

@@ -77,6 +77,13 @@ def _citing_turns(conn, matter_id: str, document_id: str) -> list[tuple[str, lis
     return out
 
 
+def _citation_targets(conn, matter_id: str, document_id: str) -> list[tuple[str, str]]:
+    """Citation checks of other documents with an item pointing into this one (S3.4)."""
+    return conn.execute("SELECT c.id, c.results_json FROM legal_citation_checks c WHERE c.matter_id=? AND c.document_id<>? AND EXISTS "
+                        "(SELECT 1 FROM json_each(c.results_json, '$.items') j WHERE json_extract(j.value, '$.target.document_id')=?)",
+                        (matter_id, document_id, document_id)).fetchall()
+
+
 def _notes(conn, matter_id: str, document_id: str, kind_: str = "research_note") -> list[str]:
     """Research notes (S2.7) or drafts (S3.1), every version of each, that quote the document: their subjects."""
     from .. import artifacts
@@ -119,6 +126,8 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
             "drafts": len(_notes(conn, matter_id, document_id, "legal_draft")),
             "redlines": len(_notes(conn, matter_id, document_id, "redline")),
             "playbook_checks": conn.execute("SELECT COUNT(*) FROM legal_playbook_checks WHERE document_id=? AND matter_id=?",
+                                            (document_id, matter_id)).fetchone()[0],
+            "citation_checks": conn.execute("SELECT COUNT(*) FROM legal_citation_checks WHERE document_id=? AND matter_id=?",
                                             (document_id, matter_id)).fetchone()[0],
             "kept": KEPT_DOCUMENT}
 
@@ -337,6 +346,16 @@ def _purge_document(conn, d: dict) -> dict:
     # S3.2: playbook checks quote the document; they go with their decisions (each can be run again).
     conn.execute("DELETE FROM legal_playbook_decisions WHERE check_id IN (SELECT id FROM legal_playbook_checks WHERE document_id=?)", (doc,))
     conn.execute("DELETE FROM legal_playbook_checks WHERE document_id=?", (doc,))
+    # S3.4: a document's citation checks go with their notes; checks of other documents that point into it
+    # keep the item but lose where it pointed (they hold its offsets, never its words).
+    conn.execute("DELETE FROM legal_citation_notes WHERE check_id IN (SELECT id FROM legal_citation_checks WHERE document_id=?)", (doc,))
+    conn.execute("DELETE FROM legal_citation_checks WHERE document_id=?", (doc,))
+    for cid, rj in _citation_targets(conn, d["matter_id"], doc):
+        stored = json.loads(rj)
+        for it in stored["items"]:
+            if (it.get("target") or {}).get("document_id") == doc:
+                it.update(status="not_found", target=None, note="The document it pointed to was deleted.")
+        conn.execute("UPDATE legal_citation_checks SET results_json=? WHERE id=?", (json.dumps(stored, ensure_ascii=False), cid))
     # S2.3: comparisons and scans quote the document throughout; they are removed whole (each can be run again).
     for cid in _comparisons(conn, d["matter_id"], doc):
         conn.execute("DELETE FROM legal_comparisons WHERE id=?", (cid,))
@@ -385,6 +404,8 @@ def verify(d: dict, gone: dict) -> dict:
                 len(_notes(conn, d["matter_id"], doc, "legal_draft")) + len(_notes(conn, d["matter_id"], doc, "redline"))
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_artifact_filings WHERE document_id=?", (doc,)).fetchone()[0]
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_playbook_checks WHERE document_id=?", (doc,)).fetchone()[0]
+            db_rows += conn.execute("SELECT COUNT(*) FROM legal_citation_checks WHERE document_id=?", (doc,)).fetchone()[0]
+            db_rows += len(_citation_targets(conn, d["matter_id"], doc))
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
                                     "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchone()[0]
             idx = registry.for_matter(d["matter_id"])

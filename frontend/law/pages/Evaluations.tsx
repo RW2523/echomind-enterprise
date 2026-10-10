@@ -9,6 +9,7 @@ import NotAvailable from './NotAvailable';
 const SUITE: Record<string, string> = {
   research: 'Research answers', compare: 'Compare and conflicts', assist: 'Silent Assist', minutes: 'Minutes',
   transcription: 'Transcription', injection: 'Prompt injection', latency: 'Latency', load: 'Load', gate: 'Gate',
+  lawyer: 'Lawyer review', drafting: 'Drafting', playbook: 'Playbook checks', redline: 'Redlines (Word)', citations: 'Citations and quotes',
 };
 // The measures a reviewer looks at first, per suite; anything else is in the report file.
 const HEADLINE: Record<string, string[]> = {
@@ -18,6 +19,9 @@ const HEADLINE: Record<string, string[]> = {
   assist: ['recall', 'critical_recall', 'precision', 'false_alerts', 'latency_max_s'],
   minutes: ['recall', 'action_owners', 'action_deadlines', 'verified', 'invented_specifics'],
   transcription: ['wer_normalised', 'entity_accuracy', 'negation_accuracy', 'speaker_accuracy'],
+  playbook: ['accuracy', 'deviations_caught', 'passed_in_error'],
+  redline: ['verified', 'missed', 'libreoffice_round_trips_kept'],
+  citations: ['correct', 'missing_caught', 'false_missing', 'altered_caught', 'false_alarms', 'malformed_caught', 'wrongly_flagged', 'external_lookups'],
 };
 const label = (k: string) => k.replace(/_/g, ' ').replace(/\bp(50|95)\b/, 'p$1').replace(/\bs$/, '(s)');
 

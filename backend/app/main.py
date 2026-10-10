@@ -365,3 +365,5 @@ from .legal.playbooks.routes import router as legal_playbooks_router  # noqa: E4
 app.include_router(legal_playbooks_router, prefix="/api")
 from .legal.redlines.routes import router as legal_redlines_router  # noqa: E402
 app.include_router(legal_redlines_router, prefix="/api")
+from .legal.citations.routes import router as legal_citations_router  # noqa: E402
+app.include_router(legal_citations_router, prefix="/api")

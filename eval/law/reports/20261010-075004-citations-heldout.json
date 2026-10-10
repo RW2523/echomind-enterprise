@@ -1,0 +1,325 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "c14e77b",
+  "time": "20261010-075004",
+  "prompt_version": "citations-s3.4",
+  "model": "none (rules only)",
+  "embeddings": "nomic-embed-text (indexing on import only)"
+ },
+ "summary": {
+  "items": 25,
+  "correct": "20/25",
+  "references": "10/12",
+  "missing_caught": "5/5",
+  "false_missing": 1,
+  "quotations": "0/3",
+  "altered_caught": "0/1",
+  "false_alarms": 0,
+  "authorities_found": "10/10",
+  "malformed_caught": "2/2",
+  "wrongly_flagged": 0,
+  "all_unverified": true,
+  "external_lookups": 0,
+  "extra_items": 5,
+  "ms_per_check": 58
+ },
+ "scenarios": [
+  {
+   "id": "H1-spa-disclosure",
+   "ms": 115,
+   "lines": [
+    {
+     "kind": "reference",
+     "text": "section 6.3 of the Share Purchase Agreement",
+     "status": "resolved",
+     "clause": "6.3",
+     "in": "Share Purchase Agreement",
+     "ok": false,
+     "got": "not found by the parser",
+     "got_status": null,
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "within eighteen (18) months after Completion",
+     "status": "accurate",
+     "clause": "6.3",
+     "in": "Share Purchase Agreement",
+     "ok": false,
+     "got": "not found by the parser",
+     "got_status": null,
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "clause 7.2",
+     "status": "resolved",
+     "clause": "7.2",
+     "in": "Share Purchase Agreement",
+     "ok": false,
+     "got": "missing — This document has no clause 7.2.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "matters disclosed in the Disclosure Letter",
+     "status": "altered",
+     "clause": "6.2",
+     "in": "Share Purchase Agreement",
+     "ok": false,
+     "got": "not found by the parser",
+     "got_status": null,
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 4 of the Share Purchase Agreement",
+     "status": "resolved",
+     "clause": "Schedule 4",
+     "in": "Share Purchase Agreement",
+     "ok": true,
+     "got": "resolved, clause Schedule 4 of Share Purchase Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 5 of the Share Purchase Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Share Purchase Agreement has no Schedule 5.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "the Purchase Price",
+     "status": "accurate",
+     "clause": "7.1",
+     "in": "Share Purchase Agreement",
+     "ok": false,
+     "got": "not found by the parser",
+     "got_status": null,
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "clause 7.4 of the Share Purchase Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Share Purchase Agreement has no clause 7.4.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [
+    {
+     "kind": "quote",
+     "text": ").\n\n2. Time limits\n2.1 Under section 6.3 of the Share Purchase Agreement, claims must be notified",
+     "status": "not_found"
+    },
+    {
+     "kind": "quote",
+     "text": ".\n2.2 By clause 7.2 of the SPA, the Seller is not liable for small claims.\n\n3. Warranties\n3.1 Clause 6.2 of the Share Purchase Agreement qualifies the Warranties by",
+     "status": "not_found"
+    },
+    {
+     "kind": "quote",
+     "text": ".\n3.2 The tax warranty is paragraph 1 of Schedule 4 of the Share Purchase Agreement; the property warranties are in Schedule 5 of the Share Purchase Agreement.\n3.3 Clause 7.1 of the Share Purchase Agreement caps liability at",
+     "status": "not_found"
+    },
+    {
+     "kind": "reference",
+     "text": "paragraph 1",
+     "status": "resolved"
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 7.1 of the Share Purchase Agreement",
+     "status": "resolved"
+    }
+   ],
+   "external_lookup": false
+  },
+  {
+   "id": "H2-licence-internal",
+   "ms": 33,
+   "lines": [
+    {
+     "kind": "reference",
+     "text": "Article 3",
+     "occurrence": 1,
+     "status": "resolved",
+     "clause": "Article 3",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause Article 3 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Annex A",
+     "status": "resolved",
+     "clause": "Annex A",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause Annex A of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Annex B",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no Annex B.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Article 5",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no article 5.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 3.1",
+     "status": "resolved",
+     "clause": "3.1",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 3.1 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 2.1",
+     "status": "resolved",
+     "clause": "2.1",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 2.1 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Article 9",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no article 9.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "H3-opinion-authorities",
+   "ms": 25,
+   "lines": [
+    {
+     "kind": "authority",
+     "text": "11 U.S.C. § 362(a)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "15 U.S.C. §§ 1",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "901 F.3d 1100 (Fed. Cir. 2018)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "22 F.4th 301 (D.C. Cir. 2021)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "55 F.4th 120 (11th Cir. 2034)",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the year 2034 is in the future",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "[2022] EWCA Civ 1234",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2019] EWHC 2468 (Ch)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2012] UKHL 15",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the House of Lords stopped sitting in 2009",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EC) No 593/2008",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Case T-201/04",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  }
+ ]
+}

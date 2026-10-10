@@ -471,3 +471,10 @@
 [data-edition="law"] .lw-redline-changes { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 [data-edition="law"] .lw-redline-changes > li { padding-top: 12px; border-top: 1px solid var(--rule); display: grid; gap: 2px; }
 [data-edition="law"] .lw-revise { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; display: grid; gap: 6px; }
+/* S3.4 citation checks */
+[data-edition="law"] .lw-cite-actions { margin-left: auto; display: inline-flex; gap: 14px; align-items: baseline; }
+[data-edition="law"] .lw-cite-act { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; display: inline-flex; gap: 4px; align-items: center;
+  color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+[data-edition="law"] .lw-cite-act:hover, [data-edition="law"] .lw-cite-act:focus-visible { color: var(--accent); text-decoration-color: currentColor; }
+[data-edition="law"] .lw-cite-diff { margin: 2px 0; padding: 6px 10px; border-left: 2px solid color-mix(in srgb, var(--conflict) 55%, transparent); background: color-mix(in srgb, var(--conflict) 5%, transparent); border-radius: 0 6px 6px 0; }
+[data-edition="law"] .lw-cite-diff del + ins { margin-left: .3em; }

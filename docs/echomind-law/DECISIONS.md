@@ -969,6 +969,72 @@ Every entry records the options considered, the recommendation, the consequence 
   - Fields and hyperlinks inside a revised paragraph are not kept.
   - A clause inside a table cell is not revised.
 
+### D-048 Citation and quote checker: rules only, nothing looked up — RECORDED (S3.4; DOC-03, T07, P-009)
+- **Audit:**
+  - The research evidence check (D-037) verified the model's own quotes against retrieved passages. It did not read a document for what *it* cites.
+  - The S2.1 reader already stores every clause with exact character ranges, including "Schedule 1", "Article I", "§ 2" and "3.3(b)". The S3.3 word diff already showed changed words.
+- **No model.** The check is deterministic, so the same document always gives the same result.
+  - Any member who can see the document may run a check (`research.query`, as IMPLEMENTATION_PLAN §5 planned). This includes a reviewer checking a memo before approving it. A first draft used `ai.draft`, which left reviewers out, and was changed before merge.
+  - Notes are for a lead, attorney or reviewer. Audit actions: `check.citations`, `check.citations.note`.
+- **What is read (`citations/parse.py`):**
+  - **References:** clause, section, §, paragraph, article, schedule, exhibit, annex and appendix.
+    - It reads lists and ranges ("Clauses 2.1 and 9.3", "clauses 10 to 12": both ends).
+    - It reads "of the <named agreement>" and short names the document defines ('the Share Purchase Agreement (the "SPA")').
+    - It reads "paragraph 2 of Schedule 3".
+    - A clause or schedule's own heading is not a reference to itself.
+  - **Quotations:** quotation marks are paired in order: curly ones by shape (single ‘UK’ quotes included, apostrophes excluded), straight ones alternately. A quotation never runs across a blank line.
+    - Four words or more are checked, or two when a clause reference introduces them.
+    - Definitions ("X" means …) are not quotations.
+    - A reference that introduces a quotation is checked through it: the quotation must be in that clause, and the item shows the reference it was cited as.
+  - **External authorities:** US Code and CFR sections, US cases with reporters, UK neutral citations, UK law reports (old and new style), UK Acts, EU regulations and directives, and CJEU cases.
+- **Resolution (`citations/check.py`):**
+  - A reference resolves to the exact clause of this document, or of a matter document the person can open whose title matches the name used. An exact title is preferred, then executed, final, received, draft.
+  - A reference with no document named is read in this document. If this document has no such clause, it is read in the agreement named earlier in the paragraph, and the item says so.
+  - **Missing:** the document exists but has no such clause ("The Master Services Agreement has no clause 18.3."). The item keeps which document was searched.
+  - **Not found:** no document the person can open has that name. A document they cannot see reads exactly like one that does not exist (T06).
+  - **Quotations:**
+    - A quotation is compared word for word with the closest passage: first in the cited clause, then in the whole document, in the named document, and then in this one (its own words excluded).
+    - The closest passage is chosen by the fewest words changed, so a changed word reads as a substitution.
+    - Ellipses split a quotation into parts found in order. A bracketed capital ("[t]he") is accurate.
+    - **Altered** shows the source's words struck and the quotation's words underlined. A quotation found in a different clause from the one cited says so.
+  - **External authorities are always UNVERIFIED (P-009):** they are listed and never looked up (`external_lookup: false`), and a notice on every check says so.
+  - **Malformed:** a citation that cannot be real is flagged:
+    - an unknown reporter (F.5th, So. 4th);
+    - a numbered circuit above the 11th;
+    - a year in the future;
+    - a UK court citing a year before it sat, or the House of Lords after 2009;
+    - a US Code title above 54, or a CFR title above 50.
+- **What is stored (migration 0026):**
+  - A check keeps where each item points (document, version, offsets), never the target's words.
+  - The passage and the changed words are read again each time the check is shown, and only for a person who can open that document. Anyone else sees "not found".
+  - A purge of the checked document removes its checks and notes. A purge of a document others' checks point into leaves those items as "The document it pointed to was deleted.", and verification counts any trace.
+  - Notes are append-only (a trigger). Rolling back below 0026 is refused while notes exist.
+- **Evaluation (T07, `eval/law/citations/run_citations_eval.py`, no model):** fictional documents with planted citations, run through the real endpoint. The expectations are what a careful lawyer would conclude by hand.
+  - **Golden (tuning):**
+    - Writing it found four gaps: lists, a capitalised "The Lease", old English reports, and future-year EU instruments. A heading read as a reference was also found and fixed.
+    - First complete run: **30/30**, no extra items.
+  - **Held-out, first run (`citations-s3.4`): 20/25.** All authorities were right and all missing clauses were caught, but there were three defects:
+    - a short defined name, `(the "SPA")`, paired every later quotation mark the wrong way;
+    - "clause 7.2 of the SPA" was looked up in the memo (a false "missing");
+    - "paragraph 1 of Schedule 4" was resolved in the memo.
+
+    These were fixed in `citations-s3.4b`. Because this set had now informed changes, it became tuning data (G5–G7). A **new held-out set was written and committed before s3.4b was run** (commit c8e8abc).
+  - **Golden on s3.4b: 55/55**:
+    - missing caught 9/9, false missing 0;
+    - altered caught 3/3, false alarms 0;
+    - malformed caught 5/5, wrongly flagged 0;
+    - all authorities unverified, no lookups.
+  - **Held-out, second run (s3.4b): 27/28**:
+    - references 11/11, quotations 3/3, malformed caught 3/3, wrongly flagged 0, no lookups.
+    - The miss is "Fed. R. Civ. P. 81(c)": **court rules (US Federal Rules, English CPR) are not recognised, so they are not listed at all.** This is recorded, not tuned on this set; it is to be fixed with a fresh held-out set at the Phase 3 gate (S3.9).
+  - **Small sets.** The lawyer review measures usefulness.
+- **Limits:**
+  - Court rules are not read (above). Neither are treaties, state statutes, law-review articles or US "Id." and "supra" short forms.
+  - A range ("clauses 10 to 12") checks both ends, not the clauses between.
+  - A document is matched by its title, not by how it is described ("the engagement letter dated 2 March").
+  - An abbreviation is only understood when the document defines it.
+  - "Malformed" catches citations that cannot exist, not ones that merely do not: a well-formed invented case is UNVERIFIED, like every other authority, until a person checks it in a licensed source (P-009).
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

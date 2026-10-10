@@ -925,3 +925,59 @@ test('redlines: the clauses outside the playbook revised to the firm\'s wording,
   await expect(sheet.locator('ins').filter({ hasText: 'ninety (90)' })).toBeVisible({ timeout: 120_000 });
   await expect(alice.getByRole('complementary', { name: 'Found while reading' }).getByText(/revised to the firm's standard position/).first()).toBeVisible();
 });
+
+test('citations: a memo\'s references resolved to the agreement, an altered quotation shown word by word, an invented case flagged', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  await expect(importButton).toBeVisible();
+  for (const [file, status] of [['Master Services Agreement (DEMO).md', 'executed'], ['Advice memo on the MSA (DEMO).md', 'draft']]) {
+    const title = file.replace(/\.md$/, '');
+    if (await alice.getByRole('button', { name: title, exact: true }).count() > 0) continue;
+    await importButton.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law', file));
+    await dialog.getByLabel('Status').selectOption(status);
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  const ids = await alice.evaluate(async () => {
+    const ms = await (await fetch('/api/legal/matters')).json();
+    const m = ms.matters.find((x: any) => x.number === 'M-101');
+    const ds = await (await fetch(`/api/legal/matters/${m.id}/documents`)).json();
+    const find = (t: string) => ds.documents.find((d: any) => d.title === t).id as string;
+    return { memo: find('Advice memo on the MSA (DEMO)'), msa: find('Master Services Agreement (DEMO)') };
+  });
+  await alice.goto(`/m/M-101/documents/${ids.memo}/read`);
+  await alice.getByRole('link', { name: 'Check citations' }).click();
+  await alice.getByRole('button', { name: 'Check citations' }).click();
+  const check = alice.getByRole('article', { name: 'Citation check' });
+  await expect(check).toBeVisible({ timeout: 60_000 });
+  await expect(check.getByRole('note')).toContainText('P-009');
+  const quotes = check.getByRole('region', { name: 'Quotations' });
+  const altered = quotes.getByRole('listitem', { name: 'Quotation: Altered' });
+  await expect(altered.locator('del')).toContainText(['thirty (30)']);
+  await expect(altered.locator('ins')).toContainText(['sixty (60)']);
+  await expect(quotes.getByRole('listitem', { name: 'Quotation: Accurate' })).toContainText('Matches Clause 6.1 of Master Services Agreement (DEMO).');
+  const refs = check.getByRole('region', { name: 'Clause references' });
+  await expect(refs.getByRole('listitem', { name: 'Clause 18.3 of the Master Services Agreement: Missing clause' }))
+    .toContainText('The Master Services Agreement has no clause 18.3.');
+  const fake = check.getByRole('region', { name: 'Authorities' }).getByRole('listitem', { name: 'Pemberton v. Halloway, 999 F.5th 1234 (14th Cir. 2031): cannot be real' });
+  await expect(fake).toContainText('there is no 14th Cir.');
+  await fake.getByRole('button', { name: /^Add a note/ }).click();
+  await fake.getByLabel('Your note').fill('No such case: removed from the memo.');
+  await fake.getByRole('button', { name: 'Save note' }).click();
+  await expect(fake.getByText(/No such case: removed from the memo\./)).toBeVisible();
+  await alice.evaluate(() => document.querySelectorAll('.lw-main, #root').forEach((el) => el.scrollTo(0, 0)));
+  await shot(alice, '38-citation-check-light');
+
+  const cap = refs.getByRole('listitem', { name: 'Clause 8.1 of the Master Services Agreement: Found' });
+  await cap.getByText('Show the passage').click();
+  // The redlines journey may have filed a revised version of 8.1; the reference still lands on the clause.
+  await expect(cap.getByRole('blockquote').last()).toContainText(/^8\.1 /);
+  await cap.getByRole('link', { name: 'Open the passage' }).click();
+  await expect(alice).toHaveURL(new RegExp(`/documents/${ids.msa}/read\\?v=`));
+  await expect(alice.getByRole('article', { name: 'Document text' })).toContainText('Limitation of Liability');
+});

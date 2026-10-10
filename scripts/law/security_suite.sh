@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 1 and 2 gates: the consolidated security suite (S1.12, S2.8), one line per spec test.
+# Phase 1, 2 and 3 gates: the consolidated security suite (S1.12, S2.8, S3.x), one line per spec test.
 #
 #   scripts/law/security_suite.sh            # exit 0 only if every group passes
 #
@@ -29,6 +29,10 @@ declare -a SUITES=(
   "Silent Assist: matter-only sources, no leaks (S2.5)|$L/test_law_assist.py"
   "AI drafts approved by a second lawyer, hash-bound (S2.6-7)|$L/test_law_minutes.py $L/test_law_reviews.py"
   "Evaluation runs recorded, audit readers only (S2.8)|$L/test_law_evaluations.py"
+  "Drafting: nothing invented, approved templates only (S3.1)|$L/test_law_drafting.py"
+  "Playbook checks advisory, figures decide (S3.2)|$L/test_law_playbooks.py"
+  "T10 Word tracked changes verified before release (S3.3)|$L/test_law_redlines.py"
+  "T07 citations: targets only for those who can see them, authorities unverified (S3.4)|$L/test_law_citations.py"
 )
 FAILED=0
 printf '%-52s %s\n' "Spec test" "Result"

@@ -402,6 +402,20 @@ export interface PlaybookCheck {
   summary: Record<CheckClass, number>; created_by: string | null; created_at: string; advisory: true; inputs: Record<string, any>;
 }
 
+/** Citation and quote checks (S3.4, D-048). External authorities are never verified (P-009). */
+export type CitationStatus = 'resolved' | 'missing' | 'not_found' | 'accurate' | 'altered' | 'unverified';
+export interface CitationItem {
+  id: string; kind: 'reference' | 'quote' | 'authority'; type: string; text: string; start: number; end: number; status: CitationStatus;
+  target: { document_id: string; version_id: string; title: string; clause: string | null; start: number; end: number; passage: string } | null;
+  note: string | null; diff: [('eq' | 'del' | 'ins'), string][]; malformed: string[]; cited_as?: string | null;
+  fields?: Record<string, string>; notes: { note: string; by: string | null; at: string }[];
+}
+export interface CitationCheck {
+  id: string; document_id: string; version_id: string; version_number: number | null; items: CitationItem[]; engine: string;
+  summary: { references: number; resolved: number; missing: number; quotes: number; accurate: number; altered: number; not_found: number; authorities: number; malformed: number };
+  external_lookup: false; notice: string; created_by: string | null; created_at: string;
+}
+
 /** Redlines (S3.3, D-047): revisions to the firm's positions, written as Word tracked changes. */
 export interface RedlineChange {
   id: string; topic: string; title: string; clause: { number: string | null; heading: string | null; start: number; end: number };
