@@ -197,7 +197,8 @@ function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; o
             <h3 className="lw-eyebrow" style={{ margin: 0 }}>Evidence</h3>
             {a.phase === 'done' && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={copy}><Copy />{copied ? 'Copied' : 'Copy with citations'}</button>}
           </div>
-          <ol className="lw-sources">{a.evidence.map((e, i) => <EvidenceItem key={`${e.n}-${i}`} e={e} active={focus === e.n} />)}</ol>
+          <ol className="lw-sources">{a.evidence.map((e, i) => <EvidenceItem key={`${e.n}-${i}`} e={e} active={focus === e.n}
+            source={a.sources.find((s) => s.n === e.n)} />)}</ol>
         </section>
       ) : cited.length > 0 && (
         <section aria-label="Sources" style={{ marginTop: 18 }}>
@@ -262,7 +263,7 @@ function withCitations(text: string, sources: ResearchSource[], onFocus: (n: num
   });
 }
 
-function EvidenceItem({ e, active }: { e: ResearchEvidence; active: boolean }) {
+function EvidenceItem({ e, active, source }: { e: ResearchEvidence; active: boolean; source?: ResearchSource }) {
   const ref = useRef<HTMLLIElement>(null);
   const matter = useMatter();
   useEffect(() => { if (active) ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' }); }, [active]);
@@ -271,6 +272,11 @@ function EvidenceItem({ e, active }: { e: ResearchEvidence; active: boolean }) {
     e.clause ? `cl. ${e.clause}` : '', pages(e), e.line ? `line ${e.line}` : ''].filter(Boolean).join(' · ');
   const href = e.char_start != null && e.char_end != null
     ? `/m/${matter.number}/documents/${encodeURIComponent(e.document_id)}/read?v=${encodeURIComponent(e.version_id)}&at=${e.char_start}-${e.char_end}` : null;
+  // A quote that could not be found still points at the passage the model cited, so the reviewer can check it there.
+  const at = source ? [source.focus_start ?? source.char_start, source.focus_end ?? source.char_end] : [];
+  const passage = !href && source && !e.removed
+    ? `/m/${matter.number}/documents/${encodeURIComponent(source.document_id)}/read?v=${encodeURIComponent(source.version_id)}` +
+      (at[0] != null && at[1] != null ? `&at=${at[0]}-${at[1]}` : '') : null;
   return (
     <li ref={ref} className="lw-source" data-active={active || undefined} data-verification={e.verification}>
       <span className="lw-cite lw-cite-static" aria-hidden="true">{e.n}</span>
@@ -283,6 +289,7 @@ function EvidenceItem({ e, active }: { e: ResearchEvidence; active: boolean }) {
         </div>
         <div className="lw-meta">{meta}</div>
         {href && <Link className="lw-linklike lw-meta" to={href} aria-label={`Open evidence ${e.n} in the document`}>Open in document</Link>}
+        {passage && <Link className="lw-linklike lw-meta" to={passage} aria-label={`Open source ${e.n} in the document`}>Open the cited passage</Link>}
       </div>
     </li>
   );

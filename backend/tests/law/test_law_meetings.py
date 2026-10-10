@@ -45,6 +45,7 @@ def meeting(world, monkeypatch):
     monkeypatch.setattr(capture, "transcriber_factory", lambda: FakeTranscriber())
     monkeypatch.setattr(settings, "LEGAL_WS_RECHECK_SEC", 0.1)
     monkeypatch.setattr(settings, "LEGAL_CONSENT_RECHECK_SEC", 0.1)
+    monkeypatch.setattr(settings, "LEGAL_SEGMENT_MIN_WORDS", 1)      # one stored segment per test sentence (S2.4 groups real speech)
     alice = as_user(world, "alice")
     mid = world["matters"]["M-101"]["id"]
     m = alice.post(f"/api/legal/matters/{mid}/meetings", headers=csrf_headers(alice),

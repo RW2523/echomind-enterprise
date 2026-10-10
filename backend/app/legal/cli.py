@@ -77,12 +77,46 @@ def seed_demo() -> dict:
     gone = repo.add_membership(m215["id"], ids["carol"], "paralegal", granted_by=ids["bob"])
     repo.revoke_membership(m215["id"], gone["id"], by=ids["bob"], reason="moved to another team")
     repo.add_membership(m202["id"], ids["alice"], "attorney", granted_by=ids["bob"], valid_from=_ts(-60), valid_to=_ts(-2))
+    _seed_meeting(org, m101["id"], ids["alice"])
 
     os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as fh:
         json.dump(creds, fh, indent=2)
     return creds
+
+
+def _seed_meeting(org: str, matter_id: str, by: str) -> None:
+    """An ended client call in M-101 with its transcript as the speech model produced it (S2.4): two
+    speakers, wall-clock times, one gap where transcription failed, and a misheard name for the
+    matter vocabulary to catch. Fictional, like everything here."""
+    import uuid
+
+    from ..core.db import get_conn
+    from .meetings import repo as meetings
+    mid = meetings.create_meeting(org, matter_id, "Renewal call with the client (demo)", "client_call", None, by)
+    helena = meetings.add_participant(mid, matter_id, "Helena Marsh", "attorney", None, by)
+    petra = meetings.add_participant(mid, matter_id, "Petra Voss", "client", None, by)
+    for pid in (helena, petra):
+        meetings.add_consent_event(mid, pid, "granted", "written", None, by)
+    cid = meetings.create_capture(mid, matter_id, by, "demo-consent-snapshot", "available")
+    start = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(days=1)
+    at = lambda s: (start + timedelta(seconds=s)).strftime("%Y-%m-%dT%H:%M:%S.000Z")   # noqa: E731
+    lines = [(helena, 0, "Thank you for joining. Harrowgate has sent its redline of the Master Services Agreement."),
+             (petra, 9, "What does the new fee look like?"),
+             (helena, 14, "The monthly fee rises to USD 19,750 and the liability cap to USD 500,000."),
+             (petra, 31, "We will not accept the fee increase unless they agree to a longer term."),
+             (helena, 40, "Noted. petra fos will confirm the board's position by Friday.")]
+    for seq, (pid, t, text) in enumerate(lines):
+        meetings.add_segment(cid, mid, matter_id, seq, t * 1000, t * 1000 + 4000, text, pid, at(t), at(t + 4))
+    with get_conn() as conn:
+        for kind, t in (("started", 0), ("stopped", 46)):
+            conn.execute("INSERT INTO legal_capture_events (id, capture_id, kind, reason, at, by) VALUES (?,?,?,?,?,?)",
+                         (str(uuid.uuid4()), cid, kind, "ended" if kind == "stopped" else None, at(t), by))
+        conn.execute("INSERT INTO legal_capture_marks (id, capture_id, meeting_id, kind, detail, audio_ms, at, by) VALUES (?,?,?,?,?,?,?,?)",
+                     (str(uuid.uuid4()), cid, mid, "gap", "transcription_error", 24000, at(24), by))
+        conn.commit()
+    meetings.end_meeting(mid)
 
 
 def main(argv=None) -> int:

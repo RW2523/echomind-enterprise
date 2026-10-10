@@ -1,0 +1,63 @@
+{
+ "note": "FICTIONAL scripted legal conversations for the transcription harness (S2.4, D-040). Every person, company and figure is invented. Each scenario lists the entities a transcript must keep and the negated statements it must not flip.",
+ "scenarios": [
+  {
+   "id": "client-call-renewal",
+   "kind": "client_call",
+   "speakers": [{"name": "Helena Marsh", "role": "attorney"}, {"name": "Petra Voss", "role": "client"}],
+   "turns": [
+    {"speaker": "Helena Marsh", "text": "Thank you for joining. Harrowgate Systems has sent a redline of the Master Services Agreement dated 2 March 2026."},
+    {"speaker": "Petra Voss", "text": "What changed on the money side?"},
+    {"speaker": "Helena Marsh", "text": "The monthly fee goes from USD 18,500 to USD 19,750, and the liability cap rises to USD 500,000 under clause 8.1."},
+    {"speaker": "Petra Voss", "text": "The board said the cap must not fall below USD 400,000, so the cap is fine. We will not accept the fee increase without a longer term."},
+    {"speaker": "Helena Marsh", "text": "Understood. I will not concede the thirty day convenience notice either. They want sixty days."}
+   ],
+   "entities": [{"kind": "name", "text": "Harrowgate Systems"}, {"kind": "date", "text": "2 March 2026"},
+                {"kind": "amount", "text": "USD 18,500"}, {"kind": "amount", "text": "USD 19,750"}, {"kind": "amount", "text": "USD 500,000"},
+                {"kind": "reference", "text": "clause 8.1"}, {"kind": "amount", "text": "USD 400,000"}],
+   "negations": ["must not fall below USD 400,000", "We will not accept the fee increase", "I will not concede the thirty day convenience notice"]
+  },
+  {
+   "id": "negotiation-change-of-control",
+   "kind": "negotiation",
+   "speakers": [{"name": "David Okafor", "role": "attorney"}, {"name": "Thomas Reyes", "role": "counterparty"}, {"name": "Petra Voss", "role": "client"}],
+   "turns": [
+    {"speaker": "Thomas Reyes", "text": "Pellucid Holdings expects completion on 15 October 2026, subject to clearance."},
+    {"speaker": "David Okafor", "text": "Clause 14.2 requires no less than thirty days notice. Your letter of 3 September 2026 gives forty two days, so notice is in time."},
+    {"speaker": "Petra Voss", "text": "We do not consent to an assignment to any Pellucid affiliate."},
+    {"speaker": "Thomas Reyes", "text": "There is no assignment. Harrowgate Systems Inc. remains the contracting party."},
+    {"speaker": "David Okafor", "text": "Then please confirm in writing that the account team will not change."}
+   ],
+   "entities": [{"kind": "name", "text": "Pellucid Holdings"}, {"kind": "date", "text": "15 October 2026"}, {"kind": "reference", "text": "Clause 14.2"},
+                {"kind": "date", "text": "3 September 2026"}, {"kind": "name", "text": "Harrowgate Systems"}],
+   "negations": ["We do not consent to an assignment", "There is no assignment", "the account team will not change"]
+  },
+  {
+   "id": "board-meeting-mandate",
+   "kind": "board",
+   "speakers": [{"name": "Karin Lindqvist", "role": "host"}, {"name": "Anders Holm", "role": "other"}, {"name": "Sofia Berg", "role": "other"}, {"name": "Petra Voss", "role": "attorney"}],
+   "turns": [
+    {"speaker": "Karin Lindqvist", "text": "Four of the six directors are present, so the meeting is quorate."},
+    {"speaker": "Anders Holm", "text": "I declare an interest in the Northbridge Analytics project and I will not vote on item five."},
+    {"speaker": "Petra Voss", "text": "Item three is the Harrowgate renewal. Management asks for authority to negotiate."},
+    {"speaker": "Sofia Berg", "text": "I move that the liability cap is not reduced below USD 400,000."},
+    {"speaker": "Karin Lindqvist", "text": "The budget for Project Lantern is SEK 2.4 million for 2026. The board resolves not to propose an interim dividend."}
+   ],
+   "entities": [{"kind": "name", "text": "Northbridge Analytics"}, {"kind": "amount", "text": "USD 400,000"}, {"kind": "name", "text": "Project Lantern"}],
+   "negations": ["I will not vote on item five", "the liability cap is not reduced below USD 400,000", "resolves not to propose an interim dividend"]
+  },
+  {
+   "id": "witness-interview",
+   "kind": "interview",
+   "speakers": [{"name": "Helena Marsh", "role": "attorney"}, {"name": "Maria Ek", "role": "witness"}],
+   "turns": [
+    {"speaker": "Helena Marsh", "text": "When did you first see the invoice for USD 19,750?"},
+    {"speaker": "Maria Ek", "text": "On 1 June 2026, my first day as chief financial officer. I did not approve it."},
+    {"speaker": "Helena Marsh", "text": "Did anyone at Harrowgate Systems tell you the fee had changed?"},
+    {"speaker": "Maria Ek", "text": "No. Nobody told me, and I never saw a signed amendment."}
+   ],
+   "entities": [{"kind": "amount", "text": "USD 19,750"}, {"kind": "date", "text": "1 June 2026"}, {"kind": "name", "text": "Harrowgate Systems"}],
+   "negations": ["I did not approve it", "I never saw a signed amendment"]
+  }
+ ]
+}

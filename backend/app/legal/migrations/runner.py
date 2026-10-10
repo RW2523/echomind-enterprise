@@ -130,6 +130,8 @@ _REFUSE_BELOW = (
      "delete records under {n} active legal hold(s)"),
     (12, "SELECT COUNT(*) FROM legal_documents WHERE acl_restricted = 1 AND deleted_at IS NULL",
      "make {n} document(s) restricted by their source's permissions visible to the whole matter"),
+    (18, "SELECT COUNT(*) FROM legal_transcript_revisions",
+     "delete {n} transcript correction(s) with who made them and why"),
 )
 
 

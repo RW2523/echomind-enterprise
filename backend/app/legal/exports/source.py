@@ -127,14 +127,15 @@ def load(matter_id: str, object_type: str, object_id: str) -> Source:
                 raise NotFound(object_id)
             title, vid, filename, wrapped = r
         else:
-            r = conn.execute("SELECT title FROM legal_meetings WHERE id=? AND matter_id=? AND transcript_deleted_at IS NULL",
+            r = conn.execute("SELECT title, kind FROM legal_meetings WHERE id=? AND matter_id=? AND transcript_deleted_at IS NULL",
                              (object_id, matter_id)).fetchone()
             if not r:
                 raise NotFound(object_id)
-            segs = [s[0] for s in conn.execute("SELECT text FROM legal_transcript_segments s JOIN legal_captures c ON c.id = s.capture_id "
-                                               "WHERE s.meeting_id=? ORDER BY c.started_at, s.seq", (object_id,))]
-            text = f"# Transcript — {r[0]}\n" + "\n".join(segs)
-            return Source("text", f"Transcript of {r[0]}", text, text_blocks(text))
+    if object_type != "document":
+        # S2.4: the transcript as corrected (revisions applied), with speakers, times and gaps.
+        from ..meetings import transcript
+        text = transcript.as_document({"title": r[0], "kind": r[1]}, transcript.view(matter_id, object_id))
+        return Source("text", f"Transcript of {r[0]}", text, text_blocks(text))
     data = blobs.load(matter_id, vid, wrapped)
     low = filename.lower()
     if low.endswith(".pdf"):

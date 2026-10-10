@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -143,8 +143,8 @@ export const useMeeting = (matterId: string, meetingId: string) =>
     queryKey: keys.meeting(matterId, meetingId), refetchOnWindowFocus: false,
     queryFn: async () => {
       const base = `${meetingsPath(matterId)}/${encodeURIComponent(meetingId)}`;
-      const [m, t] = await Promise.all([api.get<{ meeting: MeetingDetail }>(base), api.get<{ segments: Segment[] }>(`${base}/transcript`)]);
-      return { ...m.meeting, transcript: t.segments };
+      const [m, t] = await Promise.all([api.get<{ meeting: MeetingDetail }>(base), api.get<TranscriptData>(`${base}/transcript`)]);
+      return { ...m.meeting, transcript: t.segments, transcriptData: t };
     },
   });
 

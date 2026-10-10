@@ -80,7 +80,8 @@ export function ReportList({ report }: { report: DeletionReport }) {
        n(report.research_citations) ? `${plural(n(report.research_citations), 'research answer')} quoting it (the quotes are removed)` : '',
        n(report.comparisons) ? `${plural(n(report.comparisons), 'saved comparison')} quoting it (removed whole)` : '']
       .filter(Boolean)
-    : [plural(n(report.segments), 'transcript segment')];
+    : [plural(n(report.segments), 'transcript segment'), n(report.revisions) ? plural(n(report.revisions), 'correction') : '',
+       n(report.finalised_document) ? 'its finalised copy in the matter’s documents, with its search entries' : ''].filter(Boolean);
   return (
     <div style={{ display: 'grid', gap: 8 }}>
       <div><div className="lw-eyebrow">Will be removed</div><ul className="lw-report">{removed.map((r) => <li key={r}>{r}</li>)}</ul></div>
