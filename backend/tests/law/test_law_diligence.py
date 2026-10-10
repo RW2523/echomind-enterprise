@@ -191,3 +191,16 @@ def test_only_contributors_start_a_run_and_only_with_an_approved_checklist(dd):
     assert alice.post(f"{dd['base']}/diligence/runs", headers=csrf_headers(alice), json={"checklist_id": draft["id"]}).status_code == 409
     c = checklist(dd)
     assert carol.post(f"{dd['base']}/diligence/runs", headers=csrf_headers(carol), json={"checklist_id": c["id"]}).status_code == 403
+
+
+def test_s37c_a_termination_right_without_a_notice_period_is_raised():
+    """Found by held-out run 2 (diligence-s3.7b), to be measured on a fresh held-out set at the Phase 3 gate."""
+    from datetime import date
+    from app.legal.diligence import run as ddrun
+    text = ("DISTRIBUTION AGREEMENT (fictional)\n\n4. Targets\n4.1 The Supplier may terminate this Agreement if the Distributor fails to "
+            "meet the Minimum Purchase Target.\n")
+    rows = [{"number": "4", "heading": "Targets", "level": 1, "parent": None, "start": text.index("4. Targets"), "end": len(text)},
+            {"number": "4.1", "heading": None, "level": 2, "parent": "4", "start": text.index("4.1"), "end": len(text)}]
+    out = ddrun.ask(["termination"], text, rows, None, date(2026, 10, 10))
+    assert [(i["kind"], i["severity"], i["clause"]) for i in out] == [("termination", "low", "4.1")]
+

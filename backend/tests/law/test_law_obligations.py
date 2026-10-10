@@ -320,3 +320,17 @@ def test_without_the_model_the_rules_still_stand(docs, monkeypatch):
     r = alice.post(f"/api/legal/matters/{mid}/documents/{d['id']}/obligations/extract", headers=csrf_headers(alice)).json()
     assert r["model"] == "unavailable" and len(r["obligations"]) >= 10 and all(o["source"] == "rules" for o in r["obligations"])
 
+
+def test_s36g_named_anchors_of_several_words_and_other_words_for_ending():
+    """Found by held-out run 5 (obligations-s3.6f), to be measured on a fresh held-out set at the Phase 3 gate:
+    "two (2) years after the Effective Date" took only "Effective" as its anchor."""
+    from app.legal.obligations import extract as ex
+    text = ("NDA (fictional)\n\nThis Agreement is dated as of May 1, 2026 (the \"Effective Date\").\n\n1. Term\n"
+            "1.1 This Agreement shall expire two (2) years after the Effective Date.\n1.2 Either party may end this Agreement on two (2) months' notice.\n")
+    rows = [{"number": "1", "heading": "Term", "level": 1, "parent": None, "start": text.index("1. Term"), "end": len(text)},
+            {"number": "1.1", "heading": None, "level": 2, "parent": "1", "start": text.index("1.1"), "end": text.index("1.2") - 1},
+            {"number": "1.2", "heading": None, "level": 2, "parent": "1", "start": text.index("1.2"), "end": len(text)}]
+    got = {o["clause"]: o for o in ex.read(text, rows)}
+    assert got["1.1"]["kind"] == "expiry" and got["1.1"]["due_date"] == "2028-05-01"
+    assert got["1.2"]["kind"] == "termination"
+

@@ -28,7 +28,7 @@ from ..documents import numbering
 from ..documents import repo as documents
 from ..obligations import extract as ox
 
-VERSION = "diligence-s3.7b"
+VERSION = "diligence-s3.7c"
 _HEAD = 400
 
 
@@ -131,6 +131,11 @@ def ask(questions: list[str], text: str, rows: list[dict], expected_law: Optiona
             when = f" Notice is due by {_fmt(o['due_date'])}." if o.get("due_date") else ""
             add("termination", sev, f"{title} (clause {o['clause']})", f"{o['party'] or 'A party'} may {o['action']}: {o['when'] or ''}.{when}",
                 {**o["evidence"], "clause": o["clause"]})
+    if "termination" in questions:                        # a right to terminate with no notice period ("if it fails to meet the target")
+        for m in re.finditer(r"\b(?:may|is entitled to)\s+terminate\b", text, re.I):
+            ev = _sentence(text, rows, m.start())
+            if ev["clause"] and ev["start"] not in coc_sentences and not any(x["evidence"]["start"] == ev["start"] for x in out):
+                add("termination", "low", f"Termination right (clause {ev['clause']})", "A right to end the agreement, with no notice period stated.", ev)
     if "renewal" in questions:
         for o in obs:
             if o["kind"] not in ("renewal", "expiry") or not o.get("due_date"):

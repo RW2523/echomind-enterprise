@@ -1103,20 +1103,24 @@ test('due diligence: the data room run against the firm checklist, missing docum
   await alice.getByRole('button', { name: 'Run against this matter' }).click();
   const reg = alice.getByRole('article', { name: 'Issue register' });
   await expect(reg).toBeVisible({ timeout: 120_000 });
-  const coc = reg.getByRole('listitem', { name: /^Change of control \(clause 14\.\d\): Preliminary/ }).first();
+  const coc = reg.getByRole('listitem', { name: /^Change of control \(clause 14\.\d\): Preliminary/ }).filter({ hasText: 'Master Services Agreement (DEMO)' }).first();
   await expect(coc).toContainText('Change of Control');
-  await expect(reg.getByRole('listitem', { name: /^Governed by the laws of the State of Delaware/ })).toContainText('The checklist expects England and Wales.');
+  // The demo MSA's own law issue. Alone it is Delaware; after the redlines journey filed its revision, Sweden. Other
+  // Delaware-law MSAs (the Word fixture) can be in M-101 too.
+  const law = reg.getByRole('listitem', { name: /^Governed by the laws of / }).filter({ hasText: 'Master Services Agreement (DEMO)' }).first();
+  await expect(law).toContainText('The checklist expects England and Wales.');
   await expect(alice.getByRole('region', { name: 'Missing documents' }).getByRole('listitem', { name: 'Articles of association' })).toBeVisible();
-  const law = reg.getByRole('listitem', { name: /^Governed by the laws of the State of Delaware/ });
   await law.getByRole('button', { name: 'Dismiss' }).click();
-  await law.getByLabel('Why it is not an issue').fill('The client accepts Delaware law for this supplier.');
+  await law.getByLabel('Why it is not an issue').fill('The client accepts this law for this supplier.');
   await law.getByRole('button', { name: 'Dismiss' }).click();
-  await expect(reg.getByRole('listitem', { name: /^Governed by the laws of the State of Delaware.*: Dismissed$/ })).toContainText('Dismissed by alice');
+  await expect(reg.getByRole('listitem', { name: /^Governed by the laws of .*: Dismissed$/ }).filter({ hasText: 'Master Services Agreement (DEMO)' }).first())
+    .toContainText('Dismissed by alice');
 
   const nakamura = await (await browser.newContext()).newPage();
   await signIn(nakamura, 'nakamura');
   await nakamura.goto('/m/M-101/diligence');
-  const theirs = nakamura.getByRole('article', { name: 'Issue register' }).getByRole('listitem', { name: /^Change of control \(clause 14\.\d\): Preliminary/ }).first();
+  const theirs = nakamura.getByRole('article', { name: 'Issue register' }).getByRole('listitem', { name: /^Change of control \(clause 14\.\d\): Preliminary/ })
+    .filter({ hasText: 'Master Services Agreement (DEMO)' }).first();
   await theirs.getByRole('button', { name: 'Verify' }).click();
   await theirs.getByLabel('Note (optional)').fill('Notice needed before signing.');
   await theirs.getByRole('button', { name: 'Verify' }).click();

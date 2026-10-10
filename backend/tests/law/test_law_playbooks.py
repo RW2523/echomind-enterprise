@@ -176,6 +176,15 @@ def test_a_fallback_is_named(pb):
     assert row(ch, "governing_law")["classification"] == "unclear"                    # no fallback 1 exists
 
 
+def test_a_missing_option_named_by_the_model_is_decided_by_the_figures_when_none_match(pb):
+    """playbook-s3.2c, found by the S3.7 browser run: the model named "fallback 1" for a position with no fallbacks
+    and the line went to "unclear", although the clause's period matched none of the firm's options."""
+    pb["judge"].answers["payment"] = {"match": "fallback 2", "quote": "within sixty (60) days of receipt", "reason": "x"}   # only one exists
+    ch = check(pb, playbook(pb))
+    line = row(ch, "payment")
+    assert line["classification"] == "outside" and line["method"] == "rule" and "sixty (60)" in line["reason"]
+
+
 def test_an_unchecked_quote_is_unclear_and_text_addressed_to_an_ai_is_withheld(pb):
     pb["judge"].answers["governing_law"] = {"match": "standard", "quote": "governed by Swedish law", "reason": "x"}
     ch = check(pb, playbook(pb))

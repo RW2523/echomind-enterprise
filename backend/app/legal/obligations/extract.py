@@ -25,7 +25,7 @@ from typing import Optional
 from ..compare.facts import _DATE, _PERIOD, _date, _word_number
 from ..documents import numbering
 
-VERSION = "obligations-s3.6f"
+VERSION = "obligations-s3.6g"
 MODAL = re.compile(r"\b(?:shall|must|may(?!\s+not\s+be\b)|will|agrees? to|undertakes? to|is entitled to|are entitled to|"
                    r"is payable|are payable|is due|are due|falls? due|survives?|bears interest|accrues? interest)\b")
 _UNLESS_NOTICE = re.compile(r"\bunless\b[^.]*\bnotice\b", re.I)
@@ -47,7 +47,10 @@ _ORDINAL = {w: i for i, w in enumerate("first second third fourth fifth sixth se
 def kind_of(s: str) -> Optional[str]:
     if re.search(r"\brenew", s, re.I):
         return "renewal"
-    if re.search(r"\b(?:may|right to|entitled to)\s+terminate\b|\buntil terminated by\b|\bterminated by (?:either|any|each) party\b", s, re.I):
+    if re.search(r"\b(?:shall|will)\s+expire\b|\bexpires?\s+(?:on|at the end of)\b", s, re.I):
+        return "expiry"
+    if re.search(r"\b(?:may|right to|entitled to)\s+(?:terminate|end (?:this|the) (?:agreement|appointment|employment|lease|contract))\b|"
+                 r"\buntil terminated by\b|\bterminated by (?:either|any|each) party\b", s, re.I):
         return "termination"
     if re.search(r"change of control", s, re.I):
         return "change_of_control"
@@ -318,7 +321,7 @@ def due(kind: str, period: Optional[dict], text: str, sentence: Optional[str] = 
         d0 = date.fromisoformat(_date(on))
         return d0.isoformat(), f"On {_fmt(d0)}, as the clause says."
     if period and period["direction"] == "after" and not period["business"]:
-        m = re.search(r"\b(?:after|following|from)\s+(?:the\s+)?(?P<a>[A-Z][\w ]{1,40}?)(?=[\s,.;]|$)", (sentence or "")[period["end"]:period["end"] + 60])
+        m = re.search(r"\b(?:after|following|from)\s+(?:the\s+)?(?P<a>[A-Z][\w-]*(?:\s+[A-Z][\w-]*){0,4})", (sentence or "")[period["end"]:period["end"] + 60])
         start = event_date(text, m.group("a").strip()) if m else None
         if start:
             end = add_months(start[0], period["n"] * (12 if period["unit"].startswith("year") else 1)) if period["unit"].startswith(("month", "year")) \

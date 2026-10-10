@@ -929,6 +929,11 @@ Every entry records the options considered, the recommendation, the consequence 
   - Topics are found by their words and a search, so a clause on two topics can be shown for both.
   - Positions in prose ("reasonable notice") are judged by the model alone; only figures and laws have the rule.
   - Suggested revisions and redlines are S3.3.
+- **`playbook-s3.2c` (S3.7):**
+  - **The finding:** the full browser run found the model naming "fallback 1" for a position with no fallbacks. The line went to "unclear", although the clause's thirty days matched none of the firm's options.
+  - **The change:** when the model names an option the position does not have, the figures decide if they match none of the options (outside, by rule). Otherwise a lawyer still decides.
+  - **Golden runs:** 14/15 and then 15/15 on two runs. The one miss was a "not found" answer, a run-to-run variation in the model on a path the change does not touch.
+  - **Held-out:** 9/10, deviations 4/4, passed in error 0, as before.
 
 ### D-047 Redlines and Word tracked changes: the D-011 spike passes its automated checks — RECORDED (S3.3; DOC-02b, T10, P-013)
 - **Audit:**
@@ -1144,6 +1149,43 @@ Every entry records the options considered, the recommendation, the consequence 
   - A sentence gives at most one item of each kind.
   - The model's kind can differ from a lawyer's ("notice" for a repair notice duty).
   - Reminders are not sent.
+- **Later versions (S3.7):**
+  - `s3.6f` reads a term counted from a literal date ("from 1 July 2024", "from and including 24 June 2026"); golden G1–G16 with the model: 67/68, dates 18/18, none guessed.
+  - **Held-out 5 (s3.6f): 4/6,** none guessed, control clean. "End this Agreement" was read as notice, and "shall expire two (2) years after the Effective Date" had no date: a bug, the anchor was cut to its first word.
+  - `s3.6g` fixes both. It is to be measured on a fresh held-out set at the Phase 3 gate.
+
+### D-051 Due diligence: firm checklists, data-room runs, a preliminary issue register — RECORDED (S3.7; DOC-06)
+- **Audit:** the job runner (S1.6) takes new job kinds. The S3.6 obligations reader, the S2.3 governing-law reader and S2.1 clauses give the questions; S3.2's approval-by-hash pattern gives checklists.
+- **Checklists:**
+  - Items are grouped by section. Each has the phrases that name the documents expected and the questions asked of them: change of control, assignment, termination, governing law, liability, renewal.
+  - Versions are fixed (a trigger). A managing partner other than the author approves exactly the version read (its hash), which retires the version before it (`diligence.manage` / `diligence.approve`, P-008).
+  - A preset ("Share acquisition — core documents", ten items) is seeded for the demo.
+- **A run is a background job (`diligence.run`, migration 0029):**
+  - Each item is matched to the documents whose own title or first line names it; a document's body mentioning "the supply agreement" does not make it one. Unanswered items are the missing-document list.
+  - Matched documents are asked their item's questions by rules:
+    - change of control: every binding sentence about it;
+    - assignment: a consent right;
+    - termination: convenience, break dates, other rights;
+    - governing law, compared with the checklist's expected law;
+    - liability: a cap is low, unlimited is high;
+    - renewal: the deadline, high if it has passed, medium within six months; and a term ending within a year.
+
+    Each issue quotes its sentence at its offsets and names its clause.
+  - The documents read are those the person who started the run can see. What is shown is filtered again for each viewer: issues on a document a viewer cannot open are not shown, and neither is its name.
+- **Review:**
+  - Every issue is **preliminary** until a lawyer (lead, attorney, reviewer) verifies it (with an optional note) or dismisses it (with a reason); reopening is allowed. Versions are checked.
+  - The trail is append-only, and the audit holds no content. Rolling back below 0029 is refused while checklists or decisions exist.
+  - A purge of a document removes its issues and trail, and every run forgets its name.
+- **Evaluation (`eval/law/diligence/run_diligence_eval.py`, no model):** synthetic data rooms against the preset.
+  - **Golden, first run:** missing lists 3/3, issues 18/18, no extras, control clean.
+  - **Held-out 1 (s3.7): missing 3/3, issues 9/11, no extras, control clean.** The misses were a term counted from a literal date (fixed in the obligations reader: s3.6f, s3.7b). Golden G1–G6: 29/29.
+  - **Held-out 2 (s3.7b): missing 2/2, issues 5/6, no extras, control clean.** The miss: a termination right with no notice period. Fixed in s3.7c, to be measured at the Phase 3 gate.
+  - Both held-out sets were committed before their runs.
+- **Limits:**
+  - Matching is by title words, so a document named oddly is reported missing (the reviewer sees the full document list).
+  - Questions are rules only, with no model pass here.
+  - No deal-level report export yet; the register is the record.
+  - Checklist items cannot ask custom questions.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

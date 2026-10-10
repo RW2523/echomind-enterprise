@@ -35,6 +35,7 @@ declare -a SUITES=(
   "T07 citations: targets only for those who can see them, authorities unverified (S3.4)|$L/test_law_citations.py"
   "Definitions and references: nothing changed without approval (S3.5)|$L/test_law_definitions.py"
   "Obligations: proposed until confirmed, no date guessed, model checked (S3.6)|$L/test_law_obligations.py"
+  "Due diligence: preliminary until reviewed, per-viewer visibility (S3.7)|$L/test_law_diligence.py"
 )
 FAILED=0
 printf '%-52s %s\n' "Spec test" "Result"

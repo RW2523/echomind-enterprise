@@ -1,0 +1,136 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "a710434",
+  "time": "20261010-105842",
+  "prompt_version": "obligations-s3.6f",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 3,
+  "expected": 6,
+  "found": "4/6",
+  "timing_in_its_words": "3/4",
+  "dates_right": "1/2",
+  "dates_guessed": 0,
+  "extra": 2,
+  "controls_clean": "1/1",
+  "all_proposed": true,
+  "by_kind": {
+   "duty": "1/1",
+   "expiry": "1/2",
+   "notification": "1/1",
+   "payment": "1/1",
+   "termination": "0/1"
+  },
+  "ms_per_document": 100
+ },
+ "documents": [
+  {
+   "id": "M1-consultancy-terms",
+   "ms": 19,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2028-02-29",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2028-02-29",
+     "got_when": "24 months from 1 March 2026",
+     "status": "proposed"
+    },
+    {
+     "clause": "1.2",
+     "kind": "termination",
+     "when": "two (2) months",
+     "found": false,
+     "when_ok": false,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "fourteen (14) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within fourteen (14) days",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "duty",
+     "when": "six (6) years after",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "for six (6) years after this Agreement ends",
+     "status": "proposed"
+    }
+   ],
+   "extra": [
+    {
+     "clause": "1.2",
+     "kind": "notice",
+     "action": "end this Agreement",
+     "due": null
+    }
+   ],
+   "all_proposed": true
+  },
+  {
+   "id": "M2-nda-us",
+   "ms": 18,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2028-05-01",
+     "found": false,
+     "when_ok": null,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "2.1",
+     "kind": "notification",
+     "when": "ten (10) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within ten (10) days",
+     "status": "proposed"
+    }
+   ],
+   "extra": [
+    {
+     "clause": "1.1",
+     "kind": "duty",
+     "action": "expire after the Effective Date",
+     "due": null
+    }
+   ],
+   "all_proposed": true
+  },
+  {
+   "id": "M3-meeting-agenda-control",
+   "ms": 263,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true
+  }
+ ]
+}
