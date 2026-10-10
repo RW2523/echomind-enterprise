@@ -311,6 +311,9 @@ class Settings(BaseSettings):
     LEGAL_ASSIST_MIN_CONFIDENCE: float = float(os.getenv("LEGAL_ASSIST_MIN_CONFIDENCE", "0.7"))   # alerts below this are not raised
     LEGAL_ASSIST_NEAR_MIN: float = float(os.getenv("LEGAL_ASSIST_NEAR_MIN", "0.2"))               # how close a figure's context must be
     LEGAL_ASSIST_FINISH_SEC: float = float(os.getenv("LEGAL_ASSIST_FINISH_SEC", "20"))           # checks still running at a stop may finish
+    # Boardroom legal mode (S2.6; D-042).
+    LEGAL_MINUTES_BATCH_CHARS: int = int(os.getenv("LEGAL_MINUTES_BATCH_CHARS", "1800"))   # transcript per model call, whole lines only
+    LEGAL_MINUTES_MAX_TOKENS: int = int(os.getenv("LEGAL_MINUTES_MAX_TOKENS", "2400"))
     LEGAL_ASSIST_THRESHOLDS_APPROVED: bool = os.getenv("LEGAL_ASSIST_THRESHOLDS_APPROVED", "0") == "1"   # set once P-008 is signed off
     # Records (S1.9; P-002). Retention never deletes by itself: with this off (default) runs are
     # dry runs; with it on, approved policies only create deletion requests for a person to approve.

@@ -119,4 +119,13 @@ describe('Reading a document (S2.1)', () => {
     renderLaw('/m/M-101/documents/d1/read?v=v2');
     expect(await screen.findByText(/read before the document reader existed/)).toBeTruthy();
   });
+
+  it('a version still being read (just filed) waits, then opens when reading finishes', async () => {
+    let asked = 0;
+    world(doc(), { [`GET ${BASE}/d1/versions/v2/reader`]: () => (++asked === 1 ? [409, { detail: 'This version is still being read.' }] : [200, { reader: READER }]) });
+    renderLaw('/m/M-101/documents/d1/read?v=v2');
+    expect((await screen.findByRole('status')).textContent).toMatch(/still being read/);
+    expect(await screen.findByRole('navigation', { name: 'Clauses' }, { timeout: 5000 })).toBeTruthy();
+    expect(asked).toBe(2);
+  });
 });

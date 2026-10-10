@@ -290,7 +290,7 @@ test('meetings: recording waits for everyone’s consent and stops the moment on
   for (const [name, role] of [['Alice Hart', 'host'], ['Petra Voss', 'client']]) {
     await alice.getByLabel('Name').fill(name);
     await alice.getByLabel('Role').selectOption(role);
-    await alice.getByRole('button', { name: 'Add' }).click();
+    await alice.getByRole('button', { name: 'Add participant' }).click();
     await expect(alice.getByText(name, { exact: true })).toBeVisible();
   }
   await alice.getByRole('tab', { name: 'Record' }).click();
@@ -664,4 +664,35 @@ test('silent assist: alerts quote what was said; one confirmed, one dismissed wi
 
   await alice.getByRole('tab', { name: 'Prepare' }).click();          // the meeting has ended: its pack is shown, not changed
   await expect(alice.getByRole('region', { name: 'Participants' }).getByText('Client call pack', { exact: true })).toBeVisible();
+});
+
+test('minutes: drafted from the whole transcript by the real model, approved by a second lawyer, filed as a document', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/meetings');
+  await alice.getByRole('link', { name: 'Renewal call with the client (demo)' }).click();
+  await alice.getByRole('tab', { name: 'Minutes' }).click();
+  await alice.getByRole('button', { name: 'Draft minutes' }).click();
+  const minutes = alice.getByRole('region', { name: 'Minutes', exact: true });
+  await expect(minutes.getByText('Draft — not approved')).toBeVisible({ timeout: 180_000 });
+  // The demo call has two promises in the first person; each is an action with its owner from the record.
+  await expect(minutes.getByRole('listitem', { name: /^Action: .*redline/ }).first()).toContainText('Owner: Helena Marsh');
+  await expect(minutes.getByText('You made this version, so another lawyer approves it.')).toBeVisible();
+  await shot(alice, '29-minutes-draft-light');
+
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.goto('/m/M-101/meetings');
+  await nakamura.getByRole('link', { name: 'Renewal call with the client (demo)' }).click();
+  await nakamura.getByRole('tab', { name: 'Minutes' }).click();
+  await nakamura.getByRole('group', { name: 'Review these minutes' }).getByRole('button', { name: 'Approve these minutes' }).click();
+  await expect(nakamura.getByText('Approved', { exact: true })).toBeVisible();
+
+  await alice.reload();
+  await alice.getByRole('tab', { name: 'Minutes' }).click();
+  await alice.getByRole('button', { name: 'File as a matter document' }).click();
+  await alice.getByRole('link', { name: 'Open the filed minutes' }).click();
+  const sheet = alice.getByRole('article', { name: 'Document text' });
+  await expect(sheet.getByText(/Approved by nakamura on/)).toBeVisible({ timeout: 120_000 });
 });

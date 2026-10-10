@@ -197,7 +197,7 @@ export interface CaptureRecord {
   events: { kind: 'started' | 'paused' | 'resumed' | 'stopped' | 'frame_rejected'; reason?: string | null; at: string; by?: string | null }[];
 }
 export interface MeetingDetail extends MeetingSummary {
-  assist?: AssistState;
+  assist?: AssistState; agenda?: AgendaItem[];
   policy: { mode: string; methods: ConsentMethod[]; max_age_hours: number; statement: string; source: string };
   participants: Participant[]; captures: CaptureRecord[];
 }
@@ -211,6 +211,27 @@ export interface Revision {
   id: string; kind: 'text' | 'speaker'; text?: string | null; speaker_participant_id?: string | null; reason: string;
   source: 'person' | 'vocabulary'; provenance: Record<string, any>; by?: string | null; at: string;
 }
+/** Boardroom legal mode (S2.6): agenda, minutes and their review (D-042). */
+export interface AgendaItem { id: string; position: number; title: string; documents: { id: string; title: string }[] }
+export interface MinutesSource {
+  segment_id: string; line: number; time?: string | null; speaker?: string | null; agenda_item?: string | null; quote: string; verification: Verification;
+}
+export interface MinutesItem {
+  id: string; kind: 'decision' | 'action' | 'unresolved' | 'discussion'; text: string; owner?: string | null; deadline?: string | null;
+  sources: MinutesSource[]; status: 'verified' | 'not_verified' | 'added_by_person'; edited_by?: string | null; by_rule?: boolean;
+}
+export interface MinutesContent {
+  meeting: { id: string; title: string; kind: string; date?: string | null }; attendees: { name: string; role: string }[];
+  sections: { agenda_item: string | null; title: string; items: MinutesItem[] }[];
+  summary: Record<string, number>; gaps: string[];
+}
+export interface ReviewDecision { decision: 'approved' | 'changes_requested'; content_sha256: string; reason?: string | null; by?: string | null; at: string }
+export interface MinutesVersion {
+  id: string; version: number; status: 'draft' | 'approved' | 'superseded' | 'withdrawn'; content: MinutesContent; content_sha256: string;
+  inputs: Record<string, any>; created_by: string; created_by_name?: string | null; created_at: string; origin: 'model' | 'person';
+  document_id?: string | null; decisions: ReviewDecision[];
+}
+
 /** Silent Assist (S2.5): evidence-relative alerts during a meeting (D-015, D-041). */
 export type AssistPack = 'legal_client_call' | 'legal_negotiation' | 'legal_governance';
 export interface AssistAlert {

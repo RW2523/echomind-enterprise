@@ -134,9 +134,11 @@ def _fuse(rankings: Iterable[list[tuple[str, float]]]) -> list[str]:
     return sorted(scores, key=lambda c: scores[c], reverse=True)
 
 
-def _load(matter_id: str, chunk_ids: list[str], uid: str, versions: str = "signed") -> list[dict]:
+def _load(matter_id: str, chunk_ids: list[str], uid: str, versions: str = "signed",
+          documents: Optional[list[str]] = None) -> list[dict]:
     """Candidates re-read with the matter id AND the document's visibility for this person (source
-    permissions and connector freshness, S1.11) AND the version policy (S2.2a: signed by default)."""
+    permissions and connector freshness, S1.11) AND the version policy (S2.2a: signed by default),
+    and, when given, only these documents (S2.6: a board pack)."""
     from ..documents.repo import VISIBLE_TO
     from ..documents.versions import policy_sql
     if not chunk_ids:
@@ -147,8 +149,8 @@ def _load(matter_id: str, chunk_ids: list[str], uid: str, versions: str = "signe
             "d.title, v.number, v.filename, v.status FROM legal_chunks c JOIN legal_documents d ON d.id = c.document_id "
             "JOIN legal_document_versions v ON v.id = c.version_id "
             f"WHERE c.matter_id = ? AND c.active = 1 AND c.id IN ({','.join('?' * len(chunk_ids))}) AND {VISIBLE_TO} "
-            f"AND {policy_sql(versions)}",
-            (matter_id, *chunk_ids, uid)).fetchall()
+            f"AND {policy_sql(versions)}" + (f" AND c.document_id IN ({','.join('?' * len(documents))})" if documents else ""),
+            (matter_id, *chunk_ids, uid, *(documents or []))).fetchall()
     by_id = {r[0]: r for r in rows}
     out = []
     for cid in chunk_ids:
@@ -231,11 +233,11 @@ def _located(passages: list[dict], query: str = "") -> list[dict]:
 
 
 async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Iterable[str] = ALL_MODES,
-                 versions: str = "signed") -> dict:
+                 versions: str = "signed", documents: Optional[list[str]] = None) -> dict:
     recheck(scope)                                    # raises TypeError for anything but a real scope
     modes = [m for m in modes if m in ALL_MODES] or list(ALL_MODES)
     idx = registry.for_matter(scope.matter_id)
-    n = max(k, settings.LEGAL_SEARCH_CANDIDATES)
+    n = max(k, settings.LEGAL_SEARCH_CANDIDATES) * (5 if documents else 1)    # more candidates when only some documents count
     rankings = []
     if "dense" in modes:
         q = (await embedder.get().embed([query], kind="query")).astype(np.float32)
@@ -245,7 +247,8 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
         rankings.append(idx.search_sparse(query, n))
     if "keyword" in modes:
         rankings.append(_keyword(scope.matter_id, query, n))
-    hits = _load(scope.matter_id, _fuse(rankings)[:n], scope.principal_id, versions if versions in ("signed", "current") else "signed")
+    hits = _load(scope.matter_id, _fuse(rankings)[:n], scope.principal_id, versions if versions in ("signed", "current") else "signed",
+                 documents)
     subs = _windowed(hits)
     scored = await rerank(query, subs, len(subs)) if subs else []
     best: dict[str, dict] = {}

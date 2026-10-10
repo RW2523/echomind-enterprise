@@ -28,7 +28,7 @@ from . import holds, labels
 
 KEPT_DOCUMENT = ["The audit trail (identifiers only, never content)", "This deletion record, without the document's title"]
 KEPT_TRANSCRIPT = ["Consent records and the recording timeline", "Audio receipts (hashes; the audio itself was never kept)",
-                   "The audit trail (identifiers only, never content)", "This deletion record"]
+                   "Minutes already filed as a matter document", "The audit trail (identifiers only, never content)", "This deletion record"]
 PENDING = ("requested", "blocked")
 
 
@@ -120,7 +120,10 @@ def report_transcript(conn, matter_id: str, meeting_id: str) -> dict:
     from ..exports import service as exports
     doc = _transcript_document(conn, matter_id, meeting_id)
     alerts = conn.execute("SELECT COUNT(*) FROM legal_assist_alerts WHERE meeting_id=? AND matter_id=?", (meeting_id, matter_id)).fetchone()[0]
-    return {"object": "meeting_transcript", "segments": n, "revisions": revisions, "alerts": alerts, "finalised_document": 1 if doc else 0,
+    minutes = conn.execute("SELECT COUNT(*) FROM legal_ai_artifacts WHERE subject_type='meeting' AND subject_id=? AND matter_id=?",
+                           (meeting_id, matter_id)).fetchone()[0]
+    return {"object": "meeting_transcript", "segments": n, "revisions": revisions, "alerts": alerts, "minutes_versions": minutes,
+            "finalised_document": 1 if doc else 0,
             "exports": exports.count_for(conn, "meeting_transcript", meeting_id), "kept": KEPT_TRANSCRIPT}
 
 
@@ -300,6 +303,7 @@ def _purge_document(conn, d: dict) -> dict:
         ev = [({**e, "quote": "", "document_title": "", "removed": True} if e.get("document_id") == doc else e) for e in ej]
         conn.execute("UPDATE legal_research_turns SET evidence_json=?, conflicts_json=? WHERE id=?",
                      (json.dumps(ev), json.dumps([c for c in cj if c.get("document_id") != doc]), tid))
+    conn.execute("UPDATE legal_ai_artifacts SET document_id=NULL WHERE document_id=?", (doc,))   # S2.6: filed minutes purged
     # S2.5: alerts keep their decision, but the document's quote and name are removed from their source.
     for (aid,) in conn.execute("SELECT a.id FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
                                "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchall():
@@ -314,6 +318,11 @@ def _purge_transcript(conn, d: dict) -> dict:
     doc = conn.execute("SELECT transcript_document_id FROM legal_meetings WHERE id=?", (d["object_id"],)).fetchone()
     doc = doc[0] if doc and doc[0] and conn.execute("SELECT 1 FROM legal_documents WHERE id=?", (doc[0],)).fetchone() else None
     conn.execute("DELETE FROM legal_assist_alerts WHERE meeting_id=? AND matter_id=?", (d["object_id"], d["matter_id"]))   # S2.5
+    # S2.6: minutes drafts and their review decisions quote the transcript; they go with it. Minutes already
+    # filed as a matter document are a record of their own and stay (P-015, minutes-only mode).
+    conn.execute("DELETE FROM legal_review_approvals WHERE artifact_id IN (SELECT id FROM legal_ai_artifacts WHERE subject_type='meeting' "
+                 "AND subject_id=? AND matter_id=?)", (d["object_id"], d["matter_id"]))
+    conn.execute("DELETE FROM legal_ai_artifacts WHERE subject_type='meeting' AND subject_id=? AND matter_id=?", (d["object_id"], d["matter_id"]))
     conn.execute("DELETE FROM legal_transcript_revisions WHERE meeting_id=? AND matter_id=?", (d["object_id"], d["matter_id"]))
     conn.execute("DELETE FROM legal_transcript_segments WHERE meeting_id=? AND matter_id=?", (d["object_id"], d["matter_id"]))
     conn.execute("UPDATE legal_meetings SET transcript_deleted_at=NULL, transcript_deletion_id=NULL, transcript_document_id=NULL, "
@@ -355,6 +364,7 @@ def verify(d: dict, gone: dict) -> dict:
             n = conn.execute("SELECT COUNT(*) FROM legal_transcript_segments WHERE meeting_id=?", (d["object_id"],)).fetchone()[0]
             n += conn.execute("SELECT COUNT(*) FROM legal_transcript_revisions WHERE meeting_id=?", (d["object_id"],)).fetchone()[0]
             n += conn.execute("SELECT COUNT(*) FROM legal_assist_alerts WHERE meeting_id=?", (d["object_id"],)).fetchone()[0]
+            n += conn.execute("SELECT COUNT(*) FROM legal_ai_artifacts WHERE subject_type='meeting' AND subject_id=?", (d["object_id"],)).fetchone()[0]
             checks = {"database": n == 0}
             if gone.get("document"):
                 doc, versions = gone["document"], gone.get("versions", [])

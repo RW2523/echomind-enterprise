@@ -316,7 +316,7 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
             if h.reason is not None and not consent.check(meeting_id)[0]:
                 return None
             seg = repo.add_segment(capture_id, meeting_id, matter_id, state["seq"], t0, t1, text,
-                                   speaker, wall(t0), wall(t1))
+                                   speaker, wall(t0), wall(t1), state.get("agenda"))
         state["seq"] += 1
         return seg
 
@@ -433,7 +433,17 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
             except ValueError:
                 continue
             kind = obj.get("type") if isinstance(obj, dict) else None
-            if kind == "speaker":
+            if kind == "agenda":                     # S2.6: the meeting moves to an agenda item (or none)
+                item = obj.get("item_id")
+                from . import agenda as agenda_mod
+                if not await asyncio.to_thread(agenda_mod.exists, meeting_id, item):
+                    await send({"type": "error", "message": "That is not an item on this meeting's agenda."})
+                    continue
+                await drain()                         # what was said so far belongs to the previous item
+                state["agenda"] = item
+                await mark("agenda", detail=item, audio_ms=int(state["audio_ms"]))
+                await send({"type": "agenda", "item_id": item})
+            elif kind == "speaker":
                 who = obj.get("participant_id")
                 if who is not None and who not in people:
                     await send({"type": "error", "message": "That person is not a participant of this meeting."})

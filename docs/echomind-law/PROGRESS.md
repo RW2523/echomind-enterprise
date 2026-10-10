@@ -6,11 +6,11 @@
 
 | Field | Value |
 |---|---|
-| Date | 2026-10-09 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.6-boardroom` |
-| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.5 merged into `feature/echomind-law`; S2.6 next |
+| Date | 2026-10-10 |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.7-reviews` |
+| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.6 merged into `feature/echomind-law`; S2.7 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0019` (Law edition only) |
+| Migrations | `0001`–`0020` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -377,6 +377,44 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - `eval/law/assist/` golden and held-out scripted calls through the real capture path and model.
   - The tuning history and a held-out harness correction are reported in D-041.
 
+### Session 3 (continued) — S2.6 Boardroom legal mode (MEET-01)
+- **Audit:** the legacy Boardroom report (closed in Law) had four gaps:
+  - it read only the first 6,000 characters of the transcript (`boardroom/service.py:806`);
+  - it searched the whole knowledge base (`:792`);
+  - it dropped timestamps in its checks (`:863`);
+  - it verified nothing and had no approval.
+  The Law meeting had no agenda and no minutes.
+- **S2.6a — agenda and board pack (migration 0020):**
+  - Agenda items with their board papers, which must be documents the person can see.
+  - The item is marked while recording; each segment keeps its item, and the change is a capture mark.
+  - Research limited to an item's papers (`documents` on the research query), with "Ask the whole matter instead".
+- **S2.6b — minutes (D-042):** drafted from the whole transcript as corrected.
+  - Line-numbered batches, with times, speakers and items taken from the record.
+  - The answer is JSON lines with a tolerant parse.
+  - Every quote is verified, and items without one are shown "Not verified".
+  - Kinds and owners are checked against the record, and first-person commitments are added by rule.
+  - Merging is deterministic, and text addressed to an AI is withheld.
+- **S2.6c — review (foundation for S2.7):**
+  - `legal_ai_artifacts`: fixed versions with a content hash.
+  - `legal_review_approvals`: append-only, refused by a rollback.
+  - A person's edit is a new version.
+  - Approval comes from a second lawyer, bound to the hash; "Request changes" needs a reason.
+  - Only approved minutes are filed, as a matter document carrying the approval.
+  - A purge takes drafts with the transcript but keeps filed minutes; a hold blocks it.
+- **S2.6d — UI:**
+  - The Minutes tab: draft, items with their words, flags, the editor, "Review these minutes", and the review decisions.
+  - The Agenda editor in Prepare and the agenda item radio group while recording.
+  - The board-pack notice in Research.
+  - Demo seed: nakamura is a reviewer on M-101. Journey 19, screenshot 29.
+- **S2.6e — reader:** journey 19 found that a just-filed document opened in the reader before it was read, and showed "read before the reader existed".
+  - The route now says "This version is still being read." (409).
+  - The page waits and opens the document when reading finishes.
+- **Evaluation:** `eval/law/minutes/` golden and held-out scripted meetings through the real capture path and model. The tuning history is in D-042.
+- **As built vs. plan:**
+  - The approve route is `POST …/minutes/{aid}/review` with `decision: approved | changes_requested`, so a request for changes is recorded too.
+  - Artifact statuses are `draft | approved | superseded | withdrawn`. There is no `in_review`: a draft is reviewable until a newer version supersedes it.
+  - Prompt-template version is not yet recorded on artifacts (model and transcript hash are): S2.7.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -408,7 +446,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | RAG-02 | DONE for the pilot (lawyer review at S2.8) | S2.3 | Two versions clause by clause (renumbered, moved, added, removed, exact word diff, labelled changes); explanations quoting both wordings, verified; conflicts across documents between documents with the same parties; golden and held-out evaluation (D-039) |
 | LIVE-01 | PARTIAL: built; real-audio accuracy pending the speech stack (🔒) | S2.4 | Verbatim immutable record, roster speakers, wall-clock times, gaps and degradation shown, revisions with provenance, matter vocabulary, finalised transcripts in research and purges, accuracy harness (D-040) |
 | LIVE-02 | DONE for the pilot; thresholds await P-008 | S1.7, S2.5 | Three legal packs with evidence-relative alerts, exact quotes, confirm or dismiss with a reason, telemetry, matter-only sources (D-041). The voice service's research stream is unchanged (S1.7) |
-| MEET-01 | PARTIAL | S1.8, S2.6–S2.7 | S1.8: matter meetings with participants, consent and consent-gated capture. Legal-mode Boardroom (before, during, after, minutes): S2.6–S2.7 |
+| MEET-01 | DONE for the pilot | S1.8, S2.6 | Agenda and board-pack research; agenda marks; minutes from the whole transcript with verified sources, guards and deterministic merging; versioned edits; second-lawyer approval bound to the content hash; filing; purge and hold (D-042). Reviews queue and export hash binding: S2.7 |
 | DOC-01 | PARTIAL (pre-existing) | S3.1 | |
 | DOC-02 | MISSING | S3.2–S3.3 | Word tracked changes need a spike and a manual Word check |
 | DOC-03 | MISSING | S3.4 | External authority stays UNVERIFIED (P-009) |
@@ -443,25 +481,37 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Pre-existing on `main`:** standard-edition Knowledge Chat cannot send right after sign-in until a reload. There is an expected-failure test in `frontend/e2e-legacy`, and a separate task was suggested.
 - **Research abstention is the weakest measure (D-038).** When the documents do not answer, the model often says so and then adds related, supported context. That counts as an answer: abstention accuracy is 4/6 on the golden set and 1/3 held-out. The reviewer still sees the "not stated" opening and the evidence. Re-measured with a lawyer at the S2.8 gate.
 - **Transcription accuracy is unmeasured on real audio (D-040).** The harness and scoring are built and tested. The measurement needs the Law speech stack (the first `compose.sh up`, 🔒), not an install on the shared host, whose memory headroom is about 13 GB with swap full. Speakers are marked by hand: there is no automatic speaker separation.
-- In Law there is no Boardroom or document studio until their matter-scoped replacements ship (S2.6, S3.x); live transcription needs the speech model, which is not on the dev host (the capture path is tested with a stand-in). This is intended (D-025, D-026).
+- **Minutes are small-sample evaluated (D-042).** Recall 1.0 golden and 6/7 held-out, with no invented specifics; the model chooses an item's kind within the guards, so an open point can be minuted as discussion. A second lawyer reviews every draft, and lawyer scoring is S2.8's.
+- In Law the legacy Boardroom and document studio stay closed: matter meetings with minutes replace the Boardroom (S2.6), and drafting arrives in S3.x; live transcription needs the speech model, which is not on the dev host (the capture path is tested with a stand-in). This is intended (D-025, D-026).
 
 ## NEXT EXACT ACTION
 
-Start **S2.6 Boardroom legal mode (MEET-01)** on `law/s2.6-boardroom`, per IMPLEMENTATION_PLAN §7. S2.5 is merged into `feature/echomind-law`.
+Start **S2.7 Review and approval framework** on `law/s2.7-reviews`, per IMPLEMENTATION_PLAN §7. S2.6 is merged into `feature/echomind-law`, and the artifact and approval foundation exists (`legal/artifacts.py`, migration 0020, D-042).
 1. **Audit first:**
-   - the legacy Boardroom (closed in Law, D-025): the map-reduce minutes, the timestamp drop at `service.py:863`, speaker reconciliation across batches;
-   - Law meetings, transcripts (S2.4) and alerts (S2.5).
-2. **Before the meeting:** board-pack research (S2.2 research over the matter, scoped to the meeting's documents) and an agenda.
-3. **During:** consent, pause and flags already exist (S1.8, S2.4, S2.5). Add agenda items as segment markers.
-4. **After:**
-   - map-reduce over the **full** transcript as corrected (S2.4 revisions);
-   - minutes, resolutions, and actions with owner and deadline;
-   - unresolved items with timecode pinpoints;
-   - every statement verified against transcript quotes (D-037), with no invented specifics.
-5. **Approval before export:**
-   - minutes are an AI artifact, drafted then approved by a second person (ties into S2.7);
-   - custody hashes, hold and retention, purge with the transcript.
+   - where AI output leaves without a reviewer: research answers (owner-private turns), compare explanations and minutes (done);
+   - the export gateway: it renders the current version at approval time, and nothing binds it to what was requested.
+2. **Artifacts made generic (migration 0021):**
+   - a second kind, `research_note`: a research answer sent for review by its owner, with question, answer, evidence and status fixed and hashed;
+   - generic artifact routes (read, review, file);
+   - the prompt version recorded with the model;
+   - a note is visible only to people who can see every document it cites;
+   - a purge of a cited document removes unfiled notes and their decisions.
+3. **Hash binding:**
+   - an export records its source's hash when requested, and approval refuses a source that changed since;
+   - filings are recorded (artifact, document, version, body hash) in an append-only table;
+   - an export of a filed note or minutes shows the approval, and is refused if the document changed after approval.
+4. **Reviews queue:**
+   - `GET /api/legal/reviews` returns what waits for you (AI drafts you may approve and did not write, exports, deletions, holds, walls) and yours waiting on others;
+   - it is non-disclosing (matter access, walls, source permissions);
+   - a firm "Reviews" page with a count.
+5. **UI:**
+   - `ReviewBanner` and `ApprovalDialog` as shared components, used by minutes, research notes and exports;
+   - "Send for review" on a research answer;
+   - the note page.
 6. **Tests:**
-   - a fixture board meeting: approval enforced, hold respected, timestamps kept, speakers reconciled;
-   - the real model on the seeded board scenario;
-   - D-042, TEST_RESULTS run 19, a browser journey; merge.
+   - backend `test_law_reviews.py`;
+   - Vitest for the components and the queue;
+   - browser journey 20 (alice sends an answer for review, dave approves it from the queue, alice files it);
+   - D-043, TEST_RESULTS run 20; merge.
+
+Then S2.8 (Phase 2 gate).

@@ -74,6 +74,7 @@ def seed_demo() -> dict:
     m215 = repo.create_matter(org, beta["id"], "M-215", "Warehouse lease dispute", ids["bob"],
                               practice_area="Real estate litigation", jurisdiction="New York")
     repo.add_membership(m101["id"], ids["carol"], "paralegal", granted_by=ids["alice"])
+    repo.add_membership(m101["id"], ids["nakamura"], "reviewer", granted_by=ids["alice"])     # S2.6: a second lawyer to approve minutes
     gone = repo.add_membership(m215["id"], ids["carol"], "paralegal", granted_by=ids["bob"])
     repo.revoke_membership(m215["id"], gone["id"], by=ids["bob"], reason="moved to another team")
     repo.add_membership(m202["id"], ids["alice"], "attorney", granted_by=ids["bob"], valid_from=_ts(-60), valid_to=_ts(-2))

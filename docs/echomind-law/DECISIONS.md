@@ -730,6 +730,50 @@ Every entry records the options considered, the recommendation, the consequence 
   - Speakers are as marked by the person recording (S2.4).
   - Spoken amounts in words ("eighteen thousand dollars") are not read as figures. Digits are, with the currency before or after.
 
+### D-042 Boardroom legal mode: agenda, minutes and their approval — RECORDED (S2.6; MEET-01, D-037, T08)
+- **Not the legacy Boardroom report.** The legacy report (`boardroom/service.py`) stays closed in Law. The audit found that:
+  - it sent the model only the first 6,000 characters of the transcript (`service.py:806`);
+  - it searched the whole knowledge base, not the matter (`:792`);
+  - it dropped timestamps in its checks (`:863`);
+  - it had no verification of what it wrote, and no approval.
+  The Law minutes are new code (`legal/meetings/minutes.py`, `legal/artifacts.py`) over the Law transcript (S2.4).
+- **Before the meeting:**
+  - Agenda items (migration 0020) carry their board papers: matter documents the person can see.
+  - "Research these papers" opens research limited to that item's documents. The page says so and offers "Ask the whole matter instead". Research checks the documents against the same visibility rules as any search.
+- **During:**
+  - The person recording marks the agenda item. Each stored segment keeps the item it falls under, and the change is a capture mark.
+  - Consent, pause, gaps and Silent Assist are unchanged (S1.8, S2.4, S2.5).
+- **After — minutes from the whole transcript:**
+  - Drafting needs `ai.draft`, an ended meeting and a transcript that has not been deleted.
+  - Each line of the transcript as corrected carries its segment, wall-clock time, roster speaker and agenda item, taken from the record, never from the model. Lines are sent in batches (`LEGAL_MINUTES_BATCH_CHARS`, 1,800 characters) and never split, so nothing is cut off.
+  - The model returns one JSON object per line: a decision, an action (owner and deadline only if said), an unresolved point or a discussion point. Each item cites its lines with a short exact quote. A JSON-lines answer survives a cut-off: in the first tuning run, one pretty-printed object was cut off at 1,200 tokens and gave nothing.
+  - **Verified (D-037):** every quote is checked against its line. An item with no verified quote is kept but shown as "Not verified against the transcript".
+  - **Checked against the record (`guard`):**
+    - An action must cite a line where someone commits, and a decision a line where it is taken; otherwise it is filed as discussion.
+    - When the model names no owner, "I will …" makes the speaker of that line the owner. Role labels are stripped from owners.
+    - A first-person commitment that no item cites is added by rule, quoting the line exactly.
+  - **Merged deterministically:** items go under the agenda item of their first cited line, in time order, and repeats are merged with their sources. There is no second model pass that could invent a summary.
+  - Text addressed to an AI is withheld from the model (T08).
+- **Review and approval (the foundation of S2.7):**
+  - Minutes are an AI artifact (`legal_ai_artifacts`). Each version is fixed: a trigger refuses content changes, and the content is hashed (SHA-256 of canonical JSON).
+  - A person's edit (wording, kind, owner, deadline, removal, an added item, with a reason) is a new version made by that person. Every item keeps its sources, and a new version supersedes earlier drafts.
+  - Approval needs `artifacts.approve` (lead, attorney or reviewer). It must come from someone other than the version's author, and it must name the content hash the reviewer read. Only the latest draft can be reviewed. "Request changes" needs a reason.
+  - Decisions are append-only (`legal_review_approvals`). A rollback below 0020 refuses to delete them unless forced.
+- **Filing:** only approved minutes can be filed. Filing makes a matter document, "Minutes — {meeting}", status final. Its text carries the approval (who, when) and the approved content hash. Filing again is a no-op.
+- **Records:**
+  - Drafts and their decisions are matter content. A transcript purge removes them, verified. Filed minutes are a document and are kept (the deletion report says so).
+  - A legal hold blocks the purge (T04).
+  - A purged document's link from the artifact is cleared.
+- **Evaluation** (`eval/law/minutes/run_minutes_eval.py`): scripted meetings held through the real capture socket, with agenda and speaker marks, and minuted by the real model on this host through the real endpoint. Measured: planted decisions, actions and unresolved points found; owners and deadlines; verified quotes; and invented specifics (numbers or names never said, which must be 0).
+  - **Golden (tuning) set, a board meeting, 26 turns, 2 batches.** The first run had 0 items (the cut-off above). Then recall 8/9 with owners 2/3. The guards brought it to recall 1.0, owners 3/3, deadlines 3/3, verified 1.0, invented 0.
+  - **Held-out set, a lease committee, 12 turns,** never used to adjust the minutes: recall 6/7, owners 3/3, deadlines 3/3, verified 1.0, invented 0. It missed "Finance has not yet modelled the cost": it was minuted as discussion, not as an open point.
+  - The held-out set was run on two system versions with identical results. The second version added "always minute attendance, quorum and interests" (from the golden set) and stripped role labels from owners (seen in both sets' output).
+  - **These sets are small.** The numbers show the mechanism works; they are not a measured quality. Lawyer scoring is S2.8's.
+- **Limits:**
+  - The kind of an item is the model's choice within the guards, so a point can be minuted as discussion when a lawyer would call it open. The reviewer can change the kind.
+  - Speakers and agenda items are as marked by the person recording.
+  - An owner the model names is kept as given, not checked against the roster. The evaluation counts any name never said as invented, and the reviewer can correct it.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
