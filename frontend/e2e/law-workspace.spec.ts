@@ -867,3 +867,61 @@ test('playbooks: a contract checked against the firm playbook, each topic with i
   await expect(morgan.getByRole('listitem', { name: /^Limitation of liability: Cap on liability/ }).getByText('In use: version 1')).toBeVisible();
   await shot(morgan, '36-playbooks-light');
 });
+
+test('redlines: the clauses outside the playbook revised to the firm\'s wording, approved, filed as the next version with tracked changes', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  await expect(importButton).toBeVisible();
+  if (await alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true }).count() === 0) {
+    await importButton.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law/Master Services Agreement (DEMO).md'));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: /Master Services Agreement \(DEMO\)/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  const docId = await alice.evaluate(async () => {
+    const ms = await (await fetch('/api/legal/matters')).json();
+    const m = ms.matters.find((x: any) => x.number === 'M-101');
+    const ds = await (await fetch(`/api/legal/matters/${m.id}/documents`)).json();
+    return ds.documents.find((d: any) => d.title === 'Master Services Agreement (DEMO)').id as string;
+  });
+  await alice.goto(`/m/M-101/documents/${docId}/playbook`);
+  await alice.getByLabel('Playbook', { exact: true }).selectOption({ label: 'Commercial services (supplier, demo)' });
+  await alice.getByRole('button', { name: 'Check this document' }).click();
+  const check = alice.getByRole('article', { name: 'Playbook check' });
+  await expect(check.getByRole('listitem', { name: 'Termination for convenience: Outside the playbook' })).toBeVisible({ timeout: 180_000 });
+  await check.getByRole('region', { name: 'Revise to the playbook' }).getByRole('button', { name: /^Propose \d+ revisions?$/ }).click();
+  const red = alice.getByRole('article', { name: 'Redline' });
+  const termination = red.getByRole('listitem', { name: /^Termination for convenience, clause 12\.1/ });
+  await expect(termination.locator('ins')).toContainText(['ninety (90)']);
+  await expect(termination.locator('del')).toContainText(['thirty (30)']);
+  const word = await alice.evaluate(async (href) => {
+    const r = await fetch(href);
+    return { status: r.status, type: r.headers.get('content-type'), bytes: (await r.arrayBuffer()).byteLength };
+  }, await alice.getByRole('link', { name: 'Word, with tracked changes' }).getAttribute('href'));
+  expect(word.status).toBe(200);
+  expect(word.type).toContain('wordprocessingml');
+  await shot(alice, '37-redline-light');
+
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  await nakamura.getByRole('list', { name: 'Waiting for you' }).getByRole('link', { name: /Redline — Master Services Agreement/ }).click();
+  await nakamura.getByRole('group', { name: 'Review this redline' }).getByRole('button', { name: 'Approve this redline' }).click();
+  const confirm = nakamura.getByRole('dialog', { name: 'Approve version 1?' });
+  await confirm.getByLabel('I have read this version and checked its sources').check();
+  await confirm.getByRole('button', { name: 'Approve version 1' }).click();
+  await expect(nakamura.getByRole('article', { name: 'Redline' }).getByText(/^Approved by nakamura on/)).toBeVisible();
+
+  await alice.reload();
+  await alice.getByRole('button', { name: 'File as the next version' }).click();
+  await alice.getByRole('link', { name: 'Open the document' }).click();
+  const sheet = alice.getByRole('article', { name: 'Document text' });
+  // The filed version is the Word file with its tracked changes: the reader marks what alice's redline inserted.
+  await expect(sheet.locator('ins').filter({ hasText: 'ninety (90)' })).toBeVisible({ timeout: 120_000 });
+  await expect(alice.getByRole('complementary', { name: 'Found while reading' }).getByText(/revised to the firm's standard position/).first()).toBeVisible();
+});

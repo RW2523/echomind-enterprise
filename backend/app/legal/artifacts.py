@@ -33,14 +33,15 @@ class Conflict(Exception):
 # kind → (subject type, what it is called, the title of the document it is filed as)
 KINDS = {"minutes": ("meeting", "Minutes", "Minutes — {title}"),
          "research_note": ("research_turn", "Research note", "Research note — {title}"),
-         "legal_draft": ("draft", "Draft", "{title}")}
+         "legal_draft": ("draft", "Draft", "{title}"),
+         "redline": ("redline", "Redline", "{title}")}
 
 
 def title(a: dict) -> str:
     c = a["content"]
     if a["kind"] == "minutes":
         return (c.get("meeting") or {}).get("title") or ""
-    return c.get("title") or "" if a["kind"] == "legal_draft" else c.get("question") or ""
+    return c.get("title") or "" if a["kind"] in ("legal_draft", "redline") else c.get("question") or ""
 
 
 def cited_documents(a: dict) -> set[str]:
@@ -49,6 +50,8 @@ def cited_documents(a: dict) -> set[str]:
     if a["kind"] == "legal_draft":                       # S3.1: field quotes and written passages' sources
         return {s["document_id"] for item in (c.get("fields") or []) + (c.get("blocks") or []) for s in item.get("sources") or []
                 if s.get("document_id")}
+    if a["kind"] == "redline":                           # S3.3: the document it revises
+        return {c["document"]["id"]} if c.get("document") else set()
     if a["kind"] != "research_note":
         return set()
     return {x["document_id"] for key in ("evidence", "sources", "conflicts") for x in c.get(key) or [] if x.get("document_id")}
@@ -85,6 +88,8 @@ def _out(conn, r) -> dict:
 
 def create(matter_id: str, kind: str, subject_type: str, subject_id: str, content: dict, inputs: dict, by: str, origin: str) -> dict:
     """A new version; earlier drafts of the same artifact are superseded."""
+    if KINDS.get(kind, (None,))[0] != subject_type:     # checked here since 0025 (no table rebuild per kind)
+        raise ValueError(f"unknown artifact kind {kind!r} for {subject_type!r}")
     with get_conn() as conn:
         conn.execute("BEGIN IMMEDIATE")
         try:
@@ -207,12 +212,43 @@ def file(p: dict, artifact: dict, body: bytes, filename: str, mime: str = "text/
     return doc_id
 
 
+def file_version(p: dict, artifact: dict, document_id: str, body: bytes, filename: str, mime: str, status: str = "draft") -> str:
+    """An approved version filed as the next version of an existing document (a redline of it).
+    Returns the new version's id."""
+    import hashlib as _hashlib
+    from .documents import blobs
+    from .documents import repo as docs
+    from .jobs import worker
+    approval = approval_of(artifact)
+    if not approval:
+        raise Conflict("Only an approved version can be filed.")
+    version_id = docs.new_id()
+    sha = _hashlib.sha256(body).hexdigest()
+    wrapped = blobs.store(artifact["matter_id"], version_id, body)
+    try:
+        docs.add_version(version_id, document_id, artifact["matter_id"], filename, mime, len(body), sha, None, wrapped, p["sub"], status=status)
+    except BaseException:
+        blobs.remove(artifact["matter_id"], version_id)
+        raise
+    with get_conn() as conn:
+        approver, approved_at = conn.execute("SELECT by, at FROM legal_review_approvals WHERE artifact_id=? AND decision='approved' "
+                                             "ORDER BY at DESC, rowid DESC LIMIT 1", (artifact["id"],)).fetchone()
+        conn.execute("UPDATE legal_ai_artifacts SET document_id=? WHERE id=?", (document_id, artifact["id"]))
+        conn.execute("INSERT INTO legal_artifact_filings (id, artifact_id, matter_id, kind, artifact_version, document_id, version_id, "
+                     "body_sha256, content_sha256, approved_by, approved_at, filed_by, filed_at, as_new_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                     (str(uuid.uuid4()), artifact["id"], artifact["matter_id"], artifact["kind"], artifact["version"], document_id, version_id,
+                      sha, artifact["content_sha256"], approver, approved_at, p["sub"], now_iso(), 1))
+        conn.commit()
+    worker.wake()
+    return version_id
+
+
 def filing_for_document(conn, document_id: str) -> Optional[dict]:
     """The approved draft a document was filed from, with the approval it carries."""
     r = conn.execute("SELECT f.artifact_id, f.version_id, f.body_sha256, f.content_sha256, f.kind, f.artifact_version, "
-                     "(SELECT u.username FROM users u WHERE u.id = f.approved_by), f.approved_at FROM legal_artifact_filings f "
+                     "(SELECT u.username FROM users u WHERE u.id = f.approved_by), f.approved_at, f.as_new_version FROM legal_artifact_filings f "
                      "WHERE f.document_id=? ORDER BY f.filed_at DESC LIMIT 1", (document_id,)).fetchone()
     if not r:
         return None
     return {"artifact_id": r[0], "version_id": r[1], "body_sha256": r[2], "content_sha256": r[3], "kind": r[4], "version": r[5],
-            "approved_by": r[6], "approved_at": r[7]}
+            "approved_by": r[6], "approved_at": r[7], "as_new_version": bool(r[8])}

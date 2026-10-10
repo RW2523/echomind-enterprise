@@ -227,7 +227,7 @@ export interface MinutesContent {
 }
 export interface ReviewDecision { decision: 'approved' | 'changes_requested'; content_sha256: string; reason?: string | null; by?: string | null; at: string }
 /** An AI draft under review (S2.6–S2.7, D-042/D-043): fixed versions, hashed, approved by a second lawyer. */
-export type ArtifactKind = 'minutes' | 'research_note' | 'legal_draft';
+export type ArtifactKind = 'minutes' | 'research_note' | 'legal_draft' | 'redline';
 export interface ArtifactVersion<C = unknown> {
   id: string; version: number; status: 'draft' | 'approved' | 'superseded' | 'withdrawn'; content: C; content_sha256: string;
   inputs: Record<string, any>; created_by: string; created_by_name?: string | null; created_at: string; origin: 'model' | 'person';
@@ -400,5 +400,17 @@ export interface CheckLine {
 export interface PlaybookCheck {
   id: string; document_id: string; version_id: string; playbook: { id: string; name: string | null }; results: CheckLine[];
   summary: Record<CheckClass, number>; created_by: string | null; created_at: string; advisory: true; inputs: Record<string, any>;
+}
+
+/** Redlines (S3.3, D-047): revisions to the firm's positions, written as Word tracked changes. */
+export interface RedlineChange {
+  id: string; topic: string; title: string; clause: { number: string | null; heading: string | null; start: number; end: number };
+  original: string; revised: string; ops: [('eq' | 'del' | 'ins'), string][]; reason: string; comment: string;
+  fitted: boolean; fit_note: string | null; edited_by?: string | null;
+  from: { kind: 'standard' | 'fallback'; n: number | null; position_id: string; position_version: number; text: string };
+}
+export interface RedlineContent {
+  title: string; document: { id: string; title: string; version_id: string; version_number: number; filename: string; mime: string };
+  check_id: string; playbook: { id: string; name: string | null }; changes: RedlineChange[]; summary: { changes: number; fitted: number };
 }
 

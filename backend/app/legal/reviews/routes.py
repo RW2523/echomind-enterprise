@@ -112,6 +112,15 @@ def file_artifact(matter_id: str, artifact_id: str, request: Request):
         raise HTTPException(status_code=409, detail="Only an approved version can be filed.")
     if a.get("document_id") and docs.get_document(matter_id, a["document_id"]):
         return {"document_id": a["document_id"], "changed": False}
+    if a["kind"] == "redline":                           # S3.3: the next version of the document it revises
+        from ..redlines import service as redline_service
+        from ..redlines.routes import filed as file_redline
+        try:
+            doc_id, _ = file_redline(p, a)
+        except redline_service.Unverified:
+            raise HTTPException(status_code=409, detail="The Word file failed its checks and was not filed.")
+        note(details={"kind": a["kind"], "version": a["version"], "content_sha256": approval["content_sha256"]})
+        return {"document_id": doc_id, "changed": True}
     if a["kind"] == "legal_draft":                       # S3.1: a Word document in the firm's styles
         from ..drafting.routes import filed
         body, filename, mime, kind = filed(p, a, approval)

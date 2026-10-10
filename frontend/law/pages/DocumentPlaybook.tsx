@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useParams } from 'react-router';
-import { ArrowLeft, ListChecks, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router';
+import { ArrowLeft, FilePen, ListChecks, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { keys, useDocument, usePlaybookChecks, usePlaybooks } from '../api/queries';
@@ -81,7 +81,42 @@ function CheckView({ check, older }: { check: PlaybookCheck; older: number }) {
       <ul className="lw-check-lines" aria-label="Topics">
         {check.results.map((r) => <Line key={r.topic} r={r} check={check} />)}
       </ul>
+      <Revise check={check} />
     </article>
+  );
+}
+
+/** S3.3: the lines outside the playbook revised to the firm's positions, as a redline to review. */
+function Revise({ check }: { check: PlaybookCheck }) {
+  const matter = useMatter();
+  const navigate = useNavigate();
+  const outside = check.results.filter((r) => r.classification === 'outside' && r.clause);
+  const [choices, setChoices] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  if (!outside.length || !['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') || matter.status !== 'open') return null;
+  const go = async () => {
+    setBusy(true); setError('');
+    try {
+      const r = await api.post<{ redline: { id: string } }>(`/api/legal/matters/${encodeURIComponent(matter.id)}/playbook-checks/${encodeURIComponent(check.id)}/redline`, { choices });
+      navigate(`/m/${matter.number}/redlines/${encodeURIComponent(r.redline.id)}`);
+    } catch (err) { setError(err instanceof ApiError ? err.message : 'The revisions could not be proposed.'); setBusy(false); }
+  };
+  return (
+    <section className="lw-revise" aria-label="Revise to the playbook" aria-busy={busy}>
+      <h3 className="lw-h3" style={{ margin: 0 }}>Revise to the playbook</h3>
+      <p className="lw-meta" style={{ margin: '2px 0 8px' }}>Each clause outside the playbook is revised to the firm's approved wording, fitted only to this contract's own terms. You review the redline before anything is filed.</p>
+      {outside.map((r) => r.position.fallbacks.length > 0 && (
+        <label key={r.topic} className="lw-meta" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>{`${r.title}:`}
+          <select className="lw-input lw-input-sm" style={{ maxWidth: 260 }} aria-label={`Position for ${r.title}`} value={choices[r.topic] ?? 'standard'}
+            onChange={(e) => setChoices((c) => ({ ...c, [r.topic]: e.target.value }))}>
+            <option value="standard">The standard</option>
+            {r.position.fallbacks.map((f, i) => <option key={i} value={`fallback ${i + 1}`}>{`Fallback ${i + 1}${f.note ? ` (${f.note})` : ''}`}</option>)}
+          </select></label>
+      ))}
+      <div><button type="button" className="lw-btn lw-btn-sm lw-btn-primary" disabled={busy} onClick={go}><FilePen />{busy ? 'Proposing…' : `Propose ${outside.length} ${outside.length === 1 ? 'revision' : 'revisions'}`}</button></div>
+      {error && <ErrorNote>{error}</ErrorNote>}
+    </section>
   );
 }
 

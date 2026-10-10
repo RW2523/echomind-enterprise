@@ -1,0 +1,3935 @@
+{
+ "meta": {
+  "set": "t10",
+  "commit": "4c9293b",
+  "time": "20261010-071055"
+ },
+ "summary": {
+  "documents": 14,
+  "revisions": 489,
+  "placed": 478,
+  "missed": 11,
+  "verified": "478/478",
+  "libreoffice_round_trips_kept": "12/12",
+  "by_kind": {
+   "figure": "116/116",
+   "append": "159/159",
+   "shorten": "44/44",
+   "add_paragraph": "159/159"
+  }
+ },
+ "items": [
+  {
+   "document": "board-minutes.md",
+   "clause": "1.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "1.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "1.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "2.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "2.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "2.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "2.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "3.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "3.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "3.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "4.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "4.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "4.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "5.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "5.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "5.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "5.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "6.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "6.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "7.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "7.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "7.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "board-minutes.md",
+   "clause": "7.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "1.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "1.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "1.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "1.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "1.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "2.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "2.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "2.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "3.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "3.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "3.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "3.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "3.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "3.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "3.2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "3.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "4.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "4.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "4.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "4.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "5.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "5.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "6.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "6.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "6.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "7.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "7.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "8.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "8.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "8.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "engagement-letter.md",
+   "clause": "8.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "3",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "forbidden-beta-settlement.md",
+   "clause": "3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "1.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "1.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "1.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "2.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "2.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "2.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "3.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "3.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "3.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "3.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "3.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "3.2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "3.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "4.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "4.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "4.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "5.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "5.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "5.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "6.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "6.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "6.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "6.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "6.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "6.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "6.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "7.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "7.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "7.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "8.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "8.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "8.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "9.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "9.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "9.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "9.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "9.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "10.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "10.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "10.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "lease.md",
+   "clause": "10.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.4",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "1.4",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "2.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "2.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "2.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "2.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "2.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "2.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "3.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "3.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "3.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "3.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "3.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "3.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "4.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "5.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "5.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "5.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "6.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "6.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "6.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "6.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "6.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "6.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "7.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "7.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "7.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "8.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "8.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "8.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "8.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "8.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "8.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "8.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "8.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "9.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "9.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "12.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "12.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "12.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "12.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "12.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "12.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "14.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "14.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "14.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "14.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "14.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "14.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "14.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "14.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "21.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "21.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "22.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "22.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "22.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v1-signed.md",
+   "clause": "22.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.4",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "1.4",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "2.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "2.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "2.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "2.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "2.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "2.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "3.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "3.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "3.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "3.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "3.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "3.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "4.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "5.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "5.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "5.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "6.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "6.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "6.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "6.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "6.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "6.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "7.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "7.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "7.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "8.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "8.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "8.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "8.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "8.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "8.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "8.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "8.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "9.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "9.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "12.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "12.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "12.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "12.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "12.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "12.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "14.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "14.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "14.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "14.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "14.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "14.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "14.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "14.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "21.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "21.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "22.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "22.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "22.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v2-draft.md",
+   "clause": "22.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "1.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "1.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "2.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "2.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "2.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "2.2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "2.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "3.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "3.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "3.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "3.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "4.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "4.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "4.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "4.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "4.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "4.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "5.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "5.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "5.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "6.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "6.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "7.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "7.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "8.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "8.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "8.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "8.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "8.2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "nda.md",
+   "clause": "8.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "3",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "4",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "4",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "4",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "4",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "5",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "5",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "5",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "side-letter.md",
+   "clause": "5",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "3",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "4",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "4",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "4",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "4",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "5",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "5",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-side-letter.md",
+   "clause": "5",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "1.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "1.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "1.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "10.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "10.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "2.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "2.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "2.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "3.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "4.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "4.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "4.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "6.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "6.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "6.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "6.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "6.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "6.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "6.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "7.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "7.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "7.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "8.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "8.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "8.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "9.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "9.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "9.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "9.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "9.2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "heldout-lease-v2-draft.md",
+   "clause": "9.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.4",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "1.4",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "2.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "2.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "2.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "2.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "2.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "2.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "3.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "3.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "3.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "3.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "3.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "3.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.3",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.4",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.4",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "4.4",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "6.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "6.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "6.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "6.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "6.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "6.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "8.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "8.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "8.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "8.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "8.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "8.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "8.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "8.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "9.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "9.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "12.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "12.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "12.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "12.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "12.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "12.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "14.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "14.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "14.2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "14.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "14.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "14.3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "14.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "14.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "5.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "5.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "5.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "21.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "21.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "22.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "22.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "22.1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "msa-v3-restructured.md",
+   "clause": "22.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "1",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "2",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "2",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "3",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "3",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "4",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "4",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "4",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "4",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "5",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "5",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "5",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "5",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "6",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "6",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "6",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "order-form.md",
+   "clause": "6",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "Article I",
+   "kind": "figure",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "Article I",
+   "kind": "append",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "Article I",
+   "kind": "add_paragraph",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.1",
+   "kind": "figure",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.1",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.1",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.2",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.2",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.3",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.3",
+   "kind": "shorten",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.3",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.3(b)",
+   "kind": "append",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "12.3(b)",
+   "kind": "add_paragraph",
+   "placed": true,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "13",
+   "kind": "figure",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "13",
+   "kind": "append",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "13",
+   "kind": "shorten",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "13",
+   "kind": "add_paragraph",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "13.1",
+   "kind": "figure",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "13.1",
+   "kind": "append",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "13.1",
+   "kind": "shorten",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  },
+  {
+   "document": "harrowgate-msa.docx",
+   "clause": "13.1",
+   "kind": "add_paragraph",
+   "placed": false,
+   "verified": true,
+   "failed_checks": []
+  }
+ ]
+}
