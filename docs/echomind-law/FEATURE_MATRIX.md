@@ -24,7 +24,7 @@
 | DOC-02 | Clause library, playbooks, compare, Word redlines | PARTIAL: built and tested (S3.2 D-046, S3.3 D-047); the manual Microsoft Word check is pending (🔒). Playbooks with checks; redlines to the firm's positions (model fits defined terms only, checked); Word files with real tracked changes and comments, checked before release (T10: 487/487 revisions verified, LibreOffice round trips kept) | S3.2, S3.3 | Word manual verification (D-011, P-013) |
 | DOC-03 | Quote and citation checker with authority provenance | DONE for the pilot (S3.4, D-048): references resolved to exact clauses or flagged missing; quotations compared word for word (altered words shown); every external authority listed as UNVERIFIED, impossible ones flagged; nothing looked up. T07 golden 55/55, held-out 27/28 (court rules not yet read) | S3.4 | Verifying that an authority exists needs a licensed source (P-009) |
 | DOC-04 | Defined terms, numbering, cross-references | DONE for the pilot (S3.5, D-049): definitions (duplicates, unused, undefined, another form, before definition), numbering gaps and repeats at every level, broken and outdated references, all with offsets; corrections only through an approved redline. Held-out 12/12 (third set); undefined-term detection is heuristic | S3.5 | — |
-| DOC-05 | Obligations and deadlines tracker | MISSING | S3.6 | — |
+| DOC-05 | Obligations and deadlines tracker | DONE for the pilot (S3.6, D-050): rules first, then checked model proposals; exact words; dates only from dates the document fixes (none guessed in any run); proposed until a lawyer confirms; versioned edits with reasons; timezone; calendar file off by default. Held-out 10/12 with the model (rules alone about half) | S3.6 | Reminders not sent |
 | DOC-06 | Due diligence checklist and issue register | MISSING | S3.7 | — |
 | DOC-07 | Governance, cap table / approvals, IP assignment checks | MISSING | S3.8 | — |
 | OPT-01 | Client intake assistant with conflict screening | MISSING | S4.1 | Business approval |
@@ -220,7 +220,7 @@
 ### DOC-05 — Obligations and deadlines tracker
 | Field | Detail |
 |---|---|
-| Status | **MISSING.** The Silent Assistant extracts action items in calls only. |
+| Status | **DONE for the pilot (S3.6, D-050).**<ul><li>Obligations are read by rules, then the model proposes what the rules miss; every proposal is checked against the sentence, and the model's dates are never used.</li><li>Each obligation keeps the exact words and clause.</li><li>Dates come only from dates the document fixes: term ends, non-renewal and break deadlines, dated events, and periods after them.</li><li>Nothing is confirmed until a lawyer confirms it, with an owner.</li><li>Edits, dismissals and completions are versions with reasons, and the history is append-only.</li><li>Dates are shown in the firm's timezone; the ICS calendar file is off by default.</li></ul> |
 | Modifications | Extraction (notice, renewal, termination, consent rights, change-of-control, payment) with evidence spans; `legal_obligations` with status, owner, timezone and `confirmed_by`; never displayed as verified until a human confirms; reminders and ICS export only when enabled |
 | Tests | Fixture contracts give expected obligations with evidence spans; edits audited; timezone correct |
 | Acceptance | Human-confirmed deadlines, cited triggers, timezone, status and edits |

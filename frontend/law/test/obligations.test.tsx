@@ -16,7 +16,7 @@ const OBS: Obligation[] = [
   base({ id: 'o1', kind: 'renewal', action: 'give written notice of non-renewal', when: 'at least ninety (90) days before the end of the then-current term',
     due_date: '2028-12-01', due_at: '2028-12-01T23:59:59+00:00',
     due_note: '90 days before the end of the initial term. The initial term is read as 36 months from 2 March 2026 (the Effective Date), ending on 1 March 2029 (counting the first day), so notice is due by 1 December 2028. Confirm how the days are counted before relying on it.' }),
-  base({ id: 'o2', kind: 'notification', action: 'notify Client of any personal data breach affecting Client Data', clause: '6.1', party: 'Provider',
+  base({ id: 'o2', kind: 'notification', action: 'notify Client of any personal data breach affecting Client Data', clause: '6.1', party: 'Provider', source: 'model',
     when: 'within forty-eight (48) hours of becoming aware of it', due_note: 'Runs from an event (becoming aware); no date until it happens.',
     status: 'confirmed', confirmed_by: 'alice', owner: 'alice', version: 2 }),
   base({ id: 'o3', kind: 'payment', action: 'Invoices are payable', clause: '4.2', party: null, when: 'thirty (30) days from the invoice date',
@@ -45,8 +45,10 @@ describe('Obligations (S3.6)', () => {
     const renewal = within(list).getByRole('listitem', { name: 'Give written notice of non-renewal: Proposed — not confirmed' });
     expect(renewal.textContent).toContain('Due 1 December 2028 (end of day, UTC)');
     expect(renewal.textContent).toContain('ending on 1 March 2029');
+    expect(renewal.textContent).toContain('read by rules');
     expect(within(renewal).getByRole('link', { name: 'Open the words' }).getAttribute('href')).toBe('/m/M-101/documents/d1/read?v=v1&at=100-180');
     expect(within(list).getByRole('listitem', { name: /^Notify Client/ }).textContent).toContain('Confirmed by alice');
+    expect(within(list).getByRole('listitem', { name: /^Notify Client/ }).textContent).toContain('proposed by the model, its words checked');
     const late = within(within(list).getByRole('region', { name: 'Overdue' })).getByRole('listitem', { name: /^Invoices are payable/ });
     expect(within(late).getByText('Overdue')).toBeTruthy();
     expect((await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);

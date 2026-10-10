@@ -38,8 +38,9 @@ export default function MatterObligations() {
   const read = async () => {
     setBusy(true); setError(''); setMsg('');
     try {
-      const r = await api.post<{ added: number }>(`/api/legal/matters/${encodeURIComponent(matter.id)}/documents/${encodeURIComponent(doc)}/obligations/extract`, {});
-      setMsg(r.added ? `${r.added} ${r.added === 1 ? 'obligation' : 'obligations'} found and proposed.` : 'Nothing new: every obligation found is already listed.');
+      const r = await api.post<{ added: number; model: 'used' | 'off' | 'unavailable' }>(`/api/legal/matters/${encodeURIComponent(matter.id)}/documents/${encodeURIComponent(doc)}/obligations/extract`, {});
+      setMsg((r.added ? `${r.added} ${r.added === 1 ? 'obligation' : 'obligations'} found and proposed.` : 'Nothing new: every obligation found is already listed.')
+        + (r.model === 'unavailable' ? ' The model could not be reached, so only the rules read this document.' : ''));
       await refresh();
     } catch (err) { setError(err instanceof ApiError ? err.message : 'The document could not be read.'); }
     finally { setBusy(false); }
@@ -67,7 +68,7 @@ export default function MatterObligations() {
               </div>
               <button type="button" className="lw-btn lw-btn-primary" disabled={!doc || busy} onClick={read}><CalendarCheck />{busy ? 'Reading…' : 'Read its obligations'}</button>
             </div>
-            <p className="lw-meta" style={{ margin: '8px 0 0' }}>Notice periods, renewal windows, termination and consent rights, payment and notification duties, read by rules from the document's own words. Each is proposed until a lawyer confirms it; a date is given only where the document gives one.</p>
+            <p className="lw-meta" style={{ margin: '8px 0 0' }}>Terms, notice periods, renewal and break dates, termination and consent rights, payment, notification and other duties, read from the document's own words: by rules first, then by the model, whose every proposal is checked against the sentence. Each is proposed until a lawyer confirms it; a date is given only where the document fixes one.</p>
             {msg && <p className="lw-meta" role="status" style={{ margin: '6px 0 0' }}>{msg}</p>}
             {error && <ErrorNote>{error}</ErrorNote>}
           </section>
@@ -126,7 +127,8 @@ function Item({ o }: { o: Obligation }) {
           <Link className="lw-cite-act lw-meta" to={at}>Open the words</Link>
         </span>
       </div>
-      <p className="lw-meta" style={{ margin: '2px 0' }}>{[o.party, o.clause && `clause ${o.clause}`, o.document_title, o.owner && `owner ${o.owner}`].filter(Boolean).join(' · ')}</p>
+      <p className="lw-meta" style={{ margin: '2px 0' }}>{[o.party, o.clause && `clause ${o.clause}`, o.document_title, o.owner && `owner ${o.owner}`,
+        o.source === 'rules' ? 'read by rules' : o.source === 'model' ? 'proposed by the model, its words checked' : `added by ${o.created_by}`].filter(Boolean).join(' · ')}</p>
       {o.when && <p style={{ margin: '2px 0' }}>{`When: ${o.when}`}</p>}
       {o.due_date
         ? <p style={{ margin: '2px 0' }}><b>{`Due ${day(o.due_date)}`}</b><span className="lw-meta">{` (end of day, ${o.timezone})`}</span></p>

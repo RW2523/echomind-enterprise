@@ -1,0 +1,195 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "e16681f",
+  "time": "20261010-100341",
+  "prompt_version": "obligations-s3.6e",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 3,
+  "expected": 12,
+  "found": "10/12",
+  "timing_in_its_words": "7/8",
+  "dates_right": "2/3",
+  "dates_guessed": 0,
+  "extra": 1,
+  "controls_clean": "1/1",
+  "all_proposed": true,
+  "by_kind": {
+   "consent": "1/1",
+   "duty": "4/5",
+   "expiry": "1/2",
+   "notification": "1/1",
+   "payment": "2/2",
+   "termination": "1/1"
+  },
+  "ms_per_document": 1738
+ },
+ "documents": [
+  {
+   "id": "L1-lease-uk",
+   "ms": 1381,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2041-06-23",
+     "found": false,
+     "when_ok": null,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "quarterly",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "quarterly",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "duty",
+     "due": "2031-06-24",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2031-06-24",
+     "got_when": "on 24 June 2031",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "duty",
+     "when": "last year of the term",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "in the last year of the term",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.2",
+     "kind": "duty",
+     "when": "two (2) months after receiving it",
+     "found": false,
+     "when_ok": false,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "4.1",
+     "kind": "consent",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "without the Landlord's consent, which is not to be unreasonably withheld",
+     "status": "proposed"
+    }
+   ],
+   "extra": [
+    {
+     "clause": "3.2",
+     "kind": "notice",
+     "action": "carry out any repairs specified in a notice from the Landlord",
+     "due": null
+    }
+   ],
+   "all_proposed": true
+  },
+  {
+   "id": "L2-supply-us",
+   "ms": 3580,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2029-01-31",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2029-01-31",
+     "got_when": "January 31, 2029",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "tenth (10th) day of each calendar month",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "no later than the tenth (10th) day of each calendar month",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "duty",
+     "when": "two (2) business days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within two (2) business days following receipt",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "notification",
+     "when": "fifteen (15) days following delivery",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within fifteen (15) days following delivery and notify Supplier",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.1",
+     "kind": "termination",
+     "when": "ninety (90) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "ninety (90) days' prior written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.2",
+     "kind": "payment",
+     "when": "thirty (30) days following the invoice date",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within thirty (30) days following the invoice date",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true
+  },
+  {
+   "id": "L3-engagement-letter-control",
+   "ms": 253,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true
+  }
+ ]
+}

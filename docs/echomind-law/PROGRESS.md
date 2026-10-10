@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.6-obligations` |
-| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.5 merged (S3.3's manual Word check 🔒); S3.6 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.7-diligence` |
+| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.6 merged (S3.3's manual Word check 🔒); S3.7 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0027` (Law edition only) |
+| Migrations | `0001`–`0028` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -538,6 +538,20 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Evaluation:** three blind held-out sets in turn (8/12, 13/16, then 12/12 with the control clean); each became tuning data once it informed a change. Golden G1–G10: 52/55, fixes 8/8, no false findings. The misses are undefined terms the rules do not recognise.
 - **Shared change:** the citation checker uses the numbering helper (citations-s3.4c/d); T07 is unchanged at 55/55 and 27/28.
 
+### Session 3 (continued) — S3.6 Obligations and deadlines (DOC-05)
+- **Rules first (D-050):**
+  - sentences that bind someone and give a time, or a consent right, become proposed obligations;
+  - each keeps its kind, party, action, the timing in the document's words, and the exact sentence and clause.
+- **Dates only from dates the document fixes:** term ends, non-renewal and break deadlines, dated events, and periods after them. The counting is said and must be confirmed. No date was guessed in any run.
+- **Checked model proposals:** only for binding sentences the rules did not read. The timing must be the sentence's words, the party named in it, and the model's dates are never used. AI-addressed text is withheld; the rules stand alone if the model is down.
+- **Tracker (migration 0028):**
+  - proposed until a lawyer confirms with an owner;
+  - edit, done, dismiss and reopen as versions with reasons, in an append-only history; the audit holds no content;
+  - timezone (`LEGAL_TIMEZONE`); calendar file off by default (`LEGAL_OBLIGATIONS_ICS`);
+  - purged with the document.
+- **UI:** the matter's "Obligations" page. A document is read; items are grouped as overdue, dated, or running from an event; each shows its words, how its date was reached and its source; confirm, edit, done, dismiss, history. Journey 27; screenshot 40.
+- **Evaluation:** four blind held-out sets in turn (rules: 9/13, 5/10, 5/12; with the checked model: 10/12), none with a guessed date, every control clean. Golden G1–G13 with the model: 56/56, dates 15/15.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -575,7 +589,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | DOC-02 | PARTIAL: built; manual Word check 🔒 | S3.2–S3.3 | Playbooks (D-046); redlines and Word tracked changes, T10 automated checks and LibreOffice round trips pass (D-047). The manual Microsoft Word check by a person is pending |
 | DOC-03 | DONE for the pilot (court rules not yet read) | S3.4 | References resolved to exact clauses or flagged missing; quotations compared word for word with diffs; external authorities listed and always UNVERIFIED (P-009), impossible ones flagged; per-viewer targets; T07 golden 55/55, held-out 27/28 (D-048) |
 | DOC-04 | DONE for the pilot (undefined-term detection heuristic) | S3.5 | Definitions, numbering and references with offsets; corrections only through an approved redline; held-out 12/12 on the third blind set (D-049) |
-| DOC-05 | MISSING | S3.6 | |
+| DOC-05 | DONE for the pilot (reminders not sent) | S3.6 | Rules and checked model proposals with exact words; dates only from the document; confirmed by a lawyer; versioned edits; held-out 10/12 with the model (D-050) |
 | DOC-06 | MISSING | S3.7 | |
 | DOC-07 | MISSING | S3.8 | |
 | OPT-01 | MISSING | S4.1 | Needs business approval |
@@ -610,27 +624,25 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S3.6 Obligations tracker (DOC-05)** on `law/s3.6-obligations`, per IMPLEMENTATION_PLAN §5 and §7: `GET/POST …/obligations`, `PATCH …/obligations/{id}` (confirm or edit), `ai.draft` / `matter.update`, audit `obligation.*`. S3.5 is merged into `feature/echomind-law`.
+Start **S3.7 Due diligence (DOC-06)** on `law/s3.7-diligence`, per IMPLEMENTATION_PLAN §5 and §7: `POST …/diligence/runs`, `GET …/diligence/runs/{id}`, `PATCH …/diligence/issues/{id}`, `ai.draft`, audit `diligence.*`. S3.6 is merged into `feature/echomind-law`.
 1. **Audit first:**
-   - The Silent Assist action items (S2.5) are from calls only.
-   - Minutes' action items (S2.6) carry owners and deadlines.
-   - S2.3 `compare.facts` reads amounts, periods, percentages and laws.
-   - S2.1 clauses give exact offsets; `documents.numbering` (S3.5) completes them.
-2. **Extraction, with evidence spans:**
-   - What to extract: notice periods, renewal and non-renewal windows, termination rights, consent rights, change of control, and payment terms.
-   - **Rules where the wording is regular** (periods, "within N days of", "at least N days before"). The model is used only to name the obligation and its party, and every span is verified.
-   - Nothing is shown as confirmed until a person confirms it.
-3. **The tracker:**
-   - `legal_obligations`: trigger, computed due date where a date is known, timezone, owner, status, `confirmed_by`, evidence. Edits are versioned and audited.
-   - **Dates:** computed only from a date in the document (effective date, term), with the timezone stated. "Unknown until X happens" is said plainly; a date is never guessed.
-   - ICS export off by default (a setting); reminders off.
-4. **UI:** per matter and per document; confirm or edit with a reason; overdue and upcoming; evidence opens at its sentence.
-5. **Tests:**
-   - fixture contracts give the expected obligations with evidence spans;
-   - edits audited; timezone correct;
-   - golden and held-out written blind;
-   - journey 27 (the demo MSA: 90-day non-renewal notice before the end of the 36-month Initial Term from 2 March 2026; 48-hour breach notice; 30-day payment);
-   - D-050, run 27; merge.
-6. **Carry-overs:**
-   - S3.4 court rules, and S3.5 undefined-term recall (both to the S3.9 gate with fresh held-out sets);
+   - the background job runner (S1.6);
+   - per-document checks already built, and their reports' shapes: playbook (S3.2), citations (S3.4), definitions (S3.5), obligations (S3.6);
+   - the document list and labels (S1.9).
+2. **Checklists:** firm checklist templates (corporate acquisition, commercial contracts, real estate), versioned and approved like playbooks. Each item has the documents expected ("articles of association", "board minutes approving …") and the questions to answer.
+3. **Data-room run (a background job):**
+   - each matter document is matched to checklist items by its title and content; unmatched items form the missing-document list;
+   - each matched document is checked with what exists (change of control, assignment and consent, termination, liability cap, governing law, expiry and renewal dates), each answer quoting its sentence;
+   - **preliminary** until a reviewer verifies it.
+4. **Issue register:** issues with severity, the source quote and document, a reviewer, and status (preliminary, verified, dismissed with a reason), with an append-only trail and a deal-level summary.
+5. **UI:** the matter's "Due diligence" page: start a run, progress, missing documents, the issue register, and review actions.
+6. **Tests:**
+   - a synthetic data room with seeded issues and missing documents (red first);
+   - golden and held-out sets written blind;
+   - journey 28;
+   - D-051, run 28; merge.
+7. **Carry-overs:**
+   - S3.4 court rules;
+   - S3.5 undefined-term recall;
+   - S3.6 business days and recurring next dates;
    - S3.3 manual Word check 🔒.

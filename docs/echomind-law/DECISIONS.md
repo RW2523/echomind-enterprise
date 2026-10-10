@@ -1099,6 +1099,52 @@ Every entry records the options considered, the recommendation, the consequence 
   - Definitions in tables are not read.
   - A gap is reported, never renumbered.
 
+### D-050 Obligations and deadlines: rules first, checked model proposals, no date guessed — RECORDED (S3.6; DOC-05)
+- **Audit:**
+  - Silent Assist (S2.5) and minutes (S2.6) take action items from meetings, not contracts.
+  - The S2.3 fact reader gives periods and dates; S2.1 clauses and `documents.numbering` (S3.5) give where each sentence is.
+- **Reading a contract (`obligations/extract.py`, rules):** a clause sentence that binds someone ("shall", "must", "may", "is payable", "survives", "unless … gives notice") and gives a time, or a consent right, becomes a proposed obligation. It keeps:
+  - its kind: expiry, renewal, termination (break rights included), change of control, consent, payment, notification, post-termination, confidentiality, survival, duty or notice. The kind is read from the main clause, not from its "unless …" condition;
+  - the party, as the document names it;
+  - the action, and when, both in the document's words;
+  - the exact sentence, at its offsets, without a heading line read into it.
+- **Dates come only from dates the document fixes,** with the counting said and to be confirmed:
+  - a term's end: N months or years from a dated start ("the Effective Date", "the date of this agreement", "from and including"), read as the day before the anniversary;
+  - a non-renewal deadline counted back from that end;
+  - a break date (the Nth anniversary) less its notice period;
+  - a dated event ("shall take place on …", "shall release … on …") or a defined date ("on the Maturity Date");
+  - a period after a dated event ("within eighteen (18) months after Completion"; not business days).
+
+  Everything else runs from an event (an invoice, a breach, termination) and has no date until it happens. A date is never guessed.
+- **The model (`obligations/model.py`, on by default, `LEGAL_OBLIGATIONS_MODEL`)** proposes obligations only for binding sentences the rules did not read. Each proposal is checked:
+  - its timing must be copied from the sentence, or it is dropped;
+  - a party the sentence does not name is left blank;
+  - its action must be the sentence's words, or the rules' reading is used;
+  - **its dates are never used**: the rules compute one from the sentence or there is none.
+
+  AI-addressed text is withheld (T08). If the model cannot be reached, the rules' findings stand and the page says so.
+- **The tracker (migration 0028):**
+  - Everything is proposed until a lawyer (lead, attorney, reviewer) confirms it, with an owner who is a member of the matter.
+  - Edits (date, timezone, party, wording), done, dismiss (with a reason) and reopen are versions; a reason is required to edit or dismiss. The history is append-only, and the audit trail holds no content.
+  - Dates are shown at the end of the day in a timezone (`LEGAL_TIMEZONE`, UTC until the firm sets it), and overdue is judged by it.
+  - The calendar file is off unless `LEGAL_OBLIGATIONS_ICS` is on, and then holds confirmed, dated obligations only.
+  - Obligations are shown only with their document and purged with it.
+- **Evaluation (`eval/law/obligations/run_obligations_eval.py`):** fictional contracts with a lawyer's deadlines list and controls with none. Each held-out set was committed before its run and became tuning data after.
+  - **Golden, first run (rules):** 10/21 found, dates 1/5. Tuned to 21/21 and 5/5; one expectation was renamed from confidentiality to survival (a naming choice), and recorded.
+  - **Held-out 1 (s3.6b): 9/13** (11/13 counting two found under another kind); 0/4 dates. The runner first reported 2 guessed dates; that was its own bug (an empty date counted as a guess), corrected from the saved results without a re-run: **0 guessed**.
+  - **Held-out 2 (s3.6c): 5/10,** 0/2 dates, none guessed, control clean.
+  - **Held-out 3 (s3.6d): 5/12,** 0/3 dates, none guessed, control clean.
+
+    **The rules alone found about half of what a lawyer lists in unseen wording**, while never guessing a date. This is why the checked model pass was added.
+  - **Held-out 4 (s3.6e, rules and the model): 10/12** (11/12 counting one found under another kind), dates 2/3, **none guessed, control clean.** The control was an engagement letter whose "We will advise you" was correctly not listed. The miss: "fifteen (15) years from and including 24 June 2026".
+  - **Golden (G1–G13) with the model: 56/56, dates 15/15, none guessed, controls 4/4.** Three extras, all in the demo MSA and arguably trackable: the notice formalities, the monthly fee and monthly invoicing.
+- **Limits:**
+  - Business days are not counted into dates.
+  - Recurring deadlines ("quarterly", "each anniversary", "by the fifth Business Day of each month") have no next date computed.
+  - A sentence gives at most one item of each kind.
+  - The model's kind can differ from a lawyer's ("notice" for a repair notice duty).
+  - Reminders are not sent.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
