@@ -1,73 +1,83 @@
 {
- "about": "S3.6 obligations and deadlines (DOC-05) — the HELD-OUT set (second): written for obligations-s3.6c before it was run, never used to change it, run once per version. Fictional documents only. The first held-out set is now G5–G7 in golden.json.",
+ "about": "S3.6 obligations and deadlines (DOC-05) — the HELD-OUT set (third): written for obligations-s3.6d before it was run, never used to change it, run once per version. Fictional documents only. Earlier held-out sets are G5–G10 in golden.json.",
  "documents": [
   {
-   "id": "I1-employment-uk",
-   "name": "employment.txt",
-   "text": "EMPLOYMENT CONTRACT (fictional)\n\nThis Contract is between Ashgrove Design Ltd (the \"Company\") and Mira Okonjo (the \"Employee\").\n\n1. Start\n1.1 \"Start Date\" means 1 November 2026.\n1.2 The first six (6) months of employment from the Start Date are a probationary period.\n\n2. Holiday\n2.1 Holiday must be taken by 31 December in each year.\n\n3. Ending employment\n3.1 After the probationary period, either party may terminate the employment on three (3) months' written notice.\n3.2 On termination the Employee shall return all Company property.\n3.3 For six (6) months after the Termination Date, the Employee shall not work for a competitor of the Company.\n",
+   "id": "K1-distribution-uk",
+   "name": "distribution.txt",
+   "text": "DISTRIBUTION AGREEMENT (fictional)\n\nThis Agreement is made on 12 January 2026 between Calloway Instruments Ltd (the \"Supplier\") and Brenner Medical GmbH (the \"Distributor\").\n\n1. Term\n1.1 This Agreement shall remain in force for an initial period of five (5) years from the date of this Agreement and thereafter until terminated by either party giving not less than twelve (12) months' notice.\n\n2. Orders and payment\n2.1 The Distributor shall place a forecast with the Supplier by the fifth Business Day of each month.\n2.2 The Distributor shall pay each invoice within sixty (60) days of the end of the month in which it is issued.\n2.3 The Supplier may increase its prices once in each calendar year by giving the Distributor not less than ninety (90) days' written notice.\n\n3. Minimum purchases\n3.1 If the Distributor fails to meet the Minimum Purchase Target in any year, the Supplier may terminate this Agreement by giving thirty (30) days' notice within three (3) months after the end of that year.\n\n4. After termination\n4.1 Upon termination the Distributor shall cease to use the Supplier's trade marks.\n4.2 The Distributor may sell its remaining stock for six (6) months after termination.\n",
    "expect": [
     {
-     "clause": "1.2",
+     "clause": "1.1",
      "kind": "expiry",
-     "due": "2027-04-30"
+     "due": "2031-01-11"
+    },
+    {
+     "clause": "1.1",
+     "kind": "termination",
+     "when": "twelve (12) months"
     },
     {
      "clause": "2.1",
      "kind": "duty",
-     "when": "31 December"
-    },
-    {
-     "clause": "3.1",
-     "kind": "termination",
-     "when": "three (3) months"
-    },
-    {
-     "clause": "3.2",
-     "kind": "post_termination"
-    },
-    {
-     "clause": "3.3",
-     "kind": "post_termination",
-     "when": "six (6) months after the Termination Date"
-    }
-   ]
-  },
-  {
-   "id": "I2-loan-facility-us",
-   "name": "loan.txt",
-   "text": "LOAN AGREEMENT (fictional)\n\nThis Loan Agreement is dated as of July 1, 2026 between First Harbor Bank (the \"Lender\") and Quayside Foods, Inc. (the \"Borrower\").\n\n1. Definitions\n1.1 \"Maturity Date\" means June 30, 2029.\n\n2. Repayment\n2.1 The Borrower shall repay the Loan in full on the Maturity Date.\n2.2 Interest is payable quarterly in arrears on the last Business Day of each March, June, September and December.\n2.3 The Borrower may prepay the Loan in whole or in part upon not less than ten (10) Business Days' prior written notice to the Lender.\n\n3. Covenants\n3.1 The Borrower shall deliver its annual financial statements within one hundred twenty (120) days after the end of each fiscal year.\n3.2 The Borrower shall notify the Lender within five (5) Business Days of any Event of Default.\n",
-   "expect": [
-    {
-     "clause": "2.1",
-     "kind": "payment",
-     "due": "2029-06-30"
+     "when": "fifth Business Day of each month"
     },
     {
      "clause": "2.2",
      "kind": "payment",
-     "when": "quarterly in arrears"
+     "when": "sixty (60) days"
     },
     {
      "clause": "2.3",
      "kind": "notice",
-     "when": "ten (10) Business Days"
+     "when": "ninety (90) days"
     },
     {
      "clause": "3.1",
-     "kind": "duty",
-     "when": "one hundred twenty (120) days"
+     "kind": "termination",
+     "when": "three (3) months after the end of that year"
     },
     {
-     "clause": "3.2",
-     "kind": "notification",
-     "when": "five (5) Business Days"
+     "clause": "4.1",
+     "kind": "post_termination"
+    },
+    {
+     "clause": "4.2",
+     "kind": "post_termination",
+     "when": "six (6) months after termination"
     }
    ]
   },
   {
-   "id": "I3-press-release-control",
-   "name": "press.txt",
-   "text": "PRESS RELEASE (fictional)\n\n1. News\n1.1 Wrenfield Partners will open a new office in Leeds within the next 30 days.\n1.2 Our team will respond to all enquiries within 24 hours.\n1.3 The firm celebrates its 25th anniversary in 2027.\n",
+   "id": "K2-escrow-us",
+   "name": "escrow.txt",
+   "text": "ESCROW AGREEMENT (fictional)\n\nThis Escrow Agreement is dated as of March 3, 2026.\n\n1. Release\n1.1 The Escrow Agent shall release the Escrow Amount to the Seller on September 3, 2027, unless a Claim Notice has been delivered.\n1.2 The Buyer must deliver any Claim Notice no later than August 20, 2027.\n1.3 The Escrow Agent shall respond to joint written instructions within three (3) Business Days.\n\n2. Fees\n2.1 The Buyer and the Seller shall each pay one half of the Escrow Agent's annual fee on each anniversary of the date of this Agreement.\n",
+   "expect": [
+    {
+     "clause": "1.1",
+     "kind": "duty",
+     "due": "2027-09-03"
+    },
+    {
+     "clause": "1.2",
+     "kind": "notice",
+     "due": "2027-08-20"
+    },
+    {
+     "clause": "1.3",
+     "kind": "duty",
+     "when": "three (3) Business Days"
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "each anniversary"
+    }
+   ]
+  },
+  {
+   "id": "K3-matter-summary-control",
+   "name": "summary.txt",
+   "text": "MATTER SUMMARY (fictional)\n\n1. Facts\n1.1 The parties signed the supply agreement on 2 March 2026 for a term of three (3) years.\n1.2 The first delivery was made on 14 April 2026, thirty (30) days late.\n1.3 The client paid the first invoice in full.\n",
    "expect": []
   }
  ]
