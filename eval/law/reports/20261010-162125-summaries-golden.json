@@ -1,0 +1,528 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "a1a91cb",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-162125",
+  "prompt_version": "summary-s4.2"
+ },
+ "summary": {
+  "documents": 4,
+  "facts": 19,
+  "facts_covered": "17/19",
+  "citations_right": "17/17",
+  "quotes_verified": "21/21",
+  "figures_unsupported": 0,
+  "points_per_document": 5.2,
+  "seconds_per_document": 7.2
+ },
+ "documents": [
+  {
+   "id": "G1-services-agreement",
+   "seconds": 8.1,
+   "transcript": false,
+   "facts": [
+    {
+     "fact": "three-year term from 1 March 2026",
+     "anchor": "three (3) years",
+     "where": {
+      "clause": "2.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The Agreement starts on 1 March 2026 and continues for three years.",
+     "got_cite": {
+      "clause": "2.1",
+      "line": 4
+     }
+    },
+    {
+     "fact": "renewal unless 60 days' notice",
+     "anchor": "sixty (60) days",
+     "where": {
+      "clause": "2.2"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The Agreement renews for successive one-year periods unless notice of non-renewal is given at least 60 days before the end of the term.",
+     "got_cite": {
+      "clause": "2.2",
+      "line": 5
+     }
+    },
+    {
+     "fact": "invoices payable in 30 days",
+     "anchor": "thirty (30) days of its date",
+     "where": {
+      "clause": "4.2"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The Customer must pay each invoice within 30 days of its date.",
+     "got_cite": {
+      "clause": "4.2",
+      "line": 8
+     }
+    },
+    {
+     "fact": "liability capped at EUR 1,000,000",
+     "anchor": "EUR 1,000,000",
+     "where": {
+      "clause": "9.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "Each party's total liability under the Agreement is limited to EUR 1,000,000.",
+     "got_cite": {
+      "clause": "9.1",
+      "line": 10
+     }
+    },
+    {
+     "fact": "no liability for indirect loss",
+     "anchor": "indirect or consequential loss",
+     "where": {
+      "clause": "9.2"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "Neither party is liable for indirect or consequential loss.",
+     "got_cite": {
+      "clause": "9.2",
+      "line": 11
+     }
+    },
+    {
+     "fact": "termination for convenience on 90 days' notice",
+     "anchor": "ninety (90) days",
+     "where": {
+      "clause": "12.2"
+     },
+     "covered": false,
+     "cite_ok": null,
+     "point": null,
+     "got_cite": null
+    },
+    {
+     "fact": "Swedish law",
+     "anchor": "laws of Sweden",
+     "where": {
+      "clause": "15.1"
+     },
+     "covered": false,
+     "cite_ok": null,
+     "point": null,
+     "got_cite": null
+    }
+   ],
+   "points": [
+    {
+     "text": "The Agreement starts on 1 March 2026 and continues for three years.",
+     "quote": "This Agreement starts on 1 March 2026 and continues for three (3) years.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "2.1",
+      "line": 4
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The Agreement renews for successive one-year periods unless notice of non-renewal is given at least 60 days before the end of the term.",
+     "quote": "It renews for successive one-year periods unless either party gives notice of non-renewal at least sixty (60) days before the end of the term.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "2.2",
+      "line": 5
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The Customer must pay the fees set out in Schedule 1.",
+     "quote": "The Customer shall pay the fees set out in Schedule 1.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "4.1",
+      "line": 7
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The Customer must pay each invoice within 30 days of its date.",
+     "quote": "The Customer shall pay each invoice within thirty (30) days of its date.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "4.2",
+      "line": 8
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "Each party's total liability under the Agreement is limited to EUR 1,000,000.",
+     "quote": "Each party's total liability under this Agreement is limited to EUR 1,000,000.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "9.1",
+      "line": 10
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "Neither party is liable for indirect or consequential loss.",
+     "quote": "Neither party is liable for indirect or consequential loss.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "9.2",
+      "line": 11
+     },
+     "figures_unsupported": []
+    }
+   ]
+  },
+  {
+   "id": "G2-settlement-call",
+   "seconds": 6.4,
+   "transcript": true,
+   "facts": [
+    {
+     "fact": "the offer of EUR 40,000 by 30 November",
+     "anchor": "EUR 40,000",
+     "where": {
+      "timecode": "10:03:40"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The supplier offers to pay EUR 40,000 by 30 November in full settlement, with no admission of liability.",
+     "got_cite": {
+      "timecode": "10:03:40"
+     }
+    },
+    {
+     "fact": "no admission of liability",
+     "anchor": "no admission of liability",
+     "where": {
+      "timecode": "10:03:40"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The supplier offers to pay EUR 40,000 by 30 November in full settlement, with no admission of liability.",
+     "got_cite": {
+      "timecode": "10:03:40"
+     }
+    },
+    {
+     "fact": "the client's condition: service credits extended",
+     "anchor": "service credits",
+     "where": {
+      "timecode": "10:05:12"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The client can accept the offer if the supplier extends the service credits to the end of the year.",
+     "got_cite": {
+      "timecode": "10:05:12"
+     }
+    },
+    {
+     "fact": "counter-proposal by Friday",
+     "anchor": "counter-proposal",
+     "where": {
+      "timecode": "10:06:30"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The attorney will send a counter-proposal to the supplier's counsel by Friday.",
+     "got_cite": {
+      "timecode": "10:06:30"
+     }
+    }
+   ],
+   "points": [
+    {
+     "text": "The supplier has offered to settle the invoice dispute.",
+     "quote": "The supplier has offered to settle the invoice dispute.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "10:02:13"
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The supplier offers to pay EUR 40,000 by 30 November in full settlement, with no admission of liability.",
+     "quote": "They offer to pay EUR 40,000 by 30 November in full settlement, with no admission of liability.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "10:03:40"
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The client can accept the offer if the supplier extends the service credits to the end of the year.",
+     "quote": "We can accept that if they also extend the service credits to the end of the year.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "10:05:12"
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The attorney will send a counter-proposal to the supplier's counsel by Friday.",
+     "quote": "I will send a counter-proposal to their counsel by Friday.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "10:06:30"
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The client agrees to the attorney's action and requests that the finance director be copied.",
+     "quote": "Agreed. Please copy our finance director.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "10:07:05"
+     },
+     "figures_unsupported": []
+    }
+   ]
+  },
+  {
+   "id": "G3-lease-pdf",
+   "seconds": 6.1,
+   "transcript": false,
+   "facts": [
+    {
+     "fact": "ten-year term",
+     "anchor": "ten (10) years",
+     "where": {
+      "page": 1
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The lease term is ten years starting from 1 April 2025.",
+     "got_cite": {
+      "clause": "3.1",
+      "line": 4,
+      "page": 1
+     }
+    },
+    {
+     "fact": "rent of GBP 84,000 a year",
+     "anchor": "GBP 84,000",
+     "where": {
+      "page": 2,
+      "line": 2
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The rent is GBP 84,000 per year, payable quarterly in advance.",
+     "got_cite": {
+      "clause": "6.1",
+      "line": 2,
+      "page": 2
+     }
+    },
+    {
+     "fact": "rent review in 2030",
+     "anchor": "1 April 2030",
+     "where": {
+      "page": 2,
+      "line": 3
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The rent is reviewed on 1 April 2030 to open market value.",
+     "got_cite": {
+      "clause": "6.2",
+      "line": 3,
+      "page": 2
+     }
+    },
+    {
+     "fact": "tenant's break on 31 March 2030",
+     "anchor": "31 March 2030",
+     "where": {
+      "page": 2,
+      "line": 5
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The Tenant may end the lease on 31 March 2030 by giving at least six months' written notice.",
+     "got_cite": {
+      "clause": "8.1",
+      "line": 5,
+      "page": 2
+     }
+    }
+   ],
+   "points": [
+    {
+     "text": "The lease term is ten years starting from 1 April 2025.",
+     "quote": "The term of this Lease is ten (10) years from 1 April 2025.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "3.1",
+      "line": 4,
+      "page": 1
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The rent is GBP 84,000 per year, payable quarterly in advance.",
+     "quote": "The rent is GBP 84,000 per year, payable quarterly in advance.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "6.1",
+      "line": 2,
+      "page": 2
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The rent is reviewed on 1 April 2030 to open market value.",
+     "quote": "The rent is reviewed on 1 April 2030 to open market value.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "6.2",
+      "line": 3,
+      "page": 2
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The Tenant may end the lease on 31 March 2030 by giving at least six months' written notice.",
+     "quote": "The Tenant may end this Lease on 31 March 2030 by giving at least six months' written notice.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "8.1",
+      "line": 5,
+      "page": 2
+     },
+     "figures_unsupported": []
+    }
+   ]
+  },
+  {
+   "id": "G4-board-minutes",
+   "seconds": 8.3,
+   "transcript": false,
+   "facts": [
+    {
+     "fact": "accounts approved",
+     "anchor": "approved the accounts",
+     "where": {
+      "clause": "1.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The board approved the accounts for the year ended 30 September 2025.",
+     "got_cite": {
+      "clause": "1.1",
+      "line": 4
+     }
+    },
+    {
+     "fact": "1,000 shares allotted",
+     "anchor": "1,000 ordinary shares",
+     "where": {
+      "clause": "2.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The board approved the allotment of 1,000 ordinary shares to the founders.",
+     "got_cite": {
+      "clause": "2.1",
+      "line": 6
+     }
+    },
+    {
+     "fact": "facility of GBP 2,000,000 to negotiate",
+     "anchor": "GBP 2,000,000",
+     "where": {
+      "clause": "3.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The board noted the bank's offer of a GBP 2,000,000 facility.",
+     "got_cite": {
+      "clause": "3.1",
+      "line": 8
+     }
+    },
+    {
+     "fact": "next meeting 14 April 2026",
+     "anchor": "14 April 2026",
+     "where": {
+      "clause": "4.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The next meeting will be held on 14 April 2026.",
+     "got_cite": {
+      "clause": "4.1",
+      "line": 10
+     }
+    }
+   ],
+   "points": [
+    {
+     "text": "The board approved the accounts for the year ended 30 September 2025.",
+     "quote": "The board approved the accounts for the year ended 30 September 2025.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "1.1",
+      "line": 4
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The board approved the allotment of 1,000 ordinary shares to the founders.",
+     "quote": "The board approved the allotment of 1,000 ordinary shares to the founders.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "2.1",
+      "line": 6
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "C. Osei was asked to negotiate the covenants for the bank facility before 28 February 2026.",
+     "quote": "asked C. Osei to negotiate the covenants before 28 February 2026.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "3.1",
+      "line": 8
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The board noted the bank's offer of a GBP 2,000,000 facility.",
+     "quote": "The board noted the bank's offer of a GBP 2,000,000 facility",
+     "verification": "normalized",
+     "cite": {
+      "clause": "3.1",
+      "line": 8
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The next meeting will be held on 14 April 2026.",
+     "quote": "The next meeting will be held on 14 April 2026.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "4.1",
+      "line": 10
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The meeting was held on 10 January 2026.",
+     "quote": "held on 10 January 2026",
+     "verification": "verbatim",
+     "cite": {
+      "line": 1
+     },
+     "figures_unsupported": []
+    }
+   ]
+  }
+ ]
+}

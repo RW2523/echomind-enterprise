@@ -22,9 +22,9 @@ from ..research import evidence
 from ..research import llm as llm_mod
 from ..research import prompt as research_prompt
 
-VERSION = "summary-s4.2"
-SECTION_CHARS = 3500
-MAX_POINTS = 6
+VERSION = "summary-s4.2b"
+SECTION_CHARS = 2400
+MAX_POINTS = 10
 _TIMECODE = re.compile(r"^\[(\d{2}:\d{2}:\d{2})\]", re.M)
 _NUMBER = re.compile(r"\d[\d,.]*")
 
