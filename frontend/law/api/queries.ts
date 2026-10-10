@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -232,3 +232,13 @@ export const useConnectors = (enabled: boolean) =>
 export const useConnectorLinks = (matterId: string) =>
   useQuery({ queryKey: keys.links(matterId),
     queryFn: () => api.get<{ links: ConnectorLink[]; connectors: { id: string; name: string; kind: string }[] }>(`/api/legal/matters/${encodeURIComponent(matterId)}/connector-links`) });
+
+// Intake (S4.1, D-054)
+export const intakePath = (id?: string) => (id ? `/api/legal/intake/${encodeURIComponent(id)}` : '/api/legal/intake');
+export const useIntakes = () =>
+  useQuery({ queryKey: ['intakes'] as const,
+    queryFn: () => api.get<{ intakes: IntakeSummary[]; can: IntakeCan; templates: string[]; script: { version: string; questions: IntakeQuestion[] } }>(intakePath()) });
+export const useIntake = (id: string) => useQuery({ queryKey: ['intake', id] as const, queryFn: () => api.get<IntakeView>(intakePath(id)) });
+export const partiesPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/parties`;
+export const useParties = (matterId: string) =>
+  useQuery({ queryKey: ['matter', matterId, 'parties'] as const, queryFn: () => api.get<{ parties: MatterParty[]; can_manage: boolean }>(partiesPath(matterId)) });

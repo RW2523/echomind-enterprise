@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router';
 import { api, ApiError } from '../api/client';
-import { keys, useApiMutation } from '../api/queries';
-import type { Matter, Sensitivity } from '../api/types';
+import { keys, partiesPath, useApiMutation, useParties } from '../api/queries';
+import type { Matter, MatterParty, PartyRole, Sensitivity } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
-import { Dialog, ErrorNote, Field, MatterStatusPill, roleLabel, SensitivityPill } from '../ui/primitives';
+import { Dialog, EmptyState, ErrorNote, Field, MatterStatusPill, roleLabel, SensitivityPill } from '../ui/primitives';
+import { useQueryClient } from '@tanstack/react-query';
 import { HoldNotice } from '../ui/records';
 
 export default function MatterOverview() {
@@ -51,9 +52,7 @@ export default function MatterOverview() {
             <Link to="../members" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Members</Link>
           </div>
         </section>
-        <p className="lw-meta" style={{ margin: 0 }}>
-          Drafting and live assistance for this matter arrive in later releases of EchoMind Law.
-        </p>
+        <Parties matterId={matter.id} />
       </div>
       {editing && <EditMatterDialog matter={matter} onClose={() => setEditing(false)} />}
     </>
@@ -88,5 +87,71 @@ function EditMatterDialog({ matter, onClose }: { matter: Matter; onClose: () => 
         </div>
       </form>
     </Dialog>
+  );
+}
+
+const PARTY_ROLE: Record<PartyRole, string> = { adverse: 'Adverse party', related: 'Related party', client_group: "Client's group", other: 'Other' };
+
+/** The matter's party register (S4.1, D-054): the other side and related parties, which every new enquiry is
+ *  screened against. Kept by the matter's lead and attorneys; removing one keeps the history. */
+function Parties({ matterId }: { matterId: string }) {
+  const q = useParties(matterId);
+  const qc = useQueryClient();
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<PartyRole>('adverse');
+  const [removing, setRemoving] = useState<MatterParty | null>(null);
+  const [reason, setReason] = useState('');
+  const [error, setError] = useState('');
+  const refresh = () => qc.invalidateQueries({ queryKey: ['matter', matterId, 'parties'] });
+  const add = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    try { await api.post(partiesPath(matterId), { name, role }); setName(''); await refresh(); }
+    catch (err) { setError(err instanceof ApiError ? err.message : 'The party could not be added.'); }
+  };
+  const remove = async () => {
+    if (!removing) return;
+    setError('');
+    try { await api.post(`${partiesPath(matterId)}/${encodeURIComponent(removing.id)}/remove`, { reason }); setRemoving(null); setReason(''); await refresh(); }
+    catch (err) { setError(err instanceof ApiError ? err.message : 'The party could not be removed.'); }
+  };
+  if (q.isPending || q.isError) return null;
+  const { parties, can_manage } = q.data;
+  return (
+    <section className="lw-paper lw-sheet" aria-labelledby="parties-title" style={{ display: 'grid', gap: 12 }}>
+      <div>
+        <h2 className="lw-h2" id="parties-title" style={{ margin: 0 }}>Parties</h2>
+        <p className="lw-meta" style={{ margin: '2px 0 0' }}>The other side and related parties. New enquiries are checked against these names and the firm's clients.</p>
+      </div>
+      {parties.length === 0 ? <EmptyState title="No parties recorded">{can_manage ? 'Add the other side so that conflict checks can find this matter.' : 'The matter\'s lawyers add them.'}</EmptyState> : (
+        <ul className="lw-check-lines" aria-label="Parties">
+          {parties.map((p) => (
+            <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <span><b>{p.name}</b> <span className="lw-meta">{`${PARTY_ROLE[p.role]}${p.added_by ? ` · added by ${p.added_by}` : ''}`}</span></span>
+              {can_manage && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => setRemoving(p)} aria-label={`Remove ${p.name}`}>Remove</button>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {can_manage && (
+        <form onSubmit={add} style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap' }}>
+          <Field label="Party name">{(id) => <input id={id} className="lw-input" maxLength={160} value={name} onChange={(e) => setName(e.target.value)} />}</Field>
+          <Field label="As">{(id) => (
+            <select id={id} className="lw-input" value={role} onChange={(e) => setRole(e.target.value as PartyRole)}>
+              {(Object.keys(PARTY_ROLE) as PartyRole[]).map((r) => <option key={r} value={r}>{PARTY_ROLE[r]}</option>)}
+            </select>)}</Field>
+          <button type="submit" className="lw-btn" disabled={!name.trim()}>Add party</button>
+        </form>
+      )}
+      {error && <ErrorNote>{error}</ErrorNote>}
+      {removing && (
+        <Dialog title={`Remove ${removing.name}?`} onClose={() => setRemoving(null)}
+          footer={<><button type="button" className="lw-btn" onClick={() => setRemoving(null)}>Cancel</button>
+            <button type="button" className="lw-btn lw-btn-primary" disabled={!reason.trim()} onClick={remove}>Remove</button></>}>
+          <p style={{ margin: '0 0 10px' }}>Conflict checks will no longer find this matter by this name. The register keeps who added and removed it, and why.</p>
+          <Field label="Reason">{(id) => <input id={id} className="lw-input" maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />}</Field>
+        </Dialog>
+      )}
+    </section>
   );
 }

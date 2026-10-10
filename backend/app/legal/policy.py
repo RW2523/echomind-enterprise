@@ -45,6 +45,8 @@ MATTER_ACTIONS: dict[str, frozenset] = {
     "export.request": _CONTRIBUTORS,
     "export.approve": frozenset({"lead", "attorney"}),
     "deletion.request": frozenset({"lead", "attorney"}),
+    # S4.1 (D-054): the matter's party register, which conflict searches read. Kept on closed matters too.
+    "parties.manage": frozenset({"lead", "attorney"}),
 }
 
 # What an approved break-glass grant allows (read only).
@@ -92,6 +94,12 @@ ORG_ACTIONS: dict[str, frozenset] = {
     # Due-diligence checklists (S3.7, D-051): written by lawyers, approved by a managing partner other than the author.
     "diligence.manage": frozenset({"managing_partner", "attorney"}),
     "diligence.approve": frozenset({"managing_partner"}),
+    # Intake (S4.1, D-054; OPT-01): front desk and lawyers take enquiries; lawyers approve replies; the conflicts
+    # team (and managing partners, the walls authority) see screening matches and decide; records administrators purge.
+    "intake.manage": frozenset({"intake", "paralegal", "attorney", "managing_partner"}),
+    "intake.approve": frozenset({"attorney", "managing_partner"}),
+    "conflicts.review": frozenset({"conflicts", "managing_partner"}),
+    "intake.purge": frozenset({"records_admin"}),
 }
 
 

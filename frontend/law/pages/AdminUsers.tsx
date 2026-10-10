@@ -8,7 +8,7 @@ import Toolbar from '../ui/Toolbar';
 import { CopyField, Dialog, ErrorNote, Field, roleLabel, Skeleton, StatusPill } from '../ui/primitives';
 import NotAvailable from './NotAvailable';
 
-const FIRM_ROLES: FirmRole[] = ['firm_admin', 'managing_partner', 'attorney', 'paralegal', 'reviewer', 'records_admin', 'read_only'];
+const FIRM_ROLES: FirmRole[] = ['firm_admin', 'managing_partner', 'attorney', 'paralegal', 'reviewer', 'records_admin', 'read_only', 'intake', 'conflicts'];
 const linkUrl = (l: EnrollmentLink) => `${window.location.origin}${l.path}`;
 
 /** Firm administration: accounts, firm roles, enrolment links. Firm admins see no matter content. */

@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.1-intake` |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 next: S4.1 |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.2-summaries` |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1 merged; S4.2 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0030` (Law edition only) |
+| Migrations | `0001`–`0031` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -586,6 +586,24 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Lawyer review packet** (`make_packet.py --phase 3`, 66 items), `score.py --phase 3`, and rubric `releases/phase3-rubric.md`. Scoring is 🔒.
 - **Docs:** D-053, run 30, `releases/phase3-gate.md`. Merged into `feature/echomind-law` under the standing approval.
 
+### Session 3 (continued) — S4.1 Intake assistant (OPT-01)
+- **Audit:** no intake or receptionist code existed. There was no register of matter parties, and firm roles were fixed by a CHECK constraint.
+- **Built (D-054), off by default (`LEGAL_INTAKE`; enquirer links also need `LEGAL_INTAKE_LINKS`):**
+  - **Migration 0031:** two firm roles (`intake`, `conflicts`) and a party register per matter. Intakes have an append-only trail, matches, consents, encrypted recordings and replies.
+  - **The script:** nine fixed questions after a disclaimer. No model is called.
+  - **Screening:** against clients and every live matter party. Staff see only "refer"; the conflicts team sees the matches and decides.
+  - **Recordings:** only under consent; withdrawal deletes them.
+  - **Replies:** from templates, approved by a second lawyer, with a guard against naming other clients.
+  - **Conversion:** a cleared enquiry becomes a client and matter.
+  - **Enquirer links:** single-use and hashed. Tokens are masked in the backend's and nginx's access logs.
+  - **Purge:** of the enquiry's personal data.
+  - **UI:** Enquiries, the enquiry page, the enquirer's page, and Parties on the matter overview.
+  - **Demo seed:** iris (intake) and conway (conflicts), with demo parties.
+- **Tests:**
+  - Backend 1230; security suite with an S4.1 group; Vitest 143; journey 30.
+  - The full browser suite: 30/30. Journey 30 found two UI bugs, both fixed.
+- **Docs:** D-054, THREAT_MODEL T-24, run 31. Merged into `feature/echomind-law`.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -659,19 +677,25 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **Phase 4** under the owner's standing approval (2026-10-10). Each slice sits behind its own flag, off by default (IMPLEMENTATION_PLAN §7, Phase 4). Phase 3 is merged into `feature/echomind-law`.
+Continue **Phase 4** under the owner's standing approval (2026-10-10). S4.1 is merged into `feature/echomind-law`.
+1. **S4.2 Summaries (OPT-02)** on `law/s4.2-summaries`. Translation stays BLOCKED: no local translation model or licence is approved. The audit is done:
+   - the AI artifact and review machinery (S2.6–S2.7) is reused: versions, second-person approval by hash, the Reviews queue, filing;
+   - the stored page and line maps give page/line citations;
+   - finalised transcripts carry `[HH:MM:SS]` timecodes.
 
-1. **S4.1 Intake assistant (OPT-01)** on `law/s4.1-intake`. Audit first: the legacy Smart Receptionist and voice intake code, consent, and conflicts data. Then tests red first. The slice covers:
-   - scripted administrative intake by text (voice through the existing capture path, with consent before recording);
-   - a disclaimer;
-   - conflict-name screening against client, matter-party and adverse-party lists, with minimised output: "possible conflict, refer to the conflicts team", never which matter;
-   - lawyer-approved replies only;
-   - the flag `LEGAL_INTAKE` (off).
-2. Then **S4.2:** summaries with timecode and page/line citations and reviewer edits. Translation stays BLOCKED (no local MT model or licence).
-3. Then **S4.3:** time-entry drafts from audited activities, edited and approved by the user, CSV export only.
-4. Then **S4.5:** the four-perspective panel, with independent citations, a disagreement matrix, a missing-fact stop, partner approval, a background queue and a benchmark.
-5. S4.4 stays BLOCKED (a licensed source and network approval).
-6. Phase 4 gate after S4.5.
+   A first draft of `backend/app/legal/summaries/summarize.py` exists, uncommitted. The slice covers:
+   - section-by-section key points, each quoting the document, with citations computed from the quote's position (page and line, the clause, or the transcript timecode);
+   - unverified quotes and unsupported figures marked;
+   - text addressed to an AI withheld;
+   - reviewer edits as new versions, with points marked as edited;
+   - approval by a second person, then filing; the original is never changed;
+   - the flag `LEGAL_SUMMARIES` (off);
+   - golden and blind held-out evaluation sets;
+   - a journey.
+2. Then **S4.3:** time-entry drafts from audited activities, edited and approved by the user, CSV export only.
+3. Then **S4.5:** the four-perspective panel.
+4. S4.4 stays BLOCKED.
+5. Then the Phase 4 gate.
 
 Still 🔒 and confirmed one by one:
 - the Phase 2 and Phase 3 lawyer reviews;

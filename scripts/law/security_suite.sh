@@ -37,6 +37,7 @@ declare -a SUITES=(
   "Obligations: proposed until confirmed, no date guessed, model checked (S3.6)|$L/test_law_obligations.py"
   "Due diligence: preliminary until reviewed, per-viewer visibility (S3.7)|$L/test_law_diligence.py"
   "Governance: both documents quoted and hidden with either (S3.8)|$L/test_law_governance.py"
+  "Intake: off by default, screening minimised, consent, links (S4.1)|$L/test_law_intake.py $L/test_law_route_table.py"
 )
 FAILED=0
 printf '%-52s %s\n' "Spec test" "Result"

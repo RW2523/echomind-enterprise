@@ -165,6 +165,32 @@ def test_identifiers_and_urls_stay_readable(monkeypatch):
     assert rec.getMessage() == 'HTTP Request: POST http://localhost:11435/api/embeddings "HTTP/1.1 200 OK"'
 
 
+def test_secrets_in_request_paths_are_masked_in_access_logs(monkeypatch):
+    """S4.1 (D-054): an enquirer's intake link is a credential, as is a sign-in enrolment token. The server's
+    access log line (a short path with no spaces, which the free-text rule keeps) must not carry them."""
+    import logging
+    from app.core.edition import ContentRedactingFilter
+    monkeypatch.setenv("ECHOMIND_EDITION", "law")
+    token = "Q3vR9_xYk2-PzLm8NwTa4cHj7UeBs1oGfDi6KqWt0Ve"
+    for path in (f"/api/intake-link/{token}", f"/api/intake-link/{token}/submit", f"/intake/{token}", f"/signin?enrol={token}"):
+        rec = logging.LogRecord("uvicorn.access", logging.INFO, __file__, 1, '%s - "%s %s HTTP/%s" %d',
+                                ("127.0.0.1:5000", "GET", path, "1.1", 200), None)
+        ContentRedactingFilter().filter(rec)
+        line = rec.getMessage()
+        assert token not in line and "<secret>" in line, line
+    rec = logging.LogRecord("uvicorn.access", logging.INFO, __file__, 1, '%s - "%s %s HTTP/%s" %d',
+                            ("127.0.0.1:5000", "GET", "/api/legal/matters", "1.1", 200), None)
+    ContentRedactingFilter().filter(rec)
+    assert "/api/legal/matters" in rec.getMessage()
+
+
+def test_the_law_backend_masks_link_tokens_in_its_access_log():
+    import logging
+    from app.core.edition import ContentRedactingFilter, install_log_redaction
+    install_log_redaction()
+    assert any(isinstance(f, ContentRedactingFilter) for f in logging.getLogger("uvicorn.access").filters)
+
+
 def test_log_filter_is_inert_outside_law(monkeypatch):
     import logging
     from app.core.edition import ContentRedactingFilter

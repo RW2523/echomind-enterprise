@@ -1180,3 +1180,107 @@ test('governance: a company\'s register, approvals, authority, policies and IP r
   await alice.getByRole('article', { name: 'Issue register' }).getByRole('listitem', { name: /^150 ordinary shares/ }).scrollIntoViewIfNeeded();
   await shot(alice, '42-governance-light');
 });
+
+test('intake: an enquirer answers through a link, the names are screened, the conflicts team decides, a lawyer approves the reply; a telephone enquiry becomes a matter', async ({ browser }) => {
+  test.setTimeout(400_000);
+  // The front desk sends a link; the enquirer, with no account, accepts the disclaimer and answers one question at a time.
+  const iris = await (await browser.newContext()).newPage();
+  await signIn(iris, 'iris');
+  await iris.getByRole('navigation', { name: 'Firm' }).getByRole('link', { name: 'Enquiries' }).click();
+  await iris.getByRole('button', { name: 'Send a link' }).click();
+  const linkDialog = iris.getByRole('dialog');
+  const url = (await linkDialog.getByTestId('copy-value').textContent())!.trim();
+  const reference = ((await linkDialog.getByRole('heading').textContent()) ?? '').replace('Link for enquiry ', '').trim();
+  expect(url).toMatch(/\/intake\/[A-Za-z0-9_-]{40,}$/);
+  await linkDialog.getByRole('button', { name: 'Done' }).click();
+
+  const enquirer = await (await browser.newContext()).newPage();
+  await enquirer.goto(new URL(url).pathname);
+  await expect(enquirer.getByText('This is not legal advice')).toBeVisible();
+  await enquirer.getByRole('button', { name: 'I understand, continue' }).click();
+  const answer = async (n: number, fill?: (f: ReturnType<Page['getByRole']>) => Promise<void>) => {
+    const f = enquirer.getByRole('form', { name: `Question ${n} of 9` });
+    await expect(f).toBeVisible();
+    if (fill) await fill(f);
+    await f.getByRole('button', { name: 'Next' }).click();
+  };
+  await answer(1, (f) => f.getByRole('textbox').fill('Tomas Reyes'));
+  await answer(2, (f) => f.getByRole('textbox').fill('Reyes Logistics SL'));
+  await answer(3, (f) => f.getByRole('textbox').fill('tomas@reyes-logistics.example'));
+  await answer(4);
+  await answer(5, async (f) => { await f.getByRole('combobox').selectOption('dispute'); });
+  await answer(6, (f) => f.getByRole('textbox').fill('Orrin Marine Limited'));
+  await answer(7, (f) => f.getByRole('textbox').fill('A charter party dispute over late delivery of cargo.'));
+  await answer(8);
+  await answer(9);
+  await enquirer.getByRole('button', { name: 'Send my answers' }).click();
+  await expect(enquirer.getByRole('heading', { name: 'Thank you' })).toBeVisible();
+
+  // The front desk sees only that the enquiry is referred: not which matter or client matched.
+  await iris.reload();
+  const row = iris.getByRole('row', { name: new RegExp(reference) });
+  await expect(row.getByText('Refer to the conflicts team')).toBeVisible();
+  await row.getByRole('link', { name: reference }).click();
+  await expect(iris.getByRole('region', { name: 'Answers' })).toContainText('Orrin Marine Limited');
+  await expect(iris.getByRole('region', { name: 'Conflicts check' })).toHaveCount(0);
+  await expect(iris.getByText('M-202')).toHaveCount(0);
+
+  // The conflicts team sees the match against the board investigation and confirms a conflict.
+  const conway = await (await browser.newContext()).newPage();
+  await signIn(conway, 'conway');
+  await conway.goto(iris.url().replace(/^https?:\/\/[^/]+/, ''));
+  const panel = conway.getByRole('region', { name: 'Conflicts check' });
+  const match = panel.getByRole('row', { name: /Orrin Marine Limited/ });
+  await expect(match).toContainText('Orrin Marine Ltd');
+  await expect(match).toContainText('Adverse party');
+  await expect(match).toContainText('M-202');
+  await panel.getByLabel('Note for the record').fill('We act against Orrin Marine in M-202.');
+  await shot(conway, '44-intake-conflicts-light');
+  await panel.getByRole('button', { name: 'Confirm a conflict' }).click();
+  await expect(conway.getByRole('region', { name: 'Answers' }).getByText('Conflict confirmed')).toBeVisible();
+
+  // The front desk drafts "We cannot help" (it gives no reason); a lawyer approves it; the enquirer sees it on the link page.
+  await iris.reload();
+  const replies = iris.getByRole('region', { name: 'Replies' });
+  await replies.getByLabel('New reply').selectOption('cannot_act');
+  await replies.getByRole('button', { name: 'Draft reply' }).click();
+  await expect(replies.getByText('Draft by iris — awaiting a lawyer')).toBeVisible();
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto(iris.url().replace(/^https?:\/\/[^/]+/, ''));
+  await alice.getByRole('region', { name: 'Replies' }).getByRole('button', { name: 'Approve and release' }).click();
+  const approve = alice.getByRole('dialog', { name: 'Approve this reply?' });
+  await approve.getByRole('checkbox').check();
+  await approve.getByRole('button', { name: 'Approve and release' }).click();
+  await expect(alice.getByRole('region', { name: 'Replies' }).getByText('Approved by alice')).toBeVisible();
+  await enquirer.reload();
+  const reply = enquirer.getByRole('article', { name: 'Our reply' });
+  await expect(reply).toContainText('not able to help with this matter');
+  await expect(reply).not.toContainText('Orrin');
+  await shot(enquirer, '43-intake-enquirer-light');
+
+  // A telephone enquiry: the disclaimer read out, the script, no match; cleared; a lawyer opens the matter.
+  await iris.goto('/enquiries');
+  await iris.getByRole('button', { name: 'Telephone enquiry' }).click();
+  await iris.getByRole('button', { name: 'The enquirer accepts it' }).click();
+  const form = iris.getByRole('form', { name: 'Intake questions' });
+  await form.getByLabel(/^Ask: “What is your full name\?”/).fill('Lena Okafor');
+  await form.getByLabel(/^Ask: “What email address/).fill('lena@okafor-studio.example');
+  await form.getByLabel(/^Ask: “Which of these best describes/).selectOption('property');
+  await form.getByLabel(/^Ask: “In a few sentences/).fill('A review of the lease for a new design studio.');
+  await form.getByRole('button', { name: /Submit answers/ }).click();
+  await expect(iris.getByRole('region', { name: 'Answers' }).getByText('No match found', { exact: true })).toBeVisible();
+  const phoneUrl = iris.url().replace(/^https?:\/\/[^/]+/, '');
+  await conway.goto(phoneUrl);
+  await conway.getByRole('region', { name: 'Conflicts check' }).getByRole('button', { name: 'Clear' }).click();
+  await expect(conway.getByRole('region', { name: 'Answers' }).getByText('Cleared by the conflicts team')).toBeVisible();
+  await alice.goto(phoneUrl);
+  await alice.getByRole('region', { name: 'Open a matter' }).getByRole('button', { name: 'Open a matter' }).click();
+  const open = alice.getByRole('dialog', { name: 'Open a matter from this enquiry' });
+  await expect(open.getByLabel('Client', { exact: true })).toHaveValue('Lena Okafor');
+  await open.getByLabel('Matter number').fill('M-301');
+  await open.getByLabel('Matter title').fill('Studio lease review');
+  await open.getByRole('button', { name: 'Open the matter' }).click();
+  await alice.getByRole('region', { name: 'Matter opened' }).getByRole('link', { name: 'M-301' }).click();
+  await expect(alice.getByRole('heading', { name: 'Studio lease review' })).toBeVisible();
+});

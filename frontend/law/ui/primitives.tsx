@@ -91,6 +91,7 @@ export function Dialog({ title, onClose, children, footer }: {
 const ROLE_LABEL: Record<string, string> = {
   lead: 'Lead', attorney: 'Attorney', paralegal: 'Paralegal', reviewer: 'Reviewer', read_only: 'Read only',
   firm_admin: 'Firm admin', managing_partner: 'Managing partner', records_admin: 'Records admin', break_glass: 'Emergency access',
+  intake: 'Intake (front desk)', conflicts: 'Conflicts team',
 };
 export const roleLabel = (r?: string | null) => (r ? ROLE_LABEL[r] ?? r : '');
 

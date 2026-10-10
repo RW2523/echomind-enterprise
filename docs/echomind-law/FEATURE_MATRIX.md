@@ -27,7 +27,7 @@
 | DOC-05 | Obligations and deadlines tracker | DONE for the pilot (S3.6, D-050): rules first, then checked model proposals; exact words; dates only from dates the document fixes (none guessed in any run); proposed until a lawyer confirms; versioned edits with reasons; timezone; calendar file off by default. Held-out 10/12 with the model (rules alone about half) | S3.6 | Reminders not sent |
 | DOC-06 | Due diligence | DONE for the pilot (S3.7, D-051): approved firm checklists; data-room runs as background jobs; missing-document list; issue register (change of control, assignment, termination, governing law, liability, renewal) quoting each sentence; preliminary until a reviewer decides; append-only trail. Held-out: missing lists all right, issues 9/11 then 5/6, no extra issues | S3.7 | — |
 | DOC-07 | Corporate governance checks | DONE for the pilot (S3.8, D-052): shares in the register against approvals and the articles; contracts against signing limits; policies against the articles; founders against IP assignments. Each finding quotes both documents, advisory and preliminary until a reviewer decides. Held-out 3/6 (no extras) before s3.8b; s3.8b measured at S3.9 | S3.8 | — |
-| OPT-01 | Client intake assistant with conflict screening | MISSING | S4.1 | Business approval |
+| OPT-01 | Client intake assistant with conflict screening | DONE for the pilot (S4.1, D-054), off by default: a fixed administrative script after a disclaimer (no model); names screened against clients and a new matter party register, with minimised output for staff and the enquirer and the matches for the conflicts team only; call recordings only under consent; template replies approved by a second lawyer, with a guard against naming other clients; a cleared enquiry becomes a client and matter; single-use enquirer links (separately switched); purge of personal data | S4.1 | Business approval given (2026-10-10); recording transcription needs the speech stack (🔒) |
 | OPT-02 | Transcript summaries and local translation | PARTIAL (summary only) | S4.2 | Local MT model licence |
 | OPT-03 | Draft time entries | MISSING | S4.3 | Business approval |
 | OPT-04 | Regulatory monitoring via an approved source | MISSING | S4.4 | **Licensed source and network approval** |
@@ -244,7 +244,7 @@
 ### OPT-01 … OPT-05 (Phase 4, each behind its own flag and needing separate business approval)
 | ID | Status | Key constraints | Acceptance |
 |---|---|---|---|
-| OPT-01 Intake | MISSING | Scripted administrative intake only; disclaimer; conflict-name screening with minimization; no recording without consent; lawyer approves replies | Administrative only, reviewed replies, consent |
+| OPT-01 Intake | **DONE for the pilot (S4.1, D-054)** | Scripted administrative intake only; disclaimer; conflict-name screening with minimization; no recording without consent; lawyer approves replies | Administrative only, reviewed replies, consent: all tested (backend, Vitest, journey 30) |
 | OPT-02 Summaries / translation | PARTIAL (Boardroom summary) | Page/line/timecode citations; original preserved; **local MT model licence needed** (BLOCKED until chosen) | Citations, reviewer edits, original preserved |
 | OPT-03 Time entries | MISSING | Suggestions from approved activities; user must edit and approve; no billing integration | User verification enforced |
 | OPT-04 Regulatory monitoring | MISSING / **BLOCKED** | Needs a licensed source and an approved channel; off in air-gap mode | Off without an approved source |

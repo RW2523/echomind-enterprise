@@ -44,6 +44,9 @@ import MatterMeeting from '../pages/MatterMeeting';
 import MatterExports, { MatterExport } from '../pages/MatterExports';
 import NotAvailable from '../pages/NotAvailable';
 import DesignCatalogue from '../pages/DesignCatalogue';
+import Enquiries from '../pages/Enquiries';
+import Enquiry from '../pages/Enquiry';
+import IntakeLink from '../pages/IntakeLink';
 
 function Root() {
   useSessionExpiry();
@@ -55,6 +58,7 @@ export const lawRoutes = [
     element: <Root />,
     children: [
       { path: '/signin', element: <SignIn /> },
+      { path: '/intake/:token', element: <IntakeLink /> },                // an enquirer's link: no session (S4.1, D-054)
       { path: '/', element: <Navigate to="/home" replace /> },
       ...(import.meta.env.DEV ? [{ path: '/__design', element: <DesignCatalogue /> }] : []),
       {
@@ -66,6 +70,8 @@ export const lawRoutes = [
           { path: '/templates', element: <Templates /> },
           { path: '/playbooks', element: <Playbooks /> },
           { path: '/checklists', element: <Checklists /> },
+          { path: '/enquiries', element: <Enquiries /> },
+          { path: '/enquiries/:intakeId', element: <Enquiry /> },
           {
             path: '/m/:matterNo',
             element: <MatterLayout />,
