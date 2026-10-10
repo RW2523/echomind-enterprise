@@ -1,0 +1,256 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "9a3894f",
+  "time": "20261010-132919",
+  "prompt_version": "citations-s3.4f",
+  "model": "none (rules only)",
+  "embeddings": "nomic-embed-text (indexing on import only)"
+ },
+ "summary": {
+  "items": 21,
+  "correct": "20/21",
+  "references": "5/5",
+  "missing_caught": "2/2",
+  "false_missing": 0,
+  "quotations": "4/4",
+  "altered_caught": "1/1",
+  "false_alarms": 0,
+  "authorities_found": "11/12",
+  "malformed_caught": "3/3",
+  "wrongly_flagged": 0,
+  "all_unverified": true,
+  "external_lookups": 0,
+  "extra_items": 0,
+  "ms_per_check": 32
+ },
+ "scenarios": [
+  {
+   "id": "R1-distribution-advice-uk",
+   "ms": 35,
+   "lines": [
+    {
+     "kind": "reference",
+     "text": "Clause 2.1 of the Distribution Agreement",
+     "status": "resolved",
+     "clause": "2.1",
+     "in": "Distribution Agreement",
+     "ok": true,
+     "got": "resolved, clause 2.1 of Distribution Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "The Distributor shall purchase Products worth at least EUR 750,000 in each Contract Year",
+     "status": "altered",
+     "clause": "8.3",
+     "in": "Distribution Agreement",
+     "ok": true,
+     "got": "altered, clause 8.3 of Distribution Agreement",
+     "got_status": "altered",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "immediately by written notice if the Distributor fails to meet the minimum purchase obligation",
+     "status": "accurate",
+     "clause": "17.2",
+     "in": "Distribution Agreement",
+     "ok": true,
+     "got": "accurate, clause 17.2 of Distribution Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 19.1 of the Distribution Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Distribution Agreement has no clause 19.1.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Late Payment of Commercial Debts (Interest) Act 1998",
+     "malformed": false,
+     "ok": false,
+     "got": "not found by the parser",
+     "got_status": null,
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2019] EWHC 1784 (Comm)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2016] UKSC 11",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[1999] EWCA Civ 310",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: EWCA Civ gave no judgments before 2001",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EU) 2022/720",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "R2-opposition-brief-us",
+   "ms": 23,
+   "lines": [
+    {
+     "kind": "reference",
+     "text": "Section 6.4 of the Asset Purchase Agreement",
+     "status": "resolved",
+     "clause": "6.4",
+     "in": "Asset Purchase Agreement",
+     "ok": true,
+     "got": "resolved, clause 6.4 of Asset Purchase Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 11.1 of the Asset Purchase Agreement",
+     "status": "resolved",
+     "clause": "11.1",
+     "in": "Asset Purchase Agreement",
+     "ok": true,
+     "got": "resolved, clause 11.1 of Asset Purchase Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 14.2 of the Asset Purchase Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Asset Purchase Agreement has no section 14.2.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Civ. P. 56(a)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Evid. 1006",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "15 U.S.C. § 78j(b)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "17 C.F.R. § 240.10b-5",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "412 F.3d 201 (4th Cir. 2005)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Crim. P. 74",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: there is no Rule 74 of the Federal Rules of Criminal Procedure",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "91 F.5th 12 (2d Cir. 2024)",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: F.5th is not a known reporter",
+     "got_status": "unverified",
+     "got_malformed": true
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "R3-licence-note-clean",
+   "ms": 37,
+   "lines": [
+    {
+     "kind": "quote",
+     "text": "a non-exclusive licence to use the Software in the United Kingdom",
+     "status": "accurate",
+     "clause": "3.1",
+     "in": "Licence Agreement",
+     "ok": true,
+     "got": "accurate, clause 3.1 of Licence Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "Each party shall keep the other party's Confidential Information secret for five years after termination",
+     "status": "accurate",
+     "clause": "10.2",
+     "in": "Licence Agreement",
+     "ok": true,
+     "got": "accurate, clause 10.2 of Licence Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  }
+ ]
+}

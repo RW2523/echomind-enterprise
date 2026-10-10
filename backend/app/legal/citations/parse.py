@@ -29,6 +29,10 @@ _UK_COURTS = {"UKSC": 2009, "UKPC": 1830, "UKHL": 1876, "EWCA Civ": 2001, "EWCA 
 _RULE_SETS = {"civ": ("the Federal Rules of Civil Procedure", 1, 87), "evid": ("the Federal Rules of Evidence", 101, 1103),
               "app": ("the Federal Rules of Appellate Procedure", 1, 48), "crim": ("the Federal Rules of Criminal Procedure", 1, 61),
               "bankr": ("the Federal Rules of Bankruptcy Procedure", 1001, 9037)}
+_ACT_WORD = r"[A-Z][a-z]+"
+_ACT_JOIN = r"(?:of(?:\s+the)?|and|against|for|to|on|in)"
+_ACT_NAME = (r"(?!(?:See|Under|The|In|By|Also|Cf|And|Or|Per|From|With|This|That|Section|Part|Schedule)\b)" + _ACT_WORD
+             + r"(?:\s+(?:" + _ACT_JOIN + r"\s+)?(?:" + _ACT_WORD + r"|\([A-Z][A-Za-z ,]{2,60}\))){0,9}")
 AUTHORITIES = [
     # S3.9: court rules. Federal Rules (Fed. R. Civ. P. 81(c), Fed. R. Evid. 401) and the English Civil Procedure Rules
     # (CPR r. 3.4, CPR 31.16, CPR Part 36, CPR PD 51U).
@@ -44,7 +48,9 @@ AUTHORITIES = [
     ("uk_report", re.compile(r"\[(?P<year>\d{4})\]\s+(?:(?P<vol>\d{1,2})\s+)?(?P<rep>AC|QB|KB|Ch|WLR|All ER|Lloyd's Rep|BCLC|BCC)\s+(?P<page>\d{1,5})")),
     ("uk_report_old", re.compile(r"\((?P<year>1[5-9]\d{2}|20\d{2})\)\s+(?P<vol>\d{1,3})\s+(?P<rep>Exch|ER|QBD|Ch D|App Cas|CB|M & W|B & Ald|"
                                  r"Cr App R|P & CR|TLR|LT|LJ Ch|LJQB|Lloyd's Rep|WLR|All ER|BCLC|BCC)\s+(?P<page>\d{1,5})")),
-    ("uk_act", re.compile(r"(?:(?:[Ss]ection|s\.?)\s+(?P<sec>\d+[A-Z]?(?:\(\d+\))*)\s+of\s+the\s+)?(?P<act>(?:[A-Z][a-z]+\s+){1,6}Act\s+(?P<year>\d{4}))"
+    # s3.4g: Act names with joining words and a bracketed part (Late Payment of Commercial Debts (Interest) Act 1998); a word
+    # that opens a sentence or a phrase (See, Under, The) is not part of the name.
+    ("uk_act", re.compile(r"(?:(?:[Ss]ection|s\.?)\s+(?P<sec>\d+[A-Z]?(?:\(\d+\))*)\s+of\s+the\s+)?(?P<act>" + _ACT_NAME + r"\s+Act\s+(?P<year>\d{4}))"
                           r"(?:,\s+s(?:ection)?\.?\s*(?P<sec2>\d+[A-Z]?))?")),
     ("eu_act", re.compile(r"(?P<kind>Regulation|Directive|Decision)\s+\((?P<sys>EU|EC|EEC|Euratom)\)\s+(?:No\s+)?(?P<a>\d{2,4})/(?P<b>\d{1,4})"
                           r"|Directive\s+(?P<a2>\d{2,4})/(?P<b2>\d{1,4})/(?P<sys2>EU|EC|EEC)")),

@@ -229,6 +229,17 @@ def test_a_fact_the_documents_do_not_state_is_never_invented(dr):
     assert "Dear [[NEEDS INPUT: Client contact]]," in text_of(d)
 
 
+def test_one_party_given_for_two_party_fields_is_left_for_a_person(dr):
+    """The model named the first party again as the second (drafting golden, Phase 3 gate); two parties are never one."""
+    dr["model"].fields["client_contact"] = {"value": "Harrowgate Systems Inc", "quote": "Harrowgate Systems Inc. asks the firm"}
+    d = draft(dr, template(dr))
+    assert field(d, "client_name")["status"] == "sourced"
+    c = field(d, "client_contact")
+    assert c["status"] == "needs_input" and c["value"] is None and c["sources"] == []
+    assert c["suggestion"]["value"] == "Harrowgate Systems Inc" and "Client" in c["suggestion"]["reason"]
+    assert "Dear [[NEEDS INPUT: Client contact]]," in text_of(d)
+
+
 # ── Written passages ─────────────────────────────────────────────────────────────
 def test_written_passages_cite_their_sources_and_a_figure_they_do_not_contain_becomes_a_gap(dr):
     dr["model"].writes = {"scope": "The firm will review the supplier's redline {cite:reviewing the supplier's redline} "

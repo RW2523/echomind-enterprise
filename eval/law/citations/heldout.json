@@ -1,170 +1,177 @@
 {
- "about": "S3.4 citation and quote checker (T07) — the HELD-OUT set (fourth, Phase 3 gate after citations-s3.4f): written and committed before it was run, never used to change the checker, run once per version. Fictional documents only. Earlier held-out sets are G5–G13 in golden.json.",
+ "about": "S3.4 citation and quote checker (T07) — the HELD-OUT set (fifth, Phase 3 gate after citations-s3.4g): written and committed before it was run, never used to change the checker, run once per version. Fictional documents only. Earlier held-out sets are G5–G16 in golden.json.",
  "scenarios": [
   {
-   "id": "R1-distribution-advice-uk",
+   "id": "S1-executive-exit-uk",
    "sources": [
     {
-     "title": "Distribution Agreement",
+     "title": "Service Agreement",
      "status": "executed",
-     "text": "DISTRIBUTION AGREEMENT (fictional)\n\n2. Appointment\n2.1 The Supplier appoints the Distributor as its exclusive distributor of the Products in the Territory.\n\n8. Minimum purchases\n8.3 The Distributor shall purchase Products worth at least EUR 500,000 in each Contract Year.\n\n17. Termination\n17.2 The Supplier may terminate this Agreement immediately by written notice if the Distributor fails to meet the minimum purchase obligation in clause 8.3.\n"
+     "text": "SERVICE AGREEMENT (fictional)\n\n4. Duties\n4.1 The Executive shall devote the whole of their working time to the business of the Company.\n\n12. Restrictions\n12.2 For six months after the Termination Date the Executive shall not solicit any Client.\n\n18. Garden leave\n18.1 The Company may place the Executive on garden leave for up to three months.\n"
     }
    ],
    "citing": {
-    "title": "Advice on the distribution agreement",
-    "text": "ADVICE ON THE DISTRIBUTION AGREEMENT (fictional)\n\n1. Summary\n1.1 Clause 2.1 of the Distribution Agreement makes the appointment exclusive.\n1.2 Clause 8.3 of the Distribution Agreement provides that \"The Distributor shall purchase Products worth at least EUR 750,000 in each Contract Year.\"\n1.3 Under clause 17.2 of the Distribution Agreement the Supplier may terminate \"immediately by written notice if the Distributor fails to meet the minimum purchase obligation\".\n1.4 Clause 19.1 of the Distribution Agreement deals with assignment.\n\n2. Law\n2.1 Interest runs under the Late Payment of Commercial Debts (Interest) Act 1998.\n2.2 The court applied that approach in [2019] EWHC 1784 (Comm) and [2016] UKSC 11; the Distributor's reliance on [1999] EWCA Civ 310 is misplaced.\n2.3 Regulation (EU) 2022/720 governs vertical agreements.\n"
+    "title": "Advice on the executive's exit",
+    "text": "ADVICE ON THE EXECUTIVE'S EXIT (fictional)\n\n1. Restrictions\n1.1 Clause 12.2 of the Service Agreement says that \"For twelve months after the Termination Date the Executive shall not solicit any Client.\"\n1.2 Clause 18.1 of the Service Agreement allows garden leave \"for up to three months\".\n1.3 Clause 22.5 of the Service Agreement is said to cover expenses.\n\n2. Law\n2.1 The Executive may claim under section 98 of the Employment Rights Act 1996, and the Contracts (Rights of Third Parties) Act 1999 does not apply.\n2.2 On restraint of trade see [2019] UKSC 32 and Herbert Morris Ltd v Saxelby [1916] 1 AC 688.\n2.3 The Company's reliance on [2003] UKSC 14 is misplaced.\n"
    },
    "expect": [
     {
-     "kind": "reference",
-     "text": "Clause 2.1 of the Distribution Agreement",
-     "status": "resolved",
-     "clause": "2.1",
-     "in": "Distribution Agreement"
-    },
-    {
      "kind": "quote",
-     "text": "The Distributor shall purchase Products worth at least EUR 750,000 in each Contract Year",
+     "text": "For twelve months after the Termination Date the Executive shall not solicit any Client",
      "status": "altered",
-     "clause": "8.3",
-     "in": "Distribution Agreement"
+     "clause": "12.2",
+     "in": "Service Agreement"
     },
     {
      "kind": "quote",
-     "text": "immediately by written notice if the Distributor fails to meet the minimum purchase obligation",
+     "text": "for up to three months",
      "status": "accurate",
-     "clause": "17.2",
-     "in": "Distribution Agreement"
+     "clause": "18.1",
+     "in": "Service Agreement"
     },
     {
      "kind": "reference",
-     "text": "Clause 19.1 of the Distribution Agreement",
+     "text": "Clause 22.5 of the Service Agreement",
      "status": "missing"
     },
     {
      "kind": "authority",
-     "text": "Late Payment of Commercial Debts (Interest) Act 1998",
+     "text": "section 98 of the Employment Rights Act 1996",
      "malformed": false
     },
     {
      "kind": "authority",
-     "text": "[2019] EWHC 1784 (Comm)",
+     "text": "Contracts (Rights of Third Parties) Act 1999",
      "malformed": false
     },
     {
      "kind": "authority",
-     "text": "[2016] UKSC 11",
+     "text": "[2019] UKSC 32",
      "malformed": false
     },
     {
      "kind": "authority",
-     "text": "[1999] EWCA Civ 310",
+     "text": "[1916] 1 AC 688",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2003] UKSC 14",
      "malformed": true
-    },
+    }
+   ]
+  },
+  {
+   "id": "S2-distribution-memo-eu",
+   "sources": [],
+   "citing": {
+    "title": "Memorandum on the distribution network",
+    "text": "MEMORANDUM ON THE DISTRIBUTION NETWORK (fictional)\n\n1. Framework\n1.1 Regulation (EU) 2022/720 and Directive 2014/104/EU are relevant, as is Case C-230/16.\n1.2 The other side cites Regulation (EU) 2031/45 and Case T-112/29.\n\n2. Analysis\n2.1 As explained in paragraph 1.1, the block exemption may apply. Paragraph 3.4 sets out the market shares.\n"
+   },
+   "expect": [
     {
      "kind": "authority",
      "text": "Regulation (EU) 2022/720",
      "malformed": false
-    }
-   ]
-  },
-  {
-   "id": "R2-opposition-brief-us",
-   "sources": [
+    },
     {
-     "title": "Asset Purchase Agreement",
-     "status": "executed",
-     "text": "ASSET PURCHASE AGREEMENT (fictional)\n\nSection 6. Indemnification\n6.4 The Seller's aggregate liability for indemnification shall not exceed ten percent (10%) of the Purchase Price.\n\nSection 11. Governing Law\n11.1 This Agreement shall be governed by the laws of the State of Delaware.\n"
-    }
-   ],
-   "citing": {
-    "title": "Opposition brief",
-    "text": "BRIEF IN OPPOSITION (fictional)\n\nI. Background\nSection 6.4 of the Asset Purchase Agreement caps the Seller's liability, and Section 11.1 of the Asset Purchase Agreement selects Delaware law. Section 14.2 of the Asset Purchase Agreement is said to require mediation.\n\nII. Argument\nThe motion fails under Fed. R. Civ. P. 56(a) and Fed. R. Evid. 1006. See 15 U.S.C. § 78j(b); 17 C.F.R. § 240.10b-5; Corwin v. Halsted Freight Co., 412 F.3d 201 (4th Cir. 2005). Defendant's reliance on Fed. R. Crim. P. 74 and on Lister v. Marrow, 91 F.5th 12 (2d Cir. 2024) is misplaced.\n"
-   },
-   "expect": [
+     "kind": "authority",
+     "text": "Directive 2014/104/EU",
+     "malformed": false
+    },
     {
-     "kind": "reference",
-     "text": "Section 6.4 of the Asset Purchase Agreement",
-     "status": "resolved",
-     "clause": "6.4",
-     "in": "Asset Purchase Agreement"
+     "kind": "authority",
+     "text": "Case C-230/16",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EU) 2031/45",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Case T-112/29",
+     "malformed": true
     },
     {
      "kind": "reference",
-     "text": "Section 11.1 of the Asset Purchase Agreement",
+     "text": "paragraph 1.1",
      "status": "resolved",
-     "clause": "11.1",
-     "in": "Asset Purchase Agreement"
+     "clause": "1.1",
+     "in": "self"
     },
     {
      "kind": "reference",
-     "text": "Section 14.2 of the Asset Purchase Agreement",
+     "text": "Paragraph 3.4",
      "status": "missing"
-    },
-    {
-     "kind": "authority",
-     "text": "Fed. R. Civ. P. 56(a)",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "Fed. R. Evid. 1006",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "15 U.S.C. § 78j(b)",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "17 C.F.R. § 240.10b-5",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "412 F.3d 201 (4th Cir. 2005)",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "Fed. R. Crim. P. 74",
-     "malformed": true
-    },
-    {
-     "kind": "authority",
-     "text": "91 F.5th 12 (2d Cir. 2024)",
-     "malformed": true
     }
    ]
   },
   {
-   "id": "R3-licence-note-clean",
+   "id": "S3-msa-memo-us",
    "sources": [
     {
-     "title": "Licence Agreement",
+     "title": "Master Services Agreement",
      "status": "executed",
-     "text": "LICENCE AGREEMENT (fictional)\n\n3. Grant\n3.1 The Licensor grants the Licensee a non-exclusive licence to use the Software in the United Kingdom.\n\n10. Confidentiality\n10.2 Each party shall keep the other party's Confidential Information secret for five years after termination.\n"
+     "text": "MASTER SERVICES AGREEMENT (fictional)\n\nSection 5. Fees\n5.2 Customer shall pay all undisputed invoices within forty-five (45) days of receipt.\n\nSection 9. Limitation of Liability\n9.1 In no event shall either party's aggregate liability exceed the fees paid in the twelve (12) months preceding the claim.\n\nSection 13. Term\n13.1 This Agreement shall continue for an initial term of three (3) years.\n"
     }
    ],
    "citing": {
-    "title": "Note on the licence",
-    "text": "NOTE ON THE LICENCE (fictional)\n\n1. Scope\n1.1 Clause 3.1 of the Licence Agreement grants \"a non-exclusive licence to use the Software in the United Kingdom\".\n1.2 Under clause 10.2 of the Licence Agreement, \"Each party shall keep the other party's Confidential Information secret for five years after termination.\"\n"
+    "title": "Memorandum on the MSA",
+    "text": "MEMORANDUM ON THE MSA (fictional)\n\n1. Payment\n1.1 Section 5.2 of the Master Services Agreement requires payment \"within forty-five (45) days of receipt.\"\n1.2 Section 9.1 of the Master Services Agreement provides that \"In no event shall either party's aggregate liability exceed the fees paid in the twelve (12) months preceding the claim.\"\n1.3 Under Section 13.1 of the Master Services Agreement, the initial term is three years.\n\n2. Authorities\n2.1 See 9 U.S.C. § 2; 29 C.F.R. Part 1630; Fed. R. Civ. P. 26(b)(1); and Harlow Systems, Inc. v. Brandt, 245 A.3d 101 (Del. Ch. 2021).\n2.2 The plaintiff relies on 54 U.S.C. § 100101, but 63 U.S.C. § 12 does not exist.\n"
    },
    "expect": [
     {
      "kind": "quote",
-     "text": "a non-exclusive licence to use the Software in the United Kingdom",
+     "text": "within forty-five (45) days of receipt",
      "status": "accurate",
-     "clause": "3.1",
-     "in": "Licence Agreement"
+     "clause": "5.2",
+     "in": "Master Services Agreement"
     },
     {
      "kind": "quote",
-     "text": "Each party shall keep the other party's Confidential Information secret for five years after termination",
+     "text": "In no event shall either party's aggregate liability exceed the fees paid in the twelve (12) months preceding the claim",
      "status": "accurate",
-     "clause": "10.2",
-     "in": "Licence Agreement"
+     "clause": "9.1",
+     "in": "Master Services Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "Section 13.1 of the Master Services Agreement",
+     "status": "resolved",
+     "clause": "13.1",
+     "in": "Master Services Agreement"
+    },
+    {
+     "kind": "authority",
+     "text": "9 U.S.C. § 2",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "29 C.F.R. Part 1630",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Civ. P. 26(b)(1)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "245 A.3d 101 (Del. Ch. 2021)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "54 U.S.C. § 100101",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "63 U.S.C. § 12",
+     "malformed": true
     }
    ]
   }

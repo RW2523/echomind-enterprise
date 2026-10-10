@@ -1,5 +1,5 @@
 {
- "about": "S3.4 citation checker, spec test T07 — the TUNING set. Fictional documents only. Expectations are what a careful lawyer checking the citations by hand would conclude, written before the check was run on them. G5–G7 were the first held-out set; they became tuning data once they informed a change. G8–G10 were the second held-out set. G11–G13 were the third held-out set (Phase 3 gate, run once on citations-s3.4e); a lettered sub-paragraph it showed (CPR r. 3.4(2)(a)) was fixed in citations-s3.4f, so it became tuning data.",
+ "about": "S3.4 citation checker, spec test T07 — the TUNING set. Fictional documents only. Expectations are what a careful lawyer checking the citations by hand would conclude, written before the check was run on them. G5–G7 were the first held-out set; they became tuning data once they informed a change. G8–G10 were the second held-out set. G11–G13 were the third held-out set (Phase 3 gate, run once on citations-s3.4e); a lettered sub-paragraph it showed (CPR r. 3.4(2)(a)) was fixed in citations-s3.4f, so it became tuning data. G14–G16 were the fourth held-out set (run once on citations-s3.4f, 20/21); the Act name it showed was not read (Late Payment of Commercial Debts (Interest) Act 1998) was fixed in citations-s3.4g, so it became tuning data.",
  "scenarios": [
   {
    "id": "G1-supply-memo",
@@ -761,6 +761,173 @@
      "status": "accurate",
      "clause": "6.1",
      "in": "Lease"
+    }
+   ]
+  },
+  {
+   "id": "G14-distribution-advice-uk",
+   "sources": [
+    {
+     "title": "Distribution Agreement",
+     "status": "executed",
+     "text": "DISTRIBUTION AGREEMENT (fictional)\n\n2. Appointment\n2.1 The Supplier appoints the Distributor as its exclusive distributor of the Products in the Territory.\n\n8. Minimum purchases\n8.3 The Distributor shall purchase Products worth at least EUR 500,000 in each Contract Year.\n\n17. Termination\n17.2 The Supplier may terminate this Agreement immediately by written notice if the Distributor fails to meet the minimum purchase obligation in clause 8.3.\n"
+    }
+   ],
+   "citing": {
+    "title": "Advice on the distribution agreement",
+    "text": "ADVICE ON THE DISTRIBUTION AGREEMENT (fictional)\n\n1. Summary\n1.1 Clause 2.1 of the Distribution Agreement makes the appointment exclusive.\n1.2 Clause 8.3 of the Distribution Agreement provides that \"The Distributor shall purchase Products worth at least EUR 750,000 in each Contract Year.\"\n1.3 Under clause 17.2 of the Distribution Agreement the Supplier may terminate \"immediately by written notice if the Distributor fails to meet the minimum purchase obligation\".\n1.4 Clause 19.1 of the Distribution Agreement deals with assignment.\n\n2. Law\n2.1 Interest runs under the Late Payment of Commercial Debts (Interest) Act 1998.\n2.2 The court applied that approach in [2019] EWHC 1784 (Comm) and [2016] UKSC 11; the Distributor's reliance on [1999] EWCA Civ 310 is misplaced.\n2.3 Regulation (EU) 2022/720 governs vertical agreements.\n"
+   },
+   "expect": [
+    {
+     "kind": "reference",
+     "text": "Clause 2.1 of the Distribution Agreement",
+     "status": "resolved",
+     "clause": "2.1",
+     "in": "Distribution Agreement"
+    },
+    {
+     "kind": "quote",
+     "text": "The Distributor shall purchase Products worth at least EUR 750,000 in each Contract Year",
+     "status": "altered",
+     "clause": "8.3",
+     "in": "Distribution Agreement"
+    },
+    {
+     "kind": "quote",
+     "text": "immediately by written notice if the Distributor fails to meet the minimum purchase obligation",
+     "status": "accurate",
+     "clause": "17.2",
+     "in": "Distribution Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 19.1 of the Distribution Agreement",
+     "status": "missing"
+    },
+    {
+     "kind": "authority",
+     "text": "Late Payment of Commercial Debts (Interest) Act 1998",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2019] EWHC 1784 (Comm)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2016] UKSC 11",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[1999] EWCA Civ 310",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EU) 2022/720",
+     "malformed": false
+    }
+   ]
+  },
+  {
+   "id": "G15-opposition-brief-us",
+   "sources": [
+    {
+     "title": "Asset Purchase Agreement",
+     "status": "executed",
+     "text": "ASSET PURCHASE AGREEMENT (fictional)\n\nSection 6. Indemnification\n6.4 The Seller's aggregate liability for indemnification shall not exceed ten percent (10%) of the Purchase Price.\n\nSection 11. Governing Law\n11.1 This Agreement shall be governed by the laws of the State of Delaware.\n"
+    }
+   ],
+   "citing": {
+    "title": "Opposition brief",
+    "text": "BRIEF IN OPPOSITION (fictional)\n\nI. Background\nSection 6.4 of the Asset Purchase Agreement caps the Seller's liability, and Section 11.1 of the Asset Purchase Agreement selects Delaware law. Section 14.2 of the Asset Purchase Agreement is said to require mediation.\n\nII. Argument\nThe motion fails under Fed. R. Civ. P. 56(a) and Fed. R. Evid. 1006. See 15 U.S.C. § 78j(b); 17 C.F.R. § 240.10b-5; Corwin v. Halsted Freight Co., 412 F.3d 201 (4th Cir. 2005). Defendant's reliance on Fed. R. Crim. P. 74 and on Lister v. Marrow, 91 F.5th 12 (2d Cir. 2024) is misplaced.\n"
+   },
+   "expect": [
+    {
+     "kind": "reference",
+     "text": "Section 6.4 of the Asset Purchase Agreement",
+     "status": "resolved",
+     "clause": "6.4",
+     "in": "Asset Purchase Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "Section 11.1 of the Asset Purchase Agreement",
+     "status": "resolved",
+     "clause": "11.1",
+     "in": "Asset Purchase Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "Section 14.2 of the Asset Purchase Agreement",
+     "status": "missing"
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Civ. P. 56(a)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Evid. 1006",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "15 U.S.C. § 78j(b)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "17 C.F.R. § 240.10b-5",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "412 F.3d 201 (4th Cir. 2005)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Crim. P. 74",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "91 F.5th 12 (2d Cir. 2024)",
+     "malformed": true
+    }
+   ]
+  },
+  {
+   "id": "G16-licence-note-clean",
+   "sources": [
+    {
+     "title": "Licence Agreement",
+     "status": "executed",
+     "text": "LICENCE AGREEMENT (fictional)\n\n3. Grant\n3.1 The Licensor grants the Licensee a non-exclusive licence to use the Software in the United Kingdom.\n\n10. Confidentiality\n10.2 Each party shall keep the other party's Confidential Information secret for five years after termination.\n"
+    }
+   ],
+   "citing": {
+    "title": "Note on the licence",
+    "text": "NOTE ON THE LICENCE (fictional)\n\n1. Scope\n1.1 Clause 3.1 of the Licence Agreement grants \"a non-exclusive licence to use the Software in the United Kingdom\".\n1.2 Under clause 10.2 of the Licence Agreement, \"Each party shall keep the other party's Confidential Information secret for five years after termination.\"\n"
+   },
+   "expect": [
+    {
+     "kind": "quote",
+     "text": "a non-exclusive licence to use the Software in the United Kingdom",
+     "status": "accurate",
+     "clause": "3.1",
+     "in": "Licence Agreement"
+    },
+    {
+     "kind": "quote",
+     "text": "Each party shall keep the other party's Confidential Information secret for five years after termination",
+     "status": "accurate",
+     "clause": "10.2",
+     "in": "Licence Agreement"
     }
    ]
   }

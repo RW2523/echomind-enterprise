@@ -90,8 +90,10 @@ def run(args) -> int:
             lines.append({**e, "found": o is not None, "when_ok": when_ok, "date_ok": date_ok, "got_due": o["due_date"] if o else None,
                           "got_when": o["when"] if o else None, "status": o["status"] if o else None})
         extra = [{"clause": o["clause"], "kind": o["kind"], "action": o["action"], "due": o["due_date"]} for o in obs if o["id"] not in used]
+        outputs = [{"clause": o["clause"], "kind": o["kind"], "party": o["party"], "action": o["action"], "when": o["when"], "due_date": o["due_date"],
+                    "due_note": o["due_note"], "source": o["source"], "quote": (o.get("evidence") or {}).get("quote")} for o in obs]   # for the lawyer packet
         results.append({"id": d["id"], "ms": ms, "control": not d["expect"], "lines": lines, "extra": extra,
-                        "all_proposed": all(o["status"] == "proposed" for o in obs)})
+                        "all_proposed": all(o["status"] == "proposed" for o in obs), "outputs": outputs})
     allx = [x for r in results for x in r["lines"]]
     dated = [x for x in allx if x.get("due")]
     # a date given where the document fixes none, or a different date from the one it fixes (an empty date is a miss, not a guess)

@@ -38,7 +38,7 @@ from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import templates
 
-VERSION = "drafting-s3.1"
+VERSION = "drafting-s3.1b"
 GAP = re.compile(r"\[\[NEEDS INPUT:[^\]]*\]\]")
 _REF = re.compile(r"\{\{\s*([a-z][a-z0-9_]{0,40})\s*\}\}")
 _FIGURE = re.compile(
@@ -312,6 +312,26 @@ def assemble(content: dict) -> dict:
     return content
 
 
+def _party_key(value: str) -> str:
+    return re.sub(r"\W+", " ", value.casefold()).strip()
+
+
+def distinct_parties(fields: list[dict]) -> None:
+    """Two party fields never name the same party (s3.1b): a party read from the documents that an earlier field
+    already names is left for a person, with the value shown as a suggestion and the reason."""
+    named = []
+    for f in fields:
+        if f["kind"] != "party" or not f.get("value") or f["status"] not in ("sourced", "matter"):
+            continue
+        first = next((g for g in named if _party_key(g["value"]) == _party_key(f["value"])), None)
+        if first is None or f["status"] != "sourced":
+            named.append(f)
+            continue
+        quote = f["sources"][0]["quote"] if f["sources"] else None
+        f.update(value=None, status="needs_input", sources=[],
+                 suggestion={"value": f["value"], "reason": f"the same party is already given as {first['label']}", "quote": quote})
+
+
 async def draft(principal: dict, matter_id: str, template: dict, version: dict, title: str,
                 documents: Optional[list[str]], note: Optional[str]) -> tuple[dict, dict]:
     scope = scopemod.authorize(principal, matter_id, "ai.draft")
@@ -327,6 +347,7 @@ async def draft(principal: dict, matter_id: str, template: dict, version: dict, 
             fields.append({**base, "value": None, "status": "needs_input"})
         else:
             fields.append(await extract(scope, f, documents, seen))
+    distinct_parties(fields)
     blocks = []
     for b in templates.parse(version["body"]):
         if b["type"] == "heading":
