@@ -23,7 +23,7 @@ from ...rag.parse import page_for_offset
 from .. import policy
 from ..audit.record import record
 from ..retrieval import embedder, registry
-from . import blobs, chunking, extract, structure
+from . import blobs, chunking, extract, structure, versions
 
 logger = logging.getLogger(__name__)
 
@@ -142,11 +142,9 @@ def _commit(v: dict, chunks, vecs: np.ndarray, findings, pages, offsets, x: "ext
     with get_conn() as conn:
         conn.execute("BEGIN IMMEDIATE")
         try:
-            # Every passage of this document now in the index (older versions, or an earlier run of this one).
-            old = [r[0] for r in conn.execute("SELECT id FROM legal_chunks WHERE document_id=? AND active=1", (v["document_id"],))]
-            conn.execute("UPDATE legal_chunks SET active=0 WHERE document_id=? AND version_id<>?", (v["document_id"], v["id"]))
-            conn.execute("UPDATE legal_document_versions SET index_status='superseded' "
-                         "WHERE document_id=? AND id<>? AND index_status='indexed'", (v["document_id"], v["id"]))
+            # This version's passages from an earlier run leave the index; which other versions stay
+            # searchable (the latest signed one) is decided below (S2.2a).
+            old = [r[0] for r in conn.execute("SELECT id FROM legal_chunks WHERE version_id=? AND active=1", (v["id"],))]
             conn.execute("DELETE FROM legal_chunks WHERE version_id=?", (v["id"],))       # a re-index starts clean
             conn.execute("DELETE FROM legal_findings WHERE version_id=?", (v["id"],))
             conn.execute("DELETE FROM legal_marks WHERE version_id=?", (v["id"],))
@@ -177,6 +175,7 @@ def _commit(v: dict, chunks, vecs: np.ndarray, findings, pages, offsets, x: "ext
             conn.execute("UPDATE legal_document_versions SET index_status='indexed', index_error=NULL, chunk_count=?, pages=COALESCE(pages, ?), "
                          "indexed_at=?, progress_json=? WHERE id=?",
                          (len(rows), pages, policy.now_iso(), json.dumps({"stage": "done"}), v["id"]))
+            on, off = versions.sync_active(conn, v["document_id"])
             conn.commit()
         except BaseException:
             conn.rollback()
@@ -184,5 +183,5 @@ def _commit(v: dict, chunks, vecs: np.ndarray, findings, pages, offsets, x: "ext
     # The database is the source of truth; the partition follows it (and is rebuilt from it if
     # these files are ever lost or disagree).
     with idx.lock:
-        idx.remove(old)
-        idx.add([(r[0], r[5], vec) for r, vec in zip(rows, vecs)])
+        idx.remove(old + off)
+        idx.add([(r[0], r[5], vec) for r, vec in zip(rows, vecs)] + [(i, t, np.frombuffer(b, dtype=np.float32)) for i, t, b in on])

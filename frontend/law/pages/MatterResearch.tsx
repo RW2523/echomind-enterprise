@@ -1,27 +1,45 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
+import { Copy } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiError, postStream } from '../api/client';
 import { keys, useResearchHistory } from '../api/queries';
-import type { ResearchSource, ResearchTurn } from '../api/types';
+import type { ResearchConflict, ResearchEvidence, ResearchParagraph, ResearchSource, ResearchTurn, VersionPolicy } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { ErrorNote, Skeleton, StatusPill } from '../ui/primitives';
 
 type Phase = 'idle' | 'reading' | 'writing' | 'done' | 'abstained' | 'revoked' | 'error';
-interface Answer { question: string; text: string; sources: ResearchSource[]; cited: number[]; phase: Phase; uncited?: boolean; unsupported?: string[] }
+interface Answer {
+  question: string; text: string; sources: ResearchSource[]; cited: number[]; phase: Phase; uncited?: boolean; unsupported?: string[];
+  failed?: string[]; paragraphs?: ResearchParagraph[]; evidence?: ResearchEvidence[]; conflicts?: ResearchConflict[];
+  status?: string | null; reason?: string | null;
+}
 
-const pages = (s: ResearchSource) => (s.page_start ? (s.page_end && s.page_end !== s.page_start ? `pp. ${s.page_start}–${s.page_end}` : `p. ${s.page_start}`) : '');
+const pages = (s: { page_start?: number | null; page_end?: number | null }) =>
+  (s.page_start ? (s.page_end && s.page_end !== s.page_start ? `pp. ${s.page_start}–${s.page_end}` : `p. ${s.page_start}`) : '');
 const plain = (t: string) => t.replace(/(^|\s)#{1,6}\s+/g, '$1');
 const when = (iso: string) => new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+const STATUS: Record<string, string> = { draft: 'Draft', final: 'Final', executed: 'Executed', received: 'Received' };
+const VERIFIED: Record<ResearchEvidence['verification'], [string, 'verified' | 'attention' | 'conflict' | 'neutral']> = {
+  verbatim: ['Quoted exactly', 'verified'],
+  normalized: ['Quoted with small differences (spacing, quotes or case)', 'verified'],
+  failed: ['Quote not found in the source', 'conflict'],
+  not_quoted: ['No quote given — the closest passage is shown', 'neutral'],
+};
+const ABSTAINED: Record<string, string> = {
+  no_passages: 'Nothing in this matter’s documents closely matches. Try other words, or check that the document you need is imported.',
+  model: 'The passages found do not answer it. Ask more specifically, or read the passages it consulted below.',
+};
 
-/** Research: questions answered only from this matter's documents, each statement tied to the
- *  clause it relies on. Laid out as a working note, not a chat. */
+/** Research: questions answered only from this matter's documents, each statement tied to the exact
+ *  words it relies on, checked before it is shown. Laid out as a working note, not a chat. */
 export default function MatterResearch() {
   const matter = useMatter();
   const qc = useQueryClient();
   const history = useResearchHistory(matter.id);
   const [question, setQuestion] = useState('');
+  const [versions, setVersions] = useState<VersionPolicy>('signed');
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [error, setError] = useState('');
   const [focus, setFocus] = useState<number | null>(null);
@@ -38,15 +56,22 @@ export default function MatterResearch() {
     abort.current = ctrl;
     setError(''); setFocus(null);
     let state: Answer = { question: q, text: '', sources: [], cited: [], phase: 'reading' };
+    let checked = false;                                   // the server sends checked paragraphs (S2.2)
     const update = (patch: Partial<Answer>) => { state = { ...state, ...patch }; setAnswer(state); };
     update({});
     try {
-      await postStream(`/api/legal/matters/${encodeURIComponent(matter.id)}/research/query`, { question: q }, (ev) => {
+      await postStream(`/api/legal/matters/${encodeURIComponent(matter.id)}/research/query`, { question: q, versions }, (ev) => {
         if (ev.type === 'sources') update({ sources: ev.citations ?? [] });
-        else if (ev.type === 'chunk') update({ text: state.text + (ev.text ?? ''), phase: 'writing' });
+        else if (ev.type === 'paragraph') {
+          checked = true;
+          const paragraphs = [...(state.paragraphs ?? []), ev as ResearchParagraph];
+          update({ paragraphs, text: paragraphs.map((p) => p.text).join('\n\n'), phase: 'writing',
+            unsupported: paragraphs.flatMap((p) => p.unsupported ?? []), failed: paragraphs.flatMap((p) => p.failed ?? []) });
+        } else if (ev.type === 'chunk') { if (!checked) update({ text: state.text + (ev.text ?? ''), phase: 'writing' }); }
         else if (ev.type === 'done') update({ text: ev.answer ?? state.text, cited: (ev.citations ?? []).map((c: ResearchSource) => c.n),
-          phase: ev.abstained ? 'abstained' : 'done', uncited: !!ev.uncited, unsupported: ev.unsupported ?? [] });
-        else if (ev.type === 'scope_revoked') update({ text: '', sources: [], phase: 'revoked' });
+          phase: ev.abstained ? 'abstained' : 'done', uncited: !!ev.uncited, unsupported: ev.unsupported ?? [], failed: ev.failed ?? [],
+          evidence: ev.evidence ?? undefined, conflicts: ev.conflicts ?? [], status: ev.status ?? null, reason: ev.abstention_reason ?? null });
+        else if (ev.type === 'scope_revoked') update({ text: '', sources: [], paragraphs: [], phase: 'revoked' });
         else if (ev.type === 'error') update({ phase: 'error' });
       }, ctrl.signal);
       setQuestion('');
@@ -60,8 +85,10 @@ export default function MatterResearch() {
 
   const show = (t: ResearchTurn) => {
     setFocus(null);
+    const done = ['answered', 'partial', 'unverified'].includes(t.status);
     setAnswer({ question: t.question, text: t.answer ?? '', sources: t.citations, cited: t.citations.map((c) => c.n), unsupported: t.unsupported ?? [],
-      phase: t.status === 'answered' ? 'done' : t.status === 'abstained' ? 'abstained' : t.status === 'scope_revoked' ? 'revoked' : 'error' });
+      evidence: t.evidence?.length ? t.evidence : undefined, conflicts: t.conflicts ?? [], status: t.status, reason: t.abstention_reason,
+      phase: done ? 'done' : t.status === 'abstained' ? 'abstained' : t.status === 'scope_revoked' ? 'revoked' : 'error' });
   };
 
   return (
@@ -71,13 +98,23 @@ export default function MatterResearch() {
         <div style={{ display: 'grid', gap: 16, alignContent: 'start', minWidth: 0 }}>
           <form onSubmit={ask} className="lw-paper lw-sheet lw-ask">
             <label htmlFor="research-q" className="lw-h2">Ask about this matter</label>
-            <p className="lw-meta" style={{ margin: '2px 0 10px' }}>Answers come only from this matter’s documents, with the passage each statement relies on.</p>
+            <p className="lw-meta" style={{ margin: '2px 0 10px' }}>Answers come only from this matter’s documents, with the exact words each statement relies on.</p>
             <textarea id="research-q" rows={2} className="lw-input lw-serif" placeholder="e.g. What caps the supplier’s liability, and what is excluded?"
               value={question} onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask(e as unknown as React.FormEvent); }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-              <span className="lw-meta">⌘/Ctrl + Enter</span>
-              <button type="submit" className="lw-btn lw-btn-primary" disabled={!question.trim() || busy}>{busy ? 'Working…' : 'Ask'}</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
+              <fieldset className="lw-segment" aria-label="Answer from">
+                <legend className="lw-sr">Answer from</legend>
+                {([['signed', 'Signed versions'], ['current', 'Latest drafts']] as [VersionPolicy, string][]).map(([v, label]) => (
+                  <label key={v} data-on={versions === v || undefined}>
+                    <input type="radio" name="versions" value={v} checked={versions === v} onChange={() => setVersions(v)} />{label}
+                  </label>
+                ))}
+              </fieldset>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span className="lw-meta">⌘/Ctrl + Enter</span>
+                <button type="submit" className="lw-btn lw-btn-primary" disabled={!question.trim() || busy}>{busy ? 'Working…' : 'Ask'}</button>
+              </div>
             </div>
           </form>
           {error && <ErrorNote>{error}</ErrorNote>}
@@ -93,7 +130,9 @@ export default function MatterResearch() {
                   <li key={t.id}>
                     <button type="button" className="lw-history-item" onClick={() => show(t)}>
                       <span className="lw-ellipsis">{t.question}</span>
-                      <span className="lw-meta">{when(t.created_at)}{t.status === 'abstained' ? ' · not answered by the documents' : t.status === 'scope_revoked' ? ' · access ended' : ''}</span>
+                      <span className="lw-meta">{when(t.created_at)}{t.status === 'abstained' ? ' · not answered by the documents'
+                        : t.status === 'scope_revoked' ? ' · access ended' : t.status === 'partial' ? ' · some statements flagged'
+                        : t.status === 'unverified' ? ' · not verified' : ''}</span>
                     </button>
                   </li>
                 ))}
@@ -106,8 +145,18 @@ export default function MatterResearch() {
 }
 
 function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; onFocus: (n: number) => void }) {
+  const matter = useMatter();
+  const [copied, setCopied] = useState(false);
   const cited = a.sources.filter((s) => a.cited.includes(s.n));
   const consulted = a.sources.filter((s) => !a.cited.includes(s.n));
+  const live = a.phase === 'writing' || a.phase === 'done';
+  const marks: [string, 'unsupported' | 'failed'][] = a.phase === 'done' || a.paragraphs?.length
+    ? [...(a.unsupported ?? []).map((s) => [s, 'unsupported'] as [string, 'unsupported']), ...(a.failed ?? []).map((s) => [s, 'failed'] as [string, 'failed'])]
+    : [];
+  const copy = async () => {
+    await navigator.clipboard?.writeText(withReferences(a));
+    setCopied(true);
+  };
   return (
     <article className="lw-paper lw-sheet lw-answer" aria-label="Answer" aria-busy={a.phase === 'reading' || a.phase === 'writing'}>
       <div className="lw-eyebrow">Question</div>
@@ -119,22 +168,43 @@ function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; o
         {a.phase === 'abstained' && (
           <div className="lw-answer-text">
             <p style={{ margin: 0 }}>The documents in this matter do not answer that.</p>
-            <p className="lw-meta" style={{ margin: '6px 0 0', fontFamily: 'var(--sans)' }}>Nothing in them closely matches. Try other words, or check that the document you need is imported.</p>
+            <p className="lw-meta" style={{ margin: '6px 0 0', fontFamily: 'var(--sans)' }}>{ABSTAINED[a.reason ?? 'no_passages'] ?? ABSTAINED.no_passages}</p>
           </div>
         )}
-        {(a.phase === 'writing' || a.phase === 'done') && (
-          <p className="lw-serif lw-answer-text">{withMarks(a.text, a.phase === 'done' ? a.unsupported ?? [] : [], a.sources, onFocus)}</p>
-        )}
-        {a.phase === 'done' && a.uncited && <StatusPill tone="attention">No source cited — check before relying on it</StatusPill>}
-        {a.phase === 'done' && !a.uncited && (a.unsupported?.length ?? 0) > 0 && (
+        {live && (a.paragraphs?.length
+          ? a.paragraphs.map((p) => <p key={p.index} className="lw-serif lw-answer-text">{withMarks(p.text, marks, a.sources, onFocus)}</p>)
+          : a.text.split(/\n{2,}/).map((t, i) => <p key={i} className="lw-serif lw-answer-text">{withMarks(t, marks, a.sources, onFocus)}</p>))}
+        {a.phase === 'done' && a.status === 'unverified' && <StatusPill tone="conflict">None of the quotes could be found in the sources. Do not rely on this answer.</StatusPill>}
+        {a.phase === 'done' && a.status === 'partial' && (a.failed?.length ?? 0) > 0 && <StatusPill tone="attention">Some statements could not be checked against the sources — they are marked.</StatusPill>}
+        {a.phase === 'done' && a.uncited && a.status !== 'unverified' && <StatusPill tone="attention">No source cited — check before relying on it</StatusPill>}
+        {a.phase === 'done' && !a.uncited && !(a.failed?.length) && (a.unsupported?.length ?? 0) > 0 && (
           <StatusPill tone="attention">{a.unsupported!.length === 1
             ? '1 sentence cites no source — shown dimmed. Check it before relying on it.'
             : `${a.unsupported!.length} sentences cite no source — shown dimmed. Check them before relying on them.`}</StatusPill>
         )}
       </div>
-      {cited.length > 0 && (
+      {a.phase === 'done' && (a.conflicts ?? []).map((c) => (
+        <div key={`${c.document_id}-${c.clause}-${c.other.id}`} role="alert" className="lw-conflict">
+          <b>Clause {c.clause} reads differently in version {c.other.number} ({(STATUS[c.other.status ?? ''] ?? c.other.status ?? 'unknown').toLowerCase()})</b>
+          <span className="lw-meta"> · {c.document_title} · this answer uses version {c.version.number}{c.version.status ? ` (${(STATUS[c.version.status] ?? c.version.status).toLowerCase()})` : ''}</span>
+          <blockquote className="lw-serif">{plain(c.other.text)}</blockquote>
+          <Link className="lw-linklike lw-meta" to={`/m/${matter.number}/documents/${encodeURIComponent(c.document_id)}/read?v=${encodeURIComponent(c.other.id)}`}>Open version {c.other.number}</Link>
+        </div>
+      ))}
+      {a.evidence && a.evidence.length > 0 ? (
+        <section aria-label="Evidence" style={{ marginTop: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 8px' }}>
+            <h3 className="lw-eyebrow" style={{ margin: 0 }}>Evidence</h3>
+            {a.phase === 'done' && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={copy}><Copy />{copied ? 'Copied' : 'Copy with citations'}</button>}
+          </div>
+          <ol className="lw-sources">{a.evidence.map((e, i) => <EvidenceItem key={`${e.n}-${i}`} e={e} active={focus === e.n} />)}</ol>
+        </section>
+      ) : cited.length > 0 && (
         <section aria-label="Sources" style={{ marginTop: 18 }}>
-          <h3 className="lw-eyebrow" style={{ margin: '0 0 8px' }}>Sources</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 8px' }}>
+            <h3 className="lw-eyebrow" style={{ margin: 0 }}>Sources</h3>
+            {a.phase === 'done' && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={copy}><Copy />{copied ? 'Copied' : 'Copy with citations'}</button>}
+          </div>
           <ol className="lw-sources">{cited.map((s) => <SourceItem key={s.n} s={s} active={focus === s.n} />)}</ol>
         </section>
       )}
@@ -148,21 +218,33 @@ function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; o
   );
 }
 
-/** The answer with each sentence that cites no source dimmed (T08): anything a document talked
- * the model into saying, or that it added itself, is not tied to the matter's documents. */
-function withMarks(text: string, unsupported: string[], sources: ResearchSource[], onFocus: (n: number) => void): React.ReactNode {
+/** The answer as plain text with its references, for pasting into a note or an email. */
+function withReferences(a: Answer): string {
+  const where = (x: { clause?: string | null; page_start?: number | null; page_end?: number | null; line?: number | null }) =>
+    [x.clause ? `cl. ${x.clause}` : '', pages(x), x.line ? `line ${x.line}` : ''].filter(Boolean).join(', ');
+  const refs = a.evidence?.length
+    ? a.evidence.map((e) => `[${e.n}] ${e.document_title}, version ${e.version_number}${e.version_status ? ` (${e.version_status})` : ''}` +
+        `${where(e) ? `, ${where(e)}` : ''}: “${e.quote}”${e.verification === 'failed' ? ' (quote not found in the source)' : ''}`)
+    : a.sources.filter((s) => a.cited.includes(s.n)).map((s) => `[${s.n}] ${s.document_title}, version ${s.version_number}${where(s) ? `, ${where(s)}` : ''}: “${plain(s.text)}”`);
+  return `${a.text}\n\n${refs.join('\n')}`;
+}
+
+/** The answer with flagged sentences marked: those citing nothing (T08) and those whose quote is not
+ *  in the source (S2.2). */
+function withMarks(text: string, marks: [string, 'unsupported' | 'failed'][], sources: ResearchSource[], onFocus: (n: number) => void): React.ReactNode {
   const out: React.ReactNode[] = [];
+  const found = marks.map(([s, kind]) => ({ s, kind, at: text.indexOf(s) })).filter((m) => m.at >= 0).sort((x, y) => x.at - y.at);
   let at = 0;
-  unsupported.forEach((sentence, i) => {
-    const start = text.indexOf(sentence, at);
-    if (start < 0) return;
+  found.forEach(({ s, kind, at: start }, i) => {
+    if (start < at) return;
     if (start > at) out.push(<React.Fragment key={`t${i}`}>{withCitations(plain(text.slice(at, start)), sources, onFocus)}</React.Fragment>);
     out.push(
-      <span key={`u${i}`} className="lw-unsupported" data-unsupported="">
-        <span>{plain(sentence)}</span><span className="lw-sr"> (no source cited)</span>
+      <span key={`u${i}`} className="lw-unsupported" data-unsupported={kind === 'unsupported' ? '' : undefined} data-failed={kind === 'failed' ? '' : undefined}>
+        <span>{kind === 'failed' ? plain(s).replace(/\s*(\[\d{1,2}\])+\s*\.?$/, '') : plain(s)}</span>
+        <span className="lw-sr">{kind === 'failed' ? ' (quote not found in the source)' : ' (no source cited)'}</span>
       </span>,
     );
-    at = start + sentence.length;
+    at = start + s.length;
   });
   if (at < text.length) out.push(<React.Fragment key="end">{withCitations(plain(text.slice(at)), sources, onFocus)}</React.Fragment>);
   return out;
@@ -178,6 +260,32 @@ function withCitations(text: string, sources: ResearchSource[], onFocus: (n: num
     }
     return <React.Fragment key={i}>{part}</React.Fragment>;
   });
+}
+
+function EvidenceItem({ e, active }: { e: ResearchEvidence; active: boolean }) {
+  const ref = useRef<HTMLLIElement>(null);
+  const matter = useMatter();
+  useEffect(() => { if (active) ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' }); }, [active]);
+  const [label, tone] = VERIFIED[e.verification];
+  const meta = [e.document_title, `v${e.version_number}`, e.version_status ? STATUS[e.version_status] ?? e.version_status : '',
+    e.clause ? `cl. ${e.clause}` : '', pages(e), e.line ? `line ${e.line}` : ''].filter(Boolean).join(' · ');
+  const href = e.char_start != null && e.char_end != null
+    ? `/m/${matter.number}/documents/${encodeURIComponent(e.document_id)}/read?v=${encodeURIComponent(e.version_id)}&at=${e.char_start}-${e.char_end}` : null;
+  return (
+    <li ref={ref} className="lw-source" data-active={active || undefined} data-verification={e.verification}>
+      <span className="lw-cite lw-cite-static" aria-hidden="true">{e.n}</span>
+      <div style={{ minWidth: 0, display: 'grid', gap: 4 }}>
+        {e.removed ? <p className="lw-meta" style={{ margin: 0 }}>The document this quoted was deleted.</p>
+          : <blockquote className="lw-serif">{`“${e.quote}”`}</blockquote>}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <StatusPill tone={tone}>{label}</StatusPill>
+          {e.signed === false && <StatusPill tone="attention">Not signed</StatusPill>}
+        </div>
+        <div className="lw-meta">{meta}</div>
+        {href && <Link className="lw-linklike lw-meta" to={href} aria-label={`Open evidence ${e.n} in the document`}>Open in document</Link>}
+      </div>
+    </li>
+  );
 }
 
 function SourceItem({ s, active }: { s: ResearchSource; active: boolean }) {

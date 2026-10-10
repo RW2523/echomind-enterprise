@@ -539,6 +539,41 @@ Every entry records the options considered, the recommendation, the consequence 
   - The focus is lexical, not semantic.
   - Definitions inside tables are found only when they use the patterns above.
 
+### D-036 Which version answers come from, and conflicts between versions — RECORDED (S2.2a; RAG-01, T05)
+- **Searchable versions:** each document's current version, plus its latest signed (`executed`) version when that is older. Other versions leave the index; their text, clauses and marks stay for the reader and for comparison. Ingestion, status changes and restores keep this in line (`documents/versions.py`).
+- **Policies** (search and research take `versions`):
+  - **`signed` (default):** the latest signed version. A document never signed is used in its current version, and its citations say `signed: false`.
+  - **`current`:** the latest drafts.
+- **Conflicts:**
+  - For each cited clause, the other searchable version of the same document is compared after folding case and spacing. For a signed quote that is the current draft; for a draft quote, the signed version.
+  - A different wording is reported with both versions' numbers, statuses and texts.
+  - Conflicts between different documents come in S2.3.
+- **Signing:** signing a draft (setting it to `executed`) makes it the version answers come from, at once.
+
+### D-037 The evidence contract and quote verification — RECORDED (S2.2b; RAG-01, legacy R-4, R-6, R-7, R-8)
+- **Quoted citations:** the model cites every statement with a short exact quote, `[n: "…"]`. Bare `[n]` is still read, as "not quoted".
+- **Paragraph streaming:** the answer streams one checked paragraph at a time. Each quote is verified against the passage the model was given:
+  - **verbatim:** found as written;
+  - **normalized:** found after folding Unicode forms, quotes, dashes, spacing and case, or as the pieces of an ellipsis in order;
+  - **failed.**
+
+  Nothing unverified is shown unmarked. `chunk` events still carry each checked paragraph's display text (quotes removed) for the voice service.
+- **Claims:** a claim is supported if one of its quotes is found, failed if it quotes and none is found, and unquoted if it only gives numbers.
+- **Statuses:**
+  - **`answered`:** nothing flagged;
+  - **`partial`:** some claims failed, or some sentences cite nothing;
+  - **`unverified`:** no supported or unquoted claim;
+  - **`abstained`:** the reason is `no_passages` or `model`.
+
+  Failed claims are **flagged, not dropped**, so the reviewer sees what the model said and that its quote is not in the source.
+- **Evidence:** each quote with document, version and its status, `signed`, clause, page, line and the exact characters of the version's text. Saved with the turn, with the conflicts and the policy (migration 0016). A purge blanks the document's quotes in saved evidence and conflicts, and its verification checks them.
+- **Legacy defects in Law** (they were in `rag/advanced.py`, which Law does not use; these are now tested guarantees):
+  - **R-4:** a two-word legal term is researched.
+  - **R-6:** pinpoints such as "clause 12.1 (p. 1)" are kept, and evidence numbers match their sources.
+  - **R-7:** one answer draws on several documents. Meeting transcripts become research sources when they are finalised in S2.4.
+  - **R-8:** the persona is the server's; client-sent persona or system text is ignored.
+- **Measured on the real model** (8 questions, the demo MSA): 10 of 11 quotes verbatim. The one failure was an escaped inner quote, `(\"Provider\")`, which the parser now reads (tested).
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

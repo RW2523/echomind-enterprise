@@ -60,6 +60,12 @@ def _blob(matter_id: str, version_id: str) -> str:
     return os.path.join(settings.DATA_DIR, "legal", "blobs", matter_id, f"{version_id}.bin")
 
 
+def _evidence_turns(conn, matter_id: str, document_id: str) -> list[tuple[str, list, list]]:
+    rows = conn.execute("SELECT id, evidence_json, conflicts_json FROM legal_research_turns WHERE matter_id=? "
+                        "AND (evidence_json LIKE ? OR conflicts_json LIKE ?)", (matter_id, f"%{document_id}%", f"%{document_id}%")).fetchall()
+    return [(r[0], json.loads(r[1] or "[]"), json.loads(r[2] or "[]")) for r in rows]
+
+
 def _citing_turns(conn, matter_id: str, document_id: str) -> list[tuple[str, list]]:
     out = []
     for tid, cj in conn.execute("SELECT id, citations_json FROM legal_research_turns WHERE matter_id=? AND citations_json LIKE ?",
@@ -139,8 +145,8 @@ def _undo_soft_delete(conn, d: dict) -> bool:
         return False
     if d["object_type"] == "document":
         conn.execute("UPDATE legal_documents SET deleted_at=NULL, deletion_id=NULL WHERE id=? AND deletion_id=?", (d["object_id"], d["id"]))
-        conn.execute("UPDATE legal_chunks SET active=1 WHERE version_id=(SELECT current_version_id FROM legal_documents WHERE id=?)",
-                     (d["object_id"],))
+        from ..documents import versions
+        versions.sync_active(conn, d["object_id"])           # current and latest signed versions (S2.2a); index rebuilt after
         return True
     conn.execute("UPDATE legal_meetings SET transcript_deleted_at=NULL, transcript_deletion_id=NULL WHERE id=? AND transcript_deletion_id=?",
                  (d["object_id"], d["id"]))
@@ -260,6 +266,10 @@ def _purge_document(conn, d: dict) -> dict:
     for tid, cites in _citing_turns(conn, d["matter_id"], doc):
         cleaned = [({**c, "text": "", "document_title": "", "removed": True} if c.get("document_id") == doc else c) for c in cites]
         conn.execute("UPDATE legal_research_turns SET citations_json=? WHERE id=?", (json.dumps(cleaned), tid))
+    for tid, ej, cj in _evidence_turns(conn, d["matter_id"], doc):          # S2.2: saved evidence and conflicts too
+        ev = [({**e, "quote": "", "document_title": "", "removed": True} if e.get("document_id") == doc else e) for e in ej]
+        conn.execute("UPDATE legal_research_turns SET evidence_json=?, conflicts_json=? WHERE id=?",
+                     (json.dumps(ev), json.dumps([c for c in cj if c.get("document_id") != doc]), tid))
     return {"versions": versions, "chunks": chunks}
 
 
@@ -284,6 +294,8 @@ def verify(d: dict, gone: dict) -> dict:
                     db_rows += conn.execute(f"SELECT COUNT(*) FROM {table} WHERE version_id IN ({qs})", versions).fetchone()[0]
             quotes = [c for _, cites in _citing_turns(conn, d["matter_id"], doc) for c in cites
                       if c.get("document_id") == doc and (c.get("text") or c.get("document_title"))]
+            quotes += [e for _, ev, cf in _evidence_turns(conn, d["matter_id"], doc) for e in ev + cf
+                       if e.get("document_id") == doc and (e.get("quote") or e.get("document_title") or e.get("clause") and "other" in e)]
             idx = registry.for_matter(d["matter_id"])
             checks = {"database": db_rows == 0,
                       "index": not (set(idx.chunk_ids) & set(gone.get("chunks", []))),

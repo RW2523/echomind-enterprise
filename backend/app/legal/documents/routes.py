@@ -45,6 +45,7 @@ class SearchIn(BaseModel):
     query: str = Field(min_length=1, max_length=2000)
     k: int = Field(default=8, ge=1, le=20)
     modes: Optional[list[Mode]] = None
+    versions: Literal["signed", "current"] = "signed"     # S2.2a: latest signed versions, or latest drafts
 
 
 # ── Import ───────────────────────────────────────────────────────────────────────
@@ -205,7 +206,7 @@ async def search(matter_id: str, inp: SearchIn, request: Request):
                   "modes": inp.modes or list(searchmod.ALL_MODES), "k": inp.k})
     try:
         s = await run_in_threadpool(scopemod.authorize, p, matter_id)
-        result = await searchmod.search(s, q, k=inp.k, modes=inp.modes or searchmod.ALL_MODES)
+        result = await searchmod.search(s, q, k=inp.k, modes=inp.modes or searchmod.ALL_MODES, versions=inp.versions)
     except (scopemod.ScopeDenied, scopemod.ScopeRevoked):
         note(reason="scope_revoked")
         raise _not_found()
