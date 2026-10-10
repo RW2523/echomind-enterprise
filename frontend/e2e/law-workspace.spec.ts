@@ -290,7 +290,7 @@ test('meetings: recording waits for everyone’s consent and stops the moment on
   for (const [name, role] of [['Alice Hart', 'host'], ['Petra Voss', 'client']]) {
     await alice.getByLabel('Name').fill(name);
     await alice.getByLabel('Role').selectOption(role);
-    await alice.getByRole('button', { name: 'Add' }).click();
+    await alice.getByRole('button', { name: 'Add participant' }).click();
     await expect(alice.getByText(name, { exact: true })).toBeVisible();
   }
   await alice.getByRole('tab', { name: 'Record' }).click();

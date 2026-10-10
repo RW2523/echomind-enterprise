@@ -125,7 +125,7 @@ function Prepare({ m, matterId, canEdit, canSetLabel, canSuggestLabel }: { m: Me
           <Field label="Name">{(id) => <input id={id} className="lw-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />}</Field>
           <Field label="Role">{(id) => <select id={id} className="lw-input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as ParticipantRole })}>
             {ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>}</Field>
-          <button type="submit" className="lw-btn" disabled={!form.name.trim()}><UserPlus />Add</button>
+          <button type="submit" className="lw-btn" disabled={!form.name.trim()}><UserPlus />Add participant</button>
         </form>
       )}
       {error && <ErrorNote>{error}</ErrorNote>}
