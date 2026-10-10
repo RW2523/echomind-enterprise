@@ -118,7 +118,7 @@ def clauses(x: Extraction) -> list[Clause]:
     found: list[Clause] = []
     stack: list[Clause] = []
     numbered: Optional[Clause] = None                       # the last clause "(a)" would attach to
-    last_sub: Optional[tuple[str, int]] = None               # (letter, level) of the last "(a)"-style item
+    last_sub: Optional[tuple[str, int, bool]] = None         # (value, level, roman?) of the last item at the first level
     last_roman: Optional[str] = None                         # the last "(i)"-style item, if the list is roman
 
     def push(c: Clause) -> None:
@@ -143,11 +143,11 @@ def clauses(x: Extraction) -> list[Clause]:
                     continue
                 roman = _roman_item(value, last_sub[0] if last_sub else None, last_roman)
                 last_roman = value if roman else None
-                if roman and last_sub and not _ROMAN.match(last_sub[0] or ""):
+                if roman and last_sub and not last_sub[2]:      # (i) under a lettered item; "c" only looks roman
                     base, lvl = f"{numbered.number}({last_sub[0]})", last_sub[1] + 1
                 else:
                     base, lvl = numbered.number, numbered.level + 1
-                    last_sub = (value, lvl)
+                    last_sub = (value, lvl, roman)
                 number = f"{base}({value})"
                 push(Clause(number, label, _heading(rest), lvl, at, b.end, page=x.page_at(at)))
                 continue

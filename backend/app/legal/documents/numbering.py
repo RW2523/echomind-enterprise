@@ -31,9 +31,22 @@ def split(number: str) -> Optional[tuple[list[int], list[str]]]:
     return [int(x) for x in m.group(1).split(".")], re.findall(r"\(([a-z0-9]{1,5})\)", m.group(2))
 
 
+ATTACH_LINE = re.compile(r"^[ \t]*#{1,6}[ \t]*(Schedule|Annex|Exhibit|Appendix|SCHEDULE|ANNEX|EXHIBIT|APPENDIX)[ \t]+(\d{1,3}|[A-Z])\b[ \t—–:-]*([^\n]*)$", re.M)
+
+
 def complete(text: str, rows: list[dict]) -> list[dict]:
-    """Clause rows (number, heading, level, start, end) plus the numbered clauses they imply."""
+    """Clause rows (number, heading, level, start, end) plus the numbered clauses they imply, and schedules
+    known only by a Markdown heading ("## Schedule 1 Products")."""
     have = {r["number"] for r in rows}
+    marks = list(ATTACH_LINE.finditer(text))
+    for i, m in enumerate(marks):
+        number = f"{m.group(1).title()} {m.group(2)}"
+        if number in have:
+            continue
+        end = marks[i + 1].start() if i + 1 < len(marks) else len(text)
+        rows = rows + [{"number": number, "heading": m.group(3).strip() or None, "level": 0, "parent": None, "start": m.start(),
+                        "end": len(text[:end].rstrip()), "implied": True}]
+        have.add(number)
     heads = {m.group(1): (m.group(2).strip(), m.start()) for m in HEAD_LINE.finditer(text) if _is_heading(m.group(2))}
     children: dict[str, list[dict]] = {}
     for r in rows:

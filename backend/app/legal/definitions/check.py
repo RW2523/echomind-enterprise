@@ -39,6 +39,8 @@ _LEADING = {"The", "This", "These", "Those", "That", "Each", "Either", "Neither"
 COMPANY = re.compile(r"^(?:Ltd|Limited|Inc|LLC|LLP|plc|PLC|AB|GmbH|AG|SA|BV|NV|Corp|Corporation|Company|Co|SE|SAS|Pty|PLLC)\.?$")
 _TOKEN = r"[A-Z][A-Za-z'’\-]*"
 PHRASE = re.compile(rf"(?<![\w\"“]){_TOKEN}(?:[ \t]+(?:(?:of|and|for|to|in|on|under)[ \t]+)?{_TOKEN})*")
+_EACH = re.compile(r",?\s+(?:each|together|collectively|jointly)\s+(?:a|an|the)\s+[\"“]([A-Z][\w&'’\- ]{0,60}?)[\"”]")
+_PARTY_BEFORE = re.compile(r"(?:Ltd|Limited|Inc|LLC|LLP|plc|PLC|AB|GmbH|AG|SA|BV|NV|Corp|Corporation|Company|Co|SE|SAS|Pty|PLLC)\.?\s*$")
 DESCRIPTOR = re.compile(r"\s*\((?P<h>[A-Z][^()\n]{1,60})\)")
 
 
@@ -52,7 +54,7 @@ def definitions(text: str) -> list[dict]:
     """Every definition, duplicates included: term, offsets of the term, the definition sentence and its meaning."""
     sents = _sentences(text)
     out = []
-    for rx, kind in ((_MEANS, "means"), (_PAREN, "paren")):
+    for rx, kind in ((_MEANS, "means"), (_PAREN, "paren"), (_EACH, "paren")):
         for m in rx.finditer(text):
             a, b = next(((x, y) for x, y in sents if x <= m.start() < y), (m.start(), len(text)))
             meaning = text[m.end():b] if kind == "means" else text[a:m.start()]
@@ -128,17 +130,18 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
     for term, ds in by_term.items():
         own = [d["sentence"] for d in ds]
         words = term.split()
-        pat = r"(?<![\w-])(" + "|".join(re.escape(f) for f in sorted(_forms(term), key=len, reverse=True)) + r")(?![\w-])"
+        variants = [term] + ([term + "s"] if not term.endswith("s") else [])   # not "service levels" for "Services"
+        pat = r"(?<![\w-])(" + "|".join(re.escape(f) for f in sorted(variants, key=len, reverse=True)) + r")(?![\w-])"
         for m in re.finditer(pat, text, re.I):
             a, b = m.span(1)
             got = m.group(1)
-            if got in _forms(term) or _inside(a, own) or _inside(a, heads) or _quoted(text, a, b) or got.isupper():
+            if got in variants or _inside(a, own) or _inside(a, heads) or _quoted(text, a, b) or got.isupper():
                 continue
             if len(words) == 1 and not re.search(rf"\b{_DETERMINERS}[ \t]+$", text[max(0, a - 12):a], re.I):
                 continue                                    # a single common word only after "the", "any", "such"…
             if text[a - 1:a].isalpha() or (a and text[a - 1] == "-"):
                 continue
-            right = term if got.casefold() == term.casefold() else _forms(term)[1]
+            right = term if got.casefold() == term.casefold() else term + "s"
             add("definition", "inconsistent", "low", got, a, b, term=term, message=f"“{got}” is used where the defined term is “{right}”.",
                 fixes=[{"label": f"Use “{right}”", "start": a, "end": b, "original": got, "revised": right,
                         "clause": _leaf(clauses, a)}])
@@ -149,7 +152,8 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
             add("definition", "duplicate", "high" if conflicting else "medium", term, ds[1]["start"], ds[1]["end"],
                 f"“{term}” is defined {'twice' if len(ds) == 2 else f'{len(ds)} times'}" + (", with different meanings." if conflicting else ", in the same words."),
                 places=[{"start": d["start"], "end": d["end"]} for d in ds], conflicting=conflicting)
-        if not uses.get(term) and not any(f["type"] == "inconsistent" and f["term"] == term for f in findings):
+        party = all(_PARTY_BEFORE.search(text[max(0, d["start"] - 40):d["start"]].rstrip(" (\"“")) for d in ds)
+        if not uses.get(term) and not party and not any(f["type"] == "inconsistent" and f["term"] == term for f in findings):
             d = ds[0]
             fixes = []
             c = _whole_clause(text, clauses, d)
@@ -165,15 +169,23 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
 
     # Capitalised terms that read as defined terms but are not defined.
     seen_undefined: dict[str, dict] = {}
-    for m in PHRASE.finditer(text):
-        a, words = m.start(), m.group(0).split()
+    segments = []
+    for m in PHRASE.finditer(text):                        # "Party's Confidential Information": two names, not one
+        pos = m.start()
+        for seg in re.split(r"(?<=['’]s)[ \t]+", m.group(0)):
+            at = text.index(seg, pos)
+            segments.append((at, re.sub(r"['’]s$", "", seg)))
+            pos = at + len(seg)
+    for a, phrase0 in segments:
+        words = phrase0.split()
         while words and words[0] in _LEADING:
             a = text.index(words[1], a + len(words[0])) if len(words) > 1 else a
             words = words[1:]
         if not words:
             continue
         phrase = " ".join(words)
-        b = a + len(phrase) if text[a:a + len(phrase)] == phrase else m.end()
+        span = re.match(r"[ \t]+".join(map(re.escape, words)), text[a:])
+        b = a + (span.end() if span else len(phrase))
         last = words[-1].rstrip("’'s").casefold() if words[-1].endswith(("’s", "'s")) else words[-1].casefold()
         base = last[:-1] if last.endswith("s") and last[:-1] in HEADS else last
         if base not in HEADS and last not in HEADS:
@@ -202,6 +214,10 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
 
     findings += numbering_findings(clauses)
     findings += reference_findings(text, clauses)
+    for f in findings:                                     # where each finding (and each place) is, as a lawyer says it
+        f["where"] = _where(clauses, f["start"])
+        for p in f["places"]:
+            p["where"] = _where(clauses, p["start"])
     order = {"definition": 0, "reference": 1, "numbering": 2}
     findings.sort(key=lambda f: (order[f["kind"]], f["start"]))
     return findings
@@ -223,7 +239,9 @@ def _leaf(clauses: list[dict], at: int) -> Optional[str]:
 
 def _where(clauses: list[dict], at: int) -> str:
     n = _leaf(clauses, at)
-    return f"clause {n}" if n and not numbering.ATTACHMENT.match(n) else (n or "this document")
+    if n:
+        return f"clause {n}" if not numbering.ATTACHMENT.match(n) else n
+    return "the opening text" if clauses and at < min(c["start"] for c in clauses) else "this document"
 
 
 def _whole_clause(text: str, clauses: list[dict], d: dict) -> Optional[dict]:
@@ -380,8 +398,13 @@ def reference_findings(text: str, clauses: list[dict]) -> list[dict]:
             fixes = [{"label": f"Point to clause {c['number']} ({c['heading']})", "start": f.start, "end": span_end,
                       "original": text[f.start:span_end], "revised": f"{word} {c['number']} ({desc})", "clause": _leaf(clauses, f.start)}
                      for c in by_heading]
+            msg = f"This document has no {label}."
+            same = next((x for x in out if x["type"] == "broken" and x["message"] == msg and not fixes and not x["fixes"]), None)
+            if same:                                       # the same missing clause cited again: one finding, every place
+                same["places"].append({"start": f.start, "end": span_end})
+                continue
             out.append({"kind": "reference", "type": "broken", "severity": "high", "text": text[f.start:span_end], "start": f.start,
-                        "end": span_end, "message": f"This document has no {label}.", "places": [], "fixes": fixes})
+                        "end": span_end, "message": msg, "places": [{"start": f.start, "end": span_end}] if not fixes else [], "fixes": fixes})
             continue
         if desc and target.get("heading") and _norm(target["heading"]) != _norm(desc) and not _norm(target["heading"]).startswith(_norm(desc)):
             fixes = [{"label": f"Keep {word.lower()} {target['number']}; name it {target['heading']}", "start": f.start, "end": span_end,

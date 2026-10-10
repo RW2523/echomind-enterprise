@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
-import { ArrowLeft, ListChecks, TextQuote } from 'lucide-react';
+import { ArrowLeft, BookA, ListChecks, TextQuote } from 'lucide-react';
 import { ApiError } from '../api/client';
 import { useDocument, useReader } from '../api/queries';
 import type { ReaderData, ReaderMark, ReaderPage } from '../api/types';
@@ -47,6 +47,7 @@ export default function DocumentReader() {
         <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents`}><ArrowLeft />Documents</Link>
         <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/playbook`}><ListChecks />Check against a playbook</Link>
         <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/citations`}><TextQuote />Check citations</Link>
+        <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/definitions`}><BookA />Check definitions</Link>
       </Toolbar>
       {reader.isPending && reader.failureCount > 0 && reader.failureReason instanceof ApiError && reader.failureReason.status === 409
         ? <div className="lw-content"><div className="lw-paper" style={{ padding: 24 }}>

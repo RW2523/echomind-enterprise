@@ -72,6 +72,8 @@ def test_definitions_duplicated_unused_and_undefined(dc):
     dup = found(ch, "duplicate", "Fees")
     assert len(dup) == 1 and dup[0]["conflicting"] is True and len(dup[0]["places"]) == 2
     assert [CONTRACT[p["start"]:p["end"]] for p in dup[0]["places"]] == ["Fees", "Fees"]
+    assert [p["where"] for p in dup[0]["places"]] == ["clause 1.2", "clause 1.5"]
+    assert found(ch, "undefined")[0]["where"] == "clause 2.1"
     assert [f["text"] for f in found(ch, "unused")] == ["Territory"]
     assert [f["text"] for f in found(ch, "undefined")] == ["Commencement Date"]
     f = found(ch, "undefined")[0]
@@ -223,3 +225,37 @@ def test_the_demo_agreement(docs):
     assert [f["text"] for f in found(ch, "undefined")] == ["Confidential Information"]
     assert not found(ch, "duplicate") and not found(ch, "outdated")
     assert "Clauses 10 and 11 are missing: the numbering goes from 9 to 12." in [f["message"] for f in found(ch, "gap")]
+
+
+def test_the_demo_supply_agreement_in_markdown(docs):
+    """Journey 26's fixture: Markdown headings, so clauses 1, 2, 4 and 9 and both schedules are known only by
+    their headings and sub-clauses (documents.numbering)."""
+    from pathlib import Path
+    fx = Path(__file__).resolve().parents[3] / "eval" / "fixtures" / "law" / "Supply Agreement (DEMO).md"
+    alice = as_user(docs, "alice")
+    mid = docs["matters"]["M-101"]["id"]
+    doc = upload(alice, mid, fx.name, fx.read_text(), mime="text/markdown", status="draft").json()["document"]
+    index_all()
+    ch = alice.post(f"/api/legal/matters/{mid}/documents/{doc['id']}/definitions-check", headers=csrf_headers(alice)).json()["check"]
+    got = sorted((f["type"], f["text"]) for f in ch["findings"] if f["kind"] != "numbering")
+    assert got == sorted([("duplicate", "Price"), ("unused", "Territory"), ("undefined", "Commencement Date"), ("inconsistent", "price"),
+                          ("inconsistent", "confidential information"), ("outdated", "clause 4 (Liability)"), ("broken", "clause 12")])
+    assert sorted(f["message"] for f in found(ch, "gap")) == sorted([
+        "Clause 3 is missing: the numbering goes from 2 to 4.", "Clauses 5 to 8 are missing: the numbering goes from 4 to 9.",
+        "Clause 4.2 is missing: the numbering goes from 4.1 to 4.3.", "Item (b) of clause 9.2 is missing: the items go from (a) to (c)."])
+
+
+def test_a_clean_agreement_has_no_findings():
+    """Golden control G4: party short names left unused, 'each a "Party"', possessives ("Party's Confidential
+    Information") and (i) under (c) are all as they should be."""
+    import json
+    from pathlib import Path
+    from app.legal.definitions import check as checkmod
+    from app.legal.documents import extract, structure
+    g = json.loads((Path(__file__).resolve().parents[3] / "eval" / "law" / "definitions" / "golden.json").read_text())
+    text = next(d["text"] for d in g["documents"] if d["id"] == "G4-clean-nda-control")
+    x = extract.extract("nda.txt", text.encode())
+    rows = [{"number": c.number, "heading": c.heading, "level": c.level, "parent": c.parent, "start": c.start, "end": c.end}
+            for c in structure.clauses(x)]
+    assert "2.2(c)(i)" in [r["number"] for r in rows]
+    assert checkmod.analyse(text, rows) == []
