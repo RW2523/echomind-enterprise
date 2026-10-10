@@ -7,8 +7,8 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.2-summaries` |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1 merged; S4.2 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.3-time` |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1 and S4.2 merged; S4.3 next |
 | Plan documents | Committed to `feature/echomind-law` |
 | Migrations | `0001`–`0031` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
@@ -604,6 +604,19 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - The full browser suite: 30/30. Journey 30 found two UI bugs, both fixed.
 - **Docs:** D-054, THREAT_MODEL T-24, run 31. Merged into `feature/echomind-law`.
 
+### Session 3 (continued) — S4.2 Summaries (OPT-02)
+- **Built (D-055), off by default (`LEGAL_SUMMARIES`):**
+  - Section-by-section key points, each quoting the document.
+  - Citations computed from the quote's position: clause and line, page and line, or a transcript's timecode.
+  - Unfound quotes and unsupported figures marked.
+  - Reviewer edits as versions; second-person approval; filing. The original is never changed.
+  - **UI:** Summaries per matter and a summary page.
+- **Found:** the shared T08 detector missed "AI assistant:" labels and "ignore your instructions". Both are now withheld for every feature.
+- **Translation:** BLOCKED (no approved local model).
+- **Evaluation:** golden 19/19 after one tuning step; blind held-out 15/15 facts and 15/15 citations.
+- **Suites:** backend 1247; security suite with an S4.2 group; Vitest 148; journey 31; full browser suite 31/31.
+- **Docs:** D-055, run 32. Merged into `feature/echomind-law`.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -678,7 +691,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 ## NEXT EXACT ACTION
 
 Continue **Phase 4** under the owner's standing approval (2026-10-10). S4.1 is merged into `feature/echomind-law`.
-1. **S4.2 Summaries (OPT-02)** on `law/s4.2-summaries`. Translation stays BLOCKED: no local translation model or licence is approved. The audit is done:
+1. ~~S4.2 Summaries~~ merged (D-055). **S4.3 Time entries (OPT-03)** on `law/s4.3-time`: the backend is drafted and its tests pass (`git stash` "s4.3 wip": migration 0032, `app/legal/timeentries`, `test_law_time.py`, 8 tests); next is the Time page, then a journey. Previously: **S4.2 Summaries (OPT-02)** on `law/s4.2-summaries`. Translation stays BLOCKED: no local translation model or licence is approved. The audit is done:
    - the AI artifact and review machinery (S2.6–S2.7) is reused: versions, second-person approval by hash, the Reviews queue, filing;
    - the stored page and line maps give page/line citations;
    - finalised transcripts carry `[HH:MM:SS]` timecodes.
