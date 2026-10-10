@@ -129,6 +129,8 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
                                             (document_id, matter_id)).fetchone()[0],
             "citation_checks": conn.execute("SELECT COUNT(*) FROM legal_citation_checks WHERE document_id=? AND matter_id=?",
                                             (document_id, matter_id)).fetchone()[0],
+            "definition_checks": conn.execute("SELECT COUNT(*) FROM legal_definition_checks WHERE document_id=? AND matter_id=?",
+                                              (document_id, matter_id)).fetchone()[0],
             "kept": KEPT_DOCUMENT}
 
 
@@ -350,6 +352,9 @@ def _purge_document(conn, d: dict) -> dict:
     # keep the item but lose where it pointed (they hold its offsets, never its words).
     conn.execute("DELETE FROM legal_citation_notes WHERE check_id IN (SELECT id FROM legal_citation_checks WHERE document_id=?)", (doc,))
     conn.execute("DELETE FROM legal_citation_checks WHERE document_id=?", (doc,))
+    # S3.5: definition checks quote the document; they go with their notes (each can be run again).
+    conn.execute("DELETE FROM legal_definition_notes WHERE check_id IN (SELECT id FROM legal_definition_checks WHERE document_id=?)", (doc,))
+    conn.execute("DELETE FROM legal_definition_checks WHERE document_id=?", (doc,))
     for cid, rj in _citation_targets(conn, d["matter_id"], doc):
         stored = json.loads(rj)
         for it in stored["items"]:
@@ -405,6 +410,7 @@ def verify(d: dict, gone: dict) -> dict:
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_artifact_filings WHERE document_id=?", (doc,)).fetchone()[0]
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_playbook_checks WHERE document_id=?", (doc,)).fetchone()[0]
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_citation_checks WHERE document_id=?", (doc,)).fetchone()[0]
+            db_rows += conn.execute("SELECT COUNT(*) FROM legal_definition_checks WHERE document_id=?", (doc,)).fetchone()[0]
             db_rows += len(_citation_targets(conn, d["matter_id"], doc))
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
                                     "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchone()[0]

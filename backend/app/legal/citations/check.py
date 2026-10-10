@@ -21,11 +21,12 @@ from difflib import SequenceMatcher
 from typing import Optional
 
 from ...core.db import get_conn
+from ..documents import numbering
 from ..documents import repo as documents
 from ..redlines.word import ops as diff_ops
 from . import parse
 
-VERSION = "citations-s3.4b"
+VERSION = "citations-s3.4c"
 NOTICE = ("External authorities are listed but not verified: no licensed law library is connected (decision P-009) and nothing "
           "is looked up. Check each one in a licensed source before relying on it.")
 _GENERIC = {"agreement", "contract", "lease", "deed", "letter", "policy", "terms", "memorandum", "licence", "license", "order form"}
@@ -60,7 +61,7 @@ def _version(document_id: str, matter_id: str, version_id: Optional[str] = None)
 class _Doc:
     def __init__(self, document_id: str, title: str, version_id: str, text: str):
         self.id, self.title, self.version_id, self.text = document_id, title, version_id, text
-        self.clauses = _clauses(version_id)
+        self.clauses = numbering.complete(text, _clauses(version_id))      # "clause 12" of a Markdown "## 12." heading
 
     def clause(self, keys: list[str], within: Optional[str] = None) -> Optional[dict]:
         pool = self.clauses

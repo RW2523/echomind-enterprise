@@ -118,7 +118,8 @@ WITHIN = re.compile(r"\s+(?:of|to|in)\s+(?:the\s+)?(?P<att>Schedule|Annex|Exhibi
 
 def aliases(text: str) -> dict[str, str]:
     """Short names a document gives others: 'the Share Purchase Agreement (the "SPA")' → {"SPA": "Share Purchase Agreement"}."""
-    return {m.group("abbr"): " ".join(m.group("doc").split()) for m in ALIAS.finditer(text)}
+    return {m.group("abbr"): " ".join(m.group("doc").split()) for m in ALIAS.finditer(text)
+            if not re.match(r"(?i)this\b", m.group("doc"))}            # 'This Agreement (the "Agreement")' names itself
 
 
 def last_name(text: str, a: int, b: int, short: dict[str, str]) -> Optional[str]:
