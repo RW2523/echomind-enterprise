@@ -1,0 +1,141 @@
+{
+ "about": "S3.5 defined terms and cross-references (DOC-04) — the TUNING set. Fictional documents with planted drafting errors; expectations are what a careful lawyer proof-reading the document would list. Negative controls expect nothing.",
+ "documents": [
+  {
+   "id": "G1-services-planted",
+   "name": "services.txt",
+   "text": "SERVICES AGREEMENT (fictional)\n\nThis Services Agreement (the \"Agreement\") is made between Northwind Hosting Ltd (the \"Supplier\") and Alder Retail Ltd (the \"Customer\").\n\n1. Definitions\n1.1 \"Services\" means the services described in Schedule 1.\n1.2 \"Fees\" means the fees set out in Schedule 2.\n1.3 \"Confidential Information\" means all information disclosed by a party that is marked as confidential.\n1.4 \"Business Day\" means a day other than a Saturday, Sunday or public holiday in England.\n1.5 \"Fees\" means the charges set out in the Order Form.\n1.6 \"Territory\" means the United Kingdom.\n\n2. Services\n2.1 The Supplier shall provide the Services from the Commencement Date.\n2.2 The Customer shall pay the fees within thirty Business Days of invoice.\n2.3 Each party shall protect the other's confidential information as required by clause 4 (Liability).\n\n4. Confidentiality\n4.1 Each party shall keep the other party's Confidential Information confidential.\n4.3 This clause 4.3 survives termination of this Agreement.\n\n9. Liability\n9.1 Liability is limited as set out in clause 12.\n9.2 Neither party excludes liability for:\n(a) death or personal injury caused by negligence;\n(c) fraud.\n\nSchedule 1 Services\nManaged hosting (fictional).\n\nSchedule 2 Fees\nEUR 10,000 per month (fictional).",
+   "expect": [
+    {
+     "type": "duplicate",
+     "text": "Fees",
+     "conflicting": true
+    },
+    {
+     "type": "unused",
+     "text": "Territory"
+    },
+    {
+     "type": "undefined",
+     "text": "Commencement Date"
+    },
+    {
+     "type": "inconsistent",
+     "text": "fees",
+     "fix": "Fees"
+    },
+    {
+     "type": "inconsistent",
+     "text": "confidential information",
+     "fix": "Confidential Information"
+    },
+    {
+     "type": "outdated",
+     "text": "clause 4 (Liability)",
+     "fix": "clause 4 (Confidentiality)"
+    },
+    {
+     "type": "broken",
+     "text": "clause 12"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 3 is missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 5 to 8 are missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 4.2 is missing"
+    },
+    {
+     "type": "gap",
+     "message": "Item (b) of clause 9.2 is missing"
+    }
+   ]
+  },
+  {
+   "id": "G2-demo-msa-markdown",
+   "name": "Master Services Agreement (DEMO).md",
+   "text": "# MASTER SERVICES AGREEMENT (DEMO)\n\n> FICTIONAL DEMO FIXTURE. Every party, amount and term below is invented for testing EchoMind Law. Not a real agreement and not legal advice.\n\nThis Master Services Agreement (\"Agreement\") is entered into as of 2 March 2026 (the \"Effective Date\") between **Harrowgate Systems Inc.**, a Delaware corporation (\"Provider\"), and **Voss-Lindqvist AB**, a Swedish limited company (\"Client\").\n\n## 1. Definitions\n\n1.1 \"Services\" means the Harrowgate platform subscription and related support described in Schedule 1.\n\n1.2 \"Fees\" means the amounts payable by Client under Clause 4.\n\n1.3 \"Change of Control\" means any transaction by which a person or group acquires more than fifty percent (50%) of the voting rights of Provider.\n\n1.4 \"Client Data\" means all data supplied by or on behalf of Client and processed by Provider under this Agreement.\n\n## 2. Term and Renewal\n\n2.1 This Agreement begins on the Effective Date and continues for an initial term of thirty-six (36) months (the \"Initial Term\").\n\n2.2 After the Initial Term, this Agreement renews automatically for successive twelve (12) month renewal terms unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.\n\n## 3. Services\n\n3.1 Provider shall provide the Services in accordance with the service levels in Schedule 2.\n\n3.2 Provider shall maintain an information-security programme no less protective than ISO/IEC 27001.\n\n## 4. Fees and Payment\n\n4.1 Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgate platform.\n\n4.2 Provider shall invoice monthly in advance. Invoices are payable net thirty (30) days from the invoice date.\n\n4.3 Undisputed amounts not paid when due accrue interest at one percent (1%) per month until paid.\n\n## 5. Confidentiality\n\n5.1 Each party shall keep the other party's Confidential Information confidential and use it only to perform this Agreement, for the term of this Agreement and five (5) years after it ends.\n\n## 6. Data Protection\n\n6.1 Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it.\n\n6.2 Within thirty (30) days after termination, Provider shall return or securely destroy all Client Data, at Client's option.\n\n## 7. Warranties\n\n7.1 Provider warrants that the Services will perform materially in accordance with Schedule 1.\n\n## 8. Limitation of Liability\n\n8.1 Each party's total aggregate liability arising out of or in connection with this Agreement shall not exceed the greater of USD 250,000 or the Fees paid by Client in the twelve (12) months preceding the event giving rise to the claim.\n\n8.2 Neither party is liable for any indirect, incidental or consequential damages, or for loss of profits.\n\n8.3 Clauses 8.1 and 8.2 do not limit liability for fraud, wilful misconduct, or breach of Clause 5.\n\n## 9. Indemnification\n\n9.1 Provider shall indemnify Client against third-party claims that the Services infringe any intellectual property right.\n\n## 12. Termination\n\n12.1 Either party may terminate this Agreement for convenience on thirty (30) days' written notice.\n\n12.2 Either party may terminate this Agreement immediately on written notice if the other party commits a material breach that is not remedied within thirty (30) days of notice.\n\n## 14. Assignment and Change of Control\n\n14.1 Neither party may assign this Agreement without the prior written consent of the other party, such consent not to be unreasonably withheld.\n\n14.2 Provider shall provide no less than thirty (30) days' prior written notice of any Change of Control to Client in accordance with Clause 22.\n\n14.3 If Provider fails to give notice under Clause 14.2, Client may terminate this Agreement for cause by written notice within ninety (90) days of becoming aware of the Change of Control.\n\n## 21. Governing Law\n\n21.1 This Agreement is governed by the laws of the State of Delaware, without regard to its conflict-of-laws rules.\n\n## 22. Notices\n\n22.1 Any notice under this Agreement shall be in writing and addressed to the General Counsel of the receiving party at the address set out in Schedule 4.\n\n*Signed for Harrowgate Systems Inc. and for Voss-Lindqvist AB on 2 March 2026 (fictional).*\n",
+   "expect": [
+    {
+     "type": "broken",
+     "text": "Schedule 1"
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 2"
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 4"
+    },
+    {
+     "type": "undefined",
+     "text": "Confidential Information"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 10 and 11 are missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 13 is missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 15 to 20 are missing"
+    }
+   ]
+  },
+  {
+   "id": "G3-lease-interpretation-at-end",
+   "name": "lease.txt",
+   "text": "LEASE (fictional)\n\nThis Lease is made between Harbour Estates Limited (the \"Landlord\") and Pellow Studio Ltd (the \"Tenant\").\n\n1. Grant\n1.1 The Landlord lets the Premises to the Tenant for the Term.\n1.2 The Tenant shall pay the Rent from the Rent Commencement Date.\n\n2. Tenant's covenants\n2.1 The Tenant shall keep the premises clean and tidy.\n2.2 The Tenant shall comply with the Building Regulations (the \"Regulations\").\n2.3 The Tenant shall not alter the Premises except as permitted by clause 2.5 (Alterations).\n\n3. Rent review\n3.1 The Rent shall be reviewed as set out in Schedule 3.\n\n6. Insurance\n6.1 The Landlord shall insure the Building.\n6.2 The Tenant shall repay the insurance premium.\n6.2 The Tenant shall not invalidate the insurance.\n\n20. Interpretation\n20.1 \"Premises\" means Unit 4, Harbour Yard (fictional).\n20.2 \"Term\" means ten years from the date of this Lease.\n20.3 \"Rent\" means GBP 24,000 a year (fictional).\n20.4 \"Building\" means Harbour Yard (fictional).\n\nSchedule 1 The Premises\nUnit 4 (fictional).\n",
+   "expect": [
+    {
+     "type": "undefined",
+     "text": "Rent Commencement Date"
+    },
+    {
+     "type": "inconsistent",
+     "text": "premises",
+     "fix": "Premises"
+    },
+    {
+     "type": "unused",
+     "text": "Regulations"
+    },
+    {
+     "type": "broken",
+     "text": "clause 2.5 (Alterations)"
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 3"
+    },
+    {
+     "type": "repeat",
+     "message": "Clause 6.2 appears twice"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 4 and 5 are missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 7 to 19 are missing"
+    }
+   ]
+  },
+  {
+   "id": "G4-clean-nda-control",
+   "name": "nda.txt",
+   "text": "MUTUAL NON-DISCLOSURE AGREEMENT (fictional)\n\nThis Agreement is made between Corran Analytics Ltd (\"Corran\") and Bellhaven Foods Ltd (\"Bellhaven\"), each a \"Party\".\n\n1. Definitions\n1.1 \"Confidential Information\" means information disclosed by a Party that is marked confidential.\n1.2 \"Purpose\" means evaluating a supply arrangement between the Parties.\n\n2. Obligations\n2.1 Each Party shall use the other Party's Confidential Information only for the Purpose.\n2.2 The obligations in clause 2.1 do not apply to information that:\n(a) is or becomes public other than through a breach of this Agreement;\n(b) was lawfully known to the receiving Party before disclosure; or\n(c) is required to be disclosed by law, provided that the receiving Party:\n(i) gives prompt notice; and\n(ii) discloses only what is required.\n\n3. Term\n3.1 This Agreement lasts two years from the date of signature.\n3.2 Clause 2 (Obligations) survives for three years after this Agreement ends.\n",
+   "expect": []
+  }
+ ]
+}

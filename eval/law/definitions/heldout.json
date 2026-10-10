@@ -1,0 +1,76 @@
+{
+ "about": "S3.5 defined terms and cross-references (DOC-04) — the HELD-OUT set: written before the checker was run on it, never used to change it, run once per checker version. Fictional documents only.",
+ "documents": [
+  {
+   "id": "H1-software-licence",
+   "name": "licence.txt",
+   "text": "SOFTWARE LICENCE AGREEMENT (fictional)\n\nThis Agreement is between Quillon Software Ltd (the \"Licensor\") and Marsh & Teague LLP (the \"Licensee\").\n\nArticle 1 Definitions\n1.1 \"Software\" means the Quillon Ledger programme in object code.\n1.2 \"Documentation\" means the user guides supplied with the Software.\n1.3 \"Software\" means the Quillon Ledger programme in object code.\n1.4 \"Users\" means employees of the Licensee.\n\nArticle 2 Grant\n2.1 The Licensor grants the licensee a non-exclusive licence to use the Software for its Users.\n2.2 The licence is subject to Article 7 and to clause 3 (Fees).\n\nArticle 3 Restrictions\n3.1 The Licensee shall not copy the Software.\n\nArticle 4 Fees\n4.1 The Licensee shall pay the Licence Fee annually in advance.\n\nArticle 6 Term\n6.1 This Agreement continues for three years.\n",
+   "expect": [
+    {
+     "type": "duplicate",
+     "text": "Software",
+     "conflicting": false
+    },
+    {
+     "type": "unused",
+     "text": "Documentation"
+    },
+    {
+     "type": "undefined",
+     "text": "Licence Fee"
+    },
+    {
+     "type": "inconsistent",
+     "text": "licensee",
+     "fix": "Licensee"
+    },
+    {
+     "type": "broken",
+     "text": "Article 7"
+    },
+    {
+     "type": "outdated",
+     "text": "clause 3 (Fees)",
+     "fix": "clause 3 (Restrictions)"
+    },
+    {
+     "type": "gap",
+     "message": "Article 5 is missing"
+    }
+   ]
+  },
+  {
+   "id": "H2-shareholders-markdown",
+   "name": "Shareholders Agreement.md",
+   "text": "# SHAREHOLDERS' AGREEMENT (fictional)\n\nThis Agreement is made between the shareholders listed in Schedule 1 (each a \"Shareholder\") and Tidewater Holdings Ltd (the \"Company\").\n\n## 1. Board\n\n1.1 The Board shall consist of up to five Directors.\n\n1.2 The Shareholders may appoint a Director as set out in paragraph 2 of Schedule 1.\n\n## 2. Reserved Matters\n\n2.1 The Company shall not do any of the following without Shareholder Consent:\n\n(i) issue new shares;\n\n(ii) borrow more than GBP 100,000;\n\n(iv) sell the business.\n\n2.2 The reserved matters are also listed in Schedule 3.\n\n## 3. Transfers\n\n3.1 A Shareholder may not transfer shares except under clause 2.\n\n## Schedule 1 Shareholders\n\n1. Each Shareholder's name and holding are listed below (fictional).\n\n2. Each Shareholder holding 20% or more may appoint one Director.\n",
+   "expect": [
+    {
+     "type": "undefined",
+     "text": "Board"
+    },
+    {
+     "type": "undefined",
+     "text": "Directors"
+    },
+    {
+     "type": "undefined",
+     "text": "Shareholder Consent"
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 3"
+    },
+    {
+     "type": "gap",
+     "message": "Items between (ii) and (iv)"
+    }
+   ]
+  },
+  {
+   "id": "H3-clean-employment-control",
+   "name": "employment.txt",
+   "text": "EMPLOYMENT CONTRACT (fictional)\n\nThis Contract is between Ashgrove Design Ltd (the \"Company\") and Mira Okonjo (the \"Employee\").\n\n1. Role\n1.1 The Employee is employed as Senior Designer from the Start Date.\n1.2 The Employee reports to the Head of Studio.\n\n2. Pay\n2.1 The Company shall pay the Salary monthly in arrears.\n2.2 The Salary is reviewed each year under clause 2.1.\n\n3. Leave\n3.1 The Employee is entitled to:\n(a) 25 days' holiday a year;\n(b) public holidays; and\n(c) leave required by law.\n\n4. Interpretation\n4.1 \"Start Date\" means 1 November 2026.\n4.2 \"Salary\" means GBP 52,000 a year (fictional).\n",
+   "expect": []
+  }
+ ]
+}
