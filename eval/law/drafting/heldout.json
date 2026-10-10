@@ -1,67 +1,65 @@
 {
- "about": "S3.1 drafting — the HELD-OUT set (second, Phase 3 gate): written and committed before it was run, never used to adjust the drafting, run once per version. Fictional documents only. The first held-out set is now in golden.json.",
+ "about": "S3.1 drafting — the HELD-OUT set (third, Phase 3 gate after drafting-s3.1c): written and committed before it was run, never used to adjust the drafting, run once per version. Fictional documents only. Earlier held-out sets are in golden.json.",
  "scenarios": [
   {
-   "id": "engagement-corran",
+   "id": "review-kestrel-distribution",
+   "template": "contract_review",
+   "title": "Contract review — Kestrel distribution agreement",
+   "documents": [
+    {
+     "name": "distribution-agreement.txt",
+     "status": "executed",
+     "text": "DISTRIBUTION AGREEMENT (fictional)\n\nThis Distribution Agreement is made between Kestrel Audio GmbH (the Supplier) and Pinewood Retail Ltd (the Distributor).\n\n2.1 The Supplier appoints the Distributor as its non-exclusive distributor in the United Kingdom.\n\n14.2 Either party may terminate this Agreement on six months' written notice.\n\n21.1 This Agreement is governed by the laws of Germany."
+    }
+   ],
+   "expect": {
+    "agreement": "Distribution Agreement",
+    "parties": "Kestrel Audio",
+    "governing_law": "Germany"
+   },
+   "absent": []
+  },
+  {
+   "id": "demand-pinewood-rent",
+   "template": "demand_letter",
+   "title": "Letter before claim — Pinewood rent arrears",
+   "documents": [
+    {
+     "name": "lease-extract.txt",
+     "status": "executed",
+     "text": "LEASE (fictional extract)\n\nThis Lease is made between Ashcombe Properties Ltd (the Landlord) and Pinewood Retail Ltd (the Tenant).\n\nNotices to the Tenant shall be served at Unit 4, Riverside Park, Bristol BS1 6QH.\n\n5.1 The Tenant shall pay the rent quarterly in advance on the usual quarter days."
+    },
+    {
+     "name": "arrears-schedule.txt",
+     "status": "final",
+     "text": "RENT ARREARS SCHEDULE (fictional)\n\nTenant: Pinewood Retail Ltd.\n\nThe rent due on 25 March 2026 and 24 June 2026 is unpaid.\n\nTotal arrears: GBP 36,500."
+    }
+   ],
+   "expect": {
+    "recipient": "Pinewood Retail",
+    "recipient_address": "Unit 4, Riverside Park",
+    "agreement": "Lease",
+    "amount_claimed": "36,500"
+   },
+   "absent": []
+  },
+  {
+   "id": "engagement-ashcombe-no-fee",
    "template": "engagement_letter",
-   "title": "Engagement letter — Corran Foods supply dispute",
+   "title": "Engagement letter — Ashcombe lease renewal",
    "documents": [
     {
      "name": "instruction-email.txt",
      "status": "final",
-     "text": "INSTRUCTION EMAIL (fictional)\n\nFrom: Imogen Hale, General Counsel, Corran Foods Ltd\n\nPlease act for Corran Foods Ltd in the dispute with its packaging supplier. Our registered office is 9 Mill Lane, Leeds LS2 7EX.\n\nWe agreed a capped fee of GBP 25,000 plus VAT for the pre-action stage."
+     "text": "INSTRUCTION EMAIL (fictional)\n\nFrom: Daniel Okafor, Head of Legal, Ashcombe Properties Ltd\n\nPlease act for Ashcombe Properties Ltd on the renewal of the Riverside Park lease. Our registered office is 12 Quayside, Bristol BS1 4RN.\n\nWe would like to discuss your fees on our next call."
     }
    ],
    "expect": {
-    "client_address": "9 Mill Lane",
-    "client_contact": "Imogen Hale",
-    "fee_arrangement": "25,000"
-   },
-   "absent": []
-  },
-  {
-   "id": "demand-brightwater",
-   "template": "demand_letter",
-   "title": "Demand letter — Brightwater unpaid licence fees",
-   "documents": [
-    {
-     "name": "licence-extract.txt",
-     "status": "executed",
-     "text": "SOFTWARE LICENCE AGREEMENT (fictional extract)\n\nThis Software Licence Agreement is made between Northbridge Analytics AB (the Licensor) and Brightwater Retail Ltd (the Licensee).\n\nNotices to the Licensee shall be sent to Brightwater Retail Ltd, 40 Canal Street, Manchester M1 3HE.\n\n6.1 The Licensee shall pay the annual licence fee within thirty (30) days of invoice."
-    },
-    {
-     "name": "aged-debt-report.txt",
-     "status": "final",
-     "text": "AGED DEBT REPORT (fictional)\n\nDebtor: Brightwater Retail Ltd.\n\nInvoice NA-2207 for the 2026 annual licence fee is unpaid.\n\nAmount outstanding: SEK 310,000."
-    }
-   ],
-   "expect": {
-    "recipient": "Brightwater Retail",
-    "recipient_address": "40 Canal Street",
-    "agreement": "Software Licence Agreement",
-    "amount_claimed": "310,000"
-   },
-   "absent": []
-  },
-  {
-   "id": "nda-no-law",
-   "template": "nda",
-   "title": "Mutual NDA — Corran and Alder",
-   "documents": [
-    {
-     "name": "term-sheet.txt",
-     "status": "final",
-     "text": "TERM SHEET (fictional, non-binding)\n\nParties: Corran Foods Ltd and Alder Biotech AB.\n\nPurpose: to evaluate a joint development of plant-based protein ingredients.\n\nConfidential information is to be protected for two (2) years from disclosure.\n\nGoverning law: to be agreed."
-    }
-   ],
-   "expect": {
-    "party_a": "Corran",
-    "party_b": "Alder",
-    "purpose": "plant-based protein",
-    "confidentiality_period": "two"
+    "client_contact": "Daniel Okafor",
+    "client_address": "12 Quayside"
    },
    "absent": [
-    "governing_law"
+    "fee_arrangement"
    ]
   }
  ]

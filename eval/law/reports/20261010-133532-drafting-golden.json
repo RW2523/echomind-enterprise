@@ -1,0 +1,393 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "3446d1e",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-133532",
+  "prompt_version": "drafting-s3.1b"
+ },
+ "summary": {
+  "scenarios": 7,
+  "field_accuracy": "20/22",
+  "absent_left_open": "4/4",
+  "wrong_values": 0,
+  "invented_figures": 0,
+  "written_passages": 9,
+  "unsupported_sentences": 9,
+  "seconds_per_draft": 11.1
+ },
+ "scenarios": [
+  {
+   "id": "engagement-harrowgate",
+   "template": "engagement_letter",
+   "seconds": 10.2,
+   "fields": [
+    {
+     "field": "client_address",
+     "expected": "14 Quay Street",
+     "value": "14 Quay Street, Gothenburg 411 04, Sweden",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Our postal address is 14 Quay Street, Gothenburg 411 04, Sweden.",
+     "suggestion": null
+    },
+    {
+     "field": "client_contact",
+     "expected": "Petra Voss",
+     "value": "Petra Voss",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Please direct all correspondence to Petra Voss.",
+     "suggestion": null
+    },
+    {
+     "field": "fee_arrangement",
+     "expected": "18,000",
+     "value": "USD 18,000",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The firm is to advise on the renewal of Harrowgate Systems Inc.'s Master Services Agreement with Northwind Logistics Ltd, including a review of the supplier's redline and the negotiation of the liability cap. The agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments. The client contact is Petra Voss, and all correspondence should be directed to her.",
+     "sources": 3,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 3
+  },
+  {
+   "id": "nda-lantern",
+   "template": "nda",
+   "seconds": 5.0,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Alder Biotech",
+     "value": "Alder Biotech AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Alder Biotech AB and Northbridge Analytics Ltd.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Northbridge Analytics",
+     "value": "Northbridge Analytics Ltd.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Alder Biotech AB and Northbridge Analytics Ltd.",
+     "suggestion": null
+    },
+    {
+     "field": "purpose",
+     "expected": "joint venture",
+     "value": "to evaluate a joint venture in clinical data analytics",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to evaluate a joint venture in clinical data analytics",
+     "suggestion": null
+    },
+    {
+     "field": "confidentiality_period",
+     "expected": "three",
+     "value": "three (3) years",
+     "status": "sourced",
+     "ok": true,
+     "quote": "three (3) years from the date of the agreement",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "Sweden",
+     "value": "Sweden",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The agreement will be governed by the laws of Sweden.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 0
+  },
+  {
+   "id": "engagement-missing-fee",
+   "template": "engagement_letter",
+   "seconds": 5.8,
+   "fields": [
+    {
+     "field": "client_contact",
+     "expected": "Karin Lindqvist",
+     "value": "Karin Lindqvist",
+     "status": "sourced",
+     "ok": true,
+     "quote": "From: Karin Lindqvist, Chair, Voss-Lindqvist AB.",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "fee_arrangement",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    },
+    {
+     "field": "client_address",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The client has requested legal advice regarding the proposed interim dividend and the directors' duties applicable to it. The scope of the legal services includes providing guidance on the board's responsibilities in relation to the interim dividend. The engagement letter has been prepared and will be sent to Karin Lindqvist at the registered office. [[NEEDS INPUT: check against the documents]] The matter number assigned is EVAL-D3.",
+     "sources": 2,
+     "unsupported": [
+      "The matter number assigned is EVAL-D3."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 6
+  },
+  {
+   "id": "review-software-licence",
+   "template": "contract_review",
+   "seconds": 15.3,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Software Licence Agreement",
+     "value": "SOFTWARE LICENCE AGREEMENT",
+     "status": "sourced",
+     "ok": true,
+     "quote": "SOFTWARE LICENCE AGREEMENT (fictional)",
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Northbridge Analytics",
+     "value": "Northbridge Analytics Ltd and Voss-Lindqvist AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Software Licence Agreement is made between Northbridge Analytics Ltd (the Licensor) and Voss-Lindqvist AB (the Licensee).",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "Sweden",
+     "value": "Sweden",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Agreement is governed by the laws of Sweden.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The Agreement commenced on 1 January 2026 and continues for a term of three (3) years. Either party may terminate the Agreement for material breach upon thirty (30) days' written notice if the breach is not remedied. The Agreement is governed by the laws of Sweden.",
+     "sources": 3,
+     "unsupported": []
+    },
+    {
+     "text": "The Licensee shall pay an annual licence fee of EUR 120,000, invoiced annually in advance and payable within forty-five (45) days.  \n\nEither party may terminate this Agreement for material breach on thirty (30) days' written notice if the breach is not remedied.  \n\nNeither party's total liability under this Agreement shall exceed the fees paid in the twelve (12) months before the claim.  \n\nNeither party is liable for loss of profit or indirect loss.  \n\nThis Agreement is governed by the laws of Sweden.",
+     "sources": 5,
+     "unsupported": []
+    },
+    {
+     "text": "The Licence Agreement limits the total liability of either party to the fees paid in the twelve (12) months before the claim. Neither party is liable for loss of profit or indirect loss.",
+     "sources": 2,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 1
+  },
+  {
+   "id": "demand-northwind",
+   "template": "demand_letter",
+   "seconds": 15.6,
+   "fields": [
+    {
+     "field": "recipient",
+     "expected": "Northwind Logistics",
+     "value": "Northwind Logistics Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Northwind Logistics Ltd",
+     "suggestion": null
+    },
+    {
+     "field": "recipient_address",
+     "expected": "2 Harbour Road",
+     "value": "Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Notices to the Customer shall be sent to Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom.",
+     "suggestion": null
+    },
+    {
+     "field": "agreement",
+     "expected": "Supply Agreement",
+     "value": "the Supply Agreement",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Supply Agreement is made between Harrowgate Systems Inc. (the Supplier) and Northwind Logistics Ltd (the Customer).",
+     "suggestion": null
+    },
+    {
+     "field": "amount_claimed",
+     "expected": "42,750",
+     "value": "GBP 42,750",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The total outstanding is GBP 42,750.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "Northwind Logistics Ltd is the Customer under the Supply Agreement, which was executed between Harrowgate Systems Inc. (the Supplier) and Northwind Logistics Ltd. Notices to the Customer are to be sent to the address provided, which is Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom.\n\n[[NEEDS INPUT: check against the documents]] Under the terms of the Supply Agreement, the Customer is required to pay each invoice within thirty (30) days of its date. Invoices HS-1041 and HS-1042, issued on 3 June 2026 and 1 July 2026, remain unpaid. The total amount outstanding is GBP 42,750.\n\n[[NEEDS INPUT: check against the documents]] The Client has informed that the amount claimed is GBP 42,750. [[NEEDS INPUT: check against the documents]] The date of this letter is 10 October 2026. [[NEEDS INPUT: check against the documents]] The breach complained of is the failure of Northwind Logistics Ltd to pay the invoices within the stipulated period of thirty (30) days from the date of each invoice.",
+     "sources": 5,
+     "unsupported": [
+      "Under the terms of the Supply Agreement, the Customer is required to pay each invoice within thirty (30) days of its date.",
+      "The Client has informed that the amount claimed is GBP 42,750.",
+      "The date of this letter is 10 October 2026.",
+      "The breach complained of is the failure of Northwind Logistics Ltd to pay the invoices within the stipulated period of thirty (30) days from the date of each invoice."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 6
+  },
+  {
+   "id": "review-warehouse-lease",
+   "template": "contract_review",
+   "seconds": 21.8,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Lease",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Elmfield Estates",
+     "value": "Elmfield Estates Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Lease is made between Elmfield Estates Ltd (the Landlord) and Alder Biotech AB (the Tenant).",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "England and Wales",
+     "value": "the law of England and Wales",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Lease is governed by the law of England and Wales.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The term of the agreement is ten (10) years from 1 April 2025. The Tenant may terminate this Lease on 31 March 2030 by giving not less than six months' written notice. [[NEEDS INPUT: check against the documents]] Either party may terminate the Lease by giving not less than six months' written notice. The Lease is governed by the law of England and Wales.",
+     "sources": 3,
+     "unsupported": [
+      "Either party may terminate the Lease by giving not less than six months' written notice."
+     ]
+    },
+    {
+     "text": "The rent under this Lease is GBP 84,000 per year, payable quarterly in advance. The Tenant may terminate this Lease on 31 March 2030 by giving not less than six months' written notice. The Landlord's total liability under this Lease shall not exceed the rent paid in the preceding twelve months. This Lease is governed by the law of England and Wales. The term of this Lease is ten (10) years from 1 April 2025. [[NEEDS INPUT: The specific clause detailing the payment method for the rent]]",
+     "sources": 5,
+     "unsupported": []
+    },
+    {
+     "text": "The Landlord's liability under this Lease is limited to the rent paid in the preceding twelve months. There are no other exclusions of liability specified in the Lease. The governing law is the law of England and Wales. [[NEEDS INPUT: check against the documents]] The matter number is EVAL-D6 [Matter number: EVAL-D6]. [[NEEDS INPUT: check against the documents]] The parties to the Lease are Elmfield Estates Ltd and Alder Biotech AB [Parties: Elmfield Estates Ltd]. [[NEEDS INPUT: check against the documents]] The date of the Lease is 10 October 2026 [Date: 10 October 2026]. The term of the Lease is ten (10) years from 1 April 2025. The Tenant may terminate the Lease on 31 March 2030 by giving not less than six months' written notice. The rent is GBP 84,000 per year, payable quarterly in advance. [[NEEDS INPUT: the exact wording of any other clauses related to limitation or exclusion of liability]].",
+     "sources": 5,
+     "unsupported": [
+      "The matter number is EVAL-D6 [Matter number: EVAL-D6].",
+      "The parties to the Lease are Elmfield Estates Ltd and Alder Biotech AB [Parties: Elmfield Estates Ltd].",
+      "The date of the Lease is 10 October 2026 [Date: 10 October 2026]."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 8
+  },
+  {
+   "id": "nda-missing-period",
+   "template": "nda",
+   "seconds": 4.1,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Harrowgate",
+     "value": "Harrowgate Systems Inc.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Harrowgate Systems Inc. and Elmfield Estates Ltd will exchange confidential information to assess a possible warehouse automation project.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Elmfield",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "purpose",
+     "expected": "warehouse automation",
+     "value": "to assess a possible warehouse automation project",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to assess a possible warehouse automation project",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "confidentiality_period",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    },
+    {
+     "field": "governing_law",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 4
+  }
+ ]
+}

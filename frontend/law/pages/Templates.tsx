@@ -132,7 +132,7 @@ function VersionRow({ t, v, canManage, canApprove, onChange }: { t: FirmTemplate
 }
 
 const KINDS: TemplateKind[] = ['engagement_letter', 'nda', 'demand_letter', 'memo', 'contract_review', 'board_minutes', 'custom'];
-const FIELD_KINDS = ['text', 'party', 'date', 'money', 'period', 'percent', 'address'];
+const FIELD_KINDS = ['text', 'party', 'date', 'money', 'period', 'percent', 'address', 'agreement'];
 const blankField = (key = ''): TemplateField => ({ key, label: '', kind: 'text', source: 'documents', question: '' });
 
 function TemplateEditor({ template, onClose, onSaved }: { template?: FirmTemplate; onClose: () => void; onSaved: () => void }) {

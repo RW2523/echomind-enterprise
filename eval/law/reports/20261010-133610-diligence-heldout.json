@@ -1,0 +1,144 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "3446d1e",
+  "time": "20261010-133610",
+  "prompt_version": "diligence-s3.8b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "rooms": 2,
+  "missing_lists_right": "2/2",
+  "issues_found": "5/5",
+  "extra_issues": 0,
+  "controls_clean": "1/1",
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_room": 26
+ },
+ "rooms": [
+  {
+   "id": "T1-software-company",
+   "ms": 24,
+   "control": false,
+   "missing_got": [
+    "corp-captable",
+    "corp-minutes",
+    "disputes",
+    "insurance",
+    "ip",
+    "property"
+   ],
+   "missing_want": [
+    "corp-captable",
+    "corp-minutes",
+    "disputes",
+    "insurance",
+    "ip",
+    "property"
+   ],
+   "outputs": [
+    {
+     "kind": "change_of_control",
+     "title": "Change of control (clause 1.1)",
+     "detail": "A change of control lets the other party end the agreement.",
+     "document": "Software Licence Agreement - Corelogic.txt",
+     "quote": "1.1 The Licensor may terminate this Licence if the Licensee undergoes a change of control.",
+     "related": []
+    },
+    {
+     "kind": "assignment",
+     "title": "Assignment needs consent (clause 2.1)",
+     "detail": "Licensee shall not assign this Licence without the Licensor's prior written consent.",
+     "document": "Software Licence Agreement - Corelogic.txt",
+     "quote": "2.1 The Licensee shall not assign this Licence without the Licensor's prior written consent.",
+     "related": []
+    },
+    {
+     "kind": "governing_law",
+     "title": "Governed by the laws of Ireland",
+     "detail": "The checklist expects England and Wales.",
+     "document": "Software Licence Agreement - Corelogic.txt",
+     "quote": "4.1 This Licence is governed by the laws of Ireland.",
+     "related": []
+    },
+    {
+     "kind": "liability",
+     "title": "Liability is capped (clause 3.1)",
+     "detail": "Check the cap against the deal value.",
+     "document": "Software Licence Agreement - Corelogic.txt",
+     "quote": "3.1 The Licensor's aggregate liability shall not exceed EUR 2,000,000 (fictional).",
+     "related": []
+    },
+    {
+     "kind": "termination",
+     "title": "Termination right (clause 1.1)",
+     "detail": "Either party may terminate the employment: on six (6) months' written notice.",
+     "document": "Employment contract - CTO.txt",
+     "quote": "1.1 Either party may terminate the employment on six (6) months' written notice.",
+     "related": []
+    }
+   ],
+   "missing_titles": [
+    "Board minutes",
+    "Register of members or cap table",
+    "Leases",
+    "IP assignments and licences",
+    "Insurance policies",
+    "Litigation and claims"
+   ],
+   "missing_ok": true,
+   "issues_expected": 5,
+   "issues_found": 5,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "T2-corporate-control",
+   "ms": 27,
+   "control": true,
+   "missing_got": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people",
+    "property"
+   ],
+   "outputs": [],
+   "missing_titles": [
+    "Shareholders' agreement",
+    "Register of members or cap table",
+    "Material contracts",
+    "Leases",
+    "Key employment contracts",
+    "IP assignments and licences",
+    "Insurance policies",
+    "Litigation and claims"
+   ],
+   "missing_ok": true,
+   "issues_expected": 0,
+   "issues_found": 0,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  }
+ ]
+}

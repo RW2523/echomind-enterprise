@@ -240,6 +240,20 @@ def test_one_party_given_for_two_party_fields_is_left_for_a_person(dr):
     assert "Dear [[NEEDS INPUT: Client contact]]," in text_of(d)
 
 
+def test_an_agreement_field_given_a_party_name_is_left_for_a_person(dr):
+    """The model answered "which agreement" with a party (drafting held-out 2, Phase 3 gate); an agreement field names a document."""
+    fields = FIELDS + [{"key": "agreement", "label": "Agreement", "kind": "agreement", "source": "documents", "question": "Which agreement is it?"}]
+    body = BODY + "\n\nUnder the {{agreement}}."
+    dr["model"].fields["agreement"] = {"value": "Northwind Logistics Ltd", "quote": "Master Services Agreement with Northwind Logistics Ltd"}
+    d = draft(dr, template(dr, body=body, fields=fields))
+    a = field(d, "agreement")
+    assert a["status"] == "needs_input" and a["value"] is None
+    assert a["suggestion"]["value"] == "Northwind Logistics Ltd" and "an agreement" in a["suggestion"]["reason"]
+    dr["model"].fields["agreement"] = {"value": "Master Services Agreement", "quote": "Master Services Agreement with Northwind Logistics Ltd"}
+    d = draft(dr, template(dr, body=body, fields=fields, name="Engagement letter (test 2)"))
+    assert field(d, "agreement")["value"] == "Master Services Agreement" and field(d, "agreement")["status"] == "sourced"
+
+
 # ── Written passages ─────────────────────────────────────────────────────────────
 def test_written_passages_cite_their_sources_and_a_figure_they_do_not_contain_becomes_a_gap(dr):
     dr["model"].writes = {"scope": "The firm will review the supplier's redline {cite:reviewing the supplier's redline} "

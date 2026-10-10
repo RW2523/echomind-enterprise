@@ -38,7 +38,7 @@ from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import templates
 
-VERSION = "drafting-s3.1b"
+VERSION = "drafting-s3.1c"
 GAP = re.compile(r"\[\[NEEDS INPUT:[^\]]*\]\]")
 _REF = re.compile(r"\{\{\s*([a-z][a-z0-9_]{0,40})\s*\}\}")
 _FIGURE = re.compile(
@@ -112,8 +112,16 @@ _NUMBER_WORDS = {"one", "two", "three", "four", "five", "six", "seven", "eight",
                  "eighteen", "twenty", "thirty", "forty", "fifty", "sixty", "ninety", "hundred", "thousand", "million"}
 
 
+# The words that name a legal document (s3.1c): an agreement field holding none of them is not an agreement's name.
+_DOCUMENT_WORDS = re.compile(r"\b(?:agreement|contract|lease|licen[cs]e|deed|terms|conditions|order|policy|letter|memorandum|charter|"
+                             r"guarantee|mortgage|debenture|facility|instrument|undertaking|note|plan|articles|bylaws|by-laws)\b", re.I)
+
+
 def has_figure(kind: str, value: str) -> bool:
-    """An amount, date or percentage has a figure in it; a period has a figure or a number word."""
+    """An amount, date or percentage has a figure in it; a period has a figure or a number word; an agreement is
+    named by a document word (a party's name is not an agreement)."""
+    if kind == "agreement":
+        return bool(_DOCUMENT_WORDS.search(value or ""))
     if kind in ("money", "date", "percent"):
         return bool(re.search(r"\d", value or ""))
     if kind == "period":
@@ -204,7 +212,8 @@ async def extract(scope, f: dict, documents: Optional[list[str]], seen: Optional
         return out
     src = _where(where, found, str(quote))
     if not has_figure(f["kind"], value):
-        out["suggestion"] = {"value": value, "reason": f"it is not {'an amount' if f['kind'] == 'money' else 'a ' + f['kind']}", "quote": src["quote"]}
+        what = {"money": "an amount", "agreement": "an agreement's name", "address": "an address"}.get(f["kind"], "a " + f["kind"])
+        out["suggestion"] = {"value": value, "reason": f"it is not {what}", "quote": src["quote"]}
         return out
     if not grounded(f["kind"], value, src["quote"]):
         out["suggestion"] = {"value": value, "reason": "the value is not in the quoted words", "quote": src["quote"]}

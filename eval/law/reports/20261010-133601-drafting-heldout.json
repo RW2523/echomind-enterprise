@@ -1,0 +1,180 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "3446d1e",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-133601",
+  "prompt_version": "drafting-s3.1b"
+ },
+ "summary": {
+  "scenarios": 3,
+  "field_accuracy": "7/11",
+  "absent_left_open": "1/1",
+  "wrong_values": 1,
+  "invented_figures": 0,
+  "written_passages": 2,
+  "unsupported_sentences": 1,
+  "seconds_per_draft": 7.7
+ },
+ "scenarios": [
+  {
+   "id": "engagement-corran",
+   "template": "engagement_letter",
+   "seconds": 6.8,
+   "fields": [
+    {
+     "field": "client_address",
+     "expected": "9 Mill Lane",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "client_contact",
+     "expected": "Imogen Hale",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "fee_arrangement",
+     "expected": "25,000",
+     "value": "GBP 25,000 plus VAT",
+     "status": "sourced",
+     "ok": true,
+     "quote": "We agreed a capped fee of GBP 25,000 plus VAT for the pre-action stage.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The client has retained the firm to act in a dispute with its packaging supplier, as confirmed in the engagement letter. The scope of the legal services includes representation during the pre-action stage of the dispute, with a capped fee of GBP 25,000 plus VAT. [[NEEDS INPUT: check against the documents]] The matter is assigned the matter number EVAL-D1, and the fee arrangement is GBP 25,000 plus VAT.",
+     "sources": 2,
+     "unsupported": [
+      "The matter is assigned the matter number EVAL-D1, and the fee arrangement is GBP 25,000 plus VAT."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 6
+  },
+  {
+   "id": "demand-brightwater",
+   "template": "demand_letter",
+   "seconds": 11.6,
+   "fields": [
+    {
+     "field": "recipient",
+     "expected": "Brightwater Retail",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "recipient_address",
+     "expected": "40 Canal Street",
+     "value": "Brightwater Retail Ltd, 40 Canal Street, Manchester M1 3HE",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Notices to the Licensee shall be sent to Brightwater Retail Ltd, 40 Canal Street, Manchester M1 3HE.",
+     "suggestion": null
+    },
+    {
+     "field": "agreement",
+     "expected": "Software Licence Agreement",
+     "value": "Northbridge Analytics AB",
+     "status": "sourced",
+     "ok": false,
+     "quote": "Northbridge Analytics AB (the Licensor)",
+     "suggestion": null
+    },
+    {
+     "field": "amount_claimed",
+     "expected": "310,000",
+     "value": "SEK 310,000",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Amount outstanding: SEK 310,000.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [
+    "agreement"
+   ],
+   "written": [
+    {
+     "text": "Brightwater Retail Ltd is the Licensee under a Software Licence Agreement dated 10 October 2026 with Northbridge Analytics AB. Notices to the Licensee are to be sent to the address 40 Canal Street, Manchester M1 3HE. Under the terms of the agreement, the Licensee is required to pay the annual licence fee within thirty (30) days of invoice. An invoice dated 10 October 2026 for the 2026 annual licence fee remains unpaid. The amount outstanding is SEK 310,000. The breach complained of is the failure by Brightwater Retail Ltd to pay the annual licence fee as required under the agreement.",
+     "sources": 5,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 3
+  },
+  {
+   "id": "nda-no-law",
+   "template": "nda",
+   "seconds": 4.7,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Corran",
+     "value": "Corran Foods Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Corran Foods Ltd and Alder Biotech AB.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Alder",
+     "value": "Alder Biotech AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Corran Foods Ltd and Alder Biotech AB.",
+     "suggestion": null
+    },
+    {
+     "field": "purpose",
+     "expected": "plant-based protein",
+     "value": "to evaluate a joint development of plant-based protein ingredients",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to evaluate a joint development of plant-based protein ingredients",
+     "suggestion": null
+    },
+    {
+     "field": "confidentiality_period",
+     "expected": "two",
+     "value": "two (2) years",
+     "status": "sourced",
+     "ok": true,
+     "quote": "two (2) years from disclosure",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "governing_law",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 1
+  }
+ ]
+}

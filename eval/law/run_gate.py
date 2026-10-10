@@ -14,9 +14,10 @@ real models on this host, then writes one gate summary next to the suite reports
 Held-out sets are run once on this version and never used to change it. Phase 3 (S3.9) runs drafting,
 playbooks, redlines (T10), citations (T07), definitions, obligations, due diligence and governance; a
 held-out report already made on the current version and held-out file is cited rather than run again.
+Phase 3 then runs the security suite and the browser journeys, and keeps their counts as reports.
 
     cd backend && python3 ../eval/law/run_gate.py                     # Phase 2: everything (about 8 minutes on the DGX Spark)
-    cd backend && python3 ../eval/law/run_gate.py --phase 3           # Phase 3: drafting to governance
+    cd backend && python3 ../eval/law/run_gate.py --phase 3           # Phase 3: drafting to governance, then the security and browser suites
     cd backend && python3 ../eval/law/run_gate.py --only minutes,assist
     cd backend && python3 ../eval/law/run_gate.py --import-into ../.law-data   # also record the runs there
 
@@ -70,6 +71,8 @@ PHASE3 = [
     ("diligence", "heldout", [str(HERE / "diligence" / "run_diligence_eval.py"), "--set", "heldout"]),
     ("governance", "golden", [str(HERE / "governance" / "run_governance_eval.py"), "--set", "golden"]),
     ("governance", "heldout", [str(HERE / "governance" / "run_governance_eval.py"), "--set", "heldout"]),
+    ("security", "suite", None),         # scripts/law/security_suite.sh, every spec-test group
+    ("browser", "e2e", None),            # the Law browser journeys (Playwright starts its own servers)
 ]
 # Held-out sets run once per version (D-044, D-053): a held-out report made on the current rules or prompt version
 # and the same held-out file is cited by the gate, not run again. A changed version or a new blind set runs.
@@ -133,6 +136,27 @@ def _injection(args) -> tuple[int, Path]:
     return p.returncode, out
 
 
+def _command(suite: str, args) -> tuple[int, Path]:
+    """The security suite and the browser journeys: run as they are, kept as a report with their counts."""
+    if suite == "security":
+        p = subprocess.run(["bash", str(ROOT / "scripts" / "law" / "security_suite.sh")], cwd=ROOT, capture_output=True, text=True)
+        rows = [ln for ln in p.stdout.splitlines()[1:] if ln.strip()]
+        summary = {"groups": len(rows), "failed_groups": sum(("failed" in ln or "error" in ln or "passed" not in ln) for ln in rows),
+                   "tests_passed": sum(int(m) for ln in rows for m in re.findall(r"(\d+) passed", ln))}
+        items = rows
+    else:
+        p = subprocess.run(["npx", "playwright", "test"], cwd=ROOT / "frontend", capture_output=True, text=True)
+        tail = p.stdout.splitlines()[-40:]
+        n = lambda word: sum(int(m) for ln in tail for m in re.findall(rf"^\s*(\d+) {word}\b", ln))
+        summary = {"passed": n("passed"), "failed": n("failed"), "flaky": n("flaky"), "skipped": n("skipped")}
+        items = [ln for ln in p.stdout.splitlines() if re.search(r"(✓|✘|ok|x)\s+\d+ ", ln)][-60:]
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    out = REPORTS / f"{stamp}-{suite}-{'suite' if suite == 'security' else 'e2e'}.json"
+    out.write_text(json.dumps({"meta": {"set": "suite" if suite == "security" else "e2e", "commit": _commit(), "time": stamp},
+                               "summary": summary, "items": items}, indent=1, ensure_ascii=False))
+    return p.returncode, out
+
+
 def _commit() -> str:
     return _git("rev-parse", "--short", "HEAD") + ("+changes" if _git("status", "--porcelain", "--", ".", ":!eval/law/reports") else "")   # new reports are not code changes
 
@@ -140,7 +164,8 @@ def _commit() -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--phase", type=int, choices=[2, 3], default=2, help="2: research to minutes (S2.8); 3: the document tools (S3.9)")
-    ap.add_argument("--only", default="", help="comma-separated suites (for phase 2: research, compare, assist, minutes, transcription, injection)")
+    ap.add_argument("--only", default="", help="comma-separated suites (phase 2: research, compare, assist, minutes, transcription, injection; "
+                                                 "phase 3: drafting, playbook, redline, citations, definitions, obligations, diligence, governance, security, browser)")
     ap.add_argument("--llm", default="http://localhost:8355/v1")
     ap.add_argument("--model", default="nvidia/Qwen3-30B-A3B-FP4")
     ap.add_argument("--trials", type=int, default=3, help="injection probe trials per question")
@@ -158,6 +183,8 @@ def main() -> int:
         reused = _already_run(suite, set_)
         if reused:
             code, report = 0, reused
+        elif cmd is None and suite in ("security", "browser"):
+            code, report = _command(suite, args)
         elif cmd is None:
             code, report = _injection(args)
         else:

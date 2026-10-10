@@ -1,0 +1,134 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "3446d1e",
+  "time": "20261010-133614",
+  "prompt_version": "diligence-s3.8b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "companies": 3,
+  "found": "4/4",
+  "extra": 0,
+  "controls_clean": "1/1",
+  "by_kind": {
+   "share_capital": "2/2",
+   "authority": "1/1",
+   "constitution": "1/1"
+  },
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_company": 31
+ },
+ "companies": [
+  {
+   "id": "U1-mercer-uk",
+   "ms": 33,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "100 ordinary shares in the register have no approval",
+     "found": true
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "outputs": [
+    {
+     "kind": "share_capital",
+     "title": "100 ordinary shares in the register have no approval",
+     "detail": "The register shows 1,000 ordinary shares; the approvals found allow 900.",
+     "document": "Register of members - Mercer Analytics.txt",
+     "quote": "Raj Patel: 300 ordinary shares",
+     "related": [
+      {
+       "document": "Board minutes June 2026 - Mercer.txt",
+       "quote": "1.1 The board approved the allotment of 900 ordinary shares."
+      }
+     ]
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority (clause 2.1)",
+     "detail": "Signed by T. Grant, Head of Procurement, for a contract of GBP 90,000; the delegation of authority allows the Head of Procurement up to GBP 75,000.",
+     "document": "Supply Agreement - Pellow Parts.txt",
+     "quote": "2.1 Signed for Mercer Analytics Ltd by T. Grant, Head of Procurement.",
+     "related": [
+      {
+       "document": "Delegation of authority - Mercer.txt",
+       "quote": "1.1 The Head of Procurement may sign contracts with a value of up to GBP 75,000."
+      }
+     ]
+    }
+   ],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 2
+  },
+  {
+   "id": "U2-pike-us",
+   "ms": 29,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "Series A preferred stock is not a class",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "outputs": [
+    {
+     "kind": "share_capital",
+     "title": "Series A preferred stock is not a class the articles create",
+     "detail": "The register shows 500,000 Series A preferred stock shares; the articles create common shares only.",
+     "document": "Cap table - Pike Biotech.txt",
+     "quote": "Westbay Ventures: 500,000 shares of Series A preferred stock",
+     "related": [
+      {
+       "document": "Bylaws - Pike Biotech.txt",
+       "quote": "1.1 The authorized capital stock of the corporation consists of common stock."
+      }
+     ]
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors: at least one in the policy, two in the articles",
+     "detail": "The policy and the articles disagree; the articles normally prevail.",
+     "document": "Board governance policy - Pike Biotech.txt",
+     "quote": "1.1 The Board shall have at least one director.",
+     "related": [
+      {
+       "document": "Bylaws - Pike Biotech.txt",
+       "quote": "2.1 The number of directors shall not be less than two."
+      }
+     ]
+    }
+   ],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 2
+  },
+  {
+   "id": "U3-orrin-control",
+   "ms": 32,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "outputs": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 0
+  }
+ ]
+}
