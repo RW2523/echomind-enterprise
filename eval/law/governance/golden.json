@@ -1,5 +1,5 @@
 {
- "about": "S3.8 governance checks (DOC-07) — the TUNING set: fictional companies run against the 'Corporate governance review' preset. Expectations are the discrepancies a company-secretarial lawyer would raise (kind and the start of the title); the control company is consistent.",
+ "about": "S3.8 governance checks (DOC-07) — the TUNING set: fictional companies run against the 'Corporate governance review' preset. Expectations are the discrepancies a company-secretarial lawyer would raise (kind and the start of the title); the control company is consistent. G4–G6 were the first held-out set.",
  "companies": [
   {
    "id": "G1-tidewater",
@@ -148,6 +148,129 @@
      "Number of directors"
     ]
    ]
+  },
+  {
+   "id": "G4-ardent-us",
+   "documents": [
+    {
+     "name": "Bylaws - Ardent Robotics.txt",
+     "text": "BYLAWS of Ardent Robotics, Inc. (fictional)\n\n1. Stock\n1.1 The authorized capital stock of the corporation consists of common stock and Series A preferred stock.\n\n2. Board\n2.1 The number of directors shall not be less than three.\n"
+    },
+    {
+     "name": "Cap table - Ardent Robotics.txt",
+     "text": "CAP TABLE of Ardent Robotics, Inc. (fictional)\n\n1. Maya Chen: 4,000,000 shares of common stock.\n2. Luis Ortega: 1,000,000 shares of common stock.\n"
+    },
+    {
+     "name": "Board consent January 2026.txt",
+     "text": "WRITTEN CONSENT OF THE BOARD of Ardent Robotics, Inc. (fictional)\n\n1. Issuance\n1.1 The Board approved the issuance of 4,500,000 shares of common stock to the founders.\n\n2. Founders\n2.1 The founders are Maya Chen and Luis Ortega.\n"
+    },
+    {
+     "name": "Delegation of authority - Ardent.txt",
+     "text": "DELEGATION OF AUTHORITY of Ardent Robotics, Inc. (fictional)\n\n1. Contracts\n1.1 The Chief Executive Officer may sign contracts with a value of up to USD 500,000.\n"
+    },
+    {
+     "name": "Master Supply Agreement - Kestrel.txt",
+     "text": "MASTER SUPPLY AGREEMENT (fictional)\n\nThis Agreement is between Kestrel Parts Co. and Ardent Robotics, Inc.\n\n1. Value\n1.1 The total contract value is USD 750,000.\n\n2. Execution\n2.1 Signed on behalf of Ardent Robotics, Inc. by Maya Chen, Chief Executive Officer.\n"
+    },
+    {
+     "name": "Board governance policy - Ardent.txt",
+     "text": "BOARD GOVERNANCE POLICY of Ardent Robotics, Inc. (fictional)\n\n1. Composition\n1.1 The Board shall have at least two directors.\n"
+    },
+    {
+     "name": "Invention Assignment - Maya Chen.txt",
+     "text": "INVENTION ASSIGNMENT AGREEMENT (fictional)\n\n1.1 Maya Chen assigns to Ardent Robotics, Inc. all inventions made for the corporation.\n"
+    }
+   ],
+   "expect": [
+    [
+     "share_capital",
+     "500,000"
+    ],
+    [
+     "authority",
+     "Signed above the signer's authority"
+    ],
+    [
+     "constitution",
+     "Number of directors"
+    ],
+    [
+     "ip_chain",
+     "No IP assignment from Luis Ortega"
+    ]
+   ],
+   "history": "Held-out in the first run (diligence-s3.8: 3/6 found, no extras, control clean); moved here because its misses informed s3.8b."
+  },
+  {
+   "id": "G5-brenner-uk",
+   "documents": [
+    {
+     "name": "Articles of Association - Brenner Medical UK.txt",
+     "text": "ARTICLES OF ASSOCIATION of Brenner Medical UK Ltd (fictional)\n\n1. Shares\n1.1 The company's shares are divided into ordinary shares of GBP 1 each.\n\n2. Board meetings\n2.1 Board meetings require not less than five (5) days' notice.\n"
+    },
+    {
+     "name": "Register of members - Brenner Medical UK.txt",
+     "text": "REGISTER OF MEMBERS of Brenner Medical UK Ltd (fictional)\n\n1. Brenner Medical GmbH — 10,000 ordinary shares.\n"
+    },
+    {
+     "name": "Board minutes April 2026.txt",
+     "text": "MINUTES OF A BOARD MEETING of Brenner Medical UK Ltd (fictional)\n\n1. Allotment\n1.1 It was resolved that 10,000 ordinary shares be allotted to Brenner Medical GmbH.\n"
+    },
+    {
+     "name": "Delegation of authority - Brenner Medical UK.txt",
+     "text": "DELEGATION OF AUTHORITY of Brenner Medical UK Ltd (fictional)\n\n1. Contracts\n1.1 The Operations Manager may sign contracts with a value of up to GBP 25,000.\n1.2 Contracts above GBP 25,000 require the approval of two directors.\n"
+    },
+    {
+     "name": "Services Agreement - CleanCo.txt",
+     "text": "SERVICES AGREEMENT (fictional)\n\nThis Agreement is between CleanCo Facilities Ltd and Brenner Medical UK Ltd.\n\n1. Fees\n1.1 The total fees payable under this Agreement are GBP 40,000.\n\n2. Signature\n2.1 Signed for Brenner Medical UK Ltd by S. Patel, Operations Manager.\n"
+    },
+    {
+     "name": "Board procedures - Brenner Medical UK.txt",
+     "text": "BOARD PROCEDURES of Brenner Medical UK Ltd (fictional)\n\n1. Meetings\n1.1 Directors may convene a board meeting on 24 hours' notice.\n"
+    }
+   ],
+   "expect": [
+    [
+     "authority",
+     "Signed above the signer's authority"
+    ],
+    [
+     "constitution",
+     "Notice of board meetings"
+    ]
+   ],
+   "history": "Held-out in the first run (diligence-s3.8: 3/6 found, no extras, control clean); moved here because its misses informed s3.8b."
+  },
+  {
+   "id": "G6-calder-control",
+   "documents": [
+    {
+     "name": "Articles of Association - Calder Systems.txt",
+     "text": "ARTICLES OF ASSOCIATION of Calder Systems Ltd (fictional)\n\n1. Share capital\n1.1 The share capital of the company consists of ordinary shares.\n\n2. Directors\n2.1 The quorum for board meetings is two directors.\n"
+    },
+    {
+     "name": "Register of members - Calder Systems.txt",
+     "text": "REGISTER OF MEMBERS of Calder Systems Ltd (fictional)\n\n1. Owen Price: 300 ordinary shares.\n2. Ana Ruiz: 200 ordinary shares.\n"
+    },
+    {
+     "name": "Board minutes May 2026.txt",
+     "text": "MINUTES OF A BOARD MEETING of Calder Systems Ltd (fictional)\n\n1. Allotment\n1.1 The board approved the allotment of 500 ordinary shares.\n\n2. Founders\n2.1 The founders of the company are Owen Price and Ana Ruiz.\n"
+    },
+    {
+     "name": "Board procedures policy - Calder Systems.txt",
+     "text": "BOARD PROCEDURES POLICY of Calder Systems Ltd (fictional)\n\n1. Meetings\n1.1 The quorum for board meetings is two directors.\n"
+    },
+    {
+     "name": "IP Assignment - Owen Price.txt",
+     "text": "IP ASSIGNMENT DEED (fictional)\n\n1.1 Owen Price assigns to Calder Systems Ltd all intellectual property created for the company.\n"
+    },
+    {
+     "name": "IP Assignment - Ana Ruiz.txt",
+     "text": "IP ASSIGNMENT DEED (fictional)\n\n1.1 Ana Ruiz assigns to Calder Systems Ltd all intellectual property created for the company.\n"
+    }
+   ],
+   "expect": [],
+   "history": "Held-out in the first run (diligence-s3.8: 3/6 found, no extras, control clean); moved here because its misses informed s3.8b."
   }
  ]
 }

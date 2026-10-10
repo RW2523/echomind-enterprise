@@ -156,3 +156,24 @@ def test_purging_a_related_document_removes_the_finding(gv, fresh_db):
     assert deletion.purge(d["id"], users["mp"]["id"])["verification"]["ok"]
     with sqlite3.connect(fresh_db) as c:
         assert c.execute("SELECT COUNT(*) FROM legal_dd_issues WHERE related_json LIKE ?", (f"%{doc}%",)).fetchone()[0] == 0
+
+
+def test_s38b_us_stock_board_consents_signatures_after_inc_and_notice_in_hours():
+    """Found by held-out run 1 (diligence-s3.8), to be measured on a fresh held-out set at the Phase 3 gate."""
+    import json
+    from pathlib import Path
+    from app.legal.diligence import governance
+    g = json.loads((Path(__file__).resolve().parents[3] / "eval" / "law" / "governance" / "golden.json").read_text())
+
+    def check(company_id):
+        docs = []
+        for d in next(c for c in g["companies"] if c["id"] == company_id)["documents"]:
+            first = d["text"].splitlines()[0]
+            docs.append({"id": d["name"], "title": d["name"], "version_id": "v", "text": d["text"], "rows": [], "roles": governance.role_of(d["name"], first)})
+        return governance.run(list(governance.CHECKS), docs)
+    us = {(f["kind"], f["title"]) for f in check("G4-ardent-us")}
+    assert ("share_capital", "500,000 common stock in the register have no approval") in us
+    assert any(k == "authority" for k, _ in us)
+    uk = {(f["kind"], f["title"]) for f in check("G5-brenner-uk")}
+    assert ("constitution", "Notice of board meetings: 24 hours in the policy, 5 days in the articles") in uk
+    assert not any(k == "share_capital" for k, _ in uk)                  # "ordinary shares of GBP 1 each" is the ordinary class
