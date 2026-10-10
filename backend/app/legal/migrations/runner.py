@@ -142,6 +142,8 @@ _REFUSE_BELOW = (
      "delete {n} playbook position(s) and lawyers' decisions on playbook checks"),
     (25, "SELECT COUNT(*) FROM legal_ai_artifacts WHERE kind NOT IN ('minutes','research_note','legal_draft')",
      "delete {n} redline version(s)"),
+    (26, "SELECT COUNT(*) FROM legal_citation_notes",
+     "delete {n} lawyers' note(s) on citation checks"),
 )
 
 

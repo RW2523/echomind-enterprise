@@ -1,0 +1,232 @@
+{
+ "about": "S3.4 citation checker, spec test T07 — the TUNING set. Fictional documents only. Expectations are what a careful lawyer checking the citations by hand would conclude, written before the check was run on them.",
+ "scenarios": [
+  {
+   "id": "G1-supply-memo",
+   "sources": [
+    {
+     "title": "Supply Agreement",
+     "status": "executed",
+     "text": "SUPPLY AGREEMENT (fictional)\n\n1. Definitions\n1.1 \"Products\" means the goods listed in Schedule 1.\n\n5. Delivery\n5.1 The Supplier shall deliver the Products to the Delivery Point within fourteen (14) days of each Order.\n5.2 Risk in the Products passes to the Buyer on delivery.\n\n9. Liability\n9.1 The Supplier's total liability under this Agreement shall not exceed the Price paid in the preceding twelve months.\n\nSchedule 1 Products\nIndustrial fasteners, grades A to C (fictional)."
+    }
+   ],
+   "citing": {
+    "title": "Memo on supply terms",
+    "text": "MEMORANDUM (fictional)\n\n1. Delivery\n1.1 Clause 5.1 of the Supply Agreement requires delivery \"within fourteen (14) days of each Order.\" Risk passes on delivery under clause 5.2 of the Supply Agreement.\n1.2 Clause 5.3 of the Supply Agreement deals with late delivery.\n\n2. Liability\n2.1 Clause 9.1 of the Supply Agreement provides that \"[t]he Supplier's total liability under this Agreement shall not exceed the Price paid in the preceding six months.\"\n2.2 The products are listed in Schedule 1 of the Supply Agreement and the prices in Schedule 2 of the Supply Agreement."
+   },
+   "expect": [
+    {
+     "kind": "quote",
+     "text": "within fourteen (14) days of each Order",
+     "status": "accurate",
+     "clause": "5.1",
+     "in": "Supply Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "clause 5.2 of the Supply Agreement",
+     "status": "resolved",
+     "clause": "5.2",
+     "in": "Supply Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 5.3 of the Supply Agreement",
+     "status": "missing"
+    },
+    {
+     "kind": "quote",
+     "text": "preceding six months",
+     "status": "altered",
+     "clause": "9.1",
+     "in": "Supply Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 1 of the Supply Agreement",
+     "status": "resolved",
+     "clause": "Schedule 1",
+     "in": "Supply Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 2 of the Supply Agreement",
+     "status": "missing"
+    }
+   ]
+  },
+  {
+   "id": "G2-services-self-references",
+   "sources": [],
+   "citing": {
+    "title": "Services Agreement",
+    "text": "SERVICES AGREEMENT (fictional)\n\n1. Term\n1.1 This Agreement starts on the Start Date and continues until terminated under clause 8.\n\n2. Fees\n2.1 The Customer shall pay the Fees set out in Schedule 1.\n2.2 Late payments bear interest as provided in clause 2.4.\n\n8. Termination\n8.1 Either party may terminate this Agreement under this clause 8 on sixty (60) days' notice.\n8.2 Clauses 2.1 and 9.3 survive termination.\n\nSchedule 1 Fees\nEUR 12,000 per month (fictional)."
+   },
+   "expect": [
+    {
+     "kind": "reference",
+     "text": "clause 8",
+     "occurrence": 1,
+     "status": "resolved",
+     "clause": "8",
+     "in": "self"
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 1",
+     "status": "resolved",
+     "clause": "Schedule 1",
+     "in": "self"
+    },
+    {
+     "kind": "reference",
+     "text": "clause 2.4",
+     "status": "missing"
+    },
+    {
+     "kind": "reference",
+     "text": "clause 8",
+     "occurrence": 2,
+     "status": "resolved",
+     "clause": "8",
+     "in": "self"
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 2.1",
+     "status": "resolved",
+     "clause": "2.1",
+     "in": "self"
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 9.3",
+     "status": "missing"
+    }
+   ]
+  },
+  {
+   "id": "G3-brief-authorities",
+   "sources": [],
+   "citing": {
+    "title": "Brief extract",
+    "text": "BRIEF EXTRACT (fictional)\n\n1. The claim arises under 42 U.S.C. § 1983 and 28 U.S.C. § 1331.\n2. The standard is set out in Palmer v. Oakridge Freight, 544 F.3d 210 (7th Cir. 2008), and Lindqvist v. Harrow Corp., 87 F. Supp. 3d 455 (S.D.N.Y. 2015).\n3. A contrary view appears in Morrow v. Pell Industries, 310 F.4th 88 (12th Cir. 2022) and Quist v. Delane, 45 F.6th 12 (9th Cir. 2019).\n4. In England, see [2017] UKSC 59, [2008] UKHL 48 and [2016] UKHL 7; and Hadley v Baxendale (1854) 9 Exch 341.\n5. In the EU, see Regulation (EU) 2016/679, Directive 2011/83/EU and Case C-311/18.\n6. Employers must also follow 29 C.F.R. § 1910.1200."
+   },
+   "expect": [
+    {
+     "kind": "authority",
+     "text": "42 U.S.C. § 1983",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "28 U.S.C. § 1331",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Palmer v. Oakridge Freight, 544 F.3d 210 (7th Cir. 2008)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "87 F. Supp. 3d 455 (S.D.N.Y. 2015)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "310 F.4th 88 (12th Cir. 2022)",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "45 F.6th 12 (9th Cir. 2019)",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "[2017] UKSC 59",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2008] UKHL 48",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2016] UKHL 7",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "(1854) 9 Exch 341",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EU) 2016/679",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Directive 2011/83/EU",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Case C-311/18",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "29 C.F.R. § 1910.1200",
+     "malformed": false
+    }
+   ]
+  },
+  {
+   "id": "G4-lease-letter-quotes",
+   "sources": [
+    {
+     "title": "Lease",
+     "status": "executed",
+     "text": "LEASE (fictional)\n\n3. Rent\n3.1 The Tenant shall pay the Rent quarterly in advance on the Quarter Days.\n3.2 The Rent shall be reviewed on each Review Date to open market value.\n\n4. Repair\n4.1 The Tenant shall keep the interior of the Premises in good repair.\n4.2 The Landlord shall keep the structure and exterior of the Building in good repair."
+    }
+   ],
+   "citing": {
+    "title": "Letter to the client",
+    "text": "LETTER (fictional)\n\n1. The Lease says the Tenant \"shall pay the Rent quarterly in advance on the Quarter Days.\"\n2. Clause 4.1 of the Lease provides that \"The Landlord shall keep the structure and exterior of the Building in good repair.\"\n3. The Lease also states that \"The Rent shall be reviewed every five years to open market value.\"\n4. We note the suggestion that \"the Tenant may assign this lease freely and without any consent\", which we do not accept."
+   },
+   "expect": [
+    {
+     "kind": "quote",
+     "text": "shall pay the Rent quarterly",
+     "status": "accurate",
+     "clause": "3.1",
+     "in": "Lease"
+    },
+    {
+     "kind": "quote",
+     "text": "The Landlord shall keep the structure",
+     "status": "accurate",
+     "clause": "4.2",
+     "in": "Lease",
+     "note": "not clause 4.1"
+    },
+    {
+     "kind": "quote",
+     "text": "reviewed every five years",
+     "status": "altered",
+     "clause": "3.2",
+     "in": "Lease"
+    },
+    {
+     "kind": "quote",
+     "text": "assign this lease freely",
+     "status": "not_found"
+    }
+   ]
+  }
+ ]
+}

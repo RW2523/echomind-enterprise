@@ -1,0 +1,187 @@
+{
+ "about": "S3.4 citation checker, spec test T07 — the HELD-OUT set: written separately from the tuning set, never used to change the checker, run once per checker version. Fictional documents only.",
+ "scenarios": [
+  {
+   "id": "H1-spa-disclosure",
+   "sources": [
+    {
+     "title": "Share Purchase Agreement",
+     "status": "executed",
+     "text": "SHARE PURCHASE AGREEMENT (fictional)\n\n6. Warranties\n6.1 The Seller warrants to the Buyer that each Warranty is true and accurate at the date of this Agreement.\n6.2 The Warranties are qualified by matters fairly disclosed in the Disclosure Letter.\n6.3 No claim may be brought for breach of Warranty unless notified within eighteen (18) months after Completion.\n\n7. Limitations\n7.1 The Seller's aggregate liability for all Claims shall not exceed the Purchase Price.\n7.2 The Seller is not liable for a Claim of less than GBP 25,000 (fictional).\n\nSchedule 4 Warranties\n1. The Company has filed all tax returns when due."
+    }
+   ],
+   "citing": {
+    "title": "Disclosure memo",
+    "text": "DISCLOSURE MEMORANDUM (fictional)\n\n1. Background\n1.1 This memo concerns the Share Purchase Agreement (the \"SPA\").\n\n2. Time limits\n2.1 Under section 6.3 of the Share Purchase Agreement, claims must be notified \"within eighteen (18) months after Completion\".\n2.2 By clause 7.2 of the SPA, the Seller is not liable for small claims.\n\n3. Warranties\n3.1 Clause 6.2 of the Share Purchase Agreement qualifies the Warranties by \"matters disclosed in the Disclosure Letter\".\n3.2 The tax warranty is paragraph 1 of Schedule 4 of the Share Purchase Agreement; the property warranties are in Schedule 5 of the Share Purchase Agreement.\n3.3 Clause 7.1 of the Share Purchase Agreement caps liability at \"the Purchase Price\" and clause 7.4 of the Share Purchase Agreement excludes consequential loss."
+   },
+   "expect": [
+    {
+     "kind": "reference",
+     "text": "section 6.3 of the Share Purchase Agreement",
+     "status": "resolved",
+     "clause": "6.3",
+     "in": "Share Purchase Agreement"
+    },
+    {
+     "kind": "quote",
+     "text": "within eighteen (18) months after Completion",
+     "status": "accurate",
+     "clause": "6.3",
+     "in": "Share Purchase Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "clause 7.2",
+     "status": "resolved",
+     "clause": "7.2",
+     "in": "Share Purchase Agreement"
+    },
+    {
+     "kind": "quote",
+     "text": "matters disclosed in the Disclosure Letter",
+     "status": "altered",
+     "clause": "6.2",
+     "in": "Share Purchase Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 4 of the Share Purchase Agreement",
+     "status": "resolved",
+     "clause": "Schedule 4",
+     "in": "Share Purchase Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 5 of the Share Purchase Agreement",
+     "status": "missing"
+    },
+    {
+     "kind": "quote",
+     "text": "the Purchase Price",
+     "status": "accurate",
+     "clause": "7.1",
+     "in": "Share Purchase Agreement"
+    },
+    {
+     "kind": "reference",
+     "text": "clause 7.4 of the Share Purchase Agreement",
+     "status": "missing"
+    }
+   ]
+  },
+  {
+   "id": "H2-licence-internal",
+   "sources": [],
+   "citing": {
+    "title": "Software Licence",
+    "text": "SOFTWARE LICENCE (fictional)\n\nArticle 1 Grant\n1.1 The Licensor grants the Licensee a non-exclusive licence to use the Software subject to Article 3 and Annex A.\n\nArticle 2 Fees\n2.1 The Licensee shall pay the Fees in Annex B.\n\nArticle 3 Restrictions\n3.1 The Licensee shall not sublicense the Software except as permitted by Article 5.\n3.2 Sections 3.1 and 2.1 apply notwithstanding Article 9.\n\nAnnex A Permitted Sites\nThe Licensee's offices in Lund (fictional)."
+   },
+   "expect": [
+    {
+     "kind": "reference",
+     "text": "Article 3",
+     "occurrence": 1,
+     "status": "resolved",
+     "clause": "Article 3",
+     "in": "self"
+    },
+    {
+     "kind": "reference",
+     "text": "Annex A",
+     "status": "resolved",
+     "clause": "Annex A",
+     "in": "self"
+    },
+    {
+     "kind": "reference",
+     "text": "Annex B",
+     "status": "missing"
+    },
+    {
+     "kind": "reference",
+     "text": "Article 5",
+     "status": "missing"
+    },
+    {
+     "kind": "reference",
+     "text": "Section 3.1",
+     "status": "resolved",
+     "clause": "3.1",
+     "in": "self"
+    },
+    {
+     "kind": "reference",
+     "text": "Section 2.1",
+     "status": "resolved",
+     "clause": "2.1",
+     "in": "self"
+    },
+    {
+     "kind": "reference",
+     "text": "Article 9",
+     "status": "missing"
+    }
+   ]
+  },
+  {
+   "id": "H3-opinion-authorities",
+   "sources": [],
+   "citing": {
+    "title": "Opinion extract",
+    "text": "OPINION EXTRACT (fictional)\n\n1. The automatic stay under 11 U.S.C. § 362(a) applies, as do 15 U.S.C. §§ 1-7.\n2. See Arden Tool Co. v. Brisk Systems, 901 F.3d 1100 (Fed. Cir. 2018); Keller v. Danvers Group, 22 F.4th 301 (D.C. Cir. 2021); and Ostrova v. Pine Mutual, 55 F.4th 120 (11th Cir. 2034).\n3. The English position is in [2022] EWCA Civ 1234, [2019] EWHC 2468 (Ch) and [2012] UKHL 15.\n4. Applicable law is fixed by Regulation (EC) No 593/2008; see also Case T-201/04."
+   },
+   "expect": [
+    {
+     "kind": "authority",
+     "text": "11 U.S.C. § 362(a)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "15 U.S.C. §§ 1",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "901 F.3d 1100 (Fed. Cir. 2018)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "22 F.4th 301 (D.C. Cir. 2021)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "55 F.4th 120 (11th Cir. 2034)",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "[2022] EWCA Civ 1234",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2019] EWHC 2468 (Ch)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2012] UKHL 15",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EC) No 593/2008",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Case T-201/04",
+     "malformed": false
+    }
+   ]
+  }
+ ]
+}
