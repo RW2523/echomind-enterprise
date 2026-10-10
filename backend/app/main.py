@@ -369,3 +369,5 @@ from .legal.citations.routes import router as legal_citations_router  # noqa: E4
 app.include_router(legal_citations_router, prefix="/api")
 from .legal.definitions.routes import router as legal_definitions_router  # noqa: E402
 app.include_router(legal_definitions_router, prefix="/api")
+from .legal.obligations.routes import router as legal_obligations_router  # noqa: E402
+app.include_router(legal_obligations_router, prefix="/api")

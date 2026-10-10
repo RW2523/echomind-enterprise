@@ -1,0 +1,317 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "a5f81f5+changes",
+  "time": "20261010-094825",
+  "prompt_version": "obligations-s3.6b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 4,
+  "expected": 21,
+  "found": "20/21",
+  "timing_in_its_words": "17/17",
+  "dates_right": "4/5",
+  "dates_guessed": 1,
+  "extra": 2,
+  "controls_clean": "1/1",
+  "all_proposed": true,
+  "by_kind": {
+   "change_of_control": "1/1",
+   "confidentiality": "1/1",
+   "consent": "1/1",
+   "duty": "3/3",
+   "expiry": "2/3",
+   "notification": "2/2",
+   "payment": "3/3",
+   "post_termination": "1/1",
+   "renewal": "1/1",
+   "survival": "1/1",
+   "termination": "4/4"
+  },
+  "ms_per_document": 15
+ },
+ "documents": [
+  {
+   "id": "G1-demo-msa",
+   "ms": 15,
+   "control": false,
+   "lines": [
+    {
+     "clause": "2.1",
+     "kind": "expiry",
+     "due": "2029-03-01",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2029-03-01",
+     "got_when": "36 months",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "renewal",
+     "due": "2028-12-01",
+     "when": "ninety (90) days before",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": "2028-12-01",
+     "got_when": "at least ninety (90) days before the end of the then-current term",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.2",
+     "kind": "payment",
+     "when": "thirty (30) days from the invoice date",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "thirty (30) days from the invoice date",
+     "status": "proposed"
+    },
+    {
+     "clause": "5.1",
+     "kind": "confidentiality",
+     "when": "five (5) years",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "five (5) years after it ends",
+     "status": "proposed"
+    },
+    {
+     "clause": "6.1",
+     "kind": "notification",
+     "when": "forty-eight (48) hours",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within forty-eight (48) hours of becoming aware of it",
+     "status": "proposed"
+    },
+    {
+     "clause": "6.2",
+     "kind": "post_termination",
+     "when": "thirty (30) days after termination",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "Within thirty (30) days after termination",
+     "status": "proposed"
+    },
+    {
+     "clause": "12.1",
+     "kind": "termination",
+     "when": "thirty (30) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "on thirty (30) days' written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "12.2",
+     "kind": "termination",
+     "when": "thirty (30) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within thirty (30) days of notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "14.1",
+     "kind": "consent",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "without the prior written consent of the other party, such consent not to be unreasonably withheld",
+     "status": "proposed"
+    },
+    {
+     "clause": "14.2",
+     "kind": "change_of_control",
+     "when": "thirty (30) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "no less than thirty (30) days' prior written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "14.3",
+     "kind": "termination",
+     "when": "ninety (90) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within ninety (90) days of becoming aware of the Change of Control",
+     "status": "proposed"
+    }
+   ],
+   "extra": [
+    {
+     "clause": "8.1",
+     "kind": "payment",
+     "action": "not exceed the greater of USD 250",
+     "due": null
+    }
+   ],
+   "all_proposed": true
+  },
+  {
+   "id": "G2-office-lease",
+   "ms": 11,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.2",
+     "kind": "expiry",
+     "due": "2036-03-24",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2036-03-24",
+     "got_when": "10 years from the Term Commencement Date",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "quarterly in advance",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "quarterly in advance on the usual quarter days",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "fourteen (14) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within fourteen (14) days of its due date bears interest at 4% above base rate",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "due": "2030-09-25",
+     "when": "six (6) months",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": "2030-09-25",
+     "got_when": "not less than six (6) months' written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.1",
+     "kind": "duty",
+     "when": "ten (10) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within ten (10) Business Days of a written request",
+     "status": "proposed"
+    },
+    {
+     "clause": "5.1",
+     "kind": "duty",
+     "when": "twenty (20) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within twenty (20) Business Days",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true
+  },
+  {
+   "id": "G3-mutual-nda",
+   "ms": 17,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2029-05-03",
+     "found": false,
+     "when_ok": null,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "fourteen (14) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within fourteen (14) days of a written request",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "notification",
+     "when": "five (5) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within five (5) Business Days",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.3",
+     "kind": "survival",
+     "when": "two (2) years",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "for two (2) years after this Agreement ends",
+     "status": "proposed"
+    }
+   ],
+   "extra": [
+    {
+     "clause": "1",
+     "kind": "expiry",
+     "action": "The term ends",
+     "due": "2029-05-03"
+    }
+   ],
+   "all_proposed": true
+  },
+  {
+   "id": "G4-board-minutes-control",
+   "ms": 17,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true
+  }
+ ]
+}

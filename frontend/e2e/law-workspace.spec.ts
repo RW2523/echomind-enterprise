@@ -1039,3 +1039,46 @@ test('definitions: a supply agreement\'s terms, numbering and references checked
   const sheet = alice.getByRole('article', { name: 'Document text' });
   await expect(sheet.locator('ins').filter({ hasText: 'Price' })).toBeVisible({ timeout: 120_000 });
 });
+
+test('obligations: the agreement\'s deadlines read with their words, the non-renewal date computed and confirmed, an edit kept with its reason', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  await expect(importButton).toBeVisible();
+  if (await alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true }).count() === 0) {
+    await importButton.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law/Master Services Agreement (DEMO).md'));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: /Master Services Agreement \(DEMO\)/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Obligations' }).click();
+  await alice.getByLabel('Document', { exact: true }).selectOption({ label: 'Master Services Agreement (DEMO)' });
+  await alice.getByRole('button', { name: 'Read its obligations' }).click();
+  const list = alice.getByRole('article', { name: 'Obligations' });
+  const renewal = list.getByRole('listitem', { name: 'Give written notice of non-renewal: Proposed — not confirmed' });
+  await expect(renewal).toContainText('Due 1 December 2028', { timeout: 60_000 });
+  await expect(renewal).toContainText('ending on 1 March 2029');
+  await expect(list.getByRole('listitem', { name: /^Notify Client of any personal data breach/ })).toContainText('forty-eight (48) hours of becoming aware');
+  await renewal.getByRole('button', { name: 'Confirm' }).click();
+  const confirm = renewal.getByRole('form', { name: /^Confirm Give written notice/ });
+  await confirm.getByRole('combobox').selectOption('alice');
+  await confirm.getByRole('button', { name: 'Confirm this obligation' }).click();
+  const confirmed = list.getByRole('listitem', { name: 'Give written notice of non-renewal: Confirmed' });
+  await expect(confirmed).toContainText('Confirmed by alice');
+  await confirmed.getByRole('button', { name: 'Edit' }).click();
+  const edit = confirmed.getByRole('form', { name: /^Edit Give written notice/ });
+  await edit.getByLabel('Due date').fill('2028-11-30');
+  await edit.getByLabel('Why (kept with the change)').fill('Counted as 90 clear days');
+  await edit.getByRole('button', { name: 'Save' }).click();
+  await expect(confirmed).toContainText('Due 30 November 2028');
+  await confirmed.getByRole('button', { name: 'History' }).click();
+  await expect(confirmed.getByRole('list', { name: /^History of/ })).toContainText('due date: 2028-12-01 → 2028-11-30 — Counted as 90 clear days');
+  await alice.evaluate(() => document.querySelectorAll('.lw-main, #root').forEach((el) => el.scrollTo(0, 0)));
+  await shot(alice, '40-obligations-light');
+  await confirmed.getByRole('link', { name: 'Open the words' }).click();
+  await expect(alice).toHaveURL(/\/read\?v=.*&at=\d+-\d+/);
+});

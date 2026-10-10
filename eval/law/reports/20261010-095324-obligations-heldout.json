@@ -1,0 +1,167 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "aac96ba",
+  "time": "20261010-095324",
+  "prompt_version": "obligations-s3.6c",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 3,
+  "expected": 10,
+  "found": "5/10",
+  "timing_in_its_words": "4/7",
+  "dates_right": "0/2",
+  "dates_guessed": 0,
+  "extra": 0,
+  "controls_clean": "1/1",
+  "all_proposed": true,
+  "by_kind": {
+   "duty": "1/2",
+   "expiry": "0/1",
+   "notice": "1/1",
+   "notification": "1/1",
+   "payment": "0/2",
+   "post_termination": "1/2",
+   "termination": "1/1"
+  },
+  "ms_per_document": 12
+ },
+ "documents": [
+  {
+   "id": "I1-employment-uk",
+   "ms": 14,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.2",
+     "kind": "expiry",
+     "due": "2027-04-30",
+     "found": false,
+     "when_ok": null,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "31 December",
+     "found": false,
+     "when_ok": false,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "when": "three (3) months",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "on three (3) months' written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.2",
+     "kind": "post_termination",
+     "found": false,
+     "when_ok": null,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "3.3",
+     "kind": "post_termination",
+     "when": "six (6) months after the Termination Date",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "For six (6) months after the Termination Date",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true
+  },
+  {
+   "id": "I2-loan-facility-us",
+   "ms": 12,
+   "control": false,
+   "lines": [
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "due": "2029-06-30",
+     "found": false,
+     "when_ok": null,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "quarterly in arrears",
+     "found": false,
+     "when_ok": false,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "2.3",
+     "kind": "notice",
+     "when": "ten (10) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "not less than ten (10) Business Days' prior written notice to the Lender",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "duty",
+     "when": "one hundred twenty (120) days",
+     "found": true,
+     "when_ok": false,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "twenty (120) days after the end of each fiscal year",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.2",
+     "kind": "notification",
+     "when": "five (5) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within five (5) Business Days",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true
+  },
+  {
+   "id": "I3-press-release-control",
+   "ms": 11,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true
+  }
+ ]
+}

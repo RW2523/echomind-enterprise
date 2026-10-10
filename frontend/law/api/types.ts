@@ -442,3 +442,15 @@ export interface DefinitionCheck {
   summary: Record<'definitions' | DefinitionFindingType, number>; created_by: string | null; created_at: string;
 }
 
+/** Obligations and deadlines (S3.6, D-050): read by rules, proposed until a lawyer confirms. */
+export type ObligationKind = 'renewal' | 'termination' | 'change_of_control' | 'consent' | 'payment' | 'notification' | 'post_termination' | 'confidentiality' | 'notice';
+export type ObligationStatus = 'proposed' | 'confirmed' | 'done' | 'dismissed';
+export interface Obligation {
+  id: string; document_id: string; document_title: string | null; version_id: string; clause: string | null; kind: ObligationKind;
+  party: string | null; action: string; when: string | null; due_date: string | null; due_note: string | null; timezone: string;
+  due_at: string | null; overdue: boolean; status: ObligationStatus; owner: string | null; source: 'rules' | 'model' | 'person';
+  evidence: { start: number; end: number; quote: string }; confirmed_by: string | null; confirmed_at: string | null; version: number;
+  created_by: string | null; created_at: string; updated_at: string;
+}
+export interface ObligationEvent { action: string; changes: Record<string, [unknown, unknown]>; reason: string | null; by: string | null; at: string }
+
