@@ -183,6 +183,27 @@ def test_t10_libreoffice_opens_the_redline_and_keeps_its_tracked_changes(tmp_pat
     assert word.fold(" ".join(word.reject_all(back))).count("loss of profits") == 1
 
 
+def test_a_correction_deleting_a_clause_whole_survives_libreoffice(tmp_path):
+    """S3.5 corrections delete a clause by an empty revision; at the Phase 3 gate (S3.9) LibreOffice keeps it as a
+    tracked deletion by its author: accepted, the clause is gone; rejected, it is back once."""
+    from app.legal.documents import extract, structure
+    from app.legal.redlines import word
+    data = contract_docx()
+    x = extract.extract("c.docx", data)
+    c = next(c for c in structure.clauses(x) if c.number == "12.3")
+    out, _ = word.apply(data, x.text, [{"id": "c1", "original": x.text[c.start:c.end], "revised": "", "comment": "Repeats clause 12.2."}],
+                        "Helena Marsh", "2026-10-10T10:00:00Z")
+    (tmp_path / "d.docx").write_bytes(out)
+    subprocess.run(["soffice", f"-env:UserInstallation=file://{tmp_path}/lo", "--headless", "--convert-to", "docx:MS Word 2007 XML",
+                    "--outdir", str(tmp_path / "o"), str(tmp_path / "d.docx")], check=True, capture_output=True, timeout=120)
+    back = (tmp_path / "o" / "d.docx").read_bytes()
+    with zipfile.ZipFile(io.BytesIO(back)) as z:
+        xml = z.read("word/document.xml").decode()
+    assert "<w:del " in xml and "Helena Marsh" in xml
+    assert "loss of profits" not in word.fold(" ".join(word.accept_all(back)))
+    assert word.fold(" ".join(word.reject_all(back))).count("loss of profits") == 1
+
+
 # ── Proposing and reviewing a redline ────────────────────────────────────────────
 def test_a_check_s_outside_lines_become_revisions_to_the_firm_s_wording(rl):
     r = redline(rl)

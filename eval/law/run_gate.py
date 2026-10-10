@@ -158,7 +158,8 @@ def _command(suite: str, args) -> tuple[int, Path]:
 
 
 def _commit() -> str:
-    return _git("rev-parse", "--short", "HEAD") + ("+changes" if _git("status", "--porcelain", "--", ".", ":!eval/law/reports") else "")   # new reports are not code changes
+    dirty = _git("status", "--porcelain", "--", ".", ":!eval/law/reports", ":!docs/echomind-law/design/screens")   # reports and journey screenshots are not code
+    return _git("rev-parse", "--short", "HEAD") + ("+changes" if dirty else "")
 
 
 def main() -> int:

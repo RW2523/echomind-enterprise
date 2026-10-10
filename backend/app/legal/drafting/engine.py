@@ -38,7 +38,7 @@ from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import templates
 
-VERSION = "drafting-s3.1d"
+VERSION = "drafting-s3.1e"
 GAP = re.compile(r"\[\[NEEDS INPUT:[^\]]*\]\]")
 _REF = re.compile(r"\{\{\s*([a-z][a-z0-9_]{0,40})\s*\}\}")
 _FIGURE = re.compile(
@@ -112,16 +112,27 @@ _NUMBER_WORDS = {"one", "two", "three", "four", "five", "six", "seven", "eight",
                  "eighteen", "twenty", "thirty", "forty", "fifty", "sixty", "ninety", "hundred", "thousand", "million"}
 
 
-# The words that name a legal document (s3.1c): an agreement field holding none of them is not an agreement's name.
+# The words that name a legal document (s3.1c). s3.1e: the word must head the name ("Software Licence Agreement",
+# "Lease (fictional)", "Agreement for the Supply of Goods"), not merely appear in it ("the annual licence fee").
 _DOCUMENT_WORDS = re.compile(r"\b(?:agreement|contract|lease|licen[cs]e|deed|terms|conditions|order|policy|letter|memorandum|charter|"
-                             r"guarantee|mortgage|debenture|facility|instrument|undertaking|note|plan|articles|bylaws|by-laws)\b", re.I)
+                             r"guarantee|mortgage|debenture|facility|instrument|undertaking|note|plan|articles|bylaws|by-laws)"
+                             r"(?:\s*\([^)]*\))?(?:\s+(?:dated|of|between|with|for|to|made|entered|signed|executed|relating|in|on)\b.*)?\s*[.,;]?\s*$",
+                             re.I)
+# A value that says the point is open is not a value (s3.1e): "Governing law: to be agreed" gives no governing law.
+_UNSETTLED = re.compile(r"^\s*(?:(?:is\s+|are\s+)?(?:still\s+)?(?:to\s+be\s+(?:agreed|confirmed|determined|decided|discussed|negotiated|advised)|"
+                        r"not\s+(?:yet\s+)?(?:agreed|stated|specified|known|decided|provided|given|confirmed)|tbc|tba|tbd|n/?a|none|unknown|"
+                        r"pending|open)\b)[\s.,;:!]*$", re.I)
+
+
+def unsettled(value: str) -> bool:
+    return bool(_UNSETTLED.match(value or ""))
 
 
 def has_figure(kind: str, value: str) -> bool:
     """An amount, date or percentage has a figure in it; a period has a figure or a number word; an agreement is
     named by a document word (a party's name is not an agreement)."""
     if kind == "agreement":
-        return bool(_DOCUMENT_WORDS.search(value or ""))
+        return bool(_DOCUMENT_WORDS.search(" ".join((value or "").split())))
     if kind in ("money", "date", "percent"):
         return bool(re.search(r"\d", value or ""))
     if kind == "period":
@@ -193,6 +204,9 @@ async def extract(scope, f: dict, documents: Optional[list[str]], seen: Optional
     if value in (None, "", "null"):
         return out
     value = " ".join(str(value).split())[:400]
+    if unsettled(value):
+        out["suggestion"] = {"value": value, "reason": "the documents say this point is not settled"}
+        return out
     try:
         n = int(ans.get("source"))
     except (TypeError, ValueError):

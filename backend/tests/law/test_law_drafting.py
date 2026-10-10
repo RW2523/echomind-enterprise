@@ -254,6 +254,33 @@ def test_an_agreement_field_given_a_party_name_is_left_for_a_person(dr):
     assert field(d, "agreement")["value"] == "Master Services Agreement" and field(d, "agreement")["status"] == "sourced"
 
 
+def test_an_agreement_is_named_by_its_head_word_not_by_any_mention_of_one():
+    """"the 2026 annual licence fee" passed as an agreement on "licence" (drafting golden, Phase 3 gate run; s3.1e)."""
+    from app.legal.drafting import engine
+    for name in ("SOFTWARE LICENCE AGREEMENT", "DISTRIBUTION AGREEMENT (fictional)", "Lease", "Master Services Agreement dated 1 May 2025",
+                 "Agreement for the Supply of Goods", "Terms and Conditions", "Licence to Assign"):
+        assert engine.has_figure("agreement", name), name
+    for value in ("the 2026 annual licence fee", "Northbridge Analytics AB", "the lease premises", "licence fees"):
+        assert not engine.has_figure("agreement", value), value
+
+
+def test_a_value_saying_the_point_is_not_settled_is_left_for_a_person(dr):
+    """"Governing law: to be agreed" gave the governing law "to be agreed" (drafting golden, Phase 3 gate run; s3.1e)."""
+    from app.legal.drafting import engine
+    alice = as_user(dr, "alice")
+    upload(alice, dr["mid"], "term-sheet.txt", "TERM SHEET (fictional)\n\nGoverning law: to be agreed.", status="final")
+    index_all()
+    fields = FIELDS + [{"key": "law", "label": "Governing law", "kind": "text", "source": "documents", "question": "Which law governs?"}]
+    dr["model"].fields["law"] = {"value": "to be agreed", "quote": "Governing law: to be agreed."}
+    d = draft(dr, template(dr, body=BODY + "\n\nGoverned by {{law}}.", fields=fields))
+    law = field(d, "law")
+    assert law["status"] == "needs_input" and law["value"] is None
+    assert law["suggestion"]["value"] == "to be agreed" and "not settled" in law["suggestion"]["reason"]
+    for value in ("TBC", "Not stated", "to be confirmed", "N/A", "none", "unknown", "not specified", "to be determined"):
+        assert engine.unsettled(value), value
+    assert not engine.unsettled("English law") and not engine.unsettled("Nonesuch Holdings Ltd")
+
+
 def test_a_short_document_below_the_research_floor_still_reaches_the_drafting_model(dr, monkeypatch):
     """A one-passage email scored below the research answerer's abstention floor gave the drafting model nothing
     (drafting held-out 3, Phase 3 gate); drafting checks every value against its quote instead (s3.1d)."""
