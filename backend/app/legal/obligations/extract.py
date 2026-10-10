@@ -25,7 +25,7 @@ from typing import Optional
 from ..compare.facts import _DATE, _PERIOD, _date, _word_number
 from ..documents import numbering
 
-VERSION = "obligations-s3.6e"
+VERSION = "obligations-s3.6f"
 MODAL = re.compile(r"\b(?:shall|must|may(?!\s+not\s+be\b)|will|agrees? to|undertakes? to|is entitled to|are entitled to|"
                    r"is payable|are payable|is due|are due|falls? due|survives?|bears interest|accrues? interest)\b")
 _UNLESS_NOTICE = re.compile(r"\bunless\b[^.]*\bnotice\b", re.I)
@@ -182,7 +182,7 @@ def event_date(text: str, name: str) -> Optional[tuple[date, str]]:
 _EXPIRY = re.compile(r"(?:\bcontinues?\b|\blasts?\b|\bruns?\b|\bmeans\b|\bremains? in force\b)[^.;]{0,60}?\bfor\s+(?:an?\s+initial\s+(?:term|period)\s+of\s+)?"
                      r"(?P<p>[^.;()]{0,30}(?:\(\d+\))?\s*(?:months?|years?))(?:\s+from\s+(?:the\s+)?(?P<anchor>[A-Z][\w ]{2,40}?Date|date of this \w+))?"
                      r"|[\"“](?:Term|Initial Term)[\"”]\s+means\s+(?P<p2>[^.;()]{0,30}(?:\(\d+\))?\s*(?:months?|years?))\s+from\s+(?:the\s+)?(?P<anchor2>[A-Z][\w ]{2,40}?Date)"
-                     r"|\b(?:initial\s+)?(?:[A-Z][\w-]*\s+)?Term\s+(?:is|shall be|will be)\s+(?P<p3>[^.;()]{0,30}(?:\(\d+\))?\s*(?:months?|years?))\s+from\s+(?:the\s+)?(?P<anchor3>[A-Z][\w ]{2,40}?Date)",
+                     r"|\b(?:initial\s+)?(?:[A-Z][\w-]*\s+)?[Tt]erm(?:\s+of\s+this\s+\w+)?\s+(?:is|shall be|will be)\s+(?P<p3>[^.;()]{0,30}(?:\(\d+\))?\s*(?:months?|years?))\s+from\s+(?:and\s+including\s+)?(?:the\s+)?(?P<anchor3>[A-Z][\w ]{2,40}?Date)?",
                      re.I)
 _ANNIV = re.compile(r"\bon the (?P<ord>first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|\d{1,2}(?:st|nd|rd|th))\s+"
                     r"anniversary of the (?P<anchor>[A-Z][\w ]{2,40}?Date)", re.I)
@@ -215,8 +215,11 @@ def expiry(s: str, text: str) -> Optional[dict]:
     if not p:
         return None
     months = p["n"] * (12 if p["unit"].startswith("year") else 1)
-    start = anchor_date(text, anchor) if anchor else _start_date(text) if re.search(r"\b(?:begins|commences|starts)\b", s) else None
-    when = f"{p['n']} {p['unit']}" + (f" from the {anchor}" if anchor else "")
+    lit = re.search(r"\bfrom\s+(?:and\s+including\s+)?" + _DATE.pattern, s[m.start():m.end() + 60])   # "from 1 July 2024"
+    start = (anchor_date(text, anchor) if anchor else
+             (date.fromisoformat(_date(lit)), _fmt(date.fromisoformat(_date(lit)))) if lit and _date(lit) else
+             _start_date(text) if re.search(r"\b(?:begins|commences|starts)\b", s) else None)
+    when = f"{p['n']} {p['unit']}" + (f" from the {anchor}" if anchor else f" from {start[1]}" if start else "")
     if not start:
         return {"when": when, "due": None, "at": m.start(), "note": f"The term is {p['n']} {p['unit']}, but the document gives no date it starts from."}
     end = add_months(start[0], months) - timedelta(days=1)

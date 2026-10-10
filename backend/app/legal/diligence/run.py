@@ -28,7 +28,7 @@ from ..documents import numbering
 from ..documents import repo as documents
 from ..obligations import extract as ox
 
-VERSION = "diligence-s3.7"
+VERSION = "diligence-s3.7b"
 _HEAD = 400
 
 

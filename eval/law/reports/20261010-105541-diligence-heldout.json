@@ -1,0 +1,121 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "05863a6",
+  "time": "20261010-105541",
+  "prompt_version": "diligence-s3.7",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "rooms": 3,
+  "missing_lists_right": "3/3",
+  "issues_found": "9/11",
+  "extra_issues": 0,
+  "controls_clean": "1/1",
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_room": 26
+ },
+ "rooms": [
+  {
+   "id": "H1-software-sale-room",
+   "ms": 31,
+   "control": false,
+   "missing_got": [
+    "corp-captable",
+    "corp-minutes",
+    "insurance",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "corp-captable",
+    "corp-minutes",
+    "insurance",
+    "people",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 7,
+   "issues_found": 5,
+   "missed": [
+    {
+     "document": "Licence Agreement - Marsh & Teague.txt",
+     "kind": "renewal",
+     "count": 1
+    },
+    {
+     "document": "Licence Agreement - Marsh & Teague.txt",
+     "kind": "expiry",
+     "count": 1
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "H2-property-room",
+   "ms": 22,
+   "control": false,
+   "missing_got": [
+    "contracts",
+    "corp-articles",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-articles",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip"
+   ],
+   "missing_ok": true,
+   "issues_expected": 4,
+   "issues_found": 4,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "H3-corporate-control",
+   "ms": 25,
+   "control": true,
+   "missing_got": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 0,
+   "issues_found": 0,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  }
+ ]
+}

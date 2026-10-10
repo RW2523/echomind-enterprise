@@ -1,0 +1,197 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "05863a6+changes",
+  "time": "20261010-105757",
+  "prompt_version": "diligence-s3.7b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "rooms": 6,
+  "missing_lists_right": "6/6",
+  "issues_found": "29/29",
+  "extra_issues": 0,
+  "controls_clean": "2/2",
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_room": 34
+ },
+ "rooms": [
+  {
+   "id": "G1-share-sale-room",
+   "ms": 41,
+   "control": false,
+   "missing_got": [
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people"
+   ],
+   "missing_want": [
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people"
+   ],
+   "missing_ok": true,
+   "issues_expected": 8,
+   "issues_found": 8,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G2-services-company-room",
+   "ms": 34,
+   "control": false,
+   "missing_got": [
+    "corp-articles",
+    "corp-minutes",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "property"
+   ],
+   "missing_want": [
+    "corp-articles",
+    "corp-minutes",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 10,
+   "issues_found": 10,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G3-corporate-only-control",
+   "ms": 26,
+   "control": true,
+   "missing_got": [
+    "contracts",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 0,
+   "issues_found": 0,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G4-software-sale-room",
+   "ms": 37,
+   "control": false,
+   "missing_got": [
+    "corp-captable",
+    "corp-minutes",
+    "insurance",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "corp-captable",
+    "corp-minutes",
+    "insurance",
+    "people",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 7,
+   "issues_found": 7,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G5-property-room",
+   "ms": 35,
+   "control": false,
+   "missing_got": [
+    "contracts",
+    "corp-articles",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-articles",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip"
+   ],
+   "missing_ok": true,
+   "issues_expected": 4,
+   "issues_found": 4,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G6-corporate-control",
+   "ms": 33,
+   "control": true,
+   "missing_got": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 0,
+   "issues_found": 0,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  }
+ ]
+}
