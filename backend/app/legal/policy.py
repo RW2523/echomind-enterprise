@@ -89,6 +89,9 @@ ORG_ACTIONS: dict[str, frozenset] = {
     # Playbooks (S3.2, D-046): positions written by lawyers, approved by a managing partner other than the author.
     "playbooks.manage": frozenset({"managing_partner", "attorney"}),
     "playbooks.approve": frozenset({"managing_partner"}),
+    # Due-diligence checklists (S3.7, D-051): written by lawyers, approved by a managing partner other than the author.
+    "diligence.manage": frozenset({"managing_partner", "attorney"}),
+    "diligence.approve": frozenset({"managing_partner"}),
 }
 
 

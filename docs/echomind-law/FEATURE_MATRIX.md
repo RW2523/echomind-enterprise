@@ -25,7 +25,7 @@
 | DOC-03 | Quote and citation checker with authority provenance | DONE for the pilot (S3.4, D-048): references resolved to exact clauses or flagged missing; quotations compared word for word (altered words shown); every external authority listed as UNVERIFIED, impossible ones flagged; nothing looked up. T07 golden 55/55, held-out 27/28 (court rules not yet read) | S3.4 | Verifying that an authority exists needs a licensed source (P-009) |
 | DOC-04 | Defined terms, numbering, cross-references | DONE for the pilot (S3.5, D-049): definitions (duplicates, unused, undefined, another form, before definition), numbering gaps and repeats at every level, broken and outdated references, all with offsets; corrections only through an approved redline. Held-out 12/12 (third set); undefined-term detection is heuristic | S3.5 | — |
 | DOC-05 | Obligations and deadlines tracker | DONE for the pilot (S3.6, D-050): rules first, then checked model proposals; exact words; dates only from dates the document fixes (none guessed in any run); proposed until a lawyer confirms; versioned edits with reasons; timezone; calendar file off by default. Held-out 10/12 with the model (rules alone about half) | S3.6 | Reminders not sent |
-| DOC-06 | Due diligence checklist and issue register | MISSING | S3.7 | — |
+| DOC-06 | Due diligence | DONE for the pilot (S3.7, D-051): approved firm checklists; data-room runs as background jobs; missing-document list; issue register (change of control, assignment, termination, governing law, liability, renewal) quoting each sentence; preliminary until a reviewer decides; append-only trail. Held-out: missing lists all right, issues 9/11 then 5/6, no extra issues | S3.7 | — |
 | DOC-07 | Governance, cap table / approvals, IP assignment checks | MISSING | S3.8 | — |
 | OPT-01 | Client intake assistant with conflict screening | MISSING | S4.1 | Business approval |
 | OPT-02 | Transcript summaries and local translation | PARTIAL (summary only) | S4.2 | Local MT model licence |
@@ -228,7 +228,7 @@
 ### DOC-06 — Due diligence
 | Field | Detail |
 |---|---|
-| Status | **MISSING.** |
+| Status | **DONE for the pilot (S3.7, D-051).**<ul><li>Checklists are fixed versions approved by a managing partner who did not write them.</li><li>A run is a background job: documents are matched to items by their own titles, and items nothing answers make the missing list.</li><li>Matched contracts are asked each item's questions by rules, each issue quoting its sentence at its offsets.</li><li>Every issue is preliminary until a reviewer verifies or dismisses it, with an append-only trail.</li><li>Issues are shown only for documents the viewer can see, and purged with them.</li></ul> |
 | Modifications | Checklist templates; matter-scoped data-room scan as a background job; missing-document list; issue register with sources and reviewer status; preliminary findings separated from verified ones |
 | Tests | Synthetic data room with seeded issues and missing documents |
 | Acceptance | Missing-document and seeded-issue tests with provenance and review trail |

@@ -1,0 +1,174 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "a710434+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-113421",
+  "prompt_version": "playbook-s3.2c"
+ },
+ "summary": {
+  "lines": 15,
+  "accuracy": "14/15",
+  "deviations_caught": "4/5",
+  "passed_in_error": 0,
+  "by_rule": 1,
+  "quotes": 12,
+  "seconds_per_check": 8.2
+ },
+ "contracts": [
+  {
+   "id": "msa-close-to-standard",
+   "seconds": 9.6,
+   "lines": [
+    {
+     "topic": "liability_cap",
+     "expected": "standard",
+     "got": "standard",
+     "ok": true,
+     "method": "model",
+     "quote": "The total liability of each party under this Agreement shall not exceed USD 250,000.",
+     "reason": "The clause matches the standard position on the liability cap."
+    },
+    {
+     "topic": "exclusions",
+     "expected": "standard",
+     "got": "standard",
+     "ok": true,
+     "method": "model",
+     "quote": "Neither party shall be liable for any indirect or consequential loss, or for any loss of profit.",
+     "reason": "The clause matches the standard position on exclusions of indirect or consequential loss."
+    },
+    {
+     "topic": "payment",
+     "expected": "fallback",
+     "got": "fallback",
+     "ok": true,
+     "method": "model",
+     "quote": "The Customer shall pay each invoice within forty-five (45) days of receipt.",
+     "reason": "The clause specifies a 45-day payment period, which matches fallback 1."
+    },
+    {
+     "topic": "termination",
+     "expected": "standard",
+     "got": "standard",
+     "ok": true,
+     "method": "model",
+     "quote": "Either party may terminate this Agreement for convenience by giving ninety (90) days' written notice.",
+     "reason": "The clause matches the standard position on termination for convenience."
+    },
+    {
+     "topic": "governing_law",
+     "expected": "standard",
+     "got": "standard",
+     "ok": true,
+     "method": "model",
+     "quote": "This Agreement is governed by the laws of Sweden.",
+     "reason": "The clause states the same governing law as the standard position."
+    },
+    {
+     "topic": "confidentiality",
+     "expected": "not_found",
+     "got": "not_found",
+     "ok": true,
+     "method": "model",
+     "quote": null,
+     "reason": "No clause of this document deals with the topic."
+    }
+   ]
+  },
+  {
+   "id": "customer-paper",
+   "seconds": 8.4,
+   "lines": [
+    {
+     "topic": "liability_cap",
+     "expected": "outside",
+     "got": "outside",
+     "ok": true,
+     "method": "model",
+     "quote": "The Supplier's liability under this Agreement is unlimited.",
+     "reason": "The clause states an unlimited liability, which is outside the standard or any fallback positions."
+    },
+    {
+     "topic": "payment",
+     "expected": "outside",
+     "got": "outside",
+     "ok": true,
+     "method": "model",
+     "quote": "Payment of undisputed invoices is due ninety (90) days after the end of the month in which the invoice is received.",
+     "reason": "The clause specifies a 90-day term, which is different from both the standard 30-day term and the fallback 45-day term."
+    },
+    {
+     "topic": "confidentiality",
+     "expected": "standard",
+     "got": "standard",
+     "ok": true,
+     "method": "model",
+     "quote": "Each party shall keep the other party's confidential information confidential during the term and for three (3) years after termination.",
+     "reason": "The clause matches the standard position regarding confidentiality duration."
+    },
+    {
+     "topic": "termination",
+     "expected": "outside",
+     "got": "not_found",
+     "ok": false,
+     "method": "model",
+     "quote": null,
+     "reason": "No clause of this document deals with the topic."
+    },
+    {
+     "topic": "governing_law",
+     "expected": "outside",
+     "got": "outside",
+     "ok": true,
+     "method": "model",
+     "quote": "This Agreement is governed by the laws of the State of New York.",
+     "reason": "The clause specifies New York law, which is different from the standard Sweden law and the fallback England and Wales law."
+    },
+    {
+     "topic": "exclusions",
+     "expected": "not_found",
+     "got": "not_found",
+     "ok": true,
+     "method": "model",
+     "quote": null,
+     "reason": "No clause of this document deals with the topic."
+    }
+   ]
+  },
+  {
+   "id": "greater-of-cap",
+   "seconds": 6.6,
+   "lines": [
+    {
+     "topic": "liability_cap",
+     "expected": "outside",
+     "got": "outside",
+     "ok": true,
+     "method": "rule",
+     "quote": "Each party's total liability shall not exceed the greater of USD 250,000 and the fees paid in the twelve (12) months before the claim.",
+     "reason": "Outside the playbook: the clause combines positions (“the greater of …”), which the position does not."
+    },
+    {
+     "topic": "payment",
+     "expected": "standard",
+     "got": "standard",
+     "ok": true,
+     "method": "model",
+     "quote": "Invoices are payable within thirty (30) days of receipt.",
+     "reason": "The clause matches the standard payment term of 30 days."
+    },
+    {
+     "topic": "governing_law",
+     "expected": "fallback",
+     "got": "fallback",
+     "ok": true,
+     "method": "model",
+     "quote": "This agreement is governed by the laws of England and Wales.",
+     "reason": "The clause states the governing law as England and Wales, which matches fallback 1."
+    }
+   ]
+  }
+ ]
+}

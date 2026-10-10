@@ -371,3 +371,5 @@ from .legal.definitions.routes import router as legal_definitions_router  # noqa
 app.include_router(legal_definitions_router, prefix="/api")
 from .legal.obligations.routes import router as legal_obligations_router  # noqa: E402
 app.include_router(legal_obligations_router, prefix="/api")
+from .legal.diligence.routes import router as legal_diligence_router  # noqa: E402
+app.include_router(legal_diligence_router, prefix="/api")

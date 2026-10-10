@@ -148,6 +148,8 @@ _REFUSE_BELOW = (
      "delete {n} lawyers' note(s) on definition checks"),
     (28, "SELECT COUNT(*) FROM legal_obligation_events WHERE action <> 'proposed'",
      "delete {n} decision(s) on obligations (confirmations, edits, dismissals) with who made them and why"),
+    (29, "SELECT (SELECT COUNT(*) FROM legal_dd_checklists) + (SELECT COUNT(*) FROM legal_dd_issue_events WHERE action <> 'found')",
+     "delete {n} due-diligence checklist version(s) and reviewers' decisions on issues"),
 )
 
 

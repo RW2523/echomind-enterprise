@@ -1082,3 +1082,56 @@ test('obligations: the agreement\'s deadlines read with their words, the non-ren
   await confirmed.getByRole('link', { name: 'Open the words' }).click();
   await expect(alice).toHaveURL(/\/read\?v=.*&at=\d+-\d+/);
 });
+
+test('due diligence: the data room run against the firm checklist, missing documents listed, issues quoted, reviewed by a second lawyer', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  await expect(importButton).toBeVisible();
+  if (await alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true }).count() === 0) {
+    await importButton.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law/Master Services Agreement (DEMO).md'));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: /Master Services Agreement \(DEMO\)/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Due diligence' }).click();
+  await alice.getByLabel('Checklist', { exact: true }).selectOption({ label: 'Share acquisition — core documents (version 1)' });
+  await alice.getByRole('button', { name: 'Run against this matter' }).click();
+  const reg = alice.getByRole('article', { name: 'Issue register' });
+  await expect(reg).toBeVisible({ timeout: 120_000 });
+  const coc = reg.getByRole('listitem', { name: /^Change of control \(clause 14\.\d\): Preliminary/ }).filter({ hasText: 'Master Services Agreement (DEMO)' }).first();
+  await expect(coc).toContainText('Change of Control');
+  // The demo MSA's own law issue. Alone it is Delaware; after the redlines journey filed its revision, Sweden. Other
+  // Delaware-law MSAs (the Word fixture) can be in M-101 too.
+  const law = reg.getByRole('listitem', { name: /^Governed by the laws of / }).filter({ hasText: 'Master Services Agreement (DEMO)' }).first();
+  await expect(law).toContainText('The checklist expects England and Wales.');
+  await expect(alice.getByRole('region', { name: 'Missing documents' }).getByRole('listitem', { name: 'Articles of association' })).toBeVisible();
+  await law.getByRole('button', { name: 'Dismiss' }).click();
+  await law.getByLabel('Why it is not an issue').fill('The client accepts this law for this supplier.');
+  await law.getByRole('button', { name: 'Dismiss' }).click();
+  await expect(reg.getByRole('listitem', { name: /^Governed by the laws of .*: Dismissed$/ }).filter({ hasText: 'Master Services Agreement (DEMO)' }).first())
+    .toContainText('Dismissed by alice');
+
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.goto('/m/M-101/diligence');
+  const theirs = nakamura.getByRole('article', { name: 'Issue register' }).getByRole('listitem', { name: /^Change of control \(clause 14\.\d\): Preliminary/ })
+    .filter({ hasText: 'Master Services Agreement (DEMO)' }).first();
+  await theirs.getByRole('button', { name: 'Verify' }).click();
+  await theirs.getByLabel('Note (optional)').fill('Notice needed before signing.');
+  await theirs.getByRole('button', { name: 'Verify' }).click();
+  await expect(nakamura.getByRole('article', { name: 'Issue register' }).getByText(/^Verified by nakamura$/).first()).toBeVisible();
+  await alice.reload();
+  await alice.evaluate(() => document.querySelectorAll('.lw-main, #root').forEach((el) => el.scrollTo(0, 0)));
+  await expect(alice.getByRole('article', { name: 'Issue register' }).getByText(/^Verified by nakamura$/).first()).toBeVisible();
+  await shot(alice, '41-due-diligence-light');
+
+  const morgan = await (await browser.newContext()).newPage();
+  await signIn(morgan, 'morgan');
+  await morgan.getByRole('link', { name: 'Checklists' }).click();
+  await expect(morgan.getByRole('region', { name: 'Share acquisition — core documents' }).getByText('In use')).toBeVisible();
+});

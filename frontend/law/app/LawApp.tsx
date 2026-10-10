@@ -37,6 +37,8 @@ import DocumentPlaybook from '../pages/DocumentPlaybook';
 import DocumentCitations from '../pages/DocumentCitations';
 import DocumentDefinitions from '../pages/DocumentDefinitions';
 import MatterObligations from '../pages/MatterObligations';
+import MatterDiligence from '../pages/MatterDiligence';
+import Checklists from '../pages/Checklists';
 import RedlinePage from '../pages/RedlinePage';
 import MatterMeeting from '../pages/MatterMeeting';
 import MatterExports, { MatterExport } from '../pages/MatterExports';
@@ -63,6 +65,7 @@ export const lawRoutes = [
           { path: '/reviews', element: <Reviews /> },
           { path: '/templates', element: <Templates /> },
           { path: '/playbooks', element: <Playbooks /> },
+          { path: '/checklists', element: <Checklists /> },
           {
             path: '/m/:matterNo',
             element: <MatterLayout />,
@@ -82,6 +85,7 @@ export const lawRoutes = [
               { path: 'notes/:artifactId', element: <ResearchNote /> },
               { path: 'drafting', element: <MatterDrafting /> },
               { path: 'obligations', element: <MatterObligations /> },
+              { path: 'diligence', element: <MatterDiligence /> },
               { path: 'drafting/:artifactId', element: <DraftPage /> },
               { path: 'exports', element: <MatterExports /> },
               { path: 'exports/:exportId', element: <MatterExport /> },

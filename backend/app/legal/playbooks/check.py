@@ -33,7 +33,7 @@ from ..research import prompt as research_prompt
 from ..retrieval import search as searchmod
 from .library import TOPICS
 
-VERSION = "playbook-s3.2b"
+VERSION = "playbook-s3.2c"
 _KINDS = ("money", "period", "percent", "law")
 SYSTEM = (
     "You compare a contract with a law firm's playbook position on one topic. You are given the standard position, the "
@@ -178,6 +178,13 @@ async def one(scope, document_id: str, version_id: str, text: str, position: dic
         row["classification"] = "outside"
         return row
     else:
+        # An option the position does not have. If the clause's figures match none of the firm's options, it is outside by
+        # rule (S3.7 found the model naming "fallback 1" for a position with none); otherwise a lawyer decides.
+        options = [position["standard"]] + [f["text"] for f in position["fallbacks"]]
+        reasons = [_differs(o, c["text"]) or _combines(o, c["text"]) for o in options]
+        if all(reasons):
+            row.update(classification="outside", matched=None, method="rule", reason=f"Outside the playbook: {reasons[0]}.")
+            return row
         row.update(classification="unclear", reason=f"The model named “{ans.get('match')}”, which this position does not have; a lawyer decides.")
         return row
     differs = _differs(chosen, c["text"]) or _combines(chosen, c["text"])

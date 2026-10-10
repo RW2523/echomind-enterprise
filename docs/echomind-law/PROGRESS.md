@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.7-diligence` |
-| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.6 merged (S3.3's manual Word check 🔒); S3.7 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.8-governance` |
+| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.7 merged (S3.3's manual Word check 🔒); S3.8 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0028` (Law edition only) |
+| Migrations | `0001`–`0029` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -552,6 +552,15 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **UI:** the matter's "Obligations" page. A document is read; items are grouped as overdue, dated, or running from an event; each shows its words, how its date was reached and its source; confirm, edit, done, dismiss, history. Journey 27; screenshot 40.
 - **Evaluation:** four blind held-out sets in turn (rules: 9/13, 5/10, 5/12; with the checked model: 10/12), none with a guessed date, every control clean. Golden G1–G13 with the model: 56/56, dates 15/15.
 
+### Session 3 (continued) — S3.7 Due diligence (DOC-06)
+- **Checklists (D-051):** fixed versions with sections, the words that name each expected document, and the questions to ask. A managing partner other than the author approves the hash; a preset is seeded. Firm page "Checklists" with an item editor and approval.
+- **Runs:** a background job (`diligence.run`). Documents are matched by their own title line; the missing list; rules ask change of control, assignment, termination and break, governing law against the expected law, liability, and renewal and expiry. Each issue quotes its sentence.
+- **Review:** preliminary until verified or dismissed with a reason; append-only trail; visibility per viewer; purge removes issues and names. Migration 0029. Matter page "Due diligence"; journey 28; screenshot 41.
+- **Evaluation:**
+  - DOC-06 held-out: 9/11, then 5/6 issues, every missing list right, no extra issues, controls clean.
+  - Obligations held-out 5: 4/6.
+  - Fixes found by these runs (a term from a literal date; an anchor cut to one word; "end this Agreement"; termination without a notice period) are made. The last three are to be measured on fresh held-out sets at S3.9.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -590,7 +599,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | DOC-03 | DONE for the pilot (court rules not yet read) | S3.4 | References resolved to exact clauses or flagged missing; quotations compared word for word with diffs; external authorities listed and always UNVERIFIED (P-009), impossible ones flagged; per-viewer targets; T07 golden 55/55, held-out 27/28 (D-048) |
 | DOC-04 | DONE for the pilot (undefined-term detection heuristic) | S3.5 | Definitions, numbering and references with offsets; corrections only through an approved redline; held-out 12/12 on the third blind set (D-049) |
 | DOC-05 | DONE for the pilot (reminders not sent) | S3.6 | Rules and checked model proposals with exact words; dates only from the document; confirmed by a lawyer; versioned edits; held-out 10/12 with the model (D-050) |
-| DOC-06 | MISSING | S3.7 | |
+| DOC-06 | DONE for the pilot | S3.7 | Approved checklists; data-room runs; missing list; quoted issues, preliminary until reviewed; held-out 9/11 and 5/6 issues, no extras (D-051) |
 | DOC-07 | MISSING | S3.8 | |
 | OPT-01 | MISSING | S4.1 | Needs business approval |
 | OPT-02 | PARTIAL (pre-existing) | S4.2 | MT model BLOCKED |
@@ -624,25 +633,22 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S3.7 Due diligence (DOC-06)** on `law/s3.7-diligence`, per IMPLEMENTATION_PLAN §5 and §7: `POST …/diligence/runs`, `GET …/diligence/runs/{id}`, `PATCH …/diligence/issues/{id}`, `ai.draft`, audit `diligence.*`. S3.6 is merged into `feature/echomind-law`.
+Start **S3.8 Governance checks (DOC-07)** on `law/s3.8-governance`, per IMPLEMENTATION_PLAN §7: cap table vs approvals, delegation matrix, policy vs bylaws, IP assignment; advisory findings; tests on fictional company fixtures. S3.7 is merged into `feature/echomind-law`.
 1. **Audit first:**
-   - the background job runner (S1.6);
-   - per-document checks already built, and their reports' shapes: playbook (S3.2), citations (S3.4), definitions (S3.5), obligations (S3.6);
-   - the document list and labels (S1.9).
-2. **Checklists:** firm checklist templates (corporate acquisition, commercial contracts, real estate), versioned and approved like playbooks. Each item has the documents expected ("articles of association", "board minutes approving …") and the questions to answer.
-3. **Data-room run (a background job):**
-   - each matter document is matched to checklist items by its title and content; unmatched items form the missing-document list;
-   - each matched document is checked with what exists (change of control, assignment and consent, termination, liability cap, governing law, expiry and renewal dates), each answer quoting its sentence;
-   - **preliminary** until a reviewer verifies it.
-4. **Issue register:** issues with severity, the source quote and document, a reviewer, and status (preliminary, verified, dismissed with a reason), with an append-only trail and a deal-level summary.
-5. **UI:** the matter's "Due diligence" page: start a run, progress, missing documents, the issue register, and review actions.
-6. **Tests:**
-   - a synthetic data room with seeded issues and missing documents (red first);
+   - the S3.7 runs and register (reuse the run job, issue register and review trail);
+   - the S2.3 fact reader (amounts, dates, entities);
+   - the S3.6 obligations reader;
+   - the S3.5 definitions.
+2. **Checks, rules first, each finding quoting both sources:**
+   - **Share capital:** shares issued in the register of members (or cap table) against the shares approved in board or shareholder resolutions and allowed by the articles. Issues without a resolution, totals that differ, classes the articles do not create.
+   - **Authority:** a delegation of authority (who may sign what, up to what amount) against contracts signed above a person's limit, or by someone not listed.
+   - **Policy vs constitution:** a policy that contradicts the articles or bylaws (a quorum, notice periods for meetings, the number of directors).
+   - **IP assignment:** each founder or key employee named in the company's documents has an IP assignment, or one is listed missing.
+   - All findings advisory and preliminary until a reviewer decides (S3.7 register).
+3. **UI:** a "Governance" tab beside Due diligence, or the checks as an item kind of the diligence run (decide after the audit), with both quotes side by side.
+4. **Tests:**
+   - a fictional company (articles, register, resolutions, delegation matrix, two contracts, a policy, an IP assignment), with planted errors, red first;
    - golden and held-out sets written blind;
-   - journey 28;
-   - D-051, run 28; merge.
-7. **Carry-overs:**
-   - S3.4 court rules;
-   - S3.5 undefined-term recall;
-   - S3.6 business days and recurring next dates;
-   - S3.3 manual Word check 🔒.
+   - journey 29;
+   - D-052, run 29; merge. Then S3.9 (the Phase 3 gate).
+5. **Carry-overs to S3.9** (fresh held-out sets): S3.4 court rules; S3.5 undefined-term recall; S3.6 business days, recurring next dates and the s3.6g fixes; S3.7c; S3.3 manual Word check 🔒.
