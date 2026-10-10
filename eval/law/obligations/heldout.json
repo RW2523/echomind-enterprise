@@ -1,54 +1,58 @@
 {
- "about": "S3.6 obligations and deadlines (DOC-05) — the HELD-OUT set (fifth): written for obligations-s3.6f (rules and checked model proposals) before it was run, never used to change it, run once per version. Fictional documents only. Earlier held-out sets are G5–G16 in golden.json.",
+ "about": "S3.6 obligations and deadlines (DOC-05) — the HELD-OUT set (sixth, Phase 3 gate): written for obligations-s3.6g (rules and checked model proposals) before it was run, never used to change it, run once per version. Fictional documents only. Earlier held-out sets are G5–G16 in golden.json and the fifth set (M) in the S3.7 reports.",
  "documents": [
   {
-   "id": "M1-consultancy-terms",
-   "name": "consultancy-terms.txt",
-   "text": "CONSULTANCY TERMS (fictional)\n\n1. Duration\n1.1 This Agreement runs for twenty-four (24) months from 1 March 2026.\n1.2 Either party may end this Agreement on two (2) months' notice.\n\n2. Fees\n2.1 The Client shall pay each invoice within fourteen (14) days.\n\n3. Records\n3.1 The Consultant shall keep records of its work for six (6) years after this Agreement ends.\n",
+   "id": "P-reseller",
+   "name": "reseller.txt",
+   "text": "RESELLER AGREEMENT (fictional)\n\nThis Agreement is between Quillon Software Ltd (the \"Vendor\") and Ardent Systems Ltd (the \"Reseller\").\n\n1. Term\n1.1 This Agreement commences on 1 February 2026 and continues for three (3) years.\n\n2. Reporting and payment\n2.1 The Reseller shall submit sales reports within ten (10) Business Days after the end of each calendar quarter.\n2.2 The Reseller must pay all invoices within thirty (30) days of the invoice date.\n\n3. Notices\n3.1 Each party shall give the other at least sixty (60) days' written notice of any change to its registered address.\n\n4. Termination\n4.1 The Vendor may terminate this Agreement immediately if the Reseller breaches clause 2.\n",
    "expect": [
     {
      "clause": "1.1",
      "kind": "expiry",
-     "due": "2028-02-29"
+     "due": "2029-01-31"
     },
     {
-     "clause": "1.2",
-     "kind": "termination",
-     "when": "two (2) months"
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "ten (10) Business Days"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "thirty (30) days"
+    },
+    {
+     "clause": "3.1",
+     "kind": "notice",
+     "when": "sixty (60) days"
+    },
+    {
+     "clause": "4.1",
+     "kind": "termination"
+    }
+   ]
+  },
+  {
+   "id": "P-guarantee",
+   "name": "guarantee.txt",
+   "text": "LOAN AND GUARANTEE (fictional)\n\nThis Agreement is between First Harbor Bank (the \"Lender\"), Quayside Foods Ltd (the \"Borrower\") and Quayside Holdings Ltd (the \"Guarantor\").\n\n1. Repayment\n1.1 The Borrower shall repay the Loan in eight equal quarterly instalments starting on 31 March 2027.\n\n2. Guarantee\n2.1 The Guarantor shall pay any amount demanded within five (5) Business Days of a written demand.\n",
+   "expect": [
+    {
+     "clause": "1.1",
+     "kind": "payment",
+     "due": "2027-03-31"
     },
     {
      "clause": "2.1",
      "kind": "payment",
-     "when": "fourteen (14) days"
-    },
-    {
-     "clause": "3.1",
-     "kind": "duty",
-     "when": "six (6) years after"
+     "when": "five (5) Business Days"
     }
    ]
   },
   {
-   "id": "M2-nda-us",
-   "name": "nda-us.txt",
-   "text": "NONDISCLOSURE AGREEMENT (fictional)\n\nThis Agreement is dated as of May 1, 2026 (the \"Effective Date\") between Halverson Labs, Inc. and Petrel Bio LLC.\n\n1. Term\n1.1 This Agreement shall expire two (2) years after the Effective Date.\n\n2. Compelled disclosure\n2.1 The Recipient shall notify the Discloser within ten (10) days of any compelled disclosure.\n",
-   "expect": [
-    {
-     "clause": "1.1",
-     "kind": "expiry",
-     "due": "2028-05-01"
-    },
-    {
-     "clause": "2.1",
-     "kind": "notification",
-     "when": "ten (10) days"
-    }
-   ]
-  },
-  {
-   "id": "M3-meeting-agenda-control",
-   "name": "agenda.txt",
-   "text": "AGENDA (fictional)\n\n1. Items\n1.1 The chair will open the meeting at 10:00.\n1.2 The finance director will present the quarterly figures.\n1.3 Any other business.\n",
+   "id": "P-minutes-control",
+   "name": "minutes.txt",
+   "text": "MINUTES (fictional)\n\n1. Discussion\n1.1 The board discussed the reseller agreement signed last year.\n1.2 The chair noted that payments were made on time.\n",
    "expect": []
   }
  ]

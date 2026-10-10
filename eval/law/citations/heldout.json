@@ -1,199 +1,155 @@
 {
- "about": "S3.4 citation checker, spec test T07 — the HELD-OUT set (second): written for citations-s3.4b before it was run, never used to change the checker, run once per checker version. Fictional documents only. The first held-out set is now G5–G7 in golden.json.",
+ "about": "S3.4 citation and quote checker (T07) — the HELD-OUT set (third, Phase 3 gate): written for citations-s3.4e before it was run, never used to change it, run once per version. Fictional documents only. Earlier held-out sets are G5–G10 in golden.json.",
  "scenarios": [
   {
-   "id": "N1-facility-advice-uk",
+   "id": "Q1-skeleton-uk",
    "sources": [
     {
-     "title": "Facility Agreement",
+     "title": "Supply Contract",
      "status": "executed",
-     "text": "FACILITY AGREEMENT (fictional)\n\n19. Representations\n19.1 Each Obligor makes the representations and warranties set out in this Clause 19 to each Finance Party.\n19.4 No Default is continuing or might reasonably be expected to result from the making of any Utilisation.\n\n22. Financial Covenants\n22.1 The Borrower shall ensure that Leverage in respect of any Relevant Period shall not exceed 3.50:1.\n22.2 The Borrower shall ensure that Interest Cover in respect of any Relevant Period shall not be less than 4.00:1.\n\n27. Events of Default\n27.1 An Obligor does not pay on the due date any amount payable pursuant to a Finance Document unless payment is made within three Business Days of its due date.\n\nSchedule 3 Conditions Precedent\n1. A copy of the constitutional documents of each Obligor.\n2. A copy of a resolution of the board of directors of each Obligor."
+     "text": "SUPPLY CONTRACT (fictional)\n\n7. Delivery\n7.2 The Supplier shall deliver the Goods within ten (10) Business Days of each order.\n\n9. Liability\n9.1 The Supplier shall not be liable for any indirect or consequential loss.\n\n15. Termination\n15.3 Either party may terminate this Contract on ninety (90) days' written notice.\n"
     }
    ],
    "citing": {
-    "title": "Advice letter on the facility",
-    "text": "ADVICE LETTER (fictional)\n\n1. Covenants\n1.1 Under Clause 22.1 of the Facility Agreement, the Borrower must ensure that ‘Leverage in respect of any Relevant Period shall not exceed 3.75:1’.\n1.2 Interest cover is tested under Clause 22.2 of the Facility Agreement, which requires that Interest Cover ‘shall not be less than 4.00:1’.\n1.3 There is no equity cure: Clause 22.5 of the Facility Agreement is silent on the point.\n\n2. Default\n2.1 Non-payment is an Event of Default under Clause 27.1 of the Facility Agreement, subject to a grace period: payment must be made ‘within three Business Days of its due date’.\n2.2 The board resolution required by paragraph 2 of Schedule 3 of the Facility Agreement has been delivered.\n\n3. Law\n3.1 The duty to promote the success of the company is in section 172 of the Companies Act 2006, and limitation runs under section 5 of the Limitation Act 1980.\n3.2 See also [2023] EWHC 101 (KB) and [1998] EWCA Civ 12."
+    "title": "Skeleton argument",
+    "text": "SKELETON ARGUMENT FOR THE CLAIMANT (fictional)\n\n1. The contract\n1.1 Under clause 15.3 of the Supply Contract, either party may terminate on notice.\n1.2 Clause 9.1 of the Supply Contract says that \"The Supplier shall not be liable for any indirect loss.\"\n1.3 The Defendant also relies on clause 21.4 of the Supply Contract, which does not help it.\n\n2. Procedure\n2.1 The application is made under CPR r. 3.4(2)(a) and, in the alternative, CPR Part 24.\n2.2 The Defendant cites CPR Part 112, which does not exist.\n\n3. Authorities\n3.1 See [2021] EWCA Civ 1405 and [2015] UKSC 36; and Hadley v Baxendale (1854) 9 Exch 341.\n3.2 The Defendant's reliance on [2007] UKSC 12 is misplaced.\n"
    },
    "expect": [
     {
-     "kind": "quote",
-     "text": "shall not exceed 3.75:1",
-     "status": "altered",
-     "clause": "22.1",
-     "in": "Facility Agreement"
+     "kind": "reference",
+     "text": "clause 15.3 of the Supply Contract",
+     "status": "resolved",
+     "clause": "15.3",
+     "in": "Supply Contract"
     },
     {
      "kind": "quote",
-     "text": "shall not be less than 4.00:1",
-     "status": "accurate",
-     "clause": "22.2",
-     "in": "Facility Agreement"
+     "text": "shall not be liable for any indirect loss",
+     "status": "altered",
+     "clause": "9.1",
+     "in": "Supply Contract"
     },
     {
      "kind": "reference",
-     "text": "Clause 22.5 of the Facility Agreement",
+     "text": "clause 21.4 of the Supply Contract",
      "status": "missing"
     },
     {
-     "kind": "quote",
-     "text": "within three Business Days of its due date",
-     "status": "accurate",
-     "clause": "27.1",
-     "in": "Facility Agreement"
+     "kind": "authority",
+     "text": "CPR r. 3.4(2)(a)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "CPR Part 24",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "CPR Part 112",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "[2021] EWCA Civ 1405",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2015] UKSC 36",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "(1854) 9 Exch 341",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2007] UKSC 12",
+     "malformed": true
+    }
+   ]
+  },
+  {
+   "id": "Q2-motion-us",
+   "sources": [],
+   "citing": {
+    "title": "Motion memorandum",
+    "text": "MEMORANDUM IN SUPPORT OF MOTION TO DISMISS (fictional)\n\n1. Introduction\n1.1 Defendant moves under Fed. R. Civ. P. 12(b)(6).\n\n2. Standard\n2.1 Expert evidence is governed by Fed. R. Evid. 702. Venue may be transferred under 28 U.S.C. § 1404(a).\n2.2 See Barlow v. Teague Freight, 621 F.3d 77 (2d Cir. 2010). Plaintiff cites Pell v. Ormond, 88 F.4th 501 (3d Cir. 2031) and Fed. R. App. P. 52.\n\n3. Argument\n3.1 As Section 2 explains, the standard is not met. Section 9 below addresses damages.\n"
+   },
+   "expect": [
+    {
+     "kind": "authority",
+     "text": "Fed. R. Civ. P. 12(b)(6)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Evid. 702",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "28 U.S.C. § 1404(a)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "621 F.3d 77 (2d Cir. 2010)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "88 F.4th 501 (3d Cir. 2031)",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. App. P. 52",
+     "malformed": true
     },
     {
      "kind": "reference",
-     "text": "paragraph 2 of Schedule 3",
+     "text": "Section 2",
      "status": "resolved",
      "clause": "2",
-     "in": "Facility Agreement"
-    },
-    {
-     "kind": "reference",
-     "text": "Schedule 3 of the Facility Agreement",
-     "status": "resolved",
-     "clause": "Schedule 3",
-     "in": "Facility Agreement"
-    },
-    {
-     "kind": "authority",
-     "text": "Companies Act 2006",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "Limitation Act 1980",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "[2023] EWHC 101 (KB)",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "[1998] EWCA Civ 12",
-     "malformed": true
-    }
-   ]
-  },
-  {
-   "id": "N2-purchase-agreement-internal-us",
-   "sources": [],
-   "citing": {
-    "title": "Master Purchase Agreement",
-    "text": "MASTER PURCHASE AGREEMENT (fictional)\n\nSection 1. Definitions\n1.1 \"Purchase Order\" has the meaning given in Section 3.2.\n\nSection 3. Orders\n3.1 Buyer may issue Purchase Orders in the form of Exhibit A.\n3.2 Each Purchase Order is binding once accepted under Section 3.3(b).\n3.3 Acceptance.\n(a) Seller shall accept or reject each Purchase Order within five (5) Business Days.\n(b) A Purchase Order not rejected within that period is deemed accepted.\n\nSection 7. Warranties\n7.1 Seller warrants the Goods against defects for twelve (12) months, as described in Exhibit C.\n7.2 The remedies in Sections 7.1 and 7.4 are Buyer's sole remedies.\n\nExhibit A Form of Purchase Order\n[Form omitted in this fictional example.]\n\nExhibit B Pricing\n[Pricing omitted in this fictional example.]"
-   },
-   "expect": [
-    {
-     "kind": "reference",
-     "text": "Section 3.2",
-     "status": "resolved",
-     "clause": "3.2",
      "in": "self"
     },
     {
      "kind": "reference",
-     "text": "Exhibit A",
-     "status": "resolved",
-     "clause": "Exhibit A",
-     "in": "self"
-    },
-    {
-     "kind": "reference",
-     "text": "Section 3.3(b)",
-     "status": "resolved",
-     "clause": "3.3(b)",
-     "in": "self"
-    },
-    {
-     "kind": "reference",
-     "text": "Exhibit C",
-     "status": "missing"
-    },
-    {
-     "kind": "reference",
-     "text": "Section 7.1",
-     "status": "resolved",
-     "clause": "7.1",
-     "in": "self"
-    },
-    {
-     "kind": "reference",
-     "text": "Section 7.4",
+     "text": "Section 9",
      "status": "missing"
     }
    ]
   },
   {
-   "id": "N3-litigation-memo-us",
-   "sources": [],
+   "id": "Q3-lease-note-clean",
+   "sources": [
+    {
+     "title": "Lease",
+     "status": "executed",
+     "text": "LEASE (fictional)\n\n4. Rent\n4.1 The Tenant shall pay the rent quarterly in advance.\n\n6. Repair\n6.1 The Tenant shall keep the premises in good and substantial repair.\n"
+    }
+   ],
    "citing": {
-    "title": "Litigation memo",
-    "text": "LITIGATION MEMO (fictional)\n\n1. Jurisdiction\n1.1 Removal is governed by 28 U.S.C. § 1441(a) and Fed. R. Civ. P. 81(c).\n\n2. Standard\n2.1 See Tolland v. Brixham Mills, 571 U.S. 402 (2014); Okafor v. Lakeshore Bank, 140 S. Ct. 1201 (2020); and Vance v. Mercer Logistics, 812 F. App'x 330 (3d Cir. 2020).\n2.2 California courts agree: Ruiz v. Halberd Corp., 61 Cal. Rptr. 3d 97 (Cal. Ct. App. 2007). But see Dunmore v. Stack, 288 So. 4th 15 (Fla. 2019) and Pryce v. Allard, 77 F.3d 501 (5th Cir. 2029).\n\n3. Europe\n3.1 Jurisdiction within the EU follows Regulation (EU) No 1215/2012; whistleblowers are protected by Directive (EU) 2019/1937.\n\n4. Summary\n4.1 As paragraph 2.1 above explains, the standard is settled. Paragraph 5.2 sets out next steps."
+    "title": "Note on the lease",
+    "text": "NOTE ON THE LEASE (fictional)\n\n1. Rent\n1.1 Clause 4.1 of the Lease provides that \"The Tenant shall pay the rent quarterly in advance.\"\n1.2 Clause 6.1 of the Lease requires the Tenant to keep the premises in \"good and substantial repair\".\n"
    },
    "expect": [
     {
-     "kind": "authority",
-     "text": "28 U.S.C. § 1441(a)",
-     "malformed": false
+     "kind": "quote",
+     "text": "The Tenant shall pay the rent quarterly in advance",
+     "status": "accurate",
+     "clause": "4.1",
+     "in": "Lease"
     },
     {
-     "kind": "authority",
-     "text": "Fed. R. Civ. P. 81(c)",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "571 U.S. 402 (2014)",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "140 S. Ct. 1201 (2020)",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "812 F. App'x 330 (3d Cir. 2020)",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "61 Cal. Rptr. 3d 97 (Cal. Ct. App. 2007)",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "288 So. 4th 15 (Fla. 2019)",
-     "malformed": true
-    },
-    {
-     "kind": "authority",
-     "text": "77 F.3d 501 (5th Cir. 2029)",
-     "malformed": true
-    },
-    {
-     "kind": "authority",
-     "text": "Regulation (EU) No 1215/2012",
-     "malformed": false
-    },
-    {
-     "kind": "authority",
-     "text": "Directive (EU) 2019/1937",
-     "malformed": false
-    },
-    {
-     "kind": "reference",
-     "text": "paragraph 2.1",
-     "status": "resolved",
-     "clause": "2.1",
-     "in": "self"
-    },
-    {
-     "kind": "reference",
-     "text": "Paragraph 5.2",
-     "status": "missing"
+     "kind": "quote",
+     "text": "good and substantial repair",
+     "status": "accurate",
+     "clause": "6.1",
+     "in": "Lease"
     }
    ]
   }

@@ -1,76 +1,70 @@
 {
- "about": "S3.5 defined terms and cross-references (DOC-04) — the HELD-OUT set (third): written for definitions-s3.5c before it was run, never used to change the checker, run once per checker version. Fictional documents only. Earlier held-out sets are G5–G10 in golden.json.",
+ "about": "S3.5 defined terms and cross-references (DOC-04) — the HELD-OUT set (fourth, Phase 3 gate): written for definitions-s3.5c before it was run, never used to change it, run once per version. Fictional documents only. Earlier held-out sets are G5–G10 in golden.json.",
  "documents": [
   {
-   "id": "P1-asset-purchase",
-   "name": "asset-purchase.txt",
-   "text": "ASSET PURCHASE AGREEMENT (fictional)\n\nThis Agreement is made between Larkspur Tools Ltd (the \"Seller\") and Moorcroft Engineering Ltd (the \"Buyer\").\n\n1. Definitions\n1.1 \"Assets\" means the plant, machinery and stock listed in Schedule 1.\n1.2 \"Completion\" means completion of the sale under clause 5.\n1.3 \"Excluded Liabilities\" means all liabilities of the Seller arising before Completion.\n1.4 \"Assets\" means the plant, machinery and stock listed in Schedule 1.\n\n2. Sale\n2.1 The Seller shall sell and the Buyer shall buy the assets free from encumbrances.\n2.2 The price is adjusted by reference to the Completion Accounts.\n\n4. Price\n4.1 The price is GBP 1,200,000 (fictional).\n4.2 The price is paid on Completion, as set out in Schedule 4.\n\n5. Completion\n5.1 Completion takes place on the date of this Agreement.\n\n5. Warranties\n5.1 The Seller warrants that it owns the Assets.\n\n6. General\n6.1 This Agreement is governed by English law.\n6.2 Each party bears its own costs.\n6.4 Clause 4.2 survives Completion.\n\nSchedule 1 The Assets\nMachinery at the Leeds works (fictional).\n",
+   "id": "R1-dpa",
+   "name": "dpa.txt",
+   "text": "DATA PROCESSING AGREEMENT (fictional)\n\nThis Agreement is between Lumen Clinics Ltd (the \"Controller\") and Corelogic Hosting Ltd (the \"Processor\").\n\n1. Definitions\n1.1 \"Personal Data\" means any information relating to an identified or identifiable person.\n1.2 \"Supervisory Authority\" means the data protection regulator.\n1.3 \"Breach\" means a personal data breach.\n\n2. Processing\n2.1 The Processor shall process Personal Data only on the Controller's instructions.\n2.2 The Processor shall not disclose personal data to any third party.\n2.3 The Processor may appoint a Sub-processor only with the Controller's consent, and each Sub-processor shall be bound by clause 6 (Audits).\n\n6. Security\n6.1 The Processor shall notify the Controller of any Breach without undue delay.\n\n7. Audits\n7.1 The Controller may audit the Processor once a year.\n\n9. Term\n9.1 This Agreement ends when the services end, subject to clause 14.\n",
    "expect": [
     {
-     "type": "duplicate",
-     "text": "Assets",
-     "conflicting": false
+     "type": "inconsistent",
+     "text": "personal data",
+     "fix": "Personal Data"
     },
     {
      "type": "unused",
-     "text": "Excluded Liabilities"
-    },
-    {
-     "type": "inconsistent",
-     "text": "assets",
-     "fix": "Assets"
+     "text": "Supervisory Authority"
     },
     {
      "type": "undefined",
-     "text": "Completion Accounts"
-    },
-    {
-     "type": "broken",
-     "text": "Schedule 4"
-    },
-    {
-     "type": "repeat",
-     "message": "Clause 5 appears twice"
-    },
-    {
-     "type": "gap",
-     "message": "Clause 3 is missing"
-    },
-    {
-     "type": "gap",
-     "message": "Clause 6.3 is missing"
-    }
-   ]
-  },
-  {
-   "id": "P2-lease-markdown",
-   "name": "Lease.md",
-   "text": "# LEASE (fictional)\n\nThis Lease is granted by Fairholme Properties Ltd (the \"Landlord\") to Pell & Daughters LLP (the \"Tenant\").\n\n## 1. Definitions\n\n1.1 \"Premises\" means the second floor of Fairholme House (fictional).\n\n1.2 \"Term\" means ten years from the date of this Lease.\n\n1.3 \"Insured Risks\" means fire, flood and storm.\n\n## 2. Rent\n\n2.1 The Tenant shall pay the rent quarterly in advance throughout the term of this Lease.\n\n## 7. Alienation\n\n7.1 The Tenant shall not assign the Premises without consent.\n\n7.2 Clause 7 (Insurance) does not apply to an assignment to a group company.\n\n## 8. Insurance\n\n8.1 The Landlord shall insure the Premises against the Insured Risks.\n\n8.2 The Tenant shall comply with clause 9.4.\n",
-   "expect": [
-    {
-     "type": "inconsistent",
-     "text": "term",
-     "fix": "Term"
+     "text": "Sub-processor"
     },
     {
      "type": "outdated",
-     "text": "Clause 7 (Insurance)",
-     "fix": "Clause 7 (Alienation)"
+     "text": "clause 6 (Audits)",
+     "fix": "clause 6 (Security)"
     },
     {
      "type": "broken",
-     "text": "clause 9.4"
+     "text": "clause 14"
     },
     {
      "type": "gap",
-     "message": "Clauses 3 to 6 are missing"
+     "message": "Clauses 3 to 5 are missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 8 is missing"
     }
    ]
   },
   {
-   "id": "P3-clean-nda-control",
-   "name": "confidentiality.txt",
-   "text": "CONFIDENTIALITY AGREEMENT (fictional)\n\nThis Agreement is made between Wrenfield Partners LLP (\"Wrenfield\") and Ostrava Glass AB (\"Ostrava\"), each a \"Party\".\n\n1. Definitions\n1.1 \"Information\" means information that a Party discloses to the other Party in connection with the Project.\n1.2 \"Project\" means the proposed joint venture between the Parties.\n1.3 \"Representatives\" has the meaning given in clause 2.2.\n\n2. Use\n2.1 Each Party shall use the Information only for the Project.\n2.2 A Party may share Information with its directors and advisers (its \"Representatives\").\n2.3 A Party is responsible for its Representatives.\n\n3. Return\n3.1 On request, each Party shall return the Information under clause 2.1.\n",
+   "id": "R2-sha",
+   "name": "sha.txt",
+   "text": "SHAREHOLDERS' AGREEMENT (fictional)\n\nThis Agreement is between the shareholders listed in the Schedule (each a \"Shareholder\") and Pike Robotics Ltd (the \"Company\").\n\n1. Board\n1.1 Each Shareholder may appoint one director of the Company.\n\n4. Consents\n4.1 The Company shall not do any of the following without Investor Consent:\n(a) issue shares;\n(b) incur debt;\n(d) change its business.\n4.2 Investor Consent may be given in writing.\n4.2 The Shareholders shall vote to give effect to this Agreement.\n\nSchedule Shareholders\nThe shareholders and their holdings (fictional).\n",
+   "expect": [
+    {
+     "type": "undefined",
+     "text": "Investor Consent"
+    },
+    {
+     "type": "repeat",
+     "message": "Clause 4.2 appears twice"
+    },
+    {
+     "type": "gap",
+     "message": "Item (c) of clause 4.1 is missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 2 and 3 are missing"
+    }
+   ]
+  },
+  {
+   "id": "R3-clean-control",
+   "name": "consultancy.txt",
+   "text": "CONSULTANCY AGREEMENT (fictional)\n\nThis Agreement is between Fenwick Advisory Ltd (the \"Consultant\") and Orrin Logistics plc (the \"Client\").\n\n1. Definitions\n1.1 \"Services\" means the review described in clause 2.\n1.2 \"Fee\" means GBP 900 per day (fictional).\n\n2. Services\n2.1 The Consultant shall perform the Services with reasonable skill and care.\n2.2 The Client shall pay the Fee monthly.\n\n3. Term\n3.1 Clause 2 continues until the Services are complete.\n",
    "expect": []
   }
  ]
