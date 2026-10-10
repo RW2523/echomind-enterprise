@@ -72,7 +72,7 @@ Ratings: **Conformant** · **Partial** — the substance exists but the record o
 | 8.2.4 | Changes to requirements | Gap | No mechanism | G-15 |
 | 8.3.1–8.3.2 | Design planning | Partial | Design happens and is documented in `docs/`, but stages, reviews and acceptance criteria are not planned in advance | G-16 |
 | 8.3.3 | Design inputs | Partial | Implicit in the code and prompts (grounding, abstention, isolation are clearly deliberate design inputs) but never written as inputs | G-16 |
-| 8.3.4 | Design controls | **Partial — strong substance** | Verification genuinely happens: 78 unit test functions, the 52-question golden evaluation, the E1–E10 harness, and manual verification recorded in commit bodies. **Design reviews now recorded (2026-10-07): 8 reviews, 40 actions in `REG-10`.** Before that, no design review records existed. | G-16 |
+| 8.3.4 | Design controls | **Partial — strong substance** | Verification genuinely happens: 78 unit test functions, the 52-question golden evaluation, the E1–E10 harness, and manual verification recorded in commit bodies. **Design reviews now recorded: 17 reviews (9 client and design reviews from 2026-01, 8 engineering reviews), 55 actions in `REG-10`.** Before that, no design review records existed. | G-16 |
 | 8.3.5 | Design outputs | Conformant | Source, architecture documents in `docs/`, `PROTOCOL.md`, user manual | — |
 | 8.3.6 | Design changes | Partial | Every change is in Git with rationale; no impact assessment against requirements, because requirements are not recorded | G-16 |
 | 8.4.1 | Control of external providers | Partial | Controlled in practice by pinning and offline pre-caching; **no selection or evaluation criteria**, no re-evaluation | G-05 |
@@ -129,7 +129,7 @@ differ the operational consequence wins.
 | G-10 | Objectives lack current baselines — re-measure the evaluation against HEAD | 6.2, 9.1.1 |
 | G-12 | Measurement not scheduled and no trend data yet. Retention of results is now in place. | 9.1.1, 9.1.3 |
 | G-15 | No customer communication, requirements-review or satisfaction mechanism | 8.2, 9.1.2 |
-| G-16 | *Partly closed 2026-10-07* — review log of 8 deliverable reviews with 40 actions (`REG-10`, EM26-18) and 31 non-functional requirements with targets (`REG-09`, EM26-17); requirement-to-test traceability still partial | 8.3 |
+| G-16 | *Partly closed 2026-10-07* — review log of 17 deliverable reviews — 9 client and design, 8 engineering — with 55 actions (`REG-10`, EM26-18) and 31 non-functional requirements with targets (`REG-09`, EM26-17); requirement-to-test traceability still partial | 8.3 |
 | ~~G-18~~ | **CLOSED** — `REG-07` change register and SOP-06 §6 significance criteria | 8.5.6 |
 | G-19 | No nonconformity disposition/concession process; no customer-notification procedure; effectiveness verification inconsistent | 8.7, 10.2 |
 | G-13 | *Partly closed 2026-10-07* — competence matrix in `REG-05`; training records to accumulate | 7.2 |

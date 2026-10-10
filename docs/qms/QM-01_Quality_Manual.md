@@ -279,7 +279,7 @@ docs/qms/
 - **Releases identified and traceable** — v1.4.0 and v1.4.1; every running service reports its version and commit.
 - **Verification enforced** — CI runs the unit suites (backend 50, voice 131 cases) and the type-check on every push; a 13-case acceptance suite was executed four times on 2026-10-06; all executable cases pass on v1.4.1.
 - **Nonconformities handled end to end** — 16 recorded in REG-04, 11 closed with effectiveness verified, 5 open with owners and actions.
-- **Review feedback actioned** — 8 reviews, 40 actions, 34 closed with evidence (EM26-18).
+- **Review feedback actioned** — 17 reviews (9 client and design, 8 engineering and quality), 55 actions, 48 closed with evidence (EM26-18, REG-10).
 - **Non-functional requirements recorded and monitored** — 31 NFRs with targets (EM26-17).
 - **External monitoring** — the public instance's login is checked from outside every six hours; runtime security settings are drift-checked.
 - **Engineering evidence** — architecture documentation in `docs/`, a 1,257-line user manual, the QASC 2026 paper and its reproducible harness.
