@@ -25,7 +25,7 @@ from ..citations.check import _GENERIC
 from ..documents import numbering
 from ..documents.structure import _MEANS, _PAREN
 
-VERSION = "definitions-s3.5"
+VERSION = "definitions-s3.5b"
 # Words a defined term usually ends with: a capitalised phrase ending with one of them reads as a defined term.
 HEADS = {"date", "period", "day", "fee", "price", "charge", "information", "data", "service", "term", "notice", "event", "order",
          "product", "deliverable", "material", "right", "loss", "claim", "control", "default", "amount", "level", "credit", "plan",
@@ -176,6 +176,14 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
             at = text.index(seg, pos)
             segments.append((at, re.sub(r"['’]s$", "", seg)))
             pos = at + len(seg)
+    # A single capitalised word reads as a term when it follows "the", "a" or a number at least twice
+    # ("five Directors", "a Director"), and is not used as a name in front of a noun ("the Harrowgate platform").
+    singles: dict[str, int] = {}
+    for a0, seg in segments:
+        w = seg.split()[-1] if seg.split() else ""
+        if len(seg.split()) == 1 or seg.split()[0] in _LEADING:
+            if _single_term(text, a0 + seg.rfind(w), w):
+                singles[_singular(w)] = singles.get(_singular(w), 0) + 1
     for a, phrase0 in segments:
         words = phrase0.split()
         while words and words[0] in _LEADING:
@@ -188,7 +196,10 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
         b = a + (span.end() if span else len(phrase))
         last = words[-1].rstrip("’'s").casefold() if words[-1].endswith(("’s", "'s")) else words[-1].casefold()
         base = last[:-1] if last.endswith("s") and last[:-1] in HEADS else last
-        if base not in HEADS and last not in HEADS:
+        starts_defined = (len(words) > 1 and any(words[0] in _forms(t) for t in defined)       # "Shareholder Consent"
+                          and all(w[:1].isupper() for w in words) and words[-1] not in ("Clause", "Section", "Schedule", "Article", "Paragraph"))
+        repeated = len(words) == 1 and singles.get(_singular(words[0]), 0) >= 2 and words[0] not in _NAMES
+        if base not in HEADS and last not in HEADS and not starts_defined and not repeated:
             continue
         if any(COMPANY.match(w) for w in words) or re.match(r"[ \t]+(?:Ltd|Limited|Inc|LLC|LLP|plc|AB|GmbH)\b", text[b:b + 10]):
             continue
@@ -201,14 +212,15 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
             continue                                        # a heading named in a reference: "clause 9 (Liability)"
         if phrase in defined or any(phrase in _forms(t) for t in defined) or any(p in defined for p in _forms(phrase)):
             continue
-        if len(words) == 1 and not re.search(rf"\b{_DETERMINERS}[ \t]+$", text[max(0, a - 12):a]):
-            continue                                        # one capitalised word only reads as a term after "the"…
+        if len(words) == 1 and not _single_term(text, a, words[0]):
+            continue                                        # one capitalised word only reads as a term after "the", "a", "five"…
         if _sentence_start(text, a) and len(words) == 1:
             continue
-        if phrase in seen_undefined:
-            seen_undefined[phrase]["places"].append({"start": a, "end": b})
+        key = _singular(phrase) if len(words) == 1 else phrase
+        if key in seen_undefined:
+            seen_undefined[key]["places"].append({"start": a, "end": b})
             continue
-        seen_undefined[phrase] = add("definition", "undefined", "medium", phrase, a, b,
+        seen_undefined[key] = add("definition", "undefined", "medium", phrase, a, b,
                                      f"“{phrase}” reads as a defined term but is not defined in this document.",
                                      places=[{"start": a, "end": b}])
 
@@ -223,8 +235,36 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
     return findings
 
 
+_QUANT = re.compile(r"(?i)\b(?:the|a|an|any|each|all|such|that|those|these|its|their|every|no|one|two|three|four|five|six|seven|eight|nine|"
+                    r"ten|several|more|other|\d+)[ \t]+$")
+_FOLLOW = re.compile(r"[ \t]+(?:shall|may|must|will|is|are|was|were|has|have|does|do|agrees?|warrants?|undertakes?|confirms?|can|cannot|"
+                     r"should|would|means|with|of|to|for|in|on|at|by|from|under|and|or|but|as|if|who|which|that|whose|unless|until|"
+                     r"before|after|within|without|between|against|during|upon|into|than)\b|\s*[.,;:)]|\s*$|[ \t]+[A-Z0-9(]")
+_NAMES = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "January", "February", "March", "April", "May",
+          "June", "July", "August", "September", "October", "November", "December", "England", "Wales", "Scotland", "Ireland", "Europe",
+          "Delaware", "Sweden", "Court", "Crown", "Government", "Parliament", "Internet", "State", "States", "Kingdom", "Union"}
+
+
+def _to_roman(n: int) -> str:
+    out = ""
+    for v, r in ((100, "C"), (90, "XC"), (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")):
+        while n >= v:
+            out, n = out + r, n - v
+    return out
+
+
+def _singular(w: str) -> str:
+    return w[:-1] if w.endswith("s") and not w.endswith("ss") else w
+
+
+def _single_term(text: str, a: int, w: str) -> bool:
+    """A capitalised word after "the", "a" or a number, standing as a noun (not "the Harrowgate platform")."""
+    return bool(_QUANT.search(text[max(0, a - 14):a])) and bool(_FOLLOW.match(text, a + len(w))) and w not in _NAMES
+
+
 def _defined_here(text: str, a: int, b: int) -> bool:
-    return bool(re.match(r"\s*(?:\)|\"|”|means\b)", text[b:b + 8]))
+    """The name a definition is made from: '"X" means', or 'the Building Regulations (the "Regulations")'."""
+    return bool(re.match(r"\s*(?:\)|\"|”|means\b|\((?:the\s+|each\s+a\s+|together\s+the\s+)?[\"“])", text[b:b + 24]))
 
 
 def _sentence_start(text: str, a: int) -> bool:
@@ -292,6 +332,9 @@ def numbering_findings(clauses: list[dict]) -> list[dict]:
         box = next((b for b in boxes if b["start"] < c["start"] < max(b["end"], b["start"] + 1)), None)
         return box["number"] if box else ""
     groups: dict[tuple[str, str, str], list[dict]] = {}       # (attachment, parent number, kind) → children in order
+    articles = [c for c in clauses if re.fullmatch(r"Article (\d{1,3}|[IVXLC]+)", c["number"])]
+    for c in articles:
+        groups.setdefault(("", "", "Article"), []).append({**c, "_val": c["number"].split()[1]})
     for c in clauses:
         if numbering.ATTACHMENT.match(c["number"]):
             kind_, _, val = c["number"].partition(" ")
@@ -310,6 +353,8 @@ def numbering_findings(clauses: list[dict]) -> list[dict]:
             groups.setdefault((box, parent, "num"), []).append({**c, "_val": str(nums[-1])})
     for (box, parent, kind_), kids in groups.items():
         kids = sorted(kids, key=lambda c: c["start"])
+        if articles and kind_ == "num" and not parent and not box and all(k.get("implied") for k in kids):
+            continue                                       # the articles' own numbers, checked as articles
         vals = [k["_val"] for k in kids]
         real = [k for k in kids if not k.get("implied")]
         for v in sorted({k["_val"] for k in real}):
@@ -322,18 +367,22 @@ def numbering_findings(clauses: list[dict]) -> list[dict]:
                             "fixes": []})
         prefix = f"{parent}." if parent and kind_ == "num" else ""
         owner = box or (f"clause {parent}" if parent else "")
-        if kind_ in ("num", "Schedule", "Annex", "Exhibit", "Appendix"):
+        if kind_ in ("num", "Schedule", "Annex", "Exhibit", "Appendix", "Article"):
             seq = []
             for k in kids:
                 if k["_val"].isdigit():
                     seq.append((int(k["_val"]), k))
+                elif kind_ == "Article" and re.fullmatch(r"[IVXLC]+", k["_val"]):
+                    from ..documents.structure import _roman_value
+                    seq.append((_roman_value(k["_val"].lower()), k))
                 elif len(k["_val"]) == 1 and k["_val"].isalpha():
                     seq.append((ord(k["_val"].upper()) - 64, k))
             seq = sorted({v: k for v, k in seq}.items())
             for (a, ka), (b, kb) in zip(seq, seq[1:]):
                 if b > a + 1:
-                    letters = not ka["_val"].isdigit()
-                    miss = [chr(64 + x) if letters else str(x) for x in range(a + 1, b)]
+                    romans = kind_ == "Article" and not ka["_val"].isdigit()
+                    letters = not ka["_val"].isdigit() and not romans
+                    miss = [_to_roman(x) if romans else chr(64 + x) if letters else str(x) for x in range(a + 1, b)]
                     if kind_ == "num":
                         msg = _seq_msg(prefix, miss, ka["_val"], kb["_val"], False, box or "")
                     else:

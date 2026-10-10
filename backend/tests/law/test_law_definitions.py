@@ -259,3 +259,20 @@ def test_a_clean_agreement_has_no_findings():
             for c in structure.clauses(x)]
     assert "2.2(c)(i)" in [r["number"] for r in rows]
     assert checkmod.analyse(text, rows) == []
+
+
+def test_s35b_undefined_terms_by_a_defined_first_word_or_repeated_use_and_articles_named_as_articles():
+    """From held-out run 1 (definitions-s3.5): "Shareholder Consent" and "Directors" were missed, and a missing
+    Article 5 was reported as "Clause 5"."""
+    from app.legal.definitions import check as checkmod
+    from app.legal.documents import extract, structure
+    text = ("AGREEMENT (fictional)\n\nThis Agreement is between Tidewater Holdings Ltd (the \"Company\") and each shareholder "
+            "(each a \"Shareholder\").\n\nArticle 1 Board\n1.1 The Board shall consist of up to five Directors.\n"
+            "1.2 A Shareholder may appoint a Director with Shareholder Consent.\n1.3 The Harrowgate platform is used for votes.\n"
+            "1.4 Notice is given on the Harrowgate platform.\n\nArticle 2 Shares\n2.1 The Company shall issue shares.\n\nArticle 4 Exit\n4.1 None.\n")
+    x = extract.extract("a.txt", text.encode())
+    rows = [{"number": c.number, "heading": c.heading, "level": c.level, "parent": c.parent, "start": c.start, "end": c.end}
+            for c in structure.clauses(x)]
+    out = checkmod.analyse(text, rows)
+    assert sorted(f["text"] for f in out if f["type"] == "undefined") == ["Directors", "Shareholder Consent"]
+    assert [f["message"] for f in out if f["type"] == "gap"] == ["Article 3 is missing: the articles go from 2 to 4."]

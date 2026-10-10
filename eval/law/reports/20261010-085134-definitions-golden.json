@@ -1,0 +1,254 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "e26268c+changes",
+  "time": "20261010-085134",
+  "prompt_version": "definitions-s3.5b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 4,
+  "planted": 26,
+  "caught": "26/26",
+  "fixes_right": "4/4",
+  "false_findings": 1,
+  "controls_clean": "1/1",
+  "by_type": {
+   "broken": "6/6",
+   "duplicate": "1/1",
+   "gap": "9/9",
+   "inconsistent": "3/3",
+   "outdated": "1/1",
+   "repeat": "1/1",
+   "undefined": "3/3",
+   "unused": "2/2"
+  },
+  "ms_per_check": 20
+ },
+ "documents": [
+  {
+   "id": "G1-services-planted",
+   "ms": 18,
+   "control": false,
+   "lines": [
+    {
+     "type": "duplicate",
+     "text": "Fees",
+     "conflicting": true,
+     "found": true,
+     "fix_ok": null,
+     "got": "“Fees” is defined twice, with different meanings."
+    },
+    {
+     "type": "unused",
+     "text": "Territory",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Territory” is defined but never used."
+    },
+    {
+     "type": "undefined",
+     "text": "Commencement Date",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Commencement Date” reads as a defined term but is not defined in this document."
+    },
+    {
+     "type": "inconsistent",
+     "text": "fees",
+     "fix": "Fees",
+     "found": true,
+     "fix_ok": true,
+     "got": "“fees” is used where the defined term is “Fees”."
+    },
+    {
+     "type": "inconsistent",
+     "text": "confidential information",
+     "fix": "Confidential Information",
+     "found": true,
+     "fix_ok": true,
+     "got": "“confidential information” is used where the defined term is “Confidential Information”."
+    },
+    {
+     "type": "outdated",
+     "text": "clause 4 (Liability)",
+     "fix": "clause 4 (Confidentiality)",
+     "found": true,
+     "fix_ok": true,
+     "got": "Clause 4 is headed Confidentiality, not Liability."
+    },
+    {
+     "type": "broken",
+     "text": "clause 12",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no clause 12."
+    },
+    {
+     "type": "gap",
+     "message": "Clause 3 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 3 is missing: the numbering goes from 2 to 4."
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 5 to 8 are missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clauses 5 to 8 are missing: the numbering goes from 4 to 9."
+    },
+    {
+     "type": "gap",
+     "message": "Clause 4.2 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 4.2 is missing: the numbering goes from 4.1 to 4.3."
+    },
+    {
+     "type": "gap",
+     "message": "Item (b) of clause 9.2 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Item (b) of clause 9.2 is missing: the items go from (a) to (c)."
+    }
+   ],
+   "extra": []
+  },
+  {
+   "id": "G2-demo-msa-markdown",
+   "ms": 22,
+   "control": false,
+   "lines": [
+    {
+     "type": "broken",
+     "text": "Schedule 1",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no Schedule 1."
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 2",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no Schedule 2."
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 4",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no Schedule 4."
+    },
+    {
+     "type": "undefined",
+     "text": "Confidential Information",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Confidential Information” reads as a defined term but is not defined in this document."
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 10 and 11 are missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clauses 10 and 11 are missing: the numbering goes from 9 to 12."
+    },
+    {
+     "type": "gap",
+     "message": "Clause 13 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 13 is missing: the numbering goes from 12 to 14."
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 15 to 20 are missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clauses 15 to 20 are missing: the numbering goes from 14 to 21."
+    }
+   ],
+   "extra": []
+  },
+  {
+   "id": "G3-lease-interpretation-at-end",
+   "ms": 25,
+   "control": false,
+   "lines": [
+    {
+     "type": "undefined",
+     "text": "Rent Commencement Date",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Rent Commencement Date” reads as a defined term but is not defined in this document."
+    },
+    {
+     "type": "inconsistent",
+     "text": "premises",
+     "fix": "Premises",
+     "found": true,
+     "fix_ok": true,
+     "got": "“premises” is used where the defined term is “Premises”."
+    },
+    {
+     "type": "unused",
+     "text": "Regulations",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Regulations” is defined but never used."
+    },
+    {
+     "type": "broken",
+     "text": "clause 2.5 (Alterations)",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no clause 2.5."
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 3",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no Schedule 3."
+    },
+    {
+     "type": "repeat",
+     "message": "Clause 6.2 appears twice",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 6.2 appears twice."
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 4 and 5 are missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clauses 4 and 5 are missing: the numbering goes from 3 to 6."
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 7 to 19 are missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clauses 7 to 19 are missing: the numbering goes from 6 to 20."
+    }
+   ],
+   "extra": [
+    {
+     "type": "undefined",
+     "text": "Building Regulations",
+     "message": "“Building Regulations” reads as a defined term but is not defined in this document."
+    }
+   ]
+  },
+  {
+   "id": "G4-clean-nda-control",
+   "ms": 15,
+   "control": true,
+   "lines": [],
+   "extra": []
+  }
+ ]
+}
