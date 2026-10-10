@@ -1,0 +1,78 @@
+{
+ "note": "Fictional evaluation corpus for EchoMind Law (S2.2). Every party and fact is invented.",
+ "documents": [
+  {
+   "key": "msa",
+   "file": "corpus/msa-v1-signed.md",
+   "title": "Harrowgate MSA",
+   "kind": "contract",
+   "status": "executed",
+   "matter": "eval"
+  },
+  {
+   "key": "msa",
+   "file": "corpus/msa-v2-draft.md",
+   "title": "Harrowgate MSA",
+   "kind": "contract",
+   "status": "draft",
+   "matter": "eval",
+   "version_of": "msa"
+  },
+  {
+   "key": "nda",
+   "file": "corpus/nda.md",
+   "title": "Northbridge NDA",
+   "kind": "contract",
+   "status": "executed",
+   "matter": "eval"
+  },
+  {
+   "key": "lease",
+   "file": "corpus/lease.md",
+   "title": "Unit 7 Lease",
+   "kind": "contract",
+   "status": "executed",
+   "matter": "eval"
+  },
+  {
+   "key": "minutes",
+   "file": "corpus/board-minutes.md",
+   "title": "Board minutes 14 May 2026",
+   "kind": "memo",
+   "status": "final",
+   "matter": "eval"
+  },
+  {
+   "key": "engagement",
+   "file": "corpus/engagement-letter.md",
+   "title": "Calder & Wynne engagement letter",
+   "kind": "correspondence",
+   "status": "executed",
+   "matter": "eval"
+  },
+  {
+   "key": "side_letter",
+   "file": "corpus/side-letter.md",
+   "title": "Service credit side letter",
+   "kind": "contract",
+   "status": "executed",
+   "matter": "eval"
+  },
+  {
+   "key": "coc_letter",
+   "file": "corpus/change-of-control-letter.md",
+   "title": "Change of control notice",
+   "kind": "correspondence",
+   "status": "received",
+   "matter": "eval"
+  },
+  {
+   "key": "beta",
+   "file": "corpus/forbidden-beta-settlement.md",
+   "title": "Beta settlement memo",
+   "kind": "memo",
+   "status": "final",
+   "matter": "forbidden"
+  }
+ ]
+}

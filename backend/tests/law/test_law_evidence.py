@@ -166,6 +166,23 @@ def test_abstentions_say_why(ev):
     assert done["status"] == "abstained" and done["abstention_reason"] == "model"
 
 
+def test_a_supported_answer_that_also_says_the_abstention_sentence_is_an_answer(ev):
+    from app.legal.research import prompt
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    ev["llm"].answer = f'Liability is capped at USD 250,000 [{cap}: "capped at USD 250,000"].\n\n{prompt.ABSTAIN}'
+    done = ask(alice, ev["mid"], "What is the liability cap?")[-1]
+    assert done["status"] == "answered" and done["abstained"] is False
+
+
+def test_an_unsupported_answer_saying_the_documents_do_not_cover_it_is_an_abstention(ev):
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "The documents do not specify Maria Ek's salary."
+    done = ask(alice, ev["mid"], "What is the liability cap?")[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "model"
+
+
 # ── The legacy defects, as guarantees in Law ─────────────────────────────────────
 def test_r4_a_two_word_legal_term_is_researched_not_treated_as_small_talk(ev):
     alice = as_user(ev, "alice")

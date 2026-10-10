@@ -170,7 +170,19 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             yield _event({"type": "paragraph", "index": len(shown) - 1, **para})
             yield _event({"type": "chunk", "text": ("\n\n" if len(shown) > 1 else "") + para["text"]})
         text = "\n\n".join(shown)
-        abstained = prompt.is_abstention(text)
+        # An answer that supports nothing and says the documents do not cover the question is an
+        # abstention in other words (S2.2, D-038).
+        # Abstention in other words (S2.2, D-038):
+        # - nothing is supported, and the text says the documents do not answer; or
+        # - the answer opens by saying the documents do not cover the question, and every passage it
+        #   cites is only weakly related to the question.
+        # A supported answer that also says the abstention sentence is still an answer.
+        nothing = not any(c.state in ("supported", "unquoted") for c in claims)
+        cited_scores = [passages[c.n - 1].get("score") for claim in claims for c in claim.citations
+                        if 1 <= c.n <= len(passages) and passages[c.n - 1].get("score") is not None]
+        weak = not cited_scores or max(float(x) for x in cited_scores) < settings.LEGAL_ABSTAIN_WEAK_SCORE
+        abstained = (nothing and (prompt.is_abstention(text) or prompt.says_not_stated(text))) or \
+            (prompt.says_not_stated(text) and weak)
         numbers = prompt.cited_numbers(text, len(sources))
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)

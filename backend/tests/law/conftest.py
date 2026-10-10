@@ -203,9 +203,13 @@ async def overlap_rerank(query, hits, top_k):
 @pytest.fixture
 def docs(world, monkeypatch):
     """The T01 world with the test embedder and reranker, plus helpers to import and index."""
+    from app.core.config import settings
     from app.legal.retrieval import embedder, search
     monkeypatch.setattr(embedder, "_override", HashEmbedder())
     monkeypatch.setattr(search, "rerank", overlap_rerank)
+    # The floor belongs to the reranker it was calibrated for: 0.0 for this stand-in (under half the query's
+    # words = below zero); the real cross-encoder's default was calibrated in S2.2 (D-038).
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", 0.0)
     return world
 
 
