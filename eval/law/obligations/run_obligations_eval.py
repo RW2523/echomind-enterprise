@@ -90,8 +90,10 @@ def run(args) -> int:
             lines.append({**e, "found": o is not None, "when_ok": when_ok, "date_ok": date_ok, "got_due": o["due_date"] if o else None,
                           "got_when": o["when"] if o else None, "status": o["status"] if o else None})
         extra = [{"clause": o["clause"], "kind": o["kind"], "action": o["action"], "due": o["due_date"]} for o in obs if o["id"] not in used]
+        outputs = [{"clause": o["clause"], "kind": o["kind"], "party": o["party"], "action": o["action"], "when": o["when"], "due_date": o["due_date"],
+                    "due_note": o["due_note"], "source": o["source"], "quote": (o.get("evidence") or {}).get("quote")} for o in obs]   # for the lawyer packet
         results.append({"id": d["id"], "ms": ms, "control": not d["expect"], "lines": lines, "extra": extra,
-                        "all_proposed": all(o["status"] == "proposed" for o in obs)})
+                        "all_proposed": all(o["status"] == "proposed" for o in obs), "outputs": outputs})
     allx = [x for r in results for x in r["lines"]]
     dated = [x for x in allx if x.get("due")]
     # a date given where the document fixes none, or a different date from the one it fixes (an empty date is a miss, not a guess)
@@ -109,9 +111,14 @@ def run(args) -> int:
     stamp = time.strftime("%Y%m%d-%H%M%S")
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     dirty = bool(subprocess.run(["git", "status", "--porcelain", "--", ".", ":!eval/law/reports"], cwd=ROOT, capture_output=True, text=True).stdout.strip())
-    meta = {"set": args.set, "commit": commit + ("+changes" if dirty else ""), "time": stamp, "prompt_version": ex.VERSION, "model": "none (rules only)"}
+    from app.core.config import settings
+    from app.legal.obligations import model as om
+    # the checked model pass runs after the rules when LEGAL_OBLIGATIONS_MODEL is on (the default; S3.6)
+    meta = {"set": args.set, "commit": commit + ("+changes" if dirty else ""), "time": stamp, "prompt_version": ex.VERSION,
+            "model": args.model if settings.LEGAL_OBLIGATIONS_MODEL else "none (rules only)",
+            "model_version": om.VERSION if settings.LEGAL_OBLIGATIONS_MODEL else None}
     (out / f"{stamp}-obligations-{args.set}.json").write_text(json.dumps({"meta": meta, "summary": summary, "documents": results}, indent=1, ensure_ascii=False))
-    md = [f"# EchoMind Law obligations evaluation — {args.set}", "", f"- Commit: `{meta['commit']}`", f"- Rules: `{ex.VERSION}`", f"- Run: {stamp}", "",
+    md = [f"# EchoMind Law obligations evaluation — {args.set}", "", f"- Commit: `{meta['commit']}`", f"- Rules: `{ex.VERSION}`", f"- Model pass: `{meta['model']}` ({meta['model_version'] or 'off'})", f"- Run: {stamp}", "",
           "| Measure | Result |", "|---|---|"] + [f"| {k.replace('_', ' ')} | {v} |" for k, v in summary.items()]
     for r in results:
         md += ["", f"## {r['id']} ({r['ms']} ms{', control' if r['control'] else ''})", ""]

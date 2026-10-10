@@ -1,65 +1,67 @@
 {
- "about": "S3.7 due diligence (DOC-06) — the HELD-OUT set (second): written for diligence-s3.7b before it was run, never used to change it, run once per version. Fictional documents only. The first held-out set is G4–G6 in golden.json.",
+ "about": "S3.7 due diligence (DOC-06) — the HELD-OUT set (third, Phase 3 gate): written for diligence-s3.8b before it was run, never used to change it, run once per version. Fictional documents only.",
  "rooms": [
   {
-   "id": "I1-distribution-company-room",
+   "id": "T1-software-company",
    "documents": [
     {
-     "name": "Distribution Agreement - Brenner Medical.txt",
-     "text": "DISTRIBUTION AGREEMENT (fictional)\n\nThis Agreement is made between Calloway Instruments Ltd (the \"Supplier\") and Brenner Medical GmbH (the \"Distributor\").\n\n1. Term\n1.1 This Agreement continues for five (5) years from 12 January 2026.\n\n2. Change of control\n2.1 If either party undergoes a change of control, the other party may terminate this Agreement on thirty (30) days' notice.\n\n3. Assignment\n3.1 Neither party may assign this Agreement without the prior written consent of the other.\n\n4. Targets\n4.1 The Supplier may terminate this Agreement if the Distributor fails to meet the Minimum Purchase Target.\n\n5. Liability\n5.1 Each party's liability under this Agreement shall not exceed EUR 1,000,000 (fictional).\n\n6. Law\n6.1 This Agreement is governed by the laws of Germany.\n"
+     "name": "Articles of Association - Lumen.txt",
+     "text": "ARTICLES OF ASSOCIATION of Lumen Software Ltd (fictional)\n\n1. Shares\n1.1 One class of ordinary shares.\n"
     },
     {
-     "name": "Lease - Brenner warehouse.txt",
-     "text": "LEASE (fictional)\n\nThis Lease is made between Harbour Estates Limited (the \"Landlord\") and Brenner Medical GmbH (the \"Tenant\").\n\n1. Term\n1.1 \"Term Commencement Date\" means 1 April 2026.\n\n2. Break\n2.1 The Tenant may terminate this Lease on the fifth anniversary of the Term Commencement Date by giving not less than six (6) months' notice.\n\n3. Law\n3.1 This Lease is governed by the laws of England and Wales.\n"
+     "name": "Shareholders' Agreement - Lumen.txt",
+     "text": "SHAREHOLDERS' AGREEMENT of Lumen Software Ltd (fictional)\n\n1. Transfers\n1.1 Transfers need investor consent.\n"
+    },
+    {
+     "name": "Software Licence Agreement - Corelogic.txt",
+     "text": "SOFTWARE LICENCE AGREEMENT (fictional)\n\nThis Agreement is between Corelogic Ltd (the \"Licensor\") and Lumen Software Ltd (the \"Licensee\").\n\n1. Change of control\n1.1 The Licensor may terminate this Licence if the Licensee undergoes a change of control.\n\n2. Assignment\n2.1 The Licensee shall not assign this Licence without the Licensor's prior written consent.\n\n3. Liability\n3.1 The Licensor's aggregate liability shall not exceed EUR 2,000,000 (fictional).\n\n4. Law\n4.1 This Licence is governed by the laws of Ireland.\n"
+    },
+    {
+     "name": "Employment contract - CTO.txt",
+     "text": "EMPLOYMENT CONTRACT - CTO (fictional)\n\nThis Contract is between Lumen Software Ltd (the \"Company\") and N. Varga (the \"Executive\").\n\n1. Notice\n1.1 Either party may terminate the employment on six (6) months' written notice.\n"
     }
    ],
    "missing": [
-    "corp-articles",
-    "corp-sha",
     "corp-minutes",
     "corp-captable",
-    "people",
+    "property",
     "ip",
     "insurance",
     "disputes"
    ],
    "issues": [
     [
-     "Distribution Agreement - Brenner Medical.txt",
+     "Software Licence Agreement - Corelogic.txt",
      "change_of_control"
     ],
     [
-     "Distribution Agreement - Brenner Medical.txt",
+     "Software Licence Agreement - Corelogic.txt",
      "assignment"
     ],
     [
-     "Distribution Agreement - Brenner Medical.txt",
-     "termination"
-    ],
-    [
-     "Distribution Agreement - Brenner Medical.txt",
-     "governing_law"
-    ],
-    [
-     "Distribution Agreement - Brenner Medical.txt",
+     "Software Licence Agreement - Corelogic.txt",
      "liability"
     ],
     [
-     "Lease - Brenner warehouse.txt",
+     "Software Licence Agreement - Corelogic.txt",
+     "governing_law"
+    ],
+    [
+     "Employment contract - CTO.txt",
      "termination"
     ]
    ]
   },
   {
-   "id": "I2-corporate-control",
+   "id": "T2-corporate-control",
    "documents": [
     {
-     "name": "Articles of Association.txt",
-     "text": "ARTICLES OF ASSOCIATION of Brenner Medical UK Ltd (fictional)\n\n1. Shares\n1.1 One class of ordinary shares.\n"
+     "name": "Articles of Association - Lumen.txt",
+     "text": "ARTICLES OF ASSOCIATION of Lumen Software Ltd (fictional)\n\n1. Shares\n1.1 One class of ordinary shares.\n"
     },
     {
-     "name": "Board minutes.txt",
-     "text": "MINUTES OF A BOARD MEETING of Brenner Medical UK Ltd (fictional)\n\n1. Business\n1.1 The board approved the accounts.\n"
+     "name": "Board minutes - Lumen.txt",
+     "text": "MINUTES OF A BOARD MEETING of Lumen Software Ltd (fictional)\n\n1. Business\n1.1 The board noted the accounts.\n"
     }
    ],
    "missing": [

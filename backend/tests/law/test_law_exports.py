@@ -182,6 +182,19 @@ def test_t09_docx_is_rebuilt_without_comments_revisions_hidden_text_or_metadata(
     assert d.paragraphs[0].style.name.startswith("Heading")
 
 
+def test_t09_the_released_word_file_reads_back_in_libreoffice_without_what_was_redacted(ex, tmp_path):
+    """Phase 3 gate (S3.9): the released Word file opened by LibreOffice still holds nothing redacted, and the rest."""
+    import subprocess
+    _, data = run_export(ex, "terms.docx", "docx")
+    (tmp_path / "x.docx").write_bytes(data)
+    subprocess.run(["soffice", f"-env:UserInstallation=file://{tmp_path}/lo", "--headless", "--convert-to", "txt:Text",
+                    "--outdir", str(tmp_path / "o"), str(tmp_path / "x.docx")], check=True, capture_output=True, timeout=120)
+    text = (tmp_path / "o" / "x.txt").read_text(encoding="utf-8", errors="replace")
+    for s in (EMAIL, ACCOUNT, SECRET_NOTE, "DELETED-OLD-CAP", "HIDDEN-RUN-TEXT"):
+        assert s not in text, s
+    assert "Inserted clause stays." in text and "Visible end." in text and "Settlement terms" in text
+
+
 def test_t09_text_sources_render_to_both_formats(ex):
     import fitz
     _, pdf = run_export(ex, "note.txt", "pdf")

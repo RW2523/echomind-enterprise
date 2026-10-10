@@ -1,0 +1,488 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "df3b8a5",
+  "time": "20261010-135251",
+  "prompt_version": "diligence-s3.8b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "rooms": 6,
+  "missing_lists_right": "6/6",
+  "issues_found": "29/29",
+  "extra_issues": 0,
+  "controls_clean": "2/2",
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_room": 27
+ },
+ "rooms": [
+  {
+   "id": "G1-share-sale-room",
+   "ms": 25,
+   "control": false,
+   "missing_got": [
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people"
+   ],
+   "missing_want": [
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people"
+   ],
+   "outputs": [
+    {
+     "kind": "change_of_control",
+     "title": "Change of control (clause 2.1)",
+     "detail": "A change of control lets the other party end the agreement.",
+     "document": "Supply Agreement - Northwind.txt",
+     "quote": "2.1 The Supplier may terminate this Agreement on written notice if the Customer undergoes a change of control.",
+     "related": []
+    },
+    {
+     "kind": "renewal",
+     "title": "Automatic renewal (clause 1.2)",
+     "detail": "The notice deadline (1 October 2026) has passed: the agreement renews unless the other party agrees otherwise. 60 days before the end of the term. The term is read as 2 years from 1 December 2024 (the date of this agreement), ending on 30 November 2026 (counting the first day). So notice is due by 1 October 2026. Confirm how the days are counted before relying on it.",
+     "document": "Supply Agreement - Northwind.txt",
+     "quote": "1.2 It renews automatically for one year unless either party gives notice of non-renewal at least sixty (60) days before the end of the term.",
+     "related": []
+    },
+    {
+     "kind": "assignment",
+     "title": "Assignment needs consent (clause 3.1)",
+     "detail": "Customer shall not assign this Agreement without the prior written consent of the Supplier.",
+     "document": "Supply Agreement - Northwind.txt",
+     "quote": "3.1 The Customer shall not assign this Agreement without the prior written consent of the Supplier.",
+     "related": []
+    },
+    {
+     "kind": "termination",
+     "title": "Termination for convenience (clause 4.1)",
+     "detail": "Either party may terminate this Agreement for convenience: on thirty (30) days' written notice.",
+     "document": "Supply Agreement - Northwind.txt",
+     "quote": "4.1 Either party may terminate this Agreement for convenience on thirty (30) days' written notice.",
+     "related": []
+    },
+    {
+     "kind": "expiry",
+     "title": "Term ends 30 November 2026 (clause 1.1)",
+     "detail": "The term is read as 2 years from 1 December 2024 (the date of this agreement), ending on 30 November 2026 (counting the first day). Confirm before relying on it.",
+     "document": "Supply Agreement - Northwind.txt",
+     "quote": "1.1 This Agreement continues for an initial term of two (2) years from the date of this Agreement.",
+     "related": []
+    },
+    {
+     "kind": "governing_law",
+     "title": "Governed by the laws of the State of New York",
+     "detail": "The checklist expects England and Wales.",
+     "document": "Supply Agreement - Northwind.txt",
+     "quote": "6.1 This Agreement is governed by the laws of the State of New York.",
+     "related": []
+    },
+    {
+     "kind": "termination",
+     "title": "Break right (clause 2.1)",
+     "detail": "Tenant may terminate this Lease: not less than six (6) months' notice. Notice is due by 25 September 2030.",
+     "document": "Office Lease.txt",
+     "quote": "2.1 The Tenant may terminate this Lease on the fifth anniversary of the Term Commencement Date by giving not less than six (6) months' notice.",
+     "related": []
+    },
+    {
+     "kind": "liability",
+     "title": "Liability is capped (clause 5.1)",
+     "detail": "Check the cap against the deal value.",
+     "document": "Supply Agreement - Northwind.txt",
+     "quote": "5.1 The Supplier's total liability shall not exceed the fees paid in the preceding twelve (12) months.",
+     "related": []
+    }
+   ],
+   "missing_titles": [
+    "Shareholders' agreement",
+    "Register of members or cap table",
+    "Key employment contracts",
+    "IP assignments and licences",
+    "Insurance policies",
+    "Litigation and claims"
+   ],
+   "missing_ok": true,
+   "issues_expected": 8,
+   "issues_found": 8,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G2-services-company-room",
+   "ms": 43,
+   "control": false,
+   "missing_got": [
+    "corp-articles",
+    "corp-minutes",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "property"
+   ],
+   "missing_want": [
+    "corp-articles",
+    "corp-minutes",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "property"
+   ],
+   "outputs": [
+    {
+     "kind": "change_of_control",
+     "title": "Change of control (clause 14.2)",
+     "detail": "A change of control needs notice.",
+     "document": "Master Services Agreement (DEMO).md",
+     "quote": "14.2 Provider shall provide no less than thirty (30) days' prior written notice of any Change of Control to Client in accordance with Clause 22.",
+     "related": []
+    },
+    {
+     "kind": "change_of_control",
+     "title": "Change of control (clause 14.3)",
+     "detail": "A change of control lets the other party end the agreement.",
+     "document": "Master Services Agreement (DEMO).md",
+     "quote": "14.3 If Provider fails to give notice under Clause 14.2, Client may terminate this Agreement for cause by written notice within ninety (90) days of becoming aware of the Change of Control.",
+     "related": []
+    },
+    {
+     "kind": "change_of_control",
+     "title": "Change of control (clause 2.2)",
+     "detail": "A change of control needs notice.",
+     "document": "Employment contract - CTO.txt",
+     "quote": "2.2 If the Company undergoes a change of control, the Employee may resign on one (1) month's notice and receive a payment of twelve months' salary.",
+     "related": []
+    },
+    {
+     "kind": "assignment",
+     "title": "Assignment needs consent (clause 14.1)",
+     "detail": "Neither party may assign this Agreement without the prior written consent of the other party, such consent not to be unreasonably withheld.",
+     "document": "Master Services Agreement (DEMO).md",
+     "quote": "14.1 Neither party may assign this Agreement without the prior written consent of the other party, such consent not to be unreasonably withheld.",
+     "related": []
+    },
+    {
+     "kind": "termination",
+     "title": "Termination for convenience (clause 12.1)",
+     "detail": "Either party may terminate this Agreement for convenience: on thirty (30) days' written notice.",
+     "document": "Master Services Agreement (DEMO).md",
+     "quote": "12.1 Either party may terminate this Agreement for convenience on thirty (30) days' written notice.",
+     "related": []
+    },
+    {
+     "kind": "governing_law",
+     "title": "Governed by the laws of the State of Delaware",
+     "detail": "The checklist expects England and Wales.",
+     "document": "Master Services Agreement (DEMO).md",
+     "quote": "21.1 This Agreement is governed by the laws of the State of Delaware, without regard to its conflict-of-laws rules.",
+     "related": []
+    },
+    {
+     "kind": "termination",
+     "title": "Termination right (clause 12.2)",
+     "detail": "Either party may terminate this Agreement immediately: within thirty (30) days of notice.",
+     "document": "Master Services Agreement (DEMO).md",
+     "quote": "12.2 Either party may terminate this Agreement immediately on written notice if the other party commits a material breach that is not remedied within thirty (30) days of notice.",
+     "related": []
+    },
+    {
+     "kind": "renewal",
+     "title": "Automatic renewal (clause 2.2)",
+     "detail": "Notice of non-renewal is due by 1 December 2028. 90 days before the end of the term. The term is read as 36 months from 2 March 2026 (the Effective Date), ending on 1 March 2029 (counting the first day). So notice is due by 1 December 2028. Confirm how the days are counted before relying on it.",
+     "document": "Master Services Agreement (DEMO).md",
+     "quote": "2.2 After the Initial Term, this Agreement renews automatically for successive twelve (12) month renewal terms unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.",
+     "related": []
+    },
+    {
+     "kind": "liability",
+     "title": "Liability is capped (clause 8.1)",
+     "detail": "Check the cap against the deal value.",
+     "document": "Master Services Agreement (DEMO).md",
+     "quote": "8.1 Each party's total aggregate liability arising out of or in connection with this Agreement shall not exceed the greater of USD 250,000 or the Fees paid by Client in the twelve (12) months preceding the event giving rise to the claim.",
+     "related": []
+    },
+    {
+     "kind": "termination",
+     "title": "Termination right (clause 2.1)",
+     "detail": "Either party may terminate the employment: on six (6) months' written notice.",
+     "document": "Employment contract - CTO.txt",
+     "quote": "2.1 Either party may terminate the employment on six (6) months' written notice.",
+     "related": []
+    }
+   ],
+   "missing_titles": [
+    "Articles of association",
+    "Shareholders' agreement",
+    "Board minutes",
+    "Leases",
+    "IP assignments and licences",
+    "Litigation and claims"
+   ],
+   "missing_ok": true,
+   "issues_expected": 10,
+   "issues_found": 10,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G3-corporate-only-control",
+   "ms": 23,
+   "control": true,
+   "missing_got": [
+    "contracts",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "outputs": [],
+   "missing_titles": [
+    "Shareholders' agreement",
+    "Material contracts",
+    "Leases",
+    "Key employment contracts",
+    "IP assignments and licences",
+    "Litigation and claims"
+   ],
+   "missing_ok": true,
+   "issues_expected": 0,
+   "issues_found": 0,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G4-software-sale-room",
+   "ms": 28,
+   "control": false,
+   "missing_got": [
+    "corp-captable",
+    "corp-minutes",
+    "insurance",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "corp-captable",
+    "corp-minutes",
+    "insurance",
+    "people",
+    "property"
+   ],
+   "outputs": [
+    {
+     "kind": "change_of_control",
+     "title": "Change of control (clause 3.1)",
+     "detail": "A change of control lets the other party end the agreement.",
+     "document": "Licence Agreement - Marsh & Teague.txt",
+     "quote": "3.1 The Licensor may terminate this Agreement immediately if the Licensee is subject to a change of control.",
+     "related": []
+    },
+    {
+     "kind": "liability",
+     "title": "Unlimited liability (clause 4.1)",
+     "detail": "Liability is not capped.",
+     "document": "Licence Agreement - Marsh & Teague.txt",
+     "quote": "4.1 Neither party limits its liability for breach of clause 6 (Confidentiality), and that liability is unlimited.",
+     "related": []
+    },
+    {
+     "kind": "assignment",
+     "title": "Assignment needs consent (clause 2.1)",
+     "detail": "Licensee shall not assign or sublicense this Agreement without the Licensor's prior written consent.",
+     "document": "Licence Agreement - Marsh & Teague.txt",
+     "quote": "2.1 The Licensee may not assign or sublicense this Agreement without the Licensor's prior written consent.",
+     "related": []
+    },
+    {
+     "kind": "expiry",
+     "title": "Term ends 30 June 2027 (clause 1.1)",
+     "detail": "The term is read as 3 years from 1 July 2024, ending on 30 June 2027 (counting the first day). Confirm before relying on it.",
+     "document": "Licence Agreement - Marsh & Teague.txt",
+     "quote": "1.1 This Agreement continues for an initial term of three (3) years from 1 July 2024 (the \"Initial Term\").",
+     "related": []
+    },
+    {
+     "kind": "renewal",
+     "title": "Automatic renewal (clause 1.2)",
+     "detail": "Notice of non-renewal is due by 1 April 2027. 90 days before the end of the term. The term is read as 3 years from 1 July 2024, ending on 30 June 2027 (counting the first day). So notice is due by 1 April 2027. Confirm how the days are counted before relying on it.",
+     "document": "Licence Agreement - Marsh & Teague.txt",
+     "quote": "1.2 It renews for successive one-year terms unless either party gives notice at least ninety (90) days before the end of the then-current term.",
+     "related": []
+    },
+    {
+     "kind": "governing_law",
+     "title": "Governed by the laws of the State of California",
+     "detail": "The checklist expects England and Wales.",
+     "document": "Licence Agreement - Marsh & Teague.txt",
+     "quote": "5.1 This Agreement is governed by the laws of the State of California.",
+     "related": []
+    },
+    {
+     "kind": "termination",
+     "title": "Termination right (clause 3.2)",
+     "detail": "Either party may terminate this Agreement for material breach: on thirty (30) days' written notice.",
+     "document": "Licence Agreement - Marsh & Teague.txt",
+     "quote": "3.2 Either party may terminate this Agreement for material breach on thirty (30) days' written notice.",
+     "related": []
+    }
+   ],
+   "missing_titles": [
+    "Board minutes",
+    "Register of members or cap table",
+    "Leases",
+    "Key employment contracts",
+    "Insurance policies"
+   ],
+   "missing_ok": true,
+   "issues_expected": 7,
+   "issues_found": 7,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G5-property-room",
+   "ms": 21,
+   "control": false,
+   "missing_got": [
+    "contracts",
+    "corp-articles",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-articles",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip"
+   ],
+   "outputs": [
+    {
+     "kind": "termination",
+     "title": "Break right (clause 2.1)",
+     "detail": "Tenant may terminate this Lease: not less than six (6) months' notice. Notice is due by 29 March 2028.",
+     "document": "Lease - Unit 4 Harbour Yard.txt",
+     "quote": "2.1 The Tenant may terminate this Lease on the third anniversary of the Term Commencement Date by giving not less than six (6) months' notice.",
+     "related": []
+    },
+    {
+     "kind": "governing_law",
+     "title": "Governed by the laws of Scotland",
+     "detail": "The checklist expects England and Wales.",
+     "document": "Lease - Warehouse 9.txt",
+     "quote": "2.1 This Lease is governed by the laws of Scotland.",
+     "related": []
+    },
+    {
+     "kind": "termination",
+     "title": "Termination right (clause 1.1)",
+     "detail": "Landlord may terminate this Lease: not less than twelve (12) months' notice if it intends to redevelop the site.",
+     "document": "Lease - Warehouse 9.txt",
+     "quote": "1.1 The Landlord may terminate this Lease on not less than twelve (12) months' notice if it intends to redevelop the site.",
+     "related": []
+    },
+    {
+     "kind": "termination",
+     "title": "Termination right (clause 2.1)",
+     "detail": "Either party may terminate the appointment: on twelve (12) months' written notice.",
+     "document": "Service agreement - Managing Director.txt",
+     "quote": "2.1 Either party may terminate the appointment on twelve (12) months' written notice.",
+     "related": []
+    }
+   ],
+   "missing_titles": [
+    "Articles of association",
+    "Shareholders' agreement",
+    "Register of members or cap table",
+    "Material contracts",
+    "IP assignments and licences",
+    "Insurance policies",
+    "Litigation and claims"
+   ],
+   "missing_ok": true,
+   "issues_expected": 4,
+   "issues_found": 4,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G6-corporate-control",
+   "ms": 23,
+   "control": true,
+   "missing_got": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "outputs": [],
+   "missing_titles": [
+    "Shareholders' agreement",
+    "Register of members or cap table",
+    "Material contracts",
+    "Leases",
+    "Key employment contracts",
+    "IP assignments and licences",
+    "Litigation and claims"
+   ],
+   "missing_ok": true,
+   "issues_expected": 0,
+   "issues_found": 0,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  }
+ ]
+}

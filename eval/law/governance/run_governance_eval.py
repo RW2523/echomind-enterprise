@@ -93,7 +93,9 @@ def run(args) -> int:
                 return conn.execute("SELECT substr(text, ?, ?) FROM legal_version_text WHERE version_id=?", (s + 1, e - s, vid)).fetchone()[0] == q
             quotes_ok = all(at(i["version_id"], i["evidence"]["start"], i["evidence"]["end"], i["evidence"]["quote"])
                             and all(at(x["version_id"], x["start"], x["end"], x["quote"]) for x in i.get("related", [])) for i in got)
-        results.append({"id": co["id"], "ms": ms, "control": not co["expect"], "lines": lines, "extra": extra,
+        outputs = [{"kind": i["kind"], "title": i["title"], "detail": i["detail"], "document": i["document_title"], "quote": i["evidence"]["quote"],
+                    "related": [{"document": x["document_title"], "quote": x["quote"]} for x in i.get("related", [])]} for i in got]   # for the lawyer packet
+        results.append({"id": co["id"], "ms": ms, "control": not co["expect"], "lines": lines, "extra": extra, "outputs": outputs,
                         "all_preliminary": all(i["status"] == "preliminary" for i in got), "quotes_ok": quotes_ok,
                         "two_sources": sum(1 for i in got if i.get("related"))})
     allx = [x for r in results for x in r["lines"]]

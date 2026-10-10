@@ -233,7 +233,9 @@ def _located(passages: list[dict], query: str = "") -> list[dict]:
 
 
 async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Iterable[str] = ALL_MODES,
-                 versions: str = "signed", documents: Optional[list[str]] = None) -> dict:
+                 versions: str = "signed", documents: Optional[list[str]] = None, floor: bool = True) -> dict:
+    """floor=False keeps windows below LEGAL_RERANK_MIN_SCORE: for callers that check every value against its
+    quote (drafting, s3.1d) rather than abstain, a short document's one window must not be dropped."""
     recheck(scope)                                    # raises TypeError for anything but a real scope
     modes = [m for m in modes if m in ALL_MODES] or list(ALL_MODES)
     idx = registry.for_matter(scope.matter_id)
@@ -255,7 +257,7 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
     for h in scored:                                  # best window of each passage, in score order
         best.setdefault(h["chunk_id"], h)
     ranked = list(best.values())
-    if ranked and ranked[0].get("score_kind") == "ce_logit":
+    if floor and ranked and ranked[0].get("score_kind") == "ce_logit":
         ranked = [h for h in ranked if float(h["score"]) >= settings.LEGAL_RERANK_MIN_SCORE]
     recheck(scope)                                    # rights may have changed while this ran
     return {"passages": _located([_passage(h) for h in ranked[:k]], query), "abstained": not ranked}

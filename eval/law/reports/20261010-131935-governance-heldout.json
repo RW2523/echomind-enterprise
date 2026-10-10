@@ -1,0 +1,77 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "689331f",
+  "time": "20261010-131935",
+  "prompt_version": "diligence-s3.8b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "companies": 3,
+  "found": "4/4",
+  "extra": 0,
+  "controls_clean": "1/1",
+  "by_kind": {
+   "share_capital": "2/2",
+   "authority": "1/1",
+   "constitution": "1/1"
+  },
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_company": 37
+ },
+ "companies": [
+  {
+   "id": "U1-mercer-uk",
+   "ms": 52,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "100 ordinary shares in the register have no approval",
+     "found": true
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 2
+  },
+  {
+   "id": "U2-pike-us",
+   "ms": 36,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "Series A preferred stock is not a class",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 2
+  },
+  {
+   "id": "U3-orrin-control",
+   "ms": 22,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 0
+  }
+ ]
+}

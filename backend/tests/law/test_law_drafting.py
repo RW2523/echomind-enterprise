@@ -229,6 +229,99 @@ def test_a_fact_the_documents_do_not_state_is_never_invented(dr):
     assert "Dear [[NEEDS INPUT: Client contact]]," in text_of(d)
 
 
+def test_one_party_given_for_two_party_fields_is_left_for_a_person(dr):
+    """The model named the first party again as the second (drafting golden, Phase 3 gate); two parties are never one."""
+    dr["model"].fields["client_contact"] = {"value": "Harrowgate Systems Inc", "quote": "Harrowgate Systems Inc. asks the firm"}
+    d = draft(dr, template(dr))
+    assert field(d, "client_name")["status"] == "sourced"
+    c = field(d, "client_contact")
+    assert c["status"] == "needs_input" and c["value"] is None and c["sources"] == []
+    assert c["suggestion"]["value"] == "Harrowgate Systems Inc" and "Client" in c["suggestion"]["reason"]
+    assert "Dear [[NEEDS INPUT: Client contact]]," in text_of(d)
+
+
+def test_an_agreement_field_given_a_party_name_is_left_for_a_person(dr):
+    """The model answered "which agreement" with a party (drafting held-out 2, Phase 3 gate); an agreement field names a document."""
+    fields = FIELDS + [{"key": "agreement", "label": "Agreement", "kind": "agreement", "source": "documents", "question": "Which agreement is it?"}]
+    body = BODY + "\n\nUnder the {{agreement}}."
+    dr["model"].fields["agreement"] = {"value": "Northwind Logistics Ltd", "quote": "Master Services Agreement with Northwind Logistics Ltd"}
+    d = draft(dr, template(dr, body=body, fields=fields))
+    a = field(d, "agreement")
+    assert a["status"] == "needs_input" and a["value"] is None
+    assert a["suggestion"]["value"] == "Northwind Logistics Ltd" and "an agreement" in a["suggestion"]["reason"]
+    dr["model"].fields["agreement"] = {"value": "Master Services Agreement", "quote": "Master Services Agreement with Northwind Logistics Ltd"}
+    d = draft(dr, template(dr, body=body, fields=fields, name="Engagement letter (test 2)"))
+    assert field(d, "agreement")["value"] == "Master Services Agreement" and field(d, "agreement")["status"] == "sourced"
+
+
+def test_the_matter_s_own_client_read_as_the_other_side_is_left_for_a_person(dr):
+    """A demand letter's recipient read as the firm's own client, the creditor (drafting golden, s3.1e run 2). The matter's
+    client is compared first, whatever the field order, and "Ltd" or "AB" does not make another party (s3.1f)."""
+    alice = as_user(dr, "alice")
+    upload(alice, dr["mid"], "letter.txt", "LETTER (fictional)\n\nAlpha Holdings Ltd supplies Gamma Trading Ltd under the Supply Agreement.",
+           status="final")
+    index_all()
+    fields = [{"key": "recipient", "label": "Recipient", "kind": "party", "source": "documents", "question": "Who is the letter addressed to?"},
+              {"key": "client", "label": "Client", "kind": "party", "source": "matter"}]
+    dr["model"].fields["recipient"] = {"value": "Alpha Holdings Ltd", "quote": "Alpha Holdings Ltd supplies Gamma Trading Ltd"}
+    d = draft(dr, template(dr, body="# Letter\nTo {{recipient}}, for {{client}}.", fields=fields, name="Demand (test)"))
+    assert field(d, "client")["value"] == "Alpha Holdings" and field(d, "client")["status"] == "matter"
+    r = field(d, "recipient")
+    assert r["status"] == "needs_input" and r["value"] is None and "Client" in r["suggestion"]["reason"]
+
+
+def test_an_agreement_is_named_by_its_head_word_not_by_any_mention_of_one():
+    """"the 2026 annual licence fee" passed as an agreement on "licence" (drafting golden, Phase 3 gate run; s3.1e)."""
+    from app.legal.drafting import engine
+    for name in ("SOFTWARE LICENCE AGREEMENT", "DISTRIBUTION AGREEMENT (fictional)", "Lease", "Master Services Agreement dated 1 May 2025",
+                 "Agreement for the Supply of Goods", "Terms and Conditions", "Licence to Assign"):
+        assert engine.has_figure("agreement", name), name
+    for value in ("the 2026 annual licence fee", "Northbridge Analytics AB", "the lease premises", "licence fees"):
+        assert not engine.has_figure("agreement", value), value
+
+
+def test_a_value_saying_the_point_is_not_settled_is_left_for_a_person(dr):
+    """"Governing law: to be agreed" gave the governing law "to be agreed" (drafting golden, Phase 3 gate run; s3.1e)."""
+    from app.legal.drafting import engine
+    alice = as_user(dr, "alice")
+    upload(alice, dr["mid"], "term-sheet.txt", "TERM SHEET (fictional)\n\nGoverning law: to be agreed.", status="final")
+    index_all()
+    fields = FIELDS + [{"key": "law", "label": "Governing law", "kind": "text", "source": "documents", "question": "Which law governs?"}]
+    dr["model"].fields["law"] = {"value": "to be agreed", "quote": "Governing law: to be agreed."}
+    d = draft(dr, template(dr, body=BODY + "\n\nGoverned by {{law}}.", fields=fields))
+    law = field(d, "law")
+    assert law["status"] == "needs_input" and law["value"] is None
+    assert law["suggestion"]["value"] == "to be agreed" and "not settled" in law["suggestion"]["reason"]
+    for value in ("TBC", "Not stated", "to be confirmed", "N/A", "none", "unknown", "not specified", "to be determined"):
+        assert engine.unsettled(value), value
+    assert not engine.unsettled("English law") and not engine.unsettled("Nonesuch Holdings Ltd")
+
+
+def test_a_short_document_below_the_research_floor_still_reaches_the_drafting_model(dr, monkeypatch):
+    """A one-passage email scored below the research answerer's abstention floor gave the drafting model nothing
+    (drafting held-out 3, Phase 3 gate); drafting checks every value against its quote instead (s3.1d)."""
+    from app.legal.retrieval import search
+
+    async def low(query, hits, top_k):                     # the cross-encoder scores a whole short email low
+        return [{**h, "score": -11.0, "score_kind": "ce_logit"} for h in hits][:top_k]
+    monkeypatch.setattr(search, "rerank", low)
+    d = draft(dr, template(dr))
+    assert field(d, "client_contact")["value"] == "Petra Voss" and field(d, "fee")["status"] == "sourced"
+
+
+def test_with_no_source_at_all_a_written_passage_is_left_for_the_lawyer(dr, monkeypatch):
+    from app.legal.drafting import engine
+
+    async def nothing(scope, query, documents, k):
+        return []
+    monkeypatch.setattr(engine, "_search", nothing)
+    calls = len(dr["model"].calls)
+    d = draft(dr, template(dr))
+    scope = next(b for b in d["content"]["blocks"] if b.get("origin") == "written")
+    assert scope["text"] == "[[NEEDS INPUT: Describe the scope of the engagement in two sentences.]]" and scope["sources"] == []
+    assert not any(m[1]["content"].startswith("WRITE:") for m in dr["model"].calls[calls:])     # nothing written from a title
+
+
 # ── Written passages ─────────────────────────────────────────────────────────────
 def test_written_passages_cite_their_sources_and_a_figure_they_do_not_contain_becomes_a_gap(dr):
     dr["model"].writes = {"scope": "The firm will review the supplier's redline {cite:reviewing the supplier's redline} "

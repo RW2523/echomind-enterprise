@@ -1,0 +1,1760 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "b134208",
+  "time": "20261010-143153",
+  "prompt_version": "obligations-s3.6g",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "model_version": "obligations-model-s3.6e2"
+ },
+ "summary": {
+  "documents": 16,
+  "expected": 68,
+  "found": "67/68",
+  "timing_in_its_words": "50/51",
+  "dates_right": "18/18",
+  "dates_guessed": 0,
+  "extra": 4,
+  "controls_clean": "5/5",
+  "all_proposed": true,
+  "by_kind": {
+   "change_of_control": "1/1",
+   "confidentiality": "1/1",
+   "consent": "2/2",
+   "duty": "15/16",
+   "expiry": "8/8",
+   "notice": "6/6",
+   "notification": "5/5",
+   "payment": "11/11",
+   "post_termination": "6/6",
+   "renewal": "2/2",
+   "survival": "1/1",
+   "termination": "9/9"
+  },
+  "ms_per_document": 532
+ },
+ "documents": [
+  {
+   "id": "G1-demo-msa",
+   "ms": 2831,
+   "control": false,
+   "lines": [
+    {
+     "clause": "2.1",
+     "kind": "expiry",
+     "due": "2029-03-01",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2029-03-01",
+     "got_when": "36 months from 2 March 2026 (the Effective Date)",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "renewal",
+     "due": "2028-12-01",
+     "when": "ninety (90) days before",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": "2028-12-01",
+     "got_when": "at least ninety (90) days before the end of the then-current term",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.2",
+     "kind": "payment",
+     "when": "thirty (30) days from the invoice date",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "thirty (30) days from the invoice date",
+     "status": "proposed"
+    },
+    {
+     "clause": "5.1",
+     "kind": "confidentiality",
+     "when": "five (5) years",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "and five (5) years after it ends",
+     "status": "proposed"
+    },
+    {
+     "clause": "6.1",
+     "kind": "notification",
+     "when": "forty-eight (48) hours",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within forty-eight (48) hours of becoming aware of it",
+     "status": "proposed"
+    },
+    {
+     "clause": "6.2",
+     "kind": "post_termination",
+     "when": "thirty (30) days after termination",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "Within thirty (30) days after termination",
+     "status": "proposed"
+    },
+    {
+     "clause": "12.1",
+     "kind": "termination",
+     "when": "thirty (30) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "on thirty (30) days' written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "12.2",
+     "kind": "termination",
+     "when": "thirty (30) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within thirty (30) days of notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "14.1",
+     "kind": "consent",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "without the prior written consent of the other party, such consent not to be unreasonably withheld",
+     "status": "proposed"
+    },
+    {
+     "clause": "14.2",
+     "kind": "change_of_control",
+     "when": "thirty (30) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "no less than thirty (30) days' prior written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "14.3",
+     "kind": "termination",
+     "when": "ninety (90) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within ninety (90) days of becoming aware of the Change of Control",
+     "status": "proposed"
+    }
+   ],
+   "extra": [
+    {
+     "clause": "22.1",
+     "kind": "notice",
+     "action": "Any notice under this Agreement shall be in writing and addressed to the General Counsel of the receiving party at the address set out in Schedule 4",
+     "due": null
+    },
+    {
+     "clause": "4.1",
+     "kind": "payment",
+     "action": "pay a platform subscription fee",
+     "due": null
+    },
+    {
+     "clause": "4.2",
+     "kind": "payment",
+     "action": "invoice monthly in advance",
+     "due": null
+    }
+   ],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "2.2",
+     "kind": "renewal",
+     "party": "Either party",
+     "action": "give written notice of non-renewal",
+     "when": "at least ninety (90) days before the end of the then-current term",
+     "due_date": "2028-12-01",
+     "due_note": "90 days before the end of the term. The term is read as 36 months from 2 March 2026 (the Effective Date), ending on 1 March 2029 (counting the first day). So notice is due by 1 December 2028. Confirm how the days are counted before relying on it.",
+     "source": "rules",
+     "quote": "2.2 After the Initial Term, this Agreement renews automatically for successive twelve (12) month renewal terms unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term."
+    },
+    {
+     "clause": "2.1",
+     "kind": "expiry",
+     "party": null,
+     "action": "The term ends",
+     "when": "36 months from 2 March 2026 (the Effective Date)",
+     "due_date": "2029-03-01",
+     "due_note": "The term is read as 36 months from 2 March 2026 (the Effective Date), ending on 1 March 2029 (counting the first day). Confirm before relying on it.",
+     "source": "rules",
+     "quote": "2.1 This Agreement begins on the Effective Date and continues for an initial term of thirty-six (36) months (the \"Initial Term\")."
+    },
+    {
+     "clause": "12.1",
+     "kind": "termination",
+     "party": "Either party",
+     "action": "terminate this Agreement for convenience",
+     "when": "on thirty (30) days' written notice",
+     "due_date": null,
+     "due_note": "Runs from an event (the notice or the breach); no date until it happens.",
+     "source": "rules",
+     "quote": "12.1 Either party may terminate this Agreement for convenience on thirty (30) days' written notice."
+    },
+    {
+     "clause": "12.2",
+     "kind": "termination",
+     "party": "Either party",
+     "action": "terminate this Agreement immediately",
+     "when": "within thirty (30) days of notice",
+     "due_date": null,
+     "due_note": "Runs from an event (the notice or the breach); no date until it happens.",
+     "source": "rules",
+     "quote": "12.2 Either party may terminate this Agreement immediately on written notice if the other party commits a material breach that is not remedied within thirty (30) days of notice."
+    },
+    {
+     "clause": "14.1",
+     "kind": "consent",
+     "party": "Neither party",
+     "action": "assign this Agreement",
+     "when": "without the prior written consent of the other party, such consent not to be unreasonably withheld",
+     "due_date": null,
+     "due_note": "A right, not a deadline: no date.",
+     "source": "rules",
+     "quote": "14.1 Neither party may assign this Agreement without the prior written consent of the other party, such consent not to be unreasonably withheld."
+    },
+    {
+     "clause": "14.2",
+     "kind": "change_of_control",
+     "party": "Provider",
+     "action": "provide prior written notice of any Change of Control to Client",
+     "when": "no less than thirty (30) days' prior written notice",
+     "due_date": null,
+     "due_note": "Runs from an event (the change of control); no date until it happens.",
+     "source": "rules",
+     "quote": "14.2 Provider shall provide no less than thirty (30) days' prior written notice of any Change of Control to Client in accordance with Clause 22."
+    },
+    {
+     "clause": "14.3",
+     "kind": "termination",
+     "party": "Client",
+     "action": "terminate this Agreement for cause",
+     "when": "within ninety (90) days of becoming aware of the Change of Control",
+     "due_date": null,
+     "due_note": "Runs from an event (the notice or the breach); no date until it happens.",
+     "source": "rules",
+     "quote": "14.3 If Provider fails to give notice under Clause 14.2, Client may terminate this Agreement for cause by written notice within ninety (90) days of becoming aware of the Change of Control."
+    },
+    {
+     "clause": "22.1",
+     "kind": "notice",
+     "party": null,
+     "action": "Any notice under this Agreement shall be in writing and addressed to the General Counsel of the receiving party at the address set out in Schedule 4",
+     "when": "under this Agreement",
+     "due_date": null,
+     "due_note": "Read by the model from the words shown; a right, not a deadline: no date.",
+     "source": "model",
+     "quote": "22.1 Any notice under this Agreement shall be in writing and addressed to the General Counsel of the receiving party at the address set out in Schedule 4."
+    },
+    {
+     "clause": "4.1",
+     "kind": "payment",
+     "party": "Client",
+     "action": "pay a platform subscription fee",
+     "when": "per month",
+     "due_date": null,
+     "due_note": "Read by the model from the words shown; recurring, on the dates the clause gives.",
+     "source": "model",
+     "quote": "4.1 Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgate platform."
+    },
+    {
+     "clause": "4.2",
+     "kind": "payment",
+     "party": null,
+     "action": "Invoices are payable",
+     "when": "thirty (30) days from the invoice date",
+     "due_date": null,
+     "due_note": "Runs from each invoice; no date until it happens.",
+     "source": "rules",
+     "quote": "Invoices are payable net thirty (30) days from the invoice date."
+    },
+    {
+     "clause": "4.2",
+     "kind": "payment",
+     "party": "Provider",
+     "action": "invoice monthly in advance",
+     "when": "monthly in advance",
+     "due_date": null,
+     "due_note": "Read by the model from the words shown; recurring, on the dates the clause gives.",
+     "source": "model",
+     "quote": "4.2 Provider shall invoice monthly in advance."
+    },
+    {
+     "clause": "5.1",
+     "kind": "confidentiality",
+     "party": "Each party",
+     "action": "keep the other party's Confidential Information confidential and use it only to perform this Agreement",
+     "when": "and five (5) years after it ends",
+     "due_date": null,
+     "due_note": "Runs from the end of this agreement; no date until it happens.",
+     "source": "rules",
+     "quote": "5.1 Each party shall keep the other party's Confidential Information confidential and use it only to perform this Agreement, for the term of this Agreement and five (5) years after it ends."
+    },
+    {
+     "clause": "6.1",
+     "kind": "notification",
+     "party": "Provider",
+     "action": "notify Client of any personal data breach affecting Client Data",
+     "when": "within forty-eight (48) hours of becoming aware of it",
+     "due_date": null,
+     "due_note": "Runs from an event (becoming aware); no date until it happens.",
+     "source": "rules",
+     "quote": "6.1 Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it."
+    },
+    {
+     "clause": "6.2",
+     "kind": "post_termination",
+     "party": "Provider",
+     "action": "return or securely destroy all Client Data",
+     "when": "Within thirty (30) days after termination",
+     "due_date": null,
+     "due_note": "Runs from termination or expiry; no date until it happens.",
+     "source": "rules",
+     "quote": "6.2 Within thirty (30) days after termination, Provider shall return or securely destroy all Client Data, at Client's option."
+    }
+   ]
+  },
+  {
+   "id": "G2-office-lease",
+   "ms": 18,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.2",
+     "kind": "expiry",
+     "due": "2036-03-24",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2036-03-24",
+     "got_when": "10 years from the Term Commencement Date",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "quarterly in advance",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "quarterly in advance on the usual quarter days",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "fourteen (14) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within fourteen (14) days of its due date bears interest at 4% above base rate",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "due": "2030-09-25",
+     "when": "six (6) months",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": "2030-09-25",
+     "got_when": "not less than six (6) months' written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.1",
+     "kind": "duty",
+     "when": "ten (10) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within ten (10) Business Days of a written request",
+     "status": "proposed"
+    },
+    {
+     "clause": "5.1",
+     "kind": "duty",
+     "when": "twenty (20) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within twenty (20) Business Days",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "party": "Tenant",
+     "action": "terminate this Lease",
+     "when": "not less than six (6) months' written notice",
+     "due_date": "2030-09-25",
+     "due_note": "The break date is the fifth anniversary of 25 March 2026 (the Term Commencement Date): 25 March 2031. Notice of 6 months is due by 25 September 2030. Confirm how the period is counted before relying on it.",
+     "source": "rules",
+     "quote": "3.1 The Tenant may terminate this Lease on the fifth anniversary of the Term Commencement Date by giving the Landlord not less than six (6) months' written notice."
+    },
+    {
+     "clause": "1.2",
+     "kind": "expiry",
+     "party": null,
+     "action": "The term ends",
+     "when": "10 years from the Term Commencement Date",
+     "due_date": "2036-03-24",
+     "due_note": "The term is read as 10 years from 25 March 2026 (the Term Commencement Date), ending on 24 March 2036 (counting the first day). Confirm before relying on it.",
+     "source": "rules",
+     "quote": "1.2 \"Term\" means ten (10) years from the Term Commencement Date."
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "party": "Tenant",
+     "action": "pay the Rent quarterly in advance",
+     "when": "quarterly in advance on the usual quarter days",
+     "due_date": null,
+     "due_note": "Recurring, on the dates the clause gives.",
+     "source": "rules",
+     "quote": "2.1 The Tenant shall pay the Rent quarterly in advance on the usual quarter days."
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "party": null,
+     "action": "at 4% above base rate",
+     "when": "within fourteen (14) days of its due date bears interest at 4% above base rate",
+     "due_date": null,
+     "due_note": "Runs from each invoice; no date until it happens.",
+     "source": "rules",
+     "quote": "2.2 Any Rent not paid within fourteen (14) days of its due date bears interest at 4% above base rate."
+    },
+    {
+     "clause": "4.1",
+     "kind": "duty",
+     "party": "Landlord",
+     "action": "insure the Building and shall provide the Tenant with a copy of the policy",
+     "when": "within ten (10) Business Days of a written request",
+     "due_date": null,
+     "due_note": "Runs from an event (a request or the date the clause names); no date until it happens.",
+     "source": "rules",
+     "quote": "4.1 The Landlord shall insure the Building and shall provide the Tenant with a copy of the policy within ten (10) Business Days of a written request."
+    },
+    {
+     "clause": "5.1",
+     "kind": "duty",
+     "party": "Tenant",
+     "action": "remove its fixtures and make good any damage",
+     "when": "within twenty (20) Business Days",
+     "due_date": null,
+     "due_note": "Runs from an event (a request or the date the clause names); no date until it happens.",
+     "source": "rules",
+     "quote": "5.1 At the end of the Term the Tenant shall remove its fixtures and make good any damage within twenty (20) Business Days."
+    }
+   ]
+  },
+  {
+   "id": "G3-mutual-nda",
+   "ms": 22,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2029-05-03",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2029-05-03",
+     "got_when": "3 years from the Effective Date",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "fourteen (14) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within fourteen (14) days of a written request",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "notification",
+     "when": "five (5) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within five (5) Business Days",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.3",
+     "kind": "survival",
+     "when": "two (2) years",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "for two (2) years after this Agreement ends",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "party": null,
+     "action": "The term ends",
+     "when": "3 years from the Effective Date",
+     "due_date": "2029-05-03",
+     "due_note": "The term is read as 3 years from 4 May 2026 (the Effective Date), ending on 3 May 2029 (counting the first day). Confirm before relying on it.",
+     "source": "rules",
+     "quote": "1.1 This Agreement continues for three (3) years from the Effective Date."
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "party": null,
+     "action": "return or destroy all Confidential Information",
+     "when": "within fourteen (14) days of a written request",
+     "due_date": null,
+     "due_note": "Runs from an event (a request or the date the clause names); no date until it happens.",
+     "source": "rules",
+     "quote": "2.1 The Recipient shall return or destroy all Confidential Information within fourteen (14) days of a written request."
+    },
+    {
+     "clause": "2.2",
+     "kind": "notification",
+     "party": null,
+     "action": "notify the Discloser promptly",
+     "when": "within five (5) Business Days",
+     "due_date": null,
+     "due_note": "Runs from an event (becoming aware); no date until it happens.",
+     "source": "rules",
+     "quote": "2.2 The Recipient shall notify the Discloser promptly, and in any event within five (5) Business Days, of any unauthorised disclosure."
+    },
+    {
+     "clause": "2.3",
+     "kind": "survival",
+     "party": null,
+     "action": "after this Agreement ends",
+     "when": "for two (2) years after this Agreement ends",
+     "due_date": null,
+     "due_note": "Runs from the end of this agreement; no date until it happens.",
+     "source": "rules",
+     "quote": "2.3 The obligations in this clause 2 survive for two (2) years after this Agreement ends."
+    }
+   ]
+  },
+  {
+   "id": "G4-board-minutes-control",
+   "ms": 13,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": []
+  },
+  {
+   "id": "G5-us-saas",
+   "ms": 24,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2027-01-14",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2027-01-14",
+     "got_when": "12 months from the Effective Date",
+     "status": "proposed"
+    },
+    {
+     "clause": "1.2",
+     "kind": "renewal",
+     "due": "2026-12-15",
+     "when": "thirty (30) days prior",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": "2026-12-15",
+     "got_when": "at least thirty (30) days prior to the expiration of the then-current Subscription Term",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "forty-five (45) days after receipt",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within forty-five (45) days after receipt of each invoice",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "fifteen (15) days after written notice",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "fifteen (15) days after written notice of non-payment",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "notification",
+     "when": "seventy-two (72) hours",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within seventy-two (72) hours after confirming it",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.1",
+     "kind": "termination",
+     "when": "thirty (30) days after written notice",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within thirty (30) days after written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.2",
+     "kind": "post_termination",
+     "when": "ten (10) days after termination",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "Within ten (10) days after termination",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "1.2",
+     "kind": "renewal",
+     "party": "Either party",
+     "action": "give notice of non-renewal",
+     "when": "at least thirty (30) days prior to the expiration of the then-current Subscription Term",
+     "due_date": "2026-12-15",
+     "due_note": "30 days before the end of the term. The term is read as 12 months from 15 January 2026 (the Effective Date), ending on 14 January 2027 (counting the first day). So notice is due by 15 December 2026. Confirm how the days are counted before relying on it.",
+     "source": "rules",
+     "quote": "1.2 The Subscription Term renews automatically for successive one-year periods unless either party gives notice of non-renewal at least thirty (30) days prior to the expiration of the then-current Subscription Term."
+    },
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "party": null,
+     "action": "The term ends",
+     "when": "12 months from the Effective Date",
+     "due_date": "2027-01-14",
+     "due_note": "The term is read as 12 months from 15 January 2026 (the Effective Date), ending on 14 January 2027 (counting the first day). Confirm before relying on it.",
+     "source": "rules",
+     "quote": "1.1 The initial Subscription Term is twelve (12) months from the Effective Date."
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "party": "Customer",
+     "action": "pay all fees",
+     "when": "within forty-five (45) days after receipt of each invoice",
+     "due_date": null,
+     "due_note": "Runs from each invoice; no date until it happens.",
+     "source": "rules",
+     "quote": "2.1 Customer shall pay all fees within forty-five (45) days after receipt of each invoice."
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "party": null,
+     "action": "suspend the Service",
+     "when": "fifteen (15) days after written notice of non-payment",
+     "due_date": null,
+     "due_note": "Runs from each invoice; no date until it happens.",
+     "source": "rules",
+     "quote": "2.2 Northbeam may suspend the Service if any undisputed amount remains unpaid fifteen (15) days after written notice of non-payment."
+    },
+    {
+     "clause": "3.1",
+     "kind": "notification",
+     "party": null,
+     "action": "notify Customer of any Security Incident",
+     "when": "within seventy-two (72) hours after confirming it",
+     "due_date": null,
+     "due_note": "Runs from an event (becoming aware); no date until it happens.",
+     "source": "rules",
+     "quote": "3.1 Northbeam shall notify Customer of any Security Incident within seventy-two (72) hours after confirming it."
+    },
+    {
+     "clause": "4.1",
+     "kind": "termination",
+     "party": "Either party",
+     "action": "terminate this Agreement for material breach",
+     "when": "within thirty (30) days after written notice",
+     "due_date": null,
+     "due_note": "Runs from an event (the notice or the breach); no date until it happens.",
+     "source": "rules",
+     "quote": "4.1 Either party may terminate this Agreement for material breach if the breach is not cured within thirty (30) days after written notice."
+    },
+    {
+     "clause": "4.2",
+     "kind": "post_termination",
+     "party": null,
+     "action": "make Customer Data available for export",
+     "when": "Within ten (10) days after termination",
+     "due_date": null,
+     "due_note": "Runs from termination or expiry; no date until it happens.",
+     "source": "rules",
+     "quote": "4.2 Within ten (10) days after termination, Northbeam shall make Customer Data available for export."
+    }
+   ]
+  },
+  {
+   "id": "G6-spa-completion-claims",
+   "ms": 15,
+   "control": false,
+   "lines": [
+    {
+     "clause": "5.1",
+     "kind": "duty",
+     "due": "2026-09-30",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2026-09-30",
+     "got_when": "on 30 September 2026",
+     "status": "proposed"
+    },
+    {
+     "clause": "5.2",
+     "kind": "duty",
+     "when": "sixty (60) Business Days after Completion",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within sixty (60) Business Days after Completion",
+     "status": "proposed"
+    },
+    {
+     "clause": "5.3",
+     "kind": "notice",
+     "when": "twenty (20) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within twenty (20) Business Days after receiving them",
+     "status": "proposed"
+    },
+    {
+     "clause": "8.1",
+     "kind": "notice",
+     "due": "2028-03-30",
+     "when": "eighteen (18) months after Completion",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": "2028-03-30",
+     "got_when": "within eighteen (18) months after Completion",
+     "status": "proposed"
+    },
+    {
+     "clause": "8.2",
+     "kind": "notice",
+     "when": "six (6) months after notice",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within six (6) months after notice of the Claim",
+     "status": "proposed"
+    },
+    {
+     "clause": "9.1",
+     "kind": "duty",
+     "when": "two (2) years after Completion",
+     "due": "2028-09-30",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": "2028-09-30",
+     "got_when": "two (2) years after Completion",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "5.1",
+     "kind": "duty",
+     "party": null,
+     "action": "take place",
+     "when": "on 30 September 2026",
+     "due_date": "2026-09-30",
+     "due_note": "On 30 September 2026, as the clause says.",
+     "source": "rules",
+     "quote": "5.1 Completion shall take place on 30 September 2026."
+    },
+    {
+     "clause": "8.1",
+     "kind": "notice",
+     "party": "Buyer",
+     "action": "not bring a Claim",
+     "when": "within eighteen (18) months after Completion",
+     "due_date": "2028-03-30",
+     "due_note": "18 months after Completion (30 September 2026): 30 March 2028. Confirm how the period is counted before relying on it.",
+     "source": "rules",
+     "quote": "8.1 The Buyer shall not bring a Claim unless it has given the Seller notice of the Claim within eighteen (18) months after Completion."
+    },
+    {
+     "clause": "9.1",
+     "kind": "duty",
+     "party": "Seller",
+     "action": "not solicit any employee of the Company",
+     "when": "two (2) years after Completion",
+     "due_date": "2028-09-30",
+     "due_note": "2 years after Completion (30 September 2026): 30 September 2028. Confirm how the period is counted before relying on it.",
+     "source": "rules",
+     "quote": "9.1 For a period of two (2) years after Completion, the Seller shall not solicit any employee of the Company."
+    },
+    {
+     "clause": "5.2",
+     "kind": "duty",
+     "party": "Seller",
+     "action": "deliver the Completion Accounts to the Buyer",
+     "when": "within sixty (60) Business Days after Completion",
+     "due_date": null,
+     "due_note": "Runs from an event (a request or the date the clause names); no date until it happens.",
+     "source": "rules",
+     "quote": "5.2 The Seller shall deliver the Completion Accounts to the Buyer within sixty (60) Business Days after Completion."
+    },
+    {
+     "clause": "5.3",
+     "kind": "notice",
+     "party": "Buyer",
+     "action": "dispute the Completion Accounts",
+     "when": "within twenty (20) Business Days after receiving them",
+     "due_date": null,
+     "due_note": "Runs from an event; no date until it happens.",
+     "source": "rules",
+     "quote": "5.3 The Buyer may dispute the Completion Accounts by notice given within twenty (20) Business Days after receiving them."
+    },
+    {
+     "clause": "8.2",
+     "kind": "notice",
+     "party": "Seller",
+     "action": "not be liable for any Claim",
+     "when": "within six (6) months after notice of the Claim",
+     "due_date": null,
+     "due_note": "Runs from an event; no date until it happens.",
+     "source": "rules",
+     "quote": "8.2 The Seller shall not be liable for any Claim unless proceedings are issued within six (6) months after notice of the Claim."
+    }
+   ]
+  },
+  {
+   "id": "G7-internal-note-control",
+   "ms": 230,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": []
+  },
+  {
+   "id": "G8-employment-uk",
+   "ms": 17,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.2",
+     "kind": "expiry",
+     "due": "2027-04-30",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2027-04-30",
+     "got_when": "6 months from the Start Date",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "31 December",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "by 31 December in each year",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "when": "three (3) months",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "on three (3) months' written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.2",
+     "kind": "post_termination",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "On termination",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.3",
+     "kind": "post_termination",
+     "when": "six (6) months after the Termination Date",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "For six (6) months after the Termination Date",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "1.2",
+     "kind": "expiry",
+     "party": null,
+     "action": "The probationary period ends",
+     "when": "6 months from the Start Date",
+     "due_date": "2027-04-30",
+     "due_note": "The probationary period is read as 6 months from 1 November 2026 (the Start Date), ending on 30 April 2027 (counting the first day). Confirm before relying on it.",
+     "source": "rules",
+     "quote": "1.2 The first six (6) months of employment from the Start Date are a probationary period."
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "party": null,
+     "action": "Holiday must be taken",
+     "when": "by 31 December in each year",
+     "due_date": null,
+     "due_note": "A right, not a deadline: no date.",
+     "source": "rules",
+     "quote": "2.1 Holiday must be taken by 31 December in each year."
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "party": "Either party",
+     "action": "terminate the employment",
+     "when": "on three (3) months' written notice",
+     "due_date": null,
+     "due_note": "Runs from an event (the notice or the breach); no date until it happens.",
+     "source": "rules",
+     "quote": "3.1 After the probationary period, either party may terminate the employment on three (3) months' written notice."
+    },
+    {
+     "clause": "3.2",
+     "kind": "post_termination",
+     "party": "Employee",
+     "action": "return all Company property",
+     "when": "On termination",
+     "due_date": null,
+     "due_note": "A right, not a deadline: no date.",
+     "source": "rules",
+     "quote": "3.2 On termination the Employee shall return all Company property."
+    },
+    {
+     "clause": "3.3",
+     "kind": "post_termination",
+     "party": "Employee",
+     "action": "not work for a competitor of the Company",
+     "when": "For six (6) months after the Termination Date",
+     "due_date": null,
+     "due_note": "Runs from termination or expiry; no date until it happens.",
+     "source": "rules",
+     "quote": "3.3 For six (6) months after the Termination Date, the Employee shall not work for a competitor of the Company."
+    }
+   ]
+  },
+  {
+   "id": "G9-loan-facility-us",
+   "ms": 13,
+   "control": false,
+   "lines": [
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "due": "2029-06-30",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2029-06-30",
+     "got_when": "on the Maturity Date",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "quarterly in arrears",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "quarterly in arrears on the last Business Day of each March",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.3",
+     "kind": "notice",
+     "when": "ten (10) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "not less than ten (10) Business Days' prior written notice to the Lender",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "duty",
+     "when": "one hundred twenty (120) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within one hundred twenty (120) days after the end of each fiscal year",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.2",
+     "kind": "notification",
+     "when": "five (5) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within five (5) Business Days",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "party": "Borrower",
+     "action": "repay the Loan in full",
+     "when": "on the Maturity Date",
+     "due_date": "2029-06-30",
+     "due_note": "On 30 June 2029 (the Maturity Date), as the clause says.",
+     "source": "rules",
+     "quote": "2.1 The Borrower shall repay the Loan in full on the Maturity Date."
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "party": null,
+     "action": "Interest is payable",
+     "when": "quarterly in arrears on the last Business Day of each March",
+     "due_date": null,
+     "due_note": "Recurring, on the dates the clause gives.",
+     "source": "rules",
+     "quote": "2.2 Interest is payable quarterly in arrears on the last Business Day of each March, June, September and December."
+    },
+    {
+     "clause": "2.3",
+     "kind": "notice",
+     "party": "Borrower",
+     "action": "prepay the Loan in whole or in part",
+     "when": "not less than ten (10) Business Days' prior written notice to the Lender",
+     "due_date": null,
+     "due_note": "Runs from an event; no date until it happens.",
+     "source": "rules",
+     "quote": "2.3 The Borrower may prepay the Loan in whole or in part upon not less than ten (10) Business Days' prior written notice to the Lender."
+    },
+    {
+     "clause": "3.1",
+     "kind": "duty",
+     "party": "Borrower",
+     "action": "deliver its annual financial statements",
+     "when": "within one hundred twenty (120) days after the end of each fiscal year",
+     "due_date": null,
+     "due_note": "Runs from an event (a request or the date the clause names); no date until it happens.",
+     "source": "rules",
+     "quote": "3.1 The Borrower shall deliver its annual financial statements within one hundred twenty (120) days after the end of each fiscal year."
+    },
+    {
+     "clause": "3.2",
+     "kind": "notification",
+     "party": "Borrower",
+     "action": "notify the Lender",
+     "when": "within five (5) Business Days",
+     "due_date": null,
+     "due_note": "Runs from an event (becoming aware); no date until it happens.",
+     "source": "rules",
+     "quote": "3.2 The Borrower shall notify the Lender within five (5) Business Days of any Event of Default."
+    }
+   ]
+  },
+  {
+   "id": "G10-press-release-control",
+   "ms": 223,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": []
+  },
+  {
+   "id": "G11-distribution-uk",
+   "ms": 26,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2031-01-11",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2031-01-11",
+     "got_when": "5 years from the date of this Agreement",
+     "status": "proposed"
+    },
+    {
+     "clause": "1.1",
+     "kind": "termination",
+     "when": "twelve (12) months",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "not less than twelve (12) months' notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "fifth Business Day of each month",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "by the fifth Business Day of each month",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "sixty (60) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within sixty (60) days of the end of the month in which it is issued",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.3",
+     "kind": "notice",
+     "when": "ninety (90) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "not less than ninety (90) days' written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "when": "three (3) months after the end of that year",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within three (3) months after the end of that year",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.1",
+     "kind": "post_termination",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "Upon termination",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.2",
+     "kind": "post_termination",
+     "when": "six (6) months after termination",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "for six (6) months after termination",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "party": null,
+     "action": "The term ends",
+     "when": "5 years from the date of this Agreement",
+     "due_date": "2031-01-11",
+     "due_note": "The term is read as 5 years from 12 January 2026 (the date of this agreement), ending on 11 January 2031 (counting the first day). Confirm before relying on it.",
+     "source": "rules",
+     "quote": "1.1 This Agreement shall remain in force for an initial period of five (5) years from the date of this Agreement and thereafter until terminated by either party giving not less than twelve (12) months' notice."
+    },
+    {
+     "clause": "1.1",
+     "kind": "termination",
+     "party": null,
+     "action": "remain in force for an initial period of five (5) years from the date of this Agreement and thereafter until terminated",
+     "when": "not less than twelve (12) months' notice",
+     "due_date": null,
+     "due_note": "Runs from an event (the notice or the breach); no date until it happens.",
+     "source": "rules",
+     "quote": "1.1 This Agreement shall remain in force for an initial period of five (5) years from the date of this Agreement and thereafter until terminated by either party giving not less than twelve (12) months' notice."
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "party": null,
+     "action": "place a forecast with the Supplier",
+     "when": "by the fifth Business Day of each month",
+     "due_date": null,
+     "due_note": "A right, not a deadline: no date.",
+     "source": "rules",
+     "quote": "2.1 The Distributor shall place a forecast with the Supplier by the fifth Business Day of each month."
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "party": null,
+     "action": "pay each invoice",
+     "when": "within sixty (60) days of the end of the month in which it is issued",
+     "due_date": null,
+     "due_note": "Runs from each invoice; no date until it happens.",
+     "source": "rules",
+     "quote": "2.2 The Distributor shall pay each invoice within sixty (60) days of the end of the month in which it is issued."
+    },
+    {
+     "clause": "2.3",
+     "kind": "notice",
+     "party": "Supplier",
+     "action": "increase its prices once in each calendar year",
+     "when": "not less than ninety (90) days' written notice",
+     "due_date": null,
+     "due_note": "Runs from an event; no date until it happens.",
+     "source": "rules",
+     "quote": "2.3 The Supplier may increase its prices once in each calendar year by giving the Distributor not less than ninety (90) days' written notice."
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "party": "Supplier",
+     "action": "terminate this Agreement",
+     "when": "within three (3) months after the end of that year",
+     "due_date": null,
+     "due_note": "Runs from an event (the notice or the breach); no date until it happens.",
+     "source": "rules",
+     "quote": "3.1 If the Distributor fails to meet the Minimum Purchase Target in any year, the Supplier may terminate this Agreement by giving thirty (30) days' notice within three (3) months after the end of that year."
+    },
+    {
+     "clause": "4.1",
+     "kind": "post_termination",
+     "party": null,
+     "action": "cease to use the Supplier's trade marks",
+     "when": "Upon termination",
+     "due_date": null,
+     "due_note": "A right, not a deadline: no date.",
+     "source": "rules",
+     "quote": "4.1 Upon termination the Distributor shall cease to use the Supplier's trade marks."
+    },
+    {
+     "clause": "4.2",
+     "kind": "post_termination",
+     "party": null,
+     "action": "sell its remaining stock for six (6) months after termination",
+     "when": "for six (6) months after termination",
+     "due_date": null,
+     "due_note": "Runs from termination or expiry; no date until it happens.",
+     "source": "rules",
+     "quote": "4.2 The Distributor may sell its remaining stock for six (6) months after termination."
+    }
+   ]
+  },
+  {
+   "id": "G12-escrow-us",
+   "ms": 15,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "duty",
+     "due": "2027-09-03",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2027-09-03",
+     "got_when": "on 3 September 2027",
+     "status": "proposed"
+    },
+    {
+     "clause": "1.2",
+     "kind": "notice",
+     "due": "2027-08-20",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2027-08-20",
+     "got_when": "on 20 August 2027",
+     "status": "proposed"
+    },
+    {
+     "clause": "1.3",
+     "kind": "duty",
+     "when": "three (3) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within three (3) Business Days",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "each anniversary",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "on each anniversary of the date of this Agreement",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "1.2",
+     "kind": "notice",
+     "party": "Buyer",
+     "action": "deliver any Claim Notice",
+     "when": "on 20 August 2027",
+     "due_date": "2027-08-20",
+     "due_note": "On 20 August 2027, as the clause says.",
+     "source": "rules",
+     "quote": "1.2 The Buyer must deliver any Claim Notice no later than August 20, 2027."
+    },
+    {
+     "clause": "1.1",
+     "kind": "duty",
+     "party": "Agent",
+     "action": "release the Escrow Amount to the Seller",
+     "when": "on 3 September 2027",
+     "due_date": "2027-09-03",
+     "due_note": "On 3 September 2027, as the clause says.",
+     "source": "rules",
+     "quote": "1.1 The Escrow Agent shall release the Escrow Amount to the Seller on September 3, 2027, unless a Claim Notice has been delivered."
+    },
+    {
+     "clause": "1.3",
+     "kind": "duty",
+     "party": "Agent",
+     "action": "respond to joint written instructions",
+     "when": "within three (3) Business Days",
+     "due_date": null,
+     "due_note": "Runs from an event (a request or the date the clause names); no date until it happens.",
+     "source": "rules",
+     "quote": "1.3 The Escrow Agent shall respond to joint written instructions within three (3) Business Days."
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "party": "Seller",
+     "action": "each pay one half of the Escrow Agent's annual fee",
+     "when": "on each anniversary of the date of this Agreement",
+     "due_date": null,
+     "due_note": "Recurring, on the dates the clause gives.",
+     "source": "rules",
+     "quote": "2.1 The Buyer and the Seller shall each pay one half of the Escrow Agent's annual fee on each anniversary of the date of this Agreement."
+    }
+   ]
+  },
+  {
+   "id": "G13-matter-summary-control",
+   "ms": 20,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": []
+  },
+  {
+   "id": "G14-lease-uk",
+   "ms": 1350,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2041-06-23",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2041-06-23",
+     "got_when": "15 years from 24 June 2026",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "quarterly",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "quarterly",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "duty",
+     "due": "2031-06-24",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2031-06-24",
+     "got_when": "on 24 June 2031",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "duty",
+     "when": "last year of the term",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "in the last year of the term",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.2",
+     "kind": "duty",
+     "when": "two (2) months after receiving it",
+     "found": false,
+     "when_ok": false,
+     "date_ok": false,
+     "got_due": null,
+     "got_when": null,
+     "status": null
+    },
+    {
+     "clause": "4.1",
+     "kind": "consent",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "without the Landlord's consent, which is not to be unreasonably withheld",
+     "status": "proposed"
+    }
+   ],
+   "extra": [
+    {
+     "clause": "3.2",
+     "kind": "notice",
+     "action": "carry out any repairs specified in a notice from the Landlord",
+     "due": null
+    }
+   ],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "2.2",
+     "kind": "duty",
+     "party": null,
+     "action": "The rent shall be reviewed",
+     "when": "on 24 June 2031",
+     "due_date": "2031-06-24",
+     "due_note": "On 24 June 2031, as the clause says.",
+     "source": "rules",
+     "quote": "2.2 The rent shall be reviewed on 24 June 2031 and every fifth anniversary after that."
+    },
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "party": null,
+     "action": "The term ends",
+     "when": "15 years from 24 June 2026",
+     "due_date": "2041-06-23",
+     "due_note": "The term is read as 15 years from 24 June 2026, ending on 23 June 2041 (counting the first day). Confirm before relying on it.",
+     "source": "rules",
+     "quote": "1.1 The term of this Lease is fifteen (15) years from and including 24 June 2026."
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "party": "Tenant",
+     "action": "pay the rent",
+     "when": "quarterly",
+     "due_date": null,
+     "due_note": "Recurring, on the dates the clause gives.",
+     "source": "rules",
+     "quote": "2.1 The Tenant shall pay the rent by equal quarterly payments in advance on the usual quarter days."
+    },
+    {
+     "clause": "3.1",
+     "kind": "duty",
+     "party": "Tenant",
+     "action": "redecorate the interior of the Premises",
+     "when": "in the last year of the term",
+     "due_date": null,
+     "due_note": "Read by the model from the words shown; a right, not a deadline: no date.",
+     "source": "model",
+     "quote": "3.1 The Tenant shall redecorate the interior of the Premises in the last year of the term."
+    },
+    {
+     "clause": "3.2",
+     "kind": "notice",
+     "party": "Tenant",
+     "action": "carry out any repairs specified in a notice from the Landlord",
+     "when": "within two (2) months after receiving it",
+     "due_date": null,
+     "due_note": "Runs from an event; no date until it happens.",
+     "source": "rules",
+     "quote": "3.2 The Tenant shall carry out any repairs specified in a notice from the Landlord within two (2) months after receiving it."
+    },
+    {
+     "clause": "4.1",
+     "kind": "consent",
+     "party": "Tenant",
+     "action": "not assign the whole of the Premises",
+     "when": "without the Landlord's consent, which is not to be unreasonably withheld",
+     "due_date": null,
+     "due_note": "A right, not a deadline: no date.",
+     "source": "rules",
+     "quote": "4.1 The Tenant shall not assign the whole of the Premises without the Landlord's consent, which is not to be unreasonably withheld."
+    }
+   ]
+  },
+  {
+   "id": "G15-supply-us",
+   "ms": 3477,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2029-01-31",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2029-01-31",
+     "got_when": "January 31, 2029",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "tenth (10th) day of each calendar month",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "no later than the tenth (10th) day of each calendar month",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "duty",
+     "when": "two (2) business days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within two (2) business days following receipt",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "notification",
+     "when": "fifteen (15) days following delivery",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within fifteen (15) days following delivery and notify Supplier",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.1",
+     "kind": "termination",
+     "when": "ninety (90) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "ninety (90) days' prior written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.2",
+     "kind": "payment",
+     "when": "thirty (30) days following the invoice date",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within thirty (30) days following the invoice date",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "party": null,
+     "action": "This Agreement commences on the Effective Date and expires on January 31, 2029",
+     "when": "January 31, 2029",
+     "due_date": "2029-01-31",
+     "due_note": "Read by the model from the words shown; on 31 January 2029, as the clause says.",
+     "source": "model",
+     "quote": "1.1 This Agreement commences on the Effective Date and expires on January 31, 2029."
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "party": "Buyer",
+     "action": "provide a rolling six-month forecast",
+     "when": "no later than the tenth (10th) day of each calendar month",
+     "due_date": null,
+     "due_note": "Read by the model from the words shown; a right, not a deadline: no date.",
+     "source": "model",
+     "quote": "2.1 Buyer shall provide a rolling six-month forecast no later than the tenth (10th) day of each calendar month."
+    },
+    {
+     "clause": "2.2",
+     "kind": "duty",
+     "party": "Supplier",
+     "action": "acknowledge each purchase order",
+     "when": "within two (2) business days following receipt",
+     "due_date": null,
+     "due_note": "Runs from an event (a request or the date the clause names); no date until it happens.",
+     "source": "rules",
+     "quote": "2.2 Supplier shall acknowledge each purchase order within two (2) business days following receipt."
+    },
+    {
+     "clause": "3.1",
+     "kind": "notification",
+     "party": "Buyer",
+     "action": "inspect the goods",
+     "when": "within fifteen (15) days following delivery and notify Supplier",
+     "due_date": null,
+     "due_note": "Runs from an event (becoming aware); no date until it happens.",
+     "source": "rules",
+     "quote": "3.1 Buyer shall inspect the goods within fifteen (15) days following delivery and notify Supplier of any defects."
+    },
+    {
+     "clause": "4.1",
+     "kind": "termination",
+     "party": "Either party",
+     "action": "terminate this Agreement",
+     "when": "ninety (90) days' prior written notice",
+     "due_date": null,
+     "due_note": "Read by the model from the words shown; runs from an event (the notice or the breach); no date until it happens.",
+     "source": "model",
+     "quote": "4.1 Either party may terminate this Agreement upon ninety (90) days' prior written notice to the other party."
+    },
+    {
+     "clause": "4.2",
+     "kind": "payment",
+     "party": "Buyer",
+     "action": "pay for all goods delivered",
+     "when": "within thirty (30) days following the invoice date",
+     "due_date": null,
+     "due_note": "Runs from each invoice; no date until it happens.",
+     "source": "rules",
+     "quote": "4.2 Upon expiration or termination, Buyer shall pay for all goods delivered within thirty (30) days following the invoice date."
+    }
+   ]
+  },
+  {
+   "id": "G16-engagement-letter-control",
+   "ms": 225,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true,
+   "outputs": []
+  }
+ ]
+}

@@ -38,7 +38,7 @@ from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import templates
 
-VERSION = "drafting-s3.1"
+VERSION = "drafting-s3.1f"
 GAP = re.compile(r"\[\[NEEDS INPUT:[^\]]*\]\]")
 _REF = re.compile(r"\{\{\s*([a-z][a-z0-9_]{0,40})\s*\}\}")
 _FIGURE = re.compile(
@@ -112,8 +112,27 @@ _NUMBER_WORDS = {"one", "two", "three", "four", "five", "six", "seven", "eight",
                  "eighteen", "twenty", "thirty", "forty", "fifty", "sixty", "ninety", "hundred", "thousand", "million"}
 
 
+# The words that name a legal document (s3.1c). s3.1e: the word must head the name ("Software Licence Agreement",
+# "Lease (fictional)", "Agreement for the Supply of Goods"), not merely appear in it ("the annual licence fee").
+_DOCUMENT_WORDS = re.compile(r"\b(?:agreement|contract|lease|licen[cs]e|deed|terms|conditions|order|policy|letter|memorandum|charter|"
+                             r"guarantee|mortgage|debenture|facility|instrument|undertaking|note|plan|articles|bylaws|by-laws)"
+                             r"(?:\s*\([^)]*\))?(?:\s+(?:dated|of|between|with|for|to|made|entered|signed|executed|relating|in|on)\b.*)?\s*[.,;]?\s*$",
+                             re.I)
+# A value that says the point is open is not a value (s3.1e): "Governing law: to be agreed" gives no governing law.
+_UNSETTLED = re.compile(r"^\s*(?:(?:is\s+|are\s+)?(?:still\s+)?(?:to\s+be\s+(?:agreed|confirmed|determined|decided|discussed|negotiated|advised)|"
+                        r"not\s+(?:yet\s+)?(?:agreed|stated|specified|known|decided|provided|given|confirmed)|tbc|tba|tbd|n/?a|none|unknown|"
+                        r"pending|open)\b)[\s.,;:!]*$", re.I)
+
+
+def unsettled(value: str) -> bool:
+    return bool(_UNSETTLED.match(value or ""))
+
+
 def has_figure(kind: str, value: str) -> bool:
-    """An amount, date or percentage has a figure in it; a period has a figure or a number word."""
+    """An amount, date or percentage has a figure in it; a period has a figure or a number word; an agreement is
+    named by a document word (a party's name is not an agreement)."""
+    if kind == "agreement":
+        return bool(_DOCUMENT_WORDS.search(" ".join((value or "").split())))
     if kind in ("money", "date", "percent"):
         return bool(re.search(r"\d", value or ""))
     if kind == "period":
@@ -151,7 +170,7 @@ async def _search(scope, query: str, documents: Optional[list[str]], k: int) -> 
     """The passages found, each widened from the matched window to its whole passage of the document
     (about LEGAL_CHUNK_CHARS): a drafted clause needs its neighbours, as a fee needs its payment term.
     The search has already checked that the person may see each one."""
-    result = await searchmod.search(scope, query, k=k, versions="signed", documents=documents)
+    result = await searchmod.search(scope, query, k=k, versions="signed", documents=documents, floor=False)   # s3.1d: values are checked against quotes
     passages = result["passages"]
     if not passages:
         return passages
@@ -185,6 +204,9 @@ async def extract(scope, f: dict, documents: Optional[list[str]], seen: Optional
     if value in (None, "", "null"):
         return out
     value = " ".join(str(value).split())[:400]
+    if unsettled(value):
+        out["suggestion"] = {"value": value, "reason": "the documents say this point is not settled"}
+        return out
     try:
         n = int(ans.get("source"))
     except (TypeError, ValueError):
@@ -204,7 +226,8 @@ async def extract(scope, f: dict, documents: Optional[list[str]], seen: Optional
         return out
     src = _where(where, found, str(quote))
     if not has_figure(f["kind"], value):
-        out["suggestion"] = {"value": value, "reason": f"it is not {'an amount' if f['kind'] == 'money' else 'a ' + f['kind']}", "quote": src["quote"]}
+        what = {"money": "an amount", "agreement": "an agreement's name", "address": "an address"}.get(f["kind"], "a " + f["kind"])
+        out["suggestion"] = {"value": value, "reason": f"it is not {what}", "quote": src["quote"]}
         return out
     if not grounded(f["kind"], value, src["quote"]):
         out["suggestion"] = {"value": value, "reason": "the value is not in the quoted words", "quote": src["quote"]}
@@ -229,11 +252,14 @@ async def write(scope, instruction: str, title: str, template_name: str, fields:
     passages = await _search(scope, instruction, documents, k=6)
     if not passages and fallback:                      # the passages the fields were found in
         passages = fallback[:6]
+    if not passages:                                   # s3.1d: nothing to write from; the lawyer writes it
+        return {"type": "paragraph", "origin": "written", "instruction": instruction, "text": f"[[NEEDS INPUT: {instruction}]]",
+                "sources": [], "unsupported": []}
     confirmed = [f for f in fields if f["value"] and f["status"] in ("sourced", "matter", "system", "entered")]
     details = "\n".join(f"- {f['label']}: {f['value']}" for f in confirmed) or "- (none)"
     user = (f"WRITE: {instruction}\nDOCUMENT: {title} ({template_name})\nCONFIRMED DETAILS:\n{details}\n"
             + (f"NOTE FROM THE LAWYER: {note}\n" if note else "")
-            + f"\n{_sources_block(passages) if passages else '(no sources were found)'}\n\n{REMINDER}")
+            + f"\n{_sources_block(passages)}\n\n{REMINDER}")
     raw = await llm_mod.get().chat([{"role": "system", "content": WRITE_SYSTEM}, {"role": "user", "content": user}],
                                    temperature=0.1, max_tokens=900)
     para = evidence.parse(_numbered(research_prompt.clean(raw or ""), passages))
@@ -312,6 +338,33 @@ def assemble(content: dict) -> dict:
     return content
 
 
+_LEGAL_FORM = re.compile(r"(?:\s+(?:ltd|limited|plc|llp|lp|llc|inc|incorporated|corp|corporation|co|company|ab|as|asa|oy|gmbh|ag|sa|sas|"
+                         r"srl|spa|bv|nv|pty|pte|kk))+$")
+
+
+def _party_key(value: str) -> str:
+    """"Northbridge Analytics AB" and "Northbridge Analytics" are one party (s3.1f)."""
+    return _LEGAL_FORM.sub("", re.sub(r"\W+", " ", value.casefold()).strip()).strip()
+
+
+def distinct_parties(fields: list[dict]) -> None:
+    """Two party fields never name the same party (s3.1b): a party read from the documents that another field
+    already names is left for a person, with the value shown as a suggestion and the reason. The matter's own
+    parties (its client) are compared first, whatever the field order (s3.1f)."""
+    party = [f for f in fields if f["kind"] == "party" and f.get("value") and f["status"] in ("sourced", "matter")]
+    named = [f for f in party if f["status"] == "matter"]
+    for f in party:
+        if f["status"] != "sourced":
+            continue
+        first = next((g for g in named if _party_key(g["value"]) == _party_key(f["value"])), None)
+        if first is None:
+            named.append(f)
+            continue
+        quote = f["sources"][0]["quote"] if f["sources"] else None
+        f.update(value=None, status="needs_input", sources=[],
+                 suggestion={"value": f["value"], "reason": f"the same party is already given as {first['label']}", "quote": quote})
+
+
 async def draft(principal: dict, matter_id: str, template: dict, version: dict, title: str,
                 documents: Optional[list[str]], note: Optional[str]) -> tuple[dict, dict]:
     scope = scopemod.authorize(principal, matter_id, "ai.draft")
@@ -327,6 +380,7 @@ async def draft(principal: dict, matter_id: str, template: dict, version: dict, 
             fields.append({**base, "value": None, "status": "needs_input"})
         else:
             fields.append(await extract(scope, f, documents, seen))
+    distinct_parties(fields)
     blocks = []
     for b in templates.parse(version["body"]):
         if b["type"] == "heading":

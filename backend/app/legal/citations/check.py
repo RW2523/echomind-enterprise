@@ -26,7 +26,7 @@ from ..documents import repo as documents
 from ..redlines.word import ops as diff_ops
 from . import parse
 
-VERSION = "citations-s3.4d"
+VERSION = "citations-s3.4g"
 NOTICE = ("External authorities are listed but not verified: no licensed law library is connected (decision P-009) and nothing "
           "is looked up. Check each one in a licensed source before relying on it.")
 _GENERIC = {"agreement", "contract", "lease", "deed", "letter", "policy", "terms", "memorandum", "licence", "license", "order form"}

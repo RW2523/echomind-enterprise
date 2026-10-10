@@ -7,8 +7,8 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.9-gate` |
-| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.8 merged (S3.3's manual Word check 🔒); S3.9 (the Phase 3 gate) next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.1-intake` |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 next: S4.1 |
 | Plan documents | Committed to `feature/echomind-law` |
 | Migrations | `0001`–`0030` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
@@ -567,6 +567,25 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Evaluation:** golden 9/9, then held-out 3/6 (no extras, control clean), then s3.8b fixes; golden G1–G6 15/15. s3.8b is measured at S3.9.
 - **Also in this slice:** S3.7's doc placeholder filled; demo seed test for both presets.
 
+### Session 3 (continued) — S3.9 Phase 3 gate
+- **Fresh blind held-out sets, each committed before its run.** Every run is in `releases/phase3-gate.md` §2.
+  - **Citations:** court rules (s3.4e), then s3.4f (lettered sub-paragraphs) and s3.4g (UK Act names). Final blind set: 24/24.
+  - **Drafting:** five fixes:
+    - s3.1b: one party for two fields;
+    - s3.1c: an agreement field must name a document;
+    - s3.1d: drafting search without the research abstention floor, and no prose from nothing;
+    - s3.1e: an agreement named by its head word, and unsettled points not taken as values;
+    - s3.1f: the matter's client compared first, legal forms ignored.
+
+    Final blind set: 9/10, wrong 0, invented 0. Golden: 0 wrong in three runs on s3.1f.
+  - **Others:** definitions 9/11, obligations 7/7 (with the model), diligence 5/5, governance 4/4.
+- **`run_gate.py --phase 3`:**
+  - runs the Phase 3 suites, cites held-out reports already made on the current version, then runs the security suite and the browser journeys;
+  - final run on `b134208`: 17 steps, 0 failed (security 901 tests; browser 29/29).
+- **Round trips:** two LibreOffice tests added: a corrections redline deleting a clause, and the released Word export.
+- **Lawyer review packet** (`make_packet.py --phase 3`, 66 items), `score.py --phase 3`, and rubric `releases/phase3-rubric.md`. Scoring is 🔒.
+- **Docs:** D-053, run 30, `releases/phase3-gate.md`. Merged into `feature/echomind-law` under the standing approval.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -574,6 +593,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - 2026-10-09: **APPROVED** after the S1.5–S1.8 report: D-005, D-012, D-014 (as implemented), D-023, D-025 and D-026. S1.9 started.
 - 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
 - 2026-10-10: **APPROVED** the Phase 2 gate (`releases/phase2-gate.md`): merge S2.8 and start S3.1. The owner added: "approve everything and finish everything". This is taken as standing approval to build and merge every remaining slice and phase gate in order, including the Phase 4 business approval. Items that need a person (the lawyer review, the manual Word check, counsel's P-decisions) or that act outside this machine or on the shared host (a GitHub push, the first `compose.sh up` next to production, root) are confirmed one by one.
+- 2026-10-10: the Phase 3 gate (`releases/phase3-gate.md`) was merged under that standing approval. Its lawyer review and the manual Word check remain 🔒.
 - Still 🔒:
   - the first `scripts/law/compose.sh up` on the shared host;
   - any push or PR to GitHub;
@@ -600,9 +620,9 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | LIVE-01 | PARTIAL: built; real-audio accuracy pending the speech stack (🔒) | S2.4 | Verbatim immutable record, roster speakers, wall-clock times, gaps and degradation shown, revisions with provenance, matter vocabulary, finalised transcripts in research and purges, accuracy harness (D-040) |
 | LIVE-02 | DONE for the pilot; thresholds await P-008 | S1.7, S2.5 | Three legal packs with evidence-relative alerts, exact quotes, confirm or dismiss with a reason, telemetry, matter-only sources (D-041). The voice service's research stream is unchanged (S1.7) |
 | MEET-01 | DONE for the pilot | S1.8, S2.6 | Agenda and board-pack research; agenda marks; minutes from the whole transcript with verified sources, guards and deterministic merging; versioned edits; second-lawyer approval bound to the content hash; filing; purge and hold (D-042). Reviews queue and export hash binding: S2.7. S2.7: Reviews queue and shared review components |
-| DOC-01 | DONE for the pilot | S3.1 | Firm templates (versions, approval by a managing partner, Word styles, presets); drafts with sourced fields and cited passages, gaps for anything unsupported; second-lawyer approval; filed as Word (D-045) |
+| DOC-01 | DONE for the pilot | S3.1, S3.9 | Firm templates (versions, approval by a managing partner, Word styles, presets); drafts with sourced fields and cited passages, gaps for anything unsupported; second-lawyer approval; filed as Word (D-045). Phase 3 gate: five fixes; final blind set 9/10, wrong 0 (D-053) |
 | DOC-02 | PARTIAL: built; manual Word check 🔒 | S3.2–S3.3 | Playbooks (D-046); redlines and Word tracked changes, T10 automated checks and LibreOffice round trips pass (D-047). The manual Microsoft Word check by a person is pending |
-| DOC-03 | DONE for the pilot (court rules not yet read) | S3.4 | References resolved to exact clauses or flagged missing; quotations compared word for word with diffs; external authorities listed and always UNVERIFIED (P-009), impossible ones flagged; per-viewer targets; T07 golden 55/55, held-out 27/28 (D-048) |
+| DOC-03 | DONE for the pilot | S3.4, S3.9 | References resolved to exact clauses or flagged missing; quotations compared word for word with diffs; external authorities listed and always UNVERIFIED (P-009), impossible ones flagged; per-viewer targets (D-048). Phase 3 gate: court rules and UK Act names; golden 124/124, fifth blind set 24/24 (D-053) |
 | DOC-04 | DONE for the pilot (undefined-term detection heuristic) | S3.5 | Definitions, numbering and references with offsets; corrections only through an approved redline; held-out 12/12 on the third blind set (D-049) |
 | DOC-05 | DONE for the pilot (reminders not sent) | S3.6 | Rules and checked model proposals with exact words; dates only from the document; confirmed by a lawyer; versioned edits; held-out 10/12 with the model (D-050) |
 | DOC-06 | DONE for the pilot | S3.7 | Approved checklists; data-room runs; missing list; quoted issues, preliminary until reviewed; held-out 9/11 and 5/6 issues, no extras (D-051) |
@@ -613,7 +633,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | OPT-04 | BLOCKED | S4.4 | Licensed source plus network approval |
 | OPT-05 | MISSING | S4.5 | Needs business approval |
 | OPS-01 | PARTIAL | S1.0, S1.12 + OPS | S1.0: versioned migrations with down scripts + CLI; isolated compose stack. S1.12: encrypted backup and restore (`app.legal.backup`), rollback guard for audit, holds and source permissions, DR drill on real data (D-032). Runbooks and LUKS (host root) remain |
-| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7. S1.12: `security_suite.sh`, `injection_probe.py`, `egress_test.sh`, `dr_drill.sh`, `legacy_smoke.py` + legacy browser smoke, `stability_runs.sh`. Load test (T12) and CI remain. S2.8: evaluation runs (migration 0022, import command, Evaluations page), `run_gate.py`, `load_test.py` (T12 smoke), lawyer review packet and scorer, Phase 2 security groups (D-044) |
+| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7. S1.12: `security_suite.sh`, `injection_probe.py`, `egress_test.sh`, `dr_drill.sh`, `legacy_smoke.py` + legacy browser smoke, `stability_runs.sh`. Load test (T12) and CI remain. S2.8: evaluation runs (migration 0022, import command, Evaluations page), `run_gate.py`, `load_test.py` (T12 smoke), lawyer review packet and scorer, Phase 2 security groups (D-044). S3.9: `run_gate.py --phase 3` with the security and browser suites, Phase 3 packet and scorer (D-053) |
 
 ## Known risks right now
 
@@ -639,24 +659,25 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S3.9 Phase 3 gate** on `law/s3.9-gate`, per IMPLEMENTATION_PLAN §7: a planted-error suite, format round trips, and human sign-off. S3.8 is merged into `feature/echomind-law`.
-1. **Fresh blind held-out sets,** written and committed before any run, for every Phase 3 checker changed since its last held-out run:
-   - citations: court rules (Fed. R. Civ. P., CPR) not yet read; build that first, then the held-out set;
-   - definitions s3.5c and undefined-term recall;
-   - obligations s3.6g, with the model;
-   - diligence s3.7c;
-   - governance s3.8b.
+Start **Phase 4** under the owner's standing approval (2026-10-10). Each slice sits behind its own flag, off by default (IMPLEMENTATION_PLAN §7, Phase 4). Phase 3 is merged into `feature/echomind-law`.
 
-   Report every run, including any that fail.
-2. **Planted-error suite (`eval/law/run_gate.py --phase 3`):** one command that runs, in order:
-   - the Phase 3 golden and held-out sets (drafting, playbook, redline T10, citations T07, definitions, obligations, diligence, governance);
-   - the security suite;
-   - the browser suite.
+1. **S4.1 Intake assistant (OPT-01)** on `law/s4.1-intake`. Audit first: the legacy Smart Receptionist and voice intake code, consent, and conflicts data. Then tests red first. The slice covers:
+   - scripted administrative intake by text (voice through the existing capture path, with consent before recording);
+   - a disclaimer;
+   - conflict-name screening against client, matter-party and adverse-party lists, with minimised output: "possible conflict, refer to the conflicts team", never which matter;
+   - lawyer-approved replies only;
+   - the flag `LEGAL_INTAKE` (off).
+2. Then **S4.2:** summaries with timecode and page/line citations and reviewer edits. Translation stays BLOCKED (no local MT model or licence).
+3. Then **S4.3:** time-entry drafts from audited activities, edited and approved by the user, CSV export only.
+4. Then **S4.5:** the four-perspective panel, with independent citations, a disagreement matrix, a missing-fact stop, partner approval, a background queue and a benchmark.
+5. S4.4 stays BLOCKED (a licensed source and network approval).
+6. Phase 4 gate after S4.5.
 
-   It records each evaluation run (migration 0022) for the Evaluations page.
-3. **Format round trips:**
-   - drafting Word and PDF, redlines with tracked changes, filed corrections, and exports, opened by LibreOffice and checked (T10 and T09 already automated);
-   - the manual Microsoft Word check stays 🔒.
-4. **Human sign-off packet** (like S2.8's `lawyer_review`): fictional outputs of every Phase 3 feature for a lawyer to score, with a rubric. 🔒 It needs a person; prepare it, do not fake it.
-5. **`releases/phase3-gate.md`:** what is done, the measured results (every held-out run as it went), what is 🔒, the risks, and the decision asked of the owner.
-6. Then D-053, run 30; merge. Then Phase 4 (S4.1, S4.2 without MT, S4.3, S4.5; S4.4 blocked), as approved.
+Still 🔒 and confirmed one by one:
+- the Phase 2 and Phase 3 lawyer reviews;
+- the manual Word check;
+- P-001…P-015;
+- any GitHub push;
+- the first `compose.sh up`;
+- the root-run T11;
+- the load-test window.

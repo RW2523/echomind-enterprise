@@ -26,7 +26,18 @@ _CIRCUIT = re.compile(r"^(\d{1,2})(?:st|nd|rd|th) Cir\.$")
 _UK_COURTS = {"UKSC": 2009, "UKPC": 1830, "UKHL": 1876, "EWCA Civ": 2001, "EWCA Crim": 2001, "EWHC": 2001, "UKUT": 2008, "UKFTT": 2008,
               "CSIH": 2005, "CSOH": 2005}
 
+_RULE_SETS = {"civ": ("the Federal Rules of Civil Procedure", 1, 87), "evid": ("the Federal Rules of Evidence", 101, 1103),
+              "app": ("the Federal Rules of Appellate Procedure", 1, 48), "crim": ("the Federal Rules of Criminal Procedure", 1, 61),
+              "bankr": ("the Federal Rules of Bankruptcy Procedure", 1001, 9037)}
+_ACT_WORD = r"[A-Z][a-z]+"
+_ACT_JOIN = r"(?:of(?:\s+the)?|and|against|for|to|on|in)"
+_ACT_NAME = (r"(?!(?:See|Under|The|In|By|Also|Cf|And|Or|Per|From|With|This|That|Section|Part|Schedule)\b)" + _ACT_WORD
+             + r"(?:\s+(?:" + _ACT_JOIN + r"\s+)?(?:" + _ACT_WORD + r"|\([A-Z][A-Za-z ,]{2,60}\))){0,9}")
 AUTHORITIES = [
+    # S3.9: court rules. Federal Rules (Fed. R. Civ. P. 81(c), Fed. R. Evid. 401) and the English Civil Procedure Rules
+    # (CPR r. 3.4, CPR 31.16, CPR Part 36, CPR PD 51U).
+    ("us_rule", re.compile(r"\bFed\.\s?R\.\s?(?P<set>Civ|Evid|App|Crim|Bankr)\.(?:\s?P\.)?\s?(?P<num>\d{1,4})(?:\([a-z0-9]{1,4}\))*")),
+    ("uk_rule", re.compile(r"\bCPR\s+(?:(?P<kind>r\.|rule|Part|PD)\s?)?(?P<num>\d{1,3}[A-Z]?)(?:\.\d{1,3})*(?:\([a-z0-9]{1,4}\))*")),
     ("us_code", re.compile(r"\b(?P<title>\d{1,3})\s+U\.\s?S\.\s?C\.(?:\s?A\.)?\s*(?:§§?|[Ss]ec(?:tion)?\.?)\s*(?P<sec>\d[\w\-]*(?:\.[\w\-]+)*(?:\([\w]+\))*)")),
     ("cfr", re.compile(r"\b(?P<title>\d{1,3})\s+C\.\s?F\.\s?R\.\s*(?:§§?|[Pp]art)\s*(?P<sec>\d[\w\-]*(?:\.[\w\-]+)*(?:\([\w]+\))*)")),
     ("us_case", re.compile(r"(?P<name>(?:[A-Z][\w.'&-]*\s+){0,4}[A-Z][\w.'&-]*\s+v\.?\s+(?:[A-Z][\w.'&-]*\s+){0,4}[A-Z][\w.'&-]*),\s+"
@@ -37,7 +48,9 @@ AUTHORITIES = [
     ("uk_report", re.compile(r"\[(?P<year>\d{4})\]\s+(?:(?P<vol>\d{1,2})\s+)?(?P<rep>AC|QB|KB|Ch|WLR|All ER|Lloyd's Rep|BCLC|BCC)\s+(?P<page>\d{1,5})")),
     ("uk_report_old", re.compile(r"\((?P<year>1[5-9]\d{2}|20\d{2})\)\s+(?P<vol>\d{1,3})\s+(?P<rep>Exch|ER|QBD|Ch D|App Cas|CB|M & W|B & Ald|"
                                  r"Cr App R|P & CR|TLR|LT|LJ Ch|LJQB|Lloyd's Rep|WLR|All ER|BCLC|BCC)\s+(?P<page>\d{1,5})")),
-    ("uk_act", re.compile(r"(?:(?:[Ss]ection|s\.?)\s+(?P<sec>\d+[A-Z]?(?:\(\d+\))*)\s+of\s+the\s+)?(?P<act>(?:[A-Z][a-z]+\s+){1,6}Act\s+(?P<year>\d{4}))"
+    # s3.4g: Act names with joining words and a bracketed part (Late Payment of Commercial Debts (Interest) Act 1998); a word
+    # that opens a sentence or a phrase (See, Under, The) is not part of the name.
+    ("uk_act", re.compile(r"(?:(?:[Ss]ection|s\.?)\s+(?P<sec>\d+[A-Z]?(?:\(\d+\))*)\s+of\s+the\s+)?(?P<act>" + _ACT_NAME + r"\s+Act\s+(?P<year>\d{4}))"
                           r"(?:,\s+s(?:ection)?\.?\s*(?P<sec2>\d+[A-Z]?))?")),
     ("eu_act", re.compile(r"(?P<kind>Regulation|Directive|Decision)\s+\((?P<sys>EU|EC|EEC|Euratom)\)\s+(?:No\s+)?(?P<a>\d{2,4})/(?P<b>\d{1,4})"
                           r"|Directive\s+(?P<a2>\d{2,4})/(?P<b2>\d{1,4})/(?P<sys2>EU|EC|EEC)")),
@@ -94,6 +107,12 @@ def _malformed(sub: str, m: re.Match) -> list[str]:
             out.append(f"{court} gave no judgments before {began}")
         if court == "UKHL" and year and year > 2009:
             out.append("the House of Lords stopped sitting in 2009")
+    if sub == "us_rule":
+        name, lo, hi = _RULE_SETS[g["set"].casefold()]
+        if not lo <= int(g["num"]) <= hi:
+            out.append(f"there is no Rule {g['num']} of {name}")
+    if sub == "uk_rule" and (g.get("kind") or "").casefold() in ("part", "") and g["num"].isdigit() and int(g["num"]) > 89:
+        out.append(f"the Civil Procedure Rules have no Part {g['num']}")
     if sub == "eu_act":
         years = [int(v) for k, v in g.items() if k in ("a", "b", "a2", "b2") and v and len(v) == 4]
         out += [f"the year {y} is in the future" for y in years if y > _YEAR_NOW]

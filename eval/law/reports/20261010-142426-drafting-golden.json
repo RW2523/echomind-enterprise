@@ -1,0 +1,697 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "dd9059c+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-142426",
+  "prompt_version": "drafting-s3.1f"
+ },
+ "summary": {
+  "scenarios": 13,
+  "field_accuracy": "41/42",
+  "absent_left_open": "6/6",
+  "wrong_values": 0,
+  "invented_figures": 0,
+  "written_passages": 16,
+  "unsupported_sentences": 6,
+  "seconds_per_draft": 9.8
+ },
+ "scenarios": [
+  {
+   "id": "engagement-harrowgate",
+   "template": "engagement_letter",
+   "seconds": 10.3,
+   "fields": [
+    {
+     "field": "client_address",
+     "expected": "14 Quay Street",
+     "value": "14 Quay Street, Gothenburg 411 04, Sweden",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Our postal address is 14 Quay Street, Gothenburg 411 04, Sweden.",
+     "suggestion": null
+    },
+    {
+     "field": "client_contact",
+     "expected": "Petra Voss",
+     "value": "Petra Voss",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Please direct all correspondence to Petra Voss.",
+     "suggestion": null
+    },
+    {
+     "field": "fee_arrangement",
+     "expected": "18,000",
+     "value": "USD 18,000",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The client, Harrowgate Systems Inc., has requested legal advice regarding the renewal of its Master Services Agreement with Northwind Logistics Ltd, including a review of the supplier's redline and the negotiation of the liability cap. The agreed fee for the renewal negotiation is a fixed fee of USD 18,000, payable in two instalments. The matter is identified as Engagement letter — Harrowgate renewal, with the matter number EVAL-D1.",
+     "sources": 3,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 3
+  },
+  {
+   "id": "nda-lantern",
+   "template": "nda",
+   "seconds": 5.1,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Alder Biotech",
+     "value": "Alder Biotech AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Alder Biotech AB and Northbridge Analytics Ltd.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Northbridge Analytics",
+     "value": "Northbridge Analytics Ltd.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Alder Biotech AB and Northbridge Analytics Ltd.",
+     "suggestion": null
+    },
+    {
+     "field": "purpose",
+     "expected": "joint venture",
+     "value": "to evaluate a joint venture in clinical data analytics",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to evaluate a joint venture in clinical data analytics",
+     "suggestion": null
+    },
+    {
+     "field": "confidentiality_period",
+     "expected": "three",
+     "value": "three (3) years",
+     "status": "sourced",
+     "ok": true,
+     "quote": "three (3) years from the date of the agreement",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "Sweden",
+     "value": "the laws of Sweden",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The agreement will be governed by the laws of Sweden.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 0
+  },
+  {
+   "id": "engagement-missing-fee",
+   "template": "engagement_letter",
+   "seconds": 4.6,
+   "fields": [
+    {
+     "field": "client_contact",
+     "expected": "Karin Lindqvist",
+     "value": "Karin Lindqvist",
+     "status": "sourced",
+     "ok": true,
+     "quote": "From: Karin Lindqvist, Chair, Voss-Lindqvist AB.",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "fee_arrangement",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    },
+    {
+     "field": "client_address",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The client has requested legal advice concerning the proposed interim dividend and the directors' duties that apply to it. The engagement letter is to be sent to Karin Lindqvist at the registered office of Voss-Lindqvist AB. [[NEEDS INPUT: check against the documents]] The matter is assigned the matter number EVAL-D3.",
+     "sources": 2,
+     "unsupported": [
+      "The matter is assigned the matter number EVAL-D3."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 6
+  },
+  {
+   "id": "review-software-licence",
+   "template": "contract_review",
+   "seconds": 13.2,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Software Licence Agreement",
+     "value": "SOFTWARE LICENCE AGREEMENT",
+     "status": "sourced",
+     "ok": true,
+     "quote": "SOFTWARE LICENCE AGREEMENT (fictional)",
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Northbridge Analytics",
+     "value": "Northbridge Analytics Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Northbridge Analytics Ltd (the Licensor)",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "Sweden",
+     "value": "Sweden",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Agreement is governed by the laws of Sweden.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The Agreement is for a term of three (3) years, commencing on 1 January 2026. Either party may terminate the Agreement for material breach upon thirty (30) days' written notice if the breach is not remedied.",
+     "sources": 2,
+     "unsupported": []
+    },
+    {
+     "text": "The Licence Agreement provides for an annual licence fee of EUR 120,000, invoiced annually in advance and payable within forty-five (45) days.  \n\nThe total liability of either party under this Agreement is limited to the fees paid in the twelve (12) months before the claim.  \n\nNeither party is liable for loss of profit or indirect loss.  \n\nThis Agreement is governed by the laws of Sweden.",
+     "sources": 4,
+     "unsupported": []
+    },
+    {
+     "text": "[[NEEDS INPUT: check against the documents]] The Licence Agreement limits the liability of both parties. The total liability of either party under this Agreement shall not exceed the fees paid in the twelve (12) months before the claim. Additionally, neither party is liable for loss of profit or indirect loss.",
+     "sources": 2,
+     "unsupported": [
+      "The Licence Agreement limits the liability of both parties."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 2
+  },
+  {
+   "id": "demand-northwind",
+   "template": "demand_letter",
+   "seconds": 14.4,
+   "fields": [
+    {
+     "field": "recipient",
+     "expected": "Northwind Logistics",
+     "value": "Northwind Logistics Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Northwind Logistics Ltd",
+     "suggestion": null
+    },
+    {
+     "field": "recipient_address",
+     "expected": "2 Harbour Road",
+     "value": "Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Notices to the Customer shall be sent to Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom.",
+     "suggestion": null
+    },
+    {
+     "field": "agreement",
+     "expected": "Supply Agreement",
+     "value": "the Supply Agreement",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Supply Agreement is made between Harrowgate Systems Inc. (the Supplier) and Northwind Logistics Ltd (the Customer).",
+     "suggestion": null
+    },
+    {
+     "field": "amount_claimed",
+     "expected": "42,750",
+     "value": "GBP 42,750",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The total outstanding is GBP 42,750.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "Northwind Logistics Ltd is the recipient of unpaid invoices issued by Harrowgate Systems Inc. under the Supply Agreement. The invoices in question are HS-1041 and HS-1042, issued on 3 June 2026 and 1 July 2026, respectively. The total amount outstanding is GBP 42,750. The Customer is required to pay each invoice within thirty (30) days of its date. The invoices remain unpaid, and the amount claimed is GBP 42,750. Notices to the Customer are to be sent to Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom. [[NEEDS INPUT: check against the documents]] The claim is made on 10 October 2026. [[NEEDS INPUT: check against the documents]] The breach complained of is the failure of Northwind Logistics Ltd to pay the invoices within the stipulated period.",
+     "sources": 5,
+     "unsupported": [
+      "The claim is made on 10 October 2026.",
+      "The breach complained of is the failure of Northwind Logistics Ltd to pay the invoices within the stipulated period."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 4
+  },
+  {
+   "id": "review-warehouse-lease",
+   "template": "contract_review",
+   "seconds": 17.4,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Lease",
+     "value": "LEASE OF WAREHOUSE PREMISES (fictional)",
+     "status": "sourced",
+     "ok": true,
+     "quote": "LEASE OF WAREHOUSE PREMISES (fictional)",
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Elmfield Estates",
+     "value": "Elmfield Estates Ltd and Alder Biotech AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Lease is made between Elmfield Estates Ltd (the Landlord) and Alder Biotech AB (the Tenant).",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "England and Wales",
+     "value": "the law of England and Wales",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Lease is governed by the law of England and Wales.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The term of the Lease is ten (10) years from 1 April 2025. The Tenant may terminate this Lease on 31 March 2030 by giving not less than six months' written notice. [[NEEDS INPUT: check against the documents]] The Landlord may terminate this Lease by giving not less than six months' written notice to the Tenant. The Lease is governed by the law of England and Wales.",
+     "sources": 3,
+     "unsupported": [
+      "The Landlord may terminate this Lease by giving not less than six months' written notice to the Tenant."
+     ]
+    },
+    {
+     "text": "The Tenant agrees to pay rent of GBP 84,000 per year, payable quarterly in advance. The term of this Lease is ten (10) years from 1 April 2025. The Tenant may terminate this Lease on 31 March 2030 by giving not less than six months' written notice. The Landlord's total liability under this Lease shall not exceed the rent paid in the preceding twelve months. This Lease is governed by the law of England and Wales.",
+     "sources": 5,
+     "unsupported": []
+    },
+    {
+     "text": "The Landlord's liability under this Lease is limited to the rent paid in the preceding twelve months. There are no other exclusions or limitations of liability specified in the Lease. The Lease is governed by the law of England and Wales.",
+     "sources": 2,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 2
+  },
+  {
+   "id": "nda-missing-period",
+   "template": "nda",
+   "seconds": 3.6,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Harrowgate",
+     "value": "Harrowgate Systems Inc.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Harrowgate Systems Inc. and Elmfield Estates Ltd will exchange confidential information to assess a possible warehouse automation project.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Elmfield",
+     "value": "Elmfield Estates Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Elmfield Estates Ltd",
+     "suggestion": null
+    },
+    {
+     "field": "purpose",
+     "expected": "warehouse automation",
+     "value": "assess a possible warehouse automation project",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to assess a possible warehouse automation project",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "confidentiality_period",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    },
+    {
+     "field": "governing_law",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 2
+  },
+  {
+   "id": "engagement-corran",
+   "template": "engagement_letter",
+   "seconds": 5.4,
+   "fields": [
+    {
+     "field": "client_address",
+     "expected": "9 Mill Lane",
+     "value": "9 Mill Lane, Leeds LS2 7EX",
+     "status": "sourced",
+     "ok": true,
+     "quote": "9 Mill Lane, Leeds LS2 7EX",
+     "suggestion": null
+    },
+    {
+     "field": "client_contact",
+     "expected": "Imogen Hale",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "fee_arrangement",
+     "expected": "25,000",
+     "value": "GBP 25,000 plus VAT",
+     "status": "sourced",
+     "ok": true,
+     "quote": "We agreed a capped fee of GBP 25,000 plus VAT for the pre-action stage.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "We have been instructed to act for Corran Foods Ltd in the dispute with its packaging supplier. The scope of the legal services includes the pre-action stage of the dispute, with a capped fee of GBP 25,000 plus VAT. [[NEEDS INPUT: check against the documents]] The matter is assigned the matter number EVAL-D8.",
+     "sources": 2,
+     "unsupported": [
+      "The matter is assigned the matter number EVAL-D8."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 5
+  },
+  {
+   "id": "demand-brightwater",
+   "template": "demand_letter",
+   "seconds": 10.0,
+   "fields": [
+    {
+     "field": "recipient",
+     "expected": "Brightwater Retail",
+     "value": "Brightwater Retail Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Brightwater Retail Ltd",
+     "suggestion": null
+    },
+    {
+     "field": "recipient_address",
+     "expected": "40 Canal Street",
+     "value": "Brightwater Retail Ltd, 40 Canal Street, Manchester M1 3HE",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Notices to the Licensee shall be sent to Brightwater Retail Ltd, 40 Canal Street, Manchester M1 3HE.",
+     "suggestion": null
+    },
+    {
+     "field": "agreement",
+     "expected": "Software Licence Agreement",
+     "value": "SOFTWARE LICENCE AGREEMENT",
+     "status": "sourced",
+     "ok": true,
+     "quote": "SOFTWARE LICENCE AGREEMENT (fictional extract)",
+     "suggestion": null
+    },
+    {
+     "field": "amount_claimed",
+     "expected": "310,000",
+     "value": "SEK 310,000",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Amount outstanding: SEK 310,000.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "Brightwater Retail Ltd is the Licensee under the Software Licence Agreement with Northbridge Analytics AB. Notices to the Licensee are to be sent to Brightwater Retail Ltd, 40 Canal Street, Manchester M1 3HE. The Licensee is required to pay the annual licence fee within thirty (30) days of invoice. An invoice for the 2026 annual licence fee, numbered NA-2207, remains unpaid. The amount outstanding is SEK 310,000.",
+     "sources": 5,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 2
+  },
+  {
+   "id": "nda-no-law",
+   "template": "nda",
+   "seconds": 4.7,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Corran",
+     "value": "Corran Foods Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Corran Foods Ltd and Alder Biotech AB.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Alder",
+     "value": "Alder Biotech AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Parties: Corran Foods Ltd and Alder Biotech AB.",
+     "suggestion": null
+    },
+    {
+     "field": "purpose",
+     "expected": "plant-based protein",
+     "value": "to evaluate a joint development of plant-based protein ingredients",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Purpose: to evaluate a joint development of plant-based protein ingredients.",
+     "suggestion": null
+    },
+    {
+     "field": "confidentiality_period",
+     "expected": "two",
+     "value": "two (2) years",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Confidential information is to be protected for two (2) years from disclosure.",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "governing_law",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 1
+  },
+  {
+   "id": "review-kestrel-distribution",
+   "template": "contract_review",
+   "seconds": 13.7,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Distribution Agreement",
+     "value": "DISTRIBUTION AGREEMENT",
+     "status": "sourced",
+     "ok": true,
+     "quote": "DISTRIBUTION AGREEMENT (fictional)",
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Kestrel Audio",
+     "value": "Kestrel Audio GmbH (the Supplier) and Pinewood Retail Ltd (the Distributor",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Distribution Agreement is made between Kestrel Audio GmbH (the Supplier) and Pinewood Retail Ltd (the Distributor).",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "Germany",
+     "value": "the laws of Germany",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Agreement is governed by the laws of Germany.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The Distribution Agreement between Kestrel Audio GmbH (the Supplier) and Pinewood Retail Ltd (the Distributor) is governed by the laws of Germany. The term of the Agreement is not specified in the provided text. Either party may terminate the Agreement on six months' written notice.",
+     "sources": 3,
+     "unsupported": []
+    },
+    {
+     "text": "The fees and payment terms are not specified in the Distribution Agreement. The agreement does not provide details regarding the fees payable by the Distributor or the payment terms for such fees. [[NEEDS INPUT: Details of fees and payment terms]] The agreement provides for termination on six months' written notice. The governing law of the agreement is the laws of Germany.",
+     "sources": 3,
+     "unsupported": []
+    },
+    {
+     "text": "The Distribution Agreement provides for the termination of the agreement by either party upon six months' written notice. The Agreement is governed by the laws of Germany. The limitation and exclusion of liability are not explicitly addressed in the provided text. [[NEEDS INPUT: Details of limitation and exclusion of liability clauses]]",
+     "sources": 3,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 3
+  },
+  {
+   "id": "demand-pinewood-rent",
+   "template": "demand_letter",
+   "seconds": 18.4,
+   "fields": [
+    {
+     "field": "recipient",
+     "expected": "Pinewood Retail",
+     "value": "Pinewood Retail Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Pinewood Retail Ltd (the Tenant).",
+     "suggestion": null
+    },
+    {
+     "field": "recipient_address",
+     "expected": "Unit 4, Riverside Park",
+     "value": "Unit 4, Riverside Park, Bristol BS1 6QH",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Notices to the Tenant shall be served at Unit 4, Riverside Park, Bristol BS1 6QH.",
+     "suggestion": null
+    },
+    {
+     "field": "agreement",
+     "expected": "Lease",
+     "value": "the Lease",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Lease is made between Ashcombe Properties Ltd (the Landlord) and Pinewood Retail Ltd (the Tenant).",
+     "suggestion": null
+    },
+    {
+     "field": "amount_claimed",
+     "expected": "36,500",
+     "value": "GBP 36,500",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Total arrears: GBP 36,500.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The Lease is made between Ashcombe Properties Ltd (the Landlord) and Pinewood Retail Ltd (the Tenant). Notices to the Tenant shall be served at Unit 4, Riverside Park, Bristol BS1 6QH. The Tenant is required to pay the rent quarterly in advance on the usual quarter days. The rent due on 25 March 2026 and 24 June 2026 is unpaid. Total arrears amount to GBP 36,500. The Lease is the agreement between the parties. The Client is Ashcombe Properties Ltd. The Recipient is Pinewood Retail Ltd. The Recipient address is Unit 4, Riverside Park, Bristol BS1 6QH. The amount claimed is GBP 36,500. The date of this document is 10 October 2026. The breach complained of is the failure by the Tenant to pay the rent due on 25 March 2026 and 24 June 2026.",
+     "sources": 5,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 2
+  },
+  {
+   "id": "engagement-ashcombe-no-fee",
+   "template": "engagement_letter",
+   "seconds": 6.2,
+   "fields": [
+    {
+     "field": "client_contact",
+     "expected": "Daniel Okafor",
+     "value": "Daniel Okafor, Head of Legal, Ashcombe Properties Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "From: Daniel Okafor, Head of Legal, Ashcombe Properties Ltd",
+     "suggestion": null
+    },
+    {
+     "field": "client_address",
+     "expected": "12 Quayside",
+     "value": "12 Quayside, Bristol BS1 4RN",
+     "status": "sourced",
+     "ok": true,
+     "quote": "12 Quayside, Bristol BS1 4RN",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "fee_arrangement",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The firm has been engaged to act for Ashcombe Properties Ltd on the renewal of the Riverside Park lease. The scope of the legal services includes the renewal of the lease, as specified in the instruction received from the client. Further details regarding the scope of work are to be discussed during the client's next call with the firm.",
+     "sources": 2,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 4
+  }
+ ]
+}

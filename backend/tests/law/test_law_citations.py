@@ -195,15 +195,33 @@ def test_lawyers_notes_are_kept_through_an_attempted_rollback(ct, fresh_db):
     ("[2020] EWHC 1234 (Comm)", "uk_neutral", []),
     ("[1932] AC 562", "uk_report", []),
     ("section 2 of the Unfair Contract Terms Act 1977", "uk_act", []),
+    ("Late Payment of Commercial Debts (Interest) Act 1998", "uk_act", []),
+    ("Contracts (Rights of Third Parties) Act 1999", "uk_act", []),
+    ("Sale of Goods Act 1979", "uk_act", []),
+    ("Third Parties (Rights against Insurers) Act 2010", "uk_act", []),
     ("Directive 93/13/EEC", "eu_act", []),
     ("Case C-131/12", "cjeu_case", []),
     ("60 U.S.C. § 1", "us_code", ["the US Code has no title 60"]),
     ("29 C.F.R. Part 1910", "cfr", []),
+    ("Fed. R. Civ. P. 81(c)", "us_rule", []),
+    ("Fed. R. Evid. 401", "us_rule", []),
+    ("Fed. R. Civ. P. 95", "us_rule", ["there is no Rule 95 of the Federal Rules of Civil Procedure"]),
+    ("CPR r. 3.4(2)(a)", "uk_rule", []),
+    ("CPR Part 36", "uk_rule", []),
+    ("CPR Part 96", "uk_rule", ["the Civil Procedure Rules have no Part 96"]),
 ])
 def test_the_parser_reads_authorities_and_flags_impossible_ones(text, sub, bad):
     from app.legal.citations import parse
     found = [f for f in parse.read(f"See {text} for this.") if f.kind == "authority"]
     assert [f.sub for f in found] == [sub] and found[0].malformed == bad
+    if sub.endswith("_rule") or sub == "uk_act":
+        assert found[0].text == text      # the whole rule or Act name (citations-s3.4f, s3.4g)
+
+
+def test_words_before_an_act_name_are_not_part_of_it():
+    from app.legal.citations import parse
+    text = "See Sale of Goods Act 1979. Under the Companies Act 2006 and The Arbitration Act 1996, nothing changes."
+    assert [f.text for f in parse.read(text) if f.kind == "authority"] == ["Sale of Goods Act 1979", "Companies Act 2006", "Arbitration Act 1996"]
 
 
 def test_the_parser_reads_references_and_quotations():

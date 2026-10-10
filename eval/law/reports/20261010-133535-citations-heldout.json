@@ -1,0 +1,281 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "3446d1e",
+  "time": "20261010-133535",
+  "prompt_version": "citations-s3.4g",
+  "model": "none (rules only)",
+  "embeddings": "nomic-embed-text (indexing on import only)"
+ },
+ "summary": {
+  "items": 24,
+  "correct": "24/24",
+  "references": "4/4",
+  "missing_caught": "2/2",
+  "false_missing": 0,
+  "quotations": "4/4",
+  "altered_caught": "1/1",
+  "false_alarms": 0,
+  "authorities_found": "16/16",
+  "malformed_caught": "4/4",
+  "wrongly_flagged": 0,
+  "all_unverified": true,
+  "external_lookups": 0,
+  "extra_items": 0,
+  "ms_per_check": 30
+ },
+ "scenarios": [
+  {
+   "id": "S1-executive-exit-uk",
+   "ms": 33,
+   "lines": [
+    {
+     "kind": "quote",
+     "text": "For twelve months after the Termination Date the Executive shall not solicit any Client",
+     "status": "altered",
+     "clause": "12.2",
+     "in": "Service Agreement",
+     "ok": true,
+     "got": "altered, clause 12.2 of Service Agreement",
+     "got_status": "altered",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "for up to three months",
+     "status": "accurate",
+     "clause": "18.1",
+     "in": "Service Agreement",
+     "ok": true,
+     "got": "accurate, clause 18.1 of Service Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 22.5 of the Service Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Service Agreement has no clause 22.5.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "section 98 of the Employment Rights Act 1996",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Contracts (Rights of Third Parties) Act 1999",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2019] UKSC 32",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[1916] 1 AC 688",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2003] UKSC 14",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: UKSC gave no judgments before 2009",
+     "got_status": "unverified",
+     "got_malformed": true
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "S2-distribution-memo-eu",
+   "ms": 19,
+   "lines": [
+    {
+     "kind": "authority",
+     "text": "Regulation (EU) 2022/720",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Directive 2014/104/EU",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Case C-230/16",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EU) 2031/45",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the year 2031 is in the future",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Case T-112/29",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the year 29 is in the future",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "reference",
+     "text": "paragraph 1.1",
+     "status": "resolved",
+     "clause": "1.1",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 1.1 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Paragraph 3.4",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no paragraph 3.4.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "S3-msa-memo-us",
+   "ms": 37,
+   "lines": [
+    {
+     "kind": "quote",
+     "text": "within forty-five (45) days of receipt",
+     "status": "accurate",
+     "clause": "5.2",
+     "in": "Master Services Agreement",
+     "ok": true,
+     "got": "accurate, clause 5.2 of Master Services Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "In no event shall either party's aggregate liability exceed the fees paid in the twelve (12) months preceding the claim",
+     "status": "accurate",
+     "clause": "9.1",
+     "in": "Master Services Agreement",
+     "ok": true,
+     "got": "accurate, clause 9.1 of Master Services Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 13.1 of the Master Services Agreement",
+     "status": "resolved",
+     "clause": "13.1",
+     "in": "Master Services Agreement",
+     "ok": true,
+     "got": "resolved, clause 13.1 of Master Services Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "9 U.S.C. § 2",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "29 C.F.R. Part 1630",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Civ. P. 26(b)(1)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "245 A.3d 101 (Del. Ch. 2021)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "54 U.S.C. § 100101",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "63 U.S.C. § 12",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the US Code has no title 63",
+     "got_status": "unverified",
+     "got_malformed": true
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  }
+ ]
+}

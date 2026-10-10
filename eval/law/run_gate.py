@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EchoMind Law Phase 2 gate: every evaluation, once, on the code under test (S2.8; decision D-044).
+"""EchoMind Law gates: every evaluation, once, on the code under test (S2.8, D-044; S3.9, D-053).
 
 Runs each suite as its own script (each builds and deletes its own throwaway data folder) with the
 real models on this host, then writes one gate summary next to the suite reports:
@@ -11,19 +11,24 @@ real models on this host, then writes one gate summary next to the suite reports
 - transcription, scripted (LIVE-01; the word error rate on real audio needs the speech stack, 🔒);
 - the prompt-injection probe (T08), with the defences on.
 
-Held-out sets are run once on this version and never used to change it.
+Held-out sets are run once on this version and never used to change it. Phase 3 (S3.9) runs drafting,
+playbooks, redlines (T10), citations (T07), definitions, obligations, due diligence and governance; a
+held-out report already made on the current version and held-out file is cited rather than run again.
+Phase 3 then runs the security suite and the browser journeys, and keeps their counts as reports.
 
-    cd backend && python3 ../eval/law/run_gate.py                     # everything (about 8 minutes on the DGX Spark)
+    cd backend && python3 ../eval/law/run_gate.py                     # Phase 2: everything (about 8 minutes on the DGX Spark)
+    cd backend && python3 ../eval/law/run_gate.py --phase 3           # Phase 3: drafting to governance, then the security and browser suites
     cd backend && python3 ../eval/law/run_gate.py --only minutes,assist
     cd backend && python3 ../eval/law/run_gate.py --import-into ../.law-data   # also record the runs there
 
-The summary is eval/law/reports/<time>-gate-phase2.json and .md. Nothing leaves this host.
+The summary is eval/law/reports/<time>-gate-phase<N>.json and .md. Nothing leaves this host.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -48,6 +53,32 @@ STEPS = [
     ("transcription", "script", [str(HERE / "transcription" / "run_transcription_eval.py"), "--asr", "script"]),
     ("injection", "probe", None),
 ]
+# Phase 3 (S3.9): the document tools. Rules-only suites need no model; drafting, playbooks and the obligations
+# model pass use the host's model.
+PHASE3 = [
+    ("drafting", "golden", [str(HERE / "drafting" / "run_drafting_eval.py"), "--set", "golden"]),
+    ("drafting", "heldout", [str(HERE / "drafting" / "run_drafting_eval.py"), "--set", "heldout"]),
+    ("playbook", "golden", [str(HERE / "playbook" / "run_playbook_eval.py"), "--set", "golden"]),
+    ("playbook", "heldout", [str(HERE / "playbook" / "run_playbook_eval.py"), "--set", "heldout"]),
+    ("redline", "t10", [str(HERE / "redline" / "run_redline_eval.py")]),
+    ("citations", "golden", [str(HERE / "citations" / "run_citations_eval.py"), "--set", "golden"]),
+    ("citations", "heldout", [str(HERE / "citations" / "run_citations_eval.py"), "--set", "heldout"]),
+    ("definitions", "golden", [str(HERE / "definitions" / "run_definitions_eval.py"), "--set", "golden"]),
+    ("definitions", "heldout", [str(HERE / "definitions" / "run_definitions_eval.py"), "--set", "heldout"]),
+    ("obligations", "golden", [str(HERE / "obligations" / "run_obligations_eval.py"), "--set", "golden"]),
+    ("obligations", "heldout", [str(HERE / "obligations" / "run_obligations_eval.py"), "--set", "heldout"]),
+    ("diligence", "golden", [str(HERE / "diligence" / "run_diligence_eval.py"), "--set", "golden"]),
+    ("diligence", "heldout", [str(HERE / "diligence" / "run_diligence_eval.py"), "--set", "heldout"]),
+    ("governance", "golden", [str(HERE / "governance" / "run_governance_eval.py"), "--set", "golden"]),
+    ("governance", "heldout", [str(HERE / "governance" / "run_governance_eval.py"), "--set", "heldout"]),
+    ("security", "suite", None),         # scripts/law/security_suite.sh, every spec-test group
+    ("browser", "e2e", None),            # the Law browser journeys (Playwright starts its own servers)
+]
+# Held-out sets run once per version (D-044, D-053): a held-out report made on the current rules or prompt version
+# and the same held-out file is cited by the gate, not run again. A changed version or a new blind set runs.
+VERSIONS = {"drafting": "drafting/engine.py", "playbook": "playbooks/check.py", "citations": "citations/check.py",
+            "definitions": "definitions/check.py", "obligations": "obligations/extract.py", "diligence": "diligence/run.py",
+            "governance": "diligence/run.py"}
 # Latency figures each suite reports, gathered for the gate (seconds).
 LATENCY = {"research": ["latency_first_paragraph_p50_s", "latency_first_paragraph_p95_s", "latency_total_p50_s", "latency_total_p95_s"],
            "assist": ["latency_p50_s", "latency_max_s"], "minutes": ["seconds"]}
@@ -62,6 +93,26 @@ def _newest(suite: str, set_: str, since: set[str]) -> Path | None:
     fresh = [p for p in REPORTS.glob("*.json") if p.name not in since and p.name.endswith(end)
              and (suite != "research" or p.name.count("-") == 2)]
     return max(fresh, key=lambda p: p.name) if fresh else None
+
+
+def _version(suite: str) -> str | None:
+    m = re.search(r'^VERSION = "([^"]+)"', (BACKEND / "app" / "legal" / VERSIONS[suite]).read_text(), re.M)
+    return m.group(1) if m else None
+
+
+def _already_run(suite: str, set_: str) -> Path | None:
+    """The newest held-out report on this version, if it ran the held-out file as it is now."""
+    if set_ != "heldout" or suite not in VERSIONS:
+        return None
+    want = _version(suite)
+    for p in sorted(REPORTS.glob(f"*-{suite}-heldout.json"), reverse=True):
+        meta = json.loads(p.read_text()).get("meta", {})
+        if meta.get("prompt_version") != want:
+            continue
+        commit = (meta.get("commit") or "").split("+")[0]
+        same = bool(commit) and subprocess.run(["git", "diff", "--quiet", commit, "--", f"eval/law/{suite}/heldout.json"], cwd=ROOT).returncode == 0
+        return p if same else None
+    return None
 
 
 def _git(*args: str) -> str:
@@ -85,13 +136,37 @@ def _injection(args) -> tuple[int, Path]:
     return p.returncode, out
 
 
+def _command(suite: str, args) -> tuple[int, Path]:
+    """The security suite and the browser journeys: run as they are, kept as a report with their counts."""
+    if suite == "security":
+        p = subprocess.run(["bash", str(ROOT / "scripts" / "law" / "security_suite.sh")], cwd=ROOT, capture_output=True, text=True)
+        rows = [ln for ln in p.stdout.splitlines()[1:] if ln.strip()]
+        summary = {"groups": len(rows), "failed_groups": sum(("failed" in ln or "error" in ln or "passed" not in ln) for ln in rows),
+                   "tests_passed": sum(int(m) for ln in rows for m in re.findall(r"(\d+) passed", ln))}
+        items = rows
+    else:
+        p = subprocess.run(["npx", "playwright", "test"], cwd=ROOT / "frontend", capture_output=True, text=True)
+        tail = p.stdout.splitlines()[-40:]
+        n = lambda word: sum(int(m) for ln in tail for m in re.findall(rf"^\s*(\d+) {word}\b", ln))
+        summary = {"passed": n("passed"), "failed": n("failed"), "flaky": n("flaky"), "skipped": n("skipped")}
+        items = [ln for ln in p.stdout.splitlines() if re.search(r"(✓|✘|ok|x)\s+\d+ ", ln)][-60:]
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    out = REPORTS / f"{stamp}-{suite}-{'suite' if suite == 'security' else 'e2e'}.json"
+    out.write_text(json.dumps({"meta": {"set": "suite" if suite == "security" else "e2e", "commit": _commit(), "time": stamp},
+                               "summary": summary, "items": items}, indent=1, ensure_ascii=False))
+    return p.returncode, out
+
+
 def _commit() -> str:
-    return _git("rev-parse", "--short", "HEAD") + ("+changes" if _git("status", "--porcelain", "--", ".", ":!eval/law/reports") else "")   # new reports are not code changes
+    dirty = _git("status", "--porcelain", "--", ".", ":!eval/law/reports", ":!docs/echomind-law/design/screens")   # reports and journey screenshots are not code
+    return _git("rev-parse", "--short", "HEAD") + ("+changes" if dirty else "")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--only", default="", help="comma-separated suites (research, compare, assist, minutes, transcription, injection)")
+    ap.add_argument("--phase", type=int, choices=[2, 3], default=2, help="2: research to minutes (S2.8); 3: the document tools (S3.9)")
+    ap.add_argument("--only", default="", help="comma-separated suites (phase 2: research, compare, assist, minutes, transcription, injection; "
+                                                 "phase 3: drafting, playbook, redline, citations, definitions, obligations, diligence, governance, security, browser)")
     ap.add_argument("--llm", default="http://localhost:8355/v1")
     ap.add_argument("--model", default="nvidia/Qwen3-30B-A3B-FP4")
     ap.add_argument("--trials", type=int, default=3, help="injection probe trials per question")
@@ -100,13 +175,18 @@ def main() -> int:
     only = {s.strip() for s in args.only.split(",") if s.strip()}
     REPORTS.mkdir(exist_ok=True)
     started, results = time.strftime("%Y%m%d-%H%M%S"), []
-    for suite, set_, cmd in STEPS:
+    for suite, set_, cmd in (PHASE3 if args.phase == 3 else STEPS):
         if only and suite not in only:
             continue
         before = {p.name for p in REPORTS.glob("*.json")}
         t0 = time.monotonic()
         print(f"… {suite} {set_}", flush=True)
-        if cmd is None:
+        reused = _already_run(suite, set_)
+        if reused:
+            code, report = 0, reused
+        elif cmd is None and suite in ("security", "browser"):
+            code, report = _command(suite, args)
+        elif cmd is None:
             code, report = _injection(args)
         else:
             p = subprocess.run([PY, *cmd], cwd=BACKEND, capture_output=True, text=True)
@@ -119,19 +199,21 @@ def main() -> int:
             data = json.loads(report.read_text())
             summary = data.get("summary") or {k: v for k, v in data.items() if k in ("alignment", "explanations", "scan")}
         results.append({"suite": suite, "set": set_, "ok": code == 0 and report is not None, "seconds": seconds,
-                        "report": report.name if report else None, "summary": summary})
-        print(f"  {'ok' if results[-1]['ok'] else 'FAILED'} in {seconds}s → {results[-1]['report']}", flush=True)
+                        "report": report.name if report else None, "summary": summary, "reused": bool(reused)})
+        print(f"  {'ok' if results[-1]['ok'] else 'FAILED'} in {seconds}s → {results[-1]['report']}"
+              + (" (held-out already run on this version; cited, not run again)" if reused else ""), flush=True)
     latency = {f"{r['suite']}_{r['set']}": {k: r["summary"][k] for k in LATENCY.get(r["suite"], []) if k in r["summary"]}
                for r in results if LATENCY.get(r["suite"])}
     stamp = time.strftime("%Y%m%d-%H%M%S")
-    meta = {"set": "phase2", "commit": _commit(), "model": args.model, "time": stamp, "started": started}
+    meta = {"set": f"phase{args.phase}", "commit": _commit(), "model": args.model, "time": stamp, "started": started}
     gate = {"meta": meta, "summary": {"suites": len(results), "failed": sum(not r["ok"] for r in results), "latency_s": latency},
             "runs": results}
-    out = REPORTS / f"{stamp}-gate-phase2.json"
+    out = REPORTS / f"{stamp}-gate-phase{args.phase}.json"
     out.write_text(json.dumps(gate, indent=1, ensure_ascii=False))
-    md = [f"# EchoMind Law — Phase 2 gate run", "", f"- Commit: `{meta['commit']}`", f"- Model: `{args.model}`", f"- Run: {started} → {stamp}", "",
+    md = [f"# EchoMind Law — Phase {args.phase} gate run", "", f"- Commit: `{meta['commit']}`", f"- Model: `{args.model}`", f"- Run: {started} → {stamp}", "",
           "| Suite | Set | Result | Time (s) | Report |", "|---|---|---|---|---|"]
-    md += [f"| {r['suite']} | {r['set']} | {'ok' if r['ok'] else '**failed**'} | {r['seconds']} | {r['report'] or '—'} |" for r in results]
+    md += [f"| {r['suite']} | {r['set']} | {'ok' if r['ok'] else '**failed**'}{' (cited: already run on this version)' if r['reused'] else ''} "
+           f"| {r['seconds']} | {r['report'] or '—'} |" for r in results]
     md += ["", "## Latency (seconds, from the suite reports)", ""] + [f"- {k}: {v}" for k, v in latency.items() if v]
     out.with_suffix(".md").write_text("\n".join(md) + "\n")
     print(f"gate: eval/law/reports/{out.name}")

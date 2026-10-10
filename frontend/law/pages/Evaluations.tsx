@@ -10,6 +10,7 @@ const SUITE: Record<string, string> = {
   research: 'Research answers', compare: 'Compare and conflicts', assist: 'Silent Assist', minutes: 'Minutes',
   transcription: 'Transcription', injection: 'Prompt injection', latency: 'Latency', load: 'Load', gate: 'Gate',
   lawyer: 'Lawyer review', drafting: 'Drafting', playbook: 'Playbook checks', redline: 'Redlines (Word)', citations: 'Citations and quotes',
+  definitions: 'Definitions and references', obligations: 'Obligations and deadlines', diligence: 'Due diligence', governance: 'Governance checks',
 };
 // The measures a reviewer looks at first, per suite; anything else is in the report file.
 const HEADLINE: Record<string, string[]> = {
@@ -22,6 +23,10 @@ const HEADLINE: Record<string, string[]> = {
   playbook: ['accuracy', 'deviations_caught', 'passed_in_error'],
   redline: ['verified', 'missed', 'libreoffice_round_trips_kept'],
   citations: ['correct', 'missing_caught', 'false_missing', 'altered_caught', 'false_alarms', 'malformed_caught', 'wrongly_flagged', 'external_lookups'],
+  definitions: ['caught', 'fixes_right', 'false_findings', 'controls_clean'],
+  obligations: ['found', 'timing_in_its_words', 'dates_right', 'dates_guessed', 'extra', 'controls_clean'],
+  diligence: ['missing_lists_right', 'issues_found', 'extra_issues', 'controls_clean'],
+  governance: ['found', 'extra', 'controls_clean'],
 };
 const label = (k: string) => k.replace(/_/g, ' ').replace(/\bp(50|95)\b/, 'p$1').replace(/\bs$/, '(s)');
 

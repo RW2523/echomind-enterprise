@@ -1,79 +1,273 @@
 {
-  "scenarios": [
+ "about": "S3.1 drafting — the TUNING set. Fictional documents only. demand-northwind, review-warehouse-lease and nda-missing-period were the first held-out set; they informed code fixes (D-045, four reported runs), so they became tuning data at the Phase 3 gate (S3.9). engagement-corran, demand-brightwater and nda-no-law were the second held-out set (run on s3.1, then on s3.1b where the agreement field took a party's name); that informed s3.1c, so they became tuning data. review-kestrel-distribution, demand-pinewood-rent and engagement-ashcombe-no-fee were the third held-out set (run once on s3.1c: 5/9, wrong 0); it showed the research abstention floor emptying drafting's search on a short email, fixed in s3.1d, so they became tuning data. A scenario's \"client\" names the matter's client, as a firm's matter would (s3.1f); without it the client is \"Evaluation client\".",
+ "scenarios": [
+  {
+   "id": "engagement-harrowgate",
+   "template": "engagement_letter",
+   "title": "Engagement letter — Harrowgate renewal",
+   "documents": [
     {
-      "id": "engagement-harrowgate",
-      "template": "engagement_letter",
-      "title": "Engagement letter — Harrowgate renewal",
-      "documents": [
-        {
-          "name": "engagement-request.txt",
-          "status": "final",
-          "text": "ENGAGEMENT REQUEST (fictional)\n\nFrom: Petra Voss, General Counsel, Harrowgate Systems Inc.\n\nHarrowgate Systems Inc. asks the firm to advise on the renewal of its Master Services Agreement with Northwind Logistics Ltd, including a review of the supplier's redline and the negotiation of the liability cap.\n\nOur postal address is 14 Quay Street, Gothenburg 411 04, Sweden.\n\nThe agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments.\n\nPlease direct all correspondence to Petra Voss."
-        }
-      ],
-      "expect": {
-        "client_address": "14 Quay Street",
-        "client_contact": "Petra Voss",
-        "fee_arrangement": "18,000"
-      },
-      "absent": []
-    },
-    {
-      "id": "nda-lantern",
-      "template": "nda",
-      "title": "Mutual NDA — Project Lantern",
-      "documents": [
-        {
-          "name": "term-sheet.txt",
-          "status": "final",
-          "text": "TERM SHEET — PROJECT LANTERN (fictional)\n\nParties: Alder Biotech AB and Northbridge Analytics Ltd.\n\nThe parties intend to exchange confidential information to evaluate a joint venture in clinical data analytics.\n\nConfidential information shall be protected for three (3) years from the date of the agreement.\n\nThe agreement will be governed by the laws of Sweden."
-        }
-      ],
-      "expect": {
-        "party_a": "Alder Biotech",
-        "party_b": "Northbridge Analytics",
-        "purpose": "joint venture",
-        "confidentiality_period": "three",
-        "governing_law": "Sweden"
-      },
-      "absent": []
-    },
-    {
-      "id": "engagement-missing-fee",
-      "template": "engagement_letter",
-      "title": "Engagement letter — Voss-Lindqvist board advice",
-      "documents": [
-        {
-          "name": "instruction-email.txt",
-          "status": "final",
-          "text": "INSTRUCTION EMAIL (fictional)\n\nFrom: Karin Lindqvist, Chair, Voss-Lindqvist AB.\n\nVoss-Lindqvist AB would like the firm to advise the board on the proposed interim dividend and the directors' duties that apply to it.\n\nPlease send the engagement letter to Karin Lindqvist at the registered office.\n\nWe have not yet discussed fees."
-        }
-      ],
-      "expect": {
-        "client_contact": "Karin Lindqvist"
-      },
-      "absent": [
-        "fee_arrangement",
-        "client_address"
-      ]
-    },
-    {
-      "id": "review-software-licence",
-      "template": "contract_review",
-      "title": "Contract review — analytics licence",
-      "documents": [
-        {
-          "name": "licence-agreement.txt",
-          "status": "executed",
-          "text": "SOFTWARE LICENCE AGREEMENT (fictional)\n\nThis Software Licence Agreement is made between Northbridge Analytics Ltd (the Licensor) and Voss-Lindqvist AB (the Licensee).\n\n2.1 This Agreement starts on 1 January 2026 and continues for three (3) years.\n\n2.3 Either party may terminate this Agreement for material breach on thirty (30) days' written notice if the breach is not remedied.\n\n5.1 The Licensee shall pay an annual licence fee of EUR 120,000, invoiced annually in advance and payable within forty-five (45) days.\n\n8.1 Neither party's total liability under this Agreement shall exceed the fees paid in the twelve (12) months before the claim.\n\n8.2 Neither party is liable for loss of profit or indirect loss.\n\n14.1 This Agreement is governed by the laws of Sweden."
-        }
-      ],
-      "expect": {
-        "agreement": "Software Licence Agreement",
-        "parties": "Northbridge Analytics",
-        "governing_law": "Sweden"
-      },
-      "absent": []
+     "name": "engagement-request.txt",
+     "status": "final",
+     "text": "ENGAGEMENT REQUEST (fictional)\n\nFrom: Petra Voss, General Counsel, Harrowgate Systems Inc.\n\nHarrowgate Systems Inc. asks the firm to advise on the renewal of its Master Services Agreement with Northwind Logistics Ltd, including a review of the supplier's redline and the negotiation of the liability cap.\n\nOur postal address is 14 Quay Street, Gothenburg 411 04, Sweden.\n\nThe agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments.\n\nPlease direct all correspondence to Petra Voss."
     }
-  ]
+   ],
+   "expect": {
+    "client_address": "14 Quay Street",
+    "client_contact": "Petra Voss",
+    "fee_arrangement": "18,000"
+   },
+   "absent": [],
+   "client": "Harrowgate Systems Inc."
+  },
+  {
+   "id": "nda-lantern",
+   "template": "nda",
+   "title": "Mutual NDA — Project Lantern",
+   "documents": [
+    {
+     "name": "term-sheet.txt",
+     "status": "final",
+     "text": "TERM SHEET — PROJECT LANTERN (fictional)\n\nParties: Alder Biotech AB and Northbridge Analytics Ltd.\n\nThe parties intend to exchange confidential information to evaluate a joint venture in clinical data analytics.\n\nConfidential information shall be protected for three (3) years from the date of the agreement.\n\nThe agreement will be governed by the laws of Sweden."
+    }
+   ],
+   "expect": {
+    "party_a": "Alder Biotech",
+    "party_b": "Northbridge Analytics",
+    "purpose": "joint venture",
+    "confidentiality_period": "three",
+    "governing_law": "Sweden"
+   },
+   "absent": []
+  },
+  {
+   "id": "engagement-missing-fee",
+   "template": "engagement_letter",
+   "title": "Engagement letter — Voss-Lindqvist board advice",
+   "documents": [
+    {
+     "name": "instruction-email.txt",
+     "status": "final",
+     "text": "INSTRUCTION EMAIL (fictional)\n\nFrom: Karin Lindqvist, Chair, Voss-Lindqvist AB.\n\nVoss-Lindqvist AB would like the firm to advise the board on the proposed interim dividend and the directors' duties that apply to it.\n\nPlease send the engagement letter to Karin Lindqvist at the registered office.\n\nWe have not yet discussed fees."
+    }
+   ],
+   "expect": {
+    "client_contact": "Karin Lindqvist"
+   },
+   "absent": [
+    "fee_arrangement",
+    "client_address"
+   ]
+  },
+  {
+   "id": "review-software-licence",
+   "template": "contract_review",
+   "title": "Contract review — analytics licence",
+   "documents": [
+    {
+     "name": "licence-agreement.txt",
+     "status": "executed",
+     "text": "SOFTWARE LICENCE AGREEMENT (fictional)\n\nThis Software Licence Agreement is made between Northbridge Analytics Ltd (the Licensor) and Voss-Lindqvist AB (the Licensee).\n\n2.1 This Agreement starts on 1 January 2026 and continues for three (3) years.\n\n2.3 Either party may terminate this Agreement for material breach on thirty (30) days' written notice if the breach is not remedied.\n\n5.1 The Licensee shall pay an annual licence fee of EUR 120,000, invoiced annually in advance and payable within forty-five (45) days.\n\n8.1 Neither party's total liability under this Agreement shall exceed the fees paid in the twelve (12) months before the claim.\n\n8.2 Neither party is liable for loss of profit or indirect loss.\n\n14.1 This Agreement is governed by the laws of Sweden."
+    }
+   ],
+   "expect": {
+    "agreement": "Software Licence Agreement",
+    "parties": "Northbridge Analytics",
+    "governing_law": "Sweden"
+   },
+   "absent": []
+  },
+  {
+   "id": "demand-northwind",
+   "template": "demand_letter",
+   "title": "Letter before claim — Northwind unpaid invoices",
+   "documents": [
+    {
+     "name": "supply-agreement-extract.txt",
+     "status": "executed",
+     "text": "SUPPLY AGREEMENT (fictional extract)\n\nThis Supply Agreement is made between Harrowgate Systems Inc. (the Supplier) and Northwind Logistics Ltd (the Customer).\n\nNotices to the Customer shall be sent to Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom.\n\n5.2 The Customer shall pay each invoice within thirty (30) days of its date."
+    },
+    {
+     "name": "statement-of-account.txt",
+     "status": "final",
+     "text": "STATEMENT OF ACCOUNT (fictional)\n\nCustomer: Northwind Logistics Ltd.\n\nInvoices HS-1041 and HS-1042, issued on 3 June 2026 and 1 July 2026, remain unpaid.\n\nThe total outstanding is GBP 42,750."
+    }
+   ],
+   "expect": {
+    "recipient": "Northwind Logistics",
+    "recipient_address": "2 Harbour Road",
+    "agreement": "Supply Agreement",
+    "amount_claimed": "42,750"
+   },
+   "absent": [],
+   "client": "Harrowgate Systems Inc."
+  },
+  {
+   "id": "review-warehouse-lease",
+   "template": "contract_review",
+   "title": "Contract review — warehouse lease",
+   "documents": [
+    {
+     "name": "warehouse-lease.txt",
+     "status": "executed",
+     "text": "LEASE OF WAREHOUSE PREMISES (fictional)\n\nThis Lease is made between Elmfield Estates Ltd (the Landlord) and Alder Biotech AB (the Tenant).\n\n3.1 The term of this Lease is ten (10) years from 1 April 2025.\n\n3.4 The Tenant may terminate this Lease on 31 March 2030 by giving not less than six months' written notice.\n\n4.1 The rent is GBP 84,000 per year, payable quarterly in advance.\n\n9.2 The Landlord's total liability under this Lease shall not exceed the rent paid in the preceding twelve months.\n\n12.1 This Lease is governed by the law of England and Wales."
+    }
+   ],
+   "expect": {
+    "agreement": "Lease",
+    "parties": "Elmfield Estates",
+    "governing_law": "England and Wales"
+   },
+   "absent": []
+  },
+  {
+   "id": "nda-missing-period",
+   "template": "nda",
+   "title": "Mutual NDA — Harbour project",
+   "documents": [
+    {
+     "name": "meeting-note.txt",
+     "status": "final",
+     "text": "MEETING NOTE (fictional)\n\nHarrowgate Systems Inc. and Elmfield Estates Ltd will exchange confidential information to assess a possible warehouse automation project.\n\nThe parties did not agree how long the information must be kept confidential, or which law will govern."
+    }
+   ],
+   "expect": {
+    "party_a": "Harrowgate",
+    "party_b": "Elmfield",
+    "purpose": "warehouse automation"
+   },
+   "absent": [
+    "confidentiality_period",
+    "governing_law"
+   ]
+  },
+  {
+   "id": "engagement-corran",
+   "template": "engagement_letter",
+   "title": "Engagement letter — Corran Foods supply dispute",
+   "documents": [
+    {
+     "name": "instruction-email.txt",
+     "status": "final",
+     "text": "INSTRUCTION EMAIL (fictional)\n\nFrom: Imogen Hale, General Counsel, Corran Foods Ltd\n\nPlease act for Corran Foods Ltd in the dispute with its packaging supplier. Our registered office is 9 Mill Lane, Leeds LS2 7EX.\n\nWe agreed a capped fee of GBP 25,000 plus VAT for the pre-action stage."
+    }
+   ],
+   "expect": {
+    "client_address": "9 Mill Lane",
+    "client_contact": "Imogen Hale",
+    "fee_arrangement": "25,000"
+   },
+   "absent": [],
+   "client": "Corran Foods Ltd"
+  },
+  {
+   "id": "demand-brightwater",
+   "template": "demand_letter",
+   "title": "Demand letter — Brightwater unpaid licence fees",
+   "documents": [
+    {
+     "name": "licence-extract.txt",
+     "status": "executed",
+     "text": "SOFTWARE LICENCE AGREEMENT (fictional extract)\n\nThis Software Licence Agreement is made between Northbridge Analytics AB (the Licensor) and Brightwater Retail Ltd (the Licensee).\n\nNotices to the Licensee shall be sent to Brightwater Retail Ltd, 40 Canal Street, Manchester M1 3HE.\n\n6.1 The Licensee shall pay the annual licence fee within thirty (30) days of invoice."
+    },
+    {
+     "name": "aged-debt-report.txt",
+     "status": "final",
+     "text": "AGED DEBT REPORT (fictional)\n\nDebtor: Brightwater Retail Ltd.\n\nInvoice NA-2207 for the 2026 annual licence fee is unpaid.\n\nAmount outstanding: SEK 310,000."
+    }
+   ],
+   "expect": {
+    "recipient": "Brightwater Retail",
+    "recipient_address": "40 Canal Street",
+    "agreement": "Software Licence Agreement",
+    "amount_claimed": "310,000"
+   },
+   "absent": [],
+   "client": "Northbridge Analytics AB"
+  },
+  {
+   "id": "nda-no-law",
+   "template": "nda",
+   "title": "Mutual NDA — Corran and Alder",
+   "documents": [
+    {
+     "name": "term-sheet.txt",
+     "status": "final",
+     "text": "TERM SHEET (fictional, non-binding)\n\nParties: Corran Foods Ltd and Alder Biotech AB.\n\nPurpose: to evaluate a joint development of plant-based protein ingredients.\n\nConfidential information is to be protected for two (2) years from disclosure.\n\nGoverning law: to be agreed."
+    }
+   ],
+   "expect": {
+    "party_a": "Corran",
+    "party_b": "Alder",
+    "purpose": "plant-based protein",
+    "confidentiality_period": "two"
+   },
+   "absent": [
+    "governing_law"
+   ]
+  },
+  {
+   "id": "review-kestrel-distribution",
+   "template": "contract_review",
+   "title": "Contract review — Kestrel distribution agreement",
+   "documents": [
+    {
+     "name": "distribution-agreement.txt",
+     "status": "executed",
+     "text": "DISTRIBUTION AGREEMENT (fictional)\n\nThis Distribution Agreement is made between Kestrel Audio GmbH (the Supplier) and Pinewood Retail Ltd (the Distributor).\n\n2.1 The Supplier appoints the Distributor as its non-exclusive distributor in the United Kingdom.\n\n14.2 Either party may terminate this Agreement on six months' written notice.\n\n21.1 This Agreement is governed by the laws of Germany."
+    }
+   ],
+   "expect": {
+    "agreement": "Distribution Agreement",
+    "parties": "Kestrel Audio",
+    "governing_law": "Germany"
+   },
+   "absent": []
+  },
+  {
+   "id": "demand-pinewood-rent",
+   "template": "demand_letter",
+   "title": "Letter before claim — Pinewood rent arrears",
+   "documents": [
+    {
+     "name": "lease-extract.txt",
+     "status": "executed",
+     "text": "LEASE (fictional extract)\n\nThis Lease is made between Ashcombe Properties Ltd (the Landlord) and Pinewood Retail Ltd (the Tenant).\n\nNotices to the Tenant shall be served at Unit 4, Riverside Park, Bristol BS1 6QH.\n\n5.1 The Tenant shall pay the rent quarterly in advance on the usual quarter days."
+    },
+    {
+     "name": "arrears-schedule.txt",
+     "status": "final",
+     "text": "RENT ARREARS SCHEDULE (fictional)\n\nTenant: Pinewood Retail Ltd.\n\nThe rent due on 25 March 2026 and 24 June 2026 is unpaid.\n\nTotal arrears: GBP 36,500."
+    }
+   ],
+   "expect": {
+    "recipient": "Pinewood Retail",
+    "recipient_address": "Unit 4, Riverside Park",
+    "agreement": "Lease",
+    "amount_claimed": "36,500"
+   },
+   "absent": [],
+   "client": "Ashcombe Properties Ltd"
+  },
+  {
+   "id": "engagement-ashcombe-no-fee",
+   "template": "engagement_letter",
+   "title": "Engagement letter — Ashcombe lease renewal",
+   "documents": [
+    {
+     "name": "instruction-email.txt",
+     "status": "final",
+     "text": "INSTRUCTION EMAIL (fictional)\n\nFrom: Daniel Okafor, Head of Legal, Ashcombe Properties Ltd\n\nPlease act for Ashcombe Properties Ltd on the renewal of the Riverside Park lease. Our registered office is 12 Quayside, Bristol BS1 4RN.\n\nWe would like to discuss your fees on our next call."
+    }
+   ],
+   "expect": {
+    "client_contact": "Daniel Okafor",
+    "client_address": "12 Quayside"
+   },
+   "absent": [
+    "fee_arrangement"
+   ],
+   "client": "Ashcombe Properties Ltd"
+  }
+ ]
 }

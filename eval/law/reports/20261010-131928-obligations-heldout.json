@@ -1,0 +1,132 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "689331f",
+  "time": "20261010-131928",
+  "prompt_version": "obligations-s3.6g",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 3,
+  "expected": 7,
+  "found": "7/7",
+  "timing_in_its_words": "4/4",
+  "dates_right": "2/2",
+  "dates_guessed": 0,
+  "extra": 0,
+  "controls_clean": "1/1",
+  "all_proposed": true,
+  "by_kind": {
+   "duty": "1/1",
+   "expiry": "1/1",
+   "notice": "1/1",
+   "payment": "3/3",
+   "termination": "1/1"
+  },
+  "ms_per_document": 372
+ },
+ "documents": [
+  {
+   "id": "P-reseller",
+   "ms": 1084,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2029-01-31",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2029-01-31",
+     "got_when": "3 years from 1 February 2026",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "ten (10) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within ten (10) Business Days after the end of each calendar quarter",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "thirty (30) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within thirty (30) days of the invoice date",
+     "status": "proposed"
+    },
+    {
+     "clause": "3.1",
+     "kind": "notice",
+     "when": "sixty (60) days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "at least sixty (60) days' written notice",
+     "status": "proposed"
+    },
+    {
+     "clause": "4.1",
+     "kind": "termination",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "immediately",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true
+  },
+  {
+   "id": "P-guarantee",
+   "ms": 14,
+   "control": false,
+   "lines": [
+    {
+     "clause": "1.1",
+     "kind": "payment",
+     "due": "2027-03-31",
+     "found": true,
+     "when_ok": null,
+     "date_ok": true,
+     "got_due": "2027-03-31",
+     "got_when": "on 31 March 2027",
+     "status": "proposed"
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "five (5) Business Days",
+     "found": true,
+     "when_ok": true,
+     "date_ok": true,
+     "got_due": null,
+     "got_when": "within five (5) Business Days of a written demand",
+     "status": "proposed"
+    }
+   ],
+   "extra": [],
+   "all_proposed": true
+  },
+  {
+   "id": "P-minutes-control",
+   "ms": 17,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_proposed": true
+  }
+ ]
+}

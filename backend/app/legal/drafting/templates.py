@@ -30,7 +30,7 @@ from ...core.db import get_conn
 from ..policy import now_iso
 
 KINDS = ("engagement_letter", "nda", "demand_letter", "memo", "contract_review", "board_minutes", "custom")
-FIELD_KINDS = ("text", "party", "date", "money", "period", "percent", "address")
+FIELD_KINDS = ("text", "party", "date", "money", "period", "percent", "address", "agreement")   # agreement: s3.1c
 SOURCES = ("documents", "matter", "person", "today")
 MATTER_FIELDS = {"matter_number": "number", "matter_title": "title", "client": "client", "matter_client": "client"}
 _REF = re.compile(r"\{\{\s*([a-z][a-z0-9_]{0,40})\s*\}\}")

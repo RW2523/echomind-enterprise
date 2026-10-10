@@ -97,7 +97,10 @@ def run(args) -> int:
             quotes_ok = all(conn.execute("SELECT substr(text, ?, ?) FROM legal_version_text WHERE version_id=?",
                                          (i["evidence"]["start"] + 1, i["evidence"]["end"] - i["evidence"]["start"], i["version_id"])).fetchone()[0]
                             == i["evidence"]["quote"] for i in v["issues"])
+        outputs = [{"kind": i["kind"], "title": i["title"], "detail": i["detail"], "document": i["document_title"], "quote": i["evidence"]["quote"],
+                    "related": [{"document": x["document_title"], "quote": x["quote"]} for x in i.get("related", [])]} for i in v["issues"]]   # for the lawyer packet
         results.append({"id": room["id"], "ms": ms, "control": not room["issues"], "missing_got": got_missing, "missing_want": want_missing,
+                        "outputs": outputs, "missing_titles": [i["title"] for i in v["missing"]],
                         "missing_ok": got_missing == want_missing, "issues_expected": sum(want.values()), "issues_found": found,
                         "missed": missed, "extra": extra, "all_preliminary": all(i["status"] == "preliminary" for i in v["issues"]),
                         "quotes_ok": quotes_ok, "status": v["run"]["status"]})
