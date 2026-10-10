@@ -25,6 +25,8 @@ DEMO_USERS = {  # username: firm roles
     "nakamura": ["managing_partner"],
     "fiona": ["firm_admin"],
     "rhea": ["records_admin"],
+    "iris": ["intake"],          # S4.1: the front desk
+    "conway": ["conflicts"],     # S4.1: the conflicts team
 }
 
 
@@ -78,6 +80,8 @@ def seed_demo() -> dict:
     gone = repo.add_membership(m215["id"], ids["carol"], "paralegal", granted_by=ids["bob"])
     repo.revoke_membership(m215["id"], gone["id"], by=ids["bob"], reason="moved to another team")
     repo.add_membership(m202["id"], ids["alice"], "attorney", granted_by=ids["bob"], valid_from=_ts(-60), valid_to=_ts(-2))
+    _seed_parties({m101["id"]: [("Harrowgate Systems Inc.", "adverse")], m202["id"]: [("Orrin Marine Ltd", "adverse")],
+                   m215["id"]: [("Pinewood Warehousing LLC", "adverse"), ("Calder Freight Ltd", "related")]}, ids["alice"])
     _seed_meeting(org, m101["id"], ids["alice"])
     _seed_templates(org, ids["morgan"])
     _seed_playbook(org, ids["morgan"])
@@ -88,6 +92,19 @@ def seed_demo() -> dict:
     with os.fdopen(fd, "w") as fh:
         json.dump(creds, fh, indent=2)
     return creds
+
+
+def _seed_parties(by_matter: dict, by: str) -> None:
+    """S4.1: the other side on the demo matters, for conflict searches."""
+    import uuid
+    from ..core.db import get_conn
+    from .policy import now_iso
+    with get_conn() as conn:
+        for mid, parties in by_matter.items():
+            for name, role in parties:
+                conn.execute("INSERT INTO legal_matter_parties (id, matter_id, name, role, added_by, added_at) VALUES (?,?,?,?,?,?)",
+                             (str(uuid.uuid4()), mid, name, role, by, now_iso()))
+        conn.commit()
 
 
 def _seed_templates(org: str, approver: str) -> None:

@@ -191,6 +191,7 @@ _LAW_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/co
 # (legacy chat, documents, transcripts, Boardroom, document studio, evaluation) are closed for
 # everyone — none of them is matter-scoped — and their capabilities return as /api/legal routes.
 _LAW_OPEN_PREFIXES = ("/api/auth/", "/api/legal/")
+_LAW_LINK_PREFIX = "/api/intake-link/"
 _MUTATING = {"POST", "PUT", "PATCH", "DELETE"}
 
 
@@ -202,6 +203,13 @@ def _law_guard(request: Request):
     path = request.url.path
     if request.method == "OPTIONS" or path in _LAW_PUBLIC_PATHS or not path.startswith("/api/"):
         return None
+    if path.startswith(_LAW_LINK_PREFIX):
+        # S4.1 (D-054): an enquirer's intake link is its own key, with no session; served only when the firm turned
+        # intake links on, and answered 404 otherwise. The routes read nothing but the token.
+        from .core.config import settings as _s
+        if _s.LEGAL_INTAKE and _s.LEGAL_INTAKE_LINKS:
+            return None
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
     if not path.startswith(_LAW_OPEN_PREFIXES):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     principal = user_from_request(request, allow_partial=path in PARTIAL_PATHS)
@@ -373,3 +381,7 @@ from .legal.obligations.routes import router as legal_obligations_router  # noqa
 app.include_router(legal_obligations_router, prefix="/api")
 from .legal.diligence.routes import router as legal_diligence_router  # noqa: E402
 app.include_router(legal_diligence_router, prefix="/api")
+from .legal.intake.routes import parties_router as legal_parties_router, public_router as legal_intake_link_router, router as legal_intake_router  # noqa: E402
+app.include_router(legal_parties_router, prefix="/api")
+app.include_router(legal_intake_router, prefix="/api")
+app.include_router(legal_intake_link_router, prefix="/api")

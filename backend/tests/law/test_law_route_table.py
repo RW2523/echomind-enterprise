@@ -53,6 +53,31 @@ def test_every_http_route_denies_anonymous_callers(law_app, client):
     assert not leaks, "routes reachable without a session:\n" + "\n".join(leaks)
 
 
+def test_with_intake_links_on_only_the_link_routes_answer_anonymous_callers_and_only_to_a_real_link(law_app, client, monkeypatch):
+    """S4.1 (D-054): enquirer links are the Law edition's only routes without a session. A made-up token gets 404,
+    and every other route still answers 401 (Law) or 404 (closed)."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_INTAKE", True)
+    monkeypatch.setattr(settings, "LEGAL_INTAKE_LINKS", True)
+    link_routes, leaks = 0, []
+    for route in law_app.routes:
+        if not isinstance(route, APIRoute) or route.path in _FASTAPI_DOCS:
+            continue
+        for method in sorted(route.methods - {"HEAD", "OPTIONS"}):
+            if (method, route.path) in PUBLIC:
+                continue
+            r = client.request(method, _concrete(route.path).replace("/x", "/" + "t" * 43), json={"answers": {}, "version": "x"})
+            if route.path.startswith("/api/intake-link/"):
+                link_routes += 1
+                expected = 404
+            else:
+                expected = 401 if route.path.startswith(LAW_API) or not route.path.startswith("/api/") else 404
+            if r.status_code != expected:
+                leaks.append(f"{method} {route.path} -> {r.status_code} (expected {expected})")
+    assert link_routes == 3
+    assert not leaks, "\n".join(leaks)
+
+
 def test_every_websocket_denies_anonymous_callers(law_app, client):
     ws_routes = [r for r in law_app.routes if isinstance(r, APIWebSocketRoute)]
     assert ws_routes

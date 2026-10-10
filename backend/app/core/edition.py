@@ -11,6 +11,7 @@ long-running workers always see the current value.
 from __future__ import annotations
 
 import logging
+import re
 import os
 from dataclasses import dataclass
 from typing import Mapping, Optional
@@ -132,9 +133,16 @@ def api_docs_enabled() -> bool:
     return (os.getenv("LEGAL_DEV_OPENAPI") or "").strip().lower() in _TRUE
 
 
+# Credentials that travel in a path or query string (S4.1, D-054): an enquirer's intake link and a sign-in
+# enrolment token. Masked wherever they appear, before the free-text rule.
+_SECRET_IN_PATH = re.compile(r"(/api/intake-link/|/intake/|[?&](?:enrol|token)=)[A-Za-z0-9_\-]{16,}")
+
+
 def _redact(value):
     # Free text (anything with whitespace, or long) is a question, quote, title or path derived
     # from matter content. Short single tokens — ids, URLs, model names, reasons — stay readable.
+    if isinstance(value, str):
+        value = _SECRET_IN_PATH.sub(r"\1<secret>", value)
     if isinstance(value, str) and (any(c.isspace() for c in value) or len(value) > 64):
         return f"<{len(value)} chars>"
     return value
@@ -154,7 +162,11 @@ class ContentRedactingFilter(logging.Filter):
 
 
 def install_log_redaction() -> None:
-    """Attach the filter to every root handler; child loggers propagate through them."""
+    """Attach the filter to every root handler; child loggers propagate through them. The server's access log has
+    its own handlers and does not propagate, so it gets the filter on the logger itself."""
     for handler in logging.getLogger().handlers:
         if not any(isinstance(f, ContentRedactingFilter) for f in handler.filters):
             handler.addFilter(ContentRedactingFilter())
+    access = logging.getLogger("uvicorn.access")
+    if not any(isinstance(f, ContentRedactingFilter) for f in access.filters):
+        access.addFilter(ContentRedactingFilter())

@@ -22,12 +22,13 @@ MATTER_SPEC = {
     "artifacts.approve": {"lead", "attorney", "reviewer"},
     "export.request": {"lead", "attorney", "paralegal"}, "export.approve": {"lead", "attorney"},
     "deletion.request": {"lead", "attorney"},
+    "parties.manage": {"lead", "attorney"},                       # S4.1 (D-054)
 }
 # Changing the content of a closed or archived matter is refused; reading, membership, export and
 # records work (deletion requests) continue.
 BLOCKED_WHEN_CLOSED = {"documents.import", "documents.version", "labels.set", "labels.suggest", "meetings.create",
                        "consent.capture", "capture.control", "ai.draft", "artifacts.approve"}
-FIRM_ROLES = ["firm_admin", "managing_partner", "attorney", "paralegal", "reviewer", "records_admin", "read_only"]
+FIRM_ROLES = ["firm_admin", "managing_partner", "attorney", "paralegal", "reviewer", "records_admin", "read_only", "intake", "conflicts"]
 ORG_SPEC = {
     "clients.create": {"managing_partner", "attorney"}, "matters.create": {"managing_partner", "attorney"},
     "clients.update": {"managing_partner"},
@@ -40,6 +41,9 @@ ORG_SPEC = {
     "holds.read": {"records_admin", "managing_partner"}, "holds.request": {"records_admin"},
     "holds.approve": {"records_admin", "managing_partner"},
     "deletion.review": {"records_admin", "managing_partner"}, "retention.approve": {"managing_partner"},
+    # S4.1 intake (OPT-01, D-054)
+    "intake.manage": {"intake", "paralegal", "attorney", "managing_partner"}, "intake.approve": {"attorney", "managing_partner"},
+    "conflicts.review": {"conflicts", "managing_partner"}, "intake.purge": {"records_admin"},
 }
 
 OPEN = MatterFacts(status="open", sensitivity="restricted")

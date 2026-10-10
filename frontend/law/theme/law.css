@@ -485,3 +485,25 @@
 [data-edition="law"] .lw-def-fixes .lw-redline { font-size: 14px; margin: 0; }
 /* S3.8 governance: the second document a finding quotes */
 [data-edition="law"] .lw-dd-related { margin: 2px 0 0 12px; padding-left: 10px; border-left: 2px dashed var(--rule); }
+
+/* Intake (S4.1, D-054): the staff script, the enquirer's page and replies. */
+[data-edition="law"] .lw-intake-page { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; box-sizing: border-box; }
+[data-edition="law"] .lw-intake-disclaimer { margin: 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--paper-2); border-radius: 0 10px 10px 0; font-family: var(--serif); font-size: 15px; line-height: 23px; }
+[data-edition="law"] .lw-intake-form { display: grid; gap: 14px; }
+[data-edition="law"] .lw-intake-q { display: grid; gap: 6px; }
+[data-edition="law"] .lw-intake-q label { display: grid; gap: 2px; }
+[data-edition="law"] .lw-intake-say { color: var(--ink-2); font-size: 13px; font-style: italic; }
+[data-edition="law"] .lw-intake-error { margin: 0; color: var(--conflict); font-size: 13px; }
+[data-edition="law"] .lw-intake-chat { display: grid; gap: 14px; }
+[data-edition="law"] .lw-intake-turns { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+[data-edition="law"] .lw-intake-turns > li { display: grid; gap: 6px; }
+[data-edition="law"] .lw-intake-ask { margin: 0; font-family: var(--serif); font-size: 15.5px; line-height: 23px; color: var(--ink); }
+[data-edition="law"] .lw-intake-answer { margin: 0 0 0 auto; max-width: 85%; padding: 8px 12px; border-radius: 12px 12px 4px 12px; background: var(--accent-soft); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+[data-edition="law"] .lw-intake-ack { margin: 0; color: var(--ink-3); font-size: 13px; }
+[data-edition="law"] .lw-intake-current { display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid var(--rule); }
+[data-edition="law"] .lw-intake-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+[data-edition="law"] .lw-intake-answers { display: grid; grid-template-columns: max-content 1fr; gap: 8px 24px; margin: 0; }
+[data-edition="law"] .lw-intake-answers dt { color: var(--ink-3); font-size: 13px; }
+[data-edition="law"] .lw-intake-answers dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+@media (max-width: 560px) { [data-edition="law"] .lw-intake-answers { grid-template-columns: 1fr; } [data-edition="law"] .lw-intake-answers dd { margin-bottom: 6px; } }
+[data-edition="law"] .lw-intake-reply { padding: 12px 14px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper-2); display: grid; gap: 4px; margin-bottom: 10px; }

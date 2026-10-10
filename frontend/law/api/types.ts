@@ -1,12 +1,13 @@
 /** Types for the EchoMind Law API (backend/app/legal/*, backend/app/api/routes/auth.py). */
 export type MatterRole = 'lead' | 'attorney' | 'paralegal' | 'reviewer' | 'read_only';
-export type FirmRole = 'firm_admin' | 'managing_partner' | 'attorney' | 'paralegal' | 'reviewer' | 'records_admin' | 'read_only';
+export type FirmRole = 'firm_admin' | 'managing_partner' | 'attorney' | 'paralegal' | 'reviewer' | 'records_admin' | 'read_only' | 'intake' | 'conflicts';
 export type Sensitivity = 'standard' | 'restricted' | 'highly_restricted';
 export type MatterStatus = 'open' | 'closed' | 'archived';
 
 export interface Me {
   user: { id: string; username: string; role: string; roles: FirmRole[] };
   session: { auth: string; mfa_enrolled: boolean; must_change_password: boolean; idle_expires_at: number; abs_expires_at: number };
+  features?: { intake: boolean; intake_links: boolean };
 }
 export interface Client { id: string; name: string; code?: string | null; status: string; version: number; }
 export interface Matter {
@@ -479,3 +480,39 @@ export interface DdRunView {
   missing: { item_id: string; title: string; section: string }[]; issues: DdIssue[]; summary: DdSummary;
 }
 
+// ── Intake (S4.1, D-054) ──────────────────────────────────────────────────────────
+export type PartyRole = 'adverse' | 'related' | 'client_group' | 'other';
+export interface MatterParty { id: string; name: string; role: PartyRole; added_by: string | null; added_at: string }
+export type IntakeQuestionKind = 'text' | 'email' | 'phone' | 'choice' | 'names' | 'longtext' | 'date';
+export interface IntakeQuestion {
+  key: string; label: string; kind: IntakeQuestionKind; required: boolean; max?: number; max_items?: number;
+  choices?: Record<string, string>; ask: string; thanks: string;
+}
+export interface IntakeScript { version: string; questions: IntakeQuestion[] }
+export interface IntakeDisclaimer { version: string; text: string; accepted_at?: string | null; accepted?: boolean }
+export type IntakeStatus = 'invited' | 'open' | 'submitted' | 'cleared' | 'conflict' | 'converted' | 'closed' | 'purged';
+export interface IntakeScreening { result: 'not_run' | 'no_match' | 'possible_conflict'; message: string; decision: 'cleared' | 'conflict' | null }
+export type IntakeTemplate = 'acknowledge' | 'can_help' | 'cannot_act' | 'more_info';
+export interface IntakeReply {
+  id: string; template: IntakeTemplate; body: string; body_sha256: string; status: 'draft' | 'released' | 'withdrawn';
+  drafted_by: string | null; drafted_at: string; approved_by: string | null; approved_at: string | null;
+}
+export type IntakeAnswers = Record<string, string | string[]>;
+export interface Intake {
+  id: string; reference: string; channel: 'phone' | 'in_person' | 'link'; status: IntakeStatus; created_at: string; created_by: string | null;
+  updated_at: string | null; version: number; disclaimer: IntakeDisclaimer; script: IntakeScript; answers: IntakeAnswers;
+  screening: IntakeScreening; consent: { method: 'verbal' | 'written'; recorded_by: string | null; recorded_at: string } | null;
+  recording: { mime: string; bytes: number; uploaded_by: string | null; uploaded_at: string } | null; replies: IntakeReply[];
+  events: { action: string; actor: string | null; at: string; note?: string }[]; matter_number: string | null;
+  link: { expires_at: string | null; submitted_at: string | null } | null;
+}
+export interface IntakeMatch { searched: string; matched: string; kind: 'client' | PartyRole; score: number; client: string | null; matter_number: string | null }
+export interface IntakeView { intake: Intake; matches?: IntakeMatch[] }
+export interface IntakeSummary {
+  id: string; reference: string; channel: Intake['channel']; status: IntakeStatus; name: string | null; organisation: string | null;
+  screening: IntakeScreening; created_at: string; updated_at: string | null;
+}
+export interface IntakeCan { manage: boolean; approve: boolean; conflicts: boolean; purge: boolean; convert: boolean; links: boolean }
+export interface IntakeLinkPage {
+  status: 'invited' | 'submitted' | 'replied'; reference: string; disclaimer: IntakeDisclaimer; script: IntakeScript; reply: { body: string } | null;
+}

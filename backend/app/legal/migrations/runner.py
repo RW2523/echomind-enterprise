@@ -152,6 +152,9 @@ _REFUSE_BELOW = (
      "delete {n} due-diligence checklist version(s) and reviewers' decisions on issues"),
     (30, "SELECT COUNT(*) FROM legal_dd_issues WHERE related_json <> '[]'",
      "drop the second document quoted by {n} governance finding(s)"),
+    (31, "SELECT (SELECT COUNT(*) FROM legal_intakes) + (SELECT COUNT(*) FROM legal_matter_parties) "
+         "+ (SELECT COUNT(*) FROM user_roles WHERE role IN ('intake','conflicts'))",
+     "delete {n} intake record(s), matter party record(s) and intake or conflicts role grant(s)"),
 )
 
 

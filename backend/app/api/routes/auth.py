@@ -249,7 +249,8 @@ def _law_me(payload: dict) -> dict:
     return {"user": _public_user(acct),
             "session": {"auth": payload["auth"], "mfa_enrolled": acct["mfa_enabled"],
                         "must_change_password": bool(payload.get("must_change_password")),
-                        "idle_expires_at": s["idle_expires_at"], "abs_expires_at": s["abs_expires_at"]}}
+                        "idle_expires_at": s["idle_expires_at"], "abs_expires_at": s["abs_expires_at"]},
+            "features": {"intake": bool(settings.LEGAL_INTAKE), "intake_links": bool(settings.LEGAL_INTAKE and settings.LEGAL_INTAKE_LINKS)}}
 
 
 def _complete_sign_in(request: Request, response: Response, user_id: str) -> dict:

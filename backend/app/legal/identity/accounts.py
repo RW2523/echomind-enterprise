@@ -11,7 +11,8 @@ from ...core.db import get_conn
 from . import sessions
 from .sessions import _iso
 
-FIRM_ROLES = ("firm_admin", "managing_partner", "attorney", "paralegal", "reviewer", "records_admin", "read_only")
+FIRM_ROLES = ("firm_admin", "managing_partner", "attorney", "paralegal", "reviewer", "records_admin", "read_only",
+              "intake", "conflicts")        # S4.1 (D-054): front-desk intake staff and the conflicts team
 _COLS = "id, username, role, COALESCE(tenant,''), COALESCE(status,'active'), mfa_enabled, failed_logins, locked_until, password_hash"
 
 
