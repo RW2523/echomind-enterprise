@@ -25,7 +25,7 @@ from ..documents import repo as documents
 from ..redlines.word import ops as diff_ops
 from . import parse
 
-VERSION = "citations-s3.4"
+VERSION = "citations-s3.4b"
 NOTICE = ("External authorities are listed but not verified: no licensed law library is connected (decision P-009) and nothing "
           "is looked up. Check each one in a licensed source before relying on it.")
 _GENERIC = {"agreement", "contract", "lease", "deed", "letter", "policy", "terms", "memorandum", "licence", "license", "order form"}
@@ -62,9 +62,15 @@ class _Doc:
         self.id, self.title, self.version_id, self.text = document_id, title, version_id, text
         self.clauses = _clauses(version_id)
 
-    def clause(self, keys: list[str]) -> Optional[dict]:
+    def clause(self, keys: list[str], within: Optional[str] = None) -> Optional[dict]:
+        pool = self.clauses
+        if within:                                         # "paragraph 1 of Schedule 4": only inside that schedule
+            box = next((c for c in self.clauses if c["number"].casefold() == within.casefold()), None)
+            if not box:
+                return None
+            pool = [c for c in self.clauses if box["start"] < c["start"] < max(box["end"], box["start"] + 1)]
         for k in keys:
-            hit = next((c for c in self.clauses if c["number"].casefold() == k.casefold()), None)
+            hit = next((c for c in pool if c["number"].casefold() == k.casefold()), None)
             if hit:
                 return hit
         return None
@@ -110,7 +116,8 @@ def _keys(f: parse.Found) -> list[str]:
 
 def _label(f: parse.Found) -> str:
     n = f.data["number"] + (f.data.get("sub") or "")
-    return f"{f.sub} {n}" if not f.data.get("attachment") else f"{f.sub.title()} {n}"
+    out = f"{f.sub} {n}" if not f.data.get("attachment") else f"{f.sub.title()} {n}"
+    return out + (f" in {f.data['within']}" if f.data.get("within") else "")
 
 
 # ── Quotations ─────────────────────────────────────────────────────────────────────
@@ -197,11 +204,12 @@ def _reference(f: parse.Found, lib: Library, paragraph_doc: Optional[str]) -> di
     if doc is None:
         out["note"] = f"No document you can open in this matter is called the {f.data['document']}."
         return out
-    c = doc.clause(_keys(f))
+    within = f.data.get("within")
+    c = doc.clause(_keys(f), within)
     if c is None and is_self and not f.data.get("document") and paragraph_doc:
         other, other_self = lib.named(paragraph_doc)
-        if other and not other_self and other.clause(_keys(f)):
-            doc, is_self, c = other, False, other.clause(_keys(f))
+        if other and not other_self and other.clause(_keys(f), within):
+            doc, is_self, c = other, False, other.clause(_keys(f), within)
             out["note"] = f"Read as {_label(f)} of the {paragraph_doc}, named earlier in the paragraph."
     if c is None:
         cited = "This document" if is_self else f"The {f.data.get('document') or paragraph_doc}"
@@ -229,7 +237,7 @@ def _quote(f: parse.Found, lib: Library) -> dict:
     if not docs:
         return {"status": "not_found", "target": None, "note": f"No document you can open in this matter is called the {names[0]}."}
     for d in docs:
-        c = d.clause(_keys(ref)) if ref else None
+        c = d.clause(_keys(ref), ref.data.get("within")) if ref else None
         tried.append((d, [(c["start"], c["end"])] if c else [(0, len(d.text))], c))
         if ref and c:
             tried.append((d, [(0, len(d.text))], None))   # the words may be quoted from a neighbouring clause
@@ -263,10 +271,8 @@ def _quote(f: parse.Found, lib: Library) -> dict:
             "quoted": segs}
 
 
-def _paragraph_doc(text: str, at: int) -> Optional[str]:
-    a = text.rfind("\n", 0, at) + 1
-    named = [m for m in parse.DOC_NAME.finditer(text, a, at) if m.group("det") == "the"]
-    return named[-1].group("doc") if named else None
+def _paragraph_doc(text: str, at: int, short: dict[str, str]) -> Optional[str]:
+    return parse.last_name(text, text.rfind("\n", 0, at) + 1, at, short)
 
 
 def run(matter_id: str, document_id: str, uid: str, version_id: Optional[str] = None) -> tuple[list[dict], dict]:
@@ -277,6 +283,7 @@ def run(matter_id: str, document_id: str, uid: str, version_id: Optional[str] = 
     own = _Doc(document_id, title, v[0], v[1])
     lib = Library(matter_id, uid, own)
     items, n = [], {"reference": 0, "quote": 0, "authority": 0}
+    short = parse.aliases(own.text)
     for f in parse.read(own.text):
         n[f.kind] += 1
         it = {"id": f"{f.kind[0]}{n[f.kind]}", "kind": f.kind, "type": f.sub, "text": f.text, "start": f.start, "end": f.end,
@@ -284,10 +291,10 @@ def run(matter_id: str, document_id: str, uid: str, version_id: Optional[str] = 
         if f.kind == "authority":
             it.update(status="unverified", fields={k: v for k, v in f.data.items()})   # the check's notice says why (P-009)
         elif f.kind == "reference":
-            it.update(_reference(f, lib, _paragraph_doc(own.text, f.start)))
+            it.update(_reference(f, lib, _paragraph_doc(own.text, f.start, short)))
         else:
             if not f.data.get("document") and not (f.data.get("reference") and f.data["reference"].data.get("document")):
-                f.data["document"] = _paragraph_doc(own.text, f.start)
+                f.data["document"] = _paragraph_doc(own.text, f.start, short)
             ref = f.data.get("reference")
             it["cited_as"] = ref.text if ref else None
             it.update(_quote(f, lib))

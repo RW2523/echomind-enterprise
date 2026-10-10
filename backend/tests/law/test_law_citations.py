@@ -258,3 +258,19 @@ def test_a_heading_is_not_a_reference_to_itself():
             "Clause 3 says that the parties agree.\nSchedule 2\n")
     refs = [f.text for f in parse.read(text) if f.kind == "reference"]
     assert refs == ["Article 3", "Annex A", "Clause 3"]
+
+
+def test_a_defined_short_name_does_not_pair_quotation_marks_the_wrong_way():
+    """Held-out run 1 (citations-s3.4): `(the "SPA")` paired the wrong quotation marks for the rest of the memo."""
+    from app.legal.citations import parse
+    text = ('1.1 This memo concerns the Share Purchase Agreement (the "SPA").\n'
+            '2.1 Under section 6.3 of the Share Purchase Agreement, claims must be notified "within eighteen (18) months after Completion".\n'
+            '2.2 By clause 7.2 of the SPA, small claims are excluded; paragraph 1 of Schedule 4 of the SPA is the tax warranty.\n'
+            "2.3 Clause 7.1 of the SPA caps liability at \"the Purchase Price\". UK style: clause 3 says ‘the party’s notice must be in writing’.")
+    found = parse.read(text)
+    quotes = [(f.text, f.data["reference"].text if f.data["reference"] else None) for f in found if f.kind == "quote"]
+    assert quotes == [("within eighteen (18) months after Completion", "section 6.3 of the Share Purchase Agreement"),
+                      ("the Purchase Price", "Clause 7.1 of the SPA"), ("the party’s notice must be in writing", "clause 3")]
+    refs = {f.text: f.data for f in found if f.kind == "reference"}
+    assert refs["clause 7.2 of the SPA"]["document"] == "Share Purchase Agreement"
+    assert refs["paragraph 1 of Schedule 4"]["within"] == "Schedule 4" and refs["paragraph 1 of Schedule 4"]["document"] == "Share Purchase Agreement"

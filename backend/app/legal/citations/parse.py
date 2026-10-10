@@ -50,7 +50,6 @@ REFERENCE = re.compile(
     r"(?:\s+(?:of|to)\s+(?:the\s+|(?P<athis>this\s+))?(?P<adoc>(?:[A-Z][\w-]*\s+){0,6}(?:Agreement|Contract|Lease|Deed|Letter|Policy|Terms)\b))?")
 DOC_NAME = re.compile(r"\b(?P<det>[Tt]he|[Tt]his)\s+(?P<doc>(?:[A-Z][\w-]*\s+){0,6}(?:Agreement|Contract|Lease|Deed|Letter|Policy|Terms|Memorandum|Order Form|Licence|License))\b")
 MORE = re.compile(r"(?:\s*,\s*(?:and\s+|or\s+)?|\s+and\s+|\s+or\s+|\s*(?:to|-|–)\s*)(?P<num>\d+(?:\.\d+)*(?:\([a-z0-9]{1,4}\))*)(?![\w.]*\d)")
-QUOTE = re.compile(r"[\"“](?P<q>[^\"“”]{12,1200}?)[\"”]")
 
 
 @dataclass
@@ -112,12 +111,66 @@ def _heading(text: str, m: re.Match) -> bool:
     return len(rest.split()) <= 6 and not re.search(r"[.;:,\"“]$|\b(?:says?|provides?|states?|is|are|shall|may|must)\b", rest)
 
 
+_DOC_WORDS = r"(?:Agreement|Contract|Lease|Deed|Letter|Policy|Terms|Memorandum|Order Form|Licence|License)"
+ALIAS = re.compile(r"(?P<doc>(?:[A-Z][\w-]*\s+){0,6}" + _DOC_WORDS + r")\s*\(\s*(?:the\s+|this\s+)?[\"“‘](?P<abbr>[A-Z][\w&-]{1,24})[\"”’]\s*\)")
+WITHIN = re.compile(r"\s+(?:of|to|in)\s+(?:the\s+)?(?P<att>Schedule|Annex|Exhibit|Appendix)\s+(?P<an>\d{1,3}|[A-Z])\b")
+
+
+def aliases(text: str) -> dict[str, str]:
+    """Short names a document gives others: 'the Share Purchase Agreement (the "SPA")' → {"SPA": "Share Purchase Agreement"}."""
+    return {m.group("abbr"): " ".join(m.group("doc").split()) for m in ALIAS.finditer(text)}
+
+
+def last_name(text: str, a: int, b: int, short: dict[str, str]) -> Optional[str]:
+    """The last other document named between a and b ("the Lease", "the SPA"), if any."""
+    hits = [(m.start(), m.group("doc")) for m in DOC_NAME.finditer(text, a, b) if m.group("det").lower() == "the"]
+    if short:
+        rx = re.compile(r"\b(?:the\s+)?(" + "|".join(re.escape(k) for k in short) + r")\b")
+        hits += [(m.start(), short[m.group(1)]) for m in rx.finditer(text, a, b) if not _in_alias(text, m.start())]
+    return max(hits)[1] if hits else None
+
+
+def _in_alias(text: str, at: int) -> bool:
+    return any(m.start() <= at < m.end() for m in ALIAS.finditer(text, max(0, at - 200), min(len(text), at + 40)))
+
+
+def quote_spans(text: str) -> list[tuple[int, int]]:
+    """Quotation marks paired in order: “ ” and ‘ ’ by shape, straight quotes alternately. A quotation
+    never runs across a blank line, so one stray mark cannot pair everything after it the wrong way."""
+    out, open_at, kind = [], None, None
+    for m in re.finditer(r"[\"“”‘’]", text):
+        ch, at = m.group(), m.start()
+        if ch == "’" and re.match(r"\w", text[at + 1:at + 2] or " "):
+            continue                                       # an apostrophe (party’s), not a closing quote
+        if ch == "‘" and at and re.match(r"\w", text[at - 1]):
+            continue
+        if open_at is not None and "\n\n" in text[open_at:at]:
+            open_at = None
+        if open_at is None:
+            if ch in "“‘\"":
+                open_at, kind = at, ch
+            continue
+        closes = {"“": "”", "‘": "’", "\"": "\""}[kind]
+        if ch == closes:
+            out.append((open_at, at + 1))
+            open_at = None
+        elif ch in "“‘":
+            open_at, kind = at, ch
+    return out
+
+
 def read(text: str) -> list[Found]:
     found: list[Found] = []
     taken: list[tuple[int, int]] = []
+    short = aliases(text)
+    short_rx = re.compile(r"\s+(?:of|to|in)\s+(?:the\s+)?(" + "|".join(re.escape(k) for k in short) + r")\b") if short else None
 
     def free(a: int, b: int) -> bool:
         return all(b <= x or a >= y for x, y in taken)
+
+    def by_alias(at: int) -> tuple[Optional[str], int]:
+        x = short_rx.match(text, at) if short_rx else None
+        return (short[x.group(1)], x.end()) if x else (None, at)
     for sub, rx in AUTHORITIES:
         for m in rx.finditer(text):
             if not free(m.start(), m.end()):
@@ -135,8 +188,16 @@ def read(text: str) -> list[Found]:
         if g.get("word"):
             word = g["word"].lower().rstrip("s") if g["word"] != "§" else "section"
             doc = None if g.get("dthis") else (g.get("doc") or "").strip() or None
-            nums = [(g["num"], m.start(), m.end(), m.group(0).strip())]
-            if g["word"].endswith("s") and not g.get("doc"):          # "Clauses 2.1 and 9.3": each one is checked
+            end, within = m.end(), None
+            if not doc and not g.get("dthis"):
+                w = WITHIN.match(text, m.end("num"))
+                if w:                                      # "paragraph 1 of Schedule 4": a paragraph inside the schedule
+                    within, end = f"{w.group('att')} {w.group('an')}", w.end()
+                else:
+                    doc, end = by_alias(m.end("num"))
+                    end = end if doc else m.end()
+            nums = [(g["num"], m.start(), end, text[m.start():end].strip())]
+            if g["word"].endswith("s") and not g.get("doc") and not within:   # "Clauses 2.1 and 9.3": each one is checked
                 pos = m.end("num")
                 while (x := MORE.match(text, pos)) and free(x.start("num"), x.end("num")):
                     nums.append((x.group("num"), x.start("num"), x.end("num"), f"{g['word'].rstrip('s')} {x.group('num')}"))
@@ -145,21 +206,31 @@ def read(text: str) -> list[Found]:
                     nums[0] = (g["num"], m.start(), m.end("num"), f"{g['word'].rstrip('s')} {g['num']}")
             for num, a0, b0, label in nums:
                 base = re.sub(r"\(.*$", "", num)
-                refs.append(Found("reference", word, label, a0, b0, {"number": base, "sub": num[len(base):] or None, "document": doc}))
+                refs.append(Found("reference", word, label, a0, b0, {"number": base, "sub": num[len(base):] or None, "document": doc,
+                                                                    "within": within}))
         else:
-            refs.append(Found("reference", g["attach"].lower(), m.group(0).strip(), m.start(), m.end(),
-                              {"number": g["anum"], "sub": None, "document": None if g.get("athis") else (g.get("adoc") or "").strip() or None,
-                               "attachment": True}))
+            doc = None if g.get("athis") else (g.get("adoc") or "").strip() or None
+            end = m.end()
+            if not doc and not g.get("athis"):
+                doc, end = by_alias(m.end("anum"))
+                end = end if doc else m.end()
+            refs.append(Found("reference", g["attach"].lower(), text[m.start():end].strip(), m.start(), end,
+                              {"number": g["anum"], "sub": None, "document": doc, "attachment": True}))
+    for r in refs:                                         # "paragraph 1 of Schedule 4 of the SPA": the schedule's document
+        if r.data.get("within"):
+            att = next((x for x in refs if x.data.get("attachment") and x.start > r.start and x.start <= r.end), None)
+            r.data["document"] = att.data["document"] if att else None
     quotes = []
-    for m in QUOTE.finditer(text):
-        q = m.group("q").strip()
-        if len(q.split()) < 4:
-            continue
-        a, _ = _sentence(text, m.start())
-        lead = [r for r in refs if a <= r.start < m.start()]
-        named = [d for d in DOC_NAME.finditer(text, a, m.start()) if d.group("det").lower() == "the"]
-        quotes.append(Found("quote", "quotation", q, m.start(), m.end(),
-                            {"reference": lead[-1] if lead else None, "document": named[-1].group("doc") if named and not lead else None}))
+    for a0, b0 in quote_spans(text):
+        q = text[a0 + 1:b0 - 1].strip()
+        a, _ = _sentence(text, a0)
+        lead = [r for r in refs if a <= r.start < a0]
+        words = len(q.split())
+        if words < 2 or (words < 4 and not lead) or _in_alias(text, a0) or re.match(r"\s*(?:means|shall mean|has the meaning)\b", text[b0:b0 + 30]):
+            continue                                       # a defined term, not a quotation
+        named = last_name(text, a, a0, short)
+        quotes.append(Found("quote", "quotation", q, a0, b0,
+                            {"reference": lead[-1] if lead else None, "document": named if not lead else None}))
     used = {id(q.data["reference"]) for q in quotes if q.data.get("reference")}
     found += [r for r in refs if id(r) not in used]
     found += quotes
