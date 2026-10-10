@@ -104,7 +104,8 @@ def edit_redline(matter_id: str, artifact_id: str, inp: RedlineEdit, request: Re
         raise HTTPException(status_code=409, detail="This redline changed since you opened it. Reload and try again.")
     content = copy.deepcopy(cur["content"])
     editor = _username(p["sub"])
-    positions = {x["topic"]: x for x in library.approved_positions(p["org_id"], content["playbook"]["id"])}
+    positions = ({x["topic"]: x for x in library.approved_positions(p["org_id"], content["playbook"]["id"])}
+                 if content.get("playbook") else {})              # S3.5 corrections have no playbook
     by_id = {c["id"]: c for c in content["changes"]}
     for e in inp.changes:
         c = by_id.get(e.id)

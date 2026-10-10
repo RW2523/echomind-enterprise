@@ -144,6 +144,8 @@ _REFUSE_BELOW = (
      "delete {n} redline version(s)"),
     (26, "SELECT COUNT(*) FROM legal_citation_notes",
      "delete {n} lawyers' note(s) on citation checks"),
+    (27, "SELECT COUNT(*) FROM legal_definition_notes",
+     "delete {n} lawyers' note(s) on definition checks"),
 )
 
 

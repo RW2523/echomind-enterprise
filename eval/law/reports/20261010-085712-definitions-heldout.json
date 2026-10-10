@@ -1,0 +1,147 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "5dc27a4",
+  "time": "20261010-085712",
+  "prompt_version": "definitions-s3.5c",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 3,
+  "planted": 12,
+  "caught": "12/12",
+  "fixes_right": "3/3",
+  "false_findings": 1,
+  "controls_clean": "1/1",
+  "by_type": {
+   "broken": "2/2",
+   "duplicate": "1/1",
+   "gap": "3/3",
+   "inconsistent": "2/2",
+   "outdated": "1/1",
+   "repeat": "1/1",
+   "undefined": "1/1",
+   "unused": "1/1"
+  },
+  "ms_per_check": 23
+ },
+ "documents": [
+  {
+   "id": "P1-asset-purchase",
+   "ms": 26,
+   "control": false,
+   "lines": [
+    {
+     "type": "duplicate",
+     "text": "Assets",
+     "conflicting": false,
+     "found": true,
+     "fix_ok": null,
+     "got": "“Assets” is defined twice, in the same words."
+    },
+    {
+     "type": "unused",
+     "text": "Excluded Liabilities",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Excluded Liabilities” is defined but never used."
+    },
+    {
+     "type": "inconsistent",
+     "text": "assets",
+     "fix": "Assets",
+     "found": true,
+     "fix_ok": true,
+     "got": "“assets” is used where the defined term is “Assets”."
+    },
+    {
+     "type": "undefined",
+     "text": "Completion Accounts",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Completion Accounts” reads as a defined term but is not defined in this document."
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 4",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no Schedule 4."
+    },
+    {
+     "type": "repeat",
+     "message": "Clause 5 appears twice",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 5 appears twice."
+    },
+    {
+     "type": "gap",
+     "message": "Clause 3 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 3 is missing: the numbering goes from 2 to 4."
+    },
+    {
+     "type": "gap",
+     "message": "Clause 6.3 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 6.3 is missing: the numbering goes from 6.2 to 6.4."
+    }
+   ],
+   "extra": [
+    {
+     "type": "repeat",
+     "text": "5.1",
+     "message": "Clause 5.1 appears twice."
+    }
+   ]
+  },
+  {
+   "id": "P2-lease-markdown",
+   "ms": 17,
+   "control": false,
+   "lines": [
+    {
+     "type": "inconsistent",
+     "text": "term",
+     "fix": "Term",
+     "found": true,
+     "fix_ok": true,
+     "got": "“term” is used where the defined term is “Term”."
+    },
+    {
+     "type": "outdated",
+     "text": "Clause 7 (Insurance)",
+     "fix": "Clause 7 (Alienation)",
+     "found": true,
+     "fix_ok": true,
+     "got": "Clause 7 is headed Alienation, not Insurance."
+    },
+    {
+     "type": "broken",
+     "text": "clause 9.4",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no clause 9.4."
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 3 to 6 are missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clauses 3 to 6 are missing: the numbering goes from 2 to 7."
+    }
+   ],
+   "extra": []
+  },
+  {
+   "id": "P3-clean-nda-control",
+   "ms": 25,
+   "control": true,
+   "lines": [],
+   "extra": []
+  }
+ ]
+}

@@ -1,0 +1,77 @@
+{
+ "about": "S3.5 defined terms and cross-references (DOC-04) — the HELD-OUT set (third): written for definitions-s3.5c before it was run, never used to change the checker, run once per checker version. Fictional documents only. Earlier held-out sets are G5–G10 in golden.json.",
+ "documents": [
+  {
+   "id": "P1-asset-purchase",
+   "name": "asset-purchase.txt",
+   "text": "ASSET PURCHASE AGREEMENT (fictional)\n\nThis Agreement is made between Larkspur Tools Ltd (the \"Seller\") and Moorcroft Engineering Ltd (the \"Buyer\").\n\n1. Definitions\n1.1 \"Assets\" means the plant, machinery and stock listed in Schedule 1.\n1.2 \"Completion\" means completion of the sale under clause 5.\n1.3 \"Excluded Liabilities\" means all liabilities of the Seller arising before Completion.\n1.4 \"Assets\" means the plant, machinery and stock listed in Schedule 1.\n\n2. Sale\n2.1 The Seller shall sell and the Buyer shall buy the assets free from encumbrances.\n2.2 The price is adjusted by reference to the Completion Accounts.\n\n4. Price\n4.1 The price is GBP 1,200,000 (fictional).\n4.2 The price is paid on Completion, as set out in Schedule 4.\n\n5. Completion\n5.1 Completion takes place on the date of this Agreement.\n\n5. Warranties\n5.1 The Seller warrants that it owns the Assets.\n\n6. General\n6.1 This Agreement is governed by English law.\n6.2 Each party bears its own costs.\n6.4 Clause 4.2 survives Completion.\n\nSchedule 1 The Assets\nMachinery at the Leeds works (fictional).\n",
+   "expect": [
+    {
+     "type": "duplicate",
+     "text": "Assets",
+     "conflicting": false
+    },
+    {
+     "type": "unused",
+     "text": "Excluded Liabilities"
+    },
+    {
+     "type": "inconsistent",
+     "text": "assets",
+     "fix": "Assets"
+    },
+    {
+     "type": "undefined",
+     "text": "Completion Accounts"
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 4"
+    },
+    {
+     "type": "repeat",
+     "message": "Clause 5 appears twice"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 3 is missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 6.3 is missing"
+    }
+   ]
+  },
+  {
+   "id": "P2-lease-markdown",
+   "name": "Lease.md",
+   "text": "# LEASE (fictional)\n\nThis Lease is granted by Fairholme Properties Ltd (the \"Landlord\") to Pell & Daughters LLP (the \"Tenant\").\n\n## 1. Definitions\n\n1.1 \"Premises\" means the second floor of Fairholme House (fictional).\n\n1.2 \"Term\" means ten years from the date of this Lease.\n\n1.3 \"Insured Risks\" means fire, flood and storm.\n\n## 2. Rent\n\n2.1 The Tenant shall pay the rent quarterly in advance throughout the term of this Lease.\n\n## 7. Alienation\n\n7.1 The Tenant shall not assign the Premises without consent.\n\n7.2 Clause 7 (Insurance) does not apply to an assignment to a group company.\n\n## 8. Insurance\n\n8.1 The Landlord shall insure the Premises against the Insured Risks.\n\n8.2 The Tenant shall comply with clause 9.4.\n",
+   "expect": [
+    {
+     "type": "inconsistent",
+     "text": "term",
+     "fix": "Term"
+    },
+    {
+     "type": "outdated",
+     "text": "Clause 7 (Insurance)",
+     "fix": "Clause 7 (Alienation)"
+    },
+    {
+     "type": "broken",
+     "text": "clause 9.4"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 3 to 6 are missing"
+    }
+   ]
+  },
+  {
+   "id": "P3-clean-nda-control",
+   "name": "confidentiality.txt",
+   "text": "CONFIDENTIALITY AGREEMENT (fictional)\n\nThis Agreement is made between Wrenfield Partners LLP (\"Wrenfield\") and Ostrava Glass AB (\"Ostrava\"), each a \"Party\".\n\n1. Definitions\n1.1 \"Information\" means information that a Party discloses to the other Party in connection with the Project.\n1.2 \"Project\" means the proposed joint venture between the Parties.\n1.3 \"Representatives\" has the meaning given in clause 2.2.\n\n2. Use\n2.1 Each Party shall use the Information only for the Project.\n2.2 A Party may share Information with its directors and advisers (its \"Representatives\").\n2.3 A Party is responsible for its Representatives.\n\n3. Return\n3.1 On request, each Party shall return the Information under clause 2.1.\n",
+   "expect": []
+  }
+ ]
+}

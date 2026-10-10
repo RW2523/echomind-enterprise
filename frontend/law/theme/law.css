@@ -478,3 +478,8 @@
 [data-edition="law"] .lw-cite-act:hover, [data-edition="law"] .lw-cite-act:focus-visible { color: var(--accent); text-decoration-color: currentColor; }
 [data-edition="law"] .lw-cite-diff { margin: 2px 0; padding: 6px 10px; border-left: 2px solid color-mix(in srgb, var(--conflict) 55%, transparent); background: color-mix(in srgb, var(--conflict) 5%, transparent); border-radius: 0 6px 6px 0; }
 [data-edition="law"] .lw-cite-diff del + ins { margin-left: .3em; }
+/* S3.5 definitions and references */
+[data-edition="law"] .lw-def-fixes { border: 0; margin: 4px 0 0; padding: 6px 10px; display: grid; gap: 3px; background: var(--accent-soft); border-radius: 8px; }
+[data-edition="law"] .lw-def-fixes legend { padding: 0; float: left; width: 100%; margin-bottom: 2px; font-weight: 600; }
+[data-edition="law"] .lw-def-fixes label { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; cursor: pointer; }
+[data-edition="law"] .lw-def-fixes .lw-redline { font-size: 14px; margin: 0; }

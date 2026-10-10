@@ -1,0 +1,310 @@
+{
+ "about": "S3.5 defined terms and cross-references (DOC-04) — the TUNING set. Fictional documents with planted drafting errors; expectations are what a careful lawyer proof-reading the document would list. Negative controls expect nothing. G5–G7 were the first held-out set; they became tuning data once they informed a change. G8–G10 were the second held-out set.",
+ "documents": [
+  {
+   "id": "G1-services-planted",
+   "name": "services.txt",
+   "text": "SERVICES AGREEMENT (fictional)\n\nThis Services Agreement (the \"Agreement\") is made between Northwind Hosting Ltd (the \"Supplier\") and Alder Retail Ltd (the \"Customer\").\n\n1. Definitions\n1.1 \"Services\" means the services described in Schedule 1.\n1.2 \"Fees\" means the fees set out in Schedule 2.\n1.3 \"Confidential Information\" means all information disclosed by a party that is marked as confidential.\n1.4 \"Business Day\" means a day other than a Saturday, Sunday or public holiday in England.\n1.5 \"Fees\" means the charges set out in the Order Form.\n1.6 \"Territory\" means the United Kingdom.\n\n2. Services\n2.1 The Supplier shall provide the Services from the Commencement Date.\n2.2 The Customer shall pay the fees within thirty Business Days of invoice.\n2.3 Each party shall protect the other's confidential information as required by clause 4 (Liability).\n\n4. Confidentiality\n4.1 Each party shall keep the other party's Confidential Information confidential.\n4.3 This clause 4.3 survives termination of this Agreement.\n\n9. Liability\n9.1 Liability is limited as set out in clause 12.\n9.2 Neither party excludes liability for:\n(a) death or personal injury caused by negligence;\n(c) fraud.\n\nSchedule 1 Services\nManaged hosting (fictional).\n\nSchedule 2 Fees\nEUR 10,000 per month (fictional).",
+   "expect": [
+    {
+     "type": "duplicate",
+     "text": "Fees",
+     "conflicting": true
+    },
+    {
+     "type": "unused",
+     "text": "Territory"
+    },
+    {
+     "type": "undefined",
+     "text": "Commencement Date"
+    },
+    {
+     "type": "inconsistent",
+     "text": "fees",
+     "fix": "Fees"
+    },
+    {
+     "type": "inconsistent",
+     "text": "confidential information",
+     "fix": "Confidential Information"
+    },
+    {
+     "type": "outdated",
+     "text": "clause 4 (Liability)",
+     "fix": "clause 4 (Confidentiality)"
+    },
+    {
+     "type": "broken",
+     "text": "clause 12"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 3 is missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 5 to 8 are missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 4.2 is missing"
+    },
+    {
+     "type": "gap",
+     "message": "Item (b) of clause 9.2 is missing"
+    }
+   ]
+  },
+  {
+   "id": "G2-demo-msa-markdown",
+   "name": "Master Services Agreement (DEMO).md",
+   "text": "# MASTER SERVICES AGREEMENT (DEMO)\n\n> FICTIONAL DEMO FIXTURE. Every party, amount and term below is invented for testing EchoMind Law. Not a real agreement and not legal advice.\n\nThis Master Services Agreement (\"Agreement\") is entered into as of 2 March 2026 (the \"Effective Date\") between **Harrowgate Systems Inc.**, a Delaware corporation (\"Provider\"), and **Voss-Lindqvist AB**, a Swedish limited company (\"Client\").\n\n## 1. Definitions\n\n1.1 \"Services\" means the Harrowgate platform subscription and related support described in Schedule 1.\n\n1.2 \"Fees\" means the amounts payable by Client under Clause 4.\n\n1.3 \"Change of Control\" means any transaction by which a person or group acquires more than fifty percent (50%) of the voting rights of Provider.\n\n1.4 \"Client Data\" means all data supplied by or on behalf of Client and processed by Provider under this Agreement.\n\n## 2. Term and Renewal\n\n2.1 This Agreement begins on the Effective Date and continues for an initial term of thirty-six (36) months (the \"Initial Term\").\n\n2.2 After the Initial Term, this Agreement renews automatically for successive twelve (12) month renewal terms unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.\n\n## 3. Services\n\n3.1 Provider shall provide the Services in accordance with the service levels in Schedule 2.\n\n3.2 Provider shall maintain an information-security programme no less protective than ISO/IEC 27001.\n\n## 4. Fees and Payment\n\n4.1 Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgate platform.\n\n4.2 Provider shall invoice monthly in advance. Invoices are payable net thirty (30) days from the invoice date.\n\n4.3 Undisputed amounts not paid when due accrue interest at one percent (1%) per month until paid.\n\n## 5. Confidentiality\n\n5.1 Each party shall keep the other party's Confidential Information confidential and use it only to perform this Agreement, for the term of this Agreement and five (5) years after it ends.\n\n## 6. Data Protection\n\n6.1 Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it.\n\n6.2 Within thirty (30) days after termination, Provider shall return or securely destroy all Client Data, at Client's option.\n\n## 7. Warranties\n\n7.1 Provider warrants that the Services will perform materially in accordance with Schedule 1.\n\n## 8. Limitation of Liability\n\n8.1 Each party's total aggregate liability arising out of or in connection with this Agreement shall not exceed the greater of USD 250,000 or the Fees paid by Client in the twelve (12) months preceding the event giving rise to the claim.\n\n8.2 Neither party is liable for any indirect, incidental or consequential damages, or for loss of profits.\n\n8.3 Clauses 8.1 and 8.2 do not limit liability for fraud, wilful misconduct, or breach of Clause 5.\n\n## 9. Indemnification\n\n9.1 Provider shall indemnify Client against third-party claims that the Services infringe any intellectual property right.\n\n## 12. Termination\n\n12.1 Either party may terminate this Agreement for convenience on thirty (30) days' written notice.\n\n12.2 Either party may terminate this Agreement immediately on written notice if the other party commits a material breach that is not remedied within thirty (30) days of notice.\n\n## 14. Assignment and Change of Control\n\n14.1 Neither party may assign this Agreement without the prior written consent of the other party, such consent not to be unreasonably withheld.\n\n14.2 Provider shall provide no less than thirty (30) days' prior written notice of any Change of Control to Client in accordance with Clause 22.\n\n14.3 If Provider fails to give notice under Clause 14.2, Client may terminate this Agreement for cause by written notice within ninety (90) days of becoming aware of the Change of Control.\n\n## 21. Governing Law\n\n21.1 This Agreement is governed by the laws of the State of Delaware, without regard to its conflict-of-laws rules.\n\n## 22. Notices\n\n22.1 Any notice under this Agreement shall be in writing and addressed to the General Counsel of the receiving party at the address set out in Schedule 4.\n\n*Signed for Harrowgate Systems Inc. and for Voss-Lindqvist AB on 2 March 2026 (fictional).*\n",
+   "expect": [
+    {
+     "type": "broken",
+     "text": "Schedule 1"
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 2"
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 4"
+    },
+    {
+     "type": "undefined",
+     "text": "Confidential Information"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 10 and 11 are missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 13 is missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 15 to 20 are missing"
+    }
+   ]
+  },
+  {
+   "id": "G3-lease-interpretation-at-end",
+   "name": "lease.txt",
+   "text": "LEASE (fictional)\n\nThis Lease is made between Harbour Estates Limited (the \"Landlord\") and Pellow Studio Ltd (the \"Tenant\").\n\n1. Grant\n1.1 The Landlord lets the Premises to the Tenant for the Term.\n1.2 The Tenant shall pay the Rent from the Rent Commencement Date.\n\n2. Tenant's covenants\n2.1 The Tenant shall keep the premises clean and tidy.\n2.2 The Tenant shall comply with the Building Regulations (the \"Regulations\").\n2.3 The Tenant shall not alter the Premises except as permitted by clause 2.5 (Alterations).\n\n3. Rent review\n3.1 The Rent shall be reviewed as set out in Schedule 3.\n\n6. Insurance\n6.1 The Landlord shall insure the Building.\n6.2 The Tenant shall repay the insurance premium.\n6.2 The Tenant shall not invalidate the insurance.\n\n20. Interpretation\n20.1 \"Premises\" means Unit 4, Harbour Yard (fictional).\n20.2 \"Term\" means ten years from the date of this Lease.\n20.3 \"Rent\" means GBP 24,000 a year (fictional).\n20.4 \"Building\" means Harbour Yard (fictional).\n\nSchedule 1 The Premises\nUnit 4 (fictional).\n",
+   "expect": [
+    {
+     "type": "undefined",
+     "text": "Rent Commencement Date"
+    },
+    {
+     "type": "inconsistent",
+     "text": "premises",
+     "fix": "Premises"
+    },
+    {
+     "type": "unused",
+     "text": "Regulations"
+    },
+    {
+     "type": "broken",
+     "text": "clause 2.5 (Alterations)"
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 3"
+    },
+    {
+     "type": "repeat",
+     "message": "Clause 6.2 appears twice"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 4 and 5 are missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 7 to 19 are missing"
+    }
+   ]
+  },
+  {
+   "id": "G4-clean-nda-control",
+   "name": "nda.txt",
+   "text": "MUTUAL NON-DISCLOSURE AGREEMENT (fictional)\n\nThis Agreement is made between Corran Analytics Ltd (\"Corran\") and Bellhaven Foods Ltd (\"Bellhaven\"), each a \"Party\".\n\n1. Definitions\n1.1 \"Confidential Information\" means information disclosed by a Party that is marked confidential.\n1.2 \"Purpose\" means evaluating a supply arrangement between the Parties.\n\n2. Obligations\n2.1 Each Party shall use the other Party's Confidential Information only for the Purpose.\n2.2 The obligations in clause 2.1 do not apply to information that:\n(a) is or becomes public other than through a breach of this Agreement;\n(b) was lawfully known to the receiving Party before disclosure; or\n(c) is required to be disclosed by law, provided that the receiving Party:\n(i) gives prompt notice; and\n(ii) discloses only what is required.\n\n3. Term\n3.1 This Agreement lasts two years from the date of signature.\n3.2 Clause 2 (Obligations) survives for three years after this Agreement ends.\n",
+   "expect": []
+  },
+  {
+   "id": "G5-software-licence",
+   "name": "licence.txt",
+   "text": "SOFTWARE LICENCE AGREEMENT (fictional)\n\nThis Agreement is between Quillon Software Ltd (the \"Licensor\") and Marsh & Teague LLP (the \"Licensee\").\n\nArticle 1 Definitions\n1.1 \"Software\" means the Quillon Ledger programme in object code.\n1.2 \"Documentation\" means the user guides supplied with the Software.\n1.3 \"Software\" means the Quillon Ledger programme in object code.\n1.4 \"Users\" means employees of the Licensee.\n\nArticle 2 Grant\n2.1 The Licensor grants the licensee a non-exclusive licence to use the Software for its Users.\n2.2 The licence is subject to Article 7 and to clause 3 (Fees).\n\nArticle 3 Restrictions\n3.1 The Licensee shall not copy the Software.\n\nArticle 4 Fees\n4.1 The Licensee shall pay the Licence Fee annually in advance.\n\nArticle 6 Term\n6.1 This Agreement continues for three years.\n",
+   "expect": [
+    {
+     "type": "duplicate",
+     "text": "Software",
+     "conflicting": false
+    },
+    {
+     "type": "unused",
+     "text": "Documentation"
+    },
+    {
+     "type": "undefined",
+     "text": "Licence Fee"
+    },
+    {
+     "type": "inconsistent",
+     "text": "licensee",
+     "fix": "Licensee"
+    },
+    {
+     "type": "broken",
+     "text": "Article 7"
+    },
+    {
+     "type": "outdated",
+     "text": "clause 3 (Fees)",
+     "fix": "clause 3 (Restrictions)"
+    },
+    {
+     "type": "gap",
+     "message": "Article 5 is missing"
+    }
+   ],
+   "history": "Held-out in the first run (definitions-s3.5: 8/12 caught); moved here because it informed definitions-s3.5b."
+  },
+  {
+   "id": "G6-shareholders-markdown",
+   "name": "Shareholders Agreement.md",
+   "text": "# SHAREHOLDERS' AGREEMENT (fictional)\n\nThis Agreement is made between the shareholders listed in Schedule 1 (each a \"Shareholder\") and Tidewater Holdings Ltd (the \"Company\").\n\n## 1. Board\n\n1.1 The Board shall consist of up to five Directors.\n\n1.2 The Shareholders may appoint a Director as set out in paragraph 2 of Schedule 1.\n\n## 2. Reserved Matters\n\n2.1 The Company shall not do any of the following without Shareholder Consent:\n\n(i) issue new shares;\n\n(ii) borrow more than GBP 100,000;\n\n(iv) sell the business.\n\n2.2 The reserved matters are also listed in Schedule 3.\n\n## 3. Transfers\n\n3.1 A Shareholder may not transfer shares except under clause 2.\n\n## Schedule 1 Shareholders\n\n1. Each Shareholder's name and holding are listed below (fictional).\n\n2. Each Shareholder holding 20% or more may appoint one Director.\n",
+   "expect": [
+    {
+     "type": "undefined",
+     "text": "Board"
+    },
+    {
+     "type": "undefined",
+     "text": "Directors"
+    },
+    {
+     "type": "undefined",
+     "text": "Shareholder Consent"
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 3"
+    },
+    {
+     "type": "gap",
+     "message": "Items between (ii) and (iv)"
+    }
+   ],
+   "history": "Held-out in the first run (definitions-s3.5: 8/12 caught); moved here because it informed definitions-s3.5b."
+  },
+  {
+   "id": "G7-clean-employment-control",
+   "name": "employment.txt",
+   "text": "EMPLOYMENT CONTRACT (fictional)\n\nThis Contract is between Ashgrove Design Ltd (the \"Company\") and Mira Okonjo (the \"Employee\").\n\n1. Role\n1.1 The Employee is employed as Senior Designer from the Start Date.\n1.2 The Employee reports to the Head of Studio.\n\n2. Pay\n2.1 The Company shall pay the Salary monthly in arrears.\n2.2 The Salary is reviewed each year under clause 2.1.\n\n3. Leave\n3.1 The Employee is entitled to:\n(a) 25 days' holiday a year;\n(b) public holidays; and\n(c) leave required by law.\n\n4. Interpretation\n4.1 \"Start Date\" means 1 November 2026.\n4.2 \"Salary\" means GBP 52,000 a year (fictional).\n",
+   "expect": [],
+   "history": "Held-out in the first run (definitions-s3.5: 8/12 caught); moved here because it informed definitions-s3.5b."
+  },
+  {
+   "id": "G8-consultancy-uk",
+   "name": "consultancy.txt",
+   "text": "CONSULTANCY AGREEMENT (fictional)\n\nThis Agreement is dated 3 March 2026 and made between Fenwick Advisory Ltd (the \"Consultant\") and Orrin Logistics plc (the \"Client\").\n\n1. Interpretation\n1.1 In this Agreement:\n\"Assignment\" means the project described in Schedule 1;\n\"Fee\" means GBP 900 per day (fictional);\n\"Deliverables\" means the reports produced in the Assignment;\n\"Expenses\" means reasonable travel costs approved in advance;\n\"Fee\" means the fee set out in the Statement of Work.\n1.2 Clause headings do not affect interpretation.\n\n2. Services\n2.1 The Consultant shall perform the Assignment with reasonable skill and care.\n2.2 The Consultant shall deliver the deliverables by the Completion Date.\n2.3 The Client shall pay the Fee within 30 days of invoice, subject to clause 6 (Set-off).\n\n3. Intellectual property\n3.1 The Deliverables belong to the Client on payment.\n3.3 The Consultant keeps its Background IP.\n\n5. Termination\n5.1 Either party may terminate this Agreement on one month's notice.\n5.2 Clauses 3 and 7 survive termination.\n\nSchedule 1 The Assignment\nA review of warehouse routing (fictional).\n",
+   "expect": [
+    {
+     "type": "duplicate",
+     "text": "Fee",
+     "conflicting": true
+    },
+    {
+     "type": "unused",
+     "text": "Expenses"
+    },
+    {
+     "type": "inconsistent",
+     "text": "deliverables",
+     "fix": "Deliverables"
+    },
+    {
+     "type": "undefined",
+     "text": "Completion Date"
+    },
+    {
+     "type": "undefined",
+     "text": "Background IP"
+    },
+    {
+     "type": "undefined",
+     "text": "Statement of Work"
+    },
+    {
+     "type": "broken",
+     "text": "clause 6 (Set-off)"
+    },
+    {
+     "type": "broken",
+     "text": "Clause 7"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 3.2 is missing"
+    },
+    {
+     "type": "gap",
+     "message": "Clause 4 is missing"
+    }
+   ],
+   "history": "Held-out in the second run (definitions-s3.5b: 13/16 caught, 5 unexpected); moved here because it informed definitions-s3.5c."
+  },
+  {
+   "id": "G9-loan-note-markdown",
+   "name": "Loan Note Instrument.md",
+   "text": "# LOAN NOTE INSTRUMENT (fictional)\n\nThis instrument is made by Kestrel Ventures Ltd (the \"Issuer\").\n\n## 1. Definitions\n\n1.1 \"Noteholder\" means a person registered as the holder of a Note.\n\n1.2 \"Note\" means a loan note issued under this instrument.\n\n1.3 \"Maturity Date\" means 30 June 2029.\n\n## 2. Interest\n\n2.1 Each Note bears interest at 8% a year, payable on each Interest Payment Date.\n\n2.2 Interest accrues from the date of issue.\n\n2.2 Interest is paid gross.\n\n## 3. Redemption\n\n3.1 The Issuer shall redeem the Notes on the maturity date.\n\n3.2 The Issuer may redeem early in the events listed in Schedule 2:\n\n(a) a change of control;\n\n(b) a listing; or\n\n(d) a sale of the business.\n\n3.3 Early redemption is at par, as provided in paragraph 3 of Schedule 2.\n\n## Schedule 2 Early Redemption Events\n\n1. A change of control of the Issuer.\n\n2. A listing of the Issuer's shares.\n",
+   "expect": [
+    {
+     "type": "unused",
+     "text": "Noteholder"
+    },
+    {
+     "type": "undefined",
+     "text": "Interest Payment Date"
+    },
+    {
+     "type": "repeat",
+     "message": "Clause 2.2 appears twice"
+    },
+    {
+     "type": "inconsistent",
+     "text": "maturity date",
+     "fix": "Maturity Date"
+    },
+    {
+     "type": "gap",
+     "message": "Item (c) of clause 3.2 is missing"
+    },
+    {
+     "type": "broken",
+     "text": "paragraph 3 of Schedule 2"
+    }
+   ],
+   "history": "Held-out in the second run (definitions-s3.5b: 13/16 caught, 5 unexpected); moved here because it informed definitions-s3.5c."
+  },
+  {
+   "id": "G10-clean-us-consulting-control",
+   "name": "consulting.txt",
+   "text": "MASTER CONSULTING AGREEMENT (fictional)\n\nThis Master Consulting Agreement (this \"Agreement\") is entered into by Brightline Data, Inc. (\"Brightline\") and Calder Mutual Insurance Company (\"Calder\").\n\nSection 1. Definitions\n1.1 \"Work Order\" means an order for services in the form of Exhibit A.\n1.2 \"Confidential Information\" has the meaning given in Section 4.1.\n\nSection 2. Services\n2.1 Brightline shall perform the services described in each Work Order.\n2.2 Each Work Order is governed by this Agreement.\n\nSection 3. Fees\n3.1 Calder shall pay the fees set out in each Work Order within 30 days of invoice.\n\nSection 4. Confidentiality\n4.1 Each party shall protect the other party's confidential information (\"Confidential Information\") with reasonable care.\n4.2 Section 4.1 survives for three years.\n\nExhibit A Form of Work Order\n[Form omitted in this fictional example.]\n",
+   "expect": [
+    {
+     "type": "unused",
+     "text": "Confidential Information"
+    }
+   ],
+   "history": "Held-out in the second run (definitions-s3.5b: 13/16 caught, 5 unexpected); moved here because it informed definitions-s3.5c. Its expectation was corrected: the term is defined and never used."
+  }
+ ]
+}

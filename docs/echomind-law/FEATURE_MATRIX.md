@@ -23,7 +23,7 @@
 | DOC-01 | Legal templates and precedent drafting, DOCX/PDF | DONE for the pilot (S3.1, D-045). Firm templates in a small markup, versioned and approved by a managing partner (not the author), with firm Word styles; six standard presets; fields from the matter record, checked quotes or a lawyer, never the model alone; written passages citing their sources, any unsupported sentence or figure a gap; approval only with no gap left; filed as Word with the approval; golden and held-out evaluation with no wrong values and no invented figures | S3.1 | Firm templates (sample set used until provided) |
 | DOC-02 | Clause library, playbooks, compare, Word redlines | PARTIAL: built and tested (S3.2 D-046, S3.3 D-047); the manual Microsoft Word check is pending (🔒). Playbooks with checks; redlines to the firm's positions (model fits defined terms only, checked); Word files with real tracked changes and comments, checked before release (T10: 487/487 revisions verified, LibreOffice round trips kept) | S3.2, S3.3 | Word manual verification (D-011, P-013) |
 | DOC-03 | Quote and citation checker with authority provenance | DONE for the pilot (S3.4, D-048): references resolved to exact clauses or flagged missing; quotations compared word for word (altered words shown); every external authority listed as UNVERIFIED, impossible ones flagged; nothing looked up. T07 golden 55/55, held-out 27/28 (court rules not yet read) | S3.4 | Verifying that an authority exists needs a licensed source (P-009) |
-| DOC-04 | Defined terms, numbering, cross-references | MISSING | S3.5 | — |
+| DOC-04 | Defined terms, numbering, cross-references | DONE for the pilot (S3.5, D-049): definitions (duplicates, unused, undefined, another form, before definition), numbering gaps and repeats at every level, broken and outdated references, all with offsets; corrections only through an approved redline. Held-out 12/12 (third set); undefined-term detection is heuristic | S3.5 | — |
 | DOC-05 | Obligations and deadlines tracker | MISSING | S3.6 | — |
 | DOC-06 | Due diligence checklist and issue register | MISSING | S3.7 | — |
 | DOC-07 | Governance, cap table / approvals, IP assignment checks | MISSING | S3.8 | — |
@@ -212,7 +212,7 @@
 ### DOC-04 — Defined terms and cross-references
 | Field | Detail |
 |---|---|
-| Status | **MISSING.** The DoD-shaped cross-ref graph is not reusable for contracts. |
+| Status | **DONE for the pilot (S3.5, D-049).**<ul><li>Rules only.</li><li>Definitions: duplicates (whether the meanings differ), unused, undefined (heuristic), used in another form, used before defined.</li><li>Numbering gaps and repeats at every level, items, schedules and articles included.</li><li>Broken references, and outdated ones whose named heading no longer matches.</li><li>Every finding has offsets.</li><li>Corrections become a redline that a second lawyer approves before filing.</li><li>Not reused: the legacy DoD cross-reference graph.</li></ul> |
 | Modifications | Definition detector (quoted capitalized terms, "means"); usage index; undefined, unused, duplicate and inconsistent findings; numbering validator; broken cross-references; outdated-version references; offsets and proposed fixes |
 | Tests | Planted errors detected with offsets |
 | Acceptance | Planted broken references and unused terms detected with offsets |

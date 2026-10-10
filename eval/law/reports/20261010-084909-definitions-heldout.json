@@ -1,0 +1,145 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "e26268c",
+  "time": "20261010-084909",
+  "prompt_version": "definitions-s3.5",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 3,
+  "planted": 12,
+  "caught": "8/12",
+  "fixes_right": "2/2",
+  "false_findings": 1,
+  "controls_clean": "1/1",
+  "by_type": {
+   "broken": "2/2",
+   "duplicate": "1/1",
+   "gap": "1/2",
+   "inconsistent": "1/1",
+   "outdated": "1/1",
+   "undefined": "1/4",
+   "unused": "1/1"
+  },
+  "ms_per_check": 18
+ },
+ "documents": [
+  {
+   "id": "H1-software-licence",
+   "ms": 17,
+   "control": false,
+   "lines": [
+    {
+     "type": "duplicate",
+     "text": "Software",
+     "conflicting": false,
+     "found": true,
+     "fix_ok": null,
+     "got": "“Software” is defined twice, in the same words."
+    },
+    {
+     "type": "unused",
+     "text": "Documentation",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Documentation” is defined but never used."
+    },
+    {
+     "type": "undefined",
+     "text": "Licence Fee",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Licence Fee” reads as a defined term but is not defined in this document."
+    },
+    {
+     "type": "inconsistent",
+     "text": "licensee",
+     "fix": "Licensee",
+     "found": true,
+     "fix_ok": true,
+     "got": "“licensee” is used where the defined term is “Licensee”."
+    },
+    {
+     "type": "broken",
+     "text": "Article 7",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no article 7."
+    },
+    {
+     "type": "outdated",
+     "text": "clause 3 (Fees)",
+     "fix": "clause 3 (Restrictions)",
+     "found": true,
+     "fix_ok": true,
+     "got": "Clause 3 is headed Restrictions, not Fees."
+    },
+    {
+     "type": "gap",
+     "message": "Article 5 is missing",
+     "found": false,
+     "fix_ok": null,
+     "got": null
+    }
+   ],
+   "extra": [
+    {
+     "type": "gap",
+     "text": "6",
+     "message": "Clause 5 is missing: the numbering goes from 4 to 6."
+    }
+   ]
+  },
+  {
+   "id": "H2-shareholders-markdown",
+   "ms": 15,
+   "control": false,
+   "lines": [
+    {
+     "type": "undefined",
+     "text": "Board",
+     "found": false,
+     "fix_ok": null,
+     "got": null
+    },
+    {
+     "type": "undefined",
+     "text": "Directors",
+     "found": false,
+     "fix_ok": null,
+     "got": null
+    },
+    {
+     "type": "undefined",
+     "text": "Shareholder Consent",
+     "found": false,
+     "fix_ok": null,
+     "got": null
+    },
+    {
+     "type": "broken",
+     "text": "Schedule 3",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no Schedule 3."
+    },
+    {
+     "type": "gap",
+     "message": "Items between (ii) and (iv)",
+     "found": true,
+     "fix_ok": null,
+     "got": "Items between (ii) and (iv) of clause 2.1 are missing."
+    }
+   ],
+   "extra": []
+  },
+  {
+   "id": "H3-clean-employment-control",
+   "ms": 22,
+   "control": true,
+   "lines": [],
+   "extra": []
+  }
+ ]
+}

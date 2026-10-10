@@ -264,6 +264,23 @@ def test_the_demo_memo_against_the_demo_agreement(docs):
     assert ch["summary"]["authorities"] == 5 and ch["summary"]["malformed"] == 1
 
 
+def test_a_clause_known_only_by_its_markdown_heading_resolves(docs):
+    """citations-s3.4c: the reader does not read "## 12. Termination" as clause 12; its sub-clauses imply it."""
+    from pathlib import Path
+    fx = Path(__file__).resolve().parents[3] / "eval" / "fixtures" / "law"
+    alice = as_user(docs, "alice")
+    mid = docs["matters"]["M-101"]["id"]
+    upload(alice, mid, "Master Services Agreement (DEMO).md", (fx / "Master Services Agreement (DEMO).md").read_text(),
+           mime="text/markdown", status="executed")
+    memo = upload(alice, mid, "note.txt", "NOTE (fictional)\n\n1. Exit\n1.1 Clause 12 of the Master Services Agreement governs exit; "
+                  "clause 13 of the Master Services Agreement does not exist.", status="draft").json()["document"]
+    index_all()
+    ch = alice.post(f"/api/legal/matters/{mid}/documents/{memo['id']}/citation-check", headers=csrf_headers(alice)).json()["check"]
+    twelve = item(ch, "reference", "Clause 12 of")
+    assert twelve["status"] == "resolved" and twelve["target"]["clause"] == "12" and "12.1 Either party" in twelve["target"]["passage"]
+    assert item(ch, "reference", "clause 13 of")["status"] == "missing"
+
+
 def test_a_heading_is_not_a_reference_to_itself():
     from app.legal.citations import parse
     text = ("Article 1 Grant\n1.1 The licence is subject to Article 3 and Annex A.\n\n## Schedule 1 — Fees\nEUR 10 (fictional).\n"

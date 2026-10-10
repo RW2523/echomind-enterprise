@@ -421,10 +421,24 @@ export interface RedlineChange {
   id: string; topic: string; title: string; clause: { number: string | null; heading: string | null; start: number; end: number };
   original: string; revised: string; ops: [('eq' | 'del' | 'ins'), string][]; reason: string; comment: string;
   fitted: boolean; fit_note: string | null; edited_by?: string | null;
-  from: { kind: 'standard' | 'fallback'; n: number | null; position_id: string; position_version: number; text: string };
+  from: { kind: 'standard' | 'fallback' | 'fix'; n: number | null; position_id: string | null; position_version: number | null; text: string; findings?: string[] };
 }
 export interface RedlineContent {
   title: string; document: { id: string; title: string; version_id: string; version_number: number; filename: string; mime: string };
-  check_id: string; playbook: { id: string; name: string | null }; changes: RedlineChange[]; summary: { changes: number; fitted: number };
+  /** S3.5: corrections picked from a definitions check have no playbook. */
+  origin?: 'definitions'; check_id: string; playbook: { id: string; name: string | null } | null; changes: RedlineChange[]; summary: { changes: number; fitted: number };
+}
+
+/** Defined terms and cross-references (S3.5, D-049). Rules only; fixes become a redline for approval. */
+export type DefinitionFindingType = 'duplicate' | 'unused' | 'undefined' | 'inconsistent' | 'before_definition' | 'gap' | 'repeat' | 'broken' | 'outdated';
+export interface DefinitionFix { label: string; start: number; end: number; original: string; revised: string; clause: string | null }
+export interface DefinitionFinding {
+  id: string; kind: 'definition' | 'numbering' | 'reference'; type: DefinitionFindingType; severity: 'high' | 'medium' | 'low';
+  text: string; start: number; end: number; message: string; where?: string; places: { start: number; end: number; where?: string }[]; fixes: DefinitionFix[];
+  conflicting?: boolean; notes: { note: string; by: string | null; at: string }[];
+}
+export interface DefinitionCheck {
+  id: string; document_id: string; version_id: string; version_number: number | null; findings: DefinitionFinding[]; engine: string; advisory: true;
+  summary: Record<'definitions' | DefinitionFindingType, number>; created_by: string | null; created_at: string;
 }
 

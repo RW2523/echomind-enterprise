@@ -93,11 +93,33 @@ def _markers(text: str, start: int, end: int) -> list[tuple[int, str, str, int, 
     return out
 
 
+def _roman_value(s: str) -> int:
+    vals = {"i": 1, "v": 5, "x": 10, "l": 50, "c": 100}
+    total = 0
+    for i, ch in enumerate(s):
+        v = vals[ch]
+        total += -v if i + 1 < len(s) and vals[s[i + 1]] > v else v
+    return total
+
+
+def _roman_item(value: str, last_letter: Optional[str], last_roman: Optional[str]) -> bool:
+    """Whether "(x)" is a roman item: a roman list starts at (i) and counts on ((i), (ii), (iii)…). A letter
+    that only looks roman — (c) after (a), (i) after (h), (v) after (u) — is a letter item."""
+    if not _ROMAN.match(value):
+        return False
+    if last_letter and len(value) == 1 and len(last_letter) == 1 and ord(value) == ord(last_letter) + 1:
+        return False
+    if last_roman:
+        return _roman_value(value) == _roman_value(last_roman) + 1
+    return value == "i"
+
+
 def clauses(x: Extraction) -> list[Clause]:
     found: list[Clause] = []
     stack: list[Clause] = []
     numbered: Optional[Clause] = None                       # the last clause "(a)" would attach to
-    last_sub: Optional[tuple[str, int]] = None               # (letter, level) of the last "(a)"-style item
+    last_sub: Optional[tuple[str, int, bool]] = None         # (value, level, roman?) of the last item at the first level
+    last_roman: Optional[str] = None                         # the last "(i)"-style item, if the list is roman
 
     def push(c: Clause) -> None:
         while stack and stack[-1].level >= c.level:
@@ -119,13 +141,13 @@ def clauses(x: Extraction) -> list[Clause]:
             if kind == "sub":
                 if numbered is None:
                     continue
-                roman = bool(_ROMAN.match(value)) and not (last_sub and last_sub[0] and len(value) == 1 and
-                                                         ord(value) == ord(last_sub[0]) + 1)
-                if roman and last_sub and not _ROMAN.match(last_sub[0] or ""):
+                roman = _roman_item(value, last_sub[0] if last_sub else None, last_roman)
+                last_roman = value if roman else None
+                if roman and last_sub and not last_sub[2]:      # (i) under a lettered item; "c" only looks roman
                     base, lvl = f"{numbered.number}({last_sub[0]})", last_sub[1] + 1
                 else:
                     base, lvl = numbered.number, numbered.level + 1
-                    last_sub = (value, lvl)
+                    last_sub = (value, lvl, roman)
                 number = f"{base}({value})"
                 push(Clause(number, label, _heading(rest), lvl, at, b.end, page=x.page_at(at)))
                 continue
@@ -133,7 +155,7 @@ def clauses(x: Extraction) -> list[Clause]:
                 stack.clear()
             c = Clause(value, label, _heading(rest), level, at, b.end, page=x.page_at(at))
             push(c)
-            numbered, last_sub = c, None
+            numbered, last_sub, last_roman = c, None, None
     body_end = max((b.end for b in body), default=len(x.text))
     for i, c in enumerate(found):
         nxt = next((d.start for d in found[i + 1:] if d.level <= c.level), body_end)

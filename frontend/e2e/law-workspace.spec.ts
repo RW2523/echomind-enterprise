@@ -981,3 +981,61 @@ test('citations: a memo\'s references resolved to the agreement, an altered quot
   await expect(alice).toHaveURL(new RegExp(`/documents/${ids.msa}/read\\?v=`));
   await expect(alice.getByRole('article', { name: 'Document text' })).toContainText('Limitation of Liability');
 });
+
+test('definitions: a supply agreement\'s terms, numbering and references checked; two corrections approved and filed as tracked changes', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  await expect(importButton).toBeVisible();
+  if (await alice.getByRole('button', { name: 'Supply Agreement (DEMO)', exact: true }).count() === 0) {
+    await importButton.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law/Supply Agreement (DEMO).md'));
+    await dialog.getByLabel('Status').selectOption('draft');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: /Supply Agreement \(DEMO\)/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  const docId = await alice.evaluate(async () => {
+    const ms = await (await fetch('/api/legal/matters')).json();
+    const m = ms.matters.find((x: any) => x.number === 'M-101');
+    const ds = await (await fetch(`/api/legal/matters/${m.id}/documents`)).json();
+    return ds.documents.find((d: any) => d.title === 'Supply Agreement (DEMO)').id as string;
+  });
+  await alice.goto(`/m/M-101/documents/${docId}/read`);
+  await alice.getByRole('link', { name: 'Check definitions' }).click();
+  await alice.getByRole('button', { name: 'Check definitions and references' }).click();
+  const check = alice.getByRole('article', { name: 'Definitions check' });
+  await expect(check).toBeVisible({ timeout: 60_000 });
+  const terms = check.getByRole('region', { name: 'Defined terms' });
+  await expect(terms.getByRole('listitem', { name: 'Price: Defined twice' })).toContainText('with different meanings');
+  await expect(terms.getByRole('listitem', { name: 'Commencement Date: Not defined' })).toBeVisible();
+  const refs = check.getByRole('region', { name: 'Cross-references' });
+  await expect(refs.getByRole('listitem', { name: 'clause 12: Broken' })).toContainText('This document has no clause 12.');
+  await expect(check.getByRole('region', { name: 'Numbering' }).getByRole('listitem', { name: 'Clause 3 is missing: Gap' })).toBeVisible();
+  await terms.getByRole('listitem', { name: 'price: Another form' }).getByRole('radio', { name: /Use “Price”/ }).check();
+  await refs.getByRole('listitem', { name: 'clause 4 (Liability): Outdated' }).getByRole('radio', { name: /Keep clause 4; name it Confidentiality/ }).check();
+  await alice.evaluate(() => document.querySelectorAll('.lw-main, #root').forEach((el) => el.scrollTo(0, 0)));
+  await shot(alice, '39-definitions-check-light');
+  await check.getByRole('button', { name: 'Propose 2 corrections' }).click();
+  const red = alice.getByRole('article', { name: 'Redline' });
+  await expect(red.getByRole('listitem', { name: 'Use “Price”, clause 2.2' }).locator('ins')).toContainText(['Price']);
+  await expect(red.getByRole('listitem', { name: /^Keep clause 4; name it Confidentiality, clause 2\.3/ }).locator('ins')).toContainText(['Confidentiality']);
+
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  await nakamura.getByRole('list', { name: 'Waiting for you' }).getByRole('link', { name: /Corrections — Supply Agreement/ }).click();
+  await nakamura.getByRole('group', { name: 'Review this redline' }).getByRole('button', { name: 'Approve this redline' }).click();
+  const confirm = nakamura.getByRole('dialog', { name: 'Approve version 1?' });
+  await confirm.getByLabel('I have read this version and checked its sources').check();
+  await confirm.getByRole('button', { name: 'Approve version 1' }).click();
+  await expect(nakamura.getByRole('article', { name: 'Redline' }).getByText(/^Approved by nakamura on/)).toBeVisible();
+
+  await alice.reload();
+  await alice.getByRole('button', { name: 'File as the next version' }).click();
+  await alice.getByRole('link', { name: 'Open the document' }).click();
+  const sheet = alice.getByRole('article', { name: 'Document text' });
+  await expect(sheet.locator('ins').filter({ hasText: 'Price' })).toBeVisible({ timeout: 120_000 });
+});

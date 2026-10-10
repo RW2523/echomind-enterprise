@@ -45,15 +45,16 @@ export default function RedlinePage() {
     finally { setBusy(false); }
   };
   const docLink = `/m/${matter.number}/documents/${encodeURIComponent(c.document.id)}/read`;
+  const corrections = c.origin === 'definitions';           // S3.5: picked from a definitions check
   return (
     <>
       <Toolbar crumb={`${matter.number} · Documents`} title={c.title}>
-        <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(c.document.id)}/playbook`}><ArrowLeft />Playbook check</Link>
+        <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(c.document.id)}/${corrections ? 'definitions' : 'playbook'}`}><ArrowLeft />{corrections ? 'Definitions check' : 'Playbook check'}</Link>
         <a className="lw-btn lw-btn-sm" href={`/api/legal/matters/${encodeURIComponent(matter.id)}/redlines/${encodeURIComponent(v.id)}/word`} download><Download />Word, with tracked changes</a>
       </Toolbar>
       <div className="lw-content lw-draft-grid">
         <article className="lw-paper lw-sheet" aria-label="Redline">
-          <ReviewBanner v={v} made={`Version ${v.version} · ${v.origin === 'model' ? 'proposed from the playbook check' : `edited by ${v.created_by_name}`} · ${c.playbook.name ?? 'playbook'} · document version ${c.document.version_number}`} />
+          <ReviewBanner v={v} made={`Version ${v.version} · ${v.origin === 'model' ? 'proposed from the playbook check' : corrections && v.version === 1 ? `corrections picked by ${v.created_by_name}` : `edited by ${v.created_by_name}`} · ${corrections ? 'definitions and references' : c.playbook?.name ?? 'playbook'} · document version ${c.document.version_number}`} />
           {!latest && <p className="lw-meta" style={{ margin: '0 0 10px' }}>A later version of this redline exists.</p>}
           {editing ? <RedlineEditor v={v} onClose={() => setEditing(false)} onSaved={async (id) => { setEditing(false); await refresh(); navigate(`/m/${matter.number}/redlines/${encodeURIComponent(id)}`); }} />
             : (
@@ -61,11 +62,11 @@ export default function RedlinePage() {
                 {c.changes.map((ch) => (
                   <li key={ch.id} aria-label={`${ch.title}, clause ${ch.clause.number ?? ''}`}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
-                      <b>{ch.title}</b><span className="lw-meta">{`Clause ${ch.clause.number ?? '—'} · to the firm's ${ch.from.kind === 'standard' ? 'standard' : `fallback ${ch.from.n}`} (position version ${ch.from.position_version})`}</span>
+                      <b>{ch.title}</b><span className="lw-meta">{ch.from.kind === 'fix' ? `${ch.clause.number ? `Clause ${ch.clause.number}` : 'Opening paragraph'} · correction` : `Clause ${ch.clause.number ?? '—'} · to the firm's ${ch.from.kind === 'standard' ? 'standard' : `fallback ${ch.from.n}`} (position version ${ch.from.position_version})`}</span>
                     </div>
                     <Redline ops={ch.ops} />
                     {ch.reason && <p className="lw-meta" style={{ margin: 0 }}>{`Why: ${ch.reason}`}</p>}
-                    <p className="lw-meta" style={{ margin: 0 }}>{ch.fitted ? "Fitted to this contract's own terms; the firm's figures and obligations kept." : ch.fit_note ?? "The firm's wording as approved."}
+                    <p className="lw-meta" style={{ margin: 0 }}>{ch.from.kind === 'fix' ? 'Only the words named are changed; the rest of the clause stays as it is.' : ch.fitted ? "Fitted to this contract's own terms; the firm's figures and obligations kept." : ch.fit_note ?? "The firm's wording as approved."}
                       {ch.edited_by ? ` · Edited by ${ch.edited_by}` : ''}</p>
                   </li>
                 ))}

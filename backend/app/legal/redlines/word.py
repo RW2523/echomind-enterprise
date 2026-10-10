@@ -273,9 +273,9 @@ def apply(source: Optional[bytes], text: str, changes: list[dict], author: str, 
     for ch in changes:
         want, new = parts(ch["original"]), parts(ch["revised"])
         found = _match(paragraphs, want)
-        if not found or not new:
+        if not found:
             plan["missed"].append(ch["id"])
-            continue
+            continue                                         # an empty revision deletes the clause whole (S3.5)
         idx, stripped = found
         targets = [paragraphs[i] for i in idx]
         shown = []

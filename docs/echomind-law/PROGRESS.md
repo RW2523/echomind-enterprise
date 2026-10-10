@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.5-definitions` |
-| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.4 merged (S3.3's manual Word check 🔒); S3.5 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.6-obligations` |
+| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.5 merged (S3.3's manual Word check 🔒); S3.6 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0026` (Law edition only) |
+| Migrations | `0001`–`0027` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -524,6 +524,20 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Golden 55/55; new held-out 27/28. The miss: court rules (Fed. R. Civ. P., CPR) are not recognised. This is recorded for S3.9.
 - **Permission:** `research.query`, as planned. A reviewer can check a memo before approving it. Notes are for lawyers.
 
+### Session 3 (continued) — S3.5 Defined terms and cross-references (DOC-04)
+- **Audit:** the S2.1 reader keeps one definition per term; it does not see Markdown "## 4." headings as clauses; and it read "(c)" after "(a)" as roman c. Fixed in the reader (roman lists start at (i), and the roman status is tracked). `documents.numbering` (new) completes implied clauses and Markdown schedules for both checkers.
+- **The checker (rules only, D-049):**
+  - definitions: duplicates (and whether they differ), unused, undefined (heuristic), another form, used before defined;
+  - numbering gaps and repeats at every level, including items, schedules and articles;
+  - broken and outdated references.
+
+  Each finding has offsets, the clause it is in, and corrections where they are unambiguous.
+- **Corrections:** a lawyer picks them; they become a redline (S3.3) with tracked changes. A second lawyer approves it before it is filed. The Word writer deletes a clause whole when asked. Numbering is never changed.
+- **Storage:** migration 0027 (checks, append-only notes, rollback guard); purged with the document.
+- **UI:** "Check definitions" on the reader. Grouped findings with where they are, places, corrections to pick and notes; the redline page knows a corrections redline. Journey 26 with a new fictional Markdown supply agreement; screenshot 39.
+- **Evaluation:** three blind held-out sets in turn (8/12, 13/16, then 12/12 with the control clean); each became tuning data once it informed a change. Golden G1–G10: 52/55, fixes 8/8, no false findings. The misses are undefined terms the rules do not recognise.
+- **Shared change:** the citation checker uses the numbering helper (citations-s3.4c/d); T07 is unchanged at 55/55 and 27/28.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -560,7 +574,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | DOC-01 | DONE for the pilot | S3.1 | Firm templates (versions, approval by a managing partner, Word styles, presets); drafts with sourced fields and cited passages, gaps for anything unsupported; second-lawyer approval; filed as Word (D-045) |
 | DOC-02 | PARTIAL: built; manual Word check 🔒 | S3.2–S3.3 | Playbooks (D-046); redlines and Word tracked changes, T10 automated checks and LibreOffice round trips pass (D-047). The manual Microsoft Word check by a person is pending |
 | DOC-03 | DONE for the pilot (court rules not yet read) | S3.4 | References resolved to exact clauses or flagged missing; quotations compared word for word with diffs; external authorities listed and always UNVERIFIED (P-009), impossible ones flagged; per-viewer targets; T07 golden 55/55, held-out 27/28 (D-048) |
-| DOC-04 | MISSING | S3.5 | |
+| DOC-04 | DONE for the pilot (undefined-term detection heuristic) | S3.5 | Definitions, numbering and references with offsets; corrections only through an approved redline; held-out 12/12 on the third blind set (D-049) |
 | DOC-05 | MISSING | S3.6 | |
 | DOC-06 | MISSING | S3.7 | |
 | DOC-07 | MISSING | S3.8 | |
@@ -596,23 +610,27 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S3.5 Defined terms and cross-references (DOC-04)** on `law/s3.5-definitions`, per IMPLEMENTATION_PLAN §7 (`POST …/definitions/check`, `research.query`, audit `check.*`). S3.4 is merged into `feature/echomind-law`.
+Start **S3.6 Obligations tracker (DOC-05)** on `law/s3.6-obligations`, per IMPLEMENTATION_PLAN §5 and §7: `GET/POST …/obligations`, `PATCH …/obligations/{id}` (confirm or edit), `ai.draft` / `matter.update`, audit `obligation.*`. S3.5 is merged into `feature/echomind-law`.
 1. **Audit first:**
-   - S2.1 `structure.defined_terms` keeps only the first definition of a term, so duplicates need their own reading of the text.
-   - S2.1 clauses (numbers, levels, parents, offsets) give numbering.
-   - S3.4 `citations.parse` already reads internal references and flags missing ones.
-   - S3.3 redlines write Word tracked changes after a second lawyer's approval.
-2. **Checks, rules only, each with exact offsets:**
-   - **Definitions:** every definition (quoted "X" means…, (the "X")), with duplicates and conflicting duplicates; unused definitions; capitalised terms used but never defined; terms used before they are defined (advisory); inconsistent use (a lowercase or variant form of a defined term).
-   - **Numbering:** gaps (12 → 14), repeats (two 8.1s), sub-clause sequence ((a), (c)), at each level.
-   - **References:** broken (target missing, from S3.4); outdated (a reference that names a heading, "clause 9 (Confidentiality)", pointing at a clause with another heading); self-references to a clause's own number.
-3. **Proposed fixes, approval required:** each finding may carry a proposed change (the defined form of a term; the clause whose heading matches an outdated reference; renumbering is never automatic). A lawyer picks fixes; they become a redline artifact (S2.7/S3.3: second-lawyer approval, Word tracked changes, filed as the next version). Nothing is changed without approval.
-4. **UI:** "Check definitions and references" on the reader; findings grouped, with offsets, "Open at", "Propose fix", and the redline flow.
+   - The Silent Assist action items (S2.5) are from calls only.
+   - Minutes' action items (S2.6) carry owners and deadlines.
+   - S2.3 `compare.facts` reads amounts, periods, percentages and laws.
+   - S2.1 clauses give exact offsets; `documents.numbering` (S3.5) completes them.
+2. **Extraction, with evidence spans:**
+   - What to extract: notice periods, renewal and non-renewal windows, termination rights, consent rights, change of control, and payment terms.
+   - **Rules where the wording is regular** (periods, "within N days of", "at least N days before"). The model is used only to name the obligation and its party, and every span is verified.
+   - Nothing is shown as confirmed until a person confirms it.
+3. **The tracker:**
+   - `legal_obligations`: trigger, computed due date where a date is known, timezone, owner, status, `confirmed_by`, evidence. Edits are versioned and audited.
+   - **Dates:** computed only from a date in the document (effective date, term), with the timezone stated. "Unknown until X happens" is said plainly; a date is never guessed.
+   - ICS export off by default (a setting); reminders off.
+4. **UI:** per matter and per document; confirm or edit with a reason; overdue and upcoming; evidence opens at its sentence.
 5. **Tests:**
-   - planted errors in fictional contracts (red first);
-   - a golden and a held-out evaluation, written blind;
-   - journey 26 (the demo MSA has a real planted problem: Schedules 1, 2 and 4 are cited but absent);
-   - D-049, run 26; merge.
+   - fixture contracts give the expected obligations with evidence spans;
+   - edits audited; timezone correct;
+   - golden and held-out written blind;
+   - journey 27 (the demo MSA: 90-day non-renewal notice before the end of the 36-month Initial Term from 2 March 2026; 48-hour breach notice; 30-day payment);
+   - D-050, run 27; merge.
 6. **Carry-overs:**
-   - S3.4: court rules (Fed. R. Civ. P., CPR) are not read; fix them with a fresh held-out set at S3.9.
-   - S3.3: the manual Word check 🔒.
+   - S3.4 court rules, and S3.5 undefined-term recall (both to the S3.9 gate with fresh held-out sets);
+   - S3.3 manual Word check 🔒.
