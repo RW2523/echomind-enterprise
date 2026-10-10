@@ -507,3 +507,13 @@
 [data-edition="law"] .lw-intake-answers dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
 @media (max-width: 560px) { [data-edition="law"] .lw-intake-answers { grid-template-columns: 1fr; } [data-edition="law"] .lw-intake-answers dd { margin-bottom: 6px; } }
 [data-edition="law"] .lw-intake-reply { padding: 12px 14px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper-2); display: grid; gap: 4px; margin-bottom: 10px; }
+
+/* Summaries (S4.2, D-055): key points, each with its citation chip and the words it rests on. */
+[data-edition="law"] .lw-summary-points { margin: 0; padding-left: 22px; display: grid; gap: 14px; }
+[data-edition="law"] .lw-summary-points > li { display: grid; gap: 6px; padding-left: 4px; }
+[data-edition="law"] .lw-summary-points > li[data-verification="failed"] p { color: var(--ink-2); }
+[data-edition="law"] .lw-summary-cite { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+[data-edition="law"] .lw-cite-chip { font-size: 12px; font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); text-decoration: none; font-weight: 600; }
+[data-edition="law"] .lw-cite-chip:hover { text-decoration: underline; }
+[data-edition="law"] .lw-summary-quote { margin: 0; padding-left: 10px; border-left: 2px solid var(--rule); color: var(--ink-2); font-size: 13px; overflow-wrap: anywhere; }
+[data-edition="law"] .lw-summary-edit { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }

@@ -385,3 +385,5 @@ from .legal.intake.routes import parties_router as legal_parties_router, public_
 app.include_router(legal_parties_router, prefix="/api")
 app.include_router(legal_intake_router, prefix="/api")
 app.include_router(legal_intake_link_router, prefix="/api")
+from .legal.summaries.routes import router as legal_summaries_router  # noqa: E402
+app.include_router(legal_summaries_router, prefix="/api")

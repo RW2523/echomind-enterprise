@@ -79,7 +79,8 @@ def test_intake_is_off_unless_the_firm_turns_it_on(world, monkeypatch):
     assert rita.get("/api/legal/intake").status_code == 404
     assert rita.post("/api/legal/intake", headers=csrf_headers(rita), json={"channel": "phone"}).status_code == 404
     assert anonymous(world).get("/api/intake-link/abcdefabcdefabcdefabcdefabcdef12").status_code == 404
-    assert rita.get("/api/auth/me").json()["features"] == {"intake": False, "intake_links": False}
+    features = rita.get("/api/auth/me").json()["features"]
+    assert features["intake"] is False and features["intake_links"] is False
 
 
 # ── The party register ───────────────────────────────────────────────────────────

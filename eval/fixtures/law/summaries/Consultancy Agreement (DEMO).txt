@@ -1,0 +1,17 @@
+CONSULTANCY AGREEMENT (fictional demo)
+
+This Agreement is made between Voss-Lindqvist AB (the Client) and Northbridge Analytics AB (the Consultant).
+
+2. Services
+2.1 The Consultant shall provide data-migration services for the Client's warehouse systems.
+2.2 The services start on 1 December 2026 and end on 31 May 2027.
+
+4. Fees
+4.1 The Client shall pay a fixed fee of SEK 1,200,000 in three equal instalments.
+4.2 Each invoice is payable within thirty (30) days of receipt.
+
+8. Liability
+8.1 The Consultant's total liability is limited to the fees paid under this Agreement.
+
+10. Termination
+10.1 Either party may terminate this Agreement on sixty (60) days' written notice.

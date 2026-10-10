@@ -7,7 +7,7 @@ export type MatterStatus = 'open' | 'closed' | 'archived';
 export interface Me {
   user: { id: string; username: string; role: string; roles: FirmRole[] };
   session: { auth: string; mfa_enrolled: boolean; must_change_password: boolean; idle_expires_at: number; abs_expires_at: number };
-  features?: { intake: boolean; intake_links: boolean };
+  features?: { intake: boolean; intake_links: boolean; summaries?: boolean };
 }
 export interface Client { id: string; name: string; code?: string | null; status: string; version: number; }
 export interface Matter {
@@ -228,7 +228,7 @@ export interface MinutesContent {
 }
 export interface ReviewDecision { decision: 'approved' | 'changes_requested'; content_sha256: string; reason?: string | null; by?: string | null; at: string }
 /** An AI draft under review (S2.6–S2.7, D-042/D-043): fixed versions, hashed, approved by a second lawyer. */
-export type ArtifactKind = 'minutes' | 'research_note' | 'legal_draft' | 'redline';
+export type ArtifactKind = 'minutes' | 'research_note' | 'legal_draft' | 'redline' | 'summary';
 export interface ArtifactVersion<C = unknown> {
   id: string; version: number; status: 'draft' | 'approved' | 'superseded' | 'withdrawn'; content: C; content_sha256: string;
   inputs: Record<string, any>; created_by: string; created_by_name?: string | null; created_at: string; origin: 'model' | 'person';
@@ -516,3 +516,15 @@ export interface IntakeCan { manage: boolean; approve: boolean; conflicts: boole
 export interface IntakeLinkPage {
   status: 'invited' | 'submitted' | 'replied'; reference: string; disclaimer: IntakeDisclaimer; script: IntakeScript; reply: { body: string } | null;
 }
+
+// ── Summaries (S4.2, D-055) ───────────────────────────────────────────────────────
+export interface SummaryCite { page?: number; line?: number; clause?: string; timecode?: string | null }
+export interface SummaryPoint {
+  id: string; text: string; quote: string; verification: 'verbatim' | 'normalized' | 'failed'; start: number | null; end: number | null;
+  cite: SummaryCite | null; figures_unsupported: string[]; origin: 'model' | 'person';
+}
+export interface SummaryContent {
+  title: string; document: { id: string; title: string; version_id: string; version_number: number }; transcript: boolean;
+  points: SummaryPoint[]; sections: number; unverified: number; figures_unsupported: number; translation: { available: boolean; reason: string };
+}
+export type SummaryVersion = ArtifactVersion<SummaryContent>;

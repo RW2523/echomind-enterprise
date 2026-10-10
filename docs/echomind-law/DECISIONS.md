@@ -1313,6 +1313,38 @@ Every entry records the options considered, the recommendation, the consequence 
   - The register is only as complete as the matters' party lists.
   - Single-word party names in replies are matched as the firm wrote them.
 
+### D-055 Summaries with page/line and timecode citations; translation blocked — RECORDED (S4.2; OPT-02, T08)
+- **Audit:**
+  - The only summary was the legacy Boardroom's, which stays closed in Law (D-025).
+  - The AI artifact and review framework (S2.6–S2.7) gives versions, second-person approval bound to a hash, the Reviews queue and filing.
+  - The S2.1 reader stores page boundaries and line starts.
+  - Finalised transcripts carry `[HH:MM:SS]` wall-clock times (S2.4).
+- **Off by default:** `LEGAL_SUMMARIES`; every summary route answers 404 otherwise. `/api/auth/me` reports the feature for the navigation.
+- **How a summary is made (`summary-s4.2b`):**
+  - It runs as a background job on the document's current version, for the person who asked, if they can still see it.
+  - The text is cut at blank lines into sections of about 2,400 characters. Text addressed to an AI is withheld first, and each passage is fenced so it cannot close its fence.
+  - The model gives up to ten points per section, each with a word-for-word quote. No model sees anything but the section.
+- **Citations from positions, never from the model:** each quote is found in the section (verbatim or normalised).
+  - **Transcripts:** the wall-clock time of the segment it falls in.
+  - **Paged documents:** the page, and the line counted among the page's lines with text (as the reader numbers them).
+  - **All documents:** the innermost numbered clause, where there is one.
+  - A quote that is not found keeps its point, marked "not verified" with no citation. A figure in a point that its quote lacks is listed for a lawyer.
+- **Review:** a summary is an AI artifact of kind `summary`. A reviewer's rewording, reordering or removal is a new version. Edited points keep their quote and citation and are marked as edited.
+  - Approval comes from a lead, attorney or reviewer other than the version's author, for its hash.
+  - Filing makes a matter document listing each point with its citation and quote, and the approval.
+  - **The original document is never changed.** A summary is shown only to people who can see the document.
+- **The shared T08 detector (S4.2 finding):** "AI assistant: …" labels and "ignore your instructions" were not withheld. Both now are, for every feature (tests red first). Ordinary wording ("disregard the rules of the site", "Model: XJ-200") still passes.
+- **Translation: BLOCKED.** It needs a local translation model and its licence, approved by the owner. Nothing is built, and the page says so. When one is approved, translations will be separate versions; the original is always kept.
+- **Evaluation (`eval/law/summaries`, real model), measuring facts covered, citations right, quotes verified and figures unsupported:**
+  - **Golden on `s4.2`:** facts 17/19 (a dense one-section contract lost two clauses to a six-point cap), citations 17/17, quotes 21/21, figures 0.
+  - **Golden on `s4.2b`** (smaller sections, ten points), two runs: 19/19 and 18/19, citations all right, quotes all verified, figures 0.
+  - **Held-out 1 (blind, run once on s4.2b):** facts 15/15 and citations 15/15 (clauses, pages and lines, timecodes), quotes 16/16, figures 0.
+- **Limits:**
+  - Points usually restate their quote closely, which is accurate but not condensed.
+  - Facts spanning sections are summarised separately.
+  - The page and line of an OCR page depend on its recognised lines.
+  - Word documents have no pages: they are cited by clause and line.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

@@ -450,3 +450,15 @@
 | nginx | The masked log format was checked with the host's nginx in a scratch prefix (`nginx -t`, then requests). Access-log lines show `/intake/<secret>`, `/api/intake-link/<secret>/…` and `enrol=<secret>`, with no referrer. The intake page sends `Referrer-Policy: no-referrer`. The error log still prints the request line when the backend is unreachable (residual, D-054). |
 | Browser E2E | New journey 30:<ul><li>iris sends a link;</li><li>an enquirer with no account accepts the disclaimer and answers nine questions;</li><li>iris sees only "Refer to the conflicts team";</li><li>conway sees the match against M-202 and confirms a conflict (screenshot 44);</li><li>iris drafts "We cannot help", alice approves it, and the enquirer sees it (screenshot 43);</li><li>a telephone enquiry with no match is cleared and opened as matter M-301 by alice.</li></ul>The journey found two bugs, both fixed: the matter link vanished after conversion, and the new matter showed as "Not available" because the list of matters was stale. **Full suite, alone on the host: 30 passed** (12.7 min). |
 
+## Run 32 — S4.2 Summaries with page/line and timecode citations, 2026-10-10
+
+- **Branch:** `law/s4.2-summaries`
+
+| Suite | Result |
+|---|---|
+| Backend (all) | **1247 passed**. New `test_law_summaries.py` (10; written red first, all failing before the code). It covers:<ul><li>off by default;</li><li>points quoting the document with clause and line;</li><li>transcript timecodes;</li><li>page and line in a PDF;</li><li>unfound quotes and unsupported figures marked;</li><li>AI-addressed text withheld;</li><li>reviewer edits as versions, second-person approval, filing with the original unchanged;</li><li>the Reviews queue;</li><li>readers and contributors;</li><li>an audit without text.</li></ul>`test_law_injection.py` gained 7 detector cases (4 written red: "AI assistant:" labels and "ignore your instructions" now withheld; 3 ordinary-wording cases kept). The S4.1 feature test now checks its own keys. |
+| Security suite | **All groups pass** (exit 0), with a new S4.2 group (10). |
+| Frontend | tsc **clean**. Vitest **148 passed**. New `summaries.test.tsx` (5, axe clean), written with the pages. |
+| Summaries evaluation (`eval/law/summaries`, real model) | **Golden on summary-s4.2:** facts 17/19, citations 17/17, quotes 21/21, figures 0. **summary-s4.2b**, two runs: 19/19 and 18/19, with citations and quotes all right and figures 0. **Held-out 1 (blind, run once on s4.2b): facts 15/15, citations 15/15** (clauses, pages and lines, timecodes), quotes 16/16, figures 0. |
+| Browser E2E | New journey 31:<ul><li>alice imports a consultancy agreement and summarises it;</li><li>every point has a clause-and-line citation, and one opens the reader at the quoted words (screenshot 45);</li><li>her edit becomes version 2, marked as edited;</li><li>nakamura approves it, and it is filed.</li></ul>**Full suite, alone on the host: 31 passed** (13.7 min). |
+

@@ -11,6 +11,7 @@ const SUITE: Record<string, string> = {
   transcription: 'Transcription', injection: 'Prompt injection', latency: 'Latency', load: 'Load', gate: 'Gate',
   lawyer: 'Lawyer review', drafting: 'Drafting', playbook: 'Playbook checks', redline: 'Redlines (Word)', citations: 'Citations and quotes',
   definitions: 'Definitions and references', obligations: 'Obligations and deadlines', diligence: 'Due diligence', governance: 'Governance checks',
+  summaries: 'Summaries',
 };
 // The measures a reviewer looks at first, per suite; anything else is in the report file.
 const HEADLINE: Record<string, string[]> = {
@@ -27,6 +28,7 @@ const HEADLINE: Record<string, string[]> = {
   obligations: ['found', 'timing_in_its_words', 'dates_right', 'dates_guessed', 'extra', 'controls_clean'],
   diligence: ['missing_lists_right', 'issues_found', 'extra_issues', 'controls_clean'],
   governance: ['found', 'extra', 'controls_clean'],
+  summaries: ['facts_covered', 'citations_right', 'quotes_verified', 'figures_unsupported'],
 };
 const label = (k: string) => k.replace(/_/g, ' ').replace(/\bp(50|95)\b/, 'p$1').replace(/\bs$/, '(s)');
 

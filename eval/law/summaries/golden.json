@@ -1,0 +1,172 @@
+{
+ "about": "S4.2 summaries — the TUNING set. Fictional documents only. Each fact names words a lawyer's summary must carry (anchor) and, where it matters, the place the citation must give.",
+ "documents": [
+  {
+   "id": "G1-services-agreement",
+   "name": "Services Agreement (fictional).txt",
+   "text": "SERVICES AGREEMENT (fictional)\n\nThis Agreement is made between Harrowgate Systems Inc. (the Supplier) and Voss-Lindqvist AB (the Customer).\n\n2. Term\n2.1 This Agreement starts on 1 March 2026 and continues for three (3) years.\n2.2 It renews for successive one-year periods unless either party gives notice of non-renewal at least sixty (60) days before the end of the term.\n\n4. Fees\n4.1 The Customer shall pay the fees set out in Schedule 1.\n4.2 The Customer shall pay each invoice within thirty (30) days of its date.\n\n9. Liability\n9.1 Each party's total liability under this Agreement is limited to EUR 1,000,000.\n9.2 Neither party is liable for indirect or consequential loss.\n\n12. Termination\n12.1 Either party may terminate this Agreement immediately if the other commits a material breach that is not remedied within thirty (30) days of notice.\n12.2 The Customer may terminate this Agreement for convenience on ninety (90) days' written notice.\n\n15. Governing law\n15.1 This Agreement is governed by the laws of Sweden.\n",
+   "facts": [
+    {
+     "fact": "three-year term from 1 March 2026",
+     "anchor": "three (3) years",
+     "where": {
+      "clause": "2.1"
+     }
+    },
+    {
+     "fact": "renewal unless 60 days' notice",
+     "anchor": "sixty (60) days",
+     "where": {
+      "clause": "2.2"
+     }
+    },
+    {
+     "fact": "invoices payable in 30 days",
+     "anchor": "thirty (30) days of its date",
+     "where": {
+      "clause": "4.2"
+     }
+    },
+    {
+     "fact": "liability capped at EUR 1,000,000",
+     "anchor": "EUR 1,000,000",
+     "where": {
+      "clause": "9.1"
+     }
+    },
+    {
+     "fact": "no liability for indirect loss",
+     "anchor": "indirect or consequential loss",
+     "where": {
+      "clause": "9.2"
+     }
+    },
+    {
+     "fact": "termination for convenience on 90 days' notice",
+     "anchor": "ninety (90) days",
+     "where": {
+      "clause": "12.2"
+     }
+    },
+    {
+     "fact": "Swedish law",
+     "anchor": "laws of Sweden",
+     "where": {
+      "clause": "15.1"
+     }
+    }
+   ]
+  },
+  {
+   "id": "G2-settlement-call",
+   "name": "Transcript - Settlement call (fictional).md",
+   "text": "# Transcript — Settlement call\n\nMeeting M-101 · client call · transcribed verbatim; corrections are marked in the record.\n\nParticipants: Alice Hart (attorney); Petra Voss (client)\n\n[10:02:13] Alice Hart: The supplier has offered to settle the invoice dispute.\n\n[10:02:58] Petra Voss: What exactly are they offering?\n\n[10:03:40] Alice Hart: They offer to pay EUR 40,000 by 30 November in full settlement, with no admission of liability.\n\n[10:05:12] Petra Voss: We can accept that if they also extend the service credits to the end of the year.\n\n[10:06:30] Alice Hart: I will send a counter-proposal to their counsel by Friday.\n\n[10:07:05] Petra Voss: Agreed. Please copy our finance director.\n",
+   "facts": [
+    {
+     "fact": "the offer of EUR 40,000 by 30 November",
+     "anchor": "EUR 40,000",
+     "where": {
+      "timecode": "10:03:40"
+     }
+    },
+    {
+     "fact": "no admission of liability",
+     "anchor": "no admission of liability",
+     "where": {
+      "timecode": "10:03:40"
+     }
+    },
+    {
+     "fact": "the client's condition: service credits extended",
+     "anchor": "service credits",
+     "where": {
+      "timecode": "10:05:12"
+     }
+    },
+    {
+     "fact": "counter-proposal by Friday",
+     "anchor": "counter-proposal",
+     "where": {
+      "timecode": "10:06:30"
+     }
+    }
+   ]
+  },
+  {
+   "id": "G3-lease-pdf",
+   "name": "Lease (fictional).pdf",
+   "pdf_pages": [
+    "LEASE (fictional)\nThis Lease is made between Elmfield Estates Ltd (the Landlord) and Alder Biotech AB (the Tenant).\n3. Term\n3.1 The term of this Lease is ten (10) years from 1 April 2025.",
+    "6. Rent\n6.1 The rent is GBP 84,000 per year, payable quarterly in advance.\n6.2 The rent is reviewed on 1 April 2030 to open market value.\n8. Break\n8.1 The Tenant may end this Lease on 31 March 2030 by giving at least six months' written notice."
+   ],
+   "facts": [
+    {
+     "fact": "ten-year term",
+     "anchor": "ten (10) years",
+     "where": {
+      "page": 1
+     }
+    },
+    {
+     "fact": "rent of GBP 84,000 a year",
+     "anchor": "GBP 84,000",
+     "where": {
+      "page": 2,
+      "line": 2
+     }
+    },
+    {
+     "fact": "rent review in 2030",
+     "anchor": "1 April 2030",
+     "where": {
+      "page": 2,
+      "line": 3
+     }
+    },
+    {
+     "fact": "tenant's break on 31 March 2030",
+     "anchor": "31 March 2030",
+     "where": {
+      "page": 2,
+      "line": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "G4-board-minutes",
+   "name": "Board minutes (fictional).txt",
+   "text": "MINUTES OF A MEETING OF THE BOARD of Tidewater Holdings Ltd held on 10 January 2026 (fictional)\n\nPresent: A. Moreau (chair), B. Lind, C. Osei.\n\n1. Accounts\n1.1 The board approved the accounts for the year ended 30 September 2025.\n\n2. Allotment\n2.1 The board approved the allotment of 1,000 ordinary shares to the founders.\n\n3. Bank facility\n3.1 The board noted the bank's offer of a GBP 2,000,000 facility and asked C. Osei to negotiate the covenants before 28 February 2026.\n\n4. Next meeting\n4.1 The next meeting will be held on 14 April 2026.\n",
+   "facts": [
+    {
+     "fact": "accounts approved",
+     "anchor": "approved the accounts",
+     "where": {
+      "clause": "1.1"
+     }
+    },
+    {
+     "fact": "1,000 shares allotted",
+     "anchor": "1,000 ordinary shares",
+     "where": {
+      "clause": "2.1"
+     }
+    },
+    {
+     "fact": "facility of GBP 2,000,000 to negotiate",
+     "anchor": "GBP 2,000,000",
+     "where": {
+      "clause": "3.1"
+     }
+    },
+    {
+     "fact": "next meeting 14 April 2026",
+     "anchor": "14 April 2026",
+     "where": {
+      "clause": "4.1"
+     }
+    }
+   ]
+  }
+ ]
+}

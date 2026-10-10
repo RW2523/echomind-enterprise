@@ -1,0 +1,418 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "82ba39e",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-162331",
+  "prompt_version": "summary-s4.2b"
+ },
+ "summary": {
+  "documents": 3,
+  "facts": 15,
+  "facts_covered": "15/15",
+  "citations_right": "15/15",
+  "quotes_verified": "16/16",
+  "figures_unsupported": 0,
+  "points_per_document": 5.3,
+  "seconds_per_document": 6.8
+ },
+ "documents": [
+  {
+   "id": "H1-employment",
+   "seconds": 9.0,
+   "transcript": false,
+   "facts": [
+    {
+     "fact": "start on 2 November 2026",
+     "anchor": "2 November 2026",
+     "where": {
+      "clause": "3.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The employment start date is 2 November 2026.",
+     "got_cite": {
+      "clause": "3.1",
+      "line": 4
+     }
+    },
+    {
+     "fact": "six-month probation",
+     "anchor": "probationary period",
+     "where": {
+      "clause": "3.2"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The first six months of employment are a probationary period.",
+     "got_cite": {
+      "clause": "3.2",
+      "line": 5
+     }
+    },
+    {
+     "fact": "salary GBP 95,000",
+     "anchor": "GBP 95,000",
+     "where": {
+      "clause": "5.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The Executive's salary is GBP 95,000 per year, paid monthly.",
+     "got_cite": {
+      "clause": "5.1",
+      "line": 7
+     }
+    },
+    {
+     "fact": "discretionary bonus up to 20%",
+     "anchor": "20%",
+     "where": {
+      "clause": "5.2"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The Executive may earn an annual bonus of up to 20% of salary at the board's discretion.",
+     "got_cite": {
+      "clause": "5.2",
+      "line": 8
+     }
+    },
+    {
+     "fact": "three months' notice",
+     "anchor": "three (3) months",
+     "where": {
+      "clause": "11.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "After the probation period, either party may end employment with three months' written notice.",
+     "got_cite": {
+      "clause": "11.1",
+      "line": 10
+     }
+    },
+    {
+     "fact": "six-month non-solicitation",
+     "anchor": "solicit any customer",
+     "where": {
+      "clause": "13.1"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The Executive must not solicit any customer of the Company for six months after employment ends.",
+     "got_cite": {
+      "clause": "13.1",
+      "line": 12
+     }
+    }
+   ],
+   "points": [
+    {
+     "text": "The Employment Agreement is between Corran Foods Ltd and Imogen Hale.",
+     "quote": "This Agreement is made between Corran Foods Ltd (the Company) and Imogen Hale (the Executive).",
+     "verification": "verbatim",
+     "cite": {
+      "line": 2
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The employment start date is 2 November 2026.",
+     "quote": "Employment starts on 2 November 2026.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "3.1",
+      "line": 4
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The first six months of employment are a probationary period.",
+     "quote": "The first six (6) months are a probationary period.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "3.2",
+      "line": 5
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The Executive's salary is GBP 95,000 per year, paid monthly.",
+     "quote": "The Executive's salary is GBP 95,000 a year, paid monthly.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "5.1",
+      "line": 7
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The Executive may earn an annual bonus of up to 20% of salary at the board's discretion.",
+     "quote": "The Executive may earn an annual bonus of up to 20% of salary at the board's discretion.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "5.2",
+      "line": 8
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "After the probation period, either party may end employment with three months' written notice.",
+     "quote": "After probation, either party may end employment on three (3) months' written notice.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "11.1",
+      "line": 10
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "The Executive must not solicit any customer of the Company for six months after employment ends.",
+     "quote": "For six (6) months after employment ends, the Executive shall not solicit any customer of the Company.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "13.1",
+      "line": 12
+     },
+     "figures_unsupported": []
+    }
+   ]
+  },
+  {
+   "id": "H2-negotiation-call",
+   "seconds": 6.7,
+   "transcript": true,
+   "facts": [
+    {
+     "fact": "break date moved to 31 March 2029",
+     "anchor": "31 March 2029",
+     "where": {
+      "timecode": "14:00:05"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "Our client wants the break date moved to 31 March 2029.",
+     "got_cite": {
+      "timecode": "14:00:05"
+     }
+    },
+    {
+     "fact": "counterparty's rent of GBP 96,000",
+     "anchor": "GBP 96,000",
+     "where": {
+      "timecode": "14:01:20"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "Calder Freight Ltd agrees to 2029 if the rent rises to GBP 96,000 from the break date.",
+     "got_cite": {
+      "timecode": "14:01:20"
+     }
+    },
+    {
+     "fact": "client's limit of GBP 90,000",
+     "anchor": "GBP 90,000",
+     "where": {
+      "timecode": "14:02:45"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "Bob Iyer states that the client will accept a rent rise to GBP 90,000.",
+     "got_cite": {
+      "timecode": "14:02:45"
+     }
+    },
+    {
+     "fact": "deposit of three months' rent",
+     "anchor": "deposit",
+     "where": {
+      "timecode": "14:04:10"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "Calder Freight Ltd requires a deposit of three months' rent.",
+     "got_cite": {
+      "timecode": "14:04:10"
+     }
+    },
+    {
+     "fact": "reply by Wednesday",
+     "anchor": "Wednesday",
+     "where": {
+      "timecode": "14:05:30"
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "Bob Iyer will reply by Wednesday.",
+     "got_cite": {
+      "timecode": "14:05:30"
+     }
+    }
+   ],
+   "points": [
+    {
+     "text": "Our client wants the break date moved to 31 March 2029.",
+     "quote": "Our client wants the break date moved to 31 March 2029.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "14:00:05"
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "Calder Freight Ltd agrees to 2029 if the rent rises to GBP 96,000 from the break date.",
+     "quote": "We could agree to 2029 if the rent rises to GBP 96,000 from the break date.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "14:01:20"
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "Bob Iyer states that the client will accept a rent rise to GBP 90,000.",
+     "quote": "A rise to GBP 90,000 is the most our client will accept.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "14:02:45"
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "Calder Freight Ltd requires a deposit of three months' rent.",
+     "quote": "Then we need a deposit of three months' rent.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "14:04:10"
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "Bob Iyer will reply by Wednesday.",
+     "quote": "I will take instructions and reply by Wednesday.",
+     "verification": "verbatim",
+     "cite": {
+      "timecode": "14:05:30"
+     },
+     "figures_unsupported": []
+    }
+   ]
+  },
+  {
+   "id": "H3-nda-pdf",
+   "seconds": 4.8,
+   "transcript": false,
+   "facts": [
+    {
+     "fact": "purpose: evaluating a drilling pilot",
+     "anchor": "autonomous drilling pilot",
+     "where": {
+      "page": 1
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "The parties will share technical data to evaluate an autonomous drilling pilot.",
+     "got_cite": {
+      "clause": "1.1",
+      "line": 4,
+      "page": 1
+     }
+    },
+    {
+     "fact": "three-year confidentiality",
+     "anchor": "three (3) years",
+     "where": {
+      "page": 2,
+      "line": 2
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "Confidentiality obligations last three (3) years from the date of disclosure.",
+     "got_cite": {
+      "clause": "4.1",
+      "line": 2,
+      "page": 2
+     }
+    },
+    {
+     "fact": "return or destroy within ten days",
+     "anchor": "ten (10) days",
+     "where": {
+      "page": 2,
+      "line": 4
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "Each party shall return or destroy the other party's Confidential Information within ten (10) days upon request.",
+     "got_cite": {
+      "clause": "5.1",
+      "line": 4,
+      "page": 2
+     }
+    },
+    {
+     "fact": "English law",
+     "anchor": "English law",
+     "where": {
+      "page": 2,
+      "line": 6
+     },
+     "covered": true,
+     "cite_ok": true,
+     "point": "This Agreement is governed by English law.",
+     "got_cite": {
+      "clause": "7.1",
+      "line": 6,
+      "page": 2
+     }
+    }
+   ],
+   "points": [
+    {
+     "text": "The parties will share technical data to evaluate an autonomous drilling pilot.",
+     "quote": "The parties will share technical data to evaluate an autonomous drilling pilot.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "1.1",
+      "line": 4,
+      "page": 1
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "Confidentiality obligations last three (3) years from the date of disclosure.",
+     "quote": "Confidentiality obligations last three (3) years from the date of disclosure.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "4.1",
+      "line": 2,
+      "page": 2
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "Each party shall return or destroy the other party's Confidential Information within ten (10) days upon request.",
+     "quote": "On request, each party shall return or destroy the other party's Confidential Information within ten (10) days.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "5.1",
+      "line": 4,
+      "page": 2
+     },
+     "figures_unsupported": []
+    },
+    {
+     "text": "This Agreement is governed by English law.",
+     "quote": "This Agreement is governed by English law.",
+     "verification": "verbatim",
+     "cite": {
+      "clause": "7.1",
+      "line": 6,
+      "page": 2
+     },
+     "figures_unsupported": []
+    }
+   ]
+  }
+ ]
+}

@@ -34,14 +34,15 @@ class Conflict(Exception):
 KINDS = {"minutes": ("meeting", "Minutes", "Minutes — {title}"),
          "research_note": ("research_turn", "Research note", "Research note — {title}"),
          "legal_draft": ("draft", "Draft", "{title}"),
-         "redline": ("redline", "Redline", "{title}")}
+         "redline": ("redline", "Redline", "{title}"),
+         "summary": ("document", "Summary", "{title}")}           # S4.2 (D-055): a document's summary
 
 
 def title(a: dict) -> str:
     c = a["content"]
     if a["kind"] == "minutes":
         return (c.get("meeting") or {}).get("title") or ""
-    return c.get("title") or "" if a["kind"] in ("legal_draft", "redline") else c.get("question") or ""
+    return c.get("title") or "" if a["kind"] in ("legal_draft", "redline", "summary") else c.get("question") or ""
 
 
 def cited_documents(a: dict) -> set[str]:
@@ -50,7 +51,7 @@ def cited_documents(a: dict) -> set[str]:
     if a["kind"] == "legal_draft":                       # S3.1: field quotes and written passages' sources
         return {s["document_id"] for item in (c.get("fields") or []) + (c.get("blocks") or []) for s in item.get("sources") or []
                 if s.get("document_id")}
-    if a["kind"] == "redline":                           # S3.3: the document it revises
+    if a["kind"] in ("redline", "summary"):              # S3.3, S4.2: the document it revises or summarises
         return {c["document"]["id"]} if c.get("document") else set()
     if a["kind"] != "research_note":
         return set()

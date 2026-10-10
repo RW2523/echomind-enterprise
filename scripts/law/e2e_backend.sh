@@ -26,5 +26,6 @@ open('$FILES/termination-notice.pdf', 'wb').write(scanned_pdf())
 open('$FILES/harrowgate-msa.docx', 'wb').write(contract_docx())")
 # S4.1: intake and enquirer links are off by default; the intake journey turns them on here.
 export LEGAL_INTAKE=1 LEGAL_INTAKE_LINKS=1
+export LEGAL_SUMMARIES=1             # S4.2: the summaries journey
 export LAW_CORS_ORIGINS="http://localhost:5174"
 exec "$ROOT/scripts/law/dev_backend.sh"

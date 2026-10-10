@@ -56,6 +56,9 @@ def _as_text(a: dict, approval: dict) -> tuple[bytes, str]:
     if a["kind"] == "minutes":
         from ..meetings import minutes
         return minutes.as_text(a["content"], approval).encode("utf-8"), f"minutes-{a['subject_id'][:8]}-v{a['version']}.md"
+    if a["kind"] == "summary":                           # S4.2 (D-055)
+        from ..summaries import summarize
+        return summarize.as_text(a["content"], approval).encode("utf-8"), f"summary-{a['subject_id'][:8]}-v{a['version']}.md"
     from ..research import notes
     return notes.as_text(a["content"], approval).encode("utf-8"), f"research-note-{a['subject_id'][:8]}-v{a['version']}.md"
 
