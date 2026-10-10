@@ -91,6 +91,22 @@ describe('Matter documents', () => {
     expect(await axeViolations(container)).toEqual([]);
   });
 
+  it('a new version is imported with its own status (S2.2)', async () => {
+    const calls = world('lead', [doc()], { [`POST ${BASE}/import`]: () => [202, { document: doc({}, 'queued'), same_content_as: null }] });
+    renderLaw('/m/M-101/documents');
+    fireEvent.click(await screen.findByRole('button', { name: /Import a document|Import/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Import a document' });
+    fireEvent.change(within(dialog).getByLabelText('File'), { target: { files: [new File(['SIGNED'], 'msa-signed.pdf', { type: 'application/pdf' })] } });
+    fireEvent.change(within(dialog).getByLabelText('This is'), { target: { value: 'd1' } });
+    expect(within(dialog).queryByLabelText('Title')).toBeNull();
+    fireEvent.change(within(dialog).getByLabelText(/^Status/), { target: { value: 'executed' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Import$/ }));
+    await waitFor(() => expect(calls.some((c) => c.path === `${BASE}/import`)).toBe(true));
+    const sent = calls.find((c) => c.path === `${BASE}/import`)!.body;
+    expect(sent.version_of).toBe('d1');
+    expect(sent.status).toBe('executed');
+  });
+
   it('explains a failed read and lets a contributor try again', async () => {
     const calls = world('attorney', [doc({}, 'failed', 'no_text')], { [`POST ${BASE}/d1/reindex`]: () => [202, { document: doc({}, 'queued') }] });
     renderLaw('/m/M-101/documents');

@@ -574,6 +574,26 @@ Every entry records the options considered, the recommendation, the consequence 
   - **R-8:** the persona is the server's; client-sent persona or system text is ignored.
 - **Measured on the real model** (8 questions, the demo MSA): 10 of 11 quotes verbatim. The one failure was an escaped inner quote, `(\"Provider\")`, which the parser now reads (tested).
 
+### D-038 Passages, the relevance floor and when an answer counts as an abstention — RECORDED (S2.2d; RAG-01, T05, T06)
+- **Passages follow the document's sections.** Search passages are cut at headings and top-level clauses, up to `LEGAL_CHUNK_CHARS` (900) characters, so a passage no longer mixes the end of one clause with the start of the next. Offsets stay exact, so every citation still maps to the version's text (D-034).
+- **Relevance floor:** `LEGAL_RERANK_MIN_SCORE` = **-10.5** for the real cross-encoder (ms-marco-MiniLM-L-6-v2). It was calibrated on the golden set. At the old floor of 0, 22 of the golden questions were refused because their correct passages scored between -10 and 0. The test fixtures use a stand-in reranker with its own scale, so they keep 0.0. The floor only removes passages that are clearly unrelated; whether to answer is still the model's decision, followed by the checks below.
+- **When an answer counts as an abstention:**
+  - **No passages** above the floor: the model is not called, and the status is `abstained` with reason `no_passages`.
+  - **The model abstains and nothing it says is supported:** it replies with the abstention sentence (rule 3), or says it in other words. The status is `abstained` with reason `model`.
+    - "In other words" is narrow. The **opening sentence** must say that the documents or sources do not state, mention, specify, contain, provide, address or answer something, and must cite nothing (`prompt.says_not_stated`).
+    - "Our work does not include tax advice" is an answer, not an abstention.
+  - **The model says it in other words, and all its citations are weak:** the best cited passage scores below `LEGAL_ABSTAIN_WEAK_SCORE` (-6.0). The status is again `abstained`.
+  - **Otherwise it is an answer.** A supported answer that also contains the abstention sentence stays an answer, and the checks mark what is flagged. A reply with no supported claim that is not an abstention is `unverified` (D-037).
+- **Evaluation** (`eval/law/run_law_eval.py`; the real model `nvidia/Qwen3-30B-A3B-FP4` on the host, with nomic-embed-text and the cross-encoder):
+  - **Golden** (70 items, the set used for tuning): answers 62/64, abstentions 4/6, 0 false abstentions, 0 T06 leaks, citation precision 0.912, quote verification 0.979, T05 conflicts 7/7, R-7 multi-source 2/2, p50 2.47 s, p95 5.99 s.
+  - **Held-out** (32 items, never used for tuning; run once each with the system frozen): answers 27/29, abstentions 1/3, 1 false abstention, 0 leaks, precision 0.902, verification 0.905, p50 2.69 s, p95 6.19 s.
+  - **Held-out correction, reported openly.** The first held-out run reported one "leak". It was a false positive in the harness: the forbidden string "4.2" matched "clause 4.2" in a permitted document. The item's forbidden list was corrected to `["two instalments", "4.2 million"]` and the held-out set was run again with the same system code. No system change was made between the two runs.
+- **Known weakness: abstention.** When the documents do not answer, the model often says so and then adds related context it can cite ("The documents do not state who the CEO is. They name Thomas Reyes as General Counsel [1]."). Because that context is supported, the answer is not counted as an abstention (golden 2 of 6 and held-out 2 of 3 abstention items). The reviewer still sees the opening sentence and the evidence. The rule was not tuned further on the held-out set, so as not to overfit. The S2.8 gate re-measures it with a lawyer's scoring rubric.
+- **Firm library scope deferred.** The plan allows "matter plus an optional firm library". The `lib:<org>` partition exists (D-005), but nothing puts content in it until templates and playbooks are approved (S3.1–S3.2). Research therefore stays matter-only, and the firm-library option will be added with the first approved library content.
+- **Other known limits** (retrieval and model, not the evidence contract):
+  - A question that names a party ("Harrowgate's indemnity") can miss a clause written in defined roles ("Provider shall indemnify").
+  - The model sometimes leaves out a fact that its cited passage contains. One held-out answer, "who chaired the meeting", opened with "not stated". It then quoted "Karin Lindqvist (Chair)" in its own text with a bare `[1]` citation to a weakly scored passage, so it was counted as an abstention.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

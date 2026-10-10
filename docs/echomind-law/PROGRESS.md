@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-09 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.2-research` |
-| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1 merged into `feature/echomind-law`; S2.2 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.3-compare` |
+| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1 and S2.2 merged into `feature/echomind-law`; S2.3 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0015` (Law edition only) |
+| Migrations | `0001`–`0016` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -266,6 +266,37 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Research sources show the clause and line and open the document at the cited sentence.
 - **S2.1d:** a browser journey (scan, Word, citation → reader) and screenshots 21–23.
 
+### Session 3 (continued) — S2.2 Legal research (RAG-01)
+- **Audit:**
+  - Research cited whole passages, with no check that the model's words were in them.
+  - Every version of a document was searchable, so a draft could answer for a signed contract.
+  - Abstention was a single exact sentence, and the refusal floor (0) was set for the stand-in reranker, not the real one.
+- **S2.2a (D-036):**
+  - Only the current version and the latest signed version are searchable.
+  - Answers come from signed versions by default (`versions: signed|current`).
+  - A cited clause that reads differently in the other version is reported as a conflict, with both texts.
+- **S2.2b (D-037):**
+  - The model quotes its source for each statement (`[n: "…"]`), and every quote is verified against that passage.
+  - The answer streams one checked paragraph at a time.
+  - Evidence carries document, version, status, clause, page, line and exact characters.
+  - Statuses are answered, partial, unverified or abstained (with a reason). Migration 0016.
+  - Purges blank saved quotes. R-4, R-6, R-7 and R-8 are now tested in Law.
+- **S2.2c (UI):**
+  - A "Signed versions / Latest drafts" switch.
+  - Flagged sentences: failed quotes and uncited sentences.
+  - Conflict alerts with links to the other version.
+  - An Evidence region listing each quote and its verification, with a "Not signed" pill and a link into the reader.
+  - "Copy with citations".
+  - The import dialog sets the status of every new version.
+- **S2.2d (D-038):**
+  - Section-bounded passages (900 characters).
+  - Reranker floor calibrated to -10.5.
+  - Abstention in other words, narrowly matched, plus a weak-evidence rule.
+  - `eval/law/`: a fictional corpus of 9 documents, including a signed and draft MSA and a matter the user cannot reach; golden (70) and held-out (32) sets; `run_law_eval.py` and committed reports.
+- **S2.2e:**
+  - Browser journeys updated for the Evidence region.
+  - New journey 15: a signed MSA and a later draft, the conflict alert, then "Latest drafts" (screenshot 24).
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -293,7 +324,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | SEC-06 | DONE | S1.9–S1.10 | Advisory labels (S1.9); export gateway (S1.10): plan, second-lawyer approval with a privilege acknowledgement, real PDF redaction, clean Word rebuild, verification of every output, watermark, 24 h encrypted release; T09 in backend and browser. Policy values: P-006 (counsel) |
 | SEC-07 | DONE (mechanism) | S1.9 | Holds with two-person approval and release; one deletion service (soft delete, report, approval, purge with a hold re-check, verification, restore); retention dry runs only, and requests at most; T04 in backend and browser. Schedules: P-002/P-003 (counsel) |
 | SEC-08 | PARTIAL (framework DONE) | S1.11 | Connector framework, local-folder connector, fail-closed permissions and freshness, sync and removal through the approved purge; T15 in backend and browser. Real provider BLOCKED (P-010) |
-| RAG-01 | PARTIAL | S1.6–S1.7, S2.1–S2.2 | Matter-scoped search (S1.6) and research answers with numbered citations to quoted clauses, abstention and owner-private history (S1.7, real-model E2E). Still to come: OCR, clause-aware ingestion, the PDF viewer with highlights and evaluation (S2.1–S2.3) |
+| RAG-01 | DONE for the pilot (lawyer review at S2.8) | S1.6–S1.7, S2.1–S2.2 | S2.1: OCR, Word structure, tracked changes and comments, hidden-text flags, clauses, defined terms, exact offsets, per-version status, reader. S2.2: answers from signed versions by default (switch to drafts), version conflicts, every quote verified, statuses with abstention reasons, paragraph streaming, Evidence and "Copy with citations"; golden 70 and held-out 32 evaluation (D-036–D-038). Firm-library scope deferred to S3.1–S3.2 |
 | RAG-02 | MISSING | S2.3 | |
 | LIVE-01 | PARTIAL (pre-existing) | S2.4 | |
 | LIVE-02 | PARTIAL | S1.7, S2.5 | S1.7: in Law, voice needs a matter and answers only from its research stream (on-behalf-of token). The Law voice UI arrives in S2.5 |
@@ -330,26 +361,22 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Egress is observed, not enforced (D-033)** until the root-run namespace test is approved.
 - **Never run `scripts/backup_data.sh` or `scripts/restore_data.sh` from this clone.** They find their volume through the `echomind-backend` container, which on this host is production. Use `python -m app.legal.backup`.
 - **Pre-existing on `main`:** standard-edition Knowledge Chat cannot send right after sign-in until a reload. There is an expected-failure test in `frontend/e2e-legacy`, and a separate task was suggested.
+- **Research abstention is the weakest measure (D-038).** When the documents do not answer, the model often says so and then adds related, supported context. That counts as an answer: abstention accuracy is 4/6 on the golden set and 1/3 held-out. The reviewer still sees the "not stated" opening and the evidence. Re-measured with a lawyer at the S2.8 gate.
 - In Law there is no Boardroom or document studio until their matter-scoped replacements ship (S2.6, S3.x); live transcription needs the speech model, which is not on the dev host (the capture path is tested with a stand-in). This is intended (D-025, D-026).
 
 ## NEXT EXACT ACTION
 
-Start **S2.2 Legal research (RAG-01)** on `law/s2.2-research`, per IMPLEMENTATION_PLAN §7. S2.1 is merged into `feature/echomind-law`.
-1. **Evidence contract:** `{answer, status, evidence[{doc_id, version_id, version_status, section/clause, page, line, char_range, quote, verification: verbatim|normalized|failed}], conflicts[], abstention_reason}`. Use the S2.1 focus and clause data.
-2. **Quote verification after generation:** each cited quote must exist in the authorised passage text, otherwise the claim is dropped or flagged. This builds on D-031's uncited-sentence check.
-3. **Versions:**
-   - Abstain when the evidence is insufficient.
-   - Detect conflicts across versions using per-version status.
-   - Default to signed-only (`executed`) evidence, with a visible switch.
-4. **Retrieval fixes:**
-   - R-4: short legal terms.
-   - R-6: pinpoints kept; the off-by-one error.
-   - R-7: answers drawing on several sources.
-   - R-8: a server-side lawyer persona, with no FMR text.
-5. **Delivery and UI:**
-   - Paragraph-level streaming.
-   - FindingSheet, Pinpoint, and an Inspector with the highlighted quote (the S2.1 reader), a version switcher, and "Copy with citations".
-6. **Tests:**
-   - T05 and T06.
-   - A legal golden set of at least 60 items, plus a held-out set of at least 30 that is never used for tuning.
-   - Citation precision, abstention accuracy, and p50/p95 latency.
+Start **S2.3 Compare and contradictions (RAG-02)** on `law/s2.3-compare`, per IMPLEMENTATION_PLAN §7. S2.2 is merged into `feature/echomind-law`.
+1. **S2.3a Two versions, clause by clause:**
+   - Units are the blocks reading found (no headers or footers), each with the clause it starts and the clause it sits in.
+   - Alignment: same wording in order (renumbering ignored); shared wording in order; moved clauses; and an optional meaning pass with embeddings.
+   - A word diff with exact offsets, and labels: number, obligation, negation, formatting only.
+   - Saved per person (migration 0017). Access is the reader's (matter plus source permissions), and a purge removes comparisons that quote the document.
+2. **S2.3b Explanations:** the model explains each change, quoting both wordings; every quote is verified (D-037); text addressed to an AI is withheld (T08); the scope is re-checked while streaming.
+3. **S2.3c Conflicts across documents:**
+   - Facts: amounts, periods, percentages, dates, governing law, company names and references by date.
+   - Candidates come only from related documents. The model checks each one (CONFLICT / NO CONFLICT) with verified quotes.
+   - Signed versions by default; only documents the person can see.
+4. **S2.3d Compare UI:** a side-by-side view with insertions and deletions, change labels and explanations, and an "Across documents" scan with findings linking into the reader. Vitest with axe, and browser journey 16.
+5. **S2.3e Evaluation:** a seeded contract pair (renumbered, moved, added, removed, changed) and a planted-conflict order form; report alignment precision and recall, and scan precision and recall on the real model.
+6. Write D-039, TEST_RESULTS run 16 and the docs; merge.

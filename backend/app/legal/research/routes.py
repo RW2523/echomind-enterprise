@@ -170,8 +170,6 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             yield _event({"type": "paragraph", "index": len(shown) - 1, **para})
             yield _event({"type": "chunk", "text": ("\n\n" if len(shown) > 1 else "") + para["text"]})
         text = "\n\n".join(shown)
-        # An answer that supports nothing and says the documents do not cover the question is an
-        # abstention in other words (S2.2, D-038).
         # Abstention in other words (S2.2, D-038):
         # - nothing is supported, and the text says the documents do not answer; or
         # - the answer opens by saying the documents do not cover the question, and every passage it

@@ -186,7 +186,7 @@ function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; o
       {a.phase === 'done' && (a.conflicts ?? []).map((c) => (
         <div key={`${c.document_id}-${c.clause}-${c.other.id}`} role="alert" className="lw-conflict">
           <b>Clause {c.clause} reads differently in version {c.other.number} ({(STATUS[c.other.status ?? ''] ?? c.other.status ?? 'unknown').toLowerCase()})</b>
-          <span className="lw-meta"> · {c.document_title} · this answer uses version {c.version.number}{c.version.status ? ` (${(STATUS[c.version.status] ?? c.version.status).toLowerCase()})` : ''}</span>
+          <span className="lw-meta">{c.document_title} · this answer uses version {c.version.number}{c.version.status ? ` (${(STATUS[c.version.status] ?? c.version.status).toLowerCase()})` : ''}</span>
           <blockquote className="lw-serif">{plain(c.other.text)}</blockquote>
           <Link className="lw-linklike lw-meta" to={`/m/${matter.number}/documents/${encodeURIComponent(c.document_id)}/read?v=${encodeURIComponent(c.other.id)}`}>Open version {c.other.number}</Link>
         </div>
