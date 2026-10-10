@@ -307,6 +307,11 @@ class Settings(BaseSettings):
     # Legal transcription (S2.4; D-017, D-040).
     LEGAL_SEGMENT_MIN_WORDS: int = int(os.getenv("LEGAL_SEGMENT_MIN_WORDS", "12"))     # a segment ends at a sentence end after this many words
     LEGAL_CAPTURE_LAG_WARN_SEC: float = float(os.getenv("LEGAL_CAPTURE_LAG_WARN_SEC", "5"))  # model this far behind: "degraded"
+    # Silent Assist legal packs (S2.5; D-015, D-041). Conservative defaults awaiting a lawyer's sign-off (P-008).
+    LEGAL_ASSIST_MIN_CONFIDENCE: float = float(os.getenv("LEGAL_ASSIST_MIN_CONFIDENCE", "0.7"))   # alerts below this are not raised
+    LEGAL_ASSIST_NEAR_MIN: float = float(os.getenv("LEGAL_ASSIST_NEAR_MIN", "0.2"))               # how close a figure's context must be
+    LEGAL_ASSIST_FINISH_SEC: float = float(os.getenv("LEGAL_ASSIST_FINISH_SEC", "20"))           # checks still running at a stop may finish
+    LEGAL_ASSIST_THRESHOLDS_APPROVED: bool = os.getenv("LEGAL_ASSIST_THRESHOLDS_APPROVED", "0") == "1"   # set once P-008 is signed off
     # Records (S1.9; P-002). Retention never deletes by itself: with this off (default) runs are
     # dry runs; with it on, approved policies only create deletion requests for a person to approve.
     LEGAL_RETENTION_APPLY: bool = os.getenv("LEGAL_RETENTION_APPLY", "0").lower() in ("1", "true", "yes")

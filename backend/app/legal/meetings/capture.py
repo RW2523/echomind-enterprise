@@ -27,6 +27,10 @@ Verbatim transcription (S2.4; D-017, D-040):
 - Nothing is lost silently. If the model falls behind by LEGAL_CAPTURE_LAG_WARN_SEC, the capture
   says so ("degraded") and records it. A transcription error leaves a "gap" mark that the
   transcript shows.
+
+Silent Assist (S2.5; D-041): each stored segment is checked against the meeting's legal pack in the
+background, so audio is never held up. Alerts are stored and sent as `{"type": "alert"}`; none are
+sent once access has been revoked or the person signed out.
 """
 from __future__ import annotations
 
@@ -256,6 +260,32 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
             return {x["id"] for x in consent.participants(conn, meeting_id)}
     people = await asyncio.to_thread(roster)
 
+    def assist_context():
+        from ..assist import engine as assist_engine
+        from ..assist import packs as assist_packs
+        with get_conn() as conn:
+            row = conn.execute("SELECT kind, assist_pack FROM legal_meetings WHERE id=?", (meeting_id,)).fetchone()
+            names = {r[0]: {"name": r[1], "role": r[2]} for r in conn.execute(
+                "SELECT id, name, role FROM legal_meeting_participants WHERE meeting_id=? AND removed_at IS NULL", (meeting_id,))}
+        pack = assist_packs.pack_for(row[0], row[1]) if row else None
+        return assist_engine.Context(matter_id, meeting_id, p["sub"], pack, names) if pack and transcriber is not None else None
+    assist = await asyncio.to_thread(assist_context)
+    pending: set[asyncio.Task] = set()
+
+    async def check(seg: dict, heard_at: str) -> None:
+        from ..assist import engine as assist_engine
+        from ..assist import repo as assist_repo
+        try:
+            for a in await assist_engine.consider(assist, seg):
+                saved = await asyncio.to_thread(assist_repo.save, matter_id, meeting_id, capture_id, seg, assist.pack, a, heard_at)
+                if h.reason not in ("access_revoked", "signed_out"):
+                    try:
+                        await send({"type": "alert", **saved})
+                    except Exception:
+                        pass                          # the socket closed; the alert is stored
+        except Exception as e:
+            logger.warning("Assist: a segment could not be checked (%s)", type(e).__name__)
+
     def wall(audio_ms) -> Optional[str]:
         """Wall-clock time of a point in the audio given to the model."""
         if audio_ms is None or not anchors:
@@ -311,6 +341,10 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
         seg = await asyncio.to_thread(store_segment, text, t0, t1, state["speaker"])
         if seg is not None:
             await send({"type": "segment", **seg})
+            if assist is not None:
+                task = asyncio.create_task(check(seg, policy.now_iso()))
+                pending.add(task)
+                task.add_done_callback(pending.discard)
 
     async def mark(kind: str, **kw) -> None:
         await asyncio.to_thread(transcript_mod.add_mark, capture_id, meeting_id, kind, by=p["sub"], **kw)
@@ -437,6 +471,11 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
                 pass
         if reason in ("ended", "disconnected"):
             await commit()
+        if pending:                                    # let the last checks finish; never after a revocation
+            if reason in ("ended", "disconnected"):
+                await asyncio.wait(list(pending), timeout=settings.LEGAL_ASSIST_FINISH_SEC)
+            for t in list(pending):
+                t.cancel()
         await asyncio.to_thread(custody.flush)
         await asyncio.to_thread(_event, capture_id, "stopped", reason, p["sub"])
         await asyncio.to_thread(record, "capture.stop", "allow", principal=p, object_type="capture", object_id=capture_id,

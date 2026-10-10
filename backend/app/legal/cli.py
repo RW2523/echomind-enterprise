@@ -87,9 +87,11 @@ def seed_demo() -> dict:
 
 
 def _seed_meeting(org: str, matter_id: str, by: str) -> None:
-    """An ended client call in M-101 with its transcript as the speech model produced it (S2.4): two
-    speakers, wall-clock times, one gap where transcription failed, and a misheard name for the
-    matter vocabulary to catch. Fictional, like everything here."""
+    """An ended client call in M-101 with its transcript as the speech model produced it (S2.4): its
+    speakers, wall-clock times, one gap where transcription failed, and a misheard name for the matter
+    vocabulary to catch. The client-call pack's alerts are raised over it as they would have been live
+    (S2.5): a privileged remark with the counterparty on the call, and an action. Fictional, like
+    everything here."""
     import uuid
 
     from ..core.db import get_conn
@@ -97,7 +99,8 @@ def _seed_meeting(org: str, matter_id: str, by: str) -> None:
     mid = meetings.create_meeting(org, matter_id, "Renewal call with the client (demo)", "client_call", None, by)
     helena = meetings.add_participant(mid, matter_id, "Helena Marsh", "attorney", None, by)
     petra = meetings.add_participant(mid, matter_id, "Petra Voss", "client", None, by)
-    for pid in (helena, petra):
+    thomas = meetings.add_participant(mid, matter_id, "Thomas Reyes", "counterparty", None, by)
+    for pid in (helena, petra, thomas):
         meetings.add_consent_event(mid, pid, "granted", "written", None, by)
     cid = meetings.create_capture(mid, matter_id, by, "demo-consent-snapshot", "available")
     start = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(days=1)
@@ -106,11 +109,24 @@ def _seed_meeting(org: str, matter_id: str, by: str) -> None:
              (petra, 9, "What does the new fee look like?"),
              (helena, 14, "The monthly fee rises to USD 19,750 and the liability cap to USD 500,000."),
              (petra, 31, "We will not accept the fee increase unless they agree to a longer term."),
-             (helena, 40, "Noted. petra fos will confirm the board's position by Friday.")]
+             (helena, 40, "Noted. petra fos will confirm the board's position by Friday."),
+             (helena, 47, "Between us, our client's bottom line is a cap of USD 400,000 and no lower."),
+             (helena, 53, "I will send the revised redline to everyone by Friday.")]
+    stored = []
     for seq, (pid, t, text) in enumerate(lines):
-        meetings.add_segment(cid, mid, matter_id, seq, t * 1000, t * 1000 + 4000, text, pid, at(t), at(t + 4))
+        stored.append((meetings.add_segment(cid, mid, matter_id, seq, t * 1000, t * 1000 + 4000, text, pid, at(t), at(t + 4)), t + 4))
+    # S2.5: the client-call pack's rules over the call, as they would have run live (no model involved).
+    import asyncio
+    from .assist import engine as assist_engine
+    from .assist import repo as assist_repo
+    roster = {helena: {"name": "Helena Marsh", "role": "attorney"}, petra: {"name": "Petra Voss", "role": "client"},
+              thomas: {"name": "Thomas Reyes", "role": "counterparty"}}
+    ctx = assist_engine.Context(matter_id, mid, by, "legal_client_call", roster, docs=[], built=[])
+    for seg, t in stored:
+        for alert in asyncio.run(assist_engine.consider(ctx, seg)):
+            assist_repo.save(matter_id, mid, cid, seg, "legal_client_call", alert, at(t), at(t + 1))
     with get_conn() as conn:
-        for kind, t in (("started", 0), ("stopped", 46)):
+        for kind, t in (("started", 0), ("stopped", 58)):
             conn.execute("INSERT INTO legal_capture_events (id, capture_id, kind, reason, at, by) VALUES (?,?,?,?,?,?)",
                          (str(uuid.uuid4()), cid, kind, "ended" if kind == "stopped" else None, at(t), by))
         conn.execute("INSERT INTO legal_capture_marks (id, capture_id, meeting_id, kind, detail, audio_ms, at, by) VALUES (?,?,?,?,?,?,?,?)",

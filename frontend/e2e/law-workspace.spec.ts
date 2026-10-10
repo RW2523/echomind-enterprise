@@ -640,3 +640,28 @@ test('transcripts: speakers and times, a gap shown, corrections with reasons, ma
   await expect(sheet.getByText(/Petra Voss: What does the new monthly fee look like\?/)).toBeVisible({ timeout: 120_000 });
   await expect(sheet.getByText(/\[Not transcribed: a transcription error at this point\.\]/)).toBeVisible();
 });
+
+test('silent assist: alerts quote what was said; one confirmed, one dismissed with a reason; the pack per meeting', async ({ browser }) => {
+  test.setTimeout(180_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/meetings');
+  await alice.getByRole('link', { name: 'Renewal call with the client (demo)' }).click();
+  await alice.getByRole('tab', { name: 'Record' }).click();
+  const panel = alice.getByRole('region', { name: 'Silent Assist' });
+  await expect(panel.getByText(/awaiting a lawyer’s sign-off/)).toBeVisible();
+  const privileged = panel.getByRole('listitem', { name: 'Needs review: privileged or sensitive information with a counterparty on the call' });
+  await expect(privileged).toContainText('“Between us, our client\'s bottom line is a cap of USD 400,000 and no lower.”');
+  await privileged.getByRole('button', { name: 'Confirm' }).click();
+  await expect(privileged).toContainText('Confirmed by alice');
+  const action = panel.getByRole('listitem', { name: 'Action taken on' });
+  await action.getByRole('button', { name: 'Dismiss…' }).click();
+  await action.getByLabel('Why dismiss this alert?').fill('Already in the matter plan');
+  await action.getByRole('button', { name: 'Dismiss', exact: true }).click();
+  await expect(action).toContainText('Dismissed by alice — Already in the matter plan');
+  await expect(panel.getByText(/2 alerts · 1 confirmed · 1 dismissed · median 1 s after the words/)).toBeVisible();
+  await shot(alice, '28-silent-assist-alerts-light');
+
+  await alice.getByRole('tab', { name: 'Prepare' }).click();          // the meeting has ended: its pack is shown, not changed
+  await expect(alice.getByRole('region', { name: 'Participants' }).getByText('Client call pack', { exact: true })).toBeVisible();
+});

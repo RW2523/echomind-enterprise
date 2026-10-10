@@ -83,7 +83,7 @@ def get_meeting(matter_id: str, meeting_id: str, request: Request):
     d = repo.meeting_detail(matter_id, meeting_id, _number(matter_id))
     if not d:
         raise _not_found()
-    return {"meeting": d}
+    return {"meeting": {**d, "assist": _assist_state(d)}}
 
 
 @router.post(_BASE + "/{meeting_id}/end")
@@ -247,3 +247,71 @@ async def capture_socket(ws: WebSocket, matter_id: str, meeting_id: str):
         await ws.close(code=4404)
         return
     await capture.handle(ws, matter_id, meeting_id)
+
+
+# ── Silent Assist (S2.5; D-041) ──────────────────────────────────────────────────
+class AssistIn(BaseModel):
+    pack: Optional[Literal["legal_client_call", "legal_negotiation", "legal_governance", "off"]] = None   # None: the kind's default
+
+
+class DecisionIn(BaseModel):
+    reason: Optional[str] = Field(default=None, max_length=500)
+
+
+def _assist_state(m: dict) -> dict:
+    from ...core.db import get_conn
+    from ..assist import packs
+    with get_conn() as conn:
+        chosen = conn.execute("SELECT assist_pack FROM legal_meetings WHERE id=?", (m["id"],)).fetchone()[0]
+    pack = packs.pack_for(m["kind"], chosen)
+    return {"pack": pack, "chosen": chosen, "label": packs.LABELS.get(pack) if pack else None,
+            "rules": [{"id": r, "label": packs.RULES[r].label, "severity": packs.RULES[r].severity} for r in packs.PACKS.get(pack, ())]}
+
+
+@router.get(_BASE + "/{meeting_id}/alerts")
+@audited("meeting.alerts.read", object_type="meeting", object_param="meeting_id")
+def list_alerts(matter_id: str, meeting_id: str, request: Request):
+    """The meeting's Silent Assist alerts, with the pack in use and how the alerts fared."""
+    from ..assist import repo as assist_repo
+    require(principal_of(request), "meetings.read", matter_id)
+    m = _meeting(matter_id, meeting_id)
+    alerts = assist_repo.list_for(matter_id, meeting_id)
+    note(details={"alerts": len(alerts)})
+    return {"alerts": alerts, "assist": _assist_state(m), "telemetry": assist_repo.telemetry(matter_id, meeting_id)}
+
+
+@router.post(_BASE + "/{meeting_id}/alerts/{alert_id}/{decision}")
+@audited("assist.decide", object_type="assist_alert", object_param="alert_id")
+def decide_alert(matter_id: str, meeting_id: str, alert_id: str, decision: Literal["confirm", "dismiss"], inp: DecisionIn,
+                 request: Request):
+    """Confirm an alert, or dismiss it with a reason. Decided once."""
+    from ..assist import repo as assist_repo
+    p = principal_of(request)
+    require(p, "meetings.create", matter_id)
+    _meeting(matter_id, meeting_id)
+    reason = (inp.reason or "").strip() or None
+    if decision == "dismiss" and (not reason or len(reason) < 3):
+        raise HTTPException(status_code=422, detail="Say why the alert is dismissed.")
+    try:
+        out = assist_repo.decide(matter_id, meeting_id, alert_id, "confirmed" if decision == "confirm" else "dismissed", p["sub"], reason)
+    except assist_repo.Conflict as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    if out is None:
+        raise _not_found()
+    note(details={"decision": decision, "rule": out["rule"], "verdict": out["verdict"]})
+    return {"alert": out}
+
+
+@router.patch(_BASE + "/{meeting_id}/assist")
+@audited("meeting.assist", object_type="meeting", object_param="meeting_id")
+def set_assist(matter_id: str, meeting_id: str, inp: AssistIn, request: Request):
+    """Choose the meeting's legal pack, go back to its kind's default, or turn alerts off."""
+    from ...core.db import get_conn
+    p = principal_of(request)
+    require(p, "meetings.create", matter_id)
+    m = _meeting(matter_id, meeting_id)
+    with get_conn() as conn:
+        conn.execute("UPDATE legal_meetings SET assist_pack=? WHERE id=?", (inp.pack, meeting_id))
+        conn.commit()
+    note(details={"pack": inp.pack or "default"})
+    return {"assist": _assist_state(m)}

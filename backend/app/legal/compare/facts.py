@@ -43,6 +43,10 @@ _CURRENCY = {"$": "USD", "US$": "USD", "€": "EUR", "£": "GBP"}
 _SCALE = {"thousand": 1e3, "k": 1e3, "million": 1e6, "mn": 1e6, "m": 1e6, "billion": 1e9, "bn": 1e9}
 _MONEY = re.compile(r"(?P<cur>US\$|USD|EUR|GBP|SEK|CHF|JPY|NOK|DKK|CAD|AUD|[$€£])\s?"
                     r"(?P<num>\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?:\s?(?P<scale>thousand|million|billion|bn|mn|m|k)\b)?")
+# Spoken or informal: the currency after the number ("400,000 dollars", "18,500 USD").
+_MONEY_AFTER = re.compile(r"(?P<num>\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?:\s?(?P<scale>thousand|million|billion))?\s+"
+                          r"(?P<cur>dollars?|euros?|pounds?(?:\s+sterling)?|kronor|krona|USD|EUR|GBP|SEK)\b")
+_CURRENCY_WORD = {"dollar": "USD", "euro": "EUR", "pound": "GBP", "kronor": "SEK", "krona": "SEK"}
 _UNITS = {w: i for i, w in enumerate("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen "
                                      "fifteen sixteen seventeen eighteen nineteen".split())}
 _TENS = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90}
@@ -170,6 +174,14 @@ def extract(text: str, spans: list[tuple[int, int]]) -> list[Fact]:
         taken: list[tuple[int, int]] = []
         for m in _MONEY.finditer(sent):
             cur = _CURRENCY.get(m.group("cur"), m.group("cur"))
+            amount = float(m.group("num").replace(",", "")) * _SCALE.get((m.group("scale") or "").lower(), 1)
+            add("money", f"{cur} " + (f"{amount:.2f}".rstrip("0").rstrip(".")), m, unit=cur)
+            taken.append(m.span())
+        for m in _MONEY_AFTER.finditer(sent):
+            if any(a <= m.start() < b for a, b in taken):
+                continue
+            word = m.group("cur").split()[0].lower()
+            cur = _CURRENCY_WORD.get(word.rstrip("s"), _CURRENCY_WORD.get(word, word.upper()))
             amount = float(m.group("num").replace(",", "")) * _SCALE.get((m.group("scale") or "").lower(), 1)
             add("money", f"{cur} " + (f"{amount:.2f}".rstrip("0").rstrip(".")), m, unit=cur)
             taken.append(m.span())

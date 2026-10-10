@@ -1,0 +1,64 @@
+{
+ "note": "FICTIONAL scripted calls for the Silent Assist legal packs (S2.5, D-041), read against the evaluation corpus (signed Harrowgate MSA, board minutes). Each lists the issues planted in it; an alert on a statement that is not planted is a false alert unless listed as acceptable. Speech runs at about 150 words a minute for alerts per hour.",
+ "scenarios": [
+  {
+   "id": "client-call-misstatements",
+   "pack": "legal_client_call",
+   "kind": "client_call",
+   "speakers": [{"name": "Helena Marsh", "role": "attorney"}, {"name": "Petra Voss", "role": "client"}, {"name": "Thomas Reyes", "role": "counterparty"}],
+   "turns": [
+    {"speaker": "Helena Marsh", "text": "Thank you both for joining. Let us go through the renewal points one by one."},
+    {"speaker": "Thomas Reyes", "text": "Under the signed agreement the monthly fee is USD 18,000, so the increase is modest."},
+    {"speaker": "Helena Marsh", "text": "The liability cap in the signed agreement is USD 250,000, and we want it higher."},
+    {"speaker": "Thomas Reyes", "text": "Invoices are payable within forty-five days under the agreement, and that stays."},
+    {"speaker": "Helena Marsh", "text": "Our advice to the client is that the indemnity clause is weak and should not be relied on."},
+    {"speaker": "Helena Marsh", "text": "We will waive the late payment interest for this quarter if you sign this month."},
+    {"speaker": "Petra Voss", "text": "Please keep us updated on the timetable."},
+    {"speaker": "Helena Marsh", "text": "I will send the revised redline to everyone by Friday."}
+   ],
+   "planted": [
+    {"turn": 1, "rule": "signed_terms", "severity": "critical", "said": "USD 18,000", "source": "USD 18,500"},
+    {"turn": 3, "rule": "signed_terms", "severity": "critical", "said": "forty-five days", "source": "thirty (30) days"},
+    {"turn": 4, "rule": "disclosure", "severity": "critical"},
+    {"turn": 5, "rule": "commitment", "severity": "critical"},
+    {"turn": 7, "rule": "action", "severity": "notice"}
+   ],
+   "acceptable": [{"turn": 2, "rule": "signed_terms", "verdict": "matches"}]
+  },
+  {
+   "id": "negotiation-below-authority",
+   "pack": "legal_negotiation",
+   "kind": "negotiation",
+   "speakers": [{"name": "David Okafor", "role": "attorney"}, {"name": "Thomas Reyes", "role": "counterparty"}],
+   "turns": [
+    {"speaker": "Thomas Reyes", "text": "Harrowgate wants certainty on the liability cap before anything else."},
+    {"speaker": "David Okafor", "text": "We can accept a liability cap of USD 300,000 for the renewal."},
+    {"speaker": "Thomas Reyes", "text": "And the convenience notice?"},
+    {"speaker": "David Okafor", "text": "Thirty days' written notice for convenience, as in the signed agreement."}
+   ],
+   "planted": [
+    {"turn": 1, "rule": "authority", "severity": "critical", "said": "USD 300,000", "source": "USD 400,000"},
+    {"turn": 1, "rule": "commitment", "severity": "critical"}
+   ],
+   "acceptable": [{"turn": 3, "rule": "signed_terms", "verdict": "matches"}, {"turn": 1, "rule": "signed_terms"}]
+  },
+  {
+   "id": "board-quorum-and-conflict",
+   "pack": "legal_governance",
+   "kind": "board",
+   "speakers": [{"name": "Karin Lindqvist", "role": "host"}, {"name": "Anders Holm", "role": "other"}, {"name": "Petra Voss", "role": "attorney"}],
+   "turns": [
+    {"speaker": "Karin Lindqvist", "text": "Three of the six directors are present, so we can proceed."},
+    {"speaker": "Anders Holm", "text": "I declare an interest in the Northbridge Analytics project, because a family member works there."},
+    {"speaker": "Petra Voss", "text": "Item five is the Project Lantern budget with Northbridge Analytics."},
+    {"speaker": "Anders Holm", "text": "I vote in favour of the Northbridge Analytics budget."},
+    {"speaker": "Karin Lindqvist", "text": "The next meeting will be held on 10 September 2026."}
+   ],
+   "planted": [
+    {"turn": 0, "rule": "quorum", "severity": "critical"},
+    {"turn": 3, "rule": "conflict", "severity": "critical"}
+   ],
+   "acceptable": []
+  }
+ ]
+}

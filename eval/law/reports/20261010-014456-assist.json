@@ -1,0 +1,82 @@
+{
+ "meta": {
+  "commit": "9e5751d+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-014456"
+ },
+ "summary": {
+  "scenarios": 3,
+  "recall": 0.889,
+  "critical_recall": "7/8",
+  "precision": 1.0,
+  "alerts": 9,
+  "false_alerts": 0,
+  "false_alerts_per_hour": 0.0,
+  "latency_p50_s": 0.0,
+  "latency_max_s": 2.97
+ },
+ "scenarios": [
+  {
+   "id": "client-call-misstatements",
+   "pack": "legal_client_call",
+   "planted": 5,
+   "found": 4,
+   "critical_planted": 4,
+   "critical_found": 3,
+   "alerts": 4,
+   "acceptable": 0,
+   "false": 0,
+   "minutes_spoken": 0.71,
+   "missed": [
+    "turn 1 signed_terms"
+   ],
+   "false_alerts": [],
+   "all": [
+    "turn 4 disclosure needs_review (rule, 0.8): Needs review: privileged or sensitive information with a counterparty on the call",
+    "turn 5 commitment needs_review (rule, 0.75): Needs review: a commitment to the other side",
+    "turn 7 action needs_review (rule, 0.7): Action taken on",
+    "turn 3 signed_terms differs (model, 0.8): Differs from signed agreement, cl. 4.1"
+   ],
+   "seconds": 3.05
+  },
+  {
+   "id": "negotiation-below-authority",
+   "pack": "legal_negotiation",
+   "planted": 2,
+   "found": 2,
+   "critical_planted": 2,
+   "critical_found": 2,
+   "alerts": 3,
+   "acceptable": 1,
+   "false": 0,
+   "minutes_spoken": 0.25,
+   "missed": [],
+   "false_alerts": [],
+   "all": [
+    "turn 1 commitment needs_review (rule, 0.75): Needs review: a commitment to the other side",
+    "turn 1 authority differs (rule, 0.85): Differs from the authority in Board minutes 14 May 2026, cl. 3.1",
+    "turn 3 signed_terms matches (rule, 0.8): Matches signed agreement, cl. 12.1"
+   ],
+   "seconds": 0.07
+  },
+  {
+   "id": "board-quorum-and-conflict",
+   "pack": "legal_governance",
+   "planted": 2,
+   "found": 2,
+   "critical_planted": 2,
+   "critical_found": 2,
+   "alerts": 2,
+   "acceptable": 0,
+   "false": 0,
+   "minutes_spoken": 0.37,
+   "missed": [],
+   "false_alerts": [],
+   "all": [
+    "turn 0 quorum needs_review (rule, 0.75): Needs review: fewer than half the directors present — check the quorum",
+    "turn 3 conflict differs (rule, 0.85): Differs from a declaration of interest earlier in this meeting"
+   ],
+   "seconds": 0.09
+  }
+ ]
+}

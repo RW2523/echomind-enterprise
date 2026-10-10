@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -134,6 +134,10 @@ export const useComparisons = (matterId: string) =>
   useQuery({ queryKey: keys.comparisons(matterId), refetchOnWindowFocus: false,
     queryFn: async () => (await api.get<{ comparisons: ComparisonSummary[] }>(comparePath(matterId))).comparisons });
 
+export const useAlerts = (matterId: string, meetingId: string) =>
+  useQuery({ queryKey: [...keys.meeting(matterId, meetingId), 'alerts'] as const, refetchOnWindowFocus: false,
+    queryFn: async () => api.get<{ alerts: AssistAlert[]; assist: AssistState; telemetry: AssistTelemetry }>(
+      `/api/legal/matters/${encodeURIComponent(matterId)}/meetings/${encodeURIComponent(meetingId)}/alerts`) });
 export const meetingsPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/meetings`;
 export const useMeetings = (matterId: string) =>
   useQuery({ queryKey: keys.meetings(matterId), queryFn: async () => (await api.get<{ meetings: MeetingSummary[] }>(meetingsPath(matterId))).meetings });

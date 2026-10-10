@@ -216,7 +216,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - Downloads re-verify the SHA-256 recorded at import.
   - Still to come: Boardroom audio, export outputs and connector credentials (S1.8, S1.10, S1.11); key rotation; LUKS (deployment runbook).
 
-### D-015 Language of verdicts in legal mode — PROPOSED
+### D-015 Language of verdicts in legal mode — ADOPTED in S2.5 under the standing approval (see D-041)
 - **Decision:** Never label a spoken statement "true" or "false". The Silent Assistant uses evidence-relative wording:
   - "Matches signed agreement §8.2"
   - "Differs from signed agreement §8.2"
@@ -680,6 +680,55 @@ Every entry records the options considered, the recommendation, the consequence 
     - **file:** scores transcripts produced elsewhere;
     - **capture:** speaks each turn with a local Piper voice and streams it through the real capture socket, marking speakers.
 - **Not measured yet, and why:** the real word error rate needs the speech model. On this host NeMo is not installed, PyTorch is CPU-only, and memory headroom is about 13 GB with swap full, beside production model servers. Installing and loading it here would risk production. The capture mode stops and says so; it runs on the Law speech stack once the first `compose.sh up` is approved (🔒). A Piper voice's licence must be checked before its results are published, and AMI stays out until its licence check.
+
+### D-041 Silent Assist legal packs — RECORDED (S2.5; LIVE-02, D-015, P-008, T-03, T-06)
+- **Not the legacy assistant:**
+  - The legacy Silent Assistant (`silent_assistant/`) stays closed in Law. It fell back to the whole knowledge base (T-03), let the client choose the namespace, and had no confirm or dismiss and no telemetry.
+  - The Law packs are new code (`legal/assist/`). They read only the matter's documents that the person recording can see, in their signed versions.
+- **Packs:**
+  - `legal_client_call` and `legal_negotiation`: signed terms, authority, commitment, disclosure, action.
+  - `legal_governance`: quorum, conflict, authority, action.
+  - The default follows the meeting's kind (board → governance, negotiation → negotiation, otherwise client call). A contributor can choose another pack or turn alerts off before the meeting.
+- **Rules:**
+  - **Signed terms:**
+    - Amounts, periods, percentages and dates said are paired with their closest counterparts, by the words around the value (S2.3 facts).
+    - A statement about "the agreement" is checked against agreements (agreement, contract, lease, deed, order form, amendment, side letter), never against a letter or minutes. In tuning, a law firm's engagement letter was cited as "the signed agreement", which is why this rule exists.
+    - The model checks the two closest counterparts in turn: context words alone can tie, as with a fee clause and a cap that mentions "the Fees paid". If either has the same value, nothing differs.
+    - A statement that names the agreement and agrees with it is marked as matching.
+  - **Authority:** only when a figure is being agreed, offered or approved (whole verb forms), against a limit recorded with authority wording ("authorised … not reduced below USD 400,000").
+  - **Commitment and disclosure:** narrow phrases, from the firm's side (and the client, for disclosure), only when a counterparty is a participant.
+  - **Action:** "I/we will send, circulate, confirm …".
+  - **Quorum:** fewer than half the directors present. No quorum rule is cited, so the alert says to check the articles.
+  - **Conflict:** a vote by someone who declared an interest in it, earlier in the meeting or in the matter's minutes.
+- **Evidence-relative wording (D-015):**
+  - "Differs from signed agreement, cl. 4.1", "Matches …", "Needs review: …"; never "true" or "false".
+  - Every alert quotes the exact sentence said, by its characters in the stored segment. A document source is quoted by its exact characters too.
+  - Each alert carries its confidence, the threshold in force, and whether it was found by rule or checked in context.
+  - A model check counts only if it quotes. Without a verifiable quote it scores 0.6, below the 0.7 threshold, so nothing is raised.
+- **Thresholds await a lawyer (P-008):**
+  - `LEGAL_ASSIST_MIN_CONFIDENCE` 0.7, the rules' confidences, and `LEGAL_ASSIST_NEAR_MIN` 0.2 are engineering defaults.
+  - `LEGAL_ASSIST_THRESHOLDS_APPROVED` stays off until P-008 is signed off, and the UI says so.
+- **Live:**
+  - Each stored segment is checked in the background, so audio is never held up. Alerts are stored and sent on the capture socket.
+  - None are sent after access is revoked or the person signs out. Checks still running at a normal stop may finish (`LEGAL_ASSIST_FINISH_SEC`).
+  - Text addressed to an AI is withheld from the model (T08).
+- **Decisions and telemetry:**
+  - Confirm, or dismiss with a reason (at least three characters). Contributors only, decided once.
+  - Telemetry: alerts, critical, per hour (only after five minutes of capture), confirmed, dismissed, dismiss rate, and latency from the words being stored to the alert.
+  - The audit holds counts and the decision, never content.
+- **Records:**
+  - Alerts are matter content (migration 0019). Requesting deletion of a transcript hides them, and its purge removes them, verified.
+  - A purged document's quote and name are removed from the alerts that cite it, which keep their decision.
+- **Evaluation** (`eval/law/assist/run_assist_eval.py`): scripted calls played through the real capture socket and engine, with the real model checking subjects. There is no audio: speech accuracy is S2.4's.
+  - **Golden (tuning) set, 3 calls:** recall 1.0 (8/8 critical), precision 1.0, no false alerts, latency p50 0 s and max 4.9 s. The first run had recall 7/8 and cited the engagement letter. Fixed by agreements-only signed terms and checking the two closest counterparts.
+  - **Held-out set, 3 calls** (lease, NDA, board), never used to adjust the packs:
+    - First run: recall 5/6, one "false" alert. That was the harness: two consecutive turns by one speaker formed one segment, and it numbered turns by segment, while the alert ("two years" against the NDA's five) was right.
+    - With the harness corrected and identical system code: recall 1.0 (6/6), precision 1.0, max latency 2.6 s. Both runs are reported.
+  - **These sets are small (six calls).** The numbers show the mechanism works; they are not a measured false-alarm rate. The lawyer-scored measurement is S2.8's.
+- **Limits:**
+  - Phrase rules miss other wordings: recall is bounded by the phrase lists, by design (conservative).
+  - Speakers are as marked by the person recording (S2.4).
+  - Spoken amounts in words ("eighteen thousand dollars") are not read as figures. Digits are, with the currency before or after.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
