@@ -94,8 +94,8 @@ def run(args) -> int:
                         "all_proposed": all(o["status"] == "proposed" for o in obs)})
     allx = [x for r in results for x in r["lines"]]
     dated = [x for x in allx if x.get("due")]
-    guessed = sum(1 for x in allx if x["found"] and not x.get("due") and x["got_due"]) + sum(1 for x in dated if x["found"] and not x["date_ok"]) \
-        + sum(1 for r in results for e in r["extra"] if e["due"])
+    # a date given where the document fixes none, or a different date from the one it fixes (an empty date is a miss, not a guess)
+    guessed = sum(1 for x in allx if x["found"] and x["got_due"] and x["got_due"] != x.get("due")) + sum(1 for r in results for e in r["extra"] if e["due"])
     timed = [x for x in allx if x["when_ok"] is not None]
     summary = {"documents": len(results), "expected": len(allx), "found": f"{sum(x['found'] for x in allx)}/{len(allx)}",
                "timing_in_its_words": f"{sum(bool(x['when_ok']) for x in timed)}/{len(timed)}",
