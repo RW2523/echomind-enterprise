@@ -43,6 +43,7 @@ ROLES = [("deal", "Deal lawyer", "the deal lawyer: you look at how the documents
          ("specialist", "Specialist ({area})", "a specialist in {area}: you look at the points particular to that area")]
 MISSING = re.compile(r"^\s*MISSING FACTS:\s*(.*)\s*$", re.I | re.M)
 STANCE_MAX = 80
+MAX_FACTS = 8                 # the facts form takes this many; the first ones listed are kept
 _NUMBER = re.compile(r"\d[\d,.]*\d|\d")
 
 
@@ -188,7 +189,7 @@ async def run(job: dict) -> Optional[str]:
             views = [await perspective(role, label, area, question, passages, sources, facts) for role, label, _ in ROLES]
             scopemod.recheck(scope)
             mod = await moderate(question, views, facts)
-        missing = unique_facts([m for v in views for m in v["missing_facts"]] + mod["missing_facts"])
+        missing = unique_facts([m for v in views for m in v["missing_facts"]] + mod["missing_facts"])[:MAX_FACTS]   # what the lawyer can answer
         lacking = sum(1 for v in views if v["missing_facts"])
         stopped = bool(missing) and (mod["stop"] or lacking >= 3)       # s4.5c: most perspectives lacking facts also stops it
         content = {"title": f"Panel review — {question[:120]}", "question": question, "specialist": specialist, "area": area,

@@ -259,3 +259,15 @@ def test_a_question_can_be_limited_to_chosen_documents(pn):
     assert all("999,000" not in user for role, user in pn["model"].calls if role != "moderator")
     bad = alice.post(f"{pn['base']}/panel", headers=csrf_headers(alice), json={"question": QUESTION, "specialist": "commercial", "documents": ["nope"]})
     assert bad.status_code == 422 and other["id"]
+
+
+def test_a_long_list_of_missing_facts_is_cut_to_what_the_lawyer_can_answer(pn):
+    """Journey 33: the panel listed more missing facts than the facts form accepts (8), so the lawyer could not answer them."""
+    pn["model"].missing = {r: "; ".join(f"fact {r} {n}" for n in range(4)) for r in ("deal", "risk", "litigation")}
+    v = ask(pn).json()
+    facts = v["artifact"]["content"]["missing_facts"]
+    assert v["review"]["status"] == "needs_facts" and len(facts) == 8
+    alice = as_user(pn, "alice")
+    r = alice.post(f"{pn['base']}/panel/{v['review']['id']}/facts", headers=csrf_headers(alice),
+                   json={"facts": [{"question": f, "answer": "Not known."} for f in facts]})
+    assert r.status_code == 200, r.text
