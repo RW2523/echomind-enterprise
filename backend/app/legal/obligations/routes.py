@@ -18,6 +18,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
+from starlette.concurrency import run_in_threadpool
 
 from ...core.config import settings
 from ...core.db import get_conn
@@ -28,6 +29,7 @@ from ..documents import repo as documents
 from ..matters import repo as matters
 from ..matters.routes import principal_of, require, require_law_edition
 from . import extract as ex
+from . import model
 
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition)])
 _COLS = ("id", "matter_id", "document_id", "version_id", "clause", "kind", "party", "action_text", "when_text", "rule_json", "due_date",
@@ -135,16 +137,30 @@ def _text(matter_id: str, document_id: str) -> tuple[str, str, list[dict]]:
 
 @router.post("/matters/{matter_id}/documents/{document_id}/obligations/extract")
 @audited("obligation.extract", object_type="document", object_param="document_id")
-def extract_obligations(matter_id: str, document_id: str, request: Request):
+async def extract_obligations(matter_id: str, document_id: str, request: Request):
     p = principal_of(request)
-    require(p, "ai.draft", matter_id)
-    if not documents.visible(matter_id, document_id, p["sub"]):
+    await run_in_threadpool(require, p, "ai.draft", matter_id)
+    if not await run_in_threadpool(documents.visible, matter_id, document_id, p["sub"]):
         raise _not_found()
     try:
-        vid, text, rows = _text(matter_id, document_id)
+        vid, text, rows = await run_in_threadpool(_text, matter_id, document_id)
     except LookupError:
         raise HTTPException(status_code=409, detail="This document has not been read yet.")
     found = ex.read(text, rows)
+    model_state, stats = "off", {}
+    if settings.LEGAL_OBLIGATIONS_MODEL:
+        try:
+            more, stats = await model.propose(text, rows, found)
+            found, model_state = found + more, "used"
+        except Exception:                                   # noqa: BLE001 — the rules' findings stand on their own
+            model_state = "unavailable"
+    out, added = await run_in_threadpool(_store, p, matter_id, document_id, vid, found)
+    note(details={"found": len(found), "added": added, "model_used": model_state == "used", "model_unavailable": model_state == "unavailable",
+                  "model_kept": stats.get("kept", 0), "model_dropped": stats.get("dropped", 0)})   # the audit keeps no strings
+    return {**out, "model": model_state}
+
+
+def _store(p: dict, matter_id: str, document_id: str, vid: str, found: list[dict]) -> tuple[dict, int]:
     added = 0
     now = policy.now_iso()
     with get_conn() as conn:
@@ -159,12 +175,11 @@ def extract_obligations(matter_id: str, document_id: str, request: Request):
                          "created_by, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                          (oid, matter_id, document_id, vid, o["clause"], o["kind"], o["party"], o["action"], o["when"],
                           json.dumps(o["rule"]), o["due_date"], o["due_note"], settings.LEGAL_TIMEZONE, "proposed", None,
-                          json.dumps(o["evidence"], ensure_ascii=False), "rules", None, None, 1, p["sub"], now, now))
+                          json.dumps(o["evidence"], ensure_ascii=False), o.get("source", "rules"), None, None, 1, p["sub"], now, now))
             _event(conn, oid, "proposed", p["sub"])
             added += 1
         conn.commit()
-    note(details={"found": len(found), "added": added})
-    return {"obligations": _visible_rows(p, matter_id, "AND document_id=?", (document_id,)), "added": added}
+    return {"obligations": _visible_rows(p, matter_id, "AND document_id=?", (document_id,)), "added": added}, added
 
 
 @router.get("/matters/{matter_id}/obligations")

@@ -324,6 +324,7 @@ class Settings(BaseSettings):
     # file, off unless the firm turns it on (DOC-05).
     LEGAL_TIMEZONE: str = os.getenv("LEGAL_TIMEZONE", "UTC")
     LEGAL_OBLIGATIONS_ICS: bool = os.getenv("LEGAL_OBLIGATIONS_ICS", "0").lower() in ("1", "true", "yes")
+    LEGAL_OBLIGATIONS_MODEL: bool = os.getenv("LEGAL_OBLIGATIONS_MODEL", "1").lower() in ("1", "true", "yes")   # checked proposals after the rules
     # Connectors (S1.11): folders a local-folder connector may read, separated by ":" (empty = none).
     LEGAL_CONNECTOR_LOCAL_ROOTS: str = os.getenv("LEGAL_CONNECTOR_LOCAL_ROOTS", "")
     # Legal ingestion quality (S2.1; D-010 OCR with Tesseract, run as a local program — nothing leaves the host).

@@ -17,7 +17,7 @@ CREATE TABLE legal_obligations(
   status        TEXT NOT NULL CHECK (status IN ('proposed','confirmed','done','dismissed')),
   owner_id      TEXT,
   evidence_json TEXT NOT NULL,
-  source        TEXT NOT NULL CHECK (source IN ('rules','person')),
+  source        TEXT NOT NULL CHECK (source IN ('rules','model','person')),
   confirmed_by  TEXT,
   confirmed_at  TEXT,
   version       INTEGER NOT NULL DEFAULT 1,

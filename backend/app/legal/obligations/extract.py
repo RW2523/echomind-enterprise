@@ -25,7 +25,7 @@ from typing import Optional
 from ..compare.facts import _DATE, _PERIOD, _date, _word_number
 from ..documents import numbering
 
-VERSION = "obligations-s3.6d"
+VERSION = "obligations-s3.6e"
 MODAL = re.compile(r"\b(?:shall|must|may(?!\s+not\s+be\b)|will|agrees? to|undertakes? to|is entitled to|are entitled to|"
                    r"is payable|are payable|is due|are due|falls? due|survives?|bears interest|accrues? interest)\b")
 _UNLESS_NOTICE = re.compile(r"\bunless\b[^.]*\bnotice\b", re.I)
@@ -38,14 +38,16 @@ _PARTY_WORDS = r"(?:Provider|Client|Supplier|Customer|Seller|Buyer|Licensor|Lice
 _SUBJECT = re.compile(rf"\b(?:(?:Either|Each|Neither|Both|Any|The other|The)\s+part(?:y|ies)|(?:the\s+)?{_PARTY_WORDS}s?)\b", re.I)
 KINDS = ("expiry", "renewal", "termination", "change_of_control", "consent", "payment", "notification", "post_termination", "confidentiality",
          "survival", "duty", "notice")
-_FREQUENCY = re.compile(r"\b(?:monthly|quarterly|annually|yearly|weekly|half-yearly)(?:\s+in\s+(?:advance|arrears))?(?:\s+on\s+[^.,;]+)?", re.I)
+_FREQUENCY = re.compile(r"\b(?:monthly|quarterly|annually|yearly|weekly|half-yearly)(?:\s+in\s+(?:advance|arrears))?(?:\s+on\s+[^.,;]+)?"
+                        r"|\bon each anniversary of [^.,;]+", re.I)
+_EACH_PERIOD = re.compile(r"\bby the \w+(?:\s+(?:Business|working))?\s+[Dd]ay of each (?:month|quarter|year)\b|\bby the end of each (?:month|quarter|year)\b")
 _ORDINAL = {w: i for i, w in enumerate("first second third fourth fifth sixth seventh eighth ninth tenth eleventh twelfth".split(), start=1)}
 
 
 def kind_of(s: str) -> Optional[str]:
     if re.search(r"\brenew", s, re.I):
         return "renewal"
-    if re.search(r"\b(?:may|right to|entitled to)\s+terminate\b", s, re.I):
+    if re.search(r"\b(?:may|right to|entitled to)\s+terminate\b|\buntil terminated by\b|\bterminated by (?:either|any|each) party\b", s, re.I):
         return "termination"
     if re.search(r"change of control", s, re.I):
         return "change_of_control"
@@ -140,6 +142,12 @@ def _fmt(d: date) -> str:
 def anchor_date(text: str, name: str) -> Optional[tuple[date, str]]:
     """The date a named anchor stands for, as the document gives it: '"Term Commencement Date" means 25 March 2026',
     'made on 4 May 2026 (the "Effective Date")'."""
+    if re.fullmatch(r"(?i)date of this \w+", name):          # "made on 12 January 2026", "dated as of March 3, 2026"
+        m = re.search(r"\b(?:made|dated|entered into)(?:\s+(?:on|as of))?\s+" + _DATE.pattern, text[:600])
+        if m and _date(m):
+            d0 = date.fromisoformat(_date(m))
+            return d0, f"{_fmt(d0)} (the date of this agreement)"
+        return None
     for dm in re.finditer(rf"\((?:the\s+)?[\"“]{re.escape(name)}[\"”]\)", text):
         ds = list(_DATE.finditer(text[max(0, dm.start() - 120):dm.start()]))
         if ds and _date(ds[-1]):
@@ -158,7 +166,7 @@ _ON_TERMINATION = re.compile(r"\b(?:on|upon|following|at)\s+(?:the\s+)?(?:termin
 _YEARLY = re.compile(r"\b(?:by|before|on or before)\s+\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|"
                      r"December)\s+(?:in\s+)?(?:each|every)\s+(?:calendar\s+)?year\b", re.I)
 _ON_NAMED = re.compile(r"\b(?:on|by|no later than)\s+the\s+(?P<name>[A-Z][\w ]{2,40}?Date)\b")
-_ON_DATE = re.compile(r"\b(?:take place|occur|be completed|completes?)\s+(?:on|by|no later than)\s+(?:or before\s+)?" + _DATE.pattern)
+_ON_DATE = re.compile(r"\b(?:take place|occur|be completed|completes?|on|by|no later than|not later than|on or before)\s+(?:on\s+|by\s+|or before\s+)?" + _DATE.pattern)
 
 
 def event_date(text: str, name: str) -> Optional[tuple[date, str]]:
@@ -332,7 +340,7 @@ def read(text: str, clauses: list[dict]) -> list[dict]:
     for a, b in document_sentences(text):
         s = text[a:b]
         modal = MODAL.search(s)
-        ex = expiry(s, text) if not modal or re.search(r"\bcontinues?\b|\bmeans\b", s) else None
+        ex = expiry(s, text) if not modal or re.search(r"\bcontinues?\b|\bmeans\b|\bremains? in force\b", s) else None
         ex = ex or first_period(s, text)
         anchor = a + (modal.start() if modal else ex["at"] if ex else 0)
         inside = [c for c in numbered if c["start"] <= anchor < max(c["end"], c["start"] + 1)]
@@ -349,25 +357,32 @@ def read(text: str, clauses: list[dict]) -> list[dict]:
             out.append({"kind": "expiry", "clause": clause, "party": None, "action": f"The {ex['what']} ends" if ex.get("what") else "The term ends",
                         "when": ex["when"], "due_date": ex["due"],
                         "due_note": ex["note"], "rule": {"period": None, "engine": VERSION}, "evidence": evidence})
-            continue
+            # the same sentence may also give a right ("… and thereafter until terminated by either party giving
+            # twelve (12) months' notice"): it goes on to be read, without the term's own period
         if not modal and not _UNLESS_NOTICE.search(s):
             continue
-        kind = kind_of(s)
-        ps = _periods(s)
+        main = re.split(r",?\s+(?:unless|provided that|if|except|save that)\b", s)[0]
+        kind = kind_of(main)                              # what the main clause binds, not its condition ("…, unless a Claim Notice …")
+        if not kind and not (_ON_DATE.search(main) or any(p["score"] for p in _periods(main))):
+            kind = kind_of(s)
+        ps = [p for p in _periods(s) if not (ex and ex["when"].startswith(f"{p['n']} {p['unit']}"))]
         period = max(ps, key=lambda p: (p["score"], p["pstart"])) if ps else None
         freq = _FREQUENCY.search(s) if kind == "payment" and re.search(r"\b(?:pay|payable|paid)\b", s, re.I) else None
-        on = _ON_DATE.search(s)
+        each = _EACH_PERIOD.search(s)
+        on = _ON_DATE.search(s) if modal else None
         named = _ON_NAMED.search(s) if modal else None
         named_date = anchor_date(text, named.group("name")) if named else None
         yearly = _YEARLY.search(s)
         term_end = _ON_TERMINATION.search(s) if not period else None
-        if not kind and (period and period["score"] or on or named_date or yearly or term_end) and re.search(r"\b(?:shall|must)\b", s):
+        if not kind and period and re.search(r"\b(?:after|following)\s+(?:the\s+)?(?:termination|expiry|expiration)\b", s, re.I):
+            kind = "post_termination"                     # "may sell its remaining stock for six (6) months after termination"
+        if not kind and (period and period["score"] or on or named_date or yearly or term_end or each) and re.search(r"\b(?:shall|must)\b", s):
             kind = "duty"                                 # "shall provide a copy within ten (10) Business Days of a request"
         if kind == "duty" and (term_end or re.search(r"\b(?:after|following|upon|on)\s+(?:the\s+)?(?:termination|expiry|expiration|Termination Date)\b", s, re.I)):
             kind = "post_termination"
         if period and not period["score"]:
             period = None                                 # "in the twelve (12) months preceding": a look-back, not a time to act
-        if not kind or (not period and kind != "consent" and not freq and not on and not named_date and not yearly
+        if not kind or (not period and kind != "consent" and not freq and not on and not named_date and not yearly and not each
                         and not (term_end and kind in ("duty", "post_termination"))):
             continue
         date_, note = due(kind, period, text, s)
@@ -377,7 +392,7 @@ def read(text: str, clauses: list[dict]) -> list[dict]:
         party = (g.group("who").strip()[0].upper() + g.group("who").strip()[1:]) if g else _party(s, modal.start() if modal else len(s))
         when = (_when(s, kind, period) if period else freq.group(0).strip() if freq
                 else f"on {_fmt(date.fromisoformat(_date(on)))}" if on and _date(on) else named.group(0) if named_date
-                else yearly.group(0) if yearly else term_end.group(0) if term_end else _when(s, kind, None))
+                else yearly.group(0) if yearly else each.group(0) if each else term_end.group(0) if term_end else _when(s, kind, None))
         out.append({"kind": kind, "clause": clause, "party": party,
                     "action": _action(s, modal, period), "when": when, "due_date": date_, "due_note": note,
                     "rule": {"period": {k: period[k] for k in ("n", "unit", "business", "direction")} if period else None, "engine": VERSION},

@@ -1,5 +1,5 @@
 {
- "about": "S3.6 obligations and deadlines (DOC-05) — the TUNING set. Fictional documents; expectations are what a careful lawyer building a deadlines list from each document would include. 'due' is given only where the document itself fixes the date; everything else must have no date. G3 2.3 was first written as 'confidentiality' and renamed 'survival' before tuning: it is the survival of clause 2's obligations, a naming choice. G5–G7 were the first held-out set. G8–G10 were the second held-out set.",
+ "about": "S3.6 obligations and deadlines (DOC-05) — the TUNING set. Fictional documents; expectations are what a careful lawyer building a deadlines list from each document would include. 'due' is given only where the document itself fixes the date; everything else must have no date. G3 2.3 was first written as 'confidentiality' and renamed 'survival' before tuning: it is the survival of clause 2's obligations, a naming choice. G5–G7 were the first held-out set. G8–G10 were the second held-out set. G11–G13 were the third held-out set.",
  "documents": [
   {
    "id": "G1-demo-msa",
@@ -296,6 +296,88 @@
    "text": "PRESS RELEASE (fictional)\n\n1. News\n1.1 Wrenfield Partners will open a new office in Leeds within the next 30 days.\n1.2 Our team will respond to all enquiries within 24 hours.\n1.3 The firm celebrates its 25th anniversary in 2027.\n",
    "expect": [],
    "history": "Held-out in the second run (obligations-s3.6c: 5/10 found, 0/2 dates, none guessed, control clean); moved here because it informed obligations-s3.6d."
+  },
+  {
+   "id": "G11-distribution-uk",
+   "name": "distribution.txt",
+   "text": "DISTRIBUTION AGREEMENT (fictional)\n\nThis Agreement is made on 12 January 2026 between Calloway Instruments Ltd (the \"Supplier\") and Brenner Medical GmbH (the \"Distributor\").\n\n1. Term\n1.1 This Agreement shall remain in force for an initial period of five (5) years from the date of this Agreement and thereafter until terminated by either party giving not less than twelve (12) months' notice.\n\n2. Orders and payment\n2.1 The Distributor shall place a forecast with the Supplier by the fifth Business Day of each month.\n2.2 The Distributor shall pay each invoice within sixty (60) days of the end of the month in which it is issued.\n2.3 The Supplier may increase its prices once in each calendar year by giving the Distributor not less than ninety (90) days' written notice.\n\n3. Minimum purchases\n3.1 If the Distributor fails to meet the Minimum Purchase Target in any year, the Supplier may terminate this Agreement by giving thirty (30) days' notice within three (3) months after the end of that year.\n\n4. After termination\n4.1 Upon termination the Distributor shall cease to use the Supplier's trade marks.\n4.2 The Distributor may sell its remaining stock for six (6) months after termination.\n",
+   "expect": [
+    {
+     "clause": "1.1",
+     "kind": "expiry",
+     "due": "2031-01-11"
+    },
+    {
+     "clause": "1.1",
+     "kind": "termination",
+     "when": "twelve (12) months"
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "fifth Business Day of each month"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "sixty (60) days"
+    },
+    {
+     "clause": "2.3",
+     "kind": "notice",
+     "when": "ninety (90) days"
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "when": "three (3) months after the end of that year"
+    },
+    {
+     "clause": "4.1",
+     "kind": "post_termination"
+    },
+    {
+     "clause": "4.2",
+     "kind": "post_termination",
+     "when": "six (6) months after termination"
+    }
+   ],
+   "history": "Held-out in the third run (obligations-s3.6d: 5/12 found, 0/3 dates, none guessed, control clean); moved here because it informed obligations-s3.6e."
+  },
+  {
+   "id": "G12-escrow-us",
+   "name": "escrow.txt",
+   "text": "ESCROW AGREEMENT (fictional)\n\nThis Escrow Agreement is dated as of March 3, 2026.\n\n1. Release\n1.1 The Escrow Agent shall release the Escrow Amount to the Seller on September 3, 2027, unless a Claim Notice has been delivered.\n1.2 The Buyer must deliver any Claim Notice no later than August 20, 2027.\n1.3 The Escrow Agent shall respond to joint written instructions within three (3) Business Days.\n\n2. Fees\n2.1 The Buyer and the Seller shall each pay one half of the Escrow Agent's annual fee on each anniversary of the date of this Agreement.\n",
+   "expect": [
+    {
+     "clause": "1.1",
+     "kind": "duty",
+     "due": "2027-09-03"
+    },
+    {
+     "clause": "1.2",
+     "kind": "notice",
+     "due": "2027-08-20"
+    },
+    {
+     "clause": "1.3",
+     "kind": "duty",
+     "when": "three (3) Business Days"
+    },
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "when": "each anniversary"
+    }
+   ],
+   "history": "Held-out in the third run (obligations-s3.6d: 5/12 found, 0/3 dates, none guessed, control clean); moved here because it informed obligations-s3.6e."
+  },
+  {
+   "id": "G13-matter-summary-control",
+   "name": "summary.txt",
+   "text": "MATTER SUMMARY (fictional)\n\n1. Facts\n1.1 The parties signed the supply agreement on 2 March 2026 for a term of three (3) years.\n1.2 The first delivery was made on 14 April 2026, thirty (30) days late.\n1.3 The client paid the first invoice in full.\n",
+   "expect": [],
+   "history": "Held-out in the third run (obligations-s3.6d: 5/12 found, 0/3 dates, none guessed, control clean); moved here because it informed obligations-s3.6e."
   }
  ]
 }
