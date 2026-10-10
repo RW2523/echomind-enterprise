@@ -109,4 +109,35 @@ describe('Due diligence (S3.7)', () => {
     expect(within(own).queryByRole('button', { name: 'Approve' })).toBeNull();
     expect(own.textContent).toContain('You wrote this version, so another managing partner approves it.');
   });
+
+  it('a governance finding quotes both documents, each opening at its words (S3.8)', async () => {
+    const gov = issue({ id: 'g1', kind: 'authority', severity: 'high', title: "Signed above the signer's authority (clause 2.1)", document_title: 'Supply Agreement - Northwind.txt',
+      detail: 'Signed by J. Park, Finance Director, for a contract of GBP 120,000; the delegation of authority allows the Finance Director up to GBP 50,000.',
+      evidence: { start: 210, end: 270, quote: '2.1 Signed for Tidewater Holdings Ltd by J. Park, Finance Director.', clause: '2.1' },
+      related: [{ document_id: 'd9', document_title: 'Delegation of authority.txt', version_id: 'v9', start: 60, end: 140, quote: '1.1 The Finance Director may sign contracts with a value of up to GBP 50,000.' }] });
+    world('lead', { [`GET ${M}/diligence/runs/r1`]: () => [200, { ...VIEW, issues: [gov] }] });
+    renderLaw('/m/M-101/diligence');
+    const item = await screen.findByRole('listitem', { name: /^Signed above the signer's authority/ });
+    expect(item.textContent).toContain('up to GBP 50,000');
+    expect(within(item).getByRole('link', { name: 'Delegation of authority.txt' }).getAttribute('href')).toBe('/m/M-101/documents/d9/read?v=v9&at=60-140');
+  });
+
+  it('a new checklist can ask for governance checks across the company documents (S3.8)', async () => {
+    const calls = mockApi({
+      'GET /api/auth/me': () => [200, me(['attorney'])],
+      'GET /api/legal/matters': () => [200, { matters: [] }],
+      'GET /api/legal/diligence/checklists': () => [200, { checklists: [], can: { manage: true, approve: false }, questions: [] }],
+      'POST /api/legal/diligence/checklists': () => [200, { checklist: LIST }],
+    });
+    renderLaw('/checklists');
+    fireEvent.click(await screen.findByRole('button', { name: 'New checklist' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New checklist' });
+    fireEvent.change(within(dialog).getByLabelText('Name'), { target: { value: 'Governance review' } });
+    fireEvent.change(within(dialog).getByLabelText('Document'), { target: { value: 'Register of members' } });
+    fireEvent.change(within(dialog).getByLabelText(/^Found by these words/), { target: { value: 'register of members' } });
+    fireEvent.click(within(within(dialog).getByRole('group', { name: 'Governance checks' })).getByLabelText('Shares in the register against approvals and the articles'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save as a draft' }));
+    await waitFor(() => expect(calls.find((c) => c.method === 'POST')?.body).toMatchObject({ name: 'Governance review', governance: ['share_capital'],
+      items: [{ id: 'item-1', section: 'Corporate', title: 'Register of members', expect: ['register of members'], questions: [] }] }));
+  });
 });

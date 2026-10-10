@@ -150,6 +150,8 @@ _REFUSE_BELOW = (
      "delete {n} decision(s) on obligations (confirmations, edits, dismissals) with who made them and why"),
     (29, "SELECT (SELECT COUNT(*) FROM legal_dd_checklists) + (SELECT COUNT(*) FROM legal_dd_issue_events WHERE action <> 'found')",
      "delete {n} due-diligence checklist version(s) and reviewers' decisions on issues"),
+    (30, "SELECT COUNT(*) FROM legal_dd_issues WHERE related_json <> '[]'",
+     "drop the second document quoted by {n} governance finding(s)"),
 )
 
 

@@ -47,6 +47,7 @@ class ChecklistIn(BaseModel):
     expected_law: Optional[str] = Field(default=None, max_length=100)
     items: list[ItemIn] = Field(min_length=1, max_length=120)
     family_id: Optional[str] = Field(default=None, max_length=64)
+    governance: list[str] = Field(default_factory=list, max_length=4)
 
 
 class ApproveIn(BaseModel):
@@ -72,7 +73,7 @@ def list_checklists(request: Request):
     p = principal_of(request)
     return {"checklists": checklists.listing(p["org_id"], drafts=_manager(p)),
             "can": {"manage": policy.authorize(p, "diligence.manage").allowed, "approve": policy.authorize(p, "diligence.approve").allowed},
-            "questions": list(checklists.QUESTIONS)}
+            "questions": list(checklists.QUESTIONS), "governance": list(checklists.GOVERNANCE)}
 
 
 @router.post("/diligence/checklists")
@@ -81,7 +82,7 @@ def create_checklist(inp: ChecklistIn, request: Request):
     p = principal_of(request)
     require(p, "diligence.manage")
     try:
-        c = checklists.create(p["org_id"], inp.name, [i.model_dump() for i in inp.items], inp.expected_law, p["sub"], inp.family_id)
+        c = checklists.create(p["org_id"], inp.name, [i.model_dump() for i in inp.items], inp.expected_law, p["sub"], inp.family_id, inp.governance)
     except checklists.Invalid as e:
         raise HTTPException(status_code=422, detail=str(e))
     except LookupError:
@@ -108,7 +109,7 @@ def approve_checklist(checklist_id: str, inp: ApproveIn, request: Request):
 # ── Runs ────────────────────────────────────────────────────────────────────────────
 _RCOLS = "r.id, r.matter_id, r.checklist_id, r.status, r.results_json, r.error, r.created_by, r.created_at, r.finished_at"
 _ICOLS = ("id", "run_id", "matter_id", "item_id", "document_id", "version_id", "kind", "severity", "title", "detail", "evidence_json",
-          "status", "reviewer_id", "decided_at", "version", "created_at")
+          "status", "reviewer_id", "decided_at", "version", "created_at", "related_json")
 
 
 def _username(conn, uid: Optional[str]) -> Optional[str]:
@@ -134,10 +135,16 @@ def _issue_out(conn, r, seen: _Seen) -> Optional[dict]:
     title = seen.title(d["document_id"])
     if title is None:
         return None
+    related = []
+    for x in json.loads(d["related_json"] or "[]"):          # a finding is shown only with every document it quotes
+        t = seen.title(x["document_id"])
+        if t is None:
+            return None
+        related.append({**x, "document_title": t})
     return {"id": d["id"], "run_id": d["run_id"], "item_id": d["item_id"], "document_id": d["document_id"], "document_title": title,
             "version_id": d["version_id"], "kind": d["kind"], "severity": d["severity"], "title": d["title"], "detail": d["detail"],
             "evidence": json.loads(d["evidence_json"]), "status": d["status"], "reviewer": _username(conn, d["reviewer_id"]),
-            "decided_at": d["decided_at"], "version": d["version"], "created_at": d["created_at"]}
+            "decided_at": d["decided_at"], "version": d["version"], "created_at": d["created_at"], "related": related}
 
 
 def _run_view(conn, r, uid: str) -> dict:

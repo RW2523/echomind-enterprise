@@ -1135,3 +1135,48 @@ test('due diligence: the data room run against the firm checklist, missing docum
   await morgan.getByRole('link', { name: 'Checklists' }).click();
   await expect(morgan.getByRole('region', { name: 'Share acquisition — core documents' }).getByText('In use')).toBeVisible();
 });
+
+test('governance: a company\'s register, approvals, authority, policies and IP read against each other, every finding quoting both documents', async ({ browser }) => {
+  test.setTimeout(400_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  await expect(importButton).toBeVisible();
+  const dir = path.resolve(HERE, '../../eval/fixtures/law/governance');
+  for (const file of fs.readdirSync(dir).sort()) {
+    const title = file.replace(/\.txt$/, '');
+    if (await alice.getByRole('button', { name: title, exact: true }).count() > 0) continue;
+    await importButton.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.join(dir, file));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Due diligence' }).click();
+  await alice.getByLabel('Checklist', { exact: true }).selectOption({ label: 'Corporate governance review (version 1)' });
+  await alice.getByRole('button', { name: 'Run against this matter' }).click();
+  const reg = alice.getByRole('article', { name: 'Issue register' });
+  await expect(reg.getByRole('heading', { name: /^Corporate governance review, version 1/ })).toBeVisible({ timeout: 120_000 });
+  const shares = reg.getByRole('listitem', { name: /^150 ordinary shares in the register have no approval/ });
+  await expect(shares.getByRole('link', { name: 'Board minutes January 2026 (DEMO)' })).toBeVisible();
+  await expect(reg.getByRole('listitem', { name: /^B ordinary shares are not a class the articles create/ })).toContainText('ordinary shares and A preference shares');
+  const auth = reg.getByRole('listitem', { name: /^Signed above the signer's authority/ });
+  await expect(auth).toContainText('GBP 120,000');
+  await expect(auth.getByRole('link', { name: 'Delegation of authority (DEMO)' })).toBeVisible();
+  await expect(reg.getByRole('listitem', { name: /^Board quorum: one director in the policy, two in the articles/ })).toBeVisible();
+  await expect(reg.getByRole('listitem', { name: /^No IP assignment from B\. Lind/ })).toBeVisible();
+
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.goto('/m/M-101/diligence');
+  const theirs = nakamura.getByRole('article', { name: 'Issue register' }).getByRole('listitem', { name: /^Signed above the signer's authority.*Preliminary/ });
+  await theirs.getByRole('button', { name: 'Verify' }).click();
+  await theirs.getByLabel('Note (optional)').fill('Ratify by a board resolution before completion.');
+  await theirs.getByRole('button', { name: 'Verify' }).click();
+  await expect(nakamura.getByRole('article', { name: 'Issue register' }).getByRole('listitem', { name: /^Signed above the signer's authority.*Verified$/ })).toBeVisible();
+  await alice.reload();
+  await alice.getByRole('article', { name: 'Issue register' }).getByRole('listitem', { name: /^150 ordinary shares/ }).scrollIntoViewIfNeeded();
+  await shot(alice, '42-governance-light');
+});

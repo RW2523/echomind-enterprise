@@ -28,7 +28,7 @@ from ..documents import numbering
 from ..documents import repo as documents
 from ..obligations import extract as ox
 
-VERSION = "diligence-s3.7c"
+VERSION = "diligence-s3.8b"
 _HEAD = 400
 
 
@@ -203,14 +203,27 @@ async def run(job: dict) -> Optional[str]:
                 vid, text, rows = texts[d["id"]]
                 for i in ask(it.get("questions") or [], text, rows, content.get("expected_law"), today):
                     issues.append({**i, "item_id": it["id"], "document_id": d["id"], "version_id": vid})
+        if content.get("governance"):                     # S3.8: the company's documents read against each other
+            from . import governance
+            gdocs = []
+            for d in docs:
+                if d["id"] in texts:
+                    vid, text, rows = texts[d["id"]]
+                    gdocs.append({"id": d["id"], "title": d["title"], "version_id": vid, "text": text, "rows": rows,
+                                  "roles": governance.role_of(d["title"] or "", _first_line(text))})
+            for g in governance.run(content["governance"], gdocs):
+                issues.append({"kind": g["kind"], "severity": g["severity"], "title": g["title"], "detail": g["detail"], "evidence": g["evidence"],
+                               "clause": g["evidence"].get("clause"), "item_id": "governance", "document_id": g["document"]["id"],
+                               "version_id": g["document"]["version_id"], "related": g["related"]})
         now = policy.now_iso()
         with get_conn() as conn:
             for i in issues:
                 iid = str(uuid.uuid4())
                 conn.execute("INSERT INTO legal_dd_issues (id, run_id, matter_id, item_id, document_id, version_id, kind, severity, title, detail, "
-                             "evidence_json, status, reviewer_id, decided_at, version, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                             "evidence_json, status, reviewer_id, decided_at, version, created_at, related_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                              (iid, run_id, matter_id, i["item_id"], i["document_id"], i["version_id"], i["kind"], i["severity"], i["title"],
-                              i["detail"], json.dumps({**i["evidence"], "clause": i.get("clause")}, ensure_ascii=False), "preliminary", None, None, 1, now))
+                              i["detail"], json.dumps({**i["evidence"], "clause": i.get("clause")}, ensure_ascii=False), "preliminary", None, None, 1, now,
+                              json.dumps(i.get("related", []), ensure_ascii=False)))
                 conn.execute("INSERT INTO legal_dd_issue_events (id, issue_id, action, reason, by, at) VALUES (?,?,?,?,?,?)",
                              (str(uuid.uuid4()), iid, "found", None, by, now))
             conn.execute("UPDATE legal_dd_runs SET status='done', results_json=?, finished_at=? WHERE id=?",

@@ -3,7 +3,7 @@ import { Check, Copy, Plus, Trash2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { useChecklists } from '../api/queries';
-import type { DdChecklist, DdItem, DdQuestion } from '../api/types';
+import type { DdChecklist, DdGovernance, DdItem, DdQuestion } from '../api/types';
 import { useSession } from '../app/session';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Skeleton, StatusPill } from '../ui/primitives';
@@ -11,6 +11,10 @@ import { Dialog, EmptyState, ErrorNote, Skeleton, StatusPill } from '../ui/primi
 const QUESTION: Record<DdQuestion, string> = {
   change_of_control: 'Change of control', assignment: 'Assignment', termination: 'Termination', governing_law: 'Governing law',
   liability: 'Liability', renewal: 'Renewal and expiry',
+};
+const GOVERNANCE: Record<DdGovernance, string> = {
+  share_capital: 'Shares in the register against approvals and the articles', authority: 'Contracts against the delegation of authority',
+  constitution: 'Policies against the articles', ip_chain: 'Founders against IP assignments',
 };
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString([], { dateStyle: 'medium' }) : '');
 
@@ -74,6 +78,9 @@ function Family({ versions, canManage, canApprove, onChange, onNewVersion }: {
         </div>
       </div>
       {shown.status === 'draft' && canApprove && shown.created_by === me.user.username && <p className="lw-meta" style={{ margin: '0 0 6px' }}>You wrote this version, so another managing partner approves it.</p>}
+      {(shown.governance ?? []).length > 0 && (
+        <p className="lw-meta" style={{ margin: '8px 0 0' }}>{`Governance checks: ${(shown.governance ?? []).map((g) => GOVERNANCE[g]).join('; ')}.`}</p>
+      )}
       {sections.map((sec) => (
         <div key={sec}>
           <h3 className="lw-h3" style={{ margin: '12px 0 2px' }}>{sec}</h3>
@@ -106,6 +113,7 @@ const toRow = (i: DdItem): Row => ({ id: i.id, section: i.section, title: i.titl
 function Editor({ from, onClose, onSaved }: { from: DdChecklist | null; onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState(from?.name ?? '');
   const [law, setLaw] = useState(from?.expected_law ?? '');
+  const [gov, setGov] = useState<DdGovernance[]>(from?.governance ?? []);
   const [rows, setRows] = useState<Row[]>(from ? from.items.map(toRow) : [{ id: 'item-1', section: 'Corporate', title: '', expect: '', questions: [] }]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -114,7 +122,7 @@ function Editor({ from, onClose, onSaved }: { from: DdChecklist | null; onClose:
     setBusy(true); setError('');
     try {
       await api.post('/api/legal/diligence/checklists', {
-        name, expected_law: law.trim() || null, family_id: from?.family_id ?? null,
+        name, expected_law: law.trim() || null, family_id: from?.family_id ?? null, governance: gov,
         items: rows.map((r) => ({ id: r.id.trim(), section: r.section.trim(), title: r.title.trim(), expect: r.expect.split(',').map((x) => x.trim()).filter(Boolean), questions: r.questions })),
       });
       onSaved();
@@ -127,6 +135,13 @@ function Editor({ from, onClose, onSaved }: { from: DdChecklist | null; onClose:
       <div style={{ display: 'grid', gap: 8 }}>
         <label className="lw-label">Name<input className="lw-input" value={name} onChange={(e) => setName(e.target.value)} /></label>
         <label className="lw-label">Governing law expected (optional)<input className="lw-input" value={law} onChange={(e) => setLaw(e.target.value)} placeholder="England and Wales" /></label>
+        <div className="lw-meta" role="group" aria-label="Governance checks" style={{ display: 'grid', gap: 4 }}>
+          <span>Governance checks across the company's documents</span>
+          {(Object.keys(GOVERNANCE) as DdGovernance[]).map((g) => (
+            <label key={g} style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" checked={gov.includes(g)}
+              onChange={(e) => setGov((x) => (e.target.checked ? [...x, g] : x.filter((y) => y !== g)))} />{GOVERNANCE[g]}</label>
+          ))}
+        </div>
         {rows.map((r, k) => (
           <fieldset key={k} className="lw-minutes-edit" aria-label={`Item ${k + 1}`}>
             <legend className="lw-meta">{`Item ${k + 1}`}</legend>

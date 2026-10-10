@@ -34,3 +34,20 @@ def test_seed_demo_builds_the_t01_world_once(fresh_db, law_edition, monkeypatch)
     assert visible("carol") == {"M-101"}                   # her M-215 membership was revoked
     assert main(["seed-demo"]) == 0                         # idempotent
     assert json.load(open(path)) == creds
+
+
+def test_seed_demo_installs_the_firm_checklists_approved(fresh_db, law_edition, monkeypatch):
+    """S3.7/S3.8: both presets, approved by the demo managing partner; the governance review asks its checks
+    (journey 29 found the seed dropping them)."""
+    from app.core.config import settings
+    from app.legal.cli import main
+    from app.legal.diligence import checklists
+    from app.legal.orgs import default_org_id
+    monkeypatch.setattr(settings, "AUTH_ENABLED", True)
+    monkeypatch.setattr(settings, "AUTH_SECRET", "s" * 48)
+    monkeypatch.setenv("LEGAL_ALLOW_DEMO_SEED", "1")
+    assert main(["seed-demo"]) == 0
+    got = {c["name"]: c for c in checklists.listing(default_org_id(), drafts=True)}
+    assert all(c["status"] == "approved" for c in got.values())
+    assert got["Corporate governance review"]["governance"] == ["share_capital", "authority", "constitution", "ip_chain"]
+    assert got["Share acquisition — core documents"]["governance"] == []

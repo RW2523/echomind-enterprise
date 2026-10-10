@@ -1,0 +1,88 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "2e9c2f4",
+  "time": "20261010-124354",
+  "prompt_version": "diligence-s3.8",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "companies": 3,
+  "found": "3/6",
+  "extra": 0,
+  "controls_clean": "1/1",
+  "by_kind": {
+   "share_capital": "0/1",
+   "authority": "1/2",
+   "constitution": "1/2",
+   "ip_chain": "1/1"
+  },
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_company": 35
+ },
+ "companies": [
+  {
+   "id": "H1-ardent-us",
+   "ms": 48,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "500,000",
+     "found": false
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": false
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors",
+     "found": true
+    },
+    {
+     "kind": "ip_chain",
+     "title": "No IP assignment from Luis Ortega",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 1
+  },
+  {
+   "id": "H2-brenner-uk",
+   "ms": 23,
+   "control": false,
+   "lines": [
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Notice of board meetings",
+     "found": false
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 1
+  },
+  {
+   "id": "H3-calder-control",
+   "ms": 33,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 0
+  }
+ ]
+}

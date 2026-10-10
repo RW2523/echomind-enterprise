@@ -1,0 +1,171 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "2e9c2f4+changes",
+  "time": "20261010-124506",
+  "prompt_version": "diligence-s3.8b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "companies": 6,
+  "found": "14/15",
+  "extra": 1,
+  "controls_clean": "2/2",
+  "by_kind": {
+   "share_capital": "3/4",
+   "authority": "4/4",
+   "constitution": "5/5",
+   "ip_chain": "2/2"
+  },
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_company": 34
+ },
+ "companies": [
+  {
+   "id": "G1-tidewater",
+   "ms": 53,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "150 ordinary shares in the register have no approval",
+     "found": true
+    },
+    {
+     "kind": "share_capital",
+     "title": "B ordinary shares are not a class the articles create",
+     "found": true
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Board quorum",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Notice of board meetings",
+     "found": true
+    },
+    {
+     "kind": "ip_chain",
+     "title": "No IP assignment from B. Lind",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 5
+  },
+  {
+   "id": "G2-harrow-control",
+   "ms": 25,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 0
+  },
+  {
+   "id": "G3-nair",
+   "ms": 41,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "200 preference shares in the register have no approval",
+     "found": true
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 3
+  },
+  {
+   "id": "G4-ardent-us",
+   "ms": 28,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "500,000",
+     "found": false
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors",
+     "found": true
+    },
+    {
+     "kind": "ip_chain",
+     "title": "No IP assignment from Luis Ortega",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 2
+  },
+  {
+   "id": "G5-brenner-uk",
+   "ms": 34,
+   "control": false,
+   "lines": [
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Notice of board meetings",
+     "found": true
+    }
+   ],
+   "extra": [
+    {
+     "kind": "share_capital",
+     "title": "Ordinary shares are not a class the articles create",
+     "document": "Register of members - Brenner Medical UK.txt"
+    }
+   ],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 3
+  },
+  {
+   "id": "G6-calder-control",
+   "ms": 26,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 0
+  }
+ ]
+}

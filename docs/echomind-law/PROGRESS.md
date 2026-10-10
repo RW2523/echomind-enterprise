@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.8-governance` |
-| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.7 merged (S3.3's manual Word check 🔒); S3.8 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.9-gate` |
+| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.8 merged (S3.3's manual Word check 🔒); S3.9 (the Phase 3 gate) next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0029` (Law edition only) |
+| Migrations | `0001`–`0030` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -561,6 +561,12 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Obligations held-out 5: 4/6.
   - Fixes found by these runs (a term from a literal date; an anchor cut to one word; "end this Agreement"; termination without a notice period) are made. The last three are to be measured on fresh held-out sets at S3.9.
 
+### Session 3 (continued) — S3.8 Governance checks (DOC-07)
+- **Checks in the S3.7 run and register (D-052):** share capital (register against approvals and the articles), authority (contract values against the signer's limit), constitution (policies against the articles), and IP chain (founders against assignments). Each finding quotes both documents (migration 0030) and is shown only with both. A preset "Corporate governance review" is seeded.
+- **UI:** checklists turn the checks on; the register shows the second quote. Journey 29 with a fictional company (seven fixture files); screenshot 42.
+- **Evaluation:** golden 9/9, then held-out 3/6 (no extras, control clean), then s3.8b fixes; golden G1–G6 15/15. s3.8b is measured at S3.9.
+- **Also in this slice:** S3.7's doc placeholder filled; demo seed test for both presets.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -600,7 +606,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | DOC-04 | DONE for the pilot (undefined-term detection heuristic) | S3.5 | Definitions, numbering and references with offsets; corrections only through an approved redline; held-out 12/12 on the third blind set (D-049) |
 | DOC-05 | DONE for the pilot (reminders not sent) | S3.6 | Rules and checked model proposals with exact words; dates only from the document; confirmed by a lawyer; versioned edits; held-out 10/12 with the model (D-050) |
 | DOC-06 | DONE for the pilot | S3.7 | Approved checklists; data-room runs; missing list; quoted issues, preliminary until reviewed; held-out 9/11 and 5/6 issues, no extras (D-051) |
-| DOC-07 | MISSING | S3.8 | |
+| DOC-07 | DONE for the pilot | S3.8 | Register against approvals and articles, signing limits, policies against articles, IP chain; both documents quoted; advisory (D-052) |
 | OPT-01 | MISSING | S4.1 | Needs business approval |
 | OPT-02 | PARTIAL (pre-existing) | S4.2 | MT model BLOCKED |
 | OPT-03 | MISSING | S4.3 | Needs business approval |
@@ -633,22 +639,24 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S3.8 Governance checks (DOC-07)** on `law/s3.8-governance`, per IMPLEMENTATION_PLAN §7: cap table vs approvals, delegation matrix, policy vs bylaws, IP assignment; advisory findings; tests on fictional company fixtures. S3.7 is merged into `feature/echomind-law`.
-1. **Audit first:**
-   - the S3.7 runs and register (reuse the run job, issue register and review trail);
-   - the S2.3 fact reader (amounts, dates, entities);
-   - the S3.6 obligations reader;
-   - the S3.5 definitions.
-2. **Checks, rules first, each finding quoting both sources:**
-   - **Share capital:** shares issued in the register of members (or cap table) against the shares approved in board or shareholder resolutions and allowed by the articles. Issues without a resolution, totals that differ, classes the articles do not create.
-   - **Authority:** a delegation of authority (who may sign what, up to what amount) against contracts signed above a person's limit, or by someone not listed.
-   - **Policy vs constitution:** a policy that contradicts the articles or bylaws (a quorum, notice periods for meetings, the number of directors).
-   - **IP assignment:** each founder or key employee named in the company's documents has an IP assignment, or one is listed missing.
-   - All findings advisory and preliminary until a reviewer decides (S3.7 register).
-3. **UI:** a "Governance" tab beside Due diligence, or the checks as an item kind of the diligence run (decide after the audit), with both quotes side by side.
-4. **Tests:**
-   - a fictional company (articles, register, resolutions, delegation matrix, two contracts, a policy, an IP assignment), with planted errors, red first;
-   - golden and held-out sets written blind;
-   - journey 29;
-   - D-052, run 29; merge. Then S3.9 (the Phase 3 gate).
-5. **Carry-overs to S3.9** (fresh held-out sets): S3.4 court rules; S3.5 undefined-term recall; S3.6 business days, recurring next dates and the s3.6g fixes; S3.7c; S3.3 manual Word check 🔒.
+Start **S3.9 Phase 3 gate** on `law/s3.9-gate`, per IMPLEMENTATION_PLAN §7: a planted-error suite, format round trips, and human sign-off. S3.8 is merged into `feature/echomind-law`.
+1. **Fresh blind held-out sets,** written and committed before any run, for every Phase 3 checker changed since its last held-out run:
+   - citations: court rules (Fed. R. Civ. P., CPR) not yet read; build that first, then the held-out set;
+   - definitions s3.5c and undefined-term recall;
+   - obligations s3.6g, with the model;
+   - diligence s3.7c;
+   - governance s3.8b.
+
+   Report every run, including any that fail.
+2. **Planted-error suite (`eval/law/run_gate.py --phase 3`):** one command that runs, in order:
+   - the Phase 3 golden and held-out sets (drafting, playbook, redline T10, citations T07, definitions, obligations, diligence, governance);
+   - the security suite;
+   - the browser suite.
+
+   It records each evaluation run (migration 0022) for the Evaluations page.
+3. **Format round trips:**
+   - drafting Word and PDF, redlines with tracked changes, filed corrections, and exports, opened by LibreOffice and checked (T10 and T09 already automated);
+   - the manual Microsoft Word check stays 🔒.
+4. **Human sign-off packet** (like S2.8's `lawyer_review`): fictional outputs of every Phase 3 feature for a lawyer to score, with a rubric. 🔒 It needs a person; prepare it, do not fake it.
+5. **`releases/phase3-gate.md`:** what is done, the measured results (every held-out run as it went), what is 🔒, the risks, and the decision asked of the owner.
+6. Then D-053, run 30; merge. Then Phase 4 (S4.1, S4.2 without MT, S4.3, S4.5; S4.4 blocked), as approved.
