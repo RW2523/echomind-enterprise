@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.3-time` |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1 and S4.2 merged; S4.3 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.5-panel` |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1–S4.3 merged; S4.5 next (S4.4 BLOCKED) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0031` (Law edition only) |
+| Migrations | `0001`–`0032` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -617,6 +617,15 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Suites:** backend 1247; security suite with an S4.2 group; Vitest 148; journey 31; full browser suite 31/31.
 - **Docs:** D-055, run 32. Merged into `feature/echomind-law`.
 
+### Session 3 (continued) — S4.3 Time-entry drafts (OPT-03)
+- **Built (D-056), off by default (`LEGAL_TIME_ENTRIES`):**
+  - Rules, no model: a person's own allowed work on a matter, per day in the firm's timezone, in sittings (gaps under 15 minutes). Each sitting counts whole minutes plus 6, rounded up to 0.1 h.
+  - The narrative names kinds of work with counts, never content.
+  - The person edits, approves, discards or reopens their own entries. Approved entries download as CSV without formula cells; nothing goes to billing.
+  - **Migration 0032.** **UI:** Time.
+- **Suites:** backend 1256; security suite with an S4.3 group; Vitest 152; journey 32; full browser suite 32/32.
+- **Docs:** D-056, run 33. Merged into `feature/echomind-law`.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -690,25 +699,23 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Continue **Phase 4** under the owner's standing approval (2026-10-10). S4.1 is merged into `feature/echomind-law`.
-1. ~~S4.2 Summaries~~ merged (D-055). **S4.3 Time entries (OPT-03)** on `law/s4.3-time`: the backend is drafted and its tests pass (`git stash` "s4.3 wip": migration 0032, `app/legal/timeentries`, `test_law_time.py`, 8 tests); next is the Time page, then a journey. Previously: **S4.2 Summaries (OPT-02)** on `law/s4.2-summaries`. Translation stays BLOCKED: no local translation model or licence is approved. The audit is done:
-   - the AI artifact and review machinery (S2.6–S2.7) is reused: versions, second-person approval by hash, the Reviews queue, filing;
-   - the stored page and line maps give page/line citations;
-   - finalised transcripts carry `[HH:MM:SS]` timecodes.
+Continue **Phase 4** under the owner's standing approval (2026-10-10). S4.1–S4.3 are merged into `feature/echomind-law`.
+1. **S4.5 Four-perspective panel (OPT-05)** on `law/s4.5-panel`. The backend is built and its 10 tests pass (`git stash` "s4.5 wip"):
+   - migration 0033 and `app/legal/panel`;
+   - four perspectives, each in its own call with checked quotes;
+   - a moderator that sees only their answers, building the disagreement matrix;
+   - the missing-facts stop and a re-run with the lawyer's facts;
+   - partner-only approval;
+   - the Reviews queue.
 
-   A first draft of `backend/app/legal/summaries/summarize.py` exists, uncommitted. The slice covers:
-   - section-by-section key points, each quoting the document, with citations computed from the quote's position (page and line, the clause, or the transcript timecode);
-   - unverified quotes and unsupported figures marked;
-   - text addressed to an AI withheld;
-   - reviewer edits as new versions, with points marked as edited;
-   - approval by a second person, then filing; the original is never changed;
-   - the flag `LEGAL_SUMMARIES` (off);
-   - golden and blind held-out evaluation sets;
-   - a journey.
-2. Then **S4.3:** time-entry drafts from audited activities, edited and approved by the user, CSV export only.
-3. Then **S4.5:** the four-perspective panel.
-4. S4.4 stays BLOCKED.
-5. Then the Phase 4 gate.
+   Next:
+   - the Panel page (ask, the four answers, the matrix, the facts form, approval);
+   - Vitest;
+   - a benchmark evaluation (golden and blind held-out: quotes verified, stop accuracy, disagreement found, figures, seconds per panel);
+   - journey 33;
+   - D-057, run 34; merge.
+2. S4.4 stays BLOCKED (licensed source and network approval).
+3. Then the **Phase 4 gate** (`run_gate.py --phase 4`, the summaries and panel evaluations, the security and browser suites, `releases/phase4-gate.md`).
 
 Still 🔒 and confirmed one by one:
 - the Phase 2 and Phase 3 lawyer reviews;

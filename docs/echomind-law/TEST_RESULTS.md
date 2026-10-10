@@ -462,3 +462,15 @@
 | Summaries evaluation (`eval/law/summaries`, real model) | **Golden on summary-s4.2:** facts 17/19, citations 17/17, quotes 21/21, figures 0. **summary-s4.2b**, two runs: 19/19 and 18/19, with citations and quotes all right and figures 0. **Held-out 1 (blind, run once on s4.2b): facts 15/15, citations 15/15** (clauses, pages and lines, timecodes), quotes 16/16, figures 0. |
 | Browser E2E | New journey 31:<ul><li>alice imports a consultancy agreement and summarises it;</li><li>every point has a clause-and-line citation, and one opens the reader at the quoted words (screenshot 45);</li><li>her edit becomes version 2, marked as edited;</li><li>nakamura approves it, and it is filed.</li></ul>**Full suite, alone on the host: 31 passed** (13.7 min). |
 
+## Run 33 — S4.3 Time-entry drafts from audited activity, 2026-10-10
+
+- **Branch:** `law/s4.3-time`
+- **Commit:** `a8eb814`
+
+| Suite | Result |
+|---|---|
+| Backend (all) | **1256 passed**. New `test_law_time.py` (9). The first 8 were written red first and failed before the code; the ninth (whole-minute spans) was written after journey 32 showed 45 seconds suggested as 0.2 h, and failed before the fix. They cover:<ul><li>off by default;</li><li>a day of audited work becoming one draft per matter, with sittings, rounding, narrative and timezone;</li><li>suggesting again (untouched drafts follow, edits kept, no duplicates);</li><li>edit checks and owner-only access;</li><li>approve, discard and reopen;</li><li>the CSV export without formula cells;</li><li>matters she can no longer open left out;</li><li>a bounded range and an audit of counts;</li><li>the rollback guard.</li></ul> |
+| Security suite | **All groups pass** (exit 0), with a new S4.3 group (9). |
+| Frontend | tsc **clean**. Vitest **152 passed**. New `time.test.tsx` (4, axe clean), written with the page. |
+| Browser E2E | New journey 32: alice imports and reads a note on M-101, asks for suggestions, edits the narrative, approves the entry and downloads the CSV (screenshot 46). Its first run showed "1 entries" and a 45-second sitting suggested as 0.2 h; both fixed. **Full suite, alone on the host: 32 passed** (13.8 min). |
+
