@@ -1,91 +1,76 @@
 {
- "about": "S3.5 defined terms and cross-references (DOC-04) — the HELD-OUT set (second): written for definitions-s3.5b before it was run, never used to change the checker, run once per checker version. Fictional documents only. The first held-out set is now G5–G7 in golden.json.",
+ "about": "S3.5 defined terms and cross-references (DOC-04) — the HELD-OUT set (third): written for definitions-s3.5c before it was run, never used to change the checker, run once per checker version. Fictional documents only. Earlier held-out sets are G5–G10 in golden.json.",
  "documents": [
   {
-   "id": "N1-consultancy-uk",
-   "name": "consultancy.txt",
-   "text": "CONSULTANCY AGREEMENT (fictional)\n\nThis Agreement is dated 3 March 2026 and made between Fenwick Advisory Ltd (the \"Consultant\") and Orrin Logistics plc (the \"Client\").\n\n1. Interpretation\n1.1 In this Agreement:\n\"Assignment\" means the project described in Schedule 1;\n\"Fee\" means GBP 900 per day (fictional);\n\"Deliverables\" means the reports produced in the Assignment;\n\"Expenses\" means reasonable travel costs approved in advance;\n\"Fee\" means the fee set out in the Statement of Work.\n1.2 Clause headings do not affect interpretation.\n\n2. Services\n2.1 The Consultant shall perform the Assignment with reasonable skill and care.\n2.2 The Consultant shall deliver the deliverables by the Completion Date.\n2.3 The Client shall pay the Fee within 30 days of invoice, subject to clause 6 (Set-off).\n\n3. Intellectual property\n3.1 The Deliverables belong to the Client on payment.\n3.3 The Consultant keeps its Background IP.\n\n5. Termination\n5.1 Either party may terminate this Agreement on one month's notice.\n5.2 Clauses 3 and 7 survive termination.\n\nSchedule 1 The Assignment\nA review of warehouse routing (fictional).\n",
+   "id": "P1-asset-purchase",
+   "name": "asset-purchase.txt",
+   "text": "ASSET PURCHASE AGREEMENT (fictional)\n\nThis Agreement is made between Larkspur Tools Ltd (the \"Seller\") and Moorcroft Engineering Ltd (the \"Buyer\").\n\n1. Definitions\n1.1 \"Assets\" means the plant, machinery and stock listed in Schedule 1.\n1.2 \"Completion\" means completion of the sale under clause 5.\n1.3 \"Excluded Liabilities\" means all liabilities of the Seller arising before Completion.\n1.4 \"Assets\" means the plant, machinery and stock listed in Schedule 1.\n\n2. Sale\n2.1 The Seller shall sell and the Buyer shall buy the assets free from encumbrances.\n2.2 The price is adjusted by reference to the Completion Accounts.\n\n4. Price\n4.1 The price is GBP 1,200,000 (fictional).\n4.2 The price is paid on Completion, as set out in Schedule 4.\n\n5. Completion\n5.1 Completion takes place on the date of this Agreement.\n\n5. Warranties\n5.1 The Seller warrants that it owns the Assets.\n\n6. General\n6.1 This Agreement is governed by English law.\n6.2 Each party bears its own costs.\n6.4 Clause 4.2 survives Completion.\n\nSchedule 1 The Assets\nMachinery at the Leeds works (fictional).\n",
    "expect": [
     {
      "type": "duplicate",
-     "text": "Fee",
-     "conflicting": true
+     "text": "Assets",
+     "conflicting": false
     },
     {
      "type": "unused",
-     "text": "Expenses"
+     "text": "Excluded Liabilities"
     },
     {
      "type": "inconsistent",
-     "text": "deliverables",
-     "fix": "Deliverables"
+     "text": "assets",
+     "fix": "Assets"
     },
     {
      "type": "undefined",
-     "text": "Completion Date"
-    },
-    {
-     "type": "undefined",
-     "text": "Background IP"
-    },
-    {
-     "type": "undefined",
-     "text": "Statement of Work"
+     "text": "Completion Accounts"
     },
     {
      "type": "broken",
-     "text": "clause 6 (Set-off)"
-    },
-    {
-     "type": "broken",
-     "text": "Clause 7"
-    },
-    {
-     "type": "gap",
-     "message": "Clause 3.2 is missing"
-    },
-    {
-     "type": "gap",
-     "message": "Clause 4 is missing"
-    }
-   ]
-  },
-  {
-   "id": "N2-loan-note-markdown",
-   "name": "Loan Note Instrument.md",
-   "text": "# LOAN NOTE INSTRUMENT (fictional)\n\nThis instrument is made by Kestrel Ventures Ltd (the \"Issuer\").\n\n## 1. Definitions\n\n1.1 \"Noteholder\" means a person registered as the holder of a Note.\n\n1.2 \"Note\" means a loan note issued under this instrument.\n\n1.3 \"Maturity Date\" means 30 June 2029.\n\n## 2. Interest\n\n2.1 Each Note bears interest at 8% a year, payable on each Interest Payment Date.\n\n2.2 Interest accrues from the date of issue.\n\n2.2 Interest is paid gross.\n\n## 3. Redemption\n\n3.1 The Issuer shall redeem the Notes on the maturity date.\n\n3.2 The Issuer may redeem early in the events listed in Schedule 2:\n\n(a) a change of control;\n\n(b) a listing; or\n\n(d) a sale of the business.\n\n3.3 Early redemption is at par, as provided in paragraph 3 of Schedule 2.\n\n## Schedule 2 Early Redemption Events\n\n1. A change of control of the Issuer.\n\n2. A listing of the Issuer's shares.\n",
-   "expect": [
-    {
-     "type": "unused",
-     "text": "Noteholder"
-    },
-    {
-     "type": "undefined",
-     "text": "Interest Payment Date"
+     "text": "Schedule 4"
     },
     {
      "type": "repeat",
-     "message": "Clause 2.2 appears twice"
-    },
-    {
-     "type": "inconsistent",
-     "text": "maturity date",
-     "fix": "Maturity Date"
+     "message": "Clause 5 appears twice"
     },
     {
      "type": "gap",
-     "message": "Item (c) of clause 3.2 is missing"
+     "message": "Clause 3 is missing"
     },
     {
-     "type": "broken",
-     "text": "paragraph 3 of Schedule 2"
+     "type": "gap",
+     "message": "Clause 6.3 is missing"
     }
    ]
   },
   {
-   "id": "N3-clean-us-consulting-control",
-   "name": "consulting.txt",
-   "text": "MASTER CONSULTING AGREEMENT (fictional)\n\nThis Master Consulting Agreement (this \"Agreement\") is entered into by Brightline Data, Inc. (\"Brightline\") and Calder Mutual Insurance Company (\"Calder\").\n\nSection 1. Definitions\n1.1 \"Work Order\" means an order for services in the form of Exhibit A.\n1.2 \"Confidential Information\" has the meaning given in Section 4.1.\n\nSection 2. Services\n2.1 Brightline shall perform the services described in each Work Order.\n2.2 Each Work Order is governed by this Agreement.\n\nSection 3. Fees\n3.1 Calder shall pay the fees set out in each Work Order within 30 days of invoice.\n\nSection 4. Confidentiality\n4.1 Each party shall protect the other party's confidential information (\"Confidential Information\") with reasonable care.\n4.2 Section 4.1 survives for three years.\n\nExhibit A Form of Work Order\n[Form omitted in this fictional example.]\n",
+   "id": "P2-lease-markdown",
+   "name": "Lease.md",
+   "text": "# LEASE (fictional)\n\nThis Lease is granted by Fairholme Properties Ltd (the \"Landlord\") to Pell & Daughters LLP (the \"Tenant\").\n\n## 1. Definitions\n\n1.1 \"Premises\" means the second floor of Fairholme House (fictional).\n\n1.2 \"Term\" means ten years from the date of this Lease.\n\n1.3 \"Insured Risks\" means fire, flood and storm.\n\n## 2. Rent\n\n2.1 The Tenant shall pay the rent quarterly in advance throughout the term of this Lease.\n\n## 7. Alienation\n\n7.1 The Tenant shall not assign the Premises without consent.\n\n7.2 Clause 7 (Insurance) does not apply to an assignment to a group company.\n\n## 8. Insurance\n\n8.1 The Landlord shall insure the Premises against the Insured Risks.\n\n8.2 The Tenant shall comply with clause 9.4.\n",
+   "expect": [
+    {
+     "type": "inconsistent",
+     "text": "term",
+     "fix": "Term"
+    },
+    {
+     "type": "outdated",
+     "text": "Clause 7 (Insurance)",
+     "fix": "Clause 7 (Alienation)"
+    },
+    {
+     "type": "broken",
+     "text": "clause 9.4"
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 3 to 6 are missing"
+    }
+   ]
+  },
+  {
+   "id": "P3-clean-nda-control",
+   "name": "confidentiality.txt",
+   "text": "CONFIDENTIALITY AGREEMENT (fictional)\n\nThis Agreement is made between Wrenfield Partners LLP (\"Wrenfield\") and Ostrava Glass AB (\"Ostrava\"), each a \"Party\".\n\n1. Definitions\n1.1 \"Information\" means information that a Party discloses to the other Party in connection with the Project.\n1.2 \"Project\" means the proposed joint venture between the Parties.\n1.3 \"Representatives\" has the meaning given in clause 2.2.\n\n2. Use\n2.1 Each Party shall use the Information only for the Project.\n2.2 A Party may share Information with its directors and advisers (its \"Representatives\").\n2.3 A Party is responsible for its Representatives.\n\n3. Return\n3.1 On request, each Party shall return the Information under clause 2.1.\n",
    "expect": []
   }
  ]
