@@ -1,0 +1,190 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "e85b90a",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-142737",
+  "prompt_version": "drafting-s3.1f"
+ },
+ "summary": {
+  "scenarios": 3,
+  "field_accuracy": "9/10",
+  "absent_left_open": "1/1",
+  "wrong_values": 0,
+  "invented_figures": 0,
+  "written_passages": 4,
+  "unsupported_sentences": 6,
+  "seconds_per_draft": 9.5
+ },
+ "scenarios": [
+  {
+   "id": "nda-heron-short-note",
+   "template": "nda",
+   "seconds": 6.6,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Heron Robotics",
+     "value": "Heron Robotics Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Heron Robotics Ltd and Calder Mining plc will share technical data to evaluate an autonomous drilling pilot.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Calder Mining",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": {
+      "quote": "Heron Robotics Ltd and Calder Mining plc will share technical data to evaluate an autonomous drilling pilot.",
+      "reason": "the same party is already given as First party",
+      "value": "Heron Robotics Ltd"
+     }
+    },
+    {
+     "field": "purpose",
+     "expected": "autonomous drilling",
+     "value": "to evaluate an autonomous drilling pilot",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to evaluate an autonomous drilling pilot",
+     "suggestion": null
+    },
+    {
+     "field": "confidentiality_period",
+     "expected": "three",
+     "value": "three (3) years",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Confidentiality to last three (3) years.",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "English",
+     "value": "English law",
+     "status": "sourced",
+     "ok": true,
+     "quote": "English law to govern.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 2
+  },
+  {
+   "id": "engagement-calder-hourly",
+   "template": "engagement_letter",
+   "seconds": 7.5,
+   "fields": [
+    {
+     "field": "client_address",
+     "expected": "3 Harbour Walk",
+     "value": "3 Harbour Walk, Aberdeen AB11 5BN",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Calder Mining plc, 3 Harbour Walk, Aberdeen AB11 5BN",
+     "suggestion": null
+    },
+    {
+     "field": "client_contact",
+     "expected": "Fiona Baird",
+     "value": "Fiona Baird",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Our contact for this work is Fiona Baird, Legal Director.",
+     "suggestion": null
+    },
+    {
+     "field": "fee_arrangement",
+     "expected": "450",
+     "value": "GBP 450 for partners and GBP 300 for associates",
+     "status": "sourced",
+     "ok": true,
+     "quote": "We agree to your hourly rates of GBP 450 for partners and GBP 300 for associates.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The client has instructed the firm to prepare the pilot contracts with Heron Robotics Ltd, as stated in the letter of instruction. The client’s contact for this work is Fiona Baird, Legal Director, as confirmed in the letter of instruction. The firm’s fee arrangement for this matter is GBP 450 for partners and GBP 300 for associates, as specified in the engagement letter.",
+     "sources": 3,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 3
+  },
+  {
+   "id": "review-heron-services-no-law",
+   "template": "contract_review",
+   "seconds": 14.5,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Services Agreement",
+     "value": "SERVICES AGREEMENT",
+     "status": "sourced",
+     "ok": true,
+     "quote": "SERVICES AGREEMENT (fictional)",
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Heron Robotics",
+     "value": "Heron Robotics Ltd (the Provider) and Calder Mining plc (the Client)",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Services Agreement is made between Heron Robotics Ltd (the Provider) and Calder Mining plc (the Client).",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "governing_law",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [
+    {
+     "text": "[[NEEDS INPUT: check against the documents]] The Services Agreement between Heron Robotics Ltd (the Provider) and Calder Mining plc (the Client) is in effect from 10 October 2026. The Provider shall supply the drilling automation services described in Schedule 1. [[NEEDS INPUT: check against the documents]] The term of the agreement is not specified in the provided text. Each party's total liability is limited to GBP 2,000,000. [[NEEDS INPUT: check against the documents]] The manner in which either party may terminate the agreement is not specified in the provided text. [[NEEDS INPUT: check against the documents]] The specific clauses governing termination are not included in the provided text.",
+     "sources": 2,
+     "unsupported": [
+      "The Services Agreement between Heron Robotics Ltd (the Provider) and Calder Mining plc (the Client) is in effect from 10 October 2026.",
+      "The term of the agreement is not specified in the provided text.",
+      "The manner in which either party may terminate the agreement is not specified in the provided text.",
+      "The specific clauses governing termination are not included in the provided text."
+     ]
+    },
+    {
+     "text": "The Provider shall supply the drilling automation services described in Schedule 1. Each party's total liability is limited to GBP 2,000,000. [[NEEDS INPUT: check against the documents]] The fees and payment terms are not specified in the provided text [NEEDS INPUT: fees and payment terms].",
+     "sources": 2,
+     "unsupported": [
+      "The fees and payment terms are not specified in the provided text [NEEDS INPUT: fees and payment terms]."
+     ]
+    },
+    {
+     "text": "The Services Agreement limits the total liability of each party to GBP 2,000,000. [[NEEDS INPUT: check against the documents]] There are no specific exclusions of liability set out in the clauses provided. [[NEEDS INPUT: whether there are any other exclusions of liability not mentioned in the provided text]].",
+     "sources": 1,
+     "unsupported": [
+      "There are no specific exclusions of liability set out in the clauses provided."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 9
+  }
+ ]
+}
