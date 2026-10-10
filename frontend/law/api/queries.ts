@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, SummaryVersion, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, SummaryVersion, TimeEntry, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -253,3 +253,8 @@ export const useDocSummaries = (matterId: string, documentId: string | null) =>
     queryFn: () => api.get<{ summaries: SummaryVersion[]; job: { status: string; error: string | null } | null; can: { summarise: boolean } }>(
       `/api/legal/matters/${encodeURIComponent(matterId)}/documents/${encodeURIComponent(documentId!)}/summaries`),
     refetchInterval: (q) => (q.state.data?.job && ['queued', 'running'].includes(q.state.data.job.status) ? 2000 : false) });
+
+// Time entries (S4.3, D-056)
+export const useTimeEntries = (from: string, to: string) =>
+  useQuery({ queryKey: ['time', from, to] as const,
+    queryFn: () => api.get<{ entries: TimeEntry[]; timezone: string; unit_minutes: number }>(`/api/legal/time?from=${from}&to=${to}`) });

@@ -387,3 +387,5 @@ app.include_router(legal_intake_router, prefix="/api")
 app.include_router(legal_intake_link_router, prefix="/api")
 from .legal.summaries.routes import router as legal_summaries_router  # noqa: E402
 app.include_router(legal_summaries_router, prefix="/api")
+from .legal.timeentries.routes import router as legal_time_router  # noqa: E402
+app.include_router(legal_time_router, prefix="/api")

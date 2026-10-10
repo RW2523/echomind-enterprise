@@ -1345,6 +1345,28 @@ Every entry records the options considered, the recommendation, the consequence 
   - The page and line of an OCR page depend on its recognised lines.
   - Word documents have no pages: they are cited by clause and line.
 
+### D-056 Time-entry drafts from the person's own audited work; approved by them; CSV only — RECORDED (S4.3; OPT-03)
+- **Audit:**
+  - The append-only audit trail (S1.5) already records every person's actions with the matter and the time.
+  - No billing integration exists, and none is built (spec: "no billing integration").
+- **Off by default:** `LEGAL_TIME_ENTRIES`; every route answers 404 otherwise.
+- **Suggestions, by rule (no model):**
+  - **What counts:** only the person's own allowed actions that are work on a matter. They are grouped into kinds (document review, legal research, drafting, redlining, playbook review, citation and definitions checking, comparing versions, obligations, due diligence, meetings and minutes, review and approval, summaries, document management, exports). Opening a matter, lists and refused requests do not count.
+  - **Sittings:** per matter and per day in the firm's timezone, events under 15 minutes apart are one sitting. A sitting counts its whole minutes from first to last event, plus 6 minutes for the last piece of work.
+  - **Totals:** rounded up to 0.1 hour.
+  - **Narrative:** the kinds of work with their counts, in the order first done. It never holds titles, quotes or questions.
+  - **Matters:** those the person can no longer open are left out.
+- **The person's own drafts:** each person sees and changes only their own entries (another person gets 404).
+  - They edit (0.1-hour units up to 24 hours, a narrative up to 1,000 characters), approve, discard or reopen, each against the version they saw.
+  - Suggesting again follows the activity for untouched drafts and keeps a person's own figures. The suggestion stays visible beside them.
+- **Export:** approved entries only, as CSV (`Date, Matter, Client, Hours, Minutes, Narrative, Approved`), `no-store`. A cell that a spreadsheet would run as a formula (`= + - @`) is written as text.
+  - Nothing is sent anywhere.
+- **Migration 0032:** rolling back is refused while approved or edited entries exist.
+- **Found by journey 32:** three actions within 45 seconds were suggested as 0.2 hour, because the seconds were rounded up a whole unit. Spans now count whole minutes (test first).
+- **Limits:**
+  - Only work done in EchoMind is seen. Telephone calls, email and thinking time are not, so suggestions undercount and are a starting point.
+  - The 15-minute gap and the 6-minute allowance are engineering defaults for the firm to confirm (P-012-style policy, with the firm's billing rules).
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

@@ -155,6 +155,8 @@ _REFUSE_BELOW = (
     (31, "SELECT (SELECT COUNT(*) FROM legal_intakes) + (SELECT COUNT(*) FROM legal_matter_parties) "
          "+ (SELECT COUNT(*) FROM user_roles WHERE role IN ('intake','conflicts'))",
      "delete {n} intake record(s), matter party record(s) and intake or conflicts role grant(s)"),
+    (32, "SELECT COUNT(*) FROM legal_time_entries WHERE status = 'approved' OR edited = 1",
+     "delete {n} time entr(y/ies) people edited or approved"),
 )
 
 

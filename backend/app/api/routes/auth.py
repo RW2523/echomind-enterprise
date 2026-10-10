@@ -251,7 +251,7 @@ def _law_me(payload: dict) -> dict:
                         "must_change_password": bool(payload.get("must_change_password")),
                         "idle_expires_at": s["idle_expires_at"], "abs_expires_at": s["abs_expires_at"]},
             "features": {"intake": bool(settings.LEGAL_INTAKE), "intake_links": bool(settings.LEGAL_INTAKE and settings.LEGAL_INTAKE_LINKS),
-                         "summaries": bool(settings.LEGAL_SUMMARIES)}}
+                         "summaries": bool(settings.LEGAL_SUMMARIES), "time_entries": bool(settings.LEGAL_TIME_ENTRIES)}}
 
 
 def _complete_sign_in(request: Request, response: Response, user_id: str) -> dict:

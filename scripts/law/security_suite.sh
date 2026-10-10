@@ -39,6 +39,7 @@ declare -a SUITES=(
   "Governance: both documents quoted and hidden with either (S3.8)|$L/test_law_governance.py"
   "Intake: off by default, screening minimised, consent, links (S4.1)|$L/test_law_intake.py $L/test_law_route_table.py"
   "Summaries: quoted, cited by position, approved by a second person (S4.2)|$L/test_law_summaries.py"
+  "Time entries: own work only, approved by the person, CSV without formulas (S4.3)|$L/test_law_time.py"
 )
 FAILED=0
 printf '%-52s %s\n' "Spec test" "Result"
