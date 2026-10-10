@@ -48,8 +48,11 @@ def complete(text: str, rows: list[dict]) -> list[dict]:
                         "end": len(text[:end].rstrip()), "implied": True}]
         have.add(number)
     heads = {m.group(1): (m.group(2).strip(), m.start()) for m in HEAD_LINE.finditer(text) if _is_heading(m.group(2))}
+    boxes = [(r["start"], r["end"]) for r in rows if ATTACHMENT.match(r["number"])]
+    main = [r for r in rows if not ATTACHMENT.match(r["number"]) and not any(a < r["start"] < b for a, b in boxes)]
+    have = {r["number"] for r in main}                     # a schedule's own "1." does not hide clause 1 of the body
     children: dict[str, list[dict]] = {}
-    for r in rows:
+    for r in main:
         sp = split(r["number"])
         if not sp or sp[1]:
             continue

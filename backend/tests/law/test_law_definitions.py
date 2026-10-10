@@ -276,3 +276,19 @@ def test_s35b_undefined_terms_by_a_defined_first_word_or_repeated_use_and_articl
     out = checkmod.analyse(text, rows)
     assert sorted(f["text"] for f in out if f["type"] == "undefined") == ["Directors", "Shareholder Consent"]
     assert [f["message"] for f in out if f["type"] == "gap"] == ["Article 3 is missing: the articles go from 2 to 4."]
+
+
+def test_s35c_schedules_signposts_company_names_and_list_labels():
+    """From held-out run 2 (definitions-s3.5b): a schedule's "1." hid the body's clause 1 (Definitions); a signpost
+    definition read as a second one; "Brightline Data, Inc." read as a term; a list's second item shown as "7"."""
+    from app.legal.definitions import check as checkmod
+    from app.legal.documents import extract, structure
+    text = ("# NOTE (fictional)\n\nMade by Brightline Data, Inc. (\"Brightline\").\n\n## 1. Definitions\n\n1.1 \"Holder\" means the holder of a Note.\n\n"
+            "1.2 \"Note\" means a note issued by Brightline.\n\n1.3 \"Secret\" has the meaning given in clause 2.1.\n\n## 2. Terms\n\n"
+            "2.1 Each Holder keeps information secret (\"Secret\") and each Note is redeemed under clause 3.\n\n2.2 Clauses 2.1 and 7 survive.\n\n"
+            "## Schedule 1 Notes\n\n1. Each Note is for GBP 1 (fictional).\n\n2. Each Secret stays secret.\n")
+    x = extract.extract("n.md", text.encode())
+    rows = [{"number": c.number, "heading": c.heading, "level": c.level, "parent": c.parent, "start": c.start, "end": c.end}
+            for c in structure.clauses(x)]
+    out = checkmod.analyse(text, rows)
+    assert [(f["type"], f["text"]) for f in out if f["kind"] != "numbering"] == [("broken", "clause 3"), ("broken", "Clause 7")]

@@ -1,0 +1,195 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "ed9f657",
+  "time": "20261010-085312",
+  "prompt_version": "definitions-s3.5b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 3,
+  "planted": 16,
+  "caught": "13/16",
+  "fixes_right": "2/2",
+  "false_findings": 5,
+  "controls_clean": "0/1",
+  "by_type": {
+   "broken": "2/3",
+   "duplicate": "1/1",
+   "gap": "3/3",
+   "inconsistent": "2/2",
+   "repeat": "1/1",
+   "undefined": "2/4",
+   "unused": "2/2"
+  },
+  "ms_per_check": 18
+ },
+ "documents": [
+  {
+   "id": "N1-consultancy-uk",
+   "ms": 17,
+   "control": false,
+   "lines": [
+    {
+     "type": "duplicate",
+     "text": "Fee",
+     "conflicting": true,
+     "found": true,
+     "fix_ok": null,
+     "got": "“Fee” is defined twice, with different meanings."
+    },
+    {
+     "type": "unused",
+     "text": "Expenses",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Expenses” is defined but never used."
+    },
+    {
+     "type": "inconsistent",
+     "text": "deliverables",
+     "fix": "Deliverables",
+     "found": true,
+     "fix_ok": true,
+     "got": "“deliverables” is used where the defined term is “Deliverables”."
+    },
+    {
+     "type": "undefined",
+     "text": "Completion Date",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Completion Date” reads as a defined term but is not defined in this document."
+    },
+    {
+     "type": "undefined",
+     "text": "Background IP",
+     "found": false,
+     "fix_ok": null,
+     "got": null
+    },
+    {
+     "type": "undefined",
+     "text": "Statement of Work",
+     "found": false,
+     "fix_ok": null,
+     "got": null
+    },
+    {
+     "type": "broken",
+     "text": "clause 6 (Set-off)",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no clause 6."
+    },
+    {
+     "type": "broken",
+     "text": "Clause 7",
+     "found": false,
+     "fix_ok": null,
+     "got": null
+    },
+    {
+     "type": "gap",
+     "message": "Clause 3.2 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 3.2 is missing: the numbering goes from 3.1 to 3.3."
+    },
+    {
+     "type": "gap",
+     "message": "Clause 4 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 4 is missing: the numbering goes from 3 to 5."
+    }
+   ],
+   "extra": [
+    {
+     "type": "broken",
+     "text": "7",
+     "message": "This document has no clause 7."
+    }
+   ]
+  },
+  {
+   "id": "N2-loan-note-markdown",
+   "ms": 22,
+   "control": false,
+   "lines": [
+    {
+     "type": "unused",
+     "text": "Noteholder",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Noteholder” is defined but never used."
+    },
+    {
+     "type": "undefined",
+     "text": "Interest Payment Date",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Interest Payment Date” reads as a defined term but is not defined in this document."
+    },
+    {
+     "type": "repeat",
+     "message": "Clause 2.2 appears twice",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 2.2 appears twice."
+    },
+    {
+     "type": "inconsistent",
+     "text": "maturity date",
+     "fix": "Maturity Date",
+     "found": true,
+     "fix_ok": true,
+     "got": "“maturity date” is used where the defined term is “Maturity Date”."
+    },
+    {
+     "type": "gap",
+     "message": "Item (c) of clause 3.2 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Item (c) of clause 3.2 is missing: the items go from (b) to (d)."
+    },
+    {
+     "type": "broken",
+     "text": "paragraph 3 of Schedule 2",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no paragraph 3."
+    }
+   ],
+   "extra": [
+    {
+     "type": "before_definition",
+     "text": "Note",
+     "message": "“Note” is used before it is defined (in clause 1.2)."
+    }
+   ]
+  },
+  {
+   "id": "N3-clean-us-consulting-control",
+   "ms": 16,
+   "control": true,
+   "lines": [],
+   "extra": [
+    {
+     "type": "undefined",
+     "text": "Brightline Data",
+     "message": "“Brightline Data” reads as a defined term but is not defined in this document."
+    },
+    {
+     "type": "unused",
+     "text": "Confidential Information",
+     "message": "“Confidential Information” is defined but never used."
+    },
+    {
+     "type": "duplicate",
+     "text": "Confidential Information",
+     "message": "“Confidential Information” is defined twice, with different meanings."
+    }
+   ]
+  }
+ ]
+}

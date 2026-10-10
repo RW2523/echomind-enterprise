@@ -25,7 +25,7 @@ from ..citations.check import _GENERIC
 from ..documents import numbering
 from ..documents.structure import _MEANS, _PAREN
 
-VERSION = "definitions-s3.5b"
+VERSION = "definitions-s3.5c"
 # Words a defined term usually ends with: a capitalised phrase ending with one of them reads as a defined term.
 HEADS = {"date", "period", "day", "fee", "price", "charge", "information", "data", "service", "term", "notice", "event", "order",
          "product", "deliverable", "material", "right", "loss", "claim", "control", "default", "amount", "level", "credit", "plan",
@@ -59,6 +59,7 @@ def definitions(text: str) -> list[dict]:
             a, b = next(((x, y) for x, y in sents if x <= m.start() < y), (m.start(), len(text)))
             meaning = text[m.end():b] if kind == "means" else text[a:m.start()]
             out.append({"term": m.group(1).strip(), "start": m.start(1), "end": m.end(1), "sentence": (a, b), "kind": kind,
+                        "signpost": kind == "means" and bool(re.match(r"\s*(?:has|have)\s+the\s+meaning", text[m.end(1) + 1:m.end(1) + 30])),
                         "meaning": " ".join(re.sub(r"[\"“”'’.,;:()]", " ", meaning).casefold().split())})
     return sorted(out, key=lambda d: d["start"])
 
@@ -75,11 +76,16 @@ def _forms(term: str) -> list[str]:
 
 
 def _heading_spans(text: str, clauses: list[dict]) -> list[tuple[int, int]]:
+    """Heading lines only: a clause's line that is just its number and a short title ("4. Confidentiality"), not a
+    one-line clause the reader took a heading from ("2. Each Secret stays secret.")."""
     spans = []
     for c in clauses:
         if c.get("heading"):
             eol = text.find("\n", c["start"])
-            spans.append((c["start"], eol if eol >= 0 else len(text)))
+            line = text[c["start"]:eol if eol >= 0 else len(text)]
+            rest = re.sub(r"^[#\s]*(?:(?:Clause|Section|Article|Schedule|Annex|Exhibit|Appendix)\s+)?[\dA-Z.()§ ]{0,12}?[.)]?\s+", "", line, count=1)
+            if numbering._is_heading(rest):
+                spans.append((c["start"], eol if eol >= 0 else len(text)))
     spans += [(m.start(), m.end()) for m in re.finditer(r"^[ \t]*#{1,6}[^\n]*$", text, re.M)]
     return spans
 
@@ -109,6 +115,10 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
     by_term: dict[str, list[dict]] = {}
     for d in defs:
         by_term.setdefault(d["term"], []).append(d)
+    for term, ds in list(by_term.items()):                 # '"X" has the meaning given in clause 4.1' points to the definition
+        real = [d for d in ds if not d.get("signpost")]
+        if real and len(real) < len(ds):
+            by_term[term] = real
     defined = set(by_term)
 
     # Uses of each defined term: the exact form (or its plural), not inside a definition of that term,
@@ -201,7 +211,7 @@ def analyse(text: str, clauses: list[dict]) -> list[dict]:
         repeated = len(words) == 1 and singles.get(_singular(words[0]), 0) >= 2 and words[0] not in _NAMES
         if base not in HEADS and last not in HEADS and not starts_defined and not repeated:
             continue
-        if any(COMPANY.match(w) for w in words) or re.match(r"[ \t]+(?:Ltd|Limited|Inc|LLC|LLP|plc|AB|GmbH)\b", text[b:b + 10]):
+        if any(COMPANY.match(w) for w in words) or re.match(r"[ \t]*,?[ \t]+(?:Ltd|Limited|Inc|LLC|LLP|plc|PLC|AB|GmbH|Corp|Corporation|Company|LP|SE|AG)\b", text[b:b + 16]):
             continue
         if _inside(a, heads) or _quoted(text, a, b) or _inside(a, def_sentences) and _defined_here(text, a, b):
             continue
@@ -430,6 +440,12 @@ def _lookup(clauses: list[dict], f: cparse.Found) -> Optional[dict]:
     return None
 
 
+def _shown(text: str, f: cparse.Found, end: int) -> str:
+    """The reference as written; for the second item of a list ("Clauses 3 and 7") its own label ("Clause 7")."""
+    raw = text[f.start:end]
+    return raw if not re.fullmatch(r"[\d.()a-z]+", raw.split(" (")[0]) else f.text + raw[f.end - f.start:]
+
+
 def reference_findings(text: str, clauses: list[dict]) -> list[dict]:
     out = []
     for f in cparse.read(text):
@@ -452,7 +468,7 @@ def reference_findings(text: str, clauses: list[dict]) -> list[dict]:
             if same:                                       # the same missing clause cited again: one finding, every place
                 same["places"].append({"start": f.start, "end": span_end})
                 continue
-            out.append({"kind": "reference", "type": "broken", "severity": "high", "text": text[f.start:span_end], "start": f.start,
+            out.append({"kind": "reference", "type": "broken", "severity": "high", "text": _shown(text, f, span_end), "start": f.start,
                         "end": span_end, "message": msg, "places": [{"start": f.start, "end": span_end}] if not fixes else [], "fixes": fixes})
             continue
         if desc and target.get("heading") and _norm(target["heading"]) != _norm(desc) and not _norm(target["heading"]).startswith(_norm(desc)):
