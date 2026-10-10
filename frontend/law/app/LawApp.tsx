@@ -47,6 +47,8 @@ import DesignCatalogue from '../pages/DesignCatalogue';
 import Enquiries from '../pages/Enquiries';
 import Enquiry from '../pages/Enquiry';
 import IntakeLink from '../pages/IntakeLink';
+import MatterSummaries from '../pages/MatterSummaries';
+import SummaryPage from '../pages/SummaryPage';
 
 function Root() {
   useSessionExpiry();
@@ -92,6 +94,8 @@ export const lawRoutes = [
               { path: 'drafting', element: <MatterDrafting /> },
               { path: 'obligations', element: <MatterObligations /> },
               { path: 'diligence', element: <MatterDiligence /> },
+              { path: 'summaries', element: <MatterSummaries /> },
+              { path: 'summaries/:artifactId', element: <SummaryPage /> },
               { path: 'drafting/:artifactId', element: <DraftPage /> },
               { path: 'exports', element: <MatterExports /> },
               { path: 'exports/:exportId', element: <MatterExport /> },

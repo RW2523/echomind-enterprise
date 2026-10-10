@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, SummaryVersion, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -242,3 +242,14 @@ export const useIntake = (id: string) => useQuery({ queryKey: ['intake', id] as 
 export const partiesPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/parties`;
 export const useParties = (matterId: string) =>
   useQuery({ queryKey: ['matter', matterId, 'parties'] as const, queryFn: () => api.get<{ parties: MatterParty[]; can_manage: boolean }>(partiesPath(matterId)) });
+
+// Summaries (S4.2, D-055)
+export const summariesPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/summaries`;
+export const useSummaries = (matterId: string) =>
+  useQuery({ queryKey: ['matter', matterId, 'summaries'] as const,
+    queryFn: () => api.get<{ summaries: SummaryVersion[]; can: { summarise: boolean } }>(summariesPath(matterId)) });
+export const useDocSummaries = (matterId: string, documentId: string | null) =>
+  useQuery({ queryKey: ['matter', matterId, 'doc-summaries', documentId] as const, enabled: !!documentId,
+    queryFn: () => api.get<{ summaries: SummaryVersion[]; job: { status: string; error: string | null } | null; can: { summarise: boolean } }>(
+      `/api/legal/matters/${encodeURIComponent(matterId)}/documents/${encodeURIComponent(documentId!)}/summaries`),
+    refetchInterval: (q) => (q.state.data?.job && ['queued', 'running'].includes(q.state.data.job.status) ? 2000 : false) });

@@ -116,6 +116,9 @@ _ADDRESSED_TO_AI = re.compile("|".join((
     r"the|your) (?:answer|reply|response|summary|output)",
     r"\bdo not (?:mention|reveal|disclose|repeat) (?:this|these) (?:note|instructions?|message|text)\b",
     r"(?:^|[\]\).;:]\s*)(?:assistant|system|ai|llm)\s*:",
+    # S4.2 found these passing: an order to drop "your" instructions, and a speaker label naming an AI ("AI assistant:", "Chatbot:").
+    r"\b(?:ignore|disregard|forget) (?:all |any )?(?:of )?(?:your|my) (?:own )?(?:instructions|rules|prompts?|guidelines|programming)\b",
+    r"(?:^|[\]\).;:]\s*)(?:(?:ai|llm) (?:assistant|system|model)|chat ?bot)\s*:",
 )), re.I)
 WITHHELD = "[Text addressed to an AI assistant was withheld here.]"
 

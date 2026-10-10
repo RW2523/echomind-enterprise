@@ -1,0 +1,137 @@
+{
+ "about": "S4.2 summaries — the HELD-OUT set (first): written and committed before it was run, never used to change the summaries, run once per version. Fictional documents only.",
+ "documents": [
+  {
+   "id": "H1-employment",
+   "name": "Employment Agreement (fictional).txt",
+   "text": "EMPLOYMENT AGREEMENT (fictional)\n\nThis Agreement is made between Corran Foods Ltd (the Company) and Imogen Hale (the Executive).\n\n3. Start and probation\n3.1 Employment starts on 2 November 2026.\n3.2 The first six (6) months are a probationary period.\n\n5. Pay\n5.1 The Executive's salary is GBP 95,000 a year, paid monthly.\n5.2 The Executive may earn an annual bonus of up to 20% of salary at the board's discretion.\n\n11. Notice\n11.1 After probation, either party may end employment on three (3) months' written notice.\n\n13. Restrictions\n13.1 For six (6) months after employment ends, the Executive shall not solicit any customer of the Company.\n",
+   "facts": [
+    {
+     "fact": "start on 2 November 2026",
+     "anchor": "2 November 2026",
+     "where": {
+      "clause": "3.1"
+     }
+    },
+    {
+     "fact": "six-month probation",
+     "anchor": "probationary period",
+     "where": {
+      "clause": "3.2"
+     }
+    },
+    {
+     "fact": "salary GBP 95,000",
+     "anchor": "GBP 95,000",
+     "where": {
+      "clause": "5.1"
+     }
+    },
+    {
+     "fact": "discretionary bonus up to 20%",
+     "anchor": "20%",
+     "where": {
+      "clause": "5.2"
+     }
+    },
+    {
+     "fact": "three months' notice",
+     "anchor": "three (3) months",
+     "where": {
+      "clause": "11.1"
+     }
+    },
+    {
+     "fact": "six-month non-solicitation",
+     "anchor": "solicit any customer",
+     "where": {
+      "clause": "13.1"
+     }
+    }
+   ]
+  },
+  {
+   "id": "H2-negotiation-call",
+   "name": "Transcript - Lease negotiation (fictional).md",
+   "text": "# Transcript — Lease negotiation\n\nMeeting M-215 · negotiation · transcribed verbatim; corrections are marked in the record.\n\nParticipants: Bob Iyer (attorney); Calder Freight Ltd (counterparty)\n\n[14:00:05] Bob Iyer: Our client wants the break date moved to 31 March 2029.\n\n[14:01:20] Calder Freight Ltd: We could agree to 2029 if the rent rises to GBP 96,000 from the break date.\n\n[14:02:45] Bob Iyer: A rise to GBP 90,000 is the most our client will accept.\n\n[14:04:10] Calder Freight Ltd: Then we need a deposit of three months' rent.\n\n[14:05:30] Bob Iyer: I will take instructions and reply by Wednesday.\n",
+   "facts": [
+    {
+     "fact": "break date moved to 31 March 2029",
+     "anchor": "31 March 2029",
+     "where": {
+      "timecode": "14:00:05"
+     }
+    },
+    {
+     "fact": "counterparty's rent of GBP 96,000",
+     "anchor": "GBP 96,000",
+     "where": {
+      "timecode": "14:01:20"
+     }
+    },
+    {
+     "fact": "client's limit of GBP 90,000",
+     "anchor": "GBP 90,000",
+     "where": {
+      "timecode": "14:02:45"
+     }
+    },
+    {
+     "fact": "deposit of three months' rent",
+     "anchor": "deposit",
+     "where": {
+      "timecode": "14:04:10"
+     }
+    },
+    {
+     "fact": "reply by Wednesday",
+     "anchor": "Wednesday",
+     "where": {
+      "timecode": "14:05:30"
+     }
+    }
+   ]
+  },
+  {
+   "id": "H3-nda-pdf",
+   "name": "Mutual NDA (fictional).pdf",
+   "pdf_pages": [
+    "MUTUAL NON-DISCLOSURE AGREEMENT (fictional)\nBetween Heron Robotics Ltd and Calder Mining plc.\n1. Purpose\n1.1 The parties will share technical data to evaluate an autonomous drilling pilot.",
+    "4. Duration\n4.1 Confidentiality obligations last three (3) years from the date of disclosure.\n5. Return\n5.1 On request, each party shall return or destroy the other party's Confidential Information within ten (10) days.\n7. Law\n7.1 This Agreement is governed by English law."
+   ],
+   "facts": [
+    {
+     "fact": "purpose: evaluating a drilling pilot",
+     "anchor": "autonomous drilling pilot",
+     "where": {
+      "page": 1
+     }
+    },
+    {
+     "fact": "three-year confidentiality",
+     "anchor": "three (3) years",
+     "where": {
+      "page": 2,
+      "line": 2
+     }
+    },
+    {
+     "fact": "return or destroy within ten days",
+     "anchor": "ten (10) days",
+     "where": {
+      "page": 2,
+      "line": 4
+     }
+    },
+    {
+     "fact": "English law",
+     "anchor": "English law",
+     "where": {
+      "page": 2,
+      "line": 6
+     }
+    }
+   ]
+  }
+ ]
+}
