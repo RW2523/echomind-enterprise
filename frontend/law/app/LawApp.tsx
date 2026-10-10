@@ -24,6 +24,7 @@ import MatterActivity from '../pages/MatterActivity';
 import MatterDocuments from '../pages/MatterDocuments';
 import DocumentReader from '../pages/DocumentReader';
 import MatterResearch from '../pages/MatterResearch';
+import MatterCompare from '../pages/MatterCompare';
 import MatterMeetings from '../pages/MatterMeetings';
 import MatterMeeting from '../pages/MatterMeeting';
 import MatterExports, { MatterExport } from '../pages/MatterExports';
@@ -56,6 +57,7 @@ export const lawRoutes = [
               { path: 'documents', element: <MatterDocuments /> },
               { path: 'documents/:docId/read', element: <DocumentReader /> },
               { path: 'research', element: <MatterResearch /> },
+              { path: 'compare', element: <MatterCompare /> },
               { path: 'meetings', element: <MatterMeetings /> },
               { path: 'meetings/:meetingId', element: <MatterMeeting /> },
               { path: 'exports', element: <MatterExports /> },

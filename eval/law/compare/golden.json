@@ -1,0 +1,175 @@
+{
+ "note": "S2.3 tuning set (the system was adjusted against it). Alignment: every change between clause-numbered units; units without a number (title, fixture note, signature line) are reported but not scored. Scan: planted conflicts between one document and the rest, and conflicts that are acceptable but not planted.",
+ "alignment": [
+  {
+   "left": "corpus/msa-v1-signed.md",
+   "right": "corpus/msa-v2-draft.md",
+   "changes": [
+    {
+     "right": "2.1",
+     "kind": "changed",
+     "flags": [
+      "number"
+     ]
+    },
+    {
+     "right": "4.1",
+     "kind": "changed",
+     "flags": [
+      "number"
+     ]
+    },
+    {
+     "right": "8.1",
+     "kind": "changed",
+     "flags": [
+      "number"
+     ]
+    },
+    {
+     "right": "12.1",
+     "kind": "changed",
+     "flags": [
+      "number"
+     ]
+    }
+   ]
+  },
+  {
+   "left": "corpus/msa-v1-signed.md",
+   "right": "compare/msa-v3-restructured.md",
+   "changes": [
+    {
+     "right": "2.1",
+     "kind": "changed",
+     "flags": [
+      "number"
+     ]
+    },
+    {
+     "right": "4.2",
+     "kind": "added"
+    },
+    {
+     "right": "4.3",
+     "kind": "unchanged",
+     "renumbered_from": "4.2"
+    },
+    {
+     "right": "4.4",
+     "kind": "unchanged",
+     "renumbered_from": "4.3"
+    },
+    {
+     "right": "5",
+     "kind": "unchanged",
+     "moved": true
+    },
+    {
+     "right": "5.1",
+     "kind": "unchanged",
+     "moved": true
+    },
+    {
+     "right": "6.1",
+     "kind": "changed",
+     "flags": [
+      "obligation"
+     ]
+    },
+    {
+     "left": "7",
+     "kind": "removed"
+    },
+    {
+     "left": "7.1",
+     "kind": "removed"
+    },
+    {
+     "right": "8.1",
+     "kind": "changed",
+     "flags": [
+      "number"
+     ]
+    },
+    {
+     "right": "8.2",
+     "kind": "changed",
+     "flags": [
+      "negation"
+     ]
+    },
+    {
+     "right": "12.1",
+     "kind": "changed",
+     "flags": [
+      "number"
+     ]
+    },
+    {
+     "right": "14.1",
+     "kind": "formatting"
+    }
+   ]
+  }
+ ],
+ "scan": {
+  "extra_documents": [
+   {
+    "file": "compare/order-form.md",
+    "title": "Order Form No. 1",
+    "kind": "contract",
+    "status": "executed"
+   }
+  ],
+  "planted": [
+   {
+    "kind": "reference",
+    "other_title": "Harrowgate MSA",
+    "value": "Master Services Agreement dated 2 February 2026"
+   },
+   {
+    "kind": "entity",
+    "other_value": "Harrowgate Systems Inc.",
+    "value": "Harrowgate Systems Ltd"
+   },
+   {
+    "kind": "money",
+    "other_value": "USD 18,500",
+    "other_title": "Harrowgate MSA",
+    "value": "USD 18,000"
+   },
+   {
+    "kind": "period",
+    "other_value": "thirty (30) days",
+    "other_title": "Harrowgate MSA",
+    "value": "forty-five (45) days"
+   },
+   {
+    "kind": "law",
+    "other_value": "State of Delaware",
+    "other_title": "Harrowgate MSA",
+    "value": "England and Wales"
+   }
+  ],
+  "acceptable": [
+   {
+    "kind": "money",
+    "values": [
+     "USD 400,000",
+     "USD 250,000"
+    ],
+    "note": "board mandate vs signed cap (a governance check, S3.8)"
+   }
+  ],
+  "subject_title": "Order Form No. 1"
+ },
+ "versions": [
+  {
+   "of": "msa",
+   "file": "compare/msa-v3-restructured.md",
+   "status": "draft"
+  }
+ ],
+ "explain": "compare/msa-v3-restructured.md"
+}

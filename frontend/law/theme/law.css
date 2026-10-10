@@ -336,3 +336,30 @@
 [data-edition="law"] .lw-conflict blockquote { margin: 2px 0; font-size: 14.5px; line-height: 22px; }
 [data-edition="law"] .lw-source[data-verification="failed"] blockquote { text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--conflict) 60%, transparent); color: var(--ink-2); }
 [data-edition="law"] [data-failed] { text-decoration-color: color-mix(in srgb, var(--conflict) 70%, transparent); }
+
+/* Compare (S2.3): side by side; insertions underlined in --verified, deletions struck in --conflict (DiffView). */
+[data-edition="law"] .lw-compare-picks { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+[data-edition="law"] .lw-compare-pick { border: none; margin: 0; padding: 0; display: grid; gap: 6px; min-width: 0; }
+[data-edition="law"] .lw-compare-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+[data-edition="law"] .lw-compare-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+[data-edition="law"] .lw-compare-cols[aria-hidden] { padding: 0 15px 6px; }
+[data-edition="law"] .lw-compare-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+[data-edition="law"] .lw-compare-row { border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; background: var(--paper-2); display: grid; gap: 8px; min-width: 0; }
+[data-edition="law"] .lw-compare-row[data-kind="unchanged"], [data-edition="law"] .lw-compare-row[data-kind="no_conflict"] { background: var(--paper); }
+[data-edition="law"] .lw-compare-row-h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13.5px; }
+[data-edition="law"] .lw-compare-side { min-width: 0; display: grid; gap: 4px; align-content: start; }
+[data-edition="law"] .lw-compare-text { margin: 0; font-size: 15px; line-height: 24px; white-space: pre-wrap; overflow-wrap: anywhere; }
+[data-edition="law"] .lw-compare-text del { text-decoration: line-through; text-decoration-color: var(--conflict); background: color-mix(in srgb, var(--conflict) 18%, transparent);
+  color: var(--ink); border-radius: 3px; padding: 0 1px; }
+[data-edition="law"] .lw-compare-text ins { text-decoration: underline; text-decoration-color: var(--verified); text-underline-offset: 3px; text-decoration-thickness: 1.5px;
+  background: color-mix(in srgb, var(--verified) 18%, transparent); border-radius: 3px; padding: 0 1px; }
+[data-edition="law"] .lw-compare-value { background: color-mix(in srgb, var(--attention) 20%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
+[data-edition="law"] .lw-compare-none { margin: 0; font-style: italic; }
+[data-edition="law"] .lw-compare-explain { border-top: 1px solid var(--rule); padding-top: 8px; display: grid; gap: 6px; font-size: 14.5px; line-height: 22px; }
+[data-edition="law"] .lw-compare-quotes { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+[data-edition="law"] .lw-compare-quotes li { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+[data-edition="law"] .lw-compare-quotes li[data-verification="failed"] q { text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--conflict) 60%, transparent); color: var(--ink-2); }
+@media (max-width: 760px) {
+  [data-edition="law"] .lw-compare-picks, [data-edition="law"] .lw-compare-cols { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  [data-edition="law"] .lw-compare-cols[aria-hidden] { display: none; }
+}

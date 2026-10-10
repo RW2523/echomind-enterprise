@@ -293,6 +293,13 @@ class Settings(BaseSettings):
     LEGAL_RESEARCH_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_PASSAGES", "6"))          # sources given to the model
     LEGAL_RESEARCH_MAX_TOKENS: int = int(os.getenv("LEGAL_RESEARCH_MAX_TOKENS", "700"))
     LEGAL_STREAM_RECHECK_SEC: float = float(os.getenv("LEGAL_STREAM_RECHECK_SEC", "2"))    # live scope check while streaming
+    # Compare and contradictions (S2.3; D-039).
+    LEGAL_COMPARE_MATCH_MIN: float = float(os.getenv("LEGAL_COMPARE_MATCH_MIN", "0.5"))       # shared wording to pair clauses in place
+    LEGAL_COMPARE_MOVE_MIN: float = float(os.getenv("LEGAL_COMPARE_MOVE_MIN", "0.8"))         # shared wording to call a clause moved
+    LEGAL_COMPARE_MEANING_MIN: float = float(os.getenv("LEGAL_COMPARE_MEANING_MIN", "0.85"))  # embedding cosine for a rewritten clause
+    LEGAL_COMPARE_EXPLAIN_MAX: int = int(os.getenv("LEGAL_COMPARE_EXPLAIN_MAX", "20"))        # changes explained per request
+    LEGAL_CONFLICT_CANDIDATES: int = int(os.getenv("LEGAL_CONFLICT_CANDIDATES", "40"))        # possible conflicts the model checks per scan
+    LEGAL_CONFLICT_CONCURRENCY: int = int(os.getenv("LEGAL_CONFLICT_CONCURRENCY", "4"))       # model checks in flight at once
     # Consent and capture (S1.8; P-001 safe defaults until counsel decides).
     LEGAL_CONSENT_MAX_AGE_HOURS: float = float(os.getenv("LEGAL_CONSENT_MAX_AGE_HOURS", "12"))   # older consent must be renewed
     LEGAL_CONSENT_RECHECK_SEC: float = float(os.getenv("LEGAL_CONSENT_RECHECK_SEC", "1"))        # database re-check while capturing

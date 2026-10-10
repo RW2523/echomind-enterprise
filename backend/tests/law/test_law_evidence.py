@@ -72,6 +72,16 @@ def test_quoted_citations_display_as_numbers_and_become_claims():
     assert [claim.sentence for claim in para.claims] == ["The cap is USD 250,000 [1].", "Notices are written [2][1]."]
 
 
+def test_markdown_markup_and_quote_style_are_small_differences():
+    from app.legal.research import evidence
+    source = '> FICTIONAL FIXTURE. Compared with version 1:\n> a clause inserted (4.2) for an **initial term** (the "Initial Term").'
+    found = evidence.verify("FICTIONAL FIXTURE. Compared with version 1: a clause inserted (4.2)", source)
+    assert found.verification == "normalized" and source[found.start:found.end].startswith("FICTIONAL")
+    assert source[found.start:found.end].endswith("(4.2)")
+    assert evidence.verify("an initial term (the 'Initial Term')", source).verification == "normalized"
+    assert evidence.verify("an initial period", source).verification == "failed"
+
+
 def test_a_quote_with_escaped_inner_quotes_is_read_whole():
     from app.legal.research import evidence
     raw = r'The Provider is Harrowgate [2: "Harrowgate Systems Inc., a Delaware corporation (\"Provider\")"].'

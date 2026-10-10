@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, BookOpenText, Briefcase, CalendarClock, FileOutput, Files, FolderSync, FileText, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
+import { Archive, BookOpenText, Briefcase, CalendarClock, FileOutput, Files, FolderSync, FileText, GitCompareArrows, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
 import { api } from '../api/client';
 import MatterSwitcher from '../ui/MatterSwitcher';
 import { hasFirmRole, useSession } from './session';
@@ -80,6 +80,7 @@ function ShellMatterBlock() {
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/overview`} icon={<FileText />}>Overview</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/documents`} icon={<Files />}>Documents</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/research`} icon={<BookOpenText />}>Research</NavItem>
+            <NavItem to={`/m/${encodeURIComponent(matter.number)}/compare`} icon={<GitCompareArrows />}>Compare</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/meetings`} icon={<CalendarClock />}>Meetings</NavItem>
             {['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && <NavItem to={`/m/${encodeURIComponent(matter.number)}/exports`} icon={<FileOutput />}>Exports</NavItem>}
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/members`} icon={<Users />}>Members</NavItem>

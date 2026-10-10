@@ -77,7 +77,8 @@ export function ReportList({ report }: { report: DeletionReport }) {
        `${plural(n(report.index_vectors), 'entry', 'entries')} in the matter’s search index`,
        n(report.findings) ? plural(n(report.findings), 'personal-data finding') : '',
        n(report.labels) ? plural(n(report.labels), 'label') : '',
-       n(report.research_citations) ? `${plural(n(report.research_citations), 'research answer')} quoting it (the quotes are removed)` : '']
+       n(report.research_citations) ? `${plural(n(report.research_citations), 'research answer')} quoting it (the quotes are removed)` : '',
+       n(report.comparisons) ? `${plural(n(report.comparisons), 'saved comparison')} quoting it (removed whole)` : '']
       .filter(Boolean)
     : [plural(n(report.segments), 'transcript segment')];
   return (

@@ -131,6 +131,54 @@ export interface ResearchParagraph {
   claims: { sentence: string; state: 'supported' | 'failed' | 'unquoted'; citations: { n: number; quote: string | null; verification: Verification }[] }[];
 }
 
+/** Compare and contradictions (S2.3). Offsets are into each version's text; marks are relative to the side's text. */
+export type PairKind = 'unchanged' | 'formatting' | 'changed' | 'added' | 'removed';
+export type ChangeFlag = 'number' | 'obligation' | 'negation';
+export interface CompareVersion {
+  document_id: string; document_title: string; version_id: string; number: number; status?: DocStatus | null; filename: string;
+}
+export interface CompareSide {
+  start: number; end: number; label?: string | null; clause?: string | null; heading?: string | null; kind: string;
+  text: string; page?: number | null; line?: number | null;
+}
+export interface CompareQuote {
+  n: number; side: 'left' | 'right'; quote: string; verification: Verification; char_start?: number | null; char_end?: number | null;
+}
+export interface CompareExplanation {
+  text: string; status: 'answered' | 'partial' | 'unverified'; evidence: CompareQuote[]; failed: string[]; unsupported: string[];
+}
+export interface ComparePair {
+  index: number; kind: PairKind; moved: boolean; how: 'same' | 'wording' | 'moved' | 'meaning'; similarity: number; renumbered: boolean;
+  left: CompareSide | null; right: CompareSide | null; left_marks: [number, number][]; right_marks: [number, number][];
+  changes: { from: string; to: string }[]; flags: ChangeFlag[]; explanation?: CompareExplanation | null;
+}
+export interface Comparison {
+  id: string; kind: 'versions'; status: string; created_at: string; left: CompareVersion; right: CompareVersion;
+  pairs: ComparePair[]; passes: string[];
+  summary: { unchanged: number; formatting: number; changed: number; added: number; removed: number; moved: number; renumbered: number };
+}
+export interface ScanSide {
+  document_id: string; document_title: string; version_id: string; version_number: number; version_status?: DocStatus | null;
+  signed: boolean; clause?: string | null; page?: number | null; line?: number | null; value: string; value_start: number; value_end: number;
+  sentence_start: number; sentence_end: number; context_start: number; context_end: number; context: string; parties?: string[];
+}
+export type FactKind = 'money' | 'period' | 'percent' | 'date' | 'law' | 'entity' | 'reference';
+export interface ScanFinding {
+  kind: FactKind; score: number; verdict: 'conflict' | 'no_conflict' | 'unclear'; explanation: string;
+  /** "rule": a company's legal form or an agreement's date, reported as found; "model": checked in context. */
+  method: 'rule' | 'model'; subject?: string;
+  evidence: { n: number; quote: string; verification: Verification; char_start?: number | null; char_end?: number | null }[];
+  failed: string[]; a: ScanSide; b: ScanSide; error?: boolean;
+}
+export interface ConflictScan {
+  id: string; kind: 'scan'; status: string; created_at: string; versions: VersionPolicy;
+  documents: { document_id: string; document_title: string; version_id: string; number: number; status?: DocStatus | null }[];
+  findings: ScanFinding[]; rejected: ScanFinding[]; candidates: number; hidden: number;
+}
+export type ComparisonSummary =
+  | { id: string; kind: 'versions'; status: string; created_at: string; left: CompareVersion; right: CompareVersion; summary: Comparison['summary'] }
+  | { id: string; kind: 'scan'; status: string; created_at: string; versions: VersionPolicy; documents: number; conflicts: number };
+
 /** Meetings, consent and capture (S1.8). */
 export type MeetingKind = 'client_call' | 'internal' | 'negotiation' | 'interview' | 'board' | 'hearing' | 'other';
 export type ParticipantRole = 'host' | 'attorney' | 'client' | 'counterparty' | 'witness' | 'expert' | 'other';
@@ -160,7 +208,7 @@ export interface LabelEntry { label: PrivilegeLabel; kind: 'set' | 'suggested'; 
 export interface LabelState { current: LabelEntry | null; suggestions: LabelEntry[]; history: LabelEntry[] }
 export interface DeletionReport {
   object: 'document' | 'meeting_transcript'; versions?: number; passages?: number; findings?: number; labels?: number; files?: number;
-  file_bytes?: number; index_vectors?: number; research_citations?: number; segments?: number; kept: string[];
+  file_bytes?: number; index_vectors?: number; research_citations?: number; comparisons?: number; segments?: number; kept: string[];
 }
 export interface Deletion {
   id: string; object_type: 'document' | 'meeting_transcript'; object_id: string; object_label: string | null; reason: string;

@@ -16,7 +16,7 @@
 | SEC-07 | Retention, legal hold, approved deletion, restore | DONE (mechanism; schedules await counsel) | S1.9 | Schedules (P-002/P-003) |
 | SEC-08 | Firm DMS adapter with ACL/version sync | PARTIAL (framework DONE with the local-folder connector; real provider BLOCKED) | S1.11 | **Provider and credentials (P-010)** |
 | RAG-01 | Matter-scoped legal chat, clause ingestion, OCR, versions | DONE for the pilot, pending the S2.8 lawyer review. S2.1 ingestion: OCR, Word structure, tracked changes and comments as metadata, hidden-text and injection flags, clauses, defined terms, exact offsets with page/line, per-version status, reader. S2.2 research: evidence contract with verified quotes, signed-version default with a switch, version conflicts, abstention with reasons, paragraph streaming, "Copy with citations", golden 70 and held-out 32 evaluation. Firm-library scope deferred to S3.1–S3.2, when the library gets content (D-038). | S2.1, S2.2, S2.8 | Lawyer review (S2.8, P-008) |
-| RAG-02 | Document comparison and contradiction analysis | MISSING | S2.3 | — |
+| RAG-02 | Document comparison and contradiction analysis | DONE for the pilot (S2.3), pending the S2.8 lawyer review. Two versions clause by clause (renumbered, moved, added, removed; exact word diff; labelled changes), explanations quoting both wordings (verified), conflicts across documents (amounts, periods, dates, governing law, company names, agreement references; same parties only; checked in context), golden and held-out evaluation (D-039) | S2.3, S2.8 | Lawyer review (S2.8, P-008) |
 | LIVE-01 | Legal transcription: speakers, vocabulary, edits | PARTIAL | S2.4 | — |
 | LIVE-02 | Negotiation / client-call / governance Silent Assist packs | PARTIAL | S2.5 | Thresholds sign-off (P-008) |
 | MEET-01 | Boardroom legal mode: before, during, after, minutes | PARTIAL | S2.6, S2.7 | — |
@@ -146,7 +146,7 @@
 ### RAG-02 — Document comparison and contradiction analysis
 | Field | Detail |
 |---|---|
-| Status | **MISSING.** A comparison reference block exists in prompt assembly, but there is no compare feature. |
+| Status | **DONE for the pilot (S2.3), pending lawyer review at S2.8.** `legal/compare/`: alignment by wording and meaning with exact offsets; explanations with verified quotes; a conflict scan across the matter's documents (D-039). Measured on the real model, held-out: alignment 10/10, explanation quotes 1.0 verified, scan 4/5 planted with precision 1.0. *Pre-S2 audit:* a comparison reference block existed in prompt assembly, but there was no compare feature. |
 | Modifications | Clause alignment (numbering + embedding similarity) → per-clause diff → LLM explanation with both quotes; cross-document conflict scan (numbers, dates, parties, obligations); compare UI (side by side) |
 | Dependencies | S2.1 |
 | Tests | Two fixture contracts with seeded differences give cited differences; conflicting sources are visible |

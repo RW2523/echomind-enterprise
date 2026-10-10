@@ -21,8 +21,10 @@ from typing import Optional
 # A quote may contain escaped quotes, as models write them: [2: "Harrowgate Systems Inc. (\"Provider\")"].
 _CITE = re.compile(r"\[(\d{1,2})(?::\s*[\"“”]((?:\\.|[^\"“”\\])+)[\"“”]\s*)?\]", re.S)
 _TOKEN = re.compile("\x00(\\d+)\x01")
-_FOLD = str.maketrans({"‘": "'", "’": "'", "‛": "'", "′": "'", "“": '"', "”": '"', "„": '"',
-                       "–": "-", "—": "-", "−": "-", " ": " "})
+# Single and double quotes of every style fold to one mark; Markdown markup (*, #, >, _, `) is not wording (S2.3).
+_FOLD = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201b": "'", "\u2032": "'", "\u201c": "'", "\u201d": "'", "\u201e": "'",
+                       '"': "'", "\u2013": "-", "\u2014": "-", "\u2212": "-", "\u00a0": " "})
+_MARKUP = set("*#>_`")
 _ELLIPSIS = re.compile(r"\s*(?:…|\.\.\.)\s*")
 
 
@@ -96,6 +98,8 @@ def _folded(text: str) -> tuple[str, list[int]]:
     out, where, space = [], [], False
     for i, ch in enumerate(text):
         for c in unicodedata.normalize("NFKC", ch).translate(_FOLD).casefold():
+            if c in _MARKUP:
+                continue
             if c.isspace():
                 if out and not space:
                     out.append(" ")

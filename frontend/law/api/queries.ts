@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -19,6 +19,7 @@ export const keys = {
   documents: (id: string) => ['matter', id, 'documents'] as const,
   document: (id: string, docId: string) => ['matter', id, 'documents', docId] as const,
   research: (id: string) => ['matter', id, 'research'] as const,
+  comparisons: (id: string) => ['matter', id, 'comparisons'] as const,
   meetings: (id: string) => ['matter', id, 'meetings'] as const,
   meeting: (id: string, meetingId: string) => ['matter', id, 'meetings', meetingId] as const,
   labels: (id: string, type: string, objectId: string) => ['matter', id, 'labels', type, objectId] as const,
@@ -106,6 +107,13 @@ export const useDocument = (matterId: string, docId: string | null) =>
     },
   });
 export const documentsPath = docsBase;
+/** A document's versions (not a recorded read: numbers, files and statuses only). */
+export const useVersions = (matterId: string, docId: string | null) =>
+  useQuery({
+    queryKey: [...keys.document(matterId, docId ?? ''), 'versions'] as const, enabled: !!docId,
+    queryFn: async () => (await api.get<{ versions: DocVersion[] }>(`${docsBase(matterId)}/${encodeURIComponent(docId!)}/versions`)).versions,
+  });
+
 
 /** A version's text and what reading it found (S2.1). Opening it is a recorded read. */
 export const useReader = (matterId: string, docId: string, versionId: string | null) =>
@@ -120,6 +128,11 @@ export const useReader = (matterId: string, docId: string, versionId: string | n
 export const useResearchHistory = (matterId: string) =>
   useQuery({ queryKey: keys.research(matterId), refetchOnWindowFocus: false,
     queryFn: async () => (await api.get<{ turns: ResearchTurn[] }>(`/api/legal/matters/${encodeURIComponent(matterId)}/research`)).turns });
+
+export const comparePath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/compare`;
+export const useComparisons = (matterId: string) =>
+  useQuery({ queryKey: keys.comparisons(matterId), refetchOnWindowFocus: false,
+    queryFn: async () => (await api.get<{ comparisons: ComparisonSummary[] }>(comparePath(matterId))).comparisons });
 
 export const meetingsPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/meetings`;
 export const useMeetings = (matterId: string) =>
