@@ -1284,3 +1284,54 @@ test('intake: an enquirer answers through a link, the names are screened, the co
   await alice.getByRole('region', { name: 'Matter opened' }).getByRole('link', { name: 'M-301' }).click();
   await expect(alice.getByRole('heading', { name: 'Studio lease review' })).toBeVisible();
 });
+
+test('summaries: a consultancy agreement summarised point by point, each point opening the words it cites; a reviewer\'s edit approved and filed', async ({ browser }) => {
+  test.setTimeout(400_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const title = 'Consultancy Agreement (DEMO)';
+  if (await alice.getByRole('button', { name: title, exact: true }).count() === 0) {
+    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, `../../eval/fixtures/law/summaries/${title}.txt`));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Summaries' }).click();
+  await alice.getByRole('combobox', { name: 'Document', exact: true }).selectOption({ label: title });
+  await alice.getByRole('button', { name: 'Summarise' }).click();
+  const row = alice.getByRole('listitem', { name: `Summary — ${title}` });
+  await expect(row).toBeVisible({ timeout: 180_000 });
+  await row.getByRole('link', { name: `Summary — ${title}` }).click();
+  const points = alice.getByRole('list', { name: 'Key points' });
+  await expect(points.getByRole('listitem').first()).toBeVisible();
+  // Every point cites a clause and line computed from its quote; the model never supplies the place.
+  const chips = points.getByRole('link', { name: /^clause \d+\.\d+, l\. \d+$/ });
+  expect(await chips.count()).toBeGreaterThanOrEqual(3);
+  await shot(alice, '45-summary-light');
+  const summaryUrl = alice.url();
+  await chips.first().click();
+  await expect(alice).toHaveURL(/\/documents\/[^/]+\/read\?v=[^&]+&at=\d+-\d+$/);
+  await alice.goto(summaryUrl.replace(/^https?:\/\/[^/]+/, ''));
+  // A reviewer's edit is a new version; the edited point keeps its citation and is marked.
+  await alice.getByRole('button', { name: 'Edit points' }).click();
+  await alice.getByLabel('Point 1', { exact: true }).fill('The Consultant provides data-migration services for the warehouse systems (edited).');
+  await alice.getByRole('button', { name: 'Save as a new version' }).click();
+  await expect(alice.getByText(/^Version 2 · edited by alice/)).toBeVisible();
+  const edited = alice.getByRole('list', { name: 'Key points' }).getByRole('listitem', { name: /\(edited\)/ });
+  await expect(edited.getByText('Edited by a reviewer')).toBeVisible();
+  // A second lawyer approves exactly this version; it is filed, and the agreement itself is unchanged.
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.goto(alice.url().replace(/^https?:\/\/[^/]+/, ''));
+  await nakamura.getByRole('button', { name: 'Approve this summary' }).click();
+  const dialog = nakamura.getByRole('dialog', { name: 'Approve version 2?' });
+  await dialog.getByRole('checkbox').check();
+  await dialog.getByRole('button', { name: 'Approve version 2' }).click();
+  await alice.reload();
+  await alice.getByRole('button', { name: 'File as a matter document' }).click();
+  await alice.getByRole('link', { name: 'Open the filed summary' }).click();
+  await expect(alice.getByText(/Approved by nakamura/).first()).toBeVisible({ timeout: 60_000 });
+});
