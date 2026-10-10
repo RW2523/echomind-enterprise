@@ -106,11 +106,21 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
             "kept": KEPT_DOCUMENT}
 
 
+def _transcript_document(conn, matter_id: str, meeting_id: str) -> Optional[str]:
+    """The matter document a finalised transcript became (S2.4), if it still exists."""
+    row = conn.execute("SELECT m.transcript_document_id FROM legal_meetings m JOIN legal_documents d ON d.id = m.transcript_document_id "
+                       "WHERE m.id=? AND m.matter_id=?", (meeting_id, matter_id)).fetchone()
+    return row[0] if row else None
+
+
 def report_transcript(conn, matter_id: str, meeting_id: str) -> dict:
     n = conn.execute("SELECT COUNT(*) FROM legal_transcript_segments WHERE meeting_id=? AND matter_id=?", (meeting_id, matter_id)).fetchone()[0]
+    revisions = conn.execute("SELECT COUNT(*) FROM legal_transcript_revisions WHERE meeting_id=? AND matter_id=?",
+                             (meeting_id, matter_id)).fetchone()[0]
     from ..exports import service as exports
-    return {"object": "meeting_transcript", "segments": n, "exports": exports.count_for(conn, "meeting_transcript", meeting_id),
-            "kept": KEPT_TRANSCRIPT}
+    doc = _transcript_document(conn, matter_id, meeting_id)
+    return {"object": "meeting_transcript", "segments": n, "revisions": revisions, "finalised_document": 1 if doc else 0,
+            "exports": exports.count_for(conn, "meeting_transcript", meeting_id), "kept": KEPT_TRANSCRIPT}
 
 
 def preview(matter_id: str, object_type: str, object_id: str) -> dict:
@@ -144,6 +154,12 @@ def _soft_delete(conn, d: dict) -> list[str]:
         return ids
     conn.execute("UPDATE legal_meetings SET transcript_deleted_at=?, transcript_deletion_id=? WHERE id=?",
                  (now_iso(), d["id"], d["object_id"]))
+    doc = _transcript_document(conn, d["matter_id"], d["object_id"]) if d.get("matter_id") else None
+    if doc:                                       # the finalised copy is hidden with the transcript (S2.4)
+        conn.execute("UPDATE legal_documents SET deleted_at=?, deletion_id=? WHERE id=? AND deleted_at IS NULL", (now_iso(), d["id"], doc))
+        ids = [r[0] for r in conn.execute("SELECT id FROM legal_chunks WHERE document_id=? AND active=1", (doc,))]
+        conn.execute("UPDATE legal_chunks SET active=0 WHERE document_id=?", (doc,))
+        return ids
     return []
 
 
@@ -157,6 +173,12 @@ def _undo_soft_delete(conn, d: dict) -> bool:
         return True
     conn.execute("UPDATE legal_meetings SET transcript_deleted_at=NULL, transcript_deletion_id=NULL WHERE id=? AND transcript_deletion_id=?",
                  (d["object_id"], d["id"]))
+    doc = conn.execute("SELECT id FROM legal_documents WHERE deletion_id=?", (d["id"],)).fetchone()
+    if doc:
+        conn.execute("UPDATE legal_documents SET deleted_at=NULL, deletion_id=NULL WHERE id=?", (doc[0],))
+        from ..documents import versions
+        versions.sync_active(conn, doc[0])
+        return True
     return False
 
 
@@ -178,7 +200,7 @@ def request(org_id: str, matter_id: str, object_type: str, object_id: str, reaso
                          "reason, origin, soft_deleted, status, requested_by, requested_at, report_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                          (did, org_id, matter_id, object_type, object_id, label, hashlib.sha256(label.encode()).hexdigest(), reason,
                           origin, int(soft), "requested", by, now_iso(), json.dumps(rep)))
-            hidden = _soft_delete(conn, {"id": did, "object_type": object_type, "object_id": object_id}) if soft else []
+            hidden = _soft_delete(conn, {"id": did, "object_type": object_type, "object_id": object_id, "matter_id": matter_id}) if soft else []
             conn.commit()
         except BaseException:
             conn.rollback()
@@ -245,7 +267,7 @@ def purge(deletion_id: str, approved_by: str, note: Optional[str] = None) -> dic
     if gone.get("chunks"):
         registry.for_matter(d["matter_id"]).remove(gone["chunks"])
     from ..documents import blobs
-    for matter_id, export_id in gone.get("exports", []):
+    for matter_id, export_id in gone.get("exports", []) + gone.get("document_exports", []):
         blobs.remove(matter_id, export_id, "exports")
     verification = verify(d, gone)
     with get_conn() as conn:
@@ -284,9 +306,18 @@ def _purge_document(conn, d: dict) -> dict:
 
 
 def _purge_transcript(conn, d: dict) -> dict:
+    doc = conn.execute("SELECT transcript_document_id FROM legal_meetings WHERE id=?", (d["object_id"],)).fetchone()
+    doc = doc[0] if doc and doc[0] and conn.execute("SELECT 1 FROM legal_documents WHERE id=?", (doc[0],)).fetchone() else None
+    conn.execute("DELETE FROM legal_transcript_revisions WHERE meeting_id=? AND matter_id=?", (d["object_id"], d["matter_id"]))
     conn.execute("DELETE FROM legal_transcript_segments WHERE meeting_id=? AND matter_id=?", (d["object_id"], d["matter_id"]))
-    conn.execute("UPDATE legal_meetings SET transcript_deleted_at=NULL, transcript_deletion_id=NULL WHERE id=?", (d["object_id"],))
-    return {}
+    conn.execute("UPDATE legal_meetings SET transcript_deleted_at=NULL, transcript_deletion_id=NULL, transcript_document_id=NULL, "
+                 "transcript_finalised_at=NULL, transcript_finalised_by=NULL WHERE id=?", (d["object_id"],))
+    if not doc:
+        return {}
+    # The finalised copy is a matter document: purged the same way, with its files and index entries (S2.4).
+    from ..exports import service as exports
+    gone = _purge_document(conn, {**d, "object_id": doc})
+    return {**gone, "document": doc, "document_exports": exports.purge_for(conn, "document", doc)}
 
 
 def verify(d: dict, gone: dict) -> dict:
@@ -314,10 +345,19 @@ def verify(d: dict, gone: dict) -> dict:
                       "research_quotes": not quotes}
         else:
             n = conn.execute("SELECT COUNT(*) FROM legal_transcript_segments WHERE meeting_id=?", (d["object_id"],)).fetchone()[0]
+            n += conn.execute("SELECT COUNT(*) FROM legal_transcript_revisions WHERE meeting_id=?", (d["object_id"],)).fetchone()[0]
             checks = {"database": n == 0}
+            if gone.get("document"):
+                doc, versions = gone["document"], gone.get("versions", [])
+                rows = sum(conn.execute(q, (doc,)).fetchone()[0] for q in (
+                    "SELECT COUNT(*) FROM legal_documents WHERE id=?", "SELECT COUNT(*) FROM legal_chunks WHERE document_id=?"))
+                idx = registry.for_matter(d["matter_id"])
+                checks["finalised_document"] = rows == 0 and not (set(idx.chunk_ids) & set(gone.get("chunks", []))) and \
+                    not any(os.path.exists(_blob(d["matter_id"], v)) for v in versions)
         from ..exports import service as exports
         checks["exports"] = exports.count_for(conn, d["object_type"], d["object_id"]) == 0 and not any(
-            exports.file_exists(m, e) for m, e in gone.get("exports", []))
+            exports.file_exists(m, e) for m, e in gone.get("exports", []) + gone.get("document_exports", [])) and \
+            (not gone.get("document") or exports.count_for(conn, "document", gone["document"]) == 0)
     return {"ok": all(checks.values()), "checks": checks, "verified_at": now_iso()}
 
 

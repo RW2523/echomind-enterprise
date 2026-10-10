@@ -304,6 +304,9 @@ class Settings(BaseSettings):
     LEGAL_CONSENT_MAX_AGE_HOURS: float = float(os.getenv("LEGAL_CONSENT_MAX_AGE_HOURS", "12"))   # older consent must be renewed
     LEGAL_CONSENT_RECHECK_SEC: float = float(os.getenv("LEGAL_CONSENT_RECHECK_SEC", "1"))        # database re-check while capturing
     LEGAL_CUSTODY_BATCH_BYTES: int = int(os.getenv("LEGAL_CUSTODY_BATCH_BYTES", "160000"))       # ~5 s of 16 kHz PCM16 per custody record
+    # Legal transcription (S2.4; D-017, D-040).
+    LEGAL_SEGMENT_MIN_WORDS: int = int(os.getenv("LEGAL_SEGMENT_MIN_WORDS", "12"))     # a segment ends at a sentence end after this many words
+    LEGAL_CAPTURE_LAG_WARN_SEC: float = float(os.getenv("LEGAL_CAPTURE_LAG_WARN_SEC", "5"))  # model this far behind: "degraded"
     # Records (S1.9; P-002). Retention never deletes by itself: with this off (default) runs are
     # dry runs; with it on, approved policies only create deletion requests for a person to approve.
     LEGAL_RETENTION_APPLY: bool = os.getenv("LEGAL_RETENTION_APPLY", "0").lower() in ("1", "true", "yes")

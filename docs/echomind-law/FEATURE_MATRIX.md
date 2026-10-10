@@ -17,7 +17,7 @@
 | SEC-08 | Firm DMS adapter with ACL/version sync | PARTIAL (framework DONE with the local-folder connector; real provider BLOCKED) | S1.11 | **Provider and credentials (P-010)** |
 | RAG-01 | Matter-scoped legal chat, clause ingestion, OCR, versions | DONE for the pilot, pending the S2.8 lawyer review. S2.1 ingestion: OCR, Word structure, tracked changes and comments as metadata, hidden-text and injection flags, clauses, defined terms, exact offsets with page/line, per-version status, reader. S2.2 research: evidence contract with verified quotes, signed-version default with a switch, version conflicts, abstention with reasons, paragraph streaming, "Copy with citations", golden 70 and held-out 32 evaluation. Firm-library scope deferred to S3.1–S3.2, when the library gets content (D-038). | S2.1, S2.2, S2.8 | Lawyer review (S2.8, P-008) |
 | RAG-02 | Document comparison and contradiction analysis | DONE for the pilot (S2.3), pending the S2.8 lawyer review. Two versions clause by clause (renumbered, moved, added, removed; exact word diff; labelled changes), explanations quoting both wordings (verified), conflicts across documents (amounts, periods, dates, governing law, company names, agreement references; same parties only; checked in context), golden and held-out evaluation (D-039) | S2.3, S2.8 | Lawyer review (S2.8, P-008) |
-| LIVE-01 | Legal transcription: speakers, vocabulary, edits | PARTIAL | S2.4 | — |
+| LIVE-01 | Legal transcription: speakers, vocabulary, edits | PARTIAL: built (S2.4); real-audio accuracy not yet measured. Verbatim record (immutable segments of whole sentences), roster speakers marked live, wall-clock times, visible gaps and degradation, corrections as revisions, matter-vocabulary suggestions with provenance, finalised transcripts as research sources, accuracy harness (D-040). The word error rate on real audio needs the Law speech stack (first `compose.sh up`, 🔒) | S2.4, S2.8 | Speech stack start (🔒); voice licence check |
 | LIVE-02 | Negotiation / client-call / governance Silent Assist packs | PARTIAL | S2.5 | Thresholds sign-off (P-008) |
 | MEET-01 | Boardroom legal mode: before, during, after, minutes | PARTIAL | S2.6, S2.7 | — |
 | DOC-01 | Legal templates and precedent drafting, DOCX/PDF | PARTIAL | S3.1 | Firm templates (sample set used until provided) |
@@ -155,7 +155,7 @@
 ### LIVE-01 — Legal transcription
 | Field | Detail |
 |---|---|
-| Status | **PARTIAL.** Nemotron streaming, two-role manual toggle, lossy normalization, ASR-clock timestamps, no edits or provenance. |
+| Status | **PARTIAL: built in S2.4 (D-040); accuracy on real audio pending the speech stack.** Verbatim immutable record, roster speakers, wall-clock times, gaps and degradation shown, revisions with provenance, matter vocabulary, finalised transcripts in research, accuracy harness (`eval/law/transcription/`). *Pre-S2 audit:* Nemotron streaming, two-role manual toggle, lossy normalization (legacy path), ASR-clock timestamps, no edits or provenance. |
 | Evidence | `transcribe/ws.py`, `session_state.py:404-523`, `RoleToggle.tsx`, `types.ts:144` |
 | Modifications | Verbatim mode (D-017); N-role participants from the meeting roster; wall-clock anchors; matter-vocabulary post-correction with provenance (names, entities from matter documents); `transcript_revisions`; pause/resume; WER harness with legal names, dates, numbers and negations |
 | Dependencies | S1.8 |

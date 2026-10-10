@@ -14,13 +14,24 @@ audio accepted, and no text stored, is ever later than the withdrawal. A databas
 LEGAL_CONSENT_RECHECK_SEC covers captures running in another process.
 
 Raw audio is not kept: each ~5 s of received audio leaves a SHA-256 custody record. Paused
-audio is discarded unread. Transcription runs through a `Transcriber` (`feed`, `flush`); the
-default wraps the live speech-recognition model when it is installed, and capture control works
-without it.
+audio is discarded unread. Transcription runs through a `Transcriber` (`feed`, `flush`, and
+optionally `reset`); the default wraps the live speech-recognition model when it is installed, and
+capture control works without it.
+
+Verbatim transcription (S2.4; D-017, D-040):
+- The model's text is stored as produced, in segments of at least LEGAL_SEGMENT_MIN_WORDS words
+  ending at a sentence end, or at a speaker change, a pause or the end.
+- Who is speaking is marked live from the meeting's roster (`{"type": "speaker", "participant_id"}`).
+  At each change, the model is flushed and restarted, as the legacy two-role toggle did.
+- Each segment has wall-clock times, so pauses show.
+- Nothing is lost silently. If the model falls behind by LEGAL_CAPTURE_LAG_WARN_SEC, the capture
+  says so ("degraded") and records it. A transcription error leaves a "gap" mark that the
+  transcript shows.
 """
 from __future__ import annotations
 
 import asyncio
+import bisect
 import hashlib
 import json
 import logging
@@ -28,6 +39,7 @@ import re
 import threading
 import time
 import uuid
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -39,6 +51,7 @@ from ..audit.record import record
 from ..identity import sessions
 from ..identity.principal import from_websocket, origin_allowed
 from . import consent, repo
+from . import transcript as transcript_mod
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +62,8 @@ _SENTENCE_END = re.compile(r"[.!?…]\s*$")
 
 # ── Transcription ────────────────────────────────────────────────────────────────
 class NemotronTranscriber:
-    """The live speech-recognition model, one streaming context per capture."""
+    """The live speech-recognition model, one streaming context per capture (per speaker turn).
+    Calls take the model's process lock, as the legacy transcription does: one model, one at a time."""
 
     def __init__(self, stt):
         self._stt = stt
@@ -58,10 +72,16 @@ class NemotronTranscriber:
 
     async def feed(self, pcm16: bytes, sample_rate: int):
         audio = self._stt._pcm16_to_float32(pcm16)
-        return await self._ctx.process_pcm_chunk(audio, sample_rate, asyncio.get_running_loop(), self._adapter.device)
+        async with self._stt.get_nemotron_process_lock():
+            return await self._ctx.process_pcm_chunk(audio, sample_rate, asyncio.get_running_loop(), self._adapter.device)
 
     async def flush(self):
-        return await self._ctx.flush(asyncio.get_running_loop())
+        async with self._stt.get_nemotron_process_lock():
+            return await self._ctx.flush(asyncio.get_running_loop())
+
+    def reset(self) -> None:
+        """A fresh stream: its times start again at zero (the capture adds the offset)."""
+        self._ctx = self._stt.NemotronStreamContext(self._adapter)
 
 
 def transcriber_factory():
@@ -224,7 +244,26 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
                 "transcription": "available" if transcriber else "unavailable"})
 
     custody = _Custody(capture_id)
-    state = {"paused": False, "seq": 0, "text": "", "t0": None, "t1": None}
+    state = {"paused": False, "seq": 0, "text": "", "t0": None, "t1": None,
+             "speaker": None,           # the roster participant marked as speaking
+             "audio_ms": 0.0,           # audio given to the model so far (paused audio is not)
+             "base_ms": 0.0,            # where the model's current stream starts (it restarts at speaker changes)
+             "read_ms": 0.0,            # all audio read, paused included: to measure how far behind the model is
+             "started": None, "degraded": False}
+    anchors: list[tuple[float, float]] = []      # (audio_ms, wall-clock seconds) at each accepted frame
+    def roster() -> set[str]:
+        with get_conn() as conn:
+            return {x["id"] for x in consent.participants(conn, meeting_id)}
+    people = await asyncio.to_thread(roster)
+
+    def wall(audio_ms) -> Optional[str]:
+        """Wall-clock time of a point in the audio given to the model."""
+        if audio_ms is None or not anchors:
+            return None
+        k = max(0, bisect.bisect_right(anchors, (float(audio_ms), float("inf"))) - 1)
+        a_ms, a_wall = anchors[k]
+        at = datetime.fromtimestamp(a_wall + max(0.0, float(audio_ms) - a_ms) / 1000.0, tz=timezone.utc)
+        return at.strftime("%Y-%m-%dT%H:%M:%S.") + f"{at.microsecond // 1000:03d}Z"
 
     def stop_locked(reason: str) -> None:
         with lock:
@@ -237,11 +276,17 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
             custody.add(data, policy.now_iso())
             return True
 
-    def store_segment(text: str, t0, t1) -> Optional[dict]:
+    def store_segment(text: str, t0, t1, speaker) -> Optional[dict]:
         with lock:
-            if h.reason is not None:
-                return None                           # never store text once capture was stopped
-            seg = repo.add_segment(capture_id, meeting_id, matter_id, state["seq"], t0, t1, text)
+            # Never store text once capture was stopped by a withdrawal, a revocation or the meeting's end.
+            # A person's own stop (or a dropped connection) still keeps what was said before it, unless a
+            # withdrawal has been recorded since: checked under the same lock as withdrawals (S1.8).
+            if h.reason not in (None, "ended", "disconnected"):
+                return None
+            if h.reason is not None and not consent.check(meeting_id)[0]:
+                return None
+            seg = repo.add_segment(capture_id, meeting_id, matter_id, state["seq"], t0, t1, text,
+                                   speaker, wall(t0), wall(t1))
         state["seq"] += 1
         return seg
 
@@ -249,10 +294,12 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
         for piece, ts in pieces:
             if not piece.strip():
                 continue
+            at = int(state["base_ms"] + (ts or 0))      # on the capture's audio clock
             state["text"] += piece
-            state["t0"] = ts if state["t0"] is None else state["t0"]
-            state["t1"] = ts
-            if _SENTENCE_END.search(state["text"]) or len(state["text"]) > 400:
+            state["t0"] = at if state["t0"] is None else state["t0"]
+            state["t1"] = at
+            enough = len(state["text"].split()) >= settings.LEGAL_SEGMENT_MIN_WORDS
+            if (enough and _SENTENCE_END.search(state["text"])) or len(state["text"]) > 400:
                 await commit()
 
     async def commit() -> None:
@@ -261,9 +308,40 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
         state["text"], state["t0"] = "", None
         if not text:
             return
-        seg = await asyncio.to_thread(store_segment, text, t0, t1)
+        seg = await asyncio.to_thread(store_segment, text, t0, t1, state["speaker"])
         if seg is not None:
             await send({"type": "segment", **seg})
+
+    async def mark(kind: str, **kw) -> None:
+        await asyncio.to_thread(transcript_mod.add_mark, capture_id, meeting_id, kind, by=p["sub"], **kw)
+
+    async def drain() -> None:
+        """Everything the model still holds, committed, and a fresh stream (a speaker turn or a pause)."""
+        if transcriber is not None:
+            try:
+                await emit(await transcriber.flush())
+            except Exception as e:
+                logger.warning("Capture: transcription error at a turn (%s)", type(e).__name__)
+                await mark("gap", detail="transcription_error", audio_ms=int(state["audio_ms"]))
+                await send({"type": "degraded", "reason": "transcription_error"})
+            if hasattr(transcriber, "reset"):
+                transcriber.reset()
+                state["base_ms"] = state["audio_ms"]
+        await commit()
+
+    async def check_lag() -> None:
+        """How far behind real time the model is: wall time since the first frame minus audio read."""
+        if state["started"] is None:
+            return
+        lag = (time.monotonic() - state["started"]) - state["read_ms"] / 1000.0
+        if lag > settings.LEGAL_CAPTURE_LAG_WARN_SEC and not state["degraded"]:
+            state["degraded"] = True
+            await mark("degraded", detail=f"{lag:.1f}s behind", audio_ms=int(state["audio_ms"]))
+            await send({"type": "degraded", "reason": "behind", "lag_s": round(lag, 1)})
+        elif lag < 1.0 and state["degraded"]:
+            state["degraded"] = False
+            await mark("recovered", audio_ms=int(state["audio_ms"]))
+            await send({"type": "recovered"})
 
     async def watch() -> None:
         """Access and consent re-checks; ends the capture when either lapses."""
@@ -295,24 +373,45 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
                 if len(data) > _MAX_FRAME:
                     h.stop("frame_too_large")
                     return
+                frame_ms = len(data) / 2 / sample_rate * 1000.0
+                if state["started"] is None:
+                    state["started"] = time.monotonic()
+                state["read_ms"] += frame_ms
                 if state["paused"]:
                     continue                          # paused audio is discarded unread
                 if not await asyncio.to_thread(accept_frame, data):
                     await asyncio.to_thread(_event, capture_id, "frame_rejected", h.reason)
                     return
+                anchors.append((state["audio_ms"], time.time()))
+                state["audio_ms"] += frame_ms
                 if transcriber is not None:
                     try:
                         await emit(await transcriber.feed(data, sample_rate))
                     except Exception as e:
+                        # Never silent (D-017): the transcript shows a gap here, and the person is told.
                         logger.warning("Capture: transcription error (%s)", type(e).__name__)
+                        await mark("gap", detail="transcription_error", audio_ms=int(state["audio_ms"]))
+                        await send({"type": "degraded", "reason": "transcription_error"})
+                await check_lag()
                 continue
             try:
                 obj = json.loads(msg.get("text") or "{}")
             except ValueError:
                 continue
             kind = obj.get("type") if isinstance(obj, dict) else None
-            if kind == "pause" and not state["paused"]:
+            if kind == "speaker":
+                who = obj.get("participant_id")
+                if who is not None and who not in people:
+                    await send({"type": "error", "message": "That person is not a participant of this meeting."})
+                    continue
+                if who != state["speaker"]:
+                    await drain()                     # what was said so far belongs to the previous speaker
+                    state["speaker"] = who
+                    await mark("speaker", participant_id=who, audio_ms=int(state["audio_ms"]))
+                await send({"type": "speaker", "participant_id": who})
+            elif kind == "pause" and not state["paused"]:
                 state["paused"] = True
+                await drain()
                 await asyncio.to_thread(_event, capture_id, "paused", None, p["sub"])
                 await send({"type": "state", "state": "paused"})
             elif kind == "resume" and state["paused"]:

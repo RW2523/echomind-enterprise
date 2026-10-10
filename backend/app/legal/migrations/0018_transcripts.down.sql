@@ -1,0 +1,14 @@
+DROP TRIGGER capture_marks_no_update;
+DROP INDEX ix_capture_marks;
+DROP TABLE legal_capture_marks;
+DROP TRIGGER revisions_no_update;
+DROP INDEX ix_revisions_meeting;
+DROP INDEX ix_revisions_segment;
+DROP TABLE legal_transcript_revisions;
+DROP TRIGGER segments_no_update;
+ALTER TABLE legal_transcript_segments DROP COLUMN wall_end;
+ALTER TABLE legal_transcript_segments DROP COLUMN wall_start;
+ALTER TABLE legal_transcript_segments DROP COLUMN speaker_participant_id;
+ALTER TABLE legal_meetings DROP COLUMN transcript_finalised_by;
+ALTER TABLE legal_meetings DROP COLUMN transcript_finalised_at;
+ALTER TABLE legal_meetings DROP COLUMN transcript_document_id;

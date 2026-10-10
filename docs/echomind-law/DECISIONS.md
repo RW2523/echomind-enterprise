@@ -229,7 +229,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - Under `ECHOMIND_EDITION=law`, the voice ablation mode (`VOICE_ABLATION_MODE`, `/tmp/echomind_ablation_mode`) and the payload dump taps are **hard-disabled**: the code path is unreachable and a test asserts it.
   - On `main` they stay for the research experiments unless the owner decides to remove them.
 
-### D-017 Transcript fidelity mode — PROPOSED
+### D-017 Transcript fidelity mode — ADOPTED in S2.4 under the standing approval (see D-040)
 - **Decision:** Add a `verbatim` transcript mode, the default for the Law edition:
   - no lowercasing or punctuation stripping;
   - no suffix de-duplication or short-token drops;
@@ -641,6 +641,45 @@ Every entry records the options considered, the recommendation, the consequence 
   - A one-word title ("the Lease dated …") is not matched to a document, so that reference is not checked.
   - Facts outside the listed kinds (obligations in words, conditions, parties' roles) are not compared across documents; that is S3.5 and S3.8 work.
   - The meaning pass is calibrated for nomic-embed-text only.
+
+### D-040 Legal transcription: the record, speakers, corrections and accuracy — RECORDED (S2.4; LIVE-01, D-017, R-7)
+- **The record is the model's text** (D-017):
+  - Law capture never used the legacy normaliser (audit). It stores the speech model's text as produced.
+  - Segments now end at a sentence end once they have at least `LEGAL_SEGMENT_MIN_WORDS` (12) words, or at a speaker change, a pause or the end. Before, every ~0.5 s model chunk became a segment.
+  - Segments are immutable: a database trigger refuses any change (migration 0018).
+- **The last words are kept:** a pre-existing defect discarded the text pending at a normal stop. The final text is now stored unless a withdrawal, a revocation or the meeting's end stopped the capture. A withdrawal recorded since is checked under the same lock as withdrawals, so the S1.8 guarantee still holds: no text is stored after a withdrawal.
+- **Speakers from the roster:**
+  - The person recording marks who is speaking (`{"type": "speaker"}`; Alt+1…9 in the UI), from the meeting's consented participants. This replaces the legacy two-role toggle.
+  - At each change, the model is flushed and restarted, as the legacy toggle did, so words are not carried across speakers. Times continue on the capture's audio clock.
+  - Each change is an append-only capture mark.
+  - There is no automatic speaker separation: the model cannot do it. Speakers can be corrected afterwards.
+- **Wall-clock times:**
+  - Every accepted frame is anchored to the time it arrived. A segment's audio times map to wall-clock start and end, so pauses show in the transcript; the audio clock has none.
+  - The model now runs under its process lock, as legacy transcription does.
+- **Nothing lost silently:**
+  - A transcription error records a "gap" mark, tells the person ("degraded"), and appears in the transcript as "Not transcribed".
+  - When the model falls more than `LEGAL_CAPTURE_LAG_WARN_SEC` (5 s) behind real time, the capture says so and records it, then records when it has caught up.
+  - Frames were already never dropped: a slow model delays reading the socket.
+- **Corrections are revisions** (`legal_transcript_revisions`, append-only):
+  - Text or speaker, with who, when, why and the source (a person, or the matter's vocabulary with its provenance). What is shown is derived: the latest revision, else the raw text. The history and the text as heard are always shown.
+  - Contributors may correct; read-only members may not.
+  - A rollback below 0018 is refused while corrections exist.
+- **Matter vocabulary:**
+  - The meeting's participants, the companies named in documents the person can see (without their legal form) and the documents' defined terms are matched against what was heard (similarity at least 0.8).
+  - Only differences in letters or word boundaries are offered ("harrow gate systems" → "Harrowgate Systems", "petra fos" → "Petra Voss"). Case or a possessive alone is not ("the provider's" is not "Provider").
+  - A suggestion is applied only when accepted, and then becomes a revision with its document, version and characters.
+- **Finalised transcripts are research sources** (R-7):
+  - After the meeting, a contributor adds the transcript, as corrected, to research. It becomes a matter document (kind note, status final), read like any other, with a new version each time it is finalised again. It is marked when corrected since.
+  - Research, compare, exports, holds and deletion apply as to any document.
+  - Requesting deletion of a transcript hides that copy too. Restoring brings it back. Purging removes the segments, the corrections and the copy (files, passages and index entries), and the verification checks all of them.
+  - Exports of a transcript use the corrected text with speakers, times and gaps.
+- **Accuracy harness:**
+  - `app.legal.meetings.accuracy` scores word error rate (verbatim and normalised: case, punctuation, filler; spoken numbers, years, ordinals and amounts in one form), entities (names, amounts, dates, references, counting spoken forms), negations kept, and speaker accuracy by word alignment.
+  - `eval/law/transcription/` holds four fictional scripted conversations (client call, negotiation, board meeting, witness interview) and `run_transcription_eval.py`, with three modes:
+    - **script:** a self-check, where everything must score perfectly (it does);
+    - **file:** scores transcripts produced elsewhere;
+    - **capture:** speaks each turn with a local Piper voice and streams it through the real capture socket, marking speakers.
+- **Not measured yet, and why:** the real word error rate needs the speech model. On this host NeMo is not installed, PyTorch is CPU-only, and memory headroom is about 13 GB with swap full, beside production model servers. Installing and loading it here would risk production. The capture mode stops and says so; it runs on the Law speech stack once the first `compose.sh up` is approved (🔒). A Piper voice's licence must be checked before its results are published, and AMI stays out until its licence check.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

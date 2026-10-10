@@ -200,7 +200,26 @@ export interface MeetingDetail extends MeetingSummary {
   policy: { mode: string; methods: ConsentMethod[]; max_age_hours: number; statement: string; source: string };
   participants: Participant[]; captures: CaptureRecord[];
 }
-export interface Segment { id: string; capture_id?: string; seq: number; t_start_ms?: number | null; t_end_ms?: number | null; text: string }
+export interface Segment {
+  id: string; capture_id?: string; seq: number; t_start_ms?: number | null; t_end_ms?: number | null; text: string;
+  /** S2.4: the speech model's text as produced; `text` is after corrections. */
+  raw_text?: string; speaker?: string | null; speaker_participant_id?: string | null; raw_speaker_participant_id?: string | null;
+  wall_start?: string | null; wall_end?: string | null; revised?: boolean; revisions?: Revision[];
+}
+export interface Revision {
+  id: string; kind: 'text' | 'speaker'; text?: string | null; speaker_participant_id?: string | null; reason: string;
+  source: 'person' | 'vocabulary'; provenance: Record<string, any>; by?: string | null; at: string;
+}
+export interface CaptureMark { kind: 'speaker' | 'degraded' | 'recovered' | 'gap'; participant_id?: string | null; detail?: string | null; audio_ms?: number | null; at: string; capture_id: string }
+export interface TranscriptData {
+  segments: Segment[]; marks: CaptureMark[]; participants: { id: string; name: string; role: string; removed: boolean }[];
+  finalised: { document_id: string; at: string; stale: boolean } | null;
+}
+export interface VocabularySuggestion {
+  id: string; segment_id: string; start: number; end: number; heard: string; suggested: string; kind: 'participant' | 'company' | 'defined_term';
+  score: number; text: string;
+  source: { kind: 'participant'; participant_id: string } | { kind: 'document'; document_id: string; document_title: string; version_id: string; version_number: number };
+}
 
 /** Records (S1.9): labels, holds, deletions, retention. */
 export type PrivilegeLabel = 'privileged' | 'work_product' | 'confidential' | 'not_privileged' | 'unreviewed';
@@ -208,7 +227,8 @@ export interface LabelEntry { label: PrivilegeLabel; kind: 'set' | 'suggested'; 
 export interface LabelState { current: LabelEntry | null; suggestions: LabelEntry[]; history: LabelEntry[] }
 export interface DeletionReport {
   object: 'document' | 'meeting_transcript'; versions?: number; passages?: number; findings?: number; labels?: number; files?: number;
-  file_bytes?: number; index_vectors?: number; research_citations?: number; comparisons?: number; segments?: number; kept: string[];
+  file_bytes?: number; index_vectors?: number; research_citations?: number; comparisons?: number; segments?: number;
+  revisions?: number; finalised_document?: number; kept: string[];
 }
 export interface Deletion {
   id: string; object_type: 'document' | 'meeting_transcript'; object_id: string; object_label: string | null; reason: string;

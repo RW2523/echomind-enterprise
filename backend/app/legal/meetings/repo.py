@@ -127,20 +127,25 @@ def create_capture(meeting_id: str, matter_id: str, by: str, snapshot: str, tran
     return cid
 
 
-def add_segment(capture_id: str, meeting_id: str, matter_id: str, seq: int, t0, t1, text: str) -> dict:
+def add_segment(capture_id: str, meeting_id: str, matter_id: str, seq: int, t0, t1, text: str,
+                speaker_participant_id: Optional[str] = None, wall_start: Optional[str] = None, wall_end: Optional[str] = None) -> dict:
+    """Store the speech model's raw text for a stretch of speech (D-017: never altered afterwards)."""
     sid, at = _id(), now_iso()
     with get_conn() as conn:
-        conn.execute("INSERT INTO legal_transcript_segments (id, capture_id, meeting_id, matter_id, seq, t_start_ms, t_end_ms, text, created_at) "
-                     "VALUES (?,?,?,?,?,?,?,?,?)", (sid, capture_id, meeting_id, matter_id, seq, t0, t1, text, at))
+        conn.execute("INSERT INTO legal_transcript_segments (id, capture_id, meeting_id, matter_id, seq, t_start_ms, t_end_ms, text, created_at, "
+                     "speaker_participant_id, wall_start, wall_end) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                     (sid, capture_id, meeting_id, matter_id, seq, t0, t1, text, at, speaker_participant_id, wall_start, wall_end))
         conn.commit()
-    return {"id": sid, "seq": seq, "t_start_ms": t0, "t_end_ms": t1, "text": text}
+    return {"id": sid, "capture_id": capture_id, "seq": seq, "t_start_ms": t0, "t_end_ms": t1, "text": text, "raw_text": text,
+            "speaker_participant_id": speaker_participant_id, "wall_start": wall_start, "wall_end": wall_end, "revised": False}
 
 
 def segments(matter_id: str, meeting_id: str) -> list[dict]:
     with get_conn() as conn:
-        rows = conn.execute("SELECT s.id, s.capture_id, s.seq, s.t_start_ms, s.t_end_ms, s.text, s.created_at FROM legal_transcript_segments s "
+        rows = conn.execute("SELECT s.id, s.capture_id, s.seq, s.t_start_ms, s.t_end_ms, s.text, s.created_at, s.speaker_participant_id, "
+                            "s.wall_start, s.wall_end FROM legal_transcript_segments s "
                             "JOIN legal_captures c ON c.id = s.capture_id JOIN legal_meetings mt ON mt.id = s.meeting_id "
                             "WHERE s.meeting_id=? AND s.matter_id=? AND mt.transcript_deleted_at IS NULL "
                             "ORDER BY c.started_at, s.seq", (meeting_id, matter_id)).fetchall()
-    return [{"id": r[0], "capture_id": r[1], "seq": r[2], "t_start_ms": r[3], "t_end_ms": r[4], "text": r[5], "created_at": r[6]}
-            for r in rows]
+    return [{"id": r[0], "capture_id": r[1], "seq": r[2], "t_start_ms": r[3], "t_end_ms": r[4], "text": r[5], "created_at": r[6],
+             "speaker_participant_id": r[7], "wall_start": r[8], "wall_end": r[9]} for r in rows]

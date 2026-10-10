@@ -16,7 +16,8 @@ from pydantic import BaseModel, Field
 from ..audit.record import audited, note
 from ..matters import repo as matters_repo
 from ..matters.routes import principal_of, require, require_law_edition
-from . import capture, consent, repo
+from . import capture, consent, repo, vocabulary
+from . import transcript as transcript_mod
 
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition)])
 ws_router = APIRouter(prefix="/legal", tags=["legal"])      # sockets: the edition is checked by the gate itself
@@ -161,9 +162,82 @@ def withdraw_consent(matter_id: str, meeting_id: str, participant_id: str, reque
 @router.get(_BASE + "/{meeting_id}/transcript")
 @audited("meeting.transcript.read", object_type="meeting", object_param="meeting_id")
 def transcript(matter_id: str, meeting_id: str, request: Request):
+    """The transcript as corrected (S2.4): each segment's text and speaker after its revisions, its
+    raw text and full revision history, wall-clock times, and the capture's marks."""
     require(principal_of(request), "meetings.read", matter_id)
     _meeting(matter_id, meeting_id)
-    return {"segments": repo.segments(matter_id, meeting_id)}
+    return transcript_mod.view(matter_id, meeting_id)
+
+
+class RevisionIn(BaseModel):
+    text: Optional[str] = Field(default=None, min_length=1, max_length=4000)
+    speaker_participant_id: Optional[str] = Field(default=None, max_length=64)
+    reason: str = Field(min_length=3, max_length=500)
+    suggestion_id: Optional[str] = Field(default=None, max_length=32)
+
+
+def _open_for_corrections(matter_id: str, meeting_id: str, p: dict) -> dict:
+    require(p, "meetings.create", matter_id)
+    return _meeting(matter_id, meeting_id)
+
+
+@router.post(_BASE + "/{meeting_id}/transcript/segments/{segment_id}/revisions")
+@audited("transcript.revise", object_type="transcript_segment", object_param="segment_id")
+def revise_segment(matter_id: str, meeting_id: str, segment_id: str, inp: RevisionIn, request: Request):
+    """Correct a segment's text or speaker, with a reason. The raw text is kept; a correction taken
+    from the matter's vocabulary carries that suggestion's provenance."""
+    p = principal_of(request)
+    _open_for_corrections(matter_id, meeting_id, p)
+    if inp.text is None and inp.speaker_participant_id is None and not inp.suggestion_id:
+        raise HTTPException(status_code=422, detail="Change the text or the speaker.")
+    source, provenance = "person", {}
+    if inp.suggestion_id:
+        seg = next((s for s in transcript_mod.view(matter_id, meeting_id)["segments"] if s["id"] == segment_id), None)
+        found = next((x for x in vocabulary.suggest(seg, vocabulary.terms(matter_id, meeting_id, p["sub"]))
+                      if x["id"] == inp.suggestion_id), None) if seg else None
+        if not found:
+            raise HTTPException(status_code=409, detail="That suggestion no longer applies. Refresh the transcript.")
+        source = "vocabulary"
+        provenance = {"heard": found["heard"], "suggested": found["suggested"], "kind": found["kind"], **found["source"]}
+        inp = RevisionIn(text=found["text"], reason=inp.reason)
+    try:
+        made = transcript_mod.revise(matter_id, meeting_id, segment_id, p["sub"], inp.reason, inp.text, inp.speaker_participant_id,
+                                     source, provenance)
+    except transcript_mod.NotFound:
+        raise _not_found()
+    except transcript_mod.Conflict as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    note(details={"kinds": [m["kind"] for m in made], "source": source})
+    return {"revisions": made}
+
+
+@router.get(_BASE + "/{meeting_id}/transcript/suggestions")
+@audited("meeting.transcript.suggestions", object_type="meeting", object_param="meeting_id")
+def transcript_suggestions(matter_id: str, meeting_id: str, request: Request):
+    """Corrections from the matter's vocabulary (participants, companies, defined terms), not applied."""
+    p = principal_of(request)
+    require(p, "meetings.read", matter_id)
+    _meeting(matter_id, meeting_id)
+    vocab = vocabulary.terms(matter_id, meeting_id, p["sub"])
+    found = [x for s in transcript_mod.view(matter_id, meeting_id)["segments"] for x in vocabulary.suggest(s, vocab)]
+    note(details={"suggestions": len(found), "vocabulary": len(vocab)})
+    return {"suggestions": found}
+
+
+@router.post(_BASE + "/{meeting_id}/transcript/finalise")
+@audited("transcript.finalise", object_type="meeting", object_param="meeting_id")
+def finalise_transcript(matter_id: str, meeting_id: str, request: Request):
+    """The transcript as corrected becomes a matter document (or a new version of it): research can
+    cite it, and holds, purges and exports apply."""
+    p = principal_of(request)
+    m = _open_for_corrections(matter_id, meeting_id, p)
+    require(p, "documents.import", matter_id)
+    try:
+        out = transcript_mod.finalise(p["org_id"], matter_id, {**m, "number": _number(matter_id)}, p["sub"])
+    except transcript_mod.Conflict as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    note(details={"changed": out["changed"], "version_number": out.get("version_number")})
+    return out
 
 
 @ws_router.websocket(_BASE + "/{meeting_id}/capture")

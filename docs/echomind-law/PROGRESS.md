@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-09 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.4-transcription` |
-| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.3 merged into `feature/echomind-law`; S2.4 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.5-assist` |
+| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.4 merged into `feature/echomind-law`; S2.5 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0017` (Law edition only) |
+| Migrations | `0001`–`0018` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -321,6 +321,38 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - `eval/law/run_compare_eval.py` with a golden (tuning) set and a held-out set.
   - The tuning history is reported in D-039, including the first, weaker run.
 
+### Session 3 (continued) — S2.4 Legal transcription (LIVE-01)
+- **Audit:**
+  - Law capture runs the Nemotron model in-process and does not use the legacy normaliser.
+  - Segments were ~0.5 s model chunks with no speaker, on the model's clock (pauses vanished).
+  - A transcription error lost text silently.
+  - Transcripts were not research sources.
+  - Found during the slice: the text pending at a normal stop was discarded.
+- **S2.4a — the record (D-017 adopted, D-040):**
+  - Immutable segments of whole sentences (migration 0018 trigger).
+  - Roster speakers marked live; the model is flushed and restarted at each turn and runs under its process lock.
+  - Wall-clock times per segment.
+  - Gap and degraded marks, shown to the person and in the transcript.
+  - The final text is kept on a normal stop, never after a withdrawal.
+- **S2.4b — corrections:**
+  - Append-only revisions (who, when, why, source); the text shown is derived.
+  - Matter-vocabulary suggestions (participants, companies, defined terms) with provenance, applied only when accepted.
+  - Rollback guard.
+- **S2.4c — research and records:**
+  - "Add to research" makes the corrected transcript a matter document (R-7), with new versions on re-finalising and "corrected since" marked.
+  - Deleting a transcript hides, restores and purges that copy too, and the verification covers it.
+  - Exports use the corrected text with speakers.
+- **S2.4d — UI:**
+  - "Speaking now" from the roster (Alt+1…9).
+  - Warnings when transcription falls behind or leaves a gap.
+  - The transcript with times, speakers, gaps, corrections and their history.
+  - A correction dialog (reason required), vocabulary suggestions, and "Add to research".
+  - The demo seed has an ended meeting with a transcript; browser journey 17, screenshot 27.
+- **S2.4e — accuracy:**
+  - `meetings/accuracy.py`: WER verbatim and normalised, entities, negations, speakers.
+  - `eval/law/transcription/`: four fictional scripted conversations and a harness (script, file and capture modes).
+  - **The real-audio WER is not measured yet:** it needs the speech model, which is not installed here, and loading it on the shared host would risk production (D-040).
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -350,7 +382,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | SEC-08 | PARTIAL (framework DONE) | S1.11 | Connector framework, local-folder connector, fail-closed permissions and freshness, sync and removal through the approved purge; T15 in backend and browser. Real provider BLOCKED (P-010) |
 | RAG-01 | DONE for the pilot (lawyer review at S2.8) | S1.6–S1.7, S2.1–S2.2 | S2.1: OCR, Word structure, tracked changes and comments, hidden-text flags, clauses, defined terms, exact offsets, per-version status, reader. S2.2: answers from signed versions by default (switch to drafts), version conflicts, every quote verified, statuses with abstention reasons, paragraph streaming, Evidence and "Copy with citations"; golden 70 and held-out 32 evaluation (D-036–D-038). Firm-library scope deferred to S3.1–S3.2 |
 | RAG-02 | DONE for the pilot (lawyer review at S2.8) | S2.3 | Two versions clause by clause (renumbered, moved, added, removed, exact word diff, labelled changes); explanations quoting both wordings, verified; conflicts across documents between documents with the same parties; golden and held-out evaluation (D-039) |
-| LIVE-01 | PARTIAL (pre-existing) | S2.4 | |
+| LIVE-01 | PARTIAL: built; real-audio accuracy pending the speech stack (🔒) | S2.4 | Verbatim immutable record, roster speakers, wall-clock times, gaps and degradation shown, revisions with provenance, matter vocabulary, finalised transcripts in research and purges, accuracy harness (D-040) |
 | LIVE-02 | PARTIAL | S1.7, S2.5 | S1.7: in Law, voice needs a matter and answers only from its research stream (on-behalf-of token). The Law voice UI arrives in S2.5 |
 | MEET-01 | PARTIAL | S1.8, S2.6–S2.7 | S1.8: matter meetings with participants, consent and consent-gated capture. Legal-mode Boardroom (before, during, after, minutes): S2.6–S2.7 |
 | DOC-01 | PARTIAL (pre-existing) | S3.1 | |
@@ -386,22 +418,23 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Never run `scripts/backup_data.sh` or `scripts/restore_data.sh` from this clone.** They find their volume through the `echomind-backend` container, which on this host is production. Use `python -m app.legal.backup`.
 - **Pre-existing on `main`:** standard-edition Knowledge Chat cannot send right after sign-in until a reload. There is an expected-failure test in `frontend/e2e-legacy`, and a separate task was suggested.
 - **Research abstention is the weakest measure (D-038).** When the documents do not answer, the model often says so and then adds related, supported context. That counts as an answer: abstention accuracy is 4/6 on the golden set and 1/3 held-out. The reviewer still sees the "not stated" opening and the evidence. Re-measured with a lawyer at the S2.8 gate.
+- **Transcription accuracy is unmeasured on real audio (D-040).** The harness and scoring are built and tested. The measurement needs the Law speech stack (the first `compose.sh up`, 🔒), not an install on the shared host, whose memory headroom is about 13 GB with swap full. Speakers are marked by hand: there is no automatic speaker separation.
 - In Law there is no Boardroom or document studio until their matter-scoped replacements ship (S2.6, S3.x); live transcription needs the speech model, which is not on the dev host (the capture path is tested with a stand-in). This is intended (D-025, D-026).
 
 ## NEXT EXACT ACTION
 
-Start **S2.4 Legal transcription (LIVE-01)** on `law/s2.4-transcription`, per IMPLEMENTATION_PLAN §7. S2.3 is merged into `feature/echomind-law`.
-1. **Audit first:** the live capture path (S1.8, `legal/meetings`), the legacy transcription normaliser (`transcribe/`, `session_state.py`) and the voice service's Nemotron client.
-2. **Verbatim mode (D-017, adopted under the standing approval):**
-   - raw ASR text stored immutably, with no lowercasing, punctuation stripping or token drops;
-   - frames never dropped silently: backpressure, with a visible "capture degraded" warning.
-3. **Speakers:** N speakers from the meeting roster, replacing the two-role toggle, with wall-clock anchors per segment and pause and resume gaps.
-4. **Corrections:**
-   - `transcript_revisions` (who, when, why); the display text is derived;
-   - matter-vocabulary suggestions (names, defined terms and amounts from the matter's documents) offered as revisions with their provenance, never applied silently.
-5. **Research:** a finalised transcript becomes a research source (R-7, D-037), with matter scope, holds and purges.
-6. **WER and entity harness:**
-   - Scripted legal dialogue (names, dates, amounts, negations) synthesised locally with the host's TTS, and transcribed by the host's Nemotron model.
-   - Check memory headroom before loading anything on the shared GPU; never touch production containers.
-   - AMI only after a licence check.
-7. **UI, tests and records:** transcript view with revisions and speakers; Vitest; a browser journey; D-040, TEST_RESULTS run 17; merge.
+Start **S2.5 Silent Assist legal packs (LIVE-02)** on `law/s2.5-assist`, per IMPLEMENTATION_PLAN §7. S2.4 is merged into `feature/echomind-law`.
+1. **Audit first:** the legacy Silent Assist (packs, triggers, alert wording, the voice service's research stream) and how S1.7 scoped voice to a matter.
+2. **Three packs:**
+   - `legal_client_call`: inconsistency with the signed agreement, unauthorised commitment, privileged or sensitive disclosure, unresolved action;
+   - `legal_negotiation`: concessions against the signed terms, commitments, disclosure;
+   - `legal_governance`: quorum, conflict of interest, authority.
+
+   Each alert is evidence-relative (D-015): it quotes what was said and the clause or minute it differs from, and every quote is verified (D-037).
+3. **Conservative thresholds, settings only:** no alert without verified evidence. Thresholds are signed off by a lawyer (P-008); until then they are marked unapproved.
+4. **Confirm or Dismiss with a reason:**
+   - telemetry (alerts per hour, dismiss rate, latency), with no content in the audit;
+   - alerts saved with the transcript, purged with it.
+5. **UI:** an `AlertCard` beside the live transcript, with Confirm and Dismiss, opening the cited clause in the reader.
+6. **Evaluation:** scripted mock calls with planted issues (the S2.4 scenarios, extended), measuring precision, recall on critical items, false alerts per hour and latency, on the real model where text-only (no audio needed).
+7. **Tests and records:** D-041, TEST_RESULTS run 18, the docs, a browser journey; merge.

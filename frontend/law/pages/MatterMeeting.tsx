@@ -4,7 +4,7 @@ import { Circle, FileOutput, Mic, Pause, Play, Square, Trash2, UserPlus } from '
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { keys, meetingsPath, useMeeting } from '../api/queries';
-import type { CaptureRecord, ConsentMethod, MeetingDetail, Participant, ParticipantRole, Segment } from '../api/types';
+import type { CaptureRecord, ConsentMethod, MeetingDetail, Participant, ParticipantRole, Segment, TranscriptData } from '../api/types';
 import { useMatter } from '../app/matter';
 import { startMic, type Mic as MicHandle } from '../app/mic';
 import Toolbar from '../ui/Toolbar';
@@ -13,6 +13,7 @@ import NotAvailable from './NotAvailable';
 import { DeleteDialog, HoldNotice, LabelControl } from '../ui/records';
 import { kindLabel } from './MatterMeetings';
 import { ExportDialog } from './MatterExports';
+import { TranscriptRecord } from '../ui/transcript';
 
 const ROLES: [ParticipantRole, string][] = [['host', 'Host'], ['attorney', 'Attorney'], ['client', 'Client'], ['counterparty', 'Counterparty'],
   ['witness', 'Witness'], ['expert', 'Expert'], ['other', 'Other']];
@@ -27,6 +28,7 @@ const STOPPED: Record<string, string> = {
   access_revoked: 'Recording stopped: your access to this matter changed.',
   signed_out: 'Recording stopped: you were signed out.',
   meeting_ended: 'Recording stopped: the meeting was ended.',
+  frame_too_large: 'Recording stopped: the browser sent audio in a form this server does not accept.',
 };
 const REFUSED: Record<number, string> = {
   4412: 'Everyone must consent before recording can start.', 4403: 'You cannot record in this matter.',
@@ -65,7 +67,8 @@ export default function MatterMeeting() {
             canSuggestLabel={matter.my_role === 'paralegal' && matter.status === 'open'} />}
           {tab === 'consent' && <Consent m={m} matterId={matter.id} canRecord={contributor} />}
           {tab === 'record' && <Record m={m} matterId={matter.id} canRecord={contributor} waiting={waiting}
-            canDelete={['lead', 'attorney'].includes(matter.my_role ?? '')} onHold={!!matter.on_hold} />}
+            canDelete={['lead', 'attorney'].includes(matter.my_role ?? '')} onHold={!!matter.on_hold}
+            canCorrect={['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && matter.status === 'open'} />}
         </div>
       </div>
     </>
@@ -206,8 +209,9 @@ function ConsentDialog({ m, matterId, p, onClose, onSaved }: { m: MeetingDetail;
 // ── Record ─────────────────────────────────────────────────────────────────────
 type Phase = 'idle' | 'connecting' | 'live' | 'paused' | 'stopped';
 
-function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
-  m: MeetingDetail & { transcript?: Segment[] }; matterId: string; canRecord: boolean; waiting: Participant[]; canDelete: boolean; onHold: boolean;
+function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect }: {
+  m: MeetingDetail & { transcript?: Segment[]; transcriptData?: TranscriptData }; matterId: string; canRecord: boolean; waiting: Participant[];
+  canDelete: boolean; onHold: boolean; canCorrect: boolean;
 }) {
   const refresh = useRefresh(matterId, m.id);
   const [deleting, setDeleting] = useState(false);
@@ -219,6 +223,8 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
   const [transcription, setTranscription] = useState<'available' | 'unavailable' | null>(null);
   const [live, setLive] = useState<Segment[]>([]);
   const [started, setStarted] = useState<number | null>(null);
+  const [speaker, setSpeaker] = useState<string | null>(null);
+  const [warning, setWarning] = useState('');
   const [, tick] = useState(0);
   const ws = useRef<WebSocket | null>(null);
   const mic = useRef<MicHandle | null>(null);
@@ -237,7 +243,7 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
     void refresh();
   };
   const start = () => {
-    setNote(''); setLive([]); setPhase('connecting');
+    setNote(''); setLive([]); setPhase('connecting'); setSpeaker(null); setWarning('');
     const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const sock = new WebSocket(`${scheme}://${window.location.host}${meetingsPath(matterId)}/${encodeURIComponent(m.id)}/capture?sample_rate=16000`);
     sock.binaryType = 'arraybuffer';
@@ -256,12 +262,29 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
           stopped = true;
         }
       } else if (msg.type === 'segment') setLive((s) => [...s, msg]);
+      else if (msg.type === 'speaker') setSpeaker(msg.participant_id ?? null);
+      else if (msg.type === 'degraded') setWarning(msg.reason === 'behind'
+        ? `Transcription is ${msg.lag_s} s behind. Speech is still being received; the transcript will catch up, and this is noted in the record.`
+        : 'A transcription error left a gap. It is marked in the transcript at this point, so nothing is lost silently.');
+      else if (msg.type === 'recovered') setWarning('');
       else if (msg.type === 'state') setPhase(msg.state === 'paused' ? 'paused' : 'live');
       else if (msg.type === 'stopped') { stopped = true; end(STOPPED[msg.reason] ?? 'Recording stopped.'); }
     };
     sock.onclose = (e) => { if (!stopped) end(REFUSED[e.code] ?? 'The recording connection closed.'); stopped = true; };
   };
   const send = (type: string) => ws.current?.send(JSON.stringify({ type }));
+  const speaking = (id: string | null) => ws.current?.send(JSON.stringify({ type: 'speaker', participant_id: id }));
+  const speakers = m.participants.filter((x) => x.consent.state === 'granted');
+  useEffect(() => {                                 // Alt+1…9 marks who is speaking, Alt+0 nobody in particular
+    if (phase !== 'live') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.altKey || !/^Digit\d$/.test(e.code)) return;
+      const k = Number(e.code.slice(5));
+      if (k === 0) { e.preventDefault(); speaking(null); } else if (speakers[k - 1]) { e.preventDefault(); speaking(speakers[k - 1].id); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
   const elapsed = started ? Math.floor((Date.now() - started) / 1000) : 0;
   const clock = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
   const recording = phase === 'live' || phase === 'paused';
@@ -273,8 +296,10 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <Mic size={22} style={{ color: ready ? 'var(--accent)' : 'var(--ink-3)', flex: 'none' }} />
             <div style={{ flex: 1 }}>
-              <h2 className="lw-h2">{ready ? 'Everyone has consented' : 'Waiting for consent'}</h2>
-              <p className="lw-meta" style={{ margin: '2px 0 0' }}>{ready ? 'Recording can start. Anyone on the matter can stop it by recording a withdrawal.'
+              <h2 className="lw-h2">{m.status === 'ended' ? 'This meeting has ended' : ready ? 'Everyone has consented' : 'Waiting for consent'}</h2>
+              <p className="lw-meta" style={{ margin: '2px 0 0' }}>{m.status === 'ended'
+                ? 'Nothing more can be recorded. The transcript below can still be corrected, with reasons, and added to research.'
+                : ready ? 'Recording can start. Anyone on the matter can stop it by recording a withdrawal.'
                 : `Still needed from: ${waiting.map((p) => p.name).join(', ') || 'add participants first'}.`}</p>
             </div>
             {canRecord && <button type="button" className="lw-btn lw-btn-primary" disabled={!ready} onClick={start}><Circle />Start recording</button>}
@@ -293,19 +318,34 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold }: {
             <button type="button" className="lw-btn lw-btn-danger" onClick={() => send('stop')}><Square />Stop</button>
           </div>
         )}
+        {recording && transcription === 'available' && speakers.length > 0 && (
+          <fieldset className="lw-segment lw-speaking" aria-label="Speaking now">
+            <legend className="lw-sr">Speaking now (Alt+1 to Alt+9)</legend>
+            {[...speakers.map((x, i) => [x.id, x.name, `Alt+${i + 1}`] as const), [null, 'Not marked', 'Alt+0'] as const].map(([id, name, key]) => (
+              <label key={id ?? 'none'} data-on={speaker === id || undefined} title={key}>
+                <input type="radio" name="speaking" checked={speaker === id} onChange={() => speaking(id)} />{name}
+              </label>
+            ))}
+          </fieldset>
+        )}
+        {warning && recording && <p role="alert" className="lw-capture-warning">{warning}</p>}
         {note && <p role="alert" className="lw-meta" style={{ margin: recording ? '10px 0 0' : '12px 0 0', fontSize: 13.5, color: 'var(--ink-2)' }}>{note}</p>}
       </section>
       {(live.length > 0 || (m.transcript?.length ?? 0) > 0) && (
         <section className="lw-paper lw-sheet" aria-label="Transcript">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <h2 className="lw-h2">Transcript</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+            <h2 className="lw-h2" style={{ marginRight: 'auto' }}>Transcript</h2>
             {['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && !recording && (m.transcript?.length ?? 0) > 0 &&
               <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => setExporting(true)}><FileOutput />Export…</button>}
             {canDelete && !onHold && !recording && (m.transcript?.length ?? 0) > 0 &&
               <button type="button" className="lw-btn lw-btn-sm lw-btn-danger" onClick={() => setDeleting(true)}><Trash2 />Delete transcript…</button>}
           </div>
           {canDelete && onHold && <HoldNotice />}
-          <div className="lw-serif lw-transcript">{[...(recording || phase === 'stopped' ? [] : m.transcript ?? []), ...live].map((s) => <p key={s.id}>{s.text}</p>)}</div>
+          {m.transcriptData && (
+            <TranscriptRecord matterId={matterId} meetingId={m.id} data={m.transcriptData} canCorrect={canCorrect && !recording}
+              canFinalise={canCorrect && m.status === 'ended' && !recording && (m.transcript?.length ?? 0) > 0}
+              live={recording ? live : undefined} />
+          )}
         </section>
       )}
       {m.captures.length > 0 && <Timeline captures={m.captures} />}

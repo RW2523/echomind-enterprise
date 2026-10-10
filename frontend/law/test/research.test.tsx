@@ -147,6 +147,8 @@ describe('Research', () => {
     expect(within(ev).getByText('Quote not found in the source')).toBeTruthy();
     expect(within(ev).getByText('Harrowgate MSA · v2 · Executed · cl. 8.1 · p. 9 · line 3')).toBeTruthy();
     expect(within(ev).getByRole('link', { name: 'Open evidence 1 in the document' }).getAttribute('href')).toBe('/m/M-101/documents/d1/read?v=v2&at=100-128');
+    // A quote not found still points at the passage the model cited, for the reviewer to check there.
+    expect(within(ev).getByRole('link', { name: 'Open source 2 in the document' }).getAttribute('href')).toMatch(/^\/m\/M-101\/documents\/d1\/read\?v=v2/);
     fireEvent.click(within(answer).getByRole('button', { name: 'Copy with citations' }));
     await waitFor(() => expect(write).toHaveBeenCalled());
     const copied = (write.mock.calls[0] as unknown as string[])[0];

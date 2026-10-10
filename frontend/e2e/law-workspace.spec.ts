@@ -282,7 +282,7 @@ test('meetings: recording waits for everyone’s consent and stops the moment on
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/meetings');
-  await alice.getByRole('button', { name: /Plan a meeting/ }).click();
+  await alice.getByRole('button', { name: /Plan a meeting|New meeting/ }).first().click();     // the demo world has one ended meeting (S2.4)
   await alice.getByRole('dialog', { name: 'Plan a meeting' }).getByLabel('Title').fill('Call with Voss-Lindqvist');
   await alice.getByRole('button', { name: 'Create' }).click();
   await alice.getByRole('link', { name: 'Call with Voss-Lindqvist' }).click();
@@ -599,4 +599,44 @@ test('compare: two versions clause by clause, a change explained, and conflicts 
   await expect(found.getByRole('listitem', { name: 'The date of the agreement referred to differs' }).first())
     .toContainText('Master Services Agreement dated 2 February 2026');
   await shot(alice, '26-compare-conflicts-light');
+});
+
+test('transcripts: speakers and times, a gap shown, corrections with reasons, matter vocabulary, then into research', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/meetings');
+  await alice.getByRole('link', { name: 'Renewal call with the client (demo)' }).click();
+  await alice.getByRole('tab', { name: 'Record' }).click();
+  const rows = alice.getByRole('list', { name: 'Transcript segments' });
+  await expect(rows.getByText('Not transcribed: a transcription error at this point.')).toBeVisible();
+  await expect(rows.getByText('Helena Marsh').first()).toBeVisible();
+
+  // The matter knows its participants' names: "petra fos" is offered as Petra Voss, from the roster.
+  const vocab = alice.getByRole('region', { name: 'Matter vocabulary' });
+  await vocab.getByRole('button', { name: 'Accept Petra Voss for petra fos' }).click();
+  await expect(rows.getByText('Noted. Petra Voss will confirm the board\'s position by Friday.', { exact: true })).toBeVisible();
+  await expect(rows.getByText(/Corrected once — as heard: “Noted\. petra fos will confirm/)).toBeVisible();
+
+  // A person's correction, with a reason; the original stays.
+  await alice.getByRole('button', { name: /Correct the segment at/ }).nth(1).click();
+  const dialog = alice.getByRole('dialog', { name: 'Correct this segment' });
+  await dialog.getByLabel('Text').fill('What does the new monthly fee look like?');
+  await dialog.getByLabel('Reason').fill('Checked against the call notes');
+  await dialog.getByRole('button', { name: 'Save correction' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(rows.getByText('What does the new monthly fee look like?', { exact: true })).toBeVisible();
+  await shot(alice, '27-transcript-corrections-light');
+
+  // Into research: a matter document, opened in the reader with speakers and times.
+  await alice.getByRole('button', { name: 'Add to research' }).click();
+  await expect(alice.getByText('In research', { exact: true })).toBeVisible();
+  await alice.goto('/m/M-101/documents');
+  const row = alice.getByRole('row', { name: /Transcript — Renewal call with the client \(demo\)/ });
+  await expect(row.getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  await alice.getByRole('button', { name: 'Transcript — Renewal call with the client (demo)', exact: true }).click();
+  await alice.getByRole('complementary', { name: 'Document details' }).getByRole('link', { name: 'Read' }).click();
+  const sheet = alice.getByRole('article', { name: 'Document text' });
+  await expect(sheet.getByText(/Petra Voss: What does the new monthly fee look like\?/)).toBeVisible({ timeout: 120_000 });
+  await expect(sheet.getByText(/\[Not transcribed: a transcription error at this point\.\]/)).toBeVisible();
 });

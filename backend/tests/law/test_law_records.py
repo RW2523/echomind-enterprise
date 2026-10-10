@@ -211,6 +211,8 @@ def test_meeting_transcripts_go_through_the_same_service(records, fresh_db, monk
         async def flush(self):
             return []
     monkeypatch.setattr(capture, "transcriber_factory", lambda: T())
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_SEGMENT_MIN_WORDS", 1)      # one stored segment per test sentence
     alice, rhea = as_user(records, "alice"), as_user(records, "rhea")
     mid = records["mid"]
     m = alice.post(f"/api/legal/matters/{mid}/meetings", headers=csrf_headers(alice), json={"title": "Call"}).json()["meeting"]
