@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 1 gate: the consolidated security suite (S1.12), one line per spec test.
+# Phase 1 and 2 gates: the consolidated security suite (S1.12, S2.8), one line per spec test.
 #
 #   scripts/law/security_suite.sh            # exit 0 only if every group passes
 #
@@ -23,6 +23,12 @@ declare -a SUITES=(
   "T13 upgrade, rollback, encrypted restore|$L/test_law_dr.py"
   "T15 source permissions intersected, fail closed|$L/test_law_connectors.py"
   "Audit chain append-only and verifiable|$L/test_law_audit.py"
+  "T05/T06 signed versions, verified evidence (S2.2)|$L/test_law_versions.py $L/test_law_evidence.py"
+  "Compare and conflicts: visible documents only (S2.3)|$L/test_law_compare.py $L/test_law_conflicts.py"
+  "Transcripts: verbatim record, consent kept (S2.4)|$L/test_law_transcripts.py"
+  "Silent Assist: matter-only sources, no leaks (S2.5)|$L/test_law_assist.py"
+  "AI drafts approved by a second lawyer, hash-bound (S2.6-7)|$L/test_law_minutes.py $L/test_law_reviews.py"
+  "Evaluation runs recorded, audit readers only (S2.8)|$L/test_law_evaluations.py"
 )
 FAILED=0
 printf '%-52s %s\n' "Spec test" "Result"

@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""Score a filled Phase 2 review sheet against the rubric's proposed bars (S2.8).
+
+    python3 eval/law/lawyer_review/score.py sheet.csv [second_reviewer.csv]
+
+Writes eval/law/reports/<time>-lawyer-phase2.json and .md. Bars are proposals for the owner (and P-008
+for alerts); a measure below its bar is reported, never hidden.
+"""
+from __future__ import annotations
+
+import csv
+import json
+import sys
+import time
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPORTS = HERE.parent / "reports"
+SCALE = {"research_answer": 3, "compare_explanation": 3, "conflict_finding": 3, "minutes_item": 3, "assist_alert": 2}
+
+
+def read(path: str) -> dict[str, dict]:
+    with open(path, newline="") as f:
+        return {r["id"]: r for r in csv.DictReader(f) if r.get("score", "").strip() != ""}
+
+
+def measures(rows: dict[str, dict], key: list[dict]) -> dict:
+    kinds = {k["id"]: k for k in key}
+    out = {}
+    for kind, top in SCALE.items():
+        scores = [int(r["score"]) for i, r in rows.items() if kinds.get(i, {}).get("kind") == kind]
+        if not scores:
+            continue
+        good = sum(s >= top - 1 for s in scores) if top == 3 else sum(s == 2 for s in scores)
+        out[kind] = {"scored": len(scores), "zero": sum(s == 0 for s in scores), "good_share": round(good / len(scores), 3)}
+    abst = [r for i, r in rows.items() if kinds.get(i, {}).get("expect_abstain")]
+    if abst:
+        out["abstentions"] = {"items": len(abst), "correct": sum(r.get("abstained_correctly", "").strip().lower() in ("yes", "y", "1") for r in abst)}
+    invented = [r for i, r in rows.items() if kinds.get(i, {}).get("kind") == "minutes_item" and r.get("missing_or_invented", "").strip().lower().startswith("invent")]
+    out["minutes_invented"] = len(invented)
+    return out
+
+
+def main(argv: list[str]) -> int:
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("sheets", nargs="+", help="the filled sheet, and optionally the second reviewer's")
+    ap.add_argument("--key", default=str(HERE / "key.json"))
+    ap.add_argument("--reports", default=str(REPORTS))
+    args = ap.parse_args(argv)
+    argv = args.sheets
+    key = json.loads(Path(args.key).read_text())
+    first = read(argv[0])
+    result = {"measures": measures(first, key)}
+    if len(argv) > 1:
+        second = read(argv[1])
+        both = [i for i in first if i in second]
+        if both:
+            result["agreement_within_1"] = round(sum(abs(int(first[i]["score"]) - int(second[i]["score"])) <= 1 for i in both) / len(both), 3)
+            result["double_scored"] = len(both)
+    m = result["measures"]
+    bars = {"research harmful (0)": (m.get("research_answer", {}).get("zero"), "= 0"),
+            "research 2 or 3": (m.get("research_answer", {}).get("good_share"), "≥ 0.85"),
+            "compare 2 or 3": (m.get("compare_explanation", {}).get("good_share"), "≥ 0.85"),
+            "minutes items 2 or 3": (m.get("minutes_item", {}).get("good_share"), "≥ 0.85"),
+            "minutes invented": (m.get("minutes_invented"), "= 0"),
+            "agreement ±1": (result.get("agreement_within_1"), "≥ 0.80")}
+    result["bars"] = {k: {"value": v, "bar": b} for k, (v, b) in bars.items()}
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    out = Path(args.reports) / f"{stamp}-lawyer-phase2.json"
+    out.write_text(json.dumps({"meta": {"set": "phase2", "time": stamp, "sheets": [Path(a).name for a in argv]}, "summary": result}, indent=1))
+    out.with_suffix(".md").write_text("# Phase 2 lawyer review\n\n| Measure | Value | Proposed bar |\n|---|---|---|\n" +
+                                      "".join(f"| {k} | {v['value']} | {v['bar']} |\n" for k, v in result["bars"].items()))
+    print(json.dumps(result, indent=1))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

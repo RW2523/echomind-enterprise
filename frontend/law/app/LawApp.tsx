@@ -28,6 +28,7 @@ import MatterCompare from '../pages/MatterCompare';
 import MatterMeetings from '../pages/MatterMeetings';
 import ResearchNote from '../pages/ResearchNote';
 import Reviews from '../pages/Reviews';
+import Evaluations from '../pages/Evaluations';
 import MatterMeeting from '../pages/MatterMeeting';
 import MatterExports, { MatterExport } from '../pages/MatterExports';
 import NotAvailable from '../pages/NotAvailable';
@@ -78,6 +79,7 @@ export const lawRoutes = [
           { path: '/admin/audit', element: <AuditTrail /> },
           { path: '/admin/records', element: <Records /> },
           { path: '/admin/connectors', element: <Connectors /> },
+          { path: '/admin/evaluations', element: <Evaluations /> },
           { path: '*', element: <NotAvailable /> },
         ],
       },
