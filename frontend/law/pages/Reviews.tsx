@@ -6,7 +6,7 @@ import Toolbar from '../ui/Toolbar';
 import { EmptyState, ErrorNote, Skeleton, StatusPill, type Tone } from '../ui/primitives';
 
 const KIND: Record<ReviewKind, [string, Tone]> = {
-  minutes: ['Minutes', 'accent'], research_note: ['Research note', 'accent'], legal_draft: ['Draft', 'accent'], export: ['Export', 'privileged'],
+  minutes: ['Minutes', 'accent'], research_note: ['Research note', 'accent'], legal_draft: ['Draft', 'accent'], redline: ['Redline', 'accent'], export: ['Export', 'privileged'],
   deletion: ['Deletion', 'conflict'], hold: ['Legal hold', 'hold'], wall: ['Ethical wall', 'neutral'], emergency_access: ['Emergency access', 'conflict'],
 };
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '');

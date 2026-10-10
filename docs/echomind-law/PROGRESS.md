@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.3-redlines` |
-| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.2 merged; S3.3 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.4-citations` |
+| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.3 merged (S3.3's manual Word check 🔒); S3.4 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0024` (Law edition only) |
+| Migrations | `0001`–`0025` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -495,6 +495,22 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **S3.2c — UI:** the Playbooks page (positions, fallbacks, approval confirmation, new versions, read a precedent) and a document's "Check against a playbook" page, linked from the reader. Journey 23, screenshots 35–36.
 - **Evaluation:** `eval/law/playbook/` golden and held-out through the real endpoint and model. The demo journey found the "greater of" case, now in the tuning set and decided by rule (D-046).
 
+### Session 3 (continued) — S3.3 Redlines and Word tracked changes (DOC-02b)
+- **Audit:**
+  - No tracked-changes writer existed. The S2.1 reader already reads tracked changes; S1.10 exports strip them by design.
+  - Comments are written as raw OOXML with lxml (no python-docx upgrade needed).
+- **S3.3a — the D-011 spike (`redlines/word.py`, D-047):**
+  - Clauses found across paragraphs, ignoring Word's generated numbers, hidden runs and footnote marks.
+  - Word-level `w:ins`/`w:del` with author and date; whole paragraphs inserted or deleted with their marks; hidden runs and bookmarks kept; comments with reasons.
+  - **T10 `verify`** before every release (accept all = revision, reject all = original); LibreOffice keeps the changes.
+- **S3.3b — redlines (migration 0025, which also ends per-kind table rebuilds):**
+  - Each line outside the playbook revised to the approved standard or a chosen fallback, on the clause's own text only.
+  - The model may only fit defined terms, and is checked.
+  - Edits as versions, second-lawyer approval, filed as the document's next version with tracked changes; the exports rule scoped to that version.
+- **S3.3c — UI:** "Revise to the playbook" with a fallback choice per line; the redline page (struck and inserted words, reasons, the Word download, edit, approve, file). Journey 24, screenshot 37.
+- **Robustness evaluation:** 487/487 revisions placed and verified across 14 documents, LibreOffice 12/12.
+- **🔒 Pending:** the manual check in Microsoft Word by a person (D-011, P-013). The product says "Not yet verified by a person in Microsoft Word" until then.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -529,7 +545,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | LIVE-02 | DONE for the pilot; thresholds await P-008 | S1.7, S2.5 | Three legal packs with evidence-relative alerts, exact quotes, confirm or dismiss with a reason, telemetry, matter-only sources (D-041). The voice service's research stream is unchanged (S1.7) |
 | MEET-01 | DONE for the pilot | S1.8, S2.6 | Agenda and board-pack research; agenda marks; minutes from the whole transcript with verified sources, guards and deterministic merging; versioned edits; second-lawyer approval bound to the content hash; filing; purge and hold (D-042). Reviews queue and export hash binding: S2.7. S2.7: Reviews queue and shared review components |
 | DOC-01 | DONE for the pilot | S3.1 | Firm templates (versions, approval by a managing partner, Word styles, presets); drafts with sourced fields and cited passages, gaps for anything unsupported; second-lawyer approval; filed as Word (D-045) |
-| DOC-02 | PARTIAL: playbooks done (S3.2); redlines S3.3 | S3.2–S3.3 | Playbooks with approved positions, precedent proposals, topic-by-topic checks with quotes and the figures rule, lawyer decisions (D-046). Word tracked changes need a spike and a manual Word check (S3.3) |
+| DOC-02 | PARTIAL: built; manual Word check 🔒 | S3.2–S3.3 | Playbooks (D-046); redlines and Word tracked changes, T10 automated checks and LibreOffice round trips pass (D-047). The manual Microsoft Word check by a person is pending |
 | DOC-03 | MISSING | S3.4 | External authority stays UNVERIFIED (P-009) |
 | DOC-04 | MISSING | S3.5 | |
 | DOC-05 | MISSING | S3.6 | |
@@ -567,13 +583,16 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S3.3 Redlines and Word tracked changes (DOC-02b)** on `law/s3.3-redlines`, per IMPLEMENTATION_PLAN §7. S3.2 is merged into `feature/echomind-law`.
-1. **Audit first:** the S2.3 word diff and alignment, S3.1 Word rendering, and the S1.10 export rebuild (which strips tracked changes on purpose).
-2. **Suggested revisions:** for a playbook line that is outside, propose the standard (or the fallback the lawyer picks) as a revision of the exact clause. The wording comes from the approved position, never the model; the model may only adjust references (party names, defined terms), and those adjustments are checked.
-3. **HTML redline:** a word-level diff of clause and revision with insertions and deletions, author and date.
-4. **The D-011 spike, Word tracked changes:**
-   - write true `w:ins` and `w:del` runs with author and date, plus a comment carrying the reason, into the matter's own Word document;
-   - **T10 automated checks:** the XML is valid; accepting all changes gives the target text and rejecting all gives the original; LibreOffice opens and round-trips the file.
-   - The manual check in Microsoft Word is 🔒 (a person); until then the Word output is marked "not yet verified in Word".
-5. **Approval:** a redline is an AI artifact (S2.7): a second lawyer approves it before it is filed or exported.
-6. **Tests:** backend, Vitest, journey 24; D-047, TEST_RESULTS run 24; merge. Then S3.4 (citation and quote checker).
+Start **S3.4 Citation and quote checker (DOC-03, spec test T07)** on `law/s3.4-citations`, per IMPLEMENTATION_PLAN §7. S3.3 is merged into `feature/echomind-law`.
+1. **Audit first:**
+   - S2.2 quote verification (D-037), the S2.1 clause numbers and defined terms, and S2.3 references between documents;
+   - what P-009 allows: no licensed authority library, so every external citation stays UNVERIFIED.
+2. **Parser:**
+   - internal references (clause, section §, schedule, exhibit, annex, paragraph);
+   - external authorities (U.S.C., C.F.R., case reporters, EU instruments, UK statutes and cases);
+   - quotations in a document ("…" with a source named nearby).
+3. **Internal resolution:** each internal reference resolved to the exact passage of this document, or of another matter document it names. Missing or renumbered targets are flagged.
+4. **Altered quotes:** a quotation attributed to a matter document is compared with that document (normalized diff); changed words are shown.
+5. **External authorities:** listed, marked UNVERIFIED (P-009), never "checked" against anything.
+6. **Report UI:** on a document, "Check citations and quotes". Results with links to the passage. Advisory, with lawyers' notes.
+7. **Tests:** T07 with planted fictional authorities and altered quotes; a golden and held-out evaluation; journey 25; D-048, run 25; merge. Then S3.5 (defined terms and cross-references).

@@ -34,6 +34,7 @@ import MatterDrafting from '../pages/MatterDrafting';
 import DraftPage from '../pages/DraftPage';
 import Playbooks from '../pages/Playbooks';
 import DocumentPlaybook from '../pages/DocumentPlaybook';
+import RedlinePage from '../pages/RedlinePage';
 import MatterMeeting from '../pages/MatterMeeting';
 import MatterExports, { MatterExport } from '../pages/MatterExports';
 import NotAvailable from '../pages/NotAvailable';
@@ -68,6 +69,7 @@ export const lawRoutes = [
               { path: 'documents', element: <MatterDocuments /> },
               { path: 'documents/:docId/read', element: <DocumentReader /> },
               { path: 'documents/:docId/playbook', element: <DocumentPlaybook /> },
+              { path: 'redlines/:artifactId', element: <RedlinePage /> },
               { path: 'research', element: <MatterResearch /> },
               { path: 'compare', element: <MatterCompare /> },
               { path: 'meetings', element: <MatterMeetings /> },

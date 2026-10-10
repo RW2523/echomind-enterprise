@@ -104,6 +104,8 @@ def _approval(object_type: str, object_id: str, src: "source.Source") -> Optiona
         filing = artifacts.filing_for_document(conn, object_id)
         if not filing:
             return None
+        if filing["as_new_version"] and filing["version_id"] != src.version_id:
+            return None                                  # S3.3: a redline is one version of the client's document; later ones are its own
         sha = conn.execute("SELECT sha256 FROM legal_document_versions WHERE id=?", (src.version_id,)).fetchone()
     if filing["version_id"] != src.version_id or not sha or sha[0] != filing["body_sha256"]:
         what = artifacts.KINDS[filing["kind"]][1].lower()

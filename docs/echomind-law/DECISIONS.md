@@ -171,7 +171,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - The UI labels OCR text "OCR text, verify against image" and shows the page image beside it.
 - **Alternative:** a GPU OCR (docTR or PaddleOCR) can be evaluated later if Tesseract accuracy is insufficient on the pilot's scans.
 
-### D-011 DOCX export and true tracked changes — PROPOSED, with a feasibility spike
+### D-011 DOCX export and true tracked changes — PROPOSED, with a feasibility spike (S3.3: automated checks pass, manual Word check pending; see D-047)
 - **Decision:**
   - Build a DOCX renderer with python-docx for normal documents.
   - Write redlines by emitting raw OOXML `<w:ins>`/`<w:del>` runs with `w:author`/`w:date`, plus comments (`comments.xml`, `w:commentRangeStart/End`, `w:commentReference`). python-docx 1.2 adds a comments API; upgrading the 1.1.2 pin is part of the spike.
@@ -929,6 +929,45 @@ Every entry records the options considered, the recommendation, the consequence 
   - Topics are found by their words and a search, so a clause on two topics can be shown for both.
   - Positions in prose ("reasonable notice") are judged by the model alone; only figures and laws have the rule.
   - Suggested revisions and redlines are S3.3.
+
+### D-047 Redlines and Word tracked changes: the D-011 spike passes its automated checks — RECORDED (S3.3; DOC-02b, T10, P-013)
+- **Audit:**
+  - No tracked-changes writer existed. The S2.1 reader already read `w:ins`/`w:del` as accepted and showed them; the S1.10 export deliberately rebuilds Word without revisions.
+  - The S2.3 word diff aligns clauses rather than writing them.
+  - Comments were written with lxml directly (raw OOXML, as D-011 planned); the python-docx upgrade was not needed.
+- **The writer (`redlines/word.py`), as D-011 planned:**
+  - A clause is found by its words, across one or more paragraphs, ignoring numbers Word generates ("12.3", "(a)", "Article I"), hidden runs and the reader's footnote marks.
+  - Paragraphs are paired in order. Each pair becomes a word-level diff:
+    - plain runs, `w:del`/`w:delText` and `w:ins`, each with `w:author` and `w:date`;
+    - changes separated only by spaces read as one change;
+    - the paragraph's properties are kept, and the runs take its first visible run's formatting.
+  - An unpaired original paragraph is deleted whole, including its paragraph mark. A new paragraph is inserted whole, keeping the style but not Word's generated number.
+  - Hidden runs and bookmarks in a revised paragraph are kept as they were. A comment with the reason is anchored on the clause, with the comments part, relationship and content type added when missing.
+  - A clause that cannot be found is reported, never guessed.
+  - Text and PDF documents are first written as a plain Word file, one paragraph per line.
+- **T10, checked before every release:** `verify` replays each change on exactly the paragraphs it matched.
+  - Accepting all must give the original with each clause revised and nothing else.
+  - Rejecting all must give the original, including the file's own earlier tracked changes.
+  - Every change must have an author and a date, and the comments part must exist.
+  - A file that fails is not sent or filed (409).
+  - Tests use the S2.1 Word fixture (automatic numbering, existing tracked changes, a comment, hidden text, a table, a footnote). LibreOffice opens the result and keeps the changes and their author (tested).
+- **Redlines (`redlines/service.py`):**
+  - From a playbook check (S3.2), each line outside the playbook (or each topic the lawyer names) is revised to the approved standard, or to the fallback the lawyer picks. The clause's own number is kept, and only the clause's own text is revised: never the next heading, clause or a table.
+  - **The model only fits the firm's wording to the contract's defined terms.** It sees the firm's wording and the contract's defined terms (S2.1), never the clause's substance. The fit is kept only if every word it adds appears in the clause, and its figures, periods, percentages and laws are the firm's. Otherwise the firm's wording is kept, and the redline says why.
+  - With the real model, the first prompt (which showed the whole clause) produced "fits" that copied the contract's substance back ("thirty (30) days", "Delaware"). The check rejected every one. The prompt now shows only the defined terms.
+  - A revision identical to the clause is skipped, and "nothing to revise" is said plainly.
+  - A redline is an AI artifact (S2.7): edits are new versions (wording, a fallback, a change dropped), and a second lawyer approves.
+  - Filing adds the Word file with tracked changes as the document's next version (status draft) and records the filing. The exports rule of S2.7 applies to that version only: later versions of the client's document are the client's.
+  - It is visible only with the document and purged with it.
+- **Robustness evaluation (`eval/law/redline/run_redline_eval.py`, no model):** every clause of 14 documents (the Markdown corpora and the Word fixture) was revised four ways: a figure changed, words appended, shortened to a sentence, and a paragraph added.
+  - First run: 489 revisions, 478 placed and 478 verified, 11 not placed.
+  - The 11 were "Article I", hidden text, and a clause running into a table and a footnote. All were refused rather than guessed, then fixed.
+  - **Final: 487/487 placed and verified, LibreOffice round trips 12/12 kept the tracked changes.**
+- **Not yet done: the manual check in Microsoft Word (🔒, a person).** Until someone opens these files in Word, the product says "Not yet verified by a person in Microsoft Word", and DOC-02 is not called DONE (P-013).
+- **Limits:**
+  - A revised paragraph takes its first run's formatting: bold or italic words inside it are lost in the revision.
+  - Fields and hyperlinks inside a revised paragraph are not kept.
+  - A clause inside a table cell is not revised.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
