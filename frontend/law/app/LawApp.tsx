@@ -50,6 +50,8 @@ import IntakeLink from '../pages/IntakeLink';
 import MatterSummaries from '../pages/MatterSummaries';
 import SummaryPage from '../pages/SummaryPage';
 import TimeEntries from '../pages/TimeEntries';
+import MatterPanel from '../pages/MatterPanel';
+import PanelReviewPage from '../pages/PanelReviewPage';
 
 function Root() {
   useSessionExpiry();
@@ -98,6 +100,8 @@ export const lawRoutes = [
               { path: 'diligence', element: <MatterDiligence /> },
               { path: 'summaries', element: <MatterSummaries /> },
               { path: 'summaries/:artifactId', element: <SummaryPage /> },
+              { path: 'panel', element: <MatterPanel /> },
+              { path: 'panel/:reviewId', element: <PanelReviewPage /> },
               { path: 'drafting/:artifactId', element: <DraftPage /> },
               { path: 'exports', element: <MatterExports /> },
               { path: 'exports/:exportId', element: <MatterExport /> },

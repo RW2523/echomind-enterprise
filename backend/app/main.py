@@ -389,3 +389,5 @@ from .legal.summaries.routes import router as legal_summaries_router  # noqa: E4
 app.include_router(legal_summaries_router, prefix="/api")
 from .legal.timeentries.routes import router as legal_time_router  # noqa: E402
 app.include_router(legal_time_router, prefix="/api")
+from .legal.panel.routes import router as legal_panel_router  # noqa: E402
+app.include_router(legal_panel_router, prefix="/api")

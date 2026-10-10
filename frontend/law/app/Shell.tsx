@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, ListTodo, FileOutput, FilePen, Files, FolderSync, FileText, Gauge, LayoutTemplate, GitCompareArrows, History, Home as HomeIcon, Inbox, KeyRound, ListCollapse, Timer, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
+import { Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, ListTodo, FileOutput, FilePen, Files, FolderSync, FileText, Gauge, LayoutTemplate, GitCompareArrows, History, Home as HomeIcon, Inbox, KeyRound, ListCollapse, Timer, Users2, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
 import { api } from '../api/client';
 import { useReviews } from '../api/queries';
 import MatterSwitcher from '../ui/MatterSwitcher';
@@ -105,6 +105,7 @@ function ShellMatterBlock() {
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/obligations`} icon={<CalendarCheck />}>Obligations</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/diligence`} icon={<ClipboardList />}>Due diligence</NavItem>
             {me.features?.summaries && <NavItem to={`/m/${encodeURIComponent(matter.number)}/summaries`} icon={<ListCollapse />}>Summaries</NavItem>}
+            {me.features?.panel && <NavItem to={`/m/${encodeURIComponent(matter.number)}/panel`} icon={<Users2 />}>Review panel</NavItem>}
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/meetings`} icon={<CalendarClock />}>Meetings</NavItem>
             {['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && <NavItem to={`/m/${encodeURIComponent(matter.number)}/exports`} icon={<FileOutput />}>Exports</NavItem>}
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/members`} icon={<Users />}>Members</NavItem>

@@ -334,6 +334,8 @@ class Settings(BaseSettings):
     LEGAL_SUMMARIES: bool = os.getenv("LEGAL_SUMMARIES", "0").lower() in ("1", "true", "yes")
     # S4.3 time-entry drafts (OPT-03, D-056): off unless the firm turns them on. CSV export only; no billing integration.
     LEGAL_TIME_ENTRIES: bool = os.getenv("LEGAL_TIME_ENTRIES", "0").lower() in ("1", "true", "yes")
+    # S4.5 review panel (OPT-05, D-057): off unless the firm turns it on.
+    LEGAL_PANEL: bool = os.getenv("LEGAL_PANEL", "0").lower() in ("1", "true", "yes")
     # Connectors (S1.11): folders a local-folder connector may read, separated by ":" (empty = none).
     LEGAL_CONNECTOR_LOCAL_ROOTS: str = os.getenv("LEGAL_CONNECTOR_LOCAL_ROOTS", "")
     # Legal ingestion quality (S2.1; D-010 OCR with Tesseract, run as a local program — nothing leaves the host).

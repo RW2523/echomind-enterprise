@@ -1,0 +1,41 @@
+{
+ "about": "S4.5 panel benchmark — the TUNING set. Fictional matters only. stop: whether a careful panel must stop for facts the documents do not give.",
+ "scenarios": [
+  {
+   "id": "G1-change-of-control",
+   "specialist": "commercial",
+   "stop": false,
+   "question": "If the Customer undergoes a change of control, can the Supplier terminate this Agreement, and what is each party's liability?",
+   "documents": [
+    {
+     "name": "Master Services Agreement (fictional).txt",
+     "text": "MASTER SERVICES AGREEMENT (fictional)\n\nThis Agreement is made between Harrowgate Systems Inc. (the Supplier) and Voss-Lindqvist AB (the Customer).\n\n9. Liability\n9.1 Each party's total liability under this Agreement is limited to USD 250,000.\n9.2 Neither party is liable for indirect or consequential loss.\n\n14. Change of control\n14.1 The Customer shall notify the Supplier within ten (10) days of any change of control.\n14.2 The Supplier may terminate this Agreement on thirty (30) days' written notice if the Customer undergoes a change of control.\n\n18. Governing law\n18.1 This Agreement is governed by the laws of the State of Delaware.\n"
+    }
+   ]
+  },
+  {
+   "id": "G2-break-notice",
+   "specialist": "real_estate",
+   "stop": true,
+   "question": "Has the Tenant validly exercised the break clause in this Lease?",
+   "documents": [
+    {
+     "name": "Lease (fictional).txt",
+     "text": "LEASE (fictional)\n\nThis Lease is made between Elmfield Estates Ltd (the Landlord) and Alder Biotech AB (the Tenant).\n\n8. Break\n8.1 The Tenant may end this Lease on 31 March 2030 by giving the Landlord not less than six months' written notice.\n8.2 The break is conditional on the Tenant having paid all rent due up to the break date.\n\n12. Notices\n12.1 Notices must be in writing and delivered by hand or recorded delivery to the Landlord's registered office.\n"
+    }
+   ]
+  },
+  {
+   "id": "G3-restrictive-covenant",
+   "specialist": "employment",
+   "stop": false,
+   "question": "What restrictions apply to the Executive after the employment ends under this Agreement?",
+   "documents": [
+    {
+     "name": "Service Agreement (fictional).txt",
+     "text": "SERVICE AGREEMENT (fictional)\n\nThis Agreement is made between Corran Foods Ltd (the Company) and Imogen Hale (the Executive).\n\n15. Restrictions after employment\n15.1 For twelve (12) months after the employment ends, the Executive shall not work for a competitor of the Company in the United Kingdom.\n15.2 For six (6) months after the employment ends, the Executive shall not solicit any customer of the Company with whom the Executive dealt in the last year of employment.\n15.3 Each restriction is a separate covenant and is reduced by any time the Executive spends on garden leave.\n"
+    }
+   ]
+  }
+ ]
+}

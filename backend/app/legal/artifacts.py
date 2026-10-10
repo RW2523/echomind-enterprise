@@ -35,14 +35,15 @@ KINDS = {"minutes": ("meeting", "Minutes", "Minutes — {title}"),
          "research_note": ("research_turn", "Research note", "Research note — {title}"),
          "legal_draft": ("draft", "Draft", "{title}"),
          "redline": ("redline", "Redline", "{title}"),
-         "summary": ("document", "Summary", "{title}")}           # S4.2 (D-055): a document's summary
+         "summary": ("document", "Summary", "{title}"),           # S4.2 (D-055): a document's summary
+         "panel": ("panel_review", "Panel review", "{title}")}     # S4.5 (D-057): a four-perspective panel
 
 
 def title(a: dict) -> str:
     c = a["content"]
     if a["kind"] == "minutes":
         return (c.get("meeting") or {}).get("title") or ""
-    return c.get("title") or "" if a["kind"] in ("legal_draft", "redline", "summary") else c.get("question") or ""
+    return c.get("title") or "" if a["kind"] in ("legal_draft", "redline", "summary", "panel") else c.get("question") or ""
 
 
 def cited_documents(a: dict) -> set[str]:
@@ -53,6 +54,8 @@ def cited_documents(a: dict) -> set[str]:
                 if s.get("document_id")}
     if a["kind"] in ("redline", "summary"):              # S3.3, S4.2: the document it revises or summarises
         return {c["document"]["id"]} if c.get("document") else set()
+    if a["kind"] == "panel":                             # S4.5: every document any perspective quotes
+        return {e["document_id"] for v in c.get("perspectives") or [] for e in v.get("evidence") or [] if e.get("document_id")}
     if a["kind"] != "research_note":
         return set()
     return {x["document_id"] for key in ("evidence", "sources", "conflicts") for x in c.get(key) or [] if x.get("document_id")}

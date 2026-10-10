@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, SummaryVersion, TimeEntry, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, PanelReview, PanelView, SummaryVersion, TimeEntry, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -258,3 +258,14 @@ export const useDocSummaries = (matterId: string, documentId: string | null) =>
 export const useTimeEntries = (from: string, to: string) =>
   useQuery({ queryKey: ['time', from, to] as const,
     queryFn: () => api.get<{ entries: TimeEntry[]; timezone: string; unit_minutes: number }>(`/api/legal/time?from=${from}&to=${to}`) });
+
+// Review panel (S4.5, D-057)
+export const panelPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/panel`;
+export const usePanelReviews = (matterId: string) =>
+  useQuery({ queryKey: ['matter', matterId, 'panel'] as const,
+    queryFn: () => api.get<{ reviews: PanelReview[]; specialisms: Record<string, string>; can: { ask: boolean; approve: boolean } }>(panelPath(matterId)),
+    refetchInterval: (q) => (q.state.data?.reviews.some((r) => r.status === 'queued' || r.status === 'running') ? 2000 : false) });
+export const usePanelReview = (matterId: string, reviewId: string) =>
+  useQuery({ queryKey: ['matter', matterId, 'panel', reviewId] as const,
+    queryFn: () => api.get<PanelView>(`${panelPath(matterId)}/${encodeURIComponent(reviewId)}`),
+    refetchInterval: (q) => (q.state.data && ['queued', 'running'].includes(q.state.data.review.status) ? 2000 : false) });
