@@ -13,7 +13,7 @@ const doc = (over: Partial<LawDocument> = {}): LawDocument => ({
     uploaded_by: 'alice', uploaded_at: '2026-10-08T10:00:00.000Z', index_status: 'indexed', chunk_count: 2 }, ...over,
 });
 const REPORT = { object: 'document' as const, versions: 1, passages: 2, findings: 0, labels: 1, files: 1, file_bytes: 120, index_vectors: 2,
-  research_citations: 1, kept: ['The audit trail (identifiers only, never content)', 'This deletion record, without the document’s title'] };
+  research_citations: 1, comparisons: 2, kept: ['The audit trail (identifiers only, never content)', 'This deletion record, without the document’s title'] };
 const deletion = (over: Partial<Deletion> = {}): Deletion => ({
   id: 'del1', object_type: 'document', object_id: 'd1', object_label: 'Settlement memo', reason: 'Duplicate', origin: 'person', status: 'requested',
   requested_by: 'alice', requested_at: '2026-10-08T11:00:00.000Z', report: REPORT, verification: null,
@@ -83,6 +83,7 @@ describe('Deleting a document', () => {
     fireEvent.click(await within(panel).findByRole('button', { name: /Delete…/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Delete “Settlement memo”' });
     expect(await within(dialog).findByText('1 research answer quoting it (the quotes are removed)')).toBeTruthy();
+    expect(within(dialog).getByText('2 saved comparisons quoting it (removed whole)')).toBeTruthy();
     expect(within(dialog).getByText('The audit trail (identifiers only, never content)')).toBeTruthy();
     const submit = within(dialog).getByRole('button', { name: /Request deletion/ }) as HTMLButtonElement;
     expect(submit.disabled).toBe(true);

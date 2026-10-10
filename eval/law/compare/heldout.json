@@ -1,0 +1,115 @@
+{
+ "note": "S2.3 held-out set: never used to adjust the system; run once per system version and reported as it comes out.",
+ "versions": [
+  {
+   "of": "lease",
+   "file": "compare/heldout-lease-v2-draft.md",
+   "status": "draft"
+  }
+ ],
+ "alignment": [
+  {
+   "left": "corpus/lease.md",
+   "right": "compare/heldout-lease-v2-draft.md",
+   "changes": [
+    {
+     "right": "10",
+     "kind": "unchanged",
+     "moved": true
+    },
+    {
+     "right": "10.1",
+     "kind": "unchanged",
+     "moved": true
+    },
+    {
+     "right": "2.1",
+     "kind": "changed",
+     "flags": [
+      "number"
+     ]
+    },
+    {
+     "right": "3.1",
+     "kind": "changed",
+     "flags": [
+      "number"
+     ]
+    },
+    {
+     "right": "3.3",
+     "kind": "added"
+    },
+    {
+     "left": "5",
+     "kind": "removed"
+    },
+    {
+     "left": "5.1",
+     "kind": "removed"
+    },
+    {
+     "right": "6.2",
+     "kind": "changed",
+     "flags": [
+      "obligation"
+     ]
+    },
+    {
+     "right": "7.1",
+     "kind": "changed",
+     "flags": [
+      "negation"
+     ]
+    },
+    {
+     "right": "9.1",
+     "kind": "formatting"
+    }
+   ]
+  }
+ ],
+ "explain": "compare/heldout-lease-v2-draft.md",
+ "scan": {
+  "extra_documents": [
+   {
+    "file": "compare/heldout-lease-side-letter.md",
+    "title": "Unit 7 side letter",
+    "kind": "correspondence",
+    "status": "executed"
+   }
+  ],
+  "subject_title": "Unit 7 side letter",
+  "planted": [
+   {
+    "kind": "reference",
+    "value": "Lease dated 20 March 2024",
+    "other_title": "Unit 7 Lease"
+   },
+   {
+    "kind": "entity",
+    "value": "Crestmoor Estates plc",
+    "other_value": "Crestmoor Estates Ltd"
+   },
+   {
+    "kind": "money",
+    "value": "GBP 80,000",
+    "other_value": "GBP 84,000",
+    "other_title": "Unit 7 Lease"
+   },
+   {
+    "kind": "period",
+    "value": "three (3) months",
+    "other_value": "six (6) months",
+    "other_title": "Unit 7 Lease"
+   },
+   {
+    "kind": "law",
+    "value": "Scotland",
+    "other_value": "England and Wales",
+    "other_title": "Unit 7 Lease"
+   }
+  ],
+  "acceptable": []
+ }
+}

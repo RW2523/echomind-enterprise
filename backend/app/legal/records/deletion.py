@@ -76,6 +76,12 @@ def _citing_turns(conn, matter_id: str, document_id: str) -> list[tuple[str, lis
     return out
 
 
+def _comparisons(conn, matter_id: str, document_id: str) -> list[str]:
+    """Saved comparisons and conflict scans that quote the document (S2.3)."""
+    return [r[0] for r in conn.execute("SELECT c.id FROM legal_comparisons c WHERE c.matter_id=? AND EXISTS "
+                                       "(SELECT 1 FROM json_each(c.document_ids_json) j WHERE j.value=?)", (matter_id, document_id))]
+
+
 def report_document(conn, matter_id: str, document_id: str) -> dict:
     versions = [r[0] for r in conn.execute("SELECT id FROM legal_document_versions WHERE document_id=? AND matter_id=?",
                                            (document_id, matter_id))]
@@ -96,6 +102,7 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
             "labels": conn.execute("SELECT COUNT(*) FROM legal_labels WHERE object_type='document' AND object_id=?", (document_id,)).fetchone()[0],
             "files": len(files), "file_bytes": sum(os.path.getsize(_blob(matter_id, v)) for v in files),
             "index_vectors": len(in_index), "research_citations": len(_citing_turns(conn, matter_id, document_id)),
+            "comparisons": len(_comparisons(conn, matter_id, document_id)),
             "kept": KEPT_DOCUMENT}
 
 
@@ -270,6 +277,9 @@ def _purge_document(conn, d: dict) -> dict:
         ev = [({**e, "quote": "", "document_title": "", "removed": True} if e.get("document_id") == doc else e) for e in ej]
         conn.execute("UPDATE legal_research_turns SET evidence_json=?, conflicts_json=? WHERE id=?",
                      (json.dumps(ev), json.dumps([c for c in cj if c.get("document_id") != doc]), tid))
+    # S2.3: comparisons and scans quote the document throughout; they are removed whole (each can be run again).
+    for cid in _comparisons(conn, d["matter_id"], doc):
+        conn.execute("DELETE FROM legal_comparisons WHERE id=?", (cid,))
     return {"versions": versions, "chunks": chunks}
 
 
@@ -296,6 +306,7 @@ def verify(d: dict, gone: dict) -> dict:
                       if c.get("document_id") == doc and (c.get("text") or c.get("document_title"))]
             quotes += [e for _, ev, cf in _evidence_turns(conn, d["matter_id"], doc) for e in ev + cf
                        if e.get("document_id") == doc and (e.get("quote") or e.get("document_title") or e.get("clause") and "other" in e)]
+            db_rows += len(_comparisons(conn, d["matter_id"], doc))
             idx = registry.for_matter(d["matter_id"])
             checks = {"database": db_rows == 0,
                       "index": not (set(idx.chunk_ids) & set(gone.get("chunks", []))),

@@ -344,6 +344,8 @@ from .legal.documents.routes import router as legal_documents_router  # noqa: E4
 app.include_router(legal_documents_router, prefix="/api")
 from .legal.research.routes import router as legal_research_router  # noqa: E402
 app.include_router(legal_research_router, prefix="/api")
+from .legal.compare.routes import router as legal_compare_router  # noqa: E402
+app.include_router(legal_compare_router, prefix="/api")
 from .legal.meetings.routes import router as legal_meetings_router, ws_router as legal_capture_router  # noqa: E402
 app.include_router(legal_meetings_router, prefix="/api")
 app.include_router(legal_capture_router, prefix="/api")

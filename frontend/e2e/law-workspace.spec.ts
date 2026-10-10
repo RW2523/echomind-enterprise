@@ -540,3 +540,63 @@ test('versions: answers come from the signed contract and warn where the draft d
   await alice.getByRole('button', { name: 'Ask' }).click();
   await expect(answer.getByRole('region', { name: 'Evidence' }).getByText(/500,000/).first()).toBeVisible({ timeout: 180_000 });
 });
+
+test('compare: two versions clause by clause, a change explained, and conflicts across documents', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const EVAL = path.resolve(HERE, '../../eval/law');
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const importFile = async (file: string, opts: { title?: string; versionOf?: string; status: string }) => {
+    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.join(EVAL, file));
+    if (opts.versionOf) await dialog.getByLabel('This is').selectOption({ label: `A new version of “${opts.versionOf}”` });
+    else await dialog.getByLabel('Title').fill(opts.title!);
+    await dialog.getByLabel('Status').selectOption(opts.status);
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(dialog).toHaveCount(0);
+  };
+  await importFile('corpus/msa-v1-signed.md', { title: 'Harrowgate MSA (compare)', status: 'executed' });
+  const msa = alice.getByRole('row', { name: /Harrowgate MSA \(compare\)/ });
+  await expect(msa.getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  await importFile('compare/msa-v3-restructured.md', { versionOf: 'Harrowgate MSA (compare)', status: 'draft' });
+  await expect(msa.getByRole('cell', { name: 'v2', exact: true })).toBeVisible();
+  await expect(msa.getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  await importFile('compare/order-form.md', { title: 'Order Form No. 1', status: 'executed' });
+  await expect(alice.getByRole('row', { name: /Order Form No\. 1/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+
+  // Two versions: the signed version against the restructured draft.
+  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Compare' }).click();
+  await alice.getByLabel('From: document').selectOption({ label: 'Harrowgate MSA (compare)' });
+  await alice.getByLabel('To: document').selectOption({ label: 'Harrowgate MSA (compare)' });
+  await alice.getByLabel('From: version').selectOption({ label: 'Version 1 · Executed · msa-v1-signed.md' });
+  await alice.getByLabel('To: version').selectOption({ label: 'Version 2 · Draft · msa-v3-restructured.md' });
+  await alice.getByRole('button', { name: 'Compare', exact: true }).click();
+  const result = alice.getByRole('article', { name: 'Comparison' });
+  const cap = result.getByRole('listitem', { name: 'cl. 8.1: Changed' });
+  await expect(cap.locator('del')).toHaveText('removed: 250,000');
+  await expect(cap.locator('ins')).toHaveText('added: 150,000');
+  await expect(result.getByRole('listitem', { name: 'cl. 4.2: Added' })).toBeVisible();
+  await expect(result.getByRole('listitem', { name: 'cl. 4.3: Unchanged' }).getByText('Renumbered 4.2 → 4.3')).toBeVisible();
+  await expect(result.getByRole('listitem', { name: 'cl. 5.1: Unchanged' }).getByText('Moved from 5.1')).toBeVisible();
+  await expect(result.getByRole('listitem', { name: 'cl. 7.1: Removed' })).toBeVisible();
+  await expect(result.getByRole('listitem', { name: 'cl. 6.1: Changed' }).getByText('Obligation changed')).toBeVisible();
+  await expect(result.getByRole('listitem', { name: 'cl. 8.2: Changed' }).getByText('Negation changed')).toBeVisible();
+  await shot(alice, '25-compare-versions-light');
+  // The real model explains the change; its quotes are checked against each version.
+  await cap.getByRole('button', { name: 'Explain' }).click();
+  await expect(cap.locator('.lw-compare-explain')).toBeVisible({ timeout: 120_000 });
+  await expect(cap.getByRole('link', { name: /Open cl\. 8\.1 of version 2/ })).toHaveAttribute('href', /\/read\?v=.+&at=\d+-\d+$/);
+
+  // Across documents: the order form's planted differences from the signed MSA.
+  await alice.getByRole('radio', { name: 'Across documents' }).check();
+  await alice.getByRole('button', { name: 'Check for conflicts' }).click();
+  const conflicts = alice.getByRole('article', { name: 'Conflicts' });
+  await expect(conflicts.getByRole('status').filter({ hasText: /documents read \(signed versions\)/ })).toBeVisible({ timeout: 180_000 });
+  const found = conflicts.getByRole('list', { name: 'Possible conflicts' });
+  await expect(found.getByRole('listitem', { name: 'A company’s name differs' }).first()).toContainText('Harrowgate Systems Ltd');
+  await expect(found.getByRole('listitem', { name: 'The date of the agreement referred to differs' }).first())
+    .toContainText('Master Services Agreement dated 2 February 2026');
+  await shot(alice, '26-compare-conflicts-light');
+});

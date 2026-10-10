@@ -1,0 +1,925 @@
+{
+ "meta": {
+  "commit": "97debd7+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-000529"
+ },
+ "alignment": [
+  {
+   "expected": 4,
+   "correct": 4,
+   "found": 4,
+   "precision": 1.0,
+   "recall": 1.0,
+   "extra": [],
+   "unlabelled_changes": 3,
+   "rows": [
+    {
+     "unit": "right 2.1",
+     "expected": {
+      "right": "2.1",
+      "kind": "changed",
+      "flags": [
+       "number"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "number"
+      ],
+      "from": "2.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 4.1",
+     "expected": {
+      "right": "4.1",
+      "kind": "changed",
+      "flags": [
+       "number"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "number"
+      ],
+      "from": "4.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 8.1",
+     "expected": {
+      "right": "8.1",
+      "kind": "changed",
+      "flags": [
+       "number"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "number"
+      ],
+      "from": "8.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 12.1",
+     "expected": {
+      "right": "12.1",
+      "kind": "changed",
+      "flags": [
+       "number"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "number"
+      ],
+      "from": "12.1"
+     },
+     "correct": true
+    }
+   ],
+   "pair": "msa-v1-signed.md → msa-v2-draft.md",
+   "seconds": 1.71,
+   "passes": [
+    "wording",
+    "meaning"
+   ],
+   "summary": {
+    "unchanged": 37,
+    "formatting": 0,
+    "changed": 5,
+    "added": 1,
+    "removed": 1,
+    "moved": 0,
+    "renumbered": 0
+   }
+  },
+  {
+   "expected": 13,
+   "correct": 13,
+   "found": 13,
+   "precision": 1.0,
+   "recall": 1.0,
+   "extra": [],
+   "unlabelled_changes": 5,
+   "rows": [
+    {
+     "unit": "right 2.1",
+     "expected": {
+      "right": "2.1",
+      "kind": "changed",
+      "flags": [
+       "number"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "number"
+      ],
+      "from": "2.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 4.2",
+     "expected": {
+      "right": "4.2",
+      "kind": "added"
+     },
+     "got": {
+      "kind": "added",
+      "moved": false,
+      "renumbered": false,
+      "flags": [],
+      "from": null
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 4.3",
+     "expected": {
+      "right": "4.3",
+      "kind": "unchanged",
+      "renumbered_from": "4.2"
+     },
+     "got": {
+      "kind": "unchanged",
+      "moved": false,
+      "renumbered": true,
+      "flags": [],
+      "from": "4.2"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 4.4",
+     "expected": {
+      "right": "4.4",
+      "kind": "unchanged",
+      "renumbered_from": "4.3"
+     },
+     "got": {
+      "kind": "unchanged",
+      "moved": false,
+      "renumbered": true,
+      "flags": [],
+      "from": "4.3"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 5",
+     "expected": {
+      "right": "5",
+      "kind": "unchanged",
+      "moved": true
+     },
+     "got": {
+      "kind": "unchanged",
+      "moved": true,
+      "renumbered": false,
+      "flags": [],
+      "from": "5"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 5.1",
+     "expected": {
+      "right": "5.1",
+      "kind": "unchanged",
+      "moved": true
+     },
+     "got": {
+      "kind": "unchanged",
+      "moved": true,
+      "renumbered": false,
+      "flags": [],
+      "from": "5.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 6.1",
+     "expected": {
+      "right": "6.1",
+      "kind": "changed",
+      "flags": [
+       "obligation"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "obligation"
+      ],
+      "from": "6.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "left 7",
+     "expected": {
+      "left": "7",
+      "kind": "removed"
+     },
+     "got": {
+      "kind": "removed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [],
+      "from": "7"
+     },
+     "correct": true
+    },
+    {
+     "unit": "left 7.1",
+     "expected": {
+      "left": "7.1",
+      "kind": "removed"
+     },
+     "got": {
+      "kind": "removed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [],
+      "from": "7.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 8.1",
+     "expected": {
+      "right": "8.1",
+      "kind": "changed",
+      "flags": [
+       "number"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "number"
+      ],
+      "from": "8.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 8.2",
+     "expected": {
+      "right": "8.2",
+      "kind": "changed",
+      "flags": [
+       "negation"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "negation"
+      ],
+      "from": "8.2"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 12.1",
+     "expected": {
+      "right": "12.1",
+      "kind": "changed",
+      "flags": [
+       "number"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "number"
+      ],
+      "from": "12.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 14.1",
+     "expected": {
+      "right": "14.1",
+      "kind": "formatting"
+     },
+     "got": {
+      "kind": "formatting",
+      "moved": false,
+      "renumbered": false,
+      "flags": [],
+      "from": "14.1"
+     },
+     "correct": true
+    }
+   ],
+   "pair": "msa-v1-signed.md → msa-v3-restructured.md",
+   "seconds": 6.28,
+   "passes": [
+    "wording",
+    "meaning"
+   ],
+   "summary": {
+    "unchanged": 32,
+    "formatting": 1,
+    "changed": 6,
+    "added": 3,
+    "removed": 4,
+    "moved": 2,
+    "renumbered": 2
+   }
+  }
+ ],
+ "explanations": {
+  "explained": 13,
+  "errors": 0,
+  "quotes": 21,
+  "verified": 17,
+  "quote_verification_rate": 0.81,
+  "changed_with_both_sides_quoted": "5/6",
+  "statuses": {
+   "answered": 3,
+   "partial": 9,
+   "unverified": 1
+  },
+  "seconds_total": 25.68,
+  "seconds_per_change": 1.98,
+  "samples": [
+   {
+    "unit": null,
+    "text": "The version designation in the document title has been updated. Source 1 shows no version designation, while source 2 includes \"— PROVIDER RESTRUCTURED DRAFT, 20 September 2026\" [1: \"\"] and [2]. This change identifies the document as a revised draft with a specific date.",
+    "evidence": [
+     [
+      "right",
+      "verbatim",
+      "— PROVIDER RESTRUCTURED DRAFT, 20 September 2026"
+     ]
+    ]
+   },
+   {
+    "unit": null,
+    "text": "The clause is present in the left-hand version (source 1) but missing in the right-hand version (source 2). [1] [2]",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "FICTIONAL DEMO FIXTURE. Every party, amount and term below is invented for testing EchoMind Law. Not a real agreement and not legal advice."
+     ],
+     [
+      "right",
+      "failed",
+      "(No matching clause in this version.)"
+     ]
+    ]
+   },
+   {
+    "unit": null,
+    "text": "The clause \"Fictional Evaluation Fixture (S2.3)\" is present in the right-hand version [2] but not in the left-hand version [1]. The change introduces a new clause in the right-hand version that is absent in the left-hand version.",
+    "evidence": [
+     [
+      "right",
+      "verbatim",
+      "FICTIONAL EVALUATION FIXTURE (S2.3)"
+     ],
+     [
+      "left",
+      "failed",
+      "(No matching clause in this version.)"
+     ]
+    ]
+   },
+   {
+    "unit": "2.1",
+    "text": "The clause changes the initial term of the agreement from thirty-six (36) months to twenty-four (24) months.  \n[1]  \n[2]",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "thirty-six (36) months"
+     ],
+     [
+      "right",
+      "verbatim",
+      "twenty-four (24) months"
+     ]
+    ]
+   },
+   {
+    "unit": "4.2",
+    "text": "The clause in source 2 states that the subscription fee increases by three percent (3%) on each anniversary of the Effective Date. No equivalent clause is present in source 1. [2].",
+    "evidence": [
+     [
+      "right",
+      "verbatim",
+      "The subscription fee increases by three percent (3%) on each anniversary of the Effective Date."
+     ]
+    ]
+   },
+   {
+    "unit": "6.1",
+    "text": "The change is the addition of \"will use reasonable efforts to\" in place of \"shall\" in the clause. This softens the obligation, replacing a mandatory requirement with a less certain commitment. [1] and [2]",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "Provider shall notify Client"
+     ],
+     [
+      "right",
+      "verbatim",
+      "Provider will use reasonable efforts to notify Client"
+     ]
+    ]
+   },
+   {
+    "unit": "7",
+    "text": "The clause \"7. Warranties\" is present in the left-hand version (source 1) but is missing from the right-hand version (source 2). [1] [2]",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "7. Warranties"
+     ],
+     [
+      "right",
+      "failed",
+      "(No matching clause in this version.)"
+     ]
+    ]
+   },
+   {
+    "unit": "7.1",
+    "text": "The clause in source 1 states that the Provider warrants the Services will perform materially in accordance with Schedule 1. Source 2 has no matching clause. [1] [2: (No matching clause in this version.)]",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "Provider warrants that the Services will perform materially in accordance with Schedule 1"
+     ]
+    ]
+   },
+   {
+    "unit": "8.1",
+    "text": "The amount of the liability cap has decreased. In source 1, the cap is the greater of USD 250,000 or the Fees paid, while in source 2, the cap is the greater of USD 150,000 or the Fees paid.  \n[1]  \n[2]",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "the greater of USD 250,000 or the Fees paid by Client in the twelve (12) months"
+     ],
+     [
+      "right",
+      "verbatim",
+      "the greater of USD 150,000 or the Fees paid by Client in the twelve (12) months"
+     ]
+    ]
+   },
+   {
+    "unit": "8.2",
+    "text": "The wording in clause 8.2 changes from denying liability to affirming liability for indirect, incidental, or consequential damages and loss of profits. The change from \"Neither\" to \"Each\" alters who is liable, and the change from \"or\" to \"and\" alters the conditions under which liability applies. [1] [2].",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "Neither party is liable for any indirect, incidental or consequential damages, or for loss of profits"
+     ],
+     [
+      "right",
+      "verbatim",
+      "Each party is liable for any indirect, incidental or consequential damages, and for loss of profits"
+     ]
+    ]
+   },
+   {
+    "unit": "12.1",
+    "text": "The clause changes the notice period required for termination. In source 1, the notice period is thirty (30) days [1], while in source 2, it is ninety (90) days [2]. This increases the notice period from thirty to ninety days.",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "thirty (30) days"
+     ],
+     [
+      "right",
+      "verbatim",
+      "ninety (90) days"
+     ]
+    ]
+   },
+   {
+    "unit": null,
+    "text": "The clause is present in the left-hand version (source 1) but missing in the right-hand version (source 2). [1] [2]",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "*Signed for Harrowgate Systems Inc. and for Voss-Lindqvist AB on 2 March 2026 (fictional).*"
+     ],
+     [
+      "right",
+      "failed",
+      "(No matching clause in this version.)"
+     ]
+    ]
+   },
+   {
+    "unit": null,
+    "text": "The clause is present only in the right-hand version. Source 2 includes the clause, stating \"*Draft for discussion — not signed (fictional).*\", while source 1 has no matching clause.",
+    "evidence": []
+   }
+  ]
+ },
+ "scan": {
+  "documents": 8,
+  "candidates": 27,
+  "checked": 27,
+  "conflicts": 27,
+  "rejected": 0,
+  "unclear": 0,
+  "planted_recall": "5/5",
+  "precision": 0.815,
+  "acceptable_extras": 0,
+  "false_positives": [
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Calder & Wynne engagement letter: thirty (30) days",
+    "b": "Order Form No. 1: forty-five (45) days",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: ninety (90) days",
+    "b": "Order Form No. 1: thirty (30) days",
+    "explanation": "[1] [2]  \nThe two passages conflict in the length of notice required for termination: one specifies ninety days, while the other specifies thirty days.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: twelve (12) month",
+    "b": "Order Form No. 1: thirty-six (36) months",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: ninety (90) days",
+    "b": "Order Form No. 1: thirty (30) days",
+    "explanation": "[1] [2]  \nThe two passages conflict over the notice period required for termination. Source 1 specifies ninety (90) days for non-renewal, while Source 2 specifies thirty (30) days for termination for convenience.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "money",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: USD 250,000",
+    "b": "Order Form No. 1: USD 18,000",
+    "explanation": "[1] [2]  \n\nThe first passage sets a liability cap of USD 250,000 or the fees paid in the prior twelve months, while the second specifies a monthly fee of USD 18,000. These amounts differ, and the contexts suggest they pertain to different aspects of the agreement.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   }
+  ],
+  "planted_never_proposed": [],
+  "planted_rejected_by_model": [],
+  "quote_verification_rate": 0.978,
+  "seconds": 12.23,
+  "findings": [
+   {
+    "kind": "reference",
+    "verdict": "conflict",
+    "a": "Order Form No. 1: Master Services Agreement dated 2 February 2026",
+    "b": "Harrowgate MSA: entered into as of 2 March 2026",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: thirty (30) days",
+    "b": "Order Form No. 1: forty-five (45) days",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "law",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: State of Delaware",
+    "b": "Order Form No. 1: England and Wales",
+    "explanation": "[1] [2]  \nThe two passages conflict over the governing law of the respective documents.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "money",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: USD 18,500",
+    "b": "Order Form No. 1: USD 18,000",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Calder & Wynne engagement letter: thirty (30) days",
+    "b": "Order Form No. 1: forty-five (45) days",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Calder & Wynne engagement letter: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "[1] and [2] refer to different names of the same company.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Calder & Wynne engagement letter: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "[1] and [2] refer to different entities, suggesting a discrepancy in the company name.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: ninety (90) days",
+    "b": "Order Form No. 1: thirty (30) days",
+    "explanation": "[1] [2]  \nThe two passages conflict in the length of notice required for termination: one specifies ninety days, while the other specifies thirty days.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Change of control notice: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "Source 1 refers to \"Harrowgate Systems Inc.\" and source 2 refers to \"Harrowgate Systems Ltd.\" Both names are similar but differ in the suffix.",
+    "quotes": []
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Change of control notice: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "[1] [2]\nThe passages differ in the name of the company, with one referring to \"Harrowgate Systems Inc.\" and the other to \"Harrowgate Systems Ltd.\"",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Change of control notice: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "[1] and [2].  \nThe two passages refer to different legal names of the same company, \"Harrowgate Systems Inc.\" versus \"Harrowgate Systems Ltd.\"",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Change of control notice: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "Source 1 refers to \"Harrowgate Systems Inc.\" and source 2 refers to \"Harrowgate Systems Ltd.\" [1] [2].",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Change of control notice: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "Source 1 refers to \"Harrowgate Systems Inc.\" and source 2 refers to \"Harrowgate Systems Ltd.\" [1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Change of control notice: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "[1]  \n[2: \"Harrowgate Systems Ltd\" (\"Provider\") ]",
+    "quotes": [
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Change of control notice: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "Source 1 refers to \"Harrowgate Systems Inc.\" and source 2 refers to \"Harrowgate Systems Ltd.\"  \n[1] [2]",
+    "quotes": [
+     "verbatim",
+     "normalized"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Change of control notice: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "[1] [2]  \nThe passages differ in the company's name, with one referring to \"Harrowgate Systems Inc.\" and the other to \"Harrowgate Systems Ltd.\"",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "[1: \"Harrowgate Systems Inc., a Delaware corporation (\"Provider\")\"] [2]",
+    "quotes": [
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "[1: \"Harrowgate Systems Inc., a Delaware corporation (\"Provider\")\"] [2: \"Harrowgate Systems Ltd\" (\"Provider\")\"]  \nThe two documents refer to different names for the provider: \"Harrowgate Systems Inc.\" in source 1 and \"Harrowgate Systems Ltd\" in source 2.",
+    "quotes": []
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Order Form No. 1: Harrowgate Systems Ltd",
+    "b": "Service credit side letter: Harrowgate Systems Inc.",
+    "explanation": "[1: \"Harrowgate Systems Ltd\" (\"Provider\") and \"Voss-Lindqvist AB\" (\"Client\")] [2: \"Harrowgate Systems Inc.\" — To: \"Voss-Lindqvist AB\"]",
+    "quotes": []
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "Source 1 mentions \"Harrowgate Systems Inc.\" and source 2 mentions \"Harrowgate Systems Ltd.\" [1] [2].",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: Harrowgate Systems Inc.",
+    "b": "Order Form No. 1: Harrowgate Systems Ltd",
+    "explanation": "[1] [2]  \nThe passages differ in the company name of the provider: \"Harrowgate Systems Inc.\" in source 1 and \"Harrowgate Systems Ltd\" in source 2.",
+    "quotes": [
+     "verbatim",
+     "failed"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Order Form No. 1: Harrowgate Systems Ltd",
+    "b": "Service credit side letter: Harrowgate Systems Inc.",
+    "explanation": "[1] and [2].  \nThe passages differ in the name of the company, with one referring to \"Harrowgate Systems Ltd\" and the other to \"Harrowgate Systems Inc.\"",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Order Form No. 1: Harrowgate Systems Ltd",
+    "b": "Service credit side letter: Harrowgate Systems Inc.",
+    "explanation": "Source 1 refers to \"Harrowgate Systems Ltd\" and source 2 refers to \"Harrowgate Systems Inc.\"  \n[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: twelve (12) month",
+    "b": "Order Form No. 1: thirty-six (36) months",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Order Form No. 1: Harrowgate Systems Ltd",
+    "b": "Service credit side letter: Harrowgate Systems Inc.",
+    "explanation": "[1] [2]  \nThe passages conflict over the name of the company, with one referring to \"Harrowgate Systems Ltd\" and the other to \"Harrowgate Systems Inc.\"",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: ninety (90) days",
+    "b": "Order Form No. 1: thirty (30) days",
+    "explanation": "[1] [2]  \nThe two passages conflict over the notice period required for termination. Source 1 specifies ninety (90) days for non-renewal, while Source 2 specifies thirty (30) days for termination for convenience.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "money",
+    "verdict": "conflict",
+    "a": "Harrowgate MSA: USD 250,000",
+    "b": "Order Form No. 1: USD 18,000",
+    "explanation": "[1] [2]  \n\nThe first passage sets a liability cap of USD 250,000 or the fees paid in the prior twelve months, while the second specifies a monthly fee of USD 18,000. These amounts differ, and the contexts suggest they pertain to different aspects of the agreement.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   }
+  ]
+ }
+}
