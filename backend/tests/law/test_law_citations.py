@@ -202,7 +202,7 @@ def test_lawyers_notes_are_kept_through_an_attempted_rollback(ct, fresh_db):
     ("Fed. R. Civ. P. 81(c)", "us_rule", []),
     ("Fed. R. Evid. 401", "us_rule", []),
     ("Fed. R. Civ. P. 95", "us_rule", ["there is no Rule 95 of the Federal Rules of Civil Procedure"]),
-    ("CPR r. 3.4(2)", "uk_rule", []),
+    ("CPR r. 3.4(2)(a)", "uk_rule", []),
     ("CPR Part 36", "uk_rule", []),
     ("CPR Part 96", "uk_rule", ["the Civil Procedure Rules have no Part 96"]),
 ])
@@ -210,6 +210,8 @@ def test_the_parser_reads_authorities_and_flags_impossible_ones(text, sub, bad):
     from app.legal.citations import parse
     found = [f for f in parse.read(f"See {text} for this.") if f.kind == "authority"]
     assert [f.sub for f in found] == [sub] and found[0].malformed == bad
+    if sub.endswith("_rule"):
+        assert found[0].text == text      # the whole rule, lettered sub-paragraphs included (citations-s3.4f)
 
 
 def test_the_parser_reads_references_and_quotations():

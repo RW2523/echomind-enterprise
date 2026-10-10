@@ -1,0 +1,143 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "689331f",
+  "time": "20261010-131923",
+  "prompt_version": "definitions-s3.5c",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "documents": 3,
+  "planted": 11,
+  "caught": "9/11",
+  "fixes_right": "2/2",
+  "false_findings": 2,
+  "controls_clean": "1/1",
+  "by_type": {
+   "broken": "1/1",
+   "gap": "4/4",
+   "inconsistent": "1/1",
+   "outdated": "1/1",
+   "repeat": "1/1",
+   "undefined": "0/2",
+   "unused": "1/1"
+  },
+  "ms_per_check": 19
+ },
+ "documents": [
+  {
+   "id": "R1-dpa",
+   "ms": 26,
+   "control": false,
+   "lines": [
+    {
+     "type": "inconsistent",
+     "text": "personal data",
+     "fix": "Personal Data",
+     "found": true,
+     "fix_ok": true,
+     "got": "“personal data” is used where the defined term is “Personal Data”."
+    },
+    {
+     "type": "unused",
+     "text": "Supervisory Authority",
+     "found": true,
+     "fix_ok": null,
+     "got": "“Supervisory Authority” is defined but never used."
+    },
+    {
+     "type": "undefined",
+     "text": "Sub-processor",
+     "found": false,
+     "fix_ok": null,
+     "got": null
+    },
+    {
+     "type": "outdated",
+     "text": "clause 6 (Audits)",
+     "fix": "clause 6 (Security)",
+     "found": true,
+     "fix_ok": true,
+     "got": "Clause 6 is headed Security, not Audits."
+    },
+    {
+     "type": "broken",
+     "text": "clause 14",
+     "found": true,
+     "fix_ok": null,
+     "got": "This document has no clause 14."
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 3 to 5 are missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clauses 3 to 5 are missing: the numbering goes from 2 to 6."
+    },
+    {
+     "type": "gap",
+     "message": "Clause 8 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 8 is missing: the numbering goes from 7 to 9."
+    }
+   ],
+   "extra": [
+    {
+     "type": "inconsistent",
+     "text": "personal data",
+     "message": "“personal data” is used where the defined term is “Personal Data”."
+    }
+   ]
+  },
+  {
+   "id": "R2-sha",
+   "ms": 15,
+   "control": false,
+   "lines": [
+    {
+     "type": "undefined",
+     "text": "Investor Consent",
+     "found": false,
+     "fix_ok": null,
+     "got": null
+    },
+    {
+     "type": "repeat",
+     "message": "Clause 4.2 appears twice",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clause 4.2 appears twice."
+    },
+    {
+     "type": "gap",
+     "message": "Item (c) of clause 4.1 is missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Item (c) of clause 4.1 is missing: the items go from (b) to (d)."
+    },
+    {
+     "type": "gap",
+     "message": "Clauses 2 and 3 are missing",
+     "found": true,
+     "fix_ok": null,
+     "got": "Clauses 2 and 3 are missing: the numbering goes from 1 to 4."
+    }
+   ],
+   "extra": [
+    {
+     "type": "inconsistent",
+     "text": "shareholders",
+     "message": "“shareholders” is used where the defined term is “Shareholders”."
+    }
+   ]
+  },
+  {
+   "id": "R3-clean-control",
+   "ms": 16,
+   "control": true,
+   "lines": [],
+   "extra": []
+  }
+ ]
+}

@@ -1,0 +1,249 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "689331f",
+  "time": "20261010-131920",
+  "prompt_version": "citations-s3.4e",
+  "model": "none (rules only)",
+  "embeddings": "nomic-embed-text (indexing on import only)"
+ },
+ "summary": {
+  "items": 20,
+  "correct": "19/20",
+  "references": "4/4",
+  "missing_caught": "2/2",
+  "false_missing": 0,
+  "quotations": "3/3",
+  "altered_caught": "1/1",
+  "false_alarms": 0,
+  "authorities_found": "12/13",
+  "malformed_caught": "4/4",
+  "wrongly_flagged": 0,
+  "all_unverified": true,
+  "external_lookups": 0,
+  "extra_items": 1,
+  "ms_per_check": 27
+ },
+ "scenarios": [
+  {
+   "id": "Q1-skeleton-uk",
+   "ms": 28,
+   "lines": [
+    {
+     "kind": "reference",
+     "text": "clause 15.3 of the Supply Contract",
+     "status": "resolved",
+     "clause": "15.3",
+     "in": "Supply Contract",
+     "ok": true,
+     "got": "resolved, clause 15.3 of Supply Contract",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "shall not be liable for any indirect loss",
+     "status": "altered",
+     "clause": "9.1",
+     "in": "Supply Contract",
+     "ok": true,
+     "got": "altered, clause 9.1 of Supply Contract",
+     "got_status": "altered",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "clause 21.4 of the Supply Contract",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Supply Contract has no clause 21.4.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "CPR r. 3.4(2)(a)",
+     "malformed": false,
+     "ok": false,
+     "got": "not found by the parser",
+     "got_status": null,
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "CPR Part 24",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "CPR Part 112",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the Civil Procedure Rules have no Part 112",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "[2021] EWCA Civ 1405",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2015] UKSC 36",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "(1854) 9 Exch 341",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2007] UKSC 12",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: UKSC gave no judgments before 2009",
+     "got_status": "unverified",
+     "got_malformed": true
+    }
+   ],
+   "extra": [
+    {
+     "kind": "authority",
+     "text": "CPR r. 3.4(2)",
+     "status": "unverified"
+    }
+   ],
+   "external_lookup": false
+  },
+  {
+   "id": "Q2-motion-us",
+   "ms": 31,
+   "lines": [
+    {
+     "kind": "authority",
+     "text": "Fed. R. Civ. P. 12(b)(6)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Evid. 702",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "28 U.S.C. § 1404(a)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "621 F.3d 77 (2d Cir. 2010)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "88 F.4th 501 (3d Cir. 2031)",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the year 2031 is in the future",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. App. P. 52",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: there is no Rule 52 of the Federal Rules of Appellate Procedure",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "reference",
+     "text": "Section 2",
+     "status": "resolved",
+     "clause": "2",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 2 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 9",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no section 9.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "Q3-lease-note-clean",
+   "ms": 23,
+   "lines": [
+    {
+     "kind": "quote",
+     "text": "The Tenant shall pay the rent quarterly in advance",
+     "status": "accurate",
+     "clause": "4.1",
+     "in": "Lease",
+     "ok": true,
+     "got": "accurate, clause 4.1 of Lease",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "good and substantial repair",
+     "status": "accurate",
+     "clause": "6.1",
+     "in": "Lease",
+     "ok": true,
+     "got": "accurate, clause 6.1 of Lease",
+     "got_status": "accurate",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  }
+ ]
+}

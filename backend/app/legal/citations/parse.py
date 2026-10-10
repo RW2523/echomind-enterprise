@@ -33,7 +33,7 @@ AUTHORITIES = [
     # S3.9: court rules. Federal Rules (Fed. R. Civ. P. 81(c), Fed. R. Evid. 401) and the English Civil Procedure Rules
     # (CPR r. 3.4, CPR 31.16, CPR Part 36, CPR PD 51U).
     ("us_rule", re.compile(r"\bFed\.\s?R\.\s?(?P<set>Civ|Evid|App|Crim|Bankr)\.(?:\s?P\.)?\s?(?P<num>\d{1,4})(?:\([a-z0-9]{1,4}\))*")),
-    ("uk_rule", re.compile(r"\bCPR\s+(?:(?P<kind>r\.|rule|Part|PD)\s?)?(?P<num>\d{1,3}[A-Z]?)(?:\.\d{1,3})*(?:\(\d+\))*")),
+    ("uk_rule", re.compile(r"\bCPR\s+(?:(?P<kind>r\.|rule|Part|PD)\s?)?(?P<num>\d{1,3}[A-Z]?)(?:\.\d{1,3})*(?:\([a-z0-9]{1,4}\))*")),
     ("us_code", re.compile(r"\b(?P<title>\d{1,3})\s+U\.\s?S\.\s?C\.(?:\s?A\.)?\s*(?:§§?|[Ss]ec(?:tion)?\.?)\s*(?P<sec>\d[\w\-]*(?:\.[\w\-]+)*(?:\([\w]+\))*)")),
     ("cfr", re.compile(r"\b(?P<title>\d{1,3})\s+C\.\s?F\.\s?R\.\s*(?:§§?|[Pp]art)\s*(?P<sec>\d[\w\-]*(?:\.[\w\-]+)*(?:\([\w]+\))*)")),
     ("us_case", re.compile(r"(?P<name>(?:[A-Z][\w.'&-]*\s+){0,4}[A-Z][\w.'&-]*\s+v\.?\s+(?:[A-Z][\w.'&-]*\s+){0,4}[A-Z][\w.'&-]*),\s+"

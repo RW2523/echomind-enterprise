@@ -109,9 +109,14 @@ def run(args) -> int:
     stamp = time.strftime("%Y%m%d-%H%M%S")
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     dirty = bool(subprocess.run(["git", "status", "--porcelain", "--", ".", ":!eval/law/reports"], cwd=ROOT, capture_output=True, text=True).stdout.strip())
-    meta = {"set": args.set, "commit": commit + ("+changes" if dirty else ""), "time": stamp, "prompt_version": ex.VERSION, "model": "none (rules only)"}
+    from app.core.config import settings
+    from app.legal.obligations import model as om
+    # the checked model pass runs after the rules when LEGAL_OBLIGATIONS_MODEL is on (the default; S3.6)
+    meta = {"set": args.set, "commit": commit + ("+changes" if dirty else ""), "time": stamp, "prompt_version": ex.VERSION,
+            "model": args.model if settings.LEGAL_OBLIGATIONS_MODEL else "none (rules only)",
+            "model_version": om.VERSION if settings.LEGAL_OBLIGATIONS_MODEL else None}
     (out / f"{stamp}-obligations-{args.set}.json").write_text(json.dumps({"meta": meta, "summary": summary, "documents": results}, indent=1, ensure_ascii=False))
-    md = [f"# EchoMind Law obligations evaluation — {args.set}", "", f"- Commit: `{meta['commit']}`", f"- Rules: `{ex.VERSION}`", f"- Run: {stamp}", "",
+    md = [f"# EchoMind Law obligations evaluation — {args.set}", "", f"- Commit: `{meta['commit']}`", f"- Rules: `{ex.VERSION}`", f"- Model pass: `{meta['model']}` ({meta['model_version'] or 'off'})", f"- Run: {stamp}", "",
           "| Measure | Result |", "|---|---|"] + [f"| {k.replace('_', ' ')} | {v} |" for k, v in summary.items()]
     for r in results:
         md += ["", f"## {r['id']} ({r['ms']} ms{', control' if r['control'] else ''})", ""]

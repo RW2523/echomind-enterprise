@@ -1,0 +1,83 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "689331f",
+  "time": "20261010-131931",
+  "prompt_version": "diligence-s3.8b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "rooms": 2,
+  "missing_lists_right": "2/2",
+  "issues_found": "5/5",
+  "extra_issues": 0,
+  "controls_clean": "1/1",
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_room": 36
+ },
+ "rooms": [
+  {
+   "id": "T1-software-company",
+   "ms": 39,
+   "control": false,
+   "missing_got": [
+    "corp-captable",
+    "corp-minutes",
+    "disputes",
+    "insurance",
+    "ip",
+    "property"
+   ],
+   "missing_want": [
+    "corp-captable",
+    "corp-minutes",
+    "disputes",
+    "insurance",
+    "ip",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 5,
+   "issues_found": 5,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "T2-corporate-control",
+   "ms": 32,
+   "control": true,
+   "missing_got": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 0,
+   "issues_found": 0,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  }
+ ]
+}

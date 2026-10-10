@@ -1,5 +1,5 @@
 {
- "about": "S3.4 citation checker, spec test T07 — the TUNING set. Fictional documents only. Expectations are what a careful lawyer checking the citations by hand would conclude, written before the check was run on them. G5–G7 were the first held-out set; they became tuning data once they informed a change. G8–G10 were the second held-out set.",
+ "about": "S3.4 citation checker, spec test T07 — the TUNING set. Fictional documents only. Expectations are what a careful lawyer checking the citations by hand would conclude, written before the check was run on them. G5–G7 were the first held-out set; they became tuning data once they informed a change. G8–G10 were the second held-out set. G11–G13 were the third held-out set (Phase 3 gate, run once on citations-s3.4e); a lettered sub-paragraph it showed (CPR r. 3.4(2)(a)) was fixed in citations-s3.4f, so it became tuning data.",
  "scenarios": [
   {
    "id": "G1-supply-memo",
@@ -611,6 +611,158 @@
     }
    ],
    "history": "Held-out in the second run (citations-s3.4b..d: 27/28); moved here because its miss (court rules) informed citations-s3.4e."
+  },
+  {
+   "id": "G11-skeleton-uk",
+   "sources": [
+    {
+     "title": "Supply Contract",
+     "status": "executed",
+     "text": "SUPPLY CONTRACT (fictional)\n\n7. Delivery\n7.2 The Supplier shall deliver the Goods within ten (10) Business Days of each order.\n\n9. Liability\n9.1 The Supplier shall not be liable for any indirect or consequential loss.\n\n15. Termination\n15.3 Either party may terminate this Contract on ninety (90) days' written notice.\n"
+    }
+   ],
+   "citing": {
+    "title": "Skeleton argument",
+    "text": "SKELETON ARGUMENT FOR THE CLAIMANT (fictional)\n\n1. The contract\n1.1 Under clause 15.3 of the Supply Contract, either party may terminate on notice.\n1.2 Clause 9.1 of the Supply Contract says that \"The Supplier shall not be liable for any indirect loss.\"\n1.3 The Defendant also relies on clause 21.4 of the Supply Contract, which does not help it.\n\n2. Procedure\n2.1 The application is made under CPR r. 3.4(2)(a) and, in the alternative, CPR Part 24.\n2.2 The Defendant cites CPR Part 112, which does not exist.\n\n3. Authorities\n3.1 See [2021] EWCA Civ 1405 and [2015] UKSC 36; and Hadley v Baxendale (1854) 9 Exch 341.\n3.2 The Defendant's reliance on [2007] UKSC 12 is misplaced.\n"
+   },
+   "expect": [
+    {
+     "kind": "reference",
+     "text": "clause 15.3 of the Supply Contract",
+     "status": "resolved",
+     "clause": "15.3",
+     "in": "Supply Contract"
+    },
+    {
+     "kind": "quote",
+     "text": "shall not be liable for any indirect loss",
+     "status": "altered",
+     "clause": "9.1",
+     "in": "Supply Contract"
+    },
+    {
+     "kind": "reference",
+     "text": "clause 21.4 of the Supply Contract",
+     "status": "missing"
+    },
+    {
+     "kind": "authority",
+     "text": "CPR r. 3.4(2)(a)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "CPR Part 24",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "CPR Part 112",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "[2021] EWCA Civ 1405",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2015] UKSC 36",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "(1854) 9 Exch 341",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2007] UKSC 12",
+     "malformed": true
+    }
+   ]
+  },
+  {
+   "id": "G12-motion-us",
+   "sources": [],
+   "citing": {
+    "title": "Motion memorandum",
+    "text": "MEMORANDUM IN SUPPORT OF MOTION TO DISMISS (fictional)\n\n1. Introduction\n1.1 Defendant moves under Fed. R. Civ. P. 12(b)(6).\n\n2. Standard\n2.1 Expert evidence is governed by Fed. R. Evid. 702. Venue may be transferred under 28 U.S.C. § 1404(a).\n2.2 See Barlow v. Teague Freight, 621 F.3d 77 (2d Cir. 2010). Plaintiff cites Pell v. Ormond, 88 F.4th 501 (3d Cir. 2031) and Fed. R. App. P. 52.\n\n3. Argument\n3.1 As Section 2 explains, the standard is not met. Section 9 below addresses damages.\n"
+   },
+   "expect": [
+    {
+     "kind": "authority",
+     "text": "Fed. R. Civ. P. 12(b)(6)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Evid. 702",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "28 U.S.C. § 1404(a)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "621 F.3d 77 (2d Cir. 2010)",
+     "malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "88 F.4th 501 (3d Cir. 2031)",
+     "malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. App. P. 52",
+     "malformed": true
+    },
+    {
+     "kind": "reference",
+     "text": "Section 2",
+     "status": "resolved",
+     "clause": "2",
+     "in": "self"
+    },
+    {
+     "kind": "reference",
+     "text": "Section 9",
+     "status": "missing"
+    }
+   ]
+  },
+  {
+   "id": "G13-lease-note-clean",
+   "sources": [
+    {
+     "title": "Lease",
+     "status": "executed",
+     "text": "LEASE (fictional)\n\n4. Rent\n4.1 The Tenant shall pay the rent quarterly in advance.\n\n6. Repair\n6.1 The Tenant shall keep the premises in good and substantial repair.\n"
+    }
+   ],
+   "citing": {
+    "title": "Note on the lease",
+    "text": "NOTE ON THE LEASE (fictional)\n\n1. Rent\n1.1 Clause 4.1 of the Lease provides that \"The Tenant shall pay the rent quarterly in advance.\"\n1.2 Clause 6.1 of the Lease requires the Tenant to keep the premises in \"good and substantial repair\".\n"
+   },
+   "expect": [
+    {
+     "kind": "quote",
+     "text": "The Tenant shall pay the rent quarterly in advance",
+     "status": "accurate",
+     "clause": "4.1",
+     "in": "Lease"
+    },
+    {
+     "kind": "quote",
+     "text": "good and substantial repair",
+     "status": "accurate",
+     "clause": "6.1",
+     "in": "Lease"
+    }
+   ]
   }
  ]
 }
