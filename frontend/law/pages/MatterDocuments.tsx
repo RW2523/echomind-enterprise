@@ -338,7 +338,8 @@ function ImportDialog({ matterId, documents, onClose }: { matterId: string; docu
     const body = new FormData();
     body.append('file', file);
     if (form.version_of) body.append('version_of', form.version_of);
-    else { body.append('title', form.title.trim() || file.name); body.append('kind', form.kind); body.append('status', form.status); }
+    else { body.append('title', form.title.trim() || file.name); body.append('kind', form.kind); }
+    body.append('status', form.status);                    // each version keeps its own status (S2.1c/S2.2)
     try {
       const r = await api.upload<{ document: LawDocument; same_content_as: string | null }>(`${documentsPath(matterId)}/import`, body);
       await qc.invalidateQueries({ queryKey: keys.documents(matterId) });
@@ -359,15 +360,17 @@ function ImportDialog({ matterId, documents, onClose }: { matterId: string; docu
             <option value="">A new document</option>
             {documents.filter((d) => d.source?.kind !== 'connector').map((d) => <option key={d.id} value={d.id}>A new version of “{d.title}”</option>)}</select>}</Field>
         )}
-        {!form.version_of && <>
+        {!form.version_of && (
           <Field label="Title">{(id) => <input id={id} className="lw-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />}</Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Field label="Kind">{(id) => <select id={id} className="lw-input" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as DocKind })}>
-              {KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>}</Field>
-            <Field label="Status">{(id) => <select id={id} className="lw-input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as DocStatus })}>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: form.version_of ? '1fr' : '1fr 1fr', gap: 10 }}>
+          {!form.version_of && <Field label="Kind">{(id) => <select id={id} className="lw-input" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as DocKind })}>
+            {KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>}</Field>}
+          {/* S2.2: each version has its own status — a signed copy uploaded as v3 is "Executed". */}
+          <Field label="Status" hint={form.version_of ? 'Of this version. Answers use the latest executed version by default.' : undefined}>
+            {(id) => <select id={id} className="lw-input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as DocStatus })}>
               {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>}</Field>
-          </div>
-        </>}
+        </div>
         {error && <ErrorNote>{error}</ErrorNote>}
         {notice && <p role="status" className="lw-meta" style={{ margin: 0, fontSize: 13.5 }}>{notice}</p>}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

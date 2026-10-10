@@ -101,14 +101,34 @@ export interface ResearchSource {
   n: number; document_id: string; document_title: string; version_id: string; version_number: number;
   page_start?: number | null; page_end?: number | null; char_start?: number | null; char_end?: number | null; text: string;
   clause?: string | null; line?: number | null; focus_start?: number | null; focus_end?: number | null;
+  version_status?: DocStatus | null; signed?: boolean | null;
   /** The passage contains text addressed to an AI; it was withheld from the model (T08). */
   instructions?: boolean;
 }
 export interface ResearchTurn {
   id: string; question: string; answer: string | null; citations: ResearchSource[];
-  status: 'answered' | 'abstained' | 'scope_revoked' | 'error'; created_at: string;
+  status: 'answered' | 'partial' | 'unverified' | 'abstained' | 'scope_revoked' | 'error'; created_at: string;
   /** Sentences of the answer that cite no source, exactly as they appear in it. */
   unsupported?: string[];
+  evidence?: ResearchEvidence[]; conflicts?: ResearchConflict[]; versions?: VersionPolicy | null; abstention_reason?: string | null;
+}
+/** S2.2: answers come from signed versions (default) or the latest drafts. */
+export type VersionPolicy = 'signed' | 'current';
+export type Verification = 'verbatim' | 'normalized' | 'failed' | 'not_quoted';
+export interface ResearchEvidence {
+  n: number; quote: string; verification: Verification; document_id: string; document_title: string; version_id: string;
+  version_number: number; version_status?: DocStatus | null; signed?: boolean | null; clause?: string | null;
+  page_start?: number | null; page_end?: number | null; line?: number | null; char_start?: number | null; char_end?: number | null;
+  removed?: boolean;
+}
+export interface ResearchConflict {
+  document_id: string; document_title: string; clause: string;
+  version: { id: string; number: number; status?: DocStatus | null; text: string };
+  other: { id: string; number: number; status?: DocStatus | null; text: string };
+}
+export interface ResearchParagraph {
+  index: number; text: string; unsupported: string[]; failed: string[];
+  claims: { sentence: string; state: 'supported' | 'failed' | 'unquoted'; citations: { n: number; quote: string | null; verification: Verification }[] }[];
 }
 
 /** Meetings, consent and capture (S1.8). */

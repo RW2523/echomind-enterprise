@@ -282,7 +282,11 @@ class Settings(BaseSettings):
     LEGAL_DOCX_MAX_UNCOMPRESSED_MB: int = int(os.getenv("LEGAL_DOCX_MAX_UNCOMPRESSED_MB", "200"))
     LEGAL_PARTITION_CACHE: int = int(os.getenv("LEGAL_PARTITION_CACHE", "32"))          # loaded matter indexes kept in memory
     LEGAL_SEARCH_CANDIDATES: int = int(os.getenv("LEGAL_SEARCH_CANDIDATES", "40"))      # per channel, before fusion
-    LEGAL_RERANK_MIN_SCORE: float = float(os.getenv("LEGAL_RERANK_MIN_SCORE", "0.0"))    # cross-encoder logit floor
+    # Cross-encoder logit floor. Calibrated in S2.2 on the legal golden set for ms-marco-MiniLM-L-6-v2: it scores
+    # correct legal clauses as low as -10, so the floor only drops clearly unrelated passages; the model abstains
+    # on the rest (D-038).
+    LEGAL_RERANK_MIN_SCORE: float = float(os.getenv("LEGAL_RERANK_MIN_SCORE", "-10.5"))
+    LEGAL_ABSTAIN_WEAK_SCORE: float = float(os.getenv("LEGAL_ABSTAIN_WEAK_SCORE", "-6.0"))  # "not stated" + only weak passages cited = abstain
     LEGAL_JOB_POLL_SEC: float = float(os.getenv("LEGAL_JOB_POLL_SEC", "2"))
     LEGAL_JOB_MAX_ATTEMPTS: int = int(os.getenv("LEGAL_JOB_MAX_ATTEMPTS", "3"))
     # Matter research (S1.7).
@@ -301,7 +305,7 @@ class Settings(BaseSettings):
     # Connectors (S1.11): folders a local-folder connector may read, separated by ":" (empty = none).
     LEGAL_CONNECTOR_LOCAL_ROOTS: str = os.getenv("LEGAL_CONNECTOR_LOCAL_ROOTS", "")
     # Legal ingestion quality (S2.1; D-010 OCR with Tesseract, run as a local program — nothing leaves the host).
-    LEGAL_CHUNK_CHARS: int = int(os.getenv("LEGAL_CHUNK_CHARS", "1200"))              # passage size, packed by paragraph
+    LEGAL_CHUNK_CHARS: int = int(os.getenv("LEGAL_CHUNK_CHARS", "900"))               # passage size, packed by paragraph within a section
     LEGAL_OCR_ENABLED: bool = os.getenv("LEGAL_OCR_ENABLED", "1").lower() in ("1", "true", "yes")
     LEGAL_TESSERACT_CMD: str = os.getenv("LEGAL_TESSERACT_CMD", "tesseract")
     LEGAL_TESSDATA_DIR: str = os.getenv("LEGAL_TESSDATA_DIR", "")                   # empty: next to the tesseract program

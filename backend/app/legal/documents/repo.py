@@ -102,6 +102,9 @@ def update_document(matter_id: str, document_id: str, changes: dict, expected_ve
             conn.execute("UPDATE legal_document_versions SET status=? WHERE id=(SELECT current_version_id FROM legal_documents "
                          "WHERE id=?)", (allowed["status"], document_id))
         conn.commit()
+    if cur.rowcount == 1 and "status" in allowed:                # signing changes which version answers come from (S2.2a)
+        from . import versions
+        versions.resync(document_id)
     if cur.rowcount != 1:
         raise Conflict("This document was changed by someone else. Reload and try again.")
 

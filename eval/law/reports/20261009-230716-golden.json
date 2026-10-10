@@ -1,0 +1,205 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "a19e4c9+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261009-230716",
+  "limit": 5,
+  "only": null
+ },
+ "summary": {
+  "items": 5,
+  "answer_accuracy": "4/5",
+  "abstention_accuracy": "0/0",
+  "false_abstentions": 1,
+  "t06_leaks": 0,
+  "citation_precision": 0.875,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "1/1",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "partial": 1,
+   "answered": 3,
+   "abstained": 1
+  },
+  "latency_total_p50_s": 2.83,
+  "latency_total_p95_s": 5.02,
+  "latency_first_paragraph_p50_s": 2.96,
+  "latency_first_paragraph_p95_s": 5.02
+ },
+ "items": [
+  {
+   "id": "g-msa-fee",
+   "tags": [
+    "T05"
+   ],
+   "question": "What is the monthly platform subscription fee under the MSA?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The monthly platform subscription fee under the MSA is USD 18,500. This is stated in the document as follows: [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgate platform.",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 16
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": true,
+   "conflict_found": true,
+   "multi_source": null,
+   "first_paragraph_s": 5.02,
+   "total_s": 5.02
+  },
+  {
+   "id": "g-msa-invoice",
+   "tags": [],
+   "question": "When are Harrowgate's invoices payable?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Harrowgate's invoices are payable net thirty (30) days from the invoice date [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Invoices are payable net thirty (30) days from the invoice date",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.2",
+     "page_start": null,
+     "line": 17
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.85,
+   "total_s": 1.85
+  },
+  {
+   "id": "g-msa-interest",
+   "tags": [],
+   "question": "What interest accrues on undisputed late payments under the MSA?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "no_passages",
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": null,
+   "total_s": 0.71
+  },
+  {
+   "id": "g-msa-conf-duration",
+   "tags": [],
+   "question": "For how long do the confidentiality obligations in the MSA last?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The confidentiality obligations in the Harrowgate MSA last for five (5) years after the Agreement ends [1].\n\nThe confidentiality obligations in the Northbridge NDA also last for five (5) years after the Agreement ends [2].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "for the term of this Agreement and five (5) years after it ends",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5.1",
+     "page_start": null,
+     "line": 20
+    },
+    {
+     "n": 2,
+     "quote": "The obligations in Clause 3 continue for five (5) years after this Agreement ends",
+     "verification": "verbatim",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.2",
+     "page_start": null,
+     "line": 14
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.96,
+   "total_s": 2.96
+  },
+  {
+   "id": "g-msa-breach-notice",
+   "tags": [],
+   "question": "How quickly must Harrowgate notify Voss-Lindqvist of a personal data breach?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that Harrowgate must notify Voss-Lindqvist of a personal data breach without undue delay and in any event within forty-eight (48) hours of becoming aware of it [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "6.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.83,
+   "total_s": 2.83
+  }
+ ]
+}

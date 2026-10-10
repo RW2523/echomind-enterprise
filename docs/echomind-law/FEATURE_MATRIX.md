@@ -15,7 +15,7 @@
 | SEC-06 | Privilege labels, redaction preview, safe exports | DONE (labels S1.9, export gateway S1.10; P-006 values await counsel) | S1.9, S1.10 | — |
 | SEC-07 | Retention, legal hold, approved deletion, restore | DONE (mechanism; schedules await counsel) | S1.9 | Schedules (P-002/P-003) |
 | SEC-08 | Firm DMS adapter with ACL/version sync | PARTIAL (framework DONE with the local-folder connector; real provider BLOCKED) | S1.11 | **Provider and credentials (P-010)** |
-| RAG-01 | Matter-scoped legal chat, clause ingestion, OCR, versions | PARTIAL (S2.1 ingestion DONE: OCR, Word structure, tracked changes and comments as metadata, hidden-text and injection flags, clauses, defined terms, exact offsets with page/line, per-version status, reader; S2.2 evidence contract next) | S2.1, S2.2 | — |
+| RAG-01 | Matter-scoped legal chat, clause ingestion, OCR, versions | DONE for the pilot, pending the S2.8 lawyer review. S2.1 ingestion: OCR, Word structure, tracked changes and comments as metadata, hidden-text and injection flags, clauses, defined terms, exact offsets with page/line, per-version status, reader. S2.2 research: evidence contract with verified quotes, signed-version default with a switch, version conflicts, abstention with reasons, paragraph streaming, "Copy with citations", golden 70 and held-out 32 evaluation. Firm-library scope deferred to S3.1–S3.2, when the library gets content (D-038). | S2.1, S2.2, S2.8 | Lawyer review (S2.8, P-008) |
 | RAG-02 | Document comparison and contradiction analysis | MISSING | S2.3 | — |
 | LIVE-01 | Legal transcription: speakers, vocabulary, edits | PARTIAL | S2.4 | — |
 | LIVE-02 | Negotiation / client-call / governance Silent Assist packs | PARTIAL | S2.5 | Thresholds sign-off (P-008) |
@@ -135,7 +135,7 @@
 ### RAG-01 — Legal matter-scoped chat
 | Field | Detail |
 |---|---|
-| Status | **PARTIAL.** Strong hybrid RAG, reranker, gate and citations (file/section/page/snippet). Missing: OCR, DOCX structure, exact offsets, versions, claim verification, abstention contract. Defects R-1..R-8. |
+| Status | **DONE for the pilot (S2.1–S2.2), pending lawyer review at S2.8.** Law research no longer uses `rag/advanced.py`. It has its own ingestion (D-034, D-035), versions (D-036), evidence contract (D-037) and calibration (D-038). R-4, R-6, R-7 and R-8 are tested guarantees in Law. Measured (held-out): answers 27/29, abstentions 1/3, 0 leaks, citation precision 0.902, quote verification 0.905, p95 6.19 s. Not built: the firm-library scope, deferred to S3.1–S3.2 (D-038). *Pre-S2 audit:* strong hybrid RAG, reranker, gate and citations, but no OCR, DOCX structure, exact offsets, versions, claim verification or abstention contract. Defects R-1..R-8. |
 | Evidence | `rag/advanced.py:1510-1722, 2305-2335, 2689-2769, 3394-3488`; `rag/parse.py:273-275`; `sanitize.py:12-19`; `chunking/pipeline.py:324-332` |
 | Modifications | Legal ingestion (S2.1): DOCX numbering, tables and footnotes; OCR with provenance; char and page/line offsets; clause segmentation; defined-terms capture; versions with status. Chat (S2.2): `/api/legal/matters/{id}/research/query`; evidence contract; verbatim quote verification; abstention "Not found in this matter's documents"; signed-only vs all versions; conflict indicator; keep pinpoints; fix off-by-one; short legal terms routed to retrieval; firm-library ∪ matter scope; persona `Lawyer` fixed server-side |
 | Dependencies | S1.6 |

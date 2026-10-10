@@ -19,7 +19,7 @@ from __future__ import annotations
 import bisect
 import json
 import re
-from typing import Iterable
+from typing import Iterable, Optional
 
 import numpy as np
 
@@ -134,18 +134,20 @@ def _fuse(rankings: Iterable[list[tuple[str, float]]]) -> list[str]:
     return sorted(scores, key=lambda c: scores[c], reverse=True)
 
 
-def _load(matter_id: str, chunk_ids: list[str], uid: str) -> list[dict]:
+def _load(matter_id: str, chunk_ids: list[str], uid: str, versions: str = "signed") -> list[dict]:
     """Candidates re-read with the matter id AND the document's visibility for this person (source
-    permissions and connector freshness, S1.11)."""
+    permissions and connector freshness, S1.11) AND the version policy (S2.2a: signed by default)."""
     from ..documents.repo import VISIBLE_TO
+    from ..documents.versions import policy_sql
     if not chunk_ids:
         return []
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT c.id, c.text, c.page_start, c.page_end, c.char_start, c.char_end, c.document_id, c.version_id, "
-            "d.title, v.number, v.filename FROM legal_chunks c JOIN legal_documents d ON d.id = c.document_id "
+            "d.title, v.number, v.filename, v.status FROM legal_chunks c JOIN legal_documents d ON d.id = c.document_id "
             "JOIN legal_document_versions v ON v.id = c.version_id "
-            f"WHERE c.matter_id = ? AND c.active = 1 AND c.id IN ({','.join('?' * len(chunk_ids))}) AND {VISIBLE_TO}",
+            f"WHERE c.matter_id = ? AND c.active = 1 AND c.id IN ({','.join('?' * len(chunk_ids))}) AND {VISIBLE_TO} "
+            f"AND {policy_sql(versions)}",
             (matter_id, *chunk_ids, uid)).fetchall()
     by_id = {r[0]: r for r in rows}
     out = []
@@ -154,7 +156,7 @@ def _load(matter_id: str, chunk_ids: list[str], uid: str) -> list[dict]:
         if r:
             out.append({"chunk_id": r[0], "text": r[1], "page_start": r[2], "page_end": r[3], "char_start": r[4],
                         "char_end": r[5], "document_id": r[6], "version_id": r[7], "document_title": r[8],
-                        "version_number": r[9], "filename": r[10], "matter_id": matter_id})
+                        "version_number": r[9], "filename": r[10], "version_status": r[11], "matter_id": matter_id})
     return out
 
 
@@ -166,6 +168,7 @@ def _passage(h: dict) -> dict:
         "score": h.get("score"), "score_kind": h.get("score_kind"),
         "citation": {"matter_id": h["matter_id"], "document_id": h["document_id"], "document_title": h["document_title"],
                      "version_id": h["version_id"], "version_number": h["version_number"],
+                     "version_status": h.get("version_status"), "signed": h.get("version_status") == "executed",
                      "page_start": h["page_start"], "page_end": h["page_end"],
                      "char_start": base + a if base is not None else None,
                      "char_end": base + b if base is not None else None},
@@ -187,44 +190,48 @@ def _focus(text: str, query: str) -> tuple[int, int]:
     return best
 
 
+def locate(conn, version_id: str, start: int, end: int, cache: Optional[dict] = None) -> dict:
+    """Clause, pages and line of characters [start, end) of a version (S2.1 maps). Empty when the
+    version was read before S2.1."""
+    cache = cache if cache is not None else {}
+    if version_id not in cache:
+        row = conn.execute("SELECT pages_json, lines_json FROM legal_version_text WHERE version_id=?", (version_id,)).fetchone()
+        cache[version_id] = (json.loads(row[0]), json.loads(row[1])) if row else None
+    clause = conn.execute("SELECT number FROM legal_clauses WHERE version_id=? AND char_start<=? AND ?<char_end "
+                          "ORDER BY level DESC, char_start DESC LIMIT 1", (version_id, start, start)).fetchone()
+    out = {"clause": clause[0] if clause else None}
+    if not cache[version_id]:
+        return out
+    pages, lines = cache[version_id]
+    last = max(start, end - 1)
+    here = next((pg for pg in pages if pg["start"] <= start <= pg["end"]), None)
+    there = next((pg for pg in pages if pg["start"] <= last <= pg["end"]), here)
+    base = here["start"] if here else 0
+    out["line"] = max(1, bisect.bisect_right(lines, start) - bisect.bisect_left(lines, base))
+    if here:
+        out["page_start"], out["page_end"] = here["number"], (there or here)["number"]
+    return out
+
+
 def _located(passages: list[dict], query: str = "") -> list[dict]:
     """Where each quote points (S2.1): the sentence that best answers the question (the focus), its
-    clause, and the page and line it is on, from the version's stored maps. Versions read before
-    S2.1 have no maps and keep the passage's pages."""
+    clause, and the page and line it is on."""
     if not passages:
         return passages
-    for p in passages:
-        c = p["citation"]
-        if c["char_start"] is not None:
-            a, b = _focus(p["text"], query)
-            c["focus_start"], c["focus_end"] = c["char_start"] + a, c["char_start"] + b
-    maps: dict[str, tuple] = {}
+    cache: dict = {}
     with get_conn() as conn:
         for p in passages:
             c = p["citation"]
-            vid, off = c["version_id"], c.get("focus_start", c["char_start"])
-            if off is None:
+            if c["char_start"] is None:
                 continue
-            if vid not in maps:
-                row = conn.execute("SELECT pages_json, lines_json FROM legal_version_text WHERE version_id=?", (vid,)).fetchone()
-                maps[vid] = (json.loads(row[0]), json.loads(row[1])) if row else None
-            clause = conn.execute("SELECT number FROM legal_clauses WHERE version_id=? AND char_start<=? AND ?<char_end "
-                                  "ORDER BY level DESC, char_start DESC LIMIT 1", (vid, off, off)).fetchone()
-            c["clause"] = clause[0] if clause else None
-            if not maps[vid]:
-                continue
-            pages, lines = maps[vid]
-            end = max(off, (c.get("focus_end") or c["char_end"] or off) - 1)
-            here = next((pg for pg in pages if pg["start"] <= off <= pg["end"]), None)
-            there = next((pg for pg in pages if pg["start"] <= end <= pg["end"]), here)
-            base = here["start"] if here else 0
-            c["line"] = max(1, bisect.bisect_right(lines, off) - bisect.bisect_left(lines, base))
-            if here:
-                c["page_start"], c["page_end"] = here["number"], (there or here)["number"]
+            a, b = _focus(p["text"], query)
+            c["focus_start"], c["focus_end"] = c["char_start"] + a, c["char_start"] + b
+            c.update(locate(conn, c["version_id"], c["focus_start"], c["focus_end"], cache))
     return passages
 
 
-async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Iterable[str] = ALL_MODES) -> dict:
+async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Iterable[str] = ALL_MODES,
+                 versions: str = "signed") -> dict:
     recheck(scope)                                    # raises TypeError for anything but a real scope
     modes = [m for m in modes if m in ALL_MODES] or list(ALL_MODES)
     idx = registry.for_matter(scope.matter_id)
@@ -238,7 +245,7 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
         rankings.append(idx.search_sparse(query, n))
     if "keyword" in modes:
         rankings.append(_keyword(scope.matter_id, query, n))
-    hits = _load(scope.matter_id, _fuse(rankings)[:n], scope.principal_id)
+    hits = _load(scope.matter_id, _fuse(rankings)[:n], scope.principal_id, versions if versions in ("signed", "current") else "signed")
     subs = _windowed(hits)
     scored = await rerank(query, subs, len(subs)) if subs else []
     best: dict[str, dict] = {}

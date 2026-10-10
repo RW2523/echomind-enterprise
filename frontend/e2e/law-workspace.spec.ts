@@ -264,9 +264,10 @@ test('research: an answer from M-101 only, tied to the clause it relies on', asy
   await alice.getByLabel('Ask about this matter').fill('What is the cap on each party’s aggregate liability?');
   await alice.getByRole('button', { name: 'Ask' }).click();
   const answer = alice.getByRole('article', { name: 'Answer' });
-  const sources = answer.getByRole('region', { name: 'Sources' });
-  await expect(sources).toBeVisible({ timeout: 180_000 });                  // real model, real retrieval
-  await expect(sources.getByText(/aggregate liability/).first()).toBeVisible();
+  const evidence = answer.getByRole('region', { name: 'Evidence' });          // S2.2: quotes checked against the source
+  await expect(evidence).toBeVisible({ timeout: 180_000 });                  // real model, real retrieval
+  await expect(evidence.getByText(/250,000/).first()).toBeVisible();
+  await expect(evidence.getByText(/Quoted exactly|Quoted with small differences/).first()).toBeVisible();
   await expect(answer.getByRole('button', { name: /^Source \d$/ }).first()).toBeVisible();
   await expect(answer.getByText(/250,000/).first()).toBeVisible();
   await shot(alice, '15-research-light');
@@ -487,12 +488,55 @@ test('reading: a scan read by text recognition, a Word contract read as Word sho
   await alice.goto('/m/M-101/research');
   await alice.getByLabel('Ask about this matter').fill('On what date will the Master Services Agreement terminate according to the notice?');
   await alice.getByRole('button', { name: 'Ask' }).click();
-  const sources = alice.getByRole('article', { name: 'Answer' }).getByRole('region', { name: 'Sources' });
-  await expect(sources).toBeVisible({ timeout: 180_000 });
-  const link = sources.getByRole('listitem').filter({ hasText: '30 June 2026' }).first().getByRole('link', { name: /in the document/ });
-  await link.click();
+  const answer = alice.getByRole('article', { name: 'Answer' });
+  const evidence = answer.getByRole('region', { name: 'Evidence' });
+  await expect(evidence).toBeVisible({ timeout: 180_000 });
+  await expect(answer).toContainText(/30 June 2026|June 30, 2026/);
+  // The real model chooses its own words to quote; the evidence from the scan opens the reader at exactly them.
+  await evidence.getByRole('listitem').filter({ hasText: 'termination-notice' }).getByRole('link', { name: /in the document/ })
+    .first().click({ timeout: 10_000 });
   const ocrSheet = alice.getByRole('article', { name: 'Document text' });
   await expect(ocrSheet.getByText(/Page 1 · read by text recognition, \d+% confidence — check against the scan/)).toBeVisible();
-  await expect(ocrSheet.locator('[data-focus]').filter({ hasText: '30 June 2026' })).toHaveCount(1);   // the cited sentence may wrap
+  await expect(ocrSheet.locator('[data-focus]').first()).toBeVisible();          // the cited words, highlighted (they may wrap)
   await shot(alice, '23-reader-ocr-citation-light');
+});
+
+test('versions: answers come from the signed contract and warn where the draft differs; drafts on request', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const CORPUS = path.resolve(HERE, '../../eval/law/corpus');
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  let dialog = alice.getByRole('dialog', { name: 'Import a document' });
+  await dialog.getByLabel('File').setInputFiles(path.join(CORPUS, 'msa-v1-signed.md'));
+  await dialog.getByLabel('Title').fill('Harrowgate MSA (signed)');
+  await dialog.getByLabel('Status').selectOption('executed');
+  await dialog.getByRole('button', { name: /^Import$/ }).click();
+  await expect(dialog).toHaveCount(0);
+  const row = alice.getByRole('row', { name: /Harrowgate MSA \(signed\)/ });
+  await expect(row.getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  dialog = alice.getByRole('dialog', { name: 'Import a document' });
+  await dialog.getByLabel('File').setInputFiles(path.join(CORPUS, 'msa-v2-draft.md'));
+  await dialog.getByLabel('This is').selectOption({ label: 'A new version of “Harrowgate MSA (signed)”' });
+  await dialog.getByLabel('Status').selectOption('draft');
+  await dialog.getByRole('button', { name: /^Import$/ }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(row.getByRole('cell', { name: 'v2', exact: true })).toBeVisible();
+  await expect(row.getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+
+  await alice.goto('/m/M-101/research');
+  await alice.getByLabel('Ask about this matter').fill('What is each party’s total aggregate liability cap under the Harrowgate MSA?');
+  await alice.getByRole('button', { name: 'Ask' }).click();
+  const answer = alice.getByRole('article', { name: 'Answer' });
+  await expect(answer.getByRole('region', { name: 'Evidence' })).toBeVisible({ timeout: 180_000 });
+  await expect(answer.getByRole('alert').filter({ hasText: /reads differently in version 2 \(draft\)/ })).toBeVisible();
+  await expect(answer.getByRole('region', { name: 'Evidence' }).getByText(/250,000/).first()).toBeVisible();
+  await shot(alice, '24-research-signed-with-conflict-light');
+
+  await alice.getByRole('radio', { name: 'Latest drafts' }).check();
+  await alice.getByLabel('Ask about this matter').fill('What is each party’s total aggregate liability cap under the Harrowgate MSA?');
+  await alice.getByRole('button', { name: 'Ask' }).click();
+  await expect(answer.getByRole('region', { name: 'Evidence' }).getByText(/500,000/).first()).toBeVisible({ timeout: 180_000 });
 });
