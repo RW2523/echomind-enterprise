@@ -300,3 +300,17 @@
 | Frontend | tsc **clean**. Vitest **104 passed**. New `reviews.test.tsx` (6, axe clean):<ul><li>the queue with links, "sent back" with the reason, and the navigation count;</li><li>the note with its evidence opening at the quote;</li><li>approving through the confirmation (hash shown, "I have read…" required) and asking for changes with a reason;</li><li>the author's notice, filing and the filed note;</li><li>"Send for review" from an answer;</li><li>the export page showing a carried approval and a source-changed refusal.</li></ul>`minutes.test.tsx` now goes through the confirmation. **How they were written:** after the components; they passed on first run. |
 | Browser E2E | Journey 19 now finds the minutes through nakamura's Reviews queue and approves through the confirmation. New journey 20: alice sends a research answer for review; nakamura sees it in the queue (screenshot 31), approves version 1 after confirming; alice files it and the filed note shows "Approved by nakamura on …" (screenshot 30). It imports the demo contract itself when run alone.<ul><li>**First full run: 19 passed, 1 failed.** In journey 20, with documents present the import button reads "Import", not "Import a document" (a test locator).</li><li>**Second full run: 20 passed** (8.1 min).</li></ul> |
 
+## Run 21 — S2.8 Phase 2 gate, 2026-10-10
+
+- **Branch:** `law/s2.8-gate`. The gate report is `releases/phase2-gate.md`.
+
+| Suite | Result |
+|---|---|
+| Backend (all) | **971 passed**. New `test_law_evaluations.py` (8, red first: 8 of 8 failing before the code):<ul><li>a report recorded with its commit, models and dataset hash, its items never stored, imported once;</li><li>every suite named from its report with its dataset hashed;</li><li>a non-report refused;</li><li>audit readers only;</li><li>the import command.</li></ul>The schema-consistency test caught a quoted `"set"` column its parser could not read; it is now `set_name`. |
+| Voice | **151 passed** (unchanged) |
+| Frontend | tsc **clean**. Vitest **106 passed**. New `evaluations.test.tsx` (2, axe clean): headline measures, set, commit and models; not available to a lawyer. Written with the page. |
+| Security suite | All **16 groups pass**: the 10 Phase 1 groups, plus T05/T06 versions and evidence, compare, transcripts, Silent Assist, approvals and hash binding, evaluation records. |
+| Gate evaluations (`run_gate.py`, on `e0f6415`) | **10 of 10 suites ok** in about 8 minutes; results in the gate report §2. Each report says `+changes` only because the earlier suites' new report files were untracked; the scripts now ignore `eval/law/reports`. |
+| Load test (`load_test.py --smoke`, 30 s) | Research p50/p95 2.94/6.14 s while search ran (p95 0.24 s) and a capture streamed 300 frames in real time; no failures, no database busy; memory 670→760 MB. **First attempt failed** on the script's own WebSocket header argument (websockets 12 takes `extra_headers`). Fixed, and that report discarded. |
+| Browser E2E | New journey 21: morgan (managing partner) opens Evaluations and sees the gate's held-out research run with its model, and the minutes runs (screenshot 32); alice has no Evaluations link. **Stability: 5 of 5 consecutive full runs passed** (`stability_runs.sh 5`), 21 of 21 journeys each, 7.9–8.0 min per run. |
+

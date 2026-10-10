@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.8-gate` |
-| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.7 merged into `feature/echomind-law`; S2.8 (gate) next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); gate branch `law/s2.8-gate`; next slice branch `law/s3.1-drafting` after sign-off |
+| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2 complete pending sign-off: S2.1–S2.7 merged; S2.8 gate on `law/s2.8-gate` (report `releases/phase2-gate.md`) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0021` (Law edition only) |
+| Migrations | `0001`–`0022` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -442,6 +442,20 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - The queue read is not audited, because the navigation polls it; decisions are.
   - Retention policy approvals are not in the queue (they stay on Records).
 
+### Session 3 (continued) — S2.8 Phase 2 gate
+- **Evaluation records (D-044):**
+  - Migration 0022 `legal_evaluation_runs` (suite, set, commit, models, dataset hash, summary, report hash; never updated).
+  - `python -m app.legal.evaluations import`, `GET /api/legal/evaluations` for audit readers, and an "Evaluations" admin page.
+  - The E2E backend imports the newest gate run (`LAW_IMPORT_EVALUATIONS`).
+- **Gate run:** `eval/law/run_gate.py`, every suite once on `e0f6415`, 10 of 10 ok in about 8 minutes. Results and comparisons are in `releases/phase2-gate.md` §2.
+- **T12:** `scripts/law/load_test.py` (research, search and a consented capture socket at once; p50/p95, failures, database busy, memory). A 30-second smoke ran; the measured run needs a window (🔒).
+- **Lawyer review:** the rubric with proposed bars (`releases/phase2-rubric.md`); a 67-item packet from this run's held-out outputs (`eval/law/lawyer_review/`); the scorer. The session is 🔒.
+- **Security suite:** six Phase 2 groups; all 16 groups pass.
+- **Fixes during the gate:**
+  - the evaluation scripts no longer mark a commit "+changes" for new report files;
+  - the Evaluations page headlines gate and compare runs.
+- **Gate report:** `releases/phase2-gate.md`.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -487,7 +501,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | OPT-04 | BLOCKED | S4.4 | Licensed source plus network approval |
 | OPT-05 | MISSING | S4.5 | Needs business approval |
 | OPS-01 | PARTIAL | S1.0, S1.12 + OPS | S1.0: versioned migrations with down scripts + CLI; isolated compose stack. S1.12: encrypted backup and restore (`app.legal.backup`), rollback guard for audit, holds and source permissions, DR drill on real data (D-032). Runbooks and LUKS (host root) remain |
-| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7. S1.12: `security_suite.sh`, `injection_probe.py`, `egress_test.sh`, `dr_drill.sh`, `legacy_smoke.py` + legacy browser smoke, `stability_runs.sh`. Load test (T12) and CI remain |
+| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7. S1.12: `security_suite.sh`, `injection_probe.py`, `egress_test.sh`, `dr_drill.sh`, `legacy_smoke.py` + legacy browser smoke, `stability_runs.sh`. Load test (T12) and CI remain. S2.8: evaluation runs (migration 0022, import command, Evaluations page), `run_gate.py`, `load_test.py` (T12 smoke), lawyer review packet and scorer, Phase 2 security groups (D-044) |
 
 ## Known risks right now
 
@@ -513,22 +527,18 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S2.8 Phase 2 gate** on `law/s2.8-gate`, per IMPLEMENTATION_PLAN §7. S2.7 is merged into `feature/echomind-law`.
-1. **Evaluation records:**
-   - migration 0022 `legal_evaluation_runs` (suite, set, commit, models, dataset hash, summary, report);
-   - `python -m app.legal.evaluations import <reports>`;
-   - `GET /api/legal/evaluations` for audit readers, and an admin "Evaluations" page.
-2. **One gate run on the final code** (`eval/law/run_gate.py`):
-   - research, compare, assist and minutes, golden and held-out (held-out once on this version);
-   - the transcription harness (scripted);
-   - the injection probe;
-   - latency p50/p95 per operation;
-   - every report imported as an evaluation run.
-3. **Lawyer review (the session itself is 🔒):**
-   - the scoring rubric (`releases/phase2-rubric.md`);
-   - a review packet generated from the held-out outputs;
-   - a scorer for the filled sheet.
-4. **T12 load test:** `scripts/law/load_test.py` (concurrent capture, research and compare; p50/p95, memory, failures). Only a two-way smoke runs here; the measured run needs the load-test window (🔒).
-5. **Security suite:** Phase 2 groups (T05/T06 versions, approvals and hash binding, records).
-6. **Stability:** consecutive full browser runs.
-7. **Gate report:** `releases/phase2-gate.md`. **Stop for the owner's sign-off** before Phase 3.
+**Owner sign-off of the Phase 2 gate** (`releases/phase2-gate.md`, §9 and §11). S2.8 is on `law/s2.8-gate`, not yet merged, as at Phase 1.
+1. **On approval:**
+   - merge `law/s2.8-gate` into `feature/echomind-law`;
+   - start **S3.1 Legal drafting (DOC-01)** on `law/s3.1-drafting`, per IMPLEMENTATION_PLAN §7.
+2. **S3.1, audit first:** the legacy Document Studio (`docgen/`, closed in Law, D-025), its templates and its "plausible specifics" instruction (never used for legal templates).
+3. **Then build:**
+   - a template registry with versions and approvals;
+   - presets (engagement letter, NDA, demand letter, internal memo, contract review report, board minutes from S2.6);
+   - field extraction with provenance;
+   - a **no-invention writer** (gaps marked `[[NEEDS INPUT: …]]`);
+   - a DOCX renderer with the firm's styles, and PDF output;
+   - the Drafting UI;
+   - every draft an AI artifact reviewed through the S2.7 framework.
+4. **Tests:** every factual field sourced or flagged; DOCX and PDF open and round-trip through LibreOffice.
+5. **Also waiting (🔒):** the lawyer review session, the load-test window, the first `compose.sh up`, P-008.

@@ -33,7 +33,7 @@
 | OPT-04 | Regulatory monitoring via an approved source | MISSING | S4.4 | **Licensed source and network approval** |
 | OPT-05 | Four-perspective review panel | MISSING | S4.5 | Business approval, benchmark |
 | OPS-01 | Migrations, rollback, encrypted backups, runbooks | PARTIAL (S1.12: encrypted backup and restore, rollback guard, DR drill; runbooks and LUKS remain) | S1.0, S1.12 + OPS track | LUKS on target host (D-014) |
-| OPS-02 | Golden, legal, security, load and recovery test harness | PARTIAL (S1.12: security suite, injection probe, egress capture, DR drill, legacy smoke, stability runs; load test and CI remain) | S1.0, S1.12, S2.8, S3.9 + OPS track | Load window approval (D-002) |
+| OPS-02 | Golden, legal, security, load and recovery test harness | PARTIAL (S1.12: security suite, injection probe, egress capture, DR drill, legacy smoke, stability runs. S2.8 (D-044): evaluation runs recorded with commit, models and dataset hash, one gate runner for every suite, the T12 load-test script (smoke run; the measured run needs a window, 🔒), the lawyer review rubric, packet and scorer. CI remains) | S1.0, S1.12, S2.8, S3.9 + OPS track | Load window approval (D-002) |
 
 ### Spec section mapping
 - F1 → SEC-02. F2 → SEC-01 + SEC-04. F3 → SEC-05 + SEC-06 (labels) + SEC-07. F4 → SEC-06. F5 → SEC-08.

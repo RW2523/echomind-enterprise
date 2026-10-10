@@ -13,7 +13,7 @@ real models on this host, then writes one gate summary next to the suite reports
 
 Held-out sets are run once on this version and never used to change it.
 
-    cd backend && python3 ../eval/law/run_gate.py                     # everything (about 30 minutes)
+    cd backend && python3 ../eval/law/run_gate.py                     # everything (about 8 minutes on the DGX Spark)
     cd backend && python3 ../eval/law/run_gate.py --only minutes,assist
     cd backend && python3 ../eval/law/run_gate.py --import-into ../.law-data   # also record the runs there
 
@@ -86,7 +86,7 @@ def _injection(args) -> tuple[int, Path]:
 
 
 def _commit() -> str:
-    return _git("rev-parse", "--short", "HEAD") + ("+changes" if _git("status", "--porcelain") else "")
+    return _git("rev-parse", "--short", "HEAD") + ("+changes" if _git("status", "--porcelain", "--", ".", ":!eval/law/reports") else "")   # new reports are not code changes
 
 
 def main() -> int:

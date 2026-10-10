@@ -46,6 +46,14 @@ if [[ "${LAW_SEED_DEMO:-0}" == "1" ]]; then
   # Fictional demo world for end-to-end tests and design reviews (refuses without the explicit flag).
   (cd "$ROOT/backend" && LEGAL_ALLOW_DEMO_SEED=1 python3 -m app.legal.cli seed-demo)
 fi
+if [[ -n "${LAW_IMPORT_EVALUATIONS:-}" ]]; then
+  # S2.8: record the evaluation reports of the newest gate run (their summaries only) for the Evaluations page.
+  GATE="$(ls "$ROOT"/eval/law/reports/*-gate-phase2.json 2>/dev/null | tail -1)"
+  if [[ -n "$GATE" ]]; then
+    mapfile -t REPORTS < <(python3 -c "import json,sys; print('\n'.join('$ROOT/eval/law/reports/'+r['report'] for r in json.load(open(sys.argv[1]))['runs'] if r['report']))" "$GATE")
+    (cd "$ROOT/backend" && python3 -m app.legal.evaluations import "${REPORTS[@]}" "$GATE" >/dev/null)
+  fi
+fi
 
 echo "EchoMind Law dev backend: http://127.0.0.1:${PORT}  data=${DATA}"
 echo "  sign in as ${AUTH_ADMIN_USER}; password in ${DATA}/dev_admin_password"

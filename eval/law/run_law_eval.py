@@ -254,7 +254,7 @@ def report(args, summary: dict, rs: list[dict]) -> None:
     out.mkdir(exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
-    dirty = bool(subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True).stdout.strip())
+    dirty = bool(subprocess.run(["git", "status", "--porcelain", "--", ".", ":!eval/law/reports"], cwd=ROOT, capture_output=True, text=True).stdout.strip())
     meta = {"set": args.set, "commit": commit + ("+changes" if dirty else ""), "model": args.model, "embeddings": "nomic-embed-text",
             "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2", "time": stamp, "limit": args.limit or None, "only": args.only or None}
     (out / f"{stamp}-{args.set}.json").write_text(json.dumps({"meta": meta, "summary": summary, "items": rs}, indent=1))

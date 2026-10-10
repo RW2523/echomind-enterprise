@@ -1,0 +1,80 @@
+{
+ "meta": {
+  "asr": "script",
+  "commit": "e0f6415",
+  "time": "20261010-041917",
+  "voice": null
+ },
+ "summary": {
+  "scenarios": 4,
+  "wer_normalised": 0.0,
+  "wer_verbatim": 0.0,
+  "entity_accuracy": 1.0,
+  "negation_accuracy": 1.0,
+  "speaker_accuracy": 1.0,
+  "missed_entities": 0,
+  "lost_negations": 0
+ },
+ "scenarios": [
+  {
+   "id": "client-call-renewal",
+   "kind": "client_call",
+   "speakers": 2,
+   "seconds": null,
+   "wer_verbatim": 0.0,
+   "wer_normalised": 0.0,
+   "entity_accuracy": 1.0,
+   "entities": 7,
+   "missed_entities": [],
+   "negation_accuracy": 1.0,
+   "negations": 3,
+   "lost_negations": [],
+   "speaker_accuracy": 1.0
+  },
+  {
+   "id": "negotiation-change-of-control",
+   "kind": "negotiation",
+   "speakers": 3,
+   "seconds": null,
+   "wer_verbatim": 0.0,
+   "wer_normalised": 0.0,
+   "entity_accuracy": 1.0,
+   "entities": 5,
+   "missed_entities": [],
+   "negation_accuracy": 1.0,
+   "negations": 3,
+   "lost_negations": [],
+   "speaker_accuracy": 1.0
+  },
+  {
+   "id": "board-meeting-mandate",
+   "kind": "board",
+   "speakers": 4,
+   "seconds": null,
+   "wer_verbatim": 0.0,
+   "wer_normalised": 0.0,
+   "entity_accuracy": 1.0,
+   "entities": 3,
+   "missed_entities": [],
+   "negation_accuracy": 1.0,
+   "negations": 3,
+   "lost_negations": [],
+   "speaker_accuracy": 1.0
+  },
+  {
+   "id": "witness-interview",
+   "kind": "interview",
+   "speakers": 2,
+   "seconds": null,
+   "wer_verbatim": 0.0,
+   "wer_normalised": 0.0,
+   "entity_accuracy": 1.0,
+   "entities": 3,
+   "missed_entities": [],
+   "negation_accuracy": 1.0,
+   "negations": 2,
+   "lost_negations": [],
+   "speaker_accuracy": 1.0
+  }
+ ]
+}

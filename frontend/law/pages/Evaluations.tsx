@@ -12,6 +12,8 @@ const SUITE: Record<string, string> = {
 };
 // The measures a reviewer looks at first, per suite; anything else is in the report file.
 const HEADLINE: Record<string, string[]> = {
+  gate: ['suites', 'failed'],
+  compare: ['explanations.quote_verification_rate', 'explanations.changed_with_both_sides_quoted', 'scan.planted_recall', 'scan.precision', 'explanations.errors'],
   research: ['answer_accuracy', 'abstention_accuracy', 'citation_precision', 'quote_verification_rate', 't06_leaks', 'latency_total_p95_s'],
   assist: ['recall', 'critical_recall', 'precision', 'false_alerts', 'latency_max_s'],
   minutes: ['recall', 'action_owners', 'action_deadlines', 'verified', 'invented_specifics'],
@@ -24,9 +26,13 @@ function leaves(o: unknown, prefix = ''): [string, string][] {
   return Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => leaves(v, prefix ? `${prefix} · ${k}` : k));
 }
 
+const at = (o: unknown, path: string): unknown =>
+  path.split('.').reduce<unknown>((v, k) => (v && typeof v === 'object' ? (v as Record<string, unknown>)[k] : undefined), o);
+
 function headline(r: EvaluationRun): [string, string][] {
   const want = HEADLINE[r.suite];
-  if (want) return want.filter((k) => k in r.summary).map((k) => [label(k), String(r.summary[k])]);
+  const picked = (want ?? []).filter((k) => at(r.summary, k) !== undefined).map((k): [string, string] => [label(k.split('.').join(' · ')), String(at(r.summary, k))]);
+  if (picked.length) return picked;
   return leaves(r.summary).slice(0, 6).map(([k, v]) => [label(k), v]);
 }
 

@@ -819,6 +819,34 @@ Every entry records the options considered, the recommendation, the consequence 
   - Minutes still have their own review route alongside the generic one.
   - The queue lists at most what the five existing approval flows hold. Retention policies (approved on the Records page) are not in it.
 
+### D-044 Phase 2 gate: evaluation records, one gate run, load test and lawyer review — RECORDED (S2.8; OPS-02, T12)
+- **Evaluation runs are records (migration 0022):**
+  - Each report imported by `python -m app.legal.evaluations import` keeps its suite, set, commit, models, the SHA-256 of the dataset file it read, its summary, and the report's name and hash.
+  - The items (questions, answers, quotes) stay in the report file.
+  - A report is imported once, and runs are never changed (a trigger).
+  - Firm audit readers (firm admin, managing partner, records admin) see them at `GET /api/legal/evaluations` and on the "Evaluations" page; nobody else does.
+- **One gate run on the code under test (`eval/law/run_gate.py`):**
+  - Every suite runs as its own script with its own throwaway data, and the real models on this host.
+  - Suites: research, compare, assist and minutes (golden and held-out), the scripted transcription harness, and the injection probe.
+  - Held-out sets run once on this version. Nothing was changed after seeing them.
+  - Latency figures come from the suite reports.
+- **T12 load test (`scripts/law/load_test.py`):**
+  - Against a loopback development backend seeded with the demo world: research (two users), search and a consented capture socket streaming real-time audio frames, all at once.
+  - It reports p50/p95 per operation, failures, database-busy errors and the backend's memory.
+  - The answer model and embeddings are shared with production on this host, so a measured run needs an approved window (`--window-approved`, 🔒). Without it only a 30-second smoke with one user per kind runs, no heavier than the browser tests.
+  - Speech recognition under load needs the speech stack (🔒).
+- **Lawyer review (the session is 🔒):**
+  - A rubric with proposed bars for the owner (`releases/phase2-rubric.md`).
+  - A shuffled packet of held-out outputs, labelled only by what each item is.
+  - A scorer that reports every measure against its bar, with agreement between two reviewers. A measure below its bar is reported, never hidden.
+- **The security suite** gains the Phase 2 groups: versions and evidence, compare, transcripts, Silent Assist, approvals and hash binding, evaluation records.
+- **What the gate run showed (on `e0f6415`), against the slice results:**
+  - Research golden fell to 60/64 (62/64 at S2.2), and T05 conflicts to 6/7. Held-out rose to 28/29 (27/29).
+  - Minutes held-out deadlines fell to 2/3 ("next week" was not captured this time; 3/3 at S2.6).
+  - The injection probe had 1 obeyed answer in 63, flagged on screen (0 unflagged; S1.12 had 0 of 36).
+  - The system code under these suites did not change between the runs, so these are run-to-run variation of the model. They are reported, not tuned away: the held-out sets were not used to change anything.
+- **"+changes" on gate reports:** each suite marked its commit `+changes` because the earlier suites' new report files were untracked; the code was `e0f6415` throughout (checked with `git status`). The evaluation scripts now ignore `eval/law/reports` when checking for changes.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
