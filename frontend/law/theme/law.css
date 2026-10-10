@@ -452,3 +452,15 @@
 [data-edition="law"] .lw-template-versions { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 12px; }
 [data-edition="law"] .lw-template-versions > li { padding: 10px 12px; border: 1px solid var(--rule); border-radius: 12px; }
 [data-edition="law"] .lw-template-pre { white-space: pre-wrap; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; margin: 6px 0; }
+/* S3.2 — playbooks and playbook checks */
+[data-edition="law"] .lw-position { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0 0; }
+[data-edition="law"] .lw-position dt { color: var(--ink-2); font-size: 12.5px; padding-top: 2px; }
+[data-edition="law"] .lw-position dd { margin: 0; font-size: 14.5px; }
+[data-edition="law"] .lw-proposals { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+[data-edition="law"] .lw-proposals li { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 12px; justify-items: start; }
+[data-edition="law"] .lw-check-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+[data-edition="law"] .lw-check-lines > li { padding: 12px 0; border-top: 1px solid var(--rule); display: grid; gap: 4px; }
+[data-edition="law"] .lw-check-lines > li[data-class="outside"] { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--conflict) 70%, transparent); padding-left: 12px; }
+[data-edition="law"] .lw-check-quote { margin: 2px 0; padding-left: 10px; border-left: 2px solid var(--rule); font-size: 14.5px; }
+[data-edition="law"] .lw-check-decide { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+[data-edition="law"] .lw-check-decide .lw-input { max-width: 280px; }

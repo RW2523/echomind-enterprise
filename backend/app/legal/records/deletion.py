@@ -117,6 +117,8 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
             "comparisons": len(_comparisons(conn, matter_id, document_id)),
             "research_notes": len(_notes(conn, matter_id, document_id)),
             "drafts": len(_notes(conn, matter_id, document_id, "legal_draft")),
+            "playbook_checks": conn.execute("SELECT COUNT(*) FROM legal_playbook_checks WHERE document_id=? AND matter_id=?",
+                                            (document_id, matter_id)).fetchone()[0],
             "kept": KEPT_DOCUMENT}
 
 
@@ -331,6 +333,9 @@ def _purge_document(conn, d: dict) -> dict:
     for (aid,) in conn.execute("SELECT a.id FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
                                "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchall():
         conn.execute("UPDATE legal_assist_alerts SET source_json=?, document_ids_json='[]' WHERE id=?", (json.dumps({"removed": True}), aid))
+    # S3.2: playbook checks quote the document; they go with their decisions (each can be run again).
+    conn.execute("DELETE FROM legal_playbook_decisions WHERE check_id IN (SELECT id FROM legal_playbook_checks WHERE document_id=?)", (doc,))
+    conn.execute("DELETE FROM legal_playbook_checks WHERE document_id=?", (doc,))
     # S2.3: comparisons and scans quote the document throughout; they are removed whole (each can be run again).
     for cid in _comparisons(conn, d["matter_id"], doc):
         conn.execute("DELETE FROM legal_comparisons WHERE id=?", (cid,))
@@ -378,6 +383,7 @@ def verify(d: dict, gone: dict) -> dict:
             db_rows += len(_comparisons(conn, d["matter_id"], doc)) + len(_notes(conn, d["matter_id"], doc)) + \
                 len(_notes(conn, d["matter_id"], doc, "legal_draft"))
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_artifact_filings WHERE document_id=?", (doc,)).fetchone()[0]
+            db_rows += conn.execute("SELECT COUNT(*) FROM legal_playbook_checks WHERE document_id=?", (doc,)).fetchone()[0]
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
                                     "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchone()[0]
             idx = registry.for_matter(d["matter_id"])

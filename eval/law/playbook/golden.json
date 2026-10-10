@@ -1,0 +1,93 @@
+{
+  "playbook": {
+    "name": "Commercial services (supplier side)",
+    "positions": [
+      {
+        "topic": "liability_cap",
+        "title": "Cap on liability",
+        "standard": "Each party's total liability under the agreement shall not exceed USD 250,000.",
+        "fallbacks": [
+          {
+            "text": "Each party's total liability shall not exceed the fees paid in the twelve months before the claim.",
+            "note": "Partner approval"
+          }
+        ]
+      },
+      {
+        "topic": "exclusions",
+        "title": "Excluded losses",
+        "standard": "Neither party is liable for indirect or consequential loss or loss of profit.",
+        "fallbacks": []
+      },
+      {
+        "topic": "payment",
+        "title": "Payment terms",
+        "standard": "Invoices are payable within thirty (30) days of receipt.",
+        "fallbacks": [
+          {
+            "text": "Invoices are payable within forty-five (45) days of receipt.",
+            "note": "Strategic customers"
+          }
+        ]
+      },
+      {
+        "topic": "termination",
+        "title": "Termination for convenience",
+        "standard": "Either party may terminate for convenience on ninety (90) days' written notice.",
+        "fallbacks": []
+      },
+      {
+        "topic": "governing_law",
+        "title": "Governing law",
+        "standard": "The agreement is governed by the laws of Sweden.",
+        "fallbacks": [
+          {
+            "text": "The agreement is governed by the laws of England and Wales.",
+            "note": "If the customer insists"
+          }
+        ]
+      },
+      {
+        "topic": "confidentiality",
+        "title": "Confidentiality",
+        "standard": "Each party keeps the other's confidential information confidential for three (3) years after termination.",
+        "fallbacks": []
+      }
+    ]
+  },
+  "contracts": [
+    {
+      "id": "msa-close-to-standard",
+      "text": "MASTER SERVICES AGREEMENT (fictional)\n\n7. Liability\n7.1 The total liability of each party under this Agreement shall not exceed USD 250,000.\n7.2 Neither party shall be liable for any indirect or consequential loss, or for any loss of profit.\n\n9. Fees\n9.1 The Customer shall pay each invoice within forty-five (45) days of receipt.\n\n12. Term and termination\n12.1 Either party may terminate this Agreement for convenience by giving ninety (90) days' written notice.\n\n15. Law\n15.1 This Agreement is governed by the laws of Sweden.",
+      "expect": {
+        "liability_cap": "standard",
+        "exclusions": "standard",
+        "payment": "fallback",
+        "termination": "standard",
+        "governing_law": "standard",
+        "confidentiality": "not_found"
+      }
+    },
+    {
+      "id": "customer-paper",
+      "text": "SERVICES AGREEMENT — CUSTOMER FORM (fictional)\n\n5. Payment\n5.1 Payment of undisputed invoices is due ninety (90) days after the end of the month in which the invoice is received.\n\n8. Limitation of liability\n8.1 The Supplier's liability under this Agreement is unlimited.\n\n10. Confidentiality\n10.1 Each party shall keep the other party's confidential information confidential during the term and for three (3) years after termination.\n\n11. Termination\n11.1 The Customer may terminate this Agreement at any time on thirty (30) days' written notice.\n\n14. Governing law\n14.1 This Agreement is governed by the laws of the State of New York.",
+      "expect": {
+        "liability_cap": "outside",
+        "payment": "outside",
+        "confidentiality": "standard",
+        "termination": "outside",
+        "governing_law": "outside",
+        "exclusions": "not_found"
+      }
+    },
+    {
+      "id": "greater-of-cap",
+      "text": "SUPPLY AGREEMENT (fictional)\n\n10. Liability\n10.1 Each party's total liability shall not exceed the greater of USD 250,000 and the fees paid in the twelve (12) months before the claim.\n\n11. Payment\n11.1 Invoices are payable within thirty (30) days of receipt.\n\n18. Governing law\n18.1 This agreement is governed by the laws of England and Wales.",
+      "expect": {
+        "liability_cap": "outside",
+        "payment": "standard",
+        "governing_law": "fallback"
+      }
+    }
+  ]
+}

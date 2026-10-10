@@ -1,0 +1,123 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "c518b47+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-063914",
+  "prompt_version": "playbook-s3.2b"
+ },
+ "summary": {
+  "lines": 10,
+  "accuracy": "9/10",
+  "deviations_caught": "4/4",
+  "passed_in_error": 0,
+  "by_rule": 0,
+  "quotes": 8,
+  "seconds_per_check": 7.7
+ },
+ "contracts": [
+  {
+   "id": "licence-negotiated",
+   "seconds": 9.9,
+   "lines": [
+    {
+     "topic": "payment",
+     "expected": "standard",
+     "got": "standard",
+     "ok": true,
+     "method": "model",
+     "quote": "The licence fee is invoiced annually in advance and is payable within thirty (30) days of the invoice date.",
+     "reason": "The clause matches the standard position on payment terms."
+    },
+    {
+     "topic": "liability_cap",
+     "expected": "fallback",
+     "got": "fallback",
+     "ok": true,
+     "method": "model",
+     "quote": "The aggregate liability of each party under this Agreement is limited to EUR 500,000.",
+     "reason": "The clause matches the fallback 1 position of capping liability at EUR 500,000."
+    },
+    {
+     "topic": "assignment",
+     "expected": "outside",
+     "got": "unclear",
+     "ok": false,
+     "method": "model",
+     "quote": "The Licensee may assign this Agreement to any of its affiliates without consent.",
+     "reason": "The model named “fallback 1”, which this position does not have; a lawyer decides."
+    },
+    {
+     "topic": "data_protection",
+     "expected": "standard",
+     "got": "standard",
+     "ok": true,
+     "method": "model",
+     "quote": "The Licensor shall process personal data solely as processor for the Licensee and only on the Licensee's documented instructions.",
+     "reason": "The clause matches the standard position on data protection."
+    },
+    {
+     "topic": "governing_law",
+     "expected": "standard",
+     "got": "standard",
+     "ok": true,
+     "method": "model",
+     "quote": "This Agreement shall be governed by Swedish law.",
+     "reason": "The clause states that the agreement is governed by Swedish law, matching the standard position."
+    }
+   ]
+  },
+  {
+   "id": "licence-aggressive",
+   "seconds": 5.4,
+   "lines": [
+    {
+     "topic": "payment",
+     "expected": "outside",
+     "got": "outside",
+     "ok": true,
+     "method": "model",
+     "quote": "Charges are payable quarterly in arrears within sixty (60) days.",
+     "reason": "The clause specifies quarterly payments in arrears with a 60-day period, which differs from the standard's annual payments in advance with a 30-day period."
+    },
+    {
+     "topic": "liability_cap",
+     "expected": "outside",
+     "got": "outside",
+     "ok": true,
+     "method": "model",
+     "quote": "The Licensor's aggregate liability shall not exceed EUR 2,000,000.",
+     "reason": "The clause specifies a different cap amount than the standard or fallback positions."
+    },
+    {
+     "topic": "governing_law",
+     "expected": "outside",
+     "got": "outside",
+     "ok": true,
+     "method": "model",
+     "quote": "These terms are governed by the laws of Germany.",
+     "reason": "The clause specifies Germany as the governing law, which is different from the standard position of Sweden."
+    },
+    {
+     "topic": "assignment",
+     "expected": "not_found",
+     "got": "not_found",
+     "ok": true,
+     "method": "model",
+     "quote": null,
+     "reason": "No clause of this document deals with the topic."
+    },
+    {
+     "topic": "data_protection",
+     "expected": "not_found",
+     "got": "not_found",
+     "ok": true,
+     "method": "model",
+     "quote": null,
+     "reason": "No clause of this document deals with the topic."
+    }
+   ]
+  }
+ ]
+}

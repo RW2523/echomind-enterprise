@@ -138,6 +138,8 @@ _REFUSE_BELOW = (
      "delete {n} research note(s) sent for review"),
     (23, "SELECT (SELECT COUNT(*) FROM legal_ai_artifacts WHERE kind = 'legal_draft') + (SELECT COUNT(*) FROM legal_template_versions)",
      "delete {n} legal draft(s) and firm template version(s)"),
+    (24, "SELECT (SELECT COUNT(*) FROM legal_playbook_positions) + (SELECT COUNT(*) FROM legal_playbook_decisions)",
+     "delete {n} playbook position(s) and lawyers' decisions on playbook checks"),
 )
 
 

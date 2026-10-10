@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -159,6 +159,11 @@ export const useTemplates = () =>
 export const draftsPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/drafts`;
 export const useDrafts = (matterId: string) =>
   useQuery({ queryKey: ['matter', matterId, 'drafts'] as const, queryFn: async () => (await api.get<{ drafts: DraftSummary[] }>(draftsPath(matterId))).drafts });
+export const usePlaybooks = () =>
+  useQuery({ queryKey: ['playbooks'] as const, queryFn: () => api.get<{ playbooks: Playbook[]; topics: Record<string, string>; can: { manage: boolean; approve: boolean } }>('/api/legal/playbooks') });
+export const usePlaybookChecks = (matterId: string, docId: string) =>
+  useQuery({ queryKey: [...keys.document(matterId, docId), 'playbook-checks'] as const,
+    queryFn: async () => (await api.get<{ checks: PlaybookCheck[] }>(`${docsBase(matterId)}/${encodeURIComponent(docId)}/playbook-checks`)).checks });
 export const useReviews = () =>
   useQuery({ queryKey: ['reviews'] as const, refetchInterval: 120_000, retry: false, queryFn: () => api.get<ReviewQueue>('/api/legal/reviews') });
 export const useMeetings = (matterId: string) =>
