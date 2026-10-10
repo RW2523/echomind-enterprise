@@ -38,7 +38,7 @@ from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import templates
 
-VERSION = "drafting-s3.1e"
+VERSION = "drafting-s3.1f"
 GAP = re.compile(r"\[\[NEEDS INPUT:[^\]]*\]\]")
 _REF = re.compile(r"\{\{\s*([a-z][a-z0-9_]{0,40})\s*\}\}")
 _FIGURE = re.compile(
@@ -338,19 +338,26 @@ def assemble(content: dict) -> dict:
     return content
 
 
+_LEGAL_FORM = re.compile(r"(?:\s+(?:ltd|limited|plc|llp|lp|llc|inc|incorporated|corp|corporation|co|company|ab|as|asa|oy|gmbh|ag|sa|sas|"
+                         r"srl|spa|bv|nv|pty|pte|kk))+$")
+
+
 def _party_key(value: str) -> str:
-    return re.sub(r"\W+", " ", value.casefold()).strip()
+    """"Northbridge Analytics AB" and "Northbridge Analytics" are one party (s3.1f)."""
+    return _LEGAL_FORM.sub("", re.sub(r"\W+", " ", value.casefold()).strip()).strip()
 
 
 def distinct_parties(fields: list[dict]) -> None:
-    """Two party fields never name the same party (s3.1b): a party read from the documents that an earlier field
-    already names is left for a person, with the value shown as a suggestion and the reason."""
-    named = []
-    for f in fields:
-        if f["kind"] != "party" or not f.get("value") or f["status"] not in ("sourced", "matter"):
+    """Two party fields never name the same party (s3.1b): a party read from the documents that another field
+    already names is left for a person, with the value shown as a suggestion and the reason. The matter's own
+    parties (its client) are compared first, whatever the field order (s3.1f)."""
+    party = [f for f in fields if f["kind"] == "party" and f.get("value") and f["status"] in ("sourced", "matter")]
+    named = [f for f in party if f["status"] == "matter"]
+    for f in party:
+        if f["status"] != "sourced":
             continue
         first = next((g for g in named if _party_key(g["value"]) == _party_key(f["value"])), None)
-        if first is None or f["status"] != "sourced":
+        if first is None:
             named.append(f)
             continue
         quote = f["sources"][0]["quote"] if f["sources"] else None

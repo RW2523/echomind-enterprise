@@ -74,12 +74,17 @@ def run(args) -> int:
         v = t["versions"][0]
         templates.approve(org, t["id"], v["id"], mp["id"], v["content_sha256"])
         by_key[t["preset"]] = t["id"]
-    client = repo.create_client(org, "Evaluation client", "EVAL", alice["id"])
+    clients = {}
+
+    def client_for(name: str) -> dict:          # a scenario may name the matter's client, as a firm's matter would (s3.1f)
+        if name not in clients:
+            clients[name] = repo.create_client(org, name, f"EVAL{len(clients)}", alice["id"])
+        return clients[name]
     c = TestClient(main_mod.app, base_url="https://testserver")
     sign_in(c, alice)
     results = []
     for n, s in enumerate(sc["scenarios"], start=1):
-        m = repo.create_matter(org, client["id"], f"EVAL-D{n}", s["title"], alice["id"])
+        m = repo.create_matter(org, client_for(s.get("client") or "Evaluation client")["id"], f"EVAL-D{n}", s["title"], alice["id"])
         base = f"/api/legal/matters/{m['id']}"
         for d in s["documents"]:
             r = c.post(f"{base}/documents/import", headers=csrf_headers(c), files={"file": (d["name"], d["text"].encode(), "text/plain")},

@@ -1,5 +1,5 @@
 {
- "about": "S3.1 drafting — the TUNING set. Fictional documents only. demand-northwind, review-warehouse-lease and nda-missing-period were the first held-out set; they informed code fixes (D-045, four reported runs), so they became tuning data at the Phase 3 gate (S3.9). engagement-corran, demand-brightwater and nda-no-law were the second held-out set (run on s3.1, then on s3.1b where the agreement field took a party's name); that informed s3.1c, so they became tuning data. review-kestrel-distribution, demand-pinewood-rent and engagement-ashcombe-no-fee were the third held-out set (run once on s3.1c: 5/9, wrong 0); it showed the research abstention floor emptying drafting's search on a short email, fixed in s3.1d, so they became tuning data.",
+ "about": "S3.1 drafting — the TUNING set. Fictional documents only. demand-northwind, review-warehouse-lease and nda-missing-period were the first held-out set; they informed code fixes (D-045, four reported runs), so they became tuning data at the Phase 3 gate (S3.9). engagement-corran, demand-brightwater and nda-no-law were the second held-out set (run on s3.1, then on s3.1b where the agreement field took a party's name); that informed s3.1c, so they became tuning data. review-kestrel-distribution, demand-pinewood-rent and engagement-ashcombe-no-fee were the third held-out set (run once on s3.1c: 5/9, wrong 0); it showed the research abstention floor emptying drafting's search on a short email, fixed in s3.1d, so they became tuning data. A scenario's \"client\" names the matter's client, as a firm's matter would (s3.1f); without it the client is \"Evaluation client\".",
  "scenarios": [
   {
    "id": "engagement-harrowgate",
@@ -17,7 +17,8 @@
     "client_contact": "Petra Voss",
     "fee_arrangement": "18,000"
    },
-   "absent": []
+   "absent": [],
+   "client": "Harrowgate Systems Inc."
   },
   {
    "id": "nda-lantern",
@@ -98,7 +99,8 @@
     "agreement": "Supply Agreement",
     "amount_claimed": "42,750"
    },
-   "absent": []
+   "absent": [],
+   "client": "Harrowgate Systems Inc."
   },
   {
    "id": "review-warehouse-lease",
@@ -155,7 +157,8 @@
     "client_contact": "Imogen Hale",
     "fee_arrangement": "25,000"
    },
-   "absent": []
+   "absent": [],
+   "client": "Corran Foods Ltd"
   },
   {
    "id": "demand-brightwater",
@@ -179,7 +182,8 @@
     "agreement": "Software Licence Agreement",
     "amount_claimed": "310,000"
    },
-   "absent": []
+   "absent": [],
+   "client": "Northbridge Analytics AB"
   },
   {
    "id": "nda-no-law",
@@ -242,7 +246,8 @@
     "agreement": "Lease",
     "amount_claimed": "36,500"
    },
-   "absent": []
+   "absent": [],
+   "client": "Ashcombe Properties Ltd"
   },
   {
    "id": "engagement-ashcombe-no-fee",
@@ -261,7 +266,8 @@
    },
    "absent": [
     "fee_arrangement"
-   ]
+   ],
+   "client": "Ashcombe Properties Ltd"
   }
  ]
 }

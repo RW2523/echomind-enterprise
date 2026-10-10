@@ -254,6 +254,22 @@ def test_an_agreement_field_given_a_party_name_is_left_for_a_person(dr):
     assert field(d, "agreement")["value"] == "Master Services Agreement" and field(d, "agreement")["status"] == "sourced"
 
 
+def test_the_matter_s_own_client_read_as_the_other_side_is_left_for_a_person(dr):
+    """A demand letter's recipient read as the firm's own client, the creditor (drafting golden, s3.1e run 2). The matter's
+    client is compared first, whatever the field order, and "Ltd" or "AB" does not make another party (s3.1f)."""
+    alice = as_user(dr, "alice")
+    upload(alice, dr["mid"], "letter.txt", "LETTER (fictional)\n\nAlpha Holdings Ltd supplies Gamma Trading Ltd under the Supply Agreement.",
+           status="final")
+    index_all()
+    fields = [{"key": "recipient", "label": "Recipient", "kind": "party", "source": "documents", "question": "Who is the letter addressed to?"},
+              {"key": "client", "label": "Client", "kind": "party", "source": "matter"}]
+    dr["model"].fields["recipient"] = {"value": "Alpha Holdings Ltd", "quote": "Alpha Holdings Ltd supplies Gamma Trading Ltd"}
+    d = draft(dr, template(dr, body="# Letter\nTo {{recipient}}, for {{client}}.", fields=fields, name="Demand (test)"))
+    assert field(d, "client")["value"] == "Alpha Holdings" and field(d, "client")["status"] == "matter"
+    r = field(d, "recipient")
+    assert r["status"] == "needs_input" and r["value"] is None and "Client" in r["suggestion"]["reason"]
+
+
 def test_an_agreement_is_named_by_its_head_word_not_by_any_mention_of_one():
     """"the 2026 annual licence fee" passed as an agreement on "licence" (drafting golden, Phase 3 gate run; s3.1e)."""
     from app.legal.drafting import engine
