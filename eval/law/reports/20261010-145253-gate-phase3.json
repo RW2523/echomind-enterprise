@@ -1,0 +1,380 @@
+{
+ "meta": {
+  "set": "phase3",
+  "commit": "b134208",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-145253",
+  "started": "20261010-142748"
+ },
+ "summary": {
+  "suites": 17,
+  "failed": 0,
+  "latency_s": {}
+ },
+ "runs": [
+  {
+   "suite": "drafting",
+   "set": "golden",
+   "ok": true,
+   "seconds": 136.9,
+   "report": "20261010-143004-drafting-golden.json",
+   "summary": {
+    "scenarios": 13,
+    "field_accuracy": "41/42",
+    "absent_left_open": "6/6",
+    "wrong_values": 0,
+    "invented_figures": 0,
+    "written_passages": 16,
+    "unsupported_sentences": 4,
+    "seconds_per_draft": 10.1
+   },
+   "reused": false
+  },
+  {
+   "suite": "drafting",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 0.0,
+   "report": "20261010-142737-drafting-heldout.json",
+   "summary": {
+    "scenarios": 3,
+    "field_accuracy": "9/10",
+    "absent_left_open": "1/1",
+    "wrong_values": 0,
+    "invented_figures": 0,
+    "written_passages": 4,
+    "unsupported_sentences": 6,
+    "seconds_per_draft": 9.5
+   },
+   "reused": true
+  },
+  {
+   "suite": "playbook",
+   "set": "golden",
+   "ok": true,
+   "seconds": 27.0,
+   "report": "20261010-143031-playbook-golden.json",
+   "summary": {
+    "lines": 15,
+    "accuracy": "15/15",
+    "deviations_caught": "5/5",
+    "passed_in_error": 0,
+    "by_rule": 1,
+    "quotes": 13,
+    "seconds_per_check": 7.9
+   },
+   "reused": false
+  },
+  {
+   "suite": "playbook",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 0.0,
+   "report": "20261010-113438-playbook-heldout.json",
+   "summary": {
+    "lines": 10,
+    "accuracy": "9/10",
+    "deviations_caught": "4/4",
+    "passed_in_error": 0,
+    "by_rule": 0,
+    "quotes": 8,
+    "seconds_per_check": 7.2
+   },
+   "reused": true
+  },
+  {
+   "suite": "redline",
+   "set": "t10",
+   "ok": true,
+   "seconds": 22.8,
+   "report": "20261010-143054-redline-t10.json",
+   "summary": {
+    "documents": 14,
+    "revisions": 487,
+    "placed": 487,
+    "missed": 0,
+    "verified": "487/487",
+    "libreoffice_round_trips_kept": "12/12",
+    "by_kind": {
+     "figure": "118/118",
+     "append": "162/162",
+     "shorten": "45/45",
+     "add_paragraph": "162/162"
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "citations",
+   "set": "golden",
+   "ok": true,
+   "seconds": 22.4,
+   "report": "20261010-143116-citations-golden.json",
+   "summary": {
+    "items": 124,
+    "correct": "124/124",
+    "references": "42/42",
+    "missing_caught": "17/17",
+    "false_missing": 0,
+    "quotations": "19/19",
+    "altered_caught": "6/6",
+    "false_alarms": 0,
+    "authorities_found": "63/63",
+    "malformed_caught": "15/15",
+    "wrongly_flagged": 0,
+    "all_unverified": true,
+    "external_lookups": 0,
+    "extra_items": 0,
+    "ms_per_check": 33
+   },
+   "reused": false
+  },
+  {
+   "suite": "citations",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 0.0,
+   "report": "20261010-133535-citations-heldout.json",
+   "summary": {
+    "items": 24,
+    "correct": "24/24",
+    "references": "4/4",
+    "missing_caught": "2/2",
+    "false_missing": 0,
+    "quotations": "4/4",
+    "altered_caught": "1/1",
+    "false_alarms": 0,
+    "authorities_found": "16/16",
+    "malformed_caught": "4/4",
+    "wrongly_flagged": 0,
+    "all_unverified": true,
+    "external_lookups": 0,
+    "extra_items": 0,
+    "ms_per_check": 30
+   },
+   "reused": true
+  },
+  {
+   "suite": "definitions",
+   "set": "golden",
+   "ok": true,
+   "seconds": 20.9,
+   "report": "20261010-143137-definitions-golden.json",
+   "summary": {
+    "documents": 10,
+    "planted": 55,
+    "caught": "52/55",
+    "fixes_right": "8/8",
+    "false_findings": 0,
+    "controls_clean": "2/2",
+    "by_type": {
+     "broken": "11/11",
+     "duplicate": "3/3",
+     "gap": "14/14",
+     "inconsistent": "6/6",
+     "outdated": "2/2",
+     "repeat": "2/2",
+     "undefined": "8/11",
+     "unused": "6/6"
+    },
+    "ms_per_check": 23
+   },
+   "reused": false
+  },
+  {
+   "suite": "definitions",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 0.0,
+   "report": "20261010-131923-definitions-heldout.json",
+   "summary": {
+    "documents": 3,
+    "planted": 11,
+    "caught": "9/11",
+    "fixes_right": "2/2",
+    "false_findings": 2,
+    "controls_clean": "1/1",
+    "by_type": {
+     "broken": "1/1",
+     "gap": "4/4",
+     "inconsistent": "1/1",
+     "outdated": "1/1",
+     "repeat": "1/1",
+     "undefined": "0/2",
+     "unused": "1/1"
+    },
+    "ms_per_check": 19
+   },
+   "reused": true
+  },
+  {
+   "suite": "obligations",
+   "set": "golden",
+   "ok": true,
+   "seconds": 15.5,
+   "report": "20261010-143153-obligations-golden.json",
+   "summary": {
+    "documents": 16,
+    "expected": 68,
+    "found": "67/68",
+    "timing_in_its_words": "50/51",
+    "dates_right": "18/18",
+    "dates_guessed": 0,
+    "extra": 4,
+    "controls_clean": "5/5",
+    "all_proposed": true,
+    "by_kind": {
+     "change_of_control": "1/1",
+     "confidentiality": "1/1",
+     "consent": "2/2",
+     "duty": "15/16",
+     "expiry": "8/8",
+     "notice": "6/6",
+     "notification": "5/5",
+     "payment": "11/11",
+     "post_termination": "6/6",
+     "renewal": "2/2",
+     "survival": "1/1",
+     "termination": "9/9"
+    },
+    "ms_per_document": 532
+   },
+   "reused": false
+  },
+  {
+   "suite": "obligations",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 0.0,
+   "report": "20261010-133606-obligations-heldout.json",
+   "summary": {
+    "documents": 3,
+    "expected": 7,
+    "found": "7/7",
+    "timing_in_its_words": "4/4",
+    "dates_right": "2/2",
+    "dates_guessed": 0,
+    "extra": 0,
+    "controls_clean": "1/1",
+    "all_proposed": true,
+    "by_kind": {
+     "duty": "1/1",
+     "expiry": "1/1",
+     "notice": "1/1",
+     "payment": "3/3",
+     "termination": "1/1"
+    },
+    "ms_per_document": 361
+   },
+   "reused": true
+  },
+  {
+   "suite": "diligence",
+   "set": "golden",
+   "ok": true,
+   "seconds": 7.0,
+   "report": "20261010-143200-diligence-golden.json",
+   "summary": {
+    "rooms": 6,
+    "missing_lists_right": "6/6",
+    "issues_found": "29/29",
+    "extra_issues": 0,
+    "controls_clean": "2/2",
+    "all_preliminary": true,
+    "quotes_at_offsets": true,
+    "ms_per_room": 33
+   },
+   "reused": false
+  },
+  {
+   "suite": "diligence",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 0.0,
+   "report": "20261010-133610-diligence-heldout.json",
+   "summary": {
+    "rooms": 2,
+    "missing_lists_right": "2/2",
+    "issues_found": "5/5",
+    "extra_issues": 0,
+    "controls_clean": "1/1",
+    "all_preliminary": true,
+    "quotes_at_offsets": true,
+    "ms_per_room": 26
+   },
+   "reused": true
+  },
+  {
+   "suite": "governance",
+   "set": "golden",
+   "ok": true,
+   "seconds": 8.1,
+   "report": "20261010-143208-governance-golden.json",
+   "summary": {
+    "companies": 6,
+    "found": "15/15",
+    "extra": 0,
+    "controls_clean": "2/2",
+    "by_kind": {
+     "share_capital": "4/4",
+     "authority": "4/4",
+     "constitution": "5/5",
+     "ip_chain": "2/2"
+    },
+    "all_preliminary": true,
+    "quotes_at_offsets": true,
+    "ms_per_company": 38
+   },
+   "reused": false
+  },
+  {
+   "suite": "governance",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 0.0,
+   "report": "20261010-133614-governance-heldout.json",
+   "summary": {
+    "companies": 3,
+    "found": "4/4",
+    "extra": 0,
+    "controls_clean": "1/1",
+    "by_kind": {
+     "share_capital": "2/2",
+     "authority": "1/1",
+     "constitution": "1/1"
+    },
+    "all_preliminary": true,
+    "quotes_at_offsets": true,
+    "ms_per_company": 31
+   },
+   "reused": true
+  },
+  {
+   "suite": "security",
+   "set": "suite",
+   "ok": true,
+   "seconds": 488.0,
+   "report": "20261010-144016-security-suite.json",
+   "summary": {
+    "groups": 24,
+    "failed_groups": 0,
+    "tests_passed": 901
+   },
+   "reused": false
+  },
+  {
+   "suite": "browser",
+   "set": "e2e",
+   "ok": true,
+   "seconds": 757.3,
+   "report": "20261010-145253-browser-e2e.json",
+   "summary": {
+    "passed": 29,
+    "failed": 0,
+    "flaky": 0,
+    "skipped": 0
+   },
+   "reused": false
+  }
+ ]
+}

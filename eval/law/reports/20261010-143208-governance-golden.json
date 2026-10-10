@@ -1,0 +1,360 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "b134208",
+  "time": "20261010-143208",
+  "prompt_version": "diligence-s3.8b",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "companies": 6,
+  "found": "15/15",
+  "extra": 0,
+  "controls_clean": "2/2",
+  "by_kind": {
+   "share_capital": "4/4",
+   "authority": "4/4",
+   "constitution": "5/5",
+   "ip_chain": "2/2"
+  },
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_company": 38
+ },
+ "companies": [
+  {
+   "id": "G1-tidewater",
+   "ms": 53,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "150 ordinary shares in the register have no approval",
+     "found": true
+    },
+    {
+     "kind": "share_capital",
+     "title": "B ordinary shares are not a class the articles create",
+     "found": true
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Board quorum",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Notice of board meetings",
+     "found": true
+    },
+    {
+     "kind": "ip_chain",
+     "title": "No IP assignment from B. Lind",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "outputs": [
+    {
+     "kind": "share_capital",
+     "title": "150 ordinary shares in the register have no approval",
+     "detail": "The register shows 1,150 ordinary shares; the approvals found allow 1,000.",
+     "document": "Register of members.txt",
+     "quote": "C. Osei: 150 ordinary shares",
+     "related": [
+      {
+       "document": "Board minutes January 2026.txt",
+       "quote": "2.1 The board approved the allotment of 1,000 ordinary shares to the founders."
+      }
+     ]
+    },
+    {
+     "kind": "share_capital",
+     "title": "B ordinary shares are not a class the articles create",
+     "detail": "The register shows 200 B ordinary shares; the articles create ordinary and A preference shares only.",
+     "document": "Register of members.txt",
+     "quote": "Northgate Capital LLP: 200 B ordinary shares",
+     "related": [
+      {
+       "document": "Articles of Association.txt",
+       "quote": "1.1 The share capital of the company consists of ordinary shares and A preference shares."
+      }
+     ]
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority (clause 2.1)",
+     "detail": "Signed by J. Park, Finance Director, for a contract of GBP 120,000; the delegation of authority allows the Finance Director up to GBP 50,000.",
+     "document": "Supply Agreement - Northwind.txt",
+     "quote": "2.1 Signed for Tidewater Holdings Ltd by J. Park, Finance Director.",
+     "related": [
+      {
+       "document": "Delegation of authority.txt",
+       "quote": "1.1 The Finance Director may sign contracts with a value of up to GBP 50,000."
+      }
+     ]
+    },
+    {
+     "kind": "constitution",
+     "title": "Board quorum: one director in the policy, two in the articles",
+     "detail": "The policy and the articles disagree; the articles normally prevail.",
+     "document": "Board procedures policy.txt",
+     "quote": "1.1 A board meeting is quorate when one director is present.",
+     "related": [
+      {
+       "document": "Articles of Association.txt",
+       "quote": "2.2 The quorum for board meetings is two directors."
+      }
+     ]
+    },
+    {
+     "kind": "constitution",
+     "title": "Notice of board meetings: 2 days in the policy, 7 days in the articles",
+     "detail": "The policy and the articles disagree; the articles normally prevail.",
+     "document": "Board procedures policy.txt",
+     "quote": "1.2 Board meetings may be called on two (2) days' notice.",
+     "related": [
+      {
+       "document": "Articles of Association.txt",
+       "quote": "2.3 Not less than seven (7) days' notice shall be given of every board meeting."
+      }
+     ]
+    },
+    {
+     "kind": "ip_chain",
+     "title": "No IP assignment from B. Lind",
+     "detail": "B. Lind is named as a founder; no IP assignment in this matter is made by them.",
+     "document": "Board minutes January 2026.txt",
+     "quote": "1.1 The founders of the company are A. Moreau and B. Lind.",
+     "related": []
+    }
+   ],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 5
+  },
+  {
+   "id": "G2-harrow-control",
+   "ms": 38,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "outputs": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 0
+  },
+  {
+   "id": "G3-nair",
+   "ms": 27,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "200 preference shares in the register have no approval",
+     "found": true
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "outputs": [
+    {
+     "kind": "share_capital",
+     "title": "200 preference shares in the register have no approval",
+     "detail": "The register shows 700 preference shares; the approvals found allow 500.",
+     "document": "Cap table - Nair Instruments.txt",
+     "quote": "Brookfield Seed Fund: 700 preference shares",
+     "related": [
+      {
+       "document": "Written resolution March 2026.txt",
+       "quote": "1.2 The shareholders resolved to approve the issue of 500 preference shares."
+      }
+     ]
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority (clause 2.1)",
+     "detail": "Signed by R. Shah, Managing Director, for a contract of GBP 300,000; the delegation of authority allows the Managing Director up to GBP 250,000.",
+     "document": "Supply Agreement - Kestrel Parts.txt",
+     "quote": "2.1 Signed for Nair Instruments Ltd by R. Shah, Managing Director.",
+     "related": [
+      {
+       "document": "Delegation of authority - Nair Instruments.txt",
+       "quote": "1.1 The Managing Director may sign contracts with a value of up to GBP 250,000."
+      }
+     ]
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors: at least one in the policy, two in the articles",
+     "detail": "The policy and the articles disagree; the articles normally prevail.",
+     "document": "Board governance policy - Nair Instruments.txt",
+     "quote": "1.1 The company shall have at least one director.",
+     "related": [
+      {
+       "document": "Articles of Association - Nair Instruments.txt",
+       "quote": "2.1 The number of directors shall not be less than two."
+      }
+     ]
+    }
+   ],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 3
+  },
+  {
+   "id": "G4-ardent-us",
+   "ms": 28,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "500,000",
+     "found": true
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors",
+     "found": true
+    },
+    {
+     "kind": "ip_chain",
+     "title": "No IP assignment from Luis Ortega",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "outputs": [
+    {
+     "kind": "share_capital",
+     "title": "500,000 common stock in the register have no approval",
+     "detail": "The register shows 5,000,000 common stock shares; the approvals found allow 4,500,000.",
+     "document": "Cap table - Ardent Robotics.txt",
+     "quote": "Luis Ortega: 1,000,000 shares of common stock",
+     "related": [
+      {
+       "document": "Board consent January 2026.txt",
+       "quote": "1.1 The Board approved the issuance of 4,500,000 shares of common stock to the founders."
+      }
+     ]
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority (clause 2.1)",
+     "detail": "Signed by Maya Chen, Chief Executive Officer, for a contract of USD 750,000; the delegation of authority allows the Chief Executive Officer up to USD 500,000.",
+     "document": "Master Supply Agreement - Kestrel.txt",
+     "quote": "2.1 Signed on behalf of Ardent Robotics, Inc. by Maya Chen, Chief Executive Officer.",
+     "related": [
+      {
+       "document": "Delegation of authority - Ardent.txt",
+       "quote": "1.1 The Chief Executive Officer may sign contracts with a value of up to USD 500,000."
+      }
+     ]
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors: at least two in the policy, three in the articles",
+     "detail": "The policy and the articles disagree; the articles normally prevail.",
+     "document": "Board governance policy - Ardent.txt",
+     "quote": "1.1 The Board shall have at least two directors.",
+     "related": [
+      {
+       "document": "Bylaws - Ardent Robotics.txt",
+       "quote": "2.1 The number of directors shall not be less than three."
+      }
+     ]
+    },
+    {
+     "kind": "ip_chain",
+     "title": "No IP assignment from Luis Ortega",
+     "detail": "Luis Ortega is named as a founder; no IP assignment in this matter is made by them.",
+     "document": "Board consent January 2026.txt",
+     "quote": "2.1 The founders are Maya Chen and Luis Ortega.",
+     "related": []
+    }
+   ],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 3
+  },
+  {
+   "id": "G5-brenner-uk",
+   "ms": 40,
+   "control": false,
+   "lines": [
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Notice of board meetings",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "outputs": [
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority (clause 2.1)",
+     "detail": "Signed by S. Patel, Operations Manager, for a contract of GBP 40,000; the delegation of authority allows the Operations Manager up to GBP 25,000.",
+     "document": "Services Agreement - CleanCo.txt",
+     "quote": "2.1 Signed for Brenner Medical UK Ltd by S. Patel, Operations Manager.",
+     "related": [
+      {
+       "document": "Delegation of authority - Brenner Medical UK.txt",
+       "quote": "1.1 The Operations Manager may sign contracts with a value of up to GBP 25,000."
+      }
+     ]
+    },
+    {
+     "kind": "constitution",
+     "title": "Notice of board meetings: 24 hours in the policy, 5 days in the articles",
+     "detail": "The policy and the articles disagree; the articles normally prevail.",
+     "document": "Board procedures - Brenner Medical UK.txt",
+     "quote": "1.1 Directors may convene a board meeting on 24 hours' notice.",
+     "related": [
+      {
+       "document": "Articles of Association - Brenner Medical UK.txt",
+       "quote": "2.1 Board meetings require not less than five (5) days' notice."
+      }
+     ]
+    }
+   ],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 2
+  },
+  {
+   "id": "G6-calder-control",
+   "ms": 41,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "outputs": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 0
+  }
+ ]
+}

@@ -1,0 +1,44 @@
+{
+ "meta": {
+  "set": "e2e",
+  "commit": "b134208",
+  "time": "20261010-145253"
+ },
+ "summary": {
+  "passed": 29,
+  "failed": 0,
+  "flaky": 0,
+  "skipped": 0
+ },
+ "items": [
+  "  ✓   1 e2e/law-workspace.spec.ts:65:1 › alice sees only her matters; a matter she is not on is simply not available (11.7s)",
+  "  ✓   2 e2e/law-workspace.spec.ts:114:1 › bob sees the restricted matter that alice cannot (2.1s)",
+  "  ✓   3 e2e/law-workspace.spec.ts:122:1 › signing out ends the session for every tab (2.5s)",
+  "  ✓   4 e2e/law-workspace.spec.ts:133:1 › a refused authenticator code keeps the code step, and the next code signs in (23.7s)",
+  "  ✓   5 e2e/law-workspace.spec.ts:152:1 › a wall approved by a second managing partner hides a matter from its own lead (7.6s)",
+  "  ✓   6 e2e/law-workspace.spec.ts:183:1 › emergency access: requested by a firm admin, approved by a managing partner, read only (25.4s)",
+  "  ✓   7 e2e/law-workspace.spec.ts:208:1 › the audit trail shows the emergency access, intact, and the lead sees it on the matter (32.8s)",
+  "  ✓   8 e2e/law-workspace.spec.ts:235:1 › documents: imported into M-101, read in the background, searchable only inside M-101 (32.4s)",
+  "  ✓   9 e2e/law-workspace.spec.ts:259:1 › research: an answer from M-101 only, tied to the clause it relies on (26.3s)",
+  "  ✓  10 e2e/law-workspace.spec.ts:280:1 › meetings: recording waits for everyone’s consent and stops the moment one is withdrawn (32.1s)",
+  "  ✓  11 e2e/law-workspace.spec.ts:322:1 › records: a label, a deletion approved by records and verified, and a two-person legal hold (31.3s)",
+  "  ✓  12 e2e/law-workspace.spec.ts:369:1 › exports: redactions reviewed, approved by a second lawyer, checked, watermarked and downloaded (27.7s)",
+  "  ✓  13 e2e/law-workspace.spec.ts:417:1 › connectors: a folder linked by the lead syncs in with its permissions; files without them stay out (26.7s)",
+  "  ✓  14 e2e/law-workspace.spec.ts:451:1 › reading: a scan read by text recognition, a Word contract read as Word shows it, and a citation opened at its sentence (11.2s)",
+  "  ✓  15 e2e/law-workspace.spec.ts:504:1 › versions: answers come from the signed contract and warn where the draft differs; drafts on request (35.0s)",
+  "  ✓  16 e2e/law-workspace.spec.ts:544:1 › compare: two versions clause by clause, a change explained, and conflicts across documents (28.1s)",
+  "  ✓  17 e2e/law-workspace.spec.ts:604:1 › transcripts: speakers and times, a gap shown, corrections with reasons, matter vocabulary, then into research (18.7s)",
+  "  ✓  18 e2e/law-workspace.spec.ts:644:1 › silent assist: alerts quote what was said; one confirmed, one dismissed with a reason; the pack per meeting (26.3s)",
+  "  ✓  19 e2e/law-workspace.spec.ts:669:1 › minutes: drafted from the whole transcript by the real model, approved by a second lawyer, filed as a document (47.3s)",
+  "  ✓  20 e2e/law-workspace.spec.ts:703:1 › reviews: a research answer sent for review, approved by a second lawyer from the queue, filed with its approval (30.0s)",
+  "  ✓  21 e2e/law-workspace.spec.ts:752:1 › evaluations: the newest gate run, held-out and tuning sets, with the code and models measured (10.9s)",
+  "  ✓  22 e2e/law-workspace.spec.ts:767:1 › drafting: an engagement letter from the approved firm template, every fact sourced or filled, approved, filed as Word (54.6s)",
+  "  ✓  23 e2e/law-workspace.spec.ts:829:1 › playbooks: a contract checked against the firm playbook, each topic with its words, a lawyer agreeing (18.3s)",
+  "  ✓  24 e2e/law-workspace.spec.ts:871:1 › redlines: the clauses outside the playbook revised to the firm's wording, approved, filed as the next version with tracked changes (31.4s)",
+  "  ✓  25 e2e/law-workspace.spec.ts:929:1 › citations: a memo's references resolved to the agreement, an altered quotation shown word by word, an invented case flagged (20.7s)",
+  "  ✓  26 e2e/law-workspace.spec.ts:985:1 › definitions: a supply agreement's terms, numbering and references checked; two corrections approved and filed as tracked changes (35.1s)",
+  "  ✓  27 e2e/law-workspace.spec.ts:1043:1 › obligations: the agreement's deadlines read with their words, the non-renewal date computed and confirmed, an edit kept with its reason (25.3s)",
+  "  ✓  28 e2e/law-workspace.spec.ts:1086:1 › due diligence: the data room run against the firm checklist, missing documents listed, issues quoted, reviewed by a second lawyer (32.6s)",
+  "  ✓  29 e2e/law-workspace.spec.ts:1139:1 › governance: a company's register, approvals, authority, policies and IP read against each other, every finding quoting both documents (44.0s)"
+ ]
+}

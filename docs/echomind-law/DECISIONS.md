@@ -1211,6 +1211,55 @@ Every entry records the options considered, the recommendation, the consequence 
   - Transfers between holders are not reconciled.
   - Findings are advisory and never change a document.
 
+### D-053 The Phase 3 gate: fresh blind sets, fixes measured on new ones, a review packet — RECORDED (S3.9; OPS-02, T07, T10)
+- **Held-out discipline:**
+  - Every checker changed since its last held-out run got a fresh blind set, committed before it was run (`99c1342`).
+  - When a run led to a fix, the version changed, the set moved to golden, and a new blind set was written and committed before that version was run.
+  - Every run is reported in `releases/phase3-gate.md` §2, including the runs that failed.
+  - **The gate runner cites a held-out report rather than running it again** when the report was made on the current rules or prompt version and the same held-out file.
+- **Gate runner (`eval/law/run_gate.py --phase 3`):** runs the drafting, playbook, T10 redline, citation, definitions, obligations, diligence and governance suites (golden and held-out), then `scripts/law/security_suite.sh` and the Law browser journeys. Their counts are kept as reports, and the evaluation runs are imported for the Evaluations page.
+- **Fixes made at the gate (each with a test written red first):**
+  - `citations-s3.4f`: court rules keep lettered sub-paragraphs.
+  - `citations-s3.4g`: UK Act names with joining words or a bracketed part. A word that opens a sentence (See, Under, The) is not part of the name.
+  - `drafting-s3.1b`: a party already named by an earlier field is left for a person, with the value as a suggestion and the reason.
+  - `drafting-s3.1c`: a field kind `agreement`. A value naming no document is left for a person. The demand-letter and contract-review presets use it, and the template editor offers it. Templates already installed keep their kinds until a new version.
+  - `drafting-s3.1d`, in two parts:
+    - `retrieval.search(floor=False)`: drafting no longer applies the research answerer's abstention floor (`LEGAL_RERANK_MIN_SCORE`). Every drafted value is checked against its quote instead. The floor dropped a short document's only passage.
+    - With no source at all, a written passage is a gap for the lawyer, and the model is not asked.
+  - `drafting-s3.1e`, after the first full gate run gave two wrong golden values on the code that had given none:
+    - an agreement's name must be headed by its document word ("the annual licence fee" is not one);
+    - a value saying the point is open ("to be agreed", "TBC", "not stated") is left for a person.
+  - `drafting-s3.1f`: the matter's client is compared first, whatever the field order, and legal forms (Ltd, AB) do not make another party. A demand letter's recipient had been read as the firm's own client.
+    - The drafting runner can now name a scenario's matter client, as a firm's matter would.
+  - The obligations evaluation now records the model pass and its version. Before, it said "rules only".
+- **Final held-out results:**
+
+  | Tool | Version | Result |
+  |---|---|---|
+  | Citations | `s3.4g` | 24/24 |
+  | Definitions | `s3.5c` | 9/11, fixes 2/2 |
+  | Obligations | `s3.6g` with the model | 7/7, none guessed |
+  | Diligence | `s3.8b` | issues 5/5 |
+  | Governance | `s3.8b` | 4/4 |
+  | Drafting | `s3.1f` | 9/10, wrong 0, invented 0 (golden, two runs: 41/42 and 39/42, wrong 0) |
+  | Playbooks | `s3.2c` | 9/10, passed in error 0 |
+
+- **Format round trips:** two LibreOffice tests were added:
+  - a corrections redline that deletes a clause whole;
+  - the released Word export, read back without its redacted text.
+
+  The manual Microsoft Word check stays 🔒.
+- **Lawyer review (🔒):**
+  - `make_packet.py --phase 3` groups each tool's held-out output with the documents it ran on, with a row per group for what was missed.
+  - `score.py --phase 3` scores it against the bars proposed in `releases/phase3-rubric.md`.
+  - The scoring needs a person.
+- **Model variation:** the same drafting code gave 0 and then 2 wrong values on the tuning set. Each cause found became a rule that leaves the field for a person. Drafted values are shown with their quotes, and the lawyer review measures what remains.
+- **Limits:**
+  - The sets are small and fictional.
+  - The recall of undefined terms is limited to D-049's patterns.
+  - A cited drafted sentence can narrow its quote.
+  - Treaty articles and state codes are not read as authorities.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
