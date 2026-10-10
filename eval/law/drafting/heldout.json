@@ -1,0 +1,35 @@
+{
+  "scenarios": [
+    {
+      "id": "demand-northwind",
+      "template": "demand_letter",
+      "title": "Letter before claim — Northwind unpaid invoices",
+      "documents": [
+        {"name": "supply-agreement-extract.txt", "status": "executed", "text": "SUPPLY AGREEMENT (fictional extract)\n\nThis Supply Agreement is made between Harrowgate Systems Inc. (the Supplier) and Northwind Logistics Ltd (the Customer).\n\nNotices to the Customer shall be sent to Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom.\n\n5.2 The Customer shall pay each invoice within thirty (30) days of its date."},
+        {"name": "statement-of-account.txt", "status": "final", "text": "STATEMENT OF ACCOUNT (fictional)\n\nCustomer: Northwind Logistics Ltd.\n\nInvoices HS-1041 and HS-1042, issued on 3 June 2026 and 1 July 2026, remain unpaid.\n\nThe total outstanding is GBP 42,750."}
+      ],
+      "expect": {"recipient": "Northwind Logistics", "recipient_address": "2 Harbour Road", "agreement": "Supply Agreement", "amount_claimed": "42,750"},
+      "absent": []
+    },
+    {
+      "id": "review-warehouse-lease",
+      "template": "contract_review",
+      "title": "Contract review — warehouse lease",
+      "documents": [
+        {"name": "warehouse-lease.txt", "status": "executed", "text": "LEASE OF WAREHOUSE PREMISES (fictional)\n\nThis Lease is made between Elmfield Estates Ltd (the Landlord) and Alder Biotech AB (the Tenant).\n\n3.1 The term of this Lease is ten (10) years from 1 April 2025.\n\n3.4 The Tenant may terminate this Lease on 31 March 2030 by giving not less than six months' written notice.\n\n4.1 The rent is GBP 84,000 per year, payable quarterly in advance.\n\n9.2 The Landlord's total liability under this Lease shall not exceed the rent paid in the preceding twelve months.\n\n12.1 This Lease is governed by the law of England and Wales."}
+      ],
+      "expect": {"agreement": "Lease", "parties": "Elmfield Estates", "governing_law": "England and Wales"},
+      "absent": []
+    },
+    {
+      "id": "nda-missing-period",
+      "template": "nda",
+      "title": "Mutual NDA — Harbour project",
+      "documents": [
+        {"name": "meeting-note.txt", "status": "final", "text": "MEETING NOTE (fictional)\n\nHarrowgate Systems Inc. and Elmfield Estates Ltd will exchange confidential information to assess a possible warehouse automation project.\n\nThe parties did not agree how long the information must be kept confidential, or which law will govern."}
+      ],
+      "expect": {"party_a": "Harrowgate", "party_b": "Elmfield", "purpose": "warehouse automation"},
+      "absent": ["confidentiality_period", "governing_law"]
+    }
+  ]
+}

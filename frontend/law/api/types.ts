@@ -227,7 +227,7 @@ export interface MinutesContent {
 }
 export interface ReviewDecision { decision: 'approved' | 'changes_requested'; content_sha256: string; reason?: string | null; by?: string | null; at: string }
 /** An AI draft under review (S2.6–S2.7, D-042/D-043): fixed versions, hashed, approved by a second lawyer. */
-export type ArtifactKind = 'minutes' | 'research_note';
+export type ArtifactKind = 'minutes' | 'research_note' | 'legal_draft';
 export interface ArtifactVersion<C = unknown> {
   id: string; version: number; status: 'draft' | 'approved' | 'superseded' | 'withdrawn'; content: C; content_sha256: string;
   inputs: Record<string, any>; created_by: string; created_by_name?: string | null; created_at: string; origin: 'model' | 'person';
@@ -346,4 +346,37 @@ export interface ConnectorLink {
 export interface EvaluationRun {
   id: string; suite: string; set: string; commit: string | null; models: Record<string, string>; dataset_sha256: string | null;
   summary: Record<string, unknown>; report: string; report_sha256: string; run_at: string | null; imported_at: string;
+}
+
+/** Firm templates and legal drafts (S3.1, D-045). */
+export type TemplateKind = 'engagement_letter' | 'nda' | 'demand_letter' | 'memo' | 'contract_review' | 'board_minutes' | 'custom';
+export type FieldSource = 'documents' | 'matter' | 'person' | 'today';
+export interface TemplateField { key: string; label: string; kind: string; source: FieldSource; question?: string | null; from?: string | null }
+export interface TemplateVersion {
+  id: string; version: number; status: 'draft' | 'approved' | 'retired'; body: string; fields: TemplateField[]; styles: string | null;
+  content_sha256: string; created_by: string | null; created_at: string; approved_by: string | null; approved_at: string | null;
+}
+export interface FirmTemplate { id: string; name: string; kind: TemplateKind; preset: string | null; created_by: string | null; created_at: string; versions: TemplateVersion[] }
+export interface DraftSource {
+  document_id: string; document_title: string; version_id: string; version_number: number; version_status?: string | null; clause?: string | null;
+  quote: string; verification: Verification; char_start?: number | null; char_end?: number | null;
+}
+export interface DraftField {
+  key: string; label: string; kind: string; source: FieldSource; value: string | null;
+  status: 'sourced' | 'matter' | 'system' | 'entered' | 'needs_input'; sources: DraftSource[];
+  suggestion?: { value: string; reason: string; quote?: string } | null; edited_by?: string | null;
+}
+export interface DraftBlock {
+  type: 'heading' | 'paragraph'; level?: number; origin: 'template' | 'written' | 'edited'; text: string; raw?: string;
+  instruction?: string; sources?: DraftSource[]; unsupported?: string[]; edited_by?: string | null;
+}
+export interface DraftContent {
+  title: string; matter: { number: string; title: string; client: string }; fields: DraftField[]; blocks: DraftBlock[]; gaps: number;
+  template: { id: string; name: string; kind: TemplateKind; version: number; version_id: string; content_sha256: string };
+  summary: { fields: number; sourced: number; needs_input: number; written: number; unsupported: number };
+}
+export type LegalDraft = ArtifactVersion<DraftContent>;
+export interface DraftSummary {
+  id: string; draft_id: string; title: string; version: number; status: ArtifactVersion['status']; gaps: number;
+  template: DraftContent['template']; created_by_name?: string | null; created_at: string; document_id?: string | null; sent_back: boolean;
 }

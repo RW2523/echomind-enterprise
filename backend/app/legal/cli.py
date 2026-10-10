@@ -79,12 +79,23 @@ def seed_demo() -> dict:
     repo.revoke_membership(m215["id"], gone["id"], by=ids["bob"], reason="moved to another team")
     repo.add_membership(m202["id"], ids["alice"], "attorney", granted_by=ids["bob"], valid_from=_ts(-60), valid_to=_ts(-2))
     _seed_meeting(org, m101["id"], ids["alice"])
+    _seed_templates(org, ids["morgan"])
 
     os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as fh:
         json.dump(creds, fh, indent=2)
     return creds
+
+
+def _seed_templates(org: str, approver: str) -> None:
+    """The standard drafting presets (S3.1), approved by the demo managing partner."""
+    from .drafting import templates
+    templates.install_presets(org, "system")
+    for t in templates.listing(org):
+        v = t["versions"][0]
+        if v["status"] == "draft":
+            templates.approve(org, t["id"], v["id"], approver, v["content_sha256"])
 
 
 def _seed_meeting(org: str, matter_id: str, by: str) -> None:

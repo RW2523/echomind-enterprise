@@ -29,6 +29,9 @@ import MatterMeetings from '../pages/MatterMeetings';
 import ResearchNote from '../pages/ResearchNote';
 import Reviews from '../pages/Reviews';
 import Evaluations from '../pages/Evaluations';
+import Templates from '../pages/Templates';
+import MatterDrafting from '../pages/MatterDrafting';
+import DraftPage from '../pages/DraftPage';
 import MatterMeeting from '../pages/MatterMeeting';
 import MatterExports, { MatterExport } from '../pages/MatterExports';
 import NotAvailable from '../pages/NotAvailable';
@@ -52,6 +55,7 @@ export const lawRoutes = [
           { path: '/home', element: <Home /> },
           { path: '/matters', element: <Matters /> },
           { path: '/reviews', element: <Reviews /> },
+          { path: '/templates', element: <Templates /> },
           {
             path: '/m/:matterNo',
             element: <MatterLayout />,
@@ -65,6 +69,8 @@ export const lawRoutes = [
               { path: 'meetings', element: <MatterMeetings /> },
               { path: 'meetings/:meetingId', element: <MatterMeeting /> },
               { path: 'notes/:artifactId', element: <ResearchNote /> },
+              { path: 'drafting', element: <MatterDrafting /> },
+              { path: 'drafting/:artifactId', element: <DraftPage /> },
               { path: 'exports', element: <MatterExports /> },
               { path: 'exports/:exportId', element: <MatterExport /> },
               { path: 'members', element: <MatterMembers /> },

@@ -1,0 +1,211 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "97bc690+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-060207",
+  "prompt_version": "drafting-s3.1"
+ },
+ "summary": {
+  "scenarios": 3,
+  "field_accuracy": "9/10",
+  "absent_left_open": "2/2",
+  "wrong_values": 0,
+  "invented_figures": 0,
+  "written_passages": 4,
+  "unsupported_sentences": 24,
+  "seconds_per_draft": 13.0
+ },
+ "scenarios": [
+  {
+   "id": "demand-northwind",
+   "template": "demand_letter",
+   "seconds": 17.2,
+   "fields": [
+    {
+     "field": "recipient",
+     "expected": "Northwind Logistics",
+     "value": "Northwind Logistics Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Northwind Logistics Ltd",
+     "suggestion": null
+    },
+    {
+     "field": "recipient_address",
+     "expected": "2 Harbour Road",
+     "value": "Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Notices to the Customer shall be sent to Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom.",
+     "suggestion": null
+    },
+    {
+     "field": "agreement",
+     "expected": "Supply Agreement",
+     "value": "the Supply Agreement",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Supply Agreement is made between Harrowgate Systems Inc. (the Supplier) and Northwind Logistics Ltd (the Customer).",
+     "suggestion": null
+    },
+    {
+     "field": "amount_claimed",
+     "expected": "42,750",
+     "value": "GBP 42,750",
+     "status": "sourced",
+     "ok": true,
+     "quote": "The total outstanding is GBP 42,750.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "Northwind Logistics Ltd is the Customer under the Supply Agreement, which was executed between Harrowgate Systems Inc. (the Supplier) and Northwind Logistics Ltd (the Customer). Notices to the Customer are to be sent to Northwind Logistics Ltd, 2 Harbour Road, Hull HU1 1AA, United Kingdom. Under the terms of the Supply Agreement, the Customer undertook to pay each invoice within thirty (30) days of its date. Invoices HS-1041 and HS-1042, issued on 3 June 2026 and 1 July 2026, remain unpaid, with the total outstanding amount being GBP 42,750,. [[NEEDS INPUT: check against the documents]] The Client has instructed that a claim is to be made for the unpaid invoices, with the date of the claim being 10 October 2026. [[NEEDS INPUT: check against the documents]] The Client has confirmed that the amount claimed is GBP 42,750. [[NEEDS INPUT: check against the documents]] The breach complained of is the failure by Northwind Logistics Ltd to pay the invoices within thirty (30) days of their respective dates, as required by the Supply Agreement.",
+     "sources": 5,
+     "unsupported": [
+      "The Client has instructed that a claim is to be made for the unpaid invoices, with the date of the claim being 10 October 2026.",
+      "The Client has confirmed that the amount claimed is GBP 42,750.",
+      "The breach complained of is the failure by Northwind Logistics Ltd to pay the invoices within thirty (30) days of their respective dates, as required by the Supply Agreement."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 5
+  },
+  {
+   "id": "review-warehouse-lease",
+   "template": "contract_review",
+   "seconds": 17.4,
+   "fields": [
+    {
+     "field": "agreement",
+     "expected": "Lease",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null,
+     "suggestion": null
+    },
+    {
+     "field": "parties",
+     "expected": "Elmfield Estates",
+     "value": "Elmfield Estates Ltd and Alder Biotech AB",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Lease is made between Elmfield Estates Ltd (the Landlord) and Alder Biotech AB (the Tenant).",
+     "suggestion": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "England and Wales",
+     "value": "the law of England and Wales",
+     "status": "sourced",
+     "ok": true,
+     "quote": "This Lease is governed by the law of England and Wales.",
+     "suggestion": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The term of the agreement is ten (10) years, commencing on 1 April 2025. The Tenant may terminate the Lease by providing not less than six months' written notice, with the termination date being 31 March 2030. [[NEEDS INPUT: check against the documents]] Either party may terminate the Lease in accordance with the provisions of the agreement, but no specific further termination rights are outlined in the provided text [1: \"\"].\n\nThe governing law of the agreement is the law of England and Wales.",
+     "sources": 3,
+     "unsupported": [
+      "Either party may terminate the Lease in accordance with the provisions of the agreement, but no specific further termination rights are outlined in the provided text [1: \"\"]."
+     ]
+    },
+    {
+     "text": "[[NEEDS INPUT: check against the documents]] [[NEEDS INPUT: check against the documents]] The rent under the Lease is GBP 84,000 per year, payable quarterly in advance. [[NEEDS INPUT: check against the documents]] [[NEEDS INPUT: check against the documents]] The term of the Lease is ten (10) years from 1 April 2025. [[NEEDS INPUT: check against the documents]] [[NEEDS INPUT: check against the documents]] The Tenant may terminate the Lease on 31 March 2030 by giving not less than six months' written notice. [[NEEDS INPUT: check against the documents]] [[NEEDS INPUT: check against the documents]] The Landlord's total liability under the Lease shall not exceed the rent paid in the preceding twelve months. [[NEEDS INPUT: check against the documents]] [[NEEDS INPUT: check against the documents]] This Lease is governed by the law of England and Wales. [[NEEDS INPUT: check against the documents]] The parties to the Lease are Elmfield Estates Ltd and Alder Biotech AB [source not available: \"the Landlord\" and \"the Tenant\" refer to these parties]. [[NEEDS INPUT: check against the documents]] [[NEEDS INPUT: check against the documents]] The matter number is EVAL-D2. [[NEEDS INPUT: check against the documents]] [[NEEDS INPUT: check against the documents]] The date of the Lease is 10 October 2026.",
+     "sources": 0,
+     "unsupported": [
+      "The rent under the Lease is GBP 84,000 per year, payable quarterly in advance.",
+      "The term of the Lease is ten (10) years from 1 April 2025.",
+      "The Tenant may terminate the Lease on 31 March 2030 by giving not less than six months' written notice.",
+      "The Landlord's total liability under the Lease shall not exceed the rent paid in the preceding twelve months.",
+      "This Lease is governed by the law of England and Wales.",
+      "The matter number is EVAL-D2.",
+      "The date of the Lease is 10 October 2026.",
+      "The rent under the Lease is GBP 84,000 per year, payable quarterly in advance.",
+      "The term of the Lease is ten (10) years from 1 April 2025.",
+      "The Tenant may terminate the Lease on 31 March 2030 by giving not less than six months' written notice.",
+      "The Landlord's total liability under the Lease shall not exceed the rent paid in the preceding twelve months.",
+      "This Lease is governed by the law of England and Wales.",
+      "The parties to the Lease are Elmfield Estates Ltd and Alder Biotech AB [source not available: \"the Landlord\" and \"the Tenant\" refer to these parties].",
+      "The matter number is EVAL-D2.",
+      "The date of the Lease is 10 October 2026."
+     ]
+    },
+    {
+     "text": "[[NEEDS INPUT: check against the documents]] [[NEEDS INPUT: check against the documents]] The Landlord's liability under this Lease is limited to the rent paid in the preceding twelve months. [[NEEDS INPUT: check against the documents]] There are no other exclusions or limitations of liability specified in the Lease. [[NEEDS INPUT: check against the documents]] [[NEEDS INPUT: check against the documents]] The Lease is governed by the law of England and Wales.",
+     "sources": 0,
+     "unsupported": [
+      "The Landlord's liability under this Lease is limited to the rent paid in the preceding twelve months.",
+      "The Lease is governed by the law of England and Wales.",
+      "The Landlord's liability under this Lease is limited to the rent paid in the preceding twelve months.",
+      "There are no other exclusions or limitations of liability specified in the Lease.",
+      "The Lease is governed by the law of England and Wales."
+     ]
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 23
+  },
+  {
+   "id": "nda-missing-period",
+   "template": "nda",
+   "seconds": 4.4,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Harrowgate",
+     "value": "Harrowgate Systems Inc.",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Harrowgate Systems Inc. and Elmfield Estates Ltd will exchange confidential information to assess a possible warehouse automation project.",
+     "suggestion": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Elmfield",
+     "value": "Elmfield Estates Ltd",
+     "status": "sourced",
+     "ok": true,
+     "quote": "Elmfield Estates Ltd",
+     "suggestion": null
+    },
+    {
+     "field": "purpose",
+     "expected": "warehouse automation",
+     "value": "assess a possible warehouse automation project",
+     "status": "sourced",
+     "ok": true,
+     "quote": "to assess a possible warehouse automation project",
+     "suggestion": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "confidentiality_period",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    },
+    {
+     "field": "governing_law",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 2
+  }
+ ]
+}

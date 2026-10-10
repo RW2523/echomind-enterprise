@@ -1,0 +1,155 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "97bc690+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261010-055040",
+  "prompt_version": "drafting-s3.1"
+ },
+ "summary": {
+  "scenarios": 3,
+  "field_accuracy": "0/9",
+  "absent_left_open": "2/2",
+  "wrong_values": 0,
+  "invented_figures": 0,
+  "written_passages": 2,
+  "unsupported_sentences": 0,
+  "seconds_per_draft": 7.4
+ },
+ "scenarios": [
+  {
+   "id": "engagement-harrowgate",
+   "template": "engagement_letter",
+   "seconds": 10.6,
+   "fields": [
+    {
+     "field": "client_address",
+     "expected": "14 Quay Street",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    },
+    {
+     "field": "client_contact",
+     "expected": "Petra Voss",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    },
+    {
+     "field": "fee_arrangement",
+     "expected": "18,000",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The client has requested the firm to advise on the renewal of its Master Services Agreement with Northwind Logistics Ltd, including a review of the supplier's redline and the negotiation of the liability cap [n: \"Harrowgate Systems Inc. asks the firm to advise on the renewal of its Master Services Agreement with Northwind Logistics Ltd, including a review of the supplier's redline and the negotiation of the liability cap\"]. The agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments [n: \"The agreed fee is a fixed fee of USD 18,000 for the renewal negotiation, payable in two instalments\"]. The matter number assigned to this engagement is EVAL-D1 [n: \"Matter number: EVAL-D1\"].",
+     "sources": 0,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 6
+  },
+  {
+   "id": "nda-lantern",
+   "template": "nda",
+   "seconds": 6.6,
+   "fields": [
+    {
+     "field": "party_a",
+     "expected": "Alder Biotech",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    },
+    {
+     "field": "party_b",
+     "expected": "Northbridge Analytics",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    },
+    {
+     "field": "purpose",
+     "expected": "joint venture",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    },
+    {
+     "field": "confidentiality_period",
+     "expected": "three",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    },
+    {
+     "field": "governing_law",
+     "expected": "Sweden",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    }
+   ],
+   "absent": [],
+   "wrong": [],
+   "written": [],
+   "invented_figures": [],
+   "gaps": 7
+  },
+  {
+   "id": "engagement-missing-fee",
+   "template": "engagement_letter",
+   "seconds": 5.1,
+   "fields": [
+    {
+     "field": "client_contact",
+     "expected": "Karin Lindqvist",
+     "value": null,
+     "status": "needs_input",
+     "ok": false,
+     "quote": null
+    }
+   ],
+   "absent": [
+    {
+     "field": "fee_arrangement",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    },
+    {
+     "field": "client_address",
+     "status": "needs_input",
+     "value": null,
+     "ok": true
+    }
+   ],
+   "wrong": [],
+   "written": [
+    {
+     "text": "The client has requested the firm to advise the board on the proposed interim dividend and the directors' duties that apply to it [n: \"Voss-Lindqvist AB would like the firm to advise the board on the proposed interim dividend and the directors' duties that apply to it\"]. The scope of the legal services includes providing legal advice on the proposed interim dividend and the associated directors' duties [n: \"Voss-Lindqvist AB would like the firm to advise the board on the proposed interim dividend and the directors' duties that apply to it\"]. The matter number assigned to this engagement is EVAL-D3 [n: \"Matter number: EVAL-D3\"]. [[NEEDS INPUT: The specific legal services beyond advising on the proposed interim dividend and directors' duties]].",
+     "sources": 0,
+     "unsupported": []
+    }
+   ],
+   "invented_figures": [],
+   "gaps": 7
+  }
+ ]
+}

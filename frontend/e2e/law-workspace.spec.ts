@@ -763,3 +763,65 @@ test('evaluations: the newest gate run, held-out and tuning sets, with the code 
   await signIn(alice, 'alice');
   await expect(alice.getByRole('link', { name: 'Evaluations' })).toHaveCount(0);     // lawyers do not see it
 });
+
+test('drafting: an engagement letter from the approved firm template, every fact sourced or filled, approved, filed as Word', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+  await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law/Engagement request (DEMO).md'));
+  await dialog.getByLabel('Status').selectOption('final');
+  await dialog.getByRole('button', { name: /^Import$/ }).click();
+  await expect(alice.getByRole('row', { name: /Engagement request \(DEMO/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+
+  await alice.getByRole('link', { name: 'Drafting' }).click();
+  await alice.getByRole('button', { name: 'New draft' }).click();
+  const create = alice.getByRole('dialog', { name: 'New draft' });
+  await create.getByLabel('Template').selectOption({ label: 'Engagement letter (Engagement letter, version 1)' });
+  await create.getByLabel('Engagement request (DEMO)', { exact: true }).check();
+  await create.getByRole('button', { name: 'Draft' }).click();
+  const doc = alice.getByRole('article', { name: 'Draft document' });
+  await expect(doc.getByText('Draft — not approved')).toBeVisible({ timeout: 180_000 });
+  const fields = alice.getByRole('list', { name: 'Fields' });
+  await expect(fields.getByRole('listitem', { name: /^Client: / })).toContainText('From the matter record');
+  await expect(fields.getByRole('listitem', { name: /^Responsible lawyer: needs input/ })).toBeVisible();      // a person's field
+
+  // Fill every gap: the person fields, anything the documents did not state, and any sentence to check.
+  await alice.getByRole('button', { name: 'Fill in or correct' }).click();
+  const form = alice.getByRole('form', { name: 'Fill in or correct the draft' });
+  for (const input of await form.locator('label:has-text("(needs input)") input').all()) {
+    await input.fill('Confirmed with the client');
+  }
+  await form.getByLabel(/^Responsible lawyer/).fill('Helena Marsh');
+  await form.getByLabel(/^Billing frequency/).fill('monthly');
+  for (const area of await form.locator('textarea').all()) {
+    const text = await area.inputValue();
+    if (text.includes('[[NEEDS INPUT')) await area.fill(text.replace(/\[\[NEEDS INPUT:[^\]]*\]\]\s*/g, ''));
+  }
+  await form.getByRole('button', { name: 'Save as version 2' }).click();
+  await expect(doc.getByText(/Version 2 · edited by alice/)).toBeVisible();
+  await expect(alice.getByText('You made this version, so another lawyer approves it.')).toBeVisible();
+  await expect(doc).toContainText('Helena Marsh will be responsible for this matter.');
+  await shot(alice, '33-draft-engagement-letter-light');
+
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  await nakamura.getByRole('list', { name: 'Waiting for you' }).getByRole('link', { name: /Engagement letter/ }).click();
+  await nakamura.getByRole('group', { name: 'Review this draft' }).getByRole('button', { name: 'Approve this draft' }).click();
+  const confirm = nakamura.getByRole('dialog', { name: 'Approve version 2?' });
+  await confirm.getByLabel('I have read this version and checked its sources').check();
+  await confirm.getByRole('button', { name: 'Approve version 2' }).click();
+  await expect(nakamura.getByRole('article', { name: 'Draft document' }).getByText(/^Approved by nakamura on/)).toBeVisible();
+  await nakamura.goto('/templates');
+  await expect(nakamura.getByRole('region', { name: 'Engagement letter' }).getByText('In use: version 1')).toBeVisible();
+  await shot(nakamura, '34-templates-light');
+
+  await alice.reload();
+  await alice.getByRole('button', { name: 'File as a Word document' }).click();
+  await alice.getByRole('link', { name: 'Open the filed document' }).click();
+  const sheet = alice.getByRole('article', { name: 'Document text' });
+  await expect(sheet.getByText('Helena Marsh will be responsible for this matter.')).toBeVisible({ timeout: 120_000 });
+});

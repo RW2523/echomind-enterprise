@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); gate branch `law/s2.8-gate`; next slice branch `law/s3.1-drafting` after sign-off |
-| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2 complete pending sign-off: S2.1–S2.7 merged; S2.8 gate on `law/s2.8-gate` (report `releases/phase2-gate.md`) |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.2-playbooks` |
+| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1 merged; S3.2 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0022` (Law edition only) |
+| Migrations | `0001`–`0023` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -456,12 +456,39 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - the Evaluations page headlines gate and compare runs.
 - **Gate report:** `releases/phase2-gate.md`.
 
+### Session 3 (continued) — S3.1 Legal drafting (DOC-01)
+- **Audit:** the legacy Document Studio cannot be adapted. It invents "plausible specifics", bans placeholders, reads the global index without matter scope or permissions, cuts its sources to 6,000 characters, keeps no provenance or approval, and has no Word output.
+- **S3.1a — firm templates (migration 0023, D-045):**
+  - The markup (headings, `{{fields}}`, `[[write: …]]`) with declared field sources and validation.
+  - Fixed versions; firm Word styles attachable while a version is a draft.
+  - Approval by a managing partner who is not the author, bound to the hash.
+  - Six presets; `templates.manage` / `templates.approve`.
+- **S3.1b — drafting engine:**
+  - Fields from the record, checked quotes or a lawyer: a value must be in its quote, and figures must be figures.
+  - Written passages cite their sources. Clause-number citations are matched by their quote, and any uncited sentence or unsupported figure becomes a gap.
+  - Passages are widened to the whole matched passage; AI-addressed text is withheld.
+- **S3.1c — review and output:**
+  - `legal_draft` artifacts with edits as new versions; approval refused while gaps remain.
+  - Filed as Word in the firm's styles with the approval in the footer; PDF and Word previews marked "DRAFT — NOT APPROVED".
+  - Purge of quoted documents; the Reviews queue path.
+- **S3.1d — UI:**
+  - The Templates page (presets, editor with field matching, firm styles, approval confirmation, retire).
+  - Matter Drafting (list, new draft from approved templates and chosen documents).
+  - The draft page (gaps highlighted, every field with its origin and quote, fill in or correct, review, file as Word).
+  - Journey 22, screenshots 33–34.
+- **Defect found in S2.6 code:** the model client's prose tidy-up cut the tail off JSON answers, which dropped the last minuted item of every minutes batch. Fixed with `llm.complete` (`chat_raw`) and regression tests; minutes re-measured, unchanged on the sets.
+- **Evaluation:** `eval/law/drafting/` golden (4) and held-out (3) through the real endpoint and model. The tuning history and all four held-out runs are in D-045.
+- **As built vs. plan:**
+  - Templates use a markup rather than uploaded Word files; a firm's Word file supplies the styles only. Turning a firm's existing precedent document into a template is S3.2's library import.
+  - PDF output is reportlab.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
 - 2026-10-08: each slice S1.0–S1.3 approved and merged in turn; then a **standing approval** to build and merge slices in order, as recorded at the top of DECISIONS.md.
 - 2026-10-09: **APPROVED** after the S1.5–S1.8 report: D-005, D-012, D-014 (as implemented), D-023, D-025 and D-026. S1.9 started.
 - 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
+- 2026-10-10: **APPROVED** the Phase 2 gate (`releases/phase2-gate.md`): merge S2.8 and start S3.1. The owner added: "approve everything and finish everything". This is taken as standing approval to build and merge every remaining slice and phase gate in order, including the Phase 4 business approval. Items that need a person (the lawyer review, the manual Word check, counsel's P-decisions) or that act outside this machine or on the shared host (a GitHub push, the first `compose.sh up` next to production, root) are confirmed one by one.
 - Still 🔒:
   - the first `scripts/law/compose.sh up` on the shared host;
   - any push or PR to GitHub;
@@ -488,7 +515,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | LIVE-01 | PARTIAL: built; real-audio accuracy pending the speech stack (🔒) | S2.4 | Verbatim immutable record, roster speakers, wall-clock times, gaps and degradation shown, revisions with provenance, matter vocabulary, finalised transcripts in research and purges, accuracy harness (D-040) |
 | LIVE-02 | DONE for the pilot; thresholds await P-008 | S1.7, S2.5 | Three legal packs with evidence-relative alerts, exact quotes, confirm or dismiss with a reason, telemetry, matter-only sources (D-041). The voice service's research stream is unchanged (S1.7) |
 | MEET-01 | DONE for the pilot | S1.8, S2.6 | Agenda and board-pack research; agenda marks; minutes from the whole transcript with verified sources, guards and deterministic merging; versioned edits; second-lawyer approval bound to the content hash; filing; purge and hold (D-042). Reviews queue and export hash binding: S2.7. S2.7: Reviews queue and shared review components |
-| DOC-01 | PARTIAL (pre-existing) | S3.1 | |
+| DOC-01 | DONE for the pilot | S3.1 | Firm templates (versions, approval by a managing partner, Word styles, presets); drafts with sourced fields and cited passages, gaps for anything unsupported; second-lawyer approval; filed as Word (D-045) |
 | DOC-02 | MISSING | S3.2–S3.3 | Word tracked changes need a spike and a manual Word check |
 | DOC-03 | MISSING | S3.4 | External authority stays UNVERIFIED (P-009) |
 | DOC-04 | MISSING | S3.5 | |
@@ -527,18 +554,18 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-**Owner sign-off of the Phase 2 gate** (`releases/phase2-gate.md`, §9 and §11). S2.8 is on `law/s2.8-gate`, not yet merged, as at Phase 1.
-1. **On approval:**
-   - merge `law/s2.8-gate` into `feature/echomind-law`;
-   - start **S3.1 Legal drafting (DOC-01)** on `law/s3.1-drafting`, per IMPLEMENTATION_PLAN §7.
-2. **S3.1, audit first:** the legacy Document Studio (`docgen/`, closed in Law, D-025), its templates and its "plausible specifics" instruction (never used for legal templates).
-3. **Then build:**
-   - a template registry with versions and approvals;
-   - presets (engagement letter, NDA, demand letter, internal memo, contract review report, board minutes from S2.6);
-   - field extraction with provenance;
-   - a **no-invention writer** (gaps marked `[[NEEDS INPUT: …]]`);
-   - a DOCX renderer with the firm's styles, and PDF output;
-   - the Drafting UI;
-   - every draft an AI artifact reviewed through the S2.7 framework.
-4. **Tests:** every factual field sourced or flagged; DOCX and PDF open and round-trip through LibreOffice.
-5. **Also waiting (🔒):** the lawyer review session, the load-test window, the first `compose.sh up`, P-008.
+Start **S3.2 Clause library and playbooks (DOC-02a)** on `law/s3.2-playbooks`, per IMPLEMENTATION_PLAN §7. S3.1 is merged into `feature/echomind-law`.
+1. **Audit first:**
+   - what exists for clauses (S2.1 clause extraction, S2.3 alignment and facts, S3.1 templates);
+   - the legacy firm library (none in Law: the `lib:<org>` partition is planned in §5).
+2. **Clause library (migration 0024):**
+   - clause topics (liability cap, termination, governing law, payment, confidentiality…);
+   - for each, a standard position and fallbacks with owner, jurisdiction, notes and approval (managing partner, not the author, by hash);
+   - versions fixed.
+3. **Playbook import from the firm library:** a firm precedent document (Word or text) read with S2.1 extraction; its clauses proposed as standard positions for a lawyer to accept.
+4. **Deviation classification:** for each clause of a matter document, classify it as Standard / Fallback / Outside playbook.
+   - The source quote and the playbook position it was compared with are shown.
+   - The model only judges similarity, with checked quotes, and numbers come from the S2.3 facts.
+   - Nothing is called compliant without a lawyer.
+5. **UI:** a Clause library page (firm), and a "Check against the playbook" view on a document.
+6. **Tests:** backend, Vitest, journey 23; golden and held-out evaluation; D-046, TEST_RESULTS run 23; merge. Then S3.3 (redlines and Word tracked changes, with the manual Word check 🔒).

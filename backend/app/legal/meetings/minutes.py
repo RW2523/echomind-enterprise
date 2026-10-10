@@ -268,12 +268,11 @@ async def draft(meeting: dict, matter_id: str, agenda: list[dict]) -> tuple[dict
     data = transcript_mod.view(matter_id, meeting["id"])
     numbered = lines(data, agenda)
     doc_text = transcript_mod.as_document(meeting, data)
-    client = llm_mod.get()
     found, failed = [], 0
     parts = batches(numbered)
     for batch in parts:
         try:
-            raw = await client.chat(_messages(batch, agenda, meeting), temperature=0.1, max_tokens=settings.LEGAL_MINUTES_MAX_TOKENS)
+            raw = await llm_mod.complete(_messages(batch, agenda, meeting), temperature=0.1, max_tokens=settings.LEGAL_MINUTES_MAX_TOKENS)
         except Exception as e:
             logger.warning("Minutes: a batch could not be drafted (%s)", type(e).__name__)
             failed += 1
