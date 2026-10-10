@@ -199,6 +199,12 @@ def test_lawyers_notes_are_kept_through_an_attempted_rollback(ct, fresh_db):
     ("Case C-131/12", "cjeu_case", []),
     ("60 U.S.C. § 1", "us_code", ["the US Code has no title 60"]),
     ("29 C.F.R. Part 1910", "cfr", []),
+    ("Fed. R. Civ. P. 81(c)", "us_rule", []),
+    ("Fed. R. Evid. 401", "us_rule", []),
+    ("Fed. R. Civ. P. 95", "us_rule", ["there is no Rule 95 of the Federal Rules of Civil Procedure"]),
+    ("CPR r. 3.4(2)", "uk_rule", []),
+    ("CPR Part 36", "uk_rule", []),
+    ("CPR Part 96", "uk_rule", ["the Civil Procedure Rules have no Part 96"]),
 ])
 def test_the_parser_reads_authorities_and_flags_impossible_ones(text, sub, bad):
     from app.legal.citations import parse
