@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { Users2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
-import { panelPath, usePanelReviews } from '../api/queries';
+import { panelPath, useDocuments, usePanelReviews } from '../api/queries';
 import type { PanelReview } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
@@ -25,13 +25,16 @@ export default function MatterPanel() {
   const navigate = useNavigate();
   const [question, setQuestion] = useState('');
   const [area, setArea] = useState('commercial');
+  const [chosen, setChosen] = useState<string[]>([]);
+  const docs = useDocuments(matter.id);
+  const ready = (docs.data ?? []).filter((d) => d.current_version?.index_status === 'indexed');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true); setError('');
     try {
-      const r = await api.post<{ review: { id: string } }>(panelPath(matter.id), { question, specialist: area });
+      const r = await api.post<{ review: { id: string } }>(panelPath(matter.id), { question, specialist: area, documents: chosen });
       await qc.invalidateQueries({ queryKey: ['matter', matter.id, 'panel'] });
       navigate(`/m/${encodeURIComponent(matter.number)}/panel/${encodeURIComponent(r.review.id)}`);
     } catch (err) { setError(err instanceof ApiError ? err.message : 'The question could not be sent.'); } finally { setBusy(false); }
@@ -51,6 +54,15 @@ export default function MatterPanel() {
                 </select>)}</Field>
               <button type="submit" className="lw-btn lw-btn-primary" disabled={busy || question.trim().length < 10}><Users2 />Ask the panel</button>
             </div>
+            {ready.length > 1 && (
+              <fieldset className="lw-panel-docs">
+                <legend className="lw-meta">Only these documents (optional; all of the matter's otherwise)</legend>
+                {ready.map((d) => (
+                  <label key={d.id} className="lw-check"><input type="checkbox" checked={chosen.includes(d.id)}
+                    onChange={(e) => setChosen(e.target.checked ? [...chosen, d.id] : chosen.filter((x) => x !== d.id))} />{d.title}</label>
+                ))}
+              </fieldset>
+            )}
           </form>
         )}
         {error && <ErrorNote>{error}</ErrorNote>}

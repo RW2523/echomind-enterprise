@@ -1388,9 +1388,20 @@ test('panel: four perspectives on a change-of-control question, each citing the 
   const form = alice.getByRole('form', { name: 'Ask the panel' });
   await form.getByLabel('Question').fill('If the Reseller undergoes a change of control, can the Supplier terminate the Reseller Agreement, and what is each party\'s liability?');
   await form.getByLabel('Specialist area').selectOption('commercial');
+  const only = form.getByRole('checkbox', { name: title, exact: true });          // other agreements may be on M-101 by now
+  if (await only.count()) await only.check();
   await form.getByRole('button', { name: 'Ask the panel' }).click();
   const grid = alice.getByRole('region', { name: 'Perspectives' });
   await expect(grid).toBeVisible({ timeout: 240_000 });
+  await expect(alice.getByText(/^Consulted: /)).toBeVisible();
+  // If the panel stops for facts the agreement does not give, the lawyer gives them and it runs again (the real model decides).
+  for (let round = 0; round < 2 && await alice.getByRole('region', { name: 'Facts needed' }).count(); round++) {
+    const stop = alice.getByRole('region', { name: 'Facts needed' });
+    for (const field of await stop.getByRole('textbox').all()) await field.fill('Not known yet; assume the Reseller Agreement stands alone.');
+    await stop.getByRole('button', { name: 'Give these facts and run again' }).click();
+    await expect(alice.getByText(/Five answers are being drafted/)).toBeVisible();
+    await expect(alice.getByText(/Five answers are being drafted/)).toHaveCount(0, { timeout: 240_000 });
+  }
   // Four perspectives, each answering alone and citing the agreement with quotes found in it.
   await expect(grid.getByRole('article')).toHaveCount(4);
   for (const label of ['Deal lawyer', 'Risk and compliance', 'Litigator', 'Specialist (commercial contracts)']) {

@@ -162,19 +162,21 @@ async def moderate(question: str, views: list[dict], facts: list[dict]) -> dict:
 async def run(job: dict) -> Optional[str]:
     rid = job["object_id"]
     with get_conn() as conn:
-        r = conn.execute("SELECT matter_id, question, specialist, facts_json, created_by FROM legal_panel_reviews WHERE id=?", (rid,)).fetchone()
+        r = conn.execute("SELECT matter_id, question, specialist, facts_json, created_by, documents_json FROM legal_panel_reviews WHERE id=?",
+                         (rid,)).fetchone()
         if not r:
             return "no_review"
         conn.execute("UPDATE legal_panel_reviews SET status='running' WHERE id=?", (rid,))
         conn.commit()
-    matter_id, question, specialist, facts_json, by = r
+    matter_id, question, specialist, facts_json, by, documents_json = r
+    chosen = json.loads(documents_json or "[]") or None
     facts = json.loads(facts_json or "[]")
     area = SPECIALISMS.get(specialist, specialist)
     status, artifact_id = "failed", None
     try:
         principal = {"sub": by, "org_id": job["org_id"]}
         scope = scopemod.authorize(principal, matter_id, "research.query")
-        result = await searchmod.search(scope, question, k=settings.LEGAL_RESEARCH_PASSAGES)
+        result = await searchmod.search(scope, question, k=settings.LEGAL_RESEARCH_PASSAGES, documents=chosen)
         passages = result["passages"]
         from ..research.routes import _source
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
@@ -191,7 +193,7 @@ async def run(job: dict) -> Optional[str]:
         stopped = bool(missing) and (mod["stop"] or lacking >= 3)       # s4.5c: most perspectives lacking facts also stops it
         content = {"title": f"Panel review — {question[:120]}", "question": question, "specialist": specialist, "area": area,
                    "perspectives": views, "matrix": mod["matrix"], "missing_facts": missing, "stopped": stopped, "facts_given": facts,
-                   "notice": NOTICE, "sources": len(passages)}
+                   "notice": NOTICE, "sources": len(passages), "documents": chosen or []}
         artifact_id = artifacts.create(matter_id, "panel", "panel_review", rid, content,
                                        {"model": settings.LLM_MODEL, "prompt_version": VERSION, "passages": len(passages)}, by, "model")["id"]
         status = "needs_facts" if stopped else "done"

@@ -80,6 +80,8 @@ describe('Review panel (S4.5)', () => {
       'GET /api/auth/me': () => [200, withPanel(['attorney'])],
       'GET /api/legal/matters': () => [200, { matters: [matter('M-101', 'MSA renewal')] }],
       [`GET ${M}/panel`]: () => [200, { reviews: [], specialisms: { commercial: 'commercial contracts', employment: 'employment law' }, can: { ask: true, approve: false } }],
+      [`GET ${M}/documents`]: () => [200, { documents: [{ id: 'd1', title: 'Service Agreement.txt', current_version: { id: 'v1', number: 1, index_status: 'indexed' } },
+        { id: 'd2', title: 'Handbook.txt', current_version: { id: 'v2', number: 1, index_status: 'indexed' } }] }],
       [`POST ${M}/panel`]: () => [200, { review: { id: 'r1', status: 'queued' } }],
       [`GET ${M}/panel/r1`]: () => [200, view({ review: { ...view().review, status: 'running' }, artifact: null })],
     });
@@ -87,8 +89,10 @@ describe('Review panel (S4.5)', () => {
     const form = await screen.findByRole('form', { name: 'Ask the panel' });
     fireEvent.change(within(form).getByLabelText('Question'), { target: { value: 'Can the employer change the bonus scheme unilaterally?' } });
     fireEvent.change(within(form).getByLabelText('Specialist area'), { target: { value: 'employment' } });
+    fireEvent.click(await within(form).findByLabelText('Service Agreement.txt'));
     fireEvent.click(within(form).getByRole('button', { name: 'Ask the panel' }));
-    await waitFor(() => expect(calls.find((c) => c.method === 'POST' && c.path === `${M}/panel`)?.body).toEqual({ question: 'Can the employer change the bonus scheme unilaterally?', specialist: 'employment' }));
+    await waitFor(() => expect(calls.find((c) => c.method === 'POST' && c.path === `${M}/panel`)?.body).toEqual({
+      question: 'Can the employer change the bonus scheme unilaterally?', specialist: 'employment', documents: ['d1'] }));
     expect(await screen.findByRole('status')).toBeTruthy();                                // the panel is working
   });
 });

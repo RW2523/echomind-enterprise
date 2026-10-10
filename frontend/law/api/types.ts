@@ -551,7 +551,7 @@ export interface PanelContent {
 export interface PanelReview {
   id: string; question: string; specialist: string; area: string | null; status: 'queued' | 'running' | 'done' | 'needs_facts' | 'failed' | 'not_allowed';
   facts: { question: string; answer: string }[]; created_by: string | null; created_at: string; finished_at: string | null; mine: boolean;
-  version?: number | null; approval?: string | null;
+  version?: number | null; approval?: string | null; documents?: { id: string; title: string | null }[];
 }
 export interface PanelView {
   review: PanelReview; artifact: ArtifactVersion<PanelContent> | null;

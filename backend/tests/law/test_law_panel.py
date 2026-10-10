@@ -241,3 +241,21 @@ def test_two_quotes_from_one_source_show_one_marker(pn):
     pn["model"].raw = {"deal": 'The cap is USD 250,000 [1: "limited to USD 250,000"][1: "Each party\'s total liability"].\n\nMISSING FACTS: none'}
     deal = next(p for p in ask(pn).json()["artifact"]["content"]["perspectives"] if p["role"] == "deal")
     assert "[1][1]" not in deal["text"] and len(deal["evidence"]) == 2
+
+
+def test_a_question_can_be_limited_to_chosen_documents(pn):
+    """Journey 33 in the full suite: with other agreements on the matter, the perspectives asked how they related, and the
+    panel stopped. A question about one agreement now consults only the documents chosen."""
+    alice = as_user(pn, "alice")
+    other = upload(alice, pn["mid"], "Other MSA.txt", "OTHER MASTER SERVICES AGREEMENT (fictional)\n\n9. Liability\n9.1 Each party's total "
+                   "liability is limited to USD 999,000 if the Customer undergoes a change of control.\n", status="executed").json()["document"]
+    index_all()
+    msa = next(d for d in alice.get(f"{pn['base']}/documents").json()["documents"] if d["title"] == "MSA.txt")
+    r = alice.post(f"{pn['base']}/panel", headers=csrf_headers(alice), json={"question": QUESTION, "specialist": "commercial", "documents": [msa["id"]]})
+    assert r.status_code == 200, r.text
+    index_all()
+    v = alice.get(f"{pn['base']}/panel/{r.json()['review']['id']}").json()
+    assert v["review"]["documents"] == [{"id": msa["id"], "title": "MSA.txt"}]
+    assert all("999,000" not in user for role, user in pn["model"].calls if role != "moderator")
+    bad = alice.post(f"{pn['base']}/panel", headers=csrf_headers(alice), json={"question": QUESTION, "specialist": "commercial", "documents": ["nope"]})
+    assert bad.status_code == 422 and other["id"]

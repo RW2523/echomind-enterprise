@@ -19,6 +19,7 @@ from ...core.config import settings
 from ...core.db import get_conn
 from .. import artifacts, policy
 from ..audit.record import audited, note
+from ..documents import repo as documents
 from ..jobs import worker
 from ..matters.routes import principal_of, require, require_law_edition
 from .run import ROLES, SPECIALISMS, is_partner
@@ -30,12 +31,14 @@ def panel_on() -> None:
 
 
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition), Depends(panel_on)])
-_COLS = ("id", "matter_id", "question", "specialist", "facts_json", "status", "artifact_id", "created_by", "created_at", "finished_at")
+_COLS = ("id", "matter_id", "question", "specialist", "facts_json", "status", "artifact_id", "created_by", "created_at", "finished_at",
+         "documents_json")
 
 
 class AskIn(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     specialist: str = Field(min_length=1, max_length=40)
+    documents: list[str] = Field(default_factory=list, max_length=20)     # consult only these (all the matter's when empty)
 
     @field_validator("question")
     @classmethod
@@ -74,7 +77,11 @@ def _username(conn, uid):
 
 def _review(conn, r, p: dict) -> dict:
     d = dict(zip(_COLS, r))
-    return {"id": d["id"], "question": d["question"], "specialist": d["specialist"], "area": SPECIALISMS.get(d["specialist"]),
+    docs = []
+    for did in json.loads(d["documents_json"] or "[]"):
+        doc = documents.get_document(d["matter_id"], did, p["sub"])
+        docs.append({"id": did, "title": doc["title"] if doc else None})
+    return {"id": d["id"], "question": d["question"], "specialist": d["specialist"], "area": SPECIALISMS.get(d["specialist"]), "documents": docs,
             "status": d["status"], "facts": json.loads(d["facts_json"]), "created_by": _username(conn, d["created_by"]),
             "created_at": d["created_at"], "finished_at": d["finished_at"], "mine": d["created_by"] == p["sub"]}
 
@@ -88,14 +95,18 @@ def _visible(a: dict, uid: str) -> bool:
 def ask(matter_id: str, inp: AskIn, request: Request):
     p = principal_of(request)
     require(p, "ai.draft", matter_id)
+    chosen = list(dict.fromkeys(inp.documents))
+    if any(not documents.visible(matter_id, did, p["sub"]) for did in chosen):
+        raise HTTPException(status_code=422, detail="Choose documents of this matter that you can see.")
     rid = str(uuid.uuid4())
     with get_conn() as conn:
-        conn.execute("INSERT INTO legal_panel_reviews (id, org_id, matter_id, question, specialist, facts_json, status, created_by, created_at) "
-                     "VALUES (?,?,?,?,?,?,?,?,?)", (rid, p["org_id"], matter_id, inp.question, inp.specialist, "[]", "queued", p["sub"], policy.now_iso()))
+        conn.execute("INSERT INTO legal_panel_reviews (id, org_id, matter_id, question, specialist, facts_json, documents_json, status, created_by, "
+                     "created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                     (rid, p["org_id"], matter_id, inp.question, inp.specialist, "[]", json.dumps(chosen), "queued", p["sub"], policy.now_iso()))
         _enqueue(conn, p["org_id"], matter_id, rid, p["sub"])
         conn.commit()
     worker.wake()
-    note(matter_id=matter_id, details={"kind": inp.specialist})
+    note(matter_id=matter_id, details={"kind": inp.specialist, "documents": len(chosen)})
     return {"review": {"id": rid, "status": "queued"}}
 
 

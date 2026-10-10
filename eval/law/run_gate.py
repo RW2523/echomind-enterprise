@@ -18,6 +18,7 @@ Phase 3 then runs the security suite and the browser journeys, and keeps their c
 
     cd backend && python3 ../eval/law/run_gate.py                     # Phase 2: everything (about 8 minutes on the DGX Spark)
     cd backend && python3 ../eval/law/run_gate.py --phase 3           # Phase 3: drafting to governance, then the security and browser suites
+    cd backend && python3 ../eval/law/run_gate.py --phase 4           # Phase 4: summaries and the review panel, then the same suites
     cd backend && python3 ../eval/law/run_gate.py --only minutes,assist
     cd backend && python3 ../eval/law/run_gate.py --import-into ../.law-data   # also record the runs there
 
@@ -74,11 +75,21 @@ PHASE3 = [
     ("security", "suite", None),         # scripts/law/security_suite.sh, every spec-test group
     ("browser", "e2e", None),            # the Law browser journeys (Playwright starts its own servers)
 ]
+# Phase 4 (the Phase 4 gate): the optional features with a model. Intake (S4.1) and time entries (S4.3) are rules
+# without a model, tested by the backend and security suites and the browser journeys.
+PHASE4 = [
+    ("summaries", "golden", [str(HERE / "summaries" / "run_summaries_eval.py"), "--set", "golden"]),
+    ("summaries", "heldout", [str(HERE / "summaries" / "run_summaries_eval.py"), "--set", "heldout"]),
+    ("panel", "golden", [str(HERE / "panel" / "run_panel_eval.py"), "--set", "golden"]),
+    ("panel", "heldout", [str(HERE / "panel" / "run_panel_eval.py"), "--set", "heldout"]),
+    ("security", "suite", None),
+    ("browser", "e2e", None),
+]
 # Held-out sets run once per version (D-044, D-053): a held-out report made on the current rules or prompt version
 # and the same held-out file is cited by the gate, not run again. A changed version or a new blind set runs.
 VERSIONS = {"drafting": "drafting/engine.py", "playbook": "playbooks/check.py", "citations": "citations/check.py",
             "definitions": "definitions/check.py", "obligations": "obligations/extract.py", "diligence": "diligence/run.py",
-            "governance": "diligence/run.py"}
+            "governance": "diligence/run.py", "summaries": "summaries/summarize.py", "panel": "panel/run.py"}
 # Latency figures each suite reports, gathered for the gate (seconds).
 LATENCY = {"research": ["latency_first_paragraph_p50_s", "latency_first_paragraph_p95_s", "latency_total_p50_s", "latency_total_p95_s"],
            "assist": ["latency_p50_s", "latency_max_s"], "minutes": ["seconds"]}
@@ -164,7 +175,8 @@ def _commit() -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--phase", type=int, choices=[2, 3], default=2, help="2: research to minutes (S2.8); 3: the document tools (S3.9)")
+    ap.add_argument("--phase", type=int, choices=[2, 3, 4], default=2,
+                    help="2: research to minutes (S2.8); 3: the document tools (S3.9); 4: summaries and the review panel (Phase 4 gate)")
     ap.add_argument("--only", default="", help="comma-separated suites (phase 2: research, compare, assist, minutes, transcription, injection; "
                                                  "phase 3: drafting, playbook, redline, citations, definitions, obligations, diligence, governance, security, browser)")
     ap.add_argument("--llm", default="http://localhost:8355/v1")
@@ -175,7 +187,7 @@ def main() -> int:
     only = {s.strip() for s in args.only.split(",") if s.strip()}
     REPORTS.mkdir(exist_ok=True)
     started, results = time.strftime("%Y%m%d-%H%M%S"), []
-    for suite, set_, cmd in (PHASE3 if args.phase == 3 else STEPS):
+    for suite, set_, cmd in {3: PHASE3, 4: PHASE4}.get(args.phase, STEPS):
         if only and suite not in only:
             continue
         before = {p.name for p in REPORTS.glob("*.json")}

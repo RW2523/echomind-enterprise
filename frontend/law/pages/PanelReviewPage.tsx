@@ -34,6 +34,8 @@ export default function PanelReviewPage() {
         <section className="lw-paper lw-sheet" aria-label="Question">
           <p className="lw-eyebrow" style={{ margin: 0 }}>{`Question · specialist: ${review.area ?? review.specialist}`}</p>
           <h2 className="lw-h2 lw-serif" style={{ margin: '2px 0 8px' }}>{review.question}</h2>
+          <p className="lw-meta" style={{ margin: '0 0 8px' }}>{review.documents && review.documents.length
+            ? `Consulted: ${review.documents.map((d) => d.title ?? 'a document no longer available').join('; ')}` : "Consulted: all of the matter's documents"}</p>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <StatusPill tone={a?.status === 'approved' ? 'verified' : tone}>{a?.status === 'approved' ? 'Approved by a partner' : label}</StatusPill>
             {working && <span className="lw-meta" role="status">Five answers are being drafted and checked; this takes about a minute.</span>}

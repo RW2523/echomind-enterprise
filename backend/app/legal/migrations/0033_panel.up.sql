@@ -7,6 +7,7 @@ CREATE TABLE legal_panel_reviews(
   question    TEXT NOT NULL,
   specialist  TEXT NOT NULL,
   facts_json  TEXT NOT NULL DEFAULT '[]',
+  documents_json TEXT NOT NULL DEFAULT '[]',
   status      TEXT NOT NULL CHECK(status IN ('queued','running','done','needs_facts','failed','not_allowed')),
   artifact_id TEXT,
   created_by  TEXT NOT NULL,

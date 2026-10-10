@@ -531,3 +531,4 @@
 [data-edition="law"] .lw-panel-notice { margin: 10px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--fill-1); color: var(--ink-2); font-size: 13px; }
 [data-edition="law"] .lw-panel-stop { box-shadow: var(--paper-shadow), inset 3px 0 0 var(--attention); }
 [data-edition="law"] .lw-table tr[data-disagreement="yes"] td:first-child { box-shadow: inset 3px 0 0 var(--attention); }
+[data-edition="law"] .lw-panel-docs { border: 1px solid var(--rule); border-radius: 10px; padding: 8px 12px; margin: 0; display: grid; gap: 4px; }
