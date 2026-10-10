@@ -221,3 +221,24 @@ def test_s36c_dated_events_periods_from_them_and_terms_named_otherwise():
     spa = read("G6-spa-completion-claims")
     assert spa[("5.1", "duty")]["due_date"] == "2026-09-30" and spa[("5.1", "duty")]["when"] == "on 30 September 2026"
     assert spa[("8.1", "notice")]["due_date"] == "2028-03-30" and spa[("5.2", "duty")]["due_date"] is None   # business days: not counted
+
+
+def test_s36d_repayment_on_a_defined_date_recurring_payments_yearly_deadlines_and_probation():
+    """From held-out run 2 (obligations-s3.6c)."""
+    import json
+    from app.legal.documents import extract as rd, structure
+    from app.legal.obligations import extract as ex
+    g = json.loads((Path(__file__).resolve().parents[3] / "eval" / "law" / "obligations" / "golden.json").read_text())
+
+    def read(doc_id):
+        text = next(d["text"] for d in g["documents"] if d["id"] == doc_id)
+        x = rd.extract("d.txt", text.encode())
+        rows = [{"number": c.number, "heading": c.heading, "level": c.level, "parent": c.parent, "start": c.start, "end": c.end}
+                for c in structure.clauses(x)]
+        return {(o["clause"], o["kind"]): o for o in ex.read(text, rows)}
+    emp = read("G8-employment-uk")
+    assert emp[("1.2", "expiry")]["due_date"] == "2027-04-30" and emp[("1.2", "expiry")]["action"] == "The probationary period ends"
+    assert emp[("2.1", "duty")]["action"] == "Holiday must be taken" and emp[("3.2", "post_termination")]["when"] == "On termination"
+    loan = read("G9-loan-facility-us")
+    assert loan[("2.1", "payment")]["due_date"] == "2029-06-30" and loan[("2.2", "payment")]["when"].startswith("quarterly in arrears")
+    assert loan[("3.1", "duty")]["when"].startswith("within one hundred twenty (120) days")

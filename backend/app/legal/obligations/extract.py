@@ -25,14 +25,14 @@ from typing import Optional
 from ..compare.facts import _DATE, _PERIOD, _date, _word_number
 from ..documents import numbering
 
-VERSION = "obligations-s3.6c"
+VERSION = "obligations-s3.6d"
 MODAL = re.compile(r"\b(?:shall|must|may(?!\s+not\s+be\b)|will|agrees? to|undertakes? to|is entitled to|are entitled to|"
                    r"is payable|are payable|is due|are due|falls? due|survives?|bears interest|accrues? interest)\b")
 _UNLESS_NOTICE = re.compile(r"\bunless\b[^.]*\bnotice\b", re.I)
 _CUE = re.compile(r"(?:\b(?:within|at least|not less than|no less than|no later than|not later than|on|by|for|before|after)\s+)$", re.I)
 _AFTER_CUE = re.compile(r"^['’]?s?\s*(?:prior\s+)?(?:written\s+)?(?:notice\s+)?(?P<dir>before|prior to|after|following|from|of)\b", re.I)
 _CUT = re.compile(r",|\s+(?:in accordance with|without undue delay|in any event|within|on|at least|no less than|not less than|no later than|"
-                  r"subject to|without|unless|if|by written notice|for the term)\b")
+                  r"subject to|without|unless|if|by written notice|for the term|upon|by)\b")
 _PARTY_WORDS = r"(?:Provider|Client|Supplier|Customer|Seller|Buyer|Licensor|Licensee|Landlord|Tenant|Borrower|Lender|Issuer|Company|" \
                r"Consultant|Contractor|Employer|Employee|Purchaser|Vendor|Guarantor|Agent|Bank|Parent|Shareholder|Investor)"
 _SUBJECT = re.compile(rf"\b(?:(?:Either|Each|Neither|Both|Any|The other|The)\s+part(?:y|ies)|(?:the\s+)?{_PARTY_WORDS}s?)\b", re.I)
@@ -51,7 +51,7 @@ def kind_of(s: str) -> Optional[str]:
         return "change_of_control"
     if re.search(r"\bconsent\b", s, re.I):
         return "consent"
-    if re.search(r"\b(?:pay|payable|paid|unpaid|non-payment|invoices?)\b", s, re.I):
+    if re.search(r"\b(?:pay|payable|paid|unpaid|non-payment|repay|repayment|invoices?)\b", s, re.I):
         return "payment"
     if re.search(r"\bnotif(?:y|ies|ied|ication)\b", s, re.I) or (re.search(r"\bnotice\b", s, re.I) and re.search(r"\b(?:breach|incident|aware)", s, re.I)):
         return "notification"
@@ -72,10 +72,13 @@ def _periods(s: str) -> list[dict]:
         n = int(m.group("d")) if m.group("d") else _word_number(m.group("n"))
         if n is None:
             continue
-        before = _CUE.search(s[:m.start()])
+        lead = re.search(r"(?:\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|sixty|seventy|"
+                         r"eighty|ninety|hundred|thousand|and)[\s-]+)+$", s[:m.start()], re.I) if m.group("d") else None
+        pstart = lead.start() if lead else m.start()
+        before = _CUE.search(s[:pstart])
         after = _AFTER_CUE.match(s[m.end():])
         unit = m.group("unit").lower().rstrip("s") + ("s" if n != 1 else "")
-        out.append({"n": n, "unit": unit, "business": bool(m.group("kind")), "start": before.start() if before else m.start(), "pstart": m.start(),
+        out.append({"n": n, "unit": unit, "business": bool(m.group("kind")), "start": before.start() if before else pstart, "pstart": m.start(),
                     "end": m.end(), "score": (1 if before else 0) + (1 if after else 0),
                     "direction": ("before" if after and after.group("dir").lower() in ("before", "prior to") else "after") if after else None})
     return out
@@ -101,6 +104,8 @@ def _action(s: str, modal: Optional[re.Match], period: Optional[dict]) -> str:
     if m and m.group(0).startswith(("is ", "are ", "fall")):
         return body[:m.end()].strip()                      # "Invoices are payable"
     rest = body[m.end():].strip() if m else body
+    if m and rest.startswith("be "):                       # "Holiday must be taken by …": the subject stays
+        rest = f"{body[:m.start()].strip()} {m.group(0)} {rest}"
     if period:
         ptxt = s[period["start"]:period["end"]]
         if ptxt in rest:
@@ -149,6 +154,10 @@ def anchor_date(text: str, name: str) -> Optional[tuple[date, str]]:
     return None
 
 
+_ON_TERMINATION = re.compile(r"\b(?:on|upon|following|at)\s+(?:the\s+)?(?:termination|expiry|expiration|end of (?:the|this) \w+)\b", re.I)
+_YEARLY = re.compile(r"\b(?:by|before|on or before)\s+\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|"
+                     r"December)\s+(?:in\s+)?(?:each|every)\s+(?:calendar\s+)?year\b", re.I)
+_ON_NAMED = re.compile(r"\b(?:on|by|no later than)\s+the\s+(?P<name>[A-Z][\w ]{2,40}?Date)\b")
 _ON_DATE = re.compile(r"\b(?:take place|occur|be completed|completes?)\s+(?:on|by|no later than)\s+(?:or before\s+)?" + _DATE.pattern)
 
 
@@ -169,6 +178,23 @@ _EXPIRY = re.compile(r"(?:\bcontinues?\b|\blasts?\b|\bruns?\b|\bmeans\b|\bremain
                      re.I)
 _ANNIV = re.compile(r"\bon the (?P<ord>first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|\d{1,2}(?:st|nd|rd|th))\s+"
                     r"anniversary of the (?P<anchor>[A-Z][\w ]{2,40}?Date)", re.I)
+
+
+_FIRST = re.compile(r"\b[Tt]he first\s+(?P<p>[^.;()]{0,30}(?:\(\d+\))?\s*(?:months?|years?))\s+(?:of\s+\w+\s+)?from\s+(?:the\s+)?"
+                    r"(?P<anchor>[A-Z][\w ]{2,40}?Date)\s+(?:are|is|shall be|will be)\s+(?:a|the)\s+(?P<what>[\w -]{3,40}?period)\b")
+
+
+def first_period(s: str, text: str) -> Optional[dict]:
+    """'The first six (6) months of employment from the Start Date are a probationary period': when that period ends."""
+    m = _FIRST.search(s)
+    p = next(iter(_periods(m.group("p"))), None) if m else None
+    start = anchor_date(text, m.group("anchor")) if m and p else None
+    if not start:
+        return None
+    end = add_months(start[0], p["n"] * (12 if p["unit"].startswith("year") else 1)) - timedelta(days=1)
+    return {"when": f"{p['n']} {p['unit']} from the {m.group('anchor')}", "due": end.isoformat(), "at": m.start(), "what": m.group("what"),
+            "note": f"The {m.group('what')} is read as {p['n']} {p['unit']} from {start[1]}, ending on {_fmt(end)} (counting the first day). "
+                    f"Confirm before relying on it."}
 
 
 def expiry(s: str, text: str) -> Optional[dict]:
@@ -307,6 +333,7 @@ def read(text: str, clauses: list[dict]) -> list[dict]:
         s = text[a:b]
         modal = MODAL.search(s)
         ex = expiry(s, text) if not modal or re.search(r"\bcontinues?\b|\bmeans\b", s) else None
+        ex = ex or first_period(s, text)
         anchor = a + (modal.start() if modal else ex["at"] if ex else 0)
         inside = [c for c in numbered if c["start"] <= anchor < max(c["end"], c["start"] + 1)]
         if not inside:
@@ -319,7 +346,8 @@ def read(text: str, clauses: list[dict]) -> list[dict]:
         quote = s.rstrip()
         evidence = {"start": a, "end": a + len(quote), "quote": quote}
         if ex:
-            out.append({"kind": "expiry", "clause": clause, "party": None, "action": "The term ends", "when": ex["when"], "due_date": ex["due"],
+            out.append({"kind": "expiry", "clause": clause, "party": None, "action": f"The {ex['what']} ends" if ex.get("what") else "The term ends",
+                        "when": ex["when"], "due_date": ex["due"],
                         "due_note": ex["note"], "rule": {"period": None, "engine": VERSION}, "evidence": evidence})
             continue
         if not modal and not _UNLESS_NOTICE.search(s):
@@ -327,21 +355,29 @@ def read(text: str, clauses: list[dict]) -> list[dict]:
         kind = kind_of(s)
         ps = _periods(s)
         period = max(ps, key=lambda p: (p["score"], p["pstart"])) if ps else None
-        freq = _FREQUENCY.search(s) if kind == "payment" and re.search(r"\bpay\b", s, re.I) else None
+        freq = _FREQUENCY.search(s) if kind == "payment" and re.search(r"\b(?:pay|payable|paid)\b", s, re.I) else None
         on = _ON_DATE.search(s)
-        if not kind and (period and period["score"] or on) and re.search(r"\b(?:shall|must)\b", s):
+        named = _ON_NAMED.search(s) if modal else None
+        named_date = anchor_date(text, named.group("name")) if named else None
+        yearly = _YEARLY.search(s)
+        term_end = _ON_TERMINATION.search(s) if not period else None
+        if not kind and (period and period["score"] or on or named_date or yearly or term_end) and re.search(r"\b(?:shall|must)\b", s):
             kind = "duty"                                 # "shall provide a copy within ten (10) Business Days of a request"
-        if kind == "duty" and re.search(r"\b(?:after|following|upon|on)\s+(?:the\s+)?(?:termination|expiry|expiration)\b", s, re.I):
+        if kind == "duty" and (term_end or re.search(r"\b(?:after|following|upon|on)\s+(?:the\s+)?(?:termination|expiry|expiration|Termination Date)\b", s, re.I)):
             kind = "post_termination"
         if period and not period["score"]:
             period = None                                 # "in the twelve (12) months preceding": a look-back, not a time to act
-        if not kind or (not period and kind != "consent" and not freq and not on):
+        if not kind or (not period and kind != "consent" and not freq and not on and not named_date and not yearly
+                        and not (term_end and kind in ("duty", "post_termination"))):
             continue
         date_, note = due(kind, period, text, s)
+        if named_date and not period and not date_:
+            date_, note = named_date[0].isoformat(), f"On {named_date[1]}, as the clause says."
         g = None if modal else _UNLESS_GIVES.search(s)
         party = (g.group("who").strip()[0].upper() + g.group("who").strip()[1:]) if g else _party(s, modal.start() if modal else len(s))
         when = (_when(s, kind, period) if period else freq.group(0).strip() if freq
-                else f"on {_fmt(date.fromisoformat(_date(on)))}" if on and _date(on) else _when(s, kind, None))
+                else f"on {_fmt(date.fromisoformat(_date(on)))}" if on and _date(on) else named.group(0) if named_date
+                else yearly.group(0) if yearly else term_end.group(0) if term_end else _when(s, kind, None))
         out.append({"kind": kind, "clause": clause, "party": party,
                     "action": _action(s, modal, period), "when": when, "due_date": date_, "due_note": note,
                     "rule": {"period": {k: period[k] for k in ("n", "unit", "business", "direction")} if period else None, "engine": VERSION},

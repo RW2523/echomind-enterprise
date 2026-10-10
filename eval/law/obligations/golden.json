@@ -1,5 +1,5 @@
 {
- "about": "S3.6 obligations and deadlines (DOC-05) — the TUNING set. Fictional documents; expectations are what a careful lawyer building a deadlines list from each document would include. 'due' is given only where the document itself fixes the date; everything else must have no date. G3 2.3 was first written as 'confidentiality' and renamed 'survival' before tuning: it is the survival of clause 2's obligations, a naming choice. G5–G7 were the first held-out set.",
+ "about": "S3.6 obligations and deadlines (DOC-05) — the TUNING set. Fictional documents; expectations are what a careful lawyer building a deadlines list from each document would include. 'due' is given only where the document itself fixes the date; everything else must have no date. G3 2.3 was first written as 'confidentiality' and renamed 'survival' before tuning: it is the survival of clause 2's obligations, a naming choice. G5–G7 were the first held-out set. G8–G10 were the second held-out set.",
  "documents": [
   {
    "id": "G1-demo-msa",
@@ -224,6 +224,78 @@
    "text": "INTERNAL NOTE (fictional)\n\n1. Background\n1.1 The client has asked whether the thirty (30) day payment period in its supply contract is market standard.\n1.2 In our experience, periods of 30 to 60 days are common.\n\n2. Next steps\n2.1 We will review the contract this week.\n",
    "expect": [],
    "history": "Held-out in the first run (obligations-s3.6b: 9/13 by kind, 0/4 dates, none guessed); moved here because it informed obligations-s3.6c."
+  },
+  {
+   "id": "G8-employment-uk",
+   "name": "employment.txt",
+   "text": "EMPLOYMENT CONTRACT (fictional)\n\nThis Contract is between Ashgrove Design Ltd (the \"Company\") and Mira Okonjo (the \"Employee\").\n\n1. Start\n1.1 \"Start Date\" means 1 November 2026.\n1.2 The first six (6) months of employment from the Start Date are a probationary period.\n\n2. Holiday\n2.1 Holiday must be taken by 31 December in each year.\n\n3. Ending employment\n3.1 After the probationary period, either party may terminate the employment on three (3) months' written notice.\n3.2 On termination the Employee shall return all Company property.\n3.3 For six (6) months after the Termination Date, the Employee shall not work for a competitor of the Company.\n",
+   "expect": [
+    {
+     "clause": "1.2",
+     "kind": "expiry",
+     "due": "2027-04-30"
+    },
+    {
+     "clause": "2.1",
+     "kind": "duty",
+     "when": "31 December"
+    },
+    {
+     "clause": "3.1",
+     "kind": "termination",
+     "when": "three (3) months"
+    },
+    {
+     "clause": "3.2",
+     "kind": "post_termination"
+    },
+    {
+     "clause": "3.3",
+     "kind": "post_termination",
+     "when": "six (6) months after the Termination Date"
+    }
+   ],
+   "history": "Held-out in the second run (obligations-s3.6c: 5/10 found, 0/2 dates, none guessed, control clean); moved here because it informed obligations-s3.6d."
+  },
+  {
+   "id": "G9-loan-facility-us",
+   "name": "loan.txt",
+   "text": "LOAN AGREEMENT (fictional)\n\nThis Loan Agreement is dated as of July 1, 2026 between First Harbor Bank (the \"Lender\") and Quayside Foods, Inc. (the \"Borrower\").\n\n1. Definitions\n1.1 \"Maturity Date\" means June 30, 2029.\n\n2. Repayment\n2.1 The Borrower shall repay the Loan in full on the Maturity Date.\n2.2 Interest is payable quarterly in arrears on the last Business Day of each March, June, September and December.\n2.3 The Borrower may prepay the Loan in whole or in part upon not less than ten (10) Business Days' prior written notice to the Lender.\n\n3. Covenants\n3.1 The Borrower shall deliver its annual financial statements within one hundred twenty (120) days after the end of each fiscal year.\n3.2 The Borrower shall notify the Lender within five (5) Business Days of any Event of Default.\n",
+   "expect": [
+    {
+     "clause": "2.1",
+     "kind": "payment",
+     "due": "2029-06-30"
+    },
+    {
+     "clause": "2.2",
+     "kind": "payment",
+     "when": "quarterly in arrears"
+    },
+    {
+     "clause": "2.3",
+     "kind": "notice",
+     "when": "ten (10) Business Days"
+    },
+    {
+     "clause": "3.1",
+     "kind": "duty",
+     "when": "one hundred twenty (120) days"
+    },
+    {
+     "clause": "3.2",
+     "kind": "notification",
+     "when": "five (5) Business Days"
+    }
+   ],
+   "history": "Held-out in the second run (obligations-s3.6c: 5/10 found, 0/2 dates, none guessed, control clean); moved here because it informed obligations-s3.6d."
+  },
+  {
+   "id": "G10-press-release-control",
+   "name": "press.txt",
+   "text": "PRESS RELEASE (fictional)\n\n1. News\n1.1 Wrenfield Partners will open a new office in Leeds within the next 30 days.\n1.2 Our team will respond to all enquiries within 24 hours.\n1.3 The firm celebrates its 25th anniversary in 2027.\n",
+   "expect": [],
+   "history": "Held-out in the second run (obligations-s3.6c: 5/10 found, 0/2 dates, none guessed, control clean); moved here because it informed obligations-s3.6d."
   }
  ]
 }
