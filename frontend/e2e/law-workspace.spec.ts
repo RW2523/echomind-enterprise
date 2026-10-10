@@ -1335,3 +1335,37 @@ test('summaries: a consultancy agreement summarised point by point, each point o
   await alice.getByRole('link', { name: 'Open the filed summary' }).click();
   await expect(alice.getByText(/Approved by nakamura/).first()).toBeVisible({ timeout: 60_000 });
 });
+
+test('time: a lawyer\'s own work on a matter suggested as a draft entry, edited, approved and downloaded as CSV', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext({ acceptDownloads: true })).newPage();
+  await signIn(alice, 'alice');
+  // Some real work on M-101: import a short note and open it.
+  await alice.goto('/m/M-101/documents');
+  const title = 'Time journey note (DEMO)';
+  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+  await dialog.getByLabel('File').setInputFiles({ name: `${title}.txt`, mimeType: 'text/plain', buffer: Buffer.from('A short fictional note for the time journey.\n') });
+  await dialog.getByRole('button', { name: /^Import$/ }).click();
+  await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  await alice.getByRole('button', { name: title, exact: true }).click();
+  await alice.getByRole('complementary', { name: 'Document details' }).getByRole('link', { name: 'Read' }).click();
+  await expect(alice).toHaveURL(/\/read/);
+  // The suggestion comes from her own audited work; she edits it, approves it and downloads it.
+  await alice.getByRole('navigation', { name: 'Firm' }).getByRole('link', { name: 'Time' }).click();
+  await alice.getByRole('button', { name: 'Suggest from my activity' }).click();
+  const item = alice.getByRole('listitem', { name: /^M-101 on / }).first();
+  await expect(item).toBeVisible();
+  await expect(item.getByLabel('Narrative')).toHaveValue(/Document (review|management)/);
+  await item.getByLabel('Narrative').fill('Imported and read the time journey note.');
+  await item.getByRole('button', { name: 'Save changes' }).click();
+  await expect(item.getByText('Edited draft')).toBeVisible();
+  await item.getByRole('button', { name: 'Approve' }).click();
+  await expect(item.getByText('Approved')).toBeVisible();
+  await shot(alice, '46-time-light');
+  const [download] = await Promise.all([alice.waitForEvent('download'), alice.getByRole('link', { name: /Download approved/ }).click()]);
+  const csvText = fs.readFileSync(await download.path(), 'utf8');
+  expect(csvText.split('\n')[0].trim()).toBe('Date,Matter,Client,Hours,Minutes,Narrative,Approved');
+  expect(csvText).toContain('M-101');
+  expect(csvText).toContain('Imported and read the time journey note.');
+});

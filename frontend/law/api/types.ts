@@ -7,7 +7,7 @@ export type MatterStatus = 'open' | 'closed' | 'archived';
 export interface Me {
   user: { id: string; username: string; role: string; roles: FirmRole[] };
   session: { auth: string; mfa_enrolled: boolean; must_change_password: boolean; idle_expires_at: number; abs_expires_at: number };
-  features?: { intake: boolean; intake_links: boolean; summaries?: boolean };
+  features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean };
 }
 export interface Client { id: string; name: string; code?: string | null; status: string; version: number; }
 export interface Matter {
@@ -528,3 +528,11 @@ export interface SummaryContent {
   points: SummaryPoint[]; sections: number; unverified: number; figures_unsupported: number; translation: { available: boolean; reason: string };
 }
 export type SummaryVersion = ArtifactVersion<SummaryContent>;
+
+// ── Time entries (S4.3, D-056) ────────────────────────────────────────────────────
+export interface TimeEntry {
+  id: string; work_date: string; matter: { id: string; number: string; title: string; client: string }; source: 'suggested' | 'manual';
+  minutes: number; hours: string; minutes_suggested: number | null; narrative: string; narrative_suggested: string | null;
+  sessions: { from: string; to: string }[]; counts: Record<string, number>; edited: boolean; status: 'draft' | 'approved' | 'discarded';
+  approved_at: string | null; updated_at: string | null; version: number;
+}

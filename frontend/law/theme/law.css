@@ -517,3 +517,9 @@
 [data-edition="law"] .lw-cite-chip:hover { text-decoration: underline; }
 [data-edition="law"] .lw-summary-quote { margin: 0; padding-left: 10px; border-left: 2px solid var(--rule); color: var(--ink-2); font-size: 13px; overflow-wrap: anywhere; }
 [data-edition="law"] .lw-summary-edit { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+
+/* Time entries (S4.3, D-056) */
+[data-edition="law"] .lw-time-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+[data-edition="law"] .lw-time-entry { display: grid; gap: 10px; }
+[data-edition="law"] .lw-time-fields { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: start; }
+@media (max-width: 560px) { [data-edition="law"] .lw-time-fields { grid-template-columns: 1fr; } }

@@ -49,6 +49,7 @@ import Enquiry from '../pages/Enquiry';
 import IntakeLink from '../pages/IntakeLink';
 import MatterSummaries from '../pages/MatterSummaries';
 import SummaryPage from '../pages/SummaryPage';
+import TimeEntries from '../pages/TimeEntries';
 
 function Root() {
   useSessionExpiry();
@@ -74,6 +75,7 @@ export const lawRoutes = [
           { path: '/checklists', element: <Checklists /> },
           { path: '/enquiries', element: <Enquiries /> },
           { path: '/enquiries/:intakeId', element: <Enquiry /> },
+          { path: '/time', element: <TimeEntries /> },
           {
             path: '/m/:matterNo',
             element: <MatterLayout />,
