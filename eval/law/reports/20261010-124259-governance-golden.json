@@ -1,0 +1,103 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "a5ed32c+changes",
+  "time": "20261010-124259",
+  "prompt_version": "diligence-s3.8",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "companies": 3,
+  "found": "9/9",
+  "extra": 0,
+  "controls_clean": "1/1",
+  "by_kind": {
+   "share_capital": "3/3",
+   "authority": "2/2",
+   "constitution": "3/3",
+   "ip_chain": "1/1"
+  },
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_company": 29
+ },
+ "companies": [
+  {
+   "id": "G1-tidewater",
+   "ms": 29,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "150 ordinary shares in the register have no approval",
+     "found": true
+    },
+    {
+     "kind": "share_capital",
+     "title": "B ordinary shares are not a class the articles create",
+     "found": true
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Board quorum",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Notice of board meetings",
+     "found": true
+    },
+    {
+     "kind": "ip_chain",
+     "title": "No IP assignment from B. Lind",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 5
+  },
+  {
+   "id": "G2-harrow-control",
+   "ms": 29,
+   "control": true,
+   "lines": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 0
+  },
+  {
+   "id": "G3-nair",
+   "ms": 29,
+   "control": false,
+   "lines": [
+    {
+     "kind": "share_capital",
+     "title": "200 preference shares in the register have no approval",
+     "found": true
+    },
+    {
+     "kind": "authority",
+     "title": "Signed above the signer's authority",
+     "found": true
+    },
+    {
+     "kind": "constitution",
+     "title": "Number of directors",
+     "found": true
+    }
+   ],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "two_sources": 3
+  }
+ ]
+}

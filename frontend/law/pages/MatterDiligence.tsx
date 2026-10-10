@@ -161,6 +161,12 @@ function Issue({ i }: { i: DdIssue }) {
       <p className="lw-meta" style={{ margin: '2px 0' }}>{i.document_title}</p>
       {i.detail && <p style={{ margin: '2px 0' }}>{i.detail}</p>}
       <blockquote className="lw-serif lw-check-quote">{`“${i.evidence.quote}”`}</blockquote>
+      {(i.related ?? []).map((r, k) => (
+        <div key={k} className="lw-dd-related">
+          <p className="lw-meta" style={{ margin: '2px 0 0' }}>{'Against '}<Link className="lw-linklike" to={`/m/${matter.number}/documents/${encodeURIComponent(r.document_id)}/read?v=${encodeURIComponent(r.version_id)}&at=${r.start}-${r.end}`}>{r.document_title}</Link></p>
+          <blockquote className="lw-serif lw-check-quote">{`“${r.quote}”`}</blockquote>
+        </div>
+      ))}
       {reviewer && mode !== 'dismiss' && mode !== 'verify' && (
         <div className="lw-check-decide" role="group" aria-label={`Review ${i.title}`}>
           {i.status === 'preliminary' ? <>

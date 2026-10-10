@@ -139,8 +139,8 @@ def report_document(conn, matter_id: str, document_id: str) -> dict:
                                               (document_id, matter_id)).fetchone()[0],
             "obligations": conn.execute("SELECT COUNT(*) FROM legal_obligations WHERE document_id=? AND matter_id=?",
                                         (document_id, matter_id)).fetchone()[0],
-            "diligence_issues": conn.execute("SELECT COUNT(*) FROM legal_dd_issues WHERE document_id=? AND matter_id=?",
-                                             (document_id, matter_id)).fetchone()[0],
+            "diligence_issues": conn.execute("SELECT COUNT(*) FROM legal_dd_issues WHERE matter_id=? AND (document_id=? OR related_json LIKE ?)",
+                                             (matter_id, document_id, f"%{document_id}%")).fetchone()[0],
             "kept": KEPT_DOCUMENT}
 
 
@@ -369,8 +369,10 @@ def _purge_document(conn, d: dict) -> dict:
     conn.execute("DELETE FROM legal_obligation_events WHERE obligation_id IN (SELECT id FROM legal_obligations WHERE document_id=?)", (doc,))
     conn.execute("DELETE FROM legal_obligations WHERE document_id=?", (doc,))
     # S3.7: diligence issues quote the document and go with their trail; every run forgets the document's name.
-    conn.execute("DELETE FROM legal_dd_issue_events WHERE issue_id IN (SELECT id FROM legal_dd_issues WHERE document_id=?)", (doc,))
-    conn.execute("DELETE FROM legal_dd_issues WHERE document_id=?", (doc,))
+    # A governance finding that quotes it as the second document (S3.8) goes too.
+    conn.execute("DELETE FROM legal_dd_issue_events WHERE issue_id IN (SELECT id FROM legal_dd_issues WHERE document_id=? OR related_json LIKE ?)",
+                 (doc, f"%{doc}%"))
+    conn.execute("DELETE FROM legal_dd_issues WHERE document_id=? OR related_json LIKE ?", (doc, f"%{doc}%"))
     for rid, rj in _dd_runs(conn, d["matter_id"], doc):
         res = json.loads(rj)
         for it in res.get("items", []):
@@ -434,7 +436,7 @@ def verify(d: dict, gone: dict) -> dict:
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_citation_checks WHERE document_id=?", (doc,)).fetchone()[0]
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_definition_checks WHERE document_id=?", (doc,)).fetchone()[0]
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_obligations WHERE document_id=?", (doc,)).fetchone()[0]
-            db_rows += conn.execute("SELECT COUNT(*) FROM legal_dd_issues WHERE document_id=?", (doc,)).fetchone()[0]
+            db_rows += conn.execute("SELECT COUNT(*) FROM legal_dd_issues WHERE document_id=? OR related_json LIKE ?", (doc, f"%{doc}%")).fetchone()[0]
             db_rows += len(_dd_runs(conn, d["matter_id"], doc))
             db_rows += len(_citation_targets(conn, d["matter_id"], doc))
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "

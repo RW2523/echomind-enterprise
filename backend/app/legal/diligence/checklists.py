@@ -17,6 +17,7 @@ from ...core.db import get_conn
 from .. import policy
 
 QUESTIONS = ("change_of_control", "assignment", "termination", "governing_law", "liability", "renewal")
+GOVERNANCE = ("share_capital", "authority", "constitution", "ip_chain")      # S3.8: checks across the company's documents
 _COLS = ("id", "org_id", "family_id", "version", "name", "content_json", "content_sha256", "status", "created_by", "created_at",
          "approved_by", "approved_at")
 
@@ -33,7 +34,7 @@ def sha(content: dict) -> str:
     return hashlib.sha256(json.dumps(content, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
-def validate(name: str, items: list[dict], expected_law: Optional[str]) -> dict:
+def validate(name: str, items: list[dict], expected_law: Optional[str], governance: Optional[list[str]] = None) -> dict:
     if not name.strip():
         raise Invalid("Give the checklist a name.")
     if not items:
@@ -54,7 +55,13 @@ def validate(name: str, items: list[dict], expected_law: Optional[str]) -> dict:
         seen.add(iid)
         out.append({"id": iid, "section": str(it.get("section") or "").strip() or "General", "title": title, "expect": expect,
                     "questions": questions})
-    return {"name": name.strip(), "expected_law": (expected_law or "").strip() or None, "items": out}
+    bad = [g for g in (governance or []) if g not in GOVERNANCE]
+    if bad:
+        raise Invalid(f"Unknown governance check(s): {', '.join(bad)}. Use: {', '.join(GOVERNANCE)}.")
+    content = {"name": name.strip(), "expected_law": (expected_law or "").strip() or None, "items": out}
+    if governance:
+        content["governance"] = list(dict.fromkeys(governance))
+    return content
 
 
 def _username(conn, uid: Optional[str]) -> Optional[str]:
@@ -66,13 +73,14 @@ def _out(conn, r) -> dict:
     d = dict(zip(_COLS, r))
     content = json.loads(d["content_json"])
     return {"id": d["id"], "family_id": d["family_id"], "version": d["version"], "name": d["name"], "expected_law": content.get("expected_law"),
-            "items": content["items"], "content_sha256": d["content_sha256"], "status": d["status"],
+            "items": content["items"], "governance": content.get("governance", []), "content_sha256": d["content_sha256"], "status": d["status"],
             "created_by": _username(conn, d["created_by"]), "created_at": d["created_at"], "approved_by": _username(conn, d["approved_by"]),
             "approved_at": d["approved_at"]}
 
 
-def create(org_id: str, name: str, items: list[dict], expected_law: Optional[str], by: str, family_id: Optional[str] = None) -> dict:
-    content = validate(name, items, expected_law)
+def create(org_id: str, name: str, items: list[dict], expected_law: Optional[str], by: str, family_id: Optional[str] = None,
+           governance: Optional[list[str]] = None) -> dict:
+    content = validate(name, items, expected_law, governance)
     cid = str(uuid.uuid4())
     with get_conn() as conn:
         if family_id:
@@ -139,5 +147,14 @@ PRESETS = [
         {"id": "ip", "section": "Intellectual property", "title": "IP assignments and licences", "expect": ["ip assignment", "intellectual property"]},
         {"id": "insurance", "section": "Insurance", "title": "Insurance policies", "expect": ["insurance policy", "policy schedule"]},
         {"id": "disputes", "section": "Disputes", "title": "Litigation and claims", "expect": ["claim form", "letter before action", "litigation"]},
+    ]},
+    {"name": "Corporate governance review", "expected_law": None, "governance": list(GOVERNANCE), "items": [
+        {"id": "gov-articles", "section": "Constitution", "title": "Articles of association", "expect": ["articles of association", "bylaws"]},
+        {"id": "gov-register", "section": "Shares", "title": "Register of members or cap table", "expect": ["register of members", "cap table"]},
+        {"id": "gov-resolutions", "section": "Shares", "title": "Board and shareholder resolutions", "expect": ["minutes", "written resolution"]},
+        {"id": "gov-authority", "section": "Authority", "title": "Delegation of authority", "expect": ["delegation of authority", "authority matrix"]},
+        {"id": "gov-policies", "section": "Policies", "title": "Board policies and procedures", "expect": ["policy", "procedures"]},
+        {"id": "gov-contracts", "section": "Authority", "title": "Signed contracts", "expect": ["agreement"]},
+        {"id": "gov-ip", "section": "Intellectual property", "title": "IP assignments", "expect": ["ip assignment", "intellectual property assignment"]},
     ]},
 ]

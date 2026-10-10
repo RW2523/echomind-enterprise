@@ -123,7 +123,7 @@ def _seed_checklist(org: str, approver: str) -> None:
     """The firm's due-diligence checklist preset (S3.7), approved by the demo managing partner."""
     from .diligence import checklists
     for preset in checklists.PRESETS:
-        c = checklists.create(org, preset["name"], preset["items"], preset["expected_law"], "system")
+        c = checklists.create(org, preset["name"], preset["items"], preset["expected_law"], "system", governance=preset.get("governance"))
         checklists.approve(org, c["id"], approver, c["content_sha256"])
 
 

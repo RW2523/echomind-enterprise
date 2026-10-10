@@ -457,14 +457,17 @@ export interface ObligationEvent { action: string; changes: Record<string, [unkn
 /** Due diligence (S3.7, D-051): firm checklists, runs over a matter's documents, and an issue register. */
 export type DdQuestion = 'change_of_control' | 'assignment' | 'termination' | 'governing_law' | 'liability' | 'renewal';
 export interface DdItem { id: string; section: string; title: string; expect: string[]; questions: DdQuestion[] }
+export type DdGovernance = 'share_capital' | 'authority' | 'constitution' | 'ip_chain';
 export interface DdChecklist {
-  id: string; family_id: string; version: number; name: string; expected_law: string | null; items: DdItem[]; content_sha256: string;
+  id: string; family_id: string; version: number; name: string; expected_law: string | null; items: DdItem[]; governance?: DdGovernance[]; content_sha256: string;
   status: 'draft' | 'approved' | 'retired'; created_by: string | null; created_at: string; approved_by: string | null; approved_at: string | null;
 }
 export interface DdIssue {
   id: string; run_id: string; item_id: string; document_id: string; document_title: string; version_id: string; kind: string;
   severity: 'high' | 'medium' | 'low'; title: string; detail: string | null; evidence: { start: number; end: number; quote: string; clause: string | null };
   status: 'preliminary' | 'verified' | 'dismissed'; reviewer: string | null; decided_at: string | null; version: number; created_at: string;
+  /** S3.8: the second document a governance finding quotes (an approval, the delegation of authority, the articles). */
+  related?: { document_id: string; document_title: string; version_id: string; start: number; end: number; quote: string }[];
 }
 export interface DdSummary { items: number; missing: number; issues: number; high: number; medium: number; low: number; preliminary: number; verified: number; dismissed: number }
 export interface DdRunInfo {

@@ -1,0 +1,153 @@
+{
+ "about": "S3.8 governance checks (DOC-07) — the TUNING set: fictional companies run against the 'Corporate governance review' preset. Expectations are the discrepancies a company-secretarial lawyer would raise (kind and the start of the title); the control company is consistent.",
+ "companies": [
+  {
+   "id": "G1-tidewater",
+   "documents": [
+    {
+     "name": "Articles of Association.txt",
+     "text": "ARTICLES OF ASSOCIATION of Tidewater Holdings Ltd (fictional)\n\n1. Share capital\n1.1 The share capital of the company consists of ordinary shares and A preference shares.\n\n2. Directors\n2.1 The number of directors shall not be less than two.\n2.2 The quorum for board meetings is two directors.\n2.3 Not less than seven (7) days' notice shall be given of every board meeting.\n"
+    },
+    {
+     "name": "Register of members.txt",
+     "text": "REGISTER OF MEMBERS of Tidewater Holdings Ltd (fictional)\n\n1. A. Moreau: 600 ordinary shares.\n2. B. Lind: 400 ordinary shares.\n3. C. Osei: 150 ordinary shares.\n4. Northgate Capital LLP: 200 B ordinary shares.\n"
+    },
+    {
+     "name": "Board minutes January 2026.txt",
+     "text": "MINUTES OF A BOARD MEETING of Tidewater Holdings Ltd held on 10 January 2026 (fictional)\n\n1. Founders\n1.1 The founders of the company are A. Moreau and B. Lind.\n\n2. Allotment\n2.1 The board approved the allotment of 1,000 ordinary shares to the founders.\n"
+    },
+    {
+     "name": "Delegation of authority.txt",
+     "text": "DELEGATION OF AUTHORITY of Tidewater Holdings Ltd (fictional)\n\n1. Contracts\n1.1 The Finance Director may sign contracts with a value of up to GBP 50,000.\n1.2 Contracts with a value above GBP 50,000 must be signed by two directors.\n"
+    },
+    {
+     "name": "Supply Agreement - Northwind.txt",
+     "text": "SUPPLY AGREEMENT (fictional)\n\nThis Agreement is made between Northwind Components Ltd (the \"Supplier\") and Tidewater Holdings Ltd (the \"Customer\").\n\n1. Price\n1.1 The total price payable under this Agreement is GBP 120,000.\n\n2. Signature\n2.1 Signed for Tidewater Holdings Ltd by J. Park, Finance Director.\n"
+    },
+    {
+     "name": "Services Agreement - Brightline.txt",
+     "text": "SERVICES AGREEMENT (fictional)\n\nThis Agreement is made between Brightline Data, Inc. (the \"Provider\") and Tidewater Holdings Ltd (the \"Client\").\n\n1. Fees\n1.1 The total fees payable under this Agreement are GBP 18,000.\n\n2. Signature\n2.1 Signed for Tidewater Holdings Ltd by J. Park, Finance Director.\n"
+    },
+    {
+     "name": "Board procedures policy.txt",
+     "text": "BOARD PROCEDURES POLICY of Tidewater Holdings Ltd (fictional)\n\n1. Meetings\n1.1 A board meeting is quorate when one director is present.\n1.2 Board meetings may be called on two (2) days' notice.\n"
+    },
+    {
+     "name": "IP Assignment - A Moreau.txt",
+     "text": "IP ASSIGNMENT DEED (fictional)\n\n1. Assignment\n1.1 A. Moreau assigns to Tidewater Holdings Ltd all intellectual property created for the company.\n"
+    }
+   ],
+   "expect": [
+    [
+     "share_capital",
+     "150 ordinary shares in the register have no approval"
+    ],
+    [
+     "share_capital",
+     "B ordinary shares are not a class the articles create"
+    ],
+    [
+     "authority",
+     "Signed above the signer's authority"
+    ],
+    [
+     "constitution",
+     "Board quorum"
+    ],
+    [
+     "constitution",
+     "Notice of board meetings"
+    ],
+    [
+     "ip_chain",
+     "No IP assignment from B. Lind"
+    ]
+   ]
+  },
+  {
+   "id": "G2-harrow-control",
+   "documents": [
+    {
+     "name": "Articles of Association - Harrow Robotics.txt",
+     "text": "ARTICLES OF ASSOCIATION of Harrow Robotics Ltd (fictional)\n\n1. Share capital\n1.1 The share capital of the company consists of ordinary shares.\n\n2. Directors\n2.1 The number of directors shall not be less than two.\n2.2 The quorum for board meetings is two directors.\n2.3 Not less than seven (7) days' notice shall be given of every board meeting.\n"
+    },
+    {
+     "name": "Register of members - Harrow Robotics.txt",
+     "text": "REGISTER OF MEMBERS of Harrow Robotics Ltd (fictional)\n\n1. Ines Faraday: 500 ordinary shares.\n2. Tom Okafor: 500 ordinary shares.\n"
+    },
+    {
+     "name": "Board minutes February 2026.txt",
+     "text": "MINUTES OF A BOARD MEETING of Harrow Robotics Ltd (fictional)\n\n1. Founders\n1.1 The founders of the company are Ines Faraday and Tom Okafor.\n\n2. Allotment\n2.1 The board approved the allotment of 1,000 ordinary shares to the founders.\n"
+    },
+    {
+     "name": "Delegation of authority - Harrow Robotics.txt",
+     "text": "DELEGATION OF AUTHORITY of Harrow Robotics Ltd (fictional)\n\n1. Contracts\n1.1 The Chief Financial Officer may sign contracts with a value of up to GBP 100,000.\n"
+    },
+    {
+     "name": "Services Agreement - Lumen.txt",
+     "text": "SERVICES AGREEMENT (fictional)\n\nThis Agreement is made between Lumen Analytics Ltd and Harrow Robotics Ltd.\n\n1. Fees\n1.1 The total fees payable under this Agreement are GBP 60,000.\n\n2. Signature\n2.1 Signed for Harrow Robotics Ltd by K. Mensah, Chief Financial Officer.\n"
+    },
+    {
+     "name": "Board procedures policy - Harrow Robotics.txt",
+     "text": "BOARD PROCEDURES POLICY of Harrow Robotics Ltd (fictional)\n\n1. Meetings\n1.1 The quorum for board meetings is two directors.\n1.2 Board meetings may be called on seven (7) days' notice.\n"
+    },
+    {
+     "name": "IP Assignment - Ines Faraday.txt",
+     "text": "IP ASSIGNMENT DEED (fictional)\n\n1.1 Ines Faraday assigns to Harrow Robotics Ltd all intellectual property created for the company.\n"
+    },
+    {
+     "name": "IP Assignment - Tom Okafor.txt",
+     "text": "IP ASSIGNMENT DEED (fictional)\n\n1.1 Tom Okafor assigns to Harrow Robotics Ltd all intellectual property created for the company.\n"
+    }
+   ],
+   "expect": []
+  },
+  {
+   "id": "G3-nair",
+   "documents": [
+    {
+     "name": "Articles of Association - Nair Instruments.txt",
+     "text": "ARTICLES OF ASSOCIATION of Nair Instruments Ltd (fictional)\n\n1. Share capital\n1.1 The share capital of the company consists of ordinary shares and preference shares.\n\n2. Directors\n2.1 The number of directors shall not be less than two.\n"
+    },
+    {
+     "name": "Cap table - Nair Instruments.txt",
+     "text": "CAP TABLE of Nair Instruments Ltd (fictional)\n\n1. Priya Nair: 800 ordinary shares.\n2. Brookfield Seed Fund: 700 preference shares.\n"
+    },
+    {
+     "name": "Written resolution March 2026.txt",
+     "text": "WRITTEN RESOLUTION of the shareholders of Nair Instruments Ltd (fictional)\n\n1. Resolutions\n1.1 The shareholders resolved to approve the issue of 800 ordinary shares.\n1.2 The shareholders resolved to approve the issue of 500 preference shares.\n\n2. Founder\n2.1 The founder is Priya Nair.\n"
+    },
+    {
+     "name": "Delegation of authority - Nair Instruments.txt",
+     "text": "DELEGATION OF AUTHORITY of Nair Instruments Ltd (fictional)\n\n1. Contracts\n1.1 The Managing Director may sign contracts with a value of up to GBP 250,000.\n"
+    },
+    {
+     "name": "Supply Agreement - Kestrel Parts.txt",
+     "text": "SUPPLY AGREEMENT (fictional)\n\nThis Agreement is made between Kestrel Parts Co. and Nair Instruments Ltd.\n\n1. Price\n1.1 The total price payable under this Agreement is GBP 300,000.\n\n2. Signature\n2.1 Signed for Nair Instruments Ltd by R. Shah, Managing Director.\n"
+    },
+    {
+     "name": "Board governance policy - Nair Instruments.txt",
+     "text": "BOARD GOVERNANCE POLICY of Nair Instruments Ltd (fictional)\n\n1. Board\n1.1 The company shall have at least one director.\n"
+    },
+    {
+     "name": "IP Assignment - Priya Nair.txt",
+     "text": "IP ASSIGNMENT DEED (fictional)\n\n1.1 Priya Nair assigns to Nair Instruments Ltd all intellectual property created for the company.\n"
+    }
+   ],
+   "expect": [
+    [
+     "share_capital",
+     "200 preference shares in the register have no approval"
+    ],
+    [
+     "authority",
+     "Signed above the signer's authority"
+    ],
+    [
+     "constitution",
+     "Number of directors"
+    ]
+   ]
+  }
+ ]
+}

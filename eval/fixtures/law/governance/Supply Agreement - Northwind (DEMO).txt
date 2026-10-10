@@ -1,0 +1,9 @@
+SUPPLY AGREEMENT (fictional)
+
+This Agreement is made between Northwind Components Ltd (the "Supplier") and Tidewater Holdings Ltd (the "Customer").
+
+1. Price
+1.1 The total price payable under this Agreement is GBP 120,000.
+
+2. Signature
+2.1 Signed for Tidewater Holdings Ltd by J. Park, Finance Director.
