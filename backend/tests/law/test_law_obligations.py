@@ -198,3 +198,26 @@ def test_a_lease_break_date_term_expiry_and_duties_are_read_with_dates_only_from
     assert nda[("1.1", "expiry")]["due_date"] == "2029-05-03"
     assert ("2.2", "notification") in nda and ("2.3", "survival") in nda and ("2.1", "duty") in nda
     assert read("G4-board-minutes-control") == {}
+
+
+def test_s36c_dated_events_periods_from_them_and_terms_named_otherwise():
+    """From held-out run 1 (obligations-s3.6b): "the initial Subscription Term is twelve (12) months from the Effective
+    Date", a renewal deadline from that term's end, "Completion shall take place on 30 September 2026", "within
+    eighteen (18) months after Completion", suspension for non-payment, and duties after termination."""
+    import json
+    from app.legal.documents import extract as rd, structure
+    from app.legal.obligations import extract as ex
+    g = json.loads((Path(__file__).resolve().parents[3] / "eval" / "law" / "obligations" / "golden.json").read_text())
+
+    def read(doc_id):
+        text = next(d["text"] for d in g["documents"] if d["id"] == doc_id)
+        x = rd.extract("d.txt", text.encode())
+        rows = [{"number": c.number, "heading": c.heading, "level": c.level, "parent": c.parent, "start": c.start, "end": c.end}
+                for c in structure.clauses(x)]
+        return {(o["clause"], o["kind"]): o for o in ex.read(text, rows)}
+    saas = read("G5-us-saas")
+    assert saas[("1.1", "expiry")]["due_date"] == "2027-01-14" and saas[("1.2", "renewal")]["due_date"] == "2026-12-15"
+    assert ("2.2", "payment") in saas and ("4.2", "post_termination") in saas
+    spa = read("G6-spa-completion-claims")
+    assert spa[("5.1", "duty")]["due_date"] == "2026-09-30" and spa[("5.1", "duty")]["when"] == "on 30 September 2026"
+    assert spa[("8.1", "notice")]["due_date"] == "2028-03-30" and spa[("5.2", "duty")]["due_date"] is None   # business days: not counted

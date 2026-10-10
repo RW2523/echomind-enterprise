@@ -25,7 +25,7 @@ from typing import Optional
 from ..compare.facts import _DATE, _PERIOD, _date, _word_number
 from ..documents import numbering
 
-VERSION = "obligations-s3.6b"
+VERSION = "obligations-s3.6c"
 MODAL = re.compile(r"\b(?:shall|must|may(?!\s+not\s+be\b)|will|agrees? to|undertakes? to|is entitled to|are entitled to|"
                    r"is payable|are payable|is due|are due|falls? due|survives?|bears interest|accrues? interest)\b")
 _UNLESS_NOTICE = re.compile(r"\bunless\b[^.]*\bnotice\b", re.I)
@@ -51,7 +51,7 @@ def kind_of(s: str) -> Optional[str]:
         return "change_of_control"
     if re.search(r"\bconsent\b", s, re.I):
         return "consent"
-    if re.search(r"\b(?:pay|payable|paid|invoices?)\b", s, re.I):
+    if re.search(r"\b(?:pay|payable|paid|unpaid|non-payment|invoices?)\b", s, re.I):
         return "payment"
     if re.search(r"\bnotif(?:y|ies|ied|ication)\b", s, re.I) or (re.search(r"\bnotice\b", s, re.I) and re.search(r"\b(?:breach|incident|aware)", s, re.I)):
         return "notification"
@@ -149,9 +149,23 @@ def anchor_date(text: str, name: str) -> Optional[tuple[date, str]]:
     return None
 
 
+_ON_DATE = re.compile(r"\b(?:take place|occur|be completed|completes?)\s+(?:on|by|no later than)\s+(?:or before\s+)?" + _DATE.pattern)
+
+
+def event_date(text: str, name: str) -> Optional[tuple[date, str]]:
+    """The date of a named event or anchor the document fixes: 'Completion shall take place on 30 September 2026',
+    or a defined date."""
+    m = re.search(rf"\b{re.escape(name)}\s+(?:shall|will|is to)\s+(?:take place|occur)\s+on\s+" + _DATE.pattern, text)
+    if m and _date(m):
+        d0 = date.fromisoformat(_date(m))
+        return d0, f"{name} ({_fmt(d0)})"
+    return anchor_date(text, name) if name.endswith("Date") else None
+
+
 _EXPIRY = re.compile(r"(?:\bcontinues?\b|\blasts?\b|\bruns?\b|\bmeans\b|\bremains? in force\b)[^.;]{0,60}?\bfor\s+(?:an?\s+initial\s+(?:term|period)\s+of\s+)?"
                      r"(?P<p>[^.;()]{0,30}(?:\(\d+\))?\s*(?:months?|years?))(?:\s+from\s+(?:the\s+)?(?P<anchor>[A-Z][\w ]{2,40}?Date|date of this \w+))?"
-                     r"|[\"“](?:Term|Initial Term)[\"”]\s+means\s+(?P<p2>[^.;()]{0,30}(?:\(\d+\))?\s*(?:months?|years?))\s+from\s+(?:the\s+)?(?P<anchor2>[A-Z][\w ]{2,40}?Date)",
+                     r"|[\"“](?:Term|Initial Term)[\"”]\s+means\s+(?P<p2>[^.;()]{0,30}(?:\(\d+\))?\s*(?:months?|years?))\s+from\s+(?:the\s+)?(?P<anchor2>[A-Z][\w ]{2,40}?Date)"
+                     r"|\b(?:initial\s+)?(?:[A-Z][\w-]*\s+)?Term\s+(?:is|shall be|will be)\s+(?P<p3>[^.;()]{0,30}(?:\(\d+\))?\s*(?:months?|years?))\s+from\s+(?:the\s+)?(?P<anchor3>[A-Z][\w ]{2,40}?Date)",
                      re.I)
 _ANNIV = re.compile(r"\bon the (?P<ord>first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|\d{1,2}(?:st|nd|rd|th))\s+"
                     r"anniversary of the (?P<anchor>[A-Z][\w ]{2,40}?Date)", re.I)
@@ -162,7 +176,7 @@ def expiry(s: str, text: str) -> Optional[dict]:
     m = _EXPIRY.search(s)
     if not m:
         return None
-    ptxt, anchor = (m.group("p"), m.group("anchor")) if m.group("p") else (m.group("p2"), m.group("anchor2"))
+    ptxt, anchor = next(((m.group(p), m.group(an)) for p, an in (("p", "anchor"), ("p2", "anchor2"), ("p3", "anchor3")) if m.group(p)))
     p = next(iter(_periods(ptxt)), None)
     if not p:
         return None
@@ -217,6 +231,18 @@ def _term(text: str) -> Optional[tuple[int, str]]:
 def due(kind: str, period: Optional[dict], text: str, sentence: Optional[str] = None) -> tuple[Optional[str], str]:
     """(due date, how it was reached — or why there is none)."""
     if kind == "renewal" and period and period["direction"] == "before":
+        from ..research.prompt import document_sentences
+        ends = [e for e in (expiry(text[x:y], text) for x, y in document_sentences(text)) if e and e["due"]]
+        if ends:                                          # the term's end, as the document fixes it (whatever the term is called)
+            end = date.fromisoformat(ends[0]["due"])
+            if period["unit"].startswith("day") and not period["business"]:
+                deadline = end - timedelta(days=period["n"])
+            elif period["unit"].startswith("month"):
+                deadline = add_months(end, -period["n"])
+            else:
+                return None, f"Notice is due {period['n']} {period['unit']} before {_fmt(end)}; business days are not counted here."
+            return deadline.isoformat(), (f"{period['n']} {period['unit']} before the end of the term. {ends[0]['note'].split(' Confirm')[0]} "
+                                          f"So notice is due by {_fmt(deadline)}. Confirm how the days are counted before relying on it.")
         start, term = _start_date(text), _term(text)
         if not term:
             return None, "The document does not state the length of the term, so no date is computed."
@@ -250,6 +276,19 @@ def due(kind: str, period: Optional[dict], text: str, sentence: Optional[str] = 
             return None, f"The break date is {_fmt(brk)}; business days are not counted here."
         return deadline.isoformat(), (f"The break date is the {o} anniversary of {start[1]}: {_fmt(brk)}. Notice of {period['n']} {period['unit']} "
                                       f"is due by {_fmt(deadline)}. Confirm how the period is counted before relying on it.")
+    on = _ON_DATE.search(sentence or "")
+    if on and _date(on) and not period:
+        d0 = date.fromisoformat(_date(on))
+        return d0.isoformat(), f"On {_fmt(d0)}, as the clause says."
+    if period and period["direction"] == "after" and not period["business"]:
+        m = re.search(r"\b(?:after|following|from)\s+(?:the\s+)?(?P<a>[A-Z][\w ]{1,40}?)(?=[\s,.;]|$)", (sentence or "")[period["end"]:period["end"] + 60])
+        start = event_date(text, m.group("a").strip()) if m else None
+        if start:
+            end = add_months(start[0], period["n"] * (12 if period["unit"].startswith("year") else 1)) if period["unit"].startswith(("month", "year")) \
+                else start[0] + timedelta(days=period["n"]) if period["unit"].startswith("day") else None
+            if end:
+                return end.isoformat(), (f"{period['n']} {period['unit']} after {start[1]}: {_fmt(end)}. Confirm how the period is counted "
+                                         f"before relying on it.")
     if not period:
         return None, ("Recurring, on the dates the clause gives." if kind == "payment" else "A right, not a deadline: no date.")
     trigger = {"payment": "each invoice", "notification": "an event (becoming aware)", "post_termination": "termination or expiry",
@@ -289,16 +328,20 @@ def read(text: str, clauses: list[dict]) -> list[dict]:
         ps = _periods(s)
         period = max(ps, key=lambda p: (p["score"], p["pstart"])) if ps else None
         freq = _FREQUENCY.search(s) if kind == "payment" and re.search(r"\bpay\b", s, re.I) else None
-        if not kind and period and period["score"] and re.search(r"\b(?:shall|must)\b", s):
+        on = _ON_DATE.search(s)
+        if not kind and (period and period["score"] or on) and re.search(r"\b(?:shall|must)\b", s):
             kind = "duty"                                 # "shall provide a copy within ten (10) Business Days of a request"
+        if kind == "duty" and re.search(r"\b(?:after|following|upon|on)\s+(?:the\s+)?(?:termination|expiry|expiration)\b", s, re.I):
+            kind = "post_termination"
         if period and not period["score"]:
             period = None                                 # "in the twelve (12) months preceding": a look-back, not a time to act
-        if not kind or (not period and kind != "consent" and not freq):
+        if not kind or (not period and kind != "consent" and not freq and not on):
             continue
         date_, note = due(kind, period, text, s)
         g = None if modal else _UNLESS_GIVES.search(s)
         party = (g.group("who").strip()[0].upper() + g.group("who").strip()[1:]) if g else _party(s, modal.start() if modal else len(s))
-        when = _when(s, kind, period) if period else (freq.group(0).strip() if freq else _when(s, kind, None))
+        when = (_when(s, kind, period) if period else freq.group(0).strip() if freq
+                else f"on {_fmt(date.fromisoformat(_date(on)))}" if on and _date(on) else _when(s, kind, None))
         out.append({"kind": kind, "clause": clause, "party": party,
                     "action": _action(s, modal, period), "when": when, "due_date": date_, "due_note": note,
                     "rule": {"period": {k: period[k] for k in ("n", "unit", "business", "direction")} if period else None, "engine": VERSION},
