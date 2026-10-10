@@ -80,6 +80,7 @@ def seed_demo() -> dict:
     repo.add_membership(m202["id"], ids["alice"], "attorney", granted_by=ids["bob"], valid_from=_ts(-60), valid_to=_ts(-2))
     _seed_meeting(org, m101["id"], ids["alice"])
     _seed_templates(org, ids["morgan"])
+    _seed_playbook(org, ids["morgan"])
 
     os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
@@ -96,6 +97,25 @@ def _seed_templates(org: str, approver: str) -> None:
         v = t["versions"][0]
         if v["status"] == "draft":
             templates.approve(org, t["id"], v["id"], approver, v["content_sha256"])
+
+
+def _seed_playbook(org: str, approver: str) -> None:
+    """A demo playbook (S3.2): commercial services, supplier side, approved by the demo managing partner."""
+    from .playbooks import library
+    pb = library.create(org, "Commercial services (supplier, demo)", "Fictional positions for the demo world.", "Sweden", "system")
+    for pos in (
+        {"topic": "liability_cap", "title": "Cap on liability", "standard": "Each party's total aggregate liability shall not exceed USD 250,000.",
+         "fallbacks": [{"text": "Each party's total liability shall not exceed the fees paid in the twelve months before the claim.", "note": "Partner sign-off"}],
+         "guidance": "Never accept unlimited liability."},
+        {"topic": "payment", "title": "Payment terms", "standard": "Invoices are payable within thirty (30) days of receipt.",
+         "fallbacks": [{"text": "Invoices are payable within forty-five (45) days of receipt.", "note": "Strategic customers only"}]},
+        {"topic": "termination", "title": "Termination for convenience", "standard": "Either party may terminate for convenience on ninety (90) days' written notice."},
+        {"topic": "governing_law", "title": "Governing law", "standard": "The agreement is governed by the laws of Sweden.",
+         "fallbacks": [{"text": "The agreement is governed by the laws of England and Wales.", "note": "If the customer insists"}]},
+    ):
+        pb = library.add_position(org, pb["id"], pos, "system")
+    for pos in pb["positions"]:
+        library.approve(org, pb["id"], pos["id"], approver, pos["content_sha256"])
 
 
 def _seed_meeting(org: str, matter_id: str, by: str) -> None:

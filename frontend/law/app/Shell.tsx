@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, BookOpenText, Briefcase, CalendarClock, ClipboardCheck, FileOutput, FilePen, Files, FolderSync, FileText, Gauge, LayoutTemplate, GitCompareArrows, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
+import { Archive, BookMarked, BookOpenText, Briefcase, CalendarClock, ClipboardCheck, FileOutput, FilePen, Files, FolderSync, FileText, Gauge, LayoutTemplate, GitCompareArrows, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
 import { api } from '../api/client';
 import { useReviews } from '../api/queries';
 import MatterSwitcher from '../ui/MatterSwitcher';
@@ -57,6 +57,7 @@ export default function Shell() {
           <NavItem to="/matters" icon={<Briefcase />}>Matters</NavItem>
           <ReviewsNavItem />
           {hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal') && <NavItem to="/templates" icon={<LayoutTemplate />}>Templates</NavItem>}
+          {hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal') && <NavItem to="/playbooks" icon={<BookMarked />}>Playbooks</NavItem>}
           {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/users" icon={<UserCog />}>Users &amp; roles</NavItem>}
           {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/connectors" icon={<FolderSync />}>Connectors</NavItem>}
           {hasFirmRole(me, 'managing_partner') && <NavItem to="/admin/walls" icon={<ShieldOff />}>Ethical walls</NavItem>}

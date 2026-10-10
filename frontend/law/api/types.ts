@@ -380,3 +380,25 @@ export interface DraftSummary {
   id: string; draft_id: string; title: string; version: number; status: ArtifactVersion['status']; gaps: number;
   template: DraftContent['template']; created_by_name?: string | null; created_at: string; document_id?: string | null; sent_back: boolean;
 }
+
+/** Playbooks and playbook checks (S3.2, D-046). */
+export interface PlaybookPosition {
+  id: string; topic: string; topic_label: string; version: number; status: 'draft' | 'approved' | 'retired'; title: string; standard: string;
+  fallbacks: { text: string; note: string | null }[]; guidance: string | null; content_sha256: string; created_by: string | null;
+  created_at: string; approved_by: string | null; approved_at: string | null; owner_name: string | null;
+}
+export interface Playbook { id: string; name: string; description: string | null; jurisdiction: string | null; created_by: string | null; created_at: string; positions: PlaybookPosition[] }
+export interface PlaybookProposal { clause: string; title: string | null; text: string; topic: string | null }
+export type CheckClass = 'standard' | 'fallback' | 'outside' | 'not_found' | 'unclear';
+export interface CheckLine {
+  topic: string; title: string; topic_label: string; classification: CheckClass; matched: number | null;
+  position: { id: string; version: number; standard: string; fallbacks: { text: string; note: string | null }[] };
+  clause: { number: string | null; heading: string | null; start: number; end: number } | null;
+  quote: { text: string; start: number; end: number; verification: Verification } | null; reason: string | null; method: 'model' | 'rule';
+  decision: { decision: 'agree' | 'disagree'; reason: string | null; by: string | null; at: string } | null;
+}
+export interface PlaybookCheck {
+  id: string; document_id: string; version_id: string; playbook: { id: string; name: string | null }; results: CheckLine[];
+  summary: Record<CheckClass, number>; created_by: string | null; created_at: string; advisory: true; inputs: Record<string, any>;
+}
+

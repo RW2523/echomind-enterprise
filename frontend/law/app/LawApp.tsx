@@ -32,6 +32,8 @@ import Evaluations from '../pages/Evaluations';
 import Templates from '../pages/Templates';
 import MatterDrafting from '../pages/MatterDrafting';
 import DraftPage from '../pages/DraftPage';
+import Playbooks from '../pages/Playbooks';
+import DocumentPlaybook from '../pages/DocumentPlaybook';
 import MatterMeeting from '../pages/MatterMeeting';
 import MatterExports, { MatterExport } from '../pages/MatterExports';
 import NotAvailable from '../pages/NotAvailable';
@@ -56,6 +58,7 @@ export const lawRoutes = [
           { path: '/matters', element: <Matters /> },
           { path: '/reviews', element: <Reviews /> },
           { path: '/templates', element: <Templates /> },
+          { path: '/playbooks', element: <Playbooks /> },
           {
             path: '/m/:matterNo',
             element: <MatterLayout />,
@@ -64,6 +67,7 @@ export const lawRoutes = [
               { path: 'overview', element: <MatterOverview /> },
               { path: 'documents', element: <MatterDocuments /> },
               { path: 'documents/:docId/read', element: <DocumentReader /> },
+              { path: 'documents/:docId/playbook', element: <DocumentPlaybook /> },
               { path: 'research', element: <MatterResearch /> },
               { path: 'compare', element: <MatterCompare /> },
               { path: 'meetings', element: <MatterMeetings /> },

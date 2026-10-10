@@ -896,6 +896,40 @@ Every entry records the options considered, the recommendation, the consequence 
   - Field values are taken as the document words them (for example "14 Quay Street, Gothenburg 411 04, Sweden").
   - Word round trips are checked automatically through LibreOffice. The manual Microsoft Word check belongs to S3.3 (🔒).
 
+### D-046 Clause library and playbook checks — RECORDED (S3.2; DOC-02a, P-008, T08)
+- **Audit:** nothing in the legacy code or in Law held a firm position on a clause. Law already had what a check needs:
+  - clauses with exact character ranges (S2.1);
+  - the fact reader for amounts, periods, percentages and governing law (S2.3);
+  - search limited to one document (S2.6);
+  - checked quotes (D-037).
+- **Playbooks (migration 0024):**
+  - A playbook (for example "Commercial services, supplier") holds positions by topic: twelve topics, including liability cap, excluded losses, term, termination, payment, confidentiality, governing law, assignment, indemnity, data protection, force majeure and warranties.
+  - Each position has the standard wording, up to five fallbacks (each with a note such as who must agree), guidance and an owner.
+  - Versions are fixed (a trigger). `playbooks.manage` (managing partner, attorney) writes; `playbooks.approve` (managing partner, not the author) approves exactly the hash read, retiring the version before it.
+  - Lawyers who do not manage playbooks see approved positions only.
+- **From the firm's precedents:** a precedent (Word, PDF or text) is read with the S2.1 reader. Its leaf clauses are proposed with the heading above them and the topic their words suggest. Nothing is stored until a lawyer adds a position, which then waits for approval.
+- **The check (`playbooks/check.py`), for each approved position:**
+  - **Candidates:** the document's leaf clauses that say most about the topic, by their words and by a search of that document alone; four at most, or the matched passages if the document has no clause numbers.
+  - **The model** sees the standard, the numbered fallbacks and the candidates. It answers which clause deals with the topic, the exact words that decide it, and standard, fallback n, or outside.
+  - **Checks on the answer:**
+    - Words not found in the clause give **unclear**, for a lawyer.
+    - A fallback the position does not have gives **unclear**.
+    - **The figures decide:** a different amount, period, percentage or law from the chosen position makes the line **outside**, by rule. So does a clause that combines positions ("the greater of USD 250,000 and the fees") when the position does not.
+    - No candidate, or no clause named, gives **not found**.
+  - **Advisory throughout:** nothing is called compliant. Each line has Agree, or Disagree with a reason, for a lead, attorney or reviewer (append-only; the latest counts).
+  - A check is shown only to people who can see the document. It goes with its document in a purge. Text addressed to an AI is withheld (T08).
+- **Evaluation** (`eval/law/playbook/run_playbook_eval.py`): a fictional playbook approved, and contracts checked through the real endpoint with the real model.
+  - **Golden (tuning):**
+    - First run 12/12, with no deviation passed in error.
+    - The demo journey then showed "the greater of USD 250,000 or the fees" classed standard, so that case joined the tuning set. With only a prompt change, the model called it fallback 1 (passed in error, 14/15).
+    - The combination rule followed: **15/15**, deviations caught **5/5**, **passed in error 0**.
+  - **Held-out (never tuned on):** run on both versions with the same result: **9/10**, deviations caught **4/4** (one as "unclear": the model named a fallback that does not exist), **passed in error 0**.
+  - **Small sets.** The lawyer review measures quality.
+- **Limits:**
+  - Topics are found by their words and a search, so a clause on two topics can be shown for both.
+  - Positions in prose ("reasonable notice") are judged by the model alone; only figures and laws have the rule.
+  - Suggested revisions and redlines are S3.3.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

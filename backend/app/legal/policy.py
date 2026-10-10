@@ -86,6 +86,9 @@ ORG_ACTIONS: dict[str, frozenset] = {
     # Firm templates (S3.1, D-045; P-008): written by lawyers, approved by a managing partner other than the author.
     "templates.manage": frozenset({"managing_partner", "attorney"}),
     "templates.approve": frozenset({"managing_partner"}),
+    # Playbooks (S3.2, D-046): positions written by lawyers, approved by a managing partner other than the author.
+    "playbooks.manage": frozenset({"managing_partner", "attorney"}),
+    "playbooks.approve": frozenset({"managing_partner"}),
 }
 
 

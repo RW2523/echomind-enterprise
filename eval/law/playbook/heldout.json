@@ -1,0 +1,19 @@
+{
+  "playbook": {
+    "name": "Software licence (licensor side)",
+    "positions": [
+      {"topic": "liability_cap", "title": "Cap on liability", "standard": "Each party's aggregate liability is capped at the fees paid in the twelve (12) months before the claim.",
+       "fallbacks": [{"text": "Each party's aggregate liability is capped at EUR 500,000.", "note": "Enterprise deals"}]},
+      {"topic": "payment", "title": "Payment terms", "standard": "Licence fees are invoiced annually in advance and payable within thirty (30) days.", "fallbacks": []},
+      {"topic": "governing_law", "title": "Governing law", "standard": "The licence is governed by the laws of Sweden.", "fallbacks": []},
+      {"topic": "assignment", "title": "Assignment", "standard": "Neither party may assign the agreement without the other's prior written consent.", "fallbacks": []},
+      {"topic": "data_protection", "title": "Data protection", "standard": "The licensor processes personal data only as the licensee's processor and on its documented instructions.", "fallbacks": []}
+    ]
+  },
+  "contracts": [
+    {"id": "licence-negotiated", "text": "SOFTWARE LICENCE AGREEMENT (fictional)\n\n4. Fees\n4.1 The licence fee is invoiced annually in advance and is payable within thirty (30) days of the invoice date.\n\n9. Liability\n9.1 The aggregate liability of each party under this Agreement is limited to EUR 500,000.\n\n11. Assignment\n11.1 The Licensee may assign this Agreement to any of its affiliates without consent.\n\n13. Personal data\n13.1 The Licensor shall process personal data solely as processor for the Licensee and only on the Licensee's documented instructions.\n\n16. Governing law\n16.1 This Agreement shall be governed by Swedish law.",
+     "expect": {"payment": "standard", "liability_cap": "fallback", "assignment": "outside", "data_protection": "standard", "governing_law": "standard"}},
+    {"id": "licence-aggressive", "text": "ENTERPRISE LICENCE TERMS (fictional)\n\n3. Charges\n3.1 Charges are payable quarterly in arrears within sixty (60) days.\n\n7. Liability\n7.1 The Licensor's aggregate liability shall not exceed EUR 2,000,000.\n\n12. Governing law\n12.1 These terms are governed by the laws of Germany.",
+     "expect": {"payment": "outside", "liability_cap": "outside", "governing_law": "outside", "assignment": "not_found", "data_protection": "not_found"}}
+  ]
+}

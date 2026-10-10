@@ -825,3 +825,45 @@ test('drafting: an engagement letter from the approved firm template, every fact
   const sheet = alice.getByRole('article', { name: 'Document text' });
   await expect(sheet.getByText('Helena Marsh will be responsible for this matter.')).toBeVisible({ timeout: 120_000 });
 });
+
+test('playbooks: a contract checked against the firm playbook, each topic with its words, a lawyer agreeing', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  await expect(importButton).toBeVisible();
+  const msa = alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true });
+  if (await msa.count() === 0) {
+    await importButton.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law/Master Services Agreement (DEMO).md'));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: /Master Services Agreement \(DEMO\)/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  const docId = await alice.evaluate(async () => {
+    const ms = await (await fetch('/api/legal/matters')).json();
+    const m = ms.matters.find((x: any) => x.number === 'M-101');
+    const ds = await (await fetch(`/api/legal/matters/${m.id}/documents`)).json();
+    return ds.documents.find((d: any) => d.title === 'Master Services Agreement (DEMO)').id as string;
+  });
+  await alice.goto(`/m/M-101/documents/${docId}/read`);
+  await alice.getByRole('link', { name: 'Check against a playbook' }).click();
+  await alice.getByLabel('Playbook', { exact: true }).selectOption({ label: 'Commercial services (supplier, demo)' });
+  await alice.getByRole('button', { name: 'Check this document' }).click();
+  const check = alice.getByRole('article', { name: 'Playbook check' });
+  await expect(check).toBeVisible({ timeout: 180_000 });
+  await expect(check.getByRole('listitem', { name: 'Governing law: Outside the playbook' })).toContainText('Delaware');
+  await expect(check.getByRole('listitem', { name: 'Termination for convenience: Outside the playbook' })).toBeVisible();
+  const law = check.getByRole('listitem', { name: 'Governing law: Outside the playbook' });
+  await law.getByRole('button', { name: 'Agree', exact: true }).click();
+  await expect(law.getByText(/^Agreed by alice/)).toBeVisible();
+  await shot(alice, '35-playbook-check-light');
+
+  const morgan = await (await browser.newContext()).newPage();
+  await signIn(morgan, 'morgan');
+  await morgan.getByRole('link', { name: 'Playbooks' }).click();
+  await expect(morgan.getByRole('listitem', { name: /^Limitation of liability: Cap on liability/ }).getByText('In use: version 1')).toBeVisible();
+  await shot(morgan, '36-playbooks-light');
+});

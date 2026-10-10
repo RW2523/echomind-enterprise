@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.2-playbooks` |
-| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1 merged; S3.2 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s3.3-redlines` |
+| Phase | Phases 1 and 2 complete (gates accepted 2026-10-09 and 2026-10-10). Phase 3: S3.1–S3.2 merged; S3.3 next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0023` (Law edition only) |
+| Migrations | `0001`–`0024` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -482,6 +482,19 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Templates use a markup rather than uploaded Word files; a firm's Word file supplies the styles only. Turning a firm's existing precedent document into a template is S3.2's library import.
   - PDF output is reportlab.
 
+### Session 3 (continued) — S3.2 Clause library and playbooks (DOC-02a)
+- **Audit:** no firm positions existed anywhere. The check reuses S2.1 clauses with exact ranges, the S2.3 fact reader, single-document search and checked quotes.
+- **S3.2a — library (migration 0024, D-046):**
+  - Playbooks with positions by topic: standard, fallbacks with notes, guidance, owner.
+  - Fixed versions, approved by a managing partner who is not the author.
+  - Precedent proposals read with the S2.1 reader.
+- **S3.2b — check:**
+  - Candidate clauses by words and search; the model's class with a checked quote.
+  - Figures, laws and combined positions decided by rule; unclear and not found.
+  - Lawyers agree or disagree with each line. Checks are visible only with their document and purged with it.
+- **S3.2c — UI:** the Playbooks page (positions, fallbacks, approval confirmation, new versions, read a precedent) and a document's "Check against a playbook" page, linked from the reader. Journey 23, screenshots 35–36.
+- **Evaluation:** `eval/law/playbook/` golden and held-out through the real endpoint and model. The demo journey found the "greater of" case, now in the tuning set and decided by rule (D-046).
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -516,7 +529,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | LIVE-02 | DONE for the pilot; thresholds await P-008 | S1.7, S2.5 | Three legal packs with evidence-relative alerts, exact quotes, confirm or dismiss with a reason, telemetry, matter-only sources (D-041). The voice service's research stream is unchanged (S1.7) |
 | MEET-01 | DONE for the pilot | S1.8, S2.6 | Agenda and board-pack research; agenda marks; minutes from the whole transcript with verified sources, guards and deterministic merging; versioned edits; second-lawyer approval bound to the content hash; filing; purge and hold (D-042). Reviews queue and export hash binding: S2.7. S2.7: Reviews queue and shared review components |
 | DOC-01 | DONE for the pilot | S3.1 | Firm templates (versions, approval by a managing partner, Word styles, presets); drafts with sourced fields and cited passages, gaps for anything unsupported; second-lawyer approval; filed as Word (D-045) |
-| DOC-02 | MISSING | S3.2–S3.3 | Word tracked changes need a spike and a manual Word check |
+| DOC-02 | PARTIAL: playbooks done (S3.2); redlines S3.3 | S3.2–S3.3 | Playbooks with approved positions, precedent proposals, topic-by-topic checks with quotes and the figures rule, lawyer decisions (D-046). Word tracked changes need a spike and a manual Word check (S3.3) |
 | DOC-03 | MISSING | S3.4 | External authority stays UNVERIFIED (P-009) |
 | DOC-04 | MISSING | S3.5 | |
 | DOC-05 | MISSING | S3.6 | |
@@ -554,18 +567,13 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S3.2 Clause library and playbooks (DOC-02a)** on `law/s3.2-playbooks`, per IMPLEMENTATION_PLAN §7. S3.1 is merged into `feature/echomind-law`.
-1. **Audit first:**
-   - what exists for clauses (S2.1 clause extraction, S2.3 alignment and facts, S3.1 templates);
-   - the legacy firm library (none in Law: the `lib:<org>` partition is planned in §5).
-2. **Clause library (migration 0024):**
-   - clause topics (liability cap, termination, governing law, payment, confidentiality…);
-   - for each, a standard position and fallbacks with owner, jurisdiction, notes and approval (managing partner, not the author, by hash);
-   - versions fixed.
-3. **Playbook import from the firm library:** a firm precedent document (Word or text) read with S2.1 extraction; its clauses proposed as standard positions for a lawyer to accept.
-4. **Deviation classification:** for each clause of a matter document, classify it as Standard / Fallback / Outside playbook.
-   - The source quote and the playbook position it was compared with are shown.
-   - The model only judges similarity, with checked quotes, and numbers come from the S2.3 facts.
-   - Nothing is called compliant without a lawyer.
-5. **UI:** a Clause library page (firm), and a "Check against the playbook" view on a document.
-6. **Tests:** backend, Vitest, journey 23; golden and held-out evaluation; D-046, TEST_RESULTS run 23; merge. Then S3.3 (redlines and Word tracked changes, with the manual Word check 🔒).
+Start **S3.3 Redlines and Word tracked changes (DOC-02b)** on `law/s3.3-redlines`, per IMPLEMENTATION_PLAN §7. S3.2 is merged into `feature/echomind-law`.
+1. **Audit first:** the S2.3 word diff and alignment, S3.1 Word rendering, and the S1.10 export rebuild (which strips tracked changes on purpose).
+2. **Suggested revisions:** for a playbook line that is outside, propose the standard (or the fallback the lawyer picks) as a revision of the exact clause. The wording comes from the approved position, never the model; the model may only adjust references (party names, defined terms), and those adjustments are checked.
+3. **HTML redline:** a word-level diff of clause and revision with insertions and deletions, author and date.
+4. **The D-011 spike, Word tracked changes:**
+   - write true `w:ins` and `w:del` runs with author and date, plus a comment carrying the reason, into the matter's own Word document;
+   - **T10 automated checks:** the XML is valid; accepting all changes gives the target text and rejecting all gives the original; LibreOffice opens and round-trips the file.
+   - The manual check in Microsoft Word is 🔒 (a person); until then the Word output is marked "not yet verified in Word".
+5. **Approval:** a redline is an AI artifact (S2.7): a second lawyer approves it before it is filed or exported.
+6. **Tests:** backend, Vitest, journey 24; D-047, TEST_RESULTS run 24; merge. Then S3.4 (citation and quote checker).
