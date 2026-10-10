@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-10-10 |
 | Branch | `law/s2.8-gate` (from `feature/echomind-law` after S2.7, `331c475`) |
-| Code under test | `e0f6415` (the gate tooling). Later commits on the branch change only the Evaluations page headlines, the reports' "+changes" check, the evaluations journey and documentation |
+| Code under test | `e0f6415` (the gate tooling). The later commit `948bcb4` changes only the Evaluations page headlines, the reports' "+changes" check, the E2E backend's evaluation import, journey 21 and documentation; the suites in §4 ran on it |
 | Answer model | `nvidia/Qwen3-30B-A3B-FP4`, TensorRT-LLM on the host (`localhost:8355`; shared with production, used read-only as approved) |
 | Embeddings | `nomic-embed-text` (Ollama on the host, `localhost:11435`) |
 | Reranker | `cross-encoder/ms-marco-MiniLM-L-6-v2`, in-process from the local cache (offline) |
