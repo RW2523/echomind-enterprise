@@ -75,8 +75,8 @@ history itself is not duplicated here — it is the Git history of each file (SO
 | REG-06 | Customer Feedback and Complaints Log | Quality representative (Sheryl Nazareth) | No customer feedback for the rebuilt product yet |
 | REG-07 | Design and Change Register | Lead Engineer (Richard Watson Stephen Amudha) | 7 entries (DC-2026-001 … 007) |
 | REG-08 | Release and Deployment Register | Lead Engineer (Richard Watson Stephen Amudha) | v1.4.0 and v1.4.1 — authorised 2026-10-07 by Anita Johan; reference instance runs v1.4.1 |
-| REG-09 | Non-Functional Requirements Register | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs, targets approved 2026-10-07 (EM26-17) |
-| REG-10 | Review Feedback and Action Log | Quality representative (Sheryl Nazareth) | 17 reviews, 55 actions, 48 closed (EM26-18 rev 1.1) |
+| REG-09 | Non-Functional Requirements Register | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs, targets approved 2026-10-07 (EM26-17; rev 1.1 approved 2026-10-10, AR-2026-002) |
+| REG-10 | Review Feedback and Action Log | Quality representative (Sheryl Nazareth) | 17 reviews, 55 actions, 48 closed (EM26-18 rev 1.1, approved 2026-10-10, AR-2026-002) |
 
 ## 4a. Completed records
 
@@ -91,7 +91,7 @@ Completed records are filed as dated Markdown files under `docs/qms/records/`:
 | `records/approvals/` | Document approval records | — |
 | `records/runtime/` | Runtime-settings baseline (SOP-06 §10.1) | — |
 
-At 2026-10-07: `records/approvals/` (AR-2026-001), `records/releases/` (v1.4.0, v1.4.1), `records/capa/` (NC-2026-009 access-log review), `records/runtime/` (runtime-settings baseline). `records/audits/` and `records/management-review/` are still empty.
+At 2026-10-10: `records/approvals/` (AR-2026-001, AR-2026-002), `records/releases/` (v1.4.0, v1.4.1), `records/capa/` (NC-2026-009 access-log review), `records/runtime/` (runtime-settings baseline). `records/audits/` and `records/management-review/` are still empty.
 
 ## 5. Supporting engineering documentation relied on as QMS evidence
 

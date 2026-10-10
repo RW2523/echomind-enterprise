@@ -8,7 +8,7 @@
 | Owner | Lead Engineer, EchoMind Product (Richard Watson Stephen Amudha) |
 | ISO 9001:2015 clauses | 9.1.1, 8.3.4 (design review), 10.2 |
 | Raised in response to | **AFR Stage 2 audit finding #7 (16-Oct-2025, clause 9.1.1, Observation)** — *"No actions were available from review feedback of deliverables"* |
-| Reviewed | 2026-10-07 — Alexander Peter (EchoMind Project Lead); QA Sheryl Nazareth. 2026-10-10 — client and design reviews CR-2026-01…09 entered (§3b) |
+| Reviewed | 2026-10-07 — Alexander Peter (EchoMind Project Lead); QA Sheryl Nazareth. 2026-10-10 — client and design reviews CR-2026-01…09 entered (§3b); EM26-18 rev 1.1 approved by Anita Johan (AR-2026-002) |
 
 ---
 
