@@ -454,3 +454,25 @@ export interface Obligation {
 }
 export interface ObligationEvent { action: string; changes: Record<string, [unknown, unknown]>; reason: string | null; by: string | null; at: string }
 
+/** Due diligence (S3.7, D-051): firm checklists, runs over a matter's documents, and an issue register. */
+export type DdQuestion = 'change_of_control' | 'assignment' | 'termination' | 'governing_law' | 'liability' | 'renewal';
+export interface DdItem { id: string; section: string; title: string; expect: string[]; questions: DdQuestion[] }
+export interface DdChecklist {
+  id: string; family_id: string; version: number; name: string; expected_law: string | null; items: DdItem[]; content_sha256: string;
+  status: 'draft' | 'approved' | 'retired'; created_by: string | null; created_at: string; approved_by: string | null; approved_at: string | null;
+}
+export interface DdIssue {
+  id: string; run_id: string; item_id: string; document_id: string; document_title: string; version_id: string; kind: string;
+  severity: 'high' | 'medium' | 'low'; title: string; detail: string | null; evidence: { start: number; end: number; quote: string; clause: string | null };
+  status: 'preliminary' | 'verified' | 'dismissed'; reviewer: string | null; decided_at: string | null; version: number; created_at: string;
+}
+export interface DdSummary { items: number; missing: number; issues: number; high: number; medium: number; low: number; preliminary: number; verified: number; dismissed: number }
+export interface DdRunInfo {
+  id: string; status: 'queued' | 'running' | 'done' | 'failed'; error: string | null; checklist: { id: string; name: string | null; version: number | null };
+  created_by: string | null; created_at: string; finished_at: string | null; documents_read?: number | null; summary?: DdSummary;
+}
+export interface DdRunView {
+  run: DdRunInfo; items: { item_id: string; title: string; section: string; documents: { id: string; title: string }[]; missing: boolean }[];
+  missing: { item_id: string; title: string; section: string }[]; issues: DdIssue[]; summary: DdSummary;
+}
+

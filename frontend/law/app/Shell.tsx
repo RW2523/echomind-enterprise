@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, FileOutput, FilePen, Files, FolderSync, FileText, Gauge, LayoutTemplate, GitCompareArrows, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
+import { Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, ListTodo, FileOutput, FilePen, Files, FolderSync, FileText, Gauge, LayoutTemplate, GitCompareArrows, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
 import { api } from '../api/client';
 import { useReviews } from '../api/queries';
 import MatterSwitcher from '../ui/MatterSwitcher';
@@ -58,6 +58,7 @@ export default function Shell() {
           <ReviewsNavItem />
           {hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal') && <NavItem to="/templates" icon={<LayoutTemplate />}>Templates</NavItem>}
           {hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal') && <NavItem to="/playbooks" icon={<BookMarked />}>Playbooks</NavItem>}
+          {hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal') && <NavItem to="/checklists" icon={<ListTodo />}>Checklists</NavItem>}
           {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/users" icon={<UserCog />}>Users &amp; roles</NavItem>}
           {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/connectors" icon={<FolderSync />}>Connectors</NavItem>}
           {hasFirmRole(me, 'managing_partner') && <NavItem to="/admin/walls" icon={<ShieldOff />}>Ethical walls</NavItem>}
@@ -99,6 +100,7 @@ function ShellMatterBlock() {
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/compare`} icon={<GitCompareArrows />}>Compare</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/drafting`} icon={<FilePen />}>Drafting</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/obligations`} icon={<CalendarCheck />}>Obligations</NavItem>
+            <NavItem to={`/m/${encodeURIComponent(matter.number)}/diligence`} icon={<ClipboardList />}>Due diligence</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/meetings`} icon={<CalendarClock />}>Meetings</NavItem>
             {['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && <NavItem to={`/m/${encodeURIComponent(matter.number)}/exports`} icon={<FileOutput />}>Exports</NavItem>}
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/members`} icon={<Users />}>Members</NavItem>

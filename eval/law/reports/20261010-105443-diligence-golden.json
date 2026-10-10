@@ -1,0 +1,108 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "430853b+changes",
+  "time": "20261010-105443",
+  "prompt_version": "diligence-s3.7",
+  "model": "none (rules only)"
+ },
+ "summary": {
+  "rooms": 3,
+  "missing_lists_right": "3/3",
+  "issues_found": "18/18",
+  "extra_issues": 0,
+  "controls_clean": "1/1",
+  "all_preliminary": true,
+  "quotes_at_offsets": true,
+  "ms_per_room": 27
+ },
+ "rooms": [
+  {
+   "id": "G1-share-sale-room",
+   "ms": 28,
+   "control": false,
+   "missing_got": [
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people"
+   ],
+   "missing_want": [
+    "corp-captable",
+    "corp-sha",
+    "disputes",
+    "insurance",
+    "ip",
+    "people"
+   ],
+   "missing_ok": true,
+   "issues_expected": 8,
+   "issues_found": 8,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G2-services-company-room",
+   "ms": 29,
+   "control": false,
+   "missing_got": [
+    "corp-articles",
+    "corp-minutes",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "property"
+   ],
+   "missing_want": [
+    "corp-articles",
+    "corp-minutes",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 10,
+   "issues_found": 10,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  },
+  {
+   "id": "G3-corporate-only-control",
+   "ms": 23,
+   "control": true,
+   "missing_got": [
+    "contracts",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_want": [
+    "contracts",
+    "corp-sha",
+    "disputes",
+    "ip",
+    "people",
+    "property"
+   ],
+   "missing_ok": true,
+   "issues_expected": 0,
+   "issues_found": 0,
+   "missed": [],
+   "extra": [],
+   "all_preliminary": true,
+   "quotes_ok": true,
+   "status": "done"
+  }
+ ]
+}

@@ -81,6 +81,7 @@ def seed_demo() -> dict:
     _seed_meeting(org, m101["id"], ids["alice"])
     _seed_templates(org, ids["morgan"])
     _seed_playbook(org, ids["morgan"])
+    _seed_checklist(org, ids["morgan"])
 
     os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
@@ -116,6 +117,14 @@ def _seed_playbook(org: str, approver: str) -> None:
         pb = library.add_position(org, pb["id"], pos, "system")
     for pos in pb["positions"]:
         library.approve(org, pb["id"], pos["id"], approver, pos["content_sha256"])
+
+
+def _seed_checklist(org: str, approver: str) -> None:
+    """The firm's due-diligence checklist preset (S3.7), approved by the demo managing partner."""
+    from .diligence import checklists
+    for preset in checklists.PRESETS:
+        c = checklists.create(org, preset["name"], preset["items"], preset["expected_law"], "system")
+        checklists.approve(org, c["id"], approver, c["content_sha256"])
 
 
 def _seed_meeting(org: str, matter_id: str, by: str) -> None:

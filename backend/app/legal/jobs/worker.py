@@ -25,8 +25,9 @@ _stop = threading.Event()
 
 
 def _handlers():
+    from ..diligence import run as diligence
     from ..documents import ingest
-    return {"document.index": ingest.run}
+    return {"document.index": ingest.run, "diligence.run": diligence.run}
 
 
 def claim() -> Optional[dict]:

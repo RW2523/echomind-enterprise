@@ -1,0 +1,10 @@
+DROP TRIGGER dd_issue_events_no_update;
+DROP INDEX ix_dd_issue_events;
+DROP TABLE legal_dd_issue_events;
+DROP INDEX ix_dd_issues_document;
+DROP INDEX ix_dd_issues_run;
+DROP TABLE legal_dd_issues;
+DROP INDEX ix_dd_runs_matter;
+DROP TABLE legal_dd_runs;
+DROP TRIGGER dd_checklist_content_fixed;
+DROP TABLE legal_dd_checklists;

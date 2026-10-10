@@ -1,0 +1,169 @@
+{
+ "about": "S3.7 due diligence (DOC-06) — the TUNING set: synthetic data rooms run against the firm preset checklist (PRESETS[0]). Expectations: the items nothing answers, and the issues a reviewer would raise (document, kind). Fictional documents only.",
+ "rooms": [
+  {
+   "id": "G1-share-sale-room",
+   "documents": [
+    {
+     "name": "Articles of Association.txt",
+     "text": "ARTICLES OF ASSOCIATION of Tidewater Holdings Ltd (fictional)\n\n1. Shares\n1.1 The share capital is divided into ordinary shares.\n2. Directors\n2.1 The number of directors shall not be less than two.\n"
+    },
+    {
+     "name": "Board minutes January 2026.txt",
+     "text": "MINUTES OF A MEETING OF THE BOARD of Tidewater Holdings Ltd (fictional)\n\n1. Present\n1.1 A. Moreau (chair) and B. Lind.\n2. Resolutions\n2.1 The board approved the supply agreement with Northwind Components Ltd.\n"
+    },
+    {
+     "name": "Supply Agreement - Northwind.txt",
+     "text": "SUPPLY AGREEMENT (fictional)\n\nThis Agreement is made on 1 December 2024 between Northwind Components Ltd (the \"Supplier\") and Tidewater Holdings Ltd (the \"Customer\").\n\n1. Term\n1.1 This Agreement continues for an initial term of two (2) years from the date of this Agreement.\n1.2 It renews automatically for one year unless either party gives notice of non-renewal at least sixty (60) days before the end of the term.\n\n2. Change of control\n2.1 The Supplier may terminate this Agreement on written notice if the Customer undergoes a change of control.\n\n3. Assignment\n3.1 The Customer shall not assign this Agreement without the prior written consent of the Supplier.\n\n4. Termination\n4.1 Either party may terminate this Agreement for convenience on thirty (30) days' written notice.\n\n5. Liability\n5.1 The Supplier's total liability shall not exceed the fees paid in the preceding twelve (12) months.\n\n6. Law\n6.1 This Agreement is governed by the laws of the State of New York.\n"
+    },
+    {
+     "name": "Office Lease.txt",
+     "text": "LEASE (fictional)\n\nThis Lease is made between Harbour Estates Limited (the \"Landlord\") and Tidewater Holdings Ltd (the \"Tenant\").\n\n1. Term\n1.1 \"Term Commencement Date\" means 25 March 2026.\n2. Break\n2.1 The Tenant may terminate this Lease on the fifth anniversary of the Term Commencement Date by giving not less than six (6) months' notice.\n3. Law\n3.1 This Lease is governed by the laws of England and Wales.\n"
+    }
+   ],
+   "missing": [
+    "corp-sha",
+    "corp-captable",
+    "people",
+    "ip",
+    "insurance",
+    "disputes"
+   ],
+   "issues": [
+    [
+     "Supply Agreement - Northwind.txt",
+     "change_of_control"
+    ],
+    [
+     "Supply Agreement - Northwind.txt",
+     "assignment"
+    ],
+    [
+     "Supply Agreement - Northwind.txt",
+     "termination"
+    ],
+    [
+     "Supply Agreement - Northwind.txt",
+     "governing_law"
+    ],
+    [
+     "Supply Agreement - Northwind.txt",
+     "liability"
+    ],
+    [
+     "Supply Agreement - Northwind.txt",
+     "renewal"
+    ],
+    [
+     "Supply Agreement - Northwind.txt",
+     "expiry"
+    ],
+    [
+     "Office Lease.txt",
+     "termination"
+    ]
+   ]
+  },
+  {
+   "id": "G2-services-company-room",
+   "documents": [
+    {
+     "name": "Master Services Agreement (DEMO).md",
+     "text": "# MASTER SERVICES AGREEMENT (DEMO)\n\n> FICTIONAL DEMO FIXTURE. Every party, amount and term below is invented for testing EchoMind Law. Not a real agreement and not legal advice.\n\nThis Master Services Agreement (\"Agreement\") is entered into as of 2 March 2026 (the \"Effective Date\") between **Harrowgate Systems Inc.**, a Delaware corporation (\"Provider\"), and **Voss-Lindqvist AB**, a Swedish limited company (\"Client\").\n\n## 1. Definitions\n\n1.1 \"Services\" means the Harrowgate platform subscription and related support described in Schedule 1.\n\n1.2 \"Fees\" means the amounts payable by Client under Clause 4.\n\n1.3 \"Change of Control\" means any transaction by which a person or group acquires more than fifty percent (50%) of the voting rights of Provider.\n\n1.4 \"Client Data\" means all data supplied by or on behalf of Client and processed by Provider under this Agreement.\n\n## 2. Term and Renewal\n\n2.1 This Agreement begins on the Effective Date and continues for an initial term of thirty-six (36) months (the \"Initial Term\").\n\n2.2 After the Initial Term, this Agreement renews automatically for successive twelve (12) month renewal terms unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.\n\n## 3. Services\n\n3.1 Provider shall provide the Services in accordance with the service levels in Schedule 2.\n\n3.2 Provider shall maintain an information-security programme no less protective than ISO/IEC 27001.\n\n## 4. Fees and Payment\n\n4.1 Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgate platform.\n\n4.2 Provider shall invoice monthly in advance. Invoices are payable net thirty (30) days from the invoice date.\n\n4.3 Undisputed amounts not paid when due accrue interest at one percent (1%) per month until paid.\n\n## 5. Confidentiality\n\n5.1 Each party shall keep the other party's Confidential Information confidential and use it only to perform this Agreement, for the term of this Agreement and five (5) years after it ends.\n\n## 6. Data Protection\n\n6.1 Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it.\n\n6.2 Within thirty (30) days after termination, Provider shall return or securely destroy all Client Data, at Client's option.\n\n## 7. Warranties\n\n7.1 Provider warrants that the Services will perform materially in accordance with Schedule 1.\n\n## 8. Limitation of Liability\n\n8.1 Each party's total aggregate liability arising out of or in connection with this Agreement shall not exceed the greater of USD 250,000 or the Fees paid by Client in the twelve (12) months preceding the event giving rise to the claim.\n\n8.2 Neither party is liable for any indirect, incidental or consequential damages, or for loss of profits.\n\n8.3 Clauses 8.1 and 8.2 do not limit liability for fraud, wilful misconduct, or breach of Clause 5.\n\n## 9. Indemnification\n\n9.1 Provider shall indemnify Client against third-party claims that the Services infringe any intellectual property right.\n\n## 12. Termination\n\n12.1 Either party may terminate this Agreement for convenience on thirty (30) days' written notice.\n\n12.2 Either party may terminate this Agreement immediately on written notice if the other party commits a material breach that is not remedied within thirty (30) days of notice.\n\n## 14. Assignment and Change of Control\n\n14.1 Neither party may assign this Agreement without the prior written consent of the other party, such consent not to be unreasonably withheld.\n\n14.2 Provider shall provide no less than thirty (30) days' prior written notice of any Change of Control to Client in accordance with Clause 22.\n\n14.3 If Provider fails to give notice under Clause 14.2, Client may terminate this Agreement for cause by written notice within ninety (90) days of becoming aware of the Change of Control.\n\n## 21. Governing Law\n\n21.1 This Agreement is governed by the laws of the State of Delaware, without regard to its conflict-of-laws rules.\n\n## 22. Notices\n\n22.1 Any notice under this Agreement shall be in writing and addressed to the General Counsel of the receiving party at the address set out in Schedule 4.\n\n*Signed for Harrowgate Systems Inc. and for Voss-Lindqvist AB on 2 March 2026 (fictional).*\n"
+    },
+    {
+     "name": "Employment contract - CTO.txt",
+     "text": "EMPLOYMENT CONTRACT (fictional)\n\nThis Contract is between Tidewater Holdings Ltd (the \"Company\") and Ines Faraday (the \"Employee\").\n\n1. Role\n1.1 The Employee is employed as Chief Technology Officer.\n\n2. Ending\n2.1 Either party may terminate the employment on six (6) months' written notice.\n2.2 If the Company undergoes a change of control, the Employee may resign on one (1) month's notice and receive a payment of twelve months' salary.\n"
+    },
+    {
+     "name": "Insurance policy schedule 2026.txt",
+     "text": "INSURANCE POLICY SCHEDULE (fictional)\n\nInsured: Tidewater Holdings Ltd. Cover: professional indemnity, GBP 5,000,000 (fictional). Period: 1 January 2026 to 31 December 2026.\n"
+    },
+    {
+     "name": "Register of members.txt",
+     "text": "REGISTER OF MEMBERS of Tidewater Holdings Ltd (fictional)\n\n1. A. Moreau: 600 ordinary shares.\n2. B. Lind: 400 ordinary shares.\n"
+    }
+   ],
+   "missing": [
+    "corp-articles",
+    "corp-sha",
+    "corp-minutes",
+    "property",
+    "ip",
+    "disputes"
+   ],
+   "issues": [
+    [
+     "Master Services Agreement (DEMO).md",
+     "change_of_control"
+    ],
+    [
+     "Master Services Agreement (DEMO).md",
+     "change_of_control"
+    ],
+    [
+     "Master Services Agreement (DEMO).md",
+     "assignment"
+    ],
+    [
+     "Master Services Agreement (DEMO).md",
+     "termination"
+    ],
+    [
+     "Master Services Agreement (DEMO).md",
+     "termination"
+    ],
+    [
+     "Master Services Agreement (DEMO).md",
+     "governing_law"
+    ],
+    [
+     "Master Services Agreement (DEMO).md",
+     "liability"
+    ],
+    [
+     "Master Services Agreement (DEMO).md",
+     "renewal"
+    ],
+    [
+     "Employment contract - CTO.txt",
+     "change_of_control"
+    ],
+    [
+     "Employment contract - CTO.txt",
+     "termination"
+    ]
+   ]
+  },
+  {
+   "id": "G3-corporate-only-control",
+   "documents": [
+    {
+     "name": "Articles of Association.txt",
+     "text": "ARTICLES OF ASSOCIATION of Tidewater Holdings Ltd (fictional)\n\n1. Shares\n1.1 The share capital is divided into ordinary shares.\n2. Directors\n2.1 The number of directors shall not be less than two.\n"
+    },
+    {
+     "name": "Board minutes January 2026.txt",
+     "text": "MINUTES OF A MEETING OF THE BOARD of Tidewater Holdings Ltd (fictional)\n\n1. Present\n1.1 A. Moreau (chair) and B. Lind.\n2. Resolutions\n2.1 The board approved the supply agreement with Northwind Components Ltd.\n"
+    },
+    {
+     "name": "Register of members.txt",
+     "text": "REGISTER OF MEMBERS of Tidewater Holdings Ltd (fictional)\n\n1. A. Moreau: 600 ordinary shares.\n2. B. Lind: 400 ordinary shares.\n"
+    },
+    {
+     "name": "Insurance policy schedule 2026.txt",
+     "text": "INSURANCE POLICY SCHEDULE (fictional)\n\nInsured: Tidewater Holdings Ltd. Cover: professional indemnity, GBP 5,000,000 (fictional). Period: 1 January 2026 to 31 December 2026.\n"
+    }
+   ],
+   "missing": [
+    "corp-sha",
+    "contracts",
+    "property",
+    "people",
+    "ip",
+    "disputes"
+   ],
+   "issues": []
+  }
+ ]
+}
