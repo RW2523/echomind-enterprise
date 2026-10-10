@@ -150,6 +150,9 @@ export function MatterExport() {
         </section>
         <section className="lw-paper lw-sheet" aria-label="Preview">
           <h2 className="lw-h2" style={{ marginBottom: 10 }}>Preview</h2>
+          {e.plan.approval && (
+            <p className="lw-note" style={{ marginTop: 0 }}>{`Filed from ${e.plan.approval.kind === 'minutes' ? 'minutes' : 'a research note'} (version ${e.plan.approval.version}) approved by ${e.plan.approval.approved_by ?? 'a second lawyer'}${e.plan.approval.approved_at ? ` on ${when(e.plan.approval.approved_at)}` : ''} · content ${e.plan.approval.content_sha256.slice(0, 12)}…. A changed copy cannot be exported.`}</p>
+          )}
           {e.plan.warnings.image_pages.length > 0 && <p className="lw-note" style={{ marginTop: 0 }}>Pages {e.plan.warnings.image_pages.join(', ')} are mostly images. Text inside images cannot be found or redacted until text recognition arrives.</p>}
           {e.format === 'docx' && <p className="lw-meta" style={{ marginTop: 0 }}>The Word file is rebuilt clean; this preview shows its content laid out as PDF.</p>}
           {preview.isPending ? <Skeleton height={300} /> : preview.isError ? <ErrorNote>The preview could not be made.</ErrorNote> : (
@@ -199,7 +202,10 @@ export function MatterExport() {
               </div>
             </div>
           )}
-          {e.verification && (
+          {e.verification?.source_changed && (
+            <p role="alert" className="lw-note">Not released: the document changed after this export was requested, so its redactions were planned on other text. Ask for a new export.</p>
+          )}
+          {e.verification?.checks && (
             <div aria-label="Checks" role="group">
               <h3 className="lw-eyebrow" style={{ margin: '4px 0 6px' }}>Checks on the released file</h3>
               <ul className="lw-checks">{Object.entries(e.verification.checks).map(([k, ok]) => (

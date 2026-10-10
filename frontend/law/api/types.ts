@@ -226,11 +226,32 @@ export interface MinutesContent {
   summary: Record<string, number>; gaps: string[];
 }
 export interface ReviewDecision { decision: 'approved' | 'changes_requested'; content_sha256: string; reason?: string | null; by?: string | null; at: string }
-export interface MinutesVersion {
-  id: string; version: number; status: 'draft' | 'approved' | 'superseded' | 'withdrawn'; content: MinutesContent; content_sha256: string;
+/** An AI draft under review (S2.6–S2.7, D-042/D-043): fixed versions, hashed, approved by a second lawyer. */
+export type ArtifactKind = 'minutes' | 'research_note';
+export interface ArtifactVersion<C = unknown> {
+  id: string; version: number; status: 'draft' | 'approved' | 'superseded' | 'withdrawn'; content: C; content_sha256: string;
   inputs: Record<string, any>; created_by: string; created_by_name?: string | null; created_at: string; origin: 'model' | 'person';
-  document_id?: string | null; decisions: ReviewDecision[];
+  document_id?: string | null; decisions: ReviewDecision[]; kind?: ArtifactKind; title?: string; subject_id?: string;
 }
+export type MinutesVersion = ArtifactVersion<MinutesContent>;
+export interface ResearchNoteContent {
+  question: string; answer: string; status: 'answered' | 'partial' | 'unverified' | 'abstained'; abstention_reason?: string | null;
+  versions: VersionPolicy; unsupported: string[]; evidence: ResearchEvidence[]; conflicts: ResearchConflict[];
+  sources: Partial<ResearchSource>[]; asked_by: string; asked_at: string;
+}
+export type ResearchNote = ArtifactVersion<ResearchNoteContent>;
+export interface ArtifactView<C = unknown> {
+  artifact: ArtifactVersion<C>;
+  versions: { id: string; version: number; status: ArtifactVersion['status']; created_by_name?: string | null; created_at: string; origin: string }[];
+  can: { approve: boolean; file: boolean; author: boolean };
+}
+/** The reviews queue (S2.7): what waits for you, and what of yours waits for others. */
+export type ReviewKind = ArtifactKind | 'export' | 'deletion' | 'hold' | 'wall' | 'emergency_access';
+export interface ReviewItem {
+  kind: ReviewKind; id: string; title: string; version?: number; matter: { id?: string; number: string; title: string } | null;
+  by: string | null; at: string | null; path: string; state?: 'waiting' | 'changes_requested'; reason?: string | null; decided_by?: string | null;
+}
+export interface ReviewQueue { waiting: ReviewItem[]; mine: ReviewItem[]; count: number }
 
 /** Silent Assist (S2.5): evidence-relative alerts during a meeting (D-015, D-041). */
 export type AssistPack = 'legal_client_call' | 'legal_negotiation' | 'legal_governance';
@@ -297,11 +318,16 @@ export interface PlanItem { id: string; kind: string; text: string; count: numbe
 export interface LawExport {
   id: string; object_type: 'document' | 'meeting_transcript'; object_id: string; title: string; format: 'pdf' | 'docx'; purpose: string;
   status: 'draft' | 'pending_approval' | 'ready' | 'failed' | 'rejected' | 'expired';
-  plan: { items: PlanItem[]; source: 'pdf' | 'docx' | 'text'; warnings: { image_pages: number[] } };
+  plan: {
+    items: PlanItem[]; source: 'pdf' | 'docx' | 'text'; warnings: { image_pages: number[] };
+    /** S2.7: the document was filed from an approved AI draft; the export carries that approval. */
+    approval?: { kind: ArtifactKind; version: number; approved_by: string | null; approved_at: string | null; content_sha256: string };
+  };
+  source_sha256?: string | null;
   label?: string | null; requested_by?: string | null; requested_at: string; submitted_at?: string | null;
   decided_by?: string | null; decided_at?: string | null; decision_note?: string | null; watermark?: string | null;
   output_bytes?: number | null; output_sha256?: string | null;
-  verification?: { ok: boolean; checks: Record<string, boolean>; pages?: number } | null; expires_at?: string | null; downloads: number;
+  verification?: { ok: boolean; checks?: Record<string, boolean>; pages?: number; source_changed?: boolean } | null; expires_at?: string | null; downloads: number;
 }
 
 /** Connectors (S1.11). */

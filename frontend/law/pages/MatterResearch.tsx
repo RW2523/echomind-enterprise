@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
-import { Copy } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Copy, Send } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ApiError, postStream } from '../api/client';
+import { api, ApiError, postStream } from '../api/client';
 import { keys, useResearchHistory } from '../api/queries';
 import type { ResearchConflict, ResearchEvidence, ResearchParagraph, ResearchSource, ResearchTurn, VersionPolicy } from '../api/types';
 import { useMatter } from '../app/matter';
@@ -13,7 +13,7 @@ type Phase = 'idle' | 'reading' | 'writing' | 'done' | 'abstained' | 'revoked' |
 interface Answer {
   question: string; text: string; sources: ResearchSource[]; cited: number[]; phase: Phase; uncited?: boolean; unsupported?: string[];
   failed?: string[]; paragraphs?: ResearchParagraph[]; evidence?: ResearchEvidence[]; conflicts?: ResearchConflict[];
-  status?: string | null; reason?: string | null;
+  status?: string | null; reason?: string | null; turnId?: string;
 }
 
 const pages = (s: { page_start?: number | null; page_end?: number | null }) =>
@@ -75,7 +75,8 @@ export default function MatterResearch() {
         } else if (ev.type === 'chunk') { if (!checked) update({ text: state.text + (ev.text ?? ''), phase: 'writing' }); }
         else if (ev.type === 'done') update({ text: ev.answer ?? state.text, cited: (ev.citations ?? []).map((c: ResearchSource) => c.n),
           phase: ev.abstained ? 'abstained' : 'done', uncited: !!ev.uncited, unsupported: ev.unsupported ?? [], failed: ev.failed ?? [],
-          evidence: ev.evidence ?? undefined, conflicts: ev.conflicts ?? [], status: ev.status ?? null, reason: ev.abstention_reason ?? null });
+          evidence: ev.evidence ?? undefined, conflicts: ev.conflicts ?? [], status: ev.status ?? null, reason: ev.abstention_reason ?? null,
+          turnId: ev.turn_id ?? undefined });
         else if (ev.type === 'scope_revoked') update({ text: '', sources: [], paragraphs: [], phase: 'revoked' });
         else if (ev.type === 'error') update({ phase: 'error' });
       }, ctrl.signal);
@@ -92,7 +93,7 @@ export default function MatterResearch() {
     setFocus(null);
     const done = ['answered', 'partial', 'unverified'].includes(t.status);
     setAnswer({ question: t.question, text: t.answer ?? '', sources: t.citations, cited: t.citations.map((c) => c.n), unsupported: t.unsupported ?? [],
-      evidence: t.evidence?.length ? t.evidence : undefined, conflicts: t.conflicts ?? [], status: t.status, reason: t.abstention_reason,
+      evidence: t.evidence?.length ? t.evidence : undefined, conflicts: t.conflicts ?? [], status: t.status, reason: t.abstention_reason, turnId: t.id,
       phase: done ? 'done' : t.status === 'abstained' ? 'abstained' : t.status === 'scope_revoked' ? 'revoked' : 'error' });
   };
 
@@ -226,7 +227,36 @@ function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; o
           <ol className="lw-sources" style={{ marginTop: 8 }}>{consulted.map((s) => <SourceItem key={s.n} s={s} active={false} />)}</ol>
         </details>
       )}
+      {(a.phase === 'done' || a.phase === 'abstained') && a.turnId && <SendForReview turnId={a.turnId} />}
     </article>
+  );
+}
+
+/** S2.7: the answer, fixed as given, goes to a second lawyer as a research note (D-043). */
+function SendForReview({ turnId }: { turnId: string }) {
+  const matter = useMatter();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  if (!['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') || matter.status !== 'open') return null;
+  const send = async () => {
+    setBusy(true); setError('');
+    try {
+      const r = await api.post<{ artifact: { id: string } }>(`/api/legal/matters/${encodeURIComponent(matter.id)}/research/${encodeURIComponent(turnId)}/review`);
+      await qc.invalidateQueries({ queryKey: ['reviews'] });
+      navigate(`/m/${matter.number}/notes/${encodeURIComponent(r.artifact.id)}`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'The answer could not be sent for review.');
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="lw-send-review">
+      <button type="button" className="lw-btn lw-btn-sm" disabled={busy} onClick={send}><Send />{busy ? 'Sending…' : 'Send for review'}</button>
+      <span className="lw-meta">A second lawyer approves this exact answer and its evidence before it is filed.</span>
+      {error && <ErrorNote>{error}</ErrorNote>}
+    </div>
   );
 }
 

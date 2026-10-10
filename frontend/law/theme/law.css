@@ -413,8 +413,22 @@
 [data-edition="law"] .lw-minutes-sources ul { margin: 4px 0 0; padding-left: 18px; }
 [data-edition="law"] .lw-minutes-sources li[data-verification="failed"] { text-decoration: line-through; }
 [data-edition="law"] .lw-minutes-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
-[data-edition="law"] .lw-minutes-review { display: grid; gap: 6px; margin-top: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rule); }
-[data-edition="law"] .lw-minutes-decisions { margin: 10px 0 0; padding-left: 18px; }
+/* S2.7 — review of AI drafts (ReviewBanner, ApprovalDialog), shared by minutes and research notes */
+[data-edition="law"] .lw-review { display: grid; gap: 6px; margin-top: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rule); }
+[data-edition="law"] .lw-review-decisions { margin: 10px 0 0; padding-left: 18px; }
+[data-edition="law"] .lw-review-banner { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0 10px; }
+[data-edition="law"] .lw-hash { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; word-break: break-all; }
+[data-edition="law"] .lw-check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+[data-edition="law"] .lw-note-answer { font-size: 15.5px; line-height: 1.6; margin: 0; white-space: pre-wrap; }
+[data-edition="law"] .lw-note-evidence { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+[data-edition="law"] .lw-note-evidence [data-verification="failed"] { color: var(--conflict); }
+[data-edition="law"] .lw-queue { list-style: none; margin: 0; padding: 0; }
+[data-edition="law"] .lw-queue li { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; padding: 12px 20px; border-top: 1px solid var(--rule); }
+[data-edition="law"] .lw-queue li:first-child { border-top: 0; }
+[data-edition="law"] .lw-queue a { color: inherit; text-decoration: none; font-weight: 600; }
+[data-edition="law"] .lw-queue a:hover { color: var(--accent); }
+[data-edition="law"] .lw-nav-count { margin-left: auto; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-size: 11.5px; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; }
 [data-edition="law"] .lw-minutes-edit { border: 1px solid var(--rule); border-radius: 10px; padding: 8px 10px; margin: 0; display: grid; gap: 6px; }
 [data-edition="law"] .lw-minutes-edit[data-removed] { opacity: .5; }
 [data-edition="law"] .lw-pack { margin: -4px 0 10px; padding: 6px 10px; border-radius: 10px; font-size: 13.5px; background: var(--accent-soft); }
+[data-edition="law"] .lw-send-review { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); }

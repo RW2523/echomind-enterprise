@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router';
-import { Check, FileOutput, PenLine, Sparkles } from 'lucide-react';
+import { FileOutput, PenLine, Sparkles } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { keys, meetingsPath, useMe, useMinutes } from '../api/queries';
 import type { MeetingDetail, MinutesItem, MinutesVersion } from '../api/types';
 import { useMatter } from '../app/matter';
 import { ErrorNote, StatusPill, type Tone } from '../ui/primitives';
+import { ApprovalDialog, ReviewDecisions, ReviewPill } from '../ui/review';
 
 const KIND: Record<MinutesItem['kind'], [string, Tone]> = {
   decision: ['Decided', 'verified'], action: ['Action', 'accent'], unresolved: ['Open', 'attention'], discussion: ['Discussed', 'neutral'],
@@ -46,7 +47,7 @@ export default function MeetingMinutes({ m, canDraft, canApprove }: { m: Meeting
           <h2 className="lw-h2" style={{ margin: 0 }}>Minutes</h2>
           {latest && <p className="lw-meta" style={{ margin: '2px 0 0' }}>{`Version ${latest.version} · ${latest.origin === 'model' ? 'drafted from the transcript' : `edited by ${latest.created_by_name}`} · ${day(latest.created_at)}`}</p>}
         </div>
-        {latest && <StatusPill tone={latest.status === 'approved' ? 'verified' : 'attention'}>{latest.status === 'approved' ? 'Approved' : 'Draft — not approved'}</StatusPill>}
+        {latest && <ReviewPill v={latest} />}
       </div>
       {error && <ErrorNote>{error}</ErrorNote>}
       {!latest && (
@@ -69,17 +70,10 @@ export default function MeetingMinutes({ m, canDraft, canApprove }: { m: Meeting
               <FileOutput />{busy === 'file' ? 'Filing…' : 'File as a matter document'}</button>)}
         </div>
       )}
-      {latest && latest.status === 'draft' && !editing && (
-        <Review v={latest} base={base} canApprove={canApprove} isAuthor={!!mine} onDone={refresh} />
+      {latest && !editing && (
+        <ApprovalDialog v={latest} what="these minutes" endpoint={`${base}/${latest.id}/review`} canApprove={canApprove} isAuthor={!!mine} onDone={refresh} />
       )}
-      {latest && latest.decisions.length > 0 && (
-        <ol className="lw-minutes-decisions" aria-label="Review decisions">
-          {latest.decisions.map((d, i) => (
-            <li key={i} className="lw-meta">{`${d.decision === 'approved' ? 'Approved' : 'Changes requested'} by ${d.by ?? 'someone'}, ${day(d.at)}`}
-              {d.reason ? ` — ${d.reason}` : ''}{d.decision === 'approved' ? ` · content ${d.content_sha256.slice(0, 12)}…` : ''}</li>
-          ))}
-        </ol>
-      )}
+      {latest && <ReviewDecisions decisions={latest.decisions} />}
     </section>
   );
 }
@@ -137,32 +131,6 @@ function Item({ it }: { it: MinutesItem }) {
         </details>
       )}
     </li>
-  );
-}
-
-function Review({ v, base, canApprove, isAuthor, onDone }: { v: MinutesVersion; base: string; canApprove: boolean; isAuthor: boolean; onDone: () => void }) {
-  const [reason, setReason] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  if (!canApprove) return <p className="lw-meta" style={{ margin: 0 }}>Waiting for a lead, attorney or reviewer on this matter to approve.</p>;
-  if (isAuthor) return <p className="lw-meta" style={{ margin: 0 }}>You made this version, so another lawyer approves it.</p>;
-  const decide = async (decision: 'approved' | 'changes_requested') => {
-    setBusy(true); setError('');
-    try { await api.post(`${base}/${v.id}/review`, { decision, content_sha256: v.content_sha256, reason: reason.trim() || null }); setReason(''); onDone(); }
-    catch (err) { setError(err instanceof ApiError ? err.message : 'The decision could not be saved.'); }
-    finally { setBusy(false); }
-  };
-  return (
-    <div className="lw-minutes-review" role="group" aria-label="Review these minutes">
-      <p className="lw-meta" style={{ margin: 0 }}>{`Approving binds exactly this version (content ${v.content_sha256.slice(0, 12)}…). Any later change needs approval again.`}</p>
-      <label className="lw-sr" htmlFor="minutes-reason">What should change?</label>
-      <input id="minutes-reason" className="lw-input lw-input-sm" placeholder="What should change? (for a request)" value={reason} onChange={(e) => setReason(e.target.value)} />
-      <div style={{ display: 'flex', gap: 6 }}>
-        <button type="button" className="lw-btn lw-btn-sm lw-btn-primary" disabled={busy} onClick={() => decide('approved')}><Check />Approve these minutes</button>
-        <button type="button" className="lw-btn lw-btn-sm" disabled={busy || reason.trim().length < 3} onClick={() => decide('changes_requested')}>Request changes</button>
-      </div>
-      {error && <ErrorNote>{error}</ErrorNote>}
-    </div>
   );
 }
 
