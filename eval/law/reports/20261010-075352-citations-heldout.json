@@ -1,0 +1,325 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "a75a89a",
+  "time": "20261010-075352",
+  "prompt_version": "citations-s3.4b",
+  "model": "none (rules only)",
+  "embeddings": "nomic-embed-text (indexing on import only)"
+ },
+ "summary": {
+  "items": 28,
+  "correct": "27/28",
+  "references": "11/11",
+  "missing_caught": "4/4",
+  "false_missing": 0,
+  "quotations": "3/3",
+  "altered_caught": "1/1",
+  "false_alarms": 0,
+  "authorities_found": "13/14",
+  "malformed_caught": "3/3",
+  "wrongly_flagged": 0,
+  "all_unverified": true,
+  "external_lookups": 0,
+  "extra_items": 0,
+  "ms_per_check": 33
+ },
+ "scenarios": [
+  {
+   "id": "N1-facility-advice-uk",
+   "ms": 45,
+   "lines": [
+    {
+     "kind": "quote",
+     "text": "shall not exceed 3.75:1",
+     "status": "altered",
+     "clause": "22.1",
+     "in": "Facility Agreement",
+     "ok": true,
+     "got": "altered, clause 22.1 of Facility Agreement",
+     "got_status": "altered",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "shall not be less than 4.00:1",
+     "status": "accurate",
+     "clause": "22.2",
+     "in": "Facility Agreement",
+     "ok": true,
+     "got": "accurate, clause 22.2 of Facility Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Clause 22.5 of the Facility Agreement",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — The Facility Agreement has no clause 22.5.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "quote",
+     "text": "within three Business Days of its due date",
+     "status": "accurate",
+     "clause": "27.1",
+     "in": "Facility Agreement",
+     "ok": true,
+     "got": "accurate, clause 27.1 of Facility Agreement",
+     "got_status": "accurate",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "paragraph 2 of Schedule 3",
+     "status": "resolved",
+     "clause": "2",
+     "in": "Facility Agreement",
+     "ok": true,
+     "got": "resolved, clause 2 of Facility Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Schedule 3 of the Facility Agreement",
+     "status": "resolved",
+     "clause": "Schedule 3",
+     "in": "Facility Agreement",
+     "ok": true,
+     "got": "resolved, clause Schedule 3 of Facility Agreement",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Companies Act 2006",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Limitation Act 1980",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[2023] EWHC 101 (KB)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "[1998] EWCA Civ 12",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: EWCA Civ gave no judgments before 2001",
+     "got_status": "unverified",
+     "got_malformed": true
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "N2-purchase-agreement-internal-us",
+   "ms": 33,
+   "lines": [
+    {
+     "kind": "reference",
+     "text": "Section 3.2",
+     "status": "resolved",
+     "clause": "3.2",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 3.2 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Exhibit A",
+     "status": "resolved",
+     "clause": "Exhibit A",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause Exhibit A of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 3.3(b)",
+     "status": "resolved",
+     "clause": "3.3(b)",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 3.3(b) of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Exhibit C",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no Exhibit C.",
+     "got_status": "missing",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 7.1",
+     "status": "resolved",
+     "clause": "7.1",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 7.1 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Section 7.4",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no section 7.4.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  },
+  {
+   "id": "N3-litigation-memo-us",
+   "ms": 20,
+   "lines": [
+    {
+     "kind": "authority",
+     "text": "28 U.S.C. § 1441(a)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Fed. R. Civ. P. 81(c)",
+     "malformed": false,
+     "ok": false,
+     "got": "not found by the parser",
+     "got_status": null,
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "571 U.S. 402 (2014)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "140 S. Ct. 1201 (2020)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "812 F. App'x 330 (3d Cir. 2020)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "61 Cal. Rptr. 3d 97 (Cal. Ct. App. 2007)",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "288 So. 4th 15 (Fla. 2019)",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: So. 4th is not a known reporter",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "77 F.3d 501 (5th Cir. 2029)",
+     "malformed": true,
+     "ok": true,
+     "got": "unverified, malformed: the year 2029 is in the future",
+     "got_status": "unverified",
+     "got_malformed": true
+    },
+    {
+     "kind": "authority",
+     "text": "Regulation (EU) No 1215/2012",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "authority",
+     "text": "Directive (EU) 2019/1937",
+     "malformed": false,
+     "ok": true,
+     "got": "unverified, well-formed",
+     "got_status": "unverified",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "paragraph 2.1",
+     "status": "resolved",
+     "clause": "2.1",
+     "in": "self",
+     "ok": true,
+     "got": "resolved, clause 2.1 of this document",
+     "got_status": "resolved",
+     "got_malformed": false
+    },
+    {
+     "kind": "reference",
+     "text": "Paragraph 5.2",
+     "status": "missing",
+     "ok": true,
+     "got": "missing — This document has no paragraph 5.2.",
+     "got_status": "missing",
+     "got_malformed": false
+    }
+   ],
+   "extra": [],
+   "external_lookup": false
+  }
+ ]
+}

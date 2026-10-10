@@ -74,7 +74,7 @@ describe('Citation checks (S3.4)', () => {
     await waitFor(() => expect(calls.some((c) => c.method === 'POST' && c.path === `${M}/documents/d1/citation-check`)).toBe(true));
   });
 
-  it('notes are added by lawyers; a read-only member sees the check but cannot run it or note it', async () => {
+  it('notes are added by lawyers; a read-only member can check citations but not note them', async () => {
     const calls = world('lead', [CHECK], { [`POST ${M}/citation-checks/c1/notes`]: () => [200, { check: CHECK }] });
     renderLaw('/m/M-101/documents/d1/citations');
     fireEvent.click(await screen.findByRole('button', { name: 'Add a note on 15 U.S.C. § 78j(b)' }));
@@ -86,7 +86,7 @@ describe('Citation checks (S3.4)', () => {
     world('read_only');
     renderLaw('/m/M-101/documents/d1/citations');
     await screen.findByRole('article', { name: 'Citation check' });
-    expect(screen.queryByRole('button', { name: /Check/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Check again' })).toBeTruthy();
     expect(screen.queryByRole('form')).toBeNull();
     expect(screen.queryByRole('button', { name: /^Add a note/ })).toBeNull();
   });

@@ -122,6 +122,18 @@ def test_a_target_document_the_person_cannot_see_is_never_quoted_or_named(ct):
     assert item(ch, "quote", "within sixty days")["status"] == "not_found"
 
 
+def test_any_member_who_can_see_the_document_can_check_it(ct):
+    """research.query (IMPLEMENTATION_PLAN §5): a reviewer or read-only member checks a memo before relying on it."""
+    from app.legal.documents import repo
+    ch = run(ct, by="carol")
+    assert ch["created_by"] == "carol" and ch["summary"]["references"] == 3
+    repo.set_acl(ct["memo"]["id"], {ct["users"]["alice"]["id"]})
+    carol = as_user(ct, "carol")
+    assert carol.post(f"{ct['base']}/documents/{ct['memo']['id']}/citation-check", headers=csrf_headers(carol)).status_code == 404
+    bob = as_user(ct, "bob")                                   # not a member of M-101
+    assert bob.post(f"{ct['base']}/documents/{ct['memo']['id']}/citation-check", headers=csrf_headers(bob)).status_code == 404
+
+
 def test_a_lawyer_notes_an_item(ct):
     ch = run(ct)
     alice, carol = as_user(ct, "alice"), as_user(ct, "carol")

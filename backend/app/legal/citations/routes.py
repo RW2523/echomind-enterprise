@@ -1,7 +1,8 @@
 """Citation and quote checks (S3.4, DOC-03; decision D-048).
 
-- `POST /api/legal/matters/{id}/documents/{did}/citation-check`: check a document (a contributor: `ai.draft`,
-  though no model is used). Nothing is looked up outside the firm (P-009).
+- `POST /api/legal/matters/{id}/documents/{did}/citation-check`: check a document (`research.query`: any member who
+  can see it, a reviewer checking a memo before approving it included; IMPLEMENTATION_PLAN §5). No model is used and
+  nothing is looked up outside the firm (P-009).
 - `GET  …/documents/{did}/citation-checks`, `GET …/citation-checks/{cid}`: for those who can see the document;
   each item's target is shown only to a person who can open the document it points to.
 - `POST …/citation-checks/{cid}/notes`: a lawyer notes an item (lead, attorney, reviewer). Notes are append-only.
@@ -68,10 +69,10 @@ def _check(p: dict, matter_id: str, check_id: str) -> dict:
 
 
 @router.post("/matters/{matter_id}/documents/{document_id}/citation-check")
-@audited("citations.check", object_type="document", object_param="document_id")
+@audited("check.citations", object_type="document", object_param="document_id")
 async def run_check(matter_id: str, document_id: str, request: Request, inp: Optional[CheckIn] = None):
     p = principal_of(request)
-    await run_in_threadpool(require, p, "ai.draft", matter_id)
+    await run_in_threadpool(require, p, "research.query", matter_id)
     if not await run_in_threadpool(documents.visible, matter_id, document_id, p["sub"]):
         raise _not_found()
     try:
@@ -110,7 +111,7 @@ def read_check(matter_id: str, check_id: str, request: Request):
 
 
 @router.post("/matters/{matter_id}/citation-checks/{check_id}/notes")
-@audited("citations.note", object_type="citation_check", object_param="check_id")
+@audited("check.citations.note", object_type="citation_check", object_param="check_id")
 def add_note(matter_id: str, check_id: str, inp: NoteIn, request: Request):
     p = principal_of(request)
     require(p, "artifacts.approve", matter_id)                 # lead, attorney or reviewer

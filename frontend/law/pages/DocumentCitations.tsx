@@ -28,7 +28,7 @@ export default function DocumentCitations() {
   const checks = useCitationChecks(matter.id, docId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const canRun = ['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && matter.status === 'open';
+  const canRun = !!matter.my_role && matter.my_role !== 'break_glass';           // any member (research.query)
   const run = async () => {
     setBusy(true); setError('');
     try {
