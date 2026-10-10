@@ -254,6 +254,31 @@ def test_an_agreement_field_given_a_party_name_is_left_for_a_person(dr):
     assert field(d, "agreement")["value"] == "Master Services Agreement" and field(d, "agreement")["status"] == "sourced"
 
 
+def test_a_short_document_below_the_research_floor_still_reaches_the_drafting_model(dr, monkeypatch):
+    """A one-passage email scored below the research answerer's abstention floor gave the drafting model nothing
+    (drafting held-out 3, Phase 3 gate); drafting checks every value against its quote instead (s3.1d)."""
+    from app.legal.retrieval import search
+
+    async def low(query, hits, top_k):                     # the cross-encoder scores a whole short email low
+        return [{**h, "score": -11.0, "score_kind": "ce_logit"} for h in hits][:top_k]
+    monkeypatch.setattr(search, "rerank", low)
+    d = draft(dr, template(dr))
+    assert field(d, "client_contact")["value"] == "Petra Voss" and field(d, "fee")["status"] == "sourced"
+
+
+def test_with_no_source_at_all_a_written_passage_is_left_for_the_lawyer(dr, monkeypatch):
+    from app.legal.drafting import engine
+
+    async def nothing(scope, query, documents, k):
+        return []
+    monkeypatch.setattr(engine, "_search", nothing)
+    calls = len(dr["model"].calls)
+    d = draft(dr, template(dr))
+    scope = next(b for b in d["content"]["blocks"] if b.get("origin") == "written")
+    assert scope["text"] == "[[NEEDS INPUT: Describe the scope of the engagement in two sentences.]]" and scope["sources"] == []
+    assert not any(m[1]["content"].startswith("WRITE:") for m in dr["model"].calls[calls:])     # nothing written from a title
+
+
 # ── Written passages ─────────────────────────────────────────────────────────────
 def test_written_passages_cite_their_sources_and_a_figure_they_do_not_contain_becomes_a_gap(dr):
     dr["model"].writes = {"scope": "The firm will review the supplier's redline {cite:reviewing the supplier's redline} "

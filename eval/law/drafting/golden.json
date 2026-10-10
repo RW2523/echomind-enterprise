@@ -1,5 +1,5 @@
 {
- "about": "S3.1 drafting — the TUNING set. Fictional documents only. demand-northwind, review-warehouse-lease and nda-missing-period were the first held-out set; they informed code fixes (D-045, four reported runs), so they became tuning data at the Phase 3 gate (S3.9). engagement-corran, demand-brightwater and nda-no-law were the second held-out set (run on s3.1, then on s3.1b where the agreement field took a party's name); that informed s3.1c, so they became tuning data.",
+ "about": "S3.1 drafting — the TUNING set. Fictional documents only. demand-northwind, review-warehouse-lease and nda-missing-period were the first held-out set; they informed code fixes (D-045, four reported runs), so they became tuning data at the Phase 3 gate (S3.9). engagement-corran, demand-brightwater and nda-no-law were the second held-out set (run on s3.1, then on s3.1b where the agreement field took a party's name); that informed s3.1c, so they became tuning data. review-kestrel-distribution, demand-pinewood-rent and engagement-ashcombe-no-fee were the third held-out set (run once on s3.1c: 5/9, wrong 0); it showed the research abstention floor emptying drafting's search on a short email, fixed in s3.1d, so they became tuning data.",
  "scenarios": [
   {
    "id": "engagement-harrowgate",
@@ -200,6 +200,67 @@
    },
    "absent": [
     "governing_law"
+   ]
+  },
+  {
+   "id": "review-kestrel-distribution",
+   "template": "contract_review",
+   "title": "Contract review — Kestrel distribution agreement",
+   "documents": [
+    {
+     "name": "distribution-agreement.txt",
+     "status": "executed",
+     "text": "DISTRIBUTION AGREEMENT (fictional)\n\nThis Distribution Agreement is made between Kestrel Audio GmbH (the Supplier) and Pinewood Retail Ltd (the Distributor).\n\n2.1 The Supplier appoints the Distributor as its non-exclusive distributor in the United Kingdom.\n\n14.2 Either party may terminate this Agreement on six months' written notice.\n\n21.1 This Agreement is governed by the laws of Germany."
+    }
+   ],
+   "expect": {
+    "agreement": "Distribution Agreement",
+    "parties": "Kestrel Audio",
+    "governing_law": "Germany"
+   },
+   "absent": []
+  },
+  {
+   "id": "demand-pinewood-rent",
+   "template": "demand_letter",
+   "title": "Letter before claim — Pinewood rent arrears",
+   "documents": [
+    {
+     "name": "lease-extract.txt",
+     "status": "executed",
+     "text": "LEASE (fictional extract)\n\nThis Lease is made between Ashcombe Properties Ltd (the Landlord) and Pinewood Retail Ltd (the Tenant).\n\nNotices to the Tenant shall be served at Unit 4, Riverside Park, Bristol BS1 6QH.\n\n5.1 The Tenant shall pay the rent quarterly in advance on the usual quarter days."
+    },
+    {
+     "name": "arrears-schedule.txt",
+     "status": "final",
+     "text": "RENT ARREARS SCHEDULE (fictional)\n\nTenant: Pinewood Retail Ltd.\n\nThe rent due on 25 March 2026 and 24 June 2026 is unpaid.\n\nTotal arrears: GBP 36,500."
+    }
+   ],
+   "expect": {
+    "recipient": "Pinewood Retail",
+    "recipient_address": "Unit 4, Riverside Park",
+    "agreement": "Lease",
+    "amount_claimed": "36,500"
+   },
+   "absent": []
+  },
+  {
+   "id": "engagement-ashcombe-no-fee",
+   "template": "engagement_letter",
+   "title": "Engagement letter — Ashcombe lease renewal",
+   "documents": [
+    {
+     "name": "instruction-email.txt",
+     "status": "final",
+     "text": "INSTRUCTION EMAIL (fictional)\n\nFrom: Daniel Okafor, Head of Legal, Ashcombe Properties Ltd\n\nPlease act for Ashcombe Properties Ltd on the renewal of the Riverside Park lease. Our registered office is 12 Quayside, Bristol BS1 4RN.\n\nWe would like to discuss your fees on our next call."
+    }
+   ],
+   "expect": {
+    "client_contact": "Daniel Okafor",
+    "client_address": "12 Quayside"
+   },
+   "absent": [
+    "fee_arrangement"
    ]
   }
  ]

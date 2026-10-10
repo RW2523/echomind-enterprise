@@ -38,7 +38,7 @@ from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import templates
 
-VERSION = "drafting-s3.1c"
+VERSION = "drafting-s3.1d"
 GAP = re.compile(r"\[\[NEEDS INPUT:[^\]]*\]\]")
 _REF = re.compile(r"\{\{\s*([a-z][a-z0-9_]{0,40})\s*\}\}")
 _FIGURE = re.compile(
@@ -159,7 +159,7 @@ async def _search(scope, query: str, documents: Optional[list[str]], k: int) -> 
     """The passages found, each widened from the matched window to its whole passage of the document
     (about LEGAL_CHUNK_CHARS): a drafted clause needs its neighbours, as a fee needs its payment term.
     The search has already checked that the person may see each one."""
-    result = await searchmod.search(scope, query, k=k, versions="signed", documents=documents)
+    result = await searchmod.search(scope, query, k=k, versions="signed", documents=documents, floor=False)   # s3.1d: values are checked against quotes
     passages = result["passages"]
     if not passages:
         return passages
@@ -238,11 +238,14 @@ async def write(scope, instruction: str, title: str, template_name: str, fields:
     passages = await _search(scope, instruction, documents, k=6)
     if not passages and fallback:                      # the passages the fields were found in
         passages = fallback[:6]
+    if not passages:                                   # s3.1d: nothing to write from; the lawyer writes it
+        return {"type": "paragraph", "origin": "written", "instruction": instruction, "text": f"[[NEEDS INPUT: {instruction}]]",
+                "sources": [], "unsupported": []}
     confirmed = [f for f in fields if f["value"] and f["status"] in ("sourced", "matter", "system", "entered")]
     details = "\n".join(f"- {f['label']}: {f['value']}" for f in confirmed) or "- (none)"
     user = (f"WRITE: {instruction}\nDOCUMENT: {title} ({template_name})\nCONFIRMED DETAILS:\n{details}\n"
             + (f"NOTE FROM THE LAWYER: {note}\n" if note else "")
-            + f"\n{_sources_block(passages) if passages else '(no sources were found)'}\n\n{REMINDER}")
+            + f"\n{_sources_block(passages)}\n\n{REMINDER}")
     raw = await llm_mod.get().chat([{"role": "system", "content": WRITE_SYSTEM}, {"role": "user", "content": user}],
                                    temperature=0.1, max_tokens=900)
     para = evidence.parse(_numbered(research_prompt.clean(raw or ""), passages))

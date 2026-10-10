@@ -1,65 +1,61 @@
 {
- "about": "S3.1 drafting — the HELD-OUT set (third, Phase 3 gate after drafting-s3.1c): written and committed before it was run, never used to adjust the drafting, run once per version. Fictional documents only. Earlier held-out sets are in golden.json.",
+ "about": "S3.1 drafting — the HELD-OUT set (fourth, Phase 3 gate after drafting-s3.1d): written and committed before it was run, never used to adjust the drafting, run once per version. Fictional documents only. Earlier held-out sets are in golden.json.",
  "scenarios": [
   {
-   "id": "review-kestrel-distribution",
-   "template": "contract_review",
-   "title": "Contract review — Kestrel distribution agreement",
+   "id": "nda-heron-short-note",
+   "template": "nda",
+   "title": "Mutual NDA — Heron and Calder",
    "documents": [
     {
-     "name": "distribution-agreement.txt",
-     "status": "executed",
-     "text": "DISTRIBUTION AGREEMENT (fictional)\n\nThis Distribution Agreement is made between Kestrel Audio GmbH (the Supplier) and Pinewood Retail Ltd (the Distributor).\n\n2.1 The Supplier appoints the Distributor as its non-exclusive distributor in the United Kingdom.\n\n14.2 Either party may terminate this Agreement on six months' written notice.\n\n21.1 This Agreement is governed by the laws of Germany."
-    }
-   ],
-   "expect": {
-    "agreement": "Distribution Agreement",
-    "parties": "Kestrel Audio",
-    "governing_law": "Germany"
-   },
-   "absent": []
-  },
-  {
-   "id": "demand-pinewood-rent",
-   "template": "demand_letter",
-   "title": "Letter before claim — Pinewood rent arrears",
-   "documents": [
-    {
-     "name": "lease-extract.txt",
-     "status": "executed",
-     "text": "LEASE (fictional extract)\n\nThis Lease is made between Ashcombe Properties Ltd (the Landlord) and Pinewood Retail Ltd (the Tenant).\n\nNotices to the Tenant shall be served at Unit 4, Riverside Park, Bristol BS1 6QH.\n\n5.1 The Tenant shall pay the rent quarterly in advance on the usual quarter days."
-    },
-    {
-     "name": "arrears-schedule.txt",
+     "name": "call-note.txt",
      "status": "final",
-     "text": "RENT ARREARS SCHEDULE (fictional)\n\nTenant: Pinewood Retail Ltd.\n\nThe rent due on 25 March 2026 and 24 June 2026 is unpaid.\n\nTotal arrears: GBP 36,500."
+     "text": "CALL NOTE (fictional)\n\nHeron Robotics Ltd and Calder Mining plc will share technical data to evaluate an autonomous drilling pilot. Confidentiality to last three (3) years. English law to govern."
     }
    ],
    "expect": {
-    "recipient": "Pinewood Retail",
-    "recipient_address": "Unit 4, Riverside Park",
-    "agreement": "Lease",
-    "amount_claimed": "36,500"
+    "party_a": "Heron Robotics",
+    "party_b": "Calder Mining",
+    "purpose": "autonomous drilling",
+    "confidentiality_period": "three",
+    "governing_law": "English"
    },
    "absent": []
   },
   {
-   "id": "engagement-ashcombe-no-fee",
+   "id": "engagement-calder-hourly",
    "template": "engagement_letter",
-   "title": "Engagement letter — Ashcombe lease renewal",
+   "title": "Engagement letter — Calder Mining pilot contracts",
    "documents": [
     {
-     "name": "instruction-email.txt",
+     "name": "letter-of-instruction.txt",
      "status": "final",
-     "text": "INSTRUCTION EMAIL (fictional)\n\nFrom: Daniel Okafor, Head of Legal, Ashcombe Properties Ltd\n\nPlease act for Ashcombe Properties Ltd on the renewal of the Riverside Park lease. Our registered office is 12 Quayside, Bristol BS1 4RN.\n\nWe would like to discuss your fees on our next call."
+     "text": "LETTER OF INSTRUCTION (fictional)\n\nCalder Mining plc, 3 Harbour Walk, Aberdeen AB11 5BN\n\nDear Sirs,\n\nWe instruct you to prepare the pilot contracts with Heron Robotics Ltd. Our contact for this work is Fiona Baird, Legal Director.\n\nWe agree to your hourly rates of GBP 450 for partners and GBP 300 for associates.\n\nYours faithfully,\nCalder Mining plc"
     }
    ],
    "expect": {
-    "client_contact": "Daniel Okafor",
-    "client_address": "12 Quayside"
+    "client_address": "3 Harbour Walk",
+    "client_contact": "Fiona Baird",
+    "fee_arrangement": "450"
+   },
+   "absent": []
+  },
+  {
+   "id": "review-heron-services-no-law",
+   "template": "contract_review",
+   "title": "Contract review — Heron services agreement",
+   "documents": [
+    {
+     "name": "services-agreement.txt",
+     "status": "executed",
+     "text": "SERVICES AGREEMENT (fictional)\n\nThis Services Agreement is made between Heron Robotics Ltd (the Provider) and Calder Mining plc (the Client).\n\n3.1 The Provider shall supply the drilling automation services described in Schedule 1.\n\n9.1 Each party's total liability is limited to GBP 2,000,000."
+    }
+   ],
+   "expect": {
+    "agreement": "Services Agreement",
+    "parties": "Heron Robotics"
    },
    "absent": [
-    "fee_arrangement"
+    "governing_law"
    ]
   }
  ]
