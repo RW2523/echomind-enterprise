@@ -26,7 +26,7 @@
 | DOC-04 | Defined terms, numbering, cross-references | DONE for the pilot (S3.5, D-049): definitions (duplicates, unused, undefined, another form, before definition), numbering gaps and repeats at every level, broken and outdated references, all with offsets; corrections only through an approved redline. Held-out 12/12 (third set); undefined-term detection is heuristic | S3.5 | — |
 | DOC-05 | Obligations and deadlines tracker | DONE for the pilot (S3.6, D-050): rules first, then checked model proposals; exact words; dates only from dates the document fixes (none guessed in any run); proposed until a lawyer confirms; versioned edits with reasons; timezone; calendar file off by default. Held-out 10/12 with the model (rules alone about half) | S3.6 | Reminders not sent |
 | DOC-06 | Due diligence | DONE for the pilot (S3.7, D-051): approved firm checklists; data-room runs as background jobs; missing-document list; issue register (change of control, assignment, termination, governing law, liability, renewal) quoting each sentence; preliminary until a reviewer decides; append-only trail. Held-out: missing lists all right, issues 9/11 then 5/6, no extra issues | S3.7 | — |
-| DOC-07 | Governance, cap table / approvals, IP assignment checks | MISSING | S3.8 | — |
+| DOC-07 | Corporate governance checks | DONE for the pilot (S3.8, D-052): shares in the register against approvals and the articles; contracts against signing limits; policies against the articles; founders against IP assignments. Each finding quotes both documents, advisory and preliminary until a reviewer decides. Held-out 3/6 (no extras) before s3.8b; s3.8b measured at S3.9 | S3.8 | — |
 | OPT-01 | Client intake assistant with conflict screening | MISSING | S4.1 | Business approval |
 | OPT-02 | Transcript summaries and local translation | PARTIAL (summary only) | S4.2 | Local MT model licence |
 | OPT-03 | Draft time entries | MISSING | S4.3 | Business approval |
@@ -236,7 +236,7 @@
 ### DOC-07 — Corporate governance checks
 | Field | Detail |
 |---|---|
-| Status | **MISSING.** |
+| Status | **DONE for the pilot (S3.8, D-052).**<ul><li>Governance checks run inside a due-diligence run and its register, by rules.</li><li>Shares in the register are compared with approvals and the articles; contract values with the signer's limit; policies with the articles (quorum, meeting notice, number of directors); founders with IP assignments.</li><li>Each finding quotes both documents and is shown only to someone who can open both.</li><li>Nothing is decided automatically.</li></ul> |
 | Modifications | Cap table vs approvals, delegation matrix, policy vs bylaws, IP assignment chain; fixture company; findings advisory only |
 | Tests | Fictional company fixtures show the expected discrepancies |
 | Acceptance | Discrepancies shown; no automatic legal decision |

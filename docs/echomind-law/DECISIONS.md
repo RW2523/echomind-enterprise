@@ -1187,6 +1187,30 @@ Every entry records the options considered, the recommendation, the consequence 
   - No deal-level report export yet; the register is the record.
   - Checklist items cannot ask custom questions.
 
+### D-052 Governance checks: a company's documents read against each other, advisory only — RECORDED (S3.8; DOC-07)
+- **Where it lives:** governance checks are part of a due-diligence run (S3.7). A checklist asks for them by name (`share_capital`, `authority`, `constitution`, `ip_chain`), and their findings join the same register: preliminary until a reviewer decides, with the same append-only trail.
+  - A firm preset, "Corporate governance review", is seeded and approved for the demo.
+  - Journey 29 found the seed dropping a preset's checks; fixed, with a test.
+- **No model and no legal decision:** every finding is a discrepancy for a lawyer to judge. Documents are recognised by their own title line (register, articles or bylaws, minutes or written consents, delegation of authority, policies, IP assignments).
+- **The checks:**
+  - **Share capital:** the register's or cap table's holdings by class against the shares approved in resolutions or consents, and against the classes the articles create. Both "N ordinary shares" and "N shares of common stock" are read, and a nominal value ("of GBP 1 each") is not part of a class.
+  - **Authority:** a contract's stated total value against the signing limit, in the delegation of authority, of the role that signed it ("Signed for … by J. Park, Finance Director"). A role the delegation does not list is left to the reviewer.
+  - **Constitution:** a policy against the articles on the board quorum, the notice of board meetings (hours and days compared), and the minimum number of directors.
+  - **IP chain:** each founder named in the company's documents against the IP or invention assignments.
+- **Two documents:** each finding quotes both documents, at their offsets (migration 0030, `related_json`).
+  - A finding is shown only to someone who can open both documents, and it is purged with either.
+  - Rolling back below 0030 is refused while such findings exist.
+- **Evaluation (`eval/law/governance/run_governance_eval.py`):** fictional companies against the preset.
+  - **Golden, first run: 9/9,** no extras, control clean.
+  - **Held-out 1 (s3.8), in other styles: 3/6, no extras, control clean.** The misses were US stock wording, a signature line cut at "Inc.", and notice in hours.
+  - These were fixed in s3.8b, together with two faults the moved set then showed in golden: a "written consent of the board" not taken as an approval, and "ordinary shares of GBP 1 each" taken as a new class (a false finding).
+  - **Golden G1–G6: 15/15, no extras, controls clean.** s3.8b is to be measured on a fresh held-out set at the Phase 3 gate.
+- **Limits:**
+  - Only the phrasings above are read: a quorum "of a majority" or approvals by option plans are not.
+  - A contract with no stated total value is not checked.
+  - Transfers between holders are not reconciled.
+  - Findings are advisory and never change a document.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
