@@ -34,7 +34,7 @@ class Panel:
     """Stands in for the model: each perspective answers with its line (citing the source that holds the quote), and
     the moderator answers with a matrix. Records every call with the role it was for."""
     def __init__(self):
-        self.calls, self.missing, self.moderator_extra = [], {}, {}
+        self.calls, self.missing, self.moderator_extra, self.raw = [], {}, {}, {}
 
     async def chat(self, messages, temperature, max_tokens):
         system, user = messages[0]["content"], messages[-1]["content"]
@@ -42,6 +42,8 @@ class Panel:
         if role:
             role = role.group(1)
             self.calls.append((role, user))
+            if role in self.raw:
+                return self.raw[role]
             sources = {int(n): t for n, t in re.findall(r'<source n="(\d+)"[^>]*>\n?(.*?)\n?</source>', user, re.S)}
             line = ROLE_LINES[role]
             q = re.search(r'\[n: "(.*?)"\]', line).group(1)
@@ -201,3 +203,19 @@ def test_the_audit_keeps_counts_not_the_question(pn):
     with get_conn() as conn:
         rows = json.dumps(conn.execute("SELECT details_json, reason FROM audit_events WHERE action LIKE 'panel.%'").fetchall())
     assert "undergoes a change of control" not in rows and "250,000" not in rows
+
+
+def test_a_citation_labelled_by_its_clause_is_matched_to_the_source_that_holds_the_quote(pn):
+    """The real model cited "[9.1: …]" (the clause) instead of the source number, so nothing was checked (panel golden, s4.5)."""
+    pn["model"].raw = {"deal": 'Liability is capped [9.1: "Each party\'s total liability is limited to USD 250,000"].\n\nMISSING FACTS: none'}
+    deal = next(p for p in ask(pn).json()["artifact"]["content"]["perspectives"] if p["role"] == "deal")
+    assert deal["evidence"] and deal["evidence"][0]["verification"] == "verbatim" and deal["unsupported"] == []
+
+
+def test_missing_facts_drop_an_echo_of_the_instruction_and_repeats(pn):
+    pn["model"].raw = {"deal": ROLE_LINES["deal"].replace("[n:", "[1:") + "\n\nMISSING FACTS: the facts your answer depends on that the sources do not give, "
+                               "separated by semicolons; Whether the sale closed; whether the sale closed"}
+    pn["model"].missing = {"risk": "whether the sale closed"}
+    c = ask(pn).json()["artifact"]["content"]
+    assert c["missing_facts"] == ["Whether the sale closed"]
+

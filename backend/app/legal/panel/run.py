@@ -28,7 +28,7 @@ from ..research import prompt as research_prompt
 from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 
-VERSION = "panel-s4.5"
+VERSION = "panel-s4.5b"
 NOTICE = ("Four perspectives drafted by the same AI model to test the question from different angles. They are not independent "
           "experts and not legal advice; a partner reviews them before anyone relies on them.")
 SPECIALISMS = {"commercial": "commercial contracts", "corporate": "corporate law", "employment": "employment law", "ip": "intellectual property",
@@ -84,14 +84,27 @@ def _json(raw: str) -> dict:
     return {}
 
 
+_ECHO = re.compile(r"\b(?:the facts your answer depends on|separated by semicolons|missing facts\s*:)", re.I)
+
+
+def unique_facts(facts) -> list[str]:
+    """Missing facts once each (ignoring case), without an echo of the instruction (s4.5b)."""
+    out, seen = [], set()
+    for f in facts:
+        f = " ".join(str(f).split()).rstrip(".")
+        if not f or f.lower() == "none" or _ECHO.search(f) or f.casefold() in seen:
+            continue
+        seen.add(f.casefold())
+        out.append(f[:200])
+    return out
+
+
 def _missing(raw: str) -> tuple[str, list[str]]:
     m = list(MISSING.finditer(raw or ""))
     if not m:
         return raw, []
     last = m[-1]
-    facts = [] if last.group(1).strip().lower().rstrip(".") in ("none", "") else [
-        " ".join(x.split()).rstrip(".") for x in last.group(1).split(";") if x.strip()]
-    return (raw[:last.start()] + raw[last.end():]).strip(), facts[:8]
+    return (raw[:last.start()] + raw[last.end():]).strip(), unique_facts(last.group(1).split(";"))[:8]
 
 
 def _strip_citations(text: str) -> str:
@@ -103,7 +116,8 @@ async def perspective(role: str, label: str, area: str, question: str, passages:
     messages = research_prompt.build(question + _facts_block(facts), passages)
     messages[0] = {"role": "system", "content": role_system(role, area)}
     raw = await llm_mod.complete(messages, temperature=0.1, max_tokens=settings.LEGAL_RESEARCH_MAX_TOKENS)
-    body, missing = _missing(research_prompt.clean(raw or ""))
+    from ..drafting.engine import _numbered            # s4.5b: "[9.1: …]" (a clause) is matched to the source that holds the quote
+    body, missing = _missing(_numbered(research_prompt.clean(raw or ""), passages))
     shown, claims, unsupported, failed = [], [], [], []
     for para in [p for p in re.split(r"\n\s*\n", body) if p.strip()]:
         out, para_claims = _check(para, sources)
@@ -171,7 +185,7 @@ async def run(job: dict) -> Optional[str]:
             views = [await perspective(role, label, area, question, passages, sources, facts) for role, label, _ in ROLES]
             scopemod.recheck(scope)
             mod = await moderate(question, views, facts)
-        missing = list(dict.fromkeys([m for v in views for m in v["missing_facts"]] + mod["missing_facts"]))
+        missing = unique_facts([m for v in views for m in v["missing_facts"]] + mod["missing_facts"])
         stopped = bool(mod["stop"] and missing)
         content = {"title": f"Panel review — {question[:120]}", "question": question, "specialist": specialist, "area": area,
                    "perspectives": views, "matrix": mod["matrix"], "missing_facts": missing, "stopped": stopped, "facts_given": facts,
