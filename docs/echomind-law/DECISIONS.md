@@ -774,6 +774,51 @@ Every entry records the options considered, the recommendation, the consequence 
   - Speakers and agenda items are as marked by the person recording.
   - An owner the model names is kept as given, not checked against the roster. The evaluation counts any name never said as invented, and the reviewer can correct it.
 
+### D-043 Review and approval framework: research notes, one queue, hash binding — RECORDED (S2.7; RAG-01, MEET-01, SEC-06, T-09)
+- **Audit:**
+  - Research answers carried sources and a status, but no reviewer: the only way to share one was "Copy with citations".
+  - Minutes (S2.6) were the only AI draft with an approval.
+  - Approvals lived in five places (exports, deletions, holds, walls, emergency access), and none showed what was waiting.
+  - **A real defect in the export gateway (S1.10):** redactions were planned on the version current at the request, but approval rendered the version current *at approval*. A new version uploaded in between (or a transcript corrected) would have been released with a plan made for other text, for example an account number added in v2 that nobody reviewed.
+- **AI drafts made generic (`legal/artifacts.py`, migration 0021):**
+  - Kinds are `minutes` (subject: meeting) and `research_note` (subject: research turn).
+  - Shared rules: fixed versions with a content hash, approval by a second person bound to the hash, append-only decisions, and only approved versions filed.
+  - When a newer version is approved, the earlier approval is marked superseded and no longer counts.
+  - Every draft records the model and the prompt version (`research-s2.2`, `minutes-s2.6`).
+- **Research notes:**
+  - The person who asked can "Send for review" an answered, partly supported, unverified or abstained answer (not an error or a revoked scope).
+  - It is fixed as given: question, answer, status and reason, evidence, the cited passages, conflicts, who asked and when.
+  - Sending again opens the same note.
+  - A note is shown, reviewed and filed only for people who can see **every** document it quotes (source permissions, S1.11). Anyone else gets the same 404 as for something that does not exist.
+- **Generic routes:** `GET/POST /api/legal/matters/{id}/artifacts/{aid}[/review|/file]` serve any kind. Minutes keep their S2.6 routes too.
+- **Approving (`ApprovalDialog`):** "Approve …" opens a confirmation that:
+  - shows the full content hash it binds;
+  - needs "I have read this version and checked its sources" (an attestation, not proof);
+  - then approves exactly that hash.
+  "Request changes" needs a reason. The author is told another lawyer approves.
+- **`ReviewBanner`:** shows where a draft stands (draft, sent back with the reason, approved by whom and when with the hash, replaced), used by minutes and notes.
+- **One queue (`GET /api/legal/reviews`, the "Reviews" page with a count in the navigation):**
+  - **Waiting for you:**
+    - AI drafts you may approve, did not make, whose sources you can all see, and that were not sent back;
+    - exports for a second lawyer, of documents you can see;
+    - deletions, holds and their release, walls and emergency access, for those who hold those decisions, never their own.
+  - **Yours, with others:** your drafts (waiting, or sent back with the reason), exports and deletion requests.
+  - Only matters you can open are read, so the queue never discloses another matter.
+  - Reading the queue is not written to the audit trail, because the navigation polls it every two minutes (like the research history). Every decision taken from it is.
+- **Hash binding:**
+  - **Exports:** each export records `source_sha256`, the hash of the source's kind, version and readable text, when requested. Approval re-reads the source and, if anything differs, marks the export failed (`source_changed`) and refuses it: "The document changed after this export was requested… Ask for a new export."
+  - Exports requested before 0021 have no hash, so they are refused with "requested before exports were bound to their text".
+  - **Filings:** filing records the artifact, its kind and version, the document version, the body's hash, the content hash, and who approved and when (`legal_artifact_filings`, never updated). The approval is copied so the filed document keeps it after the draft is purged.
+  - **Exporting a filed document:** the plan carries "Filed from … approved by …". A copy changed after approval (a new version uploaded) is refused: "Have the changes approved as a new version before exporting it."
+- **Records:**
+  - Purging a document removes every version of every research note that quotes it, with their decisions (the report counts them). A note can be sent again from the answer, whose quotes are removed too.
+  - Filed notes are documents of their own and stay. A filing goes only with its document.
+  - A rollback below 0021 refuses to delete research notes.
+- **Limits:**
+  - A note is a snapshot: later versions of its documents do not update it, by design.
+  - Minutes still have their own review route alongside the generic one.
+  - The queue lists at most what the five existing approval flows hold. Retention policies (approved on the Records page) are not in it.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

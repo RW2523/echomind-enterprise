@@ -247,3 +247,32 @@ def _turn(r) -> dict:
     return {"id": r[0], "question": r[1], "answer": r[2], "citations": citations, "status": r[4], "created_at": r[5],
             "unsupported": unsupported, "evidence": json.loads(r[6] or "[]"), "conflicts": json.loads(r[7] or "[]"),
             "versions": r[8], "abstention_reason": r[9]}
+
+
+@router.post("/matters/{matter_id}/research/{turn_id}/review")
+@audited("research.note.send", object_type="research_turn", object_param="turn_id")
+def send_for_review(matter_id: str, turn_id: str, request: Request):
+    """The person who asked sends an answer for a second lawyer's review (S2.7, D-043). The answer is
+    fixed as it was given, as a research note; sending it again opens the same note."""
+    from fastapi import HTTPException
+    from .. import artifacts
+    from . import notes
+    p = principal_of(request)
+    require(p, "ai.draft", matter_id)
+    with get_conn() as conn:
+        r = conn.execute("SELECT id, question, answer, citations_json, status, created_at, evidence_json, conflicts_json, versions, "
+                         "abstention_reason FROM legal_research_turns WHERE id=? AND matter_id=? AND owner_id=?",
+                         (turn_id, matter_id, p["sub"])).fetchone()
+        name = (conn.execute("SELECT username FROM users WHERE id=?", (p["sub"],)).fetchone() or ["someone"])[0]
+    if not r:
+        raise HTTPException(status_code=404, detail="Not Found")       # turns are private to the person who asked
+    turn = _turn(r)
+    if turn["status"] not in notes.KINDS:
+        raise HTTPException(status_code=409, detail="This question could not be answered, so there is nothing to review. Ask it again.")
+    existing = artifacts.latest(matter_id, "research_turn", turn_id, "research_note")
+    if existing:
+        return {"artifact": existing, "changed": False}
+    a = artifacts.create(matter_id, "research_note", "research_turn", turn_id, notes.content(turn, name), notes.inputs(turn),
+                         p["sub"], "model")
+    note(details={"artifact": a["id"], "status": turn["status"], "evidence": len(turn["evidence"])})
+    return {"artifact": a, "changed": True}

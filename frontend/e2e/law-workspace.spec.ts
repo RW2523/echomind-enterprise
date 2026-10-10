@@ -681,18 +681,70 @@ test('minutes: drafted from the whole transcript by the real model, approved by 
   await expect(minutes.getByText('You made this version, so another lawyer approves it.')).toBeVisible();
   await shot(alice, '29-minutes-draft-light');
 
+  // S2.7: the reviewer finds the draft in their Reviews queue, which opens the meeting on its minutes.
   const nakamura = await (await browser.newContext()).newPage();
   await signIn(nakamura, 'nakamura');
-  await nakamura.goto('/m/M-101/meetings');
-  await nakamura.getByRole('link', { name: 'Renewal call with the client (demo)' }).click();
-  await nakamura.getByRole('tab', { name: 'Minutes' }).click();
+  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  await nakamura.getByRole('list', { name: 'Waiting for you' }).getByRole('link', { name: /Renewal call with the client \(demo\)/ }).click();
   await nakamura.getByRole('group', { name: 'Review these minutes' }).getByRole('button', { name: 'Approve these minutes' }).click();
+  const confirm = nakamura.getByRole('dialog', { name: /^Approve version \d+\?$/ });
+  await confirm.getByLabel('I have read this version and checked its sources').check();
+  await confirm.getByRole('button', { name: /^Approve version \d+$/ }).click();
   await expect(nakamura.getByText('Approved', { exact: true })).toBeVisible();
 
   await alice.reload();
   await alice.getByRole('tab', { name: 'Minutes' }).click();
   await alice.getByRole('button', { name: 'File as a matter document' }).click();
   await alice.getByRole('link', { name: 'Open the filed minutes' }).click();
+  const sheet = alice.getByRole('article', { name: 'Document text' });
+  await expect(sheet.getByText(/Approved by nakamura on/)).toBeVisible({ timeout: 120_000 });
+});
+
+test('reviews: a research answer sent for review, approved by a second lawyer from the queue, filed with its approval', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  // The demo contract is imported by the documents journey; when this journey runs alone it imports it itself.
+  await alice.goto('/m/M-101/documents');
+  const msa = alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true });
+  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  await expect(importButton).toBeVisible();
+  if (await msa.count() === 0) {
+    await importButton.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law/Master Services Agreement (DEMO).md'));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: /Master Services Agreement \(DEMO\)/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  await alice.goto('/m/M-101/research');
+  await alice.getByLabel('Ask about this matter').fill('What is the cap on each party’s aggregate liability?');
+  await alice.getByRole('button', { name: 'Ask' }).click();
+  const answer = alice.getByRole('article', { name: 'Answer' });
+  await expect(answer.getByRole('region', { name: 'Evidence' })).toBeVisible({ timeout: 180_000 });
+  await answer.getByRole('button', { name: 'Send for review' }).click();
+  const note = alice.getByRole('article', { name: 'Research note' });
+  await expect(note.getByText('Draft — not approved')).toBeVisible();
+  await expect(note.getByRole('region', { name: 'Evidence' }).getByText(/250,000/).first()).toBeVisible();
+  await expect(note.getByText('You made this version, so another lawyer approves it.')).toBeVisible();
+  await shot(alice, '30-research-note-draft-light');
+
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  const waiting = nakamura.getByRole('list', { name: 'Waiting for you' });
+  await expect(waiting.getByRole('listitem', { name: /^Research note: What is the cap/ })).toContainText('From alice');
+  await shot(nakamura, '31-reviews-queue-light');
+  await waiting.getByRole('link', { name: /What is the cap/ }).click();
+  await nakamura.getByRole('group', { name: 'Review this note' }).getByRole('button', { name: 'Approve this note' }).click();
+  const confirm = nakamura.getByRole('dialog', { name: 'Approve version 1?' });
+  await confirm.getByLabel('I have read this version and checked its sources').check();
+  await confirm.getByRole('button', { name: 'Approve version 1' }).click();
+  await expect(nakamura.getByRole('article', { name: 'Research note' }).getByText(/^Approved by nakamura on/)).toBeVisible();
+
+  await alice.reload();
+  await alice.getByRole('button', { name: 'File as a matter document' }).click();
+  await alice.getByRole('link', { name: 'Open the filed note' }).click();
   const sheet = alice.getByRole('article', { name: 'Document text' });
   await expect(sheet.getByText(/Approved by nakamura on/)).toBeVisible({ timeout: 120_000 });
 });

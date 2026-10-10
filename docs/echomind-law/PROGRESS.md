@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.7-reviews` |
-| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.6 merged into `feature/echomind-law`; S2.7 next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s2.8-gate` |
+| Phase | Phase 1 complete (gate accepted 2026-10-09). Phase 2: S2.1–S2.7 merged into `feature/echomind-law`; S2.8 (gate) next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0020` (Law edition only) |
+| Migrations | `0001`–`0021` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -415,6 +415,33 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - Artifact statuses are `draft | approved | superseded | withdrawn`. There is no `in_review`: a draft is reviewable until a newer version supersedes it.
   - Prompt-template version is not yet recorded on artifacts (model and transcript hash are): S2.7.
 
+### Session 3 (continued) — S2.7 Review and approval framework
+- **Audit:**
+  - Research answers had no reviewer, and approvals lived in five separate places with nothing listing what waits.
+  - **A real defect:** the export gateway rendered the version current at approval, not the one its redactions were planned on.
+- **S2.7a — artifacts made generic (migration 0021, D-043):**
+  - A `research_note` kind beside minutes, with generic read, review and file routes.
+  - A newer approval supersedes the earlier one, and the model and prompt version are recorded.
+  - A note is shown only to people who can see every document it quotes.
+- **S2.7b — hash binding:**
+  - An export records its source hash, and approval refuses a changed source (exports from before 0021 are asked for again).
+  - Filings are recorded with a copy of the approval. An export of a filed document carries it, and a changed copy is refused.
+- **S2.7c — the queue:**
+  - `GET /api/legal/reviews` covers AI drafts, exports, deletions, holds, walls and emergency access: waiting for you, and yours with others.
+  - It is non-disclosing.
+  - The "Reviews" page has a count in the navigation.
+- **S2.7d — UI:**
+  - `ReviewBanner`, `ReviewPill`, `ReviewDecisions` and `ApprovalDialog` (a confirmation that shows the hash and needs "I have read this version and checked its sources").
+  - The research note page and "Send for review" on answers.
+  - Minutes moved to the shared components; the meeting opens on its minutes from the queue (`?tab=minutes`).
+  - The export page shows a carried approval or a source-changed refusal.
+  - Journey 20, screenshots 30–31.
+- **Records:** a document purge removes unfiled notes quoting it, and filed notes stay; a rollback refuses to delete notes.
+- **As built vs. plan:**
+  - Artifact statuses stay `draft | approved | superseded | withdrawn`; "sent back" is the latest decision, not a status.
+  - The queue read is not audited, because the navigation polls it; decisions are.
+  - Retention policy approvals are not in the queue (they stay on Records).
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -439,14 +466,14 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | SEC-03 | DONE | S1.6–S1.7 | Matter documents in separate encrypted storage and per-matter partitions; a scope capability re-checked per search and while streaming; every legacy module closed in Law (D-025); research and voice matter-scoped; canary suites v1 (search) and v2 (research and voice); T01, T02 and T06 pass, including streams and the model |
 | SEC-04 | DONE (forwarder awaits network approval) | S1.0, S1.5 | Content-free logs (S1.0). Hash-chained append-only trail with daily anchors, verifier CLI and endpoint, firm trail for governance roles, matter activity for leads, verifiable JSONL and CSV export; every Law route audited, enforced by a test. Off-host syslog/CEF forwarder not built (network approval) |
 | SEC-05 | DONE (mechanism) | S1.8 | All-party, explicit, per-participant consent before capture; withdrawal stops capture at once with a lock-ordered guarantee; pause and resume recorded; append-only consent and capture timelines; audio receipts; T03 in backend and browser. Wording and rules: P-001 (counsel) |
-| SEC-06 | DONE | S1.9–S1.10 | Advisory labels (S1.9); export gateway (S1.10): plan, second-lawyer approval with a privilege acknowledgement, real PDF redaction, clean Word rebuild, verification of every output, watermark, 24 h encrypted release; T09 in backend and browser. Policy values: P-006 (counsel) |
+| SEC-06 | DONE | S1.9–S1.10 | Advisory labels (S1.9); export gateway (S1.10): plan, second-lawyer approval with a privilege acknowledgement, real PDF redaction, clean Word rebuild, verification of every output, watermark, 24 h encrypted release; T09 in backend and browser. Policy values: P-006 (counsel). S2.7: exports bound to their source hash; filed AI drafts carry their approval into exports (D-043) |
 | SEC-07 | DONE (mechanism) | S1.9 | Holds with two-person approval and release; one deletion service (soft delete, report, approval, purge with a hold re-check, verification, restore); retention dry runs only, and requests at most; T04 in backend and browser. Schedules: P-002/P-003 (counsel) |
 | SEC-08 | PARTIAL (framework DONE) | S1.11 | Connector framework, local-folder connector, fail-closed permissions and freshness, sync and removal through the approved purge; T15 in backend and browser. Real provider BLOCKED (P-010) |
-| RAG-01 | DONE for the pilot (lawyer review at S2.8) | S1.6–S1.7, S2.1–S2.2 | S2.1: OCR, Word structure, tracked changes and comments, hidden-text flags, clauses, defined terms, exact offsets, per-version status, reader. S2.2: answers from signed versions by default (switch to drafts), version conflicts, every quote verified, statuses with abstention reasons, paragraph streaming, Evidence and "Copy with citations"; golden 70 and held-out 32 evaluation (D-036–D-038). Firm-library scope deferred to S3.1–S3.2 |
+| RAG-01 | DONE for the pilot (lawyer review at S2.8) | S1.6–S1.7, S2.1–S2.2 | S2.1: OCR, Word structure, tracked changes and comments, hidden-text flags, clauses, defined terms, exact offsets, per-version status, reader. S2.2: answers from signed versions by default (switch to drafts), version conflicts, every quote verified, statuses with abstention reasons, paragraph streaming, Evidence and "Copy with citations"; golden 70 and held-out 32 evaluation (D-036–D-038). Firm-library scope deferred to S3.1–S3.2. S2.7: answers sent for review as research notes, approved by a second lawyer, filed (D-043) |
 | RAG-02 | DONE for the pilot (lawyer review at S2.8) | S2.3 | Two versions clause by clause (renumbered, moved, added, removed, exact word diff, labelled changes); explanations quoting both wordings, verified; conflicts across documents between documents with the same parties; golden and held-out evaluation (D-039) |
 | LIVE-01 | PARTIAL: built; real-audio accuracy pending the speech stack (🔒) | S2.4 | Verbatim immutable record, roster speakers, wall-clock times, gaps and degradation shown, revisions with provenance, matter vocabulary, finalised transcripts in research and purges, accuracy harness (D-040) |
 | LIVE-02 | DONE for the pilot; thresholds await P-008 | S1.7, S2.5 | Three legal packs with evidence-relative alerts, exact quotes, confirm or dismiss with a reason, telemetry, matter-only sources (D-041). The voice service's research stream is unchanged (S1.7) |
-| MEET-01 | DONE for the pilot | S1.8, S2.6 | Agenda and board-pack research; agenda marks; minutes from the whole transcript with verified sources, guards and deterministic merging; versioned edits; second-lawyer approval bound to the content hash; filing; purge and hold (D-042). Reviews queue and export hash binding: S2.7 |
+| MEET-01 | DONE for the pilot | S1.8, S2.6 | Agenda and board-pack research; agenda marks; minutes from the whole transcript with verified sources, guards and deterministic merging; versioned edits; second-lawyer approval bound to the content hash; filing; purge and hold (D-042). Reviews queue and export hash binding: S2.7. S2.7: Reviews queue and shared review components |
 | DOC-01 | PARTIAL (pre-existing) | S3.1 | |
 | DOC-02 | MISSING | S3.2–S3.3 | Word tracked changes need a spike and a manual Word check |
 | DOC-03 | MISSING | S3.4 | External authority stays UNVERIFIED (P-009) |
@@ -486,32 +513,22 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Start **S2.7 Review and approval framework** on `law/s2.7-reviews`, per IMPLEMENTATION_PLAN §7. S2.6 is merged into `feature/echomind-law`, and the artifact and approval foundation exists (`legal/artifacts.py`, migration 0020, D-042).
-1. **Audit first:**
-   - where AI output leaves without a reviewer: research answers (owner-private turns), compare explanations and minutes (done);
-   - the export gateway: it renders the current version at approval time, and nothing binds it to what was requested.
-2. **Artifacts made generic (migration 0021):**
-   - a second kind, `research_note`: a research answer sent for review by its owner, with question, answer, evidence and status fixed and hashed;
-   - generic artifact routes (read, review, file);
-   - the prompt version recorded with the model;
-   - a note is visible only to people who can see every document it cites;
-   - a purge of a cited document removes unfiled notes and their decisions.
-3. **Hash binding:**
-   - an export records its source's hash when requested, and approval refuses a source that changed since;
-   - filings are recorded (artifact, document, version, body hash) in an append-only table;
-   - an export of a filed note or minutes shows the approval, and is refused if the document changed after approval.
-4. **Reviews queue:**
-   - `GET /api/legal/reviews` returns what waits for you (AI drafts you may approve and did not write, exports, deletions, holds, walls) and yours waiting on others;
-   - it is non-disclosing (matter access, walls, source permissions);
-   - a firm "Reviews" page with a count.
-5. **UI:**
-   - `ReviewBanner` and `ApprovalDialog` as shared components, used by minutes, research notes and exports;
-   - "Send for review" on a research answer;
-   - the note page.
-6. **Tests:**
-   - backend `test_law_reviews.py`;
-   - Vitest for the components and the queue;
-   - browser journey 20 (alice sends an answer for review, dave approves it from the queue, alice files it);
-   - D-043, TEST_RESULTS run 20; merge.
-
-Then S2.8 (Phase 2 gate).
+Start **S2.8 Phase 2 gate** on `law/s2.8-gate`, per IMPLEMENTATION_PLAN §7. S2.7 is merged into `feature/echomind-law`.
+1. **Evaluation records:**
+   - migration 0022 `legal_evaluation_runs` (suite, set, commit, models, dataset hash, summary, report);
+   - `python -m app.legal.evaluations import <reports>`;
+   - `GET /api/legal/evaluations` for audit readers, and an admin "Evaluations" page.
+2. **One gate run on the final code** (`eval/law/run_gate.py`):
+   - research, compare, assist and minutes, golden and held-out (held-out once on this version);
+   - the transcription harness (scripted);
+   - the injection probe;
+   - latency p50/p95 per operation;
+   - every report imported as an evaluation run.
+3. **Lawyer review (the session itself is 🔒):**
+   - the scoring rubric (`releases/phase2-rubric.md`);
+   - a review packet generated from the held-out outputs;
+   - a scorer for the filled sheet.
+4. **T12 load test:** `scripts/law/load_test.py` (concurrent capture, research and compare; p50/p95, memory, failures). Only a two-way smoke runs here; the measured run needs the load-test window (🔒).
+5. **Security suite:** Phase 2 groups (T05/T06 versions, approvals and hash binding, records).
+6. **Stability:** consecutive full browser runs.
+7. **Gate report:** `releases/phase2-gate.md`. **Stop for the owner's sign-off** before Phase 3.

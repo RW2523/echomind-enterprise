@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, DirectoryMatter, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -146,6 +146,14 @@ export const useMinutes = (matterId: string, meetingId: string, enabled = true) 
     queryFn: async () => (await api.get<{ versions: MinutesVersion[] }>(
       `/api/legal/matters/${encodeURIComponent(matterId)}/meetings/${encodeURIComponent(meetingId)}/minutes`)).versions });
 export const meetingsPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/meetings`;
+/** S2.7: any AI draft under review, and the queue of what waits for a decision. */
+export const artifactPath = (matterId: string, artifactId: string) =>
+  `/api/legal/matters/${encodeURIComponent(matterId)}/artifacts/${encodeURIComponent(artifactId)}`;
+export const useArtifact = <C,>(matterId: string, artifactId: string) =>
+  useQuery({ queryKey: ['matter', matterId, 'artifact', artifactId] as const, refetchOnWindowFocus: false, retry: false,
+    queryFn: () => api.get<ArtifactView<C>>(artifactPath(matterId, artifactId)) });
+export const useReviews = () =>
+  useQuery({ queryKey: ['reviews'] as const, refetchInterval: 120_000, retry: false, queryFn: () => api.get<ReviewQueue>('/api/legal/reviews') });
 export const useMeetings = (matterId: string) =>
   useQuery({ queryKey: keys.meetings(matterId), queryFn: async () => (await api.get<{ meetings: MeetingSummary[] }>(meetingsPath(matterId))).meetings });
 /** A meeting with its participants' consent and its capture timeline. */

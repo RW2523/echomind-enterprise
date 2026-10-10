@@ -1,8 +1,9 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, BookOpenText, Briefcase, CalendarClock, FileOutput, Files, FolderSync, FileText, GitCompareArrows, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
+import { Archive, BookOpenText, Briefcase, CalendarClock, ClipboardCheck, FileOutput, Files, FolderSync, FileText, GitCompareArrows, History, Home as HomeIcon, KeyRound, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
 import { api } from '../api/client';
+import { useReviews } from '../api/queries';
 import MatterSwitcher from '../ui/MatterSwitcher';
 import { hasFirmRole, useSession } from './session';
 import { MatterProvider, useCurrentMatter } from './matter';
@@ -12,6 +13,17 @@ function NavItem({ to, icon, children }: { to: string; icon: React.ReactNode; ch
   return (
     <NavLink to={to} className="lw-nav-link">
       {icon}<span className="lw-hide-rail">{children}</span>
+    </NavLink>
+  );
+}
+
+/** S2.7: everything waiting for your decision, with how many. */
+function ReviewsNavItem() {
+  const reviews = useReviews();
+  const n = reviews.data?.count ?? 0;
+  return (
+    <NavLink to="/reviews" className="lw-nav-link" aria-label={n ? `Reviews, ${n} waiting for you` : 'Reviews'}>
+      <ClipboardCheck /><span className="lw-hide-rail">Reviews</span>{n > 0 && <span className="lw-nav-count" aria-hidden="true">{n}</span>}
     </NavLink>
   );
 }
@@ -43,6 +55,7 @@ export default function Shell() {
         <nav aria-label="Firm" style={{ display: 'grid', gap: 2 }}>
           <NavItem to="/home" icon={<HomeIcon />}>Home</NavItem>
           <NavItem to="/matters" icon={<Briefcase />}>Matters</NavItem>
+          <ReviewsNavItem />
           {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/users" icon={<UserCog />}>Users &amp; roles</NavItem>}
           {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/connectors" icon={<FolderSync />}>Connectors</NavItem>}
           {hasFirmRole(me, 'managing_partner') && <NavItem to="/admin/walls" icon={<ShieldOff />}>Ethical walls</NavItem>}

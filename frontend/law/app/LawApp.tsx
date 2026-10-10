@@ -26,6 +26,8 @@ import DocumentReader from '../pages/DocumentReader';
 import MatterResearch from '../pages/MatterResearch';
 import MatterCompare from '../pages/MatterCompare';
 import MatterMeetings from '../pages/MatterMeetings';
+import ResearchNote from '../pages/ResearchNote';
+import Reviews from '../pages/Reviews';
 import MatterMeeting from '../pages/MatterMeeting';
 import MatterExports, { MatterExport } from '../pages/MatterExports';
 import NotAvailable from '../pages/NotAvailable';
@@ -48,6 +50,7 @@ export const lawRoutes = [
         children: [
           { path: '/home', element: <Home /> },
           { path: '/matters', element: <Matters /> },
+          { path: '/reviews', element: <Reviews /> },
           {
             path: '/m/:matterNo',
             element: <MatterLayout />,
@@ -60,6 +63,7 @@ export const lawRoutes = [
               { path: 'compare', element: <MatterCompare /> },
               { path: 'meetings', element: <MatterMeetings /> },
               { path: 'meetings/:meetingId', element: <MatterMeeting /> },
+              { path: 'notes/:artifactId', element: <ResearchNote /> },
               { path: 'exports', element: <MatterExports /> },
               { path: 'exports/:exportId', element: <MatterExport /> },
               { path: 'members', element: <MatterMembers /> },

@@ -46,6 +46,9 @@ from . import transcript as transcript_mod
 logger = logging.getLogger(__name__)
 
 KINDS = ("decision", "action", "unresolved", "discussion")
+# Recorded with every draft (S2.7): which instructions produced it.
+VERSION = "minutes-s2.6"
+
 SYSTEM = (
     "You draft the minutes of a meeting from its transcript. Each transcript line is numbered and labelled like "
     "[S12 10:04:31 · Helena Marsh (attorney) · item 2].\n"
@@ -286,7 +289,7 @@ async def draft(meeting: dict, matter_id: str, agenda: list[dict]) -> tuple[dict
                           {"not_verified": sum(1 for i in all_items if i["status"] != "verified")},
                "gaps": [m["at"] for m in data["marks"] if m["kind"] == "gap"]}
     inputs = {"transcript_sha256": hashlib.sha256(doc_text.encode("utf-8")).hexdigest(), "segments": len(numbered),
-              "batches": len(parts), "failed_batches": failed, "model": settings.LLM_MODEL}
+              "batches": len(parts), "failed_batches": failed, "model": settings.LLM_MODEL, "prompt_version": VERSION}
     return content, inputs
 
 

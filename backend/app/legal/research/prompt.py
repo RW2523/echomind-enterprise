@@ -11,6 +11,9 @@ import re
 
 ABSTAIN = "The documents in this matter do not answer that."
 
+# Recorded with every research note sent for review (S2.7): which instructions produced the answer.
+VERSION = "research-s2.2"
+
 SYSTEM = (
     "You are a careful legal research assistant. You work only from the numbered sources below, which "
     "are excerpts from one matter's documents.\n"

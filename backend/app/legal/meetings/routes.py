@@ -506,38 +506,21 @@ def review_minutes(matter_id: str, meeting_id: str, artifact_id: str, inp: Revie
 @audited("minutes.file", object_type="ai_artifact", object_param="artifact_id")
 def file_minutes(matter_id: str, meeting_id: str, artifact_id: str, request: Request):
     """Approved minutes become a matter document, carrying the approval and the hash it bound."""
-    import hashlib
-    from ...core.db import get_conn
     from .. import artifacts
-    from ..documents import blobs
     from ..documents import repo as docs
-    from ..jobs import worker
     from . import minutes as minutes_mod
     p = principal_of(request)
     require(p, "documents.import", matter_id)
-    m = _meeting(matter_id, meeting_id)
+    _meeting(matter_id, meeting_id)
     cur = artifacts.get(matter_id, artifact_id)
     if not cur or cur["subject_id"] != meeting_id:
         raise _not_found()
-    bound = artifacts.approved_hash(cur)
-    if not bound:
+    approval = artifacts.approval_of(cur)
+    if not approval:
         raise HTTPException(status_code=409, detail="Only approved minutes can be filed.")
     if cur.get("document_id") and docs.get_document(matter_id, cur["document_id"]):
         return {"document_id": cur["document_id"], "changed": False}
-    approval = next(d for d in reversed(cur["decisions"]) if d["decision"] == "approved")
     body = minutes_mod.as_text(cur["content"], approval).encode("utf-8")
-    doc_id = docs.create_document(p["org_id"], matter_id, f"Minutes — {m['title']}"[:300], "note", "final", p["sub"])
-    version_id = docs.new_id()
-    wrapped = blobs.store(matter_id, version_id, body)
-    try:
-        docs.add_version(version_id, doc_id, matter_id, f"minutes-{meeting_id[:8]}-v{cur['version']}.md", "text/markdown", len(body),
-                         hashlib.sha256(body).hexdigest(), None, wrapped, p["sub"], status="final")
-    except BaseException:
-        blobs.remove(matter_id, version_id)
-        raise
-    with get_conn() as conn:
-        conn.execute("UPDATE legal_ai_artifacts SET document_id=? WHERE id=?", (doc_id, artifact_id))
-        conn.commit()
-    worker.wake()
-    note(details={"version": cur["version"], "content_sha256": bound})
+    doc_id = artifacts.file(p, cur, body, f"minutes-{meeting_id[:8]}-v{cur['version']}.md")
+    note(details={"version": cur["version"], "content_sha256": approval["content_sha256"]})
     return {"document_id": doc_id, "changed": True}

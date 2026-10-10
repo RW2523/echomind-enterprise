@@ -25,7 +25,7 @@ from . import detect, render, source, verify
 FOLDER = "exports"
 _COLS = ("id", "org_id", "matter_id", "object_type", "object_id", "source_version_id", "title", "format", "purpose", "status",
          "plan_json", "requested_by", "requested_at", "submitted_at", "decided_by", "decided_at", "decision_note", "privileged_ack",
-         "watermark", "wrapped_key", "output_sha256", "output_bytes", "verification_json", "expires_at", "downloads")
+         "watermark", "wrapped_key", "output_sha256", "output_bytes", "verification_json", "expires_at", "downloads", "source_sha256")
 PROTECTED_LABELS = ("privileged", "work_product")
 
 
@@ -64,7 +64,7 @@ def _out(conn, e: dict) -> dict:
             "decided_by": _name(conn, e["decided_by"]), "decided_at": e["decided_at"], "decision_note": e["decision_note"],
             "watermark": e["watermark"], "output_bytes": e["output_bytes"], "output_sha256": e["output_sha256"],
             "verification": json.loads(e["verification_json"]) if e["verification_json"] else None,
-            "expires_at": e["expires_at"], "downloads": e["downloads"]}
+            "expires_at": e["expires_at"], "downloads": e["downloads"], "source_sha256": e["source_sha256"]}
 
 
 def _expire_if_due(conn, e: dict) -> dict:
@@ -89,6 +89,30 @@ def listing(matter_id: str) -> list[dict]:
         return [_out(conn, _expire_if_due(conn, dict(zip(_COLS, r)))) for r in rows]
 
 
+def _bound(src: "source.Source") -> str:
+    """S2.7 (D-043): the hash of exactly what the redactions are planned on — the version and the text a
+    reader sees. An approval renders only the same text; a new version or a corrected transcript differs."""
+    return hashlib.sha256(f"{src.kind}\n{src.version_id or ''}\n{src.text}".encode("utf-8")).hexdigest()
+
+
+def _approval(object_type: str, object_id: str, src: "source.Source") -> Optional[dict]:
+    """A document filed from an approved AI draft carries that approval; a copy changed since is refused."""
+    if object_type != "document":
+        return None
+    from .. import artifacts
+    with get_conn() as conn:
+        filing = artifacts.filing_for_document(conn, object_id)
+        if not filing:
+            return None
+        sha = conn.execute("SELECT sha256 FROM legal_document_versions WHERE id=?", (src.version_id,)).fetchone()
+    if filing["version_id"] != src.version_id or not sha or sha[0] != filing["body_sha256"]:
+        what = artifacts.KINDS[filing["kind"]][1].lower()
+        raise Refused(409, f"This document was filed from approved {what} and has changed since it was approved. "
+                           "Have the changes approved as a new version before exporting it.")
+    return {"kind": filing["kind"], "version": filing["version"], "approved_by": filing["approved_by"],
+            "approved_at": filing["approved_at"], "content_sha256": filing["content_sha256"]}
+
+
 def create(p: dict, matter_id: str, object_type: str, object_id: str, fmt: str, purpose: str) -> dict:
     if object_type == "document":
         from ..documents import repo as documents
@@ -98,14 +122,17 @@ def create(p: dict, matter_id: str, object_type: str, object_id: str, fmt: str, 
         src = source.load(matter_id, object_type, object_id)
     except source.NotFound:
         raise Refused(404, "Not Found")
+    approval = _approval(object_type, object_id, src)
     items = detect.detect(src.text, matter_id, p["org_id"], detect.parties_for(matter_id, object_type, object_id))
     plan = {"items": items, "source": src.kind, "warnings": {"image_pages": src.image_pages}}
+    if approval:
+        plan["approval"] = approval
     eid = str(uuid.uuid4())
     with get_conn() as conn:
         conn.execute("INSERT INTO legal_exports (id, org_id, matter_id, object_type, object_id, source_version_id, title, format, purpose, "
-                     "status, plan_json, requested_by, requested_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                     "status, plan_json, requested_by, requested_at, source_sha256) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                      (eid, p["org_id"], matter_id, object_type, object_id, src.version_id, src.title, fmt, purpose, "draft",
-                      json.dumps(plan), p["sub"], _now_iso()))
+                      json.dumps(plan), p["sub"], _now_iso(), _bound(src)))
         conn.commit()
     return get(matter_id, eid)
 
@@ -172,6 +199,17 @@ def approve(p: dict, matter_id: str, matter_number: str, export_id: str, acknowl
         src = source.load(matter_id, e["object_type"], e["object_id"])
     except source.NotFound:
         raise Refused(409, "The source of this export no longer exists.")
+    if e["source_sha256"] != _bound(src):
+        with get_conn() as conn:
+            conn.execute("UPDATE legal_exports SET status='failed', decided_by=?, decided_at=?, verification_json=? WHERE id=?",
+                         (p["sub"], _now_iso(), json.dumps({"ok": False, "source_changed": True}), export_id))
+            conn.commit()
+        raise Refused(409, "This export was requested before exports were bound to their text. Ask for a new export."
+                      if not e["source_sha256"] else
+                      "The document changed after this export was requested, so its redactions were planned on other text. "
+                      "Ask for a new export.")
+    if json.loads(e["plan_json"]).get("approval"):
+        _approval(e["object_type"], e["object_id"], src)             # still the approved copy
     strings = [i["text"] for i in json.loads(e["plan_json"])["items"] if i["redact"]]
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
     watermark = f"CONFIDENTIAL — {matter_number} — {requester} — {stamp}"

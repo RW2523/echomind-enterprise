@@ -135,6 +135,12 @@ describe('Boardroom: agenda and minutes', () => {
     const review = await screen.findByRole('group', { name: 'Review these minutes' });
     expect((within(review).getByRole('button', { name: 'Request changes' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(within(review).getByRole('button', { name: 'Approve these minutes' }));
+    const confirm = await screen.findByRole('dialog', { name: 'Approve version 1?' });
+    expect(confirm.textContent).toContain(V1.content_sha256);                // the exact content it binds
+    const go = within(confirm).getByRole('button', { name: 'Approve version 1' }) as HTMLButtonElement;
+    expect(go.disabled).toBe(true);                                          // only once read
+    fireEvent.click(within(confirm).getByLabelText('I have read this version and checked its sources'));
+    fireEvent.click(go);
     await waitFor(() => expect(calls.find((c) => c.path === `${BASE}/mt1/minutes/v1/review`)?.body)
       .toEqual({ decision: 'approved', content_sha256: V1.content_sha256, reason: null }));
     cleanup();

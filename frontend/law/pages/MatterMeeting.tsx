@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import { Circle, FileOutput, Mic, Pause, Play, Square, Trash2, UserPlus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
@@ -49,7 +49,9 @@ export default function MatterMeeting() {
   const matter = useMatter();
   const { meetingId = '' } = useParams();
   const meeting = useMeeting(matter.id, meetingId);
-  const [tab, setTab] = useState<Tab>('consent');
+  const [params] = useSearchParams();
+  // S2.7: the reviews queue opens a meeting straight on its minutes.
+  const [tab, setTab] = useState<Tab>(params.get('tab') === 'minutes' ? 'minutes' : 'consent');
   if (meeting.isPending) return <div className="lw-content" aria-busy="true"><Skeleton height={48} /><Skeleton height={200} /></div>;
   if (meeting.isError) return <NotAvailable />;
   const m = meeting.data;
