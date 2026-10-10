@@ -1369,3 +1369,44 @@ test('time: a lawyer\'s own work on a matter suggested as a draft entry, edited,
   expect(csvText).toContain('M-101');
   expect(csvText).toContain('Imported and read the time journey note.');
 });
+
+test('panel: four perspectives on a change-of-control question, each citing the reseller agreement, compared, then approved by a partner', async ({ browser }) => {
+  test.setTimeout(400_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const title = 'Reseller Agreement (DEMO)';
+  if (await alice.getByRole('button', { name: title, exact: true }).count() === 0) {
+    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, `../../eval/fixtures/law/panel/${title}.txt`));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Review panel' }).click();
+  const form = alice.getByRole('form', { name: 'Ask the panel' });
+  await form.getByLabel('Question').fill('If the Reseller undergoes a change of control, can the Supplier terminate the Reseller Agreement, and what is each party\'s liability?');
+  await form.getByLabel('Specialist area').selectOption('commercial');
+  await form.getByRole('button', { name: 'Ask the panel' }).click();
+  const grid = alice.getByRole('region', { name: 'Perspectives' });
+  await expect(grid).toBeVisible({ timeout: 240_000 });
+  // Four perspectives, each answering alone and citing the agreement with quotes found in it.
+  await expect(grid.getByRole('article')).toHaveCount(4);
+  for (const label of ['Deal lawyer', 'Risk and compliance', 'Litigator', 'Specialist (commercial contracts)']) {
+    const card = grid.getByRole('article', { name: label });
+    await expect(card.getByRole('link', { name: 'Open at the quote' }).first()).toBeVisible();
+  }
+  await expect(alice.getByRole('table', { name: 'Disagreement matrix' })).toBeVisible();
+  await expect(alice.getByText(/not independent experts/)).toBeVisible();
+  await shot(alice, '47-panel-light');
+  // A partner who did not ask approves exactly this version.
+  const nakamura = await (await browser.newContext()).newPage();
+  await signIn(nakamura, 'nakamura');
+  await nakamura.goto(alice.url().replace(/^https?:\/\/[^/]+/, ''));
+  await nakamura.getByRole('button', { name: 'Approve this panel review' }).click();
+  const dialog = nakamura.getByRole('dialog', { name: 'Approve version 1?' });
+  await dialog.getByRole('checkbox').check();
+  await dialog.getByRole('button', { name: 'Approve version 1' }).click();
+  await expect(nakamura.getByText('Approved by a partner')).toBeVisible();
+});

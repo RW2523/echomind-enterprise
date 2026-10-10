@@ -234,3 +234,10 @@ def test_one_perspective_lacking_facts_does_not_stop_the_panel_on_its_own(pn):
     pn["model"].missing = {"litigation": "the date notice was given"}
     pn["model"].moderator_stop = False
     assert ask(pn).json()["artifact"]["content"]["stopped"] is False
+
+
+def test_two_quotes_from_one_source_show_one_marker(pn):
+    """Journey 33 showed "loss of profits [1][1]"."""
+    pn["model"].raw = {"deal": 'The cap is USD 250,000 [1: "limited to USD 250,000"][1: "Each party\'s total liability"].\n\nMISSING FACTS: none'}
+    deal = next(p for p in ask(pn).json()["artifact"]["content"]["perspectives"] if p["role"] == "deal")
+    assert "[1][1]" not in deal["text"] and len(deal["evidence"]) == 2

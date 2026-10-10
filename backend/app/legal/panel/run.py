@@ -127,7 +127,7 @@ async def perspective(role: str, label: str, area: str, question: str, passages:
         unsupported.extend(out["unsupported"])
         failed.extend(out["failed"])
     evidence = _evidence(claims, sources)
-    text = "\n\n".join(shown)
+    text = re.sub(r"(\[\d{1,2}\])(?:\1)+", r"\1", "\n\n".join(shown))       # "[1][1]" reads as one citation
     abstained = research_prompt.is_abstention(text) and not evidence
     return {"role": role, "label": label.format(area=area), "text": text, "evidence": evidence, "unsupported": unsupported, "failed": failed,
             "missing_facts": missing, "abstained": abstained}

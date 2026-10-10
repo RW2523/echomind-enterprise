@@ -1,0 +1,435 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "555002b",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-180401",
+  "prompt_version": "panel-s4.5c"
+ },
+ "summary": {
+  "panels": 3,
+  "failed": 0,
+  "stop_right": "3/3",
+  "quotes_verified": "32/32",
+  "uncited_sentences": 11,
+  "perspectives_answered": "12/12",
+  "matrix_issues": 19,
+  "disagreements": 1,
+  "matrix_figures_unsupported": 0,
+  "seconds_per_panel": 35.5
+ },
+ "scenarios": [
+  {
+   "id": "K1-notice-to-terminate",
+   "seconds": 43.6,
+   "status": "needs_facts",
+   "stop_expected": true,
+   "stopped": true,
+   "stop_right": true,
+   "missing_facts": [
+    "whether the Customer provided 90 days' written notice signed by a director",
+    "whether the notice was sent by email to legal@northbridge.example and confirmed by post",
+    "whether the Customer provided the required 90 days' written notice",
+    "whether the notice was signed by a director of the Customer",
+    "and whether the notice was sent and confirmed as required",
+    "whether the Customer provided notice",
+    "whether the notice was signed by a director",
+    "whether the notice was given on an anniversary of the Start Date",
+    "whether the Customer provided written notice",
+    "whether the notice was sent by email and confirmed by post",
+    "and whether the notice was given at least 90 days before the anniversary of the Start Date",
+    "whether the Customer provided 90 days' written notice",
+    "whether the notice was sent by email to legal@northbridge.example",
+    "whether the notice was confirmed by post",
+    "whether the notice was given at least 90 days before the anniversary of the Start Date"
+   ],
+   "quotes": 10,
+   "verified": 10,
+   "uncited": 4,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 0,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The Customer may end this Agreement for convenience by giving not less than ninety (90) days' written notice expiring on an anniversary of the Start Date [1]. Notice must be signed by a director of the Customer [1]. \n\nThe documents do not state whether the Customer provided such notice.",
+     "unsupported": [
+      "The documents do not state whether the Customer provided such notice."
+     ],
+     "missing": [
+      "whether the Customer provided 90 days' written notice signed by a director",
+      "whether the notice was sent by email to legal@northbridge.example and confirmed by post"
+     ]
+    },
+    {
+     "role": "risk",
+     "text": "The documents indicate that the Customer could end the Agreement for convenience by providing at least 90 days' written notice, which must be signed by a director of the Customer [1][1].\n\nHowever, the documents do not state whether the Customer provided such notice or whether it was properly signed [1]. \n\nThe documents in this matter do not answer that.",
+     "unsupported": [],
+     "missing": [
+      "whether the Customer provided the required 90 days' written notice",
+      "whether the notice was signed by a director of the Customer",
+      "and whether the notice was sent and confirmed as required"
+     ]
+    },
+    {
+     "role": "litigation",
+     "text": "The Customer may end this Agreement for convenience by giving not less than ninety (90) days' written notice expiring on an anniversary of the Start Date [1]. Notice must be signed by a director of the Customer [1]. \n\nThe documents do not state whether the Customer provided such notice or whether it was signed by a director.",
+     "unsupported": [
+      "The documents do not state whether the Customer provided such notice or whether it was signed by a director."
+     ],
+     "missing": [
+      "whether the Customer provided notice",
+      "whether the notice was signed by a director",
+      "whether the notice was given on an anniversary of the Start Date"
+     ]
+    },
+    {
+     "role": "specialist",
+     "text": "The Customer may end this Agreement for convenience by giving not less than ninety (90) days' written notice expiring on an anniversary of the Start Date [1]. \n\nNotice must be signed by a director of the Customer [1]. \n\nNotices must be sent by email to legal@northbridge.example and confirmed by post [1].\n\nThe documents in this matter do not answer whether the Customer provided valid notice to end the Agreement for convenience. \n\nMISSING FACTS: whether the Customer provided written notice; whether the notice was signed by a director; whether the notice was sent by email and confirmed by post; and whether the notice was given at least 90 days before the anniversary of the Start Date.",
+     "unsupported": [
+      "The documents in this matter do not answer whether the Customer provided valid notice to end the Agreement for convenience.",
+      "MISSING FACTS: whether the Customer provided written notice; whether the notice was signed by a director; whether the notice was sent by email and confirmed by post; and whether the notice was given at least 90 days before the anniversary of the Start Date."
+     ],
+     "missing": [
+      "whether the Customer provided written notice",
+      "whether the notice was signed by a director",
+      "whether the notice was sent by email and confirmed by post",
+      "and whether the notice was given at least 90 days before the anniversary of the Start Date"
+     ]
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Customer provided 90 days' written notice",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not state whether the Customer provided 90 days' written notice."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the notice was signed by a director",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not state whether the notice was signed by a director."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the notice was sent by email to legal@northbridge.example",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not state whether the notice was sent by email to legal@northbridge.example."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the notice was confirmed by post",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not state whether the notice was confirmed by post."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the notice expired on an anniversary of the Start Date",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not state whether the notice expired on an anniversary of the Start Date."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the notice was given at least 90 days before the anniversary of the Start Date",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not state whether the notice was given at least 90 days before the anniversary of the Start Date."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Customer gave valid notice to end the Agreement for convenience",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not state whether the Customer gave valid notice to end the Agreement for convenience."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the notice was properly formatted or followed all procedural requirements",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not state whether the notice was properly formatted or followed all procedural requirements."
+    }
+   ]
+  },
+  {
+   "id": "K2-loan-covenants",
+   "seconds": 32.8,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [],
+   "quotes": 16,
+   "verified": 16,
+   "uncited": 2,
+   "answered": 4,
+   "issues": 3,
+   "disagreements": 1,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The Borrower must meet two financial covenants under the Facility Agreement. First, the Borrower must ensure that its leverage (total net debt to EBITDA) does not exceed 3.0:1 on each test date [1]. Second, the Borrower must ensure that its interest cover is at least 4.0:1 on each test date [1].\n\nA breach of clause 19 constitutes an event of default [1]. If an event of default occurs, the Lender may cancel the facility and declare all loans immediately due [1].",
+     "unsupported": [
+      "The Borrower must meet two financial covenants under the Facility Agreement."
+     ],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "Under the Facility Agreement, the Borrower must meet the following financial covenants:\n\n- The Borrower shall ensure that its leverage (total net debt to EBITDA) does not exceed 3.0:1 on each test date [1].\n- The Borrower shall ensure that its interest cover is at least 4.0:1 on each test date [1].\n\nA breach of these covenants constitutes an event of default [1]. If an event of default occurs, the Lender may cancel the facility and declare all loans immediately due [1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "The Borrower must meet two financial covenants under the Facility Agreement. First, the Borrower must ensure its leverage (total net debt to EBITDA) does not exceed 3.0:1 on each test date [1]. Second, the Borrower must ensure its interest cover is at least 4.0:1 on each test date [1].\n\nA breach of these covenants constitutes an event of default [1]. Upon an event of default, the Lender may cancel the facility and declare all loans immediately due [1].",
+     "unsupported": [
+      "The Borrower must meet two financial covenants under the Facility Agreement."
+     ],
+     "missing": []
+    },
+    {
+     "role": "specialist",
+     "text": "The financial covenants the Borrower must meet under the Facility Agreement are as follows: the Borrower shall ensure that its leverage (total net debt to EBITDA) does not exceed 3.0:1 on each test date [1], and the Borrower shall ensure that its interest cover is at least 4.0:1 on each test date [1].\n\nA breach of these financial covenants constitutes an event of default [1]. Upon an event of default, the Lender may cancel the facility and declare all loans immediately due [1].",
+     "unsupported": [],
+     "missing": []
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Financial covenants",
+     "positions": {
+      "deal": "Leverage 3.0:1, Interest cover 4.0:1",
+      "litigation": "Leverage 3.0:1, Interest cover 4.0:1",
+      "risk": "Leverage 3.0:1, Interest cover 4.0:1",
+      "specialist": "Leverage 3.0:1, Interest cover 4.0:1"
+     },
+     "summary": "All answers agree on the financial covenants."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Event of default",
+     "positions": {
+      "deal": "Breach of clause 19 is an event of default",
+      "litigation": "Breach of covenants is an event of default",
+      "risk": "Breach of covenants is an event of default",
+      "specialist": "Breach of covenants is an event of default"
+     },
+     "summary": "The deal lawyer specifies 'clause 19', while others are more general."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Consequences of breach",
+     "positions": {
+      "deal": "Lender may cancel the facility and declare loans due",
+      "litigation": "Lender may cancel the facility and declare loans due",
+      "risk": "Lender may cancel the facility and declare loans due",
+      "specialist": "Lender may cancel the facility and declare loans due"
+     },
+     "summary": "All answers agree on the consequences of a breach."
+    }
+   ]
+  },
+  {
+   "id": "K3-ip-ownership",
+   "seconds": 30.1,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [],
+   "quotes": 6,
+   "verified": 6,
+   "uncited": 5,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 0,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The software the Developer writes under this Agreement is owned by the Client. Clause 8.1 states that \"All intellectual property in the Deliverables vests in the Client on creation\" [1].",
+     "unsupported": [
+      "The software the Developer writes under this Agreement is owned by the Client."
+     ],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "The documents indicate that the Client owns the software developed under this Agreement. \n\nClause 8.1 states that \"All intellectual property in the Deliverables vests in the Client on creation\" [1].\n\nThe documents do not specify any other ownership arrangement for the software developed under this Agreement.",
+     "unsupported": [
+      "The documents indicate that the Client owns the software developed under this Agreement.",
+      "The documents do not specify any other ownership arrangement for the software developed under this Agreement."
+     ],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "The software the Developer writes under this Agreement is owned by the Client. Clause 8.1 states that \"All intellectual property in the Deliverables vests in the Client on creation\" [1].\n\nThe Developer retains ownership of its pre-existing tools, but the Client is granted a perpetual, royalty-free licence to use those tools with the Deliverables [1].",
+     "unsupported": [
+      "The software the Developer writes under this Agreement is owned by the Client."
+     ],
+     "missing": []
+    },
+    {
+     "role": "specialist",
+     "text": "The software the Developer writes under this Agreement is owned by the Client. Clause 8.1 states that all intellectual property in the Deliverables vests in the Client on creation [1]. \n\nThe Developer retains ownership of its pre-existing tools but grants the Client a perpetual, royalty-free licence to use them with the Deliverables [1].",
+     "unsupported": [
+      "The software the Developer writes under this Agreement is owned by the Client."
+     ],
+     "missing": []
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Ownership of software developed under the Agreement",
+     "positions": {
+      "deal": "Client owns the software",
+      "litigation": "Client owns the software",
+      "risk": "Client owns the software",
+      "specialist": "Client owns the software"
+     },
+     "summary": "All answers agree that the Client owns the software developed under the Agreement."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Ownership of pre-existing tools",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Developer owns pre-existing tools",
+      "risk": "Not addressed",
+      "specialist": "Developer owns pre-existing tools"
+     },
+     "summary": "Both litigation and specialist answers state that the Developer retains ownership of pre-existing tools."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Licensing of pre-existing tools",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Client has perpetual, royalty-free licence",
+      "risk": "Not addressed",
+      "specialist": "Client has perpetual, royalty-free licence"
+     },
+     "summary": "Both litigation and specialist answers state that the Client has a perpetual, royalty-free licence to use the Developer's pre-existing tools."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Reference to Clause 8.1",
+     "positions": {
+      "deal": "Cited",
+      "litigation": "Cited",
+      "risk": "Cited",
+      "specialist": "Cited"
+     },
+     "summary": "All answers reference Clause 8.1 to support their position."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Existence of other ownership arrangements",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "No other arrangements specified",
+      "specialist": "Not addressed"
+     },
+     "summary": "Only the risk answer explicitly states that no other ownership arrangements are specified."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Retention of Developer's rights",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Developer retains ownership of pre-existing tools",
+      "risk": "Not addressed",
+      "specialist": "Developer retains ownership of pre-existing tools"
+     },
+     "summary": "Both litigation and specialist answers state that the Developer retains ownership of pre-existing tools."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Licensing of pre-existing tools to Client",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Client has perpetual, royalty-free licence",
+      "risk": "Not addressed",
+      "specialist": "Client has perpetual, royalty-free licence"
+     },
+     "summary": "Both litigation and specialist answers state that the Client has a perpetual, royalty-free licence to use the Developer's pre-existing tools."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Other rights or restrictions",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "No answers address other potential rights or restrictions beyond ownership and licensing."
+    }
+   ]
+  }
+ ]
+}
