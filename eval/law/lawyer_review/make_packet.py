@@ -9,6 +9,7 @@ minutes item), not by suite, setting or model.
 
     python3 eval/law/lawyer_review/make_packet.py                 # Phase 2: writes packet.html, sheet.csv, key.json here
     python3 eval/law/lawyer_review/make_packet.py --phase 3       # Phase 3: the same files in lawyer_review/phase3/
+    python3 eval/law/lawyer_review/make_packet.py --phase 4       # Phase 4: summaries and the review panel, in lawyer_review/phase4/
 
 Phase 3 takes the newest held-out report of each document tool (drafting, playbook checks, citations,
 definitions, obligations, due diligence, governance), grouped by the documents they were run on, with the
@@ -150,10 +151,45 @@ def groups3() -> list[dict]:
     return out
 
 
+def groups4() -> list[dict]:
+    """Phase 4: each summary's points with where they cite, and each panel's four answers, matrix and stop decision."""
+    out = []
+    r = newest("-summaries-heldout.json")
+    sets = {d["id"]: d for d in _heldout("summaries")["documents"]}
+    for d in json.loads(r.read_text())["documents"]:
+        src = sets[d["id"]]
+        text = src.get("text") or "\n\n[page break]\n\n".join(src.get("pdf_pages") or [])
+        cite = lambda c: ("not verified" if not c else c.get("timecode") or ", ".join(x for x in (c.get("clause") and f"clause {c['clause']}",
+                          c.get("page") and f"p. {c['page']}", c.get("line") and f"l. {c['line']}") if x))
+        out.append({"group": f"summaries:{d['id']}", "title": src["name"], "documents": [(src["name"], text)],
+                    "items": [{"kind": "summary_point", "source": [r.name, f"{d['id']} point {i}"], "title": f"Summary point ({cite(p.get('cite'))})",
+                               "body": p["text"], "evidence": [f"“{p['quote']}” · {p['verification']}"] +
+                               ([f"figure to check: {', '.join(p['figures_unsupported'])}"] if p.get("figures_unsupported") else [])}
+                              for i, p in enumerate(d["points"], start=1)]})
+    r = newest("-panel-heldout.json")
+    sets = {x["id"]: x for x in _heldout("panel")["scenarios"]}
+    for sc in json.loads(r.read_text())["scenarios"]:
+        if sc.get("failed"):
+            continue
+        src = sets[sc["id"]]
+        items = [{"kind": "panel_perspective", "source": [r.name, f"{sc['id']} {p['role']}"], "title": f"Perspective: {p['role']}",
+                  "body": p["text"], "evidence": [f"cites nothing: {u}" for u in p["unsupported"]] + ([f"says it lacks: {'; '.join(p['missing'])}"] if p["missing"] else [])}
+                 for p in sc["perspectives"]]
+        items += [{"kind": "panel_issue", "source": [r.name, f"{sc['id']} issue {i}"], "title": f"Moderator: {m['issue']}",
+                   "body": "; ".join(f"{k}: {v}" for k, v in m["positions"].items()) + (f" — {m['summary']}" if m.get("summary") else ""),
+                   "evidence": ["marked as a disagreement" if m["disagreement"] else "not marked as a disagreement"]}
+                  for i, m in enumerate(sc["matrix"], start=1)]
+        items.append({"kind": "panel_stop", "source": [r.name, f"{sc['id']} stop"], "title": "Did the panel stop for missing facts?",
+                      "body": ("Stopped, asking for: " + "; ".join(sc["missing_facts"])) if sc["stopped"] else "Did not stop.", "evidence": []})
+        out.append({"group": f"panel:{sc['id']}", "title": f"Panel: {src['question']} (specialist: {src['specialist']})",
+                    "documents": [(d["name"], d["text"]) for d in src["documents"]], "items": items})
+    return out
+
+
 def phase3(args) -> int:
-    groups = groups3()
+    groups = groups4() if args.phase == 4 else groups3()
     random.Random(args.seed).shuffle(groups)
-    out = Path(args.out or HERE / "phase3")
+    out = Path(args.out or HERE / f"phase{args.phase}")
     out.mkdir(exist_ok=True)
     n, key = 0, []
     for gi, g in enumerate(groups, start=1):
@@ -172,14 +208,16 @@ def phase3(args) -> int:
                 w.writerow([it["id"], g["id"], it["kind"], "", "", "", ""])
             w.writerow([g["id"], g["id"], "missed", "", "", "", ""])
     label = {"draft": "Draft", "playbook_line": "Playbook check", "citation": "Citation check", "definition": "Drafting check",
-             "obligation": "Obligation", "diligence_issue": "Diligence issue", "dd_missing": "Missing documents", "governance_issue": "Governance issue"}
-    parts = ["<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Phase 3 review packet</title>",
+             "obligation": "Obligation", "diligence_issue": "Diligence issue", "dd_missing": "Missing documents", "governance_issue": "Governance issue",
+             "summary_point": "Summary point", "panel_perspective": "Panel perspective", "panel_issue": "Moderator's matrix", "panel_stop": "Panel stop decision"}
+    parts = ["<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
+             f"<title>Phase {args.phase} review packet</title>",
              "<style>body{font:15px/1.55 Georgia,serif;max-width:860px;margin:40px auto;padding:0 16px;color:#15171C;background:#fff}"
              "h1{font:600 22px system-ui}h2{font:600 18px system-ui;margin-top:36px}section{border-top:1px solid #ddd;padding:12px 0}"
              ".k{font:600 12px system-ui;color:#4A4F59;text-transform:uppercase;letter-spacing:.04em}.e{font:13px system-ui;color:#4A4F59}"
              "pre{white-space:pre-wrap;font:13px/1.5 ui-monospace,monospace;background:#f6f6f4;padding:10px;border-radius:6px}</style>",
-             "<h1>Phase 3 review packet — fictional material</h1><p class=e>Each group shows the documents, then what the system produced on them. "
-             "Score each item in sheet.csv using docs/echomind-law/releases/phase3-rubric.md; on the group's own row, list anything the system missed.</p>"]
+             f"<h1>Phase {args.phase} review packet — fictional material</h1><p class=e>Each group shows the documents, then what the system produced on them. "
+             f"Score each item in sheet.csv using docs/echomind-law/releases/phase{args.phase}-rubric.md; on the group's own row, list anything the system missed.</p>"]
     for g in groups:
         docs = "".join(f"<details><summary class=e>{html.escape(t)}</summary><pre>{html.escape(x)}</pre></details>" for t, x in g["documents"])
         parts.append(f"<h2>{g['id']} · {html.escape(g['title'])}</h2>{docs}")
@@ -196,11 +234,11 @@ def phase3(args) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--phase", type=int, choices=[2, 3], default=2)
+    ap.add_argument("--phase", type=int, choices=[2, 3, 4], default=2)
     ap.add_argument("--seed", type=int, default=20261010)
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
-    if args.phase == 3:
+    if args.phase in (3, 4):
         return phase3(args)
     args.out = args.out or str(HERE)
     rows = items2()

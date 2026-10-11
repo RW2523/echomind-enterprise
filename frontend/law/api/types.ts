@@ -7,7 +7,7 @@ export type MatterStatus = 'open' | 'closed' | 'archived';
 export interface Me {
   user: { id: string; username: string; role: string; roles: FirmRole[] };
   session: { auth: string; mfa_enrolled: boolean; must_change_password: boolean; idle_expires_at: number; abs_expires_at: number };
-  features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean };
+  features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean; panel?: boolean };
 }
 export interface Client { id: string; name: string; code?: string | null; status: string; version: number; }
 export interface Matter {
@@ -228,7 +228,7 @@ export interface MinutesContent {
 }
 export interface ReviewDecision { decision: 'approved' | 'changes_requested'; content_sha256: string; reason?: string | null; by?: string | null; at: string }
 /** An AI draft under review (S2.6–S2.7, D-042/D-043): fixed versions, hashed, approved by a second lawyer. */
-export type ArtifactKind = 'minutes' | 'research_note' | 'legal_draft' | 'redline' | 'summary';
+export type ArtifactKind = 'minutes' | 'research_note' | 'legal_draft' | 'redline' | 'summary' | 'panel';
 export interface ArtifactVersion<C = unknown> {
   id: string; version: number; status: 'draft' | 'approved' | 'superseded' | 'withdrawn'; content: C; content_sha256: string;
   inputs: Record<string, any>; created_by: string; created_by_name?: string | null; created_at: string; origin: 'model' | 'person';
@@ -535,4 +535,25 @@ export interface TimeEntry {
   minutes: number; hours: string; minutes_suggested: number | null; narrative: string; narrative_suggested: string | null;
   sessions: { from: string; to: string }[]; counts: Record<string, number>; edited: boolean; status: 'draft' | 'approved' | 'discarded';
   approved_at: string | null; updated_at: string | null; version: number;
+}
+
+// ── Review panel (S4.5, D-057) ────────────────────────────────────────────────────
+export type PanelRole = 'deal' | 'risk' | 'litigation' | 'specialist';
+export interface PanelPerspective {
+  role: PanelRole; label: string; text: string; evidence: ResearchEvidence[]; unsupported: string[]; failed: string[];
+  missing_facts: string[]; abstained: boolean;
+}
+export interface PanelIssue { issue: string; positions: Record<PanelRole, string>; disagreement: boolean; summary: string | null; figures_unsupported: string[] }
+export interface PanelContent {
+  title: string; question: string; specialist: string; area: string; perspectives: PanelPerspective[]; matrix: PanelIssue[];
+  missing_facts: string[]; stopped: boolean; facts_given: { question: string; answer: string }[]; notice: string; sources: number;
+}
+export interface PanelReview {
+  id: string; question: string; specialist: string; area: string | null; status: 'queued' | 'running' | 'done' | 'needs_facts' | 'failed' | 'not_allowed';
+  facts: { question: string; answer: string }[]; created_by: string | null; created_at: string; finished_at: string | null; mine: boolean;
+  version?: number | null; approval?: string | null; documents?: { id: string; title: string | null }[];
+}
+export interface PanelView {
+  review: PanelReview; artifact: ArtifactVersion<PanelContent> | null;
+  versions: { id: string; version: number; status: string; created_at: string }[]; can: { approve: boolean; facts: boolean; author: boolean };
 }

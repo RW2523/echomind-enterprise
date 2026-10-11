@@ -33,17 +33,15 @@ def tm(world, monkeypatch):
 
 
 def act(w, who, action, matter, at, outcome="allow"):
-    """One audited event by `who` at `at` (UTC, ISO), through the real audit writer."""
-    from app.legal import policy
-    from app.legal.audit.record import record
+    """One audited event by `who` at `at` (UTC, ISO), appended to the real hash chain with its own time (no clock is
+    patched, so nothing running alongside can see a false time)."""
+    import uuid
+    from app.legal.audit import chain
     from app.legal.orgs import default_org_id
-    real, policy.now_iso = policy.now_iso, (lambda: at)
-    try:
-        u = w["users"][who]
-        record(action, outcome, principal={"sub": u["id"], "org_id": default_org_id(), "username": u["username"], "auth": "session"},
-               object_type="document", object_id="d1", matter_id=w["matters"][matter]["id"])
-    finally:
-        policy.now_iso = real
+    u = w["users"][who]
+    chain.append({"id": str(uuid.uuid4()), "ts": at, "org_id": default_org_id(), "actor_user_id": u["id"], "actor_username": u["username"],
+                  "actor_roles": None, "auth": "session", "session_ref": None, "ip": None, "action": action, "object_type": "document",
+                  "object_id": "doc-QXZ", "matter_id": w["matters"][matter]["id"], "outcome": outcome, "reason": None, "details_json": None})
 
 
 def day_of_work(w):
@@ -82,7 +80,7 @@ def test_a_day_of_audited_work_becomes_one_draft_per_matter(tm, monkeypatch):
     assert m101["narrative"] == "Document review (3); legal research (1); drafting (2)"
     assert m101["sessions"] == [{"from": "09:00", "to": "09:20"}, {"from": "11:00", "to": "11:05"}]          # in the firm's timezone
     assert got["M-114"]["minutes"] == 6 and got["M-114"]["narrative"] == "Document review (1)"
-    assert all("d1" not in json.dumps(e) for e in r.json()["entries"])                                     # no ids or content in narratives
+    assert all("QXZ" not in json.dumps(e) for e in r.json()["entries"])        # the planted object id (never hex) is in no entry
 
 
 def test_suggesting_again_updates_untouched_drafts_and_keeps_edited_ones(tm, monkeypatch):

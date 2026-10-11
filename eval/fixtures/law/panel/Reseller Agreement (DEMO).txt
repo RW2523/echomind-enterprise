@@ -1,0 +1,14 @@
+RESELLER AGREEMENT (fictional demo)
+
+This Agreement is made between Voss-Lindqvist AB (the Supplier) and Harrowgate Systems Inc. (the Reseller).
+
+6. Liability
+6.1 Each party's total liability under this Agreement is limited to EUR 400,000.
+6.2 Neither party is liable for loss of profits.
+
+12. Change of control
+12.1 The Reseller shall tell the Supplier within fifteen (15) days of any change of control.
+12.2 The Supplier may terminate this Agreement on forty-five (45) days' written notice if the Reseller undergoes a change of control.
+
+19. Governing law
+19.1 This Agreement is governed by the laws of Sweden.

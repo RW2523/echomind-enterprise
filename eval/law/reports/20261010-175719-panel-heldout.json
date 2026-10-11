@@ -1,0 +1,359 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "2a24db6",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-175719",
+  "prompt_version": "panel-s4.5b"
+ },
+ "summary": {
+  "panels": 3,
+  "failed": 0,
+  "stop_right": "2/3",
+  "quotes_verified": "29/29",
+  "uncited_sentences": 9,
+  "perspectives_answered": "12/12",
+  "matrix_issues": 14,
+  "disagreements": 4,
+  "matrix_figures_unsupported": 0,
+  "seconds_per_panel": 30.4
+ },
+ "scenarios": [
+  {
+   "id": "H1-warranty-time-limit",
+   "seconds": 40.4,
+   "status": "done",
+   "stop_expected": true,
+   "stopped": false,
+   "stop_right": false,
+   "missing_facts": [
+    "whether the Buyer provided written notice within 18 months of Completion",
+    "whether the claim exceeds GBP 25,000",
+    "whether the Buyer provided the required written notice",
+    "and whether the claim is within the total liability limit",
+    "whether the Buyer provided written notice within 18 months after Completion",
+    "and whether the total claims exceed the purchase price",
+    "whether the total claims exceed the purchase price"
+   ],
+   "quotes": 11,
+   "verified": 11,
+   "uncited": 4,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 2,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The documents indicate that the Buyer may bring a warranty claim against the Sellers, but only if certain conditions are met. The Buyer must provide written notice of the claim within 18 months after Completion [1]. Additionally, the total liability of the Sellers for all warranty claims is limited to the purchase price [1]. The Buyer also cannot bring a claim for less than GBP 25,000 [1].",
+     "unsupported": [
+      "The documents indicate that the Buyer may bring a warranty claim against the Sellers, but only if certain conditions are met."
+     ],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "The documents indicate that the Buyer can bring a warranty claim against the Sellers, but only under certain conditions. Clause 6.1 states that the Sellers are not liable for a warranty claim unless the Buyer gives written notice of it within eighteen (18) months after Completion [1]. Additionally, Clause 6.3 specifies that no claim may be brought for less than GBP 25,000 [1].",
+     "unsupported": [
+      "The documents indicate that the Buyer can bring a warranty claim against the Sellers, but only under certain conditions."
+     ],
+     "missing": [
+      "whether the Buyer provided written notice within 18 months of Completion",
+      "whether the claim exceeds GBP 25,000"
+     ]
+    },
+    {
+     "role": "litigation",
+     "text": "The documents indicate that the Buyer may bring a warranty claim against the Sellers, but only if certain conditions are met. Specifically, the Buyer must give written notice of the warranty claim within eighteen (18) months after Completion [1]. Additionally, the total liability of the Sellers for all warranty claims is limited to the purchase price [1]. Claims must also be for at least GBP 25,000 [1].",
+     "unsupported": [
+      "The documents indicate that the Buyer may bring a warranty claim against the Sellers, but only if certain conditions are met."
+     ],
+     "missing": [
+      "whether the Buyer provided the required written notice",
+      "whether the claim exceeds GBP 25,000",
+      "and whether the claim is within the total liability limit"
+     ]
+    },
+    {
+     "role": "specialist",
+     "text": "The documents indicate that the Buyer may bring a warranty claim against the Sellers, but only under specific conditions. The Sellers are not liable for a warranty claim unless the Buyer gives written notice of it within eighteen (18) months after Completion [1]. Additionally, the Sellers' total liability for all warranty claims is limited to the purchase price [1]. Furthermore, no claim may be brought for less than GBP 25,000 [1].",
+     "unsupported": [
+      "The documents indicate that the Buyer may bring a warranty claim against the Sellers, but only under specific conditions."
+     ],
+     "missing": [
+      "whether the Buyer provided written notice within 18 months after Completion",
+      "whether the claim exceeds GBP 25,000",
+      "and whether the total claims exceed the purchase price"
+     ]
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Buyer can bring a warranty claim",
+     "positions": {
+      "deal": "Yes, if conditions are met",
+      "litigation": "Yes, if conditions are met",
+      "risk": "Yes, if conditions are met",
+      "specialist": "Yes, if conditions are met"
+     },
+     "summary": "All answers agree that the Buyer can bring a warranty claim if conditions are met."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Requirement for written notice within 18 months",
+     "positions": {
+      "deal": "Required",
+      "litigation": "Required",
+      "risk": "Required",
+      "specialist": "Required"
+     },
+     "summary": "All answers agree that written notice within 18 months is required."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Limitation of Sellers' liability to the purchase price",
+     "positions": {
+      "deal": "Yes, limited to purchase price",
+      "litigation": "Yes, limited to purchase price",
+      "risk": "Not addressed",
+      "specialist": "Yes, limited to purchase price"
+     },
+     "summary": "The risk lawyer does not address the limitation of liability."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Minimum claim amount of GBP 25,000",
+     "positions": {
+      "deal": "Required",
+      "litigation": "Required",
+      "risk": "Required",
+      "specialist": "Required"
+     },
+     "summary": "All answers agree that the claim must be at least GBP 25,000."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Buyer provided written notice",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers address whether the Buyer provided written notice."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the claim exceeds GBP 25,000",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers address whether the claim exceeds GBP 25,000."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Whether the total claims exceed the purchase price",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Required"
+     },
+     "summary": "The specialist addresses this, but others do not."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Buyer can bring a warranty claim without meeting conditions",
+     "positions": {
+      "deal": "No, conditions must be met",
+      "litigation": "No, conditions must be met",
+      "risk": "No, conditions must be met",
+      "specialist": "No, conditions must be met"
+     },
+     "summary": "All answers agree that the Buyer cannot bring a claim without meeting conditions."
+    }
+   ]
+  },
+  {
+   "id": "H2-distribution-obligations",
+   "seconds": 28.0,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [],
+   "quotes": 12,
+   "verified": 12,
+   "uncited": 0,
+   "answered": 4,
+   "issues": 2,
+   "disagreements": 0,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The Distributor's main obligations under the Agreement include promoting the Products actively throughout the Territory [1], purchasing Products worth at least EUR 500,000 in each Contract Year [99], and not selling competing products during the Agreement [99].\n\nIf the Distributor misses the minimum purchases, the Supplier may terminate the Agreement on sixty (60) days' written notice [1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "The Distributor's main obligations under the Agreement include promoting the Products actively throughout the Territory [1], purchasing Products worth at least EUR 500,000 in each Contract Year [1], and not selling competing products during the Agreement [1].\n\nIf the Distributor misses the minimum purchases, the Supplier may end the Agreement on 60 days' written notice [1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "The Distributor's main obligations under this Agreement include promoting the Products actively throughout the Territory, purchasing Products worth at least EUR 500,000 in each Contract Year, and not selling competing products [1][1][1].\n\nIf the Distributor misses the minimum purchases, the Supplier may terminate the Agreement upon sixty (60) days' written notice [1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "specialist",
+     "text": "The Distributor's main obligations under the Agreement include promoting the Products actively throughout the Territory [1], purchasing Products worth at least EUR 500,000 in each Contract Year [99], and not selling competing products during the Agreement [99].\n\nIf the Distributor misses the minimum purchases, the Supplier may terminate the Agreement upon 60 days' written notice [1].",
+     "unsupported": [],
+     "missing": []
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Main obligations of the Distributor",
+     "positions": {
+      "deal": "Promote Products, purchase EUR 500,000, not sell competing products",
+      "litigation": "Promote Products, purchase EUR 500,000, not sell competing products",
+      "risk": "Promote Products, purchase EUR 500,000, not sell competing products",
+      "specialist": "Promote Products, purchase EUR 500,000, not sell competing products"
+     },
+     "summary": "All answers agree on the Distributor's main obligations."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Consequences of missing minimum purchases",
+     "positions": {
+      "deal": "Supplier may terminate on 60 days' written notice",
+      "litigation": "Supplier may terminate the Agreement upon 60 days' written notice",
+      "risk": "Supplier may end the Agreement on 60 days' written notice",
+      "specialist": "Supplier may terminate the Agreement upon 60 days' written notice"
+     },
+     "summary": "All answers agree on the consequence of missing minimum purchases."
+    }
+   ]
+  },
+  {
+   "id": "H3-breach-notification",
+   "seconds": 22.7,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [],
+   "quotes": 6,
+   "verified": 6,
+   "uncited": 5,
+   "answered": 4,
+   "issues": 4,
+   "disagreements": 2,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "Yes, the Processor must inform the Controller about a personal data breach. The Processor shall notify the Controller without undue delay, and in any event within twenty-four (24) hours, after becoming aware of a personal data breach [1].\n\nThe documents do not specify how quickly the notice must be given beyond the 24-hour requirement.",
+     "unsupported": [
+      "Yes, the Processor must inform the Controller about a personal data breach.",
+      "The documents do not specify how quickly the notice must be given beyond the 24-hour requirement."
+     ],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "Yes, the Processor must tell the Controller about a personal data breach. The Processor is required to notify the Controller without undue delay and, in any event, within twenty-four (24) hours after becoming aware of a personal data breach [1].",
+     "unsupported": [
+      "Yes, the Processor must tell the Controller about a personal data breach."
+     ],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "Yes, the Processor must tell the Controller about a personal data breach. The Processor is required to notify the Controller without undue delay and in any event within twenty-four (24) hours after becoming aware of a personal data breach [1].\n\nThe notice must describe the nature of the breach and the measures taken [1].",
+     "unsupported": [
+      "Yes, the Processor must tell the Controller about a personal data breach."
+     ],
+     "missing": []
+    },
+    {
+     "role": "specialist",
+     "text": "The Processor must notify the Controller about a personal data breach. The notice must be given without undue delay and in any event within twenty-four (24) hours after becoming aware of the breach [1].\n\nThe notice must describe the nature of the breach and the measures taken [1].",
+     "unsupported": [
+      "The Processor must notify the Controller about a personal data breach."
+     ],
+     "missing": []
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Must the Processor inform the Controller about a personal data breach?",
+     "positions": {
+      "deal": "Yes",
+      "litigation": "Yes",
+      "risk": "Yes",
+      "specialist": "Yes"
+     },
+     "summary": "All answers agree that the Processor must inform the Controller about a personal data breach."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "How quickly must the Processor notify the Controller?",
+     "positions": {
+      "deal": "Within 24 hours",
+      "litigation": "Within 24 hours",
+      "risk": "Within 24 hours",
+      "specialist": "Within 24 hours"
+     },
+     "summary": "All answers agree that the Processor must notify the Controller within 24 hours of becoming aware of a breach."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Is there a requirement for the notice to describe the nature of the breach?",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Yes",
+      "risk": "Not addressed",
+      "specialist": "Yes"
+     },
+     "summary": "The deal and risk answers do not address whether the notice must describe the nature of the breach, while the litigation and specialist answers state that it must."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Is there a requirement for the notice to describe the measures taken?",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Yes",
+      "risk": "Not addressed",
+      "specialist": "Yes"
+     },
+     "summary": "The deal and risk answers do not address whether the notice must describe the measures taken, while the litigation and specialist answers state that it must."
+    }
+   ]
+  }
+ ]
+}

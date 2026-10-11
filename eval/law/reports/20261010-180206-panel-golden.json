@@ -1,0 +1,916 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "555002b",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-180206",
+  "prompt_version": "panel-s4.5c"
+ },
+ "summary": {
+  "panels": 6,
+  "failed": 0,
+  "stop_right": "6/6",
+  "quotes_verified": "61/61",
+  "uncited_sentences": 18,
+  "perspectives_answered": "24/24",
+  "matrix_issues": 45,
+  "disagreements": 5,
+  "matrix_figures_unsupported": 0,
+  "seconds_per_panel": 37.7
+ },
+ "scenarios": [
+  {
+   "id": "G1-change-of-control",
+   "seconds": 41.4,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [
+    "whether the Customer's change of control triggers any other obligations",
+    "the exact nature of the change of control",
+    "and whether the Supplier's termination right is subject to any conditions beyond the 30-day notice period",
+    "Whether the Supplier's termination right is subject to any conditions beyond the 30-day notice period"
+   ],
+   "quotes": 10,
+   "verified": 10,
+   "uncited": 3,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 2,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The documents state that if the Customer undergoes a change of control, the Supplier may terminate the Agreement on thirty (30) days' written notice [1].\n\nThe documents also state that each party's total liability under the Agreement is limited to USD 250,000, and neither party is liable for indirect or consequential loss [1][1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "The documents state that if the Customer undergoes a change of control, the Supplier may terminate the Agreement on thirty (30) days' written notice [1]. \n\nThe Customer's total liability under the Agreement is capped at USD 250,000, and neither party is liable for indirect or consequential loss [1][1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "The documents indicate that if the Customer undergoes a change of control, the Supplier may terminate the Agreement. This is stated in the source as: \"The Supplier may terminate this Agreement on thirty (30) days' written notice if the Customer undergoes a change of control\" [14.2].\n\nRegarding liability, the documents state that each party's total liability under the Agreement is limited to USD 250,000, and neither party is liable for indirect or consequential loss [9.1][9.2].",
+     "unsupported": [
+      "The documents indicate that if the Customer undergoes a change of control, the Supplier may terminate the Agreement.",
+      "This is stated in the source as: \"The Supplier may terminate this Agreement on thirty (30) days' written notice if the Customer undergoes a change of control\" [14.2].",
+      "Regarding liability, the documents state that each party's total liability under the Agreement is limited to USD 250,000, and neither party is liable for indirect or consequential loss [9.1][9.2]."
+     ],
+     "missing": [
+      "whether the Customer's change of control triggers any other obligations",
+      "the exact nature of the change of control",
+      "and whether the Supplier's termination right is subject to any conditions beyond the 30-day notice period"
+     ]
+    },
+    {
+     "role": "specialist",
+     "text": "The Supplier may terminate this Agreement on thirty (30) days' written notice if the Customer undergoes a change of control [1]. \n\nThe Customer is required to notify the Supplier within ten (10) days of any change of control [1]. \n\nThe Customer's total liability under the Agreement is capped at USD 250,000, and neither party is liable for indirect or consequential loss [1][1].",
+     "unsupported": [],
+     "missing": []
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Right to terminate upon change of control",
+     "positions": {
+      "deal": "Supplier may terminate on 30 days' notice",
+      "litigation": "Supplier may terminate on 30 days' notice",
+      "risk": "Supplier may terminate on 30 days' notice",
+      "specialist": "Supplier may terminate on 30 days' notice"
+     },
+     "summary": "All answers agree that the Supplier may terminate the Agreement upon a change of control with 30 days' notice."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Customer's obligation to notify of change of control",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "Customer must notify Supplier within 10 days"
+     },
+     "summary": "The specialist states the Customer must notify the Supplier within 10 days, while others do not address this."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Liability cap",
+     "positions": {
+      "deal": "Each party's liability is limited to USD 250,000",
+      "litigation": "Each party's liability is limited to USD 250,000",
+      "risk": "Customer's liability is capped at USD 250,000",
+      "specialist": "Customer's liability is capped at USD 250,000"
+     },
+     "summary": "The deal, litigation, and specialist answers state that each party's liability is capped, while the risk answer only mentions the Customer's liability."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Indirect or consequential loss exclusion",
+     "positions": {
+      "deal": "Neither party is liable for indirect or consequential loss",
+      "litigation": "Neither party is liable for indirect or consequential loss",
+      "risk": "Neither party is liable for indirect or consequential loss",
+      "specialist": "Neither party is liable for indirect or consequential loss"
+     },
+     "summary": "All answers agree that neither party is liable for indirect or consequential loss."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Conditions on termination right",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers address whether the termination right is subject to any conditions beyond the 30-day notice period."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Definition of change of control",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers define what constitutes a change of control."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Other obligations triggered by change of control",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers address whether other obligations are triggered by a change of control."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the termination right is subject to conditions beyond 30-day notice",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers address whether the termination right is subject to any conditions beyond the 30-day notice period."
+    }
+   ]
+  },
+  {
+   "id": "G2-break-notice",
+   "seconds": 37.3,
+   "status": "needs_facts",
+   "stop_expected": true,
+   "stopped": true,
+   "stop_right": true,
+   "missing_facts": [
+    "whether the Tenant gave the required notice",
+    "whether the Tenant paid all rent due up to the break date",
+    "whether the Tenant gave six months' written notice",
+    "whether the Tenant had paid all rent due up to the break date"
+   ],
+   "quotes": 8,
+   "verified": 8,
+   "uncited": 4,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 0,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The documents state that the Tenant may end the Lease on 31 March 2030 by giving the Landlord not less than six months' written notice [1]. It also states that the break is conditional on the Tenant having paid all rent due up to the break date [1].\n\nThe documents do not indicate whether the Tenant has given the required notice or paid all rent due up to the break date.",
+     "unsupported": [
+      "The documents do not indicate whether the Tenant has given the required notice or paid all rent due up to the break date."
+     ],
+     "missing": [
+      "whether the Tenant gave the required notice",
+      "whether the Tenant paid all rent due up to the break date"
+     ]
+    },
+    {
+     "role": "risk",
+     "text": "The Lease allows the Tenant to end the Lease on 31 March 2030 by giving the Landlord not less than six months' written notice [1]. The break is conditional on the Tenant having paid all rent due up to the break date [1].\n\nThe documents do not state whether the Tenant has given the required notice or paid all rent due.",
+     "unsupported": [
+      "The documents do not state whether the Tenant has given the required notice or paid all rent due."
+     ],
+     "missing": [
+      "whether the Tenant gave six months' written notice",
+      "whether the Tenant paid all rent due up to the break date"
+     ]
+    },
+    {
+     "role": "litigation",
+     "text": "The Lease gives the Tenant the right to end the Lease on 31 March 2030 by giving the Landlord not less than six months' written notice [1]. The break is conditional on the Tenant having paid all rent due up to the break date [1]. \n\nThe documents do not state whether the Tenant has given the required notice or whether the Tenant has paid all rent due up to the break date.",
+     "unsupported": [
+      "The documents do not state whether the Tenant has given the required notice or whether the Tenant has paid all rent due up to the break date."
+     ],
+     "missing": [
+      "whether the Tenant gave six months' written notice",
+      "whether the Tenant had paid all rent due up to the break date"
+     ]
+    },
+    {
+     "role": "specialist",
+     "text": "The documents state that the Tenant may end the Lease on 31 March 2030 by giving the Landlord not less than six months' written notice [1]. It also states that the break is conditional on the Tenant having paid all rent due up to the break date [1].\n\nThe documents do not confirm whether the Tenant has given the required notice or paid all rent due up to the break date.",
+     "unsupported": [
+      "The documents do not confirm whether the Tenant has given the required notice or paid all rent due up to the break date."
+     ],
+     "missing": [
+      "Whether the Tenant gave six months' written notice",
+      "whether the Tenant paid all rent due up to the break date"
+     ]
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Tenant gave the required notice",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not indicate whether the Tenant gave the required notice."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Tenant paid all rent due up to the break date",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not indicate whether the Tenant paid all rent due up to the break date."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the break clause was validly exercised",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not confirm whether the break clause was validly exercised."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the break date is 31 March 2030",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the break date is 31 March 2030 as stated in the documents."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the notice period was six months",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the notice period is six months as stated in the documents."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the break clause is conditional on payment of rent",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the break clause is conditional on the Tenant having paid all rent due up to the break date."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Tenant has met all conditions for the break clause",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not confirm whether the Tenant has met all conditions for the break clause."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Tenant has validly exercised the break clause",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers agree that the documents do not confirm whether the Tenant has validly exercised the break clause."
+    }
+   ]
+  },
+  {
+   "id": "G3-restrictive-covenant",
+   "seconds": 39.3,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [],
+   "quotes": 12,
+   "verified": 12,
+   "uncited": 1,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 0,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The Agreement imposes restrictions on the Executive after employment ends. For twelve (12) months, the Executive shall not work for a competitor of the Company in the United Kingdom [1]. For six (6) months, the Executive shall not solicit any customer of the Company with whom the Executive dealt in the last year of employment [1]. Each restriction is a separate covenant and is reduced by any time the Executive spends on garden leave [1].",
+     "unsupported": [
+      "The Agreement imposes restrictions on the Executive after employment ends."
+     ],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "Under the Agreement, the Executive faces the following restrictions after employment ends:\n\nThe Executive shall not work for a competitor of the Company in the United Kingdom for twelve (12) months after the employment ends [1].\n\nAdditionally, the Executive shall not solicit any customer of the Company with whom the Executive dealt in the last year of employment for six (6) months after the employment ends [1].\n\nEach restriction is a separate covenant and is reduced by any time the Executive spends on garden leave [1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "The restrictions on the Executive after employment under the Agreement include the following:\n\nFor twelve (12) months after the employment ends, the Executive shall not work for a competitor of the Company in the United Kingdom [1].\n\nFor six (6) months after the employment ends, the Executive shall not solicit any customer of the Company with whom the Executive dealt in the last year of employment [1].\n\nEach restriction is a separate covenant and is reduced by any time the Executive spends on garden leave [1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "specialist",
+     "text": "The restrictions that apply to the Executive after the employment ends under this Agreement are as follows:  \n\nFor twelve (12) months after the employment ends, the Executive shall not work for a competitor of the Company in the United Kingdom [1].  \n\nFor six (6) months after the employment ends, the Executive shall not solicit any customer of the Company with whom the Executive dealt in the last year of employment [1].  \n\nEach restriction is a separate covenant and is reduced by any time the Executive spends on garden leave [1].",
+     "unsupported": [],
+     "missing": []
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Duration of non-compete restriction",
+     "positions": {
+      "deal": "12 months",
+      "litigation": "12 months",
+      "risk": "12 months",
+      "specialist": "12 months"
+     },
+     "summary": "All answers agree on the 12-month non-compete restriction."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Duration of non-solicitation restriction",
+     "positions": {
+      "deal": "6 months",
+      "litigation": "6 months",
+      "risk": "6 months",
+      "specialist": "6 months"
+     },
+     "summary": "All answers agree on the 6-month non-solicitation restriction."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Geographic scope of non-compete",
+     "positions": {
+      "deal": "United Kingdom",
+      "litigation": "United Kingdom",
+      "risk": "United Kingdom",
+      "specialist": "United Kingdom"
+     },
+     "summary": "All answers agree on the geographic scope of the non-compete restriction."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Applicability of non-solicitation to customers",
+     "positions": {
+      "deal": "Customers dealt with in the last year of employment",
+      "litigation": "Customers dealt with in the last year of employment",
+      "risk": "Customers dealt with in the last year of employment",
+      "specialist": "Customers dealt with in the last year of employment"
+     },
+     "summary": "All answers agree on the applicability of the non-solicitation restriction to customers from the last year of employment."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Treatment of garden leave",
+     "positions": {
+      "deal": "Reduces each restriction",
+      "litigation": "Reduces each restriction",
+      "risk": "Reduces each restriction",
+      "specialist": "Reduces each restriction"
+     },
+     "summary": "All answers agree that garden leave reduces the duration of each restriction."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Nature of restrictions",
+     "positions": {
+      "deal": "Separate covenants",
+      "litigation": "Separate covenants",
+      "risk": "Separate covenants",
+      "specialist": "Separate covenants"
+     },
+     "summary": "All answers agree that each restriction is a separate covenant."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Enforceability of restrictions",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers address the enforceability of the restrictions."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Specificity of customer definition",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers address the definition of 'customer' in the non-solicitation clause."
+    }
+   ]
+  },
+  {
+   "id": "H1-warranty-time-limit",
+   "seconds": 39.3,
+   "status": "needs_facts",
+   "stop_expected": true,
+   "stopped": true,
+   "stop_right": true,
+   "missing_facts": [
+    "whether the Buyer provided the required written notice within the 18-month period",
+    "the actual purchase price",
+    "and whether the claim exceeds GBP 25,000",
+    "whether the Buyer provided the required written notice",
+    "whether the claim exceeds GBP 25,000",
+    "and whether the total claim is within the purchase price limit",
+    "whether the Buyer provided written notice within 18 months after Completion",
+    "Whether the total claim is within the purchase price limit"
+   ],
+   "quotes": 11,
+   "verified": 11,
+   "uncited": 4,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 0,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The documents indicate that the Buyer can bring a warranty claim against the Sellers if certain conditions are met. The Sellers are not liable for a warranty claim unless the Buyer gives written notice of it within eighteen (18) months after Completion [1].\n\nHowever, the total liability of the Sellers for all warranty claims is limited to the purchase price [1].\n\nAdditionally, no claim may be brought for less than GBP 25,000 [1].",
+     "unsupported": [
+      "The documents indicate that the Buyer can bring a warranty claim against the Sellers if certain conditions are met."
+     ],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "The documents indicate that the Buyer can bring a warranty claim against the Sellers, but only if certain conditions are met. The Buyer must give written notice of the claim within 18 months after Completion [1]. Additionally, the total liability of the Sellers for all warranty claims is limited to the purchase price [1]. However, the Buyer cannot bring a claim for less than GBP 25,000 [1].",
+     "unsupported": [
+      "The documents indicate that the Buyer can bring a warranty claim against the Sellers, but only if certain conditions are met."
+     ],
+     "missing": [
+      "whether the Buyer provided the required written notice within the 18-month period",
+      "the actual purchase price",
+      "and whether the claim exceeds GBP 25,000"
+     ]
+    },
+    {
+     "role": "litigation",
+     "text": "The documents indicate that the Buyer may bring a warranty claim against the Sellers if certain conditions are met. Specifically, the Buyer must give written notice of the warranty claim within eighteen (18) months after Completion [1]. Additionally, the claim must be for at least GBP 25,000 [1]. The total liability of the Sellers for all warranty claims is capped at the purchase price [1].",
+     "unsupported": [
+      "The documents indicate that the Buyer may bring a warranty claim against the Sellers if certain conditions are met."
+     ],
+     "missing": [
+      "whether the Buyer provided the required written notice",
+      "whether the claim exceeds GBP 25,000",
+      "and whether the total claim is within the purchase price limit"
+     ]
+    },
+    {
+     "role": "specialist",
+     "text": "The documents state that the Buyer must give written notice of a warranty claim within 18 months after Completion [1]. \n\nThe documents also state that no claim may be brought for less than GBP 25,000 [1].\n\nThe documents do not specify whether the Buyer has provided the required written notice or whether the claim exceeds the minimum threshold of GBP 25,000.",
+     "unsupported": [
+      "The documents do not specify whether the Buyer has provided the required written notice or whether the claim exceeds the minimum threshold of GBP 25,000."
+     ],
+     "missing": [
+      "whether the Buyer provided written notice within 18 months after Completion",
+      "whether the claim exceeds GBP 25,000"
+     ]
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Buyer can bring a warranty claim",
+     "positions": {
+      "deal": "Yes, if conditions are met",
+      "litigation": "Yes, if conditions are met",
+      "risk": "Yes, if conditions are met",
+      "specialist": "Not addressed"
+     },
+     "summary": "All answers agree that the Buyer can bring a warranty claim if conditions are met."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Requirement for written notice",
+     "positions": {
+      "deal": "Required within 18 months",
+      "litigation": "Required within 18 months",
+      "risk": "Required within 18 months",
+      "specialist": "Required within 18 months"
+     },
+     "summary": "All answers agree that written notice is required within 18 months."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Timeframe for notice",
+     "positions": {
+      "deal": "18 months after Completion",
+      "litigation": "18 months after Completion",
+      "risk": "18 months after Completion",
+      "specialist": "18 months after Completion"
+     },
+     "summary": "All answers agree on the 18-month timeframe after Completion."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Minimum claim amount",
+     "positions": {
+      "deal": "GBP 25,000",
+      "litigation": "GBP 25,000",
+      "risk": "GBP 25,000",
+      "specialist": "GBP 25,000"
+     },
+     "summary": "All answers agree that the claim must be at least GBP 25,000."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Liability cap",
+     "positions": {
+      "deal": "Limited to purchase price",
+      "litigation": "Capped at purchase price",
+      "risk": "Limited to purchase price",
+      "specialist": "Not addressed"
+     },
+     "summary": "All answers except the specialist agree that liability is capped at the purchase price."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Buyer provided written notice",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers address whether the Buyer provided written notice."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the claim exceeds GBP 25,000",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers address whether the claim exceeds GBP 25,000."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the total claim is within the purchase price limit",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers address whether the total claim is within the purchase price limit."
+    }
+   ]
+  },
+  {
+   "id": "H2-distribution-obligations",
+   "seconds": 43.2,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [
+    "whether the Distributor met the minimum purchases",
+    "the exact definition of \"Territory\"",
+    "the specific terms of the 60-day notice period",
+    "Exact definition of 'Territory'",
+    "Exact definition of minimum purchases",
+    "Specific terms of the 60-day notice period"
+   ],
+   "quotes": 14,
+   "verified": 14,
+   "uncited": 0,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 0,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The Distributor's main obligations under this Agreement include promoting the Products actively throughout the Territory [1], purchasing Products worth at least EUR 500,000 in each Contract Year [99], and not selling competing products during the Agreement [99].\n\nIf the Distributor misses the minimum purchases, the Supplier may end the Agreement on 60 days' written notice [1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "The Distributor's main obligations under the Agreement include promoting the Products actively throughout the Territory [1], purchasing Products worth at least EUR 500,000 in each Contract Year [1], and not selling competing products during the Agreement [1].\n\nIf the Distributor misses the minimum purchases, the Supplier may end the Agreement on 60 days' written notice [1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "The Distributor's main obligations under this Agreement include promoting the Products actively throughout the Territory [1], purchasing Products worth at least EUR 500,000 in each Contract Year [1], and not selling competing products during the Agreement [1].\n\nIf the Distributor misses the minimum purchases, the Supplier may terminate the Agreement upon 60 days' written notice [1].",
+     "unsupported": [],
+     "missing": [
+      "whether the Distributor met the minimum purchases",
+      "the exact definition of \"Territory\"",
+      "the specific terms of the 60-day notice period"
+     ]
+    },
+    {
+     "role": "specialist",
+     "text": "The Distributor's main obligations under this Agreement include promoting the Products actively throughout the Territory [1], purchasing Products worth at least EUR 500,000 in each Contract Year [1], and not selling competing products during the Agreement [1].\n\nIf the Distributor misses the minimum purchases, the Supplier may terminate the Agreement upon 60 days' written notice [1].",
+     "unsupported": [],
+     "missing": []
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Main obligations of the Distributor",
+     "positions": {
+      "deal": "Promoting Products, purchasing EUR 500,000, not selling competing products",
+      "litigation": "Promoting Products, purchasing EUR 500,000, not selling competing products",
+      "risk": "Promoting Products, purchasing EUR 500,000, not selling competing products",
+      "specialist": "Promoting Products, purchasing EUR 500,000, not selling competing products"
+     },
+     "summary": "All answers agree on the Distributor's main obligations."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Consequences of missing minimum purchases",
+     "positions": {
+      "deal": "Supplier may end Agreement on 60 days' written notice",
+      "litigation": "Supplier may terminate Agreement upon 60 days' written notice",
+      "risk": "Supplier may end Agreement on 60 days' written notice",
+      "specialist": "Supplier may terminate Agreement upon 60 days' written notice"
+     },
+     "summary": "All answers agree on the consequence of missing minimum purchases, though terminology varies slightly."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Definition of 'Territory'",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers address the definition of 'Territory'."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Exact definition of minimum purchases",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers address the exact definition of minimum purchases."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Distributor met the minimum purchases",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers address whether the Distributor met the minimum purchases."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Specific terms of the 60-day notice period",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers address the specific terms of the 60-day notice period."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether 'end' and 'terminate' are synonymous in this context",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers address whether 'end' and 'terminate' are synonymous."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Agreement can be ended for other reasons",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "None of the answers address whether the Agreement can be ended for other reasons."
+    }
+   ]
+  },
+  {
+   "id": "H3-breach-notification",
+   "seconds": 25.5,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [],
+   "quotes": 6,
+   "verified": 6,
+   "uncited": 6,
+   "answered": 4,
+   "issues": 5,
+   "disagreements": 3,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "Yes, the Processor must inform the Controller about a personal data breach. The Processor shall notify the Controller without undue delay, and in any event within twenty-four (24) hours, after becoming aware of a personal data breach [1].\n\nThe documents do not specify how quickly the notice must be given beyond the 24-hour requirement.",
+     "unsupported": [
+      "Yes, the Processor must inform the Controller about a personal data breach.",
+      "The documents do not specify how quickly the notice must be given beyond the 24-hour requirement."
+     ],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "The Processor must tell the Controller about a personal data breach. The agreement states that the Processor shall notify the Controller without undue delay, and in any event within twenty-four (24) hours, after becoming aware of a personal data breach [1].\n\nThe documents do not specify how quickly the Processor must inform the Controller beyond the 24-hour requirement.",
+     "unsupported": [
+      "The Processor must tell the Controller about a personal data breach.",
+      "The documents do not specify how quickly the Processor must inform the Controller beyond the 24-hour requirement."
+     ],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "The Processor must notify the Controller about a personal data breach. The Processor shall notify the Controller without undue delay, and in any event within twenty-four (24) hours, after becoming aware of a personal data breach [1].\n\nThe notice must describe the nature of the breach and the measures taken [1].",
+     "unsupported": [
+      "The Processor must notify the Controller about a personal data breach."
+     ],
+     "missing": []
+    },
+    {
+     "role": "specialist",
+     "text": "Yes, the Processor must inform the Controller about a personal data breach. The Processor shall notify the Controller without undue delay, and in any event within twenty-four (24) hours, after becoming aware of a personal data breach [1].\n\nThe notice must describe the nature of the breach and the measures taken [1].",
+     "unsupported": [
+      "Yes, the Processor must inform the Controller about a personal data breach."
+     ],
+     "missing": []
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Must the Processor inform the Controller about a personal data breach?",
+     "positions": {
+      "deal": "Yes",
+      "litigation": "Yes",
+      "risk": "Yes",
+      "specialist": "Yes"
+     },
+     "summary": "All answers agree that the Processor must inform the Controller about a personal data breach."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "How quickly must the Processor inform the Controller?",
+     "positions": {
+      "deal": "Within 24 hours",
+      "litigation": "Within 24 hours",
+      "risk": "Within 24 hours",
+      "specialist": "Within 24 hours"
+     },
+     "summary": "All answers agree that the Processor must notify the Controller within 24 hours of becoming aware of a breach."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Does the agreement specify any additional time requirements beyond 24 hours?",
+     "positions": {
+      "deal": "No",
+      "litigation": "Not addressed",
+      "risk": "No",
+      "specialist": "Not addressed"
+     },
+     "summary": "The deal and risk answers state that no additional time requirements are specified, while the litigation and specialist answers do not address this issue."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Must the notice describe the nature of the breach?",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Yes",
+      "risk": "Not addressed",
+      "specialist": "Yes"
+     },
+     "summary": "The litigation and specialist answers state that the notice must describe the nature of the breach, while the deal and risk answers do not address this."
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Must the notice include measures taken to address the breach?",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Yes",
+      "risk": "Not addressed",
+      "specialist": "Yes"
+     },
+     "summary": "The litigation and specialist answers state that the notice must include measures taken, while the deal and risk answers do not address this."
+    }
+   ]
+  }
+ ]
+}

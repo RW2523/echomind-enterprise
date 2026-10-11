@@ -1367,6 +1367,34 @@ Every entry records the options considered, the recommendation, the consequence 
   - Only work done in EchoMind is seen. Telephone calls, email and thinking time are not, so suggestions undercount and are a starting point.
   - The 15-minute gap and the 6-minute allowance are engineering defaults for the firm to confirm (P-012-style policy, with the firm's billing rules).
 
+### D-057 The four-perspective review panel: separate cited answers, a moderator, a stop for missing facts, partner approval — RECORDED (S4.5; OPT-05, T08)
+- **Audit:**
+  - Research answers (S2.2) already give the evidence contract: numbered sources, `[n: "quote"]` citations, checked quotes, and evidence located by clause and line.
+  - The artifact framework (S2.6–S2.7) gives versions, approval bound to a hash and the Reviews queue.
+  - Nothing existed for several perspectives.
+- **Off by default:** `LEGAL_PANEL`; every route answers 404 otherwise.
+- **How it runs (`panel-s4.5c`, a background job):**
+  - **Search:** the matter is searched once, as the person who asked, by the research rules (signed versions; the research floor applies).
+  - **Four perspectives:** a deal lawyer, risk and compliance, a litigator, and a specialist in a chosen area (ten areas). Each answers in its own model call, with the same sources and without seeing the others.
+  - **Rules for each answer:** the research rules apply, plus its angle. Text addressed to an AI is withheld. Every quote is checked, and a citation labelled by clause number is matched to the source holding its quote (s4.5b). Uncited sentences are listed for the partner. The answer ends with the facts it lacks.
+  - **The moderator:** reads the four answers only (no sources, citations stripped). It lists issues, each perspective's position, disagreements and missing facts. Positions are capped in length, and a figure the moderator gives that no answer gave is flagged.
+- **The missing-facts stop:** the panel stops when there are missing facts and either the moderator says the question cannot be answered without them, or three of the four perspectives lack facts (s4.5c).
+  - A stopped panel cannot be approved and does not wait in the Reviews queue.
+  - The lawyer answers what they can, and the panel runs again as a new version. Their facts are marked "given by the lawyer (not from the documents)".
+- **Partner approval:** the matter's lead or a managing partner who did not ask approves exactly the version read; others get 403.
+- **Presentation:** every panel says it is "Four perspectives drafted by the same AI model … not independent experts and not legal advice". The screens never call the perspectives experts.
+- **Benchmark (`eval/law/panel`, real model, five calls per panel):** it measures stop decisions, quotes verified, uncited sentences, perspectives answered, matrix figures unsupported, and seconds per panel.
+  - **Golden on `s4.5`:** stop 3/3, quotes 20/20. But one matter's perspectives all cited by clause number, so nothing was checked (17 uncited), and a model echoed the instruction as a missing fact.
+  - **`s4.5b`:** golden stop 3/3, quotes 32/32, uncited 7, figures 0, 37.8 s.
+  - **Held-out 1 (blind, s4.5b): stop 2/3,** quotes 29/29, figures 0, 30.4 s. All four perspectives lacked the date of a warranty notice, but the moderator did not stop.
+  - **`s4.5c`:** held-out 1 moved to golden. Golden (6) stop 6/6, quotes 61/61, all 24 perspectives answered, figures 0, 37.7 s.
+  - **Held-out 2 (blind, s4.5c): stop 3/3, quotes 32/32,** all answered, figures 0, **35.5 s per panel**.
+- **Limits:**
+  - **Similar perspectives:** the four perspectives come from one model and are often alike. The disagreement matrix shows only what the answers say.
+  - **Repeated facts:** missing facts can repeat in different words, and the lawyer answers any subset.
+  - **Search:** a short question that misses the documents' words can find no sources, and all four then abstain.
+  - **Time:** about 30 to 40 seconds a panel on this host.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

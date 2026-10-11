@@ -1,0 +1,491 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "c295e7d+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-175535",
+  "prompt_version": "panel-s4.5b"
+ },
+ "summary": {
+  "panels": 3,
+  "failed": 0,
+  "stop_right": "3/3",
+  "quotes_verified": "32/32",
+  "uncited_sentences": 7,
+  "perspectives_answered": "12/12",
+  "matrix_issues": 24,
+  "disagreements": 4,
+  "matrix_figures_unsupported": 0,
+  "seconds_per_panel": 37.8
+ },
+ "scenarios": [
+  {
+   "id": "G1-change-of-control",
+   "seconds": 36.3,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [
+    "the specific terms of the termination notice",
+    "whether the Customer's change of control triggers any other obligations",
+    "the exact definition of \"change of control\" in the Agreement",
+    "whether the Customer actually underwent a change of control",
+    "whether the Supplier provided the required thirty-day notice",
+    "and whether any termination was effective",
+    "Specific terms of the termination notice",
+    "Whether any termination was effective"
+   ],
+   "quotes": 12,
+   "verified": 12,
+   "uncited": 0,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 4,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The Supplier may terminate this Agreement on thirty (30) days' written notice if the Customer undergoes a change of control [1].\n\nThe Customer's liability is capped at USD 250,000, and neither party is liable for indirect or consequential loss [1][1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "The documents state that if the Customer undergoes a change of control, the Supplier may terminate the Agreement upon thirty (30) days' written notice [1]. \n\nThe Customer's liability is capped at USD 250,000, and neither party is liable for indirect or consequential loss [1][1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "The Supplier may terminate this Agreement on thirty (30) days' written notice if the Customer undergoes a change of control [1]. \n\nThe Customer's liability is capped at USD 250,000, and neither party is liable for indirect or consequential loss [1][1].",
+     "unsupported": [],
+     "missing": [
+      "the specific terms of the termination notice",
+      "whether the Customer's change of control triggers any other obligations",
+      "the exact definition of \"change of control\" in the Agreement"
+     ]
+    },
+    {
+     "role": "specialist",
+     "text": "The Supplier may terminate this Agreement on thirty (30) days' written notice if the Customer undergoes a change of control [1]. \n\nThe Customer's liability is capped at USD 250,000, and neither party is liable for indirect or consequential loss [1][1].",
+     "unsupported": [],
+     "missing": [
+      "whether the Customer actually underwent a change of control",
+      "whether the Supplier provided the required thirty-day notice",
+      "and whether any termination was effective"
+     ]
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Right to terminate upon change of control",
+     "positions": {
+      "deal": "Supplier may terminate",
+      "litigation": "Supplier may terminate",
+      "risk": "Supplier may terminate",
+      "specialist": "Supplier may terminate"
+     },
+     "summary": "All agree the Supplier may terminate on 30 days' notice"
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Customer's liability",
+     "positions": {
+      "deal": "Capped at USD 250,000",
+      "litigation": "Capped at USD 250,000",
+      "risk": "Capped at USD 250,000",
+      "specialist": "Capped at USD 250,000"
+     },
+     "summary": "All agree Customer's liability is capped at USD 250,000"
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Indirect or consequential loss",
+     "positions": {
+      "deal": "Not liable",
+      "litigation": "Not liable",
+      "risk": "Not liable",
+      "specialist": "Not liable"
+     },
+     "summary": "All agree neither party is liable for indirect or consequential loss"
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Definition of change of control",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers address the definition of change of control"
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Specific terms of termination notice",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Required",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "Litigation addresses specific terms, others do not"
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Whether change of control occurred",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Required"
+     },
+     "summary": "Specialist requires confirmation of change of control"
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Whether notice was provided",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Required"
+     },
+     "summary": "Specialist requires confirmation of notice"
+    },
+    {
+     "disagreement": true,
+     "figures_unsupported": [],
+     "issue": "Effectiveness of termination",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Required"
+     },
+     "summary": "Specialist requires confirmation of termination effectiveness"
+    }
+   ]
+  },
+  {
+   "id": "G2-break-notice",
+   "seconds": 37.5,
+   "status": "needs_facts",
+   "stop_expected": true,
+   "stopped": true,
+   "stop_right": true,
+   "missing_facts": [
+    "whether the Tenant gave six months' written notice",
+    "whether the Tenant paid all rent due up to the break date",
+    "whether the Tenant provided six months' written notice",
+    "whether the Tenant had paid all rent due up to 31 March 2030",
+    "whether the Tenant gave the Landlord six months' written notice"
+   ],
+   "quotes": 8,
+   "verified": 8,
+   "uncited": 4,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 0,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "The documents state that the Tenant may end the Lease on 31 March 2030 by giving the Landlord not less than six months' written notice [1]. It also states that the break is conditional on the Tenant having paid all rent due up to the break date [1]. \n\nThe documents do not confirm whether the Tenant has given the required notice or paid all rent due up to the break date.",
+     "unsupported": [
+      "The documents do not confirm whether the Tenant has given the required notice or paid all rent due up to the break date."
+     ],
+     "missing": [
+      "whether the Tenant gave six months' written notice",
+      "whether the Tenant paid all rent due up to the break date"
+     ]
+    },
+    {
+     "role": "risk",
+     "text": "The Lease allows the Tenant to end the Lease on 31 March 2030 by giving the Landlord not less than six months' written notice [1]. The break is conditional on the Tenant having paid all rent due up to the break date [1].\n\nThe documents in this matter do not answer whether the Tenant has provided the required notice or paid all rent due.",
+     "unsupported": [
+      "The documents in this matter do not answer whether the Tenant has provided the required notice or paid all rent due."
+     ],
+     "missing": [
+      "whether the Tenant provided six months' written notice",
+      "whether the Tenant had paid all rent due up to 31 March 2030"
+     ]
+    },
+    {
+     "role": "litigation",
+     "text": "The Tenant may end this Lease on 31 March 2030 by giving the Landlord not less than six months' written notice [1]. The break is conditional on the Tenant having paid all rent due up to the break date [1].\n\nThe documents in this matter do not answer that.",
+     "unsupported": [],
+     "missing": [
+      "whether the Tenant gave the Landlord six months' written notice",
+      "whether the Tenant paid all rent due up to the break date"
+     ]
+    },
+    {
+     "role": "specialist",
+     "text": "The Lease allows the Tenant to end the Lease on 31 March 2030 by giving the Landlord not less than six months' written notice [1]. The break is conditional on the Tenant having paid all rent due up to the break date [1].\n\nThe documents do not state whether the Tenant has given the required notice or paid all rent due. Therefore, it is not possible to determine if the Tenant has validly exercised the break clause.",
+     "unsupported": [
+      "The documents do not state whether the Tenant has given the required notice or paid all rent due.",
+      "Therefore, it is not possible to determine if the Tenant has validly exercised the break clause."
+     ],
+     "missing": [
+      "whether the Tenant gave six months' written notice",
+      "whether the Tenant paid all rent due up to the break date"
+     ]
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Tenant gave six months' written notice",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers do not address whether the Tenant gave six months' written notice."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Tenant paid all rent due up to the break date",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers do not address whether the Tenant paid all rent due up to the break date."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the break clause was validly exercised",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers do not address whether the break clause was validly exercised."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the conditions for the break clause are met",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers do not address whether the conditions for the break clause are met."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the Lease allows the Tenant to end the Lease on 31 March 2030",
+     "positions": {
+      "deal": "stated",
+      "litigation": "stated",
+      "risk": "stated",
+      "specialist": "stated"
+     },
+     "summary": "All answers agree that the Lease allows the Tenant to end the Lease on 31 March 2030."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the break is conditional on the Tenant having paid all rent due up to the break date",
+     "positions": {
+      "deal": "stated",
+      "litigation": "stated",
+      "risk": "stated",
+      "specialist": "stated"
+     },
+     "summary": "All answers agree that the break is conditional on the Tenant having paid all rent due up to the break date."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the documents confirm the Tenant has given the required notice",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers do not address whether the documents confirm the Tenant has given the required notice."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Whether the documents confirm the Tenant has paid all rent due up to the break date",
+     "positions": {
+      "deal": "not addressed",
+      "litigation": "not addressed",
+      "risk": "not addressed",
+      "specialist": "not addressed"
+     },
+     "summary": "All answers do not address whether the documents confirm the Tenant has paid all rent due up to the break date."
+    }
+   ]
+  },
+  {
+   "id": "G3-restrictive-covenant",
+   "seconds": 39.5,
+   "status": "done",
+   "stop_expected": false,
+   "stopped": false,
+   "stop_right": true,
+   "missing_facts": [],
+   "quotes": 12,
+   "verified": 12,
+   "uncited": 3,
+   "answered": 4,
+   "issues": 8,
+   "disagreements": 0,
+   "matrix_figures_unsupported": 0,
+   "perspectives": [
+    {
+     "role": "deal",
+     "text": "Under the Agreement, the Executive faces several restrictions after employment ends. For twelve (12) months after the employment ends, the Executive shall not work for a competitor of the Company in the United Kingdom [1]. Additionally, for six (6) months after the employment ends, the Executive shall not solicit any customer of the Company with whom the Executive dealt in the last year of employment [1]. Each restriction is a separate covenant and is reduced by any time the Executive spends on garden leave [1].",
+     "unsupported": [
+      "Under the Agreement, the Executive faces several restrictions after employment ends."
+     ],
+     "missing": []
+    },
+    {
+     "role": "risk",
+     "text": "The Agreement imposes restrictions on the Executive after employment ends. Specifically, for twelve (12) months after the employment ends, the Executive shall not work for a competitor of the Company in the United Kingdom [1]. Additionally, for six (6) months after the employment ends, the Executive shall not solicit any customer of the Company with whom the Executive dealt in the last year of employment [1]. Each restriction is a separate covenant and is reduced by any time the Executive spends on garden leave [1].",
+     "unsupported": [
+      "The Agreement imposes restrictions on the Executive after employment ends."
+     ],
+     "missing": []
+    },
+    {
+     "role": "litigation",
+     "text": "Under the Agreement, the Executive faces the following restrictions after employment ends:\n\n- For twelve (12) months after the employment ends, the Executive shall not work for a competitor of the Company in the United Kingdom [1].\n\n- For six (6) months after the employment ends, the Executive shall not solicit any customer of the Company with whom the Executive dealt in the last year of employment [1].\n\n- Each restriction is a separate covenant and is reduced by any time the Executive spends on garden leave [1].",
+     "unsupported": [],
+     "missing": []
+    },
+    {
+     "role": "specialist",
+     "text": "Under the Agreement, the Executive faces specific restrictions after employment ends. For twelve (12) months, the Executive shall not work for a competitor of the Company in the United Kingdom [1]. Additionally, for six (6) months, the Executive shall not solicit any customer of the Company with whom the Executive dealt in the last year of employment [1]. Each restriction is a separate covenant and is reduced by any time the Executive spends on garden leave [1].",
+     "unsupported": [
+      "Under the Agreement, the Executive faces specific restrictions after employment ends."
+     ],
+     "missing": []
+    }
+   ],
+   "matrix": [
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Duration of non-compete restriction",
+     "positions": {
+      "deal": "12 months",
+      "litigation": "12 months",
+      "risk": "12 months",
+      "specialist": "12 months"
+     },
+     "summary": "All answers agree on the 12-month non-compete restriction."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Duration of non-solicitation restriction",
+     "positions": {
+      "deal": "6 months",
+      "litigation": "6 months",
+      "risk": "6 months",
+      "specialist": "6 months"
+     },
+     "summary": "All answers agree on the 6-month non-solicitation restriction."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Geographic scope of non-compete",
+     "positions": {
+      "deal": "United Kingdom",
+      "litigation": "United Kingdom",
+      "risk": "United Kingdom",
+      "specialist": "United Kingdom"
+     },
+     "summary": "All answers agree on the United Kingdom as the geographic scope."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Definition of 'customer' for non-solicitation",
+     "positions": {
+      "deal": "Customer with whom the Executive dealt in the last year of employment",
+      "litigation": "Customer with whom the Executive dealt in the last year of employment",
+      "risk": "Customer with whom the Executive dealt in the last year of employment",
+      "specialist": "Customer with whom the Executive dealt in the last year of employment"
+     },
+     "summary": "All answers agree on the definition of 'customer' for non-solicitation."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Effect of garden leave on restrictions",
+     "positions": {
+      "deal": "Reduced by any time spent on garden leave",
+      "litigation": "Reduced by any time spent on garden leave",
+      "risk": "Reduced by any time spent on garden leave",
+      "specialist": "Reduced by any time spent on garden leave"
+     },
+     "summary": "All answers agree that garden leave reduces the restrictions."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Nature of restrictions",
+     "positions": {
+      "deal": "Separate covenants",
+      "litigation": "Separate covenants",
+      "risk": "Separate covenants",
+      "specialist": "Separate covenants"
+     },
+     "summary": "All answers agree that each restriction is a separate covenant."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Enforceability of restrictions",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers address the enforceability of the restrictions."
+    },
+    {
+     "disagreement": false,
+     "figures_unsupported": [],
+     "issue": "Other potential restrictions",
+     "positions": {
+      "deal": "Not addressed",
+      "litigation": "Not addressed",
+      "risk": "Not addressed",
+      "specialist": "Not addressed"
+     },
+     "summary": "None of the answers mention other potential restrictions."
+    }
+   ]
+  }
+ ]
+}

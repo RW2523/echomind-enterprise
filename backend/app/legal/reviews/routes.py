@@ -91,7 +91,13 @@ def review_artifact(matter_id: str, artifact_id: str, inp: ReviewIn, request: Re
     """Approve the version you read (by its content hash), or ask for changes with a reason."""
     p = principal_of(request)
     require(p, "artifacts.approve", matter_id)
-    _artifact(p, matter_id, artifact_id)
+    a = _artifact(p, matter_id, artifact_id)
+    if a["kind"] == "panel":                             # S4.5 (D-057): a partner decides, once the facts are in
+        from ..panel.run import is_partner
+        if a["content"].get("stopped"):
+            raise HTTPException(status_code=409, detail="The panel stopped for missing facts. Give them first; it then runs again.")
+        if not is_partner(p, matter_id):
+            raise HTTPException(status_code=403, detail="A panel review is decided by a partner: the matter's lead or a managing partner.")
     if inp.decision == "changes_requested" and not (inp.reason or "").strip():
         raise HTTPException(status_code=422, detail="Say what should change.")
     try:

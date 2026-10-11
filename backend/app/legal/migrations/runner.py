@@ -157,6 +157,7 @@ _REFUSE_BELOW = (
      "delete {n} intake record(s), matter party record(s) and intake or conflicts role grant(s)"),
     (32, "SELECT COUNT(*) FROM legal_time_entries WHERE status = 'approved' OR edited = 1",
      "delete {n} time entr(y/ies) people edited or approved"),
+    (33, "SELECT COUNT(*) FROM legal_panel_reviews", "delete {n} panel review(s) and the questions asked"),
 )
 
 

@@ -1,0 +1,41 @@
+{
+ "about": "S4.5 panel benchmark — the HELD-OUT set (second, after panel-s4.5c): written and committed before it was run, never used to change the panel, run once per version. Fictional matters only.",
+ "scenarios": [
+  {
+   "id": "K1-notice-to-terminate",
+   "specialist": "commercial",
+   "stop": true,
+   "question": "Did the Customer give valid notice to end this Agreement for convenience?",
+   "documents": [
+    {
+     "name": "Software Licence Agreement (fictional).txt",
+     "text": "SOFTWARE LICENCE AGREEMENT (fictional)\n\nThis Agreement is made between Northbridge Analytics AB (the Licensor) and Brightwater Retail Ltd (the Customer).\n\n11. Termination\n11.1 The Customer may end this Agreement for convenience by giving not less than ninety (90) days' written notice expiring on an anniversary of the Start Date.\n11.2 Notice must be signed by a director of the Customer.\n\n20. Notices\n20.1 Notices must be sent by email to legal@northbridge.example and confirmed by post.\n"
+    }
+   ]
+  },
+  {
+   "id": "K2-loan-covenants",
+   "specialist": "finance",
+   "stop": false,
+   "question": "What financial covenants must the Borrower meet under this Facility Agreement, and what follows a breach?",
+   "documents": [
+    {
+     "name": "Facility Agreement (fictional).txt",
+     "text": "FACILITY AGREEMENT (fictional)\n\nThis Agreement is made between Tidewater Holdings Ltd (the Borrower) and Calder Bank plc (the Lender).\n\n19. Financial covenants\n19.1 The Borrower shall ensure that its leverage (total net debt to EBITDA) does not exceed 3.0:1 on each test date.\n19.2 The Borrower shall ensure that its interest cover is at least 4.0:1 on each test date.\n\n23. Events of default\n23.1 A breach of clause 19 is an event of default.\n23.2 After an event of default the Lender may cancel the facility and declare all loans immediately due.\n"
+    }
+   ]
+  },
+  {
+   "id": "K3-ip-ownership",
+   "specialist": "ip",
+   "stop": false,
+   "question": "Who owns the software the Developer writes under this Agreement?",
+   "documents": [
+    {
+     "name": "Development Agreement (fictional).txt",
+     "text": "DEVELOPMENT AGREEMENT (fictional)\n\nThis Agreement is made between Heron Robotics Ltd (the Client) and Lumen Code Ltd (the Developer).\n\n8. Intellectual property\n8.1 All intellectual property in the Deliverables vests in the Client on creation.\n8.2 The Developer keeps ownership of its pre-existing tools and grants the Client a perpetual, royalty-free licence to use them with the Deliverables.\n8.3 The Developer waives any moral rights in the Deliverables.\n"
+    }
+   ]
+  }
+ ]
+}

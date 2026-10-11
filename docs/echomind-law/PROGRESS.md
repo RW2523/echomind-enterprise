@@ -7,10 +7,10 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.5-panel` |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1–S4.3 merged; S4.5 next (S4.4 BLOCKED) |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.6-gate` (the Phase 4 gate) |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged (S4.4 BLOCKED); the Phase 4 gate next |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0032` (Law edition only) |
+| Migrations | `0001`–`0033` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
 
 ## Session log
@@ -626,6 +626,21 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Suites:** backend 1256; security suite with an S4.3 group; Vitest 152; journey 32; full browser suite 32/32.
 - **Docs:** D-056, run 33. Merged into `feature/echomind-law`.
 
+### Session 3 (continued) — S4.5 Four-perspective review panel (OPT-05)
+- **Built (D-057), off by default (`LEGAL_PANEL`):**
+  - Four perspectives answer separately with checked citations.
+  - A moderator reads only their answers into a disagreement matrix.
+  - The panel stops for missing facts (moderator, or three of four perspectives), at most eight, and runs again with the lawyer's facts.
+  - **Approval:** by a partner only.
+  - **Other:** questions can be limited to chosen documents; it runs as a background job; it is presented as one model's perspectives, not independent experts.
+  - **Migration 0033.** **UI:** Review panel and a review page.
+- **Benchmark:** blind held-out 2 gave stop 3/3, quotes 32/32, figures 0, 35.5 s a panel. The earlier runs, including held-out 1 at stop 2/3, are reported in D-057.
+- **Found by the full browser suite:** a panel on a matter with several agreements stopped legitimately (so questions can now be limited to chosen documents), and nine missing facts exceeded the form's eight (now capped).
+- **Also fixed:** a flaky time-entry test.
+- **Suites:** backend 1273; security suite with an S4.5 group; Vitest 156; full browser suite 33/33.
+- **Also built:** the Phase 4 gate tooling (`run_gate.py --phase 4`, `make_packet.py --phase 4`, `score.py --phase 4`, `releases/phase4-rubric.md`).
+- **Docs:** D-057, run 34. Merged into `feature/echomind-law`.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -699,28 +714,21 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Continue **Phase 4** under the owner's standing approval (2026-10-10). S4.1–S4.3 are merged into `feature/echomind-law`.
-1. **S4.5 Four-perspective panel (OPT-05)** on `law/s4.5-panel`. The backend is built and its 10 tests pass (`git stash` "s4.5 wip"):
-   - migration 0033 and `app/legal/panel`;
-   - four perspectives, each in its own call with checked quotes;
-   - a moderator that sees only their answers, building the disagreement matrix;
-   - the missing-facts stop and a re-run with the lawyer's facts;
-   - partner-only approval;
-   - the Reviews queue.
-
-   Next:
-   - the Panel page (ask, the four answers, the matrix, the facts form, approval);
-   - Vitest;
-   - a benchmark evaluation (golden and blind held-out: quotes verified, stop accuracy, disagreement found, figures, seconds per panel);
-   - journey 33;
-   - D-057, run 34; merge.
-2. S4.4 stays BLOCKED (licensed source and network approval).
-3. Then the **Phase 4 gate** (`run_gate.py --phase 4`, the summaries and panel evaluations, the security and browser suites, `releases/phase4-gate.md`).
+Run the **Phase 4 gate** on `law/s4.6-gate` (all buildable Phase 4 slices are merged; S4.4 stays BLOCKED):
+1. `cd backend && python3 ../eval/law/run_gate.py --phase 4 --import-into ../.law-data`. It runs:
+   - the summaries and panel golden sets;
+   - the held-out sets, which are cited, having already been run on these versions;
+   - the security suite and the browser journeys.
+2. `python3 eval/law/lawyer_review/make_packet.py --phase 4`. The scoring is 🔒: it needs a lawyer.
+3. `releases/phase4-gate.md` (as for Phase 3), D-058 and run 35, then PROGRESS and the feature matrix. Then merge.
+4. Then report to the owner. Everything in the spec that can be built without approval is then built.
 
 Still 🔒 and confirmed one by one:
-- the Phase 2 and Phase 3 lawyer reviews;
+- the lawyer reviews (Phases 2, 3 and 4);
 - the manual Word check;
 - P-001…P-015;
+- S4.4 (licensed source and network);
+- local machine translation (model licence);
 - any GitHub push;
 - the first `compose.sh up`;
 - the root-run T11;

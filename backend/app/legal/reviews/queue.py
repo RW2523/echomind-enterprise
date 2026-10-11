@@ -19,7 +19,8 @@ from ...core.db import get_conn
 from .. import artifacts, policy
 
 _KIND_PATH = {"minutes": "/m/{number}/meetings/{subject}?tab=minutes", "research_note": "/m/{number}/notes/{id}",
-              "legal_draft": "/m/{number}/drafting/{id}", "redline": "/m/{number}/redlines/{id}", "summary": "/m/{number}/summaries/{id}"}
+              "legal_draft": "/m/{number}/drafting/{id}", "redline": "/m/{number}/redlines/{id}", "summary": "/m/{number}/summaries/{id}",
+              "panel": "/m/{number}/panel/{subject}"}
 
 
 def _name(conn, uid):
@@ -32,6 +33,11 @@ def _matters(p: dict) -> dict[str, dict]:
         rows = conn.execute(f"SELECT m.id, m.number, m.title FROM matters m WHERE {policy.visible_matters_sql()}",
                             {"uid": p["sub"], "org": p["org_id"], "now": policy.now_iso()}).fetchall()
     return {r[0]: {"id": r[0], "number": r[1], "title": r[2]} for r in rows}
+
+
+def _partner(p: dict, matter_id: str) -> bool:
+    from ..panel.run import is_partner
+    return is_partner(p, matter_id)
 
 
 def _drafts(p: dict, matters: dict, waiting: list, mine: list) -> None:
@@ -59,7 +65,7 @@ def _drafts(p: dict, matters: dict, waiting: list, mine: list) -> None:
         if a["created_by"] == p["sub"]:
             mine.append({**item, "state": "changes_requested" if sent_back else "waiting",
                          "reason": last["reason"] if sent_back else None, "decided_by": last["by"] if sent_back else None})
-        elif mid in approver and not sent_back:
+        elif mid in approver and not sent_back and (a["kind"] != "panel" or (not a["content"].get("stopped") and _partner(p, mid))):
             waiting.append(item)
 
 

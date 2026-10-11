@@ -24,13 +24,13 @@ from ..policy import now_iso
 
 ROOT = Path(__file__).resolve().parents[4]
 _NAME = re.compile(r"^(\d{8}-\d{6})-(.+)\.json$")
-_SUITES = ("research", "compare", "assist", "minutes", "transcription", "gate", "latency", "load", "injection", "lawyer", "drafting", "playbook", "redline", "citations", "definitions", "obligations", "diligence", "governance", "summaries")
+_SUITES = ("research", "compare", "assist", "minutes", "transcription", "gate", "latency", "load", "injection", "lawyer", "drafting", "playbook", "redline", "citations", "definitions", "obligations", "diligence", "governance", "summaries", "panel")
 _DATASETS = {"research": "eval/law/{set}.jsonl", "compare": "eval/law/compare/{set}.json", "assist": "eval/law/assist/{set}.json",
              "minutes": "eval/law/minutes/{set}.json", "transcription": "eval/law/transcription/scenarios.json",
              "drafting": "eval/law/drafting/{set}.json", "playbook": "eval/law/playbook/{set}.json",
              "citations": "eval/law/citations/{set}.json", "definitions": "eval/law/definitions/{set}.json",
              "obligations": "eval/law/obligations/{set}.json", "diligence": "eval/law/diligence/{set}.json", "governance": "eval/law/governance/{set}.json",
-             "summaries": "eval/law/summaries/{set}.json"}
+             "summaries": "eval/law/summaries/{set}.json", "panel": "eval/law/panel/{set}.json"}
 _MODEL_KEYS = ("model", "embeddings", "reranker", "asr", "voice")
 _COLS = ("id", "suite", "set_name", "commit_ref", "models_json", "dataset_sha256", "summary_json", "report", "report_sha256", "run_at", "imported_at")
 

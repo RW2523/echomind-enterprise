@@ -1,0 +1,500 @@
+[
+ {
+  "id": "R001",
+  "kind": "panel_perspective",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate deal"
+  ]
+ },
+ {
+  "id": "R002",
+  "kind": "panel_perspective",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate risk"
+  ]
+ },
+ {
+  "id": "R003",
+  "kind": "panel_perspective",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate litigation"
+  ]
+ },
+ {
+  "id": "R004",
+  "kind": "panel_perspective",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate specialist"
+  ]
+ },
+ {
+  "id": "R005",
+  "kind": "panel_issue",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate issue 1"
+  ]
+ },
+ {
+  "id": "R006",
+  "kind": "panel_issue",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate issue 2"
+  ]
+ },
+ {
+  "id": "R007",
+  "kind": "panel_issue",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate issue 3"
+  ]
+ },
+ {
+  "id": "R008",
+  "kind": "panel_issue",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate issue 4"
+  ]
+ },
+ {
+  "id": "R009",
+  "kind": "panel_issue",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate issue 5"
+  ]
+ },
+ {
+  "id": "R010",
+  "kind": "panel_issue",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate issue 6"
+  ]
+ },
+ {
+  "id": "R011",
+  "kind": "panel_issue",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate issue 7"
+  ]
+ },
+ {
+  "id": "R012",
+  "kind": "panel_issue",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate issue 8"
+  ]
+ },
+ {
+  "id": "R013",
+  "kind": "panel_stop",
+  "group": "G01",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K1-notice-to-terminate stop"
+  ]
+ },
+ {
+  "id": "G01",
+  "kind": "missed",
+  "group": "G01",
+  "source": [
+   "panel:K1-notice-to-terminate"
+  ]
+ },
+ {
+  "id": "R014",
+  "kind": "panel_perspective",
+  "group": "G02",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K2-loan-covenants deal"
+  ]
+ },
+ {
+  "id": "R015",
+  "kind": "panel_perspective",
+  "group": "G02",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K2-loan-covenants risk"
+  ]
+ },
+ {
+  "id": "R016",
+  "kind": "panel_perspective",
+  "group": "G02",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K2-loan-covenants litigation"
+  ]
+ },
+ {
+  "id": "R017",
+  "kind": "panel_perspective",
+  "group": "G02",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K2-loan-covenants specialist"
+  ]
+ },
+ {
+  "id": "R018",
+  "kind": "panel_issue",
+  "group": "G02",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K2-loan-covenants issue 1"
+  ]
+ },
+ {
+  "id": "R019",
+  "kind": "panel_issue",
+  "group": "G02",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K2-loan-covenants issue 2"
+  ]
+ },
+ {
+  "id": "R020",
+  "kind": "panel_issue",
+  "group": "G02",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K2-loan-covenants issue 3"
+  ]
+ },
+ {
+  "id": "R021",
+  "kind": "panel_stop",
+  "group": "G02",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K2-loan-covenants stop"
+  ]
+ },
+ {
+  "id": "G02",
+  "kind": "missed",
+  "group": "G02",
+  "source": [
+   "panel:K2-loan-covenants"
+  ]
+ },
+ {
+  "id": "R022",
+  "kind": "panel_perspective",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership deal"
+  ]
+ },
+ {
+  "id": "R023",
+  "kind": "panel_perspective",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership risk"
+  ]
+ },
+ {
+  "id": "R024",
+  "kind": "panel_perspective",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership litigation"
+  ]
+ },
+ {
+  "id": "R025",
+  "kind": "panel_perspective",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership specialist"
+  ]
+ },
+ {
+  "id": "R026",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership issue 1"
+  ]
+ },
+ {
+  "id": "R027",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership issue 2"
+  ]
+ },
+ {
+  "id": "R028",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership issue 3"
+  ]
+ },
+ {
+  "id": "R029",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership issue 4"
+  ]
+ },
+ {
+  "id": "R030",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership issue 5"
+  ]
+ },
+ {
+  "id": "R031",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership issue 6"
+  ]
+ },
+ {
+  "id": "R032",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership issue 7"
+  ]
+ },
+ {
+  "id": "R033",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership issue 8"
+  ]
+ },
+ {
+  "id": "R034",
+  "kind": "panel_stop",
+  "group": "G03",
+  "source": [
+   "20261010-180401-panel-heldout.json",
+   "K3-ip-ownership stop"
+  ]
+ },
+ {
+  "id": "G03",
+  "kind": "missed",
+  "group": "G03",
+  "source": [
+   "panel:K3-ip-ownership"
+  ]
+ },
+ {
+  "id": "R035",
+  "kind": "summary_point",
+  "group": "G04",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H1-employment point 1"
+  ]
+ },
+ {
+  "id": "R036",
+  "kind": "summary_point",
+  "group": "G04",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H1-employment point 2"
+  ]
+ },
+ {
+  "id": "R037",
+  "kind": "summary_point",
+  "group": "G04",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H1-employment point 3"
+  ]
+ },
+ {
+  "id": "R038",
+  "kind": "summary_point",
+  "group": "G04",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H1-employment point 4"
+  ]
+ },
+ {
+  "id": "R039",
+  "kind": "summary_point",
+  "group": "G04",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H1-employment point 5"
+  ]
+ },
+ {
+  "id": "R040",
+  "kind": "summary_point",
+  "group": "G04",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H1-employment point 6"
+  ]
+ },
+ {
+  "id": "R041",
+  "kind": "summary_point",
+  "group": "G04",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H1-employment point 7"
+  ]
+ },
+ {
+  "id": "G04",
+  "kind": "missed",
+  "group": "G04",
+  "source": [
+   "summaries:H1-employment"
+  ]
+ },
+ {
+  "id": "R042",
+  "kind": "summary_point",
+  "group": "G05",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H2-negotiation-call point 1"
+  ]
+ },
+ {
+  "id": "R043",
+  "kind": "summary_point",
+  "group": "G05",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H2-negotiation-call point 2"
+  ]
+ },
+ {
+  "id": "R044",
+  "kind": "summary_point",
+  "group": "G05",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H2-negotiation-call point 3"
+  ]
+ },
+ {
+  "id": "R045",
+  "kind": "summary_point",
+  "group": "G05",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H2-negotiation-call point 4"
+  ]
+ },
+ {
+  "id": "R046",
+  "kind": "summary_point",
+  "group": "G05",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H2-negotiation-call point 5"
+  ]
+ },
+ {
+  "id": "G05",
+  "kind": "missed",
+  "group": "G05",
+  "source": [
+   "summaries:H2-negotiation-call"
+  ]
+ },
+ {
+  "id": "R047",
+  "kind": "summary_point",
+  "group": "G06",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H3-nda-pdf point 1"
+  ]
+ },
+ {
+  "id": "R048",
+  "kind": "summary_point",
+  "group": "G06",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H3-nda-pdf point 2"
+  ]
+ },
+ {
+  "id": "R049",
+  "kind": "summary_point",
+  "group": "G06",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H3-nda-pdf point 3"
+  ]
+ },
+ {
+  "id": "R050",
+  "kind": "summary_point",
+  "group": "G06",
+  "source": [
+   "20261010-162331-summaries-heldout.json",
+   "H3-nda-pdf point 4"
+  ]
+ },
+ {
+  "id": "G06",
+  "kind": "missed",
+  "group": "G06",
+  "source": [
+   "summaries:H3-nda-pdf"
+  ]
+ }
+]
