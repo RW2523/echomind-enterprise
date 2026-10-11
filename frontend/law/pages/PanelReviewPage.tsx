@@ -44,7 +44,14 @@ export default function PanelReviewPage() {
         </section>
         {c && a && (
           <>
-            {c.stopped && <MissingFacts c={c} canGive={can.facts} path={`${panelPath(matter.id)}/${encodeURIComponent(review.id)}/facts`} onDone={refresh} />}
+            {c.stopped && <MissingFacts c={c} canGive={can.facts} path={`${panelPath(matter.id)}/${encodeURIComponent(review.id)}`} onDone={refresh} />}
+            {c.proceeded_without && (
+              <section className="lw-paper lw-sheet lw-panel-stop" aria-label="Continued without facts">
+                <h3 className="lw-h3" style={{ marginTop: 0 }}>Continued without some facts</h3>
+                <p style={{ margin: '0 0 6px' }}>{`${c.proceeded_without.by} chose to continue on ${new Date(c.proceeded_without.at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}: “${c.proceeded_without.reason}”`}</p>
+                <p className="lw-meta" style={{ margin: 0 }}>{`Left open: ${c.proceeded_without.facts.join('; ')}.`}</p>
+              </section>
+            )}
             {c.facts_given.length > 0 && (
               <section className="lw-paper lw-sheet" aria-label="Facts you gave">
                 <h3 className="lw-h3" style={{ marginTop: 0 }}>Facts you gave (not from the documents)</h3>
@@ -118,10 +125,16 @@ function MissingFacts({ c, canGive, path, onDone }: { c: PanelContent; canGive: 
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const filled = c.missing_facts.filter((m) => (answers[m] ?? '').trim());
+  const [why, setWhy] = useState('');
   const send = async () => {
     setBusy(true); setError('');
-    try { await api.post(path, { facts: filled.map((m) => ({ question: m, answer: answers[m].trim() })) }); await onDone(); }
+    try { await api.post(`${path}/facts`, { facts: filled.map((m) => ({ question: m, answer: answers[m].trim() })) }); await onDone(); }
     catch (e) { setError(e instanceof ApiError ? e.message : 'The facts could not be sent.'); } finally { setBusy(false); }
+  };
+  const proceed = async () => {
+    setBusy(true); setError('');
+    try { await api.post(`${path}/proceed`, { reason: why.trim() }); await onDone(); }
+    catch (e) { setError(e instanceof ApiError ? e.message : 'The panel could not continue.'); } finally { setBusy(false); }
   };
   return (
     <section className="lw-paper lw-sheet lw-panel-stop" aria-label="Facts needed">
@@ -135,6 +148,12 @@ function MissingFacts({ c, canGive, path, onDone }: { c: PanelContent; canGive: 
           ))}
           {error && <ErrorNote>{error}</ErrorNote>}
           <div><button type="button" className="lw-btn lw-btn-primary" disabled={busy || filled.length === 0} onClick={send}><Send />Give these facts and run again</button></div>
+          <div className="lw-panel-proceed">
+            <Field label="Or continue without them, because" hint="Recorded with your name; the partner sees what was left open.">
+              {(id) => <input id={id} className="lw-input" maxLength={500} value={why} onChange={(e) => setWhy(e.target.value)} />}
+            </Field>
+            <div><button type="button" className="lw-btn" disabled={busy || !why.trim()} onClick={proceed}>Continue without these facts</button></div>
+          </div>
         </div>
       ) : <ul>{c.missing_facts.map((m) => <li key={m}>{m}</li>)}</ul>}
     </section>

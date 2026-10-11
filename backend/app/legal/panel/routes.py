@@ -65,6 +65,18 @@ class FactsIn(BaseModel):
     facts: list[Fact] = Field(min_length=1, max_length=8)
 
 
+class ProceedIn(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+    @field_validator("reason")
+    @classmethod
+    def _said(cls, v: str) -> str:
+        v = " ".join(v.split())
+        if not v:
+            raise ValueError("Say why the panel should continue without these facts.")
+        return v
+
+
 def _enqueue(conn, org_id: str, matter_id: str, rid: str, by: str) -> None:
     conn.execute("INSERT INTO legal_jobs (id, kind, org_id, matter_id, object_id, requested_by, created_at) VALUES (?,?,?,?,?,?,?)",
                  (str(uuid.uuid4()), "panel.run", org_id, matter_id, rid, by, policy.now_iso()))
@@ -167,3 +179,26 @@ def facts(matter_id: str, review_id: str, inp: FactsIn, request: Request):
     worker.wake()
     note(matter_id=matter_id, details={"facts": len(inp.facts)})
     return {"review": {"id": review_id, "status": "queued"}}
+
+
+@router.post("/matters/{matter_id}/panel/{review_id}/proceed")
+@audited("panel.proceed", object_type="panel_review", object_param="review_id")
+def proceed(matter_id: str, review_id: str, inp: ProceedIn, request: Request):
+    """A stopped panel continues without the facts it asked for, on the record: a new version with the same answers,
+    noting what was left open, by whom, when and why. A partner can then decide on it."""
+    p = principal_of(request)
+    require(p, "ai.draft", matter_id)
+    a = artifacts.latest(matter_id, "panel_review", review_id, "panel")
+    if not a or not artifacts.visible_to(a, p["sub"]):
+        raise HTTPException(status_code=404, detail="Not Found")
+    if not a["content"].get("stopped"):
+        raise HTTPException(status_code=409, detail="This panel has not stopped for missing facts.")
+    content = {**a["content"], "stopped": False,
+               "proceeded_without": {"facts": a["content"]["missing_facts"], "by": p["username"], "reason": inp.reason, "at": policy.now_iso()}}
+    artifacts.create(matter_id, "panel", "panel_review", review_id, content, {**a["inputs"], "proceeded_from": a["version"]}, p["sub"], "person")
+    with get_conn() as conn:
+        conn.execute("UPDATE legal_panel_reviews SET status='done' WHERE id=?", (review_id,))
+        conn.commit()
+    note(matter_id=matter_id, details={"facts": len(a["content"]["missing_facts"])})
+    return {"review": {"id": review_id, "status": "done"}}
+

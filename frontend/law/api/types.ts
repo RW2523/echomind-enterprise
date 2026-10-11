@@ -547,6 +547,7 @@ export interface PanelIssue { issue: string; positions: Record<PanelRole, string
 export interface PanelContent {
   title: string; question: string; specialist: string; area: string; perspectives: PanelPerspective[]; matrix: PanelIssue[];
   missing_facts: string[]; stopped: boolean; facts_given: { question: string; answer: string }[]; notice: string; sources: number;
+  proceeded_without?: { facts: string[]; by: string; reason: string; at: string };
 }
 export interface PanelReview {
   id: string; question: string; specialist: string; area: string | null; status: 'queued' | 'running' | 'done' | 'needs_facts' | 'failed' | 'not_allowed';
