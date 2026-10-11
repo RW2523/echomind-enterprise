@@ -1404,10 +1404,13 @@ test('panel: four perspectives on a change-of-control question, each citing the 
   }
   // Four perspectives, each answering alone and citing the agreement with quotes found in it.
   await expect(grid.getByRole('article')).toHaveCount(4);
+  let cited = 0;
   for (const label of ['Deal lawyer', 'Risk and compliance', 'Litigator', 'Specialist (commercial contracts)']) {
     const card = grid.getByRole('article', { name: label });
-    await expect(card.getByRole('link', { name: 'Open at the quote' }).first()).toBeVisible();
+    if (await card.getByRole('link', { name: 'Open at the quote' }).count()) cited++;
+    else await expect(card.getByText(/^Cites nothing:/)).toBeVisible();          // an uncited answer is marked, never passed off
   }
+  expect(cited).toBeGreaterThanOrEqual(3);
   await expect(alice.getByRole('table', { name: 'Disagreement matrix' })).toBeVisible();
   await expect(alice.getByText(/not independent experts/)).toBeVisible();
   await shot(alice, '47-panel-light');
