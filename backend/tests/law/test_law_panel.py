@@ -271,3 +271,14 @@ def test_a_long_list_of_missing_facts_is_cut_to_what_the_lawyer_can_answer(pn):
     r = alice.post(f"{pn['base']}/panel/{v['review']['id']}/facts", headers=csrf_headers(alice),
                    json={"facts": [{"question": f, "answer": "Not known."} for f in facts]})
     assert r.status_code == 200, r.text
+
+
+def test_a_quote_followed_by_its_clause_number_is_checked_and_a_bare_clause_number_finds_its_source(pn):
+    """The Phase 4 gate's browser run: perspectives wrote '"…" [12.2]' and '[6.1][6.2]', so two of four cited nothing."""
+    pn["model"].raw = {
+        "deal": 'The relevant clause states: "The Supplier may terminate this Agreement on written notice if the Customer undergoes a change of control" [14.2].'
+                "\n\nMISSING FACTS: none",
+        "risk": "Each party's liability is capped [9.1].\n\nMISSING FACTS: none"}
+    views = {p["role"]: p for p in ask(pn).json()["artifact"]["content"]["perspectives"]}
+    assert views["deal"]["evidence"][0]["verification"] == "verbatim" and views["deal"]["unsupported"] == []
+    assert views["risk"]["evidence"] and views["risk"]["evidence"][0]["verification"] == "not_quoted" and views["risk"]["unsupported"] == []
