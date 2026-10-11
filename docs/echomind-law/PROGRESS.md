@@ -7,8 +7,8 @@
 | Field | Value |
 |---|---|
 | Date | 2026-10-10 |
-| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); next slice branch `law/s4.6-gate` (the Phase 4 gate) |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged (S4.4 BLOCKED); the Phase 4 gate next |
+| Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); the Phase 4 gate (`law/s4.6-gate`) merged into it |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 and machine translation BLOCKED. Every slice that can be built without further approval is built |
 | Plan documents | Committed to `feature/echomind-law` |
 | Migrations | `0001`–`0033` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
@@ -641,6 +641,16 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Also built:** the Phase 4 gate tooling (`run_gate.py --phase 4`, `make_packet.py --phase 4`, `score.py --phase 4`, `releases/phase4-rubric.md`).
 - **Docs:** D-057, run 34. Merged into `feature/echomind-law`.
 
+### Session 3 (continued) — S4.6 Phase 4 gate
+- **`run_gate.py --phase 4`:** runs the summaries and panel golden sets, cites their held-out runs already made on these versions, then runs the security suite and the browser journeys. Per-document and per-panel times are now gathered as latencies.
+- **Two gate runs failed, each only on journey 33, and each led to a fix (tests red first):**
+  - citations written as `"quote" [12.2]` or a bare `[6.1]` went unchecked (`panel-s4.5d`; held-out 2 re-run blind on it: stop 3/3, quotes 30/30);
+  - a panel still lacking facts after the lawyer's answers could not reach a partner. A lawyer can now continue without them, with a reason recorded and shown to the partner (`POST …/panel/{id}/proceed`, "Continue without these facts").
+- **Final gate run `20261010-215020` on `2b2fcd7`: 6 steps, 0 failed.** Summaries golden 19/19; panel golden stop 6/6, quotes 63/63; security 28 groups and 1063 tests; browser 33/33. In that run the panel did not stop, so the facts and continue paths are covered by backend and Vitest tests.
+- **Lawyer review packet:** `make_packet.py --phase 4`, 53 items in 6 groups. Scoring is 🔒.
+- **Suites:** backend 1275 (tests/law 1225 plus 50 others); Vitest 158; tsc clean.
+- **Docs:** `releases/phase4-gate.md`, D-058 (and a D-057 addendum), run 35. Merged into `feature/echomind-law` under the standing approval.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -649,6 +659,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
 - 2026-10-10: **APPROVED** the Phase 2 gate (`releases/phase2-gate.md`): merge S2.8 and start S3.1. The owner added: "approve everything and finish everything". This is taken as standing approval to build and merge every remaining slice and phase gate in order, including the Phase 4 business approval. Items that need a person (the lawyer review, the manual Word check, counsel's P-decisions) or that act outside this machine or on the shared host (a GitHub push, the first `compose.sh up` next to production, root) are confirmed one by one.
 - 2026-10-10: the Phase 3 gate (`releases/phase3-gate.md`) was merged under that standing approval. Its lawyer review and the manual Word check remain 🔒.
+- 2026-10-10: **APPROVED** Phase 4 ("approved, start S4.1 and finish everything"). S4.1, S4.2, S4.3, S4.5 and the Phase 4 gate (`releases/phase4-gate.md`) were merged under it, each behind its own flag, off by default. S4.4 and machine translation stay BLOCKED.
 - Still 🔒:
   - the first `scripts/law/compose.sh up` on the shared host;
   - any push or PR to GitHub;
@@ -682,13 +693,13 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 | DOC-05 | DONE for the pilot (reminders not sent) | S3.6 | Rules and checked model proposals with exact words; dates only from the document; confirmed by a lawyer; versioned edits; held-out 10/12 with the model (D-050) |
 | DOC-06 | DONE for the pilot | S3.7 | Approved checklists; data-room runs; missing list; quoted issues, preliminary until reviewed; held-out 9/11 and 5/6 issues, no extras (D-051) |
 | DOC-07 | DONE for the pilot | S3.8 | Register against approvals and articles, signing limits, policies against articles, IP chain; both documents quoted; advisory (D-052) |
-| OPT-01 | MISSING | S4.1 | Needs business approval |
-| OPT-02 | PARTIAL (pre-existing) | S4.2 | MT model BLOCKED |
-| OPT-03 | MISSING | S4.3 | Needs business approval |
+| OPT-01 | DONE for the pilot, off by default | S4.1 | Intake script, screening, links, approved replies (D-054). Recording transcription needs the speech stack (🔒) |
+| OPT-02 | Summaries DONE for the pilot, off by default; translation BLOCKED | S4.2 | Cited key points, second-person approval (D-055). MT model licence needed |
+| OPT-03 | DONE for the pilot, off by default | S4.3 | Drafts from the person's own audited work, approved by them, CSV (D-056). Firm's billing rules to confirm |
 | OPT-04 | BLOCKED | S4.4 | Licensed source plus network approval |
-| OPT-05 | MISSING | S4.5 | Needs business approval |
+| OPT-05 | DONE for the pilot, off by default | S4.5 | Four perspectives, moderator, stop for facts or continue with a reason, partner approval (D-057, D-058) |
 | OPS-01 | PARTIAL | S1.0, S1.12 + OPS | S1.0: versioned migrations with down scripts + CLI; isolated compose stack. S1.12: encrypted backup and restore (`app.legal.backup`), rollback guard for audit, holds and source permissions, DR drill on real data (D-032). Runbooks and LUKS (host root) remain |
-| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7. S1.12: `security_suite.sh`, `injection_probe.py`, `egress_test.sh`, `dr_drill.sh`, `legacy_smoke.py` + legacy browser smoke, `stability_runs.sh`. Load test (T12) and CI remain. S2.8: evaluation runs (migration 0022, import command, Evaluations page), `run_gate.py`, `load_test.py` (T12 smoke), lawyer review packet and scorer, Phase 2 security groups (D-044). S3.9: `run_gate.py --phase 3` with the security and browser suites, Phase 3 packet and scorer (D-053) |
+| OPS-02 | PARTIAL | S1.0, gates | S1.0: Law pytest suite, Vitest, committed law fixtures, law eval baseline 6/7. S1.12: `security_suite.sh`, `injection_probe.py`, `egress_test.sh`, `dr_drill.sh`, `legacy_smoke.py` + legacy browser smoke, `stability_runs.sh`. Load test (T12) and CI remain. S2.8: evaluation runs (migration 0022, import command, Evaluations page), `run_gate.py`, `load_test.py` (T12 smoke), lawyer review packet and scorer, Phase 2 security groups (D-044). S3.9: `run_gate.py --phase 3` with the security and browser suites, Phase 3 packet and scorer (D-053). S4.6: `run_gate.py --phase 4`, the Phase 4 packet and scorer (D-058) |
 
 ## Known risks right now
 
@@ -714,22 +725,13 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 ## NEXT EXACT ACTION
 
-Run the **Phase 4 gate** on `law/s4.6-gate` (all buildable Phase 4 slices are merged; S4.4 stays BLOCKED):
-1. `cd backend && python3 ../eval/law/run_gate.py --phase 4 --import-into ../.law-data`. It runs:
-   - the summaries and panel golden sets;
-   - the held-out sets, which are cited, having already been run on these versions;
-   - the security suite and the browser journeys.
-2. `python3 eval/law/lawyer_review/make_packet.py --phase 4`. The scoring is 🔒: it needs a lawyer.
-3. `releases/phase4-gate.md` (as for Phase 3), D-058 and run 35, then PROGRESS and the feature matrix. Then merge.
-4. Then report to the owner. Everything in the spec that can be built without approval is then built.
+**Everything in the spec that can be built without further approval is built, tested and merged** (Phases 1–4; `feature/echomind-law`). What remains needs the owner, a lawyer or counsel, confirmed one by one:
+1. **Lawyer review sessions:** Phase 4 (`releases/phase4-rubric.md`, packet `eval/law/lawyer_review/phase4/`), Phase 3 and Phase 2. Score with `eval/law/lawyer_review/score.py --phase N <sheet.csv>`, then record the results in the gate reports.
+2. **The manual Microsoft Word check** of tracked changes (S3.3).
+3. **Counsel P-001…P-015**, and the firm's billing rules for time entries.
+4. **Which Phase 4 flags the pilot firm turns on.** All are off by default; intake links have their own switch.
+5. **Operations on the shared host:** the first `scripts/law/compose.sh up` (the speech stack: real-audio accuracy, intake recordings), the root-run enforced T11, and the load-test window (T12).
+6. **Blocked by design:** S4.4 (a licensed source and network approval), machine translation (a model licence), DMS (P-010), IdP (P-011), and the syslog forwarder.
+7. **Any GitHub push or PR.**
 
-Still 🔒 and confirmed one by one:
-- the lawyer reviews (Phases 2, 3 and 4);
-- the manual Word check;
-- P-001…P-015;
-- S4.4 (licensed source and network);
-- local machine translation (model licence);
-- any GitHub push;
-- the first `compose.sh up`;
-- the root-run T11;
-- the load-test window.
+When one of these is approved, start from its slice in IMPLEMENTATION_PLAN and the decision named above.
