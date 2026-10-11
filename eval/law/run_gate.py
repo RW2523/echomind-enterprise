@@ -92,7 +92,8 @@ VERSIONS = {"drafting": "drafting/engine.py", "playbook": "playbooks/check.py", 
             "governance": "diligence/run.py", "summaries": "summaries/summarize.py", "panel": "panel/run.py"}
 # Latency figures each suite reports, gathered for the gate (seconds).
 LATENCY = {"research": ["latency_first_paragraph_p50_s", "latency_first_paragraph_p95_s", "latency_total_p50_s", "latency_total_p95_s"],
-           "assist": ["latency_p50_s", "latency_max_s"], "minutes": ["seconds"]}
+           "assist": ["latency_p50_s", "latency_max_s"], "minutes": ["seconds"],
+           "summaries": ["seconds_per_document"], "panel": ["seconds_per_panel"]}
 
 
 def _pattern(suite: str, set_: str) -> str:

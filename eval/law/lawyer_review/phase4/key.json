@@ -4,7 +4,7 @@
   "kind": "panel_perspective",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate deal"
   ]
  },
@@ -13,7 +13,7 @@
   "kind": "panel_perspective",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate risk"
   ]
  },
@@ -22,7 +22,7 @@
   "kind": "panel_perspective",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate litigation"
   ]
  },
@@ -31,7 +31,7 @@
   "kind": "panel_perspective",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate specialist"
   ]
  },
@@ -40,7 +40,7 @@
   "kind": "panel_issue",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate issue 1"
   ]
  },
@@ -49,7 +49,7 @@
   "kind": "panel_issue",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate issue 2"
   ]
  },
@@ -58,7 +58,7 @@
   "kind": "panel_issue",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate issue 3"
   ]
  },
@@ -67,7 +67,7 @@
   "kind": "panel_issue",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate issue 4"
   ]
  },
@@ -76,7 +76,7 @@
   "kind": "panel_issue",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate issue 5"
   ]
  },
@@ -85,7 +85,7 @@
   "kind": "panel_issue",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate issue 6"
   ]
  },
@@ -94,7 +94,7 @@
   "kind": "panel_issue",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate issue 7"
   ]
  },
@@ -103,7 +103,7 @@
   "kind": "panel_issue",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate issue 8"
   ]
  },
@@ -112,7 +112,7 @@
   "kind": "panel_stop",
   "group": "G01",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K1-notice-to-terminate stop"
   ]
  },
@@ -129,7 +129,7 @@
   "kind": "panel_perspective",
   "group": "G02",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K2-loan-covenants deal"
   ]
  },
@@ -138,7 +138,7 @@
   "kind": "panel_perspective",
   "group": "G02",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K2-loan-covenants risk"
   ]
  },
@@ -147,7 +147,7 @@
   "kind": "panel_perspective",
   "group": "G02",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K2-loan-covenants litigation"
   ]
  },
@@ -156,7 +156,7 @@
   "kind": "panel_perspective",
   "group": "G02",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K2-loan-covenants specialist"
   ]
  },
@@ -165,7 +165,7 @@
   "kind": "panel_issue",
   "group": "G02",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K2-loan-covenants issue 1"
   ]
  },
@@ -174,7 +174,7 @@
   "kind": "panel_issue",
   "group": "G02",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K2-loan-covenants issue 2"
   ]
  },
@@ -183,16 +183,61 @@
   "kind": "panel_issue",
   "group": "G02",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K2-loan-covenants issue 3"
   ]
  },
  {
   "id": "R021",
+  "kind": "panel_issue",
+  "group": "G02",
+  "source": [
+   "20261010-204058-panel-heldout.json",
+   "K2-loan-covenants issue 4"
+  ]
+ },
+ {
+  "id": "R022",
+  "kind": "panel_issue",
+  "group": "G02",
+  "source": [
+   "20261010-204058-panel-heldout.json",
+   "K2-loan-covenants issue 5"
+  ]
+ },
+ {
+  "id": "R023",
+  "kind": "panel_issue",
+  "group": "G02",
+  "source": [
+   "20261010-204058-panel-heldout.json",
+   "K2-loan-covenants issue 6"
+  ]
+ },
+ {
+  "id": "R024",
+  "kind": "panel_issue",
+  "group": "G02",
+  "source": [
+   "20261010-204058-panel-heldout.json",
+   "K2-loan-covenants issue 7"
+  ]
+ },
+ {
+  "id": "R025",
+  "kind": "panel_issue",
+  "group": "G02",
+  "source": [
+   "20261010-204058-panel-heldout.json",
+   "K2-loan-covenants issue 8"
+  ]
+ },
+ {
+  "id": "R026",
   "kind": "panel_stop",
   "group": "G02",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K2-loan-covenants stop"
   ]
  },
@@ -205,84 +250,39 @@
   ]
  },
  {
-  "id": "R022",
+  "id": "R027",
   "kind": "panel_perspective",
   "group": "G03",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K3-ip-ownership deal"
   ]
  },
  {
-  "id": "R023",
+  "id": "R028",
   "kind": "panel_perspective",
   "group": "G03",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K3-ip-ownership risk"
   ]
  },
  {
-  "id": "R024",
+  "id": "R029",
   "kind": "panel_perspective",
   "group": "G03",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K3-ip-ownership litigation"
   ]
  },
  {
-  "id": "R025",
+  "id": "R030",
   "kind": "panel_perspective",
   "group": "G03",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K3-ip-ownership specialist"
-  ]
- },
- {
-  "id": "R026",
-  "kind": "panel_issue",
-  "group": "G03",
-  "source": [
-   "20261010-180401-panel-heldout.json",
-   "K3-ip-ownership issue 1"
-  ]
- },
- {
-  "id": "R027",
-  "kind": "panel_issue",
-  "group": "G03",
-  "source": [
-   "20261010-180401-panel-heldout.json",
-   "K3-ip-ownership issue 2"
-  ]
- },
- {
-  "id": "R028",
-  "kind": "panel_issue",
-  "group": "G03",
-  "source": [
-   "20261010-180401-panel-heldout.json",
-   "K3-ip-ownership issue 3"
-  ]
- },
- {
-  "id": "R029",
-  "kind": "panel_issue",
-  "group": "G03",
-  "source": [
-   "20261010-180401-panel-heldout.json",
-   "K3-ip-ownership issue 4"
-  ]
- },
- {
-  "id": "R030",
-  "kind": "panel_issue",
-  "group": "G03",
-  "source": [
-   "20261010-180401-panel-heldout.json",
-   "K3-ip-ownership issue 5"
   ]
  },
  {
@@ -290,8 +290,8 @@
   "kind": "panel_issue",
   "group": "G03",
   "source": [
-   "20261010-180401-panel-heldout.json",
-   "K3-ip-ownership issue 6"
+   "20261010-204058-panel-heldout.json",
+   "K3-ip-ownership issue 1"
   ]
  },
  {
@@ -299,8 +299,8 @@
   "kind": "panel_issue",
   "group": "G03",
   "source": [
-   "20261010-180401-panel-heldout.json",
-   "K3-ip-ownership issue 7"
+   "20261010-204058-panel-heldout.json",
+   "K3-ip-ownership issue 2"
   ]
  },
  {
@@ -308,16 +308,43 @@
   "kind": "panel_issue",
   "group": "G03",
   "source": [
-   "20261010-180401-panel-heldout.json",
-   "K3-ip-ownership issue 8"
+   "20261010-204058-panel-heldout.json",
+   "K3-ip-ownership issue 3"
   ]
  },
  {
   "id": "R034",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-204058-panel-heldout.json",
+   "K3-ip-ownership issue 4"
+  ]
+ },
+ {
+  "id": "R035",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-204058-panel-heldout.json",
+   "K3-ip-ownership issue 5"
+  ]
+ },
+ {
+  "id": "R036",
+  "kind": "panel_issue",
+  "group": "G03",
+  "source": [
+   "20261010-204058-panel-heldout.json",
+   "K3-ip-ownership issue 6"
+  ]
+ },
+ {
+  "id": "R037",
   "kind": "panel_stop",
   "group": "G03",
   "source": [
-   "20261010-180401-panel-heldout.json",
+   "20261010-204058-panel-heldout.json",
    "K3-ip-ownership stop"
   ]
  },
@@ -330,7 +357,7 @@
   ]
  },
  {
-  "id": "R035",
+  "id": "R038",
   "kind": "summary_point",
   "group": "G04",
   "source": [
@@ -339,7 +366,7 @@
   ]
  },
  {
-  "id": "R036",
+  "id": "R039",
   "kind": "summary_point",
   "group": "G04",
   "source": [
@@ -348,7 +375,7 @@
   ]
  },
  {
-  "id": "R037",
+  "id": "R040",
   "kind": "summary_point",
   "group": "G04",
   "source": [
@@ -357,7 +384,7 @@
   ]
  },
  {
-  "id": "R038",
+  "id": "R041",
   "kind": "summary_point",
   "group": "G04",
   "source": [
@@ -366,7 +393,7 @@
   ]
  },
  {
-  "id": "R039",
+  "id": "R042",
   "kind": "summary_point",
   "group": "G04",
   "source": [
@@ -375,7 +402,7 @@
   ]
  },
  {
-  "id": "R040",
+  "id": "R043",
   "kind": "summary_point",
   "group": "G04",
   "source": [
@@ -384,7 +411,7 @@
   ]
  },
  {
-  "id": "R041",
+  "id": "R044",
   "kind": "summary_point",
   "group": "G04",
   "source": [
@@ -401,7 +428,7 @@
   ]
  },
  {
-  "id": "R042",
+  "id": "R045",
   "kind": "summary_point",
   "group": "G05",
   "source": [
@@ -410,7 +437,7 @@
   ]
  },
  {
-  "id": "R043",
+  "id": "R046",
   "kind": "summary_point",
   "group": "G05",
   "source": [
@@ -419,7 +446,7 @@
   ]
  },
  {
-  "id": "R044",
+  "id": "R047",
   "kind": "summary_point",
   "group": "G05",
   "source": [
@@ -428,7 +455,7 @@
   ]
  },
  {
-  "id": "R045",
+  "id": "R048",
   "kind": "summary_point",
   "group": "G05",
   "source": [
@@ -437,7 +464,7 @@
   ]
  },
  {
-  "id": "R046",
+  "id": "R049",
   "kind": "summary_point",
   "group": "G05",
   "source": [
@@ -454,7 +481,7 @@
   ]
  },
  {
-  "id": "R047",
+  "id": "R050",
   "kind": "summary_point",
   "group": "G06",
   "source": [
@@ -463,7 +490,7 @@
   ]
  },
  {
-  "id": "R048",
+  "id": "R051",
   "kind": "summary_point",
   "group": "G06",
   "source": [
@@ -472,7 +499,7 @@
   ]
  },
  {
-  "id": "R049",
+  "id": "R052",
   "kind": "summary_point",
   "group": "G06",
   "source": [
@@ -481,7 +508,7 @@
   ]
  },
  {
-  "id": "R050",
+  "id": "R053",
   "kind": "summary_point",
   "group": "G06",
   "source": [
