@@ -1394,6 +1394,42 @@ Every entry records the options considered, the recommendation, the consequence 
   - **Repeated facts:** missing facts can repeat in different words, and the lawyer answers any subset.
   - **Search:** a short question that misses the documents' words can find no sources, and all four then abstain.
   - **Time:** about 30 to 40 seconds a panel on this host.
+- **At the Phase 4 gate (D-058):**
+  - **`s4.5d`:** journey 33 found citations written as a quote followed by its clause, `"quote" [12.2]`, or a bare `[6.1]`, which went unchecked. They are now turned into the numbered form and checked like the rest. Golden on `s4.5d`: stop 5/6 and 6/6, quotes 63/63 and 60/60. **Held-out 2 (blind, `s4.5d`): stop 3/3, quotes 30/30**, 36.5 s a panel, with one clause number flagged as an unsupported figure (advisory).
+  - **Continuing without the facts:** in gate runs 1 and 2 each re-run with the lawyer's facts found new missing facts, so the panel never reached a partner. A lawyer who may draft for the matter can now continue without them, giving a reason (1–500 characters). This makes a new version marked `proceeded_without` (the facts left open, who, why, when), which the page shows to the partner; the review is then done and waits for a partner in the Reviews queue. The audit records only the number of facts.
+
+### D-058 The Phase 4 gate: optional features off by default, measured, and blocked items stated — RECORDED (S4.6; OPS-02)
+- **Scope:** Phase 4 is optional. The owner's business approval of 2026-10-10 covered building and merging each slice behind its own flag, off by default:
+  - **S4.1** intake (`LEGAL_INTAKE`, `LEGAL_INTAKE_LINKS`);
+  - **S4.2** summaries (`LEGAL_SUMMARIES`);
+  - **S4.3** time entries (`LEGAL_TIME_ENTRIES`);
+  - **S4.5** the review panel (`LEGAL_PANEL`).
+- **Blocked by design and not built:**
+  - **S4.4 regulatory monitoring:** a licensed source and an outbound channel need approval.
+  - **Machine translation:** a local model and its licence need approval.
+- **The gate runner:** `run_gate.py --phase 4` does four things:
+  - runs the summaries and panel golden sets;
+  - cites their blind held-out runs, already made on the same versions;
+  - runs the security suite and the browser journeys;
+  - records the evaluation runs for the Evaluations page.
+
+  Per-document and per-panel times are now among the latencies it gathers.
+- **What the gate found (two failed runs, each only on journey 33):**
+  - Citations written as `"quote" [12.2]` or a bare `[6.1]` went unchecked (`panel-s4.5d`, D-057).
+  - A panel lacking facts could not reach a partner: a lawyer can now continue without them, with a reason recorded and shown (D-057).
+- **Final run `20261010-215020` on `2b2fcd7`: 6 steps, 0 failed:**
+  - summaries golden 19/19;
+  - panel golden stop 6/6, quotes 63/63;
+  - held-outs cited: summaries 15/15, panel stop 3/3 and quotes 30/30;
+  - security 28 groups and 1063 tests;
+  - browser 33/33.
+
+  In that run the panel did not stop, so its facts and continue paths are covered by backend and Vitest tests rather than by the journey.
+- **What "done" means here:**
+  - Every Phase 4 feature has tests written red first, and a browser journey.
+  - The two features that use the model have golden and blind held-out evaluations, and every held-out run is reported, including those that led to fixes.
+  - Quality beyond these measures is for the lawyer review (🔒): rubric `releases/phase4-rubric.md`, with a 53-item packet and the scorer.
+- **Before the pilot:** the owner chooses which flags the pilot firm turns on. Intake links are the Law edition's only routes without a session, so they keep their own switch.
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

@@ -1,0 +1,42 @@
+{
+ "meta": {
+  "set": "suite",
+  "commit": "2b2fcd7",
+  "time": "20261010-213527"
+ },
+ "summary": {
+  "groups": 28,
+  "failed_groups": 0,
+  "tests_passed": 1063
+ },
+ "items": [
+  "T01 matter isolation, walls, canaries                594 passed, 3 warnings in 80.52s (0:01:20)",
+  "T02 revocation ends access, streams and downloads    9 passed, 92 deselected, 3 warnings in 12.12s",
+  "T03 consent before capture                           11 passed, 3 warnings in 15.73s",
+  "T04 legal holds on every deletion path               9 passed, 20 deselected, 3 warnings in 13.87s",
+  "T08 prompt injection contained                       30 passed, 8 warnings in 7.61s",
+  "T09 export redaction residue                         13 passed, 8 warnings in 19.82s",
+  "T11 egress recorder (live run: egress_test.sh)       15 passed in 0.04s",
+  "T13 upgrade, rollback, encrypted restore             15 passed, 3 warnings in 16.45s",
+  "T15 source permissions intersected, fail closed      13 passed, 3 warnings in 18.03s",
+  "Audit chain append-only and verifiable               23 passed, 3 warnings in 24.81s",
+  "T05/T06 signed versions, verified evidence (S2.2)    29 passed, 3 warnings in 25.21s",
+  "Compare and conflicts: visible documents only (S2.3) 27 passed, 3 warnings in 28.83s",
+  "Transcripts: verbatim record, consent kept (S2.4)    13 passed, 3 warnings in 19.83s",
+  "Silent Assist: matter-only sources, no leaks (S2.5)  13 passed, 3 warnings in 18.19s",
+  "AI drafts approved by a second lawyer, hash-bound (S2.6-7) 32 passed, 3 warnings in 45.31s",
+  "Evaluation runs recorded, audit readers only (S2.8)  8 passed, 3 warnings in 9.48s",
+  "Drafting: nothing invented, approved templates only (S3.1) 27 passed, 8 warnings in 33.20s",
+  "Playbook checks advisory, figures decide (S3.2)      12 passed, 3 warnings in 16.22s",
+  "T10 Word tracked changes verified before release (S3.3) 14 passed, 3 warnings in 12.49s",
+  "T07 citations: targets only for those who can see them, authorities unverified (S3.4) 41 passed, 3 warnings in 18.05s",
+  "Definitions and references: nothing changed without approval (S3.5) 15 passed, 3 warnings in 14.49s",
+  "Obligations: proposed until confirmed, no date guessed, model checked (S3.6) 16 passed, 3 warnings in 15.32s",
+  "Due diligence: preliminary until reviewed, per-viewer visibility (S3.7) 8 passed, 3 warnings in 11.03s",
+  "Governance: both documents quoted and hidden with either (S3.8) 8 passed, 3 warnings in 11.36s",
+  "Intake: off by default, screening minimised, consent, links (S4.1) 30 passed, 3 warnings in 40.29s",
+  "Summaries: quoted, cited by position, approved by a second person (S4.2) 10 passed, 8 warnings in 13.59s",
+  "Time entries: own work only, approved by the person, CSV without formulas (S4.3) 9 passed, 3 warnings in 11.42s",
+  "Review panel: separate answers, checked quotes, stop for facts, partner approval (S4.5) 19 passed, 3 warnings in 23.97s"
+ ]
+}

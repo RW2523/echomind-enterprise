@@ -1,0 +1,119 @@
+{
+ "meta": {
+  "set": "phase4",
+  "commit": "2b2fcd7",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261010-215020",
+  "started": "20261010-212116"
+ },
+ "summary": {
+  "suites": 6,
+  "failed": 0,
+  "latency_s": {}
+ },
+ "runs": [
+  {
+   "suite": "summaries",
+   "set": "golden",
+   "ok": true,
+   "seconds": 36.7,
+   "report": "20261010-212153-summaries-golden.json",
+   "summary": {
+    "documents": 4,
+    "facts": 19,
+    "facts_covered": "19/19",
+    "citations_right": "19/19",
+    "quotes_verified": "23/23",
+    "figures_unsupported": 0,
+    "points_per_document": 5.8,
+    "seconds_per_document": 8.3
+   },
+   "reused": false
+  },
+  {
+   "suite": "summaries",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 0.0,
+   "report": "20261010-162331-summaries-heldout.json",
+   "summary": {
+    "documents": 3,
+    "facts": 15,
+    "facts_covered": "15/15",
+    "citations_right": "15/15",
+    "quotes_verified": "16/16",
+    "figures_unsupported": 0,
+    "points_per_document": 5.3,
+    "seconds_per_document": 6.8
+   },
+   "reused": true
+  },
+  {
+   "suite": "panel",
+   "set": "golden",
+   "ok": true,
+   "seconds": 221.3,
+   "report": "20261010-212533-panel-golden.json",
+   "summary": {
+    "panels": 6,
+    "failed": 0,
+    "stop_right": "6/6",
+    "quotes_verified": "63/63",
+    "uncited_sentences": 22,
+    "perspectives_answered": "24/24",
+    "matrix_issues": 42,
+    "disagreements": 10,
+    "matrix_figures_unsupported": 0,
+    "seconds_per_panel": 36.2
+   },
+   "reused": false
+  },
+  {
+   "suite": "panel",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 0.0,
+   "report": "20261010-204058-panel-heldout.json",
+   "summary": {
+    "panels": 3,
+    "failed": 0,
+    "stop_right": "3/3",
+    "quotes_verified": "30/30",
+    "uncited_sentences": 12,
+    "perspectives_answered": "12/12",
+    "matrix_issues": 22,
+    "disagreements": 8,
+    "matrix_figures_unsupported": 1,
+    "seconds_per_panel": 36.5
+   },
+   "reused": true
+  },
+  {
+   "suite": "security",
+   "set": "suite",
+   "ok": true,
+   "seconds": 592.4,
+   "report": "20261010-213527-security-suite.json",
+   "summary": {
+    "groups": 28,
+    "failed_groups": 0,
+    "tests_passed": 1063
+   },
+   "reused": false
+  },
+  {
+   "suite": "browser",
+   "set": "e2e",
+   "ok": true,
+   "seconds": 893.5,
+   "report": "20261010-215020-browser-e2e.json",
+   "summary": {
+    "passed": 33,
+    "failed": 0,
+    "flaky": 0,
+    "skipped": 0
+   },
+   "reused": false
+  }
+ ]
+}

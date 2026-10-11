@@ -68,6 +68,26 @@ describe('Review panel (S4.5)', () => {
       facts: [{ question: 'whether the sale has been announced', answer: 'Not yet; planned for March.' }] }));
   });
 
+  it('a stopped panel can continue without the facts, with a reason that is recorded', async () => {
+    const calls = world(view({ review: { ...view().review, status: 'needs_facts' } }, { stopped: true, missing_facts: ['the notice date'] }),
+      { [`POST ${M}/panel/r1/proceed`]: () => [200, { review: { id: 'r1', status: 'done' } }] });
+    renderLaw('/m/M-101/panel/r1');
+    const stop = await screen.findByRole('region', { name: 'Facts needed' });
+    const go = within(stop).getByRole('button', { name: 'Continue without these facts' }) as HTMLButtonElement;
+    expect(go.disabled).toBe(true);                                                    // a reason first
+    fireEvent.change(within(stop).getByLabelText('Or continue without them, because'), { target: { value: 'The client cannot say yet.' } });
+    fireEvent.click(go);
+    await waitFor(() => expect(calls.find((c) => c.path === `${M}/panel/r1/proceed`)?.body).toEqual({ reason: 'The client cannot say yet.' }));
+  });
+
+  it('a panel that continued without facts says so, with who and why', async () => {
+    world(view({}, { proceeded_without: { facts: ['the notice date'], by: 'alice', reason: 'The client cannot say yet.', at: '2026-10-10T11:00:00.000Z' } }));
+    renderLaw('/m/M-101/panel/r1');
+    const note = await screen.findByRole('region', { name: 'Continued without facts' });
+    expect(note.textContent).toContain('alice chose to continue');
+    expect(note.textContent).toContain('Left open: the notice date.');
+  });
+
   it('a lawyer who is not a partner sees that a partner decides', async () => {
     world(view({ can: { approve: false, facts: true, author: false } }));
     renderLaw('/m/M-101/panel/r1');

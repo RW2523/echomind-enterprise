@@ -485,3 +485,20 @@
 | Frontend | tsc **clean**. Vitest **156 passed**. New `panel.test.tsx` (4, axe clean), written with the pages. |
 | Panel benchmark (`eval/law/panel`, real model) | **panel-s4.5, golden:** stop 3/3, quotes 20/20; one matter cited by clause number (17 uncited). **s4.5b, golden:** stop 3/3, quotes 32/32, uncited 7, figures 0, 37.8 s. **Held-out 1 (blind, s4.5b): stop 2/3**, quotes 29/29, figures 0, 30.4 s; all four perspectives lacked facts but the moderator did not stop. **s4.5c** (held-out 1 moved to golden): golden stop 6/6, quotes 61/61, figures 0, 37.7 s. **Held-out 2 (blind, s4.5c): stop 3/3, quotes 32/32,** all 12 perspectives answered, figures 0, **35.5 s per panel**. |
 | Browser E2E | New journey 33:<ul><li>alice asks the panel about a reseller agreement's change-of-control clause, limited to that agreement;</li><li>four perspectives each cite it, and the matrix and the notice are shown (screenshot 47);</li><li>nakamura, a managing partner, approves.</li></ul>In the first full suite the journey failed: other agreements on M-101 led the panel to stop, correctly, so there was nothing to approve. That led to limiting a question to chosen documents. The next full suite found the panel asking for nine facts while the form accepts eight; the list is now cut to eight. **Full suite, alone on the host: 33 passed** (15.0 min). In that run the panel did not stop, so the facts-and-re-run path was covered by the backend and Vitest tests rather than by the journey. |
+
+## Run 35 — S4.6 Phase 4 gate, 2026-10-10
+
+- **Branch:** `law/s4.6-gate`
+- **Code under test:** `2b2fcd7`
+- **Full report:** `releases/phase4-gate.md`
+
+| Suite | Result |
+|---|---|
+| Phase 4 gate (`run_gate.py --phase 4`, `20261010-215020`) | **6 steps, 0 failed.** Summaries golden: facts 19/19, citations 19/19, quotes 23/23, figures 0, 8.3 s a document. Panel golden: stop 6/6, quotes 63/63, figures 0, 36.2 s a panel. Held-out sets already run on these versions are cited, not run again. Two earlier gate runs are kept: `20261010-203349` on `14a0d9d` and `20261010-211716` on `1723b12`. Each failed only on journey 33 and led to a fix (below). |
+| Held-out runs, in order (each blind set committed before it ran) | **Summaries:** held-out 1 on `s4.2b`: facts 15/15, citations 15/15, quotes 16/16, figures 0.<br>**Panel:**<ul><li>held-out 1 on `s4.5b`: stop 2/3 (then moved to golden);</li><li>held-out 2 on `s4.5c`: stop 3/3, quotes 32/32;</li><li>**held-out 2 on `s4.5d`: stop 3/3, quotes 30/30**, one clause number flagged as a figure (advisory).</li></ul> |
+| Panel golden runs during the gate | <ul><li>`s4.5c` (gate run 1): stop 6/6, quotes 55/55.</li><li>`s4.5d`: stop 5/6 (model variation: the facts were listed but the panel did not stop), then 6/6 in gate run 2 and 6/6 with quotes 63/63 in the final run.</li></ul> |
+| Backend (all) | **1275 passed** (1273 at run 34). New at the gate, each red first: citations as `"quote" [12.2]` or a bare `[6.1]` are checked (`s4.5d`); a stopped panel can continue without the facts, with a reason, recorded and shown to the partner. |
+| Security suite | **28 groups, all pass, 1063 tests** (inside the gate run). The panel group has 19 (2 new at the gate). |
+| Frontend | tsc **clean**. Vitest **158 passed** (2 new: continuing without facts, and the record of it). |
+| Browser E2E | **33 passed** in the final gate run (14.9 min). Gate runs 1 and 2 had 32 passed and journey 33 failed (above). In the final run the panel did not stop, so the browser did not exercise the facts form or continuing without facts; backend and Vitest tests cover both. Journey 33 now gives facts once and, if the panel still stops, continues without them; the partner approves whichever version results. |
+| Lawyer review packet | `make_packet.py --phase 4`: 53 items in 6 groups (3 summarised documents, 3 panels), from the held-out outputs, with rubric `releases/phase4-rubric.md` and `score.py --phase 4`. **Not scored: needs a lawyer (🔒).** |

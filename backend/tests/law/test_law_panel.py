@@ -271,3 +271,37 @@ def test_a_long_list_of_missing_facts_is_cut_to_what_the_lawyer_can_answer(pn):
     r = alice.post(f"{pn['base']}/panel/{v['review']['id']}/facts", headers=csrf_headers(alice),
                    json={"facts": [{"question": f, "answer": "Not known."} for f in facts]})
     assert r.status_code == 200, r.text
+
+
+def test_a_quote_followed_by_its_clause_number_is_checked_and_a_bare_clause_number_finds_its_source(pn):
+    """The Phase 4 gate's browser run: perspectives wrote '"…" [12.2]' and '[6.1][6.2]', so two of four cited nothing."""
+    pn["model"].raw = {
+        "deal": 'The relevant clause states: "The Supplier may terminate this Agreement on written notice if the Customer undergoes a change of control" [14.2].'
+                "\n\nMISSING FACTS: none",
+        "risk": "Each party's liability is capped [9.1].\n\nMISSING FACTS: none"}
+    views = {p["role"]: p for p in ask(pn).json()["artifact"]["content"]["perspectives"]}
+    assert views["deal"]["evidence"][0]["verification"] == "verbatim" and views["deal"]["unsupported"] == []
+    assert views["risk"]["evidence"] and views["risk"]["evidence"][0]["verification"] == "not_quoted" and views["risk"]["unsupported"] == []
+
+
+def test_a_lawyer_can_continue_without_the_missing_facts_and_it_is_recorded(pn):
+    """The Phase 4 gate's browser run: every run again with the lawyer's facts found new missing facts, so the panel stopped
+    three times and could never be approved. The lawyer can now continue without them, on the record."""
+    pn["model"].missing = {"risk": "whether the sale has been announced", "litigation": "the date notice would be served"}
+    v = ask(pn).json()
+    alice, carol, mp = as_user(pn, "alice"), as_user(pn, "carol"), as_user(pn, "mp")
+    url = f"{pn['base']}/panel/{v['review']['id']}/proceed"
+    assert carol.post(url, headers=csrf_headers(carol), json={"reason": "Facts not available yet."}).status_code == 403
+    assert alice.post(url, headers=csrf_headers(alice), json={"reason": ""}).status_code == 422
+    r = alice.post(url, headers=csrf_headers(alice), json={"reason": "The client cannot say yet; advise on the documents."})
+    assert r.status_code == 200, r.text
+    v2 = alice.get(f"{pn['base']}/panel/{v['review']['id']}").json()
+    c = v2["artifact"]["content"]
+    assert v2["review"]["status"] == "done" and v2["artifact"]["version"] == 2 and c["stopped"] is False
+    assert c["proceeded_without"] == {"facts": ["whether the sale has been announced", "the date notice would be served"], "by": "alice",
+                                      "reason": "The client cannot say yet; advise on the documents.", "at": c["proceeded_without"]["at"]}
+    assert c["perspectives"] == v["artifact"]["content"]["perspectives"]                     # the answers stand; nothing is re-asked
+    art = f"{pn['base']}/artifacts/{v2['artifact']['id']}"
+    r = mp.post(f"{art}/review", headers=csrf_headers(mp), json={"decision": "approved", "content_sha256": v2["artifact"]["content_sha256"]})
+    assert r.status_code == 200
+    assert alice.post(url, headers=csrf_headers(alice), json={"reason": "again"}).status_code == 409   # not stopped any more

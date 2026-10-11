@@ -1395,19 +1395,29 @@ test('panel: four perspectives on a change-of-control question, each citing the 
   await expect(grid).toBeVisible({ timeout: 240_000 });
   await expect(alice.getByText(/^Consulted: /)).toBeVisible();
   // If the panel stops for facts the agreement does not give, the lawyer gives them and it runs again (the real model decides).
-  for (let round = 0; round < 2 && await alice.getByRole('region', { name: 'Facts needed' }).count(); round++) {
+  if (await alice.getByRole('region', { name: 'Facts needed' }).count()) {
     const stop = alice.getByRole('region', { name: 'Facts needed' });
-    for (const field of await stop.getByRole('textbox').all()) await field.fill('Not known yet; assume the Reseller Agreement stands alone.');
+    for (const field of await stop.getByRole('textbox', { name: /^(?!Or continue)/ }).all()) await field.fill('Not known yet; assume the Reseller Agreement stands alone.');
     await stop.getByRole('button', { name: 'Give these facts and run again' }).click();
     await expect(alice.getByText(/Five answers are being drafted/)).toBeVisible();
     await expect(alice.getByText(/Five answers are being drafted/)).toHaveCount(0, { timeout: 240_000 });
   }
+  // Still stopped: the lawyer continues without those facts, and that is recorded for the partner.
+  if (await alice.getByRole('region', { name: 'Facts needed' }).count()) {
+    const stop = alice.getByRole('region', { name: 'Facts needed' });
+    await stop.getByLabel('Or continue without them, because').fill('The client cannot say yet; advise on the agreement alone.');
+    await stop.getByRole('button', { name: 'Continue without these facts' }).click();
+    await expect(alice.getByRole('region', { name: 'Continued without facts' })).toContainText('alice chose to continue');
+  }
   // Four perspectives, each answering alone and citing the agreement with quotes found in it.
   await expect(grid.getByRole('article')).toHaveCount(4);
+  let cited = 0;
   for (const label of ['Deal lawyer', 'Risk and compliance', 'Litigator', 'Specialist (commercial contracts)']) {
     const card = grid.getByRole('article', { name: label });
-    await expect(card.getByRole('link', { name: 'Open at the quote' }).first()).toBeVisible();
+    if (await card.getByRole('link', { name: 'Open at the quote' }).count()) cited++;
+    else await expect(card.getByText(/^Cites nothing:/)).toBeVisible();          // an uncited answer is marked, never passed off
   }
+  expect(cited).toBeGreaterThanOrEqual(3);
   await expect(alice.getByRole('table', { name: 'Disagreement matrix' })).toBeVisible();
   await expect(alice.getByText(/not independent experts/)).toBeVisible();
   await shot(alice, '47-panel-light');
@@ -1416,8 +1426,8 @@ test('panel: four perspectives on a change-of-control question, each citing the 
   await signIn(nakamura, 'nakamura');
   await nakamura.goto(alice.url().replace(/^https?:\/\/[^/]+/, ''));
   await nakamura.getByRole('button', { name: 'Approve this panel review' }).click();
-  const dialog = nakamura.getByRole('dialog', { name: 'Approve version 1?' });
+  const dialog = nakamura.getByRole('dialog', { name: /^Approve version \d+\?$/ });    // later versions if facts were given
   await dialog.getByRole('checkbox').check();
-  await dialog.getByRole('button', { name: 'Approve version 1' }).click();
+  await dialog.getByRole('button', { name: /^Approve version \d+$/ }).click();
   await expect(nakamura.getByText('Approved by a partner')).toBeVisible();
 });

@@ -29,7 +29,7 @@ from ..research import prompt as research_prompt
 from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 
-VERSION = "panel-s4.5c"
+VERSION = "panel-s4.5d"
 NOTICE = ("Four perspectives drafted by the same AI model to test the question from different angles. They are not independent "
           "experts and not legal advice; a partner reviews them before anyone relies on them.")
 SPECIALISMS = {"commercial": "commercial contracts", "corporate": "corporate law", "employment": "employment law", "ip": "intellectual property",
@@ -109,6 +109,30 @@ def _missing(raw: str) -> tuple[str, list[str]]:
     return (raw[:last.start()] + raw[last.end():]).strip(), unique_facts(last.group(1).split(";"))[:8]
 
 
+_QUOTE_THEN_LABEL = re.compile(r"[\"“]([^\"“”]{8,400}?)[\"”]\s*\[(?:clause\s+|section\s+)?([0-9]+(?:\.[0-9]+)*[a-z]?)\]", re.I)
+_BARE_CLAUSE = re.compile(r"\[(?:clause\s+|section\s+)?([0-9]+\.[0-9]+(?:\.[0-9]+)*[a-z]?)\]", re.I)
+
+
+def as_citations(raw: str, passages: list[dict]) -> str:
+    """s4.5d: '"quote" [12.2]' becomes [n: "quote"] for the source that holds the quote, and a bare clause label '[6.1]'
+    becomes [n] for the source that holds that clause, so both are checked like any citation."""
+    from ..research import evidence
+    def quoted(m: re.Match) -> str:
+        quote = m.group(1).strip()
+        for n, p in enumerate(passages, start=1):
+            if evidence.verify(quote, p["text"]).verification != "failed":
+                return f'[{n}: "{quote}"]'
+        return m.group(0)
+
+    def bare(m: re.Match) -> str:
+        label = m.group(1)
+        for n, p in enumerate(passages, start=1):
+            if re.search(rf"(?m)^\s*{re.escape(label)}(?![0-9.])", p["text"]):
+                return f"[{n}]"
+        return m.group(0)
+    return _BARE_CLAUSE.sub(bare, _QUOTE_THEN_LABEL.sub(quoted, raw))
+
+
 def _strip_citations(text: str) -> str:
     return re.sub(r"\s*\[\d{1,2}(?::\s*\"(?:\\.|[^\"\\])*\")?\]", "", text)
 
@@ -119,7 +143,7 @@ async def perspective(role: str, label: str, area: str, question: str, passages:
     messages[0] = {"role": "system", "content": role_system(role, area)}
     raw = await llm_mod.complete(messages, temperature=0.1, max_tokens=settings.LEGAL_RESEARCH_MAX_TOKENS)
     from ..drafting.engine import _numbered            # s4.5b: "[9.1: …]" (a clause) is matched to the source that holds the quote
-    body, missing = _missing(_numbered(research_prompt.clean(raw or ""), passages))
+    body, missing = _missing(_numbered(as_citations(research_prompt.clean(raw or ""), passages), passages))
     shown, claims, unsupported, failed = [], [], [], []
     for para in [p for p in re.split(r"\n\s*\n", body) if p.strip()]:
         out, para_claims = _check(para, sources)
