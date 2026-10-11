@@ -1431,6 +1431,26 @@ Every entry records the options considered, the recommendation, the consequence 
   - Quality beyond these measures is for the lawyer review (🔒): rubric `releases/phase4-rubric.md`, with a 53-item packet and the scorer.
 - **Before the pilot:** the owner chooses which flags the pilot firm turns on. Intake links are the Law edition's only routes without a session, so they keep their own switch.
 
+### D-059 Pilot configuration: every Phase 4 feature on — APPROVED by the owner 2026-10-11 (OPT-01…03, OPT-05)
+- **Decision:** the owner asked to "turn on all phase 4 features for the pilot":
+  - intake (`LEGAL_INTAKE`), including the enquirer links (`LEGAL_INTAKE_LINKS`);
+  - summaries (`LEGAL_SUMMARIES`);
+  - time entries (`LEGAL_TIME_ENTRIES`);
+  - the review panel (`LEGAL_PANEL`).
+
+  S4.4 and machine translation are not built and stay BLOCKED.
+- **How:**
+  - **Code:** each feature stays off by default, so a stack without these settings has none of them.
+  - **Compose overlay:** `docker-compose.law.yml` now passes each switch from `.env.law` to the backend, off when unset; before this, the pilot stack could not turn them on. The enquirer link lifetime is passed too (14 days unless set).
+  - **Pilot template:** `.env.law.example` turns all of them on. A test checks both files, and `compose.sh config` rendered them on with the template and off without it.
+- **When it takes effect:** at the first `scripts/law/compose.sh up` of the pilot stack, which is still 🔒. Nothing was started.
+- **What turning them on means:**
+  - **Enquirer links** are the only Law routes without a sign-in (THREAT_MODEL T-24). The Law stack has no public ingress, so a link works only where the firm's network reaches the server.
+  - **Summaries and the panel** use the shared model server.
+  - **Intake recordings** need the speech stack.
+  - **Counsel's wording and policies** (consent P-001, retention of enquiries P-002, sign-off P-008) and the firm's billing rules are still the safe defaults until counsel and the firm decide.
+  - **The lawyer review** of summaries and the panel (Phase 4 packet) has not been held, so their output is reviewed by a second person or a partner before use, as the features already require.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

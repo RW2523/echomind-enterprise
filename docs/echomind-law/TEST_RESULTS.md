@@ -502,3 +502,14 @@
 | Frontend | tsc **clean**. Vitest **158 passed** (2 new: continuing without facts, and the record of it). |
 | Browser E2E | **33 passed** in the final gate run (14.9 min). Gate runs 1 and 2 had 32 passed and journey 33 failed (above). In the final run the panel did not stop, so the browser did not exercise the facts form or continuing without facts; backend and Vitest tests cover both. Journey 33 now gives facts once and, if the panel still stops, continues without them; the partner approves whichever version results. |
 | Lawyer review packet | `make_packet.py --phase 4`: 53 items in 6 groups (3 summarised documents, 3 panels), from the held-out outputs, with rubric `releases/phase4-rubric.md` and `score.py --phase 4`. **Not scored: needs a lawyer (🔒).** |
+
+## Run 36 — Pilot configuration: Phase 4 features on (D-059), 2026-10-11
+
+- **Branch:** `law/pilot-flags`
+
+| Suite | Result |
+|---|---|
+| Pilot configuration (`test_law_pilot_config.py`, new) | **2 passed**, written red first (2 failed before the change):<ul><li>the compose overlay passes every Phase 4 switch to the backend, off when unset;</li><li>the pilot template turns every one on.</li></ul> |
+| `compose.sh config` (render only, dummy secrets in the scratchpad, nothing started) | With the template: the five switches render `1` for project `echomind-law`, with links lasting 14 days. Without them: all render `0`. |
+| Backend (all) | **1277 passed** (1275 at run 35, plus the 2 new). No application code changed. |
+

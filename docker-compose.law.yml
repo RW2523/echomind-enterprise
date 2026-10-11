@@ -57,6 +57,13 @@ services:
       - ECHOMIND_ASR_DEVICE=${LAW_ASR_DEVICE:-cpu}
       - CUDA_VISIBLE_DEVICES=${LAW_BACKEND_CUDA_VISIBLE_DEVICES-}
       - ECHOMIND_EXIT_ON_FATAL_CUDA=0
+      # Phase 4 features (D-058, D-059): off unless .env.law turns them on.
+      - LEGAL_INTAKE=${LAW_INTAKE:-0}
+      - LEGAL_INTAKE_LINKS=${LAW_INTAKE_LINKS:-0}
+      - LEGAL_INTAKE_LINK_DAYS=${LAW_INTAKE_LINK_DAYS:-14}
+      - LEGAL_SUMMARIES=${LAW_SUMMARIES:-0}
+      - LEGAL_TIME_ENTRIES=${LAW_TIME_ENTRIES:-0}
+      - LEGAL_PANEL=${LAW_PANEL:-0}
 
   voice:
     <<: *law_host_gateway

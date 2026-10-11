@@ -6,9 +6,9 @@
 
 | Field | Value |
 |---|---|
-| Date | 2026-10-10 |
+| Date | 2026-10-11 |
 | Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); the Phase 4 gate (`law/s4.6-gate`) merged into it |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 and machine translation BLOCKED. Every slice that can be built without further approval is built |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 and machine translation BLOCKED. Every slice that can be built without further approval is built. All Phase 4 features are on in the pilot configuration (D-059, 2026-10-11) |
 | Plan documents | Committed to `feature/echomind-law` |
 | Migrations | `0001`–`0033` (Law edition only) |
 | Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
@@ -651,6 +651,16 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Suites:** backend 1275 (tests/law 1225 plus 50 others); Vitest 158; tsc clean.
 - **Docs:** `releases/phase4-gate.md`, D-058 (and a D-057 addendum), run 35. Merged into `feature/echomind-law` under the standing approval.
 
+### Session 4 — Pilot configuration: Phase 4 features on (D-059)
+- **The owner's decision (2026-10-11):** turn on all Phase 4 features for the pilot.
+- **Found:** the pilot stack's overlay passed none of the Phase 4 switches to the backend, so setting them in `.env.law` would have done nothing.
+- **Built:**
+  - `docker-compose.law.yml` passes `LEGAL_INTAKE`, `LEGAL_INTAKE_LINKS`, `LEGAL_INTAKE_LINK_DAYS`, `LEGAL_SUMMARIES`, `LEGAL_TIME_ENTRIES` and `LEGAL_PANEL` from `.env.law`, off when unset.
+  - `.env.law.example` turns all of them on.
+  - The code defaults stay off.
+- **Tests:** `test_law_pilot_config.py` (2, red first). `compose.sh config` (render only) showed all on with the template and all off without it. Nothing was started.
+- **Docs:** D-059, the THREAT_MODEL T-24 note, the feature matrix, run 36.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -659,6 +669,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
 - 2026-10-10: **APPROVED** the Phase 2 gate (`releases/phase2-gate.md`): merge S2.8 and start S3.1. The owner added: "approve everything and finish everything". This is taken as standing approval to build and merge every remaining slice and phase gate in order, including the Phase 4 business approval. Items that need a person (the lawyer review, the manual Word check, counsel's P-decisions) or that act outside this machine or on the shared host (a GitHub push, the first `compose.sh up` next to production, root) are confirmed one by one.
 - 2026-10-10: the Phase 3 gate (`releases/phase3-gate.md`) was merged under that standing approval. Its lawyer review and the manual Word check remain 🔒.
+- 2026-10-11: **APPROVED** by the owner: "turn on all phase 4 features for the pilot" (D-059). The pilot configuration turns them on; they take effect at the first `compose.sh up`, which is still 🔒.
 - 2026-10-10: **APPROVED** Phase 4 ("approved, start S4.1 and finish everything"). S4.1, S4.2, S4.3, S4.5 and the Phase 4 gate (`releases/phase4-gate.md`) were merged under it, each behind its own flag, off by default. S4.4 and machine translation stay BLOCKED.
 - Still 🔒:
   - the first `scripts/law/compose.sh up` on the shared host;
@@ -729,7 +740,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 1. **Lawyer review sessions:** Phase 4 (`releases/phase4-rubric.md`, packet `eval/law/lawyer_review/phase4/`), Phase 3 and Phase 2. Score with `eval/law/lawyer_review/score.py --phase N <sheet.csv>`, then record the results in the gate reports.
 2. **The manual Microsoft Word check** of tracked changes (S3.3).
 3. **Counsel P-001…P-015**, and the firm's billing rules for time entries.
-4. **Which Phase 4 flags the pilot firm turns on.** All are off by default; intake links have their own switch.
+4. **Pilot configuration:** done. All Phase 4 features are on (D-059). To start the pilot stack, `.env.law` must be created from `.env.law.example` with real secrets, and the first `compose.sh up` must be approved (item 5).
 5. **Operations on the shared host:** the first `scripts/law/compose.sh up` (the speech stack: real-audio accuracy, intake recordings), the root-run enforced T11, and the load-test window (T12).
 6. **Blocked by design:** S4.4 (a licensed source and network approval), machine translation (a model licence), DMS (P-010), IdP (P-011), and the syslog forwarder.
 7. **Any GitHub push or PR.**
