@@ -1,0 +1,17 @@
+# EchoMind Law backend image (D-060). Built by scripts/law/build_images.sh; never by docker compose.
+# The 1.4.1 backend image (no 30+ GB rebuild) plus what the Law edition needs and that image lacks:
+# cryptography for encrypted document storage (D-014), tesseract for OCR (S2.1), and the search reranker the
+# evaluations used, copied from the host's model cache so nothing is fetched at run time. The image's code is
+# replaced by the Law code of one commit, so the pilot never runs whatever this checkout has checked out.
+ARG BASE_IMAGE=echomind-enterprise-backend:1.4.1
+FROM ${BASE_IMAGE}
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+ && rm -rf /var/lib/apt/lists/*
+# The version the Law tests ran with (backend/requirements.txt allows >=44,<47).
+RUN pip install --no-cache-dir "cryptography==46.0.3"
+COPY --from=reranker . /root/.cache/huggingface/hub/models--cross-encoder--ms-marco-MiniLM-L-6-v2/
+RUN rm -rf /app/app
+COPY backend/app /app/app
+ARG BUILD_COMMIT=unknown
+LABEL org.opencontainers.image.title="echomind-law-backend" org.opencontainers.image.revision="${BUILD_COMMIT}"

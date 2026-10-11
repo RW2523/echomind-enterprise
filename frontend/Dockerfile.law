@@ -1,0 +1,16 @@
+# EchoMind Law frontend image (D-060). Built by scripts/law/build_images.sh; never by docker compose.
+# The 1.4.1 nginx image serving the Law build of one commit (built on the host, so nothing is fetched),
+# with this edition's nginx.conf (masked intake and enrolment tokens in the access log) and its own
+# self-signed certificate rather than the one baked into the production image.
+ARG BASE_IMAGE=echomind-enterprise-frontend:1.4.1
+FROM ${BASE_IMAGE}
+RUN rm -rf /usr/share/nginx/html/* /etc/nginx/ssl \
+ && mkdir -p /etc/nginx/ssl \
+ && openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout /etc/nginx/ssl/key.pem -out /etc/nginx/ssl/cert.pem \
+      -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+COPY frontend/dist/ /usr/share/nginx/html/
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+ARG BUILD_COMMIT=unknown
+RUN printf '{"app":"echomind-law-frontend","commit":"%s"}\n' "$BUILD_COMMIT" > /usr/share/nginx/html/build.json
+LABEL org.opencontainers.image.title="echomind-law-frontend" org.opencontainers.image.revision="${BUILD_COMMIT}"
