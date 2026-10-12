@@ -10,6 +10,7 @@ minutes item), not by suite, setting or model.
     python3 eval/law/lawyer_review/make_packet.py                 # Phase 2: writes packet.html, sheet.csv, key.json here
     python3 eval/law/lawyer_review/make_packet.py --phase 3       # Phase 3: the same files in lawyer_review/phase3/
     python3 eval/law/lawyer_review/make_packet.py --phase 4       # Phase 4: summaries and the review panel, in lawyer_review/phase4/
+    python3 eval/law/lawyer_review/make_packet.py --phase 5       # the pilot additions: regulatory matching and translation (D-068, D-070)
 
 Phase 3 takes the newest held-out report of each document tool (drafting, playbook checks, citations,
 definitions, obligations, due diligence, governance), grouped by the documents they were run on, with the
@@ -26,10 +27,12 @@ import csv
 import html
 import json
 import random
+import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 LAW = HERE.parent
+ROOT = LAW.parent.parent
 REPORTS = LAW / "reports"
 
 
@@ -186,8 +189,49 @@ def groups4() -> list[dict]:
     return out
 
 
+def groups5() -> list[dict]:
+    """The pilot additions. Regulatory updates (D-068): every match of a real daily bundle against each practice area,
+    for a matter in England & Wales and one in New York; the group's row is for updates that should have matched.
+    Translation (D-070): each paragraph of the fictional corpus beside its translation by the model."""
+    sys.path.insert(0, str(ROOT / "backend"))
+    from app.legal.regulatory import store, topics
+    bundle = json.loads((ROOT / "eval/fixtures/law/regulatory/bundle-20261012.json").read_text())
+    updates = []
+    for it in bundle["items"]:
+        try:
+            updates.append(store.clean(it, today=__import__("datetime").date(2026, 10, 12)))
+        except store.Invalid:
+            pass
+    listing = "\n".join(f"[{u['jurisdiction']}] {u['kind']} · {u['published']} · {u['title']}" + (f" — {u['summary'][:300]}" if u["summary"] else "")
+                         for u in updates)
+    out = []
+    for keys, terms in topics.AREAS.items():
+        area = keys[0].title()
+        for where in ("England & Wales", "New York"):
+            matter = {"practice_area": area, "jurisdiction": where}
+            items = [{"kind": "regulatory_match", "source": ["bundle-20261012.json", u["source"], u["external_id"], area, where],
+                      "title": f"{u['kind']} · {u['published']}: {u['title']}", "body": u["summary"] or "(no summary published)",
+                      "evidence": [f"matched on: {', '.join(found)}", u["url"]]}
+                     for u in updates for found in [topics.match(u, matter)] if found]
+            out.append({"group": f"regulatory:{area}:{where}", "title": f"Regulatory updates for a {area.lower()} matter in {where} "
+                        f"(terms: {', '.join(terms)})", "documents": [(f"All {len(updates)} updates of 12 October 2026 (real public law)", listing)],
+                        "items": items})
+    r = newest("-translation-review.json")
+    rows = json.loads(r.read_text())["rows"]
+    for name in sorted({x["document"] for x in rows}):
+        for code in sorted({x["language"] for x in rows}):
+            mine = [x for x in rows if x["document"] == name and x["language"] == code]
+            out.append({"group": f"translation:{name}:{code}", "title": f"Translation into {code.upper()}: {name} (fictional)",
+                        "documents": [(name, (LAW / "corpus" / name).read_text())],
+                        "items": [{"kind": "translation_paragraph", "source": [r.name, name, code, x["paragraph"]],
+                                   "title": f"Paragraph {x['paragraph'] + 1}", "body": f"ORIGINAL: {x['source']}\n\nTRANSLATION: {x['text']}",
+                                   "evidence": ([f"figure flagged: {', '.join(x['figures_missing'])}"] if x["figures_missing"] else []) +
+                                               (["text addressed to an AI was withheld"] if x["withheld"] else [])} for x in mine]})
+    return out
+
+
 def phase3(args) -> int:
-    groups = groups4() if args.phase == 4 else groups3()
+    groups = groups5() if args.phase == 5 else groups4() if args.phase == 4 else groups3()
     random.Random(args.seed).shuffle(groups)
     out = Path(args.out or HERE / f"phase{args.phase}")
     out.mkdir(exist_ok=True)
@@ -209,7 +253,8 @@ def phase3(args) -> int:
             w.writerow([g["id"], g["id"], "missed", "", "", "", ""])
     label = {"draft": "Draft", "playbook_line": "Playbook check", "citation": "Citation check", "definition": "Drafting check",
              "obligation": "Obligation", "diligence_issue": "Diligence issue", "dd_missing": "Missing documents", "governance_issue": "Governance issue",
-             "summary_point": "Summary point", "panel_perspective": "Panel perspective", "panel_issue": "Moderator's matrix", "panel_stop": "Panel stop decision"}
+             "summary_point": "Summary point", "panel_perspective": "Panel perspective", "panel_issue": "Moderator's matrix", "panel_stop": "Panel stop decision",
+             "regulatory_match": "Regulatory match", "translation_paragraph": "Translated paragraph"}
     parts = ["<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Phase {args.phase} review packet</title>",
              "<style>body{font:15px/1.55 Georgia,serif;max-width:860px;margin:40px auto;padding:0 16px;color:#15171C;background:#fff}"
@@ -234,11 +279,11 @@ def phase3(args) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--phase", type=int, choices=[2, 3, 4], default=2)
+    ap.add_argument("--phase", type=int, choices=[2, 3, 4, 5], default=2)
     ap.add_argument("--seed", type=int, default=20261010)
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
-    if args.phase in (3, 4):
+    if args.phase in (3, 4, 5):
         return phase3(args)
     args.out = args.out or str(HERE)
     rows = items2()
