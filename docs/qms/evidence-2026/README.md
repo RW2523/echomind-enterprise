@@ -2,7 +2,7 @@
 
 The 2026 counterpart of the 2025 EchoMind evidence pack (`fileiso9001.zip`), built for the rebuilt
 product in this repository. Same structure and numbering as 2025, so an auditor can follow the same path.
-Prepared 2026-10-06 for the pre-audit (2026-10-07) and the audit (2026-10-14); approved 2026-10-07 (AR-2026-001), revision 1.1 of the review and NFR evidence approved 2026-10-10 (AR-2026-002); Excel registers EM26-19…22 added 2026-10-11.
+Prepared 2026-10-06 for the pre-audit (2026-10-07) and the audit (2026-10-14); approved 2026-10-07 (AR-2026-001), revision 1.1 of the review and NFR evidence approved 2026-10-10 (AR-2026-002); Excel registers EM26-19…22 added 2026-10-11 and approved 2026-10-12 (AR-2026-003).
 
 **Start with** `00_Overview_and_Map/EM26-00_ISO9001_Audit_Package_EchoMind_Enterprise.docx`, then the
 map `00_Overview_and_Map/EM26-00_Evidence_Map_2025_to_2026.xlsx` (every 2025 file → its 2026 counterpart).
@@ -16,7 +16,7 @@ live-system snapshot, evaluation reports) — is also available as one download:
 - **Nothing is invented.** Every record comes from a commit, a QMS register, or a test executed on
   2026-10-06 against the reference instance. Records summarising earlier work say so and give the original dates.
 - **Approvals are recorded, not assumed.** Signatures are the typed names of the role holders, entered after each
-  confirmed approval (AR-2026-001, AR-2026-002 in `docs/qms/records/approvals/`). Meeting documents are templates
+  confirmed approval (AR-2026-001, -002, -003 in `docs/qms/records/approvals/`). Meeting documents are templates
   for meetings still to be held; the management-review file is an input pack.
 - **Dates come from records.** 2025 dates from the 2025 minutes, review documents and audits; 2026 dates from commits,
   registers and test runs. Where a remembered month and the commit record differed, the commit date is used.

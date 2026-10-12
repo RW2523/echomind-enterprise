@@ -77,10 +77,10 @@ history itself is not duplicated here — it is the Git history of each file (SO
 | REG-08 | Release and Deployment Register | Lead Engineer (Richard Watson Stephen Amudha) | v1.4.0 and v1.4.1 — authorised 2026-10-07 by Anita Johan; reference instance runs v1.4.1 |
 | REG-09 | Non-Functional Requirements Register | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs, targets approved 2026-10-07 (EM26-17; rev 1.1 approved 2026-10-10, AR-2026-002) |
 | REG-10 | Review Feedback and Action Log | Quality representative (Sheryl Nazareth) | 17 reviews, 55 actions, 48 closed (EM26-18 rev 1.1, approved 2026-10-10, AR-2026-002) |
-| EM26-19 | Deliverable Review Feedback and Action Log 2025 → 2026 (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 33 reviews (15 in 2025, 18 in 2026), 75 actions, 66 closed; issued 2026-10-11 for approval — `evidence-2026/19_Excel_Registers/` |
-| EM26-20 | Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 39 requirements (5 from 2025, 34 in 2026) with traceability; issued 2026-10-11 for approval |
-| EM26-21 | Non-Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs + 9 from 2025, measurement history; issued 2026-10-11 for approval |
-| EM26-22 | Product Roadmap 2025 → 2027 (Excel) | EchoMind Project Lead (Alexander Peter) | 2025 plan vs actual, 2026 increments, forward plan; issued 2026-10-11 for approval |
+| EM26-19 | Deliverable Review Feedback and Action Log 2025 → 2026 (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 33 reviews (15 in 2025, 18 in 2026), 75 actions, 66 closed; approved 2026-10-12 (AR-2026-003) — `evidence-2026/19_Excel_Registers/` |
+| EM26-20 | Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 39 requirements (5 from 2025, 34 in 2026) with traceability; approved 2026-10-12 (AR-2026-003) |
+| EM26-21 | Non-Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs + 9 from 2025, measurement history; approved 2026-10-12 (AR-2026-003) |
+| EM26-22 | Product Roadmap 2025 → 2027 (Excel) | EchoMind Project Lead (Alexander Peter) | 2025 plan vs actual, 2026 increments, forward plan; approved 2026-10-12 (AR-2026-003) |
 
 ## 4a. Completed records
 
@@ -95,7 +95,7 @@ Completed records are filed as dated Markdown files under `docs/qms/records/`:
 | `records/approvals/` | Document approval records | — |
 | `records/runtime/` | Runtime-settings baseline (SOP-06 §10.1) | — |
 
-At 2026-10-10: `records/approvals/` (AR-2026-001, AR-2026-002), `records/releases/` (v1.4.0, v1.4.1), `records/capa/` (NC-2026-009 access-log review), `records/runtime/` (runtime-settings baseline). `records/audits/` and `records/management-review/` are still empty.
+At 2026-10-12: `records/approvals/` (AR-2026-001, AR-2026-002, AR-2026-003), `records/releases/` (v1.4.0, v1.4.1), `records/capa/` (NC-2026-009 access-log review), `records/runtime/` (runtime-settings baseline). `records/audits/` and `records/management-review/` are still empty.
 
 ## 5. Supporting engineering documentation relied on as QMS evidence
 
