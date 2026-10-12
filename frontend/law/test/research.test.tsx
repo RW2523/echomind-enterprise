@@ -28,6 +28,14 @@ async function askIt(q: string) {
 describe('Research', () => {
   afterEach(() => cleanup());
 
+  it('an empty page offers starter questions; picking one fills the question to edit or ask', async () => {
+    world([]);
+    renderLaw('/m/M-101/research');
+    const starters = await screen.findByRole('group', { name: 'Try asking' });
+    fireEvent.click(within(starters).getByRole('button', { name: 'What are the payment terms?' }));
+    expect((screen.getByLabelText('Ask about this matter') as HTMLTextAreaElement).value).toBe('What are the payment terms?');
+  });
+
   it('streams an answer whose statements point at the cited passage', async () => {
     const calls = world([
       { type: 'sources', citations: SRC },

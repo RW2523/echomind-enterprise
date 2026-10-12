@@ -69,6 +69,46 @@ describe('Conversation (S5.1)', () => {
     expect(calls.some((c) => c.path.endsWith('/conversation/speak'))).toBe(false);
   });
 
+  it('remembers the conversation: a follow-up is sent with it and the page shows what was understood', async () => {
+    const FOLLOW = [
+      { type: 'understood', question: 'Within how many days must the Client pay invoices?', rewritten: true },
+      ...STREAM.slice(0, 1),
+      { type: 'done', answer: 'Within thirty days [1].', citations: SRC, status: 'answered', abstained: false, evidence: [], turn_id: 't2' },
+    ];
+    let n = 0;
+    const calls = world({ [`POST ${M}/research/query`]: () => [200, { __ndjson: n++ === 0 ? STREAM : FOLLOW }] });
+    renderLaw('/m/M-101/conversation');
+    fireEvent.click(await screen.findByLabelText(/Read answers aloud/));               // quiet for this test
+    const ask = async (q: string) => {
+      fireEvent.change(screen.getByLabelText('Or type a question'), { target: { value: q } });
+      fireEvent.click(screen.getByRole('button', { name: 'Ask' }));
+    };
+    await ask('What is the liability cap?');
+    expect(await screen.findByRole('heading', { name: 'What is the liability cap?' })).toBeTruthy();
+    await waitFor(() => expect((screen.getByLabelText('Or type a question') as HTMLInputElement).disabled).toBe(false));
+    await ask('And how long to pay?');
+    await waitFor(() => expect(calls.filter((c) => c.path === `${M}/research/query`).length).toBe(2));
+    expect(calls.filter((c) => c.path === `${M}/research/query`)[1].body).toEqual({ question: 'And how long to pay?', versions: 'signed',
+      history: [{ question: 'What is the liability cap?', answer: 'Liability is capped at USD 250,000 [1].' }] });
+    expect(await screen.findByText('understood from the conversation as:')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Within how many days must the Client pay invoices?' })).toBeTruthy();
+    expect(screen.getByText('“And how long to pay?”')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'New conversation' }));            // forgets it
+    expect(screen.queryByRole('list', { name: 'This conversation' })).toBeNull();
+    await ask('What is the governing law?');
+    await waitFor(() => expect(calls.filter((c) => c.path === `${M}/research/query`).length).toBe(3));
+    expect(calls.filter((c) => c.path === `${M}/research/query`)[2].body).toEqual({ question: 'What is the governing law?', versions: 'signed' });
+  });
+
+  it('an empty conversation offers starter questions that are asked at once', async () => {
+    const calls = world();
+    renderLaw('/m/M-101/conversation');
+    fireEvent.click(await screen.findByLabelText(/Read answers aloud/));
+    fireEvent.click(within(await screen.findByRole('group', { name: 'Try asking' })).getByRole('button', { name: 'What are the payment terms?' }));
+    await waitFor(() => expect(calls.find((c) => c.path === `${M}/research/query`)?.body).toEqual({ question: 'What are the payment terms?', versions: 'signed' }));
+    await waitFor(() => expect(screen.queryByRole('group', { name: 'Try asking' })).toBeNull());
+  });
+
   it('without speech recognition on the server it says so and typing still works', async () => {
     world({ [`POST ${M}/conversation/transcribe?sample_rate=16000`]: () => [503, { detail: 'Speech recognition is not installed on this server. Type your question instead.' }] });
     renderLaw('/m/M-101/conversation');

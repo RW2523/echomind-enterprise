@@ -8,7 +8,7 @@
 |---|---|
 | Date | 2026-10-11 |
 | Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); the Phase 4 gate (`law/s4.6-gate`) merged into it |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 and machine translation BLOCKED. Every slice that can be built without further approval is built. All Phase 4 features are on in the pilot configuration (D-059, 2026-10-11). **The pilot stack is running** (D-060, `https://<host>:3553`) with the fictional demo world and every feature on, including the new Conversation assistant (S5.1, D-061, D-062) |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 and machine translation BLOCKED. Every slice that can be built without further approval is built. All Phase 4 features are on in the pilot configuration (D-059, 2026-10-11). **The pilot stack is running** (D-060, `https://<host>:3553`) with the fictional demo world, a practice group, six fictional cases, the base corpus and a public-law library, every feature on, Conversation with follow-ups, and the Liquid Glass interface (D-061 to D-065) |
 | Plan documents | Committed to `feature/echomind-law` |
 | Migrations | `0001`–`0033` (Law edition only) |
 | Production impact | None. Production's containers were never touched (same start times, no restarts, checked before and after each start). The Law pilot stack runs beside it as project `echomind-law`, capped below it (D-060); it reuses the host's model servers read-only. |
@@ -693,6 +693,21 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - **What changed:** the check is now repeatable, and Silent Assist asks its subject question in plain words (fix 6).
 - **Suites (final, on the merged code):** backend 1301; security 29 groups and 1089 tests, all pass; Vitest 162; browser 34/34 (15.1 min).
 
+### Session 5 — Follow-ups, demo data, a public-law library, Liquid Glass (D-063, D-064, D-065)
+- **Follow-up questions (D-063):** Conversation sends the conversation so far, and a follow-up is made to stand alone ("understood from the conversation as …"), then answered from the documents.
+- **Demo data (D-064):**
+  - R-001: five real statutes fetched once (the owner chose public-domain law; US public domain, UK OGL v3.0).
+  - M-130: the base corpus, with the MSA's two versions.
+  - The practice group (harper, sofia, kenji, lena, omar, theo) and six fictional cases, M-301 to M-306, written by the local model from fixed briefs.
+  - US-style parties are now recognised (Compare golden and held-out unchanged).
+- **Interface (D-065):**
+  - Liquid Glass (`theme/liquid.css`).
+  - Home as a dashboard.
+  - The command palette (⌘K / Ctrl K).
+  - "Work on this matter" tiles and starter questions.
+- **The flows:** `DEMO_FLOW.md`, and a published guide with eleven walkthroughs. `demo_check.py` covers each flow on the pilot.
+- **Suites:** backend 1310; security 29 groups and 1090 tests, all pass; Vitest 169; browser 33 of 34 in the full run (a slow 35 min run). The compare journey allowed only 5 s for its result; it now waits up to 60 s and passed on its own.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -701,6 +716,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
 - 2026-10-10: **APPROVED** the Phase 2 gate (`releases/phase2-gate.md`): merge S2.8 and start S3.1. The owner added: "approve everything and finish everything". This is taken as standing approval to build and merge every remaining slice and phase gate in order, including the Phase 4 business approval. Items that need a person (the lawyer review, the manual Word check, counsel's P-decisions) or that act outside this machine or on the shared host (a GitHub push, the first `compose.sh up` next to production, root) are confirmed one by one.
 - 2026-10-10: the Phase 3 gate (`releases/phase3-gate.md`) was merged under that standing approval. Its lawyer review and the manual Word check remain 🔒.
+- 2026-10-12: by the owner: "make conversation remember follow-up questions … load a crawl … the base data set … a group of users and synthetic cases … the flow … a glass Apple liquid UI". Asked what to crawl, the owner chose **public-domain law**, fetched once from official sources (D-064). Built and merged under that request (D-063, D-064, D-065).
 - 2026-10-11: by the owner: "fill in demo details and build a product … make sure everything is there and working". The fictional demo world is on the pilot; the Conversation assistant (S5.1) is built and on; Silent Assist was fixed on real speech (D-061, D-062).
 - 2026-10-11: **APPROVED** by the owner: "create .env.law and start the pilot stack". The first `compose.sh up` ran (D-060); the pilot stack is running.
 - 2026-10-11: **APPROVED** by the owner: "turn on all phase 4 features for the pilot" (D-059). The pilot configuration turns them on; they take effect at the first `compose.sh up`, which is still 🔒.

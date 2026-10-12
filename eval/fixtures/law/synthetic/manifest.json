@@ -1,0 +1,335 @@
+{
+ "note": "FICTIONAL demo cases (D-064): every party, person, figure and fact is invented.",
+ "team": {
+  "harper": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "senior associate, disputes"
+  },
+  "sofia": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "associate, employment and real estate"
+  },
+  "kenji": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "associate, corporate and regulatory"
+  },
+  "lena": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "trainee solicitor"
+  },
+  "omar": {
+   "roles": [
+    "paralegal"
+   ],
+   "about": "paralegal, disputes"
+  },
+  "theo": {
+   "roles": [
+    "reviewer"
+   ],
+   "about": "knowledge lawyer (reviews drafts)"
+  }
+ },
+ "cases": [
+  {
+   "number": "M-301",
+   "title": "Northwind v Calder Freight — late delivery claim",
+   "practice_area": "Commercial litigation",
+   "jurisdiction": "England & Wales",
+   "lead": "harper",
+   "members": {
+    "lena": "attorney",
+    "omar": "paralegal",
+    "nakamura": "reviewer"
+   },
+   "client": {
+    "name": "Northwind Logistics Ltd",
+    "code": "NWL"
+   },
+   "parties": [
+    [
+     "Calder Freight Ltd",
+     "adverse"
+    ]
+   ],
+   "documents": [
+    {
+     "file": "M-301/01 Logistics Services Agreement (DEMO).md",
+     "title": "Logistics Services Agreement (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "M-301/02 Email chain on missed deliveries (DEMO).md",
+     "title": "Email chain on missed deliveries (DEMO)",
+     "kind": "correspondence",
+     "status": "received"
+    },
+    {
+     "file": "M-301/03 Notice of claim (DEMO).md",
+     "title": "Notice of claim (DEMO)",
+     "kind": "correspondence",
+     "status": "final"
+    },
+    {
+     "file": "M-301/04 Calder Freight response (DEMO).md",
+     "title": "Calder Freight response (DEMO)",
+     "kind": "correspondence",
+     "status": "received"
+    },
+    {
+     "file": "M-301/05 Internal note of call with operations (DEMO).md",
+     "title": "Internal note of call with operations (DEMO)",
+     "kind": "note",
+     "status": "final"
+    }
+   ]
+  },
+  {
+   "number": "M-302",
+   "title": "Brightwater Clinics — on-call pay grievance",
+   "practice_area": "Employment",
+   "jurisdiction": "England & Wales",
+   "lead": "sofia",
+   "members": {
+    "lena": "attorney",
+    "theo": "reviewer"
+   },
+   "client": {
+    "name": "Brightwater Clinics Ltd",
+    "code": "BWC"
+   },
+   "parties": [
+    [
+     "Dr Amir Rahman",
+     "adverse"
+    ]
+   ],
+   "documents": [
+    {
+     "file": "M-302/01 Employment contract — Dr A. Rahman (DEMO).md",
+     "title": "Employment contract — Dr A. Rahman (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "M-302/02 On-Call Allowance Policy v3 (DEMO).md",
+     "title": "On-Call Allowance Policy v3 (DEMO)",
+     "kind": "other",
+     "status": "final"
+    },
+    {
+     "file": "M-302/03 Grievance letter (DEMO).md",
+     "title": "Grievance letter (DEMO)",
+     "kind": "correspondence",
+     "status": "received"
+    },
+    {
+     "file": "M-302/04 HR investigation notes (DEMO).md",
+     "title": "HR investigation notes (DEMO)",
+     "kind": "note",
+     "status": "final"
+    }
+   ]
+  },
+  {
+   "number": "M-303",
+   "title": "Kestrel Robotics — Series A financing",
+   "practice_area": "Corporate / venture",
+   "jurisdiction": "Delaware",
+   "lead": "kenji",
+   "members": {
+    "harper": "attorney",
+    "omar": "paralegal",
+    "morgan": "reviewer"
+   },
+   "client": {
+    "name": "Kestrel Robotics, Inc.",
+    "code": "KES"
+   },
+   "parties": [
+    [
+     "Aldermoor Ventures LP",
+     "adverse"
+    ]
+   ],
+   "documents": [
+    {
+     "file": "M-303/01 Series A term sheet (DEMO).md",
+     "title": "Series A term sheet (DEMO)",
+     "kind": "contract",
+     "status": "final"
+    },
+    {
+     "file": "M-303/02 Draft Stock Purchase Agreement (investor draft) (DEMO).md",
+     "title": "Draft Stock Purchase Agreement (investor draft) (DEMO)",
+     "kind": "contract",
+     "status": "draft"
+    },
+    {
+     "file": "M-303/03 Capitalisation table summary (DEMO).md",
+     "title": "Capitalisation table summary (DEMO)",
+     "kind": "other",
+     "status": "final"
+    },
+    {
+     "file": "M-303/04 Board consent approving the financing (draft) (DEMO).md",
+     "title": "Board consent approving the financing (draft) (DEMO)",
+     "kind": "other",
+     "status": "draft"
+    }
+   ]
+  },
+  {
+   "number": "M-304",
+   "title": "Harbourview Studios — Unit 12 lease renewal",
+   "practice_area": "Real estate",
+   "jurisdiction": "England & Wales",
+   "lead": "sofia",
+   "members": {
+    "lena": "attorney",
+    "omar": "paralegal"
+   },
+   "client": {
+    "name": "Harbourview Studios Ltd",
+    "code": "HBV"
+   },
+   "parties": [
+    [
+     "Pembroke Estates Ltd",
+     "adverse"
+    ]
+   ],
+   "documents": [
+    {
+     "file": "M-304/01 Lease of Unit 12 Riverside Works (DEMO).md",
+     "title": "Lease of Unit 12 Riverside Works (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "M-304/02 Landlord rent review proposal (DEMO).md",
+     "title": "Landlord rent review proposal (DEMO)",
+     "kind": "correspondence",
+     "status": "received"
+    },
+    {
+     "file": "M-304/03 Surveyor's comparables note (DEMO).md",
+     "title": "Surveyor's comparables note (DEMO)",
+     "kind": "memo",
+     "status": "final"
+    },
+    {
+     "file": "M-304/04 Heads of terms for a new lease (draft) (DEMO).md",
+     "title": "Heads of terms for a new lease (draft) (DEMO)",
+     "kind": "contract",
+     "status": "draft"
+    }
+   ]
+  },
+  {
+   "number": "M-305",
+   "title": "Lumen Software — SaaS agreement with Orbis Bank",
+   "practice_area": "Technology & data",
+   "jurisdiction": "England & Wales",
+   "lead": "harper",
+   "members": {
+    "kenji": "attorney",
+    "theo": "reviewer",
+    "nakamura": "reviewer"
+   },
+   "client": {
+    "name": "Lumen Software Ltd",
+    "code": "LUM"
+   },
+   "parties": [
+    [
+     "Orbis Bank plc",
+     "adverse"
+    ]
+   ],
+   "documents": [
+    {
+     "file": "M-305/01 SaaS Agreement (Lumen draft) (DEMO).md",
+     "title": "SaaS Agreement (Lumen draft) (DEMO)",
+     "kind": "contract",
+     "status": "draft"
+    },
+    {
+     "file": "M-305/02 Data Processing Addendum (Lumen draft) (DEMO).md",
+     "title": "Data Processing Addendum (Lumen draft) (DEMO)",
+     "kind": "contract",
+     "status": "draft"
+    },
+    {
+     "file": "M-305/03 Orbis mark-up email (DEMO).md",
+     "title": "Orbis mark-up email (DEMO)",
+     "kind": "correspondence",
+     "status": "received"
+    },
+    {
+     "file": "M-305/04 Security schedule (DEMO).md",
+     "title": "Security schedule (DEMO)",
+     "kind": "contract",
+     "status": "draft"
+    }
+   ]
+  },
+  {
+   "number": "M-306",
+   "title": "Meridian Foods — allergen labelling inquiry",
+   "practice_area": "Regulatory",
+   "jurisdiction": "England & Wales",
+   "lead": "kenji",
+   "members": {
+    "sofia": "attorney",
+    "omar": "paralegal",
+    "morgan": "reviewer"
+   },
+   "client": {
+    "name": "Meridian Foods plc",
+    "code": "MER"
+   },
+   "parties": [
+    [
+     "Food Labelling Authority",
+     "related"
+    ]
+   ],
+   "documents": [
+    {
+     "file": "M-306/01 Authority information request (DEMO).md",
+     "title": "Authority information request (DEMO)",
+     "kind": "correspondence",
+     "status": "received"
+    },
+    {
+     "file": "M-306/02 Product specification v5 — Harvest Seeded Loaf (DEMO).md",
+     "title": "Product specification v5 — Harvest Seeded Loaf (DEMO)",
+     "kind": "other",
+     "status": "final"
+    },
+    {
+     "file": "M-306/03 Internal compliance memo (DEMO).md",
+     "title": "Internal compliance memo (DEMO)",
+     "kind": "memo",
+     "status": "final"
+    },
+    {
+     "file": "M-306/04 Draft response to the Authority (DEMO).md",
+     "title": "Draft response to the Authority (DEMO)",
+     "kind": "correspondence",
+     "status": "draft"
+    }
+   ]
+  }
+ ]
+}

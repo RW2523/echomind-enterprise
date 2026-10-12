@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/source-serif-4';
 import '../theme/law.css';
+import '../theme/liquid.css';
 import { applyPreferences } from './preferences';
 import { RequireSession, useSessionExpiry } from './session';
 import { MatterLayout } from './matter';

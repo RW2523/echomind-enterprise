@@ -1,13 +1,46 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, ListTodo, FileOutput, FilePen, Files, FolderSync, FileText, Gauge, LayoutTemplate, GitCompareArrows, History, Home as HomeIcon, Inbox, KeyRound, ListCollapse, Timer, Users2, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog, Mic } from 'lucide-react';
+import { ClipboardCheck, KeyRound, LogOut, Moon, Search, Sun } from 'lucide-react';
 import { api } from '../api/client';
 import { useReviews } from '../api/queries';
 import MatterSwitcher from '../ui/MatterSwitcher';
-import { hasFirmRole, useSession } from './session';
+import { isMac, PaletteProvider, useOpenPalette } from '../ui/Palette';
+import { useSession } from './session';
 import { MatterProvider, useCurrentMatter } from './matter';
+import { firmEntries, matterEntries } from './nav';
 import { setThemeMode } from './preferences';
+
+/** D-065: the light on glass follows the pointer (a CSS position on the surface under it); off with reduced motion. */
+function usePointerLight() {
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    let frame = 0;
+    const onMove = (e: PointerEvent) => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const el = (e.target as Element | null)?.closest?.('.lw-glass, .lw-paper, .lw-tile') as HTMLElement | null;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+        el.style.setProperty('--my', `${e.clientY - r.top}px`);
+      });
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => { window.removeEventListener('pointermove', onMove); if (frame) cancelAnimationFrame(frame); };
+  }, []);
+}
+
+function SearchButton() {
+  const open = useOpenPalette();
+  const keys = isMac() ? '⌘K' : 'Ctrl K';
+  return (
+    <button type="button" className="lw-search-btn" onClick={() => open()} aria-label={`Search or jump to (${keys})`}>
+      <Search aria-hidden /><span>Search or jump to…</span><kbd className="lw-kbd">{keys}</kbd>
+    </button>
+  );
+}
 
 function NavItem({ to, icon, children }: { to: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -45,29 +78,18 @@ export default function Shell() {
     setThemeMode(dark ? 'light' : 'dark');
     setDark(!dark);
   };
+  usePointerLight();
 
   return (
     <MatterProvider>
+    <PaletteProvider>
     <div className="lw-shell">
       <aside className="lw-glass lw-sidebar" aria-label="Workspace navigation">
         <ShellMatterBlock />
         <div className="lw-nav-label lw-hide-rail">Firm</div>
         <nav aria-label="Firm" style={{ display: 'grid', gap: 2 }}>
-          <NavItem to="/home" icon={<HomeIcon />}>Home</NavItem>
-          <NavItem to="/matters" icon={<Briefcase />}>Matters</NavItem>
-          <ReviewsNavItem />
-          {hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal') && <NavItem to="/templates" icon={<LayoutTemplate />}>Templates</NavItem>}
-          {hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal') && <NavItem to="/playbooks" icon={<BookMarked />}>Playbooks</NavItem>}
-          {hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal') && <NavItem to="/checklists" icon={<ListTodo />}>Checklists</NavItem>}
-          {me.features?.intake && hasFirmRole(me, 'intake', 'conflicts', 'paralegal', 'attorney', 'managing_partner', 'records_admin') && <NavItem to="/enquiries" icon={<Inbox />}>Enquiries</NavItem>}
-          {me.features?.time_entries && <NavItem to="/time" icon={<Timer />}>Time</NavItem>}
-          {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/users" icon={<UserCog />}>Users &amp; roles</NavItem>}
-          {hasFirmRole(me, 'firm_admin') && <NavItem to="/admin/connectors" icon={<FolderSync />}>Connectors</NavItem>}
-          {hasFirmRole(me, 'managing_partner') && <NavItem to="/admin/walls" icon={<ShieldOff />}>Ethical walls</NavItem>}
-          {hasFirmRole(me, 'firm_admin', 'managing_partner') && <NavItem to="/admin/emergency-access" icon={<Siren />}>Emergency access</NavItem>}
-          {hasFirmRole(me, 'records_admin', 'managing_partner') && <NavItem to="/admin/records" icon={<Archive />}>Records</NavItem>}
-          {hasFirmRole(me, 'firm_admin', 'managing_partner', 'records_admin') && <NavItem to="/admin/audit" icon={<ScrollText />}>Audit trail</NavItem>}
-          {hasFirmRole(me, 'firm_admin', 'managing_partner', 'records_admin') && <NavItem to="/admin/evaluations" icon={<Gauge />}>Evaluations</NavItem>}
+          {firmEntries(me).map((e) => (e.key === 'reviews' ? <ReviewsNavItem key={e.key} />
+            : <NavItem key={e.key} to={e.to} icon={<e.icon />}>{e.label}</NavItem>))}
         </nav>
         <div style={{ marginTop: 'auto', borderTop: '1px solid var(--rule)', paddingTop: 8, display: 'grid', gap: 2 }}>
           <NavItem to="/account/security" icon={<KeyRound />}>Security</NavItem>
@@ -83,6 +105,7 @@ export default function Shell() {
         <Outlet />
       </main>
     </div>
+    </PaletteProvider>
     </MatterProvider>
   );
 }
@@ -93,24 +116,12 @@ function ShellMatterBlock() {
   return (
     <>
       <MatterSwitcher />
+      <SearchButton />
       {matter && (
         <>
           <div className="lw-nav-label lw-hide-rail">Matter</div>
           <nav aria-label="Matter" style={{ display: 'grid', gap: 2 }}>
-            <NavItem to={`/m/${encodeURIComponent(matter.number)}/overview`} icon={<FileText />}>Overview</NavItem>
-            <NavItem to={`/m/${encodeURIComponent(matter.number)}/documents`} icon={<Files />}>Documents</NavItem>
-            <NavItem to={`/m/${encodeURIComponent(matter.number)}/research`} icon={<BookOpenText />}>Research</NavItem>
-            {me.features?.conversation && <NavItem to={`/m/${encodeURIComponent(matter.number)}/conversation`} icon={<Mic />}>Conversation</NavItem>}
-            <NavItem to={`/m/${encodeURIComponent(matter.number)}/compare`} icon={<GitCompareArrows />}>Compare</NavItem>
-            <NavItem to={`/m/${encodeURIComponent(matter.number)}/drafting`} icon={<FilePen />}>Drafting</NavItem>
-            <NavItem to={`/m/${encodeURIComponent(matter.number)}/obligations`} icon={<CalendarCheck />}>Obligations</NavItem>
-            <NavItem to={`/m/${encodeURIComponent(matter.number)}/diligence`} icon={<ClipboardList />}>Due diligence</NavItem>
-            {me.features?.summaries && <NavItem to={`/m/${encodeURIComponent(matter.number)}/summaries`} icon={<ListCollapse />}>Summaries</NavItem>}
-            {me.features?.panel && <NavItem to={`/m/${encodeURIComponent(matter.number)}/panel`} icon={<Users2 />}>Review panel</NavItem>}
-            <NavItem to={`/m/${encodeURIComponent(matter.number)}/meetings`} icon={<CalendarClock />}>Meetings</NavItem>
-            {['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && <NavItem to={`/m/${encodeURIComponent(matter.number)}/exports`} icon={<FileOutput />}>Exports</NavItem>}
-            <NavItem to={`/m/${encodeURIComponent(matter.number)}/members`} icon={<Users />}>Members</NavItem>
-            {matter.my_role === 'lead' && <NavItem to={`/m/${encodeURIComponent(matter.number)}/activity`} icon={<History />}>Activity</NavItem>}
+            {matterEntries(me, matter).map((e) => <NavItem key={e.key} to={e.to} icon={<e.icon />}>{e.label}</NavItem>)}
           </nav>
         </>
       )}

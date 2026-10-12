@@ -32,14 +32,20 @@ from ..matters.routes import principal_of, require, require_law_edition
 from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import llm as llm_mod
-from . import evidence, prompt
+from . import evidence, followup, prompt
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition)])
 
 
+class Turn(BaseModel):
+    question: str = Field(max_length=2000)
+    answer: str = Field(default="", max_length=8000)
+
+
 class QueryIn(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
+    history: Optional[list[Turn]] = Field(default=None, max_length=6)   # S5.1b: the conversation so far (D-063)
     versions: Literal["signed", "current"] = "signed"     # S2.2a: answer from signed versions (default) or latest drafts
     documents: Optional[list[str]] = Field(default=None, max_length=50)   # S2.6: only these documents (a board pack)
 
@@ -129,9 +135,11 @@ def _status(abstained: bool, claims: list, unsupported: list, failed: list) -> s
 
 
 async def _answer(scope, principal: dict, question: str, turn: dict, versions: str = "signed",
-                  documents: Optional[list[str]] = None) -> AsyncIterator[str]:
+                  documents: Optional[list[str]] = None, understood: Optional[dict] = None) -> AsyncIterator[str]:
     status, answer, citations, items, found, reason = "error", None, [], [], [], None
     try:
+        if understood:                                      # S5.1b (D-063): what a follow-up was taken to ask
+            yield _event({"type": "understood", **understood})
         result = await searchmod.search(scope, question, k=settings.LEGAL_RESEARCH_PASSAGES, versions=versions, documents=documents)
         passages = result["passages"]
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
@@ -215,15 +223,20 @@ async def research_query(matter_id: str, inp: QueryIn, request: Request):
     p = principal_of(request)
     await run_in_threadpool(require, p, "research.query", matter_id)
     question = inp.question.strip()
-    note(details={"query": {"chars": len(question), "sha256": hashlib.sha256(question.encode()).hexdigest()}})
     try:
         scope = await run_in_threadpool(scopemod.authorize, p, matter_id)
     except scopemod.ScopeDenied:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Not Found")
+    understood, extra = None, {}
+    if inp.history:                                         # S5.1b (D-063): a follow-up is made to stand alone first
+        question, rewritten = await followup.standalone(question, [t.model_dump() for t in inp.history])
+        understood, extra = {"question": question, "rewritten": rewritten}, {"history_turns": len(inp.history), "rewritten": rewritten}
+    note(details={"query": {"chars": len(question), "sha256": hashlib.sha256(question.encode()).hexdigest()}, **extra})
     turn = {"id": str(uuid.uuid4()), "org_id": p["org_id"], "matter_id": matter_id, "owner_id": p["sub"],
             "question": question, "auth": p["auth"], "created_at": policy.now_iso()}
-    return StreamingResponse(_answer(scope, p, question, turn, inp.versions, inp.documents or None), media_type="application/x-ndjson",
+    return StreamingResponse(_answer(scope, p, question, turn, inp.versions, inp.documents or None, understood),
+                             media_type="application/x-ndjson",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 

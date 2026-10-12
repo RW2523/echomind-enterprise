@@ -356,3 +356,27 @@ frontend/law/
 - Tailwind `content` must include `./law/**/*` and `./verticals/**/*` (fixes the missing-styles bug, R-12).
 - Fonts: `@fontsource-variable/inter` and `@fontsource-variable/source-serif-4`, imported in `law/theme`. No CDN.
 - Visual regression: Playwright screenshots of `/__design` in light, dark, reduced transparency and high contrast. These are reviewed, not auto-accepted.
+
+## 10. Liquid Glass v2 (D-065, 2026-10-12)
+
+The owner asked for a livelier, production look: "glass, Apple, liquid, the new trend". `frontend/law/theme/liquid.css`
+is a layer loaded after `law.css`. It changes the material and keeps every component and rule above.
+
+- **Canvas:** a slow aurora (indigo, teal, amber, rose; deeper in dark mode) behind every page. It drifts over about 40
+  seconds and is still with reduced motion.
+- **Glass (chrome):** sidebar, title capsule, palette and dialogs. It is clear (`--glass-fill`), blurred and saturated,
+  with a lit top edge (inset highlight) and a soft light that follows the pointer (`--mx`, `--my`, set by the shell).
+- **Sheets (content):** `.lw-paper` is frosted glass (`--sheet`) at full text contrast. Long reading surfaces (the
+  document reader, answers, transcripts) use `--sheet-strong`, near-opaque.
+- **The current page:** a liquid pill (a light gradient, inset highlight and soft shadow) with an accent icon.
+- **Primary actions:** an indigo to violet gradient with an inset highlight. Hover lifts by 1 px, and press scales to
+  0.97–0.98.
+- **Avatars and badges:** a stable hue per client (`hueOf`) or per tool, as a two-stop gradient.
+- **Fallbacks:** reduced transparency means solid sheets; higher contrast means no aurora and solid surfaces with ink
+  borders; reduced motion means no drift and no transitions.
+- **New patterns:**
+  - **Home dashboard:** greeting, quick actions, three counts, matter cards, "Waiting for you".
+  - **Command palette:** ⌘K / Ctrl K, a combobox and listbox, keyboard first.
+  - **"Work on this matter" tiles.**
+  - **Starter questions.**
+

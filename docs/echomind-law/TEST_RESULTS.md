@@ -546,3 +546,18 @@
 | Pilot end to end (`demo_check.py`, real model, speech recognition and voice) | All 8 pass:<ul><li>research: the cap with verified quotes, about 6 s;</li><li>conversation: a spoken question heard (13 words in 15 s, the first after a restart), answered with the cap, and read aloud (23 s of audio);</li><li>meeting: a live transcript in real time;</li><li>drafting: 14 blocks, 4 gaps for the lawyer;</li><li>summary: 20 points, all cited;</li><li>panel: 4 perspectives, all citing;</li><li>time: 2 drafts;</li><li>intake: "refer to the conflicts team".</li></ul>The misstated cap was flagged in 3 of 7 spoken runs (2/2, 0/1, 1/4 by build) while Piper varied the audio each run.<br>**Streaming investigated (owner's request):**<ul><li>identical audio gives the same words streamed and whole (9 clips);</li><li>with or without an earlier speaker it gives the same words (6 runs);</li><li>three separate Piper syntheses of the same line differed.</li></ul>The check now speaks without that variation, and fix 6 was made on its repeatable call. |
 | Security, on the pilot | `/voice/speak`, `/voice/health`, `/voice/voices/installed` and `/voice/` returned 200 without a session; now 404 on both ports. |
 
+## Run 39 — Follow-ups, demo data, a public-law library, Liquid Glass (D-063, D-064, D-065), 2026-10-12
+
+- **Branch:** `law/followup-data-ui`
+
+| Suite | Result |
+|---|---|
+| Backend (all) | **1310 passed** (1301 at run 38). New, each red first:<ul><li>follow-up questions (6);</li><li>`seed-demo-practice` (2);</li><li>US-style parties (1).</li></ul> |
+| Security suite | **29 groups, all pass, 1090 tests**. |
+| Frontend | tsc **clean**. Vitest **169 passed** (the conversation memory, starter questions, and Home, palette and tiles, axe clean). |
+| Browser E2E | **33 passed, 1 failed** in the full run (35.0 min; usually about 15). The compare journey waited only Playwright's default 5 s for the comparison, which embeds every clause; compare golden gave the same alignment the same day. It now waits up to 60 s for the result, then checks the clauses, and **passed** run on its own (1.1 min). Every screenshot was re-rendered in the new design (intended, D-065). |
+| Compare (parties fix) | Golden unchanged: alignment 4/4 and 13/13, precision 1.0; scan 5/5, precision 1.0. Held-out, once, unchanged: scan 4/5 (the same pre-existing miss), precision 1.0. |
+| Pilot data | Seeding added 6 people, 7 clients, 8 matters, 29 memberships and 7 parties; 40 documents imported, all searchable. |
+| Pilot end to end (`demo_check.py`) | <ul><li>**followup:** PASS, the April notice question understood;</li><li>**conflicts:** PASS, 3 conflicts, the option pool and closing date found (after the parties fix);</li><li>**reference:** PASS, the Late Payment Act cited;</li><li>**employment:** PASS, GBP 14,080 against 18,400.</li></ul>Also checked by hand: the Unfair Contract Terms Act s.2(1) answer, and the letter before claim drafted with fields from the documents and 2 gaps. |
+| Screens (pilot, headless browser) | Home dashboard, command palette, matter tiles and a research answer, as alice and harper. |
+

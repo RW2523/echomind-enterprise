@@ -59,9 +59,10 @@ _LAW = re.compile(r"governed by(?: and (?:construed|interpreted) in accordance w
 _FORMS = {"inc": "inc", "inc.": "inc", "incorporated": "inc", "ltd": "ltd", "ltd.": "ltd", "limited": "ltd", "llc": "llc",
           "l.l.c.": "llc", "llp": "llp", "plc": "plc", "ab": "ab", "nv": "nv", "n.v.": "nv", "bv": "bv", "b.v.": "bv",
           "gmbh": "gmbh", "ag": "ag", "sa": "sa", "s.a.": "sa", "sas": "sas", "corp": "corp", "corp.": "corp",
-          "corporation": "corp"}
-_ENTITY = re.compile(r"(?P<name>[A-Z][\w'’-]*(?:\s+(?:&\s+)?[A-Z][\w'’-]*){0,4})\s+"
-                     r"(?P<form>Inc\.?|INC\.?|Incorporated|Ltd\.?|LTD\.?|Limited|LIMITED|LLC|L\.L\.C\.|LLP|plc|PLC|AB|NV|N\.V\.|"
+          "corporation": "corp", "lp": "lp", "l.p.": "lp"}
+# US style puts a comma before the form ("Kestrel Robotics, Inc."), and partnerships are "LP" or "L.P." (D-064).
+_ENTITY = re.compile(r"(?P<name>[A-Z][\w'’-]*(?:\s+(?:&\s+)?[A-Z][\w'’-]*){0,4}),?\s+"
+                     r"(?P<form>Inc\.?|INC\.?|Incorporated|Ltd\.?|LTD\.?|Limited|LIMITED|LLC|L\.L\.C\.|LLP|L\.P\.|LP|plc|PLC|AB|NV|N\.V\.|"
                      r"BV|B\.V\.|GmbH|AG|SA|S\.A\.|SAS|Corp\.?|CORP\.?|Corporation)(?=[\s,.;:)\"”*]|$)")
 _NOT_NAME = {"the", "and", "between", "for", "to", "by", "from", "of", "signed", "agreed", "dear", "this", "that", "a", "an"}
 _TITLE_WORDS = r"(?:Agreement|Contract|Lease|Letter|Deed|Notice|Order Form|Statement of Work|Addendum|Amendment|Side Letter)"
@@ -347,7 +348,7 @@ def document(document_id: str, title: str, version_id: str, text: str, spans: li
                {f.subject for f in facts if f.kind == "entity" and f.subject})
 
 
-_PARTY_CUE = re.compile(r"\b(?:between|to:|from:|signed for|accepted for|agreed by|on behalf of|for and on behalf of)\s", re.I)
+_PARTY_CUE = re.compile(r"\b(?:between|among|amongst|to:|from:|signed for|accepted for|agreed by|on behalf of|for and on behalf of)\s", re.I)
 _ROLE_AFTER = re.compile(r"[\s*,]*(?:an?\s[^()]{0,60}?)?\(\s*(?:the\s+)?[\"“][A-Z]")
 
 

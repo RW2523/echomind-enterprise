@@ -410,3 +410,21 @@ def test_explanations_stop_when_access_is_revoked(cmp):
     kinds = [e["type"] for e in events]
     assert kinds[-1] == "scope_revoked" and "done" not in kinds
     assert kinds.count("explanation") <= 1
+
+
+def test_us_style_parties_are_recognised_by_and_among_with_a_comma_before_inc_and_a_partnership():
+    """D-064: a Series A term sheet "by and among Kestrel Robotics, Inc., a Delaware corporation (the "Company"), and
+    Aldermoor Ventures LP (the "Investor")" had no parties, so it was never compared with the purchase agreement."""
+    from app.legal.compare import facts
+    sheet = ('Series A term sheet\n\nThis term sheet is entered into as of 4 September 2026, by and among Kestrel Robotics, Inc., '
+             'a Delaware corporation (the "Company"), and Aldermoor Ventures LP (the "Investor").\n\n'
+             '5. The Company shall top up the option pool to 12% of the post-money capitalization before closing.')
+    spa = ('Stock Purchase Agreement (draft)\n\nThis Agreement is made among Kestrel Robotics, Inc. (the "Company") and '
+           'Aldermoor Ventures, L.P. (the "Purchaser").\n\n'
+           '6.2 The Company shall have increased the option pool to 10% of the post-money capitalization before closing.')
+    a = facts.document("ts", "Series A term sheet", "v1", sheet, [(0, len(sheet))])
+    b = facts.document("spa", "Stock Purchase Agreement", "v1", spa, [(0, len(spa))])
+    assert facts.parties(a) == ["Kestrel Robotics, Inc.", "Aldermoor Ventures LP"]
+    assert facts.parties(b) == ["Kestrel Robotics, Inc.", "Aldermoor Ventures, L.P."]
+    assert facts.same_parties(a, b)
+    assert {g.value for g in a.facts if g.kind == "entity"} == {"inc", "lp"}

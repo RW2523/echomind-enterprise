@@ -574,6 +574,7 @@ test('compare: two versions clause by clause, a change explained, and conflicts 
   await alice.getByLabel('To: version').selectOption({ label: 'Version 2 · Draft · msa-v3-restructured.md' });
   await alice.getByRole('button', { name: 'Compare', exact: true }).click();
   const result = alice.getByRole('article', { name: 'Comparison' });
+  await expect(result).toBeVisible({ timeout: 60_000 });                      // the meaning pass embeds every clause
   const cap = result.getByRole('listitem', { name: 'cl. 8.1: Changed' });
   await expect(cap.locator('del')).toHaveText('removed: 250,000');
   await expect(cap.locator('ins')).toHaveText('added: 150,000');
