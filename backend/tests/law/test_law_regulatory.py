@@ -102,6 +102,18 @@ def test_generic_words_do_not_match_and_specific_ones_do():
     assert topics.match(us("Publication of Venezuela Sanctions Regulations Web General License 60"), inv) == ["sanctions"]
 
 
+def test_an_update_for_scotland_or_northern_ireland_matches_only_matters_there():
+    """From the first real import: a Scottish housing act matched an England & Wales lease."""
+    from app.legal.regulatory import topics
+    uk = lambda title, kind="UK Statutory Instrument": {"jurisdiction": "UK", "title": title, "kind": kind, "summary": "", "subjects": []}
+    ew, scot = {"practice_area": "Real estate", "jurisdiction": "England & Wales"}, {"practice_area": "Real estate", "jurisdiction": "Scotland"}
+    scottish = uk("The Housing (Scotland) Act 2025 (Commencement No. 4) Regulations 2026", "Scottish Statutory Instrument")
+    assert topics.match(scottish, ew) == [] and topics.match(scottish, scot) == ["housing"]
+    assert topics.match(uk("The Renters (Leasehold) Order (Northern Ireland) 2026", "Northern Ireland Statutory Rule"), ew) == []
+    assert topics.match(uk("The Housing (Wales) Regulations 2026", "Welsh Statutory Instrument"), ew) == ["housing"]
+    assert topics.match(uk("The Building Safety (Leasehold) Regulations 2026"), ew) == ["leasehold", "building safety"]
+
+
 def test_rematch_follows_new_terms_and_keeps_decisions(reg, fresh_db, monkeypatch):
     from app.legal.orgs import default_org_id
     from app.legal.regulatory import store, topics

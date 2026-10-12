@@ -125,11 +125,11 @@ def rematch(org_id: str, days: int = 90) -> dict:
     with get_conn() as conn:
         matters = [dict(zip(("id", "practice_area", "jurisdiction"), r)) for r in conn.execute(
             "SELECT id, practice_area, jurisdiction FROM matters WHERE org_id=? AND status='open'", (org_id,))]
-        for uid, jurisdiction, title, summary, subjects in conn.execute(
-                "SELECT id, jurisdiction, title, summary, subjects_json FROM legal_regulatory_updates WHERE org_id=? AND published >= ?",
+        for uid, jurisdiction, kind, title, summary, subjects in conn.execute(
+                "SELECT id, jurisdiction, kind, title, summary, subjects_json FROM legal_regulatory_updates WHERE org_id=? AND published >= ?",
                 (org_id, since)).fetchall():
             counts["updates"] += 1
-            u = {"jurisdiction": jurisdiction, "title": title, "summary": summary, "subjects": json.loads(subjects)}
+            u = {"jurisdiction": jurisdiction, "kind": kind, "title": title, "summary": summary, "subjects": json.loads(subjects)}
             have = dict(conn.execute("SELECT matter_id, status FROM legal_regulatory_matches WHERE update_id=?", (uid,)).fetchall())
             for m in matters:
                 terms, status = topics.match(u, m), have.get(m["id"])
