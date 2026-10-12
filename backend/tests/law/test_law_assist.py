@@ -366,3 +366,30 @@ def test_full_stops_the_speech_model_scatters_do_not_hide_what_a_figure_is_about
 def test_a_decimal_amount_keeps_its_point(assist):
     from app.legal.assist import engine
     assert engine._unpunctuated("The fee is USD 4.2 million. So be it.") == "The fee is USD 4.2 million  So be it "
+
+
+ECHO = ('Same subject: no, then in a few words what each passage governs and between which parties.\nVerdict: NO CONFLICT\n'
+        'Explanation: [1: "USD 18,000"] [2: "USD 18,500"].')
+
+
+def test_a_reply_that_only_echoes_the_instructions_is_asked_again(assist):
+    """D-061: on the pilot the model sometimes copied the prompt's instruction back ("Same subject: no, then in a few
+    words what each passage governs ...") instead of judging. That is no answer, so it is asked once more."""
+    replies = [ECHO]
+    model = assist["model"]
+    real = model.chat
+
+    async def chat(messages, temperature, max_tokens):
+        if replies:
+            model.calls.append(messages)
+            return replies.pop(0)
+        return await real(messages, temperature, max_tokens)
+    model.chat = chat
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Thomas Reyes", "Under the signed agreement the monthly fee is USD 18,000, so the increase is modest.")])
+    assert [a["verdict"] for a in got if a["rule"] == "signed_terms"] == ["differs"]
+    assert len(model.calls) == 2
+
+    replies.extend([ECHO, ECHO])                                                      # asked twice, no answer: no alert
+    got = say(assist, base, ids, [("Thomas Reyes", "Under the signed agreement the monthly fee is USD 18,000, so the increase is modest.")])
+    assert not [a for a in got if a["rule"] == "signed_terms"]

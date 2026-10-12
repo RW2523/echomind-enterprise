@@ -266,6 +266,9 @@ async def _terms(ctx: Context, seg: dict, rules: set, before: str = "") -> list[
     return out
 
 
+_ECHO = re.compile(r"then in a few words what each passage governs", re.I)    # the prompt's own instruction, copied back
+
+
 async def _model_check(ctx: Context, seg: dict, f: factsmod.Fact, src: dict, said: Optional[str] = None) -> Optional[tuple[float, str]]:
     """The model confirms the statement and the passage are about the same thing. None when it says
     they are not, or cannot say (a conservative alert is no alert)."""
@@ -276,7 +279,12 @@ async def _model_check(ctx: Context, seg: dict, f: factsmod.Fact, src: dict, sai
          "b": {"document_title": src["document_title"], "version_number": src["version_number"], "version_status": src["version_status"],
                "clause": src.get("clause"), "parties": [], "context": src["quote"], "value": src["value"], "context_start": src["start"]}}
     try:
-        raw = await llm_mod.get().chat(scanmod.messages(c), temperature=0.0, max_tokens=240)
+        for _ in range(2):          # a reply that only copies the instruction back is no judgement: asked once more (D-061)
+            raw = await llm_mod.get().chat(scanmod.messages(c), temperature=0.0, max_tokens=240)
+            if not _ECHO.search(raw):
+                break
+        else:
+            return None
     except Exception as e:
         logger.warning("Assist: the model could not check a statement (%s)", type(e).__name__)
         return None

@@ -208,7 +208,7 @@ def check_meeting(p: Pilot) -> tuple[bool, str]:
     words = sum(len((s.get("text") or "").split()) for s in segs)
     heard = " ".join((s.get("text") or "").lower() for s in segs)
     rules = sorted({a.get("rule") or a.get("rule_id") or "?" for a in alerts or []})
-    ok = bool(segs) and ("liability" in heard or "cap" in heard) and bool(alerts)
+    ok = bool(segs) and ("liability" in heard or "cap" in heard) and "signed_terms" in rules     # the misstated cap is flagged
     return ok, (f"{len(segs)} segments, {words} words from {spoken:.0f} s of speech in {time.time() - t0:.0f} s; "
                 f"'liability cap' {'heard' if 'cap' in heard else 'NOT heard'}; {len(alerts or [])} Silent Assist alerts {rules}; "
                 f"degraded {len(got['degraded'])}; other {[o if isinstance(o, str) else o.get('type') for o in got['other']][:4]}")
@@ -312,8 +312,12 @@ CHECKS = {"research": check_research, "conversation": check_conversation, "meeti
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("checks", nargs="*", choices=[*CHECKS, []] and list(CHECKS), default=list(CHECKS))
+    ap.add_argument("checks", nargs="*", metavar="CHECK", help=f"some of: {', '.join(CHECKS)} (default: all)")
     args = ap.parse_args()
+    unknown = [c for c in args.checks if c not in CHECKS]
+    if unknown:
+        ap.error(f"unknown checks {unknown}; choose from {', '.join(CHECKS)}")
+    args.checks = args.checks or list(CHECKS)
     p = Pilot()
     failed = 0
     for name in args.checks:
