@@ -113,3 +113,37 @@ def import_bundle(raw: bytes, org_id: str) -> dict:
                     counts["matches"] += 1
         conn.commit()
     return counts
+
+
+def rematch(org_id: str, days: int = 90) -> dict:
+    """Match the recent updates again, after the terms change: undecided matches follow the new terms (added, updated
+    or removed); a match a lawyer has decided is kept as decided. Returns counts only."""
+    from datetime import date as _date
+    since = (_date.today() - timedelta(days=days)).isoformat()
+    now = policy.now_iso()
+    counts = {"updates": 0, "added": 0, "removed": 0, "kept_decided": 0}
+    with get_conn() as conn:
+        matters = [dict(zip(("id", "practice_area", "jurisdiction"), r)) for r in conn.execute(
+            "SELECT id, practice_area, jurisdiction FROM matters WHERE org_id=? AND status='open'", (org_id,))]
+        for uid, jurisdiction, title, summary, subjects in conn.execute(
+                "SELECT id, jurisdiction, title, summary, subjects_json FROM legal_regulatory_updates WHERE org_id=? AND published >= ?",
+                (org_id, since)).fetchall():
+            counts["updates"] += 1
+            u = {"jurisdiction": jurisdiction, "title": title, "summary": summary, "subjects": json.loads(subjects)}
+            have = dict(conn.execute("SELECT matter_id, status FROM legal_regulatory_matches WHERE update_id=?", (uid,)).fetchall())
+            for m in matters:
+                terms, status = topics.match(u, m), have.get(m["id"])
+                if status not in (None, "new"):
+                    counts["kept_decided"] += 1
+                elif terms and status is None:
+                    conn.execute("INSERT INTO legal_regulatory_matches (update_id, matter_id, terms_json, matched_at) VALUES (?,?,?,?)",
+                                 (uid, m["id"], json.dumps(terms), now))
+                    counts["added"] += 1
+                elif terms:
+                    conn.execute("UPDATE legal_regulatory_matches SET terms_json=? WHERE update_id=? AND matter_id=?", (json.dumps(terms), uid, m["id"]))
+                elif status == "new":
+                    conn.execute("DELETE FROM legal_regulatory_matches WHERE update_id=? AND matter_id=? AND status='new'", (uid, m["id"]))
+                    counts["removed"] += 1
+        conn.commit()
+    return counts
+

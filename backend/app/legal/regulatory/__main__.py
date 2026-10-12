@@ -1,9 +1,10 @@
 """Import a regulatory bundle (see app/legal/regulatory/__init__.py).
 
     python -m app.legal.regulatory import < bundle.json
+    python -m app.legal.regulatory rematch          # after the practice-area terms change (topics.py)
 
-Run by scripts/law/regulatory_daily.sh through `docker exec -i`. Refuses unless LEGAL_REGULATORY is on. Prints
-counts only and records one audit event (regulatory.import) with the same counts.
+Import is run by scripts/law/regulatory_daily.sh through `docker exec -i`. Both refuse unless LEGAL_REGULATORY is on,
+print counts only and record one audit event (regulatory.import, regulatory.rematch) with the same counts.
 """
 from __future__ import annotations
 
@@ -13,7 +14,7 @@ import sys
 
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else argv
-    if argv[:1] != ["import"]:
+    if argv[:1] not in (["import"], ["rematch"]):
         print(__doc__)
         return 2
     from ...core.config import settings
@@ -23,7 +24,12 @@ def main(argv=None) -> int:
         return 2
     from ..audit.record import record
     from ..orgs import default_org_id
-    from .store import Invalid, import_bundle
+    from .store import Invalid, import_bundle, rematch
+    if argv[0] == "rematch":
+        counts = rematch(default_org_id())
+        record("regulatory.rematch", "allow", object_type="regulatory_updates", details=counts)
+        print(json.dumps(counts))
+        return 0
     raw = sys.stdin.buffer.read(16 * 1024 * 1024 + 1)
     if len(raw) > 16 * 1024 * 1024:
         print("refusing: the bundle is over 16 MB", file=sys.stderr)
