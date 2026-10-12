@@ -1717,6 +1717,21 @@ Every entry records the options considered, the recommendation, the consequence 
 - **Runbook (OPS-01):** `RUNBOOK.md` covers health checks, updates and rollback, backups and restores, regulatory updates, the network lock, people and access, incidents, and what never to do.
 - **Not done here:** generic single sign-on (OIDC, SEC-01). Reading the sign-in code was refused by the session's permission rules, alongside a refused attempt to open the pilot to the internet, so it was left for the owner to decide. OIDC also needs the firm's identity provider (P-011).
 
+### D-074 Browser journeys and a lawyer review pack for the pilot additions; CI green on the Law branch — RECORDED (owner's approval 2026-10-12: "start the next pending items and finish everything")
+- **Journeys (2 new, 36 in all):**
+  - **Regulatory:** the test backend imports the first real daily bundle, with dates moved to today. bob decides the update that concerns his walled matter M-202; alice sees the same update with no matter at all.
+  - **Translation:** the signed MSA into French by the host's model, labelled, paragraph beside paragraph, with the cap's figure kept.
+- **Lawyer review pack ("phase 5", `releases/phase5-rubric.md`):** 57 items in 28 groups, for the review still owed.
+  - **Regulatory:** every match of the real bundle for each practice area, for a matter in England & Wales and one in New York, with a row for missed updates.
+  - **Translation:** 48 translated paragraphs. `eval/law/translation/run_translation_eval.py` translated 16 fictional paragraphs into French, German and Spanish with the real model. No figure was flagged, none was short or empty, and each batch of four took about 6 s.
+  - Faithful overall. There are small grammar slips a native reader would mark, such as "das Wirkungstag" and "la mantenimiento".
+- **CI:** the repository's CI (`.github/workflows/ci.yml`) runs on every push, so pushing `feature/echomind-law` ran it: it failed, and none of the failures were in new code.
+  - Three OCR tests need Tesseract, and the T09 Word read-back needs LibreOffice: both are now installed on the runner, so the security test runs rather than skips.
+  - One LibreOffice test lacked its skip guard.
+  - The Law voice tests need `pkg_resources` (setuptools < 81) for webrtcvad on Python 3.12.
+  - The reviews test clicked Approve while a request was still in flight; on the slower runner the reply then closed the dialog.
+  - The workflow change is on the Law branch only.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

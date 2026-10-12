@@ -738,6 +738,11 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - **A public address for the pilot.** Opening it to the internet was refused by this session's permission rules. The pilot is office-network only by design (T-17).
   - **Generic single sign-on (OIDC).** Reading the sign-in code was refused by the same rules in the same request.
 
+### Session 8 — Journeys and review pack for the pilot additions; CI on the Law branch (D-074), 2026-10-12
+- Two browser journeys: regulatory updates (walls hold) and translation (real model).
+- The phase 5 lawyer review pack: regulatory matching and translation, ready for the review session.
+- GitHub CI was failing on `feature/echomind-law` (missing Tesseract, LibreOffice and setuptools on the runner, a missing skip guard, a test race). Fixed on the branch.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -832,9 +837,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 1. **Owner, on this host:**
    - `sudo scripts/law/egress_lock.sh` (T11 enforced, D-071); it prints PASS or FAIL.
    - Copy `~/.echomind-law/backup.key` and `~/.echomind-law-master/pilot-master.key` off this host, kept apart from each other and from the archives in `~/echomind-law-backups`.
-2. **Lawyer review sessions:** Phases 2, 3 and 4 (`releases/phase*-rubric.md`). Also review:
-   - the regulatory practice-area terms (D-068);
-   - translation quality per language (D-070).
+2. **Lawyer review sessions:** Phases 2, 3 and 4, and the pilot additions (phase 5: regulatory matching and translation, D-074). Rubrics are in `releases/phase*-rubric.md`; packets are built with `eval/law/lawyer_review/make_packet.py --phase N`.
 3. **The manual Microsoft Word check** of tracked changes (S3.3).
 4. **Counsel P-001…P-015**, and the firm's billing rules for time entries.
 5. **Real voices:** measure transcription on the firm's own recordings (D-072).
