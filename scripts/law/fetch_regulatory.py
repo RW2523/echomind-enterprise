@@ -19,6 +19,7 @@ import datetime as dt
 import hashlib
 import json
 import pathlib
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -77,7 +78,8 @@ def uk_entries(raw: bytes, since: dt.date) -> tuple[list[dict], bool]:
         ident = (e.findtext("a:id", default="", namespaces=_ATOM) or "").strip()
         link = next((x.get("href") for x in e.findall("a:link", _ATOM) if x.get("rel") is None), None) or ident
         kind = e.find("ukm:DocumentMainType", _ATOM)
-        out.append({"source": "legislation.gov.uk", "external_id": ident.rsplit("/id/", 1)[-1], "title": e.findtext("a:title", "", _ATOM),
+        ext = re.sub(r"^https?://(www\.)?legislation\.gov\.uk/(id/)?", "", ident)     # uksi/2026/901, or a correction slip's path
+        out.append({"source": "legislation.gov.uk", "external_id": ext, "title": e.findtext("a:title", "", _ATOM),
                     "summary": e.findtext("a:summary", "", _ATOM) or "", "url": _https(link, "legislation.gov.uk"),
                     "published": day.isoformat(), "kind": _UK_KINDS.get(kind.get("Value") if kind is not None else "", "UK legislation"),
                     "subjects": []})

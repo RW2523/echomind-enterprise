@@ -19,28 +19,32 @@ _US_STATES = ("alabama", "alaska", "arizona", "arkansas", "california", "colorad
               "wisconsin", "wyoming", "district of columbia")
 _US = ("united states", "usa", "us", "u.s.", "federal") + _US_STATES
 
-# Practice area (any of its words) -> terms looked for in an update. Reviewed with the pilot's lawyers (P-items).
+# Practice area (any of its words) -> terms looked for in an update. Specific legal words and phrases only: the first
+# real import (D-068) showed generic ones ("commercial", "enforce", "freight", "data") matching fishery quotas, Coast Guard
+# safety zones and rail notices. To be reviewed with the pilot's lawyers (P-008); `python -m app.legal.regulatory rematch`
+# applies a change to the undecided matches.
 AREAS: dict[tuple[str, ...], tuple[str, ...]] = {
-    ("employment", "labour", "labor"): ("employment", "employer", "employers", "employee", "employees", "worker", "workers", "wage", "wages",
-                                        "minimum wage", "pay", "pension", "pensions", "redundancy", "discrimination", "equality",
-                                        "whistleblowing", "working time", "occupational", "labor", "labour", "unfair dismissal"),
-    ("real estate", "property", "lease", "leasing"): ("property", "land", "lease", "leasehold", "landlord", "tenant", "tenancy", "rent",
-                                                      "renters", "housing", "building", "buildings", "planning", "mortgage", "conveyancing",
-                                                      "commonhold", "real estate"),
-    ("technology", "data", "privacy", "ip"): ("data", "data protection", "privacy", "personal information", "cyber", "cybersecurity",
-                                              "electronic", "digital", "online", "telecommunications", "artificial intelligence",
-                                              "information security", "breach notification"),
-    ("regulatory", "food", "consumer"): ("food", "food safety", "product safety", "consumer protection", "recall", "recalls", "labelling",
-                                         "labeling", "hygiene", "trading standards", "health and safety", "contaminant", "contaminants"),
-    ("corporate", "venture", "securities", "m&a"): ("companies", "company", "corporate", "securities", "investment", "investor", "investors",
-                                                    "capital markets", "insolvency", "beneficial ownership", "financial services", "shares",
-                                                    "partnership", "partnerships"),
-    ("commercial", "contracts"): ("contract", "contracts", "commercial", "late payment", "sale of goods", "supply of goods", "consumer credit",
-                                  "arbitration", "carriage", "freight"),
-    ("litigation", "disputes"): ("civil procedure", "court", "courts", "tribunal", "tribunals", "arbitration", "judgment", "judgments",
-                                 "limitation", "costs"),
-    ("investigations", "white collar"): ("investigation", "investigations", "enforcement", "fraud", "bribery", "money laundering",
-                                         "sanctions", "whistleblowing", "penalties"),
+    ("employment", "labour", "labor"): ("employment", "employer", "employee", "worker", "minimum wage", "national living wage", "wage",
+                                        "pension", "redundancy", "discrimination", "equality act", "whistleblowing", "working time",
+                                        "statutory sick pay", "parental leave", "occupational safety", "unfair dismissal", "trade union",
+                                        "labor standards", "labour market"),
+    ("real estate", "property", "lease", "leasing"): ("lease", "leasehold", "landlord", "tenant", "tenancy", "rent", "renters",
+                                                      "housing", "land registration", "mortgage", "conveyancing", "commonhold",
+                                                      "real estate", "building safety", "town and country planning", "real property"),
+    ("technology", "data", "privacy", "ip"): ("data protection", "personal data", "personal information", "privacy", "cybersecurity",
+                                              "cyber security", "artificial intelligence", "breach notification", "information security",
+                                              "telecommunications", "electronic communications", "online safety"),
+    ("regulatory", "food", "consumer"): ("food", "food safety", "product safety", "consumer protection", "recall", "labelling",
+                                         "labeling", "hygiene", "trading standards", "health and safety", "contaminant"),
+    ("corporate", "venture", "securities", "m&a"): ("securities", "company law", "companies act", "investment adviser",
+                                                    "investment company", "capital markets", "insolvency", "beneficial ownership",
+                                                    "financial services", "corporate governance", "shareholder", "crowdfunding",
+                                                    "private fund", "prospectus"),
+    ("commercial", "contracts"): ("late payment", "sale of goods", "supply of goods", "consumer credit", "arbitration",
+                                  "unfair contract terms", "electronic signatures", "commercial contracts", "consumer contracts"),
+    ("litigation", "disputes"): ("civil procedure", "court", "tribunal", "arbitration", "judgment", "limitation period", "class action"),
+    ("investigations", "white collar"): ("fraud", "bribery", "money laundering", "sanctions", "whistleblower", "whistleblowing",
+                                         "anti-corruption", "foreign corrupt practices", "export controls", "false claims"),
 }
 
 

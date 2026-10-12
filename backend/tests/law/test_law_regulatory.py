@@ -89,6 +89,35 @@ def test_import_checks_every_field_and_matches_by_jurisdiction_and_practice_area
     assert load() == {"items": 6, "skipped": 2, "new": 0, "known": 4, "matches": 0}               # a day's overlap is not repeated
 
 
+def test_generic_words_do_not_match_and_specific_ones_do():
+    """From the first real import: "Commercial" in a fishery quota, "enforce" in a Coast Guard safety zone and "freight" in
+    a rail notice matched commercial and investigations matters. The terms are now specific legal phrases."""
+    from app.legal.regulatory import topics
+    us = lambda title, summary="": {"jurisdiction": "US", "title": title, "summary": summary, "subjects": []}
+    commercial, inv = {"practice_area": "Commercial contracts", "jurisdiction": "Delaware"}, {"practice_area": "Investigations", "jurisdiction": "New York"}
+    assert topics.match(us("Fisheries of the Northeastern United States; Summer Flounder Fishery; 2026 Commercial Quota"), commercial) == []
+    assert topics.match(us("Advance Traveler Information for Rail", "Freight and passenger rail carriers"), commercial) == []
+    assert topics.match(us("Safety Zone; Chicago River", "The Coast Guard will enforce a safety zone."), inv) == []
+    assert topics.match(us("Arbitration Agreements in Consumer Contracts"), commercial) == ["arbitration", "consumer contracts"]
+    assert topics.match(us("Publication of Venezuela Sanctions Regulations Web General License 60"), inv) == ["sanctions"]
+
+
+def test_rematch_follows_new_terms_and_keeps_decisions(reg, fresh_db, monkeypatch):
+    from app.legal.orgs import default_org_id
+    from app.legal.regulatory import store, topics
+    load()
+    m101 = reg["matters"]["M-101"]["id"]
+    alice = as_user(reg, "alice")
+    uid = alice.get(f"/api/legal/matters/{m101}/regulatory").json()["matches"][0]["update"]["id"]
+    alice.post(f"/api/legal/matters/{m101}/regulatory/{uid}", headers=csrf_headers(alice), json={"status": "reviewed", "version": 1})
+    monkeypatch.setitem(topics.AREAS, ("employment", "labour", "labor"), ("late payment",))     # the terms change
+    assert store.rematch(default_org_id()) == {"updates": 4, "added": 2, "removed": 1, "kept_decided": 1}
+    rows = q(fresh_db, "SELECT m.number, u.external_id, r.status FROM legal_regulatory_matches r JOIN matters m ON m.id = r.matter_id "
+                       "JOIN legal_regulatory_updates u ON u.id = r.update_id WHERE m.number IN ('M-101', 'M-202') ORDER BY 1, 2")
+    assert rows == [("M-101", "uksi/2026/901", "reviewed"),          # decided: kept as decided
+                    ("M-101", "uksi/2026/950", "new"), ("M-202", "uksi/2026/950", "new")]   # M-202's undecided 901 no longer matches
+
+
 @pytest.mark.parametrize("bad", [b"not json", json.dumps({"format": "other", "items": []}).encode(),
                                  json.dumps({"format": "echomind-law-regulatory/1", "items": {}}).encode()])
 def test_a_bundle_that_is_not_one_is_refused_whole(reg, bad):
@@ -160,6 +189,8 @@ UK_FEED = b"""<?xml version="1.0" encoding="utf-8"?>
 <entry><id>http://www.legislation.gov.uk/id/uksi/2026/901</id><title>The Employment Rights Regulations 2026 &secret;</title>
 <link rel="self" href="http://www.legislation.gov.uk/id/uksi/2026/901"/><link href="http://www.legislation.gov.uk/uksi/2026/901/made"/>
 <published>2026-10-12T07:35:11+01:00</published><ukm:DocumentMainType Value="UnitedKingdomStatutoryInstrument"/><summary/></entry>
+<entry><id>http://www.legislation.gov.uk/uksi/2026/551/pdfs/uksics_20260551_en_001.pdf</id><title>Correction Slip</title>
+<link href="http://www.legislation.gov.uk/uksi/2026/551/pdfs/uksics_20260551_en_001.pdf"/><published>2026-10-12T07:00:00+01:00</published></entry>
 <entry><id>http://www.legislation.gov.uk/id/uksi/2026/800</id><title>Older</title><link href="http://www.legislation.gov.uk/uksi/2026/800/made"/>
 <published>2026-10-01T07:35:11+01:00</published></entry>
 </feed>"""
@@ -169,8 +200,10 @@ def test_the_fetcher_reads_the_official_feeds_and_never_resolves_entities():
     import datetime as dt
     f = fetcher()
     got, older = f.uk_entries(UK_FEED, dt.date(2026, 10, 10))
-    assert older is True and len(got) == 1
-    assert got[0]["external_id"] == "uksi/2026/901" and got[0]["url"] == "https://www.legislation.gov.uk/uksi/2026/901/made"
+    assert older is True and [g["external_id"] for g in got] == ["uksi/2026/901", "uksi/2026/551/pdfs/uksics_20260551_en_001.pdf"]
+    assert got[0]["url"] == "https://www.legislation.gov.uk/uksi/2026/901/made"
+    from app.legal.regulatory import store
+    assert store.clean(got[1])["external_id"].startswith("uksi/2026/551/")              # a correction slip is kept, not skipped
     assert got[0]["kind"] == "UK Statutory Instrument" and "root:" not in got[0]["title"]
     page = json.dumps({"results": [{"document_number": "2026-1", "title": "T", "abstract": "A", "type": "Proposed Rule",
                                     "html_url": "https://www.federalregister.gov/documents/2026/10/12/2026-1/t", "publication_date": "2026-10-12",
