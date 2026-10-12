@@ -395,3 +395,5 @@ from .legal.panel.routes import router as legal_panel_router  # noqa: E402
 app.include_router(legal_panel_router, prefix="/api")
 from .legal.conversation.routes import router as legal_conversation_router  # noqa: E402
 app.include_router(legal_conversation_router, prefix="/api")
+from .legal.regulatory.routes import router as legal_regulatory_router  # noqa: E402
+app.include_router(legal_regulatory_router, prefix="/api")

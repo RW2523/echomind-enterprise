@@ -5,7 +5,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, FileOutput, FilePen,
-  Files, FileText, FolderSync, Gauge, GitCompareArrows, History, Home, Inbox, LayoutTemplate, ListCollapse, ListTodo, Mic, ScrollText,
+  Files, FileText, FolderSync, Gauge, GitCompareArrows, History, Home, Inbox, Landmark, LayoutTemplate, ListCollapse, ListTodo, Mic, ScrollText,
   ShieldOff, Siren, Timer, UserCog, Users, Users2,
 } from 'lucide-react';
 import type { Matter, Me } from '../api/types';
@@ -25,6 +25,8 @@ export function firmEntries(me: Me): NavEntry[] {
     !!me.features?.intake && hasFirmRole(me, 'intake', 'conflicts', 'paralegal', 'attorney', 'managing_partner', 'records_admin')
       && { key: 'enquiries', to: '/enquiries', label: 'Enquiries', icon: Inbox },
     !!me.features?.time_entries && { key: 'time', to: '/time', label: 'Time', icon: Timer },
+    !!me.features?.regulatory && hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal', 'reviewer')
+      && { key: 'regulatory', to: '/regulatory', label: 'Regulatory updates', icon: Landmark },
     hasFirmRole(me, 'firm_admin') && { key: 'users', to: '/admin/users', label: 'Users & roles', icon: UserCog },
     hasFirmRole(me, 'firm_admin') && { key: 'connectors', to: '/admin/connectors', label: 'Connectors', icon: FolderSync },
     hasFirmRole(me, 'managing_partner') && { key: 'walls', to: '/admin/walls', label: 'Ethical walls', icon: ShieldOff },
@@ -52,6 +54,8 @@ export function matterEntries(me: Me, matter: Pick<Matter, 'number' | 'my_role'>
       about: 'Key points of a document, each cited.', hue: 32 },
     !!me.features?.panel && { key: 'panel', to: `${base}/panel`, label: 'Review panel', icon: Users2,
       about: 'Four perspectives on one question; a partner approves.', hue: 300 },
+    !!me.features?.regulatory && { key: 'regulatory', to: `${base}/regulatory`, label: 'Regulatory', icon: Landmark,
+      about: 'New legislation and rules that may concern it.', hue: 120 },
     { key: 'meetings', to: `${base}/meetings`, label: 'Meetings', icon: CalendarClock,
       about: 'Record with consent: live transcript, Silent Assist, minutes.', hue: 352 },
     ['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && { key: 'exports', to: `${base}/exports`, label: 'Exports', icon: FileOutput,

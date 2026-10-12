@@ -341,6 +341,9 @@ class Settings(BaseSettings):
     # S5.1 (D-062): the conversation assistant — spoken questions on a matter, answered and read aloud. Off by default.
     LEGAL_CONVERSATION: bool = os.getenv("LEGAL_CONVERSATION", "0").lower() in ("1", "true", "yes")
     LEGAL_CONVERSATION_MAX_SECONDS: int = int(os.getenv("LEGAL_CONVERSATION_MAX_SECONDS", "60"))
+    # S4.4 regulatory updates (OPT-04, D-068): public legislation and rules imported from a bundle fetched on the host
+    # (the containers stay offline), matched to open matters. Off by default.
+    LEGAL_REGULATORY: bool = os.getenv("LEGAL_REGULATORY", "0").lower() in ("1", "true", "yes")
     # Connectors (S1.11): folders a local-folder connector may read, separated by ":" (empty = none).
     LEGAL_CONNECTOR_LOCAL_ROOTS: str = os.getenv("LEGAL_CONNECTOR_LOCAL_ROOTS", "")
     # Legal ingestion quality (S2.1; D-010 OCR with Tesseract, run as a local program — nothing leaves the host).

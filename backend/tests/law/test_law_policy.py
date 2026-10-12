@@ -23,6 +23,7 @@ MATTER_SPEC = {
     "export.request": {"lead", "attorney", "paralegal"}, "export.approve": {"lead", "attorney"},
     "deletion.request": {"lead", "attorney"},
     "parties.manage": {"lead", "attorney"},                       # S4.1 (D-054)
+    "regulatory.decide": {"lead", "attorney", "paralegal", "reviewer"},   # S4.4 (D-068)
 }
 # Changing the content of a closed or archived matter is refused; reading, membership, export and
 # records work (deletion requests) continue.
@@ -44,6 +45,8 @@ ORG_SPEC = {
     # S4.1 intake (OPT-01, D-054)
     "intake.manage": {"intake", "paralegal", "attorney", "managing_partner"}, "intake.approve": {"attorney", "managing_partner"},
     "conflicts.review": {"conflicts", "managing_partner"}, "intake.purge": {"records_admin"},
+    # S4.4 regulatory updates (OPT-04, D-068): public law, for the firm's lawyers
+    "regulatory.read": {"managing_partner", "attorney", "paralegal", "reviewer"},
 }
 
 OPEN = MatterFacts(status="open", sensitivity="restricted")

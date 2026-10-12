@@ -75,6 +75,8 @@ services:
       - LEGAL_PANEL=${LAW_PANEL:-0}
       # S5.1 (D-062): the conversation assistant.
       - LEGAL_CONVERSATION=${LAW_CONVERSATION:-0}
+      # S4.4 (D-068): regulatory updates, imported from a bundle the host fetches (this container stays offline).
+      - LEGAL_REGULATORY=${LAW_REGULATORY:-0}
 
   voice:
     <<: [*law_host_gateway, *law_capped]
