@@ -166,7 +166,7 @@ async def capture(s: Session, mid: str, meeting: str, stats: Stats, until: float
     t0 = time.monotonic()
     try:
         async with websockets.connect(url, extra_headers={"Cookie": s._headers(False)["Cookie"]}, origin=s.origin, max_size=2**22) as ws:
-            ready = json.loads(await asyncio.wait_for(ws.recv(), 30))
+            ready = json.loads(await asyncio.wait_for(ws.recv(), 300))   # a cold speech model loads first; a browser waits too
             if ready.get("type") != "ready":
                 stats.bad("capture_open", json.dumps(ready))
                 return
@@ -183,7 +183,7 @@ async def capture(s: Session, mid: str, meeting: str, stats: Stats, until: float
             t1 = time.monotonic()
             await ws.send(json.dumps({"type": "stop"}))
             while True:
-                m = await asyncio.wait_for(ws.recv(), 60)
+                m = await asyncio.wait_for(ws.recv(), 320)          # audio still waiting is transcribed (LEGAL_CAPTURE_FINISH_SEC)
                 if isinstance(m, str) and json.loads(m).get("type") == "stopped":
                     break
             stats.ok("capture_stop", time.monotonic() - t1)

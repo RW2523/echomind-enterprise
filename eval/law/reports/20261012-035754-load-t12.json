@@ -1,0 +1,57 @@
+{
+ "meta": {
+  "set": "t12",
+  "commit": "6fa1869",
+  "time": "20261012-035754",
+  "started": "20261012-035217",
+  "base": "http://localhost:3110",
+  "window": "owner, 2026-10-12 (run now, capped at 10 users; stop if production slows)"
+ },
+ "summary": {
+  "seconds": 240,
+  "research_users": 8,
+  "users": [
+   "alice:M-101",
+   "nakamura:M-101",
+   "harper:M-301",
+   "sofia:M-302",
+   "kenji:M-303",
+   "lena:M-304",
+   "theo:M-305",
+   "omar:M-306"
+  ],
+  "stopped_early": false,
+  "operations": {
+   "capture_open": {
+    "n": 1,
+    "p50_s": 0.34,
+    "p95_s": 0.34,
+    "max_s": 0.34
+   },
+   "search": {
+    "n": 261,
+    "p50_s": 0.75,
+    "p95_s": 2.18,
+    "max_s": 3.75
+   },
+   "research_answer": {
+    "n": 418,
+    "p50_s": 4.43,
+    "p95_s": 9.69,
+    "max_s": 13.02
+   },
+   "capture_stop": {
+    "n": 1,
+    "p50_s": 96.73,
+    "p95_s": 96.73,
+    "max_s": 96.73
+   }
+  },
+  "failures": {},
+  "last_error": {},
+  "database_busy": 0,
+  "capture_frames": 2397,
+  "backend_rss_mb_max": 4681.7,
+  "backend_rss_mb_start": 4555.8
+ }
+}
