@@ -1,0 +1,57 @@
+{
+ "meta": {
+  "set": "t12",
+  "commit": "7402ca4",
+  "time": "20261012-032110",
+  "started": "20261012-031936",
+  "base": "http://127.0.0.1:8110",
+  "window": "owner, 2026-10-12 03:05 EDT, loop diagnosis on the dev backend"
+ },
+ "summary": {
+  "seconds": 90,
+  "research_users": 2,
+  "users": [
+   "alice:M-101",
+   "nakamura:M-101"
+  ],
+  "stopped_early": false,
+  "operations": {
+   "capture_open": {
+    "n": 1,
+    "p50_s": 0.09,
+    "p95_s": 0.09,
+    "max_s": 0.09
+   },
+   "capture_frame_lag": {
+    "n": 3,
+    "p50_s": 0.02,
+    "p95_s": 0.02,
+    "max_s": 0.02
+   },
+   "search": {
+    "n": 327,
+    "p50_s": 0.22,
+    "p95_s": 0.55,
+    "max_s": 3.0
+   },
+   "research_answer": {
+    "n": 39,
+    "p50_s": 4.54,
+    "p95_s": 9.65,
+    "max_s": 10.25
+   },
+   "capture_stop": {
+    "n": 1,
+    "p50_s": 0.01,
+    "p95_s": 0.01,
+    "max_s": 0.01
+   }
+  },
+  "failures": {},
+  "last_error": {},
+  "database_busy": 0,
+  "capture_frames": 899,
+  "backend_rss_mb_max": 829.7,
+  "backend_rss_mb_start": 319.8
+ }
+}

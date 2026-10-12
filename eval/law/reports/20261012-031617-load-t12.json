@@ -1,0 +1,55 @@
+{
+ "meta": {
+  "set": "t12",
+  "commit": "7402ca4",
+  "time": "20261012-031617",
+  "started": "20261012-031212",
+  "base": "http://localhost:3110",
+  "window": "owner, 2026-10-12 03:05 EDT, stage 2 of 2 (10 users), production watched"
+ },
+ "summary": {
+  "seconds": 240,
+  "research_users": 8,
+  "users": [
+   "alice:M-101",
+   "nakamura:M-101",
+   "harper:M-301",
+   "sofia:M-302",
+   "kenji:M-303",
+   "lena:M-304",
+   "theo:M-305",
+   "omar:M-306"
+  ],
+  "stopped_early": false,
+  "operations": {
+   "capture_open": {
+    "n": 1,
+    "p50_s": 0.39,
+    "p95_s": 0.39,
+    "max_s": 0.39
+   },
+   "search": {
+    "n": 291,
+    "p50_s": 0.7,
+    "p95_s": 2.02,
+    "max_s": 3.3
+   },
+   "research_answer": {
+    "n": 441,
+    "p50_s": 4.4,
+    "p95_s": 9.52,
+    "max_s": 12.78
+   }
+  },
+  "failures": {
+   "capture": 1
+  },
+  "last_error": {
+   "capture": "ConnectionClosedError(Close(code=1011, reason='keepalive ping timeout'), Close(code=1011, reason='keepalive ping timeout'), True)"
+  },
+  "database_busy": 0,
+  "capture_frames": 0,
+  "backend_rss_mb_max": 4297.7,
+  "backend_rss_mb_start": 4217.9
+ }
+}

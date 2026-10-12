@@ -1,0 +1,44 @@
+{
+ "meta": {
+  "set": "t12",
+  "commit": "7402ca4",
+  "time": "20261012-031035",
+  "started": "20261012-030730",
+  "base": "http://localhost:3110",
+  "window": "owner, 2026-10-12 03:05 EDT, stage 1 of 2 (5 users), production watched"
+ },
+ "summary": {
+  "seconds": 180,
+  "research_users": 3,
+  "users": [
+   "harper:M-301",
+   "sofia:M-302",
+   "kenji:M-303"
+  ],
+  "stopped_early": false,
+  "operations": {
+   "search": {
+    "n": 336,
+    "p50_s": 0.42,
+    "p95_s": 0.91,
+    "max_s": 11.95
+   },
+   "research_answer": {
+    "n": 114,
+    "p50_s": 4.58,
+    "p95_s": 8.7,
+    "max_s": 25.9
+   }
+  },
+  "failures": {
+   "capture": 1
+  },
+  "last_error": {
+   "capture": "TimeoutError()"
+  },
+  "database_busy": 0,
+  "capture_frames": 0,
+  "backend_rss_mb_max": 3911.7,
+  "backend_rss_mb_start": 881.8
+ }
+}
