@@ -1484,6 +1484,72 @@ Every entry records the options considered, the recommendation, the consequence 
   - **Master key:** `pilot-master.key` must be backed up separately from the data; without it the documents cannot be opened.
   - **Voice:** it idles near its cap. If it grows it is killed alone, and the Law interface is unaffected.
 
+### D-061 The demo world on the pilot, and Silent Assist on real speech — RECORDED (owner's request 2026-10-11; LIVE-02, OPS-02)
+- **Request:** "fill in demo details and build a product; make sure all the features are present: chat bot, live transcript + silent assistant, conversation assistant and document studio; make sure everything is there and working".
+- **Where each feature is in the Law edition** (the legacy names are closed in Law by D-025, because they were not matter-scoped):
+  - the chat bot is **Research** (S2.2): questions on a matter, answered from its documents with checked quotes;
+  - Live Transcript is **Meetings** (S1.8, S2.4): consent first, then a verbatim transcript;
+  - the silent assistant is **Silent Assist** (S2.5), in the meeting;
+  - the document studio is **Drafting** (S3.1, firm templates to Word), with redlines (S3.3) and summaries (S4.2);
+  - the conversation assistant is the new **Conversation** (D-062).
+- **Demo data on the pilot (fictional only):**
+  - `seed-demo` gives 9 people, 3 clients and 4 matters, with templates, a playbook and a checklist;
+  - `scripts/law/demo_load.py` imports 13 fixture documents into M-101 and M-114 through the pilot's own API;
+  - `scripts/law/demo_signin.py` prints the demo people's sign-in details, for the owner to run (never printed into a log or a chat).
+- **`scripts/law/demo_check.py`** checks each feature end to end on the running pilot, with the real model, speech recognition and voice. For the meeting, a fictional client call is spoken by offline Piper voices and streamed after consent.
+- **Found with real speech, each fixed with a test written red first (Silent Assist only; document comparison unchanged):**
+  1. **Spoken money:** amounts in words ("five hundred thousand dollars") were not read; only digits were. They are now read in transcripts, including across a stray full stop inside the figure.
+  2. **Split figures:** the segmenter can split a figure ("is five." | "Hundred thousand dollars"). A figure is now read across the same speaker's previous segment, quoted in the segment it ended in, and never across two speakers.
+  3. **Long clauses:** in a long clause the subject is far from the figure (the corpus MSA cap scored 0.1 against a 0.2 floor). For a spoken statement, a clause whose sentence covers every subject of the statement is now also a candidate. The model still decides.
+  4. **Scattered full stops:** the speech model scatters full stops ("The liability. Cap under. Clause eight. Is five."), so a figure's context is read with sentence-ending marks blanked. Offsets are kept and quotes are as stored.
+  5. **Echoed instructions:** the subject check sometimes copied its instruction back ("Same subject: no, then in a few words …") instead of judging. It is asked once more.
+  6. **Plain words:** that first line reads like a template, so Silent Assist now asks it in plain words ("answer yes or no in your own words …"). The document comparison is unchanged.
+- **Evaluation:**
+  - **Golden:** the demo call and the pilot's own transcript, which informed the fixes, were added. Each golden run, as it came out: 8/9 (after fixes 1–2), then 9/9 and 10/10 critical, precision 1.0, no false alerts.
+  - **Held-out:** two calls with spoken and split amounts were written and committed before any run. Each version was run once, and every run gave critical 8/9, precision 0.933.
+    - The split figure was caught, but in one segment, because the first turn had fewer than 12 words. The harness scores it on the first turn: one miss and one false alert.
+    - "I will ask … to confirm" is not an action: the action rule uses a fixed list of verbs. This is a known limit and was not tuned on.
+- **On the pilot (CPU speech recognition, synthetic Piper voices):** the live transcript keeps up with speech (16–17 s of speech each time, never behind; 22–37 s a call end to end, synthesis included). The misstated cap was flagged in 3 of 7 spoken runs across the builds:
+  - 2 of 2 on `333539a`;
+  - 0 of 1 on `071de48`, where the subject check echoed its instruction (fix 5);
+  - 1 of 4 on `0846afe`.
+
+  On `0846afe` the transcripts lost "thousand dollars" in three runs. The owner asked for that to be fixed, and it was investigated as follows:
+  - **Streaming does not drop words.** The same audio, streamed live and sent whole, gave the same words for 9 clips. With or without an earlier speaker in the capture, the same audio gave the same words in 6 runs.
+  - **The variation came from the check.** Piper varied the audio on every run (three separate syntheses of the same line differed), and the speech model misheard some versions.
+  - **The check is now repeatable.** `demo_check.py` speaks with Piper's variation turned off, so a result can be repeated.
+  - **A sixth fix came out of the repeatable call.** The amount was read across the split and matched to cl. 8.1, but the model copied its first line back every time. Silent Assist now asks that line in plain words (fix 6), while the document comparison keeps its prompt. On two garbled transcripts the model then judged conflict 6 of 6 times, and on a fee statement no conflict 3 of 3, with no echoes.
+  - Golden stayed at critical 10/10 and precision 1.0; held-out on `fc7c08d` gave the same result as before.
+
+  The action alert was raised in every run.
+
+### D-062 The conversation assistant (S5.1), and the voice service's own routes refused — RECORDED (owner's request 2026-10-11; SEC-01)
+- **What it is:** a Conversation page on each matter.
+  - Press the microphone and ask; press again to send (at most 60 seconds), or type instead.
+  - This server transcribes the question with its own speech recognition (the model meetings use, loaded on first use).
+  - The research pipeline answers it from the matter's signed documents with checked quotes, exactly as a typed Research question. It is stored in the person's research history.
+  - The answer is read aloud by this server's voice, without its citation marks. Reading aloud can be turned off, and the choice is remembered in the browser.
+- **Routes (`app/legal/conversation`):**
+  - `POST …/conversation/transcribe?sample_rate=16000` takes 16-bit mono PCM and returns `{text, seconds}`.
+  - `POST …/conversation/speak` `{text}` returns WAV, with `no-store`.
+  - Both need `research.query` on the matter, so a matter is invisible here as anywhere (404).
+  - The audio is not kept, and the audit holds the policy and lengths only.
+  - Without speech recognition or a voice, the server says so (503) and typing still works.
+- **Off unless `LEGAL_CONVERSATION` is on.** It is on in the pilot template; the compose overlay passes `LAW_CONVERSATION`.
+- **Security finding, fixed:** the pilot's nginx passed `/voice/*` to the voice service. Its own HTTP routes (`/speak`, `/voices/installed`, its test page) answer **without a session**, so anyone who could reach the pilot could make it synthesise speech. The Law interface never calls them.
+  - The Law frontend now uses `frontend/nginx.law.conf`: the standard config with `/voice/` refused (404). A test keeps the two otherwise identical, so production's nginx is untouched.
+  - Speech for the Law edition goes through the signed-in backend.
+  - Verified on the pilot: all four routes return 404 on both ports.
+- **Tests:**
+  - backend `test_law_conversation.py` (7, red first) and pilot config (the nginx test, red first);
+  - Vitest `conversation.test.tsx` (4, axe clean);
+  - browser journey 34 (typed question; this test server has no speech model or voice, and the page says so);
+  - security suite group "Conversation";
+  - on the pilot, `demo_check.py conversation`: a spoken question is transcribed, answered with the cap, and read aloud.
+- **Limits:**
+  - Each spoken question is answered on its own. Follow-ups like "and what about termination?" are not joined to the previous question.
+  - The first question after a restart waits while speech recognition loads.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

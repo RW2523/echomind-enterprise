@@ -530,3 +530,19 @@
 | Production | Unchanged (start times and restart counts compared before and after each start). |
 | Backend (all) | **1284 passed** (1277 at run 36, plus the 7 new pilot tests). |
 
+## Run 38 — Demo world, every feature on the pilot, Silent Assist on real speech, the Conversation assistant (D-061, D-062), 2026-10-11
+
+- **Branch:** `law/demo-product`
+- **Pilot running:** `0846afe`
+
+| Suite | Result |
+|---|---|
+| Backend (all) | **1299 passed** (1284 at run 37). New, each red first:<ul><li>Silent Assist: spoken amounts, split figures, never across speakers, long clauses, scattered full stops, a decimal kept, an echoed instruction asked again (8);</li><li>Conversation (7);</li><li>the Law nginx refuses `/voice/` (1).</li></ul> |
+| Security suite | **29 groups, all pass, 1088 tests**, with a new "Conversation" group (17: the conversation tests and the pilot configuration, including the refused voice routes). |
+| Frontend | tsc **clean**. Vitest **162 passed** (4 new, axe clean). The Research page now shares its answer stream and answer view with Conversation. |
+| Browser E2E | {{BROWSER}} |
+| Silent Assist golden (each run, as it came out) | `2b75d19`: critical 8/9 (the demo call's cap missed: long clause). `161387e`: 9/9. `408c691`: 10/10. `8f948c2`: 10/10. `fc7c08d`: 10/10. Precision 1.0 and no false alerts in all of them. |
+| Silent Assist held-out (once per version, as it came out) | `161387e`, `408c691`, `8f948c2` and `fc7c08d`: critical 8/9, precision 0.933, false alerts 1, each time. The two new spoken calls were written before any run. The lease call scored 3/3. The split-figure call was caught in one segment but scored on its first turn; "I will ask … to confirm" is not an action (fixed verb list). Not tuned on. |
+| Pilot end to end (`demo_check.py`, real model, speech recognition and voice) | All 8 pass:<ul><li>research: the cap with verified quotes, about 6 s;</li><li>conversation: a spoken question heard (13 words in 15 s, the first after a restart), answered with the cap, and read aloud (23 s of audio);</li><li>meeting: a live transcript in real time;</li><li>drafting: 14 blocks, 4 gaps for the lawyer;</li><li>summary: 20 points, all cited;</li><li>panel: 4 perspectives, all citing;</li><li>time: 2 drafts;</li><li>intake: "refer to the conflicts team".</li></ul>The misstated cap was flagged in 3 of 7 spoken runs (2/2, 0/1, 1/4 by build) while Piper varied the audio each run.<br>**Streaming investigated (owner's request):**<ul><li>identical audio gives the same words streamed and whole (9 clips);</li><li>with or without an earlier speaker it gives the same words (6 runs);</li><li>three separate Piper syntheses of the same line differed.</li></ul>The check now speaks without that variation, and fix 6 was made on its repeatable call. |
+| Security, on the pilot | `/voice/speak`, `/voice/health`, `/voice/voices/installed` and `/voice/` returned 200 without a session; now 404 on both ports. |
+
