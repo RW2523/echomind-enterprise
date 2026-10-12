@@ -4,6 +4,8 @@ import { api, ApiError } from '../api/client';
 import { keys, partiesPath, useApiMutation, useParties } from '../api/queries';
 import type { Matter, MatterParty, PartyRole, Sensitivity } from '../api/types';
 import { useMatter } from '../app/matter';
+import { hueOf, initials, matterEntries } from '../app/nav';
+import { useSession } from '../app/session';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Field, MatterStatusPill, roleLabel, SensitivityPill } from '../ui/primitives';
 import { useQueryClient } from '@tanstack/react-query';
@@ -11,6 +13,7 @@ import { HoldNotice } from '../ui/records';
 
 export default function MatterOverview() {
   const matter = useMatter();
+  const me = useSession();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
   const isLead = matter.my_role === 'lead';
@@ -34,11 +37,16 @@ export default function MatterOverview() {
           ? <button type="button" className="lw-btn" onClick={() => changeStatus('closed')}>Close matter</button>
           : <button type="button" className="lw-btn lw-btn-primary" onClick={() => changeStatus('open')}>Reopen matter</button>)}
       </Toolbar>
-      <div className="lw-content" style={{ maxWidth: 880 }}>
+      <div className="lw-content" style={{ maxWidth: 1120 }}>
         <section className="lw-paper lw-sheet" aria-labelledby="matter-title" style={{ display: 'grid', gap: 18 }}>
-          <div>
-            <div className="lw-eyebrow">{matter.client.name}</div>
-            <h2 className="lw-h1 lw-serif" id="matter-title" style={{ marginTop: 4 }}>{matter.title}</h2>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+            <span className="lw-avatar" style={{ ['--h' as string]: hueOf(matter.client.name), width: 48, height: 48, fontSize: 15, borderRadius: 15 }} aria-hidden>
+              {initials(matter.client.name)}
+            </span>
+            <div>
+              <div className="lw-eyebrow">{matter.client.name}</div>
+              <h2 className="lw-h1 lw-serif" id="matter-title" style={{ marginTop: 4 }}>{matter.title}</h2>
+            </div>
           </div>
           {matter.status !== 'open' && <p className="lw-meta" style={{ margin: 0 }}>This matter is {matter.status}. Its content can be read but not changed until it is reopened.</p>}
           {matter.on_hold && <HoldNotice />}
@@ -46,10 +54,16 @@ export default function MatterOverview() {
           <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '10px 24px', margin: 0 }}>
             {rows.map(([k, v]) => (<React.Fragment key={k}><dt className="lw-meta" style={{ fontSize: 13 }}>{k}</dt><dd style={{ margin: 0 }}>{v}</dd></React.Fragment>))}
           </dl>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Link to="../documents" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Documents</Link>
-            <Link to="../research" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Research</Link>
-            <Link to="../members" relative="path" className="lw-btn lw-btn-ghost lw-btn-sm">Members</Link>
+        </section>
+        <section aria-labelledby="matter-work" style={{ display: 'grid', gap: 10 }}>
+          <h2 className="lw-h2" id="matter-work" style={{ padding: '0 4px' }}>Work on this matter</h2>
+          <div className="lw-tiles">
+            {matterEntries(me, matter).filter((e) => e.key !== 'overview').map((e) => (
+              <Link key={e.key} to={e.to} className="lw-tile">
+                <span className="lw-icon-badge" style={{ ['--h' as string]: e.hue ?? 228 }}><e.icon aria-hidden /></span>
+                <span><strong>{e.label}</strong><span className="lw-meta">{e.about}</span></span>
+              </Link>
+            ))}
           </div>
         </section>
         <Parties matterId={matter.id} />
