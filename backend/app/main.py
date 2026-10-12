@@ -127,9 +127,11 @@ async def _stt_fatal_watchdog():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Pre-download and pre-load Nemotron ASR in background so first Live Transcript connection is faster
-    t = threading.Thread(target=_warm_nemotron_stt, daemon=True)
-    t.start()
+    # Pre-download and pre-load Nemotron ASR in background so first Live Transcript connection is faster.
+    # ECHOMIND_ASR_PRELOAD=0 leaves it to the first connection (the Law pilot on a shared host, D-060).
+    if os.getenv("ECHOMIND_ASR_PRELOAD", "1").strip().lower() not in ("0", "false", "no"):
+        t = threading.Thread(target=_warm_nemotron_stt, daemon=True)
+        t.start()
     # Warm LLM + embed backends so first chat/RAG is responsive
     asyncio.create_task(_warm_llm_and_embeddings())
     watchdog = asyncio.create_task(_stt_fatal_watchdog())

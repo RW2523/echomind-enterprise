@@ -1,0 +1,9 @@
+# EchoMind Law voice image (D-060). Built by scripts/law/build_images.sh; never by docker compose.
+# The 1.4.1 voice image with its code replaced by the Law code of one commit (edition gating and
+# on-behalf-of tokens, D-013). Speech models stay those in the base image.
+ARG BASE_IMAGE=echomind-enterprise-voice:1.4.1
+FROM ${BASE_IMAGE}
+RUN rm -rf /workspace/app
+COPY voice/app /workspace/app
+ARG BUILD_COMMIT=unknown
+LABEL org.opencontainers.image.title="echomind-law-voice" org.opencontainers.image.revision="${BUILD_COMMIT}"

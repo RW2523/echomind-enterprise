@@ -1451,6 +1451,39 @@ Every entry records the options considered, the recommendation, the consequence 
   - **Counsel's wording and policies** (consent P-001, retention of enquiries P-002, sign-off P-008) and the firm's billing rules are still the safe defaults until counsel and the firm decide.
   - **The lawyer review** of summaries and the panel (Phase 4 packet) has not been held, so their output is reviewed by a second person or a partner before use, as the features already require.
 
+### D-060 The pilot stack: Law images from one commit, capped below production, speech recognition on first use — RECORDED (OPS-01; first `compose.sh up` approved by the owner 2026-10-11)
+- **Approval:** "approved, create .env.law and start the pilot stack" (2026-10-11).
+- **Found before starting:**
+  - The 1.4.1 backend image lacks `cryptography`, so encrypted document storage would fail at startup. It also lacks `tesseract` (OCR) and the search reranker's model; the model cannot be fetched at run time, since the stack is offline.
+  - The overlay mounted this checkout's code. A branch switch here would change what the pilot runs, and a restart could apply a development branch's migrations to pilot data.
+  - The template's master key was the development backend's key.
+- **Images (`scripts/law/build_images.sh`):** thin images on the 1.4.1 ones, built from a clean commit, tagged by commit and pinned in `.env.law`. Compose never builds or pulls them. The build needed the network once (apt and PyPI).
+  - **Backend:** adds `cryptography` 46.0.3 (which brings `cffi` 2.1.1), `tesseract` 5.3.4 with English, and the reranker from the host's model cache.
+  - **Backend and voice:** the commit's code is baked in.
+  - **Frontend:** the commit's build, with its own self-signed certificate.
+- **Protecting production:** each container is capped, with no swap: backend 8 GB, voice 2 GB, frontend 256 MB. Each has `oom_score_adj` 800, so under host-wide pressure the kernel ends Law processes first.
+- **The first start crash-looped, and was stopped within about a minute:**
+  - Both containers loaded speech models on CPU at start: the backend its Nemotron model, the voice service Parakeet (which the base stack turns on). Each hit its then 4 GB cap and was killed and restarted.
+  - Production's containers kept the same start times, with no restarts.
+  - **Fix:** `ECHOMIND_ASR_PRELOAD` (default on, so production is unchanged) is off in the pilot, and Parakeet is off in the pilot's voice service, which the Law interface does not use.
+  - Measured in a throwaway container: the model adds 5.7 GB on CPU, and the backend's cap allows for it.
+- **Running (commit `7022d01`):**
+  - **Where:** project `echomind-law`, at `https://<host>:3553` and `http://<host>:3110`, with a self-signed certificate for `localhost`.
+  - **Data:** in volume `echomind-law_echomind_law_data`. Secrets are in `.env.law` and `.law-secrets/pilot-master.key` (mode 600, gitignored).
+  - **Idle use:** about 0.8 GB for the backend and 1.65 GB for voice. Host memory available fell from 13.3 to about 10.4 GB.
+  - **Verified:**
+    - Law edition, with sign-in enforced: every API route is 401 without a session, and a made-up enquirer link is 404.
+    - The Phase 4 switches are on, MFA is required, and all 33 migrations are applied.
+    - The enquirer-link page sends no referrer and is not cached.
+    - Production's containers are unchanged.
+- **First sign-in:** as `admin`, with the password in `.env.law`, binding an authenticator through the one-time enrolment link in the data volume (`/data/legal/bootstrap_enrollment_token`, 72 hours). Nobody has signed in yet, and the link is unused.
+- **Limits:**
+  - **Live transcripts:** the first one loads speech recognition on CPU. The backend then holds about 7 GB until restarted, leaving about 4 GB available on the host. Transcription speed on CPU is unmeasured.
+  - **Reach:** ports 3110 and 3553 are published on all interfaces, so the firm's network can reach the pilot. There is no public ingress. Browsers warn about the self-signed certificate.
+  - **Admin password:** reset to the `.env.law` value at every start while it is set there.
+  - **Master key:** `pilot-master.key` must be backed up separately from the data; without it the documents cannot be opened.
+  - **Voice:** it idles near its cap. If it grows it is killed alone, and the Law interface is unaffected.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
