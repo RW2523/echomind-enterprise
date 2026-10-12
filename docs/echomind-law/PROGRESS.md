@@ -6,11 +6,11 @@
 
 | Field | Value |
 |---|---|
-| Date | 2026-10-11 |
+| Date | 2026-10-12 |
 | Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); the Phase 4 gate (`law/s4.6-gate`) merged into it |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 and machine translation BLOCKED. Every slice that can be built without further approval is built. All Phase 4 features are on in the pilot configuration (D-059, 2026-10-11). **The pilot stack is running** (D-060, `https://<host>:3553`) with the fictional demo world, a practice group, six fictional cases, the base corpus and a public-law library, every feature on, Conversation with follow-ups, and the Liquid Glass interface (D-061 to D-065) |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 (regulatory updates, D-068) and machine translation (D-070) built on 2026-10-12 with the owner's approval of the pending items, with the T12 load test (D-066), pilot backups (D-067), the SIEM forwarder (D-069), the T11 egress lock script (D-071) and transcription measured on synthetic voices (D-072). All Phase 4 features are on in the pilot configuration (D-059, 2026-10-11). **The pilot stack is running** (D-060, `https://<host>:3553`) with the fictional demo world, a practice group, six fictional cases, the base corpus and a public-law library, every feature on, Conversation with follow-ups, and the Liquid Glass interface (D-061 to D-065) |
 | Plan documents | Committed to `feature/echomind-law` |
-| Migrations | `0001`–`0033` (Law edition only) |
+| Migrations | `0001`–`0035` (Law edition only) |
 | Production impact | None. Production's containers were never touched (same start times, no restarts, checked before and after each start). The Law pilot stack runs beside it as project `echomind-law`, capped below it (D-060); it reuses the host's model servers read-only. |
 
 ## Session log
@@ -708,6 +708,28 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **The flows:** `DEMO_FLOW.md`, and a published guide with eleven walkthroughs. `demo_check.py` covers each flow on the pilot.
 - **Suites:** backend 1310; security 29 groups and 1090 tests, all pass; Vitest 169; browser 33 of 34 in the full run (a slow 35 min run). The compare journey allowed only 5 s for its result; it now waits up to 60 s and passed on its own.
 
+### Session 6 — Load test, capture under load, backups, regulatory updates, translation, SIEM forwarder (D-066 to D-072), 2026-10-12
+- **The owner's answers:**
+  - keep the demo data;
+  - push to a new GitHub branch, kept separate;
+  - fetch regulatory feeds daily;
+  - run the load test now, capped.
+- **T12 load test (D-066):** 10 users on the pilot, with production watched; production was unaffected.
+  - It found live capture dropping under load, and a cold speech model freezing the server. Both are fixed, tests first.
+  - Capture now survives, but CPU speech recognition falls behind at that load.
+- **Backups (D-067):** daily at 02:30, encrypted and verified, with a restore test. Both keys are kept apart, and a copy of each must go off this host.
+- **Regulatory updates (D-068):**
+  - Fetched daily at 06:15 on the host from legislation.gov.uk and the Federal Register, and imported.
+  - Each update is matched to matters by a rule a lawyer can read. The first real import tuned the rule from 26 noisy matches to 3 plausible ones.
+- **SIEM forwarder (D-069):** syslog/CEF, off by default. A helper agent built it from a brief; it was reviewed and merged.
+- **Translation (D-070):** documents and summaries, by the local model, labelled as not reviewed, with figures checked.
+- **T11 enforced (D-071):** `sudo scripts/law/egress_lock.sh` for the owner to run.
+- **Transcription on synthetic voices (D-072):** capture loses nothing. The 1,120 ms look-ahead halves the word error rate (24% to 11.5%) and is now the default.
+- **Suites:**
+  - backend 1322;
+  - security 32 groups and 1152 tests, all pass;
+  - Vitest 177.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -716,6 +738,12 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
 - 2026-10-10: **APPROVED** the Phase 2 gate (`releases/phase2-gate.md`): merge S2.8 and start S3.1. The owner added: "approve everything and finish everything". This is taken as standing approval to build and merge every remaining slice and phase gate in order, including the Phase 4 business approval. Items that need a person (the lawyer review, the manual Word check, counsel's P-decisions) or that act outside this machine or on the shared host (a GitHub push, the first `compose.sh up` next to production, root) are confirmed one by one.
 - 2026-10-10: the Phase 3 gate (`releases/phase3-gate.md`) was merged under that standing approval. Its lawyer review and the manual Word check remain 🔒.
+- 2026-10-12: **APPROVED** by the owner: "approved, start the next pending items and finish everything", with these answers:
+  - "Keep the demo";
+  - "push it [to a] new branch and keep it separate";
+  - "Fetch daily";
+  - "Run now, capped".
+  - Built and merged under it: D-066 to D-072. The GitHub push goes to a new branch only, with no PR and no merge to main.
 - 2026-10-12: by the owner: "make conversation remember follow-up questions … load a crawl … the base data set … a group of users and synthetic cases … the flow … a glass Apple liquid UI". Asked what to crawl, the owner chose **public-domain law**, fetched once from official sources (D-064). Built and merged under that request (D-063, D-064, D-065).
 - 2026-10-11: by the owner: "fill in demo details and build a product … make sure everything is there and working". The fictional demo world is on the pilot; the Conversation assistant (S5.1) is built and on; Silent Assist was fixed on real speech (D-061, D-062).
 - 2026-10-11: **APPROVED** by the owner: "create .env.law and start the pilot stack". The first `compose.sh up` ran (D-060); the pilot stack is running.
@@ -723,9 +751,9 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - 2026-10-10: **APPROVED** Phase 4 ("approved, start S4.1 and finish everything"). S4.1, S4.2, S4.3, S4.5 and the Phase 4 gate (`releases/phase4-gate.md`) were merged under it, each behind its own flag, off by default. S4.4 and machine translation stay BLOCKED.
 - Still 🔒:
   - the first `scripts/law/compose.sh up` on the shared host;
-  - any push or PR to GitHub;
+  - any PR or merge to `main` on GitHub (a push of `feature/echomind-law` as its own branch was approved on 2026-10-12);
   - anything touching production;
-  - network integrations (DMS, IdP, licensed sources, syslog forwarding);
+  - network integrations (DMS, IdP, turning on syslog forwarding);
   - counsel items P-001…P-015;
   - destructive migrations on non-development data;
   - the manual Microsoft Word check for tracked changes (S3.3).
@@ -766,38 +794,46 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 
 - **Production shares this host.** Never run `docker compose` in this clone except through `scripts/law/compose.sh` (`-p echomind-law`).
 - Memory headroom is about 13 GB with the pilot stopped and about 10 GB with it idle. The pilot's first live transcript loads speech recognition on CPU: the Law backend then holds about 7 GB until restarted (capped at 8 GB, and ended first under host pressure, D-060).
-- Audit anchors sit on the same disk as the database until an off-host forwarder is approved.
+- Audit anchors sit on the same disk as the database until the SIEM forwarder (built, off; D-069) is turned on with an approved destination.
 - No per-IP sign-in throttle. Failed sign-ins are recorded and per-account lockout works.
 - E2E is not in CI. It runs locally with Playwright (`cd frontend && npx playwright test`); the research test uses the host's model server.
-- **The pilot runs pinned images** (`LAW_*_IMAGE` in `.env.law`). A code change reaches it only through `scripts/law/deploy_pilot.sh` (build, swap, and go back if unhealthy). Switching branches in this checkout no longer changes it. **Back up `.law-secrets/pilot-master.key` separately**; pilot backups (`python -m app.legal.backup` in the backend container) are not scheduled yet.
+- **The pilot runs pinned images** (`LAW_*_IMAGE` in `.env.law`). A code change reaches it only through `scripts/law/deploy_pilot.sh` (build, swap, and go back if unhealthy). Switching branches in this checkout no longer changes it. Pilot backups run daily at 02:30 (`scripts/law/backup_pilot.sh`, D-067) into `~/echomind-law-backups`; **a copy of the backup key (`~/.echomind-law/backup.key`) and of the master key (`~/.echomind-law-master/`) must go off this host** (🔒 owner).
 - Back up the master key separately from the data: without it the stored documents cannot be opened.
 - **Browser-suite stall: fixed but not proven (D-030).** Before the fix, the backend stalled inside SQLite in 3 of 5 full runs. Since the fix, 15 consecutive full runs are clean (5 in S1.11, 10 in the S1.12 gate). The exact lock is unproven without native stacks. Stack dumps stay on for browser runs (`kill -USR1 <uvicorn pid>`). If it ever stalls again, the next step is native stacks, which need the owner's permission to attach a debugger.
 - **Injection residuals (D-031):**
   - A novel phrasing can pass the deny-list.
   - An injected claim that the model cites to the injected passage is not dimmed; that passage shows its warning.
   - Voice cannot show the marks.
-- **Egress is observed, not enforced (D-033)** until the root-run namespace test is approved.
+- **Egress is observed, not enforced (D-033)** until the owner runs `sudo scripts/law/egress_lock.sh` (D-071). A reboot clears the rule; run it again after one.
 - **Never run `scripts/backup_data.sh` or `scripts/restore_data.sh` from this clone.** They find their volume through the `echomind-backend` container, which on this host is production. Use `python -m app.legal.backup`.
 - **Pre-existing on `main`:** standard-edition Knowledge Chat cannot send right after sign-in until a reload. There is an expected-failure test in `frontend/e2e-legacy`, and a separate task was suggested.
 - **Research abstention is the weakest measure (D-038).** When the documents do not answer, the model often says so and then adds related, supported context. That counts as an answer: abstention accuracy is 4/6 on the golden set and 1/3 held-out. The reviewer still sees the "not stated" opening and the evidence. Re-measured with a lawyer at the S2.8 gate.
-- **Transcription accuracy is unmeasured on real audio (D-040).** The harness and scoring are built and tested. The measurement needs the Law speech stack (the first `compose.sh up`, 🔒), not an install on the shared host, whose memory headroom is about 13 GB with swap full. Speakers are marked by hand: there is no automatic speaker separation.
+- **Transcription accuracy (D-040, D-072):**
+  - Measured only on synthetic voices through the pilot's capture: normalised WER 11.5% with the 1,120 ms look-ahead (24% with 560 ms). Under half of figures and names are kept.
+  - Real voices are unmeasured and will do worse; measure them on the firm's own recordings.
+  - Speakers are marked by hand: there is no automatic speaker separation.
+- **CPU speech recognition falls behind at 10 busy users (D-066).** The capture survives, says it is behind, and marks a gap past 120 s of backlog. A GPU for speech, or fewer users at once, is needed for live transcripts under that load.
+- **The cron jobs run scripts from this checkout** (`scripts/law/backup_pilot.sh`, `regulatory_daily.sh`). Keep a branch that has them checked out here.
 - **Minutes are small-sample evaluated (D-042).** Recall 1.0 golden and 6/7 held-out, with no invented specifics; the model chooses an item's kind within the guards, so an open point can be minuted as discussion. A second lawyer reviews every draft, and lawyer scoring is S2.8's.
 - In Law the legacy Boardroom and document studio stay closed: matter meetings with minutes replace the Boardroom (S2.6), and drafting arrives in S3.x; live transcription needs the speech model, which is not on the dev host (the capture path is tested with a stand-in). This is intended (D-025, D-026).
 
 ## NEXT EXACT ACTION
 
-**Everything in the spec that can be built without further approval is built, tested and merged** (Phases 1–4; `feature/echomind-law`). What remains needs the owner, a lawyer or counsel, confirmed one by one:
-1. **Lawyer review sessions:** Phase 4 (`releases/phase4-rubric.md`, packet `eval/law/lawyer_review/phase4/`), Phase 3 and Phase 2. Score with `eval/law/lawyer_review/score.py --phase N <sheet.csv>`, then record the results in the gate reports.
-2. **The manual Microsoft Word check** of tracked changes (S3.3).
-3. **Counsel P-001…P-015**, and the firm's billing rules for time entries.
-4. **Pilot configuration:** done. All Phase 4 features are on (D-059), and the pilot stack is running (D-060).
-5. **Pilot operations:**
-   - **The owner signs in first:** as `admin`, with the password from `.env.law`, through the one-time enrolment link `https://localhost:3553/signin?enrol=<token>`. The token is read with `scripts/law/compose.sh exec backend cat /data/legal/bootstrap_enrollment_token` and is valid for 72 hours.
-   - **Backups:** set up pilot backups (a backup key, then `python -m app.legal.backup create` in the backend container on a schedule, with archives off the volume), and back up `pilot-master.key` separately.
-   - **Still 🔒:** the root-run enforced T11 and the load-test window (T12). Real-audio transcription accuracy can now be measured on the pilot.
-   - **Demo:** the pilot holds the fictional demo world (D-061). Before a real firm's data goes in, start from a fresh volume (`compose.sh down`, then remove the `echomind-law_echomind_law_data` volume, both with the owner's approval), or keep the demo matters apart.
-   - **Speech recognition accuracy on CPU** is unmeasured on real voices. Live streaming was shown to give the same words as whole clips (D-061); misses come from the model mishearing. Measure on real recordings with the firm.
-6. **Blocked by design:** S4.4 (a licensed source and network approval), machine translation (a model licence), DMS (P-010), IdP (P-011), and the syslog forwarder.
-7. **Any GitHub push or PR.**
+**Everything that can be built without a person or root is built, tested, merged and running on the pilot** (`feature/echomind-law`, D-066 to D-072). The branch is pushed to GitHub as its own branch (no PR, no merge to main). What remains needs the owner, a lawyer or counsel:
+1. **Owner, on this host:**
+   - `sudo scripts/law/egress_lock.sh` (T11 enforced, D-071); it prints PASS or FAIL.
+   - Copy `~/.echomind-law/backup.key` and `~/.echomind-law-master/pilot-master.key` off this host, kept apart from each other and from the archives in `~/echomind-law-backups`.
+2. **Lawyer review sessions:** Phases 2, 3 and 4 (`releases/phase*-rubric.md`). Also review:
+   - the regulatory practice-area terms (D-068);
+   - translation quality per language (D-070).
+3. **The manual Microsoft Word check** of tracked changes (S3.3).
+4. **Counsel P-001…P-015**, and the firm's billing rules for time entries.
+5. **Real voices:** measure transcription on the firm's own recordings (D-072).
+6. **Hardware:** a GPU for speech recognition, if live transcripts must keep up for 10 or more busy users (D-066).
+7. **Needs a network decision:**
+   - the SIEM destination for the forwarder (D-069), plus an egress-lock exception for it;
+   - DMS (P-010);
+   - IdP/OIDC (P-011).
+8. **Before a real firm's data goes in:** start from a fresh volume (with the owner's approval), or keep the demo matters apart.
 
 When one of these is approved, start from its slice in IMPLEMENTATION_PLAN and the decision named above.

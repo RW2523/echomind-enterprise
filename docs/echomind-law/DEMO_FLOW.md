@@ -74,7 +74,8 @@ Every lawyer can read **R-001**.
 1. **Meetings**: **Plan a meeting** (client call), then add **Alice Hart** (host) and **Petra Voss** (client).
 2. **Consent**: record each person's consent. Recording stays blocked until everyone has consented.
 3. **Record**: say as Petra *"As I understand it, the liability cap under clause eight is five hundred thousand
-   dollars."* Then say as Alice *"I will check clause eight and send you a note by Friday."*
+   dollars."* Then say as Alice *"I will check clause eight and send you a note by Friday."* Say the amount in full and
+   do not pause just after it: the speech model sometimes drops the last word or two before a pause (D-072).
 4. **You should see:** the live transcript, and a Silent Assist alert **"Differs from signed agreement, cl. 8.1"**
    (USD 250,000) and an **action** alert. Decide each alert (a dismissal needs a reason).
 5. **Stop**, then **Minutes**: draft them, then **nakamura** approves them from **Reviews**.

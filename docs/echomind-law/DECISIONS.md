@@ -1635,9 +1635,14 @@ Every entry records the options considered, the recommendation, the consequence 
   - bounded plain text with control and format characters removed.
   - Licence and jurisdiction come from our own table, never from the bundle. A bad item is skipped and counted; a bad bundle is refused whole.
 - **Matching (`regulatory/topics.py`):** an update concerns an open matter when:
-  - the jurisdictions agree (England & Wales, Scotland and Northern Ireland are UK; a US state is US); and
+  - the jurisdictions agree (England & Wales, Scotland and Northern Ireland are UK; a US state is US);
+  - an update made for Scotland, Wales or Northern Ireland, by its kind or title, also needs a matter there; and
   - a term of the matter's practice area appears as a whole word, or its plural.
   - The terms found are kept and shown as the reason. It is a plain rule a lawyer can check, never a model; the term lists need a lawyer's review (P-008).
+- **The first real import (2026-10-12) tuned it.** It fetched 48 updates (12 UK, 36 US) and made 26 matches, mostly noise: "commercial" in a fishery quota, "enforce" in Coast Guard safety zones, "freight" in a rail notice, and a Scottish housing act against an England & Wales lease.
+  - The terms are now specific legal words and phrases, and the regional rule was added (tests first).
+  - `python -m app.legal.regulatory rematch` recomputed the undecided matches; a decided match is kept as decided. **3 matches remain, each plausible:** Venezuela sanctions for the investigations matter; a social-security pensions change for the employment matter; a housing change for the lease matter.
+  - A correction slip (an id that is a path) is now kept instead of skipped.
 - **Who sees what:** lawyers see each update with only the matters they may see; walls and highly restricted matters hold. On a matter, a lawyer marks a match "reviewed" or "not relevant", which needs a reason. The audit records the decision, never the reason's words.
 - **Settings:** off by default (`LEGAL_REGULATORY`) and on for the pilot. A rollback is refused once decisions exist.
 
@@ -1677,6 +1682,26 @@ Every entry records the options considered, the recommendation, the consequence 
   - Production's network is untouched, and the Law containers can no longer reach it.
 - **The test:** the backend must reach the answer model and must fail to connect to the internet.
 - **It needs root, so the owner runs it.** A reboot clears the rule.
+
+### D-072 Transcription measured with synthetic voices; the longer look-ahead by default — RECORDED (in the pending-items plan the owner approved, 2026-10-12)
+- **Why a proxy:** real-voice accuracy needs the firm's recordings. This is a proxy measure.
+- **How:** `scripts/law/transcription_proxy.py` speaks the four scripted legal conversations with fixed Piper voices. It streams them in real time through the pilot's capture socket, with speakers marked, and scores them with the S2.4 harness.
+- **Nothing is lost in capture.** The same audio sent as whole clips gave word-for-word the same text, with or without extra silence. The misses are the speech model's: "Harrowgate" heard as "Harbor Good", "cap" as "cat", "a signed amendment" as "a sign".
+- **Look-ahead (`att_context_size` right context; the model supports 0, 1, 6 or 13 frames of 80 ms).** Means of the four conversations:
+
+  | Look-ahead | Normalised word error | Verbatim word error | Entities kept | Negations kept |
+  |---|---|---|---|---|
+  | 6 frames (560 ms), as the standard edition | 24% | 59% | 29% | 54% |
+  | 13 frames (1,120 ms) | 11.5% | 34% | 48% | 83% |
+
+  The Law stack now uses 13 by default (`LAW_ASR_ATT_CONTEXT_RIGHT`, `LAW_ASR_CHUNK_MS`). Live text arrives about half a second later.
+- **Still true:**
+  - The model sometimes drops the last word or two before a pause, at either look-ahead ("below USD four hundred [thousand]"). At 1,120 ms this hit the demo call's key line: "five hundred thousand dollars" was heard as "five hundred", so the meeting check's cap alert did not fire. It fired at 560 ms. It was kept at 1,120 ms on the 19-turn measure; the demo guide says to say amounts in full.
+  - Figures and names are the weak point: entities kept are under half.
+  - The transcript is a record to correct (S2.4 revisions), not to rely on unread.
+  - Synthetic speech is cleaner than a meeting room, so real accuracy will be lower.
+  - On a GPU the speech model would also keep up under load (D-066).
+- **Reports:** `eval/law/reports/20261012-0417*` (560 ms) and `20261012-0511*` (1,120 ms).
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
