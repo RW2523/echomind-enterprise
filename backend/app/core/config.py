@@ -307,6 +307,8 @@ class Settings(BaseSettings):
     # Legal transcription (S2.4; D-017, D-040).
     LEGAL_SEGMENT_MIN_WORDS: int = int(os.getenv("LEGAL_SEGMENT_MIN_WORDS", "12"))     # a segment ends at a sentence end after this many words
     LEGAL_CAPTURE_LAG_WARN_SEC: float = float(os.getenv("LEGAL_CAPTURE_LAG_WARN_SEC", "5"))  # model this far behind: "degraded"
+    LEGAL_CAPTURE_BACKLOG_SEC: float = float(os.getenv("LEGAL_CAPTURE_BACKLOG_SEC", "120"))   # audio waiting for the model beyond this: a marked gap
+    LEGAL_CAPTURE_FINISH_SEC: float = float(os.getenv("LEGAL_CAPTURE_FINISH_SEC", "300"))     # at a stop, waiting audio may still be transcribed
     # Silent Assist legal packs (S2.5; D-015, D-041). Conservative defaults awaiting a lawyer's sign-off (P-008).
     LEGAL_ASSIST_MIN_CONFIDENCE: float = float(os.getenv("LEGAL_ASSIST_MIN_CONFIDENCE", "0.7"))   # alerts below this are not raised
     LEGAL_ASSIST_NEAR_MIN: float = float(os.getenv("LEGAL_ASSIST_NEAR_MIN", "0.2"))               # how close a figure's context must be

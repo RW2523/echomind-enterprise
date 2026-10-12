@@ -77,6 +77,14 @@ describe('Transcripts', () => {
     expect((await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);
   });
 
+  it('says why a gap was left: speech recognition fell too far behind (D-066)', async () => {
+    world(meeting(), { ...DATA, marks: [{ kind: 'gap', at: '2026-10-09T10:00:05.000Z', capture_id: 'c1', detail: 'transcription_behind' }] });
+    renderLaw('/m/M-101/meetings/mt1');
+    await openRecordTab();
+    const rows = await screen.findByRole('list', { name: 'Transcript segments' });
+    expect(rows.children[1].textContent).toMatch(/Not transcribed: speech recognition fell too far behind here\./);
+  });
+
   it('a correction needs a reason, and keeps the original', async () => {
     const calls = world(meeting(), DATA, { [`POST ${BASE}/mt1/transcript/segments/s1/revisions`]: () => [200, { revisions: [{ id: 'r9', kind: 'speaker' }] }] });
     renderLaw('/m/M-101/meetings/mt1');
@@ -130,6 +138,9 @@ describe('Transcripts', () => {
     expect(screen.getByRole('alert').textContent).toMatch(/Transcription is 6.2 s behind/);
     await act(async () => { FakeSocket.last!.server({ type: 'recovered' }); });
     expect(screen.queryByText(/Transcription is 6.2 s behind/)).toBeNull();
+    await act(async () => { FakeSocket.last!.server({ type: 'degraded', reason: 'skipped' }); });      // D-066: too far behind
+    expect(screen.getByRole('alert').textContent).toMatch(/some speech is not being transcribed\. The gap is marked/);
+    await act(async () => { FakeSocket.last!.server({ type: 'recovered' }); });
     await act(async () => { FakeSocket.last!.server({ type: 'segment', id: 'n1', seq: 0, text: 'Hello.', speaker_participant_id: 'p2', wall_start: '2026-10-10T10:00:00Z' }); });
     expect(within(await screen.findByRole('list', { name: 'Transcript segments' })).getByText('Petra Voss')).toBeTruthy();
   });

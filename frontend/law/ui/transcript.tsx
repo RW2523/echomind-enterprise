@@ -77,7 +77,9 @@ export function TranscriptRecord({ matterId, meetingId, data, canCorrect, canFin
         {rows.map((r) => r.kind === 'gap' ? (
           <li key={`gap-${r.m.at}`} className="lw-transcript-gap">
             <span className="lw-tnum lw-meta">{clock(r.m.at)}</span>
-            <span className="lw-meta">Not transcribed: a transcription error at this point.</span>
+            <span className="lw-meta">{r.m.detail === 'transcription_behind'
+              ? 'Not transcribed: speech recognition fell too far behind here.'
+              : 'Not transcribed: a transcription error at this point.'}</span>
           </li>
         ) : (
           <li key={r.s.id} className="lw-transcript-row" data-revised={r.s.revised || undefined}>
