@@ -1,0 +1,103 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "2b75d19+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261011-222123"
+ },
+ "summary": {
+  "scenarios": 4,
+  "recall": 0.909,
+  "critical_recall": "8/9",
+  "precision": 1.0,
+  "alerts": 12,
+  "false_alerts": 0,
+  "false_alerts_per_hour": 0.0,
+  "latency_p50_s": 0.0,
+  "latency_max_s": 4.97
+ },
+ "scenarios": [
+  {
+   "id": "client-call-misstatements",
+   "pack": "legal_client_call",
+   "planted": 5,
+   "found": 5,
+   "critical_planted": 4,
+   "critical_found": 4,
+   "alerts": 5,
+   "acceptable": 0,
+   "false": 0,
+   "minutes_spoken": 0.71,
+   "missed": [],
+   "false_alerts": [],
+   "all": [
+    "turn 4 disclosure needs_review (rule, 0.8): Needs review: privileged or sensitive information with a counterparty on the call — said “Our advice to the client is that the indemnity clause is weak and should not be relied on.”",
+    "turn 5 commitment needs_review (rule, 0.75): Needs review: a commitment to the other side — said “We will waive the late payment interest for this quarter if you sign this month.”",
+    "turn 7 action needs_review (rule, 0.7): Action taken on — said “I will send the revised redline to everyone by Friday.”",
+    "turn 3 signed_terms differs (model, 0.8): Differs from signed agreement, cl. 4.2 — said “forty-five days” — source “Invoices are payable net thirty (30) days from the invoice date.”",
+    "turn 1 signed_terms differs (model, 0.8): Differs from signed agreement, cl. 4.1 — said “USD 18,000” — source “4.1 Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgat”"
+   ],
+   "seconds": 5.02
+  },
+  {
+   "id": "negotiation-below-authority",
+   "pack": "legal_negotiation",
+   "planted": 2,
+   "found": 2,
+   "critical_planted": 2,
+   "critical_found": 2,
+   "alerts": 3,
+   "acceptable": 1,
+   "false": 0,
+   "minutes_spoken": 0.25,
+   "missed": [],
+   "false_alerts": [],
+   "all": [
+    "turn 1 commitment needs_review (rule, 0.75): Needs review: a commitment to the other side — said “We can accept a liability cap of USD 300,000 for the renewal.”",
+    "turn 1 authority differs (rule, 0.85): Differs from the authority in Board minutes 14 May 2026, cl. 3.1 — said “USD 300,000” — source “3.1 The board authorised management to negotiate the renewal of the Harrowgate Master Serv”",
+    "turn 3 signed_terms matches (rule, 0.8): Matches signed agreement, cl. 12.1 — said “Thirty days” — source “12.1 Either party may terminate this Agreement for convenience on thirty (30) days' writte”"
+   ],
+   "seconds": 0.08
+  },
+  {
+   "id": "board-quorum-and-conflict",
+   "pack": "legal_governance",
+   "planted": 2,
+   "found": 2,
+   "critical_planted": 2,
+   "critical_found": 2,
+   "alerts": 2,
+   "acceptable": 0,
+   "false": 0,
+   "minutes_spoken": 0.37,
+   "missed": [],
+   "false_alerts": [],
+   "all": [
+    "turn 0 quorum needs_review (rule, 0.75): Needs review: fewer than half the directors present — check the quorum — said “Three of the six directors are present, so we can proceed.”",
+    "turn 3 conflict differs (rule, 0.85): Differs from a declaration of interest earlier in this meeting — said “I vote in favour of the Northbridge Analytics budget.” — source “I declare an interest in the Northbridge Analytics project”"
+   ],
+   "seconds": 0.1
+  },
+  {
+   "id": "spoken-amounts-demo-call",
+   "pack": "legal_client_call",
+   "planted": 2,
+   "found": 1,
+   "critical_planted": 1,
+   "critical_found": 0,
+   "alerts": 2,
+   "acceptable": 1,
+   "false": 0,
+   "minutes_spoken": 0.47,
+   "missed": [
+    "turn 2 signed_terms"
+   ],
+   "false_alerts": [],
+   "all": [
+    "turn 3 signed_terms matches (rule, 0.8): Matches signed agreement, cl. 4.1 — said “eighteen thousand five hundred dollars” — source “4.1 Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgat”",
+    "turn 4 action needs_review (rule, 0.7): Action taken on — said “I will check clause eight and send you a short note on the cap by Friday.”"
+   ],
+   "seconds": 0.07
+  }
+ ]
+}

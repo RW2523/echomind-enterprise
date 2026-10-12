@@ -171,6 +171,23 @@ def _where(src: dict) -> str:
     return clause if src.get("clause") else f"“{clause}”"
 
 
+def _subjects(sentence: str) -> set:
+    """The subjects a sentence is about (fee, liability, notice, ...), from its words."""
+    words = {w.lower() for w in re.findall(r"[A-Za-z]+", sentence)}
+    return {name for name, cue in factsmod._ANCHORS.items() if words & cue}
+
+
+def _closeness(f: factsmod.Fact, said_sentence: str, g: factsmod.Fact, doc_sentence: str) -> float:
+    """How closely a statement and a passage are about the same thing. The words next to each figure
+    (the comparison's own measure), or, for a statement in a meeting, the subjects of the whole
+    sentences: a spoken statement is short and about one thing, while a clause can put its subject
+    far from its figure ("total aggregate liability ... shall not exceed the greater of USD 250,000").
+    Every subject of the statement must be the passage's (D-061). The model still decides."""
+    said = _subjects(said_sentence)
+    by_subject = 0.2 if said and said <= _subjects(doc_sentence) else 0.0
+    return max(factsmod._about_the_same(f, g), by_subject)
+
+
 async def _terms(ctx: Context, seg: dict, rules: set, before: str = "") -> list[Alert]:
     """Figures said, checked against the matter's documents (signed versions). Amounts may be said in words.
     `before`: the same speaker's previous segment, so a figure the segmenter split ("is five." | "Hundred
@@ -195,11 +212,11 @@ async def _terms(ctx: Context, seg: dict, rules: set, before: str = "") -> list[
             for g in doc.facts:
                 if g.kind != f.kind or g.unit != f.unit:
                     continue
-                score = factsmod._about_the_same(f, g)
+                sentence = ctx.docs[k]["text"][g.sentence[0]:g.sentence[1]]
+                score = _closeness(f, text[f.sentence[0]:f.sentence[1]], g, sentence)
                 if score < settings.LEGAL_ASSIST_NEAR_MIN:
                     continue
                 limit = _constraint(ctx.docs[k]["text"], g)
-                sentence = ctx.docs[k]["text"][g.sentence[0]:g.sentence[1]]
                 (limits if limit and _AUTHORITY_WORDS.search(sentence) else terms).append((score, k, g, limit))
         if limits and "authority" in rules and _PROPOSES.search(text):
             score, k, g, limit = max(limits, key=lambda x: x[0])

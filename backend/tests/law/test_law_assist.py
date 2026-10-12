@@ -330,3 +330,23 @@ def test_a_figure_is_never_joined_across_two_speakers(assist):
                                   ("Helena Marsh", "Hundred thousand dollars was last year's figure for the claim.")])
     assert not any("five" in (x.get("explanation") or "").lower() for x in got)
     assert not any("five. Hundred" in c[1]["content"] for c in assist["model"].calls)
+
+
+LEASE = """LEASE OF UNIT 9 (fictional)
+
+This Lease is made on 1 April 2025 between Calder Estates Ltd ("Landlord") and Voss-Lindqvist AB ("Tenant").
+
+7.2 The Tenant's total aggregate liability to the Landlord arising under or in connection with this Lease, whether in contract, tort or otherwise, shall not exceed the greater of GBP 50,000 or the rent paid in the preceding twelve months."""
+
+
+def test_a_long_clause_is_found_by_its_subject_when_the_words_near_the_figure_differ(assist):
+    """D-061: in a long clause the subject ("liability") can be far from the figure; a short spoken statement
+    about the same subject still reaches the model, which decides."""
+    alice = as_user(assist, "alice")
+    upload(alice, assist["mid"], "lease.txt", LEASE, status="executed")
+    index_all()
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "As I recall the liability cap under the lease is seventy thousand pounds.")])
+    [a] = [x for x in got if x["rule"] == "signed_terms"]
+    assert a["verdict"] == "differs" and "GBP 50,000" in a["source"]["quote"]
+    assert a["said"]["quote"] == "seventy thousand pounds"
