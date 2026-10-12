@@ -615,3 +615,14 @@
 | Backend (all) | **1336 passed** (1329 at run 41). A first run of the auth and intake suites showed the counts carrying over between tests (17 failures, all 429). Every test now starts with none (an autouse fixture). |
 | Security suite | **33 groups, all pass, 1166 tests** (a new group for D-075). |
 
+## Run 44 — Single sign-on with the firm's identity provider (D-076), 2026-10-12
+
+- **Branch:** `law/oidc`
+
+| Suite | Result |
+|---|---|
+| Single sign-on | **15 new backend tests** (red first, against a stand-in provider with its own key): off by default (404); the start sends the browser with PKCE, state and nonce; an existing account signs in and still gives this server's code; the provider's MFA trusted only when set and shown in `amr`. 11 kinds of refusal (wrong state, another browser, replay, another key, `alg: none`, issuer, audience, expired, nonce, unknown account, disabled account): no session, a reason in the audit trail, never the token. The route table counts the two public routes. |
+| Frontend | Vitest **180 passed** (3 new: the button only when configured, the code step on return, plain error messages). tsc clean. |
+| Backend (all) | **1351 passed**. |
+| Security suite | **34 groups, all pass, 1186 tests** (a new group for D-076). |
+

@@ -274,6 +274,18 @@ class Settings(BaseSettings):
     LEGAL_TRUSTED_PROXIES: str = os.getenv("LEGAL_TRUSTED_PROXIES", "")
     LEGAL_SIGNIN_IP_MAX_FAILURES: int = int(os.getenv("LEGAL_SIGNIN_IP_MAX_FAILURES", "20"))
     LEGAL_SIGNIN_IP_WINDOW_MIN: float = float(os.getenv("LEGAL_SIGNIN_IP_WINDOW_MIN", "15"))
+    # D-076: single sign-on with the firm's identity provider (OIDC), off unless the issuer is set. It signs in only accounts
+    # that exist here, matched on the claim (lower-cased; "@<email domain>" taken off). This server's two-step sign-in is
+    # still asked for unless TRUST_MFA and the token's amr say the provider used MFA.
+    LEGAL_OIDC_ISSUER: str = os.getenv("LEGAL_OIDC_ISSUER", "")
+    LEGAL_OIDC_CLIENT_ID: str = os.getenv("LEGAL_OIDC_CLIENT_ID", "")
+    LEGAL_OIDC_CLIENT_SECRET_FILE: str = os.getenv("LEGAL_OIDC_CLIENT_SECRET_FILE", "")
+    LEGAL_OIDC_REDIRECT_URI: str = os.getenv("LEGAL_OIDC_REDIRECT_URI", "")
+    LEGAL_OIDC_SCOPES: str = os.getenv("LEGAL_OIDC_SCOPES", "openid email profile")
+    LEGAL_OIDC_LABEL: str = os.getenv("LEGAL_OIDC_LABEL", "your firm's account")
+    LEGAL_OIDC_USERNAME_CLAIM: str = os.getenv("LEGAL_OIDC_USERNAME_CLAIM", "preferred_username")
+    LEGAL_OIDC_EMAIL_DOMAIN: str = os.getenv("LEGAL_OIDC_EMAIL_DOMAIN", "")
+    LEGAL_OIDC_TRUST_MFA: bool = os.getenv("LEGAL_OIDC_TRUST_MFA", "0").lower() in ("1", "true", "yes")
     LEGAL_PASSWORD_MIN_LENGTH: int = int(os.getenv("LEGAL_PASSWORD_MIN_LENGTH", "12"))
     LEGAL_WS_RECHECK_SEC: float = float(os.getenv("LEGAL_WS_RECHECK_SEC", "60"))          # re-validate open WebSockets
     LEGAL_OBO_TTL_SEC: int = int(os.getenv("LEGAL_OBO_TTL_SEC", "300"))                   # voice → backend token lifetime

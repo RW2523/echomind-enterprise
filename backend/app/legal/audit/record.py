@@ -61,7 +61,7 @@ def end(token) -> None:
 
 def note(**fields) -> None:
     """Add to the current route's event: object_type, object_id, matter_id, reason, details,
-    actor_user_id, actor_username. Details merge."""
+    actor_user_id, actor_username, and outcome ("deny" for a refusal that is not an error status). Details merge."""
     ctx = _ctx.get()
     if ctx is None:
         return
@@ -169,6 +169,7 @@ def _principal_for(request) -> Optional[dict]:
 def _finish(ctx: dict, action: str, object_type: Optional[str], kwargs: dict, object_param: Optional[str],
             principal: Optional[dict], outcome: str, status: Optional[int]) -> None:
     n = ctx["notes"]
+    outcome = n.get("outcome") or outcome           # a refusal answered with a redirect says so (D-076)
     decided = ctx.get("decision")
     d = decided[1] if decided else None
     if n.get("reason"):

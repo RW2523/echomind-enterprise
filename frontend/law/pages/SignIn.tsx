@@ -18,22 +18,33 @@ function safeNext(next: string | null): string {
  * is bound to an authenticator through the one-time enrolment link an administrator issued
  * (/signin?enrol=…); the QR code is drawn locally, nothing leaves the building.
  */
+const OIDC_ERRORS: Record<string, string> = {
+  failed: 'Signing in with your firm\'s account did not complete. Try again, or sign in with your password.',
+  account: 'Your firm\'s account is not set up here, or is not active. Ask your administrator.',
+  unavailable: 'Your firm\'s sign-in service could not be reached. Sign in with your password, or try again later.',
+};
+
 export default function SignIn() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const enrolToken = params.get('enrol') || '';
-  const [step, setStep] = useState<Step>('password');
+  // D-076: back from the firm's identity provider, the server says which step is next, or why it stopped.
+  const [step, setStep] = useState<Step>(params.get('step') === 'code' ? 'code' : params.get('step') === 'enrol' ? 'needs-link' : 'password');
+  const [oidc, setOidc] = useState<{ label: string } | null>(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [secret, setSecret] = useState('');
   const [qr, setQr] = useState('');
   const [recovery, setRecovery] = useState<string[]>([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(OIDC_ERRORS[params.get('oidc_error') ?? ''] ?? '');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { document.documentElement.dataset.edition = 'law'; }, []);
+  useEffect(() => {
+    api.get<{ oidc?: { label: string } }>('/api/auth/config').then((c) => setOidc(c.oidc ?? null)).catch(() => setOidc(null));
+  }, []);
 
   const finish = async () => {
     await qc.invalidateQueries({ queryKey: keys.me });
@@ -93,6 +104,12 @@ export default function SignIn() {
               <Field label="Password">{(id) => <input id={id} className="lw-input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}</Field>
               {error && <ErrorNote>{error}</ErrorNote>}
               <button type="submit" className="lw-btn lw-btn-primary" style={{ justifyContent: 'center' }} disabled={busy || !username || !password}>{busy ? 'Checking…' : 'Sign in'}</button>
+              {oidc && !enrolToken && (
+                <>
+                  <div className="lw-meta" style={{ textAlign: 'center', fontSize: 13 }}>or</div>
+                  <a className="lw-btn" style={{ justifyContent: 'center' }} href="/api/auth/oidc/start">{`Sign in with ${oidc.label}`}</a>
+                </>
+              )}
             </form>
           )}
 

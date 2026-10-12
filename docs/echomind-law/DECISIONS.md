@@ -1746,6 +1746,26 @@ Every entry records the options considered, the recommendation, the consequence 
   - Counts live in the process: a restart forgets them.
 - **Still true:** a slow, spread-out attack from many addresses is limited only by per-account lockout.
 
+### D-076 Single sign-on with the firm's identity provider (OIDC), off by default — RECORDED (owner's approval 2026-10-12: "start the next pending items and finish everything")
+- **What:** "Sign in with <the firm's account>" on the sign-in page, beside the password. It is the authorisation-code flow with PKCE (S256), and works with Entra ID, Okta, Google Workspace, Keycloak or any OpenID Connect provider.
+- **Checks:**
+  - A one-time state, bound to the browser by its own cookie, so a callback from another browser is refused (login CSRF).
+  - A nonce.
+  - The ID token's signature: RS256 or ES256 only, never "none" or a shared secret, with the provider's published keys.
+  - The token's issuer, audience (and azp), expiry and issue time.
+- **Accounts stay this server's:**
+  - It signs in only an account that already exists and is active. The username is the configured claim, lower-cased, with "@<firm domain>" taken off.
+  - Nothing is created: roles and matter access are given here.
+- **This server's own two-step code is still asked for,** unless the firm sets `LEGAL_OIDC_TRUST_MFA` and the token's `amr` says the provider used MFA.
+- **Audit:** every outcome is recorded with its reason (state, signature, issuer, no account …). The token and its claims are never recorded. A refusal shows the person a general message.
+- **Tests first:** backend 15 (the flow, PKCE, the client secret, 11 kinds of refusal), Vitest 3, and two public routes added to the route table (404 while off).
+- **To turn it on (🔒 owner and IT):**
+  1. Register this server with the provider: the redirect URI is `https://<server>/api/auth/oidc/callback`.
+  2. Set `LAW_OIDC_*` in `.env.law`, with the client secret in a file.
+  3. Allow the backend to reach the provider: network approval, and an exception in the egress lock (D-071).
+  4. Agree P-011, including whether the provider's MFA is trusted.
+- **Not built:** single logout at the provider; group or role mapping from the provider (roles stay this server's); SCIM.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
