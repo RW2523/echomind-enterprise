@@ -100,6 +100,15 @@ describe('Conversation (S5.1)', () => {
     expect(calls.filter((c) => c.path === `${M}/research/query`)[2].body).toEqual({ question: 'What is the governing law?', versions: 'signed' });
   });
 
+  it('an empty conversation offers starter questions that are asked at once', async () => {
+    const calls = world();
+    renderLaw('/m/M-101/conversation');
+    fireEvent.click(await screen.findByLabelText(/Read answers aloud/));
+    fireEvent.click(within(await screen.findByRole('group', { name: 'Try asking' })).getByRole('button', { name: 'What are the payment terms?' }));
+    await waitFor(() => expect(calls.find((c) => c.path === `${M}/research/query`)?.body).toEqual({ question: 'What are the payment terms?', versions: 'signed' }));
+    await waitFor(() => expect(screen.queryByRole('group', { name: 'Try asking' })).toBeNull());
+  });
+
   it('without speech recognition on the server it says so and typing still works', async () => {
     world({ [`POST ${M}/conversation/transcribe?sample_rate=16000`]: () => [503, { detail: 'Speech recognition is not installed on this server. Type your question instead.' }] });
     renderLaw('/m/M-101/conversation');

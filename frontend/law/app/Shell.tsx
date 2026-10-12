@@ -86,7 +86,6 @@ export default function Shell() {
     <div className="lw-shell">
       <aside className="lw-glass lw-sidebar" aria-label="Workspace navigation">
         <ShellMatterBlock />
-        <SearchButton />
         <div className="lw-nav-label lw-hide-rail">Firm</div>
         <nav aria-label="Firm" style={{ display: 'grid', gap: 2 }}>
           {firmEntries(me).map((e) => (e.key === 'reviews' ? <ReviewsNavItem key={e.key} />
@@ -117,6 +116,7 @@ function ShellMatterBlock() {
   return (
     <>
       <MatterSwitcher />
+      <SearchButton />
       {matter && (
         <>
           <div className="lw-nav-label lw-hide-rail">Matter</div>

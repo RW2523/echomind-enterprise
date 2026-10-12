@@ -7,15 +7,15 @@
 
 [data-edition="law"] {
   --canvas-base: #EAEEF6;
-  --aurora-1: rgba(96, 112, 255, .46);
-  --aurora-2: rgba(32, 196, 182, .32);
-  --aurora-3: rgba(255, 170, 96, .30);
-  --aurora-4: rgba(255, 118, 160, .24);
+  --aurora-1: rgba(96, 112, 255, .56);
+  --aurora-2: rgba(32, 196, 182, .40);
+  --aurora-3: rgba(255, 170, 96, .38);
+  --aurora-4: rgba(255, 118, 160, .32);
   --accent: #3352D0; --accent-2: #6B5CF0; --accent-ink: #FFFFFF; --accent-soft: rgba(51, 82, 208, .12);
   --glass-fill: rgba(255, 255, 255, .48); --glass-fill-strong: rgba(255, 255, 255, .80);
   --glass-edge: rgba(255, 255, 255, .78); --glass-edge-low: rgba(255, 255, 255, .26);
   --glass-shadow: 0 26px 60px -20px rgba(26, 36, 88, .32), 0 2px 6px rgba(26, 36, 88, .08);
-  --sheet: rgba(255, 255, 255, .74); --sheet-strong: rgba(255, 255, 255, .93);
+  --sheet: rgba(255, 255, 255, .68); --sheet-strong: rgba(255, 255, 255, .93);
   --sheet-shadow: 0 20px 48px -22px rgba(26, 36, 88, .30), 0 1px 2px rgba(26, 36, 88, .06);
   --paper: var(--sheet-strong);
   --light: rgba(255, 255, 255, .62);
@@ -227,3 +227,11 @@
   [data-edition="law"] .lw-shell { grid-template-columns: 76px minmax(0, 1fr); }
   [data-edition="law"] .lw-search-btn .lw-kbd, [data-edition="law"] .lw-search-btn span { display: none; }
 }
+
+/* ── Starter questions (D-065) ───────────────────────────────────────────────── */
+[data-edition="law"] .lw-starters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+[data-edition="law"] .lw-starter { border: 1px solid var(--glass-edge-low); background: color-mix(in srgb, var(--sheet-strong) 70%, transparent);
+  color: var(--ink-2); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer;
+  box-shadow: inset 0 1px 0 var(--glass-edge); transition: background var(--dur-1), color var(--dur-1), transform var(--dur-1) var(--ease); }
+[data-edition="law"] .lw-starter:hover { background: var(--sheet-strong); color: var(--ink); transform: translateY(-1px); }
+

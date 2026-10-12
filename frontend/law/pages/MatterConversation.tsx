@@ -7,6 +7,7 @@ import { useMatter } from '../app/matter';
 import { startMic, type Mic as Microphone } from '../app/mic';
 import Toolbar from '../ui/Toolbar';
 import { ErrorNote } from '../ui/primitives';
+import { Starters } from '../ui/starters';
 import { AnswerSheet, streamAnswer, type Answer } from './MatterResearch';
 
 /**
@@ -167,6 +168,7 @@ export default function MatterConversation() {
             <Volume2 aria-hidden /> Read answers aloud
           </label>
           {voiceNote && <p className="lw-meta" style={{ margin: 0 }}>{voiceNote}</p>}
+          {turns.length === 0 && !busy && <Starters onPick={(q) => void ask(q, false)} />}
           {turns.length > 0 && (
             <div className="lw-talk-memory">
               <span className="lw-meta">{`Remembering this conversation (${turns.length} ${turns.length === 1 ? 'question' : 'questions'}), so you can ask follow-ups.`}</span>

@@ -7,6 +7,7 @@ import { keys, useResearchHistory } from '../api/queries';
 import type { ResearchConflict, ResearchEvidence, ResearchParagraph, ResearchSource, ResearchTurn, VersionPolicy } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
+import { Starters } from '../ui/starters';
 import { ErrorNote, Skeleton, StatusPill } from '../ui/primitives';
 
 type Phase = 'idle' | 'reading' | 'writing' | 'done' | 'abstained' | 'revoked' | 'error';
@@ -136,6 +137,9 @@ export default function MatterResearch() {
               </div>
             </div>
           </form>
+          {!answer && !pack.length && (
+            <Starters onPick={(q) => { setQuestion(q); document.getElementById('research-q')?.focus(); }} />
+          )}
           {error && <ErrorNote>{error}</ErrorNote>}
           {answer && <AnswerSheet a={answer} focus={focus} onFocus={setFocus} />}
         </div>
