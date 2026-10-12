@@ -67,9 +67,9 @@ Ratings: **Conformant** · **Partial** — the substance exists but the record o
 | 7.4 | Communication | Partial | Internal: GitHub board, email/Teams, review records (QM-01 §9); external: SOP-04 — no customer engagement yet | G-14 |
 | 7.5 | Documented information | **Conformant** (2026-10-07) | SOP-01 uses Git as the control mechanism — versioned, attributed, timestamped, replicated. All controlled documents approved 2026-10-07 (`REG-01`, AR-2026-001) | — |
 | 8.1 | Operational planning and control | Partial | Deployment and build are well controlled and documented; planning criteria are not written down | — |
-| 8.2.1 | Customer communication | Gap | No feedback channel defined, no log. REG-06 created and empty. | G-15 |
-| 8.2.2–8.2.3 | Determining and reviewing requirements | Gap | No requirements-review record exists for any engagement | G-15 |
-| 8.2.4 | Changes to requirements | Gap | No mechanism | G-15 |
+| 8.2.1 | Customer communication | Partial (2026-10-11) | Client feedback on each demonstrated version recorded as reviews (EM26-19 CR-2026-02…09); no complaints log entries yet (REG-06) | G-15 |
+| 8.2.2–8.2.3 | Determining and reviewing requirements | Partial (2026-10-11) | Client requirements and their reviews recorded retrospectively from the commit record (EM26-20 FR register; EM26-19 CR-2026-02); 2025 SOW review 2025-08-05; FRM-11 to be used for new engagements | G-15 |
+| 8.2.4 | Changes to requirements | Partial (2026-10-11) | Requirement changes recorded with review and date (EM26-20 › Requirement changes, RC-2025-01…RC-2026-07); SOP-04 mechanism approved 2026-10-07 | G-15 |
 | 8.3.1–8.3.2 | Design planning | Partial | Design happens and is documented in `docs/`, but stages, reviews and acceptance criteria are not planned in advance | G-16 |
 | 8.3.3 | Design inputs | Partial | Implicit in the code and prompts (grounding, abstention, isolation are clearly deliberate design inputs) but never written as inputs | G-16 |
 | 8.3.4 | Design controls | **Partial — strong substance** | Verification genuinely happens: 78 unit test functions, the 52-question golden evaluation, the E1–E10 harness, and manual verification recorded in commit bodies. **Design reviews now recorded: 17 reviews (9 client and design reviews from 2026-01, 8 engineering reviews), 55 actions in `REG-10`.** Before that, no design review records existed. | G-16 |
@@ -87,7 +87,7 @@ Ratings: **Conformant** · **Partial** — the substance exists but the record o
 | 8.6 | **Release of products and services** | Partial (2026-10-07) | Release records with retained verification evidence for v1.4.0 and v1.4.1 (`records/releases/`); authorised by the Managing Director after deployment (deviation recorded); CI runs the unit tests on every push. `scripts/verify_offline_readiness.sh` is still called by nothing. | G-02 |
 | 8.7 | Control of nonconforming outputs | Partial | Handled well in practice (22 `fix:` commits with root cause); no register until REG-04, no disposition or concession process, no customer-notification procedure | G-19 |
 | 9.1.1 | Monitoring and measurement | Partial | Real measurement exists and is good; non-functional requirements recorded and monitored against approved targets in `REG-09` (2025 finding #6 closed, EM26-17); evaluation results retained; not yet trended | G-12 |
-| 9.1.2 | Customer satisfaction | Gap | No method defined, no data | G-15 |
+| 9.1.2 | Customer satisfaction | Partial (2026-10-11) | Client feedback captured in each review (EM26-19); no satisfaction survey yet (FRM-12) | G-15 |
 | 9.1.3 | Analysis and evaluation | Gap | No periodic analysis; the paper harness is the closest thing and it was a one-off campaign | G-12 |
 | 9.2 | **Internal audit** | **Gap** | Programme approved 2026-10-07 (SOP-13 §4: Nov 2026 clauses 4–7, Dec 2026 clause 8, Jan 2027 clauses 9–10), through the AJACE Inc. corporate audit programme (MR Sheryl Nazareth); none conducted yet | **G-20** |
 | 9.3 | **Management review** | **Gap** | None held yet; quarterly cadence approved (SOP-15 §4) | **G-21** |
@@ -128,7 +128,7 @@ differ the operational consequence wins.
 | ~~G-09~~ | **CLOSED 2026-10-07** — ratings confirmed, owners and dates set in `REG-03` | 6.1 |
 | G-10 | Objectives lack current baselines — re-measure the evaluation against HEAD | 6.2, 9.1.1 |
 | G-12 | Measurement not scheduled and no trend data yet. Retention of results is now in place. | 9.1.1, 9.1.3 |
-| G-15 | No customer communication, requirements-review or satisfaction mechanism | 8.2, 9.1.2 |
+| G-15 | *Partly closed 2026-10-11* — client requirements, feedback and requirement changes recorded (EM26-19, EM26-20); satisfaction survey and complaints log still to start | 8.2, 9.1.2 |
 | G-16 | *Partly closed 2026-10-07* — review log of 17 deliverable reviews — 9 client and design, 8 engineering — with 55 actions (`REG-10`, EM26-18) and 31 non-functional requirements with targets (`REG-09`, EM26-17); requirement-to-test traceability still partial | 8.3 |
 | ~~G-18~~ | **CLOSED** — `REG-07` change register and SOP-06 §6 significance criteria | 8.5.6 |
 | G-19 | No nonconformity disposition/concession process; no customer-notification procedure; effectiveness verification inconsistent | 8.7, 10.2 |
