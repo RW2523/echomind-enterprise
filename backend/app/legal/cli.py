@@ -2,12 +2,20 @@
 
     LEGAL_ALLOW_DEMO_SEED=1 python -m app.legal.cli seed-demo
 
+    LEGAL_ALLOW_DEMO_SEED=1 python -m app.legal.cli seed-demo-practice < plan.json
+
 seed-demo creates the FICTIONAL demonstration world used by the end-to-end tests and design
 reviews (IMPLEMENTATION_PLAN §8): three colleagues and four matters for two clients, including a
 highly restricted matter that only its lead can see, a revoked and an expired membership. Demo
 passwords and authenticator keys are written to $ECHOMIND_DATA_DIR/legal/demo_credentials.json
 (mode 0600). It refuses to run unless LEGAL_ALLOW_DEMO_SEED=1, so it cannot be run against a
 firm's real installation by accident. Re-running it changes nothing.
+
+seed-demo-practice (D-064) adds to that world a practice group of fictional people and fictional cases from a
+plan on stdin ({"team": {user: {"roles"}}, "matters": [{number, title, client {name, code}, practice_area,
+jurisdiction, lead, members {user: matter role}, parties [[name, role]]}]}); scripts/law/demo_load.py builds the
+plan and imports the documents. It needs the demo world first, adds the new people's sign-in details to the same
+file, prints no password, and re-running it changes nothing.
 """
 from __future__ import annotations
 
@@ -193,9 +201,77 @@ def _seed_meeting(org: str, matter_id: str, by: str) -> None:
     meetings.end_meeting(mid)
 
 
+def seed_demo_practice(plan: dict) -> dict:
+    """The practice group and the fictional cases (D-064); what was added, by count."""
+    from ..core import auth
+    from ..core.config import settings
+    from ..core.db import get_conn, init_db
+    from .identity import accounts, mfa
+    from .matters import repo
+    from .orgs import default_org_id
+
+    init_db()
+    org = default_org_id()
+    path = os.path.join(settings.DATA_DIR, "legal", "demo_credentials.json")
+    with open(path) as fh:
+        creds = json.load(fh)
+    added = {"people": 0, "clients": 0, "matters": 0, "memberships": 0, "parties": 0}
+    for name, spec in plan.get("team", {}).items():
+        if auth.get_user_by_username(name):
+            continue
+        pw = "demo " + secrets.token_urlsafe(12)
+        uid = auth.create_user(name, pw)["id"]
+        for r in spec.get("roles", []):
+            accounts.grant_role(uid, r, granted_by="seed-demo-practice")
+        secret = mfa.begin_enrollment(uid)
+        with get_conn() as conn:
+            conn.execute("UPDATE users SET mfa_enabled=1 WHERE id=?", (uid,))
+            conn.commit()
+        creds[name] = {"password": pw, "totp_secret": secret}
+        added["people"] += 1
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as fh:
+        json.dump(creds, fh, indent=2)
+
+    def uid_of(name: str) -> str:
+        u = auth.get_user_by_username(name)
+        if not u:
+            raise SystemExit(f"{name!r} is not a demo person")
+        return u["id"]
+
+    for m in plan.get("matters", []):
+        with get_conn() as conn:
+            row = conn.execute("SELECT id FROM matters WHERE org_id=? AND number=?", (org, m["number"])).fetchone()
+            client = conn.execute("SELECT id FROM clients WHERE org_id=? AND code=?", (org, m["client"]["code"])).fetchone()
+        lead = uid_of(m["lead"])
+        if row:
+            mid = row[0]
+        else:
+            if client:
+                cid = client[0]
+            else:
+                cid = repo.create_client(org, m["client"]["name"], m["client"]["code"], lead)["id"]
+                added["clients"] += 1
+            mid = repo.create_matter(org, cid, m["number"], m["title"], lead, practice_area=m.get("practice_area"),
+                                     jurisdiction=m.get("jurisdiction"), sensitivity=m.get("sensitivity", "restricted"))["id"]
+            added["matters"] += 1
+        have = {x["user_id"] for x in repo.list_live_memberships(mid)}
+        for name, role in m.get("members", {}).items():
+            if uid_of(name) not in have:
+                repo.add_membership(mid, uid_of(name), role, granted_by=lead)
+                added["memberships"] += 1
+        with get_conn() as conn:
+            known = {r[0] for r in conn.execute("SELECT name FROM legal_matter_parties WHERE matter_id=?", (mid,))}
+        new = [(n, r) for n, r in m.get("parties", []) if n not in known]
+        if new:
+            _seed_parties({mid: new}, lead)
+            added["parties"] += len(new)
+    return added
+
+
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else argv
-    if argv[:1] != ["seed-demo"]:
+    if argv[:1] not in (["seed-demo"], ["seed-demo-practice"]):
         print(__doc__)
         return 2
     from ..core.edition import is_law
@@ -205,6 +281,14 @@ def main(argv=None) -> int:
     if (os.getenv("LEGAL_ALLOW_DEMO_SEED") or "") != "1":
         print("refusing: set LEGAL_ALLOW_DEMO_SEED=1 to create fictional demo accounts and matters", file=sys.stderr)
         return 2
+    if argv[0] == "seed-demo-practice":
+        from ..core.config import settings
+        if not os.path.exists(os.path.join(settings.DATA_DIR, "legal", "demo_credentials.json")):
+            print("refusing: run seed-demo first; the practice group joins the demo world", file=sys.stderr)
+            return 2
+        added = seed_demo_practice(json.load(sys.stdin))
+        print("practice added: " + ", ".join(f"{v} {k}" for k, v in added.items()) + "; sign-in details in the same file")
+        return 0
     creds = seed_demo()
     print(f"demo world ready: users {', '.join(sorted(creds))}; credentials in $ECHOMIND_DATA_DIR/legal/demo_credentials.json")
     return 0
