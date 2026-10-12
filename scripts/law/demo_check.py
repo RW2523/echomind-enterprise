@@ -356,9 +356,39 @@ def check_employment(p: Pilot) -> tuple[bool, str]:
     return ok, f"{done['status']}, GBP 14,080 {'found' if '14,080' in done['answer'] else 'MISSING'}; 18,400 {'mentioned' if '18,400' in done['answer'] else 'not mentioned'}"
 
 
+def check_regulatory(p: Pilot) -> tuple[bool, str]:
+    """Regulatory updates (D-068): today's import is visible, labelled, linked to the official sites, and wall-safe."""
+    ups = p.call("sofia", "GET", "/legal/regulatory?days=7")["updates"]
+    if not ups:
+        return False, "no updates imported in the last 7 days (run scripts/law/regulatory_daily.sh)"
+    official = all(u["url"].startswith(("https://www.legislation.gov.uk/", "https://www.federalregister.gov/")) for u in ups)
+    visible = {m["number"] for u in ups for m in u["matters"]}
+    mine = {m["number"] for m in p.call("sofia", "GET", "/legal/matters")["matters"]}
+    by = {j: sum(1 for u in ups if u["jurisdiction"] == j) for j in ("UK", "US")}
+    return official and visible <= mine, (f"{len(ups)} updates (UK {by['UK']}, US {by['US']}), official links {'only' if official else 'NOT ONLY'}; "
+                                          f"matters shown to sofia: {sorted(visible) or 'none today'} (all hers: {visible <= mine})")
+
+
+def check_translation(p: Pilot) -> tuple[bool, str]:
+    """Machine translation (D-070): the signed MSA into French by the real model, labelled, every figure kept."""
+    mid = p.matter("alice", "M-101")
+    doc = p.documents("alice", mid)["Master Services Agreement (DEMO)"]
+    t0 = time.time()
+    raw = p.call("alice", "POST", f"/legal/matters/{q(mid)}/documents/{q(doc['id'])}/translate", {"language": "fr"}, timeout=600)
+    events = [json.loads(line) for line in raw.decode().splitlines() if line.strip()]
+    start = next((e for e in events if e["type"] == "start"), {})
+    paras = [e for e in events if e["type"] == "paragraph"]
+    flagged = [e for e in paras if e["figures_missing"]]
+    done = events[-1].get("type") if events else None
+    ok = done == "done" and "not reviewed" in start.get("label", "") and paras and len(flagged) <= max(1, len(paras) // 10)
+    sample = next((e["text"] for e in paras if "250" in e["source"]), "")[:90]
+    return bool(ok), (f"{len(paras)} paragraphs into French, {len(flagged)} with a figure flagged, {time.time() - t0:.0f} s; "
+                      f"cap clause: '{sample}'")
+
+
 CHECKS = {"research": check_research, "conversation": check_conversation, "followup": check_followup, "conflicts": check_conflicts,
           "reference": check_reference, "employment": check_employment, "meeting": check_meeting, "drafting": check_drafting, "summary": check_summary,
-          "panel": check_panel, "time": check_time, "intake": check_intake}
+          "panel": check_panel, "time": check_time, "intake": check_intake, "regulatory": check_regulatory, "translation": check_translation}
 
 
 def main() -> int:
