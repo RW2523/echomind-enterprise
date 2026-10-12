@@ -192,7 +192,8 @@ _AUTH_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/c
 
 # Law edition (S1.1, SEC-01): deny by default. Only these are reachable without a session; the
 # client-error sink is not (it would let anyone write into the logs).
-_LAW_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/config", "/api/auth/logout"}
+_LAW_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/config", "/api/auth/logout",
+                     "/api/auth/oidc/start", "/api/auth/oidc/callback"}           # D-076: 404 unless the firm's provider is set
 # S1.7 (decision D-025): only the Law API is served in the Law edition. The existing modules
 # (legacy chat, documents, transcripts, Boardroom, document studio, evaluation) are closed for
 # everyone — none of them is matter-scoped — and their capabilities return as /api/legal routes.

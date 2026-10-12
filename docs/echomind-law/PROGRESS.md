@@ -747,6 +747,10 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - The pilot's audit trail had recorded nginx's address for every event. The client's address now comes from nginx's `X-Real-IP`, believed only from the Law network. A per-address sign-in throttle closes the known gap.
 - **A public address for everyone** was asked for again. The permission rules refused it before, and a chat approval does not change them: not attempted. It is the owner's to set up, or to allow (D-073, NEXT EXACT ACTION 9).
 
+### Session 10 — Single sign-on with the firm's identity provider (D-076), 2026-10-12
+- OIDC built, off by default, tests first: PKCE, browser-bound state, nonce, signature and claim checks, existing accounts only, this server's two-step code kept unless the firm trusts the provider's MFA.
+- The sign-in code that the permission rules had refused before was read this time without a refusal.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -852,6 +856,6 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
    - IdP/OIDC (P-011).
 8. **Before a real firm's data goes in:** start from a fresh volume (with the owner's approval), or keep the demo matters apart.
 9. **A public address:** not made. This session's permission rules refused opening the pilot to the internet, and the pilot is office-network only by design (T-17). Whether, and how, it is exposed is the owner's decision. Weigh it against T-24 (intake links need no sign-in) and the missing per-address sign-in throttle.
-10. **Generic single sign-on (OIDC, SEC-01):** not built. It needs the firm's identity provider (P-011), and this session's permission rules refused the sign-in code. Build it in a session where the owner allows it.
+10. **Single sign-on (OIDC, SEC-01):** built and off (D-076). To turn it on: register this server with the firm's identity provider, set `LAW_OIDC_*`, allow the backend to reach the provider (an egress-lock exception), and agree P-011.
 
 When one of these is approved, start from its slice in IMPLEMENTATION_PLAN and the decision named above.

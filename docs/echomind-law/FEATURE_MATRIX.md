@@ -7,7 +7,7 @@
 
 | ID | Feature | Status today | Slice(s) | Blocked by |
 |---|---|---|---|---|
-| SEC-01 | Mandatory auth, SSO/OIDC, sessions, MFA | PARTIAL | S1.1 | OIDC verification needs the firm IdP (P-011) |
+| SEC-01 | Mandatory auth, SSO/OIDC, sessions, MFA | DONE for local accounts; **OIDC single sign-on built (D-076), off by default**: PKCE, browser-bound state, nonce, signature and claim checks, existing accounts only, this server's MFA kept unless the firm trusts the provider's | S1.1, D-076 | Turning OIDC on needs the firm's IdP, network approval and P-011 |
 | SEC-02 | Tenant/client/matter CRUD, RBAC+ABAC, ethical walls | DONE (S1.2–S1.5; this row was stale until S1.12) | S1.2, S1.3, S1.4 | — |
 | SEC-03 | Matter-aware indexes, ACL before retrieval and jobs | DONE (S1.6 documents and partitions; S1.7 existing modules closed, research and voice matter-scoped) | S1.6, S1.7 | — |
 | SEC-04 | Audit, admin reports, SIEM export | DONE. The syslog/CEF forwarder is built (D-069), off by default; turning it on needs the SIEM address and network approval | S1.5 | SIEM address, network approval |

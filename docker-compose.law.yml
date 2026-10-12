@@ -88,6 +88,16 @@ services:
       - LEGAL_AUDIT_SYSLOG=${LAW_AUDIT_SYSLOG:-}
       # D-075: nginx (the Law frontend, on this Docker network) passes the client's address; only it can reach the backend.
       - LEGAL_TRUSTED_PROXIES=${LAW_TRUSTED_PROXIES:-172.16.0.0/12}
+      # D-076: single sign-on with the firm's identity provider; off while LAW_OIDC_ISSUER is empty. The backend must reach the
+      # provider (network approval, and an egress-lock exception, D-071). The client secret is a file mounted read-only.
+      - LEGAL_OIDC_ISSUER=${LAW_OIDC_ISSUER:-}
+      - LEGAL_OIDC_CLIENT_ID=${LAW_OIDC_CLIENT_ID:-}
+      - LEGAL_OIDC_CLIENT_SECRET_FILE=${LAW_OIDC_CLIENT_SECRET_FILE:-}
+      - LEGAL_OIDC_REDIRECT_URI=${LAW_OIDC_REDIRECT_URI:-}
+      - LEGAL_OIDC_LABEL=${LAW_OIDC_LABEL:-your firm's account}
+      - LEGAL_OIDC_USERNAME_CLAIM=${LAW_OIDC_USERNAME_CLAIM:-preferred_username}
+      - LEGAL_OIDC_EMAIL_DOMAIN=${LAW_OIDC_EMAIL_DOMAIN:-}
+      - LEGAL_OIDC_TRUST_MFA=${LAW_OIDC_TRUST_MFA:-0}
 
   voice:
     <<: [*law_host_gateway, *law_capped]

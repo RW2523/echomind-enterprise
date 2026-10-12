@@ -8,6 +8,7 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from ...core.config import settings
@@ -30,7 +31,12 @@ def auth_config():
     """Public: lets the frontend decide whether to show the login gate, and which edition's
     interface to load (the EchoMind Law workspace when the edition is "law")."""
     from ...core.edition import current_edition
-    return {"auth_enabled": settings.AUTH_ENABLED, "edition": current_edition() or "standard"}
+    out = {"auth_enabled": settings.AUTH_ENABLED, "edition": current_edition() or "standard"}
+    if is_law():
+        from ...legal.identity import oidc
+        if oidc.enabled():
+            out["oidc"] = {"label": settings.LEGAL_OIDC_LABEL}       # D-076: the sign-in page offers the firm's account
+    return out
 
 
 @router.post("/login")
@@ -178,7 +184,8 @@ def _require_law() -> None:
 
 
 def _client_meta(request: Request) -> tuple[str, str]:
-    return (request.client.host if request.client else ""), (request.headers.get("user-agent") or "")
+    from ...legal.netaddr import client_address
+    return (client_address(request) or ""), (request.headers.get("user-agent") or "")      # the client's, through nginx (D-075)
 
 
 def _set_law_cookies(response: Response, token: str, csrf: str, mfa_verified: bool) -> None:
@@ -240,6 +247,73 @@ def _law_login(inp: LoginIn, request: Request, response: Response) -> dict:
     _set_law_cookies(response, token, csrf, mfa_verified=True)
     note(details={"status": "ok"})
     return {"status": "ok", "user": _public_user(acct)}
+
+
+# ── Single sign-on with the firm's identity provider (D-076) ────────────────────────
+def _require_oidc() -> None:
+    from ...legal.identity import oidc
+    if not is_law() or not oidc.enabled():
+        raise HTTPException(status_code=404, detail="Not Found")
+
+
+def _without_state_cookie(r: RedirectResponse) -> RedirectResponse:
+    from ...legal.identity import oidc
+    r.delete_cookie(oidc.STATE_COOKIE, path="/", secure=True, httponly=True, samesite="lax")
+    return r
+
+
+@router.get("/oidc/start")
+@audited("auth.oidc.start", session_actor=False)
+def oidc_start(request: Request):
+    """Send the browser to the firm's identity provider, with a state bound to it by its own cookie."""
+    _require_oidc()
+    from ...legal.identity import oidc
+    try:
+        url, browser = oidc.start()
+    except Exception as e:
+        note(reason="discovery", outcome="deny")
+        logger.warning("Auth: the identity provider could not be reached (%s)", type(e).__name__)
+        return RedirectResponse("/signin?oidc_error=unavailable", status_code=302)
+    r = RedirectResponse(url, status_code=302)
+    r.set_cookie(oidc.STATE_COOKIE, browser, max_age=oidc.STATE_TTL, path="/", secure=True, httponly=True, samesite="lax")
+    return r
+
+
+@router.get("/oidc/callback")
+@audited("auth.oidc", session_actor=False)
+def oidc_callback(request: Request, code: str = "", state: str = ""):
+    """The provider sends the browser back here. An existing, active account is signed in; this server's own code is
+    still asked for unless the firm trusts the provider's MFA and the token says it was used. Refusals redirect to the
+    sign-in page with a general message; the audit trail keeps the reason, never a token or a claim."""
+    _require_oidc()
+    from ...legal.identity import accounts, oidc, sessions
+
+    def refused(reason: str) -> RedirectResponse:
+        note(reason=reason, outcome="deny")
+        kind = "account" if reason in ("no_account", "account_unavailable") else "failed"
+        return _without_state_cookie(RedirectResponse(f"/signin?oidc_error={kind}", status_code=302))
+
+    try:
+        claims = oidc.finish(code, state, request.cookies.get(oidc.STATE_COOKIE))
+    except oidc.Refused as e:
+        return refused(e.reason)
+    name = oidc.username_of(claims)
+    acct = accounts.get_by_username(name) if name else None
+    if acct is None:
+        return refused("no_account")                    # nothing is created here: an administrator adds people
+    note(actor_user_id=acct["id"], actor_username=acct["username"])
+    if accounts.is_locked(acct) or acct["status"] != "active":
+        return refused("account_unavailable")
+    full = oidc.mfa_by_provider(claims)
+    if full:
+        accounts.register_success(acct["id"])
+    ip, ua = _client_meta(request)
+    token, csrf = sessions.create(acct["id"], mfa_verified=full, ip=ip, user_agent=ua)
+    where = "/home" if full else ("/signin?step=code" if acct["mfa_enabled"] else "/signin?step=enrol")
+    r = _without_state_cookie(RedirectResponse(where, status_code=302))
+    _set_law_cookies(r, token, csrf, mfa_verified=full)
+    note(details={"provider_mfa": full})
+    return r
 
 
 def _law_me(payload: dict) -> dict:
