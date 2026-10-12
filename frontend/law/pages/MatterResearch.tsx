@@ -337,6 +337,7 @@ function EvidenceItem({ e, active, source }: { e: ResearchEvidence; active: bool
           : <blockquote className="lw-serif">{`“${e.quote}”`}</blockquote>}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <StatusPill tone={tone}>{label}</StatusPill>
+          {e.matched && <StatusPill tone="neutral">Reference added: the answer quoted this without one</StatusPill>}
           {e.signed === false && <StatusPill tone="attention">Not signed</StatusPill>}
         </div>
         <div className="lw-meta">{meta}</div>

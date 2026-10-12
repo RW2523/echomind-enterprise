@@ -121,6 +121,8 @@ export interface ResearchEvidence {
   version_number: number; version_status?: DocStatus | null; signed?: boolean | null; clause?: string | null;
   page_start?: number | null; page_end?: number | null; line?: number | null; char_start?: number | null; char_end?: number | null;
   removed?: boolean;
+  /** D-073: the answer quoted this word for word without a reference; the system found where and cited it. */
+  matched?: boolean;
 }
 export interface ResearchConflict {
   document_id: string; document_title: string; clause: string;
