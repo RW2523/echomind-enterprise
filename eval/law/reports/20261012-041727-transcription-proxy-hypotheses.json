@@ -1,0 +1,129 @@
+{
+ "note": "Piper voices (fixed), streamed through the pilot's capture socket; a proxy, not real voices.",
+ "voices": [
+  "en_US-lessac-medium",
+  "en_US-joe-medium",
+  "en_US-amy-medium",
+  "en_US-john-medium",
+  "en_US-kusal-medium"
+ ],
+ "seconds": 144,
+ "hypotheses": {
+  "client-call-renewal": [
+   {
+    "speaker": "Helena Marsh",
+    "text": "Thank you for joining Harbor Good System. Redline. Into the master. Services agreement dated mid to March twenty twenty."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "Changed on the money side."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "The monthly fee goes from USDA eighteen. Five hundred to. USD nineteen."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "Thousand seven hundred fifty. And the liability. Cap. Rises to USD five."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "Hundred thousand and under clause. Eight point one one."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "The board said that the cat must not fall below. USD four hundred."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "So that the cap is fine we will not accept. The fee and increase without a longer term."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "Understood. I will not concede. The thirty day inconvenience. Notice if either the one sixty days."
+   }
+  ],
+  "negotiation-change-of-control": [
+   {
+    "speaker": "Thomas Reyes",
+    "text": "Elicit Holdings expects. Completion on fifteen October two. Thousand twenty. Subject to clearance."
+   },
+   {
+    "speaker": "David Okafor",
+    "text": "Clause fourteen point two requires. No less than thirty days. Notice. Your letter of three September twenty twenty."
+   },
+   {
+    "speaker": "David Okafor",
+    "text": "Six gives forty two days. So notice isn't in time."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "We do not consent to an assignment. To any pellucid. Affiliate."
+   },
+   {
+    "speaker": "Thomas Reyes",
+    "text": "There is no assignment. Hari. Gate system. Increment. Remains the contracting. Party."
+   },
+   {
+    "speaker": "David Okafor",
+    "text": "Then pleased confirm in her writing that the account team will not change."
+   }
+  ],
+  "board-meeting-mandate": [
+   {
+    "speaker": "Karin Lindqvist",
+    "text": "Of the six directors that are present. So the media."
+   },
+   {
+    "speaker": "Anders Holm",
+    "text": "I declare her an interest in the North. Analytics project. And I will not vote on that."
+   },
+   {
+    "speaker": "Anders Holm",
+    "text": "Item five"
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "Item three B is the heterogeneit renew. Negotiate."
+   },
+   {
+    "speaker": "Sofia Berg",
+    "text": "I move that the liability cap. Is not reduced. Below USD. Four hundred thousand."
+   },
+   {
+    "speaker": "Karin Lindqvist",
+    "text": "The budget for a project lantern is. Four. Million for two. Thousand twenty."
+   },
+   {
+    "speaker": "Karin Lindqvist",
+    "text": "Six. The board resolves not to. propose an interim dividend."
+   }
+  ],
+  "witness-interview": [
+   {
+    "speaker": "Helena Marsh",
+    "text": "When did you first see the invoice for your? USD nineteen thousand."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "Seven hundred. Fifty."
+   },
+   {
+    "speaker": "Maria Ek",
+    "text": "One June two thousand and twenty six. My first days. Chief Financial Officer."
+   },
+   {
+    "speaker": "Maria Ek",
+    "text": "I did not approve it."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "Did anyone atrogate systems? tell you the fee had changed."
+   },
+   {
+    "speaker": "Maria Ek",
+    "text": "No nobody told me. And I never saw a sign."
+   }
+  ]
+ }
+}
