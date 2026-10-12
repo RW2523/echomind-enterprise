@@ -322,6 +322,10 @@ class Settings(BaseSettings):
     LEGAL_RETENTION_APPLY: bool = os.getenv("LEGAL_RETENTION_APPLY", "0").lower() in ("1", "true", "yes")
     # Exports (S1.10; P-006): released files are kept this long, then removed.
     LEGAL_EXPORT_TTL_HOURS: float = float(os.getenv("LEGAL_EXPORT_TTL_HOURS", "24"))
+    # Audit forwarding (S1.5, SEC-04; D-069): each audit event as CEF over syslog to the firm's SIEM. Off by default.
+    LEGAL_AUDIT_SYSLOG: str = os.getenv("LEGAL_AUDIT_SYSLOG", "")                     # udp://host:port or tcp://host:port; empty = off
+    LEGAL_AUDIT_SYSLOG_FROM_START: bool = os.getenv("LEGAL_AUDIT_SYSLOG_FROM_START", "0").lower() in ("1", "true", "yes")   # a new destination also gets the history
+    LEGAL_AUDIT_SYSLOG_INTERVAL_SEC: float = float(os.getenv("LEGAL_AUDIT_SYSLOG_INTERVAL_SEC", "2"))   # how often new events are sent
     # S3.6 obligations: the firm's timezone for due dates (IANA name, shown with every date), and the calendar
     # file, off unless the firm turns it on (DOC-05).
     LEGAL_TIMEZONE: str = os.getenv("LEGAL_TIMEZONE", "UTC")

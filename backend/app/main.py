@@ -139,12 +139,16 @@ async def lifespan(app: FastAPI):
         # S1.6: background indexing of matter documents (jobs survive restarts in the database).
         from .legal.jobs import worker as law_jobs
         law_jobs.start()
+        # S1.5 (D-069): the audit trail to the firm's SIEM, only when LEGAL_AUDIT_SYSLOG names one.
+        from .legal.audit import forward as audit_forward
+        audit_forward.start()
     try:
         yield
     finally:
         watchdog.cancel()
         if is_law():
             law_jobs.stop()
+            audit_forward.stop()
 
 
 # Diagnostics (development only): `kill -USR1 <pid>` prints every thread's stack to stderr.
