@@ -80,6 +80,25 @@
    "acceptable": [
     {"turn": 3, "rule": "signed_terms", "verdict": "matches"}
    ]
+  },
+  {
+   "id": "spoken-pilot-transcript",
+   "note": "D-061: the pilot's own speech recognition output for the demo call (fictional), full stops as it wrote them. It informed the fix, so it is tuning data.",
+   "pack": "legal_client_call",
+   "kind": "client_call",
+   "speakers": [{"name": "Helena Marsh", "role": "attorney"}, {"name": "Petra Voss", "role": "client"}],
+   "turns": [
+    {"speaker": "Helena Marsh", "text": "Thank you for joining. I want to go. Through the Harrow Gate Master. Services. Agreement. Before the renewal, you will notice goes out."},
+    {"speaker": "Petra Voss", "text": "Thanks as I understand it. The liability. Cap under. Clause eight. Is five."},
+    {"speaker": "Petra Voss", "text": "hundred thousand dollars. So we were well covered."},
+    {"speaker": "Helena Marsh", "text": "I will check Clause Eight and Sund. You a short note on the cap by Friday."}
+   ],
+   "planted": [
+    {"turn": 2, "rule": "signed_terms", "severity": "critical", "said": "hundred thousand dollars", "source": "USD 250,000"},
+    {"turn": 3, "rule": "action", "severity": "notice"}
+   ],
+   "acceptable": [
+   ]
   }
  ]
 }

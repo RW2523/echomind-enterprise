@@ -171,6 +171,13 @@ def _where(src: dict) -> str:
     return clause if src.get("clause") else f"“{clause}”"
 
 
+def _unpunctuated(text: str) -> str:
+    """The speech model's full stops are unreliable ("The liability. Cap under. Clause eight. Is five."), so a
+    figure and its context are read with sentence-ending marks blanked; offsets stay the same, so quotes still
+    come from the words as stored, and a decimal point is kept (D-061)."""
+    return re.sub(r"[.?!](?=\s|$)", " ", text)
+
+
 def _subjects(sentence: str) -> set:
     """The subjects a sentence is about (fee, liability, notice, ...), from its words."""
     words = {w.lower() for w in re.findall(r"[A-Za-z]+", sentence)}
@@ -194,9 +201,12 @@ async def _terms(ctx: Context, seg: dict, rules: set, before: str = "") -> list[
     thousand dollars") is read whole (D-061); only figures ending in this segment are checked, quoted in it."""
     offset = len(before) + 1 if before else 0
     text = f"{before} {seg['text']}" if before else seg["text"]
-    said = [f for f in factsmod.extract(text, [(0, len(text))], spoken=True) if f.end > offset]
+    plain = _unpunctuated(text)
+    said = [f for f in factsmod.extract(plain, [(0, len(plain))], spoken=True) if f.end > offset]
     if not said:
         return []
+    for f in said:
+        f.shown = text[f.start:f.end]                                # as stored, full stops and all
 
     def _said(_text, start, end):                                   # positions in this segment's own text
         a, b = max(start - offset, 0), end - offset
@@ -213,7 +223,7 @@ async def _terms(ctx: Context, seg: dict, rules: set, before: str = "") -> list[
                 if g.kind != f.kind or g.unit != f.unit:
                     continue
                 sentence = ctx.docs[k]["text"][g.sentence[0]:g.sentence[1]]
-                score = _closeness(f, text[f.sentence[0]:f.sentence[1]], g, sentence)
+                score = _closeness(f, plain[f.sentence[0]:f.sentence[1]], g, sentence)
                 if score < settings.LEGAL_ASSIST_NEAR_MIN:
                     continue
                 limit = _constraint(ctx.docs[k]["text"], g)

@@ -350,3 +350,19 @@ def test_a_long_clause_is_found_by_its_subject_when_the_words_near_the_figure_di
     [a] = [x for x in got if x["rule"] == "signed_terms"]
     assert a["verdict"] == "differs" and "GBP 50,000" in a["source"]["quote"]
     assert a["said"]["quote"] == "seventy thousand pounds"
+
+
+def test_full_stops_the_speech_model_scatters_do_not_hide_what_a_figure_is_about(assist):
+    """D-061: the pilot's speech recognition wrote "The liability. Cap under. Clause eight. Is five." | "hundred
+    thousand dollars." Its full stops are unreliable, so a figure's context is read without them."""
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "Thanks as I understand it. The liability. Cap under. Clause eight. Is five."),
+                                  ("Petra Voss", "hundred thousand dollars. So we were well covered.")])
+    [a] = [x for x in got if x["rule"] == "signed_terms"]
+    assert (a["verdict"], a["title"]) == ("differs", "Differs from signed agreement, cl. 8.1")
+    assert a["said"]["quote"] == "hundred thousand dollars"
+
+
+def test_a_decimal_amount_keeps_its_point(assist):
+    from app.legal.assist import engine
+    assert engine._unpunctuated("The fee is USD 4.2 million. So be it.") == "The fee is USD 4.2 million  So be it "
