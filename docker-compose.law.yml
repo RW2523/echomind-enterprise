@@ -73,6 +73,8 @@ services:
       - LEGAL_SUMMARIES=${LAW_SUMMARIES:-0}
       - LEGAL_TIME_ENTRIES=${LAW_TIME_ENTRIES:-0}
       - LEGAL_PANEL=${LAW_PANEL:-0}
+      # S5.1 (D-062): the conversation assistant.
+      - LEGAL_CONVERSATION=${LAW_CONVERSATION:-0}
 
   voice:
     <<: [*law_host_gateway, *law_capped]

@@ -61,3 +61,23 @@ export async function postStream(path: string, body: unknown, onEvent: (e: any) 
   }
   emit(buf);
 }
+
+async function failure(r: Response): Promise<never> {
+  let data: any = null;
+  try { data = await r.json(); } catch { /* empty */ }
+  throw new ApiError(r.status, typeof data?.detail === 'string' ? data.detail : 'Something went wrong.');
+}
+
+/** POST raw bytes, JSON back (S5.1: a spoken question as 16-bit PCM). */
+export async function postBytes<T>(path: string, bytes: ArrayBuffer): Promise<T> {
+  const r = await fetch(path, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream' }, body: bytes });
+  if (!r.ok) return failure(r);
+  return (await r.json()) as T;
+}
+
+/** POST JSON, a file back (S5.1: an answer read aloud, as WAV). */
+export async function postForBlob(path: string, body: unknown): Promise<Blob> {
+  const r = await fetch(path, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) return failure(r);
+  return r.blob();
+}
