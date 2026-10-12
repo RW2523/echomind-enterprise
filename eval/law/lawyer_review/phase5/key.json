@@ -1,0 +1,862 @@
+[
+ {
+  "id": "R001",
+  "kind": "translation_paragraph",
+  "group": "G01",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "fr",
+   1
+  ]
+ },
+ {
+  "id": "R002",
+  "kind": "translation_paragraph",
+  "group": "G01",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "fr",
+   2
+  ]
+ },
+ {
+  "id": "R003",
+  "kind": "translation_paragraph",
+  "group": "G01",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "fr",
+   3
+  ]
+ },
+ {
+  "id": "R004",
+  "kind": "translation_paragraph",
+  "group": "G01",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "fr",
+   4
+  ]
+ },
+ {
+  "id": "G01",
+  "kind": "missed",
+  "group": "G01",
+  "source": [
+   "translation:lease.md:fr"
+  ]
+ },
+ {
+  "id": "R005",
+  "kind": "regulatory_match",
+  "group": "G02",
+  "source": [
+   "bundle-20261012.json",
+   "legislation.gov.uk",
+   "uksi/2026/1072",
+   "Real Estate",
+   "England & Wales"
+  ]
+ },
+ {
+  "id": "G02",
+  "kind": "missed",
+  "group": "G02",
+  "source": [
+   "regulatory:Real Estate:England & Wales"
+  ]
+ },
+ {
+  "id": "G03",
+  "kind": "missed",
+  "group": "G03",
+  "source": [
+   "regulatory:Investigations:England & Wales"
+  ]
+ },
+ {
+  "id": "G04",
+  "kind": "missed",
+  "group": "G04",
+  "source": [
+   "regulatory:Litigation:New York"
+  ]
+ },
+ {
+  "id": "R006",
+  "kind": "translation_paragraph",
+  "group": "G05",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "fr",
+   1
+  ]
+ },
+ {
+  "id": "R007",
+  "kind": "translation_paragraph",
+  "group": "G05",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "fr",
+   2
+  ]
+ },
+ {
+  "id": "R008",
+  "kind": "translation_paragraph",
+  "group": "G05",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "fr",
+   3
+  ]
+ },
+ {
+  "id": "R009",
+  "kind": "translation_paragraph",
+  "group": "G05",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "fr",
+   4
+  ]
+ },
+ {
+  "id": "G05",
+  "kind": "missed",
+  "group": "G05",
+  "source": [
+   "translation:nda.md:fr"
+  ]
+ },
+ {
+  "id": "R010",
+  "kind": "translation_paragraph",
+  "group": "G06",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "de",
+   1
+  ]
+ },
+ {
+  "id": "R011",
+  "kind": "translation_paragraph",
+  "group": "G06",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "de",
+   2
+  ]
+ },
+ {
+  "id": "R012",
+  "kind": "translation_paragraph",
+  "group": "G06",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "de",
+   3
+  ]
+ },
+ {
+  "id": "R013",
+  "kind": "translation_paragraph",
+  "group": "G06",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "de",
+   4
+  ]
+ },
+ {
+  "id": "G06",
+  "kind": "missed",
+  "group": "G06",
+  "source": [
+   "translation:msa-v1-signed.md:de"
+  ]
+ },
+ {
+  "id": "G07",
+  "kind": "missed",
+  "group": "G07",
+  "source": [
+   "regulatory:Real Estate:New York"
+  ]
+ },
+ {
+  "id": "R014",
+  "kind": "regulatory_match",
+  "group": "G08",
+  "source": [
+   "bundle-20261012.json",
+   "federalregister.gov",
+   "2026-20831",
+   "Investigations",
+   "New York"
+  ]
+ },
+ {
+  "id": "G08",
+  "kind": "missed",
+  "group": "G08",
+  "source": [
+   "regulatory:Investigations:New York"
+  ]
+ },
+ {
+  "id": "G09",
+  "kind": "missed",
+  "group": "G09",
+  "source": [
+   "regulatory:Technology:England & Wales"
+  ]
+ },
+ {
+  "id": "R015",
+  "kind": "translation_paragraph",
+  "group": "G10",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "es",
+   1
+  ]
+ },
+ {
+  "id": "R016",
+  "kind": "translation_paragraph",
+  "group": "G10",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "es",
+   2
+  ]
+ },
+ {
+  "id": "R017",
+  "kind": "translation_paragraph",
+  "group": "G10",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "es",
+   3
+  ]
+ },
+ {
+  "id": "R018",
+  "kind": "translation_paragraph",
+  "group": "G10",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "es",
+   4
+  ]
+ },
+ {
+  "id": "G10",
+  "kind": "missed",
+  "group": "G10",
+  "source": [
+   "translation:lease.md:es"
+  ]
+ },
+ {
+  "id": "G11",
+  "kind": "missed",
+  "group": "G11",
+  "source": [
+   "regulatory:Corporate:New York"
+  ]
+ },
+ {
+  "id": "R019",
+  "kind": "regulatory_match",
+  "group": "G12",
+  "source": [
+   "bundle-20261012.json",
+   "legislation.gov.uk",
+   "uksi/2026/1072",
+   "Employment",
+   "England & Wales"
+  ]
+ },
+ {
+  "id": "G12",
+  "kind": "missed",
+  "group": "G12",
+  "source": [
+   "regulatory:Employment:England & Wales"
+  ]
+ },
+ {
+  "id": "R020",
+  "kind": "translation_paragraph",
+  "group": "G13",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "es",
+   0
+  ]
+ },
+ {
+  "id": "R021",
+  "kind": "translation_paragraph",
+  "group": "G13",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "es",
+   1
+  ]
+ },
+ {
+  "id": "R022",
+  "kind": "translation_paragraph",
+  "group": "G13",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "es",
+   2
+  ]
+ },
+ {
+  "id": "R023",
+  "kind": "translation_paragraph",
+  "group": "G13",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "es",
+   3
+  ]
+ },
+ {
+  "id": "G13",
+  "kind": "missed",
+  "group": "G13",
+  "source": [
+   "translation:side-letter.md:es"
+  ]
+ },
+ {
+  "id": "R024",
+  "kind": "translation_paragraph",
+  "group": "G14",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "es",
+   1
+  ]
+ },
+ {
+  "id": "R025",
+  "kind": "translation_paragraph",
+  "group": "G14",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "es",
+   2
+  ]
+ },
+ {
+  "id": "R026",
+  "kind": "translation_paragraph",
+  "group": "G14",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "es",
+   3
+  ]
+ },
+ {
+  "id": "R027",
+  "kind": "translation_paragraph",
+  "group": "G14",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "es",
+   4
+  ]
+ },
+ {
+  "id": "G14",
+  "kind": "missed",
+  "group": "G14",
+  "source": [
+   "translation:msa-v1-signed.md:es"
+  ]
+ },
+ {
+  "id": "G15",
+  "kind": "missed",
+  "group": "G15",
+  "source": [
+   "regulatory:Regulatory:England & Wales"
+  ]
+ },
+ {
+  "id": "R028",
+  "kind": "translation_paragraph",
+  "group": "G16",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "de",
+   1
+  ]
+ },
+ {
+  "id": "R029",
+  "kind": "translation_paragraph",
+  "group": "G16",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "de",
+   2
+  ]
+ },
+ {
+  "id": "R030",
+  "kind": "translation_paragraph",
+  "group": "G16",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "de",
+   3
+  ]
+ },
+ {
+  "id": "R031",
+  "kind": "translation_paragraph",
+  "group": "G16",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "lease.md",
+   "de",
+   4
+  ]
+ },
+ {
+  "id": "G16",
+  "kind": "missed",
+  "group": "G16",
+  "source": [
+   "translation:lease.md:de"
+  ]
+ },
+ {
+  "id": "R032",
+  "kind": "regulatory_match",
+  "group": "G17",
+  "source": [
+   "bundle-20261012.json",
+   "federalregister.gov",
+   "2026-20895",
+   "Technology",
+   "New York"
+  ]
+ },
+ {
+  "id": "G17",
+  "kind": "missed",
+  "group": "G17",
+  "source": [
+   "regulatory:Technology:New York"
+  ]
+ },
+ {
+  "id": "R033",
+  "kind": "translation_paragraph",
+  "group": "G18",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "de",
+   1
+  ]
+ },
+ {
+  "id": "R034",
+  "kind": "translation_paragraph",
+  "group": "G18",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "de",
+   2
+  ]
+ },
+ {
+  "id": "R035",
+  "kind": "translation_paragraph",
+  "group": "G18",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "de",
+   3
+  ]
+ },
+ {
+  "id": "R036",
+  "kind": "translation_paragraph",
+  "group": "G18",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "de",
+   4
+  ]
+ },
+ {
+  "id": "G18",
+  "kind": "missed",
+  "group": "G18",
+  "source": [
+   "translation:nda.md:de"
+  ]
+ },
+ {
+  "id": "R037",
+  "kind": "translation_paragraph",
+  "group": "G19",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "fr",
+   0
+  ]
+ },
+ {
+  "id": "R038",
+  "kind": "translation_paragraph",
+  "group": "G19",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "fr",
+   1
+  ]
+ },
+ {
+  "id": "R039",
+  "kind": "translation_paragraph",
+  "group": "G19",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "fr",
+   2
+  ]
+ },
+ {
+  "id": "R040",
+  "kind": "translation_paragraph",
+  "group": "G19",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "fr",
+   3
+  ]
+ },
+ {
+  "id": "G19",
+  "kind": "missed",
+  "group": "G19",
+  "source": [
+   "translation:side-letter.md:fr"
+  ]
+ },
+ {
+  "id": "R041",
+  "kind": "translation_paragraph",
+  "group": "G20",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "de",
+   0
+  ]
+ },
+ {
+  "id": "R042",
+  "kind": "translation_paragraph",
+  "group": "G20",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "de",
+   1
+  ]
+ },
+ {
+  "id": "R043",
+  "kind": "translation_paragraph",
+  "group": "G20",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "de",
+   2
+  ]
+ },
+ {
+  "id": "R044",
+  "kind": "translation_paragraph",
+  "group": "G20",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "side-letter.md",
+   "de",
+   3
+  ]
+ },
+ {
+  "id": "G20",
+  "kind": "missed",
+  "group": "G20",
+  "source": [
+   "translation:side-letter.md:de"
+  ]
+ },
+ {
+  "id": "G21",
+  "kind": "missed",
+  "group": "G21",
+  "source": [
+   "regulatory:Litigation:England & Wales"
+  ]
+ },
+ {
+  "id": "G22",
+  "kind": "missed",
+  "group": "G22",
+  "source": [
+   "regulatory:Commercial:England & Wales"
+  ]
+ },
+ {
+  "id": "G23",
+  "kind": "missed",
+  "group": "G23",
+  "source": [
+   "regulatory:Corporate:England & Wales"
+  ]
+ },
+ {
+  "id": "R045",
+  "kind": "translation_paragraph",
+  "group": "G24",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "es",
+   1
+  ]
+ },
+ {
+  "id": "R046",
+  "kind": "translation_paragraph",
+  "group": "G24",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "es",
+   2
+  ]
+ },
+ {
+  "id": "R047",
+  "kind": "translation_paragraph",
+  "group": "G24",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "es",
+   3
+  ]
+ },
+ {
+  "id": "R048",
+  "kind": "translation_paragraph",
+  "group": "G24",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "nda.md",
+   "es",
+   4
+  ]
+ },
+ {
+  "id": "G24",
+  "kind": "missed",
+  "group": "G24",
+  "source": [
+   "translation:nda.md:es"
+  ]
+ },
+ {
+  "id": "G25",
+  "kind": "missed",
+  "group": "G25",
+  "source": [
+   "regulatory:Employment:New York"
+  ]
+ },
+ {
+  "id": "R049",
+  "kind": "translation_paragraph",
+  "group": "G26",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "fr",
+   1
+  ]
+ },
+ {
+  "id": "R050",
+  "kind": "translation_paragraph",
+  "group": "G26",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "fr",
+   2
+  ]
+ },
+ {
+  "id": "R051",
+  "kind": "translation_paragraph",
+  "group": "G26",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "fr",
+   3
+  ]
+ },
+ {
+  "id": "R052",
+  "kind": "translation_paragraph",
+  "group": "G26",
+  "source": [
+   "20261012-131558-translation-review.json",
+   "msa-v1-signed.md",
+   "fr",
+   4
+  ]
+ },
+ {
+  "id": "G26",
+  "kind": "missed",
+  "group": "G26",
+  "source": [
+   "translation:msa-v1-signed.md:fr"
+  ]
+ },
+ {
+  "id": "R053",
+  "kind": "regulatory_match",
+  "group": "G27",
+  "source": [
+   "bundle-20261012.json",
+   "federalregister.gov",
+   "2026-20848",
+   "Regulatory",
+   "New York"
+  ]
+ },
+ {
+  "id": "R054",
+  "kind": "regulatory_match",
+  "group": "G27",
+  "source": [
+   "bundle-20261012.json",
+   "federalregister.gov",
+   "2026-20727",
+   "Regulatory",
+   "New York"
+  ]
+ },
+ {
+  "id": "R055",
+  "kind": "regulatory_match",
+  "group": "G27",
+  "source": [
+   "bundle-20261012.json",
+   "federalregister.gov",
+   "2026-20726",
+   "Regulatory",
+   "New York"
+  ]
+ },
+ {
+  "id": "R056",
+  "kind": "regulatory_match",
+  "group": "G27",
+  "source": [
+   "bundle-20261012.json",
+   "federalregister.gov",
+   "2026-20725",
+   "Regulatory",
+   "New York"
+  ]
+ },
+ {
+  "id": "R057",
+  "kind": "regulatory_match",
+  "group": "G27",
+  "source": [
+   "bundle-20261012.json",
+   "federalregister.gov",
+   "2026-20721",
+   "Regulatory",
+   "New York"
+  ]
+ },
+ {
+  "id": "G27",
+  "kind": "missed",
+  "group": "G27",
+  "source": [
+   "regulatory:Regulatory:New York"
+  ]
+ },
+ {
+  "id": "G28",
+  "kind": "missed",
+  "group": "G28",
+  "source": [
+   "regulatory:Commercial:New York"
+  ]
+ }
+]

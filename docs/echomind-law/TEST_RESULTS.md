@@ -592,3 +592,15 @@
 | Pilot (6c4860c) | `demo_check.py reference research`, three times: **reference 3 of 3** (1 of 3 before the change), research 3 of 3. |
 | Matching in the evaluations | **0 references added in either set.** The changes against 2026-10-10 (precision 0.93 → 0.90 golden; "unverified" 2 → 0 golden and 3 → 0 held-out) are the model's variance, not this change. |
 
+## Run 42 — Journeys and review pack for the pilot additions; CI on the Law branch (D-074), 2026-10-12
+
+- **Branches:** `law/journeys-review`, `law/ci-green`
+
+| Suite | Result |
+|---|---|
+| Browser E2E, new journeys | **regulatory updates: passed** (with the 12-update and the full 49-update bundle). **Translation: passed** (1.4 min, real model). |
+| Translation evaluation | 16 fictional paragraphs into fr, de and es: **48 translations, 0 figures flagged, 0 short (< 0.6 of the original), 0 empty**, batch p50 5.9 s. |
+| Lawyer review pack, phase 5 | 57 items in 28 groups (9 regulatory matches, 48 paragraphs). The scorer was checked end to end on a dummy sheet. **Not scored:** it needs a lawyer. |
+| GitHub CI on `feature/echomind-law` (before the fix) | Backend: 1368 passed, 5 failed (3 OCR without Tesseract, 2 LibreOffice), 2 skipped. Voice: 4 failed and 2 errors (`pkg_resources`). Frontend: 176 of 177 (the reviews race). |
+| Locally after the fix | Redlines, exports and extract: 42 passed. Vitest: **177 passed**. Voice: **151 passed**. |
+

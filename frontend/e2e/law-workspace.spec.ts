@@ -1464,3 +1464,64 @@ test('conversation: a question to the matter is answered from its documents, wit
   await expect(alice.getByText('Reading aloud is not available on this server.')).toBeVisible({ timeout: 60_000 });
   await shot(alice, '48-conversation-light');
 });
+
+test('regulatory updates: real new law listed with its source and licence; bob decides the one that concerns his walled matter, which alice never sees', async ({ browser }) => {
+  // D-068. The test backend imports a saved selection of the first daily fetch (real public law, dates moved to today).
+  test.setTimeout(120_000);
+  const sanctions = /Venezuela Sanctions Regulations/;
+  const bob = await (await browser.newContext()).newPage();
+  await signIn(bob, 'bob');
+  await bob.goto('/regulatory');
+  const list = bob.getByRole('list', { name: 'Regulatory updates' });
+  await expect(list.getByRole('link', { name: sanctions })).toHaveAttribute('href', /^https:\/\/www\.federalregister\.gov\//);
+  await expect(list.getByText(/Real public law · Open Government Licence v3\.0 · legislation\.gov\.uk/).first()).toBeVisible();
+  await bob.getByRole('checkbox', { name: 'Only updates that may concern my matters' }).check();
+  await expect(list.getByRole('link', { name: /opens the official page/ })).toHaveCount(1);   // one update (its matter chip is a nested item)
+  await shot(bob, '50-regulatory-light');
+  await list.getByRole('link', { name: /^M-202 / }).click();
+  const update = bob.getByRole('article', { name: sanctions });
+  await expect(update.getByText('Matched on: sanctions')).toBeVisible();
+  await update.getByRole('button', { name: 'Not relevant…' }).click();
+  await update.getByLabel('Why it does not concern this matter').fill('A general licence for Venezuelan debt; the board investigation has no Venezuelan nexus.');
+  await update.getByRole('button', { name: 'Save: not relevant' }).click();
+  await expect(update.getByText(/^Not relevant · bob · /)).toBeVisible();
+  // The update is public law; the walled, highly restricted matter is not: alice sees the update with no matter at all.
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/regulatory');
+  const item = alice.getByRole('list', { name: 'Regulatory updates' }).getByRole('listitem').filter({ has: alice.getByRole('link', { name: sanctions }) });
+  await expect(item).toBeVisible();
+  await expect(item.getByText('May concern:')).toHaveCount(0);
+  await expect(alice.getByText('M-202')).toHaveCount(0);
+});
+
+test('translation: the signed MSA translated into French by this server\'s model, paragraph beside paragraph, labelled as not reviewed', async ({ browser }) => {
+  // D-070. Real model on the host; the assertions hold for any faithful translation (the label, the originals, the figures).
+  test.setTimeout(400_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const title = 'Master Services Agreement (DEMO)';
+  const importing = alice.getByRole('button', { name: /Import a document|^Import$/ }).first();
+  await expect(importing).toBeVisible();
+  if (await alice.getByRole('button', { name: title, exact: true }).count() === 0) {
+    await importing.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, `../../eval/fixtures/law/${title}.md`));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  await alice.getByRole('button', { name: title, exact: true }).click();
+  await alice.getByRole('complementary', { name: 'Document details' }).getByRole('link', { name: 'Read' }).click();
+  await alice.getByRole('link', { name: 'Translate' }).click();
+  await alice.getByRole('combobox', { name: 'Into' }).selectOption('fr');
+  await alice.getByRole('button', { name: 'Translate', exact: true }).click();
+  await expect(alice.getByRole('note')).toHaveText(/^Machine translation by this server's model .*not reviewed by anyone\. The original prevails/);
+  const rows = alice.getByRole('list', { name: 'Original and translation' });
+  await expect(alice.getByRole('button', { name: 'Download (.txt)' })).toBeVisible({ timeout: 360_000 });   // the whole agreement, done
+  expect(await rows.getByRole('listitem').count()).toBeGreaterThanOrEqual(10);
+  const cap = rows.getByRole('listitem').filter({ hasText: /250,000/ }).first();
+  await expect(cap.locator('p[lang="fr"]')).toContainText(/250[   .,]?000/);
+  await shot(alice, '51-translation-light');
+});

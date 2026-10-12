@@ -69,6 +69,21 @@ def measures4(rows: dict[str, dict], key: list[dict]) -> dict:
     return out
 
 
+SCALE5 = {"regulatory_match": 2, "translation_paragraph": 2}
+
+
+def measures5(rows: dict[str, dict], key: list[dict]) -> dict:
+    """Pilot additions (D-068, D-070): each match and each translated paragraph scored 0, 1 or 2."""
+    kinds = {k["id"]: k for k in key}
+    out = {}
+    for kind in SCALE5:
+        scores = [int(r["score"]) for i, r in rows.items() if kinds.get(i, {}).get("kind") == kind and r.get("score", "").strip()]
+        if scores:
+            out[kind] = {"scored": len(scores), "zero": sum(s == 0 for s in scores), "good_share": round(sum(s == 2 for s in scores) / len(scores), 3)}
+    out["groups_with_misses"] = sorted(i for i, r in rows.items() if kinds.get(i, {}).get("kind") == "missed" and _yes(r.get("missed", "")))
+    return out
+
+
 def measures(rows: dict[str, dict], key: list[dict]) -> dict:
     kinds = {k["id"]: k for k in key}
     out = {}
@@ -90,14 +105,14 @@ def main(argv: list[str]) -> int:
     import argparse
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("sheets", nargs="+", help="the filled sheet, and optionally the second reviewer's")
-    ap.add_argument("--phase", type=int, choices=[2, 3, 4], default=2)
+    ap.add_argument("--phase", type=int, choices=[2, 3, 4, 5], default=2)
     ap.add_argument("--key", default=None, help="key.json (default: next to the packet for the phase)")
     ap.add_argument("--reports", default=str(REPORTS))
     args = ap.parse_args(argv)
     argv = args.sheets
-    key = json.loads(Path(args.key or (HERE / f"phase{args.phase}" / "key.json" if args.phase in (3, 4) else HERE / "key.json")).read_text())
+    key = json.loads(Path(args.key or (HERE / f"phase{args.phase}" / "key.json" if args.phase in (3, 4, 5) else HERE / "key.json")).read_text())
     first = read(argv[0])
-    result = {"measures": {3: measures3, 4: measures4}.get(args.phase, measures)(first, key)}
+    result = {"measures": {3: measures3, 4: measures4, 5: measures5}.get(args.phase, measures)(first, key)}
     if len(argv) > 1:
         second = read(argv[1])
         both = [i for i in first if i in second and first[i].get("score", "").strip() and second[i].get("score", "").strip()]
@@ -109,6 +124,8 @@ def main(argv: list[str]) -> int:
         return _write3(args, result, m)
     if args.phase == 4:
         return _write4(args, result, m)
+    if args.phase == 5:
+        return _write5(args, result, m)
     bars = {"research harmful (0)": (m.get("research_answer", {}).get("zero"), "= 0"),
             "research 2 or 3": (m.get("research_answer", {}).get("good_share"), "≥ 0.85"),
             "compare 2 or 3": (m.get("compare_explanation", {}).get("good_share"), "≥ 0.85"),
@@ -162,6 +179,27 @@ def _write4(args, result: dict, m: dict) -> int:
                                       "".join(f"| {k} | {v['value']} | {v['bar']} |\n" for k, v in result["bars"].items()))
     print(json.dumps(result, indent=1))
     return 0
+
+
+def _write5(args, result: dict, m: dict) -> int:
+    bars = {"regulatory matches that concern the matter (2)": (m.get("regulatory_match", {}).get("good_share"), "≥ 0.50 (a prompt to look, not advice)"),
+            "regulatory groups with a missed update": (sum(1 for g in m.get("groups_with_misses", []) if g in _groups(args, "regulatory")), "reported"),
+            "translated paragraphs faithful (2)": (m.get("translation_paragraph", {}).get("good_share"), "≥ 0.85"),
+            "translated paragraphs wrong in meaning (0)": (m.get("translation_paragraph", {}).get("zero"), "= 0"),
+            "agreement ±1": (result.get("agreement_within_1"), "≥ 0.80")}
+    result["bars"] = {k: {"value": v, "bar": b} for k, (v, b) in bars.items()}
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    out = Path(args.reports) / f"{stamp}-lawyer-phase5.json"
+    out.write_text(json.dumps({"meta": {"set": "phase5", "time": stamp, "sheets": [Path(a).name for a in args.sheets]}, "summary": result}, indent=1))
+    out.with_suffix(".md").write_text("# Pilot additions lawyer review (phase 5)\n\n| Measure | Value | Proposed bar |\n|---|---|---|\n" +
+                                      "".join(f"| {k} | {v['value']} | {v['bar']} |\n" for k, v in result["bars"].items()))
+    print(json.dumps(result, indent=1))
+    return 0
+
+
+def _groups(args, prefix: str) -> set[str]:
+    key = json.loads(Path(args.key or HERE / f"phase{args.phase}" / "key.json").read_text())
+    return {k["id"] for k in key if k["kind"] == "missed" and k["source"][0].startswith(prefix + ":")}
 
 
 if __name__ == "__main__":

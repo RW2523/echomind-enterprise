@@ -80,8 +80,15 @@ describe('Reviews (S2.7)', () => {
     fireEvent.click(back);
     await waitFor(() => expect(calls.find((c) => c.path === `${M}/artifacts/a1/review`)?.body)
       .toEqual({ decision: 'changes_requested', content_sha256: SHA, reason: 'Cite the side letter too.' }));
-    fireEvent.click(within(review).getByRole('button', { name: 'Approve this note' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Approve version 1?' });
+    // The request has left, but the page is busy until it returns; closing then would shut a dialog opened too early
+    // (seen on CI's slower runner). Approve once the button is ready again.
+    const approve = await waitFor(() => {
+      const b = screen.getByRole('button', { name: 'Approve this note' }) as HTMLButtonElement;
+      expect(b.disabled).toBe(false);
+      return b;
+    }, { timeout: 5000 });
+    fireEvent.click(approve);
+    const dialog = await screen.findByRole('dialog', { name: 'Approve version 1?' }, { timeout: 5000 });
     expect(dialog.textContent).toContain(SHA);
     fireEvent.click(within(dialog).getByLabelText('I have read this version and checked its sources'));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Approve version 1' }));

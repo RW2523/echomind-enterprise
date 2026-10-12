@@ -183,6 +183,7 @@ def test_t10_libreoffice_opens_the_redline_and_keeps_its_tracked_changes(tmp_pat
     assert word.fold(" ".join(word.reject_all(back))).count("loss of profits") == 1
 
 
+@pytest.mark.skipif(not shutil.which("soffice"), reason="LibreOffice is not installed")
 def test_a_correction_deleting_a_clause_whole_survives_libreoffice(tmp_path):
     """S3.5 corrections delete a clause by an empty revision; at the Phase 3 gate (S3.9) LibreOffice keeps it as a
     tracked deletion by its author: accepted, the clause is gone; rejected, it is back once."""

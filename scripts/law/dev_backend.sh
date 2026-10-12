@@ -55,6 +55,18 @@ if [[ -n "${LAW_IMPORT_EVALUATIONS:-}" ]]; then
   fi
 fi
 
+if [[ -n "${LAW_IMPORT_REGULATORY:-}" ]]; then
+  # D-068: a saved regulatory bundle, its dates moved so the newest is today (the page shows the last 30 days).
+  python3 - "$LAW_IMPORT_REGULATORY" <<'PY' | (cd "$ROOT/backend" && python3 -m app.legal.regulatory import >/dev/null)
+import datetime as dt, json, sys
+b = json.load(open(sys.argv[1]))
+newest = max(dt.date.fromisoformat(i["published"]) for i in b["items"])
+shift = dt.date.today() - newest
+for i in b["items"]:
+    i["published"] = (dt.date.fromisoformat(i["published"]) + shift).isoformat()
+print(json.dumps(b))
+PY
+fi
 echo "EchoMind Law dev backend: http://127.0.0.1:${PORT}  data=${DATA}"
 echo "  sign in as ${AUTH_ADMIN_USER}; password in ${DATA}/dev_admin_password"
 cd "$ROOT/backend"
