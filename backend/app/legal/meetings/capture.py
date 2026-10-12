@@ -234,7 +234,7 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
     if not (await asyncio.to_thread(consent.check, meeting_id))[0]:
         await _refuse(ws, CLOSE["consent"], p, matter_id, "consent_required")
         return
-    transcriber = transcriber_factory()
+    transcriber = await asyncio.to_thread(transcriber_factory)   # a first load takes minutes: never on the event loop (D-066)
     opened = await asyncio.to_thread(open_capture)
     if opened is None:
         await _refuse(ws, CLOSE["consent"], p, matter_id, "consent_required")

@@ -212,6 +212,27 @@ def test_a_slow_model_never_stops_the_socket_being_read(tx):
                                                              ("Petra Voss", "Yes, it is five hundred thousand.")]
 
 
+def test_loading_the_speech_model_never_holds_up_the_server(tx, monkeypatch):
+    """T12 stage 1 (D-066): the first recording after a restart loads the model, for a minute or two on CPU.
+    It loads on a worker thread, so nobody else's requests wait for it."""
+    import asyncio
+    from app.legal.meetings import capture
+    seen = []
+
+    def factory():
+        try:
+            asyncio.get_running_loop()
+            seen.append("on the event loop")
+        except RuntimeError:
+            seen.append("on a worker thread")
+        return Scripted(["Loaded. "])
+    monkeypatch.setattr(capture, "transcriber_factory", factory)
+    alice = as_user(tx, "alice")
+    record(alice, tx, [FRAME])
+    assert seen == ["on a worker thread"]
+    assert [s["raw_text"] for s in view(alice, tx)["segments"]] == ["Loaded."]
+
+
 def test_a_model_too_far_behind_leaves_a_marked_gap_never_a_silent_loss(tx, monkeypatch, fresh_db):
     from app.core.config import settings
     monkeypatch.setattr(settings, "LEGAL_CAPTURE_BACKLOG_SEC", 0.3)
