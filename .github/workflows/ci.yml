@@ -40,8 +40,9 @@ jobs:
           cache: pip
           cache-dependency-path: voice/requirements.txt
       - name: Install
-        # webrtcvad imports pkg_resources, which Python 3.12 no longer brings (setuptools 81 removed it).
-        run: pip install -r voice/requirements.txt pytest "setuptools<81"
+        # webrtcvad imports pkg_resources, which Python 3.12 no longer brings (setuptools 81 removed it); the Law voice
+        # socket tests use Starlette's TestClient, which needs httpx.
+        run: pip install -r voice/requirements.txt pytest httpx "setuptools<81"
       - name: Test
         working-directory: voice
         run: python -m pytest tests -q -rs
