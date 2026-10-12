@@ -1605,6 +1605,79 @@ Every entry records the options considered, the recommendation, the consequence 
   - One navigation list (`app/nav.ts`) feeds the sidebar, the palette and the tiles, so they cannot disagree.
 - **Tests:** Vitest for Home, the palette and the tiles, axe clean (6 new). Every existing test and journey still finds what it looked for: the labels are unchanged.
 
+### D-066 T12 load test on the pilot; live capture no longer waits for speech recognition — RECORDED (owner's approval 2026-10-12: "run now, capped")
+- **The run:** 10 virtual users on the pilot (8 researchers on their own matters, 1 searching, 1 recording), 4 minutes per stage, 03:05–03:58 EDT. A watcher probed production's answer model every few seconds and would have stopped the test after 3 slow probes (over 3× its baseline or baseline + 2 s). It never did: production's probe stayed under 0.25 s against a 0.03 s baseline, with no restarts and no memory kills.
+- **What it found, and the fixes (tests first):**
+  - **Stage 2: capture dropped with "keepalive ping timeout".** The capture socket awaited the speech model for every audio frame, so under load nothing read the socket and the browser's pings went unanswered. Reading is now separate from transcription: frames are accepted at once (consent lock and custody unchanged) and queued, with turns, agenda moves and pauses, in the order received; a worker feeds the model. Audio waiting more than `LEGAL_CAPTURE_BACKLOG_SEC` (120 s) is not transcribed and leaves a "gap" mark at its place in the meeting; its custody record is kept. At a stop, waiting audio is still transcribed for up to `LEGAL_CAPTURE_FINISH_SEC` (300 s), never after a withdrawal. Lag is now the age of the audio the model has just read.
+  - **Stage 1: capture timed out on a cold start.** With `ECHOMIND_ASR_PRELOAD=0`, the first recording loads the model (about 20 s here); it loaded on the event loop and held up everyone. It now loads on a worker thread.
+- **Result after the fixes (warm model):** capture streamed 4 minutes (2,397 frames, all in custody) with no failures; research answer p50 4.4 s, p95 9.7 s; search p50 0.75 s, p95 2.2 s; no database-busy errors; backend memory 4.7 GB of its 8 GB cap.
+- **Still true:** under this load, speech recognition on CPU fell behind real time. It passed the 120 s backlog once (one marked gap), and the stop took 97 s while it caught up. A live transcript for 10 busy users needs the speech model on a GPU or fewer users at once. The capture says so ("degraded") and the transcript marks the gap; nothing is lost silently.
+- **Reports:** `eval/law/reports/20261012-03*-load-t12.*` (TEST_RESULTS run 40).
+
+### D-067 Pilot backups — RECORDED (in the pending-items plan the owner approved, 2026-10-12)
+- `scripts/law/backup_pilot.sh` makes an encrypted archive inside the backend container with `python -m app.legal.backup`, verifies it, and copies it to `~/echomind-law-backups` on the host, outside the data volume, with its sha256 checked. It keeps the newest 14.
+- A user cron job runs it daily at 02:30. `--restore-test` also restores the archive into a scratch folder and compares the counts. The first run restored 12 matters, 51 documents and 4,716 audit events, matching the archive.
+- **Keys, kept apart:**
+  - the backup key: `~/.echomind-law/backup.key`, mode 600;
+  - the master key: `.law-secrets/pilot-master.key`;
+  - a second copy of the master key: `~/.echomind-law-master/`.
+  - **Both keys still need a copy off this host** (🔒 owner). An archive cannot be read without its backup key, and its documents not without the master key.
+
+### D-068 Regulatory updates from official public sources (S4.4, OPT-04) — RECORDED (owner's approval 2026-10-12: "fetch daily")
+- **Sources** (public law only, no licence to buy):
+  - UK: new legislation from legislation.gov.uk (Atom), under the Open Government Licence v3.0.
+  - US: rules and proposed rules from the Federal Register API, which are US Government works in the public domain.
+- **The channel:** the host fetches daily at 06:15 (`scripts/law/regulatory_daily.sh`, cron) and pipes the bundle into the backend. The Law containers make no internet connections (T11; D-071 enforces it). The bundle holds only titles, short summaries, dates, kinds, agencies and official links.
+- **Import:** everything is checked again on import, because the bundle is untrusted text:
+  - a known source;
+  - an https link on that source's own site;
+  - a valid date;
+  - bounded plain text with control and format characters removed.
+  - Licence and jurisdiction come from our own table, never from the bundle. A bad item is skipped and counted; a bad bundle is refused whole.
+- **Matching (`regulatory/topics.py`):** an update concerns an open matter when:
+  - the jurisdictions agree (England & Wales, Scotland and Northern Ireland are UK; a US state is US); and
+  - a term of the matter's practice area appears as a whole word, or its plural.
+  - The terms found are kept and shown as the reason. It is a plain rule a lawyer can check, never a model; the term lists need a lawyer's review (P-008).
+- **Who sees what:** lawyers see each update with only the matters they may see; walls and highly restricted matters hold. On a matter, a lawyer marks a match "reviewed" or "not relevant", which needs a reason. The audit records the decision, never the reason's words.
+- **Settings:** off by default (`LEGAL_REGULATORY`) and on for the pilot. A rollback is refused once decisions exist.
+
+### D-069 Syslog/CEF audit forwarder, off by default — RECORDED (in the pending-items plan the owner approved, 2026-10-12)
+- **What it sends:** each audit event goes, in order, as one CEF message in RFC 5424 syslog, over UDP or TCP (RFC 6587 octet counting). The message holds what the trail already holds: who, what, outcome, matter id, counts and flags, and the event's hash and sequence number. It never holds matter content.
+- **Severity:** CEF 3 for allowed, 6 for refused and 8 for errors. Break-glass grants, and every access made under one, are at least 7.
+- **Delivery:** at-least-once across restarts.
+  - A cursor (migration 0035) records the last event sent to the destination and moves only after a send succeeds.
+  - Over TCP, "sent" means the operating system accepted it: plain syslog has no receipt. A batch cut short by a crash is sent again; a SIEM can drop repeats by `cn1` (seq) and check the `cs5` hashes against the chain.
+  - A new or changed destination starts at the end of the trail, unless `LEGAL_AUDIT_SYSLOG_FROM_START` is set.
+  - A failed send is retried with back-off, up to 60 s, and logged by type only.
+  - `python -m app.legal.audit forward --once` sends what is pending.
+- **Settings:** off by default (`LEGAL_AUDIT_SYSLOG` empty; `LAW_AUDIT_SYSLOG` in `.env.law`). Turning it on needs:
+  - the firm's SIEM address and network approval (🔒);
+  - with the Law network lock (D-071), an exception for that address (a SIEM on this host itself needs none).
+- **Built by a helper agent from a written brief,** reviewed, and merged. Its tests were checked against planted bugs (TCP length in characters, the cursor moved before sending), which they caught. 15 tests.
+
+### D-070 Machine translation with the local model (OPT-02) — RECORDED (in the pending-items plan the owner approved, 2026-10-12)
+- **No new model and no new licence:** translations use the answer model already registered (LICENSE_REGISTER; its NVIDIA checkpoint terms are still to verify, as for every feature).
+- **What it translates:**
+  - A document's current version: a few paragraphs at a time, streamed beside the original.
+  - A summary's points: each translation shown under its point.
+  - Twelve languages.
+- **Labelled every time:** "Machine translation by this server's model, not reviewed by anyone. The original prevails: check it before relying on the translation."
+- **Checks:**
+  - Every figure of the original is looked for in the translation; separators are ignored, so 19,750 = 19.750 = 19 750. A missing figure is flagged.
+  - Text addressed to an AI is withheld from the model (T08).
+  - A reply with the wrong number of passages is redone one passage at a time, never guessed.
+  - Access is re-checked between batches.
+- **Nothing is stored.** The audit records counts only.
+- **Settings:** off by default (`LEGAL_TRANSLATION`) and on for the pilot. Requests stop at `LEGAL_TRANSLATE_MAX_CHARS` (30,000) and continue from there.
+- **Still open:** a lawyer's review of translation quality per language (P-008). Until then, translations are for reading only, never for filing.
+
+### D-071 T11 enforced: a firewall rule for the pilot's network — RECORDED (needs the owner's sudo)
+- **The rule:** `scripts/law/egress_lock.sh` adds one rule in Docker's DOCKER-USER chain. It rejects anything forwarded from the Law network to another address.
+  - Traffic to this host, where the model servers are, is not forwarded, so it still works.
+  - Production's network is untouched, and the Law containers can no longer reach it.
+- **The test:** the backend must reach the answer model and must fail to connect to the internet.
+- **It needs root, so the owner runs it.** A reboot clears the rule.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

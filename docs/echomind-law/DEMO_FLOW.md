@@ -130,3 +130,25 @@ personal injury caused by negligence?"*
   content.
 - As **rhea**: open **Records**: legal holds and deletion with approval.
 - As **anyone but bob**: M-202 does not exist; a link to it says *Not available*.
+
+### 12. Regulatory updates (sofia, M-302; any lawyer, 3 min)
+1. Open **Regulatory updates** in the sidebar.
+   - **You should see:** new UK legislation and US rules from the last 30 days, fetched this morning from
+     legislation.gov.uk and the Federal Register, each labelled as real public law with its licence. Updates that may
+     concern your matters list them under **May concern**.
+2. Tick **Only updates that may concern my matters**, then open a matter chip (for example **M-302**).
+3. On the matter's **Regulatory** page, each update shows **Matched on:** the practice-area words found. Choose **Mark
+   reviewed**, or **Not relevant…**, which needs a reason.
+   - **You should see:** the decision with your name and the date. **Reopen** undoes it.
+- Matches depend on what was published: on a quiet day there may be none for a matter.
+
+### 13. Translation (alice, M-130; kenji, M-306, 3 min)
+1. As **alice**, open M-130, then a document (for example the side letter), then **Translate**. Choose **French**, then
+   **Translate**.
+   - **You should see:** the label *"Machine translation by this server's model, not reviewed by anyone. The original
+     prevails…"*, then each paragraph beside its translation, a few at a time. A figure missing from a translation is
+     flagged (**Check: … is not in the translation**).
+2. **Download (.txt)** saves both texts with the label. For a long document, **Continue** picks up where it stopped.
+3. As **kenji**, open M-306, then **Summaries**, then the compliance memo's summary (made in flow 6), then **Translate into**: **German**.
+   - **You should see:** each point's translation under it, with the same label.
+
