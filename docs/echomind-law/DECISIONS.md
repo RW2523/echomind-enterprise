@@ -1728,9 +1728,9 @@ Every entry records the options considered, the recommendation, the consequence 
 - **CI:** the repository's CI (`.github/workflows/ci.yml`) runs on every push, so pushing `feature/echomind-law` ran it: it failed, and none of the failures were in new code.
   - Three OCR tests need Tesseract, and the T09 Word read-back needs LibreOffice: both are now installed on the runner, so the security test runs rather than skips.
   - One LibreOffice test lacked its skip guard.
-  - The Law voice tests need `pkg_resources` (setuptools < 81) for webrtcvad on Python 3.12.
+  - The Law voice tests need `pkg_resources` (setuptools < 81) for webrtcvad on Python 3.12, and `httpx` for Starlette's TestClient.
   - The reviews test clicked Approve while a request was still in flight; on the slower runner the reply then closed the dialog.
-  - The workflow change is on the Law branch only.
+  - The workflow change is on the Law branch only. **CI is green on `feature/echomind-law`** (run 38285157225).
 
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 

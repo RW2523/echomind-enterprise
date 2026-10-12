@@ -603,4 +603,5 @@
 | Lawyer review pack, phase 5 | 57 items in 28 groups (9 regulatory matches, 48 paragraphs). The scorer was checked end to end on a dummy sheet. **Not scored:** it needs a lawyer. |
 | GitHub CI on `feature/echomind-law` (before the fix) | Backend: 1368 passed, 5 failed (3 OCR without Tesseract, 2 LibreOffice), 2 skipped. Voice: 4 failed and 2 errors (`pkg_resources`). Frontend: 176 of 177 (the reviews race). |
 | Locally after the fix | Redlines, exports and extract: 42 passed. Vitest: **177 passed**. Voice: **151 passed**. |
+| GitHub CI after the fix | Run 38283732787: backend and frontend green, but voice failed again (Starlette's TestClient needs `httpx` on the runner). Added. **Run 38285157225 (a56bfa4): all three jobs green** (backend 11.5 min, voice, frontend). |
 
