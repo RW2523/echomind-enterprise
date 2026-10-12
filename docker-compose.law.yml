@@ -77,6 +77,8 @@ services:
       - LEGAL_CONVERSATION=${LAW_CONVERSATION:-0}
       # S4.4 (D-068): regulatory updates, imported from a bundle the host fetches (this container stays offline).
       - LEGAL_REGULATORY=${LAW_REGULATORY:-0}
+      # OPT-02 (D-070): machine translation by the answer model already used (no new model).
+      - LEGAL_TRANSLATION=${LAW_TRANSLATION:-0}
 
   voice:
     <<: [*law_host_gateway, *law_capped]

@@ -9,7 +9,7 @@ A summary is a list of key points in the document's own order. Each point:
 A quote that is not found in the section is kept and marked "not verified". A figure in a point that its
 quote does not contain is marked for a lawyer. Text addressed to an AI is withheld from the model (T08).
 The original is never changed: a summary is a separate, versioned artifact, approved by a second person.
-Translation is not built: it needs a local translation model and its licence (BLOCKED, D-055).
+Translation is separate and on request (app/legal/translation, D-070).
 """
 from __future__ import annotations
 

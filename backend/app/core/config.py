@@ -332,8 +332,11 @@ class Settings(BaseSettings):
     LEGAL_INTAKE: bool = os.getenv("LEGAL_INTAKE", "0").lower() in ("1", "true", "yes")
     LEGAL_INTAKE_LINKS: bool = os.getenv("LEGAL_INTAKE_LINKS", "0").lower() in ("1", "true", "yes")
     LEGAL_INTAKE_LINK_DAYS: int = int(os.getenv("LEGAL_INTAKE_LINK_DAYS", "14"))
-    # S4.2 summaries (OPT-02, D-055): off unless the firm turns them on. Translation is not built (no approved local model).
+    # S4.2 summaries (OPT-02, D-055): off unless the firm turns them on.
     LEGAL_SUMMARIES: bool = os.getenv("LEGAL_SUMMARIES", "0").lower() in ("1", "true", "yes")
+    # OPT-02 translation (D-070): by the answer model already on this server; nothing stored. Off unless turned on.
+    LEGAL_TRANSLATION: bool = os.getenv("LEGAL_TRANSLATION", "0").lower() in ("1", "true", "yes")
+    LEGAL_TRANSLATE_MAX_CHARS: int = int(os.getenv("LEGAL_TRANSLATE_MAX_CHARS", "30000"))   # per request; the reader continues from there
     # S4.3 time-entry drafts (OPT-03, D-056): off unless the firm turns them on. CSV export only; no billing integration.
     LEGAL_TIME_ENTRIES: bool = os.getenv("LEGAL_TIME_ENTRIES", "0").lower() in ("1", "true", "yes")
     # S4.5 review panel (OPT-05, D-057): off unless the firm turns it on.

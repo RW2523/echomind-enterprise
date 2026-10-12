@@ -8,7 +8,7 @@ Off unless the firm turns it on (LEGAL_SUMMARIES). A summary lists a document's 
 - text addressed to an AI is withheld from the model.
 
 Reviewers' edits are new versions, and a second person approves. The original is never changed. Translation is
-not offered: it needs a local translation model and its licence (BLOCKED).
+separate and on request (test_law_translation.py, D-070); a summary says whether it is available.
 """
 from __future__ import annotations
 
@@ -112,7 +112,7 @@ def test_a_summary_lists_key_points_each_quoting_the_document_with_its_clause_an
     lines_before = sum(1 for ln in text[:pay["start"]].split("\n")[:-1] if ln.strip())   # lines with text, as the reader numbers them
     assert pay["cite"] == {"line": lines_before + 1, "clause": "5.2"} and pay["cite"]["line"] == 4
     assert pts[1]["cite"]["clause"] == "9.1" and pts[2]["cite"]["clause"] == "14.1"
-    assert c["translation"] == {"available": False, "reason": "No local translation model is approved yet."}
+    assert c["translation"] == {"available": False, "reason": "Translation is off on this server."}
 
 
 def test_a_transcript_point_cites_the_time_it_was_said(sm):

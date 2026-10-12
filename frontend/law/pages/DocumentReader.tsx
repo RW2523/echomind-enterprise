@@ -5,8 +5,10 @@ import { ApiError } from '../api/client';
 import { useDocument, useReader } from '../api/queries';
 import type { ReaderData, ReaderMark, ReaderPage } from '../api/types';
 import { useMatter } from '../app/matter';
+import { useSession } from '../app/session';
 import Toolbar from '../ui/Toolbar';
 import { ErrorNote, Skeleton, StatusPill } from '../ui/primitives';
+import { TranslateIcon } from '../ui/translation';
 
 /**
  * The document reader (S2.1): a version's text as EchoMind read it, page by page with line numbers,
@@ -41,6 +43,7 @@ export default function DocumentReader() {
   const reader = useReader(matter.id, docId, versionId);
   const focus = parseRange(params.get('at'));
   const title = doc.data?.title ?? 'Document';
+  const me = useSession();
   return (
     <>
       <Toolbar crumb={`${matter.number} · Documents`} title={title}>
@@ -48,6 +51,7 @@ export default function DocumentReader() {
         <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/playbook`}><ListChecks />Check against a playbook</Link>
         <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/citations`}><TextQuote />Check citations</Link>
         <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/definitions`}><BookA />Check definitions</Link>
+        {me.features?.translation && <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/translate`}><TranslateIcon />Translate</Link>}
       </Toolbar>
       {reader.isPending && reader.failureCount > 0 && reader.failureReason instanceof ApiError && reader.failureReason.status === 409
         ? <div className="lw-content"><div className="lw-paper" style={{ padding: 24 }}>

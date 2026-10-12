@@ -11,7 +11,14 @@ from .. import artifacts
 from ..documents import repo as documents
 from . import summarize
 
-TRANSLATION = {"available": False, "reason": "No local translation model is approved yet."}
+
+
+def translation() -> dict:
+    """Whether the summary can be translated (OPT-02, D-070): on request, by the local model, never stored with it."""
+    if settings.LEGAL_TRANSLATION:
+        return {"available": True, "reason": "Machine translation by this server's model, on request; not reviewed."}
+    return {"available": False, "reason": "Translation is off on this server."}
+
 _EXT = re.compile(r"\.(txt|md|pdf|docx?|rtf|html?)$", re.I)
 
 
@@ -34,7 +41,7 @@ async def run(job: dict) -> Optional[str]:
     out = await summarize.summarise(reader["text"], {**reader, "clauses": clauses})
     content = {"title": title_of(d["title"]), "document": {"id": document_id, "title": d["title"], "version_id": v["id"],
                                                          "version_number": v["number"]},
-               **out, "translation": TRANSLATION}
+               **out, "translation": translation()}
     artifacts.create(matter_id, "summary", "document", document_id, content,
                      {"model": settings.LLM_MODEL, "prompt_version": summarize.VERSION, "version_id": v["id"]}, by, "model")
     return None

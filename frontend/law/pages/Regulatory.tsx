@@ -16,7 +16,7 @@ export const licenceLabel = (u: RegulatoryUpdate) => u.licence === 'OGL-3.0'
 export function OfficialTitle({ u }: { u: RegulatoryUpdate }) {
   return (
     <a href={u.url} target="_blank" rel="noopener noreferrer" className="lw-reg-title">
-      {u.title}<ExternalLink aria-hidden /><span className="lw-sr-only"> (opens the official page)</span>
+      {u.title}<ExternalLink aria-hidden /><span className="lw-sr"> (opens the official page)</span>
     </a>
   );
 }
