@@ -561,3 +561,15 @@
 | Pilot end to end (`demo_check.py`) | <ul><li>**followup:** PASS, the April notice question understood;</li><li>**conflicts:** PASS, 3 conflicts, the option pool and closing date found (after the parties fix);</li><li>**reference:** PASS, the Late Payment Act cited;</li><li>**employment:** PASS, GBP 14,080 against 18,400.</li></ul>Also checked by hand: the Unfair Contract Terms Act s.2(1) answer, and the letter before claim drafted with fields from the documents and 2 gaps. |
 | Screens (pilot, headless browser) | Home dashboard, command palette, matter tiles and a research answer, as alice and harper. |
 
+## Run 40 — Load test, capture under load, backups, regulatory updates, translation, SIEM forwarder (D-066 to D-072), 2026-10-12
+
+- **Branch:** `law/pending-ops`, merged into `feature/echomind-law`.
+
+| Suite | Result |
+|---|---|
+| Backend (all) | **1322 passed** (1310 at run 39). New, each red first:<ul><li>capture reads while the model is slow, a marked gap past the backlog, the model loaded off the event loop (3);</li><li>regulatory updates (9);</li><li>translation (8);</li><li>the SIEM forwarder (15).</li></ul>The first full run had 1 failure: the gap test, when audio is sent faster than real time and a gap and a segment share a millisecond. Fixed by ordering on audio position (8b9786c); 4 of 4 reruns pass. |
+| Security suite | **32 groups, all pass, 1152 tests** (three new groups: regulatory updates, translation, the SIEM forwarder). |
+| Frontend | tsc **clean**. Vitest **177 passed** (regulatory pages, translation, the "too far behind" message and gap). |
+| T12 load test (pilot, 10 users, production watched) | **Production unaffected:** probe at most 0.23 s against a 0.03 s baseline, no restarts.<ul><li>**Stage 2 at first:** capture dropped (keepalive ping timeout). Fixed (D-066).</li><li>**Rerun right after a restart:** the capture open timed out while the model loaded (about 20 s). Nobody else was held up.</li><li>**Warm rerun:** capture survived 4 minutes (2,397 frames, all in custody). Research p50 4.4 s, p95 9.7 s; search p50 0.75 s, p95 2.2 s; no database-busy errors; backend 4.7 GB.</li><li>CPU speech recognition fell behind: one gap marked past 120 s of backlog, and the stop took 97 s to catch up.</li></ul> |
+| Backups (pilot) | First archive 4.4 MB, verified. The restore test matched the archive: 12 matters, 51 documents, 4,716 audit events. Daily at 02:30. |
+| Transcription, synthetic voices (pilot, look-ahead 560 ms) | 4 scripted conversations, fixed Piper voices, streamed through capture. WER 0.18–0.32 normalised (0.51–0.67 verbatim), entities 0–0.67, negations 0–1.0, speakers 0.88–1.0. The same audio as whole clips gave word-for-word the same text: **capture loses nothing**, and the misses are the model's. |
