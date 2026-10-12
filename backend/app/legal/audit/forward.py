@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 BATCH = 500
 CEF_SEVERITY = {"allow": 3, "deny": 6, "error": 8}            # CEF scale, 0–10
-BREAK_GLASS_SEVERITY = 7                                      # at least this for breakglass.* actions
+BREAK_GLASS_SEVERITY = 7                                      # at least this for break-glass actions and accesses
 SYSLOG_SEVERITY = {"allow": 6, "deny": 4, "error": 3}         # info, warning, err
 FACILITY = 20                                                 # local4
 APP_NAME = "echomind-law"
@@ -73,7 +73,7 @@ def cef(event: dict, version: str) -> str:
     """One audit event as a CEF record. Empty values are left out."""
     action, outcome = event.get("action") or "", event.get("outcome") or ""
     severity = CEF_SEVERITY.get(outcome, 8)
-    if action.startswith("breakglass."):
+    if action.startswith("breakglass.") or event.get("reason") == "break_glass":      # the grant, and every access under one
         severity = max(severity, BREAK_GLASS_SEVERITY)
     obj = ":".join(str(v) for v in (event.get("object_type"), event.get("object_id")) if v)
     fields = [("rt", _epoch_ms(event.get("ts"))), ("act", action), ("outcome", outcome),

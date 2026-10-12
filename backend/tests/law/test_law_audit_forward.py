@@ -213,6 +213,7 @@ def test_cef_fields_severity_and_escaping():
         return parse(forward.syslog_line(_event(**kw), "1.0"))["cef"][6]
     assert [severity(outcome=o) for o in ("allow", "deny", "error")] == ["3", "6", "8"]
     assert [severity(action="breakglass.approve", outcome=o) for o in ("allow", "deny", "error")] == ["7", "7", "8"]
+    assert severity(action="documents.read", reason="break_glass") == "7"            # a read under emergency access stands out too
 
 
 def test_syslog_framing():
