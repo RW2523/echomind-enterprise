@@ -308,7 +308,57 @@ def check_conversation(p: Pilot) -> tuple[bool, str]:
                 f"read aloud {seconds:.0f} s of {kind}")
 
 
-CHECKS = {"research": check_research, "conversation": check_conversation, "meeting": check_meeting, "drafting": check_drafting, "summary": check_summary,
+def _ask(p: Pilot, user: str, number: str, question: str, history=None) -> list[dict]:
+    mid = p.matter(user, number)
+    body = {"question": question, "versions": "signed", **({"history": history} if history else {})}
+    raw = p.call(user, "POST", f"/legal/matters/{q(mid)}/research/query", body, timeout=300)
+    return [json.loads(line) for line in raw.decode().splitlines() if line.strip()]
+
+
+def check_followup(p: Pilot) -> tuple[bool, str]:
+    """Conversation memory (D-063): a follow-up on M-301 is made to stand alone and answered from the documents."""
+    first = _ask(p, "harper", "M-301", "Within what period must the Customer notify a claim under the Logistics Services Agreement?")
+    done1 = next(e for e in first if e["type"] == "done")
+    events = _ask(p, "harper", "M-301", "And was the notice for the April failures given in time?",
+                  history=[{"question": "Within what period must the Customer notify a claim under the Logistics Services Agreement?",
+                            "answer": done1["answer"]}])
+    understood = next((e for e in events if e["type"] == "understood"), {})
+    done = next(e for e in events if e["type"] == "done")
+    ok = understood.get("rewritten") and not done["abstained"] and "april" in understood.get("question", "").lower()
+    return bool(ok), f"understood as '{understood.get('question', '')[:90]}'; {done['status']}, {len(done['citations'])} citations"
+
+
+def check_conflicts(p: Pilot) -> tuple[bool, str]:
+    """Compare across documents (S2.3): the Series A term sheet against the investor's draft (option pool 12% / 10%)."""
+    mid = p.matter("kenji", "M-303")
+    raw = p.call("kenji", "POST", f"/legal/matters/{q(mid)}/compare/scan", {"versions": "current"}, timeout=600)
+    events = [json.loads(line) for line in raw.decode().splitlines() if line.strip()]
+    done = next((e for e in events if e.get("type") == "done"), {})
+    found = [f for f in done.get("findings", []) if f.get("verdict") == "conflict"]
+    text = json.dumps(found)
+    ok = any(x in text for x in ("12%", "10%", "30 October 2026", "15 November 2026"))
+    return ok, f"{len(found)} conflicts; option pool {'found' if '12%' in text and '10%' in text else 'not found'}; closing date {'found' if '15 November 2026' in text else 'not found'}"
+
+
+def check_reference(p: Pilot) -> tuple[bool, str]:
+    """The public-law library (R-001): a question answered from a real Act, with quotes."""
+    events = _ask(p, "alice", "R-001", "Under the Late Payment of Commercial Debts (Interest) Act 1998, what interest is implied into a contract for a qualifying debt?")
+    done = next(e for e in events if e["type"] == "done")
+    titles = {c["document_title"] for c in done["citations"]}
+    ok = not done["abstained"] and any("Late Payment" in t for t in titles)
+    return ok, f"{done['status']}, cites {sorted(titles)[:2]}"
+
+
+def check_employment(p: Pilot) -> tuple[bool, str]:
+    """M-302: the claimed GBP 18,400 against the GBP 14,080 the policy rate gives."""
+    events = _ask(p, "sofia", "M-302", "How much unpaid on-call allowance is Dr Rahman owed for 2025, and how was it calculated?")
+    done = next(e for e in events if e["type"] == "done")
+    ok = not done["abstained"] and "14,080" in done["answer"]
+    return ok, f"{done['status']}, GBP 14,080 {'found' if '14,080' in done['answer'] else 'MISSING'}; 18,400 {'mentioned' if '18,400' in done['answer'] else 'not mentioned'}"
+
+
+CHECKS = {"research": check_research, "conversation": check_conversation, "followup": check_followup, "conflicts": check_conflicts,
+          "reference": check_reference, "employment": check_employment, "meeting": check_meeting, "drafting": check_drafting, "summary": check_summary,
           "panel": check_panel, "time": check_time, "intake": check_intake}
 
 
