@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, PanelReview, PanelView, SummaryVersion, TimeEntry, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, PanelReview, PanelView, RegulatoryFirmUpdate, RegulatoryMatch, SummaryVersion, TimeEntry, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -258,6 +258,15 @@ export const useDocSummaries = (matterId: string, documentId: string | null) =>
 export const useTimeEntries = (from: string, to: string) =>
   useQuery({ queryKey: ['time', from, to] as const,
     queryFn: () => api.get<{ entries: TimeEntry[]; timezone: string; unit_minutes: number }>(`/api/legal/time?from=${from}&to=${to}`) });
+
+// Regulatory updates (S4.4, D-068)
+export const useRegulatory = (jurisdiction: '' | 'UK' | 'US', mine: boolean) =>
+  useQuery({ queryKey: ['regulatory', jurisdiction, mine] as const,
+    queryFn: () => api.get<{ updates: RegulatoryFirmUpdate[]; since: string }>(
+      `/api/legal/regulatory?${new URLSearchParams({ ...(jurisdiction ? { jurisdiction } : {}), ...(mine ? { mine: '1' } : {}) })}`) });
+export const regulatoryPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/regulatory`;
+export const useMatterRegulatory = (matterId: string) =>
+  useQuery({ queryKey: ['matter', matterId, 'regulatory'] as const, queryFn: () => api.get<{ matches: RegulatoryMatch[] }>(regulatoryPath(matterId)) });
 
 // Review panel (S4.5, D-057)
 export const panelPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/panel`;

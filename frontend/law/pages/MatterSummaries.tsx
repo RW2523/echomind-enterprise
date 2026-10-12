@@ -39,7 +39,7 @@ export default function MatterSummaries() {
     <>
       <Toolbar crumb={matter.number} title="Summaries" />
       <div className="lw-content">
-        <p className="lw-meta" style={{ margin: 0 }}>Each point quotes the document and says where: page and line, the clause, or the time in a transcript. A point whose words are not found is marked. Summaries are drafts until a second person approves them; the original is never changed. Translation is not available: no local translation model is approved yet.</p>
+        <p className="lw-meta" style={{ margin: 0 }}>Each point quotes the document and says where: page and line, the clause, or the time in a transcript. A point whose words are not found is marked. Summaries are drafts until a second person approves them; the original is never changed. A summary can be translated from its page when the firm has turned translation on.</p>
         {q.data?.can.summarise && (
           <section className="lw-paper lw-sheet" aria-label="Summarise a document">
             <div style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap' }}>

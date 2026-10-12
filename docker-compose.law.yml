@@ -66,6 +66,10 @@ services:
       # Speech recognition loads on the first live transcript, not at every start: on CPU it needs a few GB
       # of the memory this host shares with production (D-060).
       - ECHOMIND_ASR_PRELOAD=${LAW_ASR_PRELOAD:-0}
+      # The streaming model's look-ahead (D-072): 6 frames = 560 ms chunks (the default), 13 = 1120 ms (more accurate,
+      # later). The chunk must match the look-ahead.
+      - ECHOMIND_ASR_ATT_CONTEXT_RIGHT=${LAW_ASR_ATT_CONTEXT_RIGHT:-6}
+      - TRANSCRIPT_NEMOTRON_CHUNK_MS=${LAW_ASR_CHUNK_MS:-560}
       # Phase 4 features (D-058, D-059): off unless .env.law turns them on.
       - LEGAL_INTAKE=${LAW_INTAKE:-0}
       - LEGAL_INTAKE_LINKS=${LAW_INTAKE_LINKS:-0}
@@ -75,6 +79,13 @@ services:
       - LEGAL_PANEL=${LAW_PANEL:-0}
       # S5.1 (D-062): the conversation assistant.
       - LEGAL_CONVERSATION=${LAW_CONVERSATION:-0}
+      # S4.4 (D-068): regulatory updates, imported from a bundle the host fetches (this container stays offline).
+      - LEGAL_REGULATORY=${LAW_REGULATORY:-0}
+      # OPT-02 (D-070): machine translation by the answer model already used (no new model).
+      - LEGAL_TRANSLATION=${LAW_TRANSLATION:-0}
+      # D-069: the audit trail to the firm's SIEM as syslog/CEF (udp://host:port or tcp://host:port). Empty = off.
+      # Needs network approval, and an exception in the egress lock (D-071) for that address.
+      - LEGAL_AUDIT_SYSLOG=${LAW_AUDIT_SYSLOG:-}
 
   voice:
     <<: [*law_host_gateway, *law_capped]

@@ -1,0 +1,105 @@
+{
+ "meta": {
+  "asr": "file",
+  "commit": "28b3416",
+  "time": "20261012-041728",
+  "voice": null
+ },
+ "summary": {
+  "scenarios": 4,
+  "wer_normalised": 0.2442,
+  "wer_verbatim": 0.5875,
+  "entity_accuracy": 0.2881,
+  "negation_accuracy": 0.5417,
+  "speaker_accuracy": 0.9398,
+  "missed_entities": 13,
+  "lost_negations": 5
+ },
+ "scenarios": [
+  {
+   "id": "client-call-renewal",
+   "kind": "client_call",
+   "speakers": 2,
+   "seconds": null,
+   "wer_verbatim": 0.6705,
+   "wer_normalised": 0.3182,
+   "entity_accuracy": 0.2857,
+   "entities": 7,
+   "missed_entities": [
+    "Harrowgate Systems",
+    "2 March 2026",
+    "USD 18,500",
+    "clause 8.1",
+    "USD 400,000"
+   ],
+   "negation_accuracy": 0.0,
+   "negations": 3,
+   "lost_negations": [
+    "must not fall below USD 400,000",
+    "We will not accept the fee increase",
+    "I will not concede the thirty day convenience notice"
+   ],
+   "speaker_accuracy": 0.9659
+  },
+  {
+   "id": "negotiation-change-of-control",
+   "kind": "negotiation",
+   "speakers": 3,
+   "seconds": null,
+   "wer_verbatim": 0.5072,
+   "wer_normalised": 0.1765,
+   "entity_accuracy": 0.2,
+   "entities": 5,
+   "missed_entities": [
+    "Pellucid Holdings",
+    "15 October 2026",
+    "Clause 14.2",
+    "Harrowgate Systems"
+   ],
+   "negation_accuracy": 1.0,
+   "negations": 3,
+   "lost_negations": [],
+   "speaker_accuracy": 1.0
+  },
+  {
+   "id": "board-meeting-mandate",
+   "kind": "board",
+   "speakers": 4,
+   "seconds": null,
+   "wer_verbatim": 0.589,
+   "wer_normalised": 0.274,
+   "entity_accuracy": 0.6667,
+   "entities": 3,
+   "missed_entities": [
+    "Northbridge Analytics"
+   ],
+   "negation_accuracy": 0.6667,
+   "negations": 3,
+   "lost_negations": [
+    "I will not vote on item five"
+   ],
+   "speaker_accuracy": 0.8767
+  },
+  {
+   "id": "witness-interview",
+   "kind": "interview",
+   "speakers": 2,
+   "seconds": null,
+   "wer_verbatim": 0.5833,
+   "wer_normalised": 0.2083,
+   "entity_accuracy": 0.0,
+   "entities": 3,
+   "missed_entities": [
+    "USD 19,750",
+    "1 June 2026",
+    "Harrowgate Systems"
+   ],
+   "negation_accuracy": 0.5,
+   "negations": 2,
+   "lost_negations": [
+    "I never saw a signed amendment"
+   ],
+   "speaker_accuracy": 0.9167
+  }
+ ]
+}

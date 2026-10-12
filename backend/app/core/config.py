@@ -307,6 +307,8 @@ class Settings(BaseSettings):
     # Legal transcription (S2.4; D-017, D-040).
     LEGAL_SEGMENT_MIN_WORDS: int = int(os.getenv("LEGAL_SEGMENT_MIN_WORDS", "12"))     # a segment ends at a sentence end after this many words
     LEGAL_CAPTURE_LAG_WARN_SEC: float = float(os.getenv("LEGAL_CAPTURE_LAG_WARN_SEC", "5"))  # model this far behind: "degraded"
+    LEGAL_CAPTURE_BACKLOG_SEC: float = float(os.getenv("LEGAL_CAPTURE_BACKLOG_SEC", "120"))   # audio waiting for the model beyond this: a marked gap
+    LEGAL_CAPTURE_FINISH_SEC: float = float(os.getenv("LEGAL_CAPTURE_FINISH_SEC", "300"))     # at a stop, waiting audio may still be transcribed
     # Silent Assist legal packs (S2.5; D-015, D-041). Conservative defaults awaiting a lawyer's sign-off (P-008).
     LEGAL_ASSIST_MIN_CONFIDENCE: float = float(os.getenv("LEGAL_ASSIST_MIN_CONFIDENCE", "0.7"))   # alerts below this are not raised
     LEGAL_ASSIST_NEAR_MIN: float = float(os.getenv("LEGAL_ASSIST_NEAR_MIN", "0.2"))               # how close a figure's context must be
@@ -320,6 +322,10 @@ class Settings(BaseSettings):
     LEGAL_RETENTION_APPLY: bool = os.getenv("LEGAL_RETENTION_APPLY", "0").lower() in ("1", "true", "yes")
     # Exports (S1.10; P-006): released files are kept this long, then removed.
     LEGAL_EXPORT_TTL_HOURS: float = float(os.getenv("LEGAL_EXPORT_TTL_HOURS", "24"))
+    # Audit forwarding (S1.5, SEC-04; D-069): each audit event as CEF over syslog to the firm's SIEM. Off by default.
+    LEGAL_AUDIT_SYSLOG: str = os.getenv("LEGAL_AUDIT_SYSLOG", "")                     # udp://host:port or tcp://host:port; empty = off
+    LEGAL_AUDIT_SYSLOG_FROM_START: bool = os.getenv("LEGAL_AUDIT_SYSLOG_FROM_START", "0").lower() in ("1", "true", "yes")   # a new destination also gets the history
+    LEGAL_AUDIT_SYSLOG_INTERVAL_SEC: float = float(os.getenv("LEGAL_AUDIT_SYSLOG_INTERVAL_SEC", "2"))   # how often new events are sent
     # S3.6 obligations: the firm's timezone for due dates (IANA name, shown with every date), and the calendar
     # file, off unless the firm turns it on (DOC-05).
     LEGAL_TIMEZONE: str = os.getenv("LEGAL_TIMEZONE", "UTC")
@@ -330,8 +336,11 @@ class Settings(BaseSettings):
     LEGAL_INTAKE: bool = os.getenv("LEGAL_INTAKE", "0").lower() in ("1", "true", "yes")
     LEGAL_INTAKE_LINKS: bool = os.getenv("LEGAL_INTAKE_LINKS", "0").lower() in ("1", "true", "yes")
     LEGAL_INTAKE_LINK_DAYS: int = int(os.getenv("LEGAL_INTAKE_LINK_DAYS", "14"))
-    # S4.2 summaries (OPT-02, D-055): off unless the firm turns them on. Translation is not built (no approved local model).
+    # S4.2 summaries (OPT-02, D-055): off unless the firm turns them on.
     LEGAL_SUMMARIES: bool = os.getenv("LEGAL_SUMMARIES", "0").lower() in ("1", "true", "yes")
+    # OPT-02 translation (D-070): by the answer model already on this server; nothing stored. Off unless turned on.
+    LEGAL_TRANSLATION: bool = os.getenv("LEGAL_TRANSLATION", "0").lower() in ("1", "true", "yes")
+    LEGAL_TRANSLATE_MAX_CHARS: int = int(os.getenv("LEGAL_TRANSLATE_MAX_CHARS", "30000"))   # per request; the reader continues from there
     # S4.3 time-entry drafts (OPT-03, D-056): off unless the firm turns them on. CSV export only; no billing integration.
     LEGAL_TIME_ENTRIES: bool = os.getenv("LEGAL_TIME_ENTRIES", "0").lower() in ("1", "true", "yes")
     # S4.5 review panel (OPT-05, D-057): off unless the firm turns it on.
@@ -339,6 +348,9 @@ class Settings(BaseSettings):
     # S5.1 (D-062): the conversation assistant — spoken questions on a matter, answered and read aloud. Off by default.
     LEGAL_CONVERSATION: bool = os.getenv("LEGAL_CONVERSATION", "0").lower() in ("1", "true", "yes")
     LEGAL_CONVERSATION_MAX_SECONDS: int = int(os.getenv("LEGAL_CONVERSATION_MAX_SECONDS", "60"))
+    # S4.4 regulatory updates (OPT-04, D-068): public legislation and rules imported from a bundle fetched on the host
+    # (the containers stay offline), matched to open matters. Off by default.
+    LEGAL_REGULATORY: bool = os.getenv("LEGAL_REGULATORY", "0").lower() in ("1", "true", "yes")
     # Connectors (S1.11): folders a local-folder connector may read, separated by ":" (empty = none).
     LEGAL_CONNECTOR_LOCAL_ROOTS: str = os.getenv("LEGAL_CONNECTOR_LOCAL_ROOTS", "")
     # Legal ingestion quality (S2.1; D-010 OCR with Tesseract, run as a local program — nothing leaves the host).

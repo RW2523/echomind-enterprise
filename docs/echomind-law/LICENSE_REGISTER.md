@@ -29,6 +29,22 @@ every document.
 | Federal Arbitration Act (9 U.S.C. ch. 1); E-SIGN Act (15 U.S.C. ch. 96) | govinfo.gov (US Code, 2023 edition) | Works of the US Government: public domain (17 U.S.C. 105) | None (source noted) |
 | Late Payment of Commercial Debts (Interest) Act 1998; Unfair Contract Terms Act 1977; Contracts (Rights of Third Parties) Act 1999 | legislation.gov.uk (CLML XML, revised text) | Open Government Licence v3.0 | Attribution statement in each document and in PROVENANCE.md |
 
+## 1c. Content: daily regulatory updates (D-068)
+
+Fetched daily on the host by `scripts/law/fetch_regulatory.py`, with the owner's approval of 2026-10-12 ("fetch daily").
+Only titles, short summaries, dates, kinds, agencies and official links are kept, never the documents. **Real public law**,
+labelled with its source and licence on every update.
+
+| Content | Source | Reported licence (verify) | Obligation |
+|---|---|---|---|
+| New UK legislation (Acts, statutory instruments, Scottish, Welsh and Northern Ireland instruments) | legislation.gov.uk Atom feed (`/new/data.feed`) | Open Government Licence v3.0 | Attribution: the label on every update ("Open Government Licence v3.0 · legislation.gov.uk") |
+| US rules and proposed rules | Federal Register API (federalregister.gov) | Works of the US Government: public domain (17 U.S.C. 105) | None (source noted on every update) |
+
+## 1d. Machine translation (D-070)
+
+No new model. Translation uses the answer model in §1 (`nvidia/Qwen3-30B-A3B-FP4`; base Qwen3 weights Apache-2.0, the NVIDIA
+checkpoint's terms still to verify, as for every feature).
+
 ## 2. New dependencies proposed by the plan (to approve before install)
 
 | Package | Purpose | Reported licence (verify) | Slice |

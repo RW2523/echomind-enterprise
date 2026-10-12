@@ -47,6 +47,8 @@ MATTER_ACTIONS: dict[str, frozenset] = {
     "deletion.request": frozenset({"lead", "attorney"}),
     # S4.1 (D-054): the matter's party register, which conflict searches read. Kept on closed matters too.
     "parties.manage": frozenset({"lead", "attorney"}),
+    # S4.4 (D-068): deciding whether a regulatory update concerns the matter.
+    "regulatory.decide": frozenset({"lead", "attorney", "paralegal", "reviewer"}),
 }
 
 # What an approved break-glass grant allows (read only).
@@ -100,6 +102,8 @@ ORG_ACTIONS: dict[str, frozenset] = {
     "intake.approve": frozenset({"attorney", "managing_partner"}),
     "conflicts.review": frozenset({"conflicts", "managing_partner"}),
     "intake.purge": frozenset({"records_admin"}),
+    # S4.4 regulatory updates (OPT-04, D-068): public law, read by the firm's lawyers.
+    "regulatory.read": frozenset({"managing_partner", "attorney", "paralegal", "reviewer"}),
 }
 
 

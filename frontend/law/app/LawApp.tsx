@@ -52,6 +52,9 @@ import IntakeLink from '../pages/IntakeLink';
 import MatterSummaries from '../pages/MatterSummaries';
 import SummaryPage from '../pages/SummaryPage';
 import TimeEntries from '../pages/TimeEntries';
+import Regulatory from '../pages/Regulatory';
+import DocumentTranslate from '../pages/DocumentTranslate';
+import MatterRegulatory from '../pages/MatterRegulatory';
 import MatterPanel from '../pages/MatterPanel';
 import PanelReviewPage from '../pages/PanelReviewPage';
 
@@ -80,6 +83,7 @@ export const lawRoutes = [
           { path: '/enquiries', element: <Enquiries /> },
           { path: '/enquiries/:intakeId', element: <Enquiry /> },
           { path: '/time', element: <TimeEntries /> },
+          { path: '/regulatory', element: <Regulatory /> },
           {
             path: '/m/:matterNo',
             element: <MatterLayout />,
@@ -91,6 +95,7 @@ export const lawRoutes = [
               { path: 'documents/:docId/playbook', element: <DocumentPlaybook /> },
               { path: 'documents/:docId/citations', element: <DocumentCitations /> },
               { path: 'documents/:docId/definitions', element: <DocumentDefinitions /> },
+              { path: 'documents/:docId/translate', element: <DocumentTranslate /> },
               { path: 'redlines/:artifactId', element: <RedlinePage /> },
               { path: 'research', element: <MatterResearch /> },
               { path: 'conversation', element: <MatterConversation /> },
@@ -101,6 +106,7 @@ export const lawRoutes = [
               { path: 'drafting', element: <MatterDrafting /> },
               { path: 'obligations', element: <MatterObligations /> },
               { path: 'diligence', element: <MatterDiligence /> },
+              { path: 'regulatory', element: <MatterRegulatory /> },
               { path: 'summaries', element: <MatterSummaries /> },
               { path: 'summaries/:artifactId', element: <SummaryPage /> },
               { path: 'panel', element: <MatterPanel /> },

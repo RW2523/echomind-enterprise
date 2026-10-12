@@ -6,10 +6,12 @@ import { api, ApiError } from '../api/client';
 import { artifactPath, summariesPath, useArtifact } from '../api/queries';
 import type { SummaryContent, SummaryPoint, SummaryVersion } from '../api/types';
 import { useMatter } from '../app/matter';
+import { useSession } from '../app/session';
 import Toolbar from '../ui/Toolbar';
-import { ErrorNote, Skeleton, StatusPill } from '../ui/primitives';
+import { ErrorNote, Field, Skeleton, StatusPill } from '../ui/primitives';
 import { ApprovalDialog, ReviewBanner, ReviewDecisions } from '../ui/review';
 import { citeLabel } from '../ui/summary';
+import { LANGUAGES, RTL, TranslateIcon, TranslationChecks, TranslationLabel } from '../ui/translation';
 
 const day = (iso: string) => new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -26,6 +28,10 @@ export default function SummaryPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [moved, setMoved] = useState<string | null>(null);
+  const me = useSession();
+  const [lang, setLang] = useState('');
+  const [translated, setTranslated] = useState<{ label: string; code: string; points: Record<string, { translation: string; figures_missing: string[] }> } | null>(null);
+  const [translating, setTranslating] = useState(false);
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['matter', matter.id, 'artifact'] }),
     qc.invalidateQueries({ queryKey: ['matter', matter.id, 'summaries'] }), qc.invalidateQueries({ queryKey: ['reviews'] })]);
   const back = <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/summaries`}><ArrowLeft />Summaries</Link>;
@@ -52,6 +58,14 @@ export default function SummaryPage() {
     try { await api.post(`${artifactPath(matter.id, v.id)}/file`); await refresh(); }
     catch (e) { setError(e instanceof ApiError ? e.message : 'The summary could not be filed.'); } finally { setBusy(false); }
   };
+  const translate = async () => {
+    setTranslating(true); setError('');
+    try {
+      const r = await api.post<{ label: string; language: { code: string }; points: { id: string; translation: string; figures_missing: string[] }[] }>(
+        `${summariesPath(matter.id)}/${encodeURIComponent(v.id)}/translate`, { language: lang });
+      setTranslated({ label: r.label, code: r.language.code, points: Object.fromEntries(r.points.map((x) => [x.id, x])) });
+    } catch (e) { setError(e instanceof ApiError ? e.message : 'The translation could not be made.'); } finally { setTranslating(false); }
+  };
   const move = (i: number, by: number) => setEditing((pts) => {
     if (!pts) return pts;
     const next = [...pts];
@@ -72,6 +86,17 @@ export default function SummaryPage() {
             {`Of `}<Link to={`/m/${matter.number}/documents/${encodeURIComponent(c.document.id)}/read?v=${encodeURIComponent(c.document.version_id)}`}>{c.document.title}</Link>{`, version ${c.document.version_number} — the original is unchanged.`}
             {c.unverified ? ` ${c.unverified} point(s) not verified.` : ''}{c.figures_unsupported ? ` ${c.figures_unsupported} point(s) state a figure their quote does not contain.` : ''}
           </p>
+          {!editing && me.features?.translation && (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap', margin: '0 0 10px' }}>
+              <Field label="Translate into">{(id) => (
+                <select id={id} className="lw-input" value={lang} onChange={(e) => setLang(e.target.value)}>
+                  <option value="">Choose a language</option>
+                  {LANGUAGES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+                </select>)}</Field>
+              <button type="button" className="lw-btn lw-btn-sm" disabled={!lang || translating} onClick={translate}><TranslateIcon />{translating ? 'Translating…' : 'Translate'}</button>
+            </div>
+          )}
+          {!editing && translated && <TranslationLabel text={translated.label} />}
           {editing ? (
             <ol className="lw-summary-points" aria-label="Edit the points">
               {editing.map((p, i) => (
@@ -102,6 +127,12 @@ export default function SummaryPage() {
                       {p.figures_unsupported.length > 0 && <StatusPill tone="attention">{`Check: ${p.figures_unsupported.join(', ')} not in the quote`}</StatusPill>}
                     </div>
                     {p.quote && <blockquote className="lw-summary-quote">“{p.quote}”</blockquote>}
+                    {translated?.points[p.id] && (
+                      <div className="lw-translation">
+                        <p className="lw-serif" lang={translated.code} dir={RTL.has(translated.code) ? 'rtl' : undefined} style={{ margin: 0 }}>{translated.points[p.id].translation}</p>
+                        <TranslationChecks figures={translated.points[p.id].figures_missing} />
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -127,7 +158,7 @@ export default function SummaryPage() {
           {!editing && <ApprovalDialog v={v} what="this summary" endpoint={`${artifactPath(matter.id, v.id)}/review`} canApprove={can.approve || can.author}
             isAuthor={can.author} onDone={refresh} />}
           <ReviewDecisions decisions={v.decisions} />
-          <p className="lw-meta" style={{ marginTop: 10 }}>Translation: not available. {c.translation.reason}</p>
+          {!me.features?.translation && <p className="lw-meta" style={{ marginTop: 10 }}>Translation: not available. Translation is off on this server.</p>}
           {versions.length > 1 && <p className="lw-meta" style={{ marginTop: 4 }}>{`Versions: ${versions.map((x) => `${x.version} (${x.status})`).join(' · ')}`}</p>}
         </article>
       </div>

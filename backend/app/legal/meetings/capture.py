@@ -27,6 +27,11 @@ Verbatim transcription (S2.4; D-017, D-040):
 - Nothing is lost silently. If the model falls behind by LEGAL_CAPTURE_LAG_WARN_SEC, the capture
   says so ("degraded") and records it. A transcription error leaves a "gap" mark that the
   transcript shows.
+- Reading the socket never waits for the model (T12, D-066): a socket left unread misses the
+  browser's keepalive and is dropped. Audio and turns are queued, in the order received, for the
+  model. Audio still waiting beyond LEGAL_CAPTURE_BACKLOG_SEC is not transcribed: it leaves a
+  "gap" mark at that point (its custody record is kept), and the model restarts after it. At a
+  stop, waiting audio is still transcribed, for up to LEGAL_CAPTURE_FINISH_SEC.
 
 Silent Assist (S2.5; D-041): each stored segment is checked against the meeting's legal pack in the
 background, so audio is never held up. Alerts are stored and sent as `{"type": "alert"}`; none are
@@ -229,7 +234,7 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
     if not (await asyncio.to_thread(consent.check, meeting_id))[0]:
         await _refuse(ws, CLOSE["consent"], p, matter_id, "consent_required")
         return
-    transcriber = transcriber_factory()
+    transcriber = await asyncio.to_thread(transcriber_factory)   # a first load takes minutes: never on the event loop (D-066)
     opened = await asyncio.to_thread(open_capture)
     if opened is None:
         await _refuse(ws, CLOSE["consent"], p, matter_id, "consent_required")
@@ -240,8 +245,12 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
     send_lock = asyncio.Lock()
 
     async def send(obj: dict) -> None:
+        """Best effort: once the person has gone, what was heard is still transcribed and stored."""
         async with send_lock:
-            await ws.send_text(json.dumps(obj))
+            try:
+                await ws.send_text(json.dumps(obj))
+            except Exception:
+                pass
 
     await ws.accept()
     await send({"type": "ready", "capture_id": capture_id, "consent_snapshot": snapshot,
@@ -252,9 +261,12 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
              "speaker": None,           # the roster participant marked as speaking
              "audio_ms": 0.0,           # audio given to the model so far (paused audio is not)
              "base_ms": 0.0,            # where the model's current stream starts (it restarts at speaker changes)
-             "read_ms": 0.0,            # all audio read, paused included: to measure how far behind the model is
-             "started": None, "degraded": False}
+             "rx_ms": 0.0,              # audio accepted so far: the same clock, ahead of audio_ms while the model catches up
+             "queued_ms": 0.0,          # audio waiting for the model
+             "skipping": False,         # waiting audio passed LEGAL_CAPTURE_BACKLOG_SEC: frames are counted, not transcribed
+             "in_gap": False, "degraded": False}
     anchors: list[tuple[float, float]] = []      # (audio_ms, wall-clock seconds) at each accepted frame
+    work: asyncio.Queue = asyncio.Queue()        # audio and turns, in the order received, for the model
     def roster() -> set[str]:
         with get_conn() as conn:
             return {x["id"] for x in consent.participants(conn, meeting_id)}
@@ -286,11 +298,13 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
         except Exception as e:
             logger.warning("Assist: a segment could not be checked (%s)", type(e).__name__)
 
-    def wall(audio_ms) -> Optional[str]:
-        """Wall-clock time of a point in the audio given to the model."""
+    def wall(audio_ms, end: bool = False) -> Optional[str]:
+        """Wall-clock time of a point in the audio given to the model. A point between two frames is the
+        start of the later one, or with `end` the end of the earlier one (so a pause shows between them)."""
         if audio_ms is None or not anchors:
             return None
-        k = max(0, bisect.bisect_right(anchors, (float(audio_ms), float("inf"))) - 1)
+        key = (float(audio_ms), float("-inf")) if end else (float(audio_ms), float("inf"))
+        k = max(0, bisect.bisect_right(anchors, key) - 1)
         a_ms, a_wall = anchors[k]
         at = datetime.fromtimestamp(a_wall + max(0.0, float(audio_ms) - a_ms) / 1000.0, tz=timezone.utc)
         return at.strftime("%Y-%m-%dT%H:%M:%S.") + f"{at.microsecond // 1000:03d}Z"
@@ -316,7 +330,7 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
             if h.reason is not None and not consent.check(meeting_id)[0]:
                 return None
             seg = repo.add_segment(capture_id, meeting_id, matter_id, state["seq"], t0, t1, text,
-                                   speaker, wall(t0), wall(t1), state.get("agenda"))
+                                   speaker, wall(t0), wall(t1, end=True), state.get("agenda"))
         state["seq"] += 1
         return seg
 
@@ -347,6 +361,8 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
                 task.add_done_callback(pending.discard)
 
     async def mark(kind: str, **kw) -> None:
+        if kind == "gap":                             # where it is in the meeting, though found as the model catches up
+            kw["at"] = wall(kw.get("audio_ms"))
         await asyncio.to_thread(transcript_mod.add_mark, capture_id, meeting_id, kind, by=p["sub"], **kw)
 
     async def drain() -> None:
@@ -363,11 +379,8 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
                 state["base_ms"] = state["audio_ms"]
         await commit()
 
-    async def check_lag() -> None:
-        """How far behind real time the model is: wall time since the first frame minus audio read."""
-        if state["started"] is None:
-            return
-        lag = (time.monotonic() - state["started"]) - state["read_ms"] / 1000.0
+    async def check_lag(lag: float) -> None:
+        """How far behind real time the model is: how long ago the audio it has just read arrived."""
         if lag > settings.LEGAL_CAPTURE_LAG_WARN_SEC and not state["degraded"]:
             state["degraded"] = True
             await mark("degraded", detail=f"{lag:.1f}s behind", audio_ms=int(state["audio_ms"]))
@@ -397,6 +410,7 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
                     await asyncio.to_thread(stop_locked, "consent_withdrawn")
 
     async def receive() -> None:
+        """Reads the socket, never waiting for the model (T12, D-066): queues audio and turns in order."""
         while h.reason is None:
             msg = await ws.receive()
             if msg["type"] == "websocket.disconnect":
@@ -407,26 +421,24 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
                 if len(data) > _MAX_FRAME:
                     h.stop("frame_too_large")
                     return
-                frame_ms = len(data) / 2 / sample_rate * 1000.0
-                if state["started"] is None:
-                    state["started"] = time.monotonic()
-                state["read_ms"] += frame_ms
                 if state["paused"]:
                     continue                          # paused audio is discarded unread
                 if not await asyncio.to_thread(accept_frame, data):
                     await asyncio.to_thread(_event, capture_id, "frame_rejected", h.reason)
                     return
-                anchors.append((state["audio_ms"], time.time()))
-                state["audio_ms"] += frame_ms
-                if transcriber is not None:
-                    try:
-                        await emit(await transcriber.feed(data, sample_rate))
-                    except Exception as e:
-                        # Never silent (D-017): the transcript shows a gap here, and the person is told.
-                        logger.warning("Capture: transcription error (%s)", type(e).__name__)
-                        await mark("gap", detail="transcription_error", audio_ms=int(state["audio_ms"]))
-                        await send({"type": "degraded", "reason": "transcription_error"})
-                await check_lag()
+                frame_ms = len(data) / 2 / sample_rate * 1000.0
+                anchors.append((state["rx_ms"], time.time()))
+                state["rx_ms"] += frame_ms
+                backlog = settings.LEGAL_CAPTURE_BACKLOG_SEC * 1000.0
+                if state["skipping"] and state["queued_ms"] <= backlog / 2:
+                    state["skipping"] = False
+                elif not state["skipping"] and state["queued_ms"] + frame_ms > backlog:
+                    state["skipping"] = True
+                if state["skipping"]:
+                    work.put_nowait(("skip", frame_ms))
+                else:
+                    state["queued_ms"] += frame_ms
+                    work.put_nowait(("audio", frame_ms, data, time.monotonic()))
                 continue
             try:
                 obj = json.loads(msg.get("text") or "{}")
@@ -439,41 +451,90 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
                 if not await asyncio.to_thread(agenda_mod.exists, meeting_id, item):
                     await send({"type": "error", "message": "That is not an item on this meeting's agenda."})
                     continue
-                await drain()                         # what was said so far belongs to the previous item
-                state["agenda"] = item
-                await mark("agenda", detail=item, audio_ms=int(state["audio_ms"]))
-                await send({"type": "agenda", "item_id": item})
+                work.put_nowait(("agenda", item))
             elif kind == "speaker":
                 who = obj.get("participant_id")
                 if who is not None and who not in people:
                     await send({"type": "error", "message": "That person is not a participant of this meeting."})
                     continue
+                work.put_nowait(("speaker", who))
+            elif kind == "pause" and not state["paused"]:
+                state["paused"] = True                # from here, audio is discarded unread
+                work.put_nowait(("pause",))
+            elif kind == "resume" and state["paused"]:
+                state["paused"] = False
+                work.put_nowait(("resume",))
+            elif kind == "stop":
+                h.stop("ended")
+                return
+
+    async def transcribe() -> None:
+        """The model's side: audio and turns in the order received, until None."""
+        while (item := await work.get()) is not None:
+            kind = item[0]
+            if kind == "audio":
+                _, frame_ms, data, arrived = item
+                state["queued_ms"] -= frame_ms
+                state["in_gap"] = False
+                state["audio_ms"] += frame_ms
+                if transcriber is not None:
+                    try:
+                        await emit(await transcriber.feed(data, sample_rate))
+                    except Exception as e:
+                        # Never silent (D-017): the transcript shows a gap here, and the person is told.
+                        logger.warning("Capture: transcription error (%s)", type(e).__name__)
+                        await mark("gap", detail="transcription_error", audio_ms=int(state["audio_ms"]))
+                        await send({"type": "degraded", "reason": "transcription_error"})
+                await check_lag(time.monotonic() - arrived)
+            elif kind == "skip":
+                if not state["in_gap"]:
+                    state["in_gap"] = True
+                    await drain()                     # what the model holds is kept; it restarts after the gap
+                    await mark("gap", detail="transcription_behind", audio_ms=int(state["audio_ms"]))
+                    state["degraded"] = True
+                    await send({"type": "degraded", "reason": "skipped"})
+                state["audio_ms"] += item[1]
+                state["base_ms"] += item[1]           # the model's clock does not count audio it never heard
+            elif kind == "agenda":
+                await drain()                         # what was said so far belongs to the previous item
+                state["agenda"] = item[1]
+                await mark("agenda", detail=item[1], audio_ms=int(state["audio_ms"]))
+                await send({"type": "agenda", "item_id": item[1]})
+            elif kind == "speaker":
+                who = item[1]
                 if who != state["speaker"]:
                     await drain()                     # what was said so far belongs to the previous speaker
                     state["speaker"] = who
                     await mark("speaker", participant_id=who, audio_ms=int(state["audio_ms"]))
                 await send({"type": "speaker", "participant_id": who})
-            elif kind == "pause" and not state["paused"]:
-                state["paused"] = True
+            elif kind == "pause":
                 await drain()
                 await asyncio.to_thread(_event, capture_id, "paused", None, p["sub"])
                 await send({"type": "state", "state": "paused"})
-            elif kind == "resume" and state["paused"]:
-                state["paused"] = False
+            elif kind == "resume":
                 await asyncio.to_thread(_event, capture_id, "resumed", None, p["sub"])
                 await send({"type": "state", "state": "live"})
-            elif kind == "stop":
-                h.stop("ended")
-                return
 
-    tasks = [asyncio.create_task(watch()), asyncio.create_task(receive()), asyncio.create_task(h.stopped.wait())]
+    worker = asyncio.create_task(transcribe())
+    tasks = [asyncio.create_task(watch()), asyncio.create_task(receive()), asyncio.create_task(h.stopped.wait()), worker]
     try:
         await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
     finally:
         for t in tasks:
-            t.cancel()
+            if t is not worker:
+                t.cancel()
         reason = h.reason or "ended"
         _unregister(h)
+        if reason in ("ended", "disconnected") and not worker.done():
+            work.put_nowait(None)                      # what was heard before the stop is still transcribed
+            await asyncio.wait([worker], timeout=settings.LEGAL_CAPTURE_FINISH_SEC)
+            if not worker.done():
+                worker.cancel()
+                await mark("gap", detail="transcription_behind", audio_ms=int(state["audio_ms"]))
+        else:
+            worker.cancel()                            # never after a withdrawal: nothing more is stored
+        if worker.done() and not worker.cancelled() and worker.exception() is not None:
+            logger.warning("Capture: transcription stopped (%s)", type(worker.exception()).__name__)
         if reason in ("ended", "disconnected") and transcriber is not None:
             try:
                 await emit(await transcriber.flush())

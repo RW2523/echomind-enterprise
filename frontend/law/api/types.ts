@@ -7,7 +7,7 @@ export type MatterStatus = 'open' | 'closed' | 'archived';
 export interface Me {
   user: { id: string; username: string; role: string; roles: FirmRole[] };
   session: { auth: string; mfa_enrolled: boolean; must_change_password: boolean; idle_expires_at: number; abs_expires_at: number };
-  features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean; panel?: boolean; conversation?: boolean };
+  features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean; panel?: boolean; conversation?: boolean; regulatory?: boolean; translation?: boolean };
 }
 export interface Client { id: string; name: string; code?: string | null; status: string; version: number; }
 export interface Matter {
@@ -557,4 +557,15 @@ export interface PanelReview {
 export interface PanelView {
   review: PanelReview; artifact: ArtifactVersion<PanelContent> | null;
   versions: { id: string; version: number; status: string; created_at: string }[]; can: { approve: boolean; facts: boolean; author: boolean };
+}
+
+// Regulatory updates (S4.4, D-068): public law, fetched on the host and matched to open matters.
+export type RegulatoryStatus = 'new' | 'reviewed' | 'not_relevant';
+export interface RegulatoryUpdate {
+  id: string; source: 'legislation.gov.uk' | 'federalregister.gov'; source_name: string; external_id: string; jurisdiction: 'UK' | 'US';
+  kind: string; title: string; summary: string; url: string; published: string; subjects: string[]; licence: 'OGL-3.0' | 'public-domain';
+}
+export interface RegulatoryFirmUpdate extends RegulatoryUpdate { matters: { id: string; number: string; title: string; status: RegulatoryStatus }[] }
+export interface RegulatoryMatch {
+  update: RegulatoryUpdate; terms: string[]; status: RegulatoryStatus; decided_by: string | null; decided_at: string | null; note: string | null; version: number;
 }

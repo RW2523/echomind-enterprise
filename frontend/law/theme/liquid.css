@@ -235,3 +235,29 @@
   box-shadow: inset 0 1px 0 var(--glass-edge); transition: background var(--dur-1), color var(--dur-1), transform var(--dur-1) var(--ease); }
 [data-edition="law"] .lw-starter:hover { background: var(--sheet-strong); color: var(--ink); transform: translateY(-1px); }
 
+
+/* Regulatory updates (S4.4, D-068) */
+[data-edition="law"] .lw-segmented { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--fill-1); border: 1px solid var(--glass-edge-low); }
+[data-edition="law"] .lw-segmented button { border: 0; background: transparent; color: var(--ink-2); font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+[data-edition="law"] .lw-segmented button[aria-pressed="true"] { background: var(--sheet-strong); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), inset 0 1px 0 var(--glass-edge); }
+[data-edition="law"] .lw-reg-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+[data-edition="law"] .lw-reg-item { display: grid; gap: 8px; }
+[data-edition="law"] .lw-reg-title { font-size: 16px; font-weight: 600; color: var(--ink); text-decoration: none; line-height: 1.35; }
+[data-edition="law"] .lw-reg-title:hover { color: var(--accent); text-decoration: underline; }
+[data-edition="law"] .lw-reg-title svg { width: 13px; height: 13px; margin-left: 6px; vertical-align: -1px; color: var(--ink-3); }
+[data-edition="law"] .lw-reg-summary { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+[data-edition="law"] .lw-reg-matters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+[data-edition="law"] .lw-chips li:has(> .lw-chip) { padding: 0; border: 0; background: none; }
+[data-edition="law"] .lw-chip { display: inline-block; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 13px; text-decoration: none; }
+[data-edition="law"] .lw-chip:hover { text-decoration: underline; }
+
+/* Machine translation (OPT-02, D-070) */
+[data-edition="law"] .lw-translate-label { margin: 0; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; color: var(--ink-2);
+  background: color-mix(in srgb, var(--attention) 10%, transparent); border: 1px solid color-mix(in srgb, var(--attention) 30%, transparent); }
+[data-edition="law"] .lw-translate-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+[data-edition="law"] .lw-translate-rows > li { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 14px 18px; border-radius: 14px;
+  background: var(--sheet); border: 1px solid var(--glass-edge-low); }
+[data-edition="law"] .lw-translate-rows p { margin: 0; line-height: 1.55; }
+[data-edition="law"] .lw-translate-rows > li > p:first-child { color: var(--ink-2); }
+@media (max-width: 760px) { [data-edition="law"] .lw-translate-rows > li { grid-template-columns: 1fr; } }
+[data-edition="law"] .lw-translation { margin-top: 8px; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; display: grid; gap: 6px; }

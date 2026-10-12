@@ -22,6 +22,10 @@ needs an approved load-test window (🔒): pass --window-approved "<who, when>".
     python3 scripts/law/load_test.py --smoke
     python3 scripts/law/load_test.py --seconds 600 --research-users 2 --window-approved "owner, 2026-10-12 22:00"
 
+The pilot stack (D-066): `--base http://localhost:3110 --origin http://localhost:3110 --container echomind-law-backend`
+reads the demo sign-ins through `docker exec`, `--users harper:M-301,sofia:M-302,...` gives each researcher their own
+matter, and `--stop-file PATH` ends every virtual user as soon as PATH exists (a watch on production writes it).
+
 The report goes to eval/law/reports/<time>-load-<smoke|t12>.json and .md.
 """
 from __future__ import annotations
@@ -117,9 +121,16 @@ def pct(values: list[float], q: float) -> float | None:
     return round(v[min(len(v) - 1, int(round(q * (len(v) - 1))))], 2)
 
 
+STOP: list = []                                                # a path whose existence ends the run (--stop-file)
+
+
+def running(until: float) -> bool:
+    return time.monotonic() < until and not (STOP and Path(STOP[0]).exists())
+
+
 async def research(s: Session, mid: str, stats: Stats, until: float, n: int) -> None:
     i = n
-    while time.monotonic() < until:
+    while running(until):
         q = QUESTIONS[i % len(QUESTIONS)]
         i += 1
         t0 = time.monotonic()
@@ -136,7 +147,7 @@ async def research(s: Session, mid: str, stats: Stats, until: float, n: int) -> 
 
 async def search(s: Session, mid: str, stats: Stats, until: float) -> None:
     i = 0
-    while time.monotonic() < until:
+    while running(until):
         t0 = time.monotonic()
         try:
             r = await s.request("POST", f"/api/legal/matters/{mid}/documents/search", json={"query": SEARCHES[i % len(SEARCHES)]})
@@ -155,13 +166,13 @@ async def capture(s: Session, mid: str, meeting: str, stats: Stats, until: float
     t0 = time.monotonic()
     try:
         async with websockets.connect(url, extra_headers={"Cookie": s._headers(False)["Cookie"]}, origin=s.origin, max_size=2**22) as ws:
-            ready = json.loads(await asyncio.wait_for(ws.recv(), 30))
+            ready = json.loads(await asyncio.wait_for(ws.recv(), 300))   # a cold speech model loads first; a browser waits too
             if ready.get("type") != "ready":
                 stats.bad("capture_open", json.dumps(ready))
                 return
             stats.ok("capture_open", time.monotonic() - t0)
             sent, start = 0, time.monotonic()
-            while time.monotonic() < until:
+            while running(until):
                 await ws.send(frame)
                 sent += 1
                 lag = start + sent * 0.1 - time.monotonic()        # real time: one frame every 100 ms
@@ -172,7 +183,7 @@ async def capture(s: Session, mid: str, meeting: str, stats: Stats, until: float
             t1 = time.monotonic()
             await ws.send(json.dumps({"type": "stop"}))
             while True:
-                m = await asyncio.wait_for(ws.recv(), 60)
+                m = await asyncio.wait_for(ws.recv(), 320)          # audio still waiting is transcribed (LEGAL_CAPTURE_FINISH_SEC)
                 if isinstance(m, str) and json.loads(m).get("type") == "stopped":
                     break
             stats.ok("capture_stop", time.monotonic() - t1)
@@ -187,8 +198,18 @@ def backend_pid(port: int) -> int | None:
     return int(m.group(1)) if m else None
 
 
+async def container_memory(name: str, stats: Stats, until: float) -> None:
+    while running(until):
+        out = await asyncio.to_thread(subprocess.run, ["docker", "stats", "--no-stream", "--format", "{{.MemUsage}}", name],
+                                      capture_output=True, text=True)
+        m = re.match(r"([\d.]+)(MiB|GiB)", out.stdout.strip())
+        if m:
+            stats.rss_mb.append(round(float(m.group(1)) * (1024 if m.group(2) == "GiB" else 1), 1))
+        await asyncio.sleep(5)
+
+
 async def memory(pid: int | None, stats: Stats, until: float) -> None:
-    while pid and time.monotonic() < until:
+    while pid and running(until):
         try:
             rss = next(int(x.split()[1]) for x in Path(f"/proc/{pid}/status").read_text().splitlines() if x.startswith("VmRSS"))
             stats.rss_mb.append(round(rss / 1024, 1))
@@ -221,30 +242,42 @@ async def setup(alice: Session, number: str) -> tuple[str, str]:
 async def run(args) -> int:
     host = urllib.parse.urlparse(args.base).hostname
     if host not in _LOOPBACK:
-        raise SystemExit("the load test runs against a loopback development backend only")
+        raise SystemExit("the load test runs against a loopback backend only")
+    if args.stop_file:
+        STOP.append(args.stop_file)
     if not args.smoke and not args.window_approved:
         raise SystemExit("a measured run shares the host's models with production: pass --window-approved \"<who, when>\" (🔒), or --smoke")
     seconds = min(args.seconds, 30) if args.smoke else args.seconds
     research_users = 1 if args.smoke else args.research_users
-    creds = json.loads((Path(args.data) / "legal" / "demo_credentials.json").read_text())
-    people = ["alice", "nakamura"][:research_users]          # the M-101 members who research (carol searches)
+    if args.container:                                      # the pilot: sign-ins read through docker exec, never written out
+        creds = json.loads(subprocess.run(["docker", "exec", args.container, "cat", "/data/legal/demo_credentials.json"],
+                                          check=True, capture_output=True, text=True).stdout)
+    else:
+        creds = json.loads((Path(args.data) / "legal" / "demo_credentials.json").read_text())
+    pairs = [tuple(x.split(":", 1)) for x in args.users.split(",") if x] if args.users else \
+        [(n, args.matter) for n in ["alice", "nakamura"][:research_users]]   # the M-101 members who research (carol searches)
+    research_users = len(pairs)
     sessions = {}
-    for name in dict.fromkeys(people + ["carol", "alice"]):
+    for name in dict.fromkeys([n for n, _ in pairs] + ["carol", "alice"]):
         sessions[name] = Session(args.base, args.origin)
         await sessions[name].sign_in(name, creds[name])
     mid, meeting = await setup(sessions["alice"], args.matter)
+    ids = {m["number"]: m["id"] for n in dict.fromkeys(n for n, _ in pairs)
+           for m in (await sessions[n].request("GET", "/api/legal/matters")).json()["matters"]}
     stats = Stats()
     until = time.monotonic() + seconds
-    pid = backend_pid(urllib.parse.urlparse(args.base).port or 80)
-    tasks = [research(sessions[n], mid, stats, until, i) for i, n in enumerate(people)]
-    tasks += [search(sessions["carol"], mid, stats, until), capture(sessions["alice"], mid, meeting, stats, until), memory(pid, stats, until)]
+    watch = container_memory(args.container, stats, until) if args.container else \
+        memory(backend_pid(urllib.parse.urlparse(args.base).port or 80), stats, until)
+    tasks = [research(sessions[n], ids[num], stats, until, i) for i, (n, num) in enumerate(pairs)]
+    tasks += [search(sessions["carol"], mid, stats, until), capture(sessions["alice"], mid, meeting, stats, until), watch]
     started = time.strftime("%Y%m%d-%H%M%S")
     await asyncio.gather(*tasks)
     for s in sessions.values():
         await s.http.aclose()
     ops = {op: {"n": len(v), "p50_s": pct(v, .5), "p95_s": pct(v, .95), "max_s": round(max(v), 2)}
            for op, v in stats.lat.items() if op not in ("capture_frames",)}
-    summary = {"seconds": seconds, "research_users": research_users, "operations": ops, "failures": stats.fail, "last_error": stats.last_error,
+    summary = {"seconds": seconds, "research_users": research_users, "users": [f"{n}:{m}" for n, m in pairs],
+               "stopped_early": bool(STOP and Path(STOP[0]).exists()), "operations": ops, "failures": stats.fail, "last_error": stats.last_error,
                "database_busy": stats.busy, "capture_frames": int(sum(stats.lat.get("capture_frames", []))),
                "backend_rss_mb_max": max(stats.rss_mb) if stats.rss_mb else None,
                "backend_rss_mb_start": stats.rss_mb[0] if stats.rss_mb else None}
@@ -278,6 +311,9 @@ def main() -> int:
     ap.add_argument("--research-users", type=int, default=2)
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--window-approved", default="", help="who approved the load-test window, and when (🔒)")
+    ap.add_argument("--container", default="", help="read the demo sign-ins from this backend container (the pilot)")
+    ap.add_argument("--users", default="", help="researchers and their matters: name:M-101,name:M-301,...")
+    ap.add_argument("--stop-file", default="", help="end the run as soon as this file exists")
     return asyncio.run(run(ap.parse_args()))
 
 

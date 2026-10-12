@@ -158,6 +158,8 @@ _REFUSE_BELOW = (
     (32, "SELECT COUNT(*) FROM legal_time_entries WHERE status = 'approved' OR edited = 1",
      "delete {n} time entr(y/ies) people edited or approved"),
     (33, "SELECT COUNT(*) FROM legal_panel_reviews", "delete {n} panel review(s) and the questions asked"),
+    (34, "SELECT COUNT(*) FROM legal_regulatory_matches WHERE status <> 'new'",
+     "delete {n} lawyers' decision(s) on regulatory updates, with who made them and why"),
 )
 
 

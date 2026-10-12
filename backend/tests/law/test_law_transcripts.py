@@ -182,6 +182,77 @@ def test_falling_behind_is_reported(tx, monkeypatch):
     assert "degraded" in [m["kind"] for m in view(alice, tx)["marks"]]
 
 
+def test_a_slow_model_never_stops_the_socket_being_read(tx):
+    """T12 (D-066): under load the model fell behind, the socket went unread and the browser's keepalive
+    timed out. Reading never waits for the model; audio and turns are transcribed in order as it catches up."""
+    alice = as_user(tx, "alice")
+    helena, petra = tx["people"]["Helena Marsh"]["id"], tx["people"]["Petra Voss"]["id"]
+    model = tx["model"]["t"] = Scripted(["Can you confirm the cap? ", "", "Yes, it is five hundred thousand. ", ""], delay=0.4)
+    got = []
+    with alice.websocket_connect(f"{WSS}{tx['base']}/capture", headers=ORIGIN) as ws:
+        got.append(ws.receive_json())
+        ws.send_json({"type": "speaker", "participant_id": helena})
+        ws.send_bytes(FRAME)
+        ws.send_bytes(FRAME)
+        ws.send_json({"type": "speaker", "participant_id": petra})
+        ws.send_bytes(FRAME)
+        ws.send_bytes(FRAME)
+        asked = time.monotonic()
+        ws.send_json({"type": "speaker", "participant_id": "someone-else"})
+        while (msg := ws.receive_json())["type"] != "error":
+            got.append(msg)
+        answered = time.monotonic() - asked
+        ws.send_json({"type": "stop"})
+        while (msg := ws.receive_json())["type"] != "stopped":
+            got.append(msg)
+    assert answered < 0.6                             # at once, not after the model's 1.6 s of work
+    assert model.fed == 4 and model.resets == 2
+    segs = view(alice, tx)["segments"]
+    assert [(s["speaker"], s["raw_text"]) for s in segs] == [("Helena Marsh", "Can you confirm the cap?"),
+                                                             ("Petra Voss", "Yes, it is five hundred thousand.")]
+
+
+def test_loading_the_speech_model_never_holds_up_the_server(tx, monkeypatch):
+    """T12 stage 1 (D-066): the first recording after a restart loads the model, for a minute or two on CPU.
+    It loads on a worker thread, so nobody else's requests wait for it."""
+    import asyncio
+    from app.legal.meetings import capture
+    seen = []
+
+    def factory():
+        try:
+            asyncio.get_running_loop()
+            seen.append("on the event loop")
+        except RuntimeError:
+            seen.append("on a worker thread")
+        return Scripted(["Loaded. "])
+    monkeypatch.setattr(capture, "transcriber_factory", factory)
+    alice = as_user(tx, "alice")
+    record(alice, tx, [FRAME])
+    assert seen == ["on a worker thread"]
+    assert [s["raw_text"] for s in view(alice, tx)["segments"]] == ["Loaded."]
+
+
+def test_a_model_too_far_behind_leaves_a_marked_gap_never_a_silent_loss(tx, monkeypatch, fresh_db):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_CAPTURE_BACKLOG_SEC", 0.3)
+    alice = as_user(tx, "alice")
+    model = tx["model"]["t"] = Scripted(["One. ", "Two. ", "Three. ", "Four. ", "After the gap. "], delay=0.3)
+    got = record(alice, tx, [FRAME] * 10 + [("sleep", 1.5), FRAME, FRAME])
+    assert any(m["type"] == "degraded" and m["reason"] == "skipped" for m in got)
+    assert model.fed < 12
+    data = view(alice, tx)
+    assert [s["raw_text"] for s in data["segments"]] == ["One. Two. Three. Four.", "After the gap."]
+    gaps = [m for m in data["marks"] if m["kind"] == "gap"]
+    assert [m["detail"] for m in gaps] == ["transcription_behind"]
+    assert data["segments"][0]["wall_start"] <= gaps[0]["at"] <= data["segments"][1]["wall_start"]
+    from app.legal.meetings import transcript
+    doc = transcript.as_document({"title": "Renewal call", "kind": "client_call"}, data)
+    assert doc.index("Four.") < doc.index("[Not transcribed: speech recognition fell too far behind here.]") < doc.index("After the gap.")
+    cid = data["segments"][0]["capture_id"] if "capture_id" in data["segments"][0] else gaps[0]["capture_id"]
+    assert q(fresh_db, "SELECT SUM(bytes) FROM legal_capture_custody WHERE capture_id=?", cid) == [(12 * len(FRAME),)]   # every frame received
+
+
 # ── Corrections ──────────────────────────────────────────────────────────────────
 def revise(c, w, sid, **body):
     return c.post(f"{w['base']}/transcript/segments/{sid}/revisions", headers=csrf_headers(c), json=body)

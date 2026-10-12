@@ -307,7 +307,9 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
       else if (msg.type === 'speaker') setSpeaker(msg.participant_id ?? null);
       else if (msg.type === 'degraded') setWarning(msg.reason === 'behind'
         ? `Transcription is ${msg.lag_s} s behind. Speech is still being received; the transcript will catch up, and this is noted in the record.`
-        : 'A transcription error left a gap. It is marked in the transcript at this point, so nothing is lost silently.');
+        : msg.reason === 'skipped'
+          ? 'Transcription fell too far behind, so some speech is not being transcribed. The gap is marked in the transcript at this point.'
+          : 'A transcription error left a gap. It is marked in the transcript at this point, so nothing is lost silently.');
       else if (msg.type === 'recovered') setWarning('');
       else if (msg.type === 'alert') setLiveAlerts((xs) => [...xs, msg as AssistAlert]);
       else if (msg.type === 'agenda') setAgendaItem(msg.item_id ?? null);
