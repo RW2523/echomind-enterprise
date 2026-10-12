@@ -193,7 +193,8 @@ _AUTH_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/c
 # Law edition (S1.1, SEC-01): deny by default. Only these are reachable without a session; the
 # client-error sink is not (it would let anyone write into the logs).
 _LAW_PUBLIC_PATHS = {"/health", "/api/version", "/api/auth/login", "/api/auth/config", "/api/auth/logout",
-                     "/api/auth/oidc/start", "/api/auth/oidc/callback"}           # D-076: 404 unless the firm's provider is set
+                     "/api/auth/oidc/start", "/api/auth/oidc/callback",           # D-076: 404 unless the firm's provider is set
+                     "/api/auth/demo"}                                            # D-077: 404 unless demo sign-in is on
 # S1.7 (decision D-025): only the Law API is served in the Law edition. The existing modules
 # (legacy chat, documents, transcripts, Boardroom, document studio, evaluation) are closed for
 # everyone — none of them is matter-scoped — and their capabilities return as /api/legal routes.
@@ -208,7 +209,7 @@ def _law_guard(request: Request):
     from .legal.identity.principal import PARTIAL_PATHS, PASSWORD_CHANGE_PATHS
     from .legal.identity.sessions import csrf_ok
     path = request.url.path
-    if request.method == "OPTIONS" or path in _LAW_PUBLIC_PATHS or not path.startswith("/api/"):
+    if request.method == "OPTIONS" or path in _LAW_PUBLIC_PATHS or not path.startswith("/api/") or path.startswith("/api/auth/demo/"):
         return None
     if path.startswith(_LAW_LINK_PREFIX):
         # S4.1 (D-054): an enquirer's intake link is its own key, with no session; served only when the firm turned

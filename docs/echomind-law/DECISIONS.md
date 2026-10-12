@@ -1766,6 +1766,23 @@ Every entry records the options considered, the recommendation, the consequence 
   4. Agree P-011, including whether the provider's MFA is trusted.
 - **Not built:** single logout at the provider; group or role mapping from the provider (roles stay this server's); SCIM.
 
+### D-077 One-click demo sign-in, no password or code — RECORDED (owner's decision 2026-10-12: "one-click demo login", "from anywhere")
+- **The request:** "remove the auth code and give me options to login directly, do not have password; remove the auth flow".
+- **Asked, and the owner chose:**
+  - one-click sign-in as a demo person, rather than removing sign-in (which would end per-person matter access, walls and second-lawyer approval);
+  - usable from any address, rather than only this server and the office network.
+- **What it does:**
+  - The sign-in page lists the demo seed's fictional people (the names in `legal/demo_credentials.json`). One click is a full session as that person.
+  - At the owner's further request ("remove the authenticator code flow and login flow"), the page shows only the people while demo sign-in is on. One small "Other accounts" link opens the password form, so the administrator account cannot be locked out.
+  - The administrator and any account added later keep their password and two-step code.
+  - Every entry is audited (`auth.demo_signin`, with the real client address, D-075). Every page shows a banner that it is on.
+- **Settings:**
+  - Off by default (`LEGAL_DEMO_SIGNIN`). The code's default reach is `private` (this server and office addresses).
+  - The pilot sets `LAW_DEMO_SIGNIN=1` and `LAW_DEMO_SIGNIN_FROM=anywhere`, at the owner's choice.
+- **Risk, accepted by the owner for the demo:** anyone who can reach the pilot can enter as any demo person, including the demo's managing partners, firm administrator and records administrator. They see and change the fictional matters, users and settings those people can.
+  - **Turn it off before any real data goes in** (`LAW_DEMO_SIGNIN=0`, then deploy).
+- **Tests first:** backend 5, Vitest 3, and two public routes added to the route table (404 while off).
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

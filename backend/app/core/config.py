@@ -286,6 +286,10 @@ class Settings(BaseSettings):
     LEGAL_OIDC_USERNAME_CLAIM: str = os.getenv("LEGAL_OIDC_USERNAME_CLAIM", "preferred_username")
     LEGAL_OIDC_EMAIL_DOMAIN: str = os.getenv("LEGAL_OIDC_EMAIL_DOMAIN", "")
     LEGAL_OIDC_TRUST_MFA: bool = os.getenv("LEGAL_OIDC_TRUST_MFA", "0").lower() in ("1", "true", "yes")
+    # D-077: one-click sign-in as the demo seed's fictional people, no password or code. Off by default; "private" allows it
+    # only from this server or private addresses, "anywhere" from any address (the owner's choice).
+    LEGAL_DEMO_SIGNIN: bool = os.getenv("LEGAL_DEMO_SIGNIN", "0").lower() in ("1", "true", "yes")
+    LEGAL_DEMO_SIGNIN_FROM: str = os.getenv("LEGAL_DEMO_SIGNIN_FROM", "private")
     LEGAL_PASSWORD_MIN_LENGTH: int = int(os.getenv("LEGAL_PASSWORD_MIN_LENGTH", "12"))
     LEGAL_WS_RECHECK_SEC: float = float(os.getenv("LEGAL_WS_RECHECK_SEC", "60"))          # re-validate open WebSockets
     LEGAL_OBO_TTL_SEC: int = int(os.getenv("LEGAL_OBO_TTL_SEC", "300"))                   # voice → backend token lifetime

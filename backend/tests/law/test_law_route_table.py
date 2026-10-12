@@ -23,6 +23,8 @@ PUBLIC = {
     # D-076: single sign-on starts and returns without a session, like the password; 404 unless the firm's provider is set
     # (test_law_oidc.py), and the callback signs in only an existing account after checking the provider's token.
     ("GET", "/api/auth/oidc/start"), ("GET", "/api/auth/oidc/callback"),
+    # D-077: one-click demo sign-in; 404 unless the owner turns it on (test_law_demo_signin.py).
+    ("GET", "/api/auth/demo"), ("POST", "/api/auth/demo/{username}"),
 }
 # FastAPI's own /docs, /redoc, /openapi.json are disabled at import in the Law edition; that is
 # proven in a fresh interpreter by test_law_edition_posture.py (this process may have imported

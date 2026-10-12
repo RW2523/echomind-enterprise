@@ -47,6 +47,7 @@ declare -a SUITES=(
   "SIEM forwarder: off by default, content-free CEF, nothing skipped (D-069)|$L/test_law_audit_forward.py"
   "Sign-in throttle per real client address; the proxy header believed only from the proxy (D-075)|$L/test_law_throttle.py"
   "Single sign-on: PKCE, browser-bound state, signed tokens, existing accounts only (D-076)|$L/test_law_oidc.py $L/test_law_route_table.py"
+  "Demo sign-in: off by default, demo people only, audited (D-077)|$L/test_law_demo_signin.py"
 )
 FAILED=0
 printf '%-52s %s\n' "Spec test" "Result"

@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import QRCode from 'qrcode';
 import { api, ApiError } from '../api/client';
 import { keys } from '../api/queries';
-import { CopyField, ErrorNote, Field } from '../ui/primitives';
+import { CopyField, ErrorNote, Field, roleLabel } from '../ui/primitives';
 
 type Step = 'password' | 'code' | 'enroll' | 'needs-link' | 'recovery';
 
@@ -32,6 +32,8 @@ export default function SignIn() {
   // D-076: back from the firm's identity provider, the server says which step is next, or why it stopped.
   const [step, setStep] = useState<Step>(params.get('step') === 'code' ? 'code' : params.get('step') === 'enrol' ? 'needs-link' : 'password');
   const [oidc, setOidc] = useState<{ label: string } | null>(null);
+  const [demo, setDemo] = useState<{ username: string; roles: string[] }[]>([]);   // D-077: one-click demo people
+  const [otherAccounts, setOtherAccounts] = useState(false);                        // with demo people: the password only on request
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -43,7 +45,10 @@ export default function SignIn() {
 
   useEffect(() => { document.documentElement.dataset.edition = 'law'; }, []);
   useEffect(() => {
-    api.get<{ oidc?: { label: string } }>('/api/auth/config').then((c) => setOidc(c.oidc ?? null)).catch(() => setOidc(null));
+    api.get<{ oidc?: { label: string }; demo_signin?: boolean }>('/api/auth/config').then((c) => {
+      setOidc(c.oidc ?? null);
+      if (c.demo_signin) api.get<{ people: { username: string; roles: string[] }[] }>('/api/auth/demo').then((r) => setDemo(r.people)).catch(() => setDemo([]));
+    }).catch(() => setOidc(null));
   }, []);
 
   const finish = async () => {
@@ -97,7 +102,26 @@ export default function SignIn() {
             </div>
           </div>
 
-          {step === 'password' && (
+          {step === 'password' && demo.length > 0 && !enrolToken && (
+            <div role="group" aria-label="Enter the demo as" style={{ display: 'grid', gap: 8, marginBottom: 18 }}>
+              <h2 className="lw-h2" style={{ margin: 0 }}>Enter the demo as</h2>
+              <p className="lw-meta" style={{ margin: 0, fontSize: 13.5 }}>Fictional people with fictional matters. No password or code needed.</p>
+              <div className="lw-demo-people">
+                {demo.map((p) => (
+                  <button key={p.username} type="button" className="lw-btn" disabled={busy}
+                    onClick={() => run(async () => { await api.post(`/api/auth/demo/${encodeURIComponent(p.username)}`); await finish(); })}>
+                    {`${p.username} · ${p.roles.map(roleLabel).join(', ') || 'Member'}`}
+                  </button>
+                ))}
+              </div>
+              {error && <ErrorNote>{error}</ErrorNote>}
+              {!otherAccounts && (
+                <button type="button" className="lw-linklike lw-meta" style={{ justifySelf: 'center', marginTop: 8, fontSize: 12.5 }}
+                  onClick={() => setOtherAccounts(true)}>Other accounts</button>
+              )}
+            </div>
+          )}
+          {step === 'password' && (demo.length === 0 || enrolToken || otherAccounts) && (
             <form onSubmit={submitPassword} style={{ display: 'grid', gap: 14 }}>
               {enrolToken && <p className="lw-meta" style={{ margin: 0, fontSize: 13.5 }}>Sign in with the details your administrator gave you; then you'll set up your authenticator.</p>}
               <Field label="Username">{(id) => <input id={id} className="lw-input" autoComplete="username" autoFocus value={username} onChange={(e) => setUsername(e.target.value)} />}</Field>

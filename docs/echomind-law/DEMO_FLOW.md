@@ -8,8 +8,9 @@ R-001, which holds **real public law**, labelled as such.
 - **Open** `https://localhost:3553` on the server, or `https://<server address>:3553` on the office network, and accept
   the self-signed certificate. Use the `localhost` address for Conversation: browsers may refuse the microphone on a
   network address with a self-signed certificate.
-- **Sign in** with each demo person's password and current code, which this command shows on the server:
-  `python3 scripts/law/demo_signin.py` (codes change every 30 seconds, and each code works once).
+- **Sign in** by clicking a demo person on the sign-in page: one-click demo sign-in is on for the pilot (D-077), with no
+  password or code. With it off, use each person's password and current code, which `python3 scripts/law/demo_signin.py`
+  shows on the server.
 - **Jump anywhere** with **⌘K / Ctrl K**. Type a matter number, a client or a tool, then press Enter.
 - **The first recording or spoken question after a restart** waits while speech recognition loads, for a minute or two.
 
