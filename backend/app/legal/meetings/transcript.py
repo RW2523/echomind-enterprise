@@ -122,6 +122,14 @@ def _clock(iso: Optional[str]) -> str:
         return "--:--:--"
 
 
+def _before(gap: dict, seg: dict) -> bool:
+    """Whether a gap comes before a segment: by where it is in the audio within one capture (exact, even when audio
+    arrives faster than real time), otherwise by wall-clock time."""
+    if gap.get("capture_id") and gap.get("capture_id") == seg.get("capture_id") and None not in (gap.get("audio_ms"), seg.get("t_start_ms")):
+        return gap["audio_ms"] <= seg["t_start_ms"]
+    return bool(seg.get("wall_start")) and gap["at"] <= seg["wall_start"]
+
+
 def as_document(meeting: dict, data: dict) -> str:
     """The transcript as text: a heading, the participants, then one paragraph per segment with its
     wall-clock time and speaker, and the gaps where nothing could be transcribed."""
@@ -129,10 +137,10 @@ def as_document(meeting: dict, data: dict) -> str:
              f"Meeting {meeting['number'] if meeting.get('number') else ''} · {meeting.get('kind', '')} · "
              f"transcribed verbatim; corrections are marked in the record.".replace("  ", " "), "",
              "Participants: " + "; ".join(f"{p['name']} ({p['role']})" for p in data["participants"] if not p["removed"]), ""]
-    gaps = sorted((m for m in data["marks"] if m["kind"] == "gap"), key=lambda m: m["at"])
+    gaps = sorted((m for m in data["marks"] if m["kind"] == "gap"), key=lambda m: (m["at"], m.get("audio_ms") or 0))
     g = 0
     for s in data["segments"]:
-        while g < len(gaps) and s.get("wall_start") and gaps[g]["at"] <= s["wall_start"]:
+        while g < len(gaps) and _before(gaps[g], s):
             lines += [f"[{_clock(gaps[g]['at'])}] [Not transcribed: {GAP_REASONS.get(gaps[g].get('detail'), GAP_REASONS[None])}]", ""]
             g += 1
         lines += [f"[{_clock(s.get('wall_start'))}] {s['speaker'] or SPEAKER_UNKNOWN}: {s['text']}", ""]

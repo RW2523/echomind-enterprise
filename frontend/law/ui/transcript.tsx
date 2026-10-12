@@ -13,6 +13,8 @@ const when = (iso: string) => new Date(iso).toLocaleString([], { dateStyle: 'med
 const KIND: Record<VocabularySuggestion['kind'], string> = { participant: 'A participant', company: 'A company in the documents', defined_term: 'A defined term' };
 
 type Row = { kind: 'segment'; s: Segment } | { kind: 'gap'; m: CaptureMark };
+const at = (r: Row) => (r.kind === 'segment' ? r.s.wall_start : r.m.at);
+const pos = (r: Row) => (r.kind === 'segment' ? r.s.t_start_ms : r.m.audio_ms) ?? 0;
 
 /** The transcript as a record: each segment with its time and speaker, corrections marked with
  *  their history, gaps where nothing could be transcribed, and matter-vocabulary suggestions. */
@@ -35,7 +37,7 @@ export function TranscriptRecord({ matterId, meetingId, data, canCorrect, canFin
   const segments = live ?? data.segments;
   const rows: Row[] = [...segments.map((s) => ({ kind: 'segment' as const, s })),
     ...(live ? [] : (data.marks ?? []).filter((m) => m.kind === 'gap').map((m) => ({ kind: 'gap' as const, m })))]
-    .sort((a, b) => ((a.kind === 'segment' ? a.s.wall_start : a.m.at) ?? '').localeCompare((b.kind === 'segment' ? b.s.wall_start : b.m.at) ?? ''));
+    .sort((a, b) => (at(a) ?? '').localeCompare(at(b) ?? '') || pos(a) - pos(b));     // equal times: by place in the audio
 
   const accept = async (x: VocabularySuggestion) => {
     setBusy(x.id); setError('');
