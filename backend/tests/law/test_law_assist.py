@@ -280,3 +280,128 @@ def test_alerts_go_with_the_transcript_and_lose_a_purged_document_s_quote(assist
     assert deletion.purge(t["id"], assist["users"]["mp"]["id"])["verification"]["ok"]
     with sqlite3.connect(fresh_db) as db:
         assert db.execute("SELECT COUNT(*) FROM legal_assist_alerts").fetchone()[0] == 0
+
+
+# D-061: speech recognition writes amounts in words and can end a segment, or put a full stop, inside a figure.
+# The pilot's demo call (a client misstating the cap as "five hundred thousand dollars") raised no alert.
+def test_amounts_spoken_in_words_are_read_from_a_transcript_and_documents_are_read_as_before():
+    from app.legal.compare import facts
+
+    def money(t, spoken=True):
+        return [(f.value, f.shown) for f in facts.extract(t, [(0, len(t))], spoken=spoken) if f.kind == "money"]
+    assert money("the liability cap is five hundred thousand dollars") == [("USD 500000", "five hundred thousand dollars")]
+    assert money("about two hundred and fifty thousand dollars")[0][0] == "USD 250000"
+    assert money("a fee of eighteen thousand five hundred dollars a month")[0][0] == "USD 18500"
+    assert money("it could cost them a million pounds")[0][0] == "GBP 1000000"
+    assert money("twenty-five thousand euros in total")[0][0] == "EUR 25000"
+    # A full stop the speech model put inside the figure.
+    assert money("The liability. Cap under clause eight is five. Hundred thousand dollars. So we are covered.") == [
+        ("USD 500000", "five. Hundred thousand dollars")]
+    assert money("Clause eight. Five hundred dollars a day.")[0][0] == "USD 500"        # not "eight five hundred"
+    assert money("Under the cap of USD 250,000 we are fine.") == [("USD 250000", "USD 250,000")]
+    assert money("we spoke for five minutes about dollars") == []
+    assert money("five hundred thousand dollars", spoken=False) == []                    # documents: unchanged
+
+
+def test_a_misstated_amount_spoken_in_words_raises_an_alert(assist):
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "As I understand it the liability cap under the agreement is five hundred thousand "
+                                                 "dollars, so we are well covered.")])
+    [a] = [x for x in got if x["rule"] == "signed_terms"]
+    assert (a["verdict"], a["title"]) == ("differs", "Differs from signed agreement, cl. 8.1")
+    assert a["said"]["quote"] == "five hundred thousand dollars"
+
+
+def test_a_figure_split_across_two_segments_by_one_speaker_is_still_checked(assist, fresh_db):
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "As I understand it the liability cap under the agreement is five."),
+                                  ("Petra Voss", "Hundred thousand dollars, so we are well covered.")])
+    [a] = [x for x in got if x["rule"] == "signed_terms"]
+    assert (a["verdict"], a["title"]) == ("differs", "Differs from signed agreement, cl. 8.1")
+    with sqlite3.connect(fresh_db) as db:                                                # the quote is in the segment it ended in
+        seg = db.execute("SELECT text FROM legal_transcript_segments WHERE id=?", (a["said"]["segment_id"],)).fetchone()[0]
+    assert seg.startswith("Hundred thousand") and seg[a["said"]["start"]:a["said"]["end"]] == a["said"]["quote"] == "Hundred thousand dollars"
+    assert "five. Hundred thousand dollars" in assist["model"].calls[-1][1]["content"]      # the model sees what was said
+
+
+def test_a_figure_is_never_joined_across_two_speakers(assist):
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "As I understand it the liability cap under the agreement is five."),
+                                  ("Helena Marsh", "Hundred thousand dollars was last year's figure for the claim.")])
+    assert not any("five" in (x.get("explanation") or "").lower() for x in got)
+    assert not any("five. Hundred" in c[1]["content"] for c in assist["model"].calls)
+
+
+LEASE = """LEASE OF UNIT 9 (fictional)
+
+This Lease is made on 1 April 2025 between Calder Estates Ltd ("Landlord") and Voss-Lindqvist AB ("Tenant").
+
+7.2 The Tenant's total aggregate liability to the Landlord arising under or in connection with this Lease, whether in contract, tort or otherwise, shall not exceed the greater of GBP 50,000 or the rent paid in the preceding twelve months."""
+
+
+def test_a_long_clause_is_found_by_its_subject_when_the_words_near_the_figure_differ(assist):
+    """D-061: in a long clause the subject ("liability") can be far from the figure; a short spoken statement
+    about the same subject still reaches the model, which decides."""
+    alice = as_user(assist, "alice")
+    upload(alice, assist["mid"], "lease.txt", LEASE, status="executed")
+    index_all()
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "As I recall the liability cap under the lease is seventy thousand pounds.")])
+    [a] = [x for x in got if x["rule"] == "signed_terms"]
+    assert a["verdict"] == "differs" and "GBP 50,000" in a["source"]["quote"]
+    assert a["said"]["quote"] == "seventy thousand pounds"
+
+
+def test_full_stops_the_speech_model_scatters_do_not_hide_what_a_figure_is_about(assist):
+    """D-061: the pilot's speech recognition wrote "The liability. Cap under. Clause eight. Is five." | "hundred
+    thousand dollars." Its full stops are unreliable, so a figure's context is read without them."""
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "Thanks as I understand it. The liability. Cap under. Clause eight. Is five."),
+                                  ("Petra Voss", "hundred thousand dollars. So we were well covered.")])
+    [a] = [x for x in got if x["rule"] == "signed_terms"]
+    assert (a["verdict"], a["title"]) == ("differs", "Differs from signed agreement, cl. 8.1")
+    assert a["said"]["quote"] == "hundred thousand dollars"
+
+
+def test_a_decimal_amount_keeps_its_point(assist):
+    from app.legal.assist import engine
+    assert engine._unpunctuated("The fee is USD 4.2 million. So be it.") == "The fee is USD 4.2 million  So be it "
+
+
+ECHO = ('Same subject: no, then in a few words what each passage governs and between which parties.\nVerdict: NO CONFLICT\n'
+        'Explanation: [1: "USD 18,000"] [2: "USD 18,500"].')
+
+
+def test_a_reply_that_only_echoes_the_instructions_is_asked_again(assist):
+    """D-061: on the pilot the model sometimes copied the prompt's instruction back ("Same subject: no, then in a few
+    words what each passage governs ...") instead of judging. That is no answer, so it is asked once more."""
+    replies = [ECHO]
+    model = assist["model"]
+    real = model.chat
+
+    async def chat(messages, temperature, max_tokens):
+        if replies:
+            model.calls.append(messages)
+            return replies.pop(0)
+        return await real(messages, temperature, max_tokens)
+    model.chat = chat
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Thomas Reyes", "Under the signed agreement the monthly fee is USD 18,000, so the increase is modest.")])
+    assert [a["verdict"] for a in got if a["rule"] == "signed_terms"] == ["differs"]
+    assert len(model.calls) == 2
+
+    replies.extend([ECHO, ECHO])                                                      # asked twice, no answer: no alert
+    got = say(assist, base, ids, [("Thomas Reyes", "Under the signed agreement the monthly fee is USD 18,000, so the increase is modest.")])
+    assert not [a for a in got if a["rule"] == "signed_terms"]
+
+
+def test_the_subject_check_asks_for_an_answer_in_the_model_s_own_words(assist):
+    """D-061: the comparison prompt's first line reads like a template ("Same subject: yes or no, then in a few words
+    what each passage governs ..."), and on a garbled transcript the model copied it back every time. Silent Assist
+    asks for the answer in the model's own words; the document comparison's prompt is unchanged."""
+    from app.legal.compare import scan
+    base, ids = meeting(assist, "client_call", CALL)
+    say(assist, base, ids, [("Thomas Reyes", "Under the signed agreement the monthly fee is USD 18,000, so the increase is modest.")])
+    system = assist["model"].calls[-1][0]["content"]
+    assert "in your own words" in system and "then in a few words what each passage governs" not in system
+    assert "then in a few words what each passage governs" in scan.SYSTEM

@@ -1431,3 +1431,35 @@ test('panel: four perspectives on a change-of-control question, each citing the 
   await dialog.getByRole('button', { name: /^Approve version \d+$/ }).click();
   await expect(nakamura.getByText('Approved by a partner')).toBeVisible();
 });
+
+test('conversation: a question to the matter is answered from its documents, with what this server cannot do said plainly', async ({ browser }) => {
+  // S5.1 (D-062). This test server has no speech model and no voice, so the question is typed and the page says
+  // that reading aloud is unavailable; the spoken path is checked on the pilot stack (scripts/law/demo_check.py).
+  test.setTimeout(240_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/m/M-101/documents');
+  const title = 'Master Services Agreement (DEMO)';
+  const importing = alice.getByRole('button', { name: /Import a document|^Import$/ }).first();   // empty matter, or not
+  await expect(importing).toBeVisible();                                                     // the list has loaded
+  if (await alice.getByRole('button', { name: title, exact: true }).count() === 0) {       // run alone: the matter starts empty
+    await importing.click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, `../../eval/fixtures/law/${title}.md`));
+    await dialog.getByLabel('Status').selectOption('executed');
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Conversation' }).click();
+  await expect(alice.getByRole('region', { name: 'Talk to this matter' })).toBeVisible();
+  await expect(alice.getByRole('button', { name: 'Speak a question' })).toBeEnabled();
+  await alice.getByLabel('Or type a question').fill('What is the cap on each party’s aggregate liability?');
+  await alice.getByRole('button', { name: 'Ask', exact: true }).click();
+  const thread = alice.getByRole('list', { name: 'This conversation' });
+  await expect(thread.getByRole('heading', { name: /aggregate liability/ })).toBeVisible();
+  const evidence = thread.getByRole('region', { name: 'Evidence' });
+  await expect(evidence).toBeVisible({ timeout: 180_000 });                  // real model, real retrieval
+  await expect(evidence.getByText(/250,000/).first()).toBeVisible();
+  await expect(alice.getByText('Reading aloud is not available on this server.')).toBeVisible({ timeout: 60_000 });
+  await shot(alice, '48-conversation-light');
+});

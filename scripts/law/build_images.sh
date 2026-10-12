@@ -20,7 +20,7 @@ fi
 
 CTX="$(mktemp -d)"
 trap 'rm -rf "$CTX"' EXIT
-git archive HEAD backend/app voice/app frontend/nginx.conf | tar -x -C "$CTX"
+git archive HEAD backend/app voice/app frontend/nginx.law.conf | tar -x -C "$CTX"
 (cd frontend && npx vite build --outDir "$CTX/frontend/dist" --emptyOutDir --logLevel warn)
 
 for svc in backend voice frontend; do

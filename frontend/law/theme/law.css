@@ -533,3 +533,20 @@
 [data-edition="law"] .lw-table tr[data-disagreement="yes"] td:first-child { box-shadow: inset 3px 0 0 var(--attention); }
 [data-edition="law"] .lw-panel-docs { border: 1px solid var(--rule); border-radius: 10px; padding: 8px 12px; margin: 0; display: grid; gap: 4px; }
 [data-edition="law"] .lw-panel-proceed { border-top: 1px solid var(--rule); padding-top: 10px; margin-top: 4px; display: grid; gap: 8px; }
+/* S5.1 conversation (D-062) */
+[data-edition="law"] .lw-talk { display: grid; gap: 12px; }
+[data-edition="law"] .lw-talk-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+[data-edition="law"] .lw-mic { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--rule); background: var(--accent); color: var(--accent-ink);
+  display: inline-grid; place-items: center; cursor: pointer; box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+[data-edition="law"] .lw-mic svg { width: 26px; height: 26px; }
+[data-edition="law"] .lw-mic:disabled { opacity: 0.5; cursor: default; }
+[data-edition="law"] .lw-mic[data-live] { background: var(--recording); color: #fff; animation: lw-mic-pulse 1.6s var(--ease, ease-in-out) infinite; }
+@keyframes lw-mic-pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--recording) 18%, transparent); } }
+@media (prefers-reduced-motion: reduce) { [data-edition="law"] .lw-mic[data-live] { animation: none; } }
+[data-edition="law"] .lw-talk-state { flex: 1; min-width: 200px; }
+[data-edition="law"] .lw-talk-type { display: flex; gap: 8px; }
+[data-edition="law"] .lw-talk-type .lw-input { flex: 1; min-width: 0; }
+[data-edition="law"] .lw-check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+[data-edition="law"] .lw-check svg { width: 16px; height: 16px; }
+[data-edition="law"] .lw-talk-thread { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+[data-edition="law"] .lw-talk-q { margin: 0 0 6px; }

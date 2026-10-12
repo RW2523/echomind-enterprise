@@ -29,5 +29,6 @@ export LEGAL_INTAKE=1 LEGAL_INTAKE_LINKS=1
 export LEGAL_SUMMARIES=1             # S4.2: the summaries journey
 export LEGAL_TIME_ENTRIES=1          # S4.3: the time-entries journey
 export LEGAL_PANEL=1                 # S4.5: the review-panel journey
+export LEGAL_CONVERSATION=1          # S5.1: the conversation journey (no speech model here: typed, and said so)
 export LAW_CORS_ORIGINS="http://localhost:5174"
 exec "$ROOT/scripts/law/dev_backend.sh"

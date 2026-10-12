@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, ListTodo, FileOutput, FilePen, Files, FolderSync, FileText, Gauge, LayoutTemplate, GitCompareArrows, History, Home as HomeIcon, Inbox, KeyRound, ListCollapse, Timer, Users2, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog } from 'lucide-react';
+import { Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, ListTodo, FileOutput, FilePen, Files, FolderSync, FileText, Gauge, LayoutTemplate, GitCompareArrows, History, Home as HomeIcon, Inbox, KeyRound, ListCollapse, Timer, Users2, LogOut, Moon, ScrollText, ShieldOff, Siren, Sun, Users, UserCog, Mic } from 'lucide-react';
 import { api } from '../api/client';
 import { useReviews } from '../api/queries';
 import MatterSwitcher from '../ui/MatterSwitcher';
@@ -100,6 +100,7 @@ function ShellMatterBlock() {
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/overview`} icon={<FileText />}>Overview</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/documents`} icon={<Files />}>Documents</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/research`} icon={<BookOpenText />}>Research</NavItem>
+            {me.features?.conversation && <NavItem to={`/m/${encodeURIComponent(matter.number)}/conversation`} icon={<Mic />}>Conversation</NavItem>}
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/compare`} icon={<GitCompareArrows />}>Compare</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/drafting`} icon={<FilePen />}>Drafting</NavItem>
             <NavItem to={`/m/${encodeURIComponent(matter.number)}/obligations`} icon={<CalendarCheck />}>Obligations</NavItem>

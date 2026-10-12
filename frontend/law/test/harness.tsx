@@ -15,11 +15,13 @@ export function mockApi(handlers: Record<string, Handler>) {
   globalThis.fetch = vi.fn(async (input: any, init?: RequestInit) => {
     const url = new URL(String(input), 'https://law.test');
     const method = (init?.method || 'GET').toUpperCase();
-    const body = init?.body instanceof FormData
-      ? Object.fromEntries(Array.from(init.body.entries()).map(([k, v]) => [k, typeof v === 'string' ? v : (v as File).name]))
-      : init?.body ? JSON.parse(String(init.body)) : undefined;
-    calls.push({ method, path: url.pathname, body });
-    let h = handlers[`${method} ${url.pathname}`];
+    const raw = init?.body;
+    const body = raw instanceof FormData
+      ? Object.fromEntries(Array.from(raw.entries()).map(([k, v]) => [k, typeof v === 'string' ? v : (v as File).name]))
+      : raw instanceof ArrayBuffer ? { bytes: raw.byteLength }                      // audio (S5.1)
+      : raw ? JSON.parse(String(raw)) : undefined;
+    calls.push({ method, path: url.pathname + url.search, body });
+    let h = handlers[`${method} ${url.pathname}${url.search}`] ?? handlers[`${method} ${url.pathname}`];
     // Opening a matter (GET /api/legal/matters/:id) answers like the server: from the person's own list.
     const open = /^\/api\/legal\/matters\/([^/]+)$/.exec(url.pathname);
     if (!h && method === 'GET' && open && handlers['GET /api/legal/matters']) {
@@ -32,6 +34,9 @@ export function mockApi(handlers: Record<string, Handler>) {
     if (json && typeof json === 'object' && Array.isArray((json as any).__ndjson)) {   // a streamed NDJSON answer
       const text = (json as any).__ndjson.map((e: unknown) => JSON.stringify(e)).join('\n') + '\n';
       return new Response(text, { status, headers: { 'Content-Type': 'application/x-ndjson' } });
+    }
+    if (json && typeof json === 'object' && typeof (json as any).__binary === 'string') {   // audio (S5.1)
+      return new Response(new Uint8Array([82, 73, 70, 70]), { status, headers: { 'Content-Type': (json as any).__binary } });
     }
     return new Response(JSON.stringify(json), { status, headers: { 'Content-Type': 'application/json' } });
   }) as any;

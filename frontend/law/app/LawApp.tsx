@@ -24,6 +24,7 @@ import MatterActivity from '../pages/MatterActivity';
 import MatterDocuments from '../pages/MatterDocuments';
 import DocumentReader from '../pages/DocumentReader';
 import MatterResearch from '../pages/MatterResearch';
+import MatterConversation from '../pages/MatterConversation';
 import MatterCompare from '../pages/MatterCompare';
 import MatterMeetings from '../pages/MatterMeetings';
 import ResearchNote from '../pages/ResearchNote';
@@ -91,6 +92,7 @@ export const lawRoutes = [
               { path: 'documents/:docId/definitions', element: <DocumentDefinitions /> },
               { path: 'redlines/:artifactId', element: <RedlinePage /> },
               { path: 'research', element: <MatterResearch /> },
+              { path: 'conversation', element: <MatterConversation /> },
               { path: 'compare', element: <MatterCompare /> },
               { path: 'meetings', element: <MatterMeetings /> },
               { path: 'meetings/:meetingId', element: <MatterMeeting /> },

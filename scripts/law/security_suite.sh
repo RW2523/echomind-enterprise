@@ -41,6 +41,7 @@ declare -a SUITES=(
   "Summaries: quoted, cited by position, approved by a second person (S4.2)|$L/test_law_summaries.py"
   "Time entries: own work only, approved by the person, CSV without formulas (S4.3)|$L/test_law_time.py"
   "Review panel: separate answers, checked quotes, stop for facts, partner approval (S4.5)|$L/test_law_panel.py"
+  "Conversation: matter members only, lengths in the audit; voice routes refused (S5.1)|$L/test_law_conversation.py $L/test_law_pilot_config.py"
 )
 FAILED=0
 printf '%-52s %s\n' "Spec test" "Result"

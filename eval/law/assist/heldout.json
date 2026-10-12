@@ -1,5 +1,5 @@
 {
- "note": "FICTIONAL held-out calls for the Silent Assist legal packs (S2.5, D-041), against the evaluation corpus (the Unit 7 lease, the Northbridge NDA, the board minutes). Never used to adjust the packs; run once per system version.",
+ "note": "FICTIONAL held-out calls for the Silent Assist legal packs (S2.5, D-041), against the evaluation corpus (the Unit 7 lease, the Northbridge NDA, the board minutes). Never used to adjust the packs; run once per system version. 2026-10-11 (D-061): two calls added before any run, with amounts spoken in words and one figure split across two segments, as speech recognition writes them.",
  "scenarios": [
   {
    "id": "lease-negotiation",
@@ -54,6 +54,46 @@
     {"turn": 3, "rule": "authority", "severity": "critical"}
    ],
    "acceptable": []
+  },
+  {
+   "id": "spoken-lease-call",
+   "pack": "legal_client_call",
+   "kind": "client_call",
+   "speakers": [{"name": "Helena Marsh", "role": "attorney"}, {"name": "Owen Hale", "role": "client"}],
+   "turns": [
+    {"speaker": "Helena Marsh", "text": "Let us go through the Unit 7 lease before the break date."},
+    {"speaker": "Owen Hale", "text": "The rent under the lease is ninety thousand pounds a year, paid quarterly."},
+    {"speaker": "Helena Marsh", "text": "The rent deposit under the lease is twenty-one thousand pounds, held until the end of the term."},
+    {"speaker": "Owen Hale", "text": "And we have to pay back the insurance premium within fourteen days of demand under the lease."},
+    {"speaker": "Helena Marsh", "text": "I will send you the break notice checklist tomorrow."}
+   ],
+   "planted": [
+    {"turn": 1, "rule": "signed_terms", "severity": "critical", "said": "ninety thousand pounds", "source": "GBP 84,000"},
+    {"turn": 3, "rule": "signed_terms", "severity": "critical", "said": "fourteen days", "source": "twenty-one (21) days"},
+    {"turn": 4, "rule": "action", "severity": "notice"}
+   ],
+   "acceptable": [
+    {"turn": 2, "rule": "signed_terms", "verdict": "matches"}
+   ]
+  },
+  {
+   "id": "spoken-msa-split-figure",
+   "pack": "legal_client_call",
+   "kind": "client_call",
+   "speakers": [{"name": "Helena Marsh", "role": "attorney"}, {"name": "Petra Voss", "role": "client"}],
+   "turns": [
+    {"speaker": "Petra Voss", "text": "Our monthly fee under the agreement is nineteen."},
+    {"speaker": "Petra Voss", "text": "Thousand five hundred dollars, if I remember correctly."},
+    {"speaker": "Helena Marsh", "text": "The liability cap in the signed agreement is two hundred and fifty thousand dollars."},
+    {"speaker": "Petra Voss", "text": "Good. Then I will ask our finance team to confirm the invoices next week."}
+   ],
+   "planted": [
+    {"turn": 1, "rule": "signed_terms", "severity": "critical", "said": "Thousand five hundred dollars", "source": "USD 18,500"},
+    {"turn": 3, "rule": "action", "severity": "notice"}
+   ],
+   "acceptable": [
+    {"turn": 2, "rule": "signed_terms", "verdict": "matches"}
+   ]
   }
  ]
 }

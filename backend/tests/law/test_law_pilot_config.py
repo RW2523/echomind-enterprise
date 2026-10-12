@@ -20,6 +20,7 @@ PHASE4 = {
     "LEGAL_SUMMARIES": ("LAW_SUMMARIES", "0"),
     "LEGAL_TIME_ENTRIES": ("LAW_TIME_ENTRIES", "0"),
     "LEGAL_PANEL": ("LAW_PANEL", "0"),
+    "LEGAL_CONVERSATION": ("LAW_CONVERSATION", "0"),     # S5.1 (D-062), switched the same way
 }
 
 
@@ -158,3 +159,16 @@ def test_the_pilot_loads_speech_models_on_first_use_only():
     voice = dict(i.split("=", 1) for i in _services()["voice"]["environment"])
     assert voice.get("VOICE_USE_PARAKEET") == "${LAW_VOICE_USE_PARAKEET:-0}"
     assert voice.get("VOICE_NEMOTRON_STARTUP_LOAD") == "${LAW_VOICE_STARTUP_LOAD:-0}"
+
+
+# D-062: the pilot's nginx passed /voice/* to the voice service, whose HTTP routes (/speak, /voices/installed, its test
+# page) answer without a session. The Law interface never calls them; speech goes through the signed-in backend.
+def test_the_law_frontend_refuses_the_voice_service_and_otherwise_matches_the_standard_config():
+    conf = (ROOT / "frontend" / "nginx.law.conf").read_text()
+    assert "proxy_pass http://voice" not in conf
+    blocks = re.findall(r"location /voice/ \{([^}]*)\}", conf)
+    assert len(blocks) == 2 and all("return 404;" in b for b in blocks)                 # the HTTP and the HTTPS server
+    strip = lambda t: re.sub(r"\n\s*location /voice/ \{[^}]*\}", "", t)                 # noqa: E731
+    assert strip(conf) == strip((ROOT / "frontend" / "nginx.conf").read_text())           # cannot drift apart
+    assert "COPY frontend/nginx.law.conf /etc/nginx/conf.d/default.conf" in (ROOT / "frontend" / "Dockerfile.law").read_text()
+    assert "frontend/nginx.law.conf" in (ROOT / "scripts" / "law" / "build_images.sh").read_text()

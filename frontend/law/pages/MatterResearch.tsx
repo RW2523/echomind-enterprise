@@ -10,7 +10,7 @@ import Toolbar from '../ui/Toolbar';
 import { ErrorNote, Skeleton, StatusPill } from '../ui/primitives';
 
 type Phase = 'idle' | 'reading' | 'writing' | 'done' | 'abstained' | 'revoked' | 'error';
-interface Answer {
+export interface Answer {
   question: string; text: string; sources: ResearchSource[]; cited: number[]; phase: Phase; uncited?: boolean; unsupported?: string[];
   failed?: string[]; paragraphs?: ResearchParagraph[]; evidence?: ResearchEvidence[]; conflicts?: ResearchConflict[];
   status?: string | null; reason?: string | null; turnId?: string;
@@ -34,6 +34,30 @@ const ABSTAINED: Record<string, string> = {
 
 /** Research: questions answered only from this matter's documents, each statement tied to the exact
  *  words it relies on, checked before it is shown. Laid out as a working note, not a chat. */
+/** Ask a question of the matter and follow the checked answer as it streams (S2.2; shared with S5.1). */
+export async function streamAnswer(matterId: string, body: Record<string, unknown>, onChange: (a: Answer) => void, signal: AbortSignal): Promise<Answer> {
+  let state: Answer = { question: String(body.question), text: '', sources: [], cited: [], phase: 'reading' };
+  let checked = false;                                   // the server sends checked paragraphs (S2.2)
+  const update = (patch: Partial<Answer>) => { state = { ...state, ...patch }; onChange(state); };
+  update({});
+  await postStream(`/api/legal/matters/${encodeURIComponent(matterId)}/research/query`, body, (ev) => {
+    if (ev.type === 'sources') update({ sources: ev.citations ?? [] });
+    else if (ev.type === 'paragraph') {
+      checked = true;
+      const paragraphs = [...(state.paragraphs ?? []), ev as ResearchParagraph];
+      update({ paragraphs, text: paragraphs.map((p) => p.text).join('\n\n'), phase: 'writing',
+        unsupported: paragraphs.flatMap((p) => p.unsupported ?? []), failed: paragraphs.flatMap((p) => p.failed ?? []) });
+    } else if (ev.type === 'chunk') { if (!checked) update({ text: state.text + (ev.text ?? ''), phase: 'writing' }); }
+    else if (ev.type === 'done') update({ text: ev.answer ?? state.text, cited: (ev.citations ?? []).map((c: ResearchSource) => c.n),
+      phase: ev.abstained ? 'abstained' : 'done', uncited: !!ev.uncited, unsupported: ev.unsupported ?? [], failed: ev.failed ?? [],
+      evidence: ev.evidence ?? undefined, conflicts: ev.conflicts ?? [], status: ev.status ?? null, reason: ev.abstention_reason ?? null,
+      turnId: ev.turn_id ?? undefined });
+    else if (ev.type === 'scope_revoked') update({ text: '', sources: [], paragraphs: [], phase: 'revoked' });
+    else if (ev.type === 'error') update({ phase: 'error' });
+  }, signal);
+  return state;
+}
+
 export default function MatterResearch() {
   const matter = useMatter();
   const qc = useQueryClient();
@@ -59,27 +83,8 @@ export default function MatterResearch() {
     const ctrl = new AbortController();
     abort.current = ctrl;
     setError(''); setFocus(null);
-    let state: Answer = { question: q, text: '', sources: [], cited: [], phase: 'reading' };
-    let checked = false;                                   // the server sends checked paragraphs (S2.2)
-    const update = (patch: Partial<Answer>) => { state = { ...state, ...patch }; setAnswer(state); };
-    update({});
     try {
-      await postStream(`/api/legal/matters/${encodeURIComponent(matter.id)}/research/query`,
-        pack.length ? { question: q, versions, documents: pack } : { question: q, versions }, (ev) => {
-        if (ev.type === 'sources') update({ sources: ev.citations ?? [] });
-        else if (ev.type === 'paragraph') {
-          checked = true;
-          const paragraphs = [...(state.paragraphs ?? []), ev as ResearchParagraph];
-          update({ paragraphs, text: paragraphs.map((p) => p.text).join('\n\n'), phase: 'writing',
-            unsupported: paragraphs.flatMap((p) => p.unsupported ?? []), failed: paragraphs.flatMap((p) => p.failed ?? []) });
-        } else if (ev.type === 'chunk') { if (!checked) update({ text: state.text + (ev.text ?? ''), phase: 'writing' }); }
-        else if (ev.type === 'done') update({ text: ev.answer ?? state.text, cited: (ev.citations ?? []).map((c: ResearchSource) => c.n),
-          phase: ev.abstained ? 'abstained' : 'done', uncited: !!ev.uncited, unsupported: ev.unsupported ?? [], failed: ev.failed ?? [],
-          evidence: ev.evidence ?? undefined, conflicts: ev.conflicts ?? [], status: ev.status ?? null, reason: ev.abstention_reason ?? null,
-          turnId: ev.turn_id ?? undefined });
-        else if (ev.type === 'scope_revoked') update({ text: '', sources: [], paragraphs: [], phase: 'revoked' });
-        else if (ev.type === 'error') update({ phase: 'error' });
-      }, ctrl.signal);
+      await streamAnswer(matter.id, pack.length ? { question: q, versions, documents: pack } : { question: q, versions }, setAnswer, ctrl.signal);
       setQuestion('');
       await qc.invalidateQueries({ queryKey: keys.research(matter.id) });
     } catch (err) {
@@ -156,7 +161,7 @@ export default function MatterResearch() {
   );
 }
 
-function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; onFocus: (n: number) => void }) {
+export function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | null; onFocus: (n: number) => void }) {
   const matter = useMatter();
   const [copied, setCopied] = useState(false);
   const cited = a.sources.filter((s) => a.cited.includes(s.n));

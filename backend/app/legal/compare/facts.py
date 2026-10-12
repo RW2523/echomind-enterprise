@@ -161,8 +161,79 @@ def _sentences(text: str, spans: list[tuple[int, int]]) -> list[tuple[int, int]]
     return out
 
 
-def extract(text: str, spans: list[tuple[int, int]]) -> list[Fact]:
-    """Facts in the given body spans of `text` (offsets are the text's)."""
+_SPOKEN_CURRENCY = re.compile(r"\b(?:U\.?S\.?\s+)?(?P<cur>dollars?|euros?|pounds?(?:\s+sterling)?|kronor|krona)\b", re.I)
+_SPOKEN_SCALE = {"thousand": 1_000, "million": 1_000_000, "billion": 1_000_000_000}
+
+
+def _spoken_value(words: list[str]) -> Optional[int]:
+    """"five hundred thousand" → 500000; None unless the words make one well-formed figure."""
+    total = current = 0
+    last = None
+    for i, w in enumerate(words):
+        w = w.lower()
+        nxt = words[i + 1].lower() if i + 1 < len(words) else ""
+        if w == "and":
+            if last not in ("hundred", "scale") or not nxt:
+                return None
+            last = "and"
+            continue
+        n = 1 if w == "a" and (nxt == "hundred" or nxt in _SPOKEN_SCALE) else _word_number(w) if not w.isdigit() else None
+        if n is not None:
+            tens = w in _TENS
+            if last == "small" or (last == "tens" and (tens or n >= 10)):
+                return None                                     # "eight five", "thirty forty"
+            current += n
+            last = "tens" if tens else "small"
+        elif w == "hundred":
+            if last == "hundred":
+                return None
+            current = (current or 1) * 100
+            last = "hundred"
+        elif w in _SPOKEN_SCALE:
+            if last == "scale":
+                return None
+            total += (current or 1) * _SPOKEN_SCALE[w]
+            current, last = 0, "scale"
+        else:
+            return None
+    return None if last in (None, "and") else total + current
+
+
+def _spoken_amounts(text: str, a: int, b: int) -> list[tuple[int, int, int, str]]:
+    """Amounts said in words before a currency word, in a transcript: (start, end, amount, currency).
+    Speech recognition writes "five hundred thousand dollars", and may put a full stop inside the figure
+    ("five. Hundred thousand dollars"); a full stop is read through only before "hundred" or a scale word."""
+    out = []
+    for m in _SPOKEN_CURRENCY.finditer(text, a, b):
+        words, pos = [], m.start()
+        while True:
+            before = text[a:pos]
+            gap = re.search(r"(?:[\s,]*|\s*\.\s*)$", before)
+            w = re.search(r"([A-Za-z]+(?:-[A-Za-z]+)?)$", before[:gap.start()]) if gap else None
+            if not w:
+                break
+            word, start = w.group(1), a + w.start(1)
+            stray = "." in gap.group(0)
+            if stray and not (words and (words[0][0].lower() == "hundred" or words[0][0].lower() in _SPOKEN_SCALE)):
+                break
+            if word.lower() not in ("and", "a", "hundred") and word.lower() not in _SPOKEN_SCALE and _word_number(word) is None:
+                break
+            words.insert(0, (word, start))
+            pos = start
+        if words and re.search(r"\d[\s,]*$", text[a:words[0][1]]):
+            continue                                            # "500 thousand dollars": the digits are read already
+        for i in range(len(words)):                             # the longest well-formed figure ending at the currency
+            value = _spoken_value([w for w, _ in words[i:]])
+            if value:
+                word = m.group("cur").split()[0].lower()
+                out.append((words[i][1], m.end(), value, _CURRENCY_WORD.get(word.rstrip("s"), _CURRENCY_WORD.get(word, "USD"))))
+                break
+    return out
+
+
+def extract(text: str, spans: list[tuple[int, int]], spoken: bool = False) -> list[Fact]:
+    """Facts in the given body spans of `text` (offsets are the text's). `spoken`: a transcript, where amounts
+    are also said in words (D-061); documents are read without it, so nothing changes for them."""
     facts: list[Fact] = []
     for s, e in _sentences(text, spans):
         sent = text[s:e]
@@ -232,6 +303,18 @@ def extract(text: str, spans: list[tuple[int, int]]) -> list[Fact]:
             for f in facts:
                 if f.sentence == (s, e) and f.kind in _VALUES:
                     f.near = f.near - names
+    if spoken:
+        sentences = _sentences(text, spans)
+        money = [(f.start, f.end) for f in facts if f.kind == "money"]
+        for a, b in spans:
+            for start, end, amount, cur in _spoken_amounts(text, a, b):
+                if any(x < end and start < y for x, y in money):
+                    continue
+                s0 = next((x for x, y in sentences if x <= start < y), a)        # a figure split by a stray full stop
+                e0 = next((y for x, y in sentences if x < end <= y), b)          # spans both sentences
+                sent = text[s0:e0]
+                facts.append(Fact("money", f"{cur} {amount}", text[start:end], start, end, (s0, e0), topic(sent),
+                                  near=_near(sent, start - s0, end - s0), unit=cur))
     return facts
 
 
