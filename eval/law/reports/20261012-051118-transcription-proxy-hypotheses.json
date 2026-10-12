@@ -1,0 +1,125 @@
+{
+ "note": "Piper voices (fixed), streamed through the pilot's capture socket; a proxy, not real voices.",
+ "voices": [
+  "en_US-lessac-medium",
+  "en_US-joe-medium",
+  "en_US-amy-medium",
+  "en_US-john-medium",
+  "en_US-kusal-medium"
+ ],
+ "seconds": 152,
+ "hypotheses": {
+  "client-call-renewal": [
+   {
+    "speaker": "Helena Marsh",
+    "text": "Thank you for joining Hierrogate Systems has set into redline of the Master Services Agreement dating."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "Mid two March twenty twenty."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "Changed on the money side."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "The monthly fee goes from USD eighteen thousand five hundred to USD nineteen thousand seven hundred fifty, and the liability."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "CAP rises to USD five hundred thousand. And under Clause Eight Point One."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "The board said the cap must not fall below USD four hundred thousand."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "So the cap is fine. We will not accept. The fee increase without."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "A longer term."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "Understood. I will not concede the thirty day inconvenience notice either. They want sixty day."
+   }
+  ],
+  "negotiation-change-of-control": [
+   {
+    "speaker": "Thomas Reyes",
+    "text": "Elicit Holdings expects completion on fifteen October two. Subject to clearance."
+   },
+   {
+    "speaker": "David Okafor",
+    "text": "Clause fourteen point two requires no less than in thirty days notice."
+   },
+   {
+    "speaker": "David Okafor",
+    "text": "Your letter of three separate. September twenty twenty. Six gives forty two days, so notice isn't in time."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "We do not consent to an assignment to any pellucid affiliate."
+   },
+   {
+    "speaker": "Thomas Reyes",
+    "text": "There is no assignment Harrogate Systems Inc. remains the contracting party."
+   },
+   {
+    "speaker": "David Okafor",
+    "text": "Then please confirm in the writing that the account team will not change."
+   }
+  ],
+  "board-meeting-mandate": [
+   {
+    "speaker": "Karin Lindqvist",
+    "text": "Four of the six directors that are present, so the meeting is quarried."
+   },
+   {
+    "speaker": "Anders Holm",
+    "text": "I declare an interest in the Northbridge Analytics project and I will not vote on Item Five."
+   },
+   {
+    "speaker": "Petra Voss",
+    "text": "Item three is the heterogate renewal management asks for authority to negotiate."
+   },
+   {
+    "speaker": "Sofia Berg",
+    "text": "I move that the liability cap is not reduced below USD four hundred."
+   },
+   {
+    "speaker": "Karin Lindqvist",
+    "text": "The budget for Project Lantern is SCK to two point four million for twenty twenty six."
+   },
+   {
+    "speaker": "Karin Lindqvist",
+    "text": "The board resolves not to propose an interim dividend."
+   }
+  ],
+  "witness-interview": [
+   {
+    "speaker": "Helena Marsh",
+    "text": "When did you first see the invoice for USD nineteen thousand seven hundred?"
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "Fifty"
+   },
+   {
+    "speaker": "Maria Ek",
+    "text": "On one June twenty twenty six, my first day as Chief Financial Officer, I did not approve it."
+   },
+   {
+    "speaker": "Helena Marsh",
+    "text": "Did anyone atrogate systems tell you the fee had changed?"
+   },
+   {
+    "speaker": "Maria Ek",
+    "text": "No nobody told me and I never saw a signed amendment"
+   }
+  ]
+ }
+}
