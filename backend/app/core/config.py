@@ -269,6 +269,11 @@ class Settings(BaseSettings):
     LEGAL_MFA_REQUIRED: bool = os.getenv("LEGAL_MFA_REQUIRED", "1").lower() in ("1", "true", "yes")
     LEGAL_LOCKOUT_THRESHOLD: int = int(os.getenv("LEGAL_LOCKOUT_THRESHOLD", "5"))
     LEGAL_LOCKOUT_MINUTES: int = int(os.getenv("LEGAL_LOCKOUT_MINUTES", "15"))
+    # D-075: the client's address comes from nginx's X-Real-IP only when the request is from one of these (IPs or networks,
+    # comma-separated); empty believes no one. Failed sign-in steps per address before 429, and the window in minutes.
+    LEGAL_TRUSTED_PROXIES: str = os.getenv("LEGAL_TRUSTED_PROXIES", "")
+    LEGAL_SIGNIN_IP_MAX_FAILURES: int = int(os.getenv("LEGAL_SIGNIN_IP_MAX_FAILURES", "20"))
+    LEGAL_SIGNIN_IP_WINDOW_MIN: float = float(os.getenv("LEGAL_SIGNIN_IP_WINDOW_MIN", "15"))
     LEGAL_PASSWORD_MIN_LENGTH: int = int(os.getenv("LEGAL_PASSWORD_MIN_LENGTH", "12"))
     LEGAL_WS_RECHECK_SEC: float = float(os.getenv("LEGAL_WS_RECHECK_SEC", "60"))          # re-validate open WebSockets
     LEGAL_OBO_TTL_SEC: int = int(os.getenv("LEGAL_OBO_TTL_SEC", "300"))                   # voice → backend token lifetime

@@ -238,13 +238,29 @@ async def _auth_guard(request: Request, call_next):
     if is_law():
         # S1.5: every Law request runs inside an audit context; a state-changing request that wrote
         # no event of its own gets a generic one when it finishes (legal/audit/record.py).
+        from .legal import throttle
         from .legal.audit import record as law_audit
+        from .legal.netaddr import behind_untrusted_proxy, client_address
         token = law_audit.begin(request)
         try:
+            # D-075: too many failed sign-in steps from one address and that address waits.
+            signin = request.method == "POST" and request.url.path in throttle.SIGNIN_PATHS
+            address = client_address(request) if signin and not behind_untrusted_proxy(request) else None
+            if signin and (wait := throttle.retry_after(address)):
+                count = throttle.first_refusal(address)
+                if count is not None:
+                    await run_in_threadpool(law_audit.record, "auth.signin.throttled", "deny", object_type="client_address",
+                                            reason="too_many_failures", details={"failures": count})
+                return JSONResponse({"detail": "Too many failed sign-ins from this address. Try again in a few minutes."},
+                                    status_code=429, headers={"Retry-After": str(wait)})
             denied = _law_guard(request)
             if denied is not None:
+                if signin:
+                    throttle.failed(address, denied.status_code)
                 return denied
             response = await call_next(request)
+            if signin:
+                throttle.failed(address, response.status_code)
             await run_in_threadpool(law_audit.request_finished, request, response.status_code)
             return response
         finally:

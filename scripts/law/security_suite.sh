@@ -45,6 +45,7 @@ declare -a SUITES=(
   "Regulatory updates: untrusted feed checked, matters only for those who see them (S4.4)|$L/test_law_regulatory.py"
   "Translation: labelled, figures checked, AI-addressed text withheld, access (D-070)|$L/test_law_translation.py"
   "SIEM forwarder: off by default, content-free CEF, nothing skipped (D-069)|$L/test_law_audit_forward.py"
+  "Sign-in throttle per real client address; the proxy header believed only from the proxy (D-075)|$L/test_law_throttle.py"
 )
 FAILED=0
 printf '%-52s %s\n' "Spec test" "Result"

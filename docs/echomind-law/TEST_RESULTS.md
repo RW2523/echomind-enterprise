@@ -605,3 +605,13 @@
 | Locally after the fix | Redlines, exports and extract: 42 passed. Vitest: **177 passed**. Voice: **151 passed**. |
 | GitHub CI after the fix | Run 38283732787: backend and frontend green, but voice failed again (Starlette's TestClient needs `httpx` on the runner). Added. **Run 38285157225 (a56bfa4): all three jobs green** (backend 11.5 min, voice, frontend). |
 
+## Run 43 — The client's real address and a per-address sign-in throttle (D-075), 2026-10-12
+
+- **Branch:** `law/signin-throttle`
+
+| Suite | Result |
+|---|---|
+| Throttle and addresses | **7 new tests** (red first): the audit records the address nginx passes; the header is ignored from an untrusted sender; one address refused after its failures (across accounts), others not; wrong authenticator codes count; the window passes; successful sign-ins never count; behind an untrusted proxy nothing is counted. |
+| Backend (all) | **1336 passed** (1329 at run 41). A first run of the auth and intake suites showed the counts carrying over between tests (17 failures, all 429). Every test now starts with none (an autouse fixture). |
+| Security suite | **33 groups, all pass, 1166 tests** (a new group for D-075). |
+

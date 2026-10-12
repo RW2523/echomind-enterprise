@@ -743,6 +743,10 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - The phase 5 lawyer review pack: regulatory matching and translation, ready for the review session.
 - GitHub CI was failing on `feature/echomind-law` (missing Tesseract, LibreOffice and setuptools on the runner, a missing skip guard, a test race). Fixed on the branch.
 
+### Session 9 — The client's real address and a sign-in throttle (D-075), 2026-10-12
+- The pilot's audit trail had recorded nginx's address for every event. The client's address now comes from nginx's `X-Real-IP`, believed only from the Law network. A per-address sign-in throttle closes the known gap.
+- **A public address for everyone** was asked for again. The permission rules refused it before, and a chat approval does not change them: not attempted. It is the owner's to set up, or to allow (D-073, NEXT EXACT ACTION 9).
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -809,7 +813,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Production shares this host.** Never run `docker compose` in this clone except through `scripts/law/compose.sh` (`-p echomind-law`).
 - Memory headroom is about 13 GB with the pilot stopped and about 10 GB with it idle. The pilot's first live transcript loads speech recognition on CPU: the Law backend then holds about 7 GB until restarted (capped at 8 GB, and ended first under host pressure, D-060).
 - Audit anchors sit on the same disk as the database until the SIEM forwarder (built, off; D-069) is turned on with an approved destination.
-- No per-IP sign-in throttle. Failed sign-ins are recorded and per-account lockout works.
+- **Per-address sign-in throttle and real client addresses (D-075):** 20 failed sign-in steps from one address in 15 minutes and it waits. Before D-075 the audit trail recorded nginx's address for every event; events from before 2026-10-12 still do.
 - E2E is not in CI. It runs locally with Playwright (`cd frontend && npx playwright test`); the research test uses the host's model server.
 - **The pilot runs pinned images** (`LAW_*_IMAGE` in `.env.law`). A code change reaches it only through `scripts/law/deploy_pilot.sh` (build, swap, and go back if unhealthy). Switching branches in this checkout no longer changes it. Pilot backups run daily at 02:30 (`scripts/law/backup_pilot.sh`, D-067) into `~/echomind-law-backups`; **a copy of the backup key (`~/.echomind-law/backup.key`) and of the master key (`~/.echomind-law-master/`) must go off this host** (🔒 owner).
 - Back up the master key separately from the data: without it the stored documents cannot be opened.
