@@ -80,8 +80,8 @@ services:
     <<: [*law_host_gateway, *law_capped]
     build: !reset null
     image: ${LAW_VOICE_IMAGE:-echomind-law-voice:latest}
-    mem_limit: ${LAW_VOICE_MEM:-2g}
-    memswap_limit: ${LAW_VOICE_MEM:-2g}
+    mem_limit: ${LAW_VOICE_MEM:-3g}
+    memswap_limit: ${LAW_VOICE_MEM:-3g}
     container_name: echomind-law-voice
     ports: !reset []             # reached only through the Law frontend's /voice/ proxy
     depends_on: !override
