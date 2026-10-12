@@ -513,3 +513,20 @@
 | `compose.sh config` (render only, dummy secrets in the scratchpad, nothing started) | With the template: the five switches render `1` for project `echomind-law`, with links lasting 14 days. Without them: all render `0`. |
 | Backend (all) | **1277 passed** (1275 at run 35, plus the 2 new). No application code changed. |
 
+## Run 37 — The pilot stack started (D-060), 2026-10-11
+
+- **Branch:** `law/pilot-stack`
+- **Running commit:** `7022d01`
+
+| Check | Result |
+|---|---|
+| `test_law_pilot_config.py` (now 9) | **9 passed.** These were written red first:<ul><li>prebuilt Law images with no code mounted;</li><li>each container capped and ended first under pressure;</li><li>what the backend image adds;</li><li>the build refuses uncommitted changes;</li><li>speech recognition preloads by default and not in the pilot.</li></ul>One more test was added with its change rather than red first: the pilot never shares the development master key. |
+| Backend image (`echomind-law-backend`, throwaway container, no network) | Every import works, including the app; AES-GCM round trip; reranker loads offline; `tesseract` 5.3.4 with English. `pip check` itself crashes on a malformed tag in the base image (pre-existing, unrelated). |
+| Speech recognition on CPU (throwaway container, 7 GB cap) | Loaded in 9 s; **5.66 GB resident**. The backend's cap is 8 GB. |
+| First start (`2f89eb9`) | **Crash loop:** the backend and voice were killed at their 4 GB caps while loading speech models (exit 137, twice each). Stopped within about a minute; production's six containers kept the same start times, with no restarts. |
+| Second start (`7022d01`) | All three containers running; backend and voice healthy; no restarts, no memory kills over 90 s. Idle: backend 0.82 GB, voice 1.65 GB, frontend 19 MB; host available 13.3 GB before, about 10.4 GB after. |
+| Through nginx (`https://localhost:3553`, `http://localhost:3110`) | `build.json` shows commit `7022d01`. Edition `law`, sign-in enforced. `/api/auth/me` and every other API route return 401 without a session. A made-up enquirer link returns 404. `/intake/…` is sent with `no-referrer` and `no-store`. |
+| Running backend | Phase 4 switches on; MFA required; 33 migrations applied; speech recognition not preloaded; the pilot's master key is mounted; the enrolment link token was written and is unused. |
+| Production | Unchanged (start times and restart counts compared before and after each start). |
+| Backend (all) | **1284 passed** (1277 at run 36, plus the 7 new pilot tests). |
+

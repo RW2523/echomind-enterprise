@@ -8,10 +8,10 @@
 |---|---|
 | Date | 2026-10-11 |
 | Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); the Phase 4 gate (`law/s4.6-gate`) merged into it |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 and machine translation BLOCKED. Every slice that can be built without further approval is built. All Phase 4 features are on in the pilot configuration (D-059, 2026-10-11) |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 and machine translation BLOCKED. Every slice that can be built without further approval is built. All Phase 4 features are on in the pilot configuration (D-059, 2026-10-11). **The pilot stack is running** (D-060, commit `7022d01`, `https://<host>:3553`); nobody has signed in yet |
 | Plan documents | Committed to `feature/echomind-law` |
 | Migrations | `0001`–`0033` (Law edition only) |
-| Production impact | None. Production stack untouched; only read-only `docker ps`/`inspect`/`curl` probes were run. |
+| Production impact | None. Production's containers were never touched (same start times, no restarts, checked before and after each start). The Law pilot stack runs beside it as project `echomind-law`, capped below it (D-060); it reuses the host's model servers read-only. |
 
 ## Session log
 
@@ -661,6 +661,23 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Tests:** `test_law_pilot_config.py` (2, red first). `compose.sh config` (render only) showed all on with the template and all off without it. Nothing was started.
 - **Docs:** D-059, the THREAT_MODEL T-24 note, the feature matrix, run 36.
 
+### Session 4 (continued) — The pilot stack started (D-060)
+- **Owner's approval (2026-10-11):** create `.env.law` and start the pilot stack (the first `compose.sh up`).
+- **Before starting, three gaps were found and fixed:**
+  - the 1.4.1 backend image lacks `cryptography`, `tesseract` and the reranker model;
+  - the overlay mounted this checkout's code;
+  - the template reused the development master key.
+
+  The fix: `scripts/law/build_images.sh` builds thin Law images from a clean commit, pinned in `.env.law`. The pilot has its own master key. Each container is capped (backend 8 GB, voice 2 GB, frontend 256 MB) with `oom_score_adj` 800.
+- **The first start crash-looped**, because both speech models loaded on CPU and hit the 4 GB caps. It was stopped within about a minute; production was unaffected. Speech recognition now loads on first use (`ECHOMIND_ASR_PRELOAD=0`; production's default is unchanged), and Parakeet is off in the pilot's voice service. Measured: the model needs 5.7 GB on CPU.
+- **Running and verified:** all three containers healthy, with no restarts and no memory kills.
+  - Law edition, sign-in enforced; Phase 4 switches on; MFA required; 33 migrations applied.
+  - A made-up enquirer link returns 404; the frontend serves commit `7022d01` on 3553 and 3110.
+  - Host memory available is about 10.4 GB.
+- **Secrets** (`.env.law`, `.law-secrets/pilot-master.key`) are mode 600 and gitignored, and were never printed.
+- **Tests:** `test_law_pilot_config.py` grows to 9; backend 1284 (1277 at run 36, plus 7).
+- **Docs:** D-060, THREAT_MODEL T-17, feature matrix OPS-01, run 37.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -669,6 +686,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
 - 2026-10-10: **APPROVED** the Phase 2 gate (`releases/phase2-gate.md`): merge S2.8 and start S3.1. The owner added: "approve everything and finish everything". This is taken as standing approval to build and merge every remaining slice and phase gate in order, including the Phase 4 business approval. Items that need a person (the lawyer review, the manual Word check, counsel's P-decisions) or that act outside this machine or on the shared host (a GitHub push, the first `compose.sh up` next to production, root) are confirmed one by one.
 - 2026-10-10: the Phase 3 gate (`releases/phase3-gate.md`) was merged under that standing approval. Its lawyer review and the manual Word check remain 🔒.
+- 2026-10-11: **APPROVED** by the owner: "create .env.law and start the pilot stack". The first `compose.sh up` ran (D-060); the pilot stack is running.
 - 2026-10-11: **APPROVED** by the owner: "turn on all phase 4 features for the pilot" (D-059). The pilot configuration turns them on; they take effect at the first `compose.sh up`, which is still 🔒.
 - 2026-10-10: **APPROVED** Phase 4 ("approved, start S4.1 and finish everything"). S4.1, S4.2, S4.3, S4.5 and the Phase 4 gate (`releases/phase4-gate.md`) were merged under it, each behind its own flag, off by default. S4.4 and machine translation stay BLOCKED.
 - Still 🔒:
@@ -715,11 +733,11 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 ## Known risks right now
 
 - **Production shares this host.** Never run `docker compose` in this clone except through `scripts/law/compose.sh` (`-p echomind-law`).
-- Memory headroom is about 14 GB. ASR containers need a memory check first.
+- Memory headroom is about 13 GB with the pilot stopped and about 10 GB with it idle. The pilot's first live transcript loads speech recognition on CPU: the Law backend then holds about 7 GB until restarted (capped at 8 GB, and ended first under host pressure, D-060).
 - Audit anchors sit on the same disk as the database until an off-host forwarder is approved.
 - No per-IP sign-in throttle. Failed sign-ins are recorded and per-account lockout works.
 - E2E is not in CI. It runs locally with Playwright (`cd frontend && npx playwright test`); the research test uses the host's model server.
-- The compose overlay reuses the 1.4.1 backend image, which may not contain `cryptography`. Check or rebuild at the first approved `compose.sh up`.
+- **The pilot runs pinned images** (`LAW_*_IMAGE` in `.env.law`). A code change reaches it only by `scripts/law/build_images.sh`, pinning the new tags, and `compose.sh up -d`. Switching branches in this checkout no longer changes it. **Back up `.law-secrets/pilot-master.key` separately**; pilot backups (`python -m app.legal.backup` in the backend container) are not scheduled yet.
 - Back up the master key separately from the data: without it the stored documents cannot be opened.
 - **Browser-suite stall: fixed but not proven (D-030).** Before the fix, the backend stalled inside SQLite in 3 of 5 full runs. Since the fix, 15 consecutive full runs are clean (5 in S1.11, 10 in the S1.12 gate). The exact lock is unproven without native stacks. Stack dumps stay on for browser runs (`kill -USR1 <uvicorn pid>`). If it ever stalls again, the next step is native stacks, which need the owner's permission to attach a debugger.
 - **Injection residuals (D-031):**
@@ -740,8 +758,11 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 1. **Lawyer review sessions:** Phase 4 (`releases/phase4-rubric.md`, packet `eval/law/lawyer_review/phase4/`), Phase 3 and Phase 2. Score with `eval/law/lawyer_review/score.py --phase N <sheet.csv>`, then record the results in the gate reports.
 2. **The manual Microsoft Word check** of tracked changes (S3.3).
 3. **Counsel P-001…P-015**, and the firm's billing rules for time entries.
-4. **Pilot configuration:** done. All Phase 4 features are on (D-059). To start the pilot stack, `.env.law` must be created from `.env.law.example` with real secrets, and the first `compose.sh up` must be approved (item 5).
-5. **Operations on the shared host:** the first `scripts/law/compose.sh up` (the speech stack: real-audio accuracy, intake recordings), the root-run enforced T11, and the load-test window (T12).
+4. **Pilot configuration:** done. All Phase 4 features are on (D-059), and the pilot stack is running (D-060).
+5. **Pilot operations:**
+   - **The owner signs in first:** as `admin`, with the password from `.env.law`, through the one-time enrolment link `https://localhost:3553/signin?enrol=<token>`. The token is read with `scripts/law/compose.sh exec backend cat /data/legal/bootstrap_enrollment_token` and is valid for 72 hours.
+   - **Backups:** set up pilot backups (a backup key, then `python -m app.legal.backup create` in the backend container on a schedule, with archives off the volume), and back up `pilot-master.key` separately.
+   - **Still 🔒:** the root-run enforced T11 and the load-test window (T12). Real-audio transcription accuracy can now be measured on the pilot.
 6. **Blocked by design:** S4.4 (a licensed source and network approval), machine translation (a model licence), DMS (P-010), IdP (P-011), and the syslog forwarder.
 7. **Any GitHub push or PR.**
 
