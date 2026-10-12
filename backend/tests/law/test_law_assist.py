@@ -393,3 +393,15 @@ def test_a_reply_that_only_echoes_the_instructions_is_asked_again(assist):
     replies.extend([ECHO, ECHO])                                                      # asked twice, no answer: no alert
     got = say(assist, base, ids, [("Thomas Reyes", "Under the signed agreement the monthly fee is USD 18,000, so the increase is modest.")])
     assert not [a for a in got if a["rule"] == "signed_terms"]
+
+
+def test_the_subject_check_asks_for_an_answer_in_the_model_s_own_words(assist):
+    """D-061: the comparison prompt's first line reads like a template ("Same subject: yes or no, then in a few words
+    what each passage governs ..."), and on a garbled transcript the model copied it back every time. Silent Assist
+    asks for the answer in the model's own words; the document comparison's prompt is unchanged."""
+    from app.legal.compare import scan
+    base, ids = meeting(assist, "client_call", CALL)
+    say(assist, base, ids, [("Thomas Reyes", "Under the signed agreement the monthly fee is USD 18,000, so the increase is modest.")])
+    system = assist["model"].calls[-1][0]["content"]
+    assert "in your own words" in system and "then in a few words what each passage governs" not in system
+    assert "then in a few words what each passage governs" in scan.SYSTEM

@@ -120,12 +120,14 @@ def check_research(p: Pilot) -> tuple[bool, str]:
 def _synthesise(lines: list[tuple[str, str, str]]) -> list[tuple[str, bytes, int]]:
     """Each line as 16-bit mono PCM, spoken by an offline Piper voice in a throwaway, capped container."""
     with tempfile.TemporaryDirectory() as tmp:
-        script = ("import sys, wave, json\nfrom piper import PiperVoice\n"
+        # Without Piper's random variation, so every run speaks exactly the same audio and a result can be repeated.
+        script = ("import sys, wave, json\nfrom piper import PiperVoice, SynthesisConfig\n"
                   "lines = json.load(open('/out/lines.json'))\n"
+                  "fixed = SynthesisConfig(noise_scale=0.0, noise_w_scale=0.0)\n"
                   "for i, (voice, text) in enumerate(lines):\n"
                   "    v = PiperVoice.load(f'/voices/{voice}.onnx')\n"
                   "    with wave.open(f'/out/{i}.wav', 'wb') as w:\n"
-                  "        (v.synthesize_wav if hasattr(v, 'synthesize_wav') else v.synthesize)(text, w)\n")
+                  "        v.synthesize_wav(text, w, syn_config=fixed)\n")
         pathlib.Path(tmp, "lines.json").write_text(json.dumps([[v, t] for _, v, t in lines]))
         pathlib.Path(tmp, "speak.py").write_text(script)
         os.chmod(tmp, 0o777)

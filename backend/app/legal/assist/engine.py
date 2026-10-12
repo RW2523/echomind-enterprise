@@ -267,6 +267,11 @@ async def _terms(ctx: Context, seg: dict, rules: set, before: str = "") -> list[
 
 
 _ECHO = re.compile(r"then in a few words what each passage governs", re.I)    # the prompt's own instruction, copied back
+# The comparison's first line reads like a template, and on a garbled transcript the model copied it back every time
+# (D-061); here it is asked in plain words. The document comparison keeps its own prompt.
+_SYSTEM = scanmod.SYSTEM.replace(
+    "Same subject: yes or no, then in a few words what each passage governs and between which parties.",
+    "Same subject: answer yes or no in your own words, saying briefly what each passage is about and between which parties.")
 
 
 async def _model_check(ctx: Context, seg: dict, f: factsmod.Fact, src: dict, said: Optional[str] = None) -> Optional[tuple[float, str]]:
@@ -280,7 +285,8 @@ async def _model_check(ctx: Context, seg: dict, f: factsmod.Fact, src: dict, sai
                "clause": src.get("clause"), "parties": [], "context": src["quote"], "value": src["value"], "context_start": src["start"]}}
     try:
         for _ in range(2):          # a reply that only copies the instruction back is no judgement: asked once more (D-061)
-            raw = await llm_mod.get().chat(scanmod.messages(c), temperature=0.0, max_tokens=240)
+            raw = await llm_mod.get().chat([{"role": "system", "content": _SYSTEM}, *scanmod.messages(c)[1:]],
+                                           temperature=0.0, max_tokens=240)
             if not _ECHO.search(raw):
                 break
         else:

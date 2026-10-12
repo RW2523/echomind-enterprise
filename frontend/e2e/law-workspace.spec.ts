@@ -1440,8 +1440,10 @@ test('conversation: a question to the matter is answered from its documents, wit
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
   const title = 'Master Services Agreement (DEMO)';
+  const importing = alice.getByRole('button', { name: /Import a document|^Import$/ }).first();   // empty matter, or not
+  await expect(importing).toBeVisible();                                                     // the list has loaded
   if (await alice.getByRole('button', { name: title, exact: true }).count() === 0) {       // run alone: the matter starts empty
-    await alice.getByRole('button', { name: /Import a document/ }).first().click();
+    await importing.click();
     const dialog = alice.getByRole('dialog', { name: 'Import a document' });
     await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, `../../eval/fixtures/law/${title}.md`));
     await dialog.getByLabel('Status').selectOption('executed');
