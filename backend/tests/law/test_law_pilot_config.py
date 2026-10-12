@@ -6,6 +6,7 @@ off when unset, and the pilot settings template must turn each one on.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import yaml
@@ -103,3 +104,57 @@ def test_the_law_backend_image_adds_what_the_1_4_1_image_lacks():
 def test_the_image_build_refuses_uncommitted_changes_and_tags_by_commit():
     s = (ROOT / "scripts" / "law" / "build_images.sh").read_text()
     assert "git status --porcelain" in s and "git archive" in s and "rev-parse --short" in s
+
+
+def test_the_pilot_never_shares_the_development_backends_master_key():
+    dev = re.search(r'SECRETS/master\.key|\.law-secrets/master\.key', (ROOT / "scripts" / "law" / "dev_backend.sh").read_text())
+    assert dev, "the development key path moved; update this test"
+    assert _template()["LAW_MASTER_KEY_FILE"] == "./.law-secrets/pilot-master.key"
+
+
+# D-060: on the shared host the pilot loads speech recognition on first use, not at every start (a CPU load of
+# the model pushed the backend past its cap). Production keeps preloading: the switch defaults on.
+def _lifespan_threads(monkeypatch, preload: str | None) -> list:
+    import asyncio
+    import app.main as m
+    if preload is None:
+        monkeypatch.delenv("ECHOMIND_ASR_PRELOAD", raising=False)
+    else:
+        monkeypatch.setenv("ECHOMIND_ASR_PRELOAD", preload)
+    started = []
+
+    class _Thread:
+        def __init__(self, target=None, daemon=None, **_):
+            self.target = target
+
+        def start(self):
+            started.append(self.target)
+
+    async def _nothing():
+        return None
+
+    monkeypatch.setattr(m.threading, "Thread", _Thread)
+    monkeypatch.setattr(m, "_warm_llm_and_embeddings", _nothing)
+    monkeypatch.setattr(m, "_stt_fatal_watchdog", _nothing)
+    from app.legal.jobs import worker
+    monkeypatch.setattr(worker, "start", lambda *a, **k: None)
+    monkeypatch.setattr(worker, "stop", lambda *a, **k: None)
+
+    async def _run():
+        async with m.lifespan(m.app):
+            pass
+    asyncio.run(_run())
+    return [t.__name__ for t in started]
+
+
+def test_speech_recognition_preloads_by_default_and_the_pilot_can_load_it_on_first_use(monkeypatch):
+    assert "_warm_nemotron_stt" in _lifespan_threads(monkeypatch, None)
+    assert "_warm_nemotron_stt" not in _lifespan_threads(monkeypatch, "0")
+
+
+def test_the_pilot_loads_speech_models_on_first_use_only():
+    env = _backend_env()
+    assert env.get("ECHOMIND_ASR_PRELOAD") == "${LAW_ASR_PRELOAD:-0}"
+    voice = dict(i.split("=", 1) for i in _services()["voice"]["environment"])
+    assert voice.get("VOICE_USE_PARAKEET") == "${LAW_VOICE_USE_PARAKEET:-0}"
+    assert voice.get("VOICE_NEMOTRON_STARTUP_LOAD") == "${LAW_VOICE_STARTUP_LOAD:-0}"

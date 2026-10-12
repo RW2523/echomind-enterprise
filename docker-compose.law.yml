@@ -40,8 +40,8 @@ services:
     <<: [*law_host_gateway, *law_capped]
     build: !reset null            # a merged key cannot reset, so each service resets its own
     image: ${LAW_BACKEND_IMAGE:-echomind-law-backend:latest}
-    mem_limit: ${LAW_BACKEND_MEM:-4g}
-    memswap_limit: ${LAW_BACKEND_MEM:-4g}
+    mem_limit: ${LAW_BACKEND_MEM:-8g}
+    memswap_limit: ${LAW_BACKEND_MEM:-8g}
     container_name: echomind-law-backend
     depends_on: !reset {}
     volumes: !override
@@ -63,6 +63,9 @@ services:
       - ECHOMIND_ASR_DEVICE=${LAW_ASR_DEVICE:-cpu}
       - CUDA_VISIBLE_DEVICES=${LAW_BACKEND_CUDA_VISIBLE_DEVICES-}
       - ECHOMIND_EXIT_ON_FATAL_CUDA=0
+      # Speech recognition loads on the first live transcript, not at every start: on CPU it needs a few GB
+      # of the memory this host shares with production (D-060).
+      - ECHOMIND_ASR_PRELOAD=${LAW_ASR_PRELOAD:-0}
       # Phase 4 features (D-058, D-059): off unless .env.law turns them on.
       - LEGAL_INTAKE=${LAW_INTAKE:-0}
       - LEGAL_INTAKE_LINKS=${LAW_INTAKE_LINKS:-0}
@@ -75,8 +78,8 @@ services:
     <<: [*law_host_gateway, *law_capped]
     build: !reset null
     image: ${LAW_VOICE_IMAGE:-echomind-law-voice:latest}
-    mem_limit: ${LAW_VOICE_MEM:-4g}
-    memswap_limit: ${LAW_VOICE_MEM:-4g}
+    mem_limit: ${LAW_VOICE_MEM:-2g}
+    memswap_limit: ${LAW_VOICE_MEM:-2g}
     container_name: echomind-law-voice
     ports: !reset []             # reached only through the Law frontend's /voice/ proxy
     depends_on: !override
@@ -99,6 +102,8 @@ services:
       - VOICE_PARAKEET_DEVICE=${LAW_ASR_DEVICE:-cpu}
       - CUDA_VISIBLE_DEVICES=${LAW_VOICE_CUDA_VISIBLE_DEVICES-}
       - VOICE_NEMOTRON_STARTUP_LOAD=${LAW_VOICE_STARTUP_LOAD:-0}
+      # The base stack preloads Parakeet for final decodes; on CPU that alone exceeds the cap (D-060).
+      - VOICE_USE_PARAKEET=${LAW_VOICE_USE_PARAKEET:-0}
 
   frontend:
     <<: *law_capped
