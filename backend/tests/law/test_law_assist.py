@@ -280,3 +280,53 @@ def test_alerts_go_with_the_transcript_and_lose_a_purged_document_s_quote(assist
     assert deletion.purge(t["id"], assist["users"]["mp"]["id"])["verification"]["ok"]
     with sqlite3.connect(fresh_db) as db:
         assert db.execute("SELECT COUNT(*) FROM legal_assist_alerts").fetchone()[0] == 0
+
+
+# D-061: speech recognition writes amounts in words and can end a segment, or put a full stop, inside a figure.
+# The pilot's demo call (a client misstating the cap as "five hundred thousand dollars") raised no alert.
+def test_amounts_spoken_in_words_are_read_from_a_transcript_and_documents_are_read_as_before():
+    from app.legal.compare import facts
+
+    def money(t, spoken=True):
+        return [(f.value, f.shown) for f in facts.extract(t, [(0, len(t))], spoken=spoken) if f.kind == "money"]
+    assert money("the liability cap is five hundred thousand dollars") == [("USD 500000", "five hundred thousand dollars")]
+    assert money("about two hundred and fifty thousand dollars")[0][0] == "USD 250000"
+    assert money("a fee of eighteen thousand five hundred dollars a month")[0][0] == "USD 18500"
+    assert money("it could cost them a million pounds")[0][0] == "GBP 1000000"
+    assert money("twenty-five thousand euros in total")[0][0] == "EUR 25000"
+    # A full stop the speech model put inside the figure.
+    assert money("The liability. Cap under clause eight is five. Hundred thousand dollars. So we are covered.") == [
+        ("USD 500000", "five. Hundred thousand dollars")]
+    assert money("Clause eight. Five hundred dollars a day.")[0][0] == "USD 500"        # not "eight five hundred"
+    assert money("Under the cap of USD 250,000 we are fine.") == [("USD 250000", "USD 250,000")]
+    assert money("we spoke for five minutes about dollars") == []
+    assert money("five hundred thousand dollars", spoken=False) == []                    # documents: unchanged
+
+
+def test_a_misstated_amount_spoken_in_words_raises_an_alert(assist):
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "As I understand it the liability cap under the agreement is five hundred thousand "
+                                                 "dollars, so we are well covered.")])
+    [a] = [x for x in got if x["rule"] == "signed_terms"]
+    assert (a["verdict"], a["title"]) == ("differs", "Differs from signed agreement, cl. 8.1")
+    assert a["said"]["quote"] == "five hundred thousand dollars"
+
+
+def test_a_figure_split_across_two_segments_by_one_speaker_is_still_checked(assist, fresh_db):
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "As I understand it the liability cap under the agreement is five."),
+                                  ("Petra Voss", "Hundred thousand dollars, so we are well covered.")])
+    [a] = [x for x in got if x["rule"] == "signed_terms"]
+    assert (a["verdict"], a["title"]) == ("differs", "Differs from signed agreement, cl. 8.1")
+    with sqlite3.connect(fresh_db) as db:                                                # the quote is in the segment it ended in
+        seg = db.execute("SELECT text FROM legal_transcript_segments WHERE id=?", (a["said"]["segment_id"],)).fetchone()[0]
+    assert seg.startswith("Hundred thousand") and seg[a["said"]["start"]:a["said"]["end"]] == a["said"]["quote"] == "Hundred thousand dollars"
+    assert "five. Hundred thousand dollars" in assist["model"].calls[-1][1]["content"]      # the model sees what was said
+
+
+def test_a_figure_is_never_joined_across_two_speakers(assist):
+    base, ids = meeting(assist, "client_call", CALL)
+    got = say(assist, base, ids, [("Petra Voss", "As I understand it the liability cap under the agreement is five."),
+                                  ("Helena Marsh", "Hundred thousand dollars was last year's figure for the claim.")])
+    assert not any("five" in (x.get("explanation") or "").lower() for x in got)
+    assert not any("five. Hundred" in c[1]["content"] for c in assist["model"].calls)

@@ -91,6 +91,7 @@ class Context:
     docs: Optional[list] = None                   # scan.documents(...) for the person, signed versions
     built: Optional[list] = None
     interests: list = field(default_factory=list)  # (participant id, topic words, segment id, quote)
+    previous: Optional[tuple] = None              # (speaker, text) of the segment before, for a figure split across two
 
     @property
     def counterparty(self) -> bool:
@@ -170,12 +171,19 @@ def _where(src: dict) -> str:
     return clause if src.get("clause") else f"“{clause}”"
 
 
-async def _terms(ctx: Context, seg: dict, rules: set) -> list[Alert]:
-    """Figures said, checked against the matter's documents (signed versions)."""
-    text = seg["text"]
-    said = factsmod.extract(text, [(0, len(text))])
+async def _terms(ctx: Context, seg: dict, rules: set, before: str = "") -> list[Alert]:
+    """Figures said, checked against the matter's documents (signed versions). Amounts may be said in words.
+    `before`: the same speaker's previous segment, so a figure the segmenter split ("is five." | "Hundred
+    thousand dollars") is read whole (D-061); only figures ending in this segment are checked, quoted in it."""
+    offset = len(before) + 1 if before else 0
+    text = f"{before} {seg['text']}" if before else seg["text"]
+    said = [f for f in factsmod.extract(text, [(0, len(text))], spoken=True) if f.end > offset]
     if not said:
         return []
+
+    def _said(_text, start, end):                                   # positions in this segment's own text
+        a, b = max(start - offset, 0), end - offset
+        return {"start": a, "end": b, "quote": seg["text"][a:b]}
     load_documents(ctx)
     out: list[Alert] = []
     for f in said:
@@ -222,7 +230,7 @@ async def _terms(ctx: Context, seg: dict, rules: set) -> list[Alert]:
             continue
         for score, k, g, _ in top:
             src = _source(ctx, k, g)
-            checked = await _model_check(ctx, seg, f, src)
+            checked = await _model_check(ctx, seg, f, src, text)
             if checked is not None:
                 what = _what(ctx, k, src)
                 out.append(Alert("signed_terms", "differs", "critical", f"Differs from {what}, {_where(src)}", _said(text, f.start, f.end),
@@ -231,13 +239,13 @@ async def _terms(ctx: Context, seg: dict, rules: set) -> list[Alert]:
     return out
 
 
-async def _model_check(ctx: Context, seg: dict, f: factsmod.Fact, src: dict) -> Optional[tuple[float, str]]:
+async def _model_check(ctx: Context, seg: dict, f: factsmod.Fact, src: dict, said: Optional[str] = None) -> Optional[tuple[float, str]]:
     """The model confirms the statement and the passage are about the same thing. None when it says
     they are not, or cannot say (a conservative alert is no alert)."""
     speaker = ctx.roster.get(seg.get("speaker_participant_id") or "", {})
     c = {"kind": f.kind,
          "a": {"document_title": "What was said in the meeting", "version_number": "", "version_status": speaker.get("role", ""),
-               "clause": None, "parties": [], "context": seg["text"], "value": f.shown, "context_start": 0},
+               "clause": None, "parties": [], "context": said or seg["text"], "value": f.shown, "context_start": 0},
          "b": {"document_title": src["document_title"], "version_number": src["version_number"], "version_status": src["version_status"],
                "clause": src.get("clause"), "parties": [], "context": src["quote"], "value": src["value"], "context_start": src["start"]}}
     try:
@@ -311,12 +319,15 @@ def _declared_in_documents(ctx: Context, name: str, text: str) -> Optional[dict]
 async def consider(ctx: Context, seg: dict) -> list[Alert]:
     """Alerts for one stored segment, at or above the threshold in force."""
     rules = set(packs.PACKS.get(ctx.pack, ()))
+    speaker, previous = seg.get("speaker_participant_id"), ctx.previous
+    ctx.previous = (speaker, seg.get("text", ""))
     if not rules or not seg.get("text", "").strip():
         return []
     found = _phrases(ctx, seg, rules)
     if rules & {"signed_terms", "authority"}:
+        before = previous[1] if previous and speaker and previous[0] == speaker else ""
         try:
-            found += await _terms(ctx, seg, rules)
+            found += await _terms(ctx, seg, rules, before)
         except Exception as e:
             logger.warning("Assist: checking the terms failed (%s)", type(e).__name__)
     return [a for a in found if a.confidence >= settings.LEGAL_ASSIST_MIN_CONFIDENCE]

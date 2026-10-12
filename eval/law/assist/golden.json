@@ -59,6 +59,27 @@
     {"turn": 3, "rule": "conflict", "severity": "critical"}
    ],
    "acceptable": []
+  },
+  {
+   "id": "spoken-amounts-demo-call",
+   "note": "D-061: the pilot's demo call, as speech recognition wrote it. Amounts in words, and the client's misstated cap split across two segments by a stray full stop. It informed the fix, so it is tuning data.",
+   "pack": "legal_client_call",
+   "kind": "client_call",
+   "speakers": [{"name": "Helena Marsh", "role": "attorney"}, {"name": "Petra Voss", "role": "client"}],
+   "turns": [
+    {"speaker": "Helena Marsh", "text": "Thank you for joining. I want to go through the Harrowgate master services agreement before the renewal notice goes out."},
+    {"speaker": "Petra Voss", "text": "Thanks. As I understand it, the liability cap under clause eight is five."},
+    {"speaker": "Petra Voss", "text": "Hundred thousand dollars, so we are well covered."},
+    {"speaker": "Helena Marsh", "text": "The subscription fee under the agreement is eighteen thousand five hundred dollars a month."},
+    {"speaker": "Helena Marsh", "text": "I will check clause eight and send you a short note on the cap by Friday."}
+   ],
+   "planted": [
+    {"turn": 2, "rule": "signed_terms", "severity": "critical", "said": "Hundred thousand dollars", "source": "USD 250,000"},
+    {"turn": 4, "rule": "action", "severity": "notice"}
+   ],
+   "acceptable": [
+    {"turn": 3, "rule": "signed_terms", "verdict": "matches"}
+   ]
   }
  ]
 }
