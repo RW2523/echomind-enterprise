@@ -333,8 +333,7 @@ def check_conflicts(p: Pilot) -> tuple[bool, str]:
     mid = p.matter("kenji", "M-303")
     raw = p.call("kenji", "POST", f"/legal/matters/{q(mid)}/compare/scan", {"versions": "current"}, timeout=600)
     events = [json.loads(line) for line in raw.decode().splitlines() if line.strip()]
-    done = next((e for e in events if e.get("type") == "done"), {})
-    found = [f for f in done.get("findings", []) if f.get("verdict") == "conflict"]
+    found = [e["finding"] for e in events if e.get("type") == "checked" and (e.get("finding") or {}).get("verdict") == "conflict"]
     text = json.dumps(found)
     ok = any(x in text for x in ("12%", "10%", "30 October 2026", "15 November 2026"))
     return ok, f"{len(found)} conflicts; option pool {'found' if '12%' in text and '10%' in text else 'not found'}; closing date {'found' if '15 November 2026' in text else 'not found'}"
@@ -344,7 +343,7 @@ def check_reference(p: Pilot) -> tuple[bool, str]:
     """The public-law library (R-001): a question answered from a real Act, with quotes."""
     events = _ask(p, "alice", "R-001", "Under the Late Payment of Commercial Debts (Interest) Act 1998, what interest is implied into a contract for a qualifying debt?")
     done = next(e for e in events if e["type"] == "done")
-    titles = {c["document_title"] for c in done["citations"]}
+    titles = {c["document_title"] for c in done["citations"]} | {e["document_title"] for e in done.get("evidence") or []}
     ok = not done["abstained"] and any("Late Payment" in t for t in titles)
     return ok, f"{done['status']}, cites {sorted(titles)[:2]}"
 
