@@ -122,7 +122,8 @@ release-blocking failure under SOP-07 §7 is open.
 it existed — no tags across 202 commits, no `CHANGELOG`, `frontend/package.json` at `"0.0.0"`, untagged
 images and no build identifier. Now:
 
-- Annotated tags `v1.4.0` and `v1.4.1`, created by `scripts/release.sh`, which also regenerates
+- Annotated tags `v1.4.0` and `v1.4.1`, created by `scripts/release.sh`; the earlier two-month increments
+  are identified as retrospective baselines `v1.0.0`–`v1.3.0` (REG-08 §2a, tagged 2026-10-12). The script also regenerates
   `CHANGELOG.md` and records the version in `frontend/package.json:4` (`"1.4.1"`).
 - `BUILD_VERSION`, `BUILD_COMMIT` and `BUILD_DATE` are build arguments baked into the backend, voice
   and frontend images (`backend/Dockerfile:64`, `voice/Dockerfile:92`, `frontend/Dockerfile:19`).

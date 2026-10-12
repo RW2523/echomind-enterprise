@@ -7,8 +7,38 @@ All notable changes to EchoMind Enterprise are recorded here. The format follows
 This file is generated from the git history by `scripts/gen_changelog.sh`; do
 not edit it by hand. Versions are cut by `scripts/release.sh`, which tags the
 source revision that each released image is built from (ISO 9001:2015, 8.5.2).
+Versions 1.0.0 to 1.3.0 are retrospective baselines: the 2026 increments, identified
+on 2026-10-12 from this history and tagged on the last commit of each increment.
+They were not released as numbered versions at the time; release records start at 1.4.0.
 
-History covered: 2026-02-05 to 2026-10-06.
+History covered: 2026-02-05 to 2026-10-12.
+
+## Unreleased
+
+### Documentation
+
+- **qms**: evidence package after the AR-2026-003 approval (snapshot 2026-10-12 @ 98531cc) (`1c41b36`)
+- **qms**: Excel registers EM26-19…22 approved (AR-2026-003) (`98531cc`)
+- **qms**: evidence package with the Excel registers EM26-19…22 (snapshot 2026-10-11 @ 33273a2) (`76505d8`)
+- **qms**: Excel registers EM26-19…22 — review log, functional and non-functional requirements, roadmap (2025 → 2027) (`33273a2`)
+- **qms**: evidence package rebuilt after the rev 1.1 approval (snapshot 2026-10-10 @ 698e0ce) (`9ded4da`)
+- **qms**: revision 1.1 approved (AR-2026-002) — review and NFR evidence signed off (`698e0ce`)
+- **qms**: evidence package rebuilt with the client and design review history (snapshot 2026-10-10 @ 2e18a33) (`788b0cd`)
+- **qms**: client and design reviews 2025–2026 in the review log (EM26-18 rev 1.1) (`2e18a33`)
+- **qms**: ISO 9001 evidence package rebuilt after approval (snapshot 2026-10-07 @ 3b05278) (`95782e4`)
+- **qms**: approve the full QMS set (AR-2026-001) and bring every document up to date (`3b05278`)
+- **qms**: closure evidence for 2025 findings #6 (NFRs) and #7 (review actions) (`ac600ae`)
+- **qms**: ISO 9001 evidence package as a single download (snapshot 2026-10-07) (`24ccb48`)
+- **qms**: NC-2026-010 closed — CI proven to fail on a broken test; first external login check passed (`b2a1658`)
+- **qms**: project board evidence — 65 tracked tickets replace the 2025 Jira screens (`6c24efe`)
+- **qms**: current GitHub evidence — v1.4.1 tag and the defect-fix commit (`7bdcb94`)
+- **qms**: refer to the 2025 pilot customer generically in the evidence pack (`ba80d9f`)
+- **qms**: point test records at the per-run execution folders (`eb8ace2`)
+
+### Other changes
+
+- ci: run the public login gate check when its definition changes (`ee26cfd`)
+- qms: corrective actions for NC-2026-008/009/010/016 — CI, external login check, eval pre-flight (`f3aca50`)
 
 ## [1.4.1] - 2026-10-06
 
@@ -20,6 +50,7 @@ History covered: 2026-02-05 to 2026-10-06.
 
 ### Documentation
 
+- **changelog**: regenerate for v1.4.1 (`f1b8445`)
 - **qms**: 2026 EchoMind ISO 9001 evidence pack; raise NC-2026-011..015 (`bd44ade`)
 - **qms**: record 2026-10-06 deployment — login restored, v1.4.0 code live, log rotation applied (`1d7f154`)
 - **qms**: correct audit-pack claims against the running system; raise NC-2026-009/010 (`855bd80`)
@@ -36,6 +67,25 @@ History covered: 2026-02-05 to 2026-10-06.
 - **build**: release identification, off-host backup scheduling, pinned NeMo (`51fd3bc`)
 - **voice**: speculative replies, LLM tool routing, dynamic hold phrases, GPU final STT (`ff29843`)
 - **transcript,voice,chat**: cleaner utterances, gated checks, enterprise voice tone, focused UI (`15f3c96`)
+
+### Fixed
+
+- **transcript**: render live speech as continuous text, not per-chunk sentences (`c2a6ed5`)
+
+### Documentation
+
+- **changelog**: regenerate for v1.4.0 (`eaa7b1a`)
+- **qms**: October surveillance audit pack for the EchoMind Product area (`4a43773`)
+- **qms**: ISO 9001:2015 quality management system, repo tidy-up, data backup (`9efb134`)
+
+### Other changes
+
+- chore(release): v1.4.0 (`b0ba848`)
+
+## [1.3.0] - 2026-08-16
+
+### Added
+
 - **silent-assistant**: sentence-level live checks with quoted proof, record pull, scenarios (`7f2658a`)
 - **voice**: loop provenance tags and ablation switch for paper eval (`5ce8bbe`)
 - **security**: enable auth; sanitize citation artifacts; reserve 'default' tenant (`9810e98`)
@@ -44,6 +94,53 @@ History covered: 2026-02-05 to 2026-10-06.
 - **llm**: port chat to Qwen3-30B-A3B NVFP4 on TensorRT-LLM (driver fix confirmed) (`80375c6`)
 - **eval**: golden-question evaluation harness for the RAG + conversation stack (`12f7219`)
 - **rag**: conversational intelligence, honest citations, persona quality overhaul (`343117f`)
+
+### Fixed
+
+- **rag**: overhaul ingestion, embeddings, scoring end to end (`7e582e1`)
+- **chat**: kill repetition loops, right-size answers, harden personas (`149a1b6`)
+- **voice**: sentence-aligned TTS cadence, pipelined synthesis, smooth playback (`1d1e3aa`)
+- **rag**: enforce namespace predicate on sparse transcript path (`4e27109`)
+- **rag**: gate BookRAG behind RAG_ENABLE_BOOKRAG (default off) — it measured worse (`2decb99`)
+- **rag**: stop silent content loss, unblock BookRAG, guard reasoning leaks (`7b04eb9`)
+- **voice**: pass VOICE_AUTH_SECRET (not AUTH_SECRET) so the WS gate actually works (`73f0b4f`)
+- **scripts**: await delete_document in re-ingest; add stale-PDF dedupe (`febfc5f`)
+- **rag**: unblock BookRAG + stop silent content loss in PDF ingestion (`4a8402e`)
+- **tts**: /api/transcribe/speak returned null audio — wrong voice port (`558eaae`)
+- **voice**: eliminate TTS gaps — trim phrase silence, controlled pauses, edge-only fades (`31b7786`)
+- **rag**: two-tier CE relevance gate + multi-part answer hint (eval round 4) (`beeb1b7`)
+- **rag**: five retrieval bugs found by the golden-question eval (`ebd232f`)
+- **compose**: restore GPU to backend/voice on GB10, pin Live Transcript ASR to CPU (`cb3a280`)
+
+### Performance
+
+- **voice**: move Live Transcript ASR back to GPU (driver 580.159.03 fixed NVML) (`c864fa7`)
+
+### Documentation
+
+- **paper**: camera-ready v4 with updated author list and ajace.com emails (`bc9aa33`)
+- add pitch deck PPTX and consolidate collateral into marketing_doc/ (`9360f69`)
+- add technical, business, architecture and pitch documents (`17ecfcf`)
+- update second author to full name Richard Watson Stephen Amudha (`cea19f9`)
+- finalize QASC 2026 camera-ready; keep only the final package (`f52651f`)
+- standardize capability brief to US English (`28a065d`)
+- add EchoMind AI capability & product brief (`93c5dc4`)
+- LNEE LaTeX camera-ready + author reorder (`20faed3`)
+- finalize camera-ready author block (`ec4d08f`)
+- QASC 2026 camera-ready v3 + response to reviewers (`c1c1fed`)
+- add architecture brief v2 (9-page PDF, full feature coverage) (`1584623`)
+- add EchoMind architecture brief (3-page PDF) (`58c774d`)
+- **readme**: bring README in line with the shipped system (`ec5136b`)
+
+### Other changes
+
+- eval: QASC 2026 paper experiment harness and frozen results (`cbc57d1`)
+- Add files via upload (`01b203c`)
+
+## [1.2.0] - 2026-06-27
+
+### Added
+
 - **export**: secure offline export gateway — PII/secret scan + redaction (#5) (`d19177d`)
 - **auth**: per-tenant scoping (#4 multi-tenant) (`ef19d68`)
 - **silent-assistant**: namespace-aware + always-surface + per-vertical rule packs (#3) (`f75121b`)
@@ -69,23 +166,6 @@ History covered: 2026-02-05 to 2026-10-06.
 
 ### Fixed
 
-- **transcript**: render live speech as continuous text, not per-chunk sentences (`c2a6ed5`)
-- **build,boardroom**: repair image rebuilds and salvage truncated report JSON (`724fb98`)
-- **rag**: overhaul ingestion, embeddings, scoring end to end (`7e582e1`)
-- **chat**: kill repetition loops, right-size answers, harden personas (`149a1b6`)
-- **voice**: sentence-aligned TTS cadence, pipelined synthesis, smooth playback (`1d1e3aa`)
-- **rag**: enforce namespace predicate on sparse transcript path (`4e27109`)
-- **rag**: gate BookRAG behind RAG_ENABLE_BOOKRAG (default off) — it measured worse (`2decb99`)
-- **rag**: stop silent content loss, unblock BookRAG, guard reasoning leaks (`7b04eb9`)
-- **voice**: pass VOICE_AUTH_SECRET (not AUTH_SECRET) so the WS gate actually works (`73f0b4f`)
-- **scripts**: await delete_document in re-ingest; add stale-PDF dedupe (`febfc5f`)
-- **rag**: unblock BookRAG + stop silent content loss in PDF ingestion (`4a8402e`)
-- **tts**: /api/transcribe/speak returned null audio — wrong voice port (`558eaae`)
-- **voice**: eliminate TTS gaps — trim phrase silence, controlled pauses, edge-only fades (`31b7786`)
-- **rag**: two-tier CE relevance gate + multi-part answer hint (eval round 4) (`beeb1b7`)
-- **rag**: five retrieval bugs found by the golden-question eval (`ebd232f`)
-- **compose**: restore GPU to backend/voice on GB10, pin Live Transcript ASR to CPU (`cb3a280`)
-- **compose**: serve chat via ollama, gate resource-hogging trtllm on GB10 (`2039d62`)
 - **settings**: Settings tab crashed (undefined PERSONA_META for new personas) (`2465767`)
 - **voice**: keep barge-in off for the intro's full playback duration (`974b308`)
 - **build**: relax huggingface-hub pin 0.33.5 -> >=0.34,<2 (diffusers>=0.38 needs >=0.34) (`421aa46`)
@@ -95,27 +175,10 @@ History covered: 2026-02-05 to 2026-10-06.
 
 ### Performance
 
-- **voice**: move Live Transcript ASR back to GPU (driver 580.159.03 fixed NVML) (`c864fa7`)
 - **rag**: cache query embeddings (deterministic, LRU 4096) (`3b6fe19`)
 
 ### Documentation
 
-- **changelog**: regenerate for v1.4.0 (`eaa7b1a`)
-- **qms**: October surveillance audit pack for the EchoMind Product area (`4a43773`)
-- **qms**: ISO 9001:2015 quality management system, repo tidy-up, data backup (`9efb134`)
-- **paper**: camera-ready v4 with updated author list and ajace.com emails (`bc9aa33`)
-- add pitch deck PPTX and consolidate collateral into marketing_doc/ (`9360f69`)
-- add technical, business, architecture and pitch documents (`17ecfcf`)
-- update second author to full name Richard Watson Stephen Amudha (`cea19f9`)
-- finalize QASC 2026 camera-ready; keep only the final package (`f52651f`)
-- standardize capability brief to US English (`28a065d`)
-- add EchoMind AI capability & product brief (`93c5dc4`)
-- LNEE LaTeX camera-ready + author reorder (`20faed3`)
-- finalize camera-ready author block (`ec4d08f`)
-- QASC 2026 camera-ready v3 + response to reviewers (`c1c1fed`)
-- add architecture brief v2 (9-page PDF, full feature coverage) (`1584623`)
-- add EchoMind architecture brief (3-page PDF) (`58c774d`)
-- **readme**: bring README in line with the shipped system (`ec5136b`)
 - **db**: Postgres migration runbook (#6 — planned, maintenance-window) (`46bd774`)
 - **deploy**: clarify public-hostname step (avoid doubled domain) + troubleshooting (`51bc562`)
 - hide generated PPTX (export WIP) — untrack + gitignore, keep PDFs (`daa470c`)
@@ -135,14 +198,15 @@ History covered: 2026-02-05 to 2026-10-06.
 
 ### Other changes
 
-- chore(release): v1.4.0 (`b0ba848`)
-- eval: QASC 2026 paper experiment harness and frozen results (`cbc57d1`)
-- Add files via upload (`01b203c`)
 - Add Document Studio: AI document generation with on-device images + PDF/PPTX export (`2d23f40`)
 - Harden security, fix bugs across RAG/transcribe/boardroom/voice, audit prompts (`b08cf25`)
 - Implement backchannel and partial transcript features for enhanced voice interaction (`fbbadd0`)
 - paper (`539493f`)
-- Enhance transcript analysis and boardroom session features (`e1a337b`)
+
+## [1.1.0] - 2026-04-29
+
+### Other changes
+
 - Update voice service configurations and enhance TTS handling (`e5292f3`)
 - Enhance Docker configurations for offline model preparation and update frontend components (`0818cdc`)
 - Comment out Voice Context section in Settings component for future use (`d41014d`)
@@ -174,7 +238,11 @@ History covered: 2026-02-05 to 2026-10-06.
 - Refactor document chunking and indexing for improved metadata handling (`03e43d3`)
 - Refactor document chunking and indexing for enhanced metadata management (`7abc98c`)
 - Refactor document chunking and indexing for improved metadata handling (`045b1b1`)
-- Enhance document chunking and indexing features (`31f1205`)
+
+## [1.0.0] - 2026-02-27
+
+### Other changes
+
 - Enhance WebSocket handling and configuration settings (`595b24b`)
 - Add transcript management features and source options handling (`223714c`)
 - Enhance transcript time parsing and formatting (`5081ad8`)

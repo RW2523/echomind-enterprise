@@ -104,13 +104,17 @@ All notable changes to EchoMind Enterprise are recorded here. The format follows
 This file is generated from the git history by \`scripts/gen_changelog.sh\`; do
 not edit it by hand. Versions are cut by \`scripts/release.sh\`, which tags the
 source revision that each released image is built from (ISO 9001:2015, 8.5.2).
+Versions 1.0.0 to 1.3.0 are retrospective baselines: the 2026 increments, identified
+on 2026-10-12 from this history and tagged on the last commit of each increment.
+They were not released as numbered versions at the time; release records start at 1.4.0.
 
 History covered: ${FIRST_COMMIT_DATE} to ${LAST_COMMIT_DATE}.
 
 EOF
 
-# Tags newest first. Empty when the repository has no tags yet.
-mapfile -t TAGS < <(git tag --list --sort=-creatordate 'v*')
+# Tags newest first, by version (retrospective baselines are tagged after the fact,
+# so creation date would misorder them). Empty when the repository has no tags yet.
+mapfile -t TAGS < <(git tag --list --sort=-v:refname 'v*')
 if [ "${#TAGS[@]}" -eq 0 ]; then
   mapfile -t TAGS < <(git tag --list --sort=-creatordate)
 fi

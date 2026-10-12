@@ -77,10 +77,10 @@ history itself is not duplicated here — it is the Git history of each file (SO
 | REG-08 | Release and Deployment Register | Lead Engineer (Richard Watson Stephen Amudha) | v1.4.0 and v1.4.1 — authorised 2026-10-07 by Anita Johan; reference instance runs v1.4.1 |
 | REG-09 | Non-Functional Requirements Register | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs, targets approved 2026-10-07 (EM26-17; rev 1.1 approved 2026-10-10, AR-2026-002) |
 | REG-10 | Review Feedback and Action Log | Quality representative (Sheryl Nazareth) | 17 reviews, 55 actions, 48 closed (EM26-18 rev 1.1, approved 2026-10-10, AR-2026-002) |
-| EM26-19 | Deliverable Review Feedback and Action Log 2025 → 2026 (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 33 reviews (15 in 2025, 18 in 2026), 75 actions, 66 closed; approved 2026-10-12 (AR-2026-003) — `evidence-2026/19_Excel_Registers/` |
-| EM26-20 | Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 39 requirements (5 from 2025, 34 in 2026) with traceability; approved 2026-10-12 (AR-2026-003) |
-| EM26-21 | Non-Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs + 9 from 2025, measurement history; approved 2026-10-12 (AR-2026-003) |
-| EM26-22 | Product Roadmap 2025 → 2027 (Excel) | EchoMind Project Lead (Alexander Peter) | 2025 plan vs actual, 2026 increments, forward plan; approved 2026-10-12 (AR-2026-003) |
+| EM26-19 | Deliverable Review Feedback and Action Log 2025 → 2026 (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 33 reviews (15 in 2025, 18 in 2026), 75 actions, 66 closed; rev 1.0 approved 2026-10-12 (AR-2026-003); rev 1.1 adds versions v1.0.0–v1.4.1 — approval to be confirmed — `evidence-2026/19_Excel_Registers/` |
+| EM26-20 | Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 39 requirements (5 from 2025, 34 in 2026) with traceability; rev 1.0 approved 2026-10-12 (AR-2026-003); rev 1.1 adds versions v1.0.0–v1.4.1 — approval to be confirmed |
+| EM26-21 | Non-Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs + 9 from 2025, measurement history; rev 1.0 approved 2026-10-12 (AR-2026-003); rev 1.1 adds versions v1.0.0–v1.4.1 — approval to be confirmed |
+| EM26-22 | Product Roadmap 2025 → 2027 (Excel) | EchoMind Project Lead (Alexander Peter) | 2025 plan vs actual, 2026 increments, forward plan; rev 1.0 approved 2026-10-12 (AR-2026-003); rev 1.1 adds versions v1.0.0–v1.4.1 — approval to be confirmed |
 
 ## 4a. Completed records
 

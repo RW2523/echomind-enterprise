@@ -176,7 +176,7 @@ git commit SHA  →  annotated git tag  →  image tag carrying that version
 
 | Link | Present state | Evidence |
 |---|---|---|
-| Git tag | Annotated tags `v1.4.0`, `v1.4.1` | `git tag`; `scripts/release.sh` |
+| Git tag | Releases `v1.4.0`, `v1.4.1`; retrospective baselines `v1.0.0`–`v1.3.0` for the earlier increments (REG-08 §2a) | `git tag`; `scripts/release.sh` |
 | Changelog | Generated at each release | `CHANGELOG.md` |
 | Application version | `frontend/package.json:4` is `"1.4.1"`; `BUILD_VERSION` baked into every built image | `backend/Dockerfile:64`, `voice/Dockerfile:92`, `frontend/Dockerfile:19` |
 | Image tags | `backend`, `voice` and `frontend` are compose-default builds with no `image:` key, so they are effectively `:latest`. Only `echomind-trtllm:1.2.0rc6` (`docker-compose.yml:5`) and `echomind-ollama:setup` (`:235`) carry a tag | `docker-compose.yml:229-234`, `:47-57`, `:115-125` |
