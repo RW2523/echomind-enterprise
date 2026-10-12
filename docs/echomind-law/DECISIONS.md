@@ -1703,6 +1703,20 @@ Every entry records the options considered, the recommendation, the consequence 
   - On a GPU the speech model would also keep up under load (D-066).
 - **Reports:** `eval/law/reports/20261012-0417*` (560 ms) and `20261012-0511*` (1,120 ms).
 
+### D-073 A quote given without a reference is cited where it is found; the operations runbook — RECORDED (owner's approval 2026-10-12: "start the next pending items and finish everything")
+- **Found on the pilot:** the reference-library question was answered correctly, quoting the Act word for word ("Section 1(1) states, "…""), but with no `[n]`. So it showed as unverified in 2 of 3 runs.
+- **Change (tests first):**
+  - In a sentence that cites nothing, a quote of four or more words found in a retrieved source is cited to the first source, in rank order, that contains it.
+  - It is verified like any other quote and marked `matched`. The evidence says "Reference added: the answer quoted this without one".
+  - A quote found nowhere stays uncited, so its sentence is still marked unsupported.
+  - A passage flagged for text addressed to an AI is never matched (T08).
+- **Evaluation:** golden, then held-out once, on dbb7a6a.
+  - **Golden:** answers 61/64, abstentions 4/6, citation precision 0.90, quote verification 0.99, no "unverified" answers. The last run, 2026-10-10, gave 60/64, 0.93, 1.0 and 2.
+  - **Held-out:** 28/29, abstentions 1/3, precision 0.95, quote verification 1.0, no "unverified". The last run gave 28/29, 0/3, 0.95, 0.97 and 3.
+  - **No reference was added by matching in either set,** so these differences are the model's day-to-day variance, not this change. The change acts only when the model quotes without a marker, as it did on the pilot.
+- **Runbook (OPS-01):** `RUNBOOK.md` covers health checks, updates and rollback, backups and restores, regulatory updates, the network lock, people and access, incidents, and what never to do.
+- **Not done here:** generic single sign-on (OIDC, SEC-01). Reading the sign-in code was refused by the session's permission rules, alongside a refused attempt to open the pilot to the internet, so it was left for the owner to decide. OIDC also needs the firm's identity provider (P-011).
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

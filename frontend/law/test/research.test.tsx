@@ -133,7 +133,8 @@ describe('Research', () => {
         unsupported: [], failed: [p1], uncited: false, versions: 'signed', turn_id: 't1',
         evidence: [
           { n: 1, quote: 'shall not exceed USD 250,000', verification: 'verbatim', document_id: 'd1', document_title: 'Harrowgate MSA', version_id: 'v2',
-            version_number: 2, version_status: 'executed', signed: true, clause: '8.1', page_start: 9, page_end: 9, line: 3, char_start: 100, char_end: 128 },
+            version_number: 2, version_status: 'executed', signed: true, clause: '8.1', page_start: 9, page_end: 9, line: 3, char_start: 100, char_end: 128,
+            matched: true },
           { n: 2, quote: 'fraud is excluded', verification: 'failed', document_id: 'd1', document_title: 'Harrowgate MSA', version_id: 'v2',
             version_number: 2, version_status: 'executed', signed: true, clause: null, page_start: 3, page_end: 3, line: null, char_start: null, char_end: null },
         ],
@@ -152,6 +153,7 @@ describe('Research', () => {
     const ev = within(answer).getByRole('region', { name: 'Evidence' });
     expect(within(ev).getByText('“shall not exceed USD 250,000”')).toBeTruthy();
     expect(within(ev).getByText('Quoted exactly')).toBeTruthy();
+    expect(within(ev).getByText('Reference added: the answer quoted this without one')).toBeTruthy();   // D-073
     expect(within(ev).getByText('Quote not found in the source')).toBeTruthy();
     expect(within(ev).getByText('Harrowgate MSA · v2 · Executed · cl. 8.1 · p. 9 · line 3')).toBeTruthy();
     expect(within(ev).getByRole('link', { name: 'Open evidence 1 in the document' }).getAttribute('href')).toBe('/m/M-101/documents/d1/read?v=v2&at=100-128');

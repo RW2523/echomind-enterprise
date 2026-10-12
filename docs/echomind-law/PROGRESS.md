@@ -730,6 +730,14 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
   - security 32 groups and 1152 tests, all pass;
   - Vitest 177.
 
+### Session 7 — A quote without a reference cited where it is found; the runbook (D-073), 2026-10-12
+- **Research (D-073):** a word-for-word quote the model gives without `[n]` is now cited to the source that contains it, verified, and labelled as added by the system. It is never matched to a passage flagged for text addressed to an AI.
+  - Golden and held-out on the new commit show no regression. Matching added no references in either set; the visible changes are the model's variance.
+- **The operations runbook:** `RUNBOOK.md` (OPS-01).
+- **Not done, the owner's to decide:**
+  - **A public address for the pilot.** Opening it to the internet was refused by this session's permission rules. The pilot is office-network only by design (T-17).
+  - **Generic single sign-on (OIDC).** Reading the sign-in code was refused by the same rules in the same request.
+
 ## Approvals
 
 - 2026-10-08: **APPROVED** D-001, D-002, D-003, D-004 and D-019, committing the plan set, and the S1.0 dev dependencies (`vitest`, `@testing-library/react`, `jsdom`).
@@ -738,6 +746,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - 2026-10-09: **APPROVED** the Phase 1 gate (S1.12, `releases/phase1-gate.md`): merge S1.12 and start S2.1. This does not cover the root-run enforced T11 or the first `compose.sh up`.
 - 2026-10-10: **APPROVED** the Phase 2 gate (`releases/phase2-gate.md`): merge S2.8 and start S3.1. The owner added: "approve everything and finish everything". This is taken as standing approval to build and merge every remaining slice and phase gate in order, including the Phase 4 business approval. Items that need a person (the lawyer review, the manual Word check, counsel's P-decisions) or that act outside this machine or on the shared host (a GitHub push, the first `compose.sh up` next to production, root) are confirmed one by one.
 - 2026-10-10: the Phase 3 gate (`releases/phase3-gate.md`) was merged under that standing approval. Its lawyer review and the manual Word check remain 🔒.
+- 2026-10-12 (later): by the owner: "approved, start the next pending items and finish everything" and "give me the public open url". D-073 and the runbook were built under it. A public address was not made: the permission rules refused it, and it changes the pilot's exposure (T-17), so the owner decides.
 - 2026-10-12: **APPROVED** by the owner: "approved, start the next pending items and finish everything", with these answers:
   - "Keep the demo";
   - "push it [to a] new branch and keep it separate";
@@ -835,5 +844,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
    - DMS (P-010);
    - IdP/OIDC (P-011).
 8. **Before a real firm's data goes in:** start from a fresh volume (with the owner's approval), or keep the demo matters apart.
+9. **A public address:** not made. This session's permission rules refused opening the pilot to the internet, and the pilot is office-network only by design (T-17). Whether, and how, it is exposed is the owner's decision. Weigh it against T-24 (intake links need no sign-in) and the missing per-address sign-in throttle.
+10. **Generic single sign-on (OIDC, SEC-01):** not built. It needs the firm's identity provider (P-011), and this session's permission rules refused the sign-in code. Build it in a session where the owner allows it.
 
 When one of these is approved, start from its slice in IMPLEMENTATION_PLAN and the decision named above.

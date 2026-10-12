@@ -576,3 +576,18 @@
 | Transcription, synthetic voices (pilot) | 4 scripted conversations (19 turns), fixed Piper voices, streamed through capture; means of the four:<ul><li>**560 ms look-ahead:** WER 24% normalised (59% verbatim), entities 29%, negations 54%, speakers 0.88–1.0.</li><li>**1,120 ms:** WER 11.5% (34%), entities 48%, negations 83%, speakers 0.98–1.0. Now the Law default (D-072).</li></ul>The same audio as whole clips gave word-for-word the same text: **capture loses nothing**, and the misses are the model's. |
 | Regulatory updates (pilot) | First daily import: 48 fetched (12 UK, 36 US), 47 new, 1 correction slip skipped (now kept). 26 matches, mostly noise. After tighter terms and the regional rule (tests first), `rematch` left **3 plausible matches**. |
 | Pilot end to end (`demo_check.py`, 14 checks) | **11 PASS:**<ul><li>research, conversation, conflicts, employment, drafting, summary, panel, time and intake;</li><li>**regulatory:** 47 updates, official links only, sofia sees only her matters;</li><li>**translation:** the signed MSA into French by the real model, 43 paragraphs, 0 figures flagged, 39 s.</li></ul>**3 FAIL:**<ul><li>**followup:** the question was not rewritten in the full run, then passed 2 of 2 reruns (model variance).</li><li>**reference:** a correct answer quoting the Act by section but without citation markers, so "unverified". It passed 1 of 3 runs. Model variance in research citations; code unchanged today.</li><li>**meeting:** at the 1,120 ms look-ahead the model heard the client's "five hundred thousand dollars" as "five hundred", so Silent Assist raised the action alert but not the cap conflict. It passed at 560 ms in run 38. Whole-clip transcription gives the same words, so this is the model, not capture: it drops the words before a pause. Kept at 1,120 ms on the 19-turn measure (D-072); the demo guide now says to say amounts in full.</li></ul> |
+
+## Run 41 — A quote without a reference cited where it is found; the runbook (D-073), 2026-10-12
+
+- **Branch:** `law/research-citations`
+
+| Suite | Result |
+|---|---|
+| Research evidence | **4 new tests** (red first): a word-for-word quote without a marker is cited and marked matched; a model-cited quote is not matched again; a quote ending in its full stop; a passage that speaks to an AI is never matched (T08). Every test that asks research questions: **171 passed**. Injection suite unchanged, all pass. |
+| Frontend | Vitest research page: the "Reference added" label (9 passed). |
+| Backend (all) | **1329 passed** (1322 at run 40). |
+| Security suite | **32 groups, all pass, 1159 tests**. |
+| Research golden (dbb7a6a) | answers **61/64**, abstentions 4/6, T06 leaks 0, citation precision 0.902, quote verification 0.99, conflicts 7/7, multi-source 2/2, no "unverified". |
+| Research held-out (dbb7a6a, once) | answers **28/29**, abstentions 1/3, T06 leaks 0, precision 0.954, quote verification 1.0, conflicts 1/1, no "unverified". |
+| Matching in the evaluations | **0 references added in either set.** The changes against 2026-10-10 (precision 0.93 → 0.90 golden; "unverified" 2 → 0 golden and 3 → 0 held-out) are the model's variance, not this change. |
+

@@ -77,8 +77,13 @@ def _save(turn: dict) -> None:
 
 
 def _check(raw: str, sources: list[dict]) -> tuple[dict, list]:
-    """One finished paragraph: its display text and its claims with every quote verified (S2.2b)."""
-    para = evidence.parse(raw)
+    """One finished paragraph: its display text and its claims with every quote verified (S2.2b). A quote given
+    without a citation is cited to the first source, in rank order, that contains it (D-073), never to a passage
+    flagged for text addressed to an AI (T08)."""
+    def where(quote: str):
+        return next((s["n"] for s in sources if not s.get("instructions")
+                     and evidence.verify(quote, s["text"]).verification != "failed"), None)
+    para = evidence.parse(raw, match=where)
     claims = []
     for claim in para.claims:
         for c in claim.citations:
@@ -91,7 +96,8 @@ def _check(raw: str, sources: list[dict]) -> tuple[dict, list]:
                 found = evidence.verify(c.quote, src["text"])
                 c.verification, c.start, c.end = found.verification, found.start, found.end
         claims.append({"sentence": claim.sentence, "state": claim.state,
-                       "citations": [{"n": c.n, "quote": c.quote, "verification": c.verification} for c in claim.citations]})
+                       "citations": [{"n": c.n, "quote": c.quote, "verification": c.verification, **({"matched": True} if c.matched else {})}
+                                     for c in claim.citations]})
     return ({"text": para.display, "claims": claims, "unsupported": prompt.unsupported(para.display, len(sources)),
              "failed": [c["sentence"] for c in claims if c["state"] == "failed"]}, para.claims)
 
@@ -121,7 +127,7 @@ def _evidence(claims: list, sources: list[dict]) -> list[dict]:
                               "version_number": src["version_number"], "version_status": src.get("version_status"),
                               "signed": src.get("signed"), "clause": where.get("clause") or src.get("clause"),
                               "page_start": where.get("page_start", src["page_start"]), "page_end": where.get("page_end", src["page_end"]),
-                              "line": where.get("line"), "char_start": a, "char_end": b})
+                              "line": where.get("line"), "char_start": a, "char_end": b, **({"matched": True} if c.matched else {})})
     return items
 
 
