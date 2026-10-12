@@ -1,0 +1,126 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "fc7c08d+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261011-234431"
+ },
+ "summary": {
+  "scenarios": 5,
+  "recall": 0.833,
+  "critical_recall": "8/9",
+  "precision": 0.933,
+  "alerts": 15,
+  "false_alerts": 1,
+  "false_alerts_per_hour": 31.2,
+  "latency_p50_s": 0.01,
+  "latency_max_s": 4.61
+ },
+ "scenarios": [
+  {
+   "id": "lease-negotiation",
+   "pack": "legal_negotiation",
+   "planted": 5,
+   "found": 5,
+   "critical_planted": 4,
+   "critical_found": 4,
+   "alerts": 6,
+   "acceptable": 1,
+   "false": 0,
+   "minutes_spoken": 0.6,
+   "missed": [],
+   "false_alerts": [],
+   "all": [
+    "turn 1 signed_terms matches (rule, 0.8): Matches signed agreement, cl. 4.1 — said “GBP 21,000” — source “4.1 On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000, to be hel”",
+    "turn 3 disclosure needs_review (rule, 0.8): Needs review: privileged or sensitive information with a counterparty on the call — said “Between us, the tenant's bottom line is to leave by the break date whatever happens.”",
+    "turn 4 commitment needs_review (rule, 0.75): Needs review: a commitment to the other side — said “We are prepared to pay the dilapidations claim in full if you drop the rent review.”",
+    "turn 5 action needs_review (rule, 0.7): Action taken on — said “I'll circulate a marked-up schedule of condition on Monday.”",
+    "turn 0 signed_terms differs (model, 0.8): Differs from signed agreement, cl. 3.1 — said “GBP 80,000” — source “3.1 The Tenant shall pay rent of GBP 84,000 per year, exclusive of VAT, by equal quarterly”",
+    "turn 2 signed_terms differs (model, 0.8): Differs from signed agreement, cl. 8.1 — said “three months” — source “8.1 The Tenant may end this Lease on 31 March 2030 by giving the Landlord at least six (6)”"
+   ],
+   "seconds": 4.06
+  },
+  {
+   "id": "nda-client-call",
+   "pack": "legal_client_call",
+   "planted": 1,
+   "found": 1,
+   "critical_planted": 1,
+   "critical_found": 1,
+   "alerts": 2,
+   "acceptable": 1,
+   "false": 0,
+   "minutes_spoken": 0.23,
+   "missed": [],
+   "false_alerts": [],
+   "all": [
+    "turn 1 signed_terms matches (rule, 0.8): Matches signed agreement, cl. 4.1 — said “three years” — source “4.1 This Agreement lasts for three (3) years from the Effective Date.”",
+    "turn 2 signed_terms differs (model, 0.8): Differs from signed agreement, cl. 4.2 — said “two years” — source “4.2 The obligations in Clause 3 continue for five (5) years after this Agreement ends.”"
+   ],
+   "seconds": 2.11
+  },
+  {
+   "id": "board-quorate-and-abstaining",
+   "pack": "legal_governance",
+   "planted": 1,
+   "found": 1,
+   "critical_planted": 1,
+   "critical_found": 1,
+   "alerts": 1,
+   "acceptable": 0,
+   "false": 0,
+   "minutes_spoken": 0.35,
+   "missed": [],
+   "false_alerts": [],
+   "all": [
+    "turn 3 authority differs (rule, 0.85): Differs from the authority in Board minutes 14 May 2026, cl. 3.1 — said “USD 350,000” — source “3.1 The board authorised management to negotiate the renewal of the Harrowgate Master Serv”"
+   ],
+   "seconds": 0.07
+  },
+  {
+   "id": "spoken-lease-call",
+   "pack": "legal_client_call",
+   "planted": 3,
+   "found": 3,
+   "critical_planted": 2,
+   "critical_found": 2,
+   "alerts": 4,
+   "acceptable": 1,
+   "false": 0,
+   "minutes_spoken": 0.45,
+   "missed": [],
+   "false_alerts": [],
+   "all": [
+    "turn 2 signed_terms matches (rule, 0.8): Matches signed agreement, cl. 4.1 — said “twenty-one thousand pounds” — source “4.1 On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000, to be hel”",
+    "turn 4 action needs_review (rule, 0.7): Action taken on — said “I will send you the break notice checklist tomorrow.”",
+    "turn 3 signed_terms differs (model, 0.8): Differs from signed agreement, cl. 6.3 — said “fourteen days” — source “6.3 The Landlord shall insure the building and the Tenant shall reimburse the Landlord for”",
+    "turn 1 signed_terms differs (model, 0.8): Differs from signed agreement, cl. 3.1 — said “ninety thousand pounds” — source “3.1 The Tenant shall pay rent of GBP 84,000 per year, exclusive of VAT, by equal quarterly”"
+   ],
+   "seconds": 4.63
+  },
+  {
+   "id": "spoken-msa-split-figure",
+   "pack": "legal_client_call",
+   "planted": 2,
+   "found": 0,
+   "critical_planted": 1,
+   "critical_found": 0,
+   "alerts": 2,
+   "acceptable": 1,
+   "false": 1,
+   "minutes_spoken": 0.29,
+   "missed": [
+    "turn 1 signed_terms",
+    "turn 3 action"
+   ],
+   "false_alerts": [
+    "turn 0 signed_terms differs: nineteen. Thousand five hundred dollars"
+   ],
+   "all": [
+    "turn 2 signed_terms matches (rule, 0.8): Matches signed agreement, cl. 8.1 — said “two hundred and fifty thousand dollars” — source “8.1 Each party's total aggregate liability arising out of or in connection with this Agree”",
+    "turn 0 signed_terms differs (model, 0.8): Differs from signed agreement, cl. 4.1 — said “nineteen. Thousand five hundred dollars” — source “4.1 Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgat”"
+   ],
+   "seconds": 3.67
+  }
+ ]
+}
