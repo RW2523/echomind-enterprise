@@ -691,7 +691,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - **Pilot checks:** all 8 pass (research, conversation, meeting, drafting, summary, panel, time, intake).
   - **Owner's request:** fix live transcription dropping words. It does not: identical audio gives the same words streamed and whole. The misses came from the check's audio varying between runs.
   - **What changed:** the check is now repeatable, and Silent Assist asks its subject question in plain words (fix 6).
-- **Suites:** backend 1299; security 29 groups and 1088 tests, all pass; Vitest 162; browser {{BROWSER}}.
+- **Suites (final, on the merged code):** backend 1301; security 29 groups and 1089 tests, all pass; Vitest 162; browser 34/34 (15.1 min).
 
 ## Approvals
 
@@ -753,7 +753,7 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 - Audit anchors sit on the same disk as the database until an off-host forwarder is approved.
 - No per-IP sign-in throttle. Failed sign-ins are recorded and per-account lockout works.
 - E2E is not in CI. It runs locally with Playwright (`cd frontend && npx playwright test`); the research test uses the host's model server.
-- **The pilot runs pinned images** (`LAW_*_IMAGE` in `.env.law`). A code change reaches it only by `scripts/law/build_images.sh`, pinning the new tags, and `compose.sh up -d`. Switching branches in this checkout no longer changes it. **Back up `.law-secrets/pilot-master.key` separately**; pilot backups (`python -m app.legal.backup` in the backend container) are not scheduled yet.
+- **The pilot runs pinned images** (`LAW_*_IMAGE` in `.env.law`). A code change reaches it only through `scripts/law/deploy_pilot.sh` (build, swap, and go back if unhealthy). Switching branches in this checkout no longer changes it. **Back up `.law-secrets/pilot-master.key` separately**; pilot backups (`python -m app.legal.backup` in the backend container) are not scheduled yet.
 - Back up the master key separately from the data: without it the stored documents cannot be opened.
 - **Browser-suite stall: fixed but not proven (D-030).** Before the fix, the backend stalled inside SQLite in 3 of 5 full runs. Since the fix, 15 consecutive full runs are clean (5 in S1.11, 10 in the S1.12 gate). The exact lock is unproven without native stacks. Stack dumps stay on for browser runs (`kill -USR1 <uvicorn pid>`). If it ever stalls again, the next step is native stacks, which need the owner's permission to attach a debugger.
 - **Injection residuals (D-031):**

@@ -1461,7 +1461,7 @@ Every entry records the options considered, the recommendation, the consequence 
   - **Backend:** adds `cryptography` 46.0.3 (which brings `cffi` 2.1.1), `tesseract` 5.3.4 with English, and the reranker from the host's model cache.
   - **Backend and voice:** the commit's code is baked in.
   - **Frontend:** the commit's build, with its own self-signed certificate.
-- **Protecting production:** each container is capped, with no swap: backend 8 GB, voice 2 GB, frontend 256 MB. Each has `oom_score_adj` 800, so under host-wide pressure the kernel ends Law processes first.
+- **Protecting production:** each container is capped, with no swap: backend 8 GB, voice 2 GB (raised to 3 GB, D-062), frontend 256 MB. Each has `oom_score_adj` 800, so under host-wide pressure the kernel ends Law processes first.
 - **The first start crash-looped, and was stopped within about a minute:**
   - Both containers loaded speech models on CPU at start: the backend its Nemotron model, the voice service Parakeet (which the base stack turns on). Each hit its then 4 GB cap and was killed and restarted.
   - Production's containers kept the same start times, with no restarts.
@@ -1546,6 +1546,8 @@ Every entry records the options considered, the recommendation, the consequence 
   - browser journey 34 (typed question; this test server has no speech model or voice, and the page says so);
   - security suite group "Conversation";
   - on the pilot, `demo_check.py conversation`: a spoken question is transcribed, answered with the cap, and read aloud.
+- **The voice service's cap:** it idles near 1.6 GB, because it preloads a second voice the Law edition does not use. At its 2 GB cap the kernel stopped it while reading a long answer aloud (memory cgroup; production untouched), so the pilot gives it 3 GB. Three spoken questions then passed, with voice steady at 1.7 GB.
+- **Updating the pilot:** `scripts/law/deploy_pilot.sh` builds first and changes nothing if that fails, then swaps the images and goes back if they are unhealthy. A hand-chained update once stopped the pilot after the build had refused (uncommitted changes); it was down for about two minutes.
 - **Limits:**
   - Each spoken question is answered on its own. Follow-ups like "and what about termination?" are not joined to the previous question.
   - The first question after a restart waits while speech recognition loads.
