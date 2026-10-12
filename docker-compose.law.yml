@@ -83,6 +83,9 @@ services:
       - LEGAL_REGULATORY=${LAW_REGULATORY:-0}
       # OPT-02 (D-070): machine translation by the answer model already used (no new model).
       - LEGAL_TRANSLATION=${LAW_TRANSLATION:-0}
+      # D-069: the audit trail to the firm's SIEM as syslog/CEF (udp://host:port or tcp://host:port). Empty = off.
+      # Needs network approval, and an exception in the egress lock (D-071) for that address.
+      - LEGAL_AUDIT_SYSLOG=${LAW_AUDIT_SYSLOG:-}
 
   voice:
     <<: [*law_host_gateway, *law_capped]
