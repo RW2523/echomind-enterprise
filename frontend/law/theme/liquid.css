@@ -261,3 +261,9 @@
 [data-edition="law"] .lw-translate-rows > li > p:first-child { color: var(--ink-2); }
 @media (max-width: 760px) { [data-edition="law"] .lw-translate-rows > li { grid-template-columns: 1fr; } }
 [data-edition="law"] .lw-translation { margin-top: 8px; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; display: grid; gap: 6px; }
+
+/* One-click demo sign-in (D-077) */
+[data-edition="law"] .lw-demo-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+[data-edition="law"] .lw-demo-people .lw-btn { justify-content: flex-start; font-size: 13.5px; }
+[data-edition="law"] .lw-demo-banner { margin: 10px 16px 0; padding: 8px 14px; border-radius: 12px; font-size: 13px; color: var(--ink-2);
+  background: color-mix(in srgb, var(--attention) 12%, transparent); border: 1px solid color-mix(in srgb, var(--attention) 32%, transparent); }

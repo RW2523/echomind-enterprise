@@ -7,7 +7,7 @@ export type MatterStatus = 'open' | 'closed' | 'archived';
 export interface Me {
   user: { id: string; username: string; role: string; roles: FirmRole[] };
   session: { auth: string; mfa_enrolled: boolean; must_change_password: boolean; idle_expires_at: number; abs_expires_at: number };
-  features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean; panel?: boolean; conversation?: boolean; regulatory?: boolean; translation?: boolean };
+  features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean; panel?: boolean; conversation?: boolean; regulatory?: boolean; translation?: boolean; demo_signin?: boolean };
 }
 export interface Client { id: string; name: string; code?: string | null; status: string; version: number; }
 export interface Matter {

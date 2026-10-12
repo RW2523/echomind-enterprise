@@ -98,6 +98,10 @@ services:
       - LEGAL_OIDC_USERNAME_CLAIM=${LAW_OIDC_USERNAME_CLAIM:-preferred_username}
       - LEGAL_OIDC_EMAIL_DOMAIN=${LAW_OIDC_EMAIL_DOMAIN:-}
       - LEGAL_OIDC_TRUST_MFA=${LAW_OIDC_TRUST_MFA:-0}
+      # D-077: one-click sign-in as the demo's fictional people (no password or code). Off unless .env.law turns it on;
+      # "private" = this server and office addresses only, "anywhere" = any address.
+      - LEGAL_DEMO_SIGNIN=${LAW_DEMO_SIGNIN:-0}
+      - LEGAL_DEMO_SIGNIN_FROM=${LAW_DEMO_SIGNIN_FROM:-private}
 
   voice:
     <<: [*law_host_gateway, *law_capped]

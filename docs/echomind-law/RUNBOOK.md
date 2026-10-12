@@ -90,7 +90,7 @@ sudo scripts/law/egress_lock.sh
 - **New people, a lost authenticator, or someone leaving:** the firm administrator uses **Users & roles**: an enrolment link, a reset of two-step sign-in, sign everywhere out, or disable.
   - Disabling ends every session at once.
   - Matter access is given and taken on each matter's **Members** page.
-- **Demo sign-ins** (fictional people only): `python3 scripts/law/demo_signin.py`, on the server. Never paste these anywhere else.
+- **Demo sign-ins** (fictional people only): with one-click demo sign-in on (D-077), the sign-in page lists them, with no password. Otherwise `python3 scripts/law/demo_signin.py`, on the server, shows their passwords and codes; never paste these anywhere else.
 
 ## 8. When something goes wrong
 
@@ -108,5 +108,6 @@ sudo scripts/law/egress_lock.sh
 - Run `docker compose` in this clone except through `scripts/law/compose.sh` (`-p echomind-law`). The project name would otherwise be production's.
 - Run `scripts/law/compose.sh down -v`, or remove the `echomind-law_*` volume, without the owner's approval and a verified backup.
 - Run `scripts/backup_data.sh` or `scripts/restore_data.sh` from this clone.
-- Put real client data into the pilot while it holds the demo world (DEMO_FLOW.md); start from a fresh volume first.
+- Put real client data into the pilot while it holds the demo world (DEMO_FLOW.md); start from a fresh volume first, and turn
+  one-click demo sign-in off (`LAW_DEMO_SIGNIN=0`, then deploy; D-077).
 - Print passwords, keys or authenticator secrets into logs, chats or tickets.

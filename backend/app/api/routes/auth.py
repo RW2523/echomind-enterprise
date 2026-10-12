@@ -27,7 +27,7 @@ class LoginIn(BaseModel):
 
 
 @router.get("/config")
-def auth_config():
+def auth_config(request: Request):
     """Public: lets the frontend decide whether to show the login gate, and which edition's
     interface to load (the EchoMind Law workspace when the edition is "law")."""
     from ...core.edition import current_edition
@@ -36,6 +36,9 @@ def auth_config():
         from ...legal.identity import oidc
         if oidc.enabled():
             out["oidc"] = {"label": settings.LEGAL_OIDC_LABEL}       # D-076: the sign-in page offers the firm's account
+        from ...legal.identity import demo
+        if demo.available(request):
+            out["demo_signin"] = True                                    # D-077: the sign-in page lists the demo people
     return out
 
 
@@ -249,6 +252,41 @@ def _law_login(inp: LoginIn, request: Request, response: Response) -> dict:
     return {"status": "ok", "user": _public_user(acct)}
 
 
+# ── One-click demo sign-in (D-077) ─────────────────────────────────────────────────
+@router.get("/demo")
+def demo_people(request: Request):
+    """The demo seed's fictional people, for the sign-in page; 404 unless demo sign-in is on for this address."""
+    from ...legal.identity import accounts, demo
+    if not demo.available(request):
+        raise HTTPException(status_code=404, detail="Not Found")
+    people = []
+    for name in demo.people():
+        acct = accounts.get_by_username(name)
+        if acct and acct["status"] == "active":
+            people.append({"username": name, "roles": sorted(accounts.roles_of(acct["id"]))})
+    return {"people": people}
+
+
+@router.post("/demo/{username}")
+@audited("auth.demo_signin", session_actor=False)
+def demo_signin(username: str, request: Request, response: Response):
+    """Enter as a demo person: a full session, no password or code. Never the administrator or a real account."""
+    from ...legal.identity import accounts, demo, sessions
+    if not demo.available(request) or username not in demo.people():
+        raise HTTPException(status_code=404, detail="Not Found")
+    acct = accounts.get_by_username(username)
+    if acct is None:
+        raise HTTPException(status_code=404, detail="Not Found")
+    note(actor_user_id=acct["id"], actor_username=acct["username"])
+    if accounts.is_locked(acct) or acct["status"] != "active":
+        raise HTTPException(status_code=403, detail="This demo person is not active.")
+    accounts.register_success(acct["id"])
+    ip, ua = _client_meta(request)
+    token, csrf = sessions.create(acct["id"], mfa_verified=True, ip=ip, user_agent=ua)
+    _set_law_cookies(response, token, csrf, mfa_verified=True)
+    return {"status": "ok", "user": _public_user(acct)}
+
+
 # ── Single sign-on with the firm's identity provider (D-076) ────────────────────────
 def _require_oidc() -> None:
     from ...legal.identity import oidc
@@ -327,7 +365,8 @@ def _law_me(payload: dict) -> dict:
             "features": {"intake": bool(settings.LEGAL_INTAKE), "intake_links": bool(settings.LEGAL_INTAKE and settings.LEGAL_INTAKE_LINKS),
                          "summaries": bool(settings.LEGAL_SUMMARIES), "time_entries": bool(settings.LEGAL_TIME_ENTRIES),
                          "panel": bool(settings.LEGAL_PANEL), "conversation": bool(settings.LEGAL_CONVERSATION),
-                         "regulatory": bool(settings.LEGAL_REGULATORY), "translation": bool(settings.LEGAL_TRANSLATION)}}
+                         "regulatory": bool(settings.LEGAL_REGULATORY), "translation": bool(settings.LEGAL_TRANSLATION),
+                         "demo_signin": bool(settings.LEGAL_DEMO_SIGNIN)}}
 
 
 def _complete_sign_in(request: Request, response: Response, user_id: str) -> dict:

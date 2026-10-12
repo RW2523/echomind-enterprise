@@ -626,3 +626,14 @@
 | Backend (all) | **1351 passed**. |
 | Security suite | **34 groups, all pass, 1186 tests** (a new group for D-076). |
 
+## Run 45 — One-click demo sign-in (D-077), 2026-10-12
+
+- **Branch:** `law/demo-signin`
+
+| Suite | Result |
+|---|---|
+| Demo sign-in | **5 new backend tests** (red first): off by default; the page lists the demo people and one click is a full session, audited with the address; never the administrator or an account added later; a disabled person refused; only private addresses by default, anywhere when chosen. Two public routes added to the route table. |
+| Frontend | Vitest **184 passed** (4 new): only the people shown, with no password or code form; "Other accounts" opens the password form; not offered when off; the banner on every page. tsc clean. |
+| Backend (all) | **1356 passed**. |
+| Security suite | **35 groups, all pass, 1191 tests**. |
+
