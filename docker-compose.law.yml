@@ -86,6 +86,8 @@ services:
       # D-069: the audit trail to the firm's SIEM as syslog/CEF (udp://host:port or tcp://host:port). Empty = off.
       # Needs network approval, and an exception in the egress lock (D-071) for that address.
       - LEGAL_AUDIT_SYSLOG=${LAW_AUDIT_SYSLOG:-}
+      # D-075: nginx (the Law frontend, on this Docker network) passes the client's address; only it can reach the backend.
+      - LEGAL_TRUSTED_PROXIES=${LAW_TRUSTED_PROXIES:-172.16.0.0/12}
 
   voice:
     <<: [*law_host_gateway, *law_capped]

@@ -51,7 +51,8 @@ _ctx: ContextVar[Optional[dict]] = ContextVar("law_audit", default=None)
 # ── Request context ──────────────────────────────────────────────────────────────
 def begin(request) -> Any:
     """Open the audit context for one HTTP request (called by the Law guard)."""
-    return _ctx.set({"ip": request.client.host if request.client else None, "recorded": False, "notes": {}})
+    from ..netaddr import client_address
+    return _ctx.set({"ip": client_address(request), "recorded": False, "notes": {}})
 
 
 def end(token) -> None:
@@ -208,7 +209,8 @@ def audited(action: str, *, object_type: Optional[str] = None, object_param: Opt
             ctx = _ctx.get()
             token = None
             if ctx is None:
-                token = _ctx.set({"ip": request.client.host if request is not None and request.client else None,
+                from ..netaddr import client_address
+                token = _ctx.set({"ip": client_address(request) if request is not None else None,
                                   "recorded": False, "notes": {}})
                 ctx = _ctx.get()
             ctx.update(action=action, notes={}, decision=None)

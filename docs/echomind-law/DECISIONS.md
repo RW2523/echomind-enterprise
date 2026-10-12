@@ -1732,6 +1732,20 @@ Every entry records the options considered, the recommendation, the consequence 
   - The reviews test clicked Approve while a request was still in flight; on the slower runner the reply then closed the dialog.
   - The workflow change is on the Law branch only. **CI is green on `feature/echomind-law`** (run 38285157225).
 
+### D-075 The client's real address, and a per-address sign-in throttle — RECORDED (owner's approval 2026-10-12: "start the next pending items and finish everything")
+- **Found on the pilot:** every audit event since its start (4,789) recorded nginx's address (172.25.0.4), not the client's. Behind the Law frontend, every request reaches the backend from nginx. So:
+  - the trail could not say where a sign-in came from;
+  - the intake links' per-address limit was one limit for everyone;
+  - and the known gap remained: there was no per-address sign-in throttle, only per-account lockout.
+- **Change (tests first, 7):**
+  - **The client's address:** nginx passes it in `X-Real-IP`. It is believed only from an address in `LEGAL_TRUSTED_PROXIES`, which the Law stack sets to its own Docker network, so a client cannot choose its own. The backend publishes no port. The audit trail and the intake limit use it.
+  - **The throttle:** after `LEGAL_SIGNIN_IP_MAX_FAILURES` (20) failed sign-in steps from one address within `LEGAL_SIGNIN_IP_WINDOW_MIN` (15) minutes, that address gets 429 with `Retry-After`. A wrong password or authenticator code counts, across any accounts; a successful sign-in never counts.
+    - Other addresses are not affected.
+    - The first refusal in a window is audited (`auth.signin.throttled`, the count only).
+    - Behind a proxy that is not trusted, nothing is counted, and a warning is logged once. Otherwise every client would share the proxy's address, and one person's failures would lock everyone out.
+  - Counts live in the process: a restart forgets them.
+- **Still true:** a slow, spread-out attack from many addresses is limited only by per-account lockout.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.

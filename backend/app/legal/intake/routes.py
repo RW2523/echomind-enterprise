@@ -35,6 +35,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core.config import settings
 from ...core.db import get_conn
 from .. import policy
+from ..netaddr import client_address
 from ..audit.record import audited, note
 from ..matters.routes import principal_of, require, require_law_edition
 from . import repo
@@ -404,7 +405,7 @@ def _limited(key: str, limit: int) -> bool:
 
 
 def _link(token: str, request: Request) -> dict:
-    address = request.client.host if request.client else "unknown"
+    address = client_address(request) or "unknown"            # the enquirer's, through nginx (D-075)
     if _limited("link:" + repo.token_hash(token), _PER_LINK) or _limited("addr:" + address, _PER_ADDRESS):
         raise HTTPException(status_code=429, detail="Too many requests. Please wait a few minutes and try again.")
     d = repo.by_token(token) if 20 <= len(token) <= 100 else None

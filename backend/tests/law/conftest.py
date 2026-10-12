@@ -109,6 +109,19 @@ def current_code(secret: str, offset_steps: int = 0) -> str:
     return mfa.totp(secret, time.time() + 30 * offset_steps)
 
 
+@pytest.fixture(autouse=True)
+def _fresh_signin_throttle():
+    """D-075: the per-address sign-in counts live in the process; every test starts with none."""
+    try:
+        from app.legal import throttle
+    except ImportError:
+        yield
+        return
+    throttle.reset()
+    yield
+    throttle.reset()
+
+
 def sign_in(c, user) -> None:
     """Full sign-in (password + TOTP) for an MFA-enrolled user."""
     r = c.post("/api/auth/login", json={"username": user["username"], "password": user["password"]})
