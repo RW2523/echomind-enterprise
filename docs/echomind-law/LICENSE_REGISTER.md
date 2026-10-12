@@ -16,7 +16,18 @@
 | Piper TTS (`piper-tts>=1.4.2`, the `piper1-gpl` fork) + voices amy/joe/john/kusal/lessac | TTS | voice | Engine: GPL-3.0 (reported); **each voice has its own licence (verify per voice)** | GPL distribution implications; consider Kokoro-only for Law S2.4: the transcription harness can speak its fictional scripts with a Piper voice given on the command line (`--voice`); no voice is bundled or downloaded, and a voice's licence must be checked before its results are published. |
 | Kokoro-82M | TTS | voice | Apache-2.0 (verify) | — |
 | `stabilityai/sdxl-turbo` | Document Studio images | backend | Stability AI licence. **Historically non-commercial research; terms have changed over time. Verify current terms.** | **Proposed: disabled in Law edition** (images not needed for legal documents) |
-| Tesseract 5 + `eng` traineddata (D-010, used from S2.1) | OCR | backend | Apache-2.0 (verify) | Dev host: miniconda `tesseract 5.2.0`. Law image: add `tesseract-ocr tesseract-ocr-eng` at the first approved build |
+| Tesseract 5 + `eng` traineddata (D-010, used from S2.1) | OCR | backend | Apache-2.0 (verify) | Dev host: miniconda `tesseract 5.2.0`. Law image: `tesseract-ocr tesseract-ocr-eng` 5.3.4 (Ubuntu 24.04), added by `backend/Dockerfile.law` (D-060) |
+
+## 1b. Content: the public-law reference library (D-064)
+
+Fetched once, with the owner's approval of 2026-10-12, by `scripts/law/fetch_reference.py`. The provenance and checksums
+are in `eval/fixtures/law/reference/PROVENANCE.md`. This is **real public law, not fictional**, and is labelled so in
+every document.
+
+| Content | Source | Reported licence (verify) | Obligation |
+|---|---|---|---|
+| Federal Arbitration Act (9 U.S.C. ch. 1); E-SIGN Act (15 U.S.C. ch. 96) | govinfo.gov (US Code, 2023 edition) | Works of the US Government: public domain (17 U.S.C. 105) | None (source noted) |
+| Late Payment of Commercial Debts (Interest) Act 1998; Unfair Contract Terms Act 1977; Contracts (Rights of Third Parties) Act 1999 | legislation.gov.uk (CLML XML, revised text) | Open Government Licence v3.0 | Attribution statement in each document and in PROVENANCE.md |
 
 ## 2. New dependencies proposed by the plan (to approve before install)
 

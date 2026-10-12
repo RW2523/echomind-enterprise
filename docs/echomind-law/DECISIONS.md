@@ -1552,6 +1552,59 @@ Every entry records the options considered, the recommendation, the consequence 
   - Each spoken question is answered on its own. Follow-ups like "and what about termination?" are not joined to the previous question.
   - The first question after a restart waits while speech recognition loads.
 
+### D-063 Conversation remembers follow-up questions (S5.1b) — RECORDED (owner's request 2026-10-12)
+- **Request:** "make conversation remember follow-up questions".
+- **How:**
+  - The page sends the conversation so far (at most six turns) with each question.
+  - The model first turns a follow-up into one standalone question (`research/followup.py`), using the conversation only to resolve what it refers to.
+  - That question is what the documents are searched with, what is answered (from the documents only) and what is kept in the research history.
+  - The page shows it: "You asked …, understood from the conversation as: …".
+- **Safety:**
+  - Earlier answers go to the rewrite without their citation marks, and with text addressed to an AI withheld.
+  - A reply that is not a short question (an answer, too long, addressed to an AI), or a failure, falls back to the follow-up as asked.
+  - Without a conversation nothing changes.
+  - The audit holds the number of turns and whether the question was rewritten.
+- **Controls:** "New conversation" forgets it.
+- **Tests (red first):** backend 6, Vitest 1. On the pilot, harper's "And was the notice for the April failures given in time?" was understood and answered with citations.
+
+### D-064 Demo data: a public-law reference library, the base corpus, a practice group and six fictional cases — RECORDED (owner's request 2026-10-12)
+- **Request:** crawl some content, load the base data set, and create a group of users and synthetic cases. Asked which content to crawl, the owner chose **public-domain law**.
+- **The reference library (R-001), real public law:** five texts fetched once from official sources (`scripts/law/fetch_reference.py`), the only network use, with the owner's approval.
+  - Sources: the US Code (Federal Arbitration Act, E-SIGN Act; public domain) and UK Acts (Late Payment of Commercial Debts (Interest) Act 1998, Unfair Contract Terms Act 1977, Contracts (Rights of Third Parties) Act 1999; Open Government Licence v3.0).
+  - Operative text only. Each document is labelled as real law; the licences are in LICENSE_REGISTER §1b.
+  - Every demo lawyer reads it (read-only members).
+- **The base data set (M-130):** the fictional evaluation corpus, with the Harrowgate MSA's signed v1 and draft v2 as versions of one document. Its Beta settlement memo is filed on Beta Shipping's M-215, for isolation.
+- **The practice group and six fictional cases:**
+  - People: harper, sofia, kenji, lena, omar and theo, seeded by `seed-demo-practice`. It needs the demo world, prints no password and is idempotent (tests red first).
+  - Cases: M-301 to M-306 across litigation, employment, venture, real estate, technology and data, and regulatory. Each has 4–5 documents written by the local model from a fixed brief, with every figure checked, and disagreements planted on purpose for Compare, Silent Assist and the panel.
+  - The files are committed (`eval/fixtures/law/synthetic`), so the demo is the same every time.
+- **Found while checking the flows:**
+  - US-style parties ("by and among Kestrel Robotics, Inc., … and Aldermoor Ventures LP") were not recognised, so the term sheet was never compared with the purchase agreement.
+  - Fixed: "among" now cues parties, a comma may precede the legal form, and LP / L.P. is a form (test red first).
+  - Compare golden is unchanged (alignment 4/4 and 13/13, scan 5/5, precision 1.0); held-out, run once, is unchanged (scan 4/5, precision 1.0).
+  - On the pilot the scan now finds the option pool (12% against 10%) and the closing date.
+- **On the pilot:** 6 people, 7 clients, 8 matters, 29 memberships and 40 documents, all searchable.
+- **The flows:**
+  - `DEMO_FLOW.md` and a published guide give eleven walkthroughs.
+  - `demo_check.py` checks them end to end: research, conversation, follow-up, conflicts, reference, employment, meeting, drafting, summary, panel, time and intake.
+- **Before a real firm:** start from a fresh data volume, with the owner's approval. The demo data is fictional, apart from the public law.
+
+### D-065 Liquid Glass, a Home dashboard, the command palette, tools as tiles, starter questions — RECORDED (owner's request 2026-10-12)
+- **Request:** "the UI is so boring; a glass Apple liquid UI, the new trend, an advanced UI/UX that looks like production"; and "keep the flow more usable".
+- **The material (`theme/liquid.css`, a layer over law.css):**
+  - A slow aurora behind every page, so the glass has colour to bend.
+  - Clear glass for navigation and chrome, with a lit edge and a light that follows the pointer.
+  - Frosted sheets for content, which keep text at full contrast; long reading (the reader, answers, transcripts) stays near-opaque.
+  - A liquid pill for the current page, and gradient primary actions.
+  - Reduced transparency, reduced motion and higher contrast fall back to solid, still surfaces. DESIGN_SYSTEM §10.
+- **Flows made shorter:**
+  - **Home** is a dashboard: a greeting, quick actions (each asks which matter), counts, matters as cards, and what is waiting for a decision.
+  - **The command palette (⌘K / Ctrl K, or the sidebar's search)** jumps to any matter, its tools or firm pages.
+  - Each matter's overview offers its tools as tiles.
+  - Empty Research and Conversation pages offer starter questions.
+  - One navigation list (`app/nav.ts`) feeds the sidebar, the palette and the tiles, so they cannot disagree.
+- **Tests:** Vitest for Home, the palette and the tiles, axe clean (6 new). Every existing test and journey still finds what it looked for: the labels are unchanged.
+
 ## B. Policy decisions — NEEDS COUNSEL (pilot firm)
 
 Engineering provides configurable mechanisms with **the safest default**, and each item is recorded here until counsel approves it. Nothing in this table is decided by Claude.
