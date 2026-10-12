@@ -589,5 +589,6 @@
 | Security suite | **32 groups, all pass, 1159 tests**. |
 | Research golden (dbb7a6a) | answers **61/64**, abstentions 4/6, T06 leaks 0, citation precision 0.902, quote verification 0.99, conflicts 7/7, multi-source 2/2, no "unverified". |
 | Research held-out (dbb7a6a, once) | answers **28/29**, abstentions 1/3, T06 leaks 0, precision 0.954, quote verification 1.0, conflicts 1/1, no "unverified". |
+| Pilot (6c4860c) | `demo_check.py reference research`, three times: **reference 3 of 3** (1 of 3 before the change), research 3 of 3. |
 | Matching in the evaluations | **0 references added in either set.** The changes against 2026-10-10 (precision 0.93 → 0.90 golden; "unverified" 2 → 0 golden and 3 → 0 held-out) are the model's variance, not this change. |
 
