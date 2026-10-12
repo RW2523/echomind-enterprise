@@ -1,7 +1,8 @@
 """Which open matters a regulatory update may concern (D-068): a plain rule a lawyer can check, never a model.
 
 An update matches a matter when the matter's jurisdiction is in the update's (England & Wales, Scotland and
-Northern Ireland are UK; a US state or "United States" is US) and a term of the matter's practice area appears
+Northern Ireland are UK, and an update made for Scotland, Wales or Northern Ireland needs a matter there; a US state
+or "United States" is US) and a term of the matter's practice area appears
 as a whole word (or its plural) in the update's title, summary, agencies or topics. The match keeps the terms found, which the
 page shows as the reason. A practice area with no terms below matches nothing.
 """
@@ -68,9 +69,22 @@ def terms_for(practice_area: Optional[str]) -> tuple[str, ...]:
     return tuple(found)
 
 
+def region_of(update: dict) -> Optional[str]:
+    """Scotland, Wales or Northern Ireland for a UK update made for one of them (by its kind or its title), else None."""
+    kind, title = (update.get("kind") or "").lower(), (update.get("title") or "").lower()
+    for region, kinds in (("scotland", ("scottish",)), ("northern ireland", ("northern ireland",)), ("wales", ("welsh", "act of senedd"))):
+        if kind.startswith(kinds) or f"({region})" in title:
+            return region
+    return None
+
+
 def match(update: dict, matter: dict) -> list[str]:
-    """The practice-area terms found in the update, or [] when it does not concern the matter."""
+    """The practice-area terms found in the update, or [] when it does not concern the matter. A UK update made for
+    Scotland, Wales or Northern Ireland concerns only a matter whose jurisdiction names that place."""
     if update["jurisdiction"] not in jurisdictions_of(matter.get("jurisdiction")):
+        return []
+    region = region_of(update) if update["jurisdiction"] == "UK" else None
+    if region and region not in (matter.get("jurisdiction") or "").lower():
         return []
     text = " ".join([update.get("title") or "", update.get("summary") or "", *update.get("subjects", [])]).lower()
     return [t for t in terms_for(matter.get("practice_area")) if re.search(rf"(?<![a-z]){re.escape(t)}s?(?![a-z])", text)]
