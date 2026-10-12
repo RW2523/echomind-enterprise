@@ -79,7 +79,11 @@ export default function MatterConversation() {
     setError(''); setPhase('answering');
     const put = (answer: Answer) => setTurns((ts) => [...ts.filter((t) => t.id !== id), { id, answer, spoken }]);
     try {
-      const final = await streamAnswer(matter.id, { question: q, versions: 'signed' }, put, ctrl.signal);
+      // S5.1b (D-063): the conversation so far goes with the question, so a follow-up is understood.
+      const history = turns.filter((t) => ['done', 'abstained'].includes(t.answer.phase)).slice(-6)
+        .map((t) => ({ question: t.answer.question, answer: t.answer.text }));
+      const body = history.length ? { question: q, versions: 'signed', history } : { question: q, versions: 'signed' };
+      const final = await streamAnswer(matter.id, body, put, ctrl.signal);
       await qc.invalidateQueries({ queryKey: keys.research(matter.id) });
       if (readAloud && final.text && ['done', 'abstained'].includes(final.phase)) await say(final.text);
     } catch (err) {
@@ -163,6 +167,13 @@ export default function MatterConversation() {
             <Volume2 aria-hidden /> Read answers aloud
           </label>
           {voiceNote && <p className="lw-meta" style={{ margin: 0 }}>{voiceNote}</p>}
+          {turns.length > 0 && (
+            <div className="lw-talk-memory">
+              <span className="lw-meta">{`Remembering this conversation (${turns.length} ${turns.length === 1 ? 'question' : 'questions'}), so you can ask follow-ups.`}</span>
+              <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" disabled={busy}
+                onClick={() => { stopAudio(); abort.current?.abort(); setTurns([]); setError(''); }}>New conversation</button>
+            </div>
+          )}
         </section>
         {error && <ErrorNote>{error}</ErrorNote>}
         {turns.length > 0 && (
@@ -180,6 +191,12 @@ function TurnItem({ t }: { t: Turn }) {
   return (
     <li>
       <p className="lw-meta lw-talk-q">{t.spoken ? 'Asked aloud' : 'Typed'}</p>
+      {t.answer.asked && (
+        <p className="lw-understood">
+          <span className="lw-meta">You asked</span><span className="lw-understood-asked">{`“${t.answer.asked}”`}</span>
+          <span className="lw-meta">understood from the conversation as:</span>
+        </p>
+      )}
       <AnswerSheet a={t.answer} focus={focus} onFocus={setFocus} />
     </li>
   );

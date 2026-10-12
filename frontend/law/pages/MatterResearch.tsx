@@ -14,6 +14,7 @@ export interface Answer {
   question: string; text: string; sources: ResearchSource[]; cited: number[]; phase: Phase; uncited?: boolean; unsupported?: string[];
   failed?: string[]; paragraphs?: ResearchParagraph[]; evidence?: ResearchEvidence[]; conflicts?: ResearchConflict[];
   status?: string | null; reason?: string | null; turnId?: string;
+  asked?: string;                                        // S5.1b: the follow-up as asked, when it was made to stand alone
 }
 
 const pages = (s: { page_start?: number | null; page_end?: number | null }) =>
@@ -41,7 +42,8 @@ export async function streamAnswer(matterId: string, body: Record<string, unknow
   const update = (patch: Partial<Answer>) => { state = { ...state, ...patch }; onChange(state); };
   update({});
   await postStream(`/api/legal/matters/${encodeURIComponent(matterId)}/research/query`, body, (ev) => {
-    if (ev.type === 'sources') update({ sources: ev.citations ?? [] });
+    if (ev.type === 'understood') update(ev.rewritten ? { question: ev.question, asked: String(body.question) } : { question: ev.question });
+    else if (ev.type === 'sources') update({ sources: ev.citations ?? [] });
     else if (ev.type === 'paragraph') {
       checked = true;
       const paragraphs = [...(state.paragraphs ?? []), ev as ResearchParagraph];

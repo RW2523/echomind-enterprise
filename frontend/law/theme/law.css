@@ -550,3 +550,7 @@
 [data-edition="law"] .lw-check svg { width: 16px; height: 16px; }
 [data-edition="law"] .lw-talk-thread { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
 [data-edition="law"] .lw-talk-q { margin: 0 0 6px; }
+[data-edition="law"] .lw-talk-memory { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+[data-edition="law"] .lw-understood { margin: 0 0 6px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+[data-edition="law"] .lw-understood-asked { color: var(--ink); opacity: 0.72; font-style: italic; }
+
