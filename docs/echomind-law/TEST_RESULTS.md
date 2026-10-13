@@ -637,3 +637,10 @@
 | Backend (all) | **1356 passed**. |
 | Security suite | **35 groups, all pass, 1191 tests**. |
 
+## Run 46 — The full browser suite after D-073 to D-077, 2026-10-12
+
+| Suite | Result |
+|---|---|
+| Browser E2E, full run | **34 passed, 2 failed** (35.8 min, 36 journeys).<ul><li>**Evaluations:** its review screenshot passed the 30 s limit after the checks had passed, the second full run in a row. It now has 90 s.</li><li>**Conversation:** the answer stated USD 250,000, but the real model cited a research note filed earlier in the shared M-101 (shown as "No quote given") rather than the agreement, so the evidence had no 250,000. The journey now looks for the figure in the answer or its evidence. Not a product change: the model chose the source.</li></ul>Both **passed** on their own afterwards (5.4 s and 52.1 s). Screenshots restored: no intended change. |
+| Published demo guide | Updated in place: one-click sign-in, flows 12 (regulatory updates) and 13 (translation), the meeting tip, real-law note. |
+
