@@ -81,6 +81,11 @@ history itself is not duplicated here — it is the Git history of each file (SO
 | EM26-20 | Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 39 requirements (5 from 2025, 34 in 2026) with traceability; rev 1.0 approved 2026-10-12 (AR-2026-003); rev 1.1 (versions v1.0.0–v1.4.1) approved 2026-10-12 (AR-2026-004) |
 | EM26-21 | Non-Functional Requirements Register (Excel) | Lead Engineer (Richard Watson Stephen Amudha) | 31 NFRs + 9 from 2025, measurement history; rev 1.0 approved 2026-10-12 (AR-2026-003); rev 1.1 (versions v1.0.0–v1.4.1) approved 2026-10-12 (AR-2026-004) |
 | EM26-22 | Product Roadmap 2025 → 2027 (Excel) | EchoMind Project Lead (Alexander Peter) | 2025 plan vs actual, 2026 increments, forward plan; rev 1.0 approved 2026-10-12 (AR-2026-003); rev 1.1 (versions v1.0.0–v1.4.1) approved 2026-10-12 (AR-2026-004) |
+| EM26-23 | Project Plan — EchoMind Enterprise | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-13 (AR-2026-005) — `docs/EchoMind_Audit_2026-10-14_Project2/02_Project_Plan/` |
+| EM26-24 | Test Plan — EchoMind Enterprise | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-13 (AR-2026-005) — `…/08_Test_Plan_and_Test_Cases/` |
+| EM26-25 | Release Notes v1.0.0 → v1.4.1 | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-13 (AR-2026-005) — `…/11_Release_Notes/` |
+| EM26-26 | New Use Cases — EchoMind Enterprise | EchoMind Project Lead (Alexander Peter) | 1.0 approved 2026-10-13 (AR-2026-005) — `…/13_New_Use_Case_EchoMind/` |
+| EM26-27 | Client Communication Log | EchoMind Project Lead (Alexander Peter) | 1.0 approved 2026-10-13 (AR-2026-005) — `…/03_Communication_with_Client/` |
 
 ## 4a. Completed records
 
@@ -95,7 +100,7 @@ Completed records are filed as dated Markdown files under `docs/qms/records/`:
 | `records/approvals/` | Document approval records | — |
 | `records/runtime/` | Runtime-settings baseline (SOP-06 §10.1) | — |
 
-At 2026-10-12: `records/approvals/` (AR-2026-001 … AR-2026-004), `records/releases/` (v1.4.0, v1.4.1), `records/capa/` (NC-2026-009 access-log review), `records/runtime/` (runtime-settings baseline). `records/audits/` and `records/management-review/` are still empty.
+At 2026-10-12: `records/approvals/` (AR-2026-001 … AR-2026-005), `records/releases/` (v1.4.0, v1.4.1), `records/capa/` (NC-2026-009 access-log review), `records/runtime/` (runtime-settings baseline). `records/audits/` and `records/management-review/` are still empty.
 
 ## 5. Supporting engineering documentation relied on as QMS evidence
 

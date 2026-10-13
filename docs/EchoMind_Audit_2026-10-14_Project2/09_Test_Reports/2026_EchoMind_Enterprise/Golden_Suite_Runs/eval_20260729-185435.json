@@ -1,0 +1,989 @@
+{
+  "run_id": "20260729-185435",
+  "base": "http://localhost:3000/api",
+  "passed": 47,
+  "total": 52,
+  "results": [
+    {
+      "id": "bank-money-market-apy",
+      "set": "bank",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 2.05,
+      "n_citations": 1,
+      "cited": [
+        "Banking Products & Rates (DEMO).md"
+      ],
+      "answer_head": "The Sapphire Money Market account pays an APY of 4.10%. To open the account, the minimum opening balance is $25,000. To earn the APY, the minimum balance required is $25,000 (Banking Products & Rates \u2014 Savings)."
+    },
+    {
+      "id": "bank-cd-12mo-penalty",
+      "set": "bank",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 3.12,
+      "n_citations": 1,
+      "cited": [
+        "Banking Products & Rates (DEMO).md"
+      ],
+      "answer_head": "If you put money in a 12-month CD, you would receive an APY of 4.55% (Banking Products & Rates \u2014 Savings). The early withdrawal penalty is 180 days' interest (Banking Products & Rates \u2014 Savings)."
+    },
+    {
+      "id": "bank-personal-loan-eligibility",
+      "set": "bank",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 4.13,
+      "n_citations": 1,
+      "cited": [
+        "Banking Products & Rates (DEMO).md"
+      ],
+      "answer_head": "To qualify for a Crest Personal Loan, you need a minimum FICO-equivalent CrestScore of 680, a debt-to-income (DTI) ratio at or below 43%, and a minimum verifiable annual income of $40,000 (Banking Products & Rates \u2014 Savi"
+    },
+    {
+      "id": "bank-jumbo-cd-grace",
+      "set": "bank",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 3.26,
+      "n_citations": 1,
+      "cited": [
+        "Banking Products & Rates (DEMO).md"
+      ],
+      "answer_head": "- Jumbo CDs ($250,000+) earn a +0.15% relationship bonus (Banking Products & Rates \u2014 Savings).  \n- You have 10 calendar days after maturity to withdraw or renew the CD (Banking Products & Rates \u2014 Savings)."
+    },
+    {
+      "id": "bank-beneficial-owner-threshold",
+      "set": "bank",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 1.54,
+      "n_citations": 1,
+      "cited": [
+        "KYC-AML & Loan Suitability Guidelines (DEMO).md"
+      ],
+      "answer_head": "When onboarding a company, the bank must identify and verify all beneficial owners holding 25% or more of the entity (Banking Products & Rates \u2014 Savings)."
+    },
+    {
+      "id": "bank-sam-sar-timelines",
+      "set": "bank",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 3.31,
+      "n_citations": 1,
+      "cited": [
+        "KYC-AML & Loan Suitability Guidelines (DEMO).md"
+      ],
+      "answer_head": "1. File an internal Suspicious Activity Memo (SAM) within **24 hours** of detecting a red flag. (Document: [1], [12])\n\n2. The Financial Crimes Compliance Unit (FCCU) evaluates and files a Suspicious Activity Report withi"
+    },
+    {
+      "id": "bank-high-risk-edd",
+      "set": "bank",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 2.4,
+      "n_citations": 1,
+      "cited": [
+        "KYC-AML & Loan Suitability Guidelines (DEMO).md"
+      ],
+      "answer_head": "High-risk customers are re-reviewed every 6 months. Enhanced due diligence requires source-of-funds documentation for deposits above $100,000 (Banking Products & Rates \u2014 Savings)."
+    },
+    {
+      "id": "conv-greeting-exact",
+      "set": "conversational",
+      "type": "smalltalk",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "forbid": true
+      },
+      "notes": [],
+      "doc_precision": null,
+      "latency_s": 0.84,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "I'm doing great, thanks for asking! How about you? \ud83d\ude0a"
+    },
+    {
+      "id": "conv-greeting-variant",
+      "set": "conversational",
+      "type": "smalltalk",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "forbid": true
+      },
+      "notes": [],
+      "doc_precision": null,
+      "latency_s": 2.52,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "Hey! I'm doing great, thanks for asking. How about you? It's always nice to chat with a friendly person. \ud83d\ude0a\n\u79fb\u9664\n\nHey! I'm doing great, thanks for asking. How about you? It's always nice to chat with a friendly person. \ud83d\ude0a\n\u79fb\u9664"
+    },
+    {
+      "id": "conv-greeting-semantic",
+      "set": "conversational",
+      "type": "smalltalk",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "forbid": true
+      },
+      "notes": [],
+      "doc_precision": null,
+      "latency_s": 0.95,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "Life is treating me well, thanks for asking. How are you?"
+    },
+    {
+      "id": "conv-greeting-semantic-2",
+      "set": "conversational",
+      "type": "smalltalk",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "forbid": true
+      },
+      "notes": [],
+      "doc_precision": null,
+      "latency_s": 0.4,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "Not much. How's your day?"
+    },
+    {
+      "id": "conv-thanks",
+      "set": "conversational",
+      "type": "smalltalk",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "forbid": true
+      },
+      "notes": [],
+      "doc_precision": null,
+      "latency_s": 0.81,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "You're very welcome! Let me know if there's anything else I can assist with."
+    },
+    {
+      "id": "conv-refusal-rule",
+      "set": "conversational",
+      "type": "refusal",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "forbid": true
+      },
+      "notes": [],
+      "doc_precision": null,
+      "latency_s": 1.2,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "Got it. Let me know if there's anything else I can help with! \ud83d\ude0a"
+    },
+    {
+      "id": "conv-refusal-semantic",
+      "set": "conversational",
+      "type": "refusal",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "forbid": true
+      },
+      "notes": [],
+      "doc_precision": null,
+      "latency_s": 0.88,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "Sure, what would you like to discuss?"
+    },
+    {
+      "id": "conv-offcorpus",
+      "set": "conversational",
+      "type": "offcorpus",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "facts": true,
+        "forbid": true
+      },
+      "notes": [],
+      "doc_precision": null,
+      "latency_s": 11.14,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "A classic chocolate cake recipe often includes ingredients like flour, sugar, cocoa powder, eggs, butter, and baking powder. Here's a simple version:\n\n**Ingredients:**\n- 1 3/4 cups all-purpose flour\n- 1 3/4 cups granulat"
+    },
+    {
+      "id": "conv-greeting-lawyer-no-disclaimer",
+      "set": "conversational",
+      "type": "smalltalk",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "forbid": true
+      },
+      "notes": [],
+      "doc_precision": null,
+      "latency_s": 0.73,
+      "n_citations": 0,
+      "cited": [],
+      "answer_head": "Good morning! How can I assist you today?"
+    },
+    {
+      "id": "conv-domain-shape-not-smalltalk",
+      "set": "conversational",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 6.87,
+      "n_citations": 1,
+      "cited": [
+        "Company Policy Handbook Excerpts (DEMO).md"
+      ],
+      "answer_head": "Travel expenses are reimbursed according to the following guidelines:\n\n- **Meals (domestic travel):** Up to EUR 55/day, requiring Manager approval.\n- **Meals (international travel):** Up to EUR 85/day, requiring Manager "
+    },
+    {
+      "id": "default-jv-approval-officials",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 14.85,
+      "n_citations": 1,
+      "cited": [
+        "06a_02.pdf"
+      ],
+      "answer_head": "Under the DoD Financial Management Regulation (FMR), the approval of Journal Vouchers (JVs) is determined by the dollar amount of the adjustment. Here's the structured breakdown:\n\n1. **JV under $100 million**: Approved b"
+    },
+    {
+      "id": "default-jv-component-coordination",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 8.18,
+      "n_citations": 1,
+      "cited": [
+        "06a_02.pdf"
+      ],
+      "answer_head": "The journal voucher (JV) must be coordinated with the affected DoD Component when the JV exceeds **$1 billion**.\n\n**Regulatory Basis:**\n- According to the provided documents, \"all JVs over $1 billion must be coordinated "
+    },
+    {
+      "id": "default-dfas-reconciliation-threshold",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 7.95,
+      "n_citations": 1,
+      "cited": [
+        "06a_02.pdf"
+      ],
+      "answer_head": "The question has multiple parts, and each will be addressed explicitly:\n\n1. **How often must DFAS perform reconciliations between the general ledger and subsidiary records?**  \n   DFAS must perform reconciliations on a *"
+    },
+    {
+      "id": "default-ada-statute-sections",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": false
+      },
+      "notes": [
+        "missing fact groups: [['1341']]"
+      ],
+      "doc_precision": 0.25,
+      "latency_s": 15.9,
+      "n_citations": 4,
+      "cited": [
+        "14_01.pdf",
+        "14_03.pdf",
+        "14_01.pdf",
+        "14_02.pdf"
+      ],
+      "answer_head": "The Antideficiency Act (ADA) is primarily codified in **Title 31 of the United States Code**, specifically in **sections 1511 through 1519**. These sections outline the statutory restrictions on obligations and expenditu"
+    },
+    {
+      "id": "default-purpose-statute",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 12.7,
+      "n_citations": 1,
+      "cited": [
+        "14_02.pdf"
+      ],
+      "answer_head": "The **Purpose Statute** is codified at **31 U.S.C. \u00a7 1301**, which stipulates that appropriations must be applied only to the objects for which the appropriations were made, except as otherwise provided by law.\n\n### Regu"
+    },
+    {
+      "id": "default-ada-investigation-timeframes",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 9.14,
+      "n_citations": 4,
+      "cited": [
+        "14_03.pdf",
+        "14_03.pdf",
+        "14_03.pdf",
+        "14_03.pdf"
+      ],
+      "answer_head": "The DoD Component has specific timeframes for completing the preliminary review and formal investigation of a suspected Antideficiency Act (ADA) violation, as outlined in the provided documents:\n\n1. **Preliminary Review*"
+    },
+    {
+      "id": "default-dod-cfo-appointment",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 20.15,
+      "n_citations": 4,
+      "cited": [
+        "01_01.pdf",
+        "01_01.pdf",
+        "01_01.pdf",
+        "01_01.pdf"
+      ],
+      "answer_head": "The question has multiple parts, and each will be answered explicitly:\n\n1. **Who serves as the Chief Financial Officer (CFO) of the Department of Defense (DoD)?**  \n   The Chief Financial Officer of the Department of Def"
+    },
+    {
+      "id": "health-htn-first-line",
+      "set": "health",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 6.15,
+      "n_citations": 1,
+      "cited": [
+        "Clinic Protocols & Formulary (DEMO).md"
+      ],
+      "answer_head": "The first-line medication for stage 1 hypertension in an adult without CKD or diabetes is **Lisinopril 10 mg PO once daily**, with titration to 20\u201340 mg over 4 weeks (Clinic Protocols & Formulary \u2014 Common Conditions \u2014 Fi"
+    },
+    {
+      "id": "health-cap-penicillin-allergy",
+      "set": "health",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 2.68,
+      "n_citations": 1,
+      "cited": [
+        "Clinic Protocols & Formulary (DEMO).md"
+      ],
+      "answer_head": "For a patient with community-acquired pneumonia who is allergic to penicillin, the recommended antibiotic is doxycycline. The dose is 100 mg PO twice daily for 5 days (Clinic Protocols & Formulary \u2014 Common Conditions \u2014 F"
+    },
+    {
+      "id": "health-metformin-contrast-hold",
+      "set": "health",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 1.79,
+      "n_citations": 1,
+      "cited": [
+        "Clinic Protocols & Formulary (DEMO).md"
+      ],
+      "answer_head": "Metformin should be held for 48 hours around IV iodinated contrast. The risk being avoided is lactic acidosis. (Clinic Protocols & Formulary \u2014 KEY Drug Interactions)."
+    },
+    {
+      "id": "health-critical-value-escalation",
+      "set": "health",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": false
+      },
+      "notes": [
+        "missing fact groups: [['4477']]"
+      ],
+      "doc_precision": 1.0,
+      "latency_s": 3.38,
+      "n_citations": 1,
+      "cited": [
+        "Clinic Protocols & Formulary (DEMO).md"
+      ],
+      "answer_head": "1. If a patient comes back with a critical lab value like potassium over 6.0, you should page the on-call clinician immediately.  \n   (Clinic Protocols & Formulary \u2014 Escalation)\n\n2. To reach the on-call clinician, use th"
+    },
+    {
+      "id": "health-mammogram-interval",
+      "set": "health",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 2.61,
+      "n_citations": 1,
+      "cited": [
+        "Clinic Protocols & Formulary (DEMO).md"
+      ],
+      "answer_head": "The question has multiple parts. Here are the answers:\n\n1. Women should get mammograms every 2 years under the screening schedule.\n2. The age range for mammograms is 40-74 years."
+    },
+    {
+      "id": "health-okonkwo-bp-med-added",
+      "set": "health",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 2.9,
+      "n_citations": 1,
+      "cited": [
+        "Sample Patient Visit Note (DEMO).md"
+      ],
+      "answer_head": "The new blood pressure medication started for Daniel Okonkwo at his June visit was amlodipine, and the dose was 5 mg PO daily. \n\nThis information is derived from the visit note excerpt, which states: \"Plan - Hypertension"
+    },
+    {
+      "id": "health-okonkwo-prediabetes-labs",
+      "set": "health",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 4.18,
+      "n_citations": 1,
+      "cited": [
+        "Sample Patient Visit Note (DEMO).md"
+      ],
+      "answer_head": "Mr. Okonkwo's recent A1c result was 6.4%, and his fasting glucose was 128 mg/dL (Clinic Protocols & Formulary \u2014 Drug Interactions). These results led to a diagnosis of prediabetes (ICD-10 R73.03) (Clinic Protocols & Form"
+    },
+    {
+      "id": "law-msa-base-fee-payment",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 8.48,
+      "n_citations": 1,
+      "cited": [
+        "Master Services Agreement (DEMO).md"
+      ],
+      "answer_head": "The Harrowgate platform subscription costs **USD 18,500 per month**. Invoices are due **net thirty (30) days** from the invoice date.\n\n**Rule:**  \nUnder the terms of the Master Services Agreement, the base platform subsc"
+    },
+    {
+      "id": "law-msa-liability-cap",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 13.45,
+      "n_citations": 1,
+      "cited": [
+        "Master Services Agreement (DEMO).md"
+      ],
+      "answer_head": "**Legal Conclusion:** The liability cap in the Master Services Agreement (MSA) between Harrowgate and Voss-Lindqvist is the greater of USD 250,000 or the fees paid in the twelve (12) months preceding the claim.\n\n**Rule:*"
+    },
+    {
+      "id": "law-msa-term-governing-law",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 8.75,
+      "n_citations": 1,
+      "cited": [
+        "Master Services Agreement (DEMO).md"
+      ],
+      "answer_head": "The initial term of the Master Services Agreement is thirty-six (36) months from the Effective Date. The Agreement is governed by the laws of the State of Delaware.\n\n**Rule:** The term and governing law of the Master Ser"
+    },
+    {
+      "id": "law-playbook-payment-fallback",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 19.33,
+      "n_citations": 1,
+      "cited": [
+        "Contract Review Playbook (DEMO).md"
+      ],
+      "answer_head": "**Answer:**\n\nWhen redlining a vendor contract's payment terms, you should push for **Net 45 payment terms** and a **maximum late-payment interest rate of 1.5% per month**, or the maximum permitted by law, whichever is lo"
+    },
+    {
+      "id": "law-playbook-breach-notice-data-return",
+      "set": "law",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": false
+      },
+      "notes": [
+        "missing fact groups: [['72 hours', '72-hour', '72h']]"
+      ],
+      "doc_precision": 1.0,
+      "latency_s": 11.93,
+      "n_citations": 2,
+      "cited": [
+        "Contract Review Playbook (DEMO).md",
+        "Contract Review Playbook (DEMO).md"
+      ],
+      "answer_head": "The question has multiple parts, and each is addressed below:\n\n**1. How fast must a breach be reported?**  \nThere is no specific breach-notification timeline provided in the documents for regulated data. However, Documen"
+    },
+    {
+      "id": "law-playbook-liability-escalation",
+      "set": "law",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 9.23,
+      "n_citations": 1,
+      "cited": [
+        "Contract Review Playbook (DEMO).md"
+      ],
+      "answer_head": "1. **Identify the trigger for escalation:**  \n   The trigger for escalation is when the liability cap drops below six months of fees. This is explicitly stated in the document excerpt:  \n   > \"Liability cap below 6 month"
+    },
+    {
+      "id": "law-msa-renewal-vs-playbook",
+      "set": "law",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": true
+      },
+      "notes": [
+        "expected docs not cited: ['Master Services']; cited=['Contract Review Playbook (DEMO).md']"
+      ],
+      "doc_precision": 1.0,
+      "latency_s": 12.38,
+      "n_citations": 1,
+      "cited": [
+        "Contract Review Playbook (DEMO).md"
+      ],
+      "answer_head": "The auto-renewal notice period in the Harrowgate MSA does **not** meet the firm's playbook standard fallback for non-renewal notice.\n\n**Rule:** Under the firm's Contract Review Playbook, the standard fallback for automat"
+    },
+    {
+      "id": "meetings-receipt-threshold",
+      "set": "meetings",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 5.42,
+      "n_citations": 1,
+      "cited": [
+        "Company Policy Handbook Excerpts (DEMO).md"
+      ],
+      "answer_head": "1. The smallest expense that requires a receipt is **EUR 25**. This is specified in the Expense Reimbursement section under the \"Receipts are mandatory for any expense over EUR 25\" statement (document excerpt [5]).\n\n2. Y"
+    },
+    {
+      "id": "meetings-pto-accrual-tenure",
+      "set": "meetings",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 4.04,
+      "n_citations": 1,
+      "cited": [
+        "Company Policy Handbook Excerpts (DEMO).md"
+      ],
+      "answer_head": "Full-time employees at Nordvale Instruments, Inc. accrue **22 days** of annual paid leave, which increases to **27 days** after five years of continuous service (Q3 Product Strategy \u2014 Action Items). The PTO accrual rate "
+    },
+    {
+      "id": "meetings-mileage-rate",
+      "set": "meetings",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 1.52,
+      "n_citations": 1,
+      "cited": [
+        "Company Policy Handbook Excerpts (DEMO).md"
+      ],
+      "answer_head": "The company reimburses personal vehicle mileage at **EUR 0.42/km** (document 2)."
+    },
+    {
+      "id": "meetings-remote-abroad-stipend",
+      "set": "meetings",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 3.63,
+      "n_citations": 1,
+      "cited": [
+        "Company Policy Handbook Excerpts (DEMO).md"
+      ],
+      "answer_head": "You are allowed to work from another EU country for up to **20 working days per year** without special approval (document: Q3 Product Strategy \u2014 Action Items). \n\nRegarding home-office allowance, a **one-time home-office "
+    },
+    {
+      "id": "meetings-atlas-freeze-ga",
+      "set": "meetings",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 3.63,
+      "n_citations": 1,
+      "cited": [
+        "Q3 Product Strategy \u2014 Meeting Minutes (DEMO).md"
+      ],
+      "answer_head": "The code freeze for Atlas 3.0 is scheduled for 22 August 2026, as confirmed in the document excerpt (Q3 Product Strategy \u2014 Meeting Minutes). Atlas 3.0 is targeted to go GA on 15 September 2026, as stated in the same docu"
+    },
+    {
+      "id": "meetings-tiered-pricing-pilot",
+      "set": "meetings",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 4.13,
+      "n_citations": 1,
+      "cited": [
+        "Q3 Product Strategy \u2014 Meeting Minutes (DEMO).md"
+      ],
+      "answer_head": "The per-seat prices in the new Tiered Access pricing model are: Starter (EUR 39/seat/mo), Team (EUR 79/seat/mo), and Enterprise (custom, with a floor of EUR 24k/yr) (Q3 Product Strategy \u2014 Action Items). There are 25 acco"
+    },
+    {
+      "id": "meetings-renewal-risk-arr",
+      "set": "meetings",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 2.83,
+      "n_citations": 1,
+      "cited": [
+        "Q3 Product Strategy \u2014 Meeting Minutes (DEMO).md"
+      ],
+      "answer_head": "The enterprise customers that made Atlas 3.0 a condition for their renewal are Caldermoor Energy, Brightside Logistics, and the Vantage Health Group. The total ARR at stake is EUR 1.42M (document 1)."
+    },
+    {
+      "id": "retail-volt-ev-promo",
+      "set": "retail",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 8.23,
+      "n_citations": 1,
+      "cited": [
+        "Dealership Inventory & Financing (DEMO).md"
+      ],
+      "answer_head": "The current financing promotion for the Tavari Volt EV is a **2.9% APR up to 60 months** for Tier 1/2 buyers, valid through **2026-07-31** (Financing & APR Options \u2014 Representative tiers). If you skip this special APR, y"
+    },
+    {
+      "id": "retail-volt-long-range-specs",
+      "set": "retail",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 3.04,
+      "n_citations": 1,
+      "cited": [
+        "Dealership Inventory & Financing (DEMO).md"
+      ],
+      "answer_head": "The Tavari Volt Long Range electric sedan has an MSRP of $45,300 and offers an EPA-estimated range of 318 miles on a single charge (Product Catalog \u2014 Tavari Volt EV \u2014 Electric Sedan)."
+    },
+    {
+      "id": "retail-solace-se-lease",
+      "set": "retail",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 3.3,
+      "n_citations": 1,
+      "cited": [
+        "Dealership Inventory & Financing (DEMO).md"
+      ],
+      "answer_head": "The lease terms for the Solace SE are as follows:\n\n- **Monthly payment:** $329/mo (Product Catalog \u2014 Lease example (Solace SE)).\n- **Lease term:** 36 months (Product Catalog \u2014 Lease example (Solace SE)).\n- **Due at signi"
+    },
+    {
+      "id": "retail-negative-equity-cap",
+      "set": "retail",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 4.25,
+      "n_citations": 1,
+      "cited": [
+        "Dealership Inventory & Financing (DEMO).md"
+      ],
+      "answer_head": "1. **Can the difference be rolled into the new loan?**  \n   Yes, the difference may be rolled into the new loan, but only for Tier 1/2 buyers, and it is capped at 125% loan-to-value (as per the negative equity policy) (D"
+    },
+    {
+      "id": "retail-h7pro-battery-promo",
+      "set": "retail",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 3.4,
+      "n_citations": 1,
+      "cited": [
+        "Product Catalog (DEMO).md"
+      ],
+      "answer_head": "The NovaWave H7 Pro headphones have a battery life of 38 hours when noise cancelling is turned on. The promo price for the NovaWave H7 Pro is $279.00, valid through May 31, 2026 (Product Catalog \u2014 Warranty)."
+    },
+    {
+      "id": "retail-return-restocking",
+      "set": "retail",
+      "type": "retrieval",
+      "passed": true,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": true
+      },
+      "notes": [],
+      "doc_precision": 1.0,
+      "latency_s": 2.46,
+      "n_citations": 1,
+      "cited": [
+        "Product Catalog (DEMO).md"
+      ],
+      "answer_head": "Veltora's return window is 30 days from the date of purchase, and there is a 15% restocking fee on opened computing items. (Product Catalog \u2014 Pricing & Warranty Policy Summary)"
+    },
+    {
+      "id": "retail-veltoracare-price-window",
+      "set": "retail",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": false
+      },
+      "notes": [
+        "missing fact groups: [['3-year', '3 year', 'three-year', '3 years']]"
+      ],
+      "doc_precision": 1.0,
+      "latency_s": 3.05,
+      "n_citations": 1,
+      "cited": [
+        "Product Catalog (DEMO).md"
+      ],
+      "answer_head": "The VeltoraCare+ extended plan for the Veltora Glide 14 costs $179. (Product Catalog \u2014 Computing & Accessories) \n\nYou can add the VeltoraCare+ extended plan within 30 days of purchasing the laptop. (Document 2)"
+    }
+  ]
+}

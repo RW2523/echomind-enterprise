@@ -1,0 +1,164 @@
+{
+  "run_id": "20260729-200328",
+  "base": "http://localhost:3000/api",
+  "passed": 0,
+  "total": 7,
+  "results": [
+    {
+      "id": "default-jv-approval-officials",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": false
+      },
+      "notes": [
+        "expected docs not cited: ['06a_02']; cited=['14_01.pdf']",
+        "missing fact groups: [['Branch Chief', 'branch chief'], ['Site Director', 'site director']]"
+      ],
+      "doc_precision": 0.0,
+      "latency_s": 11.41,
+      "n_citations": 1,
+      "cited": [
+        "14_01.pdf"
+      ],
+      "answer_head": "The DoD Financial Management Regulation (FMR) does not explicitly specify the approval thresholds for Journal Vouchers (JVs) in the provided documents. However, based on the context and general DoD financial management p"
+    },
+    {
+      "id": "default-jv-component-coordination",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": false
+      },
+      "notes": [
+        "expected docs not cited: ['06a_02']; cited=['14_01.pdf']",
+        "missing fact groups: [['$1 billion', '1 billion', '$1B']]"
+      ],
+      "doc_precision": 0.0,
+      "latency_s": 18.94,
+      "n_citations": 1,
+      "cited": [
+        "14_01.pdf"
+      ],
+      "answer_head": "The DoD Financial Management Regulation (FMR) does not specify a particular dollar amount at which a journal voucher must be coordinated with the affected DoD Component. Instead, the coordination of journal vouchers is g"
+    },
+    {
+      "id": "default-dfas-reconciliation-threshold",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": false
+      },
+      "notes": [
+        "missing fact groups: [['monthly'], ['$1 million', '1 million']]"
+      ],
+      "doc_precision": 1.0,
+      "latency_s": 11.09,
+      "n_citations": 1,
+      "cited": [
+        "06a_02.pdf"
+      ],
+      "answer_head": "The question has multiple parts \u2014 answer every part explicitly, none may be skipped.\n\n1. **How often must DFAS perform reconciliations between the general ledger and subsidiary records?**  \n   The provided documents do n"
+    },
+    {
+      "id": "default-ada-statute-sections",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": false,
+        "facts": false
+      },
+      "notes": [
+        "expected docs not cited: ['14_02']; cited=['14_01.pdf']",
+        "missing fact groups: [['1341']]"
+      ],
+      "doc_precision": 0.0,
+      "latency_s": 21.74,
+      "n_citations": 1,
+      "cited": [
+        "14_01.pdf"
+      ],
+      "answer_head": "The Antideficiency Act (ADA) is primarily defined in **Title 31 of the U.S. Code**, specifically in **sections 1511 through 1519**. These sections outline the key provisions of the ADA, including prohibitions on unauthor"
+    },
+    {
+      "id": "default-purpose-statute",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": false
+      },
+      "notes": [
+        "missing fact groups: [['objects']]"
+      ],
+      "doc_precision": 1.0,
+      "latency_s": 20.01,
+      "n_citations": 1,
+      "cited": [
+        "14_02.pdf"
+      ],
+      "answer_head": "The \"purpose statute\" refers to statutory provisions that limit how appropriated funds may be used. These restrictions are codified in various sections of the United States Code, particularly in Title 31, which governs f"
+    },
+    {
+      "id": "default-ada-investigation-timeframes",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": false
+      },
+      "notes": [
+        "missing fact groups: [['four months', '4 months'], ['nine months', '9 months']]"
+      ],
+      "doc_precision": 1.0,
+      "latency_s": 13.3,
+      "n_citations": 4,
+      "cited": [
+        "14_03.pdf",
+        "14_03.pdf",
+        "14_03.pdf",
+        "14_03.pdf"
+      ],
+      "answer_head": "The DoD Component has **no specific time limit** stated in the provided documents for completing the **preliminary review** of a suspected Antideficiency Act (ADA) violation. However, the documents emphasize that the pre"
+    },
+    {
+      "id": "default-dod-cfo-appointment",
+      "set": "fmr",
+      "type": "retrieval",
+      "passed": false,
+      "checks": {
+        "citations": true,
+        "docs": true,
+        "facts": false
+      },
+      "notes": [
+        "missing fact groups: [['Senate']]"
+      ],
+      "doc_precision": 1.0,
+      "latency_s": 10.88,
+      "n_citations": 4,
+      "cited": [
+        "01_01.pdf",
+        "01_01.pdf",
+        "01_01.pdf",
+        "01_01.pdf"
+      ],
+      "answer_head": "The Chief Financial Officer (CFO) of the Department of Defense (DoD) is the Under Secretary of Defense (Comptroller) (USD(C)). This position is established by the CFO Act of 1990 (page 2) and is responsible for developin"
+    }
+  ]
+}

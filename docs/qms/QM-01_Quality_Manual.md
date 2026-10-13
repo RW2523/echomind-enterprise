@@ -275,7 +275,7 @@ docs/qms/
 
 ### 14.1 What is operating
 
-- **Documents approved** on 2026-10-07 (approval record AR-2026-001); revision 1.1 of the review and NFR evidence on 2026-10-10 (AR-2026-002); the Excel registers EM26-19…22 on 2026-10-12 (AR-2026-003) and their revision 1.1 with versions v1.0.0–v1.4.1 the same day (AR-2026-004).
+- **Documents approved** on 2026-10-07 (approval record AR-2026-001); revision 1.1 of the review and NFR evidence on 2026-10-10 (AR-2026-002); the Excel registers EM26-19…22 on 2026-10-12 (AR-2026-003) and their revision 1.1 with versions v1.0.0–v1.4.1 the same day (AR-2026-004); the project plan, test plan, release notes, new use cases and client communication log EM26-23…27 on 2026-10-13 (AR-2026-005).
 - **Releases identified and traceable** — v1.4.0 and v1.4.1; every running service reports its version and commit.
 - **Verification enforced** — CI runs the unit suites (backend 50, voice 131 cases) and the type-check on every push; a 13-case acceptance suite was executed four times on 2026-10-06; all executable cases pass on v1.4.1.
 - **Nonconformities handled end to end** — 16 recorded in REG-04, 11 closed with effectiveness verified, 5 open with owners and actions.

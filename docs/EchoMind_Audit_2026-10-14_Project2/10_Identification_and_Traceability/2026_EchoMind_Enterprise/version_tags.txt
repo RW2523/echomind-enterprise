@@ -1,0 +1,305 @@
+=== v1.0.0 → commit 595b24b (2026-02-27), tagged 2026-10-12
+v1.0.0 — EchoMind Enterprise, increment Jan–Feb 2026
+
+Scope: the 2025 code ported to the NVIDIA DGX Spark; knowledge chat with citations and streaming;
+live transcription; Kyutai speech recognition; voice conversation with barge-in; wake word and
+listen-only mode; document deletion and sparse indexing.
+Baseline commit: last commit on main in February 2026 (2026-02-27).
+Version reviews: CR-2026-01 (2026-01, platform decision); CR-2026-02 and CR-2026-03 (2026-03, client
+requirements and client review of conversation v1).
+
+Retrospective baseline, identified 2026-10-12 from the commit history (SOP-06 §9). It was not
+released as a numbered version at the time and has no release record (FRM-03); formal release
+records start at v1.4.0. The tag marks the last commit on main of the increment so that the
+increment and its reviews can be traced to an exact source revision.
+
+=== v1.1.0 → commit e5292f3 (2026-04-29), tagged 2026-10-12
+v1.1.0 — EchoMind Enterprise, increment Mar–Apr 2026
+
+Scope: DoD FMR knowledge base (hierarchical section and table-of-contents retrieval, regulation-tuned
+query classification); financial-assistant behaviour; chat management; word cloud; TensorRT-LLM
+integrated beside Ollama; own dual-loop voice architecture with Nemotron speech recognition; personas;
+offline model preparation.
+Baseline commit: last commit on main in April 2026 (2026-04-29).
+Version reviews: CR-2026-04 (PersonaPlex review), CR-2026-05 (field deployment, hotspot), CR-2026-06
+(live-transcript accuracy and speed); CR-2026-07 (2026-05, law firm) reviewed this version.
+
+Retrospective baseline, identified 2026-10-12 from the commit history (SOP-06 §9). It was not
+released as a numbered version at the time and has no release record (FRM-03); formal release
+records start at v1.4.0. The tag marks the last commit on main of the increment so that the
+increment and its reviews can be traced to an exact source revision.
+
+=== v1.2.0 → commit 46bd774 (2026-06-27), tagged 2026-10-12
+v1.2.0 — EchoMind Enterprise, increment May–Jun 2026
+
+Scope: Silent Assistant; Boardroom with diarisation and meeting reports; security and defect fixes from
+the code audit; Document Studio (PDF/PPTX, on-device images, templates); Parakeet final speech
+recognition with fallback; login, roles, activity log, tenancy, export gateway; vertical packs;
+public reference instance.
+Baseline commit: last commit on main in June 2026 (2026-06-27).
+Version reviews: CR-2026-08 (Boardroom), SR-2026-01 (code audit, 2026-06-18), CR-2026-09 (Document
+Studio); delivers the Silent Assistant requested in CR-2026-07.
+
+Retrospective baseline, identified 2026-10-12 from the commit history (SOP-06 §9). It was not
+released as a numbered version at the time and has no release record (FRM-03); formal release
+records start at v1.4.0. The tag marks the last commit on main of the increment so that the
+increment and its reviews can be traced to an exact source revision.
+
+=== v1.3.0 → commit bc9aa33 (2026-08-16), tagged 2026-10-12
+v1.3.0 — EchoMind Enterprise, increment Jul–Aug 2026
+
+Scope: chat on TensorRT-LLM with Qwen3-30B-A3B NVFP4; golden-question evaluation harness; retrieval
+fixes and honest citations; namespace predicate on every retrieval path; RAG ingestion overhaul;
+Silent Assistant v2 (sentence-level checks with quoted proof); voice cadence; QASC 2026 paper results.
+Baseline commit: last commit on main in August 2026 (2026-08-16).
+Version reviews: RV-2026-01 (golden evaluation, 2026-07-29 → 08-07), RV-2026-02 (paper campaign, 2026-08-07).
+
+Retrospective baseline, identified 2026-10-12 from the commit history (SOP-06 §9). It was not
+released as a numbered version at the time and has no release record (FRM-03); formal release
+records start at v1.4.0. The tag marks the last commit on main of the increment so that the
+increment and its reviews can be traced to an exact source revision.
+
+=== v1.4.0 → commit eaa7b1a (2026-09-22), tagged 2026-09-22
+EchoMind Enterprise 1.4.0
+
+Commit: eaa7b1a049574f497595a887f99e4089cdd6a57b
+Date:   2026-09-22T17:53:08Z
+Branch: main
+
+Changes (full history — first tagged release):
+  - eaa7b1a docs(changelog): regenerate for v1.4.0
+  - b0ba848 chore(release): v1.4.0
+  - 4a43773 docs(qms): October surveillance audit pack for the EchoMind Product area
+  - 51fd3bc feat(build): release identification, off-host backup scheduling, pinned NeMo
+  - c2a6ed5 fix(transcript): render live speech as continuous text, not per-chunk sentences
+  - 9efb134 docs(qms): ISO 9001:2015 quality management system, repo tidy-up, data backup
+  - ff29843 feat(voice): speculative replies, LLM tool routing, dynamic hold phrases, GPU final STT
+  - 15f3c96 feat(transcript,voice,chat): cleaner utterances, gated checks, enterprise voice tone, focused UI
+  - 724fb98 fix(build,boardroom): repair image rebuilds and salvage truncated report JSON
+  - bc9aa33 docs(paper): camera-ready v4 with updated author list and ajace.com emails
+  - 7f2658a feat(silent-assistant): sentence-level live checks with quoted proof, record pull, scenarios
+  - 7e582e1 fix(rag): overhaul ingestion, embeddings, scoring end to end
+  - 149a1b6 fix(chat): kill repetition loops, right-size answers, harden personas
+  - 1d1e3aa fix(voice): sentence-aligned TTS cadence, pipelined synthesis, smooth playback
+  - 9360f69 docs: add pitch deck PPTX and consolidate collateral into marketing_doc/
+  - 17ecfcf docs: add technical, business, architecture and pitch documents
+  - cea19f9 docs: update second author to full name Richard Watson Stephen Amudha
+  - f52651f docs: finalize QASC 2026 camera-ready; keep only the final package
+  - 28a065d docs: standardize capability brief to US English
+  - 93c5dc4 docs: add EchoMind AI capability & product brief
+  - 20faed3 docs: LNEE LaTeX camera-ready + author reorder
+  - ec4d08f docs: finalize camera-ready author block
+  - c1c1fed docs: QASC 2026 camera-ready v3 + response to reviewers
+  - cbc57d1 eval: QASC 2026 paper experiment harness and frozen results
+  - 5ce8bbe feat(voice): loop provenance tags and ablation switch for paper eval
+  - 4e27109 fix(rag): enforce namespace predicate on sparse transcript path
+  - 01b203c Add files via upload
+  - 1584623 docs: add architecture brief v2 (9-page PDF, full feature coverage)
+  - 58c774d docs: add EchoMind architecture brief (3-page PDF)
+  - 2decb99 fix(rag): gate BookRAG behind RAG_ENABLE_BOOKRAG (default off) — it measured worse
+  - 7b04eb9 fix(rag): stop silent content loss, unblock BookRAG, guard reasoning leaks
+  - 73f0b4f fix(voice): pass VOICE_AUTH_SECRET (not AUTH_SECRET) so the WS gate actually works
+  - 9810e98 feat(security): enable auth; sanitize citation artifacts; reserve 'default' tenant
+  - b6aa963 feat(rag): tier-2 quality fixes — early sources, fail-closed, follow-up context
+  - febfc5f fix(scripts): await delete_document in re-ingest; add stale-PDF dedupe
+  - 4a8402e fix(rag): unblock BookRAG + stop silent content loss in PDF ingestion
+  - 558eaae fix(tts): /api/transcribe/speak returned null audio — wrong voice port
+  - 31b7786 fix(voice): eliminate TTS gaps — trim phrase silence, controlled pauses, edge-only fades
+  - 8e6d984 feat(eval): voice end-to-end test — synthetic speech through the live WS loop
+  - 80375c6 feat(llm): port chat to Qwen3-30B-A3B NVFP4 on TensorRT-LLM (driver fix confirmed)
+  - ec5136b docs(readme): bring README in line with the shipped system
+  - beeb1b7 fix(rag): two-tier CE relevance gate + multi-part answer hint (eval round 4)
+  - 12f7219 feat(eval): golden-question evaluation harness for the RAG + conversation stack
+  - ebd232f fix(rag): five retrieval bugs found by the golden-question eval
+  - 343117f feat(rag): conversational intelligence, honest citations, persona quality overhaul
+  - c864fa7 perf(voice): move Live Transcript ASR back to GPU (driver 580.159.03 fixed NVML)
+  - cb3a280 fix(compose): restore GPU to backend/voice on GB10, pin Live Transcript ASR to CPU
+  - 2039d62 fix(compose): serve chat via ollama, gate resource-hogging trtllm on GB10
+  - 46bd774 docs(db): Postgres migration runbook (#6 — planned, maintenance-window)
+  - d19177d feat(export): secure offline export gateway — PII/secret scan + redaction (#5)
+  - ef19d68 feat(auth): per-tenant scoping (#4 multi-tenant)
+  - f75121b feat(silent-assistant): namespace-aware + always-surface + per-vertical rule packs (#3)
+  - 3ed6c58 revert(verticals): remove bespoke Bank experience
+  - b9f076e feat(verticals): bespoke Meetings, Law, Retail experiences (verticals 3-5/5)
+  - 9992848 feat(verticals): bespoke Health experience (vertical 2/5)
+  - 0dd5f82 feat(verticals): bespoke per-vertical experiences framework + Bank (vertical 1/5)
+  - 10a80b3 feat(api): per-IP rate limiting / quotas, opt-in (#2)
+  - 3b6fe19 perf(rag): cache query embeddings (deterministic, LRU 4096)
+  - 66356f9 feat(docgen): per-vertical Document Studio templates
+  - 2465767 fix(settings): Settings tab crashed (undefined PERSONA_META for new personas)
+  - bd428f2 feat(auth): WebSocket auth gating (Phase 0b, step 5 — hardening)
+  - ac26d41 feat(auth): audit log + usage metering + CORS lock (Phase 0b, step 4)
+  - 7a83262 feat(auth): RBAC + admin user management (Phase 0b, step 3)
+  - d12db42 feat(auth): frontend login gate, opt-in (Phase 0b, step 2)
+  - c9bad3d feat(auth): local-accounts + JWT auth core, opt-in via AUTH_ENABLED (Phase 0b, step 1)
+  - c6b834d feat(packs): per-vertical theming, content, personas + seeded demo data (UI refurbish)
+  - e8ead2f feat(packs): vertical-pack framework + subdomain wiring (Step 2)
+  - 2dba137 feat(rag): per-namespace knowledge bases (Step 1: KB namespacing lynchpin)
+  - 4bc0d58 feat(voice): selectable Kokoro voice (7 speakers) in Settings
+  - 52e6db9 feat(voice): selectable TTS engine (Piper or Kokoro-82M) in Settings
+  - 974b308 fix(voice): keep barge-in off for the intro's full playback duration
+  - 3a6b1f9 build(voice): bake Parakeet into image + run it on CPU (avoids trtllm CUDA-graph crash)
+  - b6a70d8 feat(voice): accurate final STT via NeMo Parakeet-TDT (fixes domain-term mishearing)
+  - 421aa46 fix(build): relax huggingface-hub pin 0.33.5 -> >=0.34,<2 (diffusers>=0.38 needs >=0.34)
+  - 5088c93 fix(voice): barge-in lead 12->8 (12 was too strict to interrupt); rebuild bakes thinking-off patch
+  - 7b444fe fix(voice): raise local reply cap LLM_MAX_TOKENS 220->420 (was truncating answers mid-sentence)
+  - 1c8c923 fix(voice): less-aggressive endpointing + stricter barge-in + permissive VAD + CPU Piper
+  - 3afac4a feat(voice): always keep knowledge base ON (voice RAG-connected by default)
+  - bdc12ff feat(llm): switch to Qwen3-30B-A3B-FP4, cap KV cache, disable reasoning
+  - 51bc562 docs(deploy): clarify public-hostname step (avoid doubled domain) + troubleshooting
+  - 7c521f3 feat(deploy): public access via Cloudflare Tunnel for echomind-ajace.com
+  - daa470c docs: hide generated PPTX (export WIP) — untrack + gitignore, keep PDFs
+  - c4e6389 docs: professional README — accurate stack, modules, product vision, doc links
+  - 29fb479 docs: add EchoMind Marketing Book + User Guide (PDF & PPTX, with on-device images)
+  - 723d34f docs: add USER_MANUAL.pdf — styled 56-page PDF of the user manual
+  - dfcf300 docs: add USER_MANUAL.md — complete marketing-style end-to-end user manual
+  - e59e80d docs: add CAPABILITIES.md — full capabilities + how-it-works overview
+  - 2d23f40 Add Document Studio: AI document generation with on-device images + PDF/PPTX export
+  - b08cf25 Harden security, fix bugs across RAG/transcribe/boardroom/voice, audit prompts
+  - fbbadd0 Implement backchannel and partial transcript features for enhanced voice interaction
+  - 539493f paper
+  - e1a337b Enhance transcript analysis and boardroom session features
+  - e5292f3 Update voice service configurations and enhance TTS handling
+  - 0818cdc Enhance Docker configurations for offline model preparation and update frontend components
+  - d41014d Comment out Voice Context section in Settings component for future use
+  - 518fb8e Update persona types and enhance voice interaction features
+  - ddc0aa3 Add Nemotron ASR adapter, warmup build, voice STT bridge, and Docker context trim
+  - 1de5063 Update Sidebar component to restore navigation items
+  - 172b94c Enhance ASR model integration and session management
+  - d89aeda Refactor ASR model integration and update session handling
+  - eaf17a0 Refactor main.py and enhance text normalization in advanced.py and normalize.py
+  - 34d6847 Resolve merge conflicts in main.py and package-lock
+  - 821f650 Resolve stash conflicts after pull
+  - 7f1b818 Update package-lock.json and Sidebar component
+  - 06e788a Enhance Ollama and TensorRT-LLM integration for offline capabilities
+  - 0993588 Enhance LLM streaming and logging capabilities
+  - 1d28247 Enhance project structure and offline capabilities
+  - 07ac10d Refactor Header component and implement chat management features
+  - 2b9730b Implement chat management features in backend and frontend
+  - 5d64088 Add Word Cloud feature to Live Transcription
+  - e59fd55 Enhance financial assistant features and session management
+  - 95d3512 Enhance financial assistant capabilities and improve session management
+  - 5057a30 Enhance TOC index and retrieval features
+  - dd037c7 Enhance TOC index management and data deletion process
+  - 22282ae Refactor section indexing and retrieval logic
+  - 0b8b252 Refactor section indexing and retrieval enhancements
+  - ace2e4b Refactor section indexing and retrieval logic
+  - 18715c7 Enhance section indexing and retrieval features
+  - a988f9b Refactor query handling and improve configuration settings
+  - cfe3360 Enhance query classification and configuration settings
+  - 03e43d3 Refactor document chunking and indexing for improved metadata handling
+  - 7abc98c Refactor document chunking and indexing for enhanced metadata management
+  - 045b1b1 Refactor document chunking and indexing for improved metadata handling
+  - 31f1205 Enhance document chunking and indexing features
+  - 595b24b Enhance WebSocket handling and configuration settings
+  - 223714c Add transcript management features and source options handling
+  - 5081ad8 Enhance transcript time parsing and formatting
+  - 5eacb1b Add time parsing and document metadata handling functions
+  - 9be8ac5 Add sample transcript functionality and enhance metadata storage
+  - 592cb9b Detect and docker flow management
+  - fa9550e Refactor LLM model integration and enhance performance: Updated LLM model references to `qwen2.5:7b-instruct-q4_K_M` in configuration files and Docker setup. Enabled FAISS GPU support in Docker Compose for improved performance. Adjusted documentation to reflect these changes.
+  - 5b6ef43 Update LLM model references and enable FAISS GPU support: Changed LLM model from `qwen2.5:7b-instruct` to `qwen2.5:7b-instruct-q4_K_M` across configuration files, Docker setup, and documentation. Enabled FAISS GPU support in Docker Compose for improved performance. Updated README and other relevant files to reflect these changes.
+  - a1fd76b Implement continuous listening mode: Added support for a "listen-only" feature that allows the assistant to respond only after the wake word "EchoMind." Updated relevant components to manage listen buffer text and toggle functionality. Enhanced logging in the server for listen-mode events and adjusted Dockerfile for improved package installation reliability.
+  - e0ca515 Enhance wake word functionality: Implemented semantic intent recognition for changing the assistant's wake word, including confirmation prompts. Updated session management to handle wake word changes and improved logging of user interactions. Refactored related tests to ensure proper functionality of wake word change intents.
+  - 014f1a7 Updated ollama loading
+  - f6d66b4 Loading Ollama model
+  - 8e92aca Enhance Kyutai STT integration: Implemented pre-loading and warm-up functionality for faster initial connections. Added model download and instance management methods to improve performance and reduce latency during Live Transcript sessions. Updated WebSocket handler to utilize new instance management functions.
+  - d8638d4 Refactor OrbVisualizer components: Implemented safe radius handling to prevent canvas errors and ensure valid dimensions. Updated OrbCanvas to clamp size values, enhancing robustness. Improved drawing functions in orbEffects to utilize safe radius calculations, ensuring consistent rendering and preventing invalid states during animation.
+  - 9015f16 Enhance VoiceConversation and VoiceOrb components: Improved VoiceConversation styling for better visual consistency and streamlined VoiceOrb by removing unnecessary state management. Updated TopBar to focus on settings functionality, enhancing overall user experience.
+  - fdc69aa Refactor VoiceConversation and VoiceOrb components: Updated VoiceConversation to streamline boxShadow styling. Simplified VoiceOrb by removing unused state management and status display, enhancing performance and readability. Adjusted TopBar to remove connection status display, focusing on settings functionality.
+  - 5542173 Enhance LiveTranscription component and Docker configurations: Updated LiveTranscription to include mic mute functionality and clear/reset button for improved user interaction. Modified Docker Compose and Dockerfiles to ensure health checks for services and pre-download necessary models during build, optimizing startup time. Updated README to reflect automatic model setup during build.
+  - 7eb6809 Refactor KnowledgeChat and LiveTranscription components: Updated KnowledgeChat to utilize a custom hook for managing chat state, improving state management and reducing complexity. Enhanced LiveTranscription to accept props for better integration with the app's state, streamlining session handling and user interaction. Added clear chat functionality and improved UI responsiveness.
+  - 5d7dc8f Refactor STT streaming and configuration: Enhanced Kyutai STT integration with improved audio processing, including sliding-window VAD and GPU concurrency management. Updated settings for PCM queue backpressure and warmup frames. Improved session handling with audio-relative timestamps and optimized buffer management for efficient transcription.
+  - e1f9530 Update session management and voice interaction features: Enhanced user-specific voice message handling and error recovery. Improved audio processing and added voice activity detection for better transcription accuracy. Updated README and configuration for recent changes, including adjustments to sample rates and dependencies.
+  - bff6cf2 Refactor STT streaming to utilize Kyutai STT exclusively, removing Whisper fallback. Updated README and configuration for Kyutai integration, including sample rate adjustments and improved audio processing. Enhanced session state management for better whitespace normalization and audio handling. Added voice activity detection to reduce noise transcription. Updated Dockerfile and requirements for necessary dependencies.
+  - c821802 made RAG_QUERY_REWRITE_ENABLED in default false and updated readme.md files
+  - 60c2b95 Enhance voice interaction capabilities: Improved session management with refined user-specific voice message handling and robust error recovery. Updated UI components for a more intuitive user experience and optimized backend API for efficient transcript storage and retrieval, ensuring seamless voice interaction integration.
+  - 8962eeb Refine voice interaction features: Improved session management with enhanced user-specific voice message handling and error recovery. Updated UI components for better user experience and optimized backend API for transcript storage and retrieval, ensuring seamless integration with voice interactions.
+  - 633ca12 Enhance voice conversation features: Introduced dynamic voice message handling with improved session management, including user-specific voice messages and connection error handling. Updated UI components for better user interaction and streamlined context management. Enhanced backend API for transcript storage and retrieval, ensuring better integration with voice interactions.
+  - 577edc8 Refactor voice assistant features: Improved session management by implementing user-specific profiles and conversation memory updates. Enhanced voice command processing for dynamic interactions and streamlined configuration settings for better user experience.
+  - 8a0ea41 Revamp EchoMind voice assistant: Updated README and HTML to reflect new branding and features, including conversation memory and profile management. Enhanced session handling with rolling memory and user profiles, allowing for dynamic updates via voice commands. Improved configuration settings for memory and assistant defaults. Streamlined conversation context management for better user interaction.
+  - 07f0db9 Improve error handling in transcript storage: Enhanced the store_transcript_to_db function to include more detailed logging for indexing failures, facilitating better tracking and debugging of transcript-related issues.
+  - 8c15c96 Add logging for transcript indexing errors: Introduced logging to capture warnings when indexing transcripts fails in the store_transcript_to_db function. This enhancement improves error tracking and debugging capabilities in the transcript storage process.
+  - af97302 Refactor configuration and logging for LLM interactions: Updated the settings in config.py to centralize data directory paths and added new paths for transcript handling. Enhanced logging in LLM-related classes to capture full request payloads for better debugging and monitoring. Improved markdown rendering in the frontend to prevent layout issues with nested lists.
+  - 850fb7e Enhance transcript handling in intent classification: Updated logic to better identify user requests for transcripts, including new functions for parsing time windows and recent transcripts. Improved retrieval process to filter hits based on user queries related to transcripts, ensuring more accurate responses. Removed unnecessary print statements for cleaner code.
+  - 7d9034c Add fade-in/fade-out functionality to audio processing: Implemented short fade effects in both frontend and backend audio handling to reduce clicks at chunk boundaries. Updated related functions to enhance audio quality during playback and improved transcript handling in the API for better user experience.
+  - 305e19c Refactor voice interaction settings and improve user experience: Updated frontend components to enhance microphone management and knowledge base integration. Adjusted backend API to streamline voice-related requests and improved transcript handling, ensuring a more cohesive interaction flow.
+  - 089ecfb Enhance voice conversation and transcription features: Introduced new settings for voice bot and user names, and added support for knowledge base integration in voice interactions. Updated frontend components to manage microphone state and toggle knowledge base usage. Refactored backend API to handle voice-related requests and improved transcript storage logic, ensuring better integration with the overall system.
+  - e794ea4 Update voice download functionality: Change Hugging Face base URL to versioned endpoint and improve voice ID parsing logic. Enhance error handling for invalid voice IDs and adjust path formatting for voice files, ensuring compatibility with the new structure.
+  - b3253c2 Implement voice management features: Added API endpoints for listing installed Piper voices and downloading voices by ID. Enhanced frontend components to support voice selection and downloading, improving user experience. Updated configuration and download script for better voice handling.
+  - 236cc04 Remove polish feature implementation: Deleted the LLM-based transcript polishing functionality from the backend, including related helper functions and imports. This change reflects the recent refactor to rename polish to refine, streamlining the codebase.
+  - 46b5567 Refactor transcription API and frontend components: Renamed the polish functionality to refine, updating related API routes and frontend services accordingly. Adjusted database schema to reflect changes in text processing terminology, ensuring consistency across the application. Enhanced documentation to clarify the new refined text handling.
+  - 030b8af changes reverted
+  - 40edd92 Enhance database schema and text processing capabilities: Added a new table for document headings to support structured retrieval and improved text normalization by introducing a function to remove repeated headers and footers. Updated chunking and retrieval logic to utilize these enhancements, ensuring better handling of document structure and user queries.
+  - 743f182 Integrate text normalization and enhance query handling: Added text normalization in the chunk_document function to improve input consistency. Introduced deterministic query expansion methods to handle typos and TOC queries, enhancing retrieval accuracy. Updated retrieval logic to utilize new query variants and adjusted settings for book retrieval, improving overall query processing and user experience.
+  - 341b0be Enhance database schema and chat functionality: Added a new column for conversation summaries in the chats table and implemented functions to manage conversation summaries during chat interactions. Updated API routes to support summary retrieval and updating, improving the overall chat experience and context management.
+  - b834262 Refactor TTS and transcription handling: Improved the TTS voice selection process by optimizing the dynamic voice options in AppSettings. Enhanced the database schema to better manage transcript data with new fields for echotag and echodate. Updated relevant API routes and frontend components to support these changes, further enhancing user interaction and experience.
+  - 8af2d31 Enhance TTS and transcription features: Introduced Piper TTS voice options and updated AppSettings to support dynamic voice selection. Modified database schema to include echotag and echodate in transcripts. Updated API routes and frontend components to handle new voice and transcription features, improving user experience and flexibility in voice interactions.
+  - 4615895 removed unmute in code
+  - 08745a7 Update Sidebar component with logo image and add favicon to index.html: Replaced the icon component in the Sidebar with an image logo for better branding. Added a favicon link in index.html to enhance the application's visual identity in browser tabs.
+  - 8d01ea0 Enhance ConversationStage component with dynamic color resolution: Added functionality to resolve CSS variables for assistant and user orb colors, improving visual consistency. Updated layout to utilize resolved colors and adjusted orb visualizer glow behavior for better user feedback during interactions.
+  - 466cd34 Enhance ConversationStage and orb visualizer for better user interaction: Improved the layout and visual feedback of the ConversationStage component, ensuring consistent orb states during voice interactions. Updated styling for action buttons and context input to enhance overall user experience.
+  - 925b3ff Refactor ConversationStage and orb visualizer for improved user feedback: Updated the ConversationStage component to enhance context management and visual feedback during voice interactions. Adjusted orb visualizer behavior to maintain consistent visual states for idle and listening, ensuring a smoother user experience. Improved styling and layout for context input and action buttons.
+  - 9880a87 Implement markdown stripping for TTS and enhance conversation state management: Added a new function to remove markdown from text inputs, ensuring cleaner output for TTS and LLM. Updated various components to utilize this function, improving the clarity of spoken responses and user inputs. Refactored the ConversationStage and VoiceConversation components to streamline state management and remove demo controls, enhancing overall user experience during voice interactions.
+  - b07e2cc Refactor ConversationStage layout and improve voice connection state management: Adjusted the layout of orbs in the ConversationStage component to maintain consistent sizing and prevent layout shifts. Updated voice connection logic to enhance state transitions and added hysteresis for microphone state changes, improving user experience during voice interactions.
+  - f024bc9 Refactor TTS greeting and streamline intro tip handling: Updated the TTS introductory phrase for improved engagement and removed the intro tip from the conversation state, enhancing the user experience during session initiation.
+  - c189bbb Enhance frontend configuration for HTTPS support: Updated docker-compose to expose port 3443 for HTTPS, modified nginx configuration to handle both HTTP and HTTPS with a self-signed certificate, and adjusted Vite configuration to enable HTTPS in development. Updated README to reflect new access URLs and instructions for using HTTPS.
+  - 9755130 Update introductory phrase for TTS and remove intro tip from state: Changed the greeting phrase for TTS to a more engaging version and eliminated the intro tip from the conversation state, streamlining the user experience during session initiation.
+  - ce072b7 Refactor intro tip handling and update greeting phrase: Removed the intro tip display from the UI and adjusted voice connection state management to eliminate its dependency. Updated the introductory phrase for TTS to provide a more engaging greeting for users at the start of the session.
+  - 65210b2 Update voice connection state management and reposition intro tip: Changed userOrb state to "listening" and refined assistantOrb states for "speaking" and "idle" during voice events. Moved the intro tip display below the orbs for better visibility and adjusted its styling for improved user experience.
+  - 65e01ec Add barge-in speech lead settings and intro TTS feature: Introduced new configuration options for consecutive speech frames required for barge-in detection, enhancing robustness against false triggers. Added an introductory phrase feature that prompts users to unmute and speak upon connection, improving user experience during initial interactions.
+  - 0f132fe Enhance LiveTranscription component with improved UI and feedback: Updated the LiveTranscription interface to visually indicate listening status with dynamic styles and animations. Added new animations for the listening state and adjusted button styles for better user interaction. Introduced a moving gradient effect for the orb visualizer to enhance visual feedback during audio processing.
+  - fd2a3ea Enhance WebSocket handling and add transcript tagging feature: Improved WebSocket connection management in LiveTranscription component, including error handling and status updates. Introduced a new API endpoint for previewing transcript tags and conversation types, along with corresponding frontend integration for fetching and displaying tags. Updated Vite configuration to support WebSocket connections in the proxy settings.
+  - 3a053b1 Add storage usage endpoint and integrate with sidebar: Implemented a new API endpoint to retrieve vector DB storage usage and disk capacity. Updated the frontend to display this information in the sidebar, enhancing user awareness of storage metrics. Added automatic refresh functionality for real-time updates.
+  - bd488be Refactor source chunk handling in FaissIndex: Updated the source_by_chunk mapping to improve data organization and retrieval efficiency. This change enhances the clarity of source data associated with chunk IDs, ensuring better management of metadata during indexing.
+  - 5e39015 Refactor assistant message rendering and loading indication: Improved the Markdown rendering for assistant messages, enhancing visual clarity and formatting. Updated loading indicators to provide a better user experience during message processing.
+  - 6869e91 Implement Markdown rendering for assistant messages in KnowledgeChat: Added a styled Markdown renderer to enhance the display of assistant responses, including support for headings, lists, and code formatting. Improved loading indication for assistant messages while processing. This update enhances the user experience by providing clearer and more visually appealing message formatting.
+  - ad36bd6 Enhance RAG system with source exposure configuration and context handling: Added a new setting to control citation exposure to clients. Refactored context building logic to avoid source lines in responses, ensuring internal grounding only. Improved error handling and logging for RAG answer generation, enhancing overall stability and audit capabilities.
+  - a1df52a Update embedding configuration and truncation logic: Adjusted the default maximum characters for embeddings to 2000 for better compatibility with 512-token models. Added a safeguard in the truncation function to ensure the limit is not set to zero, enhancing stability in text processing.
+  - de079b4 Add embedding truncation logic and configuration for max characters: Introduced a new method to truncate text for embedding API calls, ensuring input length constraints are respected. Updated configuration to allow setting a maximum character limit for embeddings, enhancing stability and performance during text processing.
+  - cbc69aa Refactor document addition process in FaissIndex: Updated the add_document method to utilize a new chunking approach, improving text extraction and embedding handling. Enhanced database insertion logic for chunks and documents, ensuring better data integrity and organization.
+  - 734a368 Refactor sparse indexing call in retrieve function: Changed the sparse search method to a synchronous call for improved performance and consistency in the retrieval process.
+  - 4d17f39 Add support for document deletion and integrate sparse indexing: Implemented a new API endpoint for deleting documents, enhancing the backend to remove associated data from both FAISS and sparse indices. Updated frontend components to allow users to delete documents from the knowledge base, improving overall data management and user experience.
+  - 86e700f Refactor LiveTranscription and UI components for improved layout and responsiveness: Enhanced the structure of the LiveTranscription component, adjusting styles for better visual hierarchy and overflow handling. Updated orb visualizer parameters and UI elements for consistent design across components, including adjustments to color schemes and spacing for a more cohesive user experience.
+  - b384141 Refactor orb visualizer parameters and drawing logic: Adjusted glow intensity, pulse behavior, and wave ring rendering for improved visual effects. Enhanced responsiveness of particle orbiting based on state, optimizing performance and aesthetics during voice interactions.
+  - ddbcd1f Enhance voice conversation functionality: Added a new WebSocket URL for voice conversations and integrated voice connection hooks in the VoiceConversation component. Improved UI structure and state management for real-time interactions.
+  - 413aecd Add document listing and general conversation handling: Introduced a new API endpoint `/docs/list` to retrieve uploaded documents. Enhanced the RAG system to identify general conversation and respond appropriately without citations. Updated frontend components to support document listing and improved user experience during uploads.
+  - da4787d Implement streaming chat functionality in backend and frontend: Added `chat_stream` method to `OpenAICompatChat` for token-by-token response streaming. Updated `answer_stream` in `advanced.py` to yield response chunks. Enhanced FastAPI route with `/ask-stream` for streaming responses. Modified frontend to utilize `askChatStream` for real-time message updates during chat interactions.
+  - 3513f43 Fix import path in kb.py to ensure correct module referencing.
+  - c751d79 Update scipy version constraints in requirements files for compatibility with aarch64 architecture. Adjusted to allow pip to select a suitable wheel version, avoiding the need for building from source.
+  - 4dfa4f8 Refactor backend configuration and transcription modules: Simplify settings for database and file paths, enhance session state management for real-time transcription, and improve knowledge base interaction. Update tagging and polishing logic for better metadata extraction and transcript formatting.
+  - f843777 Refactor LiveTranscription component to use full transcript state instead of entries array. Update WebSocket handling for improved transcript management and display. Enhance Dockerfile and requirements for GPU support with FAISS. Update README with GPU usage instructions and environment variable configurations for better flexibility.
+  - e20ccc6 Enhance frontend configuration and components: Added WebSocket path handling, improved API proxy settings, updated transcript entry types, and introduced new Wave icon. Updated Nginx configuration for better proxy handling.
+  - 2c9df0c Update voice TTS Piper adapter
+  - 160f786 Implement initial project structure for EchoMind Enterprise, including backend, frontend, voice integration, and docker-compose setup.
+  - 4b90b36 Initial commit: EchoMind Enterprise (backend, frontend, voice, docker-compose)
+
+Released under ISO 9001:2015 clause 8.6 — release authorised by the person
+running this procedure. Build identity is reported at runtime by
+GET /health, GET /api/version (backend), GET /health (voice) and
+GET /build.json (front end).
+
+=== v1.4.1 → commit f1b8445 (2026-10-06), tagged 2026-10-06
+EchoMind Enterprise 1.4.1
+
+Commit: f1b8445a994e3b3eb9201e93c58d327b30664d9b
+Date:   2026-10-06T22:17:01Z
+Branch: main
+
+Changes since v1.4.0:
+  - f1b8445 docs(changelog): regenerate for v1.4.1
+  - 6ac7021 chore(release): v1.4.1
+  - 3feb5db fix(audit): attribute activity to the caller before the request runs
+  - e0ed4d0 fix: correct the four defects found by the 2026-10-06 acceptance tests
+  - bd44ade docs(qms): 2026 EchoMind ISO 9001 evidence pack; raise NC-2026-011..015
+  - 1d7f154 docs(qms): record 2026-10-06 deployment — login restored, v1.4.0 code live, log rotation applied
+  - 855bd80 docs(qms): correct audit-pack claims against the running system; raise NC-2026-009/010
+  - 736ea61 fix(frontend): type fadeUp as framer-motion Variants
+  - 5ddf8a6 test: update 5 stale tests to match current behaviour
+  - b3f3a35 docs(qms): record the 2026-09-22 evaluation result and raise NC-2026-008
+
+Prepared under ISO 9001:2015 clause 8.6. Release authorisation is recorded by
+a person in the FRM-03 release record (docs/qms/records/releases/). Build identity is reported at runtime by
+GET /health, GET /api/version (backend), GET /health (voice) and
+GET /build.json (front end).
+
