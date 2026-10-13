@@ -1,0 +1,71 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/b6aa963
+
+commit b6aa96356b52162cf1d76e506e97d6e5241e5c50
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Jul 29 20:17:32 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Jul 29 20:17:32 2026 -0400
+
+    feat(rag): tier-2 quality fixes — early sources, fail-closed, follow-up context
+    
+    Measured against the golden eval at every step; 48/52 with doc-precision 0.98
+    maintained (verified pre and post).
+    
+    - Streaming sources: answer_stream now yields a "sources" event as soon as
+      retrieval finishes instead of only with the terminal "done". Measured on a
+      real RAG query: sources at 0.20s, first token 1.13s, answer complete 27.3s —
+      attribution is visible 27s earlier. Plumbed through /chat/ask-stream and
+      /chat/ask-voice-stream, an optional onSources callback in backend.ts, and
+      rendered immediately in KnowledgeChat. "done" still carries the full list, so
+      older clients are unaffected.
+    
+    - Fail closed with no sources: when the CE relevance gate finds nothing, the
+      model previously answered anyway from parametric memory — a Banking Advisor
+      in the bank namespace confidently listed antihypertensive drug classes
+      (reproduced live). It now declines out-of-role questions and never presents
+      general knowledge as document-sourced. Verified: same probe now refuses.
+    
+    - Namespace-agnostic citation examples: "(Volume 5, Chapter 3)" was hardcoded
+      in 6 prompt sites, which caused a health-namespace answer to cite the DoD FMR
+      for pregnancy hypertension. Replaced with neutral placeholders.
+    
+    - Follow-up context: the summary branch of _build_llm_messages dropped history
+      entirely, so pronouns had no referent — "what dose if they cannot take that?"
+      returned a dump of every alternative. Now keeps the last 6 raw turns
+      alongside the summary. Verified: that exact question now resolves "that" to
+      amoxicillin and answers doxycycline 100mg BID x5d, focused.
+    
+    - _is_follow_up_question used substring matching, so "it" fired on "credit" and
+      "and" on "standard" — nearly every question took the follow-up branch. Now
+      word-boundary matched.
+    
+    - Section-restriction coverage guard: inferred (non-explicit) section
+      restriction is a HARD filter, and with a partially-populated section index it
+      confines every query to the minority of sectioned documents. Measured at 25%
+      coverage: whole-KB retrieval collapsed 7/7 -> 0/7. Now requires
+      RAG_SECTION_MIN_DOC_COVERAGE (0.6) before inferring; explicit references still
+      hard-anchor.
+    
+    - trtllm max_num_tokens 8192 -> 16384 (TRTLLM_MAX_NUM_TOKENS). Long RAG prompts
+      were rejected with HTTP 400 ("prompt length (8209) should not exceed
+      max_num_tokens (8192)"), which surfaced as a truncated stream.
+    
+    - Tried and REVERTED: widening the whole-KB candidate pool to 192. Measured
+      worse (47->43, doc-precision 0.98->0.86, all six regressions on whole-KB
+      questions) because this corpus is ~97% transcript chunks and the larger pool
+      admits near-miss noise. Kept narrow, with the finding recorded in-code.
+    
+    - scripts/rebuild_index.py: ground-truth index repair (re-embeds every chunk
+      from the DB rather than reconstructing vectors) plus a --check self-retrieval
+      alignment test.
+    
+    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+ backend/app/api/routes/chat.py        |  10 +++
+ backend/app/rag/advanced.py           | 109 ++++++++++++++++++++++++++++----
+ backend/app/rag/index.py              |   9 ++-
+ docker/trtllm/entrypoint.sh           |   8 ++-
+ frontend/components/KnowledgeChat.tsx |   7 ++
+ frontend/services/backend.ts          |   4 ++
+ scripts/rebuild_index.py              | 116 ++++++++++++++++++++++++++++++++++
+ 7 files changed, 248 insertions(+), 15 deletions(-)

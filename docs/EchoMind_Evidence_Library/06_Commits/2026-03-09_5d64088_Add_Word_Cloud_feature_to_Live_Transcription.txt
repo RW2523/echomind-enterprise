@@ -1,0 +1,21 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/5d64088
+
+commit 5d640886ac686c7b3e022bfce62c6c6a5bf60ee0
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Mon Mar 9 02:41:28 2026 -0400
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Mon Mar 9 02:41:28 2026 -0400
+
+    Add Word Cloud feature to Live Transcription
+    
+    - Introduced a new WordCloud component to visualize word frequency from live transcriptions.
+    - Updated LiveTranscription component to include a button for displaying the WordCloudModal.
+    - Enhanced constants file with a new WordCloud icon for UI representation.
+    - Added utility functions for word counting and filtering to support word cloud generation.
+    - Implemented WordCloudModal to fetch and display word counts from existing transcripts and live text.
+
+ frontend/components/LiveTranscription.tsx |  21 ++-
+ frontend/components/WordCloudModal.tsx    | 269 ++++++++++++++++++++++++++++++
+ frontend/constants.tsx                    |   3 +
+ frontend/utils/wordCloudUtils.ts          |  54 ++++++
+ 4 files changed, 346 insertions(+), 1 deletion(-)

@@ -1,0 +1,39 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/e1a337b
+
+commit e1a337ba65ae773cc8931a12e297f99e8e8b3e17
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed May 27 13:13:03 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed May 27 13:13:03 2026 -0400
+
+    Enhance transcript analysis and boardroom session features
+    
+    - Updated docker-compose.prepare.yml to include the echomind_data volume for VibeVoice-ASR-HF model weights.
+    - Added backend service for downloading VibeVoice model during preparation.
+    - Introduced new database tables for real-time RAG analysis and boardroom session management.
+    - Enhanced transcribe API with new endpoints for transcript analysis and chunk previews.
+    - Updated frontend components to support boardroom session features and display analysis results.
+    - Improved live transcription handling with new state management for analysis cards and segments.
+
+ backend/app/api/routes/boardroom.py       | 166 +++++
+ backend/app/api/routes/transcribe.py      | 115 ++++
+ backend/app/boardroom/__init__.py         |   1 +
+ backend/app/boardroom/service.py          | 994 ++++++++++++++++++++++++++++++
+ backend/app/boardroom/vibevoice_worker.py | 224 +++++++
+ backend/app/core/db.py                    |  50 ++
+ backend/app/main.py                       |   2 +
+ backend/app/transcribe/analyzer.py        | 290 +++++++++
+ backend/app/transcribe/session_state.py   |  22 +
+ backend/app/transcribe/ws.py              |  50 ++
+ backend/requirements.txt                  |   3 +
+ docker-compose.prepare.yml                |  19 +-
+ frontend/components/AnalysisCardModal.tsx | 129 ++++
+ frontend/components/AnalysisPanel.tsx     | 266 ++++++++
+ frontend/components/BoardroomView.tsx     | 369 +++++++++++
+ frontend/components/LiveTranscription.tsx | 294 ++++++++-
+ frontend/hooks/useLiveTranscription.ts    | 273 +++++++-
+ frontend/nginx.conf                       |   4 +
+ frontend/services/backend.ts              |  89 +++
+ frontend/types.ts                         |  65 ++
+ voice/app/server.py                       |  39 ++
+ 21 files changed, 3422 insertions(+), 42 deletions(-)

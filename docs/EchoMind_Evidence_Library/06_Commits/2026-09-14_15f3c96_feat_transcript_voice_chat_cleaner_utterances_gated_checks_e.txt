@@ -1,0 +1,125 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/15f3c96
+
+commit 15f3c96dd49020e700db99f67e116d5b151d274d
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Mon Sep 14 23:27:54 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Mon Sep 14 23:27:54 2026 -0400
+
+    feat(transcript,voice,chat): cleaner utterances, gated checks, enterprise voice tone, focused UI
+    
+    Two rounds of product feedback. Behaviour first, then the screens that show it.
+    
+    ── Live transcript quality ──
+    Streaming STT ended nearly every ~560 ms chunk with a full stop and capitalised
+    the next one, so the transcript read as fragments ("But some." / "Let me check.").
+    session_state now repairs the boundary at append time using wording (dangling
+    words, continuation words, short fragments) AND timing: two results arriving in
+    the same breath cannot be separated by a real sentence end, because VAD drops
+    silence so a genuine pause always arrives later. Guarded so a finished sentence
+    followed by a capitalised sentence-opener still breaks.
+      "…the liquid." + "Aided damages are kept." -> one utterance
+      "I can see the ticket." + "A technician visit…" -> kept separate
+    
+    ── Verification gating ──
+    New classify_utterance() (verifier.py) sorts each sentence into claim / question /
+    filler / personal. Only claims reach retrieval and the LLM, so "can you see the
+    screen?", greetings, "let me check" and self-introductions no longer produce
+    cards. Domain terms are weighted per scenario (profiles.claim_terms) and beat the
+    short-sentence bail, so "there is no deadline." is still checked. Programmatic
+    speech-act tags respect the same gate. 15/15 classification cases verified.
+    
+    ── Tags ──
+    The keyphrase extractor produced junk tags ("everybody knows", "my", "language").
+    Replaced with a curated 16-topic taxonomy (Contract Review, Compliance, KYC,
+    Refund & Cancellation, Litigation, …): max 3 tags, cue-threshold gated, none when
+    unsure. topic_for_title() feeds a readable auto session title
+    ("Legal consultation — Contract Review") pushed over a new `session_title` WS
+    message, replacing "transcript_2026-09-14_21…".
+    
+    ── Voice conversation behaviour ──
+    - Silence and filler no longer trigger a reply: MIN_VOICED_MS gate on the audio
+      plus is_meaningful_utterance() on the transcript; both return to listening.
+    - Filler backchannels ("Interesting.", "I see.") off by default.
+    - clean_assistant_text() strips emoji, AI self-description ("I'm just a virtual
+      assistant"), filler openers and repeated closing offers from every reply —
+      applied centrally in send() and before TTS, never returning empty.
+    - Enterprise system prompt + per-persona tone (legal / banking / customer care).
+    - Identical utterances inside DUP_UTTERANCE_WINDOW_S are ignored: one input,
+      one response. Greetings answer in one line with no lead filler.
+    
+    ── Knowledge Chat: no inline locators in the answer body ──
+    Answers repeated "(Section 3.1, page 5)" after nearly every bullet. strip_inline_refs()
+    removes those from the DISPLAYED text only; retrieval, the citations payload and the
+    Sources panel are untouched. It runs LAST (via a wrapper around the existing
+    post-processing) because improve_citation_accuracy() only fires when no inline
+    citation is present — stripping first would have appended a "*See also Section X*"
+    footer to every answer. A parenthetical is cut only when it contains a page/section
+    label and its whole content is locator tokens, so "(BAH)", "(2024)", "(e.g., …)",
+    "(02a_03.pdf)" and "37 U.S.C. § 403" survive. 19/19 citation forms removed, 14/14
+    legitimate parentheticals preserved. Mirrored in KnowledgeChat.tsx on the accumulated
+    stream text so nothing flashes mid-generation.
+    
+    ── Live transcript screen ──
+    Scenario pill is the mode anchor; speaker control is a clean Lawyer|Client|Auto
+    segmented switch; "Problems only/Problems + records" renamed "Flagged only/All
+    insights"; the Name/Location/Date/Tags row moved into a Session details dialog
+    (location renders "Remote call"); transcript is speaker blocks ("Lawyer · 10:14:32",
+    consecutive turns merged) at ~65% with insights ~35%; check filters reduced to
+    All|Supported|Flagged with the rest behind a filter popover; 5 newest checks then
+    "View all N"; Unverified is neutral slate, strong colour reserved for contradicted /
+    violating / risk; only the sentence under check is highlighted; tabs show counts only
+    when non-zero; secondary actions moved into a ••• menu.
+    
+    ── Voice conversation screen ──
+    Orb reduced to a compact status visual (104px desktop / 76px phone, <=20vh) and moved
+    to the TOP CENTRE with the status pill directly beneath it; transcript is the hero in
+    the middle (57%/47%/59% vh at 1500/900/390px) with distinct You/EchoMind turns and
+    generous spacing; Start/primary controls centred at the bottom; secondary controls in
+    a ••• menu. Title, sidebar, theme, typography and all voice/session logic unchanged.
+    
+    Verified on the running stack: silence/filler produce no reply; greeting returns
+    "Hello. How can I help you today?"; chat answers clean across three personas with
+    Sources still populated (6 each); live legal dialogue yields sentence-grouped
+    utterances with questions/filler skipped; both screens measured in a real browser at
+    three viewports with zero console errors; voice turn still completes (1.1s to first
+    audio).
+    
+    Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
+ backend/app/core/config.py                         |   4 +
+ backend/app/rag/advanced.py                        |  58 ++
+ backend/app/silent_assistant/profiles.py           |  12 +
+ backend/app/silent_assistant/service.py            |  34 +-
+ backend/app/silent_assistant/verifier.py           | 112 ++-
+ backend/app/tagging.py                             |  76 +-
+ backend/app/transcribe/PROTOCOL.md                 |   4 +
+ backend/app/transcribe/session_state.py            |  88 ++
+ backend/app/transcribe/ws.py                       |  43 +-
+ docker-compose.yml                                 |   9 +-
+ frontend/components/AnalysisCardModal.tsx          |  63 +-
+ frontend/components/AnalysisPanel.tsx              | 441 ++++-----
+ frontend/components/AssistantSidebar.tsx           |  49 +-
+ frontend/components/Conversation/ControlBar.tsx    | 141 +--
+ .../components/Conversation/ConversationStage.tsx  | 178 ++--
+ frontend/components/Conversation/OverflowMenu.tsx  | 162 ++++
+ frontend/components/Conversation/TopBar.tsx        |  19 +-
+ .../components/Conversation/TranscriptPanel.tsx    | 175 ++++
+ frontend/components/Conversation/VoiceOrb.tsx      | 138 ++-
+ .../components/Conversation/VoiceStatusBar.tsx     | 126 +++
+ frontend/components/KnowledgeChat.tsx              |  28 +-
+ frontend/components/LiveTranscription.tsx          | 991 +++++++++++----------
+ frontend/components/RoleToggle.tsx                 |  64 +-
+ frontend/components/ScenarioPicker.tsx             |  60 +-
+ frontend/components/SubjectCard.tsx                |  77 +-
+ frontend/components/TranscriptHistoryPanel.tsx     |  66 +-
+ frontend/components/TranscriptSentences.tsx        | 343 +++----
+ frontend/components/VoiceConversation.tsx          |  29 +-
+ frontend/hooks/useHandraise.ts                     |  99 ++
+ frontend/hooks/useLiveTranscription.ts             | 126 ++-
+ frontend/index.css                                 |   8 +
+ frontend/types.ts                                  |   8 +
+ frontend/utils/silentAssistant.ts                  |  94 +-
+ voice/app/config.py                                |  16 +-
+ voice/app/session.py                               | 188 +++-
+ 35 files changed, 2761 insertions(+), 1368 deletions(-)

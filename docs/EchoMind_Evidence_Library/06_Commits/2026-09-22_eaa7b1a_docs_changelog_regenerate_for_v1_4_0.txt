@@ -1,0 +1,12 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/eaa7b1a
+
+commit eaa7b1a049574f497595a887f99e4089cdd6a57b
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Sep 22 13:53:08 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Sep 22 13:53:08 2026 -0400
+
+    docs(changelog): regenerate for v1.4.0
+
+ CHANGELOG.md | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)

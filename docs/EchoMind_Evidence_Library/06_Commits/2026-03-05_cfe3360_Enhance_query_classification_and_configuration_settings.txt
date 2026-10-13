@@ -1,0 +1,24 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/cfe3360
+
+commit cfe33605b92b77d424825e9a4268c29e4578dc34
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Thu Mar 5 00:01:53 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Thu Mar 5 00:01:53 2026 -0500
+
+    Enhance query classification and configuration settings
+    
+    - Updated the query classifier to support multi-type queries, allowing for blended weights between citation and procedural types.
+    - Expanded procedural verb patterns to improve regulatory query handling.
+    - Introduced a new method to classify all applicable query types for better retrieval accuracy.
+    - Added configuration settings for large section handling and dynamic weight adjustments in the settings module.
+    - Enhanced reranker functionality with configurable character limits for cross-encoder input, improving performance on regulatory documents.
+    - Implemented a new method to retrieve section paths containing specific codes, aiding in comparison queries.
+
+ backend/app/core/config.py           |  29 +-
+ backend/app/rag/advanced.py          | 507 ++++++++++++++++++++++++++++++++---
+ backend/app/rag/chunking/chunkers.py |  51 ++++
+ backend/app/rag/query_classifier.py  | 196 ++++++++++----
+ backend/app/rag/reranker.py          |  31 ++-
+ backend/app/rag/section_index.py     |  20 ++
+ 6 files changed, 741 insertions(+), 93 deletions(-)

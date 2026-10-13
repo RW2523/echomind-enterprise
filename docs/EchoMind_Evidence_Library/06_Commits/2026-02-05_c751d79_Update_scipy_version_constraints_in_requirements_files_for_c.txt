@@ -1,0 +1,13 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/c751d79
+
+commit c751d7900c978522c23325fe4e5bdff10f70b87c
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Thu Feb 5 20:40:47 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Thu Feb 5 20:40:47 2026 -0500
+
+    Update scipy version constraints in requirements files for compatibility with aarch64 architecture. Adjusted to allow pip to select a suitable wheel version, avoiding the need for building from source.
+
+ backend/requirements-gpu.txt | 2 +-
+ backend/requirements.txt     | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)

@@ -1,0 +1,4 @@
+{
+  "status": "not_run",
+  "reason": "Corpus-scale sweep not run. Only 421 of 17,514 chunks are content (the rest are auto-saved voice transcripts), far below the spec's 1,000-doc / 50k-chunk floor, so a 10/25/50/100% sweep would measure transcript noise rather than retrieval scaling."
+}

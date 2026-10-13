@@ -1,0 +1,115 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/ff29843
+
+commit ff2984391e0b845292b695d00321bfae5046791b
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Mon Sep 21 22:37:27 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Mon Sep 21 22:37:27 2026 -0400
+
+    feat(voice): speculative replies, LLM tool routing, dynamic hold phrases, GPU final STT
+    
+    Built after comparing our cascade against nvidia/NVIDIA-NemotronLabs-VoiceChat-11B
+    (full-duplex, ~450 ms; not adopted: 2-minute context, no retrieval, gibberish
+    degradation, 80 GB/vLLM, no sm_121 path). We kept the grounded cascade and took its
+    latency. Measured on two 6-turn spoken sessions (Financial Advisor + Lawyer):
+    speech end -> first audio 0.14-0.49 s on every turn (was 1.1-2.7 s), 12/12 routed
+    correctly, barge-in clean, 0 CUDA errors.
+    
+    ── Speculative reply (voice/app/session.py, adapters/stt_nemotron.py) ──
+    At the endpoint NemotronStreamingSTT.flush() releases the last words + look-ahead
+    (zero-pad, keep_all_outputs=True); a 600 ms pre-roll primes the recogniser at speech
+    onset (cold starts dropped "What does…"). _maybe_start_speculation() starts the LLM
+    stream on that partial while Parakeet decodes; nothing is spoken until the final text
+    arrives. _spec_matches() adopts only if every content word of the final was already in
+    the partial (number words -> digits, plural stem) and the word-level ratio >= 0.85;
+    otherwise StreamHandle.abort() shuts the socket down so TRT-LLM really stops.
+    
+    ── Final STT on the GPU (adapters/stt_nemotron.py, docker-compose.yml) ──
+    Root cause of the historic "illegal memory access" found: Parakeet's CUDA-graph
+    label-looping decoder replaying on the STT executor thread while the Nemotron streaming
+    decoder replayed its own graphs on the default executor - same process, not GPU vs
+    TRT-LLM. Reproduced 3/3 with graphs on, 0/300 with graphs off (alongside Nemotron
+    streaming + TRT-LLM generating). Parakeet now loads on cuda with
+    use_cuda_graph_decoder=False (verified, else CPU fallback), fuse_triton=False (closes
+    NeMo's shared Triton autotuner race), a sequential warm-up before any session, numpy
+    input (no temp wav), and any GPU fault in its own path falls back to CPU instead of
+    tripping the process-exit watchdog. Final decode ~70-130 ms, was ~1.0-1.6 s.
+    
+    ── Tool routing (voice/app/tools.py, adapters/llm_openai_stream.py, session.py) ──
+    One LLM stream per turn offering search_knowledge_base / search_transcripts /
+    lookup_record. trtllm-serve has no tool parser, so "<tool_call>{json}</tool_call>"
+    (also "<call>") arrives as text: the adapter gates on the first token (ToolStart at
+    ~30 ms) and yields one ToolCall; nothing between the tags reaches TTS. A direct answer
+    IS the stream; a tool call becomes the grounded backend answer on the same TTS queue
+    with matching source_options, history only on follow-ups, and the tool query for the
+    hold phrase. Replaces the _RAG_INDICATOR_PHRASES substring list (kept as fallback when
+    TOOL_ROUTING_ENABLED=0).
+    Defences, each needed in testing: small talk never gets tools (Lawyer persona
+    hallucinated a dialogue + lookup_record("my account") for "Hello"); organisational
+    questions are grounded even when the model starts answering from memory ("Employees
+    are entitled to 14 days of annual leave" was invented for a KB with no leave policy);
+    a 300 ms first-phrase hold on tool turns plus narration / claim-of-absence nets turn
+    "let me check…" and "…is not specified in the documents" into the lookup they meant;
+    ToolStart without a parsable call still runs the lookup; "couldn't find" replies stay
+    out of the model-facing history (two in a row taught it to stop calling tools).
+    
+    ── Hold phrases (voice/app/hold_phrases.py) ──
+    "One moment while I check." retired. Tone-keyed pools (legal/bank/health/meetings/
+    retail/customer_care/neutral) per tool, topic from the model's own query ("Checking the
+    agreement on the notice period."), no template repeats within three turns, spoken the
+    moment a lookup is known - during Parakeet when speculation sees it (caption deferred
+    until asr_final so the transcript order stays right) - else at ToolStart; the delayed
+    hold and a one-word ack for slow direct answers remain as fallbacks. Filler goes through
+    the phrase pipeline, so it never races the answer audio.
+    
+    ── Backend (api/routes/chat.py, rag/advanced.py) ──
+    AskVoiceIn accepts source_options / history / tool / tool_query. answer_stream() gets
+    must_mention: a missing identifier is a hard not-found without generating (0.0-0.2 s);
+    words only caution the answer model (a lexical veto refused "uptime guarantee" against
+    "99.9% availability" - 15/20 legitimate questions in review). VOICE MODE is prepended
+    with fidelity over brevity: only facts from the material, never a loosely related
+    clause, one-sentence not-found plus one clause offering the nearest thing the material
+    does cover; no read-out section/page numbers; the general (no-material) prompt carries
+    the style rules only. Neutral not-found wording in voice / vertical packs, no canned
+    "Information not found directly in the queried section" tail. strip_inline_refs also
+    drops "(Section 12.2 of the MSA)" while keeping "(Section 8 of the Act requires
+    notice)"; mirrored in KnowledgeChat.tsx.
+    
+    ── Production bugs fixed on the way ──
+    - preprocess_english_only deleted every digit: "customer ID 48213" reached the model
+      as "customer ID ?".
+    - A mis-heard "accommod" had been persisted as the assistant name and injected into
+      every prompt; name changes now require a short whole-word confirmation, and the
+      stored wake word is reset to EchoMind.
+    - History stored a one-word "Hello." that made the model echo greetings to every
+      question; it now stores the spoken text and never a degenerate turn.
+    - _persona_system_prompt never matched the persona labels, so the tone was dead.
+    - Abandoned LLM/backend streams kept the engine generating on barge-in, spec mismatch
+      and WebSocket close; all are aborted now, off the event-loop thread.
+    - Spoken citations "(Section 2.3, page 5)" and template leaks "(<document> — <heading>)"
+      are stripped from speech; voice answers capped at ~4 sentences (VOICE_RAG_MAX_TOKENS
+      200); LLM_TEMPERATURE 0.5 (0.7 narrated instead of calling the tool).
+    - Streaming STT push/flush/reset serialised; empty or failed streams speak an honest
+      fallback instead of silence, and a failure mid-answer never replays what was heard.
+    
+    Deploy: voice = docker cp + docker commit + restart (compose recreate uses the image).
+    Turn timings in the app.session.turn logger ([SPEC]/[HOLD]/[ROUTE]/[GROUNDED]/[TURN]).
+    Tests: voice/tests/test_hold_phrases.py (111); live harnesses in the session scratchpad.
+    
+    Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
+ backend/app/api/routes/chat.py          |  75 ++-
+ backend/app/rag/advanced.py             | 155 ++++-
+ docker-compose.yml                      |  10 +-
+ frontend/components/KnowledgeChat.tsx   |   2 +-
+ voice/app/adapters/llm_openai_stream.py | 344 +++++++++--
+ voice/app/adapters/stt_nemotron.py      | 148 ++++-
+ voice/app/config.py                     |  36 +-
+ voice/app/echo_commands.py              |  24 +-
+ voice/app/hold_phrases.py               | 720 +++++++++++++++++++++++
+ voice/app/server.py                     |   1 +
+ voice/app/session.py                    | 997 ++++++++++++++++++++++++++------
+ voice/app/tools.py                      | 127 ++++
+ voice/tests/test_hold_phrases.py        | 318 ++++++++++
+ voice/voices/wake_word.json             |   4 +-
+ 14 files changed, 2682 insertions(+), 279 deletions(-)

@@ -1,0 +1,79 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/51fd3bc
+
+commit 51fd3bcbc7656c5bf38c91e499688054c89f7a29
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Sep 22 13:53:02 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Sep 22 13:53:02 2026 -0400
+
+    feat(build): release identification, off-host backup scheduling, pinned NeMo
+    
+    Three controls the October ISO 9001 surveillance audit will ask for, and which did
+    not exist: traceability from a running instance back to its source, a scheduled
+    off-host backup, and a reproducible build.
+    
+    ── Release identification and traceability (8.5.2, 8.6) ──
+    A deployed instance could not be traced to a source revision: no git tags, no
+    version (frontend/package.json was "0.0.0"), no changelog, no build identifier
+    anywhere. If a customer reported a defect there was no way to establish what they
+    were running.
+    
+    - BUILD_VERSION / BUILD_COMMIT / BUILD_DATE are accepted as build args by the
+      backend, voice and frontend images and promoted to env, placed as the last
+      layers so a version bump does not invalidate the model and dependency layers.
+      They are also passed as plain environment entries, so a container started from
+      an image built before this change can still report what it is.
+    - Backend GET /health gains a build object and a dedicated GET /api/version is
+      added (both public; the 503 CUDA-fault path is untouched). Voice /health gains
+      the same object. The frontend writes /build.json into the nginx root.
+    - scripts/release.sh cuts a release: refuses a dirty tree, refuses a non-semver
+      argument, refuses an existing tag, bumps the package version, regenerates the
+      changelog and creates an annotated tag carrying the commit, the UTC date and
+      the change list. It prints the build and verify commands rather than running
+      them — the release is authorised by a person, not a script.
+    - scripts/gen_changelog.sh generates CHANGELOG.md from git history grouped by
+      conventional-commit prefix. 201 entries from 204 commits; unrecognised prefixes
+      keep their subject verbatim under "Other changes". No dates invented.
+    
+    Verified: /health and /api/version return the build object on both services;
+    defaults fall back to 0.0.0-dev/unknown; /api/version stays reachable with
+    AUTH_ENABLED=1 while /api/docs correctly returns 401; frontend build.json parses.
+    The ARG->ENV promotion itself is unproven until the next image build, since the
+    running containers were deliberately not rebuilt.
+    
+    ── Backup scheduling and off-host copy (8.5.4) ──
+    The backup written yesterday was manual and landed beside the data it protects,
+    which survives nothing.
+    
+    - BACKUP_REMOTE replicates the archive by rsync, scp or to a mounted share.
+    - A failed replication aborts the run with a non-zero exit rather than leaving a
+      single on-host copy that looks like a backup. Verified: unreachable destination
+      exits 1 and leaves no archive behind.
+    - scripts/install_backup_timer.sh installs a nightly systemd timer with
+      Persistent=true, so a missed run fires at next boot.
+    
+    ── Reproducible build (8.4.2) ──
+    nemo_toolkit was installed from the moving branch @main. That is not a release:
+    every rebuild could pull different code, and on 2026-09-04 it pulled
+    setuptools>=82, removing pkg_resources, which broke librosa at build and webrtcvad
+    at runtime (commit 724fb98).
+    
+    Pinned in both Dockerfiles to 60ce9407ef60a3327ffaf2c15931b9b3b834afc2 — read from
+    the running containers, so it is the build actually proven in production
+    (NeMo 3.1.0+60ce9407e), not a version chosen on paper. The setuptools re-pin is
+    retained as defence in depth. Risk R-01 residual 20 (Critical) -> 4 (Low).
+    
+    Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
+ CHANGELOG.md                    | 236 ++++++++++++++++++++++++++++++++++++++++
+ backend/Dockerfile              |  19 +++-
+ backend/app/main.py             |  25 ++++-
+ docker-compose.yml              |  28 +++++
+ frontend/Dockerfile             |  12 ++
+ scripts/backup_data.sh          |  26 +++++
+ scripts/gen_changelog.sh        | 143 ++++++++++++++++++++++++
+ scripts/install_backup_timer.sh |  73 +++++++++++++
+ scripts/release.sh              | 161 +++++++++++++++++++++++++++
+ voice/Dockerfile                |  17 ++-
+ voice/app/server.py             |  15 ++-
+ 11 files changed, 750 insertions(+), 5 deletions(-)

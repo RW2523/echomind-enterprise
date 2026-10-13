@@ -1,0 +1,41 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/e0ed4d0
+
+commit e0ed4d056a0d4e72bbac010b892023b36d67ac3c
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Oct 6 18:12:29 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Oct 6 18:12:29 2026 -0400
+
+    fix: correct the four defects found by the 2026-10-06 acceptance tests
+    
+    - NC-2026-012 auth: logout now revokes the token server-side (sha256 in
+      revoked_tokens until expiry; decode_token rejects it). The voice
+      WebSocket confirms the session with the backend (/api/auth/me) and
+      fails closed, so a logged-out token cannot open a voice session.
+    - NC-2026-013 upload: only .pdf/.docx/.pptx/.txt/.md, checked by content
+      signature; binary data in text files rejected. HTTP 415 with a reason.
+    - NC-2026-014 chat: "greeting + small talk" ("Hello! How are you today?")
+      is recognised by rule; the semantic intent classifier is warmed at
+      start-up so its first call is not lost to a cold timeout; the Financial
+      Advisor prompt no longer asks the model to guess an FMR chapter.
+    - NC-2026-015 export gateway: sk-/sk_ keys with segments, pk/rk_live/test
+      keys and api_key=… assignments detected; overlapping matches merged
+      before redaction so the redacted copy cannot be corrupted.
+    
+    Tests: backend 50/50 (+10), voice 131/131 (+4), tsc clean.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ backend/app/api/routes/auth.py        |  4 +-
+ backend/app/api/routes/docs.py        |  5 +-
+ backend/app/core/auth.py              | 50 ++++++++++++++++---
+ backend/app/core/db.py                |  2 +
+ backend/app/core/export_gateway.py    | 15 ++++--
+ backend/app/main.py                   |  8 +++
+ backend/app/rag/advanced.py           | 15 ++++--
+ backend/app/rag/parse.py              | 25 ++++++++++
+ backend/tests/test_nc_2026_012_015.py | 92 +++++++++++++++++++++++++++++++++++
+ voice/app/auth_check.py               | 16 ++++++
+ voice/app/server.py                   |  4 +-
+ voice/tests/test_auth_session.py      | 67 +++++++++++++++++++++++++
+ 12 files changed, 287 insertions(+), 16 deletions(-)

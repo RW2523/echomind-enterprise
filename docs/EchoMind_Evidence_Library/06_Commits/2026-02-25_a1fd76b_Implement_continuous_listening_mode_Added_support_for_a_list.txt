@@ -1,0 +1,18 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/a1fd76b
+
+commit a1fd76be7104d2490a4750dabc50c6163a97ce86
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Feb 25 13:25:29 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Feb 25 13:25:29 2026 -0500
+
+    Implement continuous listening mode: Added support for a "listen-only" feature that allows the assistant to respond only after the wake word "EchoMind." Updated relevant components to manage listen buffer text and toggle functionality. Enhanced logging in the server for listen-mode events and adjusted Dockerfile for improved package installation reliability.
+
+ docker/ollama/Dockerfile                           |  5 ++-
+ frontend/components/Conversation/ChatState.ts      |  3 ++
+ frontend/components/Conversation/ControlBar.tsx    | 25 +++++++++++
+ .../components/Conversation/ConversationStage.tsx  | 43 +++++++++++++------
+ frontend/components/VoiceConversation.tsx          |  6 +++
+ frontend/hooks/useVoiceConnection.ts               | 49 ++++++++++++++++++++--
+ voice/app/server.py                                |  4 ++
+ 7 files changed, 117 insertions(+), 18 deletions(-)

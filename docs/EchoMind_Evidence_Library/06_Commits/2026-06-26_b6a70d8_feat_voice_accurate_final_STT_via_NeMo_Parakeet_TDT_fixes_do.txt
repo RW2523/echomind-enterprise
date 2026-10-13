@@ -1,0 +1,24 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/b6a70d8
+
+commit b6a70d82f0574f83fcdc854e8249c5264bde873c
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Jun 26 15:31:41 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Jun 26 15:31:41 2026 -0400
+
+    feat(voice): accurate final STT via NeMo Parakeet-TDT (fixes domain-term mishearing)
+    
+    The streaming Nemotron-0.6B mangled domain terms ('DoD FMR'->'DODFMA', 'B visa'
+    ->'Pizza'), so the LLM answered the wrong (mis-heard) question. Route the FINAL
+    transcript (what feeds the LLM) through nvidia/parakeet-tdt-0.6b-v2 via NeMo when
+    VOICE_USE_PARAKEET=1; live partials stay on the streaming model; auto-fallback to
+    streaming on any error. Pre-warm at startup so the first utterance isn't slow.
+    Loads offline from baked cache (air-gap safe). Model baked into the image via commit
+    (from-scratch build now also fixed via the huggingface-hub pin).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ docker-compose.yml                 |  4 ++
+ voice/app/adapters/stt_nemotron.py | 81 ++++++++++++++++++++++++++++++++++++++
+ voice/app/server.py                |  6 +++
+ 3 files changed, 91 insertions(+)

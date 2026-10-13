@@ -1,0 +1,21 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/595b24b
+
+commit 595b24b08027f666c99ef180619cad4d6411485e
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Feb 27 20:12:31 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Feb 27 20:12:31 2026 -0500
+
+    Enhance WebSocket handling and configuration settings
+    
+    - Added a new configuration setting for WebSocket receive timeout to manage stale connections.
+    - Implemented timeout handling in the WebSocket consumer to close connections after a period of inactivity, with logging for better error tracking.
+    - Updated frontend input styles to prevent zoom on mobile devices and improved text input sizes for better usability.
+    - Introduced heartbeat mechanism in the live transcription hook to maintain WebSocket connections when the tab is backgrounded.
+
+ backend/app/core/config.py             |  2 ++
+ backend/app/transcribe/ws.py           | 23 ++++++++++++--
+ frontend/components/KnowledgeChat.tsx  |  4 +--
+ frontend/hooks/useLiveTranscription.ts | 57 +++++++++++++++++++++++++++++++---
+ frontend/index.html                    |  6 ++++
+ 5 files changed, 82 insertions(+), 10 deletions(-)

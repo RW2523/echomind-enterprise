@@ -1,0 +1,26 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/d12db42
+
+commit d12db428cbd4a4322389e8d4433ac2c56f1fe211
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 12:49:26 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 12:49:26 2026 -0400
+
+    feat(auth): frontend login gate, opt-in (Phase 0b, step 2)
+    
+    - Login.tsx: themed sign-in screen (pack-aware branding/accent).
+    - services/backend.ts: getAuthConfig / getMe / login / logout (cookie-based; same-origin requests
+      carry the httpOnly session automatically, so no per-call changes).
+    - App.tsx: on load, GET /api/auth/config; if auth_enabled, GET /api/auth/me and gate the app behind
+      Login until authenticated. auth_enabled=false => no gate (demo unchanged).
+    - Header.tsx: shows username + Sign out when authenticated.
+    
+    Verified: with AUTH_ENABLED=0 the gate never renders (config=false), index serves 200, all healthy.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ frontend/App.tsx               | 25 +++++++++++++--
+ frontend/components/Header.tsx | 18 ++++++++++-
+ frontend/components/Login.tsx  | 73 ++++++++++++++++++++++++++++++++++++++++++
+ frontend/services/backend.ts   | 39 ++++++++++++++++++++++
+ 4 files changed, 152 insertions(+), 3 deletions(-)

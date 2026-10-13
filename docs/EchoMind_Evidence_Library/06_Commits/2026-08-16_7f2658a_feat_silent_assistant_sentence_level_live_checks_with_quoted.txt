@@ -1,0 +1,120 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/7f2658a
+
+commit 7f2658a937d5aa94d6333af1ecfb176410879464
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sun Aug 16 12:32:42 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sun Aug 16 12:32:42 2026 -0400
+
+    feat(silent-assistant): sentence-level live checks with quoted proof, record pull, scenarios
+    
+    Rebuilds the Silent Assistant (live transcript + boardroom) so every spoken
+    sentence is tagged, verified against the sources with an exact quote as
+    proof, and personal details pull the person's records — with behaviour
+    selected per scenario (customer_care / legal / banking / general, or auto).
+    
+    Design came from a 4-auditor + 3-design + judge workflow; the build reuses
+    the chat RAG stack (hybrid retrieve + CE rerank) rather than the old dense-
+    only paragraph analyzer.
+    
+    Backend — new package backend/app/silent_assistant/
+    - profiles.py: scenario profiles as data (roles, entity kinds, record
+      targets, tag vocab with proof rules, domain rules, prompt rules, cues),
+      suggest_scenario() detector.
+    - entities.py: spoken-number normalizer ("A T four four eight two one" ->
+      "A T 44821", "one hundred fifty dollars" -> "150 dollars", "seventeen of
+      twenty twenty four" -> "17 of 2024") + regex extraction of person / account /
+      policy / order / ticket / case / phone / email / dob / amount / date /
+      clause / statute / org, with lookup variants.
+    - state.py: per-session window, entities, subjects (candidate/confirmed,
+      supersede weak name-only candidates), records, reference resolution.
+    - retrieval.py: retrieve_for_claim (hybrid + CE, namespace fallback,
+      evidence sentences ranked globally by overlap + CE rank), lookup_records
+      (exact SQLite substring -> BM25 -> semantic -> CE; quotes must literally
+      contain the identifier), legal related-case hop, reused-record linking.
+    - verifier.py: ONE batched LLM call per 1-4 sentences that may only cite
+      E#/R# evidence ids we supplied (quotes exact by construction); tag proof
+      rules; claim/evidence grounding guard with re-cite; verdict/tag floors;
+      programmatic commitment/question/action-item/record-found tags; TTS
+      phrase templates.
+    - service.py: T0 filler / T1 entities+records / T2 retrieval gate /
+      T3 verify tiers, persistence, check_turns() for boardroom.
+    
+    Live pipeline (transcribe/)
+    - session_state.py: sentence tracking with char offsets; STT chunk-boundary
+      fragments coalesced (dangling-end / continuation-start rules, lookahead
+      hold, mid-period cleanup); force_commit / close_paragraph_now.
+    - ws.py: sentence enqueue + 1.2 s debounced batch (<=4, global LLM sem),
+      idle loop with silent-chunk STT flush (VAD drops silence, so lookahead
+      tokens only surfaced on the next speech), speaker turns as ordered PCM
+      markers that flush+reset the stream, `session`/`warning` acks, new
+      inbound speaker/scenario/subject, rich `segment` (role, sentences[]),
+      superset `analysis` payload (legacy label kept), entity/subject/record/
+      scenario_suggest events, namespaced transcript auto-store.
+    - analyzer.py: analyze_segment() kept as a compat wrapper over the engine.
+    - PROTOCOL.md documents the WS/REST contract.
+    
+    RAG (additive): advanced.retrieve_reranked()/ce_context_relevant() (rerank
+    the WHOLE fused pool — BM25 #1 sat at fused pos 17), EvidenceSentence
+    provenance (chunk_id/doc_id/doc_title), index.search_chunks_exact(),
+    namespaced add_text/kb_add_text.
+    
+    Routes/DB: GET /transcribe/scenarios, GET /transcripts/{id}/assistant,
+    PATCH /boardroom/sessions/{id}/speakers; boardroom analyse_meeting runs
+    check_turns and the PDF gains "Statement checks with evidence" +
+    "Records pulled"; additive schema (transcript_analysis widened,
+    transcript_segments, assistant_entities/subjects/records).
+    
+    Frontend: ScenarioPicker (start modal tiles + session pill), RoleToggle
+    (Alt+1/Alt+2), SubjectCard (Confirm / Not them), RecordPanel (grouped
+    records with quotes, Open p.N, Copy), ActionsPanel, TagChip, ProofPopover,
+    AssistantSidebar (Records | Checks | Actions with badges; mobile sheet),
+    TranscriptSentences (per-sentence role chip, status glyph, inline tags,
+    hover proof); AnalysisPanel/Modal evidence-first; history detail loads the
+    assistant data and highlights checked sentences; hook handles the v2
+    protocol and persists the scenario choice.
+    
+    Verified live (synthesized speech -> WS -> Nemotron -> checks, seed KB):
+    28-29/36 scripted expectations across the four scenarios; the misses are
+    STT mishearings. Median check latency ~1.2 s after the words end.
+    
+    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+ backend/app/api/routes/boardroom.py            |  19 +
+ backend/app/api/routes/transcribe.py           |  62 ++++
+ backend/app/boardroom/service.py               | 105 +++++-
+ backend/app/core/config.py                     |  12 +
+ backend/app/core/db.py                         |  59 +++
+ backend/app/kb.py                              |   4 +-
+ backend/app/rag/advanced.py                    |  76 +++-
+ backend/app/rag/evidence_extractor.py          |   7 +
+ backend/app/rag/index.py                       |  61 +++-
+ backend/app/silent_assistant/__init__.py       |   2 +
+ backend/app/silent_assistant/entities.py       | 452 +++++++++++++++++++++++
+ backend/app/silent_assistant/profiles.py       | 249 +++++++++++++
+ backend/app/silent_assistant/retrieval.py      | 341 +++++++++++++++++
+ backend/app/silent_assistant/service.py        | 336 +++++++++++++++++
+ backend/app/silent_assistant/state.py          | 243 +++++++++++++
+ backend/app/silent_assistant/verifier.py       | 468 ++++++++++++++++++++++++
+ backend/app/transcribe/PROTOCOL.md             |  39 ++
+ backend/app/transcribe/analyzer.py             | 230 ++----------
+ backend/app/transcribe/session_state.py        | 237 ++++++++++++
+ backend/app/transcribe/ws.py                   | 432 ++++++++++++++++++++--
+ frontend/components/ActionsPanel.tsx           |  93 +++++
+ frontend/components/AnalysisCardModal.tsx      | 269 +++++++++++---
+ frontend/components/AnalysisPanel.tsx          | 236 ++++++++----
+ frontend/components/AssistantSidebar.tsx       | 155 ++++++++
+ frontend/components/LiveTranscription.tsx      | 352 ++++++++++++++----
+ frontend/components/ProofPopover.tsx           | 156 ++++++++
+ frontend/components/RecordPanel.tsx            | 170 +++++++++
+ frontend/components/RoleToggle.tsx             |  63 ++++
+ frontend/components/ScenarioPicker.tsx         | 120 ++++++
+ frontend/components/SubjectCard.tsx            |  92 +++++
+ frontend/components/TagChip.tsx                |  48 +++
+ frontend/components/TranscriptHistoryPanel.tsx | 253 +++++++++----
+ frontend/components/TranscriptSentences.tsx    | 181 ++++++++++
+ frontend/hooks/useLiveTranscription.ts         | 482 ++++++++++++++++++++++---
+ frontend/services/backend.ts                   |  38 +-
+ frontend/types.ts                              | 175 +++++++++
+ frontend/utils/silentAssistant.ts              | 297 +++++++++++++++
+ 37 files changed, 6095 insertions(+), 519 deletions(-)

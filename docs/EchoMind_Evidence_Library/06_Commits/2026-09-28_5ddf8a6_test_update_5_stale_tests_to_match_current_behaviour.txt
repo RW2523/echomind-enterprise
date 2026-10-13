@@ -1,0 +1,31 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/5ddf8a6
+
+commit 5ddf8a6c0cb1e3f99fa35f111cbb3a55e7cf70a3
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Mon Sep 28 11:24:11 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Mon Sep 28 11:24:11 2026 -0400
+
+    test: update 5 stale tests to match current behaviour
+    
+    - H4 section/glossary index: fake embedder accepts the kind= argument the
+      real embedder gained in the RAG ingestion overhaul (7e582e1).
+    - L20 tagging: the keyphrase extractor was replaced by the curated topic
+      taxonomy (15f3c96); test now checks tags come only from that taxonomy
+      and tiny transcripts are not tagged.
+    - Lawyer disclaimer: match the reworded disclaimer from the persona
+      overhaul (343117f); drop the "Consult a licensed attorney" check, which
+      only the RAG variant still carries.
+    - Voice rename: "Your name is X" now proposes a name that needs a "yes"
+      before it is saved; test checks the proposal and that a garbled phrase
+      is rejected.
+    
+    Backend 40/40, voice 127/127.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ backend/tests/test_critical_high_fixes.py |  2 +-
+ backend/tests/test_medium_low_fixes.py    | 19 ++++++++++---------
+ backend/tests/test_prompt_guards.py       |  4 +---
+ voice/tests/test_echo_memory.py           |  9 +++++++--
+ 4 files changed, 19 insertions(+), 15 deletions(-)

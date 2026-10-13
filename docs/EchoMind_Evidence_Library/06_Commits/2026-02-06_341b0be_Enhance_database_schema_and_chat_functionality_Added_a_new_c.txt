@@ -1,0 +1,15 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/341b0be
+
+commit 341b0bee65c93fc6cce38c9cbeab0052d5a70eab
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Feb 6 17:56:42 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Feb 6 17:56:42 2026 -0500
+
+    Enhance database schema and chat functionality: Added a new column for conversation summaries in the chats table and implemented functions to manage conversation summaries during chat interactions. Updated API routes to support summary retrieval and updating, improving the overall chat experience and context management.
+
+ backend/app/api/routes/chat.py |  45 ++++-
+ backend/app/core/config.py     |  24 +++
+ backend/app/core/db.py         |   6 +-
+ backend/app/rag/advanced.py    | 419 +++++++++++++++++++++++++++++++++++++----
+ 4 files changed, 446 insertions(+), 48 deletions(-)

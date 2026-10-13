@@ -1,0 +1,22 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/bc9aa33
+
+commit bc9aa330ee1e03858cd8347a40095e4e20cb734d
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sun Aug 16 13:10:04 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sun Aug 16 13:10:04 2026 -0400
+
+    docs(paper): camera-ready v4 with updated author list and ajace.com emails
+    
+    Add Antony Johan and Anita Johan as co-authors, and move all author
+    contact addresses to the ajace.com domain. Ships the rebuilt LNEE
+    camera-ready PDF, LaTeX source zip, and the Word/PDF variants; v3
+    artifacts are left in place unchanged.
+    
+    Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
+ EchoMind_QASC2026_CameraReady_LNEE_source_v4.zip | Bin 0 -> 40160 bytes
+ EchoMind_QASC2026_CameraReady_v4.docx            | Bin 0 -> 225190 bytes
+ EchoMind_QASC2026_CameraReady_v4.pdf             | Bin 0 -> 434797 bytes
+ EchoMind_QASC2026_CameraReady_v4_LNEE.pdf        | Bin 0 -> 342668 bytes
+ 4 files changed, 0 insertions(+), 0 deletions(-)

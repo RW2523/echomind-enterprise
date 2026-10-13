@@ -1,0 +1,29 @@
+{
+  "status": "partial",
+  "bargein": {
+    "n_trials": 8,
+    "acoustic_stop_median_ms": 2131.0,
+    "acoustic_stop_p95_ms": 2140.6,
+    "success_rate": 1.0,
+    "wilson_ci_95": [
+      0.6756,
+      1
+    ],
+    "measurement": "audio_out_frame_cessation",
+    "_note": "Measured as cessation of audio_out frames on the wire \u2014 closer to the spec's acoustic requirement than the software cancel event, but NOT a microphone recording of the speaker; client-side buffer drain is excluded.",
+    "_measurement_caveat": "Measured from the ONSET of injected user speech to the last audio_out frame, matching the spec definition. It therefore includes VAD lead-in (~160 ms of sustained speech is required before barge-in triggers) and is NOT a pure interrupt-to-silence figure. n=8, far below the spec-s 50 trials."
+  },
+  "i1_checker": {
+    "status": "not_measurable",
+    "reason": "The voice WebSocket emits the grounded answer as token-level streaming deltas (\"The\" -> \"The liability\" -> \"The liability cap\"...). The harness counted each delta as a distinct L_I utterance and scored it as a novel assertion preceding its increment, producing a spurious 0.111 violation rate over 1357 pseudo-utterances. Separating L_I (lead phrase) from L_G (grounded stream) requires event-level provenance the protocol does not currently carry. Reported as not_measurable rather than as a number.",
+    "what_would_fix_it": "tag each assistant_phrase/assistant_text_partial event with its originating loop (L_I vs L_G) in voice/app/session.py, then re-run."
+  },
+  "user_ratings": {
+    "status": "not_run",
+    "reason": "no user panel available"
+  },
+  "_limitations": [
+    "n=12 turns, below the spec's >=200 utterances / >=50 barge-in trials.",
+    "Barge-in measured on the wire, not from a recorded speaker waveform."
+  ]
+}

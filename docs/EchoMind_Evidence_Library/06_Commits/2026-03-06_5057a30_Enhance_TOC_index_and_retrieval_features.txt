@@ -1,0 +1,33 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/5057a30
+
+commit 5057a3088568cd3ba927db0e7a4032170deee96f
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Mar 6 16:25:42 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Mar 6 16:25:42 2026 -0500
+
+    Enhance TOC index and retrieval features
+    
+    - Introduced optional hybrid search in the TOC index, combining vector search with BM25 using weighted reciprocal rank fusion (RRF).
+    - Updated the `TocIndex` class to support loading and saving sparse data for improved search accuracy.
+    - Enhanced the search method to utilize hybrid search when enabled, improving retrieval quality.
+    - Added metadata validation for book chunks to ensure valid section paths during indexing.
+    - Improved evidence extraction logic to group sentences by section and score them effectively, enhancing retrieval performance.
+    - Updated database schema to include new fields for contextualized text and section summaries, improving metadata management.
+
+ backend/app/api/routes/chat.py                   |  38 ++-
+ backend/app/core/config.py                       |  22 ++
+ backend/app/core/db.py                           |   8 +
+ backend/app/rag/advanced.py                      | 400 ++++++++++++++++++++---
+ backend/app/rag/book/heading_normalizer.py       | 119 +++++++
+ backend/app/rag/chunking/pipeline.py             |  15 +
+ backend/app/rag/contextualizer.py                | 202 ++++++++++++
+ backend/app/rag/evidence_extractor.py            | 102 ++++--
+ backend/app/rag/evidence_gate.py                 |  65 ++--
+ backend/app/rag/index.py                         | 132 +++++++-
+ backend/app/rag/indexes/section_summary_index.py | 171 ++++++++++
+ backend/app/rag/indexes/toc_index.py             | 112 ++++++-
+ backend/app/rag/metadata_validation.py           | 364 +++++++++++++++++++++
+ backend/app/rag/sparse.py                        |   7 +-
+ frontend/components/KnowledgeChat.tsx            |   8 +
+ 15 files changed, 1650 insertions(+), 115 deletions(-)

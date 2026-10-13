@@ -1,0 +1,25 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/8e6d984
+
+commit 8e6d984a63c7023a7985a0c03b8a07ae3f2012bd
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Jul 29 14:39:08 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Jul 29 14:39:08 2026 -0400
+
+    feat(eval): voice end-to-end test — synthetic speech through the live WS loop
+    
+    Synthesizes a spoken question with Piper (/speak), feeds it into the voice
+    WebSocket as real-time 20 ms PCM frames, and measures the full pipeline (VAD →
+    Nemotron partials → semantic endpoint → Parakeet final → intent routing →
+    LLM/RAG → phrase-chunked Piper TTS). Reports the heard transcript, the reply,
+    and end-of-speech-relative latencies (asr_final / first reply / first audio).
+    
+    Measured with Qwen3-30B-A3B-FP4 on TRT-LLM: word-perfect STT on both turns,
+    first audio +0.41 s (casual) and +0.64 s (full RAG turn; 30B answer streaming
+    from +1.14 s).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ eval/README.md         | 17 ++++++++++
+ eval/voice_e2e_test.py | 91 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 108 insertions(+)

@@ -1,0 +1,22 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/2b9730b
+
+commit 2b9730b3950ae827c44552965238f7a43fc23c7b
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Mon Mar 9 03:53:17 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Mon Mar 9 03:53:17 2026 -0400
+
+    Implement chat management features in backend and frontend
+    
+    - Added endpoints for creating, listing, retrieving, and deleting chats in the backend.
+    - Enhanced chat creation to use a default title if none is provided.
+    - Integrated chat management functionality in the frontend, including loading chat history and updating chat titles based on user messages.
+    - Updated the sidebar to display chat history and allow for chat selection and deletion.
+    - Refactored components to support new chat functionalities and improve user experience.
+
+ backend/app/api/routes/chat.py        |  66 +++++++++++++++++++-
+ frontend/App.tsx                      |   2 +-
+ frontend/components/KnowledgeChat.tsx |  11 ++--
+ frontend/components/Sidebar.tsx       |  71 +++++++++++++++++++--
+ frontend/hooks/useKnowledgeChat.ts    | 113 +++++++++++++++++++++++++++++++---
+ 5 files changed, 242 insertions(+), 21 deletions(-)

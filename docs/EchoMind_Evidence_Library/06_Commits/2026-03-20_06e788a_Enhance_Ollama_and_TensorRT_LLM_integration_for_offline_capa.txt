@@ -1,0 +1,27 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/06e788a
+
+commit 06e788a4e13ce2dbca14f2e7b065376acd2a8cdf
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Mar 20 15:22:55 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Mar 20 15:22:55 2026 -0400
+
+    Enhance Ollama and TensorRT-LLM integration for offline capabilities
+    
+    - Introduced OLLAMA_EMBED_ONLY environment variable to allow Ollama to serve only embedding models when using TensorRT-LLM for chat.
+    - Updated entrypoint script to handle model availability checks based on the new embedding-only mode.
+    - Modified Docker Compose configuration to include a new service for TensorRT-LLM, ensuring proper health checks and dependencies.
+    - Enhanced offline preparation scripts to populate only the necessary models and cache for a fully offline deployment.
+    - Updated documentation to reflect changes in model handling and offline setup instructions.
+
+ OFFLINE_DEPLOYMENT.md            | 50 +++++++++++++++++++++-------------
+ README.md                        |  6 ++--
+ backend/app/main.py              | 51 ++++++++++++++++++----------------
+ docker-compose.yml               | 59 ++++++++++++++++++++++++++++++++++------
+ docker/ollama/entrypoint.sh      | 30 ++++++++++++++++----
+ docker/trtllm/Dockerfile         |  7 +++++
+ docker/trtllm/entrypoint.sh      | 32 ++++++++++++++++++++++
+ scripts/export_offline_bundle.sh | 26 +++++++++++++++---
+ scripts/import_offline_bundle.sh | 15 +++++++++-
+ scripts/prepare_offline.sh       | 11 +++++---
+ 10 files changed, 220 insertions(+), 67 deletions(-)

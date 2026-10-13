@@ -1,0 +1,31 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/f75121b
+
+commit f75121b8460226ebb92022c4023f0684b73c9c4d
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 17:41:13 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 17:41:13 2026 -0400
+
+    feat(silent-assistant): namespace-aware + always-surface + per-vertical rule packs (#3)
+    
+    Upgrade the live transcription analyzer toward a Parakeet-style live assistant:
+    - Namespace-scoped: analyze_segment sets the active KB namespace before retrieval (set_active_namespace),
+      so a vertical session is checked only against its own KB. Verified: health->health docs, law->law docs,
+      zero cross-namespace leak.
+    - Always-surface: every paragraph with relevant KB material now yields a 'Relevant' info card (top
+      passages + citation) even when nothing is flagged — the LLM already ran per paragraph, so this is
+      ZERO extra GPU cost (we just stop discarding the result).
+    - Per-vertical rule packs: domain guidance appended to the analysis prompt per namespace
+      (health=drug interactions/dosing, law=risky clauses, bank=KYC/AML disclosures, etc.).
+    - Frontend: 'Relevant' label + cyan style; Live Transcription sends namespace + analysis_always_surface.
+    
+    namespace=''/always_surface absent -> prior behavior (backward compatible).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/transcribe/analyzer.py        | 44 +++++++++++++++++++++++--------
+ backend/app/transcribe/ws.py              |  8 +++++-
+ frontend/components/AnalysisCardModal.tsx |  1 +
+ frontend/hooks/useLiveTranscription.ts    |  3 +++
+ frontend/types.ts                         |  3 ++-
+ 5 files changed, 46 insertions(+), 13 deletions(-)

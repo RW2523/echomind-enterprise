@@ -1,0 +1,16 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/da4787d
+
+commit da4787df7bcc01f31b0e37f919145672fbfe41f6
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Thu Feb 5 21:13:21 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Thu Feb 5 21:13:21 2026 -0500
+
+    Implement streaming chat functionality in backend and frontend: Added `chat_stream` method to `OpenAICompatChat` for token-by-token response streaming. Updated `answer_stream` in `advanced.py` to yield response chunks. Enhanced FastAPI route with `/ask-stream` for streaming responses. Modified frontend to utilize `askChatStream` for real-time message updates during chat interactions.
+
+ backend/app/api/routes/chat.py        | 32 +++++++++++++++++-
+ backend/app/rag/advanced.py           | 26 ++++++++++++++-
+ backend/app/rag/llm.py                | 24 ++++++++++++++
+ frontend/components/KnowledgeChat.tsx | 27 +++++++++-------
+ frontend/services/backend.ts          | 61 +++++++++++++++++++++++++++++++++++
+ 5 files changed, 157 insertions(+), 13 deletions(-)

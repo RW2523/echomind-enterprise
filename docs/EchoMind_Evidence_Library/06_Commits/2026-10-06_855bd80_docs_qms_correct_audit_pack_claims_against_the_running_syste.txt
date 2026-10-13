@@ -1,0 +1,50 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/855bd80
+
+commit 855bd80745e9939bec4e8221d99931f064cebea6
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Oct 6 15:34:28 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Oct 6 15:34:28 2026 -0400
+
+    docs(qms): correct audit-pack claims against the running system; raise NC-2026-009/010
+    
+    Re-verified the October audit pack against the reference instance on
+    2026-10-06 and corrected what did not hold:
+    
+    - Public deployment: the pack, SOP-02/04/09/11, REG-02 and REG-03 said
+      Cloudflare Access gates echomind-ajace.com. It does not, and
+      AUTH_ENABLED=0, so the instance has no access control. Corrected and
+      raised as NC-2026-009 (S2, open).
+    - /api/version returns 404 on the reference instance (it predates the
+      mechanism); log rotation and the backup timer are built but not
+      applied there. Pack, checklist, gap analysis and risk register now say
+      so.
+    - v1.4.0: added the REG-08 entry and a retrospective FRM-03 record
+      (records/releases/2026-10-06_v1.4.0.md). Authorisation and concessions
+      left blank for the authoriser.
+    - NC-2026-010 (S3): five unit tests and 20 type errors failed unnoticed
+      and v1.4.0 was tagged with them failing; correction 5ddf8a6/736ea61
+      verified, CI corrective action open.
+    - Reworded "Do not let the auditor discover this"; added W-9 (public
+      repository).
+    
+    SOP-02, SOP-04, SOP-09 and SOP-11 to revision 1.1 (factual correction,
+    SOP-01 §5); REG-01 updated. No approval, signature or owner was filled in.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ docs/qms/AUDIT_PACK_2026_EchoMind.md               |  35 ++++----
+ docs/qms/COMPLETION_CHECKLIST.md                   |  12 +--
+ docs/qms/ISO9001_Gap_Analysis.md                   |   4 +-
+ .../SOP-02_Context_Interested_Parties_and_Risk.md  |   4 +-
+ ...P-04_Customer_Requirements_and_Communication.md |   6 +-
+ .../SOP-09_External_Providers_and_Open_Source.md   |   4 +-
+ .../SOP-11_Customer_Property_and_Data_Handling.md  |   6 +-
+ docs/qms/records/releases/2026-10-06_v1.4.0.md     | 100 +++++++++++++++++++++
+ docs/qms/records/releases/README.md                |   5 +-
+ .../registers/REG-01_Document_Control_Register.md  |  10 +--
+ .../REG-02_External_Documents_and_Providers.md     |   2 +-
+ docs/qms/registers/REG-03_Risk_Register.md         |   8 +-
+ .../registers/REG-04_Nonconformity_and_CAPA_Log.md |  42 ++++++++-
+ .../REG-08_Release_and_Deployment_Register.md      |  15 ++--
+ 14 files changed, 203 insertions(+), 50 deletions(-)

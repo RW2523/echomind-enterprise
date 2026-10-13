@@ -1,0 +1,33 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/80375c6
+
+commit 80375c61da5482ccf4a735a26271e4a3a8ab21c1
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Jul 29 13:52:54 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Jul 29 13:52:54 2026 -0400
+
+    feat(llm): port chat to Qwen3-30B-A3B NVFP4 on TensorRT-LLM (driver fix confirmed)
+    
+    Driver 580.159.03 fixed the GB10 worker-spawn CUDA bug that took trtllm down
+    (CVD ordinal masking — verified: CUDA_VISIBLE_DEVICES=0 now yields
+    device_count=1, and spawned/forked CUDA workers initialize cleanly). TRT-LLM
+    1.2.0rc6 serves nvidia/Qwen3-30B-A3B-FP4 again with NVFP4 CUTLASS kernels.
+    
+    - trtllm: un-gated (profile removed), restart: unless-stopped; regression
+      playbook documented in the service comment.
+    - backend + voice: LLM_BASE_URL/LLM_URL -> trtllm:8355, model
+      nvidia/Qwen3-30B-A3B-FP4 (thinking disabled via chat_template_kwargs as
+      before). Ollama stays for embeddings + as a documented one-line rollback.
+    - README: architecture/model tables updated to match.
+    
+    Measured on the box: decode ~37 tok/s steady; prefill ~3k tok/s (3,633-token
+    prompt end-to-end in 1.2 s) vs ~340 tok/s on ollama — ~10x faster RAG TTFT at
+    30B quality. Golden eval: 48/52 maintained, doc-precision 0.98, retrieval
+    median 6.2s -> 5.4s, refusal median 4.6s -> 1.3s. GPU: ~37 GB (weights + KV
+    at TRTLLM_KV_FRACTION=0.5) alongside voice ASR + backend; 56 GB headroom.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ README.md          | 15 +++++++--------
+ docker-compose.yml | 32 +++++++++++++++++---------------
+ 2 files changed, 24 insertions(+), 23 deletions(-)

@@ -1,0 +1,25 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/7a83262
+
+commit 7a83262d3a6ea93009860ec55624fd575b48bffc
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 12:53:13 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 12:53:13 2026 -0400
+
+    feat(auth): RBAC + admin user management (Phase 0b, step 3)
+    
+    - routes/auth.py: admin-only /api/auth/users (list/create/delete) guarded by _require_admin
+      (401 unauthenticated, 403 non-admin); cannot delete your own account.
+    - services/backend.ts: listUsers / createUser / deleteUserAccount.
+    - UserManagement.tsx: admin-only panel (renders only when auth_enabled AND role=admin) to add/remove
+      accounts; surfaced at the top of Settings.
+    
+    Verified: admin allowed, user 403, no-token 401; demo endpoints still 200 with auth off.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/api/routes/auth.py         | 42 ++++++++++++++++++
+ frontend/components/Settings.tsx       |  2 +
+ frontend/components/UserManagement.tsx | 81 ++++++++++++++++++++++++++++++++++
+ frontend/services/backend.ts           | 30 +++++++++++++
+ 4 files changed, 155 insertions(+)

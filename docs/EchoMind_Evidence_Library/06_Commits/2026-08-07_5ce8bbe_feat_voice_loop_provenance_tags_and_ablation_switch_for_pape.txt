@@ -1,0 +1,21 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/5ce8bbe
+
+commit 5ce8bbe4057c51b0713593f0d1c630952be3daf3
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Aug 7 01:34:34 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Aug 7 01:34:34 2026 -0400
+
+    feat(voice): loop provenance tags and ablation switch for paper eval
+    
+    Tag every assistant event with its originating loop (L_I lead phrase /
+    L_G grounded stream) so invariant I1 is checkable at runtime; additive
+    field, ignored by existing clients. Add VOICE_ABLATION_MODE switch
+    (dual_i1 default = production behaviour unchanged) used by the E10
+    dual-loop ablation. Measured: dual_i1 636 ms first audio, 0/10 I1
+    violations; dual_no_i1 10/10.
+    
+    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+ voice/app/session.py | 60 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 58 insertions(+), 2 deletions(-)

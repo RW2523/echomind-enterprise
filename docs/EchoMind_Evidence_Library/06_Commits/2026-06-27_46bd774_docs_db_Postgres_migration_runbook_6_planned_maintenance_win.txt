@@ -1,0 +1,18 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/46bd774
+
+commit 46bd774ae88598e8e86d194b7565f2960928de56
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 17:56:44 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 17:56:44 2026 -0400
+
+    docs(db): Postgres migration runbook (#6 — planned, maintenance-window)
+    
+    Full SQLite->Postgres swap is a multi-day refactor + risky live cutover, so deliver the runbook
+    (scope, code changes, dry-run, cutover, rollback) rather than an unsafe inline migration. Recommends
+    SQLAlchemy Core for dual-backend + keeping SQLite as instant rollback during the window.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ docs/POSTGRES_MIGRATION.md | 63 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)

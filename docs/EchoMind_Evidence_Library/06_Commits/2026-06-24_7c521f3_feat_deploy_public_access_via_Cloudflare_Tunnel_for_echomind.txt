@@ -1,0 +1,25 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/7c521f3
+
+commit 7c521f303353d3e52ba5da93f403f914c8d86f77
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Jun 24 00:14:55 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Jun 24 00:14:55 2026 -0400
+
+    feat(deploy): public access via Cloudflare Tunnel for echomind-ajace.com
+    
+    - docker-compose: add opt-in 'cloudflared' service (profile: public) wired to
+      frontend:80; default 'docker compose up' is unchanged (nothing auto-exposed).
+    - nginx: add echomind-ajace.com to server_name.
+    - docs/PUBLIC_DEPLOYMENT.md: runbook for the Cloudflare-account steps (tunnel
+      token, hostname route, and MANDATORY Cloudflare Access login gate) + rate
+      limiting, since EchoMind has no built-in auth.
+    Frontend already builds same-origin API/WS URLs, so it serves the public
+    domain with no rebuild.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ docker-compose.yml        | 14 ++++++++++
+ docs/PUBLIC_DEPLOYMENT.md | 71 +++++++++++++++++++++++++++++++++++++++++++++++
+ frontend/nginx.conf       |  4 +--
+ 3 files changed, 87 insertions(+), 2 deletions(-)

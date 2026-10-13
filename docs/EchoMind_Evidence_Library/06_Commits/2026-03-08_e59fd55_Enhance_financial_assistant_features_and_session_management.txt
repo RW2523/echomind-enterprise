@@ -1,0 +1,18 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/e59fd55
+
+commit e59fd55f48007a3b8727fc02423db77621fc7ef5
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Sun Mar 8 16:54:34 2026 -0400
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Sun Mar 8 16:54:34 2026 -0400
+
+    Enhance financial assistant features and session management
+    
+    - Updated voice assistant system prompt to prioritize financial management and regulatory topics for improved response accuracy.
+    - Introduced a flag to disable barge-in during intro playback, reducing microphone feedback.
+    - Enhanced conversation memory and summarization for better handling of financial discussions.
+    - Improved logging of LLM request payloads for enhanced debugging and performance tracking.
+    - Updated configuration settings to support new features and optimize system performance.
+
+ docs/RAG_FLOW.md | 186 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 186 insertions(+)

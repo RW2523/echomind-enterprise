@@ -1,0 +1,29 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/ac26d41
+
+commit ac26d411eef00e92554394cf88e011ef54cbcc9b
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 13:06:05 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 13:06:05 2026 -0400
+
+    feat(auth): audit log + usage metering + CORS lock (Phase 0b, step 4)
+    
+    - core/audit.py + activity_log table: best-effort record of every /api mutation (incl. logins),
+      with user/role/method/path/status/ip/ts.
+    - main.py: activity-log middleware (outermost; logs POST/PUT/DELETE/PATCH) + CORS now driven by
+      CORS_ALLOW_ORIGINS env ('*' default = open; set real origin to lock + enable credentials).
+    - routes/auth.py: admin-only GET /api/auth/audit + /api/auth/usage.
+    - Frontend: getAudit/getUsage + admin-only Recent activity + Usage panels in UserManagement.
+    
+    Verified: failed login (401) and chat-create (200) captured; usage summary aggregates per user.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/api/routes/auth.py         | 15 ++++++++++++
+ backend/app/core/audit.py              | 44 ++++++++++++++++++++++++++++++++++
+ backend/app/core/config.py             |  1 +
+ backend/app/core/db.py                 |  6 +++++
+ backend/app/main.py                    | 24 +++++++++++++++++--
+ frontend/components/UserManagement.tsx | 41 +++++++++++++++++++++++++++++--
+ frontend/services/backend.ts           | 14 +++++++++++
+ 7 files changed, 141 insertions(+), 4 deletions(-)

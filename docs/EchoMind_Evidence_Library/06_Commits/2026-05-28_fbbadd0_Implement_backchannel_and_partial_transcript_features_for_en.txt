@@ -1,0 +1,26 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/fbbadd0
+
+commit fbbadd026e1d637caa0df486d9f587041d865ce7
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Thu May 28 14:41:53 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Thu May 28 14:41:53 2026 -0400
+
+    Implement backchannel and partial transcript features for enhanced voice interaction
+    
+    - Added support for backchannel text ("Mm-hmm", "I see") during user speech to create a more engaging conversation experience.
+    - Introduced partial transcript handling to display ongoing speech recognition results in real-time.
+    - Updated relevant components (VoiceConversation, ConversationStage, VoiceOrb) to incorporate new props for backchannel and partial transcript.
+    - Enhanced voice connection logic to manage backchannel and partial transcript states effectively.
+    - Configured settings for backchannel behavior and streaming STT capabilities in the application.
+
+ frontend/components/Conversation/ChatState.ts      |   8 ++
+ .../components/Conversation/ConversationStage.tsx  |  28 +++-
+ frontend/components/Conversation/VoiceOrb.tsx      |   6 +-
+ frontend/components/VoiceConversation.tsx          |   2 +
+ frontend/hooks/useVoiceConnection.ts               |  25 +++-
+ voice/app/adapters/stt_nemotron.py                 |  70 ++++++++++
+ voice/app/config.py                                |  19 +++
+ voice/app/lead_phrases.py                          | 142 +++++++++++++++++++++
+ voice/app/session.py                               |  94 +++++++++++++-
+ 9 files changed, 389 insertions(+), 5 deletions(-)

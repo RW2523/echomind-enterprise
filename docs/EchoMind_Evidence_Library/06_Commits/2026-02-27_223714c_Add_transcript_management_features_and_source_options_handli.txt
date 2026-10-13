@@ -1,0 +1,25 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/223714c
+
+commit 223714c64889462cb87ea3db47fd37378658845d
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Feb 27 02:40:11 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Feb 27 02:40:11 2026 -0500
+
+    Add transcript management features and source options handling
+    
+    - Introduced new endpoints for retrieving and deleting transcripts, enhancing transcript management capabilities.
+    - Added a `SourceOptionsIn` model to allow users to specify search preferences for transcripts and documents.
+    - Updated the `ask_stream` function to incorporate source options, enabling more flexible query handling based on user preferences.
+    - Enhanced the frontend to support transcript preview and deletion, improving user interaction with transcript data.
+
+ backend/app/api/routes/chat.py                  |  14 +++
+ backend/app/api/routes/transcribe.py            |  52 ++++++++
+ backend/app/rag/advanced.py                     | 110 ++++++++++------
+ frontend/components/Conversation/ControlBar.tsx |  17 +--
+ frontend/components/KnowledgeChat.tsx           | 161 +++++++++++++++++++++---
+ frontend/constants.tsx                          |   3 +
+ frontend/hooks/useVoiceConnection.ts            |   3 +
+ frontend/services/backend.ts                    |  41 +++++-
+ voice/voices/wake_word.json                     |   3 +
+ 9 files changed, 335 insertions(+), 69 deletions(-)

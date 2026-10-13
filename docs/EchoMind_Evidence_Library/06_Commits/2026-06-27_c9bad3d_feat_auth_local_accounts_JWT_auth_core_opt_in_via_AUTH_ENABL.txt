@@ -1,0 +1,30 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/c9bad3d
+
+commit c9bad3d89112252d78cd675adfea66282e9e66b7
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 12:45:36 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 12:45:36 2026 -0400
+
+    feat(auth): local-accounts + JWT auth core, opt-in via AUTH_ENABLED (Phase 0b, step 1)
+    
+    Dependency-free (stdlib pbkdf2-hmac-sha256 + HS256 HMAC JWT) so it stays offline-safe.
+    - core/auth.py: password hashing, token make/decode, user store (create/list/delete/authenticate),
+      seed_admin(), user_from_request() (Bearer header or echomind_token cookie).
+    - core/db.py: users table. core/config.py: AUTH_ENABLED (default 0), AUTH_SECRET (auto-persisted),
+      AUTH_TOKEN_TTL_MIN, AUTH_ADMIN_USER/PASSWORD.
+    - routes/auth.py: /api/auth/{config,login,logout,me}.
+    - main.py: http auth-guard middleware (enforced only when AUTH_ENABLED; login/config/health public;
+      OPTIONS + non-/api pass; WS not gated yet) + seed_admin() on boot.
+    
+    AUTH_ENABLED=0 (default) => zero behavior change; live demo verified unaffected (config=false,
+    docs/list 200). Enforcement verified: 401 without/with bad token, pass with valid token.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/api/routes/auth.py |  49 ++++++++++
+ backend/app/core/auth.py       | 198 +++++++++++++++++++++++++++++++++++++++++
+ backend/app/core/config.py     |   7 ++
+ backend/app/core/db.py         |   2 +
+ backend/app/main.py            |  19 ++++
+ 5 files changed, 275 insertions(+)

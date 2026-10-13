@@ -1,0 +1,96 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/b08cf25
+
+commit b08cf25d6f70b97372e5ce87bd53ba304c5d5e67
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Thu Jun 18 02:13:22 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Thu Jun 18 02:13:22 2026 -0400
+
+    Harden security, fix bugs across RAG/transcribe/boardroom/voice, audit prompts
+    
+    Security
+    - Boardroom: allowlist audio_format + path-containment checks (path-traversal write)
+    - PDF export: XML-escape all LLM/transcript text (reportlab markup injection / 500s)
+    - RAG/voice: prompt-injection guards + fenced untrusted context (chat, boardroom, voice)
+    - LLM client: stop logging full prompts at INFO (gated behind debug flag)
+    
+    Live Transcript / Silent Assistant
+    - Server-generate WS session_id; session-scoped paragraph ids (reconnect collisions)
+    - WS session cap + dropped-frame overload signal; auto-store/EOS store lock
+    - Analyze final (EOS) paragraph; analysis concurrency cap; revive silence segmentation
+    - delete_transcript removes all KB docs; delete_document/_rebuild_transcript_index
+      reconstruct vectors instead of re-embedding the whole corpus (60s+ -> <1s deletes)
+    - Frontend: send real AudioContext sample rate, merge final segments, clear stale
+      spinners, reconnect-counter fix, echo cancellation
+    
+    Boardroom
+    - Atomic finalize/analyse re-entry guards + GPU concurrency semaphore + chunk bounds
+    - Restore prior status on failed re-analysis; poll while analysing; real recorder format
+    
+    RAG correctness
+    - PDF page numbers: normalize per-page before computing offsets
+    - Section/glossary index delete keeps row<->meta alignment (reconstruct)
+    - DoD section-id regex excludes years; TOC parser accepts non-zero-prefixed codes
+    - Evidence gate normalizes cross-encoder logits
+    
+    Voice
+    - Semantic endpointing, instant/clean barge-in, gapless scheduled playback
+    - Fix /speak (missing PiperTTS import); move blocking HTTP off the event loop
+    - Sender-loop deadlock guard; cap listen-only buffer; case-insensitive wake word
+    
+    Prompts & cleanup
+    - Fenced follow-up RAG context; broadened strict-citation validator
+    - Removed leftover Gemini settings + dead gemini.ts/vectorStore.ts/Header code
+    - Dropped dead constants/params; aligned report JSON instruction; README rewrite
+    
+    Tests: added unit tests for the above; all backend (29) + voice (12) pass.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/api/routes/boardroom.py            |   58 +-
+ backend/app/api/routes/chat.py                 |   72 +-
+ backend/app/api/routes/transcribe.py           |   58 +-
+ backend/app/boardroom/service.py               |  202 +++--
+ backend/app/boardroom/vibevoice_worker.py      |  124 ++-
+ backend/app/core/config.py                     |   10 +
+ backend/app/core/db.py                         |   13 +
+ backend/app/rag/advanced.py                    |  135 ++-
+ backend/app/rag/book/section_id.py             |   16 +-
+ backend/app/rag/book/toc_parser.py             |    4 +-
+ backend/app/rag/chunking/pipeline.py           |    7 +-
+ backend/app/rag/evidence_gate.py               |   21 +-
+ backend/app/rag/glossary_index.py              |   56 +-
+ backend/app/rag/index.py                       |   57 +-
+ backend/app/rag/llm.py                         |   24 +-
+ backend/app/rag/parse.py                       |   10 +-
+ backend/app/rag/section_index.py               |   62 +-
+ backend/app/tagging.py                         |    4 +-
+ backend/app/transcribe/analyzer.py             |   15 +-
+ backend/app/transcribe/session_state.py        |   18 +-
+ backend/app/transcribe/store_to_db.py          |    5 +-
+ backend/app/transcribe/ws.py                   | 1081 ++++++++++++++----------
+ backend/tests/test_critical_high_fixes.py      |  150 ++++
+ backend/tests/test_medium_low_fixes.py         |   46 +
+ backend/tests/test_transcript_audit_fixes.py   |   47 ++
+ frontend/App.tsx                               |    4 -
+ frontend/README.md                             |   34 +-
+ frontend/components/BoardroomView.tsx          |    4 +-
+ frontend/components/Header.tsx                 |   22 +-
+ frontend/components/KnowledgeChat.tsx          |   49 +-
+ frontend/components/LiveTranscription.tsx      |   24 +
+ frontend/components/Settings.tsx               |   18 +
+ frontend/components/TranscriptHistoryPanel.tsx |  498 +++++++++++
+ frontend/components/UI/StatusLabel.tsx         |    1 +
+ frontend/components/WordCloudModal.tsx         |   62 +-
+ frontend/hooks/useLiveTranscription.ts         |  121 ++-
+ frontend/hooks/useVoiceConnection.ts           |  148 +++-
+ frontend/public/pcm-processor.js               |   20 +
+ frontend/services/backend.ts                   |   84 +-
+ frontend/services/gemini.ts                    |    2 -
+ frontend/services/vectorStore.ts               |    2 -
+ frontend/types.ts                              |    4 +-
+ frontend/vite.config.ts                        |    5 +-
+ voice/app/config.py                            |    8 +
+ voice/app/server.py                            |    1 +
+ voice/app/session.py                           |  132 ++-
+ 46 files changed, 2695 insertions(+), 843 deletions(-)

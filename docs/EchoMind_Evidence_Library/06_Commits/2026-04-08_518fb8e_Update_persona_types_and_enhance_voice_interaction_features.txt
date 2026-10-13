@@ -1,0 +1,26 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/518fb8e
+
+commit 518fb8ed716d681175c415f73a6d471a04e68335
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Apr 8 17:11:58 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Apr 8 17:11:58 2026 -0400
+
+    Update persona types and enhance voice interaction features
+    
+    - Added new persona types: TEACHER, FINANCIAL, FUNNY, LAWYER, and AI_EXPERT to improve user interaction and response customization.
+    - Updated default persona in settings to FINANCIAL for better alignment with user needs.
+    - Enhanced voice connection logic to support persona-specific voice prompts and context handling.
+    - Improved introduction phrases for each persona to provide a more tailored user experience.
+    - Updated frontend components to reflect new persona metadata and improve user interface elements related to persona selection.
+
+ backend/app/api/routes/chat.py        |  66 ++++++--
+ backend/app/rag/advanced.py           | 292 +++++++++++++++++++++++++++-------
+ frontend/App.tsx                      |   2 +-
+ frontend/components/KnowledgeChat.tsx |  68 +++++++-
+ frontend/components/Settings.tsx      | 148 ++++++++++-------
+ frontend/hooks/useVoiceConnection.ts  |  75 +++++++--
+ frontend/types.ts                     |   9 +-
+ voice/app/config.py                   |   2 +-
+ voice/app/session.py                  |  75 +++++++--
+ 9 files changed, 582 insertions(+), 155 deletions(-)

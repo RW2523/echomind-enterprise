@@ -1,0 +1,23 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/bff6cf2
+
+commit bff6cf2b97fdffb366195dbbaa2f69fb33c00cf5
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Feb 17 22:15:23 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Feb 17 22:15:23 2026 -0500
+
+    Refactor STT streaming to utilize Kyutai STT exclusively, removing Whisper fallback. Updated README and configuration for Kyutai integration, including sample rate adjustments and improved audio processing. Enhanced session state management for better whitespace normalization and audio handling. Added voice activity detection to reduce noise transcription. Updated Dockerfile and requirements for necessary dependencies.
+
+ README.md                                 |  10 ++
+ backend/Dockerfile                        |  15 ++-
+ backend/app/core/config.py                |   8 +-
+ backend/app/transcribe/session_state.py   |  41 +++++--
+ backend/app/transcribe/stt_streaming.py   | 193 ++++++++++++------------------
+ backend/app/transcribe/ws.py              | 145 +++++++++-------------
+ backend/requirements-gpu.txt              |   4 +-
+ backend/requirements-kyutai.txt           |   6 +-
+ backend/requirements.txt                  |   2 +-
+ docker-compose.yml                        |   1 -
+ docs/TRANSCRIPT_STORAGE_FLOW.md           |  10 +-
+ frontend/components/LiveTranscription.tsx |  33 +++--
+ 12 files changed, 225 insertions(+), 243 deletions(-)

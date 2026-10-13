@@ -1,0 +1,39 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/1d7f154
+
+commit 1d7f154f14b049fd010acaa1967878e044f5d611
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Oct 6 16:08:21 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Oct 6 16:08:21 2026 -0400
+
+    docs(qms): record 2026-10-06 deployment — login restored, v1.4.0 code live, log rotation applied
+    
+    Services on the reference instance were restarted on 2026-10-06:
+    
+    - AUTH_ENABLED=1 / VOICE_AUTH_ENABLED=1. Verified externally: unauthenticated
+      API calls return 401, voice /ws returns 403 without a session. NC-2026-009
+      correction recorded and verified; corrective actions (b)-(d) stay open.
+    - v1.4.0 application code deployed (docker cp of the release-identification
+      change + docker commit); /api/version reports 1.4.0 / eaa7b1a. REG-08
+      deployment row and FRM-03 §1/§6/§7/§8 completed, noting the deployment
+      preceded authorisation and that images are not a from-scratch build.
+    - Log rotation applied to all six containers (R-07, G-11, checklist D2).
+    
+    Audit pack W-4, W-8, §2.2-§2.7, §3 and §5 tasks 5/6a/6b updated to match.
+    SOP-02, SOP-04 and SOP-11 to revision 1.2; REG-01 updated.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ docs/qms/AUDIT_PACK_2026_EchoMind.md               | 24 ++++++++---------
+ docs/qms/COMPLETION_CHECKLIST.md                   |  8 +++---
+ docs/qms/ISO9001_Gap_Analysis.md                   |  2 +-
+ .../SOP-02_Context_Interested_Parties_and_Risk.md  |  4 +--
+ ...P-04_Customer_Requirements_and_Communication.md |  4 +--
+ .../SOP-11_Customer_Property_and_Data_Handling.md  |  8 +++---
+ docs/qms/records/releases/2026-10-06_v1.4.0.md     | 30 ++++++++++++++--------
+ .../registers/REG-01_Document_Control_Register.md  |  8 +++---
+ .../REG-02_External_Documents_and_Providers.md     |  2 +-
+ docs/qms/registers/REG-03_Risk_Register.md         |  4 +--
+ .../registers/REG-04_Nonconformity_and_CAPA_Log.md | 11 ++++----
+ .../REG-08_Release_and_Deployment_Register.md      | 10 +++++---
+ 12 files changed, 63 insertions(+), 52 deletions(-)

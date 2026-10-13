@@ -1,0 +1,20 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/736ea61
+
+commit 736ea61f24b79ff4e6775f540a9ce4d0337871b1
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Mon Sep 28 11:29:33 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Mon Sep 28 11:29:33 2026 -0400
+
+    fix(frontend): type fadeUp as framer-motion Variants
+    
+    The untyped fadeUp object inferred its cubic-bezier ease as number[],
+    which framer-motion 12 rejects (it wants a 4-number tuple). Annotating
+    it as Variants types the array correctly. Clears all 20 tsc errors in
+    verticals/; type-only, so the built bundle is unchanged.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ frontend/verticals/HealthExperience.tsx | 3 ++-
+ frontend/verticals/_shared.tsx          | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)

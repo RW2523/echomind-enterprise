@@ -1,0 +1,38 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/12f7219
+
+commit 12f72195e27694c7933bac5c9cc98c0865906392
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Jul 29 13:03:09 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Jul 29 13:03:09 2026 -0400
+
+    feat(eval): golden-question evaluation harness for the RAG + conversation stack
+    
+    52 golden questions run against the live backend and score routing (small talk
+    / refusals / off-corpus must not cite), retrieval (expected docs cited, doc
+    precision), answer facts (grouped alternatives, all groups required), forbidden
+    strings (hallucination + dropped-topic canaries), and latency.
+    
+    - eval/run_eval.py     stdlib-only runner; JSON reports; exit code for CI;
+                           optional --judge (LLM-as-judge via local ollama)
+    - eval/golden/*.jsonl  per-namespace retrieval sets (bank/health/law/meetings/
+                           retail/fmr) drafted from ACTUAL corpus chunks with
+                           source-verified facts, + conversational routing set
+    - eval/README.md       how to run, scoring rules, how to add questions
+    
+    First runs immediately caught the five retrieval bugs fixed in the previous
+    commit. Run after any change to backend/app/rag/, model swaps, or before demos.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ eval/.gitignore                  |   1 +
+ eval/README.md                   |  53 +++++++++
+ eval/golden/bank.jsonl           |   8 ++
+ eval/golden/conversational.jsonl |  12 ++
+ eval/golden/fmr.jsonl            |   8 ++
+ eval/golden/health.jsonl         |   8 ++
+ eval/golden/law.jsonl            |   8 ++
+ eval/golden/meetings.jsonl       |   8 ++
+ eval/golden/retail.jsonl         |   8 ++
+ eval/run_eval.py                 | 246 +++++++++++++++++++++++++++++++++++++++
+ 10 files changed, 360 insertions(+)

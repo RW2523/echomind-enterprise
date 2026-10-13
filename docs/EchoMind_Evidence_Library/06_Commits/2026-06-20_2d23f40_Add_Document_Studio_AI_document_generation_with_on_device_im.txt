@@ -1,0 +1,59 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/2d23f40
+
+commit 2d23f406f810b8a4ea27ca9f1f784fcb22a47584
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 20 23:00:30 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 20 23:00:30 2026 -0400
+
+    Add Document Studio: AI document generation with on-device images + PDF/PPTX export
+    
+    Document Studio turns a chat / uploaded reference docs / a brief into a polished, templated document exported as PDF and PPTX:
+    - Multi-agent pipeline (planner -> parallel section-writers -> assembler) with 18 templates incl. a marketing suite and a single-page flyer layout; topic-grounded writers, refusal/scaffolding/markdown scrubbing, placeholder bans, heading de-dup and empty-section pruning.
+    - On-device image generation (SDXL-Turbo via diffusers) with an art-director subagent that decides placement and writes diffusion-safe prompts; offline 'local' synthetic and cloud 'nim'/'comfyui' backends also supported.
+    - Professional renderers: reportlab PDF (cover hero, live TOC, themed sections, banded tables, page-fitted flow diagrams, callouts, embedded images) and python-pptx deck (themed 16:9, hanging-indent native bullets, flow chains, image slides, custom-template render-into-pptx).
+    - Custom-template upload (pptx/docx/pdf/md/txt); background jobs + polling; export Cache-Control no-store.
+    - Frontend Document Studio tab, images-on-by-default toggle, and an app-wide ErrorBoundary that reports client crashes to the backend.
+    
+    Supporting fixes in this batch: voice/STT CUDA fault auto-recovery (health 503 + in-process watchdog) and a prompt audit across RAG/refine/transcribe.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/api/routes/docgen.py        |  262 ++++++++
+ backend/app/core/db.py                  |   24 +
+ backend/app/docgen/__init__.py          |    1 +
+ backend/app/docgen/custom_templates.py  |  766 +++++++++++++++++++++
+ backend/app/docgen/images.py            |  441 +++++++++++++
+ backend/app/docgen/models.py            |  342 ++++++++++
+ backend/app/docgen/pipeline.py          |  889 +++++++++++++++++++++++++
+ backend/app/docgen/render_pdf.py        | 1095 +++++++++++++++++++++++++++++++
+ backend/app/docgen/render_pptx.py       | 1093 ++++++++++++++++++++++++++++++
+ backend/app/docgen/store.py             |  149 +++++
+ backend/app/docgen/templates.py         |  520 +++++++++++++++
+ backend/app/docgen/theme.py             |   83 +++
+ backend/app/kb.py                       |    3 +-
+ backend/app/main.py                     |   56 +-
+ backend/app/rag/advanced.py             |   29 +-
+ backend/app/rag/contextualizer.py       |   11 +-
+ backend/app/refine.py                   |   13 +-
+ backend/app/transcribe/analyzer.py      |   16 +-
+ backend/app/transcribe/stt_streaming.py |   59 +-
+ backend/requirements.txt                |    2 +
+ backend/tests/test_docgen_images.py     |  184 ++++++
+ backend/tests/test_prompt_guards.py     |   42 ++
+ docker-compose.yml                      |   28 +
+ frontend/App.tsx                        |    8 +-
+ frontend/components/DocumentStudio.tsx  | 1018 ++++++++++++++++++++++++++++
+ frontend/components/ErrorBoundary.tsx   |  105 +++
+ frontend/components/Header.tsx          |    1 +
+ frontend/components/KnowledgeChat.tsx   |    2 +-
+ frontend/components/Sidebar.tsx         |    1 +
+ frontend/hooks/useVoiceConnection.ts    |   50 +-
+ frontend/types.ts                       |    1 +
+ voice/app/adapters/llm_openai_compat.py |   33 -
+ voice/app/adapters/stt_nemotron.py      |   40 ++
+ voice/app/echo_commands.py              |    6 +-
+ voice/app/server.py                     |   43 +-
+ voice/app/session.py                    |   13 +-
+ voice/tests/test_stt_health.py          |   44 ++
+ 37 files changed, 7378 insertions(+), 95 deletions(-)

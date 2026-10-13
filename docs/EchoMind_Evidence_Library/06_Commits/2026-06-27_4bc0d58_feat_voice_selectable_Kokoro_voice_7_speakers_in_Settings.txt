@@ -1,0 +1,25 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/4bc0d58
+
+commit 4bc0d5829e1d8c43724fab6d4f7cb43f289c046e
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 11:20:14 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 11:20:14 2026 -0400
+
+    feat(voice): selectable Kokoro voice (7 speakers) in Settings
+    
+    - Session honors set_context.kokoro_voice (rebuilds engine when voice changes).
+    - 7 American Kokoro voices baked offline (af_heart/bella/nicole/sarah, am_michael/fenrir/adam);
+      Dockerfile pre-downloads all for clean rebuilds.
+    - Frontend: KOKORO_VOICES list + a Kokoro voice picker shown when the Kokoro engine is selected,
+      persisted and sent in set_context.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ frontend/App.tsx                     |  2 ++
+ frontend/components/Settings.tsx     | 24 +++++++++++++++++++++++-
+ frontend/hooks/useVoiceConnection.ts |  2 ++
+ frontend/types.ts                    | 13 +++++++++++++
+ voice/Dockerfile                     |  5 +++--
+ voice/app/session.py                 | 14 ++++++++------
+ 6 files changed, 51 insertions(+), 9 deletions(-)

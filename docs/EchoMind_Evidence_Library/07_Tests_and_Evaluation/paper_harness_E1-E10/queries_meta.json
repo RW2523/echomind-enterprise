@@ -1,0 +1,21 @@
+{
+  "n_queries": 92,
+  "strata": {
+    "S1": 32,
+    "S2": 11,
+    "S4": 25,
+    "S5": 24
+  },
+  "queries_sha256": "778879bec9dd7931a7736641bd2ce1598d0259f876dbf56c371c8fdd9afe05bf",
+  "principals": {
+    "u_bank": "bank",
+    "u_health": "health",
+    "u_law": "law",
+    "u_meetings": "meetings",
+    "u_retail": "retail",
+    "u_high": ""
+  },
+  "_note": "S3 (transcript-document comparison) NOT built: the 17k transcript chunks are auto-saved voice sessions with no curated gold pairs. Reported as a coverage gap rather than filled with unverified items.",
+  "_frozen": true,
+  "_s5_note": "S5 rebuilt and verified: 24 of 25 candidates survived a screen requiring NO distinctive term to appear in any content chunk. The original S5 set contained items the corpus could answer, which collapsed the abstention denominator."
+}

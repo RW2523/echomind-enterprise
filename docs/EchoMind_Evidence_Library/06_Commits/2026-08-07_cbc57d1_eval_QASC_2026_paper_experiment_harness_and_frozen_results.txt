@@ -1,0 +1,56 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/cbc57d1
+
+commit cbc57d15b4e6c1895f18e52726f6b6c8420748f2
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Aug 7 01:34:34 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Aug 7 01:34:34 2026 -0400
+
+    eval: QASC 2026 paper experiment harness and frozen results
+    
+    Full measurement campaign behind the camera-ready Sect. 8: E1 latency
+    decomposition (3 concurrency cells, n=30), E3/E3b permission isolation
+    + per-path audit, E4 injection containment (4 arms x 98 payloads), E5
+    grounding fidelity, E7 barge-in, E10 dual-loop ablation, plus corpus
+    stats, frozen 92-query set (SHA-256), config manifest, and results.zip
+    artifact bundle. E2/E6/E8/E9 recorded as not_run with reasons - no
+    estimated or synthesized numbers anywhere.
+    
+    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+ eval/paper/assemble_summary.py               |  179 +
+ eval/paper/build_foundation.py               |  117 +
+ eval/paper/build_queries.py                  |  124 +
+ eval/paper/build_s5.py                       |   78 +
+ eval/paper/e10_full_ablation.py              |  138 +
+ eval/paper/e1_latency.py                     |  160 +
+ eval/paper/e3_permission.py                  |  148 +
+ eval/paper/e3b_path_isolation.py             |   76 +
+ eval/paper/e4_injection.py                   |  259 +
+ eval/paper/e5_grounding.py                   |  166 +
+ eval/paper/e7_e10_voice.py                   |  202 +
+ eval/paper/results.zip                       |  Bin 0 -> 98550 bytes
+ eval/paper/results/REGRESSION_AND_FIXES.json |   19 +
+ eval/paper/results/SUMMARY.json              |   98 +
+ eval/paper/results/config_manifest.json      |   90 +
+ eval/paper/results/corpus_stats.json         |  141 +
+ eval/paper/results/e10_ablation.json         |   70 +
+ eval/paper/results/e1_latency.json           |  170 +
+ eval/paper/results/e2_retrieval.json         |    4 +
+ eval/paper/results/e3_permission.json        |  158 +
+ eval/paper/results/e3b_path_isolation.json   |   57 +
+ eval/paper/results/e4_injection.json         |  317 +
+ eval/paper/results/e5_grounding.json         |   79 +
+ eval/paper/results/e6_outcome.json           |    4 +
+ eval/paper/results/e7_interaction.json       |   29 +
+ eval/paper/results/e8_process.json           |    4 +
+ eval/paper/results/e9_weights.json           |    4 +
+ eval/paper/results/queries.jsonl             |   92 +
+ eval/paper/results/queries_meta.json         |   21 +
+ eval/paper/results/raw/e10_runs.json         |  338 ++
+ eval/paper/results/raw/e1_spans.json         | 1076 ++++
+ eval/paper/results/raw/e3_runs.json          | 1810 ++++++
+ eval/paper/results/raw/e4_runs.json          | 3538 +++++++++++
+ eval/paper/results/raw/e5_runs.json          |  640 ++
+ eval/paper/results/raw/e7_e10_runs.json      | 8300 ++++++++++++++++++++++++++
+ 35 files changed, 18706 insertions(+)

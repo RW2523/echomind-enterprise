@@ -1,0 +1,69 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/f540976
+
+commit f54097650c67c8125bffcb0f9a0fabe9b7fb905e
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Thu May 14 02:35:13 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Thu May 14 02:35:13 2026 -0400
+
+    Add Board Room report generation and Assistant insights features
+    
+    - Introduced new API routes for Board Room report generation, including endpoints for generating and exporting reports in PDF and PPTX formats.
+    - Implemented Assistant insights storage and retrieval, allowing for analysis of session insights with support for bulk saving and action status updates.
+    - Enhanced the Dockerfile and docker-compose.yml to accommodate new dependencies and environment variables for the Board Room and Assistant features.
+    - Updated requirements files to include new libraries for report generation and PDF handling.
+    - Improved logging and error handling in the Assistant insights processing to ensure robust performance during analysis.
+
+ ENDPOINTS.md                                       |   1 +
+ backend/Dockerfile                                 |  20 +-
+ backend/app/api/routes/assistant.py                | 231 +++++++++++
+ backend/app/api/routes/board_room.py               | 114 ++++++
+ backend/app/api/routes/chat.py                     |  12 +-
+ backend/app/api/routes/docs.py                     |   1 +
+ backend/app/assistant/__init__.py                  |   1 +
+ backend/app/assistant/insights_store.py            | 277 +++++++++++++
+ backend/app/assistant/live_analysis.py             | 426 +++++++++++++++++++
+ backend/app/board_room/__init__.py                 |   1 +
+ backend/app/board_room/export.py                   | 138 +++++++
+ backend/app/board_room/report_pipeline.py          | 203 +++++++++
+ backend/app/core/db.py                             |  28 ++
+ backend/app/main.py                                |  19 +-
+ backend/app/rag/advanced.py                        |  13 +-
+ backend/app/transcribe/session_state.py            | 135 +++++-
+ backend/app/transcribe/stt_streaming.py            | 175 ++++++--
+ backend/app/transcribe/ws.py                       |  35 +-
+ backend/requirements-gpu.txt                       |   1 +
+ backend/requirements.txt                           |   1 +
+ backend/tests/test_assistant_insights_store.py     |  76 ++++
+ backend/tests/test_assistant_live_analysis.py      | 190 +++++++++
+ backend/tests/test_board_room_report.py            |  35 ++
+ backend/tests/test_transcript_session_state.py     |  64 +++
+ docker-compose.yml                                 |   6 +-
+ docker/install_nemo_asr.sh                         |  31 ++
+ frontend/App.tsx                                   |  27 ++
+ frontend/components/BoardRoom.tsx                  | 346 ++++++++++++++++
+ frontend/components/Header.tsx                     |   3 +
+ frontend/components/KnowledgeChat.tsx              |  26 +-
+ frontend/components/PersonalAssistant.tsx          | 455 +++++++++++++++++++++
+ frontend/components/Sidebar.tsx                    |   3 +
+ frontend/components/SilentAssistant.tsx            | 245 +++++++++++
+ .../components/assistant/AssistantModeControls.tsx |  77 ++++
+ .../assistant/AssistantTranscriptPanel.tsx         |  43 ++
+ .../assistant/EvidenceSourcePreviewModal.tsx       | 203 +++++++++
+ frontend/components/assistant/HandRaiseCard.tsx    | 117 ++++++
+ frontend/components/assistant/InsightPanel.tsx     | 126 ++++++
+ .../components/assistant/SessionInsightsReview.tsx |  66 +++
+ frontend/components/assistant/assistantUtils.ts    | 128 ++++++
+ frontend/constants.tsx                             |   3 +
+ frontend/hooks/useAssistantAnalysis.ts             | 179 ++++++++
+ frontend/hooks/useLiveTranscription.ts             |  51 ++-
+ frontend/hooks/useSpeakAssistantTts.ts             | 113 +++++
+ frontend/services/backend.ts                       | 131 +++++-
+ frontend/types.ts                                  | 135 ++++++
+ nemotron_asr/nemotron_asr/adapter.py               |  73 +++-
+ nemotron_asr/nemotron_asr/warmup_build.py          |   6 +-
+ voice/Dockerfile                                   |   6 +-
+ voice/app/server.py                                |  27 +-
+ voice/app/tts_oneoff.py                            |  91 +++++
+ voice/tests/test_tts_speak_http.py                 |  53 +++
+ 52 files changed, 4871 insertions(+), 96 deletions(-)

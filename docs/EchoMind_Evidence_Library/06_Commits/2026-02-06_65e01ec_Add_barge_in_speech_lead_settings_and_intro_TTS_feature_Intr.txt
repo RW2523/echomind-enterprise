@@ -1,0 +1,16 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/65e01ec
+
+commit 65e01ec50aa6ea87fcd1bfd72d5881ef823ca806
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Feb 6 03:15:26 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Feb 6 03:15:26 2026 -0500
+
+    Add barge-in speech lead settings and intro TTS feature: Introduced new configuration options for consecutive speech frames required for barge-in detection, enhancing robustness against false triggers. Added an introductory phrase feature that prompts users to unmute and speak upon connection, improving user experience during initial interactions.
+
+ frontend/components/Conversation/ChatState.ts      |   3 +
+ .../components/Conversation/ConversationStage.tsx  |   7 ++
+ frontend/hooks/useVoiceConnection.ts               |  25 ++++-
+ voice/app/config.py                                |   6 ++
+ voice/app/session.py                               | 113 +++++++++++++++------
+ 5 files changed, 119 insertions(+), 35 deletions(-)

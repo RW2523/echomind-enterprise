@@ -1,0 +1,14 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/5088c93
+
+commit 5088c938582ec7dba2c976f3f28b65a9f427e6fd
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Jun 26 14:54:44 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Jun 26 14:54:44 2026 -0400
+
+    fix(voice): barge-in lead 12->8 (12 was too strict to interrupt); rebuild bakes thinking-off patch
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ docker-compose.yml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)

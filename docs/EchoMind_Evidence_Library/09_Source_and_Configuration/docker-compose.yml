@@ -1,0 +1,317 @@
+services:
+  trtllm:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
+    build:
+      context: ./docker/trtllm
+    image: echomind-trtllm:1.2.0rc6
+    container_name: echomind-trtllm
+    # PRODUCTION chat LLM (Qwen3-30B-A3B NVFP4). Was profile-gated while GB10's worker-spawn
+    # CUDA bug (CVD ordinal masking, driver <=580.126) broke it; driver 580.159.03 fixed it —
+    # verified: spawned/forked CUDA workers OK, NVFP4 CUTLASS kernels serving, 3.6k-token
+    # prompts fine. If it ever regresses to the ~90%-CPU busy-loop: re-add profiles+restart:no
+    # and point backend/voice back at ollama.
+    restart: unless-stopped
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    ports:
+      - "8355:8355"
+    environment:
+      # Gated HF models: set HF_TOKEN in .env only for the first-time prepare run.
+      - HF_TOKEN=${HF_TOKEN:-}
+      - MODEL_HANDLE=${TRTLLM_MODEL_HANDLE:-nvidia/Qwen3-30B-A3B-FP4}
+      # Memory management: cap KV cache (was 0.9 ~83GB) so the LLM fits beside STT + SDXL on one Spark.
+      - TRTLLM_KV_FRACTION=${TRTLLM_KV_FRACTION:-0.5}
+      # Offline by default: model weights live in the trtllm_hf_cache volume (populated once via docker-compose.prepare.yml).
+      # To re-download, set TRTLLM_HF_HUB_OFFLINE=0 and TRTLLM_SKIP_DOWNLOAD=0 in your .env for one run.
+      - HF_HUB_OFFLINE=${TRTLLM_HF_HUB_OFFLINE:-1}
+      - TRTLLM_SKIP_DOWNLOAD=${TRTLLM_SKIP_DOWNLOAD:-1}
+    volumes:
+      - trtllm_hf_cache:/root/.cache/huggingface
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8355/v1/models', timeout=5).read()\"",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 120
+      start_period: 1200s
+    # Use `gpus: all` (== docker run --gpus all), NOT deploy.resources.reservations.devices:
+    # the deploy form injects the devices but NOT a working NVML, so trtllm dies at
+    # pynvml.nvmlInit() ("Failed to initialize NVML" -> MPI_ABORT). Verified: same image
+    # works with --gpus all, fails via the deploy form.
+    gpus: all
+
+  backend:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        USE_FAISS_GPU: "1"   # set to "1" for FAISS GPU (faster RAG search; needs GPU)
+        HF_TOKEN: ${HF_TOKEN:-}
+        ECHOMIND_ASR_MODEL_NAME: ${ECHOMIND_ASR_MODEL_NAME:-nvidia/nemotron-speech-streaming-en-0.6b}
+        # Release identification (ISO 9001 8.5.2) — exported by scripts/release.sh.
+        BUILD_VERSION: ${BUILD_VERSION:-0.0.0-dev}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+        # SKIP_MODEL_DOWNLOAD: "1"  # uncomment if build fails with "file already closed"; incompatible with offline
+        # SKIP_NEMOTRON_WARMUP: "1"  # skip NeMo load during build (faster CI; colder first runtime load)
+    container_name: echomind-backend
+    restart: unless-stopped
+    expose: ["8000"]
+    healthcheck:
+      # 503 when a fatal GPU/CUDA fault poisons the shared context; combined with the in-process
+      # watchdog (exits on fatal) + restart policy, the container self-recovers.
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)\""]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 180s
+    environment:
+      # ── Release identification (ISO 9001 8.5.2) ──────────────────────────────
+      # Normally baked into the image by the build args above. Repeated here so a
+      # container started from a PREVIOUSLY built image can still be told which
+      # revision it is; the runtime value wins over the baked-in default.
+      - BUILD_VERSION=${BUILD_VERSION:-0.0.0-dev}
+      - BUILD_COMMIT=${BUILD_COMMIT:-unknown}
+      - BUILD_DATE=${BUILD_DATE:-unknown}
+      # Chat LLM: Qwen3-30B-A3B (MoE, NVFP4) served by TensorRT-LLM — driver 580.159.03 fixed
+      # the GB10 worker-spawn CUDA bug (CVD ordinal masking; verified spawn/fork workers OK).
+      # Prefill ~3000 tok/s (vs ~340 on ollama) => ~10x faster RAG TTFT at 30B quality.
+      # Rollback: point these two back at ollama / qwen2.5:7b-instruct-q4_K_M.
+      - LLM_BASE_URL=http://trtllm:8355/v1
+      - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
+      - OLLAMA_EMBED_URL=http://ollama:11434/api/embeddings
+      - OLLAMA_EMBED_MODEL=nomic-embed-text
+      # ── Auth (Phase 0b). Values come from .env (gitignored). AUTH_ENABLED=0 there
+      # reverts to the open demo behaviour; AUTH_ADMIN_PASSWORD re-seeds the admin on boot.
+      - AUTH_ENABLED=${AUTH_ENABLED:-0}
+      - AUTH_SECRET=${AUTH_SECRET:-}
+      - AUTH_ADMIN_USER=${AUTH_ADMIN_USER:-admin}
+      - AUTH_ADMIN_PASSWORD=${AUTH_ADMIN_PASSWORD:-}
+      # Offline: use only local Hugging Face cache (no runtime model download)
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+      # Live Transcript ASR on GPU. Driver 580.159.03 fixed the GB10 NVML-in-container bug that
+      # made this container report torch device_count=0 (which crashed streams with
+      # "Stream init failed: CUDA device(s) busy or unavailable" and forced a CPU pin). The
+      # backend now sees the GPU reliably alongside FAISS-GPU. Revert to cpu if NVML regresses.
+      - ECHOMIND_ASR_DEVICE=cuda
+      # Document Studio images: real on-device text-to-image (SDXL-Turbo via diffusers).
+      # Private + offline after the one-time model download (cached in /data). Set
+      # DOCGEN_IMAGE_BACKEND=local for the no-GPU synthetic fallback, or =nim for cloud.
+      - DOCGEN_IMAGE_BACKEND=diffusers
+      - DOCGEN_DIFFUSERS_MODEL=stabilityai/sdxl-turbo
+      - DOCGEN_DIFFUSERS_CACHE=/data/docgen_models
+      - DOCGEN_DIFFUSERS_STEPS=4
+      - DOCGEN_DIFFUSERS_MAX=1024
+      - DOCGEN_MAX_IMAGES=8
+      - DOCGEN_IMAGE_CONCURRENCY=1
+    volumes:
+      - echomind_data:/data
+    depends_on:
+      # No hard trtllm dependency: its cold start takes minutes and the backend serves
+      # health/ingestion without it; LLM calls simply retry once it's up. Embeddings need ollama.
+      ollama:
+        condition: service_healthy
+    # Use `gpus: all` (== docker run --gpus all), NOT deploy.resources.reservations.devices:
+    # on GB10 the deploy form gives a broken NVML — torch reports device_count=0
+    # ("Failed to initialize NVML: Unknown Error"), so ASR/FAISS silently lose the GPU and
+    # Live Transcript dies with "Stream init failed: CUDA-capable device(s) busy or unavailable".
+    # Same fix that was applied to trtllm. Verified: this image sees the GB10 with --gpus all.
+    gpus: all
+
+  voice:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
+    build:
+      context: .
+      dockerfile: voice/Dockerfile
+      args:
+        HF_TOKEN: ${HF_TOKEN:-}
+        ECHOMIND_ASR_MODEL_NAME: ${ECHOMIND_ASR_MODEL_NAME:-nvidia/nemotron-speech-streaming-en-0.6b}
+        # Release identification (ISO 9001 8.5.2) — exported by scripts/release.sh.
+        BUILD_VERSION: ${BUILD_VERSION:-0.0.0-dev}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+        # SKIP_NEMOTRON_WARMUP: "1"  # optional: skip build-time NeMo warmup
+    volumes:
+       - ./voice/voices:/voices
+    container_name: echomind-voice
+    restart: unless-stopped
+    # Host port for optional direct voice access; Nginx uses voice:8000 on the Docker network (unchanged).
+    # Default 8002 — host 8001 is often taken (e.g. uvicorn). Override: VOICE_HOST_PORT=8001 in .env
+    ports: ["${VOICE_HOST_PORT:-8002}:8000"]
+    healthcheck:
+      # /health returns 503 once a fatal CUDA fault poisons STT; with the watchdog (self-exit on
+      # fatal) + restart policy, the container recovers automatically with a fresh CUDA context.
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)\""]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 120s
+    environment:
+      # ── Release identification (ISO 9001 8.5.2) ──────────────────────────────
+      # Normally baked into the image by the build args above. Repeated here so a
+      # container started from a PREVIOUSLY built image can still be told which
+      # revision it is; the runtime value wins over the baked-in default.
+      - BUILD_VERSION=${BUILD_VERSION:-0.0.0-dev}
+      - BUILD_COMMIT=${BUILD_COMMIT:-unknown}
+      - BUILD_DATE=${BUILD_DATE:-unknown}
+      # TensorRT-LLM in compose (OpenAI-compatible); dialogue uses stream=true for TTFT.
+      - LLM_URL=http://trtllm:8355/v1/chat/completions
+      - LLM_MODEL=nvidia/Qwen3-30B-A3B-FP4
+      # Gate the voice WebSocket with the backend session cookie. NOTE the name:
+      # voice/app/auth_check.py reads VOICE_AUTH_SECRET, which must equal the backend's
+      # AUTH_SECRET or every handshake fails signature validation.
+      - VOICE_AUTH_ENABLED=${VOICE_AUTH_ENABLED:-0}
+      - VOICE_AUTH_SECRET=${AUTH_SECRET:-}
+      # Optional: LLM_LOG_PAYLOAD=1 logs full JSON body at WARNING (timing always INFO: VOICE_LLM stream start/done).
+      # Nemotron STT (same model as backend live transcript; gated HF — set HF_TOKEN in .env if needed)
+      - ECHOMIND_ASR_MODEL_NAME=nvidia/nemotron-speech-streaming-en-0.6b
+      # DGX / Spark: keep ASR on GPU (PyTorch). Use ECHOMIND_ASR_DEVICE=cpu only for CPU-only hosts.
+      - ECHOMIND_ASR_DEVICE=${VOICE_ASR_DEVICE:-cuda}   # cpu when the GPU is shared with other stacks
+      # Fail startup if the voice container cannot see a GPU (no silent CPU fallback for ASR).
+      - ECHOMIND_ASR_REQUIRE_CUDA=${VOICE_ASR_REQUIRE_CUDA:-1}
+      # Set VOICE_CUDA_VISIBLE_DEVICES= (empty) in .env to hide the GPU from voice entirely when another
+      # stack owns it; NeMo initialises a CUDA context on load even with ASR_DEVICE=cpu.
+      - CUDA_VISIBLE_DEVICES=${VOICE_CUDA_VISIBLE_DEVICES-0}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - HF_HUB_OFFLINE=${HF_HUB_OFFLINE:-1}
+      # Utterance chunking for voice STT (ms); optional override
+      - VOICE_NEMOTRON_CHUNK_MS=${VOICE_NEMOTRON_CHUNK_MS:-560}
+      # 1 = load Nemotron at startup so GPU/weights issues fail fast on DGX; set 0 for faster WS accept on weak hosts
+      - VOICE_NEMOTRON_STARTUP_LOAD=${VOICE_NEMOTRON_STARTUP_LOAD:-1}
+      # Piper ONNX TTS on GPU (requires onnxruntime-gpu in the voice image)
+      # Piper TTS: onnxruntime CUDA EP isn't available on Spark/ARM (it silently fell back to CPU);
+      # set 0 to go straight to CPU. CPU Piper is fast enough for short replies.
+      - VOICE_PIPER_USE_CUDA=${VOICE_PIPER_USE_CUDA:-0}
+      # Pin voice to one GPU if the host runs trtllm/backend on others, e.g. NVIDIA_VISIBLE_DEVICES=2
+      # RAG: voice bot calls backend for answers from documents + transcripts
+      - BACKEND_CHAT_URL=http://backend:8000
+      # Offline: disable runtime Piper voice download from Hugging Face
+      - VOICE_OFFLINE=1
+      # ── Voice turn-taking tuning (fixes "cuts off my speech / doesn't listen / cut off for no reason") ──
+      # Less-aggressive endpointing so a natural pause doesn't end your turn early.
+      - ENDPOINT_SILENCE_MS=${ENDPOINT_SILENCE_MS:-700}
+      - ENDPOINT_SILENCE_COMPLETE_MS=${ENDPOINT_SILENCE_COMPLETE_MS:-550}
+      - ENDPOINT_SILENCE_INCOMPLETE_MS=${ENDPOINT_SILENCE_INCOMPLETE_MS:-1300}
+      # Barge-in balance (~160ms): low enough to interrupt easily, high enough to ignore brief echo/noise.
+      - BARGE_IN_SPEECH_LEAD_ACTIVE=${BARGE_IN_SPEECH_LEAD_ACTIVE:-8}
+      # More permissive VAD so quieter speech isn't dropped.
+      - VAD_AGGR=${VAD_AGGR:-1}
+      # Local voice replies were capped at 220 tokens (~150 words) and truncated mid-sentence; raise the ceiling.
+      - LLM_MAX_TOKENS=${VOICE_LLM_MAX_TOKENS:-420}
+      # Accurate FINAL transcript (the text that feeds the LLM) via NeMo Parakeet-TDT; fixes domain-term
+      # mishearing ("DoD FMR"->"DODFMA"). Live partials stay on the streaming model. Falls back on error.
+      - VOICE_USE_PARAKEET=${VOICE_USE_PARAKEET:-1}
+      - VOICE_FINAL_ASR_MODEL=${VOICE_FINAL_ASR_MODEL:-nvidia/parakeet-tdt-0.6b-v2}
+      # Parakeet on the GPU with its CUDA-graph decoder disabled (see stt_nemotron._get_parakeet):
+      # the old illegal-memory-access was Parakeet's graph decoder colliding with the Nemotron
+      # streaming decoder in-process, not the GPU. ~170 ms per final decode vs ~1.5 s on CPU.
+      # VOICE_PARAKEET_DEVICE=cpu restores the CPU path.
+      # Follows VOICE_ASR_DEVICE when that is set to cpu (a CPU-only host), else cuda.
+      - VOICE_PARAKEET_DEVICE=${VOICE_PARAKEET_DEVICE:-${VOICE_ASR_DEVICE:-cuda}}
+      - VOICE_PARAKEET_CUDA_GRAPHS=${VOICE_PARAKEET_CUDA_GRAPHS:-0}
+    depends_on:
+      # No hard trtllm dependency (slow cold start; LLM calls retry). Embeddings need ollama.
+      ollama:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    # Use `gpus: all` (== docker run --gpus all), NOT deploy.resources.reservations.devices:
+    # on GB10 the deploy form gives a broken NVML — torch reports device_count=0
+    # ("Failed to initialize NVML: Unknown Error"), so ASR/FAISS silently lose the GPU and
+    # Live Transcript dies with "Stream init failed: CUDA-capable device(s) busy or unavailable".
+    # Same fix that was applied to trtllm. Verified: this image sees the GB10 with --gpus all.
+    gpus: all
+
+  frontend:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_BASE=
+        # Release identification (ISO 9001 8.5.2) — written into the web root as
+        # /build.json at build time; the served assets are static, so there is no
+        # runtime environment fallback for the front end.
+        - BUILD_VERSION=${BUILD_VERSION:-0.0.0-dev}
+        - BUILD_COMMIT=${BUILD_COMMIT:-unknown}
+        - BUILD_DATE=${BUILD_DATE:-unknown}
+    container_name: echomind-frontend
+    restart: unless-stopped
+    ports: ["3000:80", "3443:443"]
+    depends_on: [backend, voice]
+
+  # ── Public access via Cloudflare Tunnel (OPT-IN: only starts with `--profile public`) ──
+  # Domain: echomind-ajace.com. Create a *remote-managed* tunnel in the Cloudflare
+  # Zero Trust dashboard, put its token in .env as TUNNEL_TOKEN, then route the public
+  # hostname echomind-ajace.com -> http://frontend:80 (cloudflared shares this network).
+  # ⚠️ GATE IT WITH CLOUDFLARE ACCESS (login) FIRST — app auth (AUTH_ENABLED) is OFF by default,
+    #    and WebSocket endpoints are not covered by the auth middleware even when it is on.
+  # Full runbook: docs/PUBLIC_DEPLOYMENT.md   Start: docker compose --profile public up -d cloudflared
+  cloudflared:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
+    image: cloudflare/cloudflared:latest
+    container_name: echomind-cloudflared
+    restart: unless-stopped
+    profiles: ["public"]
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN:-}
+    depends_on: [frontend]
+
+  ollama:
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }   # bounded: default is unlimited (QMS risk R-07)
+    build:
+      context: ./docker/ollama
+      dockerfile: Dockerfile
+    image: echomind-ollama:setup
+    container_name: echomind-ollama
+    restart: unless-stopped
+    ports: ["${OLLAMA_HOST_PORT:-11434}:11434"]   # host port only; containers use ollama:11434 on the docker network
+    environment:
+      - OLLAMA_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
+      - OLLAMA_EMBED_MODEL=nomic-embed-text
+      # Chat LLM is TensorRT-LLM; Ollama only serves embeddings for RAG
+      - OLLAMA_EMBED_ONLY=1
+      # Offline: do not pull at startup; require models in volume (populated by prepare step)
+      - OLLAMA_OFFLINE=1
+      # Set OLLAMA_CUDA_VISIBLE_DEVICES= (empty) in .env to run embeddings on the CPU when the GPU is
+      # shared with other stacks and a new CUDA context cannot be created (REG-04 NC-2026-016).
+      - CUDA_VISIBLE_DEVICES=${OLLAMA_CUDA_VISIBLE_DEVICES-0}
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      # A real embedding call: listing models stayed "healthy" while every embedding failed
+      # (REG-04 NC-2026-016).
+      test: ["CMD", "sh", "-c", "curl -sf -m 30 http://localhost:11434/api/embeddings -d '{\"model\":\"nomic-embed-text\",\"prompt\":\"healthcheck\"}' | grep -q embedding"]
+      interval: 15s
+      timeout: 10s
+      retries: 80
+      start_period: 300s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  echomind_data:
+  ollama_data:
+  trtllm_hf_cache:

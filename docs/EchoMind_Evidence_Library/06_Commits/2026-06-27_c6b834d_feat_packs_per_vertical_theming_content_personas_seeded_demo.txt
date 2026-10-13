@@ -1,0 +1,36 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/c6b834d
+
+commit c6b834da356f9ff0378b5af15b201570b2f2c63a
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 12:35:11 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 12:35:11 2026 -0400
+
+    feat(packs): per-vertical theming, content, personas + seeded demo data (UI refurbish)
+    
+    Each vertical now looks and reads like its own product:
+    - Theme engine: Tailwind accent/accent2 colors bound to CSS vars; packs.ts sets palette +
+      ambient glows per vertical; applyPackTheme() on load. Sidebar, header badge, chat
+      (welcome, prompts, send, citations, thinking dots) follow the active accent.
+    - Identity: sidebar brand name/tagline/logo color, per-view nav labels (Clinical Chat,
+      Case Chat, Advisory Chat...), document title, vertical emoji.
+    - Content: chat empty-state welcome headline + blurb + clickable starter prompts mapped to
+      the seeded demo data (send() now accepts override text).
+    - Personas: new Clinical Assistant / Banking Advisor / Meeting Facilitator / Retail Advisor
+      across all 3 backend persona prompt maps — KB-grounded, generic citations, no DoD refusal.
+      Packs map health->Clinical, law->Lawyer, meetings->Meeting, retail->Retail, bank->Banking.
+    
+    Verified end-to-end: all 5 namespaces answer from their own isolated KB in their persona's
+    voice with citations and zero cross-vertical leak.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/rag/advanced.py           |  47 ++++++++++++++
+ frontend/App.tsx                      |   7 ++-
+ frontend/components/KnowledgeChat.tsx |  49 ++++++++++-----
+ frontend/components/Sidebar.tsx       |  29 +++++----
+ frontend/index.css                    |   8 +++
+ frontend/packs.ts                     | 114 +++++++++++++++++++++++++++++++---
+ frontend/tailwind.config.js           |   8 ++-
+ frontend/types.ts                     |   4 ++
+ 8 files changed, 223 insertions(+), 43 deletions(-)

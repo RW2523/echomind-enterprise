@@ -1,0 +1,33 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/e8ead2f
+
+commit e8ead2ffe039433f00153992cf13df4a74bc8d08
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 12:06:38 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 12:06:38 2026 -0400
+
+    feat(packs): vertical-pack framework + subdomain wiring (Step 2)
+    
+    Maps a subdomain (or ?vertical= override for testing) to an isolated KB namespace,
+    a default persona, and light branding — the building-block model.
+    - packs.ts: PACKS registry (health/law/meetings/retail/bank) + resolvePack()
+      (?vertical= or subdomain) + getActiveNamespace().
+    - services/backend.ts: chat ask/ask-stream + upload now send the active namespace.
+    - useVoiceConnection.ts: voice set_context sends namespace.
+    - voice/session.py: stores kb_namespace from set_context, forwards it to the backend
+      RAG payloads (both /ask-voice-stream call sites).
+    - App.tsx: resolves pack -> default persona + document.title; passes pack to Header.
+    - Header.tsx: shows a pack brand badge (name + tagline + accent).
+    
+    Main app (no pack) sends no namespace -> whole-KB behavior unchanged. Verified over HTTP:
+    namespace=law returns zero KB excerpts; no-namespace returns DoD FMR excerpts.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ frontend/App.tsx                     |  9 +++--
+ frontend/components/Header.tsx       | 14 +++++++-
+ frontend/hooks/useVoiceConnection.ts |  3 ++
+ frontend/packs.ts                    | 70 ++++++++++++++++++++++++++++++++++++
+ frontend/services/backend.ts         |  7 +++-
+ voice/app/session.py                 |  4 +++
+ 6 files changed, 103 insertions(+), 4 deletions(-)

@@ -1,0 +1,20 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/dfcf300
+
+commit dfcf300045d5b264818eb6cee4914542811aa854
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Mon Jun 22 15:16:11 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Mon Jun 22 15:16:11 2026 -0400
+
+    docs: add USER_MANUAL.md — complete marketing-style end-to-end user manual
+    
+    16 chapters + glossary + admin appendix covering all five modules, personas,
+    settings, privacy, tips, and troubleshooting. Generated via a multi-agent
+    draft→completeness-critic pipeline, then fact-checked against the actual UI
+    (corrected Settings/data-management and live-transcription claims that
+    referenced commented-out controls).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ docs/USER_MANUAL.md | 1257 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 1257 insertions(+)

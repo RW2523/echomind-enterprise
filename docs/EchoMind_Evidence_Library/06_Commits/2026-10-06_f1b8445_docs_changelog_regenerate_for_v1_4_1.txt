@@ -1,0 +1,12 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/f1b8445
+
+commit f1b8445a994e3b3eb9201e93c58d327b30664d9b
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Oct 6 18:17:02 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Oct 6 18:17:02 2026 -0400
+
+    docs(changelog): regenerate for v1.4.1
+
+ CHANGELOG.md | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)

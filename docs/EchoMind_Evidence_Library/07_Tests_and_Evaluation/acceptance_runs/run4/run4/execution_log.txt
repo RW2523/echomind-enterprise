@@ -1,0 +1,72 @@
+[2026-10-06 22:28:05 UTC] === TC-EM-AUTH-101 Login, session and access control
+[2026-10-06 22:28:05 UTC]   AC-101.1 PASS — HTTP 200 {'auth_enabled': True}
+[2026-10-06 22:28:05 UTC]   AC-101.2 PASS — HTTP 200, cookie set, role admin
+[2026-10-06 22:28:05 UTC]   AC-101.3 PASS — HTTP 401 {'detail': 'Invalid username or password'}
+[2026-10-06 22:28:05 UTC]   AC-101.4 PASS — /api/docs/list → 401, /api/chat/list → 401, /api/auth/users → 401, POST /api/docs/delete-all → 401
+[2026-10-06 22:28:06 UTC]   AC-101.5 PASS — create user HTTP 200; login 200; GET /api/auth/users → 403; GET /api/docs/list → 200
+[2026-10-06 22:28:06 UTC]   AC-101.6 PASS — exp − iat = 720 minutes (12 h); configured by AUTH_TOKEN_TTL_MIN
+[2026-10-06 22:28:06 UTC]   AC-101.7 PASS — logout HTTP 200; replayed token → HTTP 401
+[2026-10-06 22:28:06 UTC]   AC-101.8 PASS — 150 recent events; 1 for qa_tc101_6bb5e; e.g. {"ts": "2026-10-06T22:28:06Z", "username": "qa_tc101_6bb5e", "role": "user", "method": "POST", "path": "/api/auth/logout", "status": 200, "ip": "172.22.0.6"}
+[2026-10-06 22:28:16 UTC]   AC-101.9 PASS — without session → 403; with session → 101
+[2026-10-06 22:28:16 UTC]   => TC-EM-AUTH-101 Pass
+[2026-10-06 22:28:16 UTC] === TC-EM-DOC-102 Document upload, validation and activity log
+[2026-10-06 22:28:17 UTC]   DOC-102.1 PASS — HTTP 200; doc_id doc_51574092abab
+[2026-10-06 22:28:17 UTC]   DOC-102.2 PASS — present in list: True
+[2026-10-06 22:28:17 UTC]   DOC-102.3 PASS — HTTP 200; duplicate_of doc_51574092abab
+[2026-10-06 22:28:17 UTC]   DOC-102.4 PASS — HTTP 422; {'detail': 'No text could be extracted from this file. It may be a scanned/image PDF (OCR not supported), corrupted, or empty.'}
+[2026-10-06 22:28:17 UTC]   DOC-102.5 PASS — HTTP 415; {'detail': 'Unsupported file type. Allowed: .pdf, .docx, .pptx, .txt, .md.'}
+[2026-10-06 22:28:17 UTC]   DOC-102.6 PASS — 14 upload events; latest {"ts": "2026-10-06T22:28:17Z", "username": "admin", "role": "admin", "method": "POST", "path": "/api/docs/upload", "status": 415, "ip": "172.22.0.6"}
+[2026-10-06 22:28:18 UTC]   DOC-102.7 PASS — DELETE HTTP 200; absent from list: True
+[2026-10-06 22:28:18 UTC]   => TC-EM-DOC-102 Pass
+[2026-10-06 22:28:18 UTC] === TC-EM-RAG-103 Grounded answers with citations; no fabricated sources
+[2026-10-06 22:28:28 UTC]   RAG-103.1 PASS — HTTP 200 in 10.7s; cites ['02_Meridian_Bank_Data_Protection_and_Security_Addendum_Demo.pdf', '03_Meridian_Bank_Service_Level_and_Support_Schedule_Demo.pdf']; answer: The acknowledgment time for a Severity 1 (P1) incident in the Meridian Bank service level schedule is **15 minutes** after the incident reaches the Provider's designated 
+[2026-10-06 22:28:37 UTC]   RAG-103.2 PASS — HTTP 200 in 8.8s; cites ['01_Meridian_Bank_Master_Services_Agreement_Demo.pdf', '02_Meridian_Bank_Data_Protection_and_Security_Addendum_Demo.pdf', '04_Meridian_Bank_Implementation_Statement_of_Work_Demo.pdf']; answer: The Meridian Bank contract documents provided do not mention anything about "colonising Mars" or any related activities. The documents focus on service level agreements, 
+[2026-10-06 22:28:38 UTC]   RAG-103.3 PASS — HTTP 200 in 1.0s; cites none; answer: I'm good, thanks for asking! How can I assist you today?
+[2026-10-06 22:28:38 UTC]   => TC-EM-RAG-103 Pass
+[2026-10-06 22:28:38 UTC] === TC-EM-ISO-104 Knowledge-base namespace isolation between vertical packs
+[2026-10-06 22:28:45 UTC]     namespace bank: HTTP 200; cites []
+[2026-10-06 22:28:45 UTC]     namespace health: HTTP 200; cites []
+[2026-10-06 22:28:45 UTC]     namespace law: HTTP 200; cites []
+[2026-10-06 22:28:45 UTC]   ISO-104.1 PASS — bank: cites Meridian = False; health: cites Meridian = False; law: cites Meridian = False
+[2026-10-06 22:28:45 UTC]   ISO-104.2 Info — Meridian cited in: none of bank/health/law — documents are in the default namespace
+[2026-10-06 22:28:45 UTC]   => TC-EM-ISO-104 Pass
+[2026-10-06 22:28:45 UTC] === TC-EM-OPS-105 Service stack health, controlled restart and configuration rejection
+[2026-10-06 22:28:46 UTC]   OPS-105.1 PASS — backend: Up 10 minutes (healthy); cloudflared: Up 2 hours; frontend: Up About a minute; ollama: Up 47 seconds (healthy); trtllm: Up 3 hours (healthy); voice: Up 3 minutes (healthy)
+[2026-10-06 22:28:46 UTC]   OPS-105.2 PASS — ; running services unchanged: True
+[2026-10-06 22:28:47 UTC]   OPS-105.3 PASS — HTTP 200 after 1.4s
+[2026-10-06 22:28:47 UTC]   OPS-105.4 PASS — /api/version HTTP 200
+[2026-10-06 22:28:47 UTC]   => TC-EM-OPS-105 Pass
+[2026-10-06 22:28:47 UTC] === TC-EM-REL-106 Release identification and traceability
+[2026-10-06 22:28:47 UTC]   REL-106.1 PASS — HTTP 200 {'app': 'EchoMind Backend', 'version': '1.4.1', 'commit': 'f1b8445a994e3b3eb9201e93c58d327b30664d9b', 'date': '2026-10-06T22:17:01Z'}
+[2026-10-06 22:28:47 UTC]   REL-106.2 PASS — reported f1b8445a994e; tag v1.4.1 → f1b8445a994e
+[2026-10-06 22:28:47 UTC]   REL-106.3 PASS — ## [1.4.1] present
+[2026-10-06 22:28:47 UTC]   REL-106.4 PASS — {"ok":true,"build":{"version":"1.4.1","commit":"f1b8445a994e3b3eb9201e93c58d327b30664d9b","date":"2026-10-06T22:17:01Z"}}
+[2026-10-06 22:28:47 UTC]   => TC-EM-REL-106 Pass
+[2026-10-06 22:28:47 UTC] === TC-EM-EXP-108 Secure export gateway — PII and secret detection with redaction
+[2026-10-06 22:28:47 UTC]   EXP-108.1 PASS — HTTP 200; 4 findings: ['api_key', 'email', 'phone', 'ssn']
+[2026-10-06 22:28:47 UTC]   EXP-108.2 PASS — redacted copy present: True; values still present: none
+[2026-10-06 22:28:47 UTC]   => TC-EM-EXP-108 Pass
+[2026-10-06 22:28:47 UTC] === TC-EM-UNIT-109 Automated regression suites (backend, voice, frontend type-check)
+[2026-10-06 22:28:49 UTC]   UNIT-109.1 PASS — 50 passed in 0.81s
+[2026-10-06 22:28:49 UTC]   UNIT-109.2 PASS — 131 passed in 0.13s
+[2026-10-06 22:28:52 UTC]   UNIT-109.3 PASS — 0 errors; exit=0
+[2026-10-06 22:28:52 UTC]   => TC-EM-UNIT-109 Pass
+[2026-10-06 22:28:52 UTC] === TC-EM-DGEN-110 Document Studio availability (smoke)
+[2026-10-06 22:28:52 UTC]   DGEN-110.1 PASS — HTTP 200; 25 templates
+[2026-10-06 22:28:52 UTC]   DGEN-110.2 PASS — HTTP 200; {'backend': 'diffusers', 'enabled': True, 'mode': 'on-device', 'model': 'stabilityai/sdxl-turbo'}
+[2026-10-06 22:28:52 UTC]   => TC-EM-DGEN-110 Pass
+[2026-10-06 22:28:52 UTC] === TC-EM-BRD-111 Boardroom session lifecycle (smoke)
+[2026-10-06 22:28:52 UTC]   BRD-111.1 PASS — HTTP 200; id brm_c4474aae0970; 
+[2026-10-06 22:28:52 UTC]   BRD-111.2 PASS — HTTP 200
+[2026-10-06 22:28:53 UTC]   BRD-111.3 PASS — DELETE HTTP 200; GET after delete HTTP 404
+[2026-10-06 22:28:53 UTC]   => TC-EM-BRD-111 Pass
+[2026-10-06 22:28:53 UTC] === TC-EM-TRN-112 Live transcription end to end (microphone → transcript → live check)
+[2026-10-06 22:28:53 UTC]   TRN-112.1 Not executed — Requires a microphone session; scheduled as a manual test. Backend transcription unit tests pass (TC-EM-UNIT-109).
+[2026-10-06 22:28:53 UTC]   => TC-EM-TRN-112 Not executed
+[2026-10-06 22:28:53 UTC] === TC-EM-BKP-113 Data backup integrity and restore
+[2026-10-06 22:28:53 UTC]   BKP-113.1 PASS — echomind_data_20260922-135915.tar.gz: OK
+[2026-10-06 22:28:53 UTC]   BKP-113.2 Not executed — Last executed 2026-09-22 (integrity_check ok, 32 tables — REG-09 NFR-R04). Not repeated today; no scheduled backup since (open action).
+[2026-10-06 22:28:53 UTC]   => TC-EM-BKP-113 Pass
+[2026-10-06 22:28:53 UTC] === TC-EM-EVAL-114 Golden-question retrieval evaluation (52 questions)
+[2026-10-06 22:28:53 UTC]   EVAL-114.1 Blocked — Blocked by NC-2026-008 — the evaluation corpus is absent; last run 2026-09-22 scored 9/52 by construction (eval/reports/eval_20260922-135322.json).
+[2026-10-06 22:28:53 UTC]   => TC-EM-EVAL-114 Blocked

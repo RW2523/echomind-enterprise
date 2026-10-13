@@ -1,0 +1,22 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/0818cdc
+
+commit 0818cdcc803d36a9b1f406b6019d81c0c85a921e
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Apr 10 01:42:26 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Apr 10 01:42:26 2026 -0400
+
+    Enhance Docker configurations for offline model preparation and update frontend components
+    
+    - Updated docker-compose.prepare.yml to include trtllm service for downloading model weights and caching.
+    - Modified docker-compose.yml to set default environment variables for offline operation and cache reuse.
+    - Removed importmap script from frontend index.html to streamline the loading process.
+    - Replaced logo image in Sidebar component with an SVG representation for improved scalability and design consistency.
+
+ docker-compose.prepare.yml               | 18 +++++++++++++++---
+ docker-compose.yml                       |  9 +++++----
+ frontend/components/Sidebar.tsx          | 15 ++++++++++-----
+ frontend/index.html                      | 10 ----------
+ livetranscript/docker-compose.yml        |  7 +++++++
+ livetranscript/docker/Dockerfile.backend | 19 +++++++++++++++++--
+ 6 files changed, 54 insertions(+), 24 deletions(-)

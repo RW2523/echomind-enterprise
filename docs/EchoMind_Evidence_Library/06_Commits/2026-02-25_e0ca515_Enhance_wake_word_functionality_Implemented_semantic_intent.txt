@@ -1,0 +1,18 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/e0ca515
+
+commit e0ca5154b4eb6f275bb2e43f7b71606dde80ca14
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Feb 25 13:25:20 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Feb 25 13:25:20 2026 -0500
+
+    Enhance wake word functionality: Implemented semantic intent recognition for changing the assistant's wake word, including confirmation prompts. Updated session management to handle wake word changes and improved logging of user interactions. Refactored related tests to ensure proper functionality of wake word change intents.
+
+ README.md                                  |   9 +-
+ docs/CONVERSATION_AI_AND_WAKE_WORD_FLOW.md | 181 +++++++++++++++++++++++++++++
+ scripts/build.sh                           |  19 +++
+ voice/app/echo_commands.py                 |  96 +++++++++++++--
+ voice/app/session.py                       | 128 +++++++++++++++-----
+ voice/app/wake_word_storage.py             |  42 +++++++
+ voice/tests/test_echo_memory.py            |  30 +++++
+ 7 files changed, 462 insertions(+), 43 deletions(-)

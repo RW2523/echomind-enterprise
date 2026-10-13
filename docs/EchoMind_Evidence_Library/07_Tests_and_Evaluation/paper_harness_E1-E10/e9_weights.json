@@ -1,0 +1,4 @@
+{
+  "status": "not_run",
+  "reason": "AHP weight elicitation requires >=3 panels x >=3 human practitioners. No panel was available; synthesising pairwise judgements would fabricate the very weights the experiment exists to measure."
+}

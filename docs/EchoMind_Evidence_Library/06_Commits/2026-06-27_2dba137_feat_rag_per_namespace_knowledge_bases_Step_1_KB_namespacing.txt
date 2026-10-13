@@ -1,0 +1,31 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/2dba137
+
+commit 2dba1373b808205ae1e2e3633ca81afc355129d4
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 11:59:52 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 11:59:52 2026 -0400
+
+    feat(rag): per-namespace knowledge bases (Step 1: KB namespacing lynchpin)
+    
+    Additive, backward-compatible KB isolation for multi-tenant / per-vertical demos:
+    - index.py: async contextvar (set_active_namespace) + _ns_ok filter; add_document(namespace=...)
+      tags each chunk's source_json + doc meta_json (no schema migration); namespace filter applied
+      inside search / search_document_only / sparse methods.
+    - advanced.py: safety post-filter at all 3 retrieve_semantic_first call sites -> isolation holds
+      across every retrieval path (incl. BOOK section/glossary over the existing book).
+    - chat.py: namespace field on AskIn/AskVoiceIn; contextvar set at all 4 RAG entry points
+      (/ask, /ask-stream, /ask-voice, /ask-voice-stream; inside generator for streaming).
+    - docs.py: /upload accepts a namespace form field.
+    
+    namespace=None -> identical to prior single-KB behavior (verified). Live test PASS:
+    secret doc in demo_health retrievable there, invisible to default/demo_law, visible whole-KB,
+    zero cross-namespace leak, clean after delete.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/api/routes/chat.py |  7 +++++++
+ backend/app/api/routes/docs.py |  5 +++--
+ backend/app/rag/advanced.py    |  5 ++++-
+ backend/app/rag/index.py       | 35 ++++++++++++++++++++++++++++++++---
+ 4 files changed, 46 insertions(+), 6 deletions(-)

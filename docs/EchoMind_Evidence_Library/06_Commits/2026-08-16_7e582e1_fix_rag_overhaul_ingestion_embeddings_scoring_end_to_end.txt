@@ -1,0 +1,78 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/7e582e1
+
+commit 7e582e17c3752d5b441e5ff7f8aef0332ddfb1a5
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sun Aug 16 01:09:22 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sun Aug 16 01:09:22 2026 -0400
+
+    fix(rag): overhaul ingestion, embeddings, scoring end to end
+    
+    Trigger: chunk preview showed "-1025% relevance" — raw cross-encoder logits
+    were leaking to the UI as percentages. A 17-agent audit (5 auditors, 12
+    adversarial verifiers; 12 defects confirmed, 0 refuted) traced three
+    incompatible score scales mixed under one key, plus deeper ingestion and
+    embedding defects. Corpus re-ingested (34 docs / 1957 chunks) on the new
+    pipeline; 5/5 retrieval probes pass.
+    
+    Embedding layer
+    - nomic-embed-text asymmetric task prefixes: embed(texts, kind=) with
+      "document" (ingest/rebuild), "query" (retrieval, default), "raw" (intent
+      classifier — thresholds calibrated un-prefixed). Cache key includes prefix.
+    - Deterministic contextual header for non-book docs
+      ([Document: <file> — <title lines>] [Page N]) stored in contextualized_text
+      and embedded/BM25-indexed; raw text still used for CE + prompt.
+    - EMBED_MAX_CHARS 2000 -> 4000 (headers must not truncate bodies).
+    - source_json.doc_title_line saved; CE passages prefixed with it so
+      "what does volume 2A chapter 1 cover" ranks the chapter's own chunks above
+      cross-references from other volumes.
+    
+    Scoring / display
+    - reranker: spread **h, tag score_kind="ce_logit" (was dropping aux fields
+      and silently switching scale under 'score').
+    - _display_score(): sigmoid logits, /10 LLM-rerank, pass-through cosine —
+      applied ONLY at the citation boundary; internal logit gates unchanged.
+    - graph-expansion confidence gate compares normalized score vs 0.5.
+    - citation selection: relative window (RAG_CITATION_CE_WINDOW=2.0 nats)
+      fixes all-negative-logit collapse to a single citation.
+    - evidence_extractor: chunk logit sigmoid-normalized before mixing with
+      keyword bonuses.
+    - frontend scoreLabel clamps to 0..1, "<1%" floor.
+    
+    Retrieval
+    - Candidate pool deepened to RAG_RERANK_TOP_K before rerank (the 25->15
+      rerank was a 15->15 no-op — every upstream stage capped at TOP_K).
+    - BM25 compound tokens (chapter_1, volume_2a) — single digits were dropped
+      and bare digits are IDF-useless (df('1')=74%).
+    - Phantom parent-expansion budget charge removed for flat corpora.
+    
+    Ingestion
+    - Header/footer stripping fixed: 3-char min for masked patterns ("#-#"),
+      windows measured in content lines, masked-number chains collapsed
+      ("DoD #.#-R" == "DoD #-R"), explicit page-marker regex at page edges.
+      02a_02.pdf: 86 header + 52 footer survivors -> 0.
+    - Token-based overlap carry honors CHUNK_OVERLAP=120 (was ~55 median, 4% of
+      adjacent pairs shared nothing -> 0%).
+    - page_start/page_end populated per chunk.
+    - Upload content-hash (sha256) dedup; duplicate BUDGET-2027-BUD.pdf
+      collapsed to one copy.
+    
+    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+ backend/app/api/routes/docs.py                   | 18 ++++++-
+ backend/app/core/config.py                       |  5 +-
+ backend/app/rag/advanced.py                      | 65 +++++++++++++++++++++---
+ backend/app/rag/chunking/chunkers.py             | 37 +++++++++++---
+ backend/app/rag/embeddings.py                    | 29 ++++++++++-
+ backend/app/rag/evidence_extractor.py            | 11 +++-
+ backend/app/rag/glossary_index.py                |  2 +-
+ backend/app/rag/index.py                         | 55 ++++++++++++++++++--
+ backend/app/rag/indexes/section_summary_index.py |  2 +-
+ backend/app/rag/indexes/toc_index.py             |  2 +-
+ backend/app/rag/intent.py                        |  4 +-
+ backend/app/rag/parse.py                         | 52 ++++++++++++++-----
+ backend/app/rag/reranker.py                      | 27 ++++++++--
+ backend/app/rag/section_index.py                 |  2 +-
+ backend/app/rag/sparse.py                        | 21 +++++++-
+ frontend/components/KnowledgeChat.tsx            |  8 +--
+ 16 files changed, 288 insertions(+), 52 deletions(-)

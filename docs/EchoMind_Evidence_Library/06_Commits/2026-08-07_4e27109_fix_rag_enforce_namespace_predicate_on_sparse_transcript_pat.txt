@@ -1,0 +1,25 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/4e27109
+
+commit 4e27109470950a4d6258b5ba4e02da61112052cf
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Aug 7 01:34:21 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Aug 7 01:34:21 2026 -0400
+
+    fix(rag): enforce namespace predicate on sparse transcript path
+    
+    advanced.py called Bm25Index.search directly for the transcript sparse
+    path, bypassing the _ns_ok namespace filter every other retrieval path
+    applies. Under a tenant-scoped query it returned 10/10 out-of-namespace
+    chunks, which also outranked in-namespace documents and silently zeroed
+    citations on vertical queries (golden eval 50/52 -> 42/52 as the corpus
+    grew). New search_transcript_only_sparse() wrapper enforces the
+    predicate; namespace candidate pool now scales with corpus size instead
+    of a fixed 512. Post-fix path audit: 0/359 out-of-namespace hits;
+    golden eval 49/52.
+    
+    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+ backend/app/rag/advanced.py |  4 +++-
+ backend/app/rag/index.py    | 25 ++++++++++++++++++++++++-
+ 2 files changed, 27 insertions(+), 2 deletions(-)

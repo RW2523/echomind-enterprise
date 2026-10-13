@@ -1,0 +1,22 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/3a6b1f9
+
+commit 3a6b1f9e2c8db5bca191cd9ed2c13f6837fcaab8
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Jun 26 16:21:58 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Jun 26 16:21:58 2026 -0400
+
+    build(voice): bake Parakeet into image + run it on CPU (avoids trtllm CUDA-graph crash)
+    
+    - voice/Dockerfile: snapshot_download nvidia/parakeet-tdt-0.6b-v2 at build so a clean
+      rebuild keeps the accurate final-decode model (offline runtime).
+    - stt_nemotron: VOICE_PARAKEET_DEVICE (default cpu). Parakeet on GPU caused a fatal
+      CUDA illegal-memory-access (CUDA-graph conflict with trtllm); CPU decode once-per-turn
+      on the Grace CPU is stable. Streaming partials stay on GPU.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ docker-compose.yml                 |  3 +++
+ voice/Dockerfile                   |  6 ++++++
+ voice/app/adapters/stt_nemotron.py | 21 ++++++++++++++++-----
+ 3 files changed, 25 insertions(+), 5 deletions(-)

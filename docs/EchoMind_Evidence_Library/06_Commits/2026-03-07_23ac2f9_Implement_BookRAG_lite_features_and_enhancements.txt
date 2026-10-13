@@ -1,0 +1,37 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/23ac2f9
+
+commit 23ac2f95878d4d6a96c8c490a63ee20475dfb244
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Mar 7 00:41:31 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Mar 7 00:41:31 2026 -0500
+
+    Implement BookRAG-lite++ features and enhancements
+    
+    - Added new configuration options for improved book chunk processing, including fallback keyword retrieval and clause chunking.
+    - Introduced a page-level index for accurate citations and logical mapping during document ingestion.
+    - Enhanced the Chunk model with additional attributes for clause IDs, adjacency links, and evidence types to improve metadata handling.
+    - Updated the query classifier to support new query types related to thresholds, tables, and comparisons, enhancing retrieval accuracy.
+    - Implemented adjacency expansion to fetch sibling chunks, reducing missed answers due to clause splits.
+    - Improved document upload handling with better error messages for empty or unprocessable files.
+    - Enhanced section path validation to accommodate DoD-style codes, improving robustness in metadata validation.
+
+ backend/app/api/routes/docs.py                     |  52 +++-
+ backend/app/core/config.py                         |  42 +++
+ backend/app/core/db.py                             |  67 +++++
+ backend/app/rag/advanced.py                        | 317 +++++++++++++++++++--
+ backend/app/rag/book/clause_parser.py              | 205 +++++++++++++
+ backend/app/rag/book/section_resolver.py           |  24 +-
+ backend/app/rag/chunking/models.py                 |  31 ++
+ backend/app/rag/chunking/pipeline.py               | 145 +++++++++-
+ backend/app/rag/metadata_validation.py             |  27 +-
+ backend/app/rag/query_classifier.py                | 108 ++++++-
+ .../components/Conversation/ConversationStage.tsx  |  13 +-
+ frontend/components/VoiceConversation.tsx          |   2 +
+ frontend/hooks/useVoiceConnection.ts               |  36 ++-
+ voice/app/conversation_memory.py                   |   5 +
+ voice/app/echo_commands.py                         |  96 +------
+ voice/app/session.py                               |  91 +++---
+ voice/static/index.html                            |  47 ++-
+ voice/tests/test_echo_memory.py                    |  49 +---
+ 18 files changed, 1115 insertions(+), 242 deletions(-)

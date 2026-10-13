@@ -1,0 +1,21 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/045b1b1
+
+commit 045b1b1aac4953fb6a669aefd12946023dc98621
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Mar 3 23:24:53 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Mar 3 23:24:53 2026 -0500
+
+    Refactor document chunking and indexing for improved metadata handling
+    
+    - Enhanced the `Chunk` model with `section_path` and `page_number` attributes for better organization and citation.
+    - Updated serialization to include new metadata fields, improving context during retrieval.
+    - Improved long-form detection to recognize additional document structures.
+    - Implemented dynamic chunk sizing based on content density for optimized processing.
+    - Introduced a new database schema for section-level metadata and cross-references.
+    - Updated parsing functions to return page information and offsets for enhanced navigation.
+    - Enhanced frontend components to display section paths and page numbers in citations.
+
+ backend/app/rag/cross_ref_graph.py | 209 +++++++++++++++++++++++++++++++++++++
+ backend/app/rag/section_index.py   | 183 ++++++++++++++++++++++++++++++++
+ 2 files changed, 392 insertions(+)

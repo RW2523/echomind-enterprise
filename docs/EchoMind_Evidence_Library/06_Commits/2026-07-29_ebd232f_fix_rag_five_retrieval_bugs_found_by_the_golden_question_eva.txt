@@ -1,0 +1,52 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/ebd232f
+
+commit ebd232fdeea57e85052f5d57edd17248a3ddafaa
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Jul 29 13:03:09 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Jul 29 13:03:09 2026 -0400
+
+    fix(rag): five retrieval bugs found by the golden-question eval
+    
+    The new eval harness (next commit) exposed a chain of real bugs, each verified
+    by tracing live requests:
+    
+    1. Semantic-intent false positives: conversationally-phrased domain questions
+       ("Do jumbo CDs earn anything extra ...?") embedded close to small-talk
+       prototypes and were misrouted to no-RAG. Fixed: small talk requires <= 12
+       words (RAG_INTENT_SMALLTALK_MAX_WORDS), floor 0.66 -> 0.68, margin 0.03 ->
+       0.05, and conversationally-phrased knowledge anchors added. Re-calibrated
+       32/32.
+    
+    2. Small-namespace starvation: FAISS/BM25 rank globally then filter by
+       namespace; with a 10k-chunk default corpus a 6-chunk vertical namespace was
+       absent from the k*4 global top -> 0 hits. Fixed: _ns_fetch_k widens the
+       candidate pool (>=512) whenever a namespace is active.
+    
+    3. Section-restriction hijack: the global, book-oriented TOC/section indexes
+       matched FMR sections for vertical queries and forced retrieval through a
+       section-restricted path containing zero in-namespace chunks. Fixed: BookRAG
+       section restriction only applies to the default (whole-KB) corpus.
+    
+    4. Keyword-grep namespace leak (tenant-isolation hole): the grep fallback did
+       not filter by namespace, returning out-of-namespace chunks (score 0.8) that
+       outranked real in-namespace hits and were then killed by the _ns_ok safety
+       net -> net 0 hits. Fixed: _ns_ok enforced inside the grep.
+    
+    5. Document time-decay: reference documents decayed on a 14-day half-life
+       (0.61 x exp(-ln2*32d/14d) ~= 0.13 < 0.45 relevance threshold), collapsing
+       every vertical query to "general". A policy handbook is not less true after
+       3 weeks. Fixed: doc decay off by default (RAG_DOC_TIME_DECAY_HALFLIFE_DAYS,
+       0 = off); transcript recency decay unchanged. Also: the grep merge now
+       upgrades duplicate chunk scores instead of skipping them, so a grep rescue
+       can actually rescue chunks dense found weakly.
+    
+    Plus: general-mode prompts now forbid invented citations (a no-context answer
+    had fabricated "(Compliance Policies — ...)" references).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/rag/advanced.py | 36 +++++++++++++++++++++++++-----------
+ backend/app/rag/index.py    | 27 +++++++++++++++++++++++----
+ backend/app/rag/intent.py   | 28 ++++++++++++++++++++++++----
+ 3 files changed, 72 insertions(+), 19 deletions(-)

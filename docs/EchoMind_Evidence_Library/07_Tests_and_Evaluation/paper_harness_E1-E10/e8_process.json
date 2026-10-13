@@ -1,0 +1,4 @@
+{
+  "status": "not_run",
+  "reason": "Process efficiency measures tool calls and recovery from injected tool failures. EchoMind has no tool-calling layer, so the metric is undefined for this system."
+}

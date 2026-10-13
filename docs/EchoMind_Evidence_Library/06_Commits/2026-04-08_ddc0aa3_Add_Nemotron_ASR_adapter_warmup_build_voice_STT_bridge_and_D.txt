@@ -1,0 +1,25 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/ddc0aa3
+
+commit ddc0aa33075d2f8817c6e48325acb04c5be6e8af
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Apr 8 16:05:21 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Apr 8 16:05:21 2026 -0400
+
+    Add Nemotron ASR adapter, warmup build, voice STT bridge, and Docker context trim
+    
+    - nemotron_asr: streaming NeMo adapter and build-time warmup helper
+    - voice: stt_nemotron adapter wiring for utterance transcription
+    - scripts: smoke_voice_nemotron for import/runtime checks
+    - .dockerignore: exclude node_modules, BookRAG, caches from image builds
+    - .gitignore: ignore BookRAG/ (local large assets)
+    
+    Made-with: Cursor
+
+ .dockerignore                             |   8 ++
+ .gitignore                                |   3 +
+ nemotron_asr/nemotron_asr/adapter.py      | 223 ++++++++++++++++++++++++++++++
+ nemotron_asr/nemotron_asr/warmup_build.py | 109 +++++++++++++++
+ scripts/smoke_voice_nemotron.py           |  68 +++++++++
+ voice/app/adapters/stt_nemotron.py        | 115 +++++++++++++++
+ 6 files changed, 526 insertions(+)

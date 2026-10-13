@@ -1,0 +1,59 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/343117f
+
+commit 343117f2e12372cbb1924e7abc8a26808bb576fa
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Jul 29 12:34:42 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Jul 29 12:34:42 2026 -0400
+
+    feat(rag): conversational intelligence, honest citations, persona quality overhaul
+    
+    Fixes a reported conversation where a greeting ("How are you doing") pulled 4
+    irrelevant KB sources, invented the user's situation from stored documents, and
+    a topic refusal was ignored — plus the "always exactly 4 sources" bug.
+    
+    Routing (3 layers, cheap → smart), applies to chat AND voice:
+    - Rules: normalized small-talk phrases + anchored shape patterns; new topic-
+      refusal detector routes declines to a no-RAG reply that drops the topic.
+    - Semantic (new rag/intent.py): prototype-embedding classifier via
+      nomic-embed-text (smalltalk/refusal vs knowledge anchors, floor 0.66 +
+      margin 0.03). Query embeds share the LRU cache and are reused by retrieval,
+      so real questions pay ~zero latency. Calibrated 23/23; fails open.
+    - CE relevance gate: after rerank, if the best cross-encoder score is below
+      RAG_CE_RELEVANCE_FLOOR (-8.0) the context is judged irrelevant and callers
+      answer generally instead of force-fitting junk (measured: junk ≈ -11,
+      relevant +3..+8).
+    
+    Reranker actually enabled: sentence-transformers was never in the backend
+    image, so the "cross-encoder rerank" stage silently used the slow LLM fallback
+    since day one. Added sentence-transformers>=5,<6 to requirements (model:
+    cross-encoder/ms-marco-MiniLM-L-6-v2; pre-download for offline runtime).
+    
+    "Always 4 sources" fix: _dedupe_by_section and _get_section_id_for_hit
+    collapsed ALL sectionless chunks (generic md/pdf corpora) into one shared
+    __no_section__ bucket, capping every answer at RAG_MAX_CHUNKS_PER_SECTION=4
+    total. Both now bucket per-document; book-style docs unaffected.
+    
+    Honest citations: new _select_citation_hits keeps only hits with CE score >=
+    RAG_CITATION_CE_FLOOR (0.0), cap RAG_MAX_CITATIONS (6) — a cystitis answer no
+    longer cites the H-1B checklist; focused questions cite one precise source.
+    
+    Persona quality (all 10): the 4 vertical packs got dedicated general-mode
+    prompts (their RAG prompts demanded "ONLY the provided context" with no
+    context present); all canned verbatim reply scripts replaced with natural
+    behavioral guidance; Lawyer disclaimer scoped to substantive legal analysis;
+    EchoMind Guide product facts corrected (Qwen via Ollama, Nemotron+Parakeet
+    STT, FAISS+BM25+CE reranker); universal RELEVANCE/conduct guards appended to
+    every persona (never infer the user's situation from the corpus; drop
+    declined topics).
+    
+    Verified live against the running backend: greetings 0 citations across all
+    10 personas, refusals drop topics, namespaced domain queries still cite
+    correctly, off-corpus questions answer naturally with 0 junk citations.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/rag/advanced.py | 432 +++++++++++++++++++++++++++++++++-----------
+ backend/app/rag/intent.py   | 157 ++++++++++++++++
+ backend/requirements.txt    |   4 +
+ 3 files changed, 484 insertions(+), 109 deletions(-)

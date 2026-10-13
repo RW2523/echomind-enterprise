@@ -1,0 +1,19 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/66356f9
+
+commit 66356f9bcd511d9a84aaa9708132dce59620b9c9
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 13:24:05 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 13:24:05 2026 -0400
+
+    feat(docgen): per-vertical Document Studio templates
+    
+    Five vertical templates wired to the new personas: Clinical Visit Note (SOAP), Contract Review Memo,
+    Meeting Minutes & Actions, Loan Suitability Summary, Product/Vehicle Quote Sheet. Data-only entries
+    (section blueprints + system guidance); optional appendix/cover_image omitted (consumer uses .get()).
+    Verified: /api/docgen/templates lists all 5 (25 total) without error.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/docgen/templates.py | 102 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 102 insertions(+)

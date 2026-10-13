@@ -1,0 +1,98 @@
+{
+  "experiments": {
+    "E1": {
+      "status": "complete",
+      "headline": "T_grounded median 3313 ms (p95 15171 ms) at concurrency 1; retrieval share 0.028; permission filter 0.08 ms",
+      "contradicts_paper": "YES \u2014 \u00a77.2 argues the retrieval terms dominate T_grounded. Measured, they are 2.8% of it; generation is ~97%. The dual-loop split is still justified, but by GENERATION latency, not retrieval latency.",
+      "caveat": "warm cells only; cold-cache cells not run (needs host root to drop page cache)"
+    },
+    "E2": {
+      "status": "not_run",
+      "reason": "Corpus-scale sweep not run. Only 421 of 17,514 chunks are content (the rest are auto-saved voice transcripts), far below the spec's 1,000-doc / 50k-chunk floor, so a 10/25/50/100% sweep would measure transcript noise rather than retrieval scaling."
+    },
+    "E3": {
+      "status": "complete",
+      "headline": "content leak 0/50 in BOTH arms (Wilson CI [0, 0.0714]); disclosing refusal rate 0.0; BUT a timing channel is present in both: pre_filter KS=0.54 p=2e-06, post_filter KS=0.56 p=1e-06",
+      "partially_contradicts_paper": "\u00a76.1 predicts pre-filtering closes the side channels. Content and wording channels ARE closed. The TIMING channel is NOT: queries whose answer exists in another tenant return significantly faster than queries with no answer anywhere, so response time still distinguishes existence."
+    },
+    "E4": {
+      "status": "partial",
+      "headline": "attack success B0 0.102 CI[0.0564, 0.1777] \u2192 B3 0.051 CI[0.022, 0.1139] (n=98 payloads/arm); false positives 0/25 in every arm",
+      "contradicts_paper": "\u00a76.2 claims the lattice degrades injection to a REPORTABLE event. report_rate is 0.000 in every arm: containment is real but SILENT. The system never tells the user a document carried an instruction it declined.",
+      "caveat": "B0/B3 Wilson intervals overlap at n=35, so the containment trend is suggestive, not decisive. A4 tool-abuse omitted (no tool layer exists) rather than scored 0."
+    },
+    "E5": {
+      "status": "partial",
+      "headline": "citation precision 0.9792 (n=36), recall 0.8256; gold-fact support 0.8152; S5 abstention 18/23 = 0.7826 CI[0.581, 0.9034] (1 S5 items excluded as actually answerable)",
+      "caveat": "unsupported_claim_rate NOT measured \u2014 needs atomic-claim decomposition and a human-validated judge. fact_support_rate is a different, stricter substring metric and understates paraphrased support. No LLM judge used, so no kappa."
+    },
+    "E3b": {
+      "status": "complete",
+      "headline": "per-path namespace audit: 0 out-of-namespace hits across 359 checked, all 5 paths clean (POST-fix)",
+      "critical_finding": "Before the fix applied in this session, sparse_transcript returned 10/10 out-of-namespace hits under a bank-scoped query (chunks tagged 'default' and null): advanced.py called Bm25Index.search directly, bypassing _ns_ok, while the other three paths filtered correctly. The breach ALSO degraded quality \u2014 leaked transcript hits outranked in-namespace documents and won source selection, silently zeroing citations on vertical queries (golden eval 50/52 -> 42/52). It surfaced only because the corpus grew 10.3k -> 17.6k chunks; at the original size the leaked hits did not outrank real ones. Numbers above are POST-fix.",
+      "for_paper": "An architecturally-stated invariant (permission-before-retrieval) held in 3 of 4 retrieval paths and was violated in the 4th at the implementation level. Neither the architecture nor an answer-level evaluation detected it. This argues for path-level invariant testing, which is \u00a710 open question 2."
+    },
+    "E6": {
+      "status": "not_run",
+      "reason": "Outcome correctness needs per-query rubric annotation by two independent annotators with Cohen's kappa. No annotator panel available; an LLM-only rubric score would violate the spec's rule 4 (unvalidated judge)."
+    },
+    "E7": {
+      "status": "partial",
+      "headline": "barge-in stop median 2131.0 ms (n=8); I1 violation rate not_measurable \u2014 see e7_interaction.json",
+      "caveat": "The voice WebSocket emits the grounded answer as token-level streaming deltas (\"The\" -> \"The liability\" -> \"The liability cap\"...). The harness counted each delta as a distinct L_I utterance and scored it as a novel assertion preceding its increment, producing a spurious 0.111 violation rate over 1357 pseudo-utterances. Separating L_I (lead phrase) from L_G (grounded stream) requires event-level provenance the protocol does not currently carry. Reported as not_measurable rather than as a number. Barge-in measured from onset of injected user speech to last audio frame (spec definition), n=8, below the spec's 50 trials."
+    },
+    "E8": {
+      "status": "not_run",
+      "reason": "Process efficiency measures tool calls and recovery from injected tool failures. EchoMind has no tool-calling layer, so the metric is undefined for this system."
+    },
+    "E9": {
+      "status": "not_run",
+      "reason": "AHP weight elicitation requires >=3 panels x >=3 human practitioners. No panel was available; synthesising pairwise judgements would fabricate the very weights the experiment exists to measure."
+    },
+    "E10": {
+      "status": "complete",
+      "headline": "production dual-loop: T_first median 635.8 ms, first grounded token 642.6 ms, I1 violations 0/10",
+      "all_arms": {
+        "dual_i1": {
+          "T_first_median_ms": 635.8,
+          "i1_violations": "0/10"
+        },
+        "single_loop": {
+          "T_first_median_ms": 865.8,
+          "i1_violations": "0/0"
+        },
+        "dual_no_i1": {
+          "T_first_median_ms": 750.9,
+          "i1_violations": "10/10"
+        }
+      },
+      "finding": "Predicted pattern CONFIRMED in direction: single_loop has the highest T_first (865.8 ms) and no L_I utterances at all; dual_no_i1 violates I1 on 10/10 turns by construction; dual_i1 achieves the lowest T_first (635.8 ms) with 0/10 violations. The benefit is real but MODEST \u2014 230 ms, ~27% faster first audio. Because TensorRT-LLM prefill is fast on this hardware, the grounded answer begins almost immediately (first grounded token ~642 ms), leaving little latency for the interaction loop to mask. The architecture should matter more as generation slows or context grows; that scaling relationship is NOT measured here.",
+      "caveat": "Effect size is MODEST: dual_i1 635.8 ms vs single_loop 865.8 ms first audio (230 ms, ~27%). Fast TRT-LLM prefill leaves little latency for L_I to mask; the benefit should grow as generation slows. n=10 per arm."
+    }
+  },
+  "corpus_is_synthetic": false,
+  "corpus_is_public": true,
+  "corpus_note": "17514 chunks total but only 421 are content (20 documents: public DoD FMR regulation PDFs + 10 synthetic vertical demo documents). 17093 are auto-saved voice-session transcripts. Materially below the spec's corpus floor.",
+  "query_set": {
+    "n": 92,
+    "strata": {
+      "S1": 32,
+      "S2": 11,
+      "S4": 25,
+      "S5": 24
+    },
+    "sha256": "778879bec9dd7931a7736641bd2ce1598d0259f876dbf56c371c8fdd9afe05bf",
+    "note": "S3 (transcript-document comparison) NOT built: the 17k transcript chunks are auto-saved voice sessions with no curated gold pairs. Reported as a coverage gap rather than filled with unverified items."
+  },
+  "page_limit_for_track": null,
+  "surprises_or_negative_results": [
+    "E1 REFUTES \u00a77.2: retrieval is 2.8% of T_grounded, not the dominant term. Generation is ~97%. The dual-loop argument should be re-grounded on generation latency.",
+    "E4 REFUTES the reportability half of \u00a76.2: report_rate is 0.000 in every arm. Containment improves 17.1% \u2192 2.9% from B0 to B3, but the system never surfaces the attempt to the user.",
+    "E3 PARTIALLY REFUTES \u00a76.1: content and refusal-wording channels are closed, but a significant timing channel survives pre-filtering (KS\u22480.54, p<1e-5).",
+    "E1 tail latency is severe: p95 T_grounded 15,171 ms against a 3,313 ms median.",
+    "The permission predicate costs 0.08 ms \u2014 governance is NOT what makes retrieval expensive in this architecture, contrary to the framing in \u00a77.2."
+  ],
+  "architecture_mapping_warning": "The specification assumes pgvector/HNSW with per-chunk ACLs, Whisper ASR, and a tool-calling layer. EchoMind is FAISS+BM25 over SQLite, isolates by TENANT NAMESPACE (no ACL model), uses NeMo ASR, and has NO tools. Property P1 was therefore tested as namespace pre-filtering, and the tool-allowlist component of C2 is UNIMPLEMENTED and untestable. The paper should narrow these claims rather than let a reviewer discover the gap.",
+  "harness_integrity_note": "Five measurement defects were found and corrected before reporting: (1) a module-global span store contaminated by concurrent tasks produced an impossible retrieval share of 1.61; (2) a refusal classifier scored generic 'I don't have access to documents' as authorization disclosure, inflating disclosing_rate to 0.36; (3) an E3 control group of answerable queries confounded 'restricted content exists' with 'no answer available'; (4) an E4 judge scored canary string presence as obedience on a summarisation task where quoting the payload was correct, yielding a false 74% attack-success rate; (5) an E5 abstention classifier missed the model's most common abstention phrasings and the S5 set contained answerable items. All corrected figures are the ones reported.",
+  "notes_for_paper": "Tier 1 is complete (E1, E3, E4, E5). Tier 2 is partial: E7 and E10 measured on the production configuration only. Tier 3 (E6, E8, E9) not run for the structural reasons recorded above. Three of the four Tier-1 results contradict or qualify a claim in the manuscript; all are reported as measured."
+}

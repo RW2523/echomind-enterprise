@@ -1,0 +1,34 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/18715c7
+
+commit 18715c74f5e12ddb01597e54d537f8ecdd2a3c68
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Thu Mar 5 19:16:43 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Thu Mar 5 19:16:43 2026 -0500
+
+    Enhance section indexing and retrieval features
+    
+    - Added support for canonical section IDs in the SectionIndex class to improve section identification.
+    - Updated section path retrieval logic to include checks for canonical section IDs, enhancing query accuracy.
+    - Enhanced the Chunk model with additional attributes for section title and ID, improving metadata handling.
+    - Implemented a new endpoint for uploading Table of Contents (TOC) PDFs, allowing for authoritative routing in section-level retrieval.
+    - Improved the document parsing process to better handle headers and footers, optimizing text extraction from PDFs.
+    - Updated configuration settings for section retrieval thresholds and TOC routing, enhancing overall system performance.
+
+ backend/app/api/routes/chat.py           |  16 +-
+ backend/app/api/routes/docs.py           |  39 ++
+ backend/app/core/config.py               |  17 +-
+ backend/app/core/db.py                   |   5 +
+ backend/app/rag/advanced.py              | 823 ++++++++++++++++++++++---------
+ backend/app/rag/book/section_id.py       |  99 ++++
+ backend/app/rag/book/section_resolver.py | 305 ++++++++++++
+ backend/app/rag/chunking/models.py       |   9 +
+ backend/app/rag/chunking/pipeline.py     |   8 +
+ backend/app/rag/citation_utils.py        |  41 +-
+ backend/app/rag/cross_ref_graph.py       |  81 ++-
+ backend/app/rag/index.py                 | 133 ++++-
+ backend/app/rag/parse.py                 | 196 +++++++-
+ backend/app/rag/query_classifier.py      |  37 +-
+ backend/app/rag/section_index.py         |  11 +-
+ backend/requirements.txt                 |   1 +
+ 16 files changed, 1511 insertions(+), 310 deletions(-)

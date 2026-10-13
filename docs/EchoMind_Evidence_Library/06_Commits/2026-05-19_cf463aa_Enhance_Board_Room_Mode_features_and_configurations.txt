@@ -1,0 +1,47 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/cf463aa
+
+commit cf463aa91a1bf9e1f9b805676abb6d0345fb88cd
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue May 19 22:59:15 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Tue May 19 22:59:15 2026 -0400
+
+    Enhance Board Room Mode features and configurations
+    
+    - Updated docker-compose.yml to include new environment variables for Board Room Mode, enabling support for Parakeet multitalker ASR and related settings.
+    - Modified backend Dockerfile to pre-download and warm up the Parakeet ASR model for improved performance during Board Room sessions.
+    - Expanded the database schema to support boardroom sessions and reports, ensuring proper storage and management of multi-speaker meeting data.
+    - Enhanced session state management to improve anti-duplication logic and ensure accurate transcript handling.
+    - Updated frontend components to integrate Board Room functionality, including new icons and navigation items for a seamless user experience.
+    - Adjusted VAD settings to better capture soft speech and brief word-starts, improving audio processing accuracy.
+
+ backend/Dockerfile                                 |   30 +
+ backend/app/api/routes/boardroom.py                |  356 ++++++
+ backend/app/api/routes/models.py                   |   98 ++
+ backend/app/boardroom/__init__.py                  |    1 +
+ backend/app/boardroom/diarization.py               |  288 +++++
+ backend/app/boardroom/export.py                    |  506 ++++++++
+ backend/app/boardroom/multitalker_transcription.py |  310 +++++
+ backend/app/boardroom/report.py                    |  402 +++++++
+ backend/app/boardroom/stt_parakeet.py              | 1219 ++++++++++++++++++++
+ backend/app/boardroom/ws.py                        | 1014 ++++++++++++++++
+ backend/app/cleanup/__init__.py                    |    0
+ backend/app/cleanup/stt_vibevoice.py               |  349 ++++++
+ backend/app/core/config.py                         |   70 +-
+ backend/app/core/db.py                             |   62 +
+ backend/app/main.py                                |   64 +-
+ backend/app/transcribe/session_state.py            |   18 +-
+ backend/app/transcribe/stt_streaming.py            |   30 +-
+ backend/app/transcribe/ws.py                       |   22 +-
+ backend/requirements.txt                           |    1 +
+ backend/tests/test_boardroom_multispeaker.py       |  160 +++
+ docker-compose.yml                                 |   23 +
+ frontend/App.tsx                                   |    3 +
+ frontend/components/BoardRoom.tsx                  | 1116 ++++++++++++++++++
+ frontend/components/Header.tsx                     |    1 +
+ frontend/components/Sidebar.tsx                    |    1 +
+ frontend/constants.tsx                             |   35 +-
+ frontend/hooks/useLiveTranscription.ts             |   55 +-
+ frontend/services/boardroom.ts                     |  233 ++++
+ frontend/types.ts                                  |    1 +
+ 29 files changed, 6427 insertions(+), 41 deletions(-)

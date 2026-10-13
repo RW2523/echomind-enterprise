@@ -1,0 +1,33 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/2decb99
+
+commit 2decb993b63a3bf597a077b3b1ae528e8578b33a
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Thu Jul 30 02:13:37 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Thu Jul 30 02:13:37 2026 -0400
+
+    fix(rag): gate BookRAG behind RAG_ENABLE_BOOKRAG (default off) — it measured worse
+    
+    The BookRAG chunking path is now correct (content loss fixed, coverage guard,
+    regression test), but enabling it end-to-end measured WORSE on this corpus, so
+    it ships opt-in rather than on by default.
+    
+    Measured with the golden eval, same corpus, re-ingesting the 10 PDFs:
+      flat chunking (default) : 50/52, doc-precision 0.98
+      BookRAG enabled         : 43/52, doc-precision 0.90
+    
+    Five whole-KB questions regressed. The facts are still present — retrieval
+    stops finding them. 14_03.pdf grows 47 -> 82 chunks with large parent-context
+    blocks and starts crowding out sibling chapters: two JV questions began citing
+    14_03 instead of 06a_02, one returned zero citations, and two lost the expected
+    fact from the answer. Larger structure-rich chunks change ranking dynamics in a
+    corpus that is ~97% transcripts.
+    
+    Set RAG_ENABLE_BOOKRAG=1 to evaluate the structured path (parent/child chunks,
+    section paths, contextual headers). Verified both ways on 14_03.pdf:
+    off -> 45 chunks / 0 parents; on -> 82 chunks / 19 parents.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/rag/chunking/pipeline.py | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)

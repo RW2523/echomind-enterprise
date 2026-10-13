@@ -1,0 +1,31 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/31f1205
+
+commit 31f1205ddb8a7a4d9a135d4106842aaaf6a0aa16
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Mar 3 23:24:42 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Mar 3 23:24:42 2026 -0500
+
+    Enhance document chunking and indexing features
+    
+    - Added `section_path` and `page_number` attributes to the `Chunk` model for improved hierarchical organization and citation.
+    - Updated chunk serialization to include new metadata fields for better context in retrieval.
+    - Enhanced long-form detection to recognize additional document structures, including DoD regulation patterns.
+    - Implemented dynamic chunk sizing based on content density to optimize processing of technical documents.
+    - Introduced a new database schema for storing section-level metadata and cross-references between sections.
+    - Updated parsing functions to return page information and offsets for better document navigation.
+    - Enhanced frontend components to display section paths and page numbers in citation metadata.
+
+ backend/app/api/routes/docs.py        |  72 ++++++-
+ backend/app/core/config.py            |  49 ++++-
+ backend/app/core/db.py                |  21 ++
+ backend/app/rag/advanced.py           | 390 ++++++++++++++++++++++++++++++++--
+ backend/app/rag/chunking/chunkers.py  | 218 +++++++++++++++----
+ backend/app/rag/chunking/detect.py    |  24 ++-
+ backend/app/rag/chunking/models.py    |   6 +
+ backend/app/rag/chunking/pipeline.py  |  88 +++++++-
+ backend/app/rag/index.py              | 287 ++++++++++++++++++++++---
+ backend/app/rag/parse.py              |  64 +++++-
+ frontend/components/KnowledgeChat.tsx | 372 ++++++++++++++++++++++++++++++--
+ frontend/types.ts                     |  10 +
+ 12 files changed, 1463 insertions(+), 138 deletions(-)

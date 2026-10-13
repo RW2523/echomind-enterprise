@@ -1,0 +1,67 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/4b90b36
+
+commit 4b90b367a97150228b9422a68eeb82661200bd82
+Author:     RW2523 <richardwatson252331@gmail.com>
+AuthorDate: Thu Feb 5 11:57:31 2026 -0500
+Commit:     RW2523 <richardwatson252331@gmail.com>
+CommitDate: Thu Feb 5 11:57:31 2026 -0500
+
+    Initial commit: EchoMind Enterprise (backend, frontend, voice, docker-compose)
+    
+    Co-authored-by: Cursor <cursoragent@cursor.com>
+
+ .gitignore                                |  32 ++
+ README.md                                 |  24 ++
+ backend/Dockerfile                        |   9 +
+ backend/app/api/routes/chat.py            |  38 +++
+ backend/app/api/routes/docs.py            |  12 +
+ backend/app/api/routes/transcribe.py      |  52 ++++
+ backend/app/core/config.py                |  18 ++
+ backend/app/core/db.py                    |  21 ++
+ backend/app/main.py                       |  26 ++
+ backend/app/rag/advanced.py               |  57 ++++
+ backend/app/rag/embeddings.py             |  13 +
+ backend/app/rag/index.py                  |  83 ++++++
+ backend/app/rag/llm.py                    |  16 +
+ backend/app/rag/parse.py                  |  29 ++
+ backend/app/transcribe/ws.py              |  51 ++++
+ backend/app/utils/ids.py                  |   5 +
+ backend/requirements.txt                  |  15 +
+ docker-compose.yml                        |  51 ++++
+ frontend/.gitignore                       |  24 ++
+ frontend/App.tsx                          |  55 ++++
+ frontend/Dockerfile                       |  13 +
+ frontend/README.md                        |  20 ++
+ frontend/components/Header.tsx            |  47 +++
+ frontend/components/KnowledgeChat.tsx     | 121 ++++++++
+ frontend/components/LiveTranscription.tsx | 141 +++++++++
+ frontend/components/Settings.tsx          | 119 ++++++++
+ frontend/components/Sidebar.tsx           |  61 ++++
+ frontend/components/Uploader.tsx          |  49 ++++
+ frontend/components/VoiceConversation.tsx |  17 ++
+ frontend/constants.tsx                    |  33 +++
+ frontend/index.html                       |  72 +++++
+ frontend/index.tsx                        |  16 +
+ frontend/metadata.json                    |   7 +
+ frontend/nginx.conf                       |  23 ++
+ frontend/package.json                     |  21 ++
+ frontend/services/backend.ts              |  58 ++++
+ frontend/services/gemini.ts               |   2 +
+ frontend/services/vectorStore.ts          |   2 +
+ frontend/tsconfig.json                    |  29 ++
+ frontend/types.ts                         |  54 ++++
+ frontend/vite.config.ts                   |   9 +
+ voice/Dockerfile                          |   7 +
+ voice/README.md                           |  25 ++
+ voice/app/adapters/llm_openai_compat.py   |  22 ++
+ voice/app/adapters/llm_openai_stream.py   |  57 ++++
+ voice/app/adapters/moshi_ws.py            |  53 ++++
+ voice/app/adapters/stt_whisper.py         |  12 +
+ voice/app/adapters/tts_piper.py           |  38 +++
+ voice/app/config.py                       |  42 +++
+ voice/app/server.py                       |  37 +++
+ voice/app/session.py                      | 465 ++++++++++++++++++++++++++++++
+ voice/requirements.txt                    |   9 +
+ voice/scripts/download_voice.sh           |   9 +
+ voice/static/index.html                   | 319 ++++++++++++++++++++
+ 54 files changed, 2640 insertions(+)

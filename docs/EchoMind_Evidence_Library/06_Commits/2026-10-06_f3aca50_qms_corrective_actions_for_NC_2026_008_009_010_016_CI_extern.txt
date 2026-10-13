@@ -1,0 +1,44 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/f3aca50
+
+commit f3aca50860a5efcf8227db46e8703e5c3555ca35
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Oct 6 22:18:43 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Oct 6 22:18:43 2026 -0400
+
+    qms: corrective actions for NC-2026-008/009/010/016 — CI, external login check, eval pre-flight
+    
+    - CI (.github/workflows/ci.yml): backend and voice unit suites and the
+      front-end type-check on every push and PR. Recipe proven in clean
+      Python 3.12 environments first (backend 50/50, voice 131/131). #50
+    - External login gate check (.github/workflows/public-gate-check.yml):
+      every 6 hours from GitHub's network; fails if the public API answers
+      without a login or reports auth disabled. #51
+    - SOP-06 §10.1 + scripts/check_runtime_config.sh + recorded baseline of
+      non-secret security settings: drift must be recorded in REG-07.
+      Verified: match → exit 0, simulated login-off → exit 1. #52
+    - Access-log review (records/capa/2026-10-07_…): login was off from
+      2026-07-30 02:56 UTC to 2026-10-06, not only from 2026-09-28; 64
+      internet-scanner probes (all 404); every data change aligns with
+      recorded engineering work; the evaluation corpus most likely left on
+      2026-09-15. REG-04 NC-2026-008/009 and the audit pack corrected. #53
+    - eval/run_eval.py aborts when expected documents are missing (lists
+      them, exit 2) instead of reporting a misleading score. #48
+    - Ollama healthcheck makes a real embedding call; verified healthy, and
+      the probe returns 1 when embedding fails. #59
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ .github/workflows/ci.yml                           | 61 ++++++++++++++++++++
+ .github/workflows/public-gate-check.yml            | 37 ++++++++++++
+ docker-compose.yml                                 |  5 +-
+ docs/qms/AUDIT_PACK_2026_EchoMind.md               |  2 +-
+ .../SOP-06_Configuration_and_Change_Management.md  | 17 +++++-
+ .../2026-10-07_NC-2026-009_access_log_review.md    | 66 ++++++++++++++++++++++
+ .../records/runtime/runtime-config-baseline.env    | 16 ++++++
+ .../registers/REG-01_Document_Control_Register.md  |  2 +-
+ .../registers/REG-04_Nonconformity_and_CAPA_Log.md | 16 ++++--
+ .../registers/REG-07_Design_and_Change_Register.md |  1 +
+ eval/run_eval.py                                   | 28 +++++++++
+ scripts/check_runtime_config.sh                    | 38 +++++++++++++
+ 12 files changed, 278 insertions(+), 11 deletions(-)

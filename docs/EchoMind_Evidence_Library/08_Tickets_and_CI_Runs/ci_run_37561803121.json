@@ -1,0 +1,41 @@
+{
+ "conclusion": "success",
+ "createdAt": "2026-10-07T02:24:07Z",
+ "databaseId": 37561803121,
+ "displayTitle": "ci: run the public login gate check when its definition changes",
+ "headSha": "ee26cfd05cdf9c78b82c626a4ad74f4b55be9666",
+ "jobs": [
+  {
+   "completedAt": "2026-10-07T02:24:15Z",
+   "conclusion": "success",
+   "databaseId": 112600516914,
+   "name": "gate",
+   "startedAt": "2026-10-07T02:24:11Z",
+   "status": "completed",
+   "steps": [
+    {
+     "conclusion": "success",
+     "name": "Set up job",
+     "number": 1,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Protected API must not answer without a login",
+     "number": 2,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Complete job",
+     "number": 3,
+     "status": "completed"
+    }
+   ],
+   "url": "https://github.com/RW2523/echomind-enterprise/actions/runs/37561803121/job/112600516914"
+  }
+ ],
+ "status": "completed",
+ "url": "https://github.com/RW2523/echomind-enterprise/actions/runs/37561803121",
+ "workflowName": "Public login gate check"
+}

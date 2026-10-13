@@ -1,0 +1,39 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/724fb98
+
+commit 724fb98b5bfd4f9339c8512f149e99c20d122154
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Fri Sep 4 15:23:36 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Fri Sep 4 15:23:36 2026 -0400
+
+    fix(build,boardroom): repair image rebuilds and salvage truncated report JSON
+    
+    Rebuilding the images from source (rather than the docker-cp'd layers the
+    running containers carried) surfaced three breakages, all fixed here so a
+    clean `docker compose build` + `up` works end to end.
+    
+    - voice/Dockerfile: a python heredoc sat inside a `RUN ... \` continuation,
+      so its body lines were parsed as Dockerfile instructions — every
+      `docker compose build voice` died with "unknown instruction: fi".
+      Rewritten as a `python -c` one-liner.
+    - backend/Dockerfile & voice/Dockerfile: NeMo installs from git@main and
+      pulls setuptools>=82, which removed pkg_resources. librosa imports it at
+      build time (backend warmup crash) and webrtcvad imports it at runtime
+      (voice crash-loop on boot). Re-pin setuptools<82 as the last install step
+      in both images.
+    - boardroom/service.py: analyse_meeting stored raw JSON text as the
+      executive summary when the LLM's report JSON was truncated (max_tokens
+      cut / trailing comma). Now trims to the last complete object, then falls
+      back to regex-extracting the summary string, so the report and PDF always
+      render clean prose.
+    
+    Verified on a from-scratch rebuild: all six containers healthy; chat,
+    Silent Assistant live checks, voice turn, and boardroom analyse/export all
+    pass. Data/model volumes preserved.
+    
+    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+ backend/Dockerfile               |  4 ++++
+ backend/app/boardroom/service.py | 20 +++++++++++++++++---
+ voice/Dockerfile                 | 19 +++++++++++--------
+ 3 files changed, 32 insertions(+), 11 deletions(-)

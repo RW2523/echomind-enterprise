@@ -1,0 +1,81 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/ec9b180
+
+commit ec9b180b8ae2afee567ca97450bc7c5feec2022f
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Mon May 11 20:16:23 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Mon May 11 20:16:23 2026 -0400
+
+    Add Assistant and Silent Assistant APIs, enhance session note management, and update ASR configurations
+    
+    - Introduced new REST APIs for Assistant and Silent Assistant modes, including suggestion generation and transcript analysis.
+    - Implemented session note management APIs for creating, listing, and managing notes associated with sessions.
+    - Updated docker-compose.yml to configure ASR device settings for optimal performance based on available hardware.
+    - Enhanced documentation to reflect changes in ASR model integration and offline deployment strategies.
+    - Refactored existing code to improve maintainability and clarity in the assistant-related functionalities.
+
+ OFFLINE_DEPLOYMENT.md                              |  14 +-
+ README.md                                          |  15 +-
+ backend/app/api/routes/assistant.py                |  80 +++
+ backend/app/api/routes/chat.py                     |   6 +-
+ backend/app/api/routes/rules_library.py            | 202 ++++++
+ backend/app/api/routes/session_notes.py            |  77 +++
+ backend/app/api/routes/silent_assistant.py         |  53 ++
+ backend/app/assistant/__init__.py                  |   1 +
+ backend/app/assistant/kb_transcript_analyzer.py    | 305 +++++++++
+ backend/app/assistant/suggestion_generator.py      | 333 ++++++++++
+ backend/app/assistant/suggestion_store.py          | 183 ++++++
+ backend/app/core/config.py                         |   3 +
+ backend/app/core/db.py                             | 140 +++++
+ backend/app/main.py                                |   4 +
+ backend/app/rag/advanced.py                        |  31 +
+ backend/app/rules_library/__init__.py              |   1 +
+ backend/app/rules_library/matching.py              |  35 ++
+ backend/app/rules_library/rules_store.py           | 306 +++++++++
+ backend/app/schemas/assistant_suggestion.py        | 193 ++++++
+ backend/app/schemas/rules_library.py               |  93 +++
+ backend/app/schemas/session_note.py                |  88 +++
+ backend/app/schemas/silent_finding.py              | 184 ++++++
+ backend/app/schemas/transcript_analyze.py          |  74 +++
+ backend/app/session_notes/__init__.py              |   1 +
+ backend/app/session_notes/notes_store.py           | 201 ++++++
+ backend/app/silent_assistant/__init__.py           |   1 +
+ backend/app/silent_assistant/finding_store.py      | 177 ++++++
+ backend/app/silent_assistant/silent_analyzer.py    | 327 ++++++++++
+ backend/app/transcribe/session_state.py            |  54 +-
+ backend/app/transcribe/ws.py                       |  53 +-
+ backend/requirements-kyutai.txt                    |   2 +-
+ backend/tests/test_assistant_suggestions.py        | 110 ++++
+ backend/tests/test_silent_findings.py              |  86 +++
+ docker-compose.yml                                 |  14 +-
+ docs/CONVERSATION_AI_AND_WAKE_WORD_FLOW.md         |   6 +-
+ ...OMIND_ASSISTANT_SILENT_IMPLEMENTATION_REPORT.md |  65 ++
+ docs/ECHOMIND_FOUR_MODE_IMPLEMENTATION_PLAN.md     |  86 +++
+ docs/ECHOMIND_FOUR_MODE_SCOPE_UPDATE_REPORT.md     |  72 +++
+ docs/TRANSCRIPT_STORAGE_FLOW.md                    |   8 +-
+ frontend/App.tsx                                   |  14 +-
+ frontend/components/AssistantMode.tsx              | 690 +++++++++++++++++++++
+ frontend/components/Conversation/ControlBar.tsx    |  37 ++
+ .../components/Conversation/ConversationStage.tsx  |  90 ++-
+ frontend/components/Header.tsx                     |  19 +-
+ frontend/components/KnowledgeChat.tsx              |  32 +-
+ frontend/components/LiveTranscription.tsx          | 211 ++++---
+ frontend/components/ProductModeHeader.tsx          |  99 +++
+ frontend/components/Settings.tsx                   |  26 +
+ frontend/components/Sidebar.tsx                    |  38 +-
+ frontend/components/SilentAssistantMode.tsx        | 609 ++++++++++++++++++
+ frontend/components/VoiceConversation.tsx          |   3 +
+ frontend/constants.tsx                             |  20 +-
+ frontend/hooks/useAssistantSpeak.ts                | 160 +++++
+ frontend/hooks/useLiveTranscription.ts             | 109 +++-
+ frontend/hooks/useVoiceConnection.ts               | 167 +++--
+ frontend/services/backend.ts                       | 147 +++++
+ frontend/tsconfig.json                             |   2 +
+ frontend/types.ts                                  | 212 ++++++-
+ frontend/utils/mapCitations.ts                     |  28 +
+ frontend/utils/modeChrome.ts                       |  75 +++
+ frontend/utils/voicePlayback.ts                    |  40 ++
+ scripts/prepare_offline.sh                         |   2 +-
+ voice/app/adapters/stt_nemotron.py                 |  42 +-
+ voice/app/session.py                               |  59 +-
+ 64 files changed, 6355 insertions(+), 260 deletions(-)

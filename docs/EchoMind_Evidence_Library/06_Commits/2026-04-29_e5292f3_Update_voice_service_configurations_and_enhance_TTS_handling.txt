@@ -1,0 +1,27 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/e5292f3
+
+commit e5292f3276249a6b773d9f786592f46a94074358
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Apr 29 23:45:03 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Apr 29 23:45:03 2026 -0400
+
+    Update voice service configurations and enhance TTS handling
+    
+    - Modified docker-compose.yml to allow dynamic host port configuration for the voice service, defaulting to 8002.
+    - Updated development documentation to reflect changes in the Vite proxy configuration for the voice service.
+    - Enhanced voice interaction by introducing a new parameter, voice_max_tokens, to cap RAG LLM response lengths and prevent long GPU freezes.
+    - Improved TTS pipeline logic to commit phrases based on natural clause boundaries, enhancing audio output quality.
+    - Updated environment settings to include VOICE_RAG_MAX_TOKENS for better control over spoken answer lengths.
+
+ ENDPOINTS.md                            |  2 +-
+ README.md                               |  2 +-
+ backend/app/api/routes/chat.py          |  7 ++-
+ backend/app/rag/advanced.py             | 24 ++++++---
+ docker-compose.yml                      |  4 +-
+ frontend/vite.config.ts                 |  5 +-
+ voice/README.md                         |  8 +--
+ voice/app/adapters/llm_openai_stream.py |  6 ++-
+ voice/app/config.py                     | 11 +++--
+ voice/app/session.py                    | 88 ++++++++++++++++-----------------
+ 10 files changed, 94 insertions(+), 63 deletions(-)

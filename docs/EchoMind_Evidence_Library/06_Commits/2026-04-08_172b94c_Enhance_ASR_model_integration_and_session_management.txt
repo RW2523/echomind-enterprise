@@ -1,0 +1,18 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/172b94c
+
+commit 172b94c0544703c59fd2300a706de7f55d60a216
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Wed Apr 8 01:22:14 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Wed Apr 8 01:22:14 2026 -0400
+
+    Enhance ASR model integration and session management
+    
+    - Updated session handling to improve ASR model interactions and performance.
+    - Refined logging mechanisms for better tracking of ASR-related events.
+    - Adjusted configuration settings to optimize ASR model parameters and session management.
+    - Improved error handling during audio processing to enhance user experience.
+
+ nemotron_asr/nemotron_asr/__init__.py  |  6 +++
+ nemotron_asr/nemotron_asr/utterance.py | 75 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 81 insertions(+)

@@ -1,0 +1,28 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/52e6db9
+
+commit 52e6db9c433113c247dfe367060dac9c873f89a5
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 00:12:02 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 00:12:02 2026 -0400
+
+    feat(voice): selectable TTS engine (Piper or Kokoro-82M) in Settings
+    
+    - New KokoroTTS adapter (same interface as Piper); runs on CPU, loads offline from
+      baked cache. Session swaps engine via set_context tts_engine (set before intro).
+    - Background pre-warm at startup so switching is instant; auto-falls back to Piper.
+    - voice/Dockerfile: install espeak-ng + kokoro, bake model/voice for offline rebuilds.
+    - Frontend: TTS Engine toggle (Piper fast / Kokoro natural) in Settings, persisted,
+      sent in set_context; Piper voice picker relabeled (applies when Piper selected).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ frontend/App.tsx                     |  2 ++
+ frontend/components/Settings.tsx     | 22 ++++++++++++--
+ frontend/hooks/useVoiceConnection.ts |  2 ++
+ frontend/types.ts                    |  2 ++
+ voice/Dockerfile                     | 16 ++++++++--
+ voice/app/adapters/tts_kokoro.py     | 59 ++++++++++++++++++++++++++++++++++++
+ voice/app/server.py                  |  6 ++++
+ voice/app/session.py                 | 19 +++++++++++-
+ 8 files changed, 123 insertions(+), 5 deletions(-)

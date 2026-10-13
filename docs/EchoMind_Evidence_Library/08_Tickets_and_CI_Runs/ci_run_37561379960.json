@@ -1,0 +1,189 @@
+{
+ "conclusion": "success",
+ "createdAt": "2026-10-07T02:18:50Z",
+ "databaseId": 37561379960,
+ "displayTitle": "qms: corrective actions for NC-2026-008/009/010/016 \u2014 CI, external lo\u2026",
+ "headSha": "f3aca50860a5efcf8227db46e8703e5c3555ca35",
+ "jobs": [
+  {
+   "completedAt": "2026-10-07T02:19:28Z",
+   "conclusion": "success",
+   "databaseId": 112599187854,
+   "name": "Frontend type-check",
+   "startedAt": "2026-10-07T02:18:53Z",
+   "status": "completed",
+   "steps": [
+    {
+     "conclusion": "success",
+     "name": "Set up job",
+     "number": 1,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Run actions/checkout@v4",
+     "number": 2,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Run actions/setup-node@v4",
+     "number": 3,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Install",
+     "number": 4,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Type-check",
+     "number": 5,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Post Run actions/setup-node@v4",
+     "number": 9,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Post Run actions/checkout@v4",
+     "number": 10,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Complete job",
+     "number": 11,
+     "status": "completed"
+    }
+   ],
+   "url": "https://github.com/RW2523/echomind-enterprise/actions/runs/37561379960/job/112599187854"
+  },
+  {
+   "completedAt": "2026-10-07T02:20:33Z",
+   "conclusion": "success",
+   "databaseId": 112599187991,
+   "name": "Backend unit tests",
+   "startedAt": "2026-10-07T02:18:53Z",
+   "status": "completed",
+   "steps": [
+    {
+     "conclusion": "success",
+     "name": "Set up job",
+     "number": 1,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Run actions/checkout@v4",
+     "number": 2,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Run actions/setup-python@v5",
+     "number": 3,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Install (CPU-only PyTorch)",
+     "number": 4,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Test",
+     "number": 5,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Post Run actions/setup-python@v5",
+     "number": 9,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Post Run actions/checkout@v4",
+     "number": 10,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Complete job",
+     "number": 11,
+     "status": "completed"
+    }
+   ],
+   "url": "https://github.com/RW2523/echomind-enterprise/actions/runs/37561379960/job/112599187991"
+  },
+  {
+   "completedAt": "2026-10-07T02:23:38Z",
+   "conclusion": "success",
+   "databaseId": 112599188018,
+   "name": "Voice unit tests",
+   "startedAt": "2026-10-07T02:18:53Z",
+   "status": "completed",
+   "steps": [
+    {
+     "conclusion": "success",
+     "name": "Set up job",
+     "number": 1,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Run actions/checkout@v4",
+     "number": 2,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Run actions/setup-python@v5",
+     "number": 3,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Install",
+     "number": 4,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Test",
+     "number": 5,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Post Run actions/setup-python@v5",
+     "number": 9,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Post Run actions/checkout@v4",
+     "number": 10,
+     "status": "completed"
+    },
+    {
+     "conclusion": "success",
+     "name": "Complete job",
+     "number": 11,
+     "status": "completed"
+    }
+   ],
+   "url": "https://github.com/RW2523/echomind-enterprise/actions/runs/37561379960/job/112599188018"
+  }
+ ],
+ "status": "completed",
+ "url": "https://github.com/RW2523/echomind-enterprise/actions/runs/37561379960",
+ "workflowName": "CI"
+}

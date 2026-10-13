@@ -1,0 +1,30 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/ef19d68
+
+commit ef19d684782508b6cb17f24cb78cf2042a566df9
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Sat Jun 27 17:52:26 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Sat Jun 27 17:52:26 2026 -0400
+
+    feat(auth): per-tenant scoping (#4 multi-tenant)
+    
+    Bind users -> tenant -> KB namespace so an authenticated user is locked to their tenant's data.
+    - users.tenant column (migration) + create_user/list_users/authenticate/get_user carry tenant;
+      JWT carries a tenant claim; /api/auth/me + admin user list/create expose tenant.
+    - chat routes: _effective_ns() forces the user's tenant namespace over whatever the client sends
+      (prevents reading another tenant's KB); docs upload tags a tenant user's docs with their tenant.
+    - Admin UI: tenant field on create-user + tenant badge in the user list.
+    
+    Only active when AUTH_ENABLED; auth-off / no-tenant -> prior behavior. Verified: tenant user forced
+    to tenant ns, no-tenant uses requested, auth-off unchanged, demo 200.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ backend/app/api/routes/auth.py         |  7 ++++---
+ backend/app/api/routes/chat.py         | 30 +++++++++++++++++++++---------
+ backend/app/api/routes/docs.py         | 11 +++++++++--
+ backend/app/core/auth.py               | 23 ++++++++++++-----------
+ backend/app/core/db.py                 |  4 ++++
+ frontend/components/UserManagement.tsx |  7 +++++--
+ frontend/services/backend.ts           |  6 +++---
+ 7 files changed, 58 insertions(+), 30 deletions(-)

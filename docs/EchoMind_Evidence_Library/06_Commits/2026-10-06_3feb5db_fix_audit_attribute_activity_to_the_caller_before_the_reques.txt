@@ -1,0 +1,22 @@
+GitHub: https://github.com/RW2523/echomind-enterprise/commit/3feb5db
+
+commit 3feb5dbfd9f181bbb990930e505de79b2117eef8
+Author:     2523 <richardwatson252331@gmail.com>
+AuthorDate: Tue Oct 6 18:17:01 2026 -0400
+Commit:     2523 <richardwatson252331@gmail.com>
+CommitDate: Tue Oct 6 18:17:01 2026 -0400
+
+    fix(audit): attribute activity to the caller before the request runs
+    
+    Re-testing NC-2026-012 showed the logout itself recorded as anonymous:
+    logout now revokes the token, and the activity middleware resolved the
+    user only after the request. Identify the caller first.
+    
+    release.sh: the tag message no longer states that running the script
+    authorises the release; authorisation is recorded by a person in FRM-03.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ backend/app/main.py | 7 ++++++-
+ scripts/release.sh  | 4 ++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
