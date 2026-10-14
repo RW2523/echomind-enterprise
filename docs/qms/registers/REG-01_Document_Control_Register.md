@@ -86,6 +86,11 @@ history itself is not duplicated here — it is the Git history of each file (SO
 | EM26-25 | Release Notes v1.0.0 → v1.4.1 | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-13 (AR-2026-005) — `…/11_Release_Notes/` |
 | EM26-26 | New Use Cases — EchoMind Enterprise | EchoMind Project Lead (Alexander Peter) | 1.0 approved 2026-10-13 (AR-2026-005) — `…/13_New_Use_Case_EchoMind/` |
 | EM26-27 | Client Communication Log | EchoMind Project Lead (Alexander Peter) | 1.0 approved 2026-10-13 (AR-2026-005) — `…/03_Communication_with_Client/` |
+| EM26-28 | Development Side Contract Review — EchoMind | EchoMind Project Lead (Alexander Peter) | 1.0 approved 2026-10-14 (AR-2026-006) — `…/01_Contract_Review/` |
+| EM26-29 | Software Requirements Specification — EchoMind Enterprise | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-14 (AR-2026-006) — `…/04_Requirements/` |
+| EM26-30 | Requirement Change Record | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-14 (AR-2026-006) — `…/05_Changes_to_Requirements/` |
+| EM26-31 | Design and Development Record | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-14 (AR-2026-006) — `…/06_Design_and_Development/` |
+| EM26-32 | Identification and Traceability Record | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-14 (AR-2026-006) — `…/10_Identification_and_Traceability/` |
 
 ## 4a. Completed records
 
@@ -100,7 +105,7 @@ Completed records are filed as dated Markdown files under `docs/qms/records/`:
 | `records/approvals/` | Document approval records | — |
 | `records/runtime/` | Runtime-settings baseline (SOP-06 §10.1) | — |
 
-At 2026-10-12: `records/approvals/` (AR-2026-001 … AR-2026-005), `records/releases/` (v1.4.0, v1.4.1), `records/capa/` (NC-2026-009 access-log review), `records/runtime/` (runtime-settings baseline). `records/audits/` and `records/management-review/` are still empty.
+At 2026-10-12: `records/approvals/` (AR-2026-001 … AR-2026-006), `records/releases/` (v1.4.0, v1.4.1), `records/capa/` (NC-2026-009 access-log review), `records/runtime/` (runtime-settings baseline). `records/audits/` and `records/management-review/` are still empty.
 
 ## 5. Supporting engineering documentation relied on as QMS evidence
 
