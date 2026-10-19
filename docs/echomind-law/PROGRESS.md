@@ -8,7 +8,7 @@
 |---|---|
 | Date | 2026-10-12 |
 | Repo / branch | `law/echomind-enterprise`. Integration branch `feature/echomind-law` (from `main@95782e4`); the Phase 4 gate (`law/s4.6-gate`) merged into it |
-| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 (regulatory updates, D-068) and machine translation (D-070) built on 2026-10-12 with the owner's approval of the pending items, with the T12 load test (D-066), pilot backups (D-067), the SIEM forwarder (D-069), the T11 egress lock script (D-071) and transcription measured on synthetic voices (D-072). All Phase 4 features are on in the pilot configuration (D-059, 2026-10-11). **The pilot stack is running** (D-060, `https://<host>:3553`) with the fictional demo world, a practice group, six fictional cases, the base corpus and a public-law library, every feature on, Conversation with follow-ups, and the Liquid Glass interface (D-061 to D-065) |
+| Phase | Phases 1, 2 and 3 complete (gates 2026-10-09, 2026-10-10 and 2026-10-10; Phase 3 merged under the standing approval, its lawyer review and manual Word check 🔒). Phase 4 (approved 2026-10-10): S4.1, S4.2, S4.3 and S4.5 merged, and the Phase 4 gate passed and merged (`releases/phase4-gate.md`). S4.4 (regulatory updates, D-068) and machine translation (D-070) built on 2026-10-12 with the owner's approval of the pending items, with the T12 load test (D-066), pilot backups (D-067), the SIEM forwarder (D-069), the T11 egress lock script (D-071) and transcription measured on synthetic voices (D-072). All Phase 4 features are on in the pilot configuration (D-059, 2026-10-11). **The pilot stack was stopped on 2026-10-19 at the owner's request** (D-060, `https://<host>:3553`; data kept, see the 2026-10-19 entry) with the fictional demo world, a practice group, six fictional cases, the base corpus and a public-law library, every feature on, Conversation with follow-ups, and the Liquid Glass interface (D-061 to D-065) |
 | Plan documents | Committed to `feature/echomind-law` |
 | Migrations | `0001`–`0035` (Law edition only) |
 | Production impact | None. Production's containers were never touched (same start times, no restarts, checked before and after each start). The Law pilot stack runs beside it as project `echomind-law`, capped below it (D-060); it reuses the host's model servers read-only. |
@@ -754,6 +754,15 @@ These change legacy behaviour only by fixing bugs: vertical pages become fully s
 ### Session 11 — One-click demo sign-in (D-077), 2026-10-12
 - The owner asked to remove passwords and codes. Asked, they chose one-click sign-in as the demo's fictional people, from any address.
 - Built tests first, off by default, on for the pilot, audited, with a banner. **Turn it off before real data.**
+
+### 2026-10-19 — The pilot stopped at the owner's request
+- "Stop this application fully end to end." A final verified backup was taken (`law-pilot-20261019-181121.emlb`: 12 matters, 51 documents, 4,994 audit events).
+- The two daily jobs were removed from the crontab; a copy is in `~/echomind-law-crontab.saved`.
+- The pilot's containers and network were removed (`scripts/law/compose.sh down`). The data volume `echomind-law_echomind_law_data`, the keys, the images and the backups are kept. Production was not touched (37 containers, same start times).
+- **To start again:**
+  1. `scripts/law/deploy_pilot.sh`, or `scripts/law/compose.sh up -d backend voice frontend` with 12 GB free.
+  2. `crontab - < ~/echomind-law-crontab.saved`.
+  - One-click demo sign-in comes back on with it (`.env.law`).
 
 ## Approvals
 
