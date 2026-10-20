@@ -3,18 +3,20 @@
 | Field | Value |
 |---|---|
 | Document ID | SOP-05 |
-| Revision | 1.1 |
-| Status | **APPROVED** |
+| Revision | 1.2 |
+| Status | **ISSUED FOR APPROVAL** — revision 1.2 (2026-10-20). Revision 1.1 APPROVED 2026-10-07 (AR-2026-001) remains in force until 1.2 is approved |
 | Owner | Lead Engineer (Richard Watson Stephen Amudha) |
 | Approved by | Anita Johan (Managing Director) |
-| Approval date | 2026-10-07 |
+| Approval date | 2026-10-07 (revision 1.1) — revision 1.2 pending |
 | ISO 9001:2015 clauses | 8.3.1, 8.3.2, 8.3.3, 8.3.4, 8.3.5, 8.3.6 |
-| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07 |
-| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07 |
-| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07 |
+| Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07; revision 1.2 — 2026-10-20 |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07; revision 1.2 — to confirm |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07; revision 1.2 — to confirm |
 | Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
 
 > **Revision note 2026-10-07.** Wording in this procedure about “one person” describes the engineering work, which is concentrated in the Lead Engineer. Within AJACE Inc. the roles are held by named people (QM-01 §7.1): independent review by the EchoMind Project Lead (Alexander Peter), verification and QMS maintenance by QA/MR (Sheryl Nazareth), approval and release authorisation by the Managing Director (Anita Johan); internal audit is provided by the AJACE Inc. corporate audit programme.
+
+> **Revision 1.2 — 2026-10-20.** Adds §7a *AI impact assessment*: a documented assessment of the impacts of the product's AI — including governance and ethical considerations — at the design-input stage and before each release, new use case, new model or new client sector. Raised by the surveillance audit of 2026-10-14, finding 6 (opportunity for improvement, clause 6.1.1); logged as OFI-2026-06 in `REG-04`. Changes: §3, §4.2 (stage 1a), §5.6, §7a, §10.
 
 ---
 
@@ -41,6 +43,8 @@ how this product is built and is treated explicitly in §7.
 | Lead Engineer | Owns this procedure. Plans each piece of design work, states its inputs, performs and records verification and validation, and produces the design outputs. Is accountable for every line committed, including AI-generated lines. |
 | Managing Director | Approves the transition of a design output to release. Confirms that customer, statutory and regulatory inputs are complete before build starts. Chairs design reviews. |
 | Anyone contributing code | Applies this procedure to their own changes without exception, including small ones. |
+| EchoMind Project Lead | Reviews the AI impact assessment (§7a) for client, user and ethical impact. |
+| Data custodian | Reviews the AI impact assessment for data protection, consent and retention. |
 
 Design is performed by the Lead Engineer (Richard Watson Stephen Amudha); design review is by the EchoMind Project Lead
 (Alexander Peter); approval by the Managing Director (Anita Johan). §11 records where reviews were performed by the
@@ -83,10 +87,11 @@ deployment is always Class B, however small the diff.
 | Stage | Exit condition | Control applied |
 |---|---|---|
 | 1. Inputs stated | The inputs in §5 are written down and are unambiguous, complete and not in conflict | Design review (Class B and C) |
+| 1a. AI impact assessed | The AI impact assessment (§7a) is updated for the change, and any new high impact has a control or an action with an owner | Review by the Project Lead and the data custodian (Class B and C) |
 | 2. Design and build | Working implementation exists | AI-output verification (§7) applies continuously |
 | 3. Verification | The outputs meet the stated inputs | §6.1 — unit tests, golden-question suite, targeted measurement |
 | 4. Validation | The result meets the intended use in the customer's context | §6.2 |
-| 5. Release | Managing Director approves | Release record in `registers/REG-08_Release_and_Deployment_Register.md` |
+| 5. Release | Managing Director approves; the AI impact assessment is current for the release | Release record in `registers/REG-08_Release_and_Deployment_Register.md` |
 
 ## 5. Design and development inputs (8.3.3)
 
@@ -153,6 +158,13 @@ conflict with one another. Conflicts between inputs — most commonly between a 
 an always-helpful assistant and the abstention requirement in §5.4 — are resolved in favour of the
 mandatory inputs, and the resolution is recorded in the design plan and communicated to the customer
 under `SOP-04` §6.
+
+### 5.6 Impacts of the AI on people
+
+The AI impact assessment (§7a) is a design input. Its open actions — for example a recording notice,
+a bias measurement or a user statement that answers must be checked — are stated as requirements
+in the functional and non-functional requirement registers (EM26-20, EM26-21) and verified like
+any other requirement.
 
 ## 6. Design and development controls (8.3.4)
 
@@ -256,6 +268,50 @@ Customers and auditors are entitled to know how the software was built.
 The competence dimension of this — that reviewing generated output requires more competence in the
 area, not less — is in `SOP-03` §7.
 
+## 7a. AI impact assessment
+
+EchoMind is an AI product: it transcribes people, answers from documents, generates documents and
+images, and checks statements during conversations. Its impacts on the people who use it and the
+people it affects are assessed systematically and recorded, not only handled control by control.
+
+**When.** An AI impact assessment is made or updated:
+
+1. at the design-input stage of a Class B or C change that adds or changes AI behaviour (stage 1a);
+2. for every new use case, and for every new client sector or region;
+3. when a model is added or replaced (REG-02 §2);
+4. before each release — the release record in REG-08 states that the assessment is current;
+5. after any incident or complaint involving AI output;
+6. at management review (SOP-15) and internal audit (SOP-13).
+
+**What is assessed.** For each area: who is affected, the possible impact, the rating before and
+after controls (High / Medium / Low), the controls in place and their evidence, the gap, and the
+action with an owner and a date.
+
+| Area | Question |
+|---|---|
+| Privacy and data protection | Can personal or client data leave the client's control, or be kept longer than needed? |
+| Consent | Do people who are recorded or transcribed know, and has the customer been told what consent it needs? |
+| Accuracy | Can the output be wrong or invented, and is that measured? |
+| Over-reliance | Are users told to check the output, and can they see the source? |
+| Bias and fairness | Does quality differ by accent, language, sector or group, and is that measured? |
+| Transparency | Can a user see why an answer was given? |
+| Human oversight | Does the system make or act on decisions about people without a human? |
+| Security and misuse | Prompt injection, unauthorised access, misuse of the output |
+| Confidentiality between clients | Can one client see another's data? |
+| Model provenance and licences | Is each model used within its licence terms? |
+| Generated content | Who may use generated text and images, and on what terms? |
+| Environmental impact | Energy and hardware use |
+| Accessibility | Can every feature be used without voice or without hearing? |
+| Governance | Who is accountable, and how is AI-assisted development controlled (§7)? |
+
+**Who.** Prepared by the Lead Engineer; reviewed by the EchoMind Project Lead (client, user and
+ethical impact) and the data custodian (data protection and consent); approved by the Managing
+Director. ISO/IEC 42001 and ISO/IEC 23894 are used as guidance.
+
+**Where.** `evidence-2026/20_AI_Impact_Assessment/EM26-35_AI_Impact_Assessment_EchoMind.docx`.
+High and medium impacts that remain after controls are carried as risks in `REG-03`; actions are
+tracked to closure there and in `REG-04` where they arise from an audit finding.
+
 ## 8. Design and development outputs (8.3.5)
 
 Outputs are produced in a form that can be verified against inputs, and are approved before release.
@@ -311,6 +367,7 @@ as a requirement for Class B changes.
 | Design outputs | The repository itself, at the tagged or recorded commit | Per SOP-01 §8 |
 | Release approval | `registers/REG-08_Release_and_Deployment_Register.md` | Life of the release + 3 years |
 | Customer acceptance against agreed criteria | Filed under `SOP-04` §10 | 3 years after the engagement ends |
+| AI impact assessment (§7a) | `evidence-2026/20_AI_Impact_Assessment/` — EM26-35 and its revisions | Life of the product release + 3 years |
 
 ## 11. Current state and gaps
 

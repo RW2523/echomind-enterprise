@@ -332,6 +332,30 @@ Severity scale (defined in SOP-10 §3):
 
 ---
 
+## Section D — External audit findings
+
+Findings raised by the certification body. An opportunity for improvement (OFI) is not a
+nonconformity; it is recorded here so that the response, the action and its effectiveness are
+tracked in the same way.
+
+### OFI-2026-06 — No AI impact assessment during development
+
+| Field | Entry |
+|---|---|
+| Date raised | 2026-10-14 |
+| Raised by | Certification body auditor (SY) — surveillance audit 2026-10-14, finding 6; auditee Alexander Peter (EchoMind Project Lead) |
+| Type | **Opportunity for improvement** — ISO 9001:2015 clause 6.1.1 |
+| Finding | "For EchoMind, evidence of an AI impact assessment during development was not available to demonstrate that relevant impacts, including governance and ethical considerations, had been systematically evaluated." |
+| Root cause | SOP-05 required functional, non-functional, security and data-protection inputs, but no consolidated AI impact assessment. Ethical and governance impacts were handled through individual controls (offline processing, export redaction, citations, tenant isolation, human release authorisation) without one documented, systematic evaluation. |
+| Correction | 2026-10-20: AI Impact Assessment EM26-35 prepared for EchoMind v1.4.1 and every use case in EM26-26 — 15 impact areas, 13 use-case screenings, 9 actions with owners. Issued for approval. |
+| Corrective action | (a) SOP-05 revision 1.2, §7a: an AI impact assessment at the design-input stage and before every release, new use case, new model and new client sector — issued 2026-10-20 for approval. (b) AI risks R-15 … R-18 and opportunity O-05 added to `REG-03`. (c) EM26-35 actions AIA-01 … AIA-09 tracked to closure; first priority AIA-01 (recording notice and consent guidance, due 2026-11-30). |
+| Response to the certification body | Findings sheet columns J–M — due 2026-10-22 (`evidence-2026/20_AI_Impact_Assessment/OFI-2026-06_Response_Finding_6.docx`) |
+| Effectiveness verification | At the internal audit, 9–13 Nov 2026: EM26-35 approved; the release record of the next release states the assessment is current; AIA actions on schedule. |
+| Owner | Richard Watson Stephen Amudha (Lead Engineer); verification Sheryl Nazareth (QA / MR) |
+| Status | **OPEN** — assessment and procedure issued for approval 2026-10-20 |
+
+---
+
 ## Statistics
 
 | Metric | Value | As at |
@@ -342,3 +366,4 @@ Severity scale (defined in SOP-10 §3):
 | Of which S1 | 2 | |
 | Closed with effectiveness verified | 3 | |
 | Open | 5 (NC-2026-007, 008, 009, 011, 016); NC-2026-010 closed 2026-10-07, NC-2026-012 to 015 closed 2026-10-06 | 2026-10-07 |
+| External audit findings recorded (Section D) | 1 — OFI-2026-06, open | 2026-10-20 |

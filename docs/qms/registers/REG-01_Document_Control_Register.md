@@ -33,7 +33,7 @@ history itself is not duplicated here — it is the Git history of each file (SO
 | SOP-02 | Context, Interested Parties and Risk | 1.3 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
 | SOP-03 | Competence, Training and Awareness | 1.0 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
 | SOP-04 | Customer Requirements and Communication | 1.3 | APPROVED | Managing Director (Anita Johan) | Anita Johan | 2026-10-07 |
-| SOP-05 | Design and Development Control | 1.1 | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
+| SOP-05 | Design and Development Control | 1.1 (1.2 issued 2026-10-20 for approval) | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
 | SOP-06 | Configuration and Change Management | 1.1 | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
 | SOP-07 | Verification, Validation and Testing | 1.0 | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
 | SOP-08 | Release and Deployment | 1.0 | APPROVED | Lead Engineer (Richard Watson Stephen Amudha) | Anita Johan | 2026-10-07 |
@@ -91,6 +91,7 @@ history itself is not duplicated here — it is the Git history of each file (SO
 | EM26-30 | Requirement Change Record | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-14 (AR-2026-006) — `…/05_Changes_to_Requirements/` |
 | EM26-31 | Design and Development Record | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-14 (AR-2026-006) — `…/06_Design_and_Development/` |
 | EM26-32 | Identification and Traceability Record | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 approved 2026-10-14 (AR-2026-006) — `…/10_Identification_and_Traceability/` |
+| EM26-35 | AI Impact Assessment — EchoMind Enterprise | Lead Engineer (Richard Watson Stephen Amudha) | 1.0 issued 2026-10-20 for approval — `evidence-2026/20_AI_Impact_Assessment/` |
 
 ## 4a. Completed records
 

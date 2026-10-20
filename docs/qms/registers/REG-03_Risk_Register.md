@@ -233,6 +233,62 @@ and set Revision 1.1.
 | Owner / due | Richard Watson Stephen Amudha / 2026-10-31 (GPU-sharing decision) |
 | Residual | 4 / 2 / 8 — Medium |
 
+### R-15 — People recorded or transcribed without being told
+
+| | |
+|---|---|
+| Category | AI impact / data protection and consent |
+| Description | Live transcription, the Silent Assistant and Boardroom record and transcribe speech, including people who are not EchoMind users (meeting participants, callers). Nothing in the application tells them they are being recorded, and customers are given no guidance on the consent they need. |
+| Evidence | Search of `frontend/src`, `backend/app` and `voice/app` on 2026-10-20 for a recording notice or consent step: none found. AI Impact Assessment EM26-35 area 2. |
+| Likelihood / Impact / Rating | 3 / 4 / **12 — High** |
+| Existing controls | Recording starts only on a user action; all audio and transcripts stay on the customer's system (NFR-D01); the export gateway redacts personal data (TC-EM-EXP-108). |
+| Treatment | **Reduce.** Show a clear recording indicator in live transcription and Boardroom; add consent guidance for customers to the user manual (EM26-35 action AIA-01). |
+| Owner / due | Kishan Haravu Pradeep with Richard Watson Stephen Amudha / 2026-11-30 |
+| Residual | 2 / 4 / 8 — Medium |
+| Linked | EM26-35 AIA-01; OFI-2026-06 (REG-04); SOP-05 §7a |
+
+### R-16 — Unmeasured differences in quality between groups of users
+
+| | |
+|---|---|
+| Category | AI impact / fairness |
+| Description | Transcription and answer quality has been measured overall but not by accent, language or persona. Some speakers or sectors may receive worse transcripts or answers without it being known. |
+| Evidence | NFR register REG-09 — no measurement by group; EM26-35 area 5. |
+| Likelihood / Impact / Rating | 3 / 3 / **9 — Medium** |
+| Existing controls | Domain-tuned final transcription with fallback; answers cite their source, so a weak answer can be checked. |
+| Treatment | **Reduce.** Measure quality by accent, language and persona and add the set to the golden suite (EM26-35 action AIA-02). |
+| Owner / due | Richard Watson Stephen Amudha / 2027-01-31 |
+| Residual | 2 / 3 / 6 — Medium |
+| Linked | EM26-35 AIA-02 |
+
+### R-17 — Wrong AI output relied on without checking
+
+| | |
+|---|---|
+| Category | AI impact / accuracy and over-reliance |
+| Description | Users may act on an answer, a transcript or a Silent Assistant check without checking it. Abstention is below its target, so some questions the documents cannot answer still receive an answer. |
+| Evidence | NFR-Q04 abstention 0.783 against ≥ 0.80 (REG-09, action A-17-04); citation precision 0.979 and fact support 0.815; EM26-35 areas 3 and 4. |
+| Likelihood / Impact / Rating | 3 / 4 / **12 — High** |
+| Existing controls | Answers drawn from the customer's documents with citations; abstention when the documents cannot answer; Silent Assistant labels each claim supported / contradicted / unverified with quoted proof; no automated decisions about people. |
+| Treatment | **Reduce.** Raise abstention to ≥ 0.80 (AIA-03); state in the application and the user manual that answers must be checked against their citations (AIA-05). |
+| Owner / due | Richard Watson Stephen Amudha (AIA-03) and Alexander Peter (AIA-05) / 2026-11-30 |
+| Residual | 2 / 4 / 8 — Medium |
+| Linked | EM26-35 AIA-03, AIA-05; NFR-Q04, NFR-S03 |
+
+### R-18 — AI used for decisions in new sectors before its impact is assessed
+
+| | |
+|---|---|
+| Category | AI impact / new use |
+| Description | The Asia-Pacific projects (sensor data for agriculture; vehicle inspection) would use EchoMind output in decisions about safety and livelihoods — impacts not covered by the current assessment. |
+| Evidence | EM26-28 contract review CON-2026-04 (in evaluation); EM26-26 UC-AP-01, UC-AP-02; EM26-35 area 15. |
+| Likelihood / Impact / Rating | 2 / 4 / **8 — Medium** |
+| Existing controls | Contract review before commitment (SOP-04, FRM-11); no contract signed. |
+| Treatment | **Avoid until assessed.** Complete an AI impact assessment at contract review, before signature (AIA-08; SOP-05 §7a). |
+| Owner / due | Alexander Peter / before signature |
+| Residual | 1 / 4 / 4 — Low |
+| Linked | EM26-35 AIA-08; EM26-28 |
+
 ---
 
 ## Opportunities (6.1.1)
@@ -243,6 +299,7 @@ and set Revision 1.1.
 | **O-02** | Use the QMS as a procurement enabler | Regulated buyers increasingly require supplier quality evidence. An operating ISO 9001 system shortens procurement. | Complete adoption (ADOPTION_GUIDE.md) |
 | **O-03** | The honest-abstention behaviour is a compliance feature | "I could not find that" is what a regulated user needs. Market it as such and measure it. | Add abstention correctness to the evaluation set |
 | **O-04** | Pinning and SBOM work also unlocks air-gapped defence procurement | Those buyers require a bill of materials. | Bundle with R-10 treatment |
+| **O-05** | A documented AI impact assessment is a procurement asset | Government, legal and banking buyers increasingly ask how AI impacts are assessed and governed (ISO/IEC 42001). EM26-35 answers that question with evidence. | Keep EM26-35 current at every release (SOP-05 §7a); offer it to customers with the security summary |
 
 ---
 
@@ -251,3 +308,4 @@ and set Revision 1.1.
 | Review date | Reviewed by | Changes |
 |---|---|---|
 | — | — | Initial confirmation of proposed ratings — **due at the first management review** |
+| 2026-10-20 | Richard Watson Stephen Amudha (Lead Engineer); for confirmation by Alexander Peter and Sheryl Nazareth | R-15 … R-18 and O-05 added from the AI Impact Assessment EM26-35 — surveillance audit 2026-10-14, finding 6 (OFI, 6.1.1) |
