@@ -31,3 +31,9 @@
 | Kishan Haravu Pradeep — data protection | Confirmed 2026-10-20 (to be filed by the QA/MR) |
 | Sheryl Nazareth — QA | Confirmed 2026-10-20 (to be filed by the QA/MR) |
 | Anita Johan — approval | Confirmed 2026-10-20 (to be filed by the QA/MR) |
+
+## Correction after approval
+
+| Date | Correction | Effect |
+|---|---|---|
+| 2026-10-20 | EM26-35 area 2, action AIA-01, REG-03 R-15 and the J–M response: the application does show the operator a recording indicator (‘Listening…’, ‘Recording in Boardroom Mode…’, elapsed time). The gap is restated as no consent step and no notice for the other participants. | Wording only — rating, owner and due date unchanged. Approvers to be informed by the preparer. |

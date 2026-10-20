@@ -238,11 +238,11 @@ and set Revision 1.1.
 | | |
 |---|---|
 | Category | AI impact / data protection and consent |
-| Description | Live transcription, the Silent Assistant and Boardroom record and transcribe speech, including people who are not EchoMind users (meeting participants, callers). Nothing in the application tells them they are being recorded, and customers are given no guidance on the consent they need. |
-| Evidence | Search of `frontend/src`, `backend/app` and `voice/app` on 2026-10-20 for a recording notice or consent step: none found. AI Impact Assessment EM26-35 area 2. |
+| Description | Live transcription, the Silent Assistant and Boardroom record and transcribe speech, including people who are not EchoMind users (meeting participants, callers). The operator sees ‘Listening…’ or ‘Recording in Boardroom Mode…’ with the elapsed time, but there is no consent step, nothing tells the other participants, and customers are given no guidance on the consent they need. |
+| Evidence | Review of `frontend/components/LiveTranscription.tsx` and `frontend/components/BoardroomView.tsx`, and search of `frontend`, `backend/app` and `voice/app` on 2026-10-20: operator indicator only; no consent step or participant notice. AI Impact Assessment EM26-35 area 2. |
 | Likelihood / Impact / Rating | 3 / 4 / **12 — High** |
-| Existing controls | Recording starts only on a user action; all audio and transcripts stay on the customer's system (NFR-D01); the export gateway redacts personal data (TC-EM-EXP-108). |
-| Treatment | **Reduce.** Show a clear recording indicator in live transcription and Boardroom; add consent guidance for customers to the user manual (EM26-35 action AIA-01). |
+| Existing controls | Recording starts only on a user action and the operator sees a recording indicator; all audio and transcripts stay on the customer's system (NFR-D01); the export gateway redacts personal data (TC-EM-EXP-108). |
+| Treatment | **Reduce.** Add a consent step when live transcription or Boardroom starts and an optional notice for participants; add consent guidance for customers to the user manual (EM26-35 action AIA-01). |
 | Owner / due | Kishan Haravu Pradeep with Richard Watson Stephen Amudha / 2026-11-30 |
 | Residual | 2 / 4 / 8 — Medium |
 | Linked | EM26-35 AIA-01; OFI-2026-06 (REG-04); SOP-05 §7a |
