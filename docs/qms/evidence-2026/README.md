@@ -38,7 +38,7 @@ live-system snapshot, evaluation reports) — is also available as one download:
 | `17_NFR_Register` | EM26-17 NFR record and monitoring + workbook (2025 finding #6) | NFR tracker |
 | `18_Review_Actions` | EM26-18 review feedback and action log + workbook (2025 finding #7) | Action tracking register |
 | `19_Excel_Registers` | EM26-19 deliverable review feedback and action log 2025 → 2026 (33 reviews, two-monthly review cycle); EM26-20 functional requirements; EM26-21 non-functional requirements with measurement history; EM26-22 product roadmap 2025 → 2027 | Lessons log, SDLC plan, roadmap |
-| `20_AI_Impact_Assessment` | EM26-35 AI impact assessment of EchoMind v1.4.1 and every use case (15 impact areas, 9 actions); response to surveillance audit 2026-10-14 finding 6 (OFI, 6.1.1) — issued 2026-10-20 for approval | — (new in 2026) |
+| `20_AI_Impact_Assessment` | EM26-35 AI impact assessment of EchoMind v1.4.1 and every use case (15 impact areas, 9 actions); response to surveillance audit 2026-10-14 finding 6 (OFI, 6.1.1) — approved 2026-10-20 (AR-2026-008) | — (new in 2026) |
 | `Screens` | 21 real screenshots: app, GitHub, test and service evidence | screencapture-*.pdf/png/jpg |
 | `QMS_Word` | Word copies of every `docs/qms` markdown document (the markdown stays the controlled source) | QMS-DOC-08-x |
 

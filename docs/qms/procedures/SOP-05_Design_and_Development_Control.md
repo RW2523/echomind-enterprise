@@ -4,15 +4,15 @@
 |---|---|
 | Document ID | SOP-05 |
 | Revision | 1.2 |
-| Status | **ISSUED FOR APPROVAL** — revision 1.2 (2026-10-20). Revision 1.1 APPROVED 2026-10-07 (AR-2026-001) remains in force until 1.2 is approved |
+| Status | **APPROVED** |
 | Owner | Lead Engineer (Richard Watson Stephen Amudha) |
 | Approved by | Anita Johan (Managing Director) |
-| Approval date | 2026-10-07 (revision 1.1) — revision 1.2 pending |
+| Approval date | 2026-10-20 (revision 1.2); revision 1.1 2026-10-07 |
 | ISO 9001:2015 clauses | 8.3.1, 8.3.2, 8.3.3, 8.3.4, 8.3.5, 8.3.6 |
 | Prepared by | Richard Watson Stephen Amudha (Lead Engineer) — 2026-10-07; revision 1.2 — 2026-10-20 |
-| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07; revision 1.2 — to confirm |
-| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07; revision 1.2 — to confirm |
-| Approval record | `records/approvals/2026-10-07_AR-2026-001_document_approval.md` |
+| Reviewed by | Alexander Peter (EchoMind Project Lead) — 2026-10-07; revision 1.2 — 2026-10-20 |
+| Quality assurance | Sheryl Nazareth (QA / MR) — 2026-10-07; revision 1.2 — 2026-10-20 |
+| Approval record | `records/approvals/2026-10-20_AR-2026-008_ai_impact_assessment_approval.md` (revision 1.2); `records/approvals/2026-10-07_AR-2026-001_document_approval.md` (revision 1.1) |
 
 > **Revision note 2026-10-07.** Wording in this procedure about “one person” describes the engineering work, which is concentrated in the Lead Engineer. Within AJACE Inc. the roles are held by named people (QM-01 §7.1): independent review by the EchoMind Project Lead (Alexander Peter), verification and QMS maintenance by QA/MR (Sheryl Nazareth), approval and release authorisation by the Managing Director (Anita Johan); internal audit is provided by the AJACE Inc. corporate audit programme.
 

@@ -347,12 +347,12 @@ tracked in the same way.
 | Type | **Opportunity for improvement** — ISO 9001:2015 clause 6.1.1 |
 | Finding | "For EchoMind, evidence of an AI impact assessment during development was not available to demonstrate that relevant impacts, including governance and ethical considerations, had been systematically evaluated." |
 | Root cause | SOP-05 required functional, non-functional, security and data-protection inputs, but no consolidated AI impact assessment. Ethical and governance impacts were handled through individual controls (offline processing, export redaction, citations, tenant isolation, human release authorisation) without one documented, systematic evaluation. |
-| Correction | 2026-10-20: AI Impact Assessment EM26-35 prepared for EchoMind v1.4.1 and every use case in EM26-26 — 15 impact areas, 13 use-case screenings, 9 actions with owners. Issued for approval. |
-| Corrective action | (a) SOP-05 revision 1.2, §7a: an AI impact assessment at the design-input stage and before every release, new use case, new model and new client sector — issued 2026-10-20 for approval. (b) AI risks R-15 … R-18 and opportunity O-05 added to `REG-03`. (c) EM26-35 actions AIA-01 … AIA-09 tracked to closure; first priority AIA-01 (recording notice and consent guidance, due 2026-11-30). |
+| Correction | 2026-10-20: AI Impact Assessment EM26-35 prepared for EchoMind v1.4.1 and every use case in EM26-26 — 15 impact areas, 13 use-case screenings, 9 actions with owners. Approved 2026-10-20 (AR-2026-008). |
+| Corrective action | (a) SOP-05 revision 1.2, §7a: an AI impact assessment at the design-input stage and before every release, new use case, new model and new client sector — approved 2026-10-20 (AR-2026-008). (b) AI risks R-15 … R-18 and opportunity O-05 added to `REG-03`. (c) EM26-35 actions AIA-01 … AIA-09 tracked to closure; first priority AIA-01 (recording notice and consent guidance, due 2026-11-30). |
 | Response to the certification body | Findings sheet columns J–M — due 2026-10-22 (`evidence-2026/20_AI_Impact_Assessment/OFI-2026-06_Response_Finding_6.docx`) |
 | Effectiveness verification | At the internal audit, 9–13 Nov 2026: EM26-35 approved; the release record of the next release states the assessment is current; AIA actions on schedule. |
 | Owner | Richard Watson Stephen Amudha (Lead Engineer); verification Sheryl Nazareth (QA / MR) |
-| Status | **OPEN** — assessment and procedure issued for approval 2026-10-20 |
+| Status | **OPEN** — correction and procedure approved 2026-10-20 (AR-2026-008); response due 2026-10-22; effectiveness to be verified |
 
 ---
 

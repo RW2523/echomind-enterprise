@@ -308,4 +308,4 @@ and set Revision 1.1.
 | Review date | Reviewed by | Changes |
 |---|---|---|
 | — | — | Initial confirmation of proposed ratings — **due at the first management review** |
-| 2026-10-20 | Richard Watson Stephen Amudha (Lead Engineer); for confirmation by Alexander Peter and Sheryl Nazareth | R-15 … R-18 and O-05 added from the AI Impact Assessment EM26-35 — surveillance audit 2026-10-14, finding 6 (OFI, 6.1.1) |
+| 2026-10-20 | Prepared by Richard Watson Stephen Amudha; reviewed by Alexander Peter and Kishan Haravu Pradeep; QA Sheryl Nazareth; approved by Anita Johan (AR-2026-008) | R-15 … R-18 and O-05 added from the AI Impact Assessment EM26-35 — surveillance audit 2026-10-14, finding 6 (OFI, 6.1.1) |
