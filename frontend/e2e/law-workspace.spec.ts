@@ -41,14 +41,21 @@ async function sendCode(page: Page, code: string): Promise<boolean> {
   return resp.ok();
 }
 
+// An authenticator code is single-use. Signing the same person in twice within one 30 s step would send a used code,
+// which the server refuses and counts against this address (D-075); wait for the next step instead of failing.
+const lastStep: Record<string, number> = {};
+
 async function signIn(page: Page, name: string) {
   const c = creds()[name];
+  const step = Math.floor(Date.now() / 30_000);
+  if (lastStep[name] === step) await page.waitForTimeout(31_000 - (Date.now() % 30_000));
+  lastStep[name] = Math.floor(Date.now() / 30_000);
   await page.goto('/signin');
   await page.getByLabel('Username').fill(name);
   await page.getByLabel('Password').fill(c.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   for (let attempt = 0; attempt < 2; attempt++) {
-    if (await sendCode(page, totp(c.totp_secret))) return;
+    if (await sendCode(page, totp(c.totp_secret))) { lastStep[name] = Math.floor(Date.now() / 30_000); return; }
     // A code is single-use: if this person already signed in during this 30 s step, wait for the next one.
     await page.waitForTimeout(31_000 - (Date.now() % 30_000));
   }

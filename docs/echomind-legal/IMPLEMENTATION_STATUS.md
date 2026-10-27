@@ -98,3 +98,16 @@ python3 scripts/law/demo_load.py --base http://127.0.0.1:8110/api --data-dir "$P
 LAW_FRONTEND_HOST=localhost scripts/law/dev_frontend.sh                  # http://localhost:5174 → "Enter the demo as" alice
 ```
 Demo sign-in is for this local, fictional setup only; it is off by default and must stay off with real data.
+
+## Next, in order
+
+1. **Amendment-aware answers** (live finding 1): when a retrieved clause is replaced by a signed amendment, bring the amending
+   clause into the evidence and say which wording is in force from when (blueprint 06 temporal model). Add golden items for it.
+2. **Chronology card** (LEGAL-011): dated events with their sources and uncertain dates, built from obligations and the
+   conflict scan's dated facts; an "explained" discrepancy (dispatch vs arrival) becomes two events.
+3. **Draft from the conversation** (LEGAL-013 in chat): the `draft` intent opens a right-hand editor over the existing drafting
+   engine (firm templates, sourced fields, second-lawyer approval), instead of pointing to the Drafting page.
+4. **Guided questions** (03 registry): one contextual form with at most three questions for ambiguous requests.
+5. **Owner and counsel items carried from the Law programme**: egress lock (root), off-host key copies, lawyer review sessions,
+   P-001…P-015 (docs/echomind-law/PROGRESS.md). Restarting the stopped pilot with this branch is the owner's decision
+   (`scripts/law/deploy_pilot.sh`).

@@ -5,6 +5,7 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/source-serif-4';
 import '../theme/law.css';
 import '../theme/liquid.css';
+import '../counsel/counsel.css';
 import { applyPreferences } from './preferences';
 import { RequireSession, useSessionExpiry } from './session';
 import { MatterLayout } from './matter';
@@ -158,7 +159,8 @@ export default function LawApp() {
   const [router] = React.useState(() => createBrowserRouter(lawRoutes));
   useEffect(() => {
     document.documentElement.dataset.edition = 'law';
-    document.title = 'EchoMind Law';
+    document.documentElement.dataset.shell = 'counsel';          // EchoMind Legal "Quiet Counsel" tokens everywhere, sign-in included
+    document.title = 'EchoMind Legal';
     applyPreferences();
     const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
     const onChange = () => applyPreferences();

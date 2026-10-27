@@ -324,9 +324,8 @@ function ShellBody() {
 export default function CounselShell() {
   useEffect(() => {
     const root = document.documentElement;
-    root.dataset.shell = 'counsel';
+    root.dataset.shell = 'counsel';                              // also set app-wide by LawApp; kept for pages mounted alone
     document.title = 'EchoMind Legal';
-    return () => { delete root.dataset.shell; };
   }, []);
   return (
     <MatterProvider>
