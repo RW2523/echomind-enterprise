@@ -87,6 +87,22 @@ export interface EvidenceComparisonProps {
   can_review: boolean;
 }
 
+export interface TimelineEvent {
+  id: string;
+  date?: string;                     // YYYY-MM-DD as the document states it; absent when it does not
+  date_text: string;                 // the date's words, as written
+  certainty: 'stated' | 'uncertain' | 'undated';
+  kind: 'event' | 'deadline' | 'document_date' | 'obligation';
+  reported: boolean;
+  superseded: boolean;
+  text: string;
+  status?: string;
+  notes: string[];
+  source: ComparisonSide;
+}
+
+export interface TimelineProps { summary: string; events: TimelineEvent[]; more: number; caution: string }
+
 export interface TaskProgressProps { label: string; done: number; total: number; state: 'running' | 'done' | 'canceled' | 'failed' }
 export interface NoticeProps { tone: 'info' | 'caution'; text: string }
 export interface UnavailableProps { text: string }
@@ -96,6 +112,7 @@ export type SafeComponent =
   | (Base & { type: 'source_answer'; props: SourceAnswerProps })
   | (Base & { type: 'priority_list'; props: PriorityListProps })
   | (Base & { type: 'evidence_comparison'; data_ref: string; props: EvidenceComparisonProps })
+  | (Base & { type: 'timeline'; props: TimelineProps })
   | (Base & { type: 'task_progress'; props: TaskProgressProps })
   | (Base & { type: 'notice'; props: NoticeProps })
   | (Base & { type: 'unavailable'; props: UnavailableProps })

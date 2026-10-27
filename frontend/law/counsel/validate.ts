@@ -5,7 +5,7 @@
  */
 import type {
   ActionType, AnswerState, CitationRef, ComparisonSide, DiscrepancyStatus, Envelope, EvidenceComparisonProps, NoticeProps,
-  PriorityItem, PriorityListProps, ReviewEntry, SafeComponent, SourceAnswerProps, TaskProgressProps, UiAction,
+  PriorityItem, PriorityListProps, ReviewEntry, SafeComponent, SourceAnswerProps, TaskProgressProps, TimelineEvent, TimelineProps, UiAction,
 } from './types';
 
 class Invalid extends Error {}
@@ -162,6 +162,30 @@ function evidenceComparison(v: unknown): EvidenceComparisonProps {
   };
 }
 
+const EVENT_KINDS: readonly TimelineEvent['kind'][] = ['event', 'deadline', 'document_date', 'obligation'];
+const CERTAINTY: readonly TimelineEvent['certainty'][] = ['stated', 'uncertain', 'undated'];
+
+function timeline(v: unknown): TimelineProps {
+  const o = obj(v, 'props');
+  return {
+    summary: str(o.summary, 400, 'summary'), caution: str(o.caution, 400, 'caution'), more: o.more === undefined ? 0 : int(o.more, 'more'),
+    events: list(o.events, 60, 'events', (x): TimelineEvent => {
+      const e = obj(x, 'event');
+      const date = optStr(e.date, 10, 'event.date');
+      const certainty = oneOf(e.certainty, CERTAINTY, 'event.certainty');
+      if (date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Invalid('event.date');
+      if ((certainty === 'undated') !== (date === undefined)) throw new Invalid('an event has a date exactly when its date is stated');
+      return {
+        id: ident(e.id, 'event.id'), date, date_text: str(e.date_text, 80, 'event.date_text'), certainty,
+        kind: oneOf(e.kind, EVENT_KINDS, 'event.kind'), reported: e.reported === undefined ? false : bool(e.reported, 'event.reported'),
+        superseded: e.superseded === undefined ? false : bool(e.superseded, 'event.superseded'), text: str(e.text, 400, 'event.text'),
+        status: optStr(e.status, 80, 'event.status'), notes: list(e.notes, 3, 'event.notes', (n) => str(n, 300, 'event.note')),
+        source: side(e.source),
+      };
+    }),
+  };
+}
+
 function taskProgress(v: unknown): TaskProgressProps {
   const o = obj(v, 'props');
   return { label: str(o.label, 200, 'label'), done: int(o.done, 'done'), total: int(o.total, 'total'),
@@ -185,6 +209,7 @@ export function parseComponent(v: unknown): SafeComponent {
       case 'priority_list': return { id, version, type: 'priority_list', props: priorityList(o.props) };
       case 'evidence_comparison':
         return { id, version, type: 'evidence_comparison', data_ref: str(o.data_ref, 40, 'data_ref'), props: evidenceComparison(o.props) };
+      case 'timeline': return { id, version, type: 'timeline', props: timeline(o.props) };
       case 'task_progress': return { id, version, type: 'task_progress', props: taskProgress(o.props) };
       case 'notice': return { id, version, type: 'notice', props: notice(o.props) };
       case 'unavailable': return { id, version, type: 'unavailable', props: { text: str(obj(o.props, 'props').text, 300, 'text') } };

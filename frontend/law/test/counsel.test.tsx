@@ -346,3 +346,55 @@ describe('Citation numbers', () => {
     expect([...labels.entries()]).toEqual([[5, 1], [1, 2], [3, 3]]);
   });
 });
+
+describe('Chronology', () => {
+  const side = (doc: string, title: string, value: string, context: string) => ({
+    document_id: doc, document_title: title, version_id: `v-${doc}`, version_number: 1, value, context,
+    value_start: context.indexOf(value), value_end: context.indexOf(value) + value.length,
+    reader_path: `/m/M-101/documents/${doc}/read?v=v-${doc}&at=10-22`, stale: false });
+  const ev = (i: number, date: string | undefined, dateText: string, extra: object = {}) => ({
+    id: `ev${i}`, ...(date ? { date } : {}), date_text: dateText, certainty: date ? 'stated' : 'undated', kind: 'event',
+    reported: false, superseded: false, text: `Sentence ${i} on ${dateText}.`, notes: [],
+    source: side(`d${i}`, `Document ${i}`, dateText, `Sentence ${i} on ${dateText}.`), ...extra });
+  const tl = (events: object[]) => ({ ...answerEnvelope(), summary: 'Chronology', components: [{ id: CMP, version: 1, type: 'timeline', props: {
+    summary: `${events.length} events in M-101.`, more: 0, events,
+    caution: 'Dates are shown as the documents state them; nothing is inferred.' } }] });
+
+  it('lists dated events first with what each is, then on request the ones whose date is not stated; each opens its words', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const events = [
+      ev(1, '2026-04-01', 'April 1, 2026', { kind: 'document_date' }),
+      ev(2, '2026-05-12', 'May 12, 2026', { reported: true, certainty: 'uncertain', notes: ['Explained by alice: “Dispatch and arrival.”'] }),
+      ev(3, '2026-05-15', 'May 15, 2026', { kind: 'deadline', superseded: true, status: 'Confirmed by a lawyer' }),
+      ...Array.from({ length: 7 }, (_, k) => ev(10 + k, `2026-06-${String(k + 10)}`, `June ${k + 10}, 2026`)),
+      ev(30, undefined, 'the 20th'),
+    ];
+    world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(tl(events))] });
+    renderLaw('/chat');
+    await ask('Build a chronology');
+    const card = await screen.findByRole('region', { name: '11 events in M-101.' });
+    const dated = within(card).getByRole('list', { name: 'Dated events' });
+    expect(within(dated).getAllByRole('listitem')).toHaveLength(8);                           // a first view, the rest on request
+    const witness = within(dated).getAllByRole('listitem')[1];
+    expect(within(witness).getByText('Recollection')).toBeTruthy();
+    expect(within(witness).getByText('Uncertain')).toBeTruthy();
+    expect(within(witness).getByText(/Explained by alice/)).toBeTruthy();
+    const deadline = within(dated).getAllByRole('listitem')[2];
+    expect(['Deadline', 'Replaced', 'Confirmed by a lawyer'].every((t) => within(deadline).queryByText(t))).toBe(true);
+    expect(within(card).queryByRole('list', { name: 'Events whose date is not stated' })).toBeNull();
+    fireEvent.click(within(card).getByRole('button', { name: /Show all \(3 more, 1 without a stated date\)/ }));
+    expect(within(card).getAllByRole('list', { name: 'Dated events' })[0].querySelectorAll('li')).toHaveLength(10);
+    const undated = within(card).getByRole('list', { name: 'Events whose date is not stated' });
+    expect(within(undated).getByText('“the 20th”')).toBeTruthy();
+    fireEvent.click(within(witness).getByRole('button', { name: 'Inspect Document 2, May 12, 2026' }));
+    const panel = await screen.findByRole('complementary', { name: 'May 12, 2026: Document 2' });
+    expect(within(panel).getByText('May 12, 2026', { selector: 'mark' })).toBeTruthy();
+  });
+
+  it('an event that claims a date while saying it has none is not shown', () => {
+    const bad = { id: CMP, type: 'timeline', props: { summary: 's', caution: 'c', more: 0,
+      events: [{ ...ev(1, '2026-05-12', 'May 12, 2026'), certainty: 'undated' }] } };
+    expect(parseComponent(bad).type).toBe('inert');
+    expect(parseComponent({ ...bad, props: { ...bad.props, events: [ev(1, '12/05/2026', 'x')] } }).type).toBe('inert');
+  });
+});

@@ -6,6 +6,7 @@ the matter's documents (`ask_fact`), which is the safe default: research answers
 verified quotes, or abstains.
 
 - `inspect_case`  "What matters today?", "What changed?", "Brief me" → a briefing from records (briefing.py)
+- `chronology`    "Build a chronology", "Timeline of events" → dated events from the documents (chronology.py)
 - `compare`       "Find conflicting dates", "Are there inconsistencies?" → the conflict scan (discrepancies.py)
 - `other_matters` "Use the other matters too" → an explanation that a conversation is limited to its matter
 - `draft`         "Draft a client update" → where drafting from firm templates is done
@@ -17,7 +18,7 @@ from __future__ import annotations
 
 import re
 
-INTENTS = ("ask_fact", "compare", "inspect_case", "other_matters", "draft", "deliberate", "smalltalk")
+INTENTS = ("ask_fact", "compare", "inspect_case", "chronology", "other_matters", "draft", "deliberate", "smalltalk")
 
 _OTHER_MATTERS = re.compile(
     r"\b(?:other|another|all|every|any|across|different|related)\s+(?:of\s+(?:the|our|my)\s+)?(?:matters?|cases?|clients?|files?)\b"
@@ -33,6 +34,8 @@ _DRAFT = re.compile(r"^\s*(?:please\s+|can\s+you\s+|could\s+you\s+)?(?:draft|wri
                     r"|\b(?:draft|write|prepare)\s+(?:a|an|the|me\s+a)\s+(?:\w+\s+){0,3}(?:letter|update|memo|email|reply|notice|agreement|contract)\b", re.I)
 _SMALLTALK = re.compile(r"^\s*(?:hi|hello|hey|thanks|thank\s+you|thx|cheers|ok(?:ay)?|good\s+(?:morning|afternoon|evening))"
                         r"(?:\s+(?:there|again|so\s+much|echomind))?\s*[!.?]*\s*$", re.I)
+_CHRONOLOGY = re.compile(r"\b(?:chronology|chronological|timeline|time\s+line|sequence\s+of\s+events|order\s+of\s+events"
+                         r"|what\s+happened\s+when)\b", re.I)
 _DELIBERATE = re.compile(r"\b(?:challenge|devil'?s\s+advocate|counter-?arguments?|poke\s+holes|stress[- ]test|argue\s+against"
                          r"|what\s+would\s+(?:opposing|the\s+other\s+side'?s?)\s+counsel)\b", re.I)
 
@@ -49,6 +52,8 @@ def classify(text: str) -> str:
         return "draft"
     if _DELIBERATE.search(t):
         return "deliberate"
+    if _CHRONOLOGY.search(t):
+        return "chronology"
     if _COMPARE.search(t):
         return "compare"
     if _INSPECT.search(t):

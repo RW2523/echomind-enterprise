@@ -19,7 +19,7 @@ const SUGGESTIONS = [
   'What matters today?',
   'Find conflicting dates or amounts',
   'Summarize this matter from its documents',
-  'Which deadlines do the documents set?',
+  'Build a chronology of events',
 ];
 const FINISHED = new Set(['completed', 'abstained']);
 

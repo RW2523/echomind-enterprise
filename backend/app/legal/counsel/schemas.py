@@ -167,6 +167,36 @@ class EvidenceComparisonProps(Strict):
     can_review: bool
 
 
+IsoDate = Annotated[str, StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$")]
+
+
+class TimelineEvent(Strict):
+    id: Ident
+    date: Optional[IsoDate] = None                        # as the document states it; None when it does not
+    date_text: text(80)                                   # the words of the date, as written
+    certainty: Literal["stated", "uncertain", "undated"]
+    kind: Literal["event", "deadline", "document_date", "obligation"]
+    reported: bool = False                                # someone's recollection ("Witness A recalls …")
+    superseded: bool = False                              # in a clause a signed amendment replaced
+    text: text(400)
+    status: Optional[text(80)] = None                     # an obligation's review state
+    notes: list[text(300)] = Field(default_factory=list, max_length=3)
+    source: ComparisonSide
+
+    @model_validator(mode="after")
+    def _undated_has_no_date(self):
+        if (self.certainty == "undated") != (self.date is None):
+            raise ValueError("an event has a date exactly when its date is stated")
+        return self
+
+
+class TimelineProps(Strict):
+    summary: text(400)
+    events: list[TimelineEvent] = Field(default_factory=list, max_length=60)
+    more: int = Field(default=0, ge=0)
+    caution: text(400)
+
+
 class TaskProgressProps(Strict):
     label: text(200)
     done: int = Field(ge=0)
@@ -206,6 +236,11 @@ class EvidenceComparison(_Base):
     props: EvidenceComparisonProps
 
 
+class Timeline(_Base):
+    type: Literal["timeline"]
+    props: TimelineProps
+
+
 class TaskProgress(_Base):
     type: Literal["task_progress"]
     props: TaskProgressProps
@@ -221,9 +256,9 @@ class Unavailable(_Base):
     props: UnavailableProps
 
 
-Component = Annotated[Union[SourceAnswer, PriorityList, EvidenceComparison, TaskProgress, Notice, Unavailable],
+Component = Annotated[Union[SourceAnswer, PriorityList, EvidenceComparison, Timeline, TaskProgress, Notice, Unavailable],
                       Field(discriminator="type")]
-COMPONENT_TYPES = ("source_answer", "priority_list", "evidence_comparison", "task_progress", "notice", "unavailable")
+COMPONENT_TYPES = ("source_answer", "priority_list", "evidence_comparison", "timeline", "task_progress", "notice", "unavailable")
 
 
 class Envelope(Strict):

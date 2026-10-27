@@ -5,7 +5,7 @@ Called inside the purge's own transaction, so either everything goes or nothing 
 - potential inconsistencies quoting it go with their review history (a scan can find them again);
 - answers keep their wording, but citation chips naming the document lose its title and are marked removed, and their notes
   (which name the documents a conflict or an amendment is about) are dropped;
-- a briefing that named the document is replaced by "no longer available";
+- a briefing or chronology that named the document is replaced by "no longer available";
 - evidence comparisons need nothing: they are resolved from their discrepancy, which is gone.
 """
 from __future__ import annotations
@@ -15,6 +15,7 @@ import json
 from . import citations, discrepancies
 
 REMOVED = "This briefing referred to a document that has since been deleted."
+REMOVED_TIMELINE = "This chronology quoted a document that has since been deleted. Ask for it again."
 
 
 def document(conn, matter_id: str, document_id: str) -> None:
@@ -29,9 +30,9 @@ def document(conn, matter_id: str, document_id: str) -> None:
                                    if c.get("document_id") == document_id else c) for c in props.get("citations", [])]
             props["notes"] = []                    # notes name the documents they are about (conflicts, amendments)
             conn.execute("UPDATE legal_counsel_components SET props_json=? WHERE id=?", (json.dumps(props, ensure_ascii=False), cid))
-        elif type_ == "priority_list":
+        elif type_ in ("priority_list", "timeline"):
             conn.execute("UPDATE legal_counsel_components SET type='unavailable', props_json=? WHERE id=?",
-                         (json.dumps({"text": REMOVED}), cid))
+                         (json.dumps({"text": REMOVED if type_ == "priority_list" else REMOVED_TIMELINE}), cid))
 
 
 def remaining(conn, matter_id: str, document_id: str) -> int:
@@ -45,6 +46,6 @@ def remaining(conn, matter_id: str, document_id: str) -> int:
         if type_ == "source_answer":
             n += sum(1 for c in props.get("citations", []) if c.get("document_id") == document_id and c.get("document_title"))
             n += 1 if props.get("notes") else 0
-        elif type_ == "priority_list":
+        elif type_ in ("priority_list", "timeline"):
             n += 1
     return n

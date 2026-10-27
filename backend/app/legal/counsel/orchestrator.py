@@ -29,7 +29,7 @@ from ..compare import scan
 from ..research import followup
 from ..research import routes as research
 from ..retrieval import scope as scopemod
-from . import briefing, citations, discrepancies, intent as intents, schemas, store
+from . import briefing, chronology, citations, discrepancies, intent as intents, schemas, store
 
 logger = logging.getLogger(__name__)
 
@@ -304,6 +304,10 @@ async def run(principal: dict, conv: dict, text: str, client_request_id: Optiona
         elif kind == "compare":
             async for e in _compare(principal, scope, conv, text, focus, built):
                 yield e
+        elif kind == "chronology":
+            props, named = await run_in_threadpool(chronology.build, principal, matter)
+            built.add("timeline", props, named)
+            built.summary = props["summary"]
         elif kind == "inspect_case":
             props, named = await run_in_threadpool(briefing.build, principal, matter)
             built.add("priority_list", props, named)

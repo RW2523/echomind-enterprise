@@ -9,7 +9,8 @@ root or a decision). "Tested (Law)" = delivered earlier on `feature/echomind-law
 Sign in → **Chat** opens: "How can I help?", the matter in the header, four suggestions. In one conversation a lawyer can
 ask what matters today (a briefing from records, at most three items), ask questions answered only from the matter's
 documents with verified, clickable citations, find potential inconsistencies between documents and resolve them with a
-reason, open any cited passage beside the conversation (re-verified against the stored text, highlighted), and reopen
+reason, build a chronology of the matter (every date the documents state, in order, each opening its exact words), open any
+cited passage beside the conversation (re-verified against the stored text, highlighted), and reopen
 past conversations from the rail. Matters, Drafts (what waits for review, your own drafts) and Activity (your own
 actions, documents being read) are the other destinations; every existing Law page still works inside the shell, and
 the firm's pages are in the account menu. Screens: [`screens/`](screens/).
@@ -36,7 +37,7 @@ the firm's pages are in the account menu. Screens: [`screens/`](screens/).
 | LEGAL-008 | Chat shell (Quiet Counsel) | **Tested** | `frontend/law/counsel/CounselShell.tsx`; `counsel.test.tsx` (four destinations, four suggestions, private, real capture state); live screenshots desktop, 390 px, dark |
 | LEGAL-009 | Trusted UI component contract and registry | **Tested** | server `counsel/schemas.py` (unknown types, extra fields, >3 components, >3 items, foreign paths, out-of-range highlights rejected); client `validate.ts` (unknown → inert, hostile paths not offered, markup shown as text) |
 | LEGAL-010 | Cards, source panel, actions with CAS + idempotency | **Tested** | `POST /api/legal/counsel/actions`: stale version 409 with current state (UI shows it), replay by key, forged component/action refused, read-only 403 (UI offers no controls), closed matter 409; Esc closes the panel and focus returns to the chip (unit and live) |
-| LEGAL-011 | Chronology | Not started | (obligations give lawyer-confirmed dates: Tested (Law); the briefing counts unconfirmed ones) |
+| LEGAL-011 | Chronology | **Tested** | `app/legal/counsel/chronology.py`, `timeline` component: built from the documents' stated dates (the conflict scan's reader), never by the model. Document dates, deadlines and events in order; recollections and hedged dates marked; partial or relative dates ("the 20th", "yesterday") listed without a date, never converted; a clause a signed amendment replaced marked "Replaced"; a resolved inconsistency's reason on both events; register deadlines with their review state (confirmed only by a lawyer). `test_law_chronology.py` (11: order and exact sources, unreadable documents left out, explained pair, register states, malformed events refused, purge withdraws it, header dates / date ranges / headings); `counsel.test.tsx` (timeline card); live below |
 | LEGAL-012 | Discrepancy resolution | **Tested** | `legal_discrepancies` + reviews written once (trigger), audited `discrepancy.review`, hidden when a quoted document is not readable, amendments flagged as possible supersessions; live: found and explained in the browser |
 | LEGAL-013 | Draft editor | **Tested (Law)** in its own pages; chat points there | `test_law_drafting.py`; the chat's `draft` intent offers the real Drafting page only to roles that may draft |
 | LEGAL-014 | Export approval | **Tested (Law)** | `test_law_exports.py` (T09) |
@@ -106,6 +107,10 @@ Seconds are request-to-last-event, single user, measured once: not a benchmark.
 | C5 | Live API journey + live browser journey (Playwright, real model) | all steps passed; no console errors, no remote requests, no horizontal overflow at 390 px, focus returns after Esc |
 | C7 | Backend, all, with amendment-aware answers (final code) | **1479 passed, 3 skipped, 1 failed** (LibreOffice absent, as at baseline) |
 | C8 | Frontend after amendment-aware answers | **204 passed**; `tsc` main and strict clean |
+| C9 | `test_law_chronology.py` (final code) | **11 passed** (15 s, `--network none`) |
+| C10 | Frontend with the chronology card | **206 passed** (38 files); `tsc` main and strict clean |
+| C11 | Backend, all, with the chronology | **1489 passed, 3 skipped, 1 failed** (13 min 46 s; LibreOffice absent, as at baseline) |
+| L2 | Live, through the public demo URL (alice, MAT-1042, Playwright): "Build a chronology of events" | 17 events (15 dated, 2 not) from 6 documents: 8 shown first, "Show all" reveals the rest and the two undated ones ("the 20th", "the 12th"); the email's "Sent:" lines, the shipment's "May 13, 2026 to May 14, 2026" as one event, Witness A marked Recollection + Uncertain with alice's explanation, the contract's May 15 deadline marked Replaced, the amendment's May 20 deadline; Inspect opened the exact characters; no console errors |
 | EV1 | Research evaluation, new amendment items, real model (`run_law_eval.py --only …`) | golden **2/2**, held-out **1/1**; 0 leaks; quote verification 1.0 |
 | C6 | Backend, all (`--network none`) after the chat work | **1467 passed, 3 skipped, 2 failed**: LibreOffice absent (environment, as at baseline) and the nginx drift test (the new CSP lines; test updated to allow exactly them, then its module + the chat suite **59 passed**) |
 | E1 | Browser E2E, full (36 journeys + the new chat journey), real model | 28 passed, 9 failed: all from the shell change (old sidebar links, sign-out, the queue link, an "Ask" name clash) — fixed |
@@ -126,8 +131,9 @@ Demo sign-in is for this local, fictional setup only; it is off by default and m
 
 1. ~~Amendment-aware answers~~ — done (finding 1 above). Still open: research notes sent for review do not yet carry the
    amendment links; amendments that change a clause without naming its number are not detected.
-2. **Chronology card** (LEGAL-011): dated events with their sources and uncertain dates, built from obligations and the
-   conflict scan's dated facts; an "explained" discrepancy (dispatch vs arrival) becomes two events.
+2. ~~Chronology card~~ (LEGAL-011) — done. Still open: no date filter or per-party view; events are dates the reader
+   recognises in English month-name or numeric form; a document with more than 60 dated events shows the first 60 and
+   says how many more.
 3. **Draft from the conversation** (LEGAL-013 in chat): the `draft` intent opens a right-hand editor over the existing drafting
    engine (firm templates, sourced fields, second-lawyer approval), instead of pointing to the Drafting page.
 4. **Guided questions** (03 registry): one contextual form with at most three questions for ambiguous requests.

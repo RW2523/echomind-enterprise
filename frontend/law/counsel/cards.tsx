@@ -5,13 +5,13 @@
  */
 import React, { useState } from 'react';
 import {
-  AlertTriangle, BadgeCheck, CheckCircle2, CircleDashed, FileSearch, FileX, Info, ListChecks, Scale,
+  AlertTriangle, BadgeCheck, CalendarDays, CheckCircle2, CircleDashed, FileSearch, FileX, Info, ListChecks, Scale,
 } from 'lucide-react';
 import { counselApi, requestId } from './api';
 import { isWorkspacePath, parseComponent } from './validate';
 import type {
   CitationRef, ComparisonSide, DiscrepancyStatus, EvidenceComparisonProps, NoticeProps, PriorityListProps, SafeComponent,
-  SourceAnswerProps, UiAction,
+  SourceAnswerProps, TimelineEvent, TimelineProps, UiAction,
 } from './types';
 
 export interface CardContext {
@@ -290,6 +290,65 @@ function EvidenceComparison({ comp, ctx }: { comp: Extract<SafeComponent, { type
   );
 }
 
+// ── timeline ───────────────────────────────────────────────────────────────────
+const FIRST_EVENTS = 8;
+const KIND_LABEL: Record<TimelineEvent['kind'], string | null> = {
+  event: null, deadline: 'Deadline', document_date: 'Document date', obligation: 'Deadline (register)',
+};
+
+function EventRow({ e, ctx }: { e: TimelineEvent; ctx: CardContext }) {
+  const s = e.source;
+  const where = [s.document_title, s.clause ? `cl. ${s.clause}` : '', s.page ? `p. ${s.page}` : ''].filter(Boolean).join(' · ');
+  const tags = [KIND_LABEL[e.kind], e.reported ? 'Recollection' : null, e.certainty === 'uncertain' ? 'Uncertain' : null,
+    e.superseded ? 'Replaced' : null, e.status ?? null].filter((t): t is string => !!t);
+  return (
+    <li className="qc-event" data-certainty={e.certainty} data-superseded={e.superseded ? 'true' : undefined}>
+      <div className="qc-event-date">
+        {e.date ? <time dateTime={e.date}>{e.date_text}</time> : <span>“{e.date_text}”</span>}
+      </div>
+      <div className="qc-event-body">
+        {tags.length > 0 && <div className="qc-tags">{tags.map((t) => <span key={t} className="qc-tag" data-tag={t}>{t}</span>)}</div>}
+        <p className="qc-quote" style={{ fontSize: 14.5 }}>{e.text}</p>
+        <span className="qc-meta">{where} · <button type="button" className="qc-linkbtn"
+          onClick={(ev) => ctx.openSide(s, `${e.date_text}: ${s.document_title}`, ev.currentTarget)}
+          aria-label={`Inspect ${s.document_title}, ${e.date_text}`}>Inspect</button></span>
+        {e.notes.map((n, i) => <p key={i} className="qc-note" role="note" style={{ fontSize: 13 }}><Info size={14} aria-hidden />{n}</p>)}
+      </div>
+    </li>
+  );
+}
+
+function Timeline({ p, ctx }: { p: TimelineProps; ctx: CardContext }) {
+  const [all, setAll] = useState(false);
+  const dated = p.events.filter((e) => e.certainty !== 'undated');
+  const undated = p.events.filter((e) => e.certainty === 'undated');
+  const shownDated = all ? dated : dated.slice(0, FIRST_EVENTS);
+  const hidden = dated.length - shownDated.length + (all ? 0 : undated.length);
+  return (
+    <section className="qc-card" data-component="timeline" aria-label={p.summary}>
+      <h3 className="qc-card-title"><CalendarDays size={16} aria-hidden style={{ verticalAlign: -2, marginRight: 6 }} />{p.summary}</h3>
+      {p.events.length === 0 ? <p className="qc-meta" style={{ margin: 0 }}>No dates found in the documents you can read.</p> : (
+        <>
+          {shownDated.length > 0 && <ol className="qc-timeline" aria-label="Dated events">{shownDated.map((e) => <EventRow key={e.id} e={e} ctx={ctx} />)}</ol>}
+          {all && undated.length > 0 && (
+            <>
+              <h4 className="qc-card-title" style={{ fontSize: 14 }}>Date not stated</h4>
+              <ol className="qc-timeline" aria-label="Events whose date is not stated">{undated.map((e) => <EventRow key={e.id} e={e} ctx={ctx} />)}</ol>
+            </>
+          )}
+          {hidden > 0 && (
+            <button type="button" className="qc-btn" onClick={() => setAll(true)} aria-expanded={false}>
+              Show all ({hidden} more{undated.length && !all ? `, ${undated.length} without a stated date` : ''})
+            </button>
+          )}
+          {p.more > 0 && <p className="qc-meta" style={{ margin: 0 }}>{p.more} more not shown: ask about a narrower period or document.</p>}
+        </>
+      )}
+      <p className="qc-note" data-tone="info" role="note"><Info size={15} aria-hidden />{p.caution}</p>
+    </section>
+  );
+}
+
 // ── notice, unavailable, inert ─────────────────────────────────────────────────
 function Notice({ p }: { p: NoticeProps }) {
   return <p className="qc-note" data-tone={p.tone === 'caution' ? undefined : 'info'} data-component="notice" style={{ fontSize: 15 }}>
@@ -302,6 +361,7 @@ export function ComponentView({ comp, ctx }: { comp: SafeComponent; ctx: CardCon
     case 'source_answer': return <SourceAnswer p={comp.props} ctx={ctx} />;
     case 'priority_list': return <PriorityList p={comp.props} ctx={ctx} />;
     case 'evidence_comparison': return <EvidenceComparison comp={comp} ctx={ctx} />;
+    case 'timeline': return <Timeline p={comp.props} ctx={ctx} />;
     case 'notice': return <Notice p={comp.props} />;
     case 'unavailable': return <p className="qc-inert" data-component="unavailable">{comp.props.text}</p>;
     case 'task_progress': return <p className="qc-meta"><ListChecks size={14} aria-hidden /> {comp.props.label}</p>;

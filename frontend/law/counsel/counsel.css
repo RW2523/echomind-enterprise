@@ -231,3 +231,19 @@
 .qc-list li { border-top: 1px solid var(--rule); padding: 12px 2px; display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
 .qc-list li:first-child { border-top: none; }
 .qc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ── Timeline (chronology) ───────────────────────────────────────────────────── */
+.qc-timeline { list-style: none; margin: 0; padding: 0; display: grid; }
+.qc-event { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-top: 1px solid var(--rule); }
+.qc-event:first-child { border-top: none; padding-top: 2px; }
+.qc-event-date { font-weight: 650; font-size: 14px; font-variant-numeric: tabular-nums; }
+.qc-event[data-certainty="undated"] .qc-event-date { color: var(--ink-3); font-weight: 500; font-style: italic; }
+.qc-event[data-superseded="true"] .qc-quote { text-decoration: line-through; text-decoration-color: var(--neutral-line); }
+.qc-event-body { display: grid; gap: 6px; min-width: 0; }
+.qc-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.qc-tag { font-size: 12px; font-weight: 600; border: 1px solid var(--rule); border-radius: 999px; padding: 1px 8px; color: var(--ink-2); }
+.qc-tag[data-tag="Uncertain"], .qc-tag[data-tag="Recollection"] { color: var(--attention); border-color: var(--amber-line); }
+.qc-tag[data-tag="Replaced"] { color: var(--ink-3); }
+.qc-tag[data-tag="Confirmed by a lawyer"], .qc-tag[data-tag="Done (confirmed by a lawyer)"] { color: var(--verified); border-color: var(--verified); }
+@media (max-width: 560px) { .qc-event { grid-template-columns: 1fr; gap: 4px; } }
+.qc-linkbtn { border: none; background: none; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
