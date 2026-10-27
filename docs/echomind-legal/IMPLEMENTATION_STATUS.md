@@ -78,10 +78,16 @@ Seconds are request-to-last-event, single user, measured once: not a benchmark.
    `research-s2.3`), and returns `amendments` with the answer (signed or not, its own words on when it applies, whether the
    answer cited it). An answer relying on wording a **signed** amendment replaced, without citing the amendment, is `partial`
    and the chat and research page say so and offer the amending clause. Stored with research history (migration 0037) and
-   removed by a purge. Evidence: `test_law_amendments.py` (9, incl. the live failure replayed with a scripted model, unreadable
+   removed by a purge. Evidence: `test_law_amendments.py` (11, incl. the live failure replayed with a scripted model, unreadable
    and other-matter amendments never used, unsigned amendments said to be unsigned), research page Vitest (2), and the real
    model on new evaluation items: golden `g-amend-storage-fee`, `g-amend-storage-unchanged` **2/2**, held-out
-   `h-amend-storage-from` **1/1** (eval/law/reports/20261026-230253-golden.md, 20261026-230314-heldout.md).
+   `h-amend-storage-from` **1/1** (final code: eval/law/reports/20261026-233235-golden.md, 20261026-233253-heldout.md).
+   **Re-asked live** on MAT-1042 with the real model: "Which contractual deadline applied?" → *answered*: "initially … May 15,
+   2026 [1]. However, this was amended by Amendment No. 1 (DEMO), which replaced the deadline with May 20, 2026 [5]. The
+   amendment became effective on May 14, 2026, when both parties signed it [2]" — three verified quotes; the note names clause
+   1.1 and "Open the amendment" opens its exact characters. A passage is matched on every clause it covers, and "relies on the
+   replaced wording" is decided by where the answer's verified quote lands (a quote from an unchanged clause of the same
+   passage is not flagged).
 2. *The conflict check over-proposes.* A contract's deadline ("by May 15") against a witness's event date ("took place on
    May 12") was proposed as a potential inconsistency. **Mitigated:** such a pair is now recognised (`duty_vs_event`), ranked
    after real conflicts and shown with "they may not contradict each other: check whether the event met the deadline"; it
@@ -98,7 +104,7 @@ Seconds are request-to-last-event, single user, measured once: not a benchmark.
 | C3 | Frontend with the chat tests | **202 passed** (38 files); `tsc` main and strict clean |
 | C4 | `test_law_counsel.py` final | **48 passed** |
 | C5 | Live API journey + live browser journey (Playwright, real model) | all steps passed; no console errors, no remote requests, no horizontal overflow at 390 px, focus returns after Esc |
-| C7 | Backend, all, with amendment-aware answers (final code) | **1477 passed, 3 skipped, 1 failed** (LibreOffice absent, as at baseline) |
+| C7 | Backend, all, with amendment-aware answers (final code) | **1479 passed, 3 skipped, 1 failed** (LibreOffice absent, as at baseline) |
 | C8 | Frontend after amendment-aware answers | **204 passed**; `tsc` main and strict clean |
 | EV1 | Research evaluation, new amendment items, real model (`run_law_eval.py --only …`) | golden **2/2**, held-out **1/1**; 0 leaks; quote verification 1.0 |
 | C6 | Backend, all (`--network none`) after the chat work | **1467 passed, 3 skipped, 2 failed**: LibreOffice absent (environment, as at baseline) and the nginx drift test (the new CSP lines; test updated to allow exactly them, then its module + the chat suite **59 passed**) |

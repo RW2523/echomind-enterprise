@@ -160,22 +160,33 @@ def _amended(passages: list[dict], links: list[dict]) -> list[dict]:
     return out
 
 
-def _changed(links: list[dict], sources: list[dict], cited: list[int]) -> list[dict]:
-    """What the answer should know: each cited clause a document replaces or changes (or each amendment it cites), whether
-    the amendment is signed, when it says it applies, and whether the answer cites both."""
+def _relies_on(n: int, rng: tuple[int, int], cited: list[int], evidence: list[dict]) -> bool:
+    """The answer relies on characters [rng) of source n: a quote it gives from n lands there, or it cites n without a
+    located quote (then it cannot be told apart, so it counts)."""
+    located = [e for e in evidence if e.get("n") == n and e.get("char_start") is not None and e.get("char_end") is not None]
+    if located:
+        return any(e["char_start"] < rng[1] and rng[0] < e["char_end"] for e in located)
+    return n in cited
+
+
+def _changed(links: list[dict], sources: list[dict], cited: list[int], evidence: list[dict]) -> list[dict]:
+    """What the answer should know: each changed clause it relies on (or each amendment it cites), whether the amendment is
+    signed, when it says it applies, and whether the answer cites the amendment too."""
     out, seen = [], set()
     for link in links:
         t, a = sources[link["index"]], sources[link["by_index"]]
         tn, an = link["index"] + 1, link["by_index"] + 1
-        if (tn, an) in seen or (tn not in cited and an not in cited):
+        relies = _relies_on(tn, link["target_range"], cited, evidence)
+        if (tn, an) in seen or (not relies and an not in cited):
             continue
         seen.add((tn, an))
         eff = link["effective"]
+        own = link["passage"]["citation"]          # the amending clause itself, even when a wider retrieved passage holds it
         out.append({"document_id": t["document_id"], "document_title": t["document_title"], "version_id": t["version_id"],
-                    "clause": link["clause"], "n": tn, "how": link["how"], "cited": tn in cited, "amendment_cited": an in cited,
-                    "by": {"document_id": a["document_id"], "document_title": a["document_title"], "version_id": a["version_id"],
-                           "version_number": a["version_number"], "clause": a.get("clause"), "signed": link["signed"], "n": an,
-                           "char_start": a["char_start"], "char_end": a["char_end"],
+                    "clause": link["clause"], "n": tn, "how": link["how"], "cited": relies, "amendment_cited": an in cited,
+                    "by": {"document_id": own["document_id"], "document_title": own["document_title"], "version_id": own["version_id"],
+                           "version_number": own["version_number"], "clause": own.get("clause"), "signed": link["signed"], "n": an,
+                           "char_start": own["char_start"], "char_end": own["char_end"],
                            "effective": ({k: eff[k] for k in ("kind", "date", "words")} if eff else None)}})
     return out
 
@@ -252,7 +263,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
         status, answer, reason = _status(abstained, claims, unsupported, failed), text, ("model" if abstained else None)
         found = [] if abstained else await run_in_threadpool(doc_versions.conflicts, citations or sources, versions)
-        changed = [] if abstained else _changed(links, sources, numbers)
+        changed = [] if abstained else _changed(links, sources, numbers, items)
         if status == "answered" and any(a["by"]["signed"] and a["cited"] and not a["amendment_cited"] for a in changed):
             status = "partial"                     # it relies on wording a signed amendment replaced, without the amendment
         yield _event({"type": "done", "answer": text, "status": status, "abstained": abstained, "abstention_reason": reason,

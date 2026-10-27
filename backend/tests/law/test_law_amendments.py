@@ -211,3 +211,30 @@ def test_the_clause_saying_when_the_amendment_applies_is_a_source_too(am):
     assert any("Both parties signed it on May 14, 2026." in t for t in texts)
     d = done(events)
     assert d["status"] == "answered" and len(d["evidence"]) == 3 and all(e["verification"] == "verbatim" for e in d["evidence"])
+
+
+def test_the_amending_clause_is_named_precisely_even_when_its_whole_document_was_retrieved(am, fresh_db):
+    """Live: when the amendment's own passage is among the search results, the link still names clause 1.1 and its exact
+    characters, not the wider passage that holds it."""
+    _, amendment = load(am)
+    alice = as_user(am, "alice")
+    am["model"].parts = [OLD]
+    events = ask(alice, am["mid"], "Services Agreement: when must Apex complete delivery?")
+    [a] = done(events)["amendments"]
+    wider = [s for s in events[0]["citations"] if s["document_id"] == amendment["id"] and s.get("amends")
+             and (s["char_start"], s["char_end"]) != (a["by"]["char_start"], a["by"]["char_end"])]
+    assert wider, "the amendment's own retrieved passage (wider than clause 1.1) should hold the mark"
+    assert a["by"]["clause"] == "1.1"
+    with sqlite3.connect(fresh_db) as c:
+        text = c.execute("SELECT text FROM legal_version_text WHERE version_id=?", (a["by"]["version_id"],)).fetchone()[0]
+    assert text[a["by"]["char_start"]:a["by"]["char_end"]].startswith("1.1 Clause 4.2 of the Services Agreement")
+
+
+def test_a_quote_from_an_unchanged_clause_of_the_same_passage_is_not_flagged(am):
+    """The agreement's passage holds clauses 4.2 (replaced) and 9.1 (unchanged). An answer quoting only 9.1 relies on nothing
+    the amendment changed: it stays answered, with nothing to flag."""
+    load(am)
+    alice = as_user(am, "alice")
+    am["model"].parts = [("Morgan pays within thirty days", "within thirty days of complete delivery")]
+    d = done(ask(alice, am["mid"], "When must Apex complete delivery and when is the fee paid?"))
+    assert d["status"] == "answered" and d["amendments"] == []

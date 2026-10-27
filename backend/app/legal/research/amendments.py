@@ -136,7 +136,7 @@ def for_passages(matter_id: str, uid: str, passages: list[dict], policy: str = "
     wanted = {}
     for i, p in enumerate(passages):
         c = p["citation"]
-        if c.get("clause"):
+        if c.get("char_start") is not None and c.get("char_end") is not None:
             wanted.setdefault(c["document_id"], []).append(i)
     if not wanted:
         return []
@@ -149,6 +149,14 @@ def for_passages(matter_id: str, uid: str, passages: list[dict], policy: str = "
             f"JOIN legal_document_versions v ON v.id = {pick} JOIN legal_version_text t ON t.version_id = v.id "
             f"WHERE d.matter_id = ? AND {doc_repo.VISIBLE_TO} AND ({like}) ORDER BY d.created_at LIMIT 50",
             (matter_id, uid, *[f"%{w}%" for w in _CANDIDATE_WORDS])).fetchall()
+        spans = {}                                  # every clause a passage covers, not only its best sentence's
+        for idxs in wanted.values():
+            for i in idxs:
+                c = passages[i]["citation"]
+                spans[i] = conn.execute("SELECT number, char_start, char_end FROM legal_clauses WHERE version_id=? AND char_start < ? "
+                                        "AND char_end > ?", (c["version_id"], c["char_end"], c["char_start"])).fetchall()
+        if not any(spans.values()):
+            return []
         targets = []
         for did in wanted:
             vid = passages[wanted[did][0]]["citation"]["version_id"]
@@ -180,7 +188,8 @@ def for_passages(matter_id: str, uid: str, passages: list[dict], policy: str = "
                 target = _target_for(ch, text, [t for t in targets if t["document_id"] != did])
                 if not target:
                     continue
-                hit = [i for i in wanted[target["document_id"]] if _clause_covers(passages[i]["citation"].get("clause"), ch.clause)]
+                hit = {i: [(s, e) for num, s, e in spans.get(i, []) if _clause_covers(num, ch.clause)] for i in wanted[target["document_id"]]}
+                hit = {i: r for i, r in hit.items() if r}
                 if not hit:
                     continue
                 a, b = clause_span(vid, text, ch.start, ch.end)
@@ -190,7 +199,8 @@ def for_passages(matter_id: str, uid: str, passages: list[dict], policy: str = "
                 if eff and not (a <= eff["char_start"] < b):
                     ea, eb = clause_span(vid, text, eff["char_start"], eff["char_end"])
                     when = passage_at(did, title, vid, number, status, text, ea, eb, (eff["char_start"], eff["char_end"]))
-                for i in hit:
+                for i, ranges in hit.items():
                     links.append({"index": i, "clause": ch.clause, "how": ch.how, "passage": passage, "when": when,
-                                  "signed": status == "executed", "effective": eff})
+                                  "signed": status == "executed", "effective": eff,
+                                  "target_range": (min(s for s, _ in ranges), max(e for _, e in ranges))})
     return links
