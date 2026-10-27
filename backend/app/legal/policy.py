@@ -49,6 +49,8 @@ MATTER_ACTIONS: dict[str, frozenset] = {
     "parties.manage": frozenset({"lead", "attorney"}),
     # S4.4 (D-068): deciding whether a regulatory update concerns the matter.
     "regulatory.decide": frozenset({"lead", "attorney", "paralegal", "reviewer"}),
+    # EchoMind Legal chat: resolving a potential inconsistency between documents (explained / confirmed / dismissed).
+    "findings.review": frozenset({"lead", "attorney", "reviewer"}),
 }
 
 # What an approved break-glass grant allows (read only).
@@ -58,7 +60,7 @@ BREAK_GLASS_ROLE = "break_glass"
 # Content changes refused on closed/archived matters (reading, membership, export and records continue).
 BLOCKED_WHEN_CLOSED = frozenset({"documents.import", "documents.version", "labels.set", "labels.suggest",
                                  "meetings.create", "consent.capture", "capture.control", "ai.draft",
-                                 "artifacts.approve"})
+                                 "artifacts.approve", "findings.review"})
 
 ORG_ACTIONS: dict[str, frozenset] = {
     "clients.create": frozenset({"managing_partner", "attorney"}),

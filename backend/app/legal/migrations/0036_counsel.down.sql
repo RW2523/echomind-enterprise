@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS legal_counsel_seen;
+DROP TABLE IF EXISTS legal_counsel_actions;
+DROP TABLE IF EXISTS legal_discrepancy_scans;
+DROP TRIGGER IF EXISTS discrepancy_reviews_no_update;
+DROP TABLE IF EXISTS legal_discrepancy_reviews;
+DROP TABLE IF EXISTS legal_discrepancies;
+DROP TABLE IF EXISTS legal_counsel_citations;
+DROP TABLE IF EXISTS legal_counsel_components;
+DROP TABLE IF EXISTS legal_conversation_turns;
+DROP TABLE IF EXISTS legal_conversations;

@@ -402,7 +402,9 @@ app.include_router(legal_citations_router, prefix="/api")
 from .legal.definitions.routes import router as legal_definitions_router  # noqa: E402
 app.include_router(legal_definitions_router, prefix="/api")
 from .legal.obligations.routes import router as legal_obligations_router  # noqa: E402
+from .legal.counsel.routes import router as legal_counsel_router  # noqa: E402  (EchoMind Legal chat)
 app.include_router(legal_obligations_router, prefix="/api")
+app.include_router(legal_counsel_router, prefix="/api")
 from .legal.diligence.routes import router as legal_diligence_router  # noqa: E402
 app.include_router(legal_diligence_router, prefix="/api")
 from .legal.intake.routes import parties_router as legal_parties_router, public_router as legal_intake_link_router, router as legal_intake_router  # noqa: E402

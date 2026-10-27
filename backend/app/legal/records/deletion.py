@@ -388,6 +388,9 @@ def _purge_document(conn, d: dict) -> dict:
     # S2.3: comparisons and scans quote the document throughout; they are removed whole (each can be run again).
     for cid in _comparisons(conn, d["matter_id"], doc):
         conn.execute("DELETE FROM legal_comparisons WHERE id=?", (cid,))
+    # EchoMind Legal chat: citations, potential inconsistencies (with their reviews) and chips naming the document.
+    from ..counsel import purge as counsel_purge
+    counsel_purge.document(conn, d["matter_id"], doc)
     return {"versions": versions, "chunks": chunks}
 
 
@@ -441,6 +444,8 @@ def verify(d: dict, gone: dict) -> dict:
             db_rows += len(_citation_targets(conn, d["matter_id"], doc))
             db_rows += conn.execute("SELECT COUNT(*) FROM legal_assist_alerts a WHERE a.matter_id=? AND EXISTS "
                                     "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchone()[0]
+            from ..counsel import purge as counsel_purge
+            db_rows += counsel_purge.remaining(conn, d["matter_id"], doc)
             idx = registry.for_matter(d["matter_id"])
             checks = {"database": db_rows == 0,
                       "index": not (set(idx.chunk_ids) & set(gone.get("chunks", []))),

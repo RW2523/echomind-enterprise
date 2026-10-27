@@ -91,6 +91,9 @@ _ANCHORS = {
     "law": {"governed", "law", "laws", "jurisdiction", "court", "courts"},
     "completion": {"completion", "closing"},
     "start": {"effective", "commence", "commencement", "begin"},
+    # EchoMind Legal: delivery disputes (dispatch, shipment and arrival dates told differently by witnesses or logs).
+    "delivery": {"delivery", "deliver", "delivered", "deliveries", "shipment", "shipped", "dispatch", "dispatched", "arrival",
+                 "arrived", "receipt", "received"},
 }
 
 
