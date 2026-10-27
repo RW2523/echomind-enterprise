@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import axe from 'axe-core';
 import type { Me, RegulatoryMatch, RegulatoryUpdate } from '../api/types';
-import { matter, me, mockApi, renderLaw } from './harness';
+import { matter, me, mockApi, openAccountMenu, renderLaw } from './harness';
 
 /** S4.4 (D-068) — regulatory updates: public law fetched on the host, matched to open matters, decided by a lawyer. */
 const withRegulatory = (roles: string[] = ['attorney'], on = true): Me =>
@@ -85,6 +85,6 @@ describe('Regulatory updates (S4.4, D-068)', () => {
     world();
     renderLaw('/m/M-302/overview');
     expect(within(await screen.findByRole('region', { name: 'Work on this matter' })).getByRole('link', { name: /Regulatory/ })).toBeTruthy();
-    expect(screen.getAllByRole('link', { name: 'Regulatory updates' }).length).toBeGreaterThan(0);
+    expect(within(await openAccountMenu()).getByRole('menuitem', { name: 'Regulatory updates' })).toBeTruthy();
   });
 });

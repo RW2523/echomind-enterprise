@@ -2,6 +2,8 @@
  * Microphone → 16 kHz mono PCM16 frames (S1.8). Audio goes only to the capture socket, which the
  * server opens only after consent; nothing is recorded in the browser.
  */
+import { captureStarted } from './capture';
+
 export interface Mic { stop: () => void; sampleRate: number }
 
 function downsample(input: Float32Array, from: number, to: number): Float32Array {
@@ -29,6 +31,8 @@ function toPcm16(f32: Float32Array): ArrayBuffer {
 
 export async function startMic(onFrame: (pcm: ArrayBuffer) => void): Promise<Mic> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+  const ended = captureStarted();                       // the header's recording status follows the real stream
+  stream.getTracks().forEach((t) => t.addEventListener('ended', ended));
   const ctx = new AudioContext();
   const source = ctx.createMediaStreamSource(stream);
   const proc = ctx.createScriptProcessor(4096, 1, 1);
@@ -41,6 +45,7 @@ export async function startMic(onFrame: (pcm: ArrayBuffer) => void): Promise<Mic
       proc.onaudioprocess = null;
       try { proc.disconnect(); source.disconnect(); } catch { /* already disconnected */ }
       stream.getTracks().forEach((t) => t.stop());
+      ended();
       void ctx.close();
     },
   };

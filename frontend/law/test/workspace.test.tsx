@@ -1,10 +1,10 @@
 import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import axe from 'axe-core';
 import { keys } from '../api/queries';
 import { useBlockMatterSwitch } from '../app/navigationGuard';
-import { matter, me, mockApi, renderLaw } from './harness';
+import { matter, me, mockApi, openAccountMenu, renderLaw } from './harness';
 
 const M101 = matter('M-101', 'MSA renewal');
 const M114 = matter('M-114', 'Series B diligence', 'Alpha Holdings', { sensitivity: 'standard', my_role: 'attorney' });
@@ -55,13 +55,13 @@ describe('Law workspace', () => {
     signedIn(['paralegal'], [{ ...M101, my_role: 'read_only' }]);
     renderLaw('/m/M-101/overview');
     await screen.findByRole('heading', { name: 'MSA renewal' });
-    expect(screen.queryByText('Users & roles')).toBeNull();          // not a firm admin
+    expect(within(await openAccountMenu()).queryByRole('menuitem', { name: 'Users & roles' })).toBeNull();   // not a firm admin
     expect(screen.queryByText('Edit details')).toBeNull();           // not the matter lead
     expect(screen.queryByText('Close matter')).toBeNull();
     cleanup();
     signedIn(['firm_admin', 'attorney']);
     renderLaw('/matters');
-    expect(await screen.findByText('Users & roles')).toBeTruthy();
+    expect(within(await openAccountMenu()).getByRole('menuitem', { name: 'Users & roles' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /New matter/ })).toBeTruthy();
   });
 
@@ -148,7 +148,7 @@ describe('Sign-in', () => {
     expect(calls.find((c) => c.path === '/api/auth/mfa/enroll')!.body).toEqual({ enrollment_token: 'link-123' });
     expect(calls.find((c) => c.path === '/api/auth/mfa/confirm')!.body).toEqual({ code: '123456', enrollment_token: 'link-123' });
     fireEvent.click(screen.getByRole('button', { name: "I've saved my recovery codes" }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/home'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/chat'));
   });
 
   it('without a link, explains that an administrator must issue one', async () => {
@@ -170,7 +170,7 @@ describe('Sign-in', () => {
     fillPassword();
     fireEvent.change(await screen.findByLabelText('Authenticator code'), { target: { value: '123456' } });
     fireEvent.click(screen.getByRole('button', { name: 'Verify' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/home'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/chat'));
   });
 
   it('shows the server\'s message when sign-in fails', async () => {

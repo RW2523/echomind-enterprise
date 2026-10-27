@@ -8,6 +8,8 @@
 - `POST /counsel/actions`                        a component action: identity, matter right, component origin,
                                                  version (CAS) and idempotency key are all checked here
 - `GET  /counsel/discrepancies?matter_id=`       potential inconsistencies the caller may see, with their state
+- `GET  /counsel/activity`                       the caller's own recent actions, and documents still being read in
+                                                 their matters (the Activity destination)
 
 A conversation, turn, component or citation of someone else, in a matter the caller cannot open, or that does not
 exist, answers the same 404. Every route writes one audit event; the stream writes `counsel.answer` when it ends.
@@ -17,7 +19,7 @@ from __future__ import annotations
 import json
 from typing import Any, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, ValidationError
 from starlette.concurrency import run_in_threadpool
@@ -215,3 +217,35 @@ def component_action(inp: ActionIn, request: Request):
     result = {"component": schemas.validate_component(orchestrator.materialize(p, comp))}
     store.remember(p["sub"], inp.idempotency_key, inp.component_id, inp.action_id, result)
     return JSONResponse(result, headers=_NO_STORE)
+
+
+# ── Activity ─────────────────────────────────────────────────────────────────────
+@router.get("/activity")
+@audited("counsel.activity.read")
+def my_activity(request: Request, before: Optional[int] = None, limit: int = Query(50, ge=1, le=100)):
+    """What the caller did (their own audit events, never anyone else's), with matter numbers only for matters they
+    can still open, and how many documents are still being read in each of their matters."""
+    from ...core.db import get_conn
+    from .. import policy
+    from ..audit import routes as audit_routes
+    p = principal_of(request)
+    where, params = ["org_id = ?", "actor_user_id = ?", "action <> 'counsel.activity.read'"], [p["org_id"], p["sub"]]
+    if before:
+        where.append("seq < ?")
+        params.append(before)
+    out = audit_routes._events(" AND ".join(where), params, limit, with_numbers=False)
+    args = {"uid": p["sub"], "org": p["org_id"], "now": policy.now_iso()}
+    with get_conn() as conn:
+        visible = {r[0]: {"id": r[0], "number": r[1], "title": r[2]} for r in conn.execute(
+            f"SELECT m.id, m.number, m.title FROM matters m WHERE {policy.visible_matters_sql()}", args).fetchall()}
+        reading = conn.execute(
+            "SELECT v.matter_id, COUNT(*) FROM legal_document_versions v JOIN matters m ON m.id = v.matter_id "
+            f"WHERE v.index_status IN ('queued','indexing') AND {policy.visible_matters_sql()} GROUP BY v.matter_id", args).fetchall()
+    for e in out["events"]:
+        e.pop("ip", None)
+        e.pop("session_ref", None)
+        if e.get("matter"):
+            e["matter"] = visible.get(e["matter"]["id"])
+    note(details={"events": len(out["events"])})
+    return JSONResponse({**out, "in_progress": [{"matter": visible[mid], "documents": n} for mid, n in reading if mid in visible]},
+                        headers=_NO_STORE)

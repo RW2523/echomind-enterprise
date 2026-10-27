@@ -10,7 +10,9 @@ Then it adds (D-064), through `seed-demo-practice` in the backend container:
 - the practice group and six fictional cases (eval/fixtures/law/synthetic, written by make_synthetic_cases.py);
 - M-130, the fictional evaluation corpus (the base data set), with the MSA's signed and draft versions;
 - R-001, the reference library of REAL public law (eval/fixtures/law/reference, fetched by fetch_reference.py),
-  readable by every lawyer in the demo.
+  readable by every lawyer in the demo;
+- the EchoMind Legal demo (eval/fixtures/legal): MAT-1042 Morgan v. Apex Industries, and MAT-2033, a highly
+  restricted matter alice cannot see.
 
 Signs in as the demo lawyers with the credentials the seed wrote inside the backend's data volume. They are
 read through `docker exec` and never printed or written anywhere. Each document is imported once (a title
@@ -39,6 +41,7 @@ GOV = FIX / "governance"
 CORPUS = ROOT / "eval" / "law" / "corpus"
 REF = FIX / "reference"
 SYN = FIX / "synthetic"
+LEGAL = ROOT / "eval" / "fixtures" / "legal"        # EchoMind Legal demo (docs/echomind-legal/13): MAT-1042, MAT-2033
 LAWYERS = ["alice", "bob", "carol", "nakamura", "harper", "sofia", "kenji", "lena", "omar", "theo"]
 # matter number: (who imports it, [(file, kind, status)])
 DEMO = {
@@ -65,10 +68,15 @@ DEMO = {
 def plan() -> tuple[dict, dict]:
     """The practice plan for seed-demo-practice, and the documents each new matter gets: number -> (lead, files)."""
     syn = json.loads((SYN / "manifest.json").read_text())
+    legal = json.loads((LEGAL / "manifest.json").read_text()) if (LEGAL / "manifest.json").exists() else {"cases": []}
     matters, docs = [], {}
-    for c in syn["cases"]:
-        matters.append({k: c[k] for k in ("number", "title", "client", "practice_area", "jurisdiction", "lead", "members", "parties")})
-        docs[c["number"]] = (c["lead"], [(SYN / d["file"], d["kind"], d["status"], None) for d in c["documents"]])
+    for base, c in [(SYN, c) for c in syn["cases"]] + [(LEGAL, c) for c in legal["cases"]]:
+        keep = ("number", "title", "client", "practice_area", "jurisdiction", "lead", "members", "parties", "sensitivity")
+        matters.append({k: c[k] for k in keep if k in c})
+        # The D-064 cases keep their file names as titles (as already loaded on the pilot); the Legal demo uses its own.
+        docs[c["number"]] = (c["lead"], [(base / d["file"], d["kind"], d["status"], None,
+                                          d["title"] if base == LEGAL and d.get("title") else (base / d["file"]).stem)
+                                         for d in c["documents"]])
     corpus = json.loads((CORPUS / "manifest.json").read_text())["documents"]
     matters.append({"number": "M-130", "title": "Harrowgate platform — renewal file (base corpus)",
                     "client": {"name": "Voss-Lindqvist AB", "code": "VOSS"}, "practice_area": "Commercial contracts",

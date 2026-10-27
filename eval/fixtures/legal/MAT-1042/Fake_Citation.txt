@@ -1,0 +1,6 @@
+DEMO / SYNTHETIC — fictional research memo for EchoMind Legal demonstrations. It cites an authority that does not exist, on purpose.
+
+RESEARCH MEMO — LATE DELIVERY CREDITS (DRAFT)
+
+The Customer may argue that the late-delivery credit in clause 4.3 is a penalty. In Harlow v. Brennan Logistics, 512 F.4th 1203 (13th Cir. 2027), the court is said to have held that a weekly credit of two percent was enforceable.
+That citation could not be found in any reporter; there is no Thirteenth Circuit. It must not be relied on and is included only to test that unverified authorities are flagged.

@@ -10,7 +10,7 @@ type Step = 'password' | 'code' | 'enroll' | 'needs-link' | 'recovery';
 
 /** Only same-app paths are accepted as a destination after sign-in (no open redirect). */
 function safeNext(next: string | null): string {
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/home';
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
 }
 
 /**

@@ -1,0 +1,21 @@
+DEMO / SYNTHETIC — fictional correspondence for EchoMind Legal demonstrations.
+
+EMAIL THREAD — DELIVERY TIMING
+
+From: Apex Industries, Inc. (project lead, fictional)
+To: Morgan Company LLC (operations, fictional)
+Sent: May 9, 2026
+Subject: Units — timing
+We are running a few days behind on final testing. Could delivery move to the 20th? We would paper it properly.
+
+From: Morgan Company LLC (operations, fictional)
+To: Apex Industries, Inc. (project lead, fictional)
+Sent: May 10, 2026
+Subject: RE: Units — timing
+In principle we can live with that, but nothing changes until legal signs off. Please send the paperwork.
+
+From: Apex Industries, Inc. (project lead, fictional)
+To: Morgan Company LLC (operations, fictional)
+Sent: May 13, 2026
+Subject: RE: RE: Units — timing
+Trucks went out yesterday, so you may not need the extension after all. Amendment attached anyway for signature.

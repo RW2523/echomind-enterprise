@@ -580,3 +580,22 @@ def test_purging_a_document_removes_what_the_chat_kept_of_it(cs, fresh_db):
     assert chips[0]["removed"] is True and chips[0]["document_title"] == ""
     assert alice.get(f"/api/legal/counsel/citations/{cit['id']}").status_code == 404
     assert _review(alice, cs, comp, key="key-0201").status_code == 404
+
+
+def test_activity_shows_only_the_caller_s_own_events_and_hides_matters_they_left(cs):
+    from app.legal.matters import repo
+    alice, carol = as_user(cs, "alice"), as_user(cs, "carol")
+    new_conversation(alice, cs["mid"])
+    new_conversation(carol, cs["mid"])
+    r = carol.get("/api/legal/counsel/activity")
+    assert r.status_code == 200 and r.headers["cache-control"] == "no-store"
+    body = r.json()
+    assert body["events"] and {e["actor"]["username"] for e in body["events"]} == {"carol"}
+    assert all("ip" not in e and "session_ref" not in e for e in body["events"])
+    assert any((e.get("matter") or {}).get("number") == "M-101" for e in body["events"])
+    assert not any(e["action"] == "counsel.activity.read" for e in carol.get("/api/legal/counsel/activity").json()["events"])
+    m = next(x for x in repo.list_live_memberships(cs["mid"]) if x["user_id"] == cs["users"]["carol"]["id"])
+    repo.revoke_membership(cs["mid"], m["id"], by=cs["users"]["alice"]["id"], reason="left the team")
+    after = carol.get("/api/legal/counsel/activity").json()
+    assert not any((e.get("matter") or {}).get("number") == "M-101" for e in after["events"])
+    assert "MSA renewal" not in json.dumps(after)

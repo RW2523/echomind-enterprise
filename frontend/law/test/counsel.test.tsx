@@ -1,0 +1,339 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import axe from 'axe-core';
+import { captureStarted, _resetCaptureForTests } from '../app/capture';
+import { parseAction, parseComponent, parseEnvelope } from '../counsel/validate';
+import { matter, me, mockApi, renderLaw } from './harness';
+
+/** EchoMind Legal chat (docs/echomind-legal/02, 03, 04; AC02–AC05, AC07, AC11). */
+const hex = (c: string) => c.repeat(32);
+const CIT = `cit_${hex('a')}`;
+const CMP = `cmp_${hex('1')}`;
+const CMP2 = `cmp_${hex('2')}`;
+const DSC = `dsc_${hex('d')}`;
+
+const answerEnvelope = (extra: any[] = []) => ({
+  schema_version: '1.0', message_id: 'turn_1', matter_id: 'id-M-101', summary: 'Answered from 1 source, 1 with a verified quote.',
+  components: [{ id: CMP, version: 1, type: 'source_answer', props: {
+    answer: 'The agreement requires delivery by May 15, 2026 [1].', state: 'answered',
+    citations: [{ id: CIT, n: 1, document_id: 'doc1', document_title: 'Services Agreement', version_number: 1, version_status: 'executed', page: 2,
+                  clause: '4.2', verified: true }],
+    unsupported: [], notes: [] } }, ...extra],
+  suggested_actions: [],
+});
+
+const comparison = (status = 'potential', can_review = true, version = 1) => ({
+  id: CMP2, version, type: 'evidence_comparison', data_ref: CMP2, props: {
+    discrepancy_id: DSC, kind: 'date', title: 'Potential inconsistency in dates: “May 12, 2026” and “May 15, 2026”', status,
+    a: { document_id: 'wa', document_title: 'Witness A', version_id: 'va', version_number: 1, value: 'May 12, 2026',
+         context: 'took place on May 12, 2026. The witness', value_start: 14, value_end: 26, reader_path: '/m/M-101/documents/wa/read?v=va&at=10-22', stale: false },
+    b: { document_id: 'wb', document_title: 'Witness B', version_id: 'vb', version_number: 1, value: 'May 15, 2026',
+         context: 'took place on May 15, 2026, on arrival', value_start: 14, value_end: 26, reader_path: '/m/M-101/documents/wb/read?v=vb&at=10-22', stale: false },
+    explanation: 'Source [A] gives May 12, 2026 and [B] gives May 15, 2026.', caution: 'The two dates may describe different events.',
+    method: 'model', history: status === 'potential' ? [] : [{ to_status: status, by: 'alice', at: '2026-10-26T12:00:00.000Z', note: 'Dispatch and arrival.' }],
+    can_review,
+  } });
+
+const stream = (envelope: object, terminal = 'turn.completed') => ({ __ndjson: [
+  { event: 'turn.started', data: { turn_id: 'turn_1', conversation_id: 'conv_1', matter_id: 'id-M-101', intent: 'ask_fact' } },
+  { event: 'answer.delta', data: { text: 'The agreement requires delivery by May 15, 2026 [1].' } },
+  { event: 'ui.final', data: envelope },
+  { event: terminal, data: { turn_id: 'turn_1', status: 'completed' } },
+] });
+
+function world(handlers: Record<string, (body: any) => [number, unknown]> = {}, roles = ['attorney']) {
+  return mockApi({
+    'GET /api/auth/me': () => [200, me(roles)],
+    'GET /api/legal/matters': () => [200, { matters: [matter('M-101', 'MSA renewal'), matter('M-215', 'Lease dispute', 'Beta Corp')] }],
+    'GET /api/legal/reviews': () => [200, { waiting: [], mine: [], count: 0 }],
+    'GET /api/legal/counsel/conversations': () => [200, { conversations: [] }],
+    'POST /api/legal/counsel/conversations': (b) => [201, { conversation: { id: 'conv_1', matter_id: b.matter_id, title: 'New conversation' } }],
+    ...handlers,
+  });
+}
+
+async function ask(text: string) {
+  const box = await screen.findByRole('textbox', { name: 'Ask EchoMind' });
+  fireEvent.change(box, { target: { value: text } });
+  fireEvent.keyDown(box, { key: 'Enter' });
+}
+
+const axeClean = async (el: Element) =>
+  (await axe.run(el, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(' ')}`);
+
+beforeEach(() => { localStorage.clear(); _resetCaptureForTests(); });
+afterEach(() => { cleanup(); localStorage.clear(); });
+
+describe('The chat home', () => {
+  it('is quiet: one question, the matter, four suggestions, four destinations, private and not recording', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    world();
+    const { container, router } = renderLaw('/');
+    expect(await screen.findByRole('heading', { name: 'How can I help?' })).toBeTruthy();
+    expect(router.state.location.pathname).toBe('/chat');
+    expect(await screen.findByText('M-101 · MSA renewal', { selector: '.qc-context' })).toBeTruthy();
+    const start = screen.getByRole('heading', { name: 'How can I help?' }).parentElement!;
+    expect(within(start).getAllByRole('button')).toHaveLength(4);
+    const rail = screen.getByRole('navigation', { name: 'Workspace' });
+    expect(within(rail).getAllByRole('link').map((a) => a.textContent)).toEqual(['Chat', 'Matters', 'Drafts', 'Activity']);
+    expect(within(rail).getByRole('button', { name: 'New chat' })).toBeTruthy();
+    expect(screen.getByText('Not recording')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Private/ })).toBeTruthy();
+    expect(await axeClean(container)).toEqual([]);
+  });
+
+  it('the recording status follows the real capture, not the page', async () => {
+    world();
+    renderLaw('/chat');
+    expect(await screen.findByText('Not recording')).toBeTruthy();
+    let stop: () => void = () => {};
+    act(() => { stop = captureStarted(); });
+    expect(screen.getByText('Recording')).toBeTruthy();
+    act(() => stop());
+    expect(screen.getByText('Not recording')).toBeTruthy();
+  });
+});
+
+describe('Asking', () => {
+  it('starts a conversation in the chosen matter, streams, then shows the verified answer with its source', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const calls = world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(answerEnvelope())] });
+    const { router } = renderLaw('/chat');
+    await ask('When must Apex complete delivery?');
+    expect(await screen.findByText('Supported by 1 verified quote')).toBeTruthy();
+    expect(router.state.location.pathname).toBe('/chat/conv_1');
+    expect(calls.find((c) => c.method === 'POST' && c.path === '/api/legal/counsel/conversations')?.body).toEqual({ matter_id: 'id-M-101' });
+    const turn = calls.find((c) => c.path === '/api/legal/counsel/conversations/conv_1/turns')!.body;
+    expect(turn.text).toBe('When must Apex complete delivery?');
+    expect(turn.client_request_id).toMatch(/^[0-9a-f]{32}$/);
+    expect(screen.getByRole('button', { name: /Source 1: Services Agreement, page 2, clause 4.2\. Verified quote/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open source 1: Services Agreement, page 2' })).toBeTruthy();
+  });
+
+  it('opens a source in the side panel, highlighted, and Escape returns focus to the chip', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const calls = world({
+      'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(answerEnvelope())],
+      [`GET /api/legal/counsel/citations/${CIT}`]: () => [200, { citation: {
+        id: CIT, n: 1, matter_id: 'id-M-101', verification: 'verbatim', verified: true,
+        document: { id: 'doc1', title: 'Services Agreement', kind: 'contract', status: 'executed' },
+        version: { id: 'v1', number: 1, status: 'executed', filename: 'services-agreement.txt', sha256: 'f'.repeat(64) },
+        quote: 'complete delivery by May 15, 2026',
+        context: { text: '4.2 Delivery. Apex shall complete delivery by May 15, 2026.', highlight_start: 25, highlight_end: 58, offset: 0,
+                   truncated_before: false, truncated_after: false },
+        clause: '4.2', page: 2, line: 3, newer_version: null, reader_path: '/m/M-101/documents/doc1/read?v=v1&at=40-73' } }],
+    });
+    renderLaw('/chat');
+    await ask('When must Apex complete delivery?');
+    const chip = await screen.findByRole('button', { name: /Source 1: Services Agreement/ });
+    chip.focus();
+    fireEvent.click(chip);
+    const panel = await screen.findByRole('complementary', { name: 'Source' });
+    expect(await within(panel).findByText('complete delivery by May 15, 2026', { selector: 'mark' })).toBeTruthy();
+    expect(within(panel).getByText(/Verified quote/)).toBeTruthy();
+    expect(within(panel).getByRole('link', { name: 'Open full document' }).getAttribute('href')).toBe('/m/M-101/documents/doc1/read?v=v1&at=40-73');
+    expect(calls.some((c) => c.path === `/api/legal/counsel/citations/${CIT}`)).toBe(true);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('complementary', { name: 'Source' })).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(chip));
+  });
+
+  it('a source that is no longer readable says so instead of showing anything', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    world({
+      'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(answerEnvelope())],
+      [`GET /api/legal/counsel/citations/${CIT}`]: () => [409, { detail: 'The stored document no longer matches this citation, so it is not shown.' }],
+    });
+    renderLaw('/chat');
+    await ask('When must Apex complete delivery?');
+    fireEvent.click(await screen.findByRole('button', { name: /Source 1: Services Agreement/ }));
+    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'The stored document no longer matches this citation, so it is not shown.');
+  });
+
+  it('an abstention says no source was found and offers no sources', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const env = { ...answerEnvelope(), summary: "No source found in this matter's documents.",
+                  components: [{ id: CMP, version: 1, type: 'source_answer', props: { answer: 'The documents in this matter do not answer that.',
+                                 state: 'abstained', citations: [], unsupported: [], notes: [] } }] };
+    world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(env, 'turn.abstained')] });
+    renderLaw('/chat');
+    await ask('What is the governing law of the Kestrel licence?');
+    expect(await screen.findByText("No source found in this matter's documents")).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Sources' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Open source/ })).toBeNull();
+  });
+
+  it('without a matter, asks which one, then answers in it', async () => {
+    const calls = world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(answerEnvelope())] });
+    renderLaw('/chat');
+    await ask('What matters today?');
+    const pick = await screen.findByRole('region', { name: 'Which matter is this about?' });
+    fireEvent.click(within(pick).getByRole('button', { name: 'M-215 · Lease dispute' }));
+    await screen.findByText('Supported by 1 verified quote');
+    expect(calls.find((c) => c.method === 'POST' && c.path === '/api/legal/counsel/conversations')?.body).toEqual({ matter_id: 'id-M-215' });
+  });
+
+  it('losing access mid-answer stops it and says why', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, { __ndjson: [
+      { event: 'turn.started', data: { turn_id: 'turn_1' } }, { event: 'scope_revoked', data: { turn_id: 'turn_1' } }] }] });
+    renderLaw('/chat');
+    await ask('When must Apex complete delivery?');
+    expect((await screen.findByRole('alert')).textContent).toMatch(/no longer have access to this matter/);
+  });
+});
+
+describe('Trusted components only', () => {
+  it('text is never markup, unknown components are inert, and actions outside the workspace are not offered', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const env = {
+      ...answerEnvelope([{ id: `cmp_${hex('3')}`, version: 1, type: 'html', props: { html: '<img src=x onerror="alert(1)">' } }]),
+      suggested_actions: [
+        { id: 'evil', label: 'Open evil', action_type: 'open_page', path: 'https://evil.example/', document_ids: [] },
+        { id: 'js', label: 'Run js', action_type: 'open_page', path: 'javascript:alert(1)', document_ids: [] },
+        { id: 'ok', label: 'Open obligations', action_type: 'open_page', path: '/m/M-101/obligations', document_ids: [] },
+      ],
+    };
+    env.components[0] = { ...env.components[0], props: { ...env.components[0].props, answer: 'Plain <img src=x onerror="alert(1)"> text [1].' } } as any;
+    world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(env)] });
+    const { container } = renderLaw('/chat');
+    await ask('Anything');
+    expect(await screen.findByText('This part of the answer could not be shown.')).toBeTruthy();
+    expect(container.querySelector('img')).toBeNull();
+    expect(screen.getByText(/Plain <img src=x onerror="alert\(1\)"> text/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Open evil' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Run js' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Open obligations' })).toBeTruthy();
+  });
+
+  it('the client re-checks the contract', () => {
+    expect(parseComponent({ id: 'nope', type: 'notice', props: { tone: 'info', text: 'x' } }).type).toBe('inert');
+    expect(parseComponent({ id: CMP, type: 'notice', props: { tone: 'info', text: 'x', onclick: 'x' } }).type).toBe('notice');   // extra fields are ignored, never rendered
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { answer: 'x', state: 'abstained', citations: [answerEnvelope().components[0].props.citations[0]] } }).type).toBe('inert');
+    expect(parseComponent({ ...comparison(), props: { ...comparison().props, a: { ...comparison().props.a, value_end: 999 } } }).type).toBe('inert');
+    expect(() => parseAction({ id: 'x', label: 'x', action_type: 'open_page', path: '/m/M-1/../admin' })).toThrow();
+    expect(() => parseAction({ id: 'x', label: 'x', action_type: 'ask' })).toThrow();
+    const many = Array.from({ length: 5 }, (_, i) => ({ id: `cmp_${String(i).repeat(32)}`, type: 'notice', props: { tone: 'info', text: `${i}` } }));
+    expect(parseEnvelope({ schema_version: '1.0', message_id: 'm', matter_id: 'x', components: many })!.components).toHaveLength(3);
+    expect(parseEnvelope({ schema_version: '2.0', message_id: 'm', matter_id: 'x', components: [] })).toBeNull();
+  });
+});
+
+describe('Potential inconsistencies', () => {
+  const compareEnvelope = (comp: object) => ({ ...answerEnvelope(), summary: '1 potential inconsistency found.', components: [comp] });
+
+  it('shows both sources with the uncertainty, and a lawyer resolves it with a reason', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const calls = world({
+      'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(compareEnvelope(comparison()))],
+      'POST /api/legal/counsel/actions': () => [200, { component: comparison('explained', true, 2) }],
+    });
+    const { container } = renderLaw('/chat');
+    await ask('Find delivery date conflicts');
+    const card = await screen.findByRole('region', { name: /Potential inconsistency in dates/ });
+    expect(within(card).getByText('Potential')).toBeTruthy();
+    expect(within(card).getByText('May 12, 2026', { selector: 'mark' })).toBeTruthy();
+    expect(within(card).getByText('May 15, 2026', { selector: 'mark' })).toBeTruthy();
+    expect(within(card).getByText('The two dates may describe different events.')).toBeTruthy();
+    expect(card.textContent).not.toMatch(/\blie|lied|fraud/i);
+    fireEvent.click(within(card).getByRole('button', { name: 'Explained' }));
+    fireEvent.click(within(card).getByRole('button', { name: 'Save' }));
+    expect(within(card).getByRole('alert').textContent).toMatch(/Say briefly why/);
+    expect(calls.some((c) => c.path === '/api/legal/counsel/actions')).toBe(false);
+    fireEvent.change(within(card).getByRole('textbox', { name: /Explained: why/ }), { target: { value: 'Dispatch and arrival.' } });
+    fireEvent.click(within(card).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(within(card).getByText('Explained', { selector: '.qc-status-chip' })).toBeTruthy());
+    const body = calls.find((c) => c.path === '/api/legal/counsel/actions')!.body;
+    expect(body).toMatchObject({ component_id: CMP2, action_id: 'review', matter_id: 'id-M-101', expected_version: 1,
+                                 parameters: { resolution: 'explained', note: 'Dispatch and arrival.' } });
+    expect(body.idempotency_key).toMatch(/^[0-9a-f]{32}$/);
+    expect(within(card).getByRole('list', { name: 'Review history' }).textContent).toMatch(/Explained by alice.*Dispatch and arrival/);
+    expect(await axeClean(container)).toEqual([]);
+  });
+
+  it('someone else changed it first: the current state is shown, with why', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    world({
+      'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(compareEnvelope(comparison()))],
+      'POST /api/legal/counsel/actions': () => [409, { detail: 'Someone changed this item while you were reading it. Here is its current state.',
+                                                       code: 'VERSION_CONFLICT', component: comparison('dismissed', true, 2) }],
+    });
+    renderLaw('/chat');
+    await ask('Find delivery date conflicts');
+    const card = await screen.findByRole('region', { name: /Potential inconsistency in dates/ });
+    fireEvent.click(within(card).getByRole('button', { name: 'Confirm inconsistency' }));
+    fireEvent.change(within(card).getByRole('textbox'), { target: { value: 'Both say delivery.' } });
+    fireEvent.click(within(card).getByRole('button', { name: 'Save' }));
+    const updated = await screen.findByRole('region', { name: /Potential inconsistency in dates/ });
+    await waitFor(() => expect(within(updated).getByText('Dismissed', { selector: '.qc-status-chip' })).toBeTruthy());
+    expect(within(updated).getByRole('alert').textContent).toMatch(/Someone changed this item/);
+  });
+
+  it('a read-only member sees it but is offered nothing to resolve it with', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(compareEnvelope(comparison('potential', false)))] });
+    renderLaw('/chat');
+    await ask('Find delivery date conflicts');
+    const card = await screen.findByRole('region', { name: /Potential inconsistency in dates/ });
+    expect(within(card).queryByRole('button', { name: 'Explained' })).toBeNull();
+    expect(within(card).getByText(/Resolving it is for the matter's lawyers and reviewers/)).toBeTruthy();
+  });
+
+  it('a briefing shows at most three items; Review opens that item in the conversation', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const briefing = { ...answerEnvelope(), summary: '3 things in M-101 need your attention.', components: [{ id: CMP, version: 1, type: 'priority_list', props: {
+      summary: '3 things in M-101 need your attention.', more: 1, items: [
+        { id: 'discrepancies', kind: 'discrepancy', title: '1 potential inconsistency to review', detail: 'Witness A says “May 12, 2026”.',
+          action: { id: 'review', label: 'Review', action_type: 'open_discrepancy', target_id: DSC, document_ids: [] } },
+        { id: 'new_documents', kind: 'new_documents', title: '4 new documents', detail: 'Agreement, Witness A.',
+          action: { id: 'summarize_new', label: 'What do they say?', action_type: 'ask', prompt: 'Summarize the key points of the new documents.', document_ids: ['doc1'] } },
+        { id: 'obligations', kind: 'obligation', title: '1 deadline proposed', detail: 'Not yet confirmed.',
+          action: { id: 'open_obligations', label: 'Confirm dates', action_type: 'open_page', path: '/m/M-101/obligations', document_ids: [] } },
+      ] } }] };
+    let n = 0;
+    const calls = world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, n++ === 0 ? stream(briefing) : stream(compareEnvelope(comparison()))] });
+    renderLaw('/chat');
+    await ask('What matters today?');
+    const list = await screen.findByRole('region', { name: '3 things in M-101 need your attention.' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3);
+    expect(within(list).getByText('and 1 more')).toBeTruthy();
+    fireEvent.click(within(list).getByRole('button', { name: 'Review' }));
+    expect(await screen.findByRole('region', { name: /Potential inconsistency in dates/ })).toBeTruthy();
+    const second = calls.filter((c) => c.path === '/api/legal/counsel/conversations/conv_1/turns')[1].body;
+    expect(second.focus_discrepancy_id).toBe(DSC);
+  });
+});
+
+describe('History and the other destinations', () => {
+  it('reopens a conversation from the rail with its stored answers', async () => {
+    world({
+      'GET /api/legal/counsel/conversations': () => [200, { conversations: [{ id: 'conv_9', title: 'When must Apex complete delivery?', created_at: '', updated_at: '',
+        matter: { id: 'id-M-101', number: 'M-101', title: 'MSA renewal' }, turns: 1 }] }],
+      'GET /api/legal/counsel/conversations/conv_9': () => [200, { conversation: { id: 'conv_9', matter_id: 'id-M-101', title: 'x' }, turns: [
+        { id: 'turn_1', seq: 1, question: 'When must Apex complete delivery?', intent: 'ask_fact', status: 'completed', created_at: '', envelope: answerEnvelope() }] }],
+    });
+    renderLaw('/chat');
+    const recent = await screen.findByRole('navigation', { name: 'Recent conversations' });
+    fireEvent.click(within(recent).getByRole('link', { name: /When must Apex complete delivery/ }));
+    expect(await screen.findByText('Supported by 1 verified quote')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Matter: M-101 MSA renewal/ })).toBeTruthy();
+  });
+
+  it('Drafts lists what waits for you and your own drafts', async () => {
+    world({ 'GET /api/legal/reviews': () => [200, { count: 1, waiting: [{ kind: 'research_note', id: 'a1', title: 'Liability cap', matter: { number: 'M-101', title: 'MSA renewal' },
+      by: 'bob', at: '2026-10-11T10:00:00Z', path: '/m/M-101/notes/a1' }], mine: [] }] });
+    renderLaw('/drafts');
+    const waiting = await screen.findByRole('region', { name: 'Waiting for your review' });
+    expect(within(waiting).getByRole('link', { name: 'Research note: Liability cap' }).getAttribute('href')).toBe('/m/M-101/notes/a1');
+    expect(screen.getByRole('link', { name: 'Drafts, 1 waiting for you' })).toBeTruthy();
+  });
+
+  it('Activity shows your own actions and documents still being read', async () => {
+    world({ 'GET /api/legal/counsel/activity': () => [200, { next_before: null, in_progress: [{ matter: { id: 'id-M-101', number: 'M-101', title: 'MSA renewal' }, documents: 2 }],
+      events: [{ seq: 5, ts: '2026-10-26T10:00:00.000Z', action: 'matter.read', outcome: 'allow', actor: { username: 'alice', roles: ['attorney'] },
+                 matter: { id: 'id-M-101', number: 'M-101', title: 'MSA renewal' } }] }] });
+    renderLaw('/activity');
+    expect(await screen.findByText(/2 documents being read in/)).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'What you did' })).toBeTruthy();
+  });
+});

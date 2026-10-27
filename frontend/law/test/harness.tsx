@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
@@ -60,3 +60,9 @@ export const matter = (number: string, title: string, client = 'Alpha Holdings',
   id: `id-${number}`, number, title, status: 'open', sensitivity: 'restricted', version: 1, created_at: '2026-10-08T00:00:00.000Z',
   client: { id: `c-${client}`, name: client }, my_role: 'lead', ...extra,
 });
+
+/** EchoMind Legal shell: firm tools and administration live under the account menu; returns the open menu. */
+export async function openAccountMenu(): Promise<HTMLElement> {
+  fireEvent.click(await screen.findByRole('button', { name: /Account and settings/ }));
+  return screen.findByRole('menu', { name: 'Account and settings' });
+}

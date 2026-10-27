@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import axe from 'axe-core';
 import type { Me, TimeEntry } from '../api/types';
-import { me, mockApi, renderLaw } from './harness';
+import { me, mockApi, openAccountMenu, renderLaw } from './harness';
 
 /** S4.3 — time-entry drafts from audited activity (OPT-03; D-056). */
 const entry = (x: Partial<TimeEntry> = {}): TimeEntry => ({
@@ -67,11 +67,10 @@ describe('Time entries (S4.3)', () => {
     world([entry({ id: 't2', status: 'discarded' })]);
     renderLaw('/time');
     expect(await screen.findByText('No entries for these days')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Time' })).toBeTruthy();
+    expect(within(await openAccountMenu()).getByRole('menuitem', { name: 'Time' })).toBeTruthy();
     cleanup();
     mockApi({ 'GET /api/auth/me': () => [200, me(['attorney'])], 'GET /api/legal/matters': () => [200, { matters: [] }] });
     renderLaw('/home');
-    await screen.findByRole('navigation', { name: 'Firm' });
-    expect(screen.queryByRole('link', { name: 'Time' })).toBeNull();
+    expect(within(await openAccountMenu()).queryByRole('menuitem', { name: 'Time' })).toBeNull();
   });
 });

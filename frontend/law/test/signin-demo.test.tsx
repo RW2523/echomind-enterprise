@@ -27,7 +27,7 @@ describe('One-click demo sign-in (D-077)', () => {
     expect(people.textContent).toMatch(/fictional people/i);
     expect((await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);
     fireEvent.click(screen.getByRole('button', { name: 'harper · Attorney' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/home'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/chat'));
     expect(calls.some((c) => c.method === 'POST' && c.path === '/api/auth/demo/harper')).toBe(true);
     expect(screen.queryByLabelText('Password')).toBeNull();
   });

@@ -52,7 +52,7 @@ describe('Reviews (S2.7)', () => {
     expect(within(waiting).getByRole('link', { name: /Side letter \(PDF\)/ }).getAttribute('href')).toBe('/m/M-101/exports/e1');
     const mine = screen.getByRole('list', { name: 'Yours, with others' });
     expect(mine.textContent).toContain('Sent back by erin: “Add the quorum.”');
-    expect(await screen.findByRole('link', { name: 'Reviews, 2 waiting for you' })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Drafts, 2 waiting for you' })).toBeTruthy();
     expect((await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);
   });
 

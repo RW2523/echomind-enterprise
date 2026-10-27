@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": [
+    "law/counsel/**/*.ts",
+    "law/counsel/**/*.tsx",
+    "law/counsel/react-dom-shim.d.ts",
+    "law/app/capture.ts",
+    "law/vite-env.d.ts"
+  ]
+}

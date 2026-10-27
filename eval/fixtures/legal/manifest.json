@@ -1,0 +1,99 @@
+{
+ "note": "FICTIONAL EchoMind Legal demo (docs/echomind-legal/13_DEMO_SEED_DATA.md): every party, person, figure and fact is invented. In the demo world the blueprint's attorney 'Alex' is alice and 'Jordan' is bob.",
+ "team": {},
+ "cases": [
+  {
+   "number": "MAT-1042",
+   "title": "Morgan v. Apex Industries",
+   "practice_area": "Commercial litigation",
+   "jurisdiction": "Delaware",
+   "lead": "alice",
+   "members": {
+    "carol": "paralegal",
+    "nakamura": "reviewer"
+   },
+   "client": {
+    "name": "Morgan Company LLC",
+    "code": "MORGAN"
+   },
+   "parties": [
+    [
+     "Apex Industries, Inc.",
+     "adverse"
+    ]
+   ],
+   "documents": [
+    {
+     "file": "MAT-1042/Services_Agreement_2026-04-01.txt",
+     "title": "Services Agreement (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "MAT-1042/Amendment_1_2026-05-14.txt",
+     "title": "Amendment No. 1 (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "MAT-1042/Witness_A_Interview.txt",
+     "title": "Witness A interview (DEMO)",
+     "kind": "evidence",
+     "status": "final"
+    },
+    {
+     "file": "MAT-1042/Witness_B_Interview.txt",
+     "title": "Witness B interview (DEMO)",
+     "kind": "evidence",
+     "status": "final"
+    },
+    {
+     "file": "MAT-1042/Shipment_Log.txt",
+     "title": "Shipment log (DEMO)",
+     "kind": "evidence",
+     "status": "received"
+    },
+    {
+     "file": "MAT-1042/Email_Thread.txt",
+     "title": "Email thread on delivery timing (DEMO)",
+     "kind": "correspondence",
+     "status": "received"
+    },
+    {
+     "file": "MAT-1042/Draft_Meeting_Notes.txt",
+     "title": "Draft meeting notes (DEMO)",
+     "kind": "note",
+     "status": "draft"
+    },
+    {
+     "file": "MAT-1042/Fake_Citation.txt",
+     "title": "Research memo with an unverified citation (DEMO)",
+     "kind": "memo",
+     "status": "draft"
+    }
+   ]
+  },
+  {
+   "number": "MAT-2033",
+   "title": "Rivera Confidential Matter",
+   "practice_area": "Employment",
+   "jurisdiction": "New York",
+   "sensitivity": "highly_restricted",
+   "lead": "bob",
+   "members": {},
+   "client": {
+    "name": "Rivera (DEMO)",
+    "code": "RIVERA"
+   },
+   "parties": [],
+   "documents": [
+    {
+     "file": "MAT-2033/Rivera_Confidential_Note.txt",
+     "title": "Rivera confidential note (DEMO)",
+     "kind": "note",
+     "status": "final"
+    }
+   ]
+  }
+ ]
+}

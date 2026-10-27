@@ -1,0 +1,22 @@
+DEMO / SYNTHETIC — fictional document for EchoMind Legal demonstrations. Not a real agreement.
+
+SERVICES AGREEMENT
+
+This Services Agreement is dated April 1, 2026 and is made between Morgan Company LLC (the "Customer") and Apex Industries, Inc. (the "Supplier").
+
+1. Services
+1.1 The Supplier shall manufacture and deliver the control units described in Schedule 1 (the "Units") to the Customer's site at 400 Harbor Road.
+
+4. Delivery
+4.1 The Supplier shall notify the Customer in writing of the dispatch date at least three business days before dispatch.
+4.2 The Supplier shall complete delivery of the Units by May 15, 2026. Delivery is complete when the Units arrive at the Customer's site.
+4.3 If delivery is completed after the date in clause 4.2, the Supplier shall credit the Customer two percent (2%) of the fees for each week of delay.
+
+9. Fees
+9.1 The Customer shall pay fees of USD 240,000 within thirty (30) days of complete delivery.
+
+12. Amendments
+12.1 No amendment to this Agreement is effective unless it is in writing and signed by both parties.
+
+Signed for Morgan Company LLC by its authorised signatory (DEMO).
+Signed for Apex Industries, Inc. by its authorised signatory (DEMO).

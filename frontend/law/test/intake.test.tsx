@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import axe from 'axe-core';
 import type { Intake, IntakeLinkPage, IntakeScript, IntakeView, Me } from '../api/types';
-import { matter, me, mockApi, renderLaw } from './harness';
+import { matter, me, mockApi, openAccountMenu, renderLaw } from './harness';
 
 /** S4.1 — intake assistant with conflict screening (OPT-01; D-054). */
 const SCRIPT: IntakeScript = {
@@ -49,7 +49,7 @@ describe('Intake (S4.1)', () => {
     const row = await screen.findByRole('row', { name: /INT-2026-0001/ });
     expect(within(row).getByText('Refer to the conflicts team')).toBeTruthy();
     expect(within(row).getByText('Awaiting conflicts check')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Enquiries' })).toBeTruthy();                  // the navigation item, with the feature on
+    expect(within(await openAccountMenu()).getByRole('menuitem', { name: 'Enquiries' })).toBeTruthy();   // the menu item, with the feature on
     cleanup();
     const { container } = renderLaw('/enquiries/i1');
     await screen.findByRole('region', { name: 'Answers' });
@@ -216,7 +216,6 @@ describe('Intake (S4.1)', () => {
   it('without the feature, there is no Enquiries item', async () => {
     mockApi({ 'GET /api/auth/me': () => [200, me(['intake'])], 'GET /api/legal/matters': () => [200, { matters: [] }] });
     renderLaw('/home');
-    await screen.findByRole('navigation', { name: 'Firm' });
-    expect(screen.queryByRole('link', { name: 'Enquiries' })).toBeNull();
+    expect(within(await openAccountMenu()).queryByRole('menuitem', { name: 'Enquiries' })).toBeNull();
   });
 });

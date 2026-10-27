@@ -8,7 +8,10 @@ import '../theme/liquid.css';
 import { applyPreferences } from './preferences';
 import { RequireSession, useSessionExpiry } from './session';
 import { MatterLayout } from './matter';
-import Shell from './Shell';
+import CounselShell from '../counsel/CounselShell';
+import ChatPage from '../counsel/ChatPage';
+import DraftsPage from '../counsel/DraftsPage';
+import ActivityPage from '../counsel/ActivityPage';
 import SignIn from '../pages/SignIn';
 import Home from '../pages/Home';
 import Matters from '../pages/Matters';
@@ -69,11 +72,15 @@ export const lawRoutes = [
     children: [
       { path: '/signin', element: <SignIn /> },
       { path: '/intake/:token', element: <IntakeLink /> },                // an enquirer's link: no session (S4.1, D-054)
-      { path: '/', element: <Navigate to="/home" replace /> },
+      { path: '/', element: <Navigate to="/chat" replace /> },
       ...(import.meta.env.DEV ? [{ path: '/__design', element: <DesignCatalogue /> }] : []),
       {
-        element: <RequireSession><Shell /></RequireSession>,
+        element: <RequireSession><CounselShell /></RequireSession>,
         children: [
+          // EchoMind Legal: chat is home; Matters, Drafts and Activity are the other destinations (docs/echomind-legal/04).
+          { path: '/chat/:conversationId?', element: <ChatPage /> },
+          { path: '/drafts', element: <DraftsPage /> },
+          { path: '/activity', element: <ActivityPage /> },
           { path: '/home', element: <Home /> },
           { path: '/matters', element: <Matters /> },
           { path: '/reviews', element: <Reviews /> },

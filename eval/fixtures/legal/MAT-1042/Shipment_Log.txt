@@ -1,0 +1,11 @@
+DEMO / SYNTHETIC — fictional carrier record for EchoMind Legal demonstrations.
+
+SHIPMENT LOG — CONTROL UNITS
+
+Shipment under the Services Agreement between Morgan Company LLC and Apex Industries, Inc.
+Carrier: Bluewater Haulage (fictional). Consignment reference: BWH-DEMO-5512.
+
+Pickup (dispatch) from the Apex Industries warehouse: May 12, 2026, 16:40.
+In transit: May 13, 2026 to May 14, 2026.
+Arrival at the Morgan Company site, 400 Harbor Road: May 15, 2026, 14:05. Receipt signed by the site manager.
+Remarks: two pallets with damaged outer wrapping noted on arrival.

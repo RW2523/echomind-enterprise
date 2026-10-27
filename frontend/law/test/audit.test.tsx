@@ -107,7 +107,7 @@ describe('Matter activity', () => {
     });
     renderLaw('/m/M-101/activity');
     expect(await screen.findByText("This item isn't available.")).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Activity' })).toBeNull();
+    expect(within(screen.getByRole('navigation', { name: 'Matter' })).queryByRole('link', { name: 'Activity' })).toBeNull();
   });
 
   it('shows who did what on the matter', async () => {
@@ -119,7 +119,7 @@ describe('Matter activity', () => {
     const { container } = renderLaw('/m/M-101/activity');
     expect(await screen.findByText(/viewed M-101/)).toBeTruthy();
     expect(screen.getByText('Emergency access')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Activity' })).toBeTruthy();
+    expect(within(screen.getByRole('navigation', { name: 'Matter' })).getByRole('link', { name: 'Activity' })).toBeTruthy();
     expect(calls.some((c) => c.path === '/api/legal/matters/id-M-101/activity')).toBe(true);
     expect(await axeViolations(container)).toEqual([]);
   });

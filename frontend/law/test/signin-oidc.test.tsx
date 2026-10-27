@@ -29,7 +29,7 @@ describe('Signing in with the firm\'s account (D-076)', () => {
     const { router } = renderLaw('/signin?step=code');
     fireEvent.change(await screen.findByLabelText('Authenticator code'), { target: { value: '123456' } });
     fireEvent.click(screen.getByRole('button', { name: 'Verify' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/home'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/chat'));
   });
 
   it('says plainly when the provider\'s sign-in did not work, without saying why', async () => {
