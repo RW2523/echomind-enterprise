@@ -29,8 +29,7 @@ would violate the blueprint's "do not rebuild working components".
 | Memory | 121 GiB total, **110 GiB used, 11 GiB available**, swap 15 GiB of 15 GiB used | `free -h` |
 | Disk | 3.7 TB, 2.2 TB free | `df -h /` |
 
-Memory is the binding constraint. The host also runs a separate 22-container "cio" stack (two vLLM engines, Temporal,
-Grafana) and production EchoMind. The Law stack's `compose.sh` refuses to start below 12 GB available
+Memory is the binding constraint. The host also runs other workloads and production EchoMind. The Law stack's `compose.sh` refuses to start below 12 GB available
 (`LAW_MIN_FREE_GB`), each Law container is memory-capped (backend 8 GB) and marked first to be killed
 (`oom_score_adj: 800`). The blueprint's 128 GB assumption holds for the device, but **only ~11 GB is free for EchoMind Legal today**.
 
