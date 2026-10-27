@@ -82,7 +82,8 @@ def build(principal: dict, matter: dict) -> tuple[dict, list[str]]:
                    "prompt": "Summarize the key points of the new documents.", "document_ids": [d["id"] for d in ready[:10]]}
                   if ready else {"id": "open_documents", "label": "Open documents", "action_type": "open_page", "path": f"{base}/documents"})
         items.append({"id": "new_documents", "kind": "new_documents",
-                      "title": f"{len(new)} new document{'s' if len(new) != 1 else ''} since {'your last briefing' if seen else 'the last two weeks'}",
+                      "title": f"{len(new)} new document{'s' if len(new) != 1 else ''} "
+                               f"{'since your last briefing' if seen else 'in the last two weeks'}",
                       "detail": detail, "action": action})
 
     with get_conn() as conn:

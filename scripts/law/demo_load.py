@@ -95,15 +95,25 @@ def plan() -> tuple[dict, dict]:
     return {"team": syn["team"], "matters": matters}, docs
 
 
-def _seed_practice(container: str, practice: dict) -> None:
-    r = subprocess.run(["docker", "exec", "-i", "-e", "LEGAL_ALLOW_DEMO_SEED=1", container, "python3", "-m", "app.legal.cli",
-                        "seed-demo-practice"], input=json.dumps(practice), capture_output=True, text=True)
+def _native_env(data_dir: str) -> dict:
+    return {**os.environ, "ECHOMIND_EDITION": "law", "ECHOMIND_DATA_DIR": data_dir, "LEGAL_ALLOW_DEMO_SEED": "1"}
+
+
+def _seed_practice(container: str, practice: dict, data_dir: str = "") -> None:
+    if data_dir:                    # a native dev backend (scripts/law/dev_backend.sh): the same CLI, run here
+        r = subprocess.run([sys.executable, "-m", "app.legal.cli", "seed-demo-practice"], input=json.dumps(practice),
+                           capture_output=True, text=True, cwd=ROOT / "backend", env=_native_env(data_dir))
+    else:
+        r = subprocess.run(["docker", "exec", "-i", "-e", "LEGAL_ALLOW_DEMO_SEED=1", container, "python3", "-m", "app.legal.cli",
+                            "seed-demo-practice"], input=json.dumps(practice), capture_output=True, text=True)
     if r.returncode != 0:
         raise SystemExit(f"seed-demo-practice failed: {r.stderr.strip()[-300:]}")
     print(r.stdout.strip().splitlines()[-1])
 
 
-def _credentials(container: str) -> dict:
+def _credentials(container: str, data_dir: str = "") -> dict:
+    if data_dir:
+        return json.loads((pathlib.Path(data_dir) / "legal" / "demo_credentials.json").read_text())
     out = subprocess.run(["docker", "exec", container, "cat", "/data/legal/demo_credentials.json"],
                          check=True, capture_output=True, text=True).stdout
     return json.loads(out)
@@ -125,13 +135,18 @@ def main() -> int:
     ap.add_argument("--base", default="http://localhost:3110/api")
     ap.add_argument("--container", default="echomind-law-backend")
     ap.add_argument("--wait", type=int, default=900, help="seconds to wait for indexing")
+    ap.add_argument("--data-dir", default="", help="a native dev backend's data folder (scripts/law/dev_backend.sh) instead of a container")
+    ap.add_argument("--only", default="", help="comma-separated matter numbers to import (default: all)")
     args = ap.parse_args()
     practice, more = plan()
-    _seed_practice(args.container, practice)
-    creds = _credentials(args.container)
+    _seed_practice(args.container, practice, args.data_dir)
+    creds = _credentials(args.container, args.data_dir)
     sessions = {}
     work = {n: (u, [(f, k, s, None) for f, k, s in files]) for n, (u, files) in DEMO.items()}
     work.update(more)
+    if args.only:
+        wanted = {n.strip() for n in args.only.split(",") if n.strip()}
+        work = {n: w for n, w in work.items() if n in wanted}
 
     def session(user: str):
         if user not in sessions:

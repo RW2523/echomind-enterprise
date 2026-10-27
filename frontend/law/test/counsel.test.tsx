@@ -323,8 +323,8 @@ describe('History and the other destinations', () => {
     world({ 'GET /api/legal/reviews': () => [200, { count: 1, waiting: [{ kind: 'research_note', id: 'a1', title: 'Liability cap', matter: { number: 'M-101', title: 'MSA renewal' },
       by: 'bob', at: '2026-10-11T10:00:00Z', path: '/m/M-101/notes/a1' }], mine: [] }] });
     renderLaw('/drafts');
-    const waiting = await screen.findByRole('region', { name: 'Waiting for your review' });
-    expect(within(waiting).getByRole('link', { name: 'Research note: Liability cap' }).getAttribute('href')).toBe('/m/M-101/notes/a1');
+    const waiting = await screen.findByRole('list', { name: 'Waiting for you' });                  // the existing reviews queue, reused
+    expect(within(waiting).getByRole('link', { name: /Liability cap/ }).getAttribute('href')).toBe('/m/M-101/notes/a1');
     expect(screen.getByRole('link', { name: 'Drafts, 1 waiting for you' })).toBeTruthy();
   });
 
@@ -335,5 +335,14 @@ describe('History and the other destinations', () => {
     renderLaw('/activity');
     expect(await screen.findByText(/2 documents being read in/)).toBeTruthy();
     expect(screen.getByRole('region', { name: 'What you did' })).toBeTruthy();
+  });
+});
+
+describe('Citation numbers', () => {
+  it('are shown 1, 2, 3 in the order the answer cites them, whatever research numbered its passages', async () => {
+    const { displayNumbers } = await import('../counsel/cards');
+    const c = (n: number) => ({ id: `cit_${String(n).repeat(32).slice(0, 32)}`, n, document_id: `d${n}`, document_title: `D${n}`, verified: true, removed: false });
+    const labels = displayNumbers('First [5]. Then [1] and [5, 3].', [c(1), c(3), c(5)]);
+    expect([...labels.entries()]).toEqual([[5, 1], [1, 2], [3, 3]]);
   });
 });

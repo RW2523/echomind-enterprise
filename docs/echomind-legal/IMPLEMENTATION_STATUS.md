@@ -4,6 +4,16 @@ Statuses: **Not started**, **In progress**, **Tested** (executed tests pass, evi
 root or a decision). "Tested (Law)" = delivered earlier on `feature/echomind-law` with its own evidence
 (docs/echomind-law/TEST_RESULTS.md) and re-run on this branch. Branch: `feature/echomind-legal-chat`.
 
+## What a person can do now
+
+Sign in → **Chat** opens: "How can I help?", the matter in the header, four suggestions. In one conversation a lawyer can
+ask what matters today (a briefing from records, at most three items), ask questions answered only from the matter's
+documents with verified, clickable citations, find potential inconsistencies between documents and resolve them with a
+reason, open any cited passage beside the conversation (re-verified against the stored text, highlighted), and reopen
+past conversations from the rail. Matters, Drafts (what waits for review, your own drafts) and Activity (your own
+actions, documents being read) are the other destinations; every existing Law page still works inside the shell, and
+the firm's pages are in the account menu. Screens: [`screens/`](screens/).
+
 ## Baseline on this branch before any change (2026-10-26)
 
 | Suite | Command | Result |
@@ -19,28 +29,72 @@ root or a decision). "Tested (Law)" = delivered earlier on `feature/echomind-law
 | LEGAL-001 | Repo audit, current architecture, gap matrix | **Tested** | CURRENT_ARCHITECTURE.md, GAP_ANALYSIS.md (commands and outputs quoted) |
 | LEGAL-002 | Firm/matter/membership schema | **Tested (Law)** | migrations 0002–0006; `test_law_matters_api.py` |
 | LEGAL-003 | RBAC, ethical walls, deny by default, 404 for hidden | **Tested (Law)** | `test_law_policy.py` (incl. new `findings.review`), `test_law_walls.py`, `test_law_scoping.py` |
-| LEGAL-004 | Source ingestion: hash, versions, OCR, anchors | **Tested (Law)** | `test_law_documents.py`, `test_law_extract.py`, `test_law_structure.py` |
-| LEGAL-005 | Citation resolver: opaque ids, re-verified spans, tamper refusal | **Tested** | `test_law_counsel.py`: opening returns exact characters; foreign/forged ids 404; changed text 409; revoked member 404 |
-| LEGAL-006 | Search filtered by authorization before scoring | **Tested (Law)** | `AuthorizedScope` + per-matter partitions; `test_law_retrieval.py`; chat cross-matter test (`test_another_matter_never_answers…`) |
-| LEGAL-007 | Answer verifier + abstention | **Tested (Law)**, reused | research `_answer`; chat tests for verified/abstained states |
-| LEGAL-008 | Chat shell (Quiet Counsel) | **In progress** | — |
-| LEGAL-009 | Trusted UI component contract (server) | **Tested** | `counsel/schemas.py`; tests reject unknown types, extra fields, >3 components, >3 items, foreign paths, out-of-range highlights |
-| LEGAL-009 | Trusted UI component registry (client) | **In progress** | — |
-| LEGAL-010 | Cards, source panel, actions with CAS + idempotency | Backend **Tested**, UI **In progress** | `POST /api/legal/counsel/actions`: stale version 409 with current state, replay by key, forged component/action refused, role 403, closed matter 409 |
-| LEGAL-011 | Chronology | Not started | (obligations give lawyer-confirmed dates: Tested (Law)) |
-| LEGAL-012 | Discrepancy resolution | Backend **Tested**, UI **In progress** | `legal_discrepancies` + reviews (written once, trigger), audited `discrepancy.review`, hidden when a quoted document is not readable |
-| LEGAL-013 | Draft editor | **Tested (Law)** in its own pages; chat points there | `test_law_drafting.py`; chat `draft` intent offers the real Drafting page only to roles that may draft |
+| LEGAL-004 | Source ingestion: hash, versions, OCR, anchors | **Tested (Law)** | `test_law_documents.py`, `test_law_extract.py`, `test_law_structure.py`; live: 9 demo documents imported and indexed |
+| LEGAL-005 | Citation resolver: opaque ids, re-verified spans, tamper refusal | **Tested** | `test_law_counsel.py`: exact characters returned; foreign/forged ids 404; changed stored text 409; revoked member 404; UI: panel highlights the span, a 409 is shown as such |
+| LEGAL-006 | Search filtered by authorization before scoring | **Tested (Law)** | `AuthorizedScope` + per-matter partitions (`test_law_retrieval.py`); chat: a document of another matter named by id is not used |
+| LEGAL-007 | Answer verifier + abstention | **Tested (Law)**, reused unchanged | research `_answer`; chat tests for answered/partial/abstained; live: the Rivera question abstained |
+| LEGAL-008 | Chat shell (Quiet Counsel) | **Tested** | `frontend/law/counsel/CounselShell.tsx`; `counsel.test.tsx` (four destinations, four suggestions, private, real capture state); live screenshots desktop, 390 px, dark |
+| LEGAL-009 | Trusted UI component contract and registry | **Tested** | server `counsel/schemas.py` (unknown types, extra fields, >3 components, >3 items, foreign paths, out-of-range highlights rejected); client `validate.ts` (unknown → inert, hostile paths not offered, markup shown as text) |
+| LEGAL-010 | Cards, source panel, actions with CAS + idempotency | **Tested** | `POST /api/legal/counsel/actions`: stale version 409 with current state (UI shows it), replay by key, forged component/action refused, read-only 403 (UI offers no controls), closed matter 409; Esc closes the panel and focus returns to the chip (unit and live) |
+| LEGAL-011 | Chronology | Not started | (obligations give lawyer-confirmed dates: Tested (Law); the briefing counts unconfirmed ones) |
+| LEGAL-012 | Discrepancy resolution | **Tested** | `legal_discrepancies` + reviews written once (trigger), audited `discrepancy.review`, hidden when a quoted document is not readable, amendments flagged as possible supersessions; live: found and explained in the browser |
+| LEGAL-013 | Draft editor | **Tested (Law)** in its own pages; chat points there | `test_law_drafting.py`; the chat's `draft` intent offers the real Drafting page only to roles that may draft |
 | LEGAL-014 | Export approval | **Tested (Law)** | `test_law_exports.py` (T09) |
-| LEGAL-015 | Backup and restore | **Tested (Law)** | `app/legal/backup`, `test_law_dr.py`, DR drill (Law run 21) |
-| LEGAL-016 | Security / prompt-injection suite | **Tested (Law)** + new chat cases | `test_law_injection.py`; chat: injected notes withheld from the model, no extra words, no other matter |
-| LEGAL-017 | Offline acceptance | Backend tests run with `--network none`; enforcement **Blocked (owner, root)** | `sudo scripts/law/egress_lock.sh` (D-071) |
+| LEGAL-015 | Backup and restore | **Tested (Law)** | `app/legal/backup`, `test_law_dr.py`; the chat's tables are in the same database and purge |
+| LEGAL-016 | Security / prompt-injection suite | **Tested (Law)** + chat cases | `test_law_injection.py`; chat: injected notes withheld from the model, no extra words, no other matter; live: `INJECTION-CANARY` never shown |
+| LEGAL-017 | Offline acceptance | Backend tests run with `--network none`; live UI made **no** request to a non-local host; enforcement **Blocked (owner, root)** | `sudo scripts/law/egress_lock.sh` (D-071) |
 | LEGAL-018 | Advanced agents (Council, GraphRAG, MCP) | Not started (Review panel exists, off: Tested (Law)) | — |
 | — | Purge covers the chat | **Tested** | `test_purging_a_document_removes_what_the_chat_kept_of_it`; purge verification counts the chat's tables |
-| — | Conflict finder recognises delivery dates | **Tested** | `compare/facts.py` anchor `delivery`; `test_law_compare.py` still green |
-| — | Content-Security-Policy | Not started | `frontend/nginx.law.conf` has none |
+| — | Conflict finder recognises delivery dates | **Tested** | `compare/facts.py` anchor `delivery`; `test_law_compare.py` green |
+| — | Content-Security-Policy | **Tested** (config) | `frontend/nginx.law.conf`: `default-src 'self'` …, validated with `nginx -t`; the built bundle references no CDN |
+| — | Strict TypeScript for new code | **Tested** | `tsconfig.counsel.json` (`strict`), also in CI |
+
+## Live run on the DGX Spark (2026-10-26, real model, isolated dev backend)
+
+Native dev backend (`scripts/law/dev_backend.sh`, fresh `.law-data`, 127.0.0.1 only) with the demo world and the Legal
+demo matters loaded through the real ingestion pipeline (`demo_load.py --data-dir .law-data --only MAT-1042,MAT-2033`).
+Model `nvidia/Qwen3-30B-A3B-FP4` (TensorRT-LLM) and `nomic-embed-text`, both shared with production, ~10 GB free.
+
+| Turn (alice, MAT-1042) | End | Seconds |
+|---|---|---|
+| What matters today? | completed (briefing from records) | 0.1 |
+| Find conflicting dates or amounts | completed: 5 potential inconsistencies across 8 documents | 4.4 |
+| Which contractual deadline applied? | completed, 2 verified citations | 5.7 |
+| Could the witnesses be describing different events? | completed (partial), 3 verified citations | 6.0 |
+| Let other case materials inform this | completed (notice, no other matter named) | 0.0 |
+| What does the Rivera note say about settlement authority? | **abstained** | 1.1 |
+| Summarize the draft meeting notes | completed, injection noted, canary absent | 5.7 |
+
+Seconds are request-to-last-event, single user, measured once: not a benchmark.
+
+**Findings to act on (not hidden):**
+1. *Wrong inference with a real quote.* "Which contractual deadline applied?" was answered "the amendment did not change the
+   delivery deadline", citing the amendment's clause 2.1 ("all other terms remain in force"). The quote is verified; the
+   conclusion is wrong, because retrieval did not bring clause 1.1 of the amendment, which moves delivery to May 20. A verified
+   quote proves the words exist, not the inference. Next: amendment/supersession awareness in retrieval (blueprint 06
+   temporal model) and an evaluation item for it.
+2. *The conflict check over-proposes.* A contract's deadline ("by May 15") against a witness's event date ("took place on
+   May 12") was proposed as a potential inconsistency. **Mitigated:** such a pair is now recognised (`duty_vs_event`), ranked
+   after real conflicts and shown with "they may not contradict each other: check whether the event met the deadline"; it
+   stays `potential` until a person resolves it. Amendments are handled the same way (`amends`).
+3. *Retrieval missed the shipment log* for "Could the witnesses be describing different events?" (the answer used both
+   witnesses and the meeting notes). The blueprint's expected answer cites it.
 
 ## Test runs on this branch
 
 | Run | What | Result |
 |---|---|---|
 | C1 | `test_law_counsel.py` + policy, route table, audit, records, compare, migrations, schema, settings | **701 passed** (1 min 49 s, `--network none`) |
+| C2 | Frontend after the shell change: existing suites updated for the new navigation | **184 passed** |
+| C3 | Frontend with the chat tests | **202 passed** (38 files); `tsc` main and strict clean |
+| C4 | `test_law_counsel.py` final | **48 passed** |
+| C5 | Live API journey + live browser journey (Playwright, real model) | all steps passed; no console errors, no remote requests, no horizontal overflow at 390 px, focus returns after Esc |
+
+## How to run the demo locally (fictional data only)
+
+```bash
+LAW_SEED_DEMO=1 LEGAL_DEMO_SIGNIN=1 scripts/law/dev_backend.sh          # 127.0.0.1:8110, fresh .law-data
+python3 scripts/law/demo_load.py --base http://127.0.0.1:8110/api --data-dir "$PWD/.law-data" --only MAT-1042,MAT-2033
+LAW_FRONTEND_HOST=localhost scripts/law/dev_frontend.sh                  # http://localhost:5174 → "Enter the demo as" alice
+```
+Demo sign-in is for this local, fictional setup only; it is off by default and must stay off with real data.

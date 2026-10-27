@@ -50,25 +50,42 @@ export function ActionButtons({ actions, ctx }: { actions: UiAction[]; ctx: Card
 // ── Answer text with inline citation chips ─────────────────────────────────────
 const MARK = /\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]/g;
 
-export function CitationChip({ n, c, ctx, pending }: { n: number; c?: CitationRef; ctx?: CardContext; pending?: boolean }) {
+/** Display numbers: sources numbered 1, 2, 3 in the order the answer first cites them (research numbers its passages). */
+export function displayNumbers(text: string, citations: CitationRef[]): Map<number, number> {
+  const known = new Set(citations.map((c) => c.n));
+  const order = new Map<number, number>();
+  for (const m of text.matchAll(MARK)) {
+    for (const x of (m[1] ?? '').split(',')) {
+      const n = Number(x.trim());
+      if (known.has(n) && !order.has(n)) order.set(n, order.size + 1);
+    }
+  }
+  for (const c of [...citations].sort((a, b) => a.n - b.n)) if (!order.has(c.n)) order.set(c.n, order.size + 1);
+  return order;
+}
+
+export function CitationChip({ n, c, ctx, pending, label }: { n: number; c?: CitationRef; ctx?: CardContext; pending?: boolean; label?: number }) {
+  const shown = label ?? n;
   if (!c || pending || !ctx) {
-    return <span className="qc-cite" data-pending="true" aria-label={`Source ${n}, not checked yet`}>{n}</span>;
+    return <span className="qc-cite" data-pending="true" aria-label={`Source ${shown}, not checked yet`}>{shown}</span>;
   }
   if (c.removed) {
-    return <button type="button" className="qc-cite" disabled aria-label={`Source ${n}: the document was deleted`}>{n}</button>;
+    return <button type="button" className="qc-cite" disabled aria-label={`Source ${shown}: the document was deleted`}>{shown}</button>;
   }
   const where = [c.document_title, c.page ? `page ${c.page}` : '', c.clause ? `clause ${c.clause}` : ''].filter(Boolean).join(', ');
   return (
     <button type="button" className="qc-cite" data-verified={c.verified ? 'true' : 'false'} title={where}
-      aria-label={`Source ${n}: ${where}. ${c.verified ? 'Verified quote' : 'Not verified'}`}
+      aria-label={`Source ${shown}: ${where}. ${c.verified ? 'Verified quote' : 'Not verified'}`}
       onClick={(e) => ctx.openCitation(c, e.currentTarget)}>
-      {n}{c.verified ? <BadgeCheck aria-hidden /> : null}
+      {shown}{c.verified ? <BadgeCheck aria-hidden /> : null}
     </button>
   );
 }
 
 /** Paragraphs of plain text; "[n]" markers become chips only for sources this answer actually has. */
-export function AnswerText({ text, citations, ctx, pending }: { text: string; citations: CitationRef[]; ctx?: CardContext; pending?: boolean }) {
+export function AnswerText({ text, citations, ctx, pending, labels }: {
+  text: string; citations: CitationRef[]; ctx?: CardContext; pending?: boolean; labels?: Map<number, number>;
+}) {
   const byN = new Map(citations.map((c) => [c.n, c]));
   const paragraphs = text.replace(/\*\*(.+?)\*\*/g, '$1').split(/\n{2,}/).filter((p) => p.trim());
   return (
@@ -80,7 +97,7 @@ export function AnswerText({ text, citations, ctx, pending }: { text: string; ci
           const ns = m[1].split(',').map((x) => Number(x.trim()));
           if (!pending && !ns.every((n) => byN.has(n))) continue;
           parts.push(p.slice(last, m.index));
-          ns.forEach((n) => parts.push(<CitationChip key={`${m.index}-${n}`} n={n} c={byN.get(n)} ctx={ctx} pending={pending} />));
+          ns.forEach((n) => parts.push(<CitationChip key={`${m.index}-${n}`} n={n} c={byN.get(n)} ctx={ctx} pending={pending} label={labels?.get(n)} />));
           last = (m.index ?? 0) + m[0].length;
         }
         parts.push(p.slice(last));
@@ -100,21 +117,24 @@ function AnswerState({ p }: { p: SourceAnswerProps }) {
 }
 
 function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
-  const unique = Array.from(new Map(p.citations.map((c) => [c.n, c])).values()).sort((a, b) => a.n - b.n);
+  const labels = displayNumbers(p.answer, p.citations);
+  const unique = Array.from(new Map(p.citations.map((c) => [c.n, c])).values())
+    .sort((a, b) => (labels.get(a.n) ?? a.n) - (labels.get(b.n) ?? b.n));
   return (
     <div className="qc-a" data-component="source_answer">
       <AnswerState p={p} />
       {p.state === 'abstained'
         ? <p className="qc-answer" style={{ margin: 0 }}>The documents in this matter do not answer that. Try naming the document, clause or party.</p>
-        : <AnswerText text={p.answer} citations={p.citations} ctx={ctx} />}
+        : <AnswerText text={p.answer} citations={p.citations} ctx={ctx} labels={labels} />}
       {unique.length > 0 && (
         <div className="qc-sources" aria-label="Sources">
           {unique.map((c) => (
             <button key={c.id} type="button" className="qc-source" data-verified={c.verified ? 'true' : 'false'} disabled={c.removed}
               onClick={(e) => ctx.openCitation(c, e.currentTarget)}
-              aria-label={c.removed ? `Source ${c.n}: the document was deleted` : `Open source ${c.n}: ${c.document_title}${c.page ? `, page ${c.page}` : ''}`}>
+              aria-label={c.removed ? `Source ${labels.get(c.n) ?? c.n}: the document was deleted`
+                : `Open source ${labels.get(c.n) ?? c.n}: ${c.document_title}${c.page ? `, page ${c.page}` : ''}`}>
               {c.verified ? <BadgeCheck aria-hidden /> : <CircleDashed aria-hidden />}
-              <b>{c.n}</b>
+              <b>{labels.get(c.n) ?? c.n}</b>
               <span>{c.removed ? 'Deleted document' : `${c.document_title}${c.page ? ` · p. ${c.page}` : ''}${c.clause ? ` · cl. ${c.clause}` : ''}`}</span>
             </button>
           ))}

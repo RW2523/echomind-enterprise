@@ -37,7 +37,7 @@ async function sendCode(page: Page, code: string): Promise<boolean> {
     page.waitForResponse((r) => r.url().endsWith('/api/auth/mfa/verify') && r.request().method() === 'POST'),
     page.getByRole('button', { name: 'Verify' }).click(),
   ]);
-  if (resp.ok()) await page.waitForURL('**/home');
+  if (resp.ok()) await page.waitForURL('**/chat');               // EchoMind Legal: chat is home
   return resp.ok();
 }
 
@@ -55,6 +55,12 @@ async function signIn(page: Page, name: string) {
   throw new Error(`could not sign ${name} in`);
 }
 
+/** EchoMind Legal shell: the firm's pages are in the account menu. */
+async function firmPage(page: Page, name: string) {
+  await page.getByRole('button', { name: /Account and settings/ }).click();
+  await page.getByRole('menu', { name: 'Account and settings' }).getByRole('menuitem', { name }).click();
+}
+
 async function shot(page: Page, name: string) {
   fs.mkdirSync(SHOTS, { recursive: true });
   await page.mouse.move(1439, 899);             // no hover state in review screenshots
@@ -67,7 +73,7 @@ test('alice sees only her matters; a matter she is not on is simply not availabl
   await expect(page.getByText('Private legal workspace')).toBeVisible();
   await shot(page, '01-sign-in-light');
   await signIn(page, 'alice');
-  await expect(page.getByRole('heading', { name: 'Your open matters' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
   await shot(page, '02-home-light');
 
   await page.getByRole('link', { name: 'Matters', exact: true }).click();
@@ -124,7 +130,7 @@ test('signing out ends the session for every tab', async ({ page, context }) => 
   const other = await context.newPage();
   await other.goto('/matters');
   await expect(other.getByText('Harrowgate MSA renewal')).toBeVisible();
-  await page.getByRole('button', { name: /Sign out/ }).click();
+  await firmPage(page, 'Sign out');                 // sign-out is in the account menu
   await page.waitForURL('**/signin');
   await other.reload();
   await other.waitForURL('**/signin**');
@@ -685,7 +691,7 @@ test('minutes: drafted from the whole transcript by the real model, approved by 
   // S2.7: the reviewer finds the draft in their Reviews queue, which opens the meeting on its minutes.
   const nakamura = await (await browser.newContext()).newPage();
   await signIn(nakamura, 'nakamura');
-  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  await nakamura.getByRole('link', { name: /^Drafts, \d+ waiting for you$/ }).click();
   await nakamura.getByRole('list', { name: 'Waiting for you' }).getByRole('link', { name: /Renewal call with the client \(demo\)/ }).click();
   await nakamura.getByRole('group', { name: 'Review these minutes' }).getByRole('button', { name: 'Approve these minutes' }).click();
   const confirm = nakamura.getByRole('dialog', { name: /^Approve version \d+\?$/ });
@@ -732,7 +738,7 @@ test('reviews: a research answer sent for review, approved by a second lawyer fr
 
   const nakamura = await (await browser.newContext()).newPage();
   await signIn(nakamura, 'nakamura');
-  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  await nakamura.getByRole('link', { name: /^Drafts, \d+ waiting for you$/ }).click();
   const waiting = nakamura.getByRole('list', { name: 'Waiting for you' });
   await expect(waiting.getByRole('listitem', { name: /^Research note: What is the cap/ })).toContainText('From alice');
   await shot(nakamura, '31-reviews-queue-light');
@@ -754,7 +760,7 @@ test('evaluations: the newest gate run, held-out and tuning sets, with the code 
   test.setTimeout(90_000);                // a long page: its review screenshot alone passed 30 s twice on a loaded host
   const morgan = await (await browser.newContext()).newPage();
   await signIn(morgan, 'morgan');
-  await morgan.getByRole('link', { name: 'Evaluations' }).click();
+  await firmPage(morgan, 'Evaluations');
   const runs = morgan.getByRole('table', { name: 'Evaluation runs' });
   const heldout = runs.getByRole('row').filter({ hasText: 'Research answers' }).filter({ hasText: 'Held-out' });
   await expect(heldout).toContainText('answer accuracy');
@@ -763,7 +769,8 @@ test('evaluations: the newest gate run, held-out and tuning sets, with the code 
   await shot(morgan, '32-evaluations-light');
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
-  await expect(alice.getByRole('link', { name: 'Evaluations' })).toHaveCount(0);     // lawyers do not see it
+  await alice.getByRole('button', { name: /Account and settings/ }).click();
+  await expect(alice.getByRole('menu', { name: 'Account and settings' }).getByRole('menuitem', { name: 'Evaluations' })).toHaveCount(0);     // lawyers do not see it
 });
 
 test('drafting: an engagement letter from the approved firm template, every fact sourced or filled, approved, filed as Word', async ({ browser }) => {
@@ -810,7 +817,7 @@ test('drafting: an engagement letter from the approved firm template, every fact
 
   const nakamura = await (await browser.newContext()).newPage();
   await signIn(nakamura, 'nakamura');
-  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  await nakamura.getByRole('link', { name: /^Drafts, \d+ waiting for you$/ }).click();
   await nakamura.getByRole('list', { name: 'Waiting for you' }).getByRole('link', { name: /Engagement letter/ }).click();
   await nakamura.getByRole('group', { name: 'Review this draft' }).getByRole('button', { name: 'Approve this draft' }).click();
   const confirm = nakamura.getByRole('dialog', { name: 'Approve version 2?' });
@@ -865,7 +872,7 @@ test('playbooks: a contract checked against the firm playbook, each topic with i
 
   const morgan = await (await browser.newContext()).newPage();
   await signIn(morgan, 'morgan');
-  await morgan.getByRole('link', { name: 'Playbooks' }).click();
+  await firmPage(morgan, 'Playbooks');
   await expect(morgan.getByRole('listitem', { name: /^Limitation of liability: Cap on liability/ }).getByText('In use: version 1')).toBeVisible();
   await shot(morgan, '36-playbooks-light');
 });
@@ -911,7 +918,7 @@ test('redlines: the clauses outside the playbook revised to the firm\'s wording,
 
   const nakamura = await (await browser.newContext()).newPage();
   await signIn(nakamura, 'nakamura');
-  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  await nakamura.getByRole('link', { name: /^Drafts, \d+ waiting for you$/ }).click();
   await nakamura.getByRole('list', { name: 'Waiting for you' }).getByRole('link', { name: /Redline — Master Services Agreement/ }).click();
   await nakamura.getByRole('group', { name: 'Review this redline' }).getByRole('button', { name: 'Approve this redline' }).click();
   const confirm = nakamura.getByRole('dialog', { name: 'Approve version 1?' });
@@ -1027,7 +1034,7 @@ test('definitions: a supply agreement\'s terms, numbering and references checked
 
   const nakamura = await (await browser.newContext()).newPage();
   await signIn(nakamura, 'nakamura');
-  await nakamura.getByRole('link', { name: /^Reviews, \d+ waiting for you$/ }).click();
+  await nakamura.getByRole('link', { name: /^Drafts, \d+ waiting for you$/ }).click();
   await nakamura.getByRole('list', { name: 'Waiting for you' }).getByRole('link', { name: /Corrections — Supply Agreement/ }).click();
   await nakamura.getByRole('group', { name: 'Review this redline' }).getByRole('button', { name: 'Approve this redline' }).click();
   const confirm = nakamura.getByRole('dialog', { name: 'Approve version 1?' });
@@ -1134,7 +1141,7 @@ test('due diligence: the data room run against the firm checklist, missing docum
 
   const morgan = await (await browser.newContext()).newPage();
   await signIn(morgan, 'morgan');
-  await morgan.getByRole('link', { name: 'Checklists' }).click();
+  await firmPage(morgan, 'Checklists');
   await expect(morgan.getByRole('region', { name: 'Share acquisition — core documents' }).getByText('In use')).toBeVisible();
 });
 
@@ -1188,7 +1195,7 @@ test('intake: an enquirer answers through a link, the names are screened, the co
   // The front desk sends a link; the enquirer, with no account, accepts the disclaimer and answers one question at a time.
   const iris = await (await browser.newContext()).newPage();
   await signIn(iris, 'iris');
-  await iris.getByRole('navigation', { name: 'Firm' }).getByRole('link', { name: 'Enquiries' }).click();
+  await firmPage(iris, 'Enquiries');
   await iris.getByRole('button', { name: 'Send a link' }).click();
   const linkDialog = iris.getByRole('dialog');
   const url = (await linkDialog.getByTestId('copy-value').textContent())!.trim();
@@ -1354,7 +1361,7 @@ test('time: a lawyer\'s own work on a matter suggested as a draft entry, edited,
   await alice.getByRole('complementary', { name: 'Document details' }).getByRole('link', { name: 'Read' }).click();
   await expect(alice).toHaveURL(/\/read/);
   // The suggestion comes from her own audited work; she edits it, approves it and downloads it.
-  await alice.getByRole('navigation', { name: 'Firm' }).getByRole('link', { name: 'Time' }).click();
+  await firmPage(alice, 'Time');
   await alice.getByRole('button', { name: 'Suggest from my activity' }).click();
   const item = alice.getByRole('listitem', { name: /^M-101 on / }).first();
   await expect(item).toBeVisible();
@@ -1527,4 +1534,59 @@ test('translation: the signed MSA translated into French by this server\'s model
   const cap = rows.getByRole('listitem').filter({ hasText: /250,000/ }).first();
   await expect(cap.locator('p[lang="fr"]')).toContainText(/250[   .,]?000/);
   await shot(alice, '51-translation-light');
+});
+
+test('EchoMind Legal chat: a potential inconsistency found, inspected and explained; a cited source opened; other matters never used', async ({ browser }) => {
+  test.setTimeout(420_000);
+  const LEGAL = path.resolve(HERE, '../../eval/fixtures/legal/MAT-1042');
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await expect(alice.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
+  // Two fictional witness memos that give different delivery dates, imported into M-101 the usual way.
+  await alice.goto('/m/M-101/documents');
+  for (const file of ['Witness_A_Interview.txt', 'Witness_B_Interview.txt']) {
+    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    const dialog = alice.getByRole('dialog', { name: 'Import a document' });
+    await dialog.getByLabel('File').setInputFiles(path.join(LEGAL, file));
+    await dialog.getByRole('button', { name: /^Import$/ }).click();
+    await expect(dialog).toHaveCount(0);
+  }
+  for (const title of ['Witness_A_Interview', 'Witness_B_Interview']) {
+    await expect(alice.getByRole('row', { name: new RegExp(title) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
+  }
+  // From the matter to the chat, with the matter as its context.
+  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('button', { name: 'Chat about this matter' }).click();
+  await expect(alice).toHaveURL(/\/chat$/);
+  await expect(alice.getByRole('button', { name: /Matter: M-101/ })).toBeVisible();
+  const ask = async (text: string) => {
+    const box = alice.getByRole('textbox', { name: 'Ask EchoMind' });
+    await box.fill(text);
+    await box.press('Enter');
+  };
+  await ask('Find conflicting delivery dates');
+  const card = alice.getByRole('region', { name: /Potential inconsistency/ }).first();
+  await expect(card).toBeVisible({ timeout: 240_000 });
+  await expect(card.locator('mark').first()).toBeVisible();
+  await expect(card.getByText('Potential', { exact: true })).toBeVisible();
+  await shot(alice, '37-legal-chat-inconsistency-light');
+  await card.getByRole('button', { name: 'Explained' }).click();
+  await card.getByRole('textbox').fill('Witness A describes dispatch from the warehouse; Witness B the arrival at the site.');
+  await card.getByRole('button', { name: 'Save' }).click();
+  await expect(card.locator('.qc-status-chip', { hasText: 'Explained' })).toBeVisible();
+  await expect(card.getByRole('list', { name: 'Review history' })).toContainText('Explained by alice');
+  // An answer with a verified source, opened beside the conversation.
+  await ask('When did Witness B say the delivery took place?');
+  const chip = alice.locator('.qc-cite[data-verified="true"]').first();
+  await expect(chip).toBeVisible({ timeout: 180_000 });
+  await chip.click();
+  const panel = alice.getByRole('complementary', { name: 'Source' });
+  await expect(panel.locator('mark').first()).toBeVisible();
+  await expect(panel.getByText(/Witness_B_Interview/).first()).toBeVisible();
+  await shot(alice, '38-legal-chat-source-light');
+  await alice.keyboard.press('Escape');
+  await expect(panel).toHaveCount(0);
+  // Another matter is never brought in, and its existence is not revealed.
+  await ask('Let other case materials inform this');
+  await expect(alice.getByText(/uses only the documents in M-101/)).toBeVisible();
+  await expect(alice.getByText(/M-202|Board investigation/)).toHaveCount(0);
 });

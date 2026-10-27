@@ -168,7 +168,11 @@ def test_the_law_frontend_refuses_the_voice_service_and_otherwise_matches_the_st
     assert "proxy_pass http://voice" not in conf
     blocks = re.findall(r"location /voice/ \{([^}]*)\}", conf)
     assert len(blocks) == 2 and all("return 404;" in b for b in blocks)                 # the HTTP and the HTTPS server
-    strip = lambda t: re.sub(r"\n\s*location /voice/ \{[^}]*\}", "", t)                 # noqa: E731
+    # EchoMind Legal adds a Content-Security-Policy to the Law app only (docs/echomind-legal/08): its comment and two
+    # add_header lines are the one other allowed difference; everything else must stay identical.
+    legal_csp = re.compile(r"\n[ ]*# EchoMind Legal \(docs/echomind-legal/08\)[^\n]*|\n[ ]*add_header (?:Content-Security-Policy|X-Content-Type-Options) [^\n]*")
+    strip = lambda t: legal_csp.sub("", re.sub(r"\n\s*location /voice/ \{[^}]*\}", "", t))     # noqa: E731
     assert strip(conf) == strip((ROOT / "frontend" / "nginx.conf").read_text())           # cannot drift apart
+    assert conf.count("add_header Content-Security-Policy \"default-src 'self'") == 4      # every location serving the app
     assert "COPY frontend/nginx.law.conf /etc/nginx/conf.d/default.conf" in (ROOT / "frontend" / "Dockerfile.law").read_text()
     assert "frontend/nginx.law.conf" in (ROOT / "scripts" / "law" / "build_images.sh").read_text()

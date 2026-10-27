@@ -17,11 +17,11 @@ exist, answers the same 404. Every route writes one audit event; the stream writ
 from __future__ import annotations
 
 import json
-from typing import Any, Literal, Optional
+from typing import Annotated, Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, StringConstraints, ValidationError
 from starlette.concurrency import run_in_threadpool
 
 from ..audit.record import audited, note
@@ -89,7 +89,7 @@ def read_conversation(conversation_id: str, request: Request):
 class TurnIn(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
     client_request_id: Optional[str] = Field(default=None, min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
-    document_ids: list[str] = Field(default_factory=list, max_length=10)
+    document_ids: list[Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_.:-]{1,80}$")]] = Field(default_factory=list, max_length=10)
     focus_discrepancy_id: Optional[str] = Field(default=None, pattern=r"^dsc_[0-9a-f]{32}$")
 
 

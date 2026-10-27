@@ -94,7 +94,7 @@ function MatterPicker() {
       <button ref={button} type="button" className="qc-matter-btn" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}
         aria-label={current ? `Matter: ${current.number} ${current.title}. Switch matter` : 'Choose a matter'}>
         {current && current.sensitivity !== 'standard' && <Lock aria-label="Restricted" />}
-        <span>{current ? `${current.number} · ${current.title}` : 'Choose a matter'}</span>
+        <span>{current ? <>{current.number}<span className="qc-hide-small"> · {current.title}</span></> : 'Choose a matter'}</span>
         <ChevronsUpDown aria-hidden />
       </button>
       {open && (
@@ -136,7 +136,7 @@ function PrivacyStatus() {
   return (
     <>
       <button ref={button} type="button" className="qc-status" aria-expanded={open} onClick={() => setOpen((o) => !o)} aria-label="Private: about where answers come from">
-        <ShieldCheck aria-hidden /><span className="qc-hide-narrow">Private</span>
+        <ShieldCheck aria-hidden /><span className="qc-narrow-sr">Private</span>
       </button>
       {open && (
         <div ref={pop} className="qc-pop" role="dialog" aria-label="Private" style={{ ...style, padding: 14 }}>
@@ -157,7 +157,7 @@ function RecordingStatus() {
       title={capturing ? 'The microphone is in use by EchoMind in this window.' : 'EchoMind is not using the microphone in this window.'}>
       <span className="qc-dot" aria-hidden />
       {capturing ? <Mic aria-hidden /> : <MicOff aria-hidden />}
-      <span>{capturing ? 'Recording' : 'Not recording'}</span>
+      <span className="qc-narrow-sr">{capturing ? 'Recording' : 'Not recording'}</span>
     </span>
   );
 }
@@ -235,7 +235,7 @@ function DraftsLink() {
 function SearchButton() {
   const open = useOpenPalette();
   return (
-    <button type="button" className="qc-icon-btn" onClick={() => open()} aria-label={`Search or jump to (${isMac() ? '⌘K' : 'Ctrl K'})`}>
+    <button type="button" className="qc-icon-btn qc-hide-small" onClick={() => open()} aria-label={`Search or jump to (${isMac() ? '⌘K' : 'Ctrl K'})`}>
       <Search aria-hidden />
     </button>
   );
@@ -251,7 +251,7 @@ function MatterTabs() {
   return (
     <nav className="qc-tabs" aria-label="Matter">
       <button type="button" className="qc-tab" style={{ border: 'none', background: 'none', font: 'inherit', cursor: 'pointer' }}
-        onClick={() => { setMatterId(matter.id); navigate('/chat'); }}><MessageSquare aria-hidden />Ask about this matter</button>
+        onClick={() => { setMatterId(matter.id); navigate('/chat'); }}><MessageSquare aria-hidden />Chat about this matter</button>
       {matterEntries(me, matter).map((e) => (
         <NavLink key={e.key} to={e.to} className={({ isActive }) => `qc-tab${isActive ? ' active' : ''}`}><e.icon aria-hidden />{e.label}</NavLink>
       ))}

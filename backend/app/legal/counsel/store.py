@@ -137,6 +137,7 @@ def history(conversation_id: str, owner_id: str, before_seq: int, limit: int = 4
     with get_conn() as conn:
         rows = conn.execute("SELECT t.question, t.understood, t.component_ids_json FROM legal_conversation_turns t "
                             "WHERE t.conversation_id=? AND t.owner_id=? AND t.seq < ? AND t.status IN ('completed','abstained') "
+                            "AND t.intent = 'ask_fact' "
                             "ORDER BY t.seq DESC LIMIT ?", (conversation_id, owner_id, before_seq, limit)).fetchall()
         out = []
         for q, understood, cj in reversed(rows):

@@ -10,7 +10,6 @@ import { RequireSession, useSessionExpiry } from './session';
 import { MatterLayout } from './matter';
 import CounselShell from '../counsel/CounselShell';
 import ChatPage from '../counsel/ChatPage';
-import DraftsPage from '../counsel/DraftsPage';
 import ActivityPage from '../counsel/ActivityPage';
 import SignIn from '../pages/SignIn';
 import Home from '../pages/Home';
@@ -79,7 +78,7 @@ export const lawRoutes = [
         children: [
           // EchoMind Legal: chat is home; Matters, Drafts and Activity are the other destinations (docs/echomind-legal/04).
           { path: '/chat/:conversationId?', element: <ChatPage /> },
-          { path: '/drafts', element: <DraftsPage /> },
+          { path: '/drafts', element: <Reviews /> },        // Drafts: the existing reviews queue (what waits for you, and yours)
           { path: '/activity', element: <ActivityPage /> },
           { path: '/home', element: <Home /> },
           { path: '/matters', element: <Matters /> },

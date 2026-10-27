@@ -599,3 +599,51 @@ def test_activity_shows_only_the_caller_s_own_events_and_hides_matters_they_left
     after = carol.get("/api/legal/counsel/activity").json()
     assert not any((e.get("matter") or {}).get("number") == "M-101" for e in after["events"])
     assert "MSA renewal" not in json.dumps(after)
+
+
+def test_an_amendment_is_flagged_as_a_possible_supersession_and_ranked_after_real_conflicts(cs):
+    from app.legal.counsel import discrepancies
+    alice = as_user(cs, "alice")
+    amendment = ("AMENDMENT No. 1 (fictional, DEMO / SYNTHETIC)\n\n"
+                 "This Amendment No. 1 is made between Morgan Company LLC and Apex Industries, Inc.\n\n"
+                 "1.1 Clause 4.2 is replaced: Apex Industries, Inc. shall complete delivery by May 20, 2026.")
+    assert upload(alice, cs["mid"], "Amendment No. 1.txt", amendment, status="executed").status_code == 202
+    index_all()
+    _, _, events = _compare(cs)
+    top = component(final(events), "evidence_comparison")["props"]
+    assert "Amendment" not in top["a"]["document_title"] + top["b"]["document_title"]      # a witness conflict ranks first
+    from app.legal.orgs import default_org_id
+    principal = {"sub": cs["users"]["alice"]["id"], "org_id": default_org_id()}
+    rows = discrepancies.listed(principal, cs["mid"])
+    flagged = [r for r in rows if discrepancies.amends(r)]
+    assert flagged and rows.index(flagged[0]) > 0
+    props = discrepancies.render(principal, flagged[0])
+    assert "amendment" in props["caution"].lower() and "replace the earlier term" in props["caution"]
+
+
+def test_an_explanation_made_only_of_source_marks_is_not_shown():
+    from app.legal.counsel.discrepancies import _explanation
+    assert _explanation("[1] [2]") == ""
+    assert _explanation('[1: "May 20, 2026"] [2: "May 15, 2026"].') == ""
+    assert _explanation("Source [1] gives May 12 while source [2] gives May 15.") == "Source [A] gives May 12 while source [B] gives May 15."
+
+
+def test_a_deadline_against_an_event_date_is_said_to_be_possibly_no_contradiction():
+    from app.legal.counsel import discrepancies
+    side = lambda ctx, value: {"context": ctx, "context_start": 100, "value_start": 100 + ctx.index(value),     # noqa: E731
+                               "value_end": 100 + ctx.index(value) + len(value), "value": value, "document_title": "D"}
+    row = {"kind": "date", "detail": {"a": side("Apex shall complete delivery by May 15, 2026.", "May 15, 2026"),
+                                      "b": side("The delivery took place on May 12, 2026.", "May 12, 2026")}}
+    assert discrepancies.duty_vs_event(row) is True
+    both_events = {"kind": "date", "detail": {"a": side("Delivery took place on May 15, 2026.", "May 15, 2026"),
+                                              "b": side("Delivery took place on May 12, 2026.", "May 12, 2026")}}
+    assert discrepancies.duty_vs_event(both_events) is False
+    assert discrepancies.duty_vs_event({**row, "kind": "amount"}) is False
+
+
+def test_a_turn_refuses_malformed_document_ids(cs):
+    alice = as_user(cs, "alice")
+    conv = new_conversation(alice, cs["mid"])
+    r = alice.post(f"/api/legal/counsel/conversations/{conv}/turns", headers=csrf_headers(alice),
+                   json={"text": "What is due?", "document_ids": ["x' OR '1'='1"]})
+    assert r.status_code == 422

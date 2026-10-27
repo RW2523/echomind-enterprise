@@ -27,8 +27,8 @@ What it does **not** have is the blueprint's product shape:
 5. **Opaque citation references.** Citations travel to the browser as full passages with offsets; there is no stable,
    owner-bound citation id that the server re-verifies against the stored version when the source is opened (AC02,
    "tampered IDs fail").
-6. **Deployment hardening.** The Law nginx sends no Content-Security-Policy; egress is recorded and tested but enforced only
-   after the owner runs `sudo scripts/law/egress_lock.sh` (D-033/D-071).
+6. **Deployment hardening.** The Law nginx sent no Content-Security-Policy (added on this branch); egress is recorded and
+   tested but enforced only after the owner runs `sudo scripts/law/egress_lock.sh` (D-033/D-071).
 
 ## 2. Reuse / refactor / new matrix
 
@@ -57,7 +57,7 @@ What it does **not** have is the blueprint's product shape:
 | Audit (FR09) | `audit/record.py`, `audit/chain.py`; every Law route audited (`test_law_audit.py`) | **Reuse** | New routes use `@audited` |
 | Backup + restore (08, AC09) | `app/legal/backup` (AES-256-GCM, manifest), `scripts/law/dr_drill.sh`; `test_law_dr.py` | **Reuse** | — |
 | Offline / WAN deny (FR10, AC08) | `app/legal/egress.py` recorder + `egress_test.sh`; enforcement `egress_lock.sh` needs root | **Reuse; Blocked (owner)** | Run the backend tests with `--network none` |
-| CSP, no remote assets (08) | fonts bundled (`@fontsource`); **no CSP header** in `nginx.law.conf` | **New** | Add a strict CSP |
+| CSP, no remote assets (08) | fonts bundled (`@fontsource`); there was **no CSP header** in `nginx.law.conf` | **New — done** | `default-src 'self'` policy on every app location; `nginx -t` passes |
 | Bounded job queue (05, 08) | `jobs/worker.py` (one thread, restart-safe), `LEGAL_CONFLICT_CONCURRENCY` | **Reuse** | — |
 | Timeline / chronology (P1) | obligations (dates from documents, lawyer-confirmed) | Later | — |
 | GraphRAG, Council, MCP (P2) | Review panel (`panel/`, four perspectives, off by default) | Later | Not in this slice |

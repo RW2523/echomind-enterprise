@@ -91,4 +91,4 @@ chat bubbles. Typed API client (`law/api/client.ts`, NDJSON streaming helper), s
 |---|---|---|
 | Frontend type-check | `cd frontend && npx tsc --noEmit -p .` | clean |
 | Frontend unit | `cd frontend && npx vitest run` | **184 passed** (37 files) |
-| Backend (all) | pinned image, `--network none`: `python -m pytest tests -q` | see IMPLEMENTATION_STATUS.md §Baseline |
+| Backend (all) | pinned image, `--network none`: `python -m pytest tests -q` | **1402 passed, 3 skipped, 1 failed** (LibreOffice is not in the image; CI installs it) |

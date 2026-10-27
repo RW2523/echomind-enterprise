@@ -39,6 +39,34 @@ _CAUTION = {
     "period": "The periods may apply to different obligations. Read both passages before resolving.",
 }
 _DEFAULT_CAUTION = "The documents may describe different things. Read both passages before resolving."
+_AMENDING = ("amendment", "addendum", "side letter", "variation", "novation")
+_AMENDS_CAUTION = ("One of these documents is an amendment or side letter. A later signed amendment may replace the earlier "
+                   "term rather than contradict it: check which one is in force and from when.")
+_MARKERS = re.compile(r"\[[AB12](?::[^\]]*)?\]")
+
+
+_DEADLINE_BEFORE = re.compile(r"\b(?:by|no\s+later\s+than|on\s+or\s+before|before|not\s+later\s+than|until|due)\s*(?:the\s+)?$", re.I)
+_DUTY_EVENT_CAUTION = ("One passage sets a deadline; the other says when something happened. They may not contradict each "
+                       "other: check whether the event met the deadline.")
+
+
+def _sets_deadline(side: dict) -> bool:
+    ctx = side.get("context") or ""
+    at = (side.get("value_start") or 0) - (side.get("context_start") or 0)
+    return bool(ctx) and 0 <= at <= len(ctx) and bool(_DEADLINE_BEFORE.search(ctx[max(0, at - 30):at]))
+
+
+def duty_vs_event(row: dict) -> bool:
+    """A date or period that one passage sets as a deadline ("by May 15") and the other reports as an event."""
+    if row["kind"] not in ("date", "period"):
+        return False
+    return _sets_deadline(row["detail"]["a"]) != _sets_deadline(row["detail"]["b"])
+
+
+def amends(row: dict) -> bool:
+    """One side is (by its title) an amendment-type document: the difference may be a supersession, not a conflict."""
+    titles = (row["detail"]["a"].get("document_title") or "", row["detail"]["b"].get("document_title") or "")
+    return any(w in t.lower() for t in titles for w in _AMENDING)
 
 
 class NotFound(Exception):
@@ -157,7 +185,8 @@ def listed(principal: dict, matter_id: str, statuses=OPEN, query: str = "") -> l
     def overlap(r: dict) -> int:
         text = (r["detail"]["a"].get("context") or "") + " " + (r["detail"]["b"].get("context") or "")
         return len(words & set(_WORD.findall(text.lower())))
-    rows.sort(key=lambda r: (_STATUS_RANK.get(r["status"], 9), r["verdict"] != "conflict", -overlap(r), -r["score"], r["created_at"]))
+    rows.sort(key=lambda r: (_STATUS_RANK.get(r["status"], 9), r["verdict"] != "conflict", amends(r), duty_vs_event(r), -overlap(r),
+                             -r["score"], r["created_at"]))
     return rows
 
 
@@ -200,7 +229,10 @@ def _side(conn, number: str, s: dict) -> dict:
 
 
 def _explanation(text: str) -> str:
-    return re.sub(r"\[([12])\]", lambda m: "[A]" if m.group(1) == "1" else "[B]", text or "")
+    """The model's explanation with its source marks as A and B, or nothing when it says nothing beyond the marks."""
+    shown = re.sub(r"\[([12])\]", lambda m: "[A]" if m.group(1) == "1" else "[B]", text or "")
+    words = re.findall(r"[A-Za-z]{2,}", _MARKERS.sub(" ", shown))
+    return shown if len(words) >= 4 else ""
 
 
 def render(principal: dict, row: dict) -> dict:
@@ -210,7 +242,9 @@ def render(principal: dict, row: dict) -> dict:
         a, b = _side(conn, number, row["detail"]["a"]), _side(conn, number, row["detail"]["b"])
     return {"discrepancy_id": row["id"], "kind": row["kind"], "title": title(row), "status": row["status"], "a": a, "b": b,
             "explanation": _explanation(row["detail"].get("explanation") or "")[:1500],
-            "caution": _CAUTION.get(row["kind"], _DEFAULT_CAUTION), "method": row["method"], "history": history(row["id"])[-20:],
+            "caution": (_AMENDS_CAUTION if amends(row) else _DUTY_EVENT_CAUTION if duty_vs_event(row)
+                        else _CAUTION.get(row["kind"], _DEFAULT_CAUTION)), "method": row["method"],
+            "history": history(row["id"])[-20:],
             "can_review": policy.authorize(principal, "findings.review", row["matter_id"]).allowed}
 
 

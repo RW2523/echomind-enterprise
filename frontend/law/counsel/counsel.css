@@ -33,6 +33,10 @@
 [data-edition="law"][data-shell="counsel"] body { font-size: 15px; line-height: 1.5; }
 [data-edition="law"][data-shell="counsel"] .lw-glass { -webkit-backdrop-filter: none; backdrop-filter: none; }
 [data-edition="law"][data-shell="counsel"] .lw-glass::before { display: none; }
+/* No decorative light: the Law edition's aurora behind the page and the pointer-following glow on cards are off here. */
+[data-edition="law"][data-shell="counsel"] body::before,
+[data-edition="law"][data-shell="counsel"] .lw-glass::after,
+[data-edition="law"][data-shell="counsel"] .lw-paper::after { display: none; }
 
 /* ── Shell ───────────────────────────────────────────────────────────────────── */
 .qc-shell { display: grid; grid-template-columns: var(--qc-rail) minmax(0, 1fr); grid-template-rows: var(--qc-header) minmax(0, 1fr);
@@ -94,6 +98,14 @@
   .qc-scrim { position: fixed; inset: var(--qc-header) 0 0 0; background: rgba(15, 23, 36, .28); z-index: 4; border: none; }
 }
 @media (min-width: 861px) { .qc-only-narrow { display: none !important; } }
+/* Narrow header: the matter by number, the states by icon (their words stay for screen readers), no search button. */
+@media (max-width: 560px) {
+  .qc-header { gap: 6px; padding: 0 8px; }
+  .qc-matter-btn { max-width: 40vw; padding: 0 8px; }
+  .qc-status { padding: 0 8px; }
+  .qc-narrow-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .qc-hide-small { display: none !important; }
+}
 @media (prefers-reduced-motion: reduce) { .qc-shell * { transition: none !important; animation: none !important; } }
 
 /* ── Chat ────────────────────────────────────────────────────────────────────── */
@@ -115,7 +127,8 @@
 .qc-progress-bar span { display: block; height: 100%; background: var(--ink-3); }
 .qc-composer-wrap { position: sticky; bottom: 0; padding: 12px 0 18px; background: linear-gradient(to bottom, transparent, var(--paper-2) 24%); }
 .qc-composer { display: flex; align-items: flex-end; gap: 8px; border: 1px solid var(--rule); background: var(--paper); border-radius: 16px; padding: 8px 8px 8px 14px; }
-.qc-composer:focus-within { border-color: var(--neutral-line); }
+.qc-composer:focus-within { border-color: var(--ink-3); box-shadow: 0 0 0 3px var(--accent-soft); }
+[data-edition="law"] .qc-composer textarea:focus-visible { outline: none; }   /* the whole composer shows the focus */
 .qc-composer textarea { flex: 1; border: none; outline: none; resize: none; background: transparent; color: var(--ink); font: inherit; line-height: 1.5;
   max-height: 200px; padding: 6px 0; min-height: 24px; }
 .qc-send { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; border: none; background: var(--accent);
