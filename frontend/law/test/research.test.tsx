@@ -185,3 +185,42 @@ describe('Research', () => {
     expect(within(answer).getByRole('button', { name: 'Source 2' })).toBeTruthy();
   });
 });
+
+describe('Research: amended clauses (EchoMind Legal)', () => {
+  afterEach(() => cleanup());
+
+  const AMEND = {
+    document_id: 'd1', document_title: 'Services Agreement', version_id: 'v1', clause: '4.2', n: 1, how: 'deleted and replaced',
+    cited: true, amendment_cited: false,
+    by: { document_id: 'd2', document_title: 'Amendment No. 1', version_id: 'v9', version_number: 1, clause: '1.1', signed: true, n: 2,
+          char_start: 120, char_end: 260, effective: { kind: 'signed', date: '2026-05-14', words: 'Both parties signed it on May 14, 2026.' } },
+  };
+
+  it('says which clause a signed amendment replaced, quotes when it applies, warns when the answer used the old wording, and opens it', async () => {
+    world([
+      { type: 'sources', citations: SRC },
+      { type: 'chunk', text: 'Delivery was due by May 15, 2026 [1].' },
+      { type: 'done', answer: 'Delivery was due by May 15, 2026 [1].', citations: [SRC[0]], abstained: false, uncited: false, turn_id: 't1',
+        status: 'partial', amendments: [AMEND] },
+    ]);
+    renderLaw('/m/M-101/research');
+    await askIt('When must delivery be complete?');
+    const alert = (await screen.findAllByRole('alert')).find((a) => /Amendment No\. 1/.test(a.textContent ?? ''))!;
+    expect(alert.textContent).toContain('Clause 4.2 of Services Agreement was deleted and replaced by Amendment No. 1, clause 1.1 (signed)');
+    expect(alert.textContent).toContain('It says: “Both parties signed it on May 14, 2026.”');
+    expect(alert.textContent).toContain('relies on the earlier wording');
+    expect(within(alert).getByRole('link', { name: 'Open the amendment' }).getAttribute('href')).toBe('/m/M-101/documents/d2/read?v=v9&at=120-260');
+  });
+
+  it('an unsigned amendment is said to be unsigned; history shows it too', async () => {
+    const unsigned = { ...AMEND, by: { ...AMEND.by, signed: false, effective: null } };
+    world([], [{ id: 't1', question: 'When must delivery be complete?', answer: 'Delivery was due by May 15, 2026 [1].', citations: [SRC[0]],
+                 status: 'answered', created_at: '2026-10-26T10:00:00Z', unsupported: [], evidence: [], conflicts: [], versions: 'signed',
+                 abstention_reason: null, amendments: [unsigned] }]);
+    renderLaw('/m/M-101/research');
+    fireEvent.click(await screen.findByRole('button', { name: /When must delivery be complete\?/ }));
+    const alert = (await screen.findAllByRole('alert')).find((a) => /Amendment No\. 1/.test(a.textContent ?? ''))!;
+    expect(alert.textContent).toContain('would be deleted and replaced by Amendment No. 1, which is not signed');
+    expect(alert.textContent).not.toContain('relies on the earlier wording');
+  });
+});

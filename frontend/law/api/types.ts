@@ -112,6 +112,7 @@ export interface ResearchTurn {
   /** Sentences of the answer that cite no source, exactly as they appear in it. */
   unsupported?: string[];
   evidence?: ResearchEvidence[]; conflicts?: ResearchConflict[]; versions?: VersionPolicy | null; abstention_reason?: string | null;
+  amendments?: ResearchAmendment[];
 }
 /** S2.2: answers come from signed versions (default) or the latest drafts. */
 export type VersionPolicy = 'signed' | 'current';
@@ -123,6 +124,12 @@ export interface ResearchEvidence {
   removed?: boolean;
   /** D-073: the answer quoted this word for word without a reference; the system found where and cited it. */
   matched?: boolean;
+}
+/** A cited clause another document of the matter replaced or changed (EchoMind Legal), found in the documents' own words. */
+export interface ResearchAmendment {
+  document_id: string; document_title: string; version_id: string; clause: string; n: number; how: string; cited: boolean; amendment_cited: boolean;
+  by: { document_id: string; document_title: string; version_id: string; version_number?: number; clause?: string | null; signed: boolean; n: number;
+        char_start?: number | null; char_end?: number | null; effective?: { kind: string; date?: string | null; words: string } | null };
 }
 export interface ResearchConflict {
   document_id: string; document_title: string; clause: string;

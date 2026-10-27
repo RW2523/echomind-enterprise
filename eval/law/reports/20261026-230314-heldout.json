@@ -1,0 +1,68 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "73e5db5+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261026-230314",
+  "limit": null,
+  "only": "h-amend-storage-from"
+ },
+ "summary": {
+  "items": 1,
+  "answer_accuracy": "1/1",
+  "abstention_accuracy": "0/0",
+  "false_abstentions": 0,
+  "t06_leaks": 0,
+  "citation_precision": 1.0,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "partial": 1
+  },
+  "latency_total_p50_s": 3.99,
+  "latency_total_p95_s": 3.99,
+  "latency_first_paragraph_p50_s": 3.99,
+  "latency_first_paragraph_p95_s": 3.99
+ },
+ "items": [
+  {
+   "id": "h-amend-storage-from",
+   "tags": [
+    "AMEND"
+   ],
+   "question": "From when does the new monthly storage fee for Kestrel apply?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The new monthly storage fee for Kestrel applies from 1 June 2026. This is stated in the Amendment No. 1 to the Kestrel storage agreement, which specifies that the amendment takes effect on that date [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Amendment takes effect on 1 June 2026",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.99,
+   "total_s": 3.99
+  }
+ ]
+}

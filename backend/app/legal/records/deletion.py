@@ -67,6 +67,11 @@ def _evidence_turns(conn, matter_id: str, document_id: str) -> list[tuple[str, l
     return [(r[0], json.loads(r[1] or "[]"), json.loads(r[2] or "[]")) for r in rows]
 
 
+def _amendment_turns(conn, matter_id: str, document_id: str) -> list[tuple[str, str]]:
+    return conn.execute("SELECT id, amendments_json FROM legal_research_turns WHERE matter_id=? AND amendments_json LIKE ?",
+                        (matter_id, f"%{document_id}%")).fetchall()
+
+
 def _citing_turns(conn, matter_id: str, document_id: str) -> list[tuple[str, list]]:
     out = []
     for tid, cj in conn.execute("SELECT id, citations_json FROM legal_research_turns WHERE matter_id=? AND citations_json LIKE ?",
@@ -337,6 +342,9 @@ def _purge_document(conn, d: dict) -> dict:
     for tid, cites in _citing_turns(conn, d["matter_id"], doc):
         cleaned = [({**c, "text": "", "document_title": "", "removed": True} if c.get("document_id") == doc else c) for c in cites]
         conn.execute("UPDATE legal_research_turns SET citations_json=? WHERE id=?", (json.dumps(cleaned), tid))
+    for tid, aj in _amendment_turns(conn, d["matter_id"], doc):            # EchoMind Legal: amendment links naming it go
+        kept = [a for a in json.loads(aj or "[]") if doc not in (a.get("document_id"), (a.get("by") or {}).get("document_id"))]
+        conn.execute("UPDATE legal_research_turns SET amendments_json=? WHERE id=?", (json.dumps(kept), tid))
     for tid, ej, cj in _evidence_turns(conn, d["matter_id"], doc):          # S2.2: saved evidence and conflicts too
         ev = [({**e, "quote": "", "document_title": "", "removed": True} if e.get("document_id") == doc else e) for e in ej]
         conn.execute("UPDATE legal_research_turns SET evidence_json=?, conflicts_json=? WHERE id=?",
@@ -446,6 +454,8 @@ def verify(d: dict, gone: dict) -> dict:
                                     "(SELECT 1 FROM json_each(a.document_ids_json) j WHERE j.value=?)", (d["matter_id"], doc)).fetchone()[0]
             from ..counsel import purge as counsel_purge
             db_rows += counsel_purge.remaining(conn, d["matter_id"], doc)
+            db_rows += sum(1 for _, aj in _amendment_turns(conn, d["matter_id"], doc) for a in json.loads(aj or "[]")
+                           if doc in (a.get("document_id"), (a.get("by") or {}).get("document_id")))
             idx = registry.for_matter(d["matter_id"])
             checks = {"database": db_rows == 0,
                       "index": not (set(idx.chunk_ids) & set(gone.get("chunks", []))),

@@ -71,8 +71,17 @@ Seconds are request-to-last-event, single user, measured once: not a benchmark.
 1. *Wrong inference with a real quote.* "Which contractual deadline applied?" was answered "the amendment did not change the
    delivery deadline", citing the amendment's clause 2.1 ("all other terms remain in force"). The quote is verified; the
    conclusion is wrong, because retrieval did not bring clause 1.1 of the amendment, which moves delivery to May 20. A verified
-   quote proves the words exist, not the inference. Next: amendment/supersession awareness in retrieval (blueprint 06
-   temporal model) and an evaluation item for it.
+   quote proves the words exist, not the inference. **Fixed (amendment-aware answers):** `app/legal/research/amendments.py`
+   finds, in the documents' own words, a readable document of the same matter that replaces or changes a cited clause
+   ("Clause 4.2 of the Services Agreement is deleted and replaced …"), adds that clause and the clause saying when it applies to
+   the sources, marks it for the model (`amends="… clause 4.2" amendment="signed"`, prompt rule 7, prompt version
+   `research-s2.3`), and returns `amendments` with the answer (signed or not, its own words on when it applies, whether the
+   answer cited it). An answer relying on wording a **signed** amendment replaced, without citing the amendment, is `partial`
+   and the chat and research page say so and offer the amending clause. Stored with research history (migration 0037) and
+   removed by a purge. Evidence: `test_law_amendments.py` (9, incl. the live failure replayed with a scripted model, unreadable
+   and other-matter amendments never used, unsigned amendments said to be unsigned), research page Vitest (2), and the real
+   model on new evaluation items: golden `g-amend-storage-fee`, `g-amend-storage-unchanged` **2/2**, held-out
+   `h-amend-storage-from` **1/1** (eval/law/reports/20261026-230253-golden.md, 20261026-230314-heldout.md).
 2. *The conflict check over-proposes.* A contract's deadline ("by May 15") against a witness's event date ("took place on
    May 12") was proposed as a potential inconsistency. **Mitigated:** such a pair is now recognised (`duty_vs_event`), ranked
    after real conflicts and shown with "they may not contradict each other: check whether the event met the deadline"; it
@@ -89,6 +98,9 @@ Seconds are request-to-last-event, single user, measured once: not a benchmark.
 | C3 | Frontend with the chat tests | **202 passed** (38 files); `tsc` main and strict clean |
 | C4 | `test_law_counsel.py` final | **48 passed** |
 | C5 | Live API journey + live browser journey (Playwright, real model) | all steps passed; no console errors, no remote requests, no horizontal overflow at 390 px, focus returns after Esc |
+| C7 | Backend, all, with amendment-aware answers (final code) | **1477 passed, 3 skipped, 1 failed** (LibreOffice absent, as at baseline) |
+| C8 | Frontend after amendment-aware answers | **204 passed**; `tsc` main and strict clean |
+| EV1 | Research evaluation, new amendment items, real model (`run_law_eval.py --only …`) | golden **2/2**, held-out **1/1**; 0 leaks; quote verification 1.0 |
 | C6 | Backend, all (`--network none`) after the chat work | **1467 passed, 3 skipped, 2 failed**: LibreOffice absent (environment, as at baseline) and the nginx drift test (the new CSP lines; test updated to allow exactly them, then its module + the chat suite **59 passed**) |
 | E1 | Browser E2E, full (36 journeys + the new chat journey), real model | 28 passed, 9 failed: all from the shell change (old sidebar links, sign-out, the queue link, an "Ask" name clash) — fixed |
 | E2 | Browser E2E, full | 30 passed, 7 failed: 6 refused at sign-in by the per-address throttle (the test helper reused single-use codes in a faster run) — helper fixed; 1 `versions` |
@@ -106,8 +118,8 @@ Demo sign-in is for this local, fictional setup only; it is off by default and m
 
 ## Next, in order
 
-1. **Amendment-aware answers** (live finding 1): when a retrieved clause is replaced by a signed amendment, bring the amending
-   clause into the evidence and say which wording is in force from when (blueprint 06 temporal model). Add golden items for it.
+1. ~~Amendment-aware answers~~ — done (finding 1 above). Still open: research notes sent for review do not yet carry the
+   amendment links; amendments that change a clause without naming its number are not detected.
 2. **Chronology card** (LEGAL-011): dated events with their sources and uncertain dates, built from obligations and the
    conflict scan's dated facts; an "explained" discrepancy (dispatch vs arrival) becomes two events.
 3. **Draft from the conversation** (LEGAL-013 in chat): the `draft` intent opens a right-hand editor over the existing drafting

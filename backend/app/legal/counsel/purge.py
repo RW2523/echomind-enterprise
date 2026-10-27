@@ -3,7 +3,8 @@
 Called inside the purge's own transaction, so either everything goes or nothing does:
 - citations pointing into the document are deleted (they hold offsets and a hash, never words);
 - potential inconsistencies quoting it go with their review history (a scan can find them again);
-- answers keep their wording, but citation chips naming the document lose its title and are marked removed;
+- answers keep their wording, but citation chips naming the document lose its title and are marked removed, and their notes
+  (which name the documents a conflict or an amendment is about) are dropped;
 - a briefing that named the document is replaced by "no longer available";
 - evidence comparisons need nothing: they are resolved from their discrepancy, which is gone.
 """
@@ -26,6 +27,7 @@ def document(conn, matter_id: str, document_id: str) -> None:
         if type_ == "source_answer":
             props["citations"] = [({**c, "document_title": "", "removed": True, "clause": None, "page": None}
                                    if c.get("document_id") == document_id else c) for c in props.get("citations", [])]
+            props["notes"] = []                    # notes name the documents they are about (conflicts, amendments)
             conn.execute("UPDATE legal_counsel_components SET props_json=? WHERE id=?", (json.dumps(props, ensure_ascii=False), cid))
         elif type_ == "priority_list":
             conn.execute("UPDATE legal_counsel_components SET type='unavailable', props_json=? WHERE id=?",
@@ -42,6 +44,7 @@ def remaining(conn, matter_id: str, document_id: str) -> int:
         props = json.loads(pj)
         if type_ == "source_answer":
             n += sum(1 for c in props.get("citations", []) if c.get("document_id") == document_id and c.get("document_title"))
+            n += 1 if props.get("notes") else 0
         elif type_ == "priority_list":
             n += 1
     return n

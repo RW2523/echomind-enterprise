@@ -1,0 +1,115 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "73e5db5+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261026-230253",
+  "limit": null,
+  "only": "g-amend-storage-fee,g-amend-storage-unchanged"
+ },
+ "summary": {
+  "items": 2,
+  "answer_accuracy": "2/2",
+  "abstention_accuracy": "0/0",
+  "false_abstentions": 0,
+  "t06_leaks": 0,
+  "citation_precision": 0.75,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "1/1",
+  "statuses": {
+   "partial": 2
+  },
+  "latency_total_p50_s": 2.71,
+  "latency_total_p95_s": 5.46,
+  "latency_first_paragraph_p50_s": 2.71,
+  "latency_first_paragraph_p95_s": 5.46
+ },
+ "items": [
+  {
+   "id": "g-amend-storage-fee",
+   "tags": [
+    "AMEND"
+   ],
+   "question": "What is the monthly storage fee under the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The monthly storage fee under the Kestrel storage agreement is EUR 4,000, as stated in the original agreement [1]. However, this amount was amended by Amendment No. 1 to the agreement, which changed the fee to EUR 4,600 [2]. The amendment took effect on 1 June 2026.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Client shall pay a monthly storage fee of EUR 4,000, invoiced on the first business day of each month.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 7
+    },
+    {
+     "n": 2,
+     "quote": "Client shall pay a monthly storage fee of EUR 4,600, invoiced on the first business day of each month.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": true,
+   "first_paragraph_s": 5.46,
+   "total_s": 5.46
+  },
+  {
+   "id": "g-amend-storage-unchanged",
+   "tags": [
+    "AMEND"
+   ],
+   "question": "How much notice is needed to terminate the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel storage agreement can be terminated with sixty (60) days' written notice, according to Clause 5.2 of the Kestrel Storage Services Agreement [1].\n\nThere is no mention of a different notice period for termination in the other sources provided.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Either party may terminate this Agreement on sixty (60) days' written notice.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5.2",
+     "page_start": null,
+     "line": 10
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.71,
+   "total_s": 2.71
+  }
+ ]
+}

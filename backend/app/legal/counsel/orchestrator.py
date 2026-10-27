@@ -97,6 +97,29 @@ def _matter(matter_id: str) -> dict:
     return {"id": r[0], "number": r[1], "title": r[2]}
 
 
+def _amendment_notes(changed: list[dict], matter_number: str) -> tuple[list[str], list[dict]]:
+    """What a signed (or unsigned) amendment changes in a clause the answer relies on, in the documents' own words, and a way to
+    open the amending clause. Deterministic: research found the link in the documents, not the model."""
+    notes, actions = [], []
+    for a in changed[:2]:
+        by = a["by"]
+        eff = by.get("effective") or {}
+        when = f' It says: “{eff["words"]}”' if eff.get("words") else " It does not say from when it applies."
+        if by.get("signed"):
+            text = (f"Clause {a['clause']} of {a['document_title']} was {a['how']} by clause {by.get('clause') or '?'} of "
+                    f"{by['document_title']} (signed).{when}")
+            if a["cited"] and not a["amendment_cited"]:
+                text += " This answer relies on the earlier wording: read the amendment before relying on it."
+        else:
+            text = (f"Clause {a['clause']} of {a['document_title']} would be {a['how']} by {by['document_title']}, "
+                    f"which is not signed, so the earlier wording still applies.")
+        notes.append(text[:400])
+        if not actions and by.get("char_start") is not None:
+            actions.append({"id": "open_amendment", "label": "Open the amendment", "action_type": "open_page",
+                            "path": citations.reader_path(matter_number, by["document_id"], by["version_id"], by["char_start"], by["char_end"])})
+    return notes, actions
+
+
 def _notes(cites: list[dict], conflicts: list[dict]) -> list[str]:
     notes = []
     for c in conflicts[:2]:
@@ -143,13 +166,16 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
         if c["verified"]:
             yield event("citation.verified", {"citation_id": c["id"], "n": c["n"], "document_id": c["document_id"], "page": c.get("page")})
     state = done.get("status") if done.get("status") in ("answered", "partial", "unverified", "abstained") else "unverified"
+    changed = done.get("amendments") or []
+    amend_notes, amend_actions = await run_in_threadpool(_amendment_notes, changed, (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
     props = {"answer": done.get("answer") or "", "state": state,
              "citations": [{k: v for k, v in c.items() if k != "instructions"} for c in cites],
              "unsupported": [s[:500] for s in (done.get("unsupported") or [])][:10],
-             "notes": _notes(cites, done.get("conflicts") or [])}
+             "notes": (amend_notes + _notes(cites, done.get("conflicts") or []))[:3]}
     if built.understood:
         props["understood"] = built.understood[:400]
-    built.add("source_answer", props, [c["document_id"] for c in cites])
+    built.add("source_answer", props, [c["document_id"] for c in cites] + [a["by"]["document_id"] for a in changed])
+    built.actions = amend_actions
     if state == "abstained":
         built.status = "abstained"
         built.summary = "No source found in this matter's documents."

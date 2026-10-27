@@ -4,7 +4,7 @@ import { Copy, Send } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError, postStream } from '../api/client';
 import { keys, useResearchHistory } from '../api/queries';
-import type { ResearchConflict, ResearchEvidence, ResearchParagraph, ResearchSource, ResearchTurn, VersionPolicy } from '../api/types';
+import type { ResearchAmendment, ResearchConflict, ResearchEvidence, ResearchParagraph, ResearchSource, ResearchTurn, VersionPolicy } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { Starters } from '../ui/starters';
@@ -14,6 +14,7 @@ type Phase = 'idle' | 'reading' | 'writing' | 'done' | 'abstained' | 'revoked' |
 export interface Answer {
   question: string; text: string; sources: ResearchSource[]; cited: number[]; phase: Phase; uncited?: boolean; unsupported?: string[];
   failed?: string[]; paragraphs?: ResearchParagraph[]; evidence?: ResearchEvidence[]; conflicts?: ResearchConflict[];
+  amendments?: ResearchAmendment[];
   status?: string | null; reason?: string | null; turnId?: string;
   asked?: string;                                        // S5.1b: the follow-up as asked, when it was made to stand alone
 }
@@ -54,7 +55,7 @@ export async function streamAnswer(matterId: string, body: Record<string, unknow
     else if (ev.type === 'done') update({ text: ev.answer ?? state.text, cited: (ev.citations ?? []).map((c: ResearchSource) => c.n),
       phase: ev.abstained ? 'abstained' : 'done', uncited: !!ev.uncited, unsupported: ev.unsupported ?? [], failed: ev.failed ?? [],
       evidence: ev.evidence ?? undefined, conflicts: ev.conflicts ?? [], status: ev.status ?? null, reason: ev.abstention_reason ?? null,
-      turnId: ev.turn_id ?? undefined });
+      turnId: ev.turn_id ?? undefined, amendments: ev.amendments ?? [] });
     else if (ev.type === 'scope_revoked') update({ text: '', sources: [], paragraphs: [], phase: 'revoked' });
     else if (ev.type === 'error') update({ phase: 'error' });
   }, signal);
@@ -102,6 +103,7 @@ export default function MatterResearch() {
     const done = ['answered', 'partial', 'unverified'].includes(t.status);
     setAnswer({ question: t.question, text: t.answer ?? '', sources: t.citations, cited: t.citations.map((c) => c.n), unsupported: t.unsupported ?? [],
       evidence: t.evidence?.length ? t.evidence : undefined, conflicts: t.conflicts ?? [], status: t.status, reason: t.abstention_reason, turnId: t.id,
+      amendments: t.amendments ?? [],
       phase: done ? 'done' : t.status === 'abstained' ? 'abstained' : t.status === 'scope_revoked' ? 'revoked' : 'error' });
   };
 
@@ -206,6 +208,18 @@ export function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | 
             : `${a.unsupported!.length} sentences cite no source — shown dimmed. Check them before relying on them.`}</StatusPill>
         )}
       </div>
+      {a.phase === 'done' && (a.amendments ?? []).map((m) => (
+        <div key={`${m.version_id}-${m.clause}-${m.by.version_id}`} role="alert" className="lw-conflict">
+          <b>{m.by.signed
+            ? `Clause ${m.clause} of ${m.document_title} was ${m.how} by ${m.by.document_title}${m.by.clause ? `, clause ${m.by.clause}` : ''} (signed)`
+            : `Clause ${m.clause} of ${m.document_title} would be ${m.how} by ${m.by.document_title}, which is not signed`}</b>
+          {m.by.effective?.words && <span className="lw-meta">It says: “{m.by.effective.words}”</span>}
+          {m.by.signed && m.cited && !m.amendment_cited && <span className="lw-meta">This answer relies on the earlier wording. Read the amendment before relying on it.</span>}
+          {m.by.char_start != null && m.by.char_end != null && (
+            <Link className="lw-linklike lw-meta" to={`/m/${matter.number}/documents/${encodeURIComponent(m.by.document_id)}/read?v=${encodeURIComponent(m.by.version_id)}&at=${m.by.char_start}-${m.by.char_end}`}>Open the amendment</Link>
+          )}
+        </div>
+      ))}
       {a.phase === 'done' && (a.conflicts ?? []).map((c) => (
         <div key={`${c.document_id}-${c.clause}-${c.other.id}`} role="alert" className="lw-conflict">
           <b>Clause {c.clause} reads differently in version {c.other.number} ({(STATUS[c.other.status ?? ''] ?? c.other.status ?? 'unknown').toLowerCase()})</b>

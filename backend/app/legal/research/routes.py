@@ -32,7 +32,7 @@ from ..matters.routes import principal_of, require, require_law_edition
 from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import llm as llm_mod
-from . import evidence, followup, prompt
+from . import amendments, evidence, followup, prompt
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition)])
@@ -61,18 +61,20 @@ def _source(n: int, p: dict) -> dict:
             "char_start": c["char_start"], "char_end": c["char_end"], "text": p["text"],
             "clause": c.get("clause"), "line": c.get("line"), "focus_start": c.get("focus_start"), "focus_end": c.get("focus_end"),
             "version_status": c.get("version_status"), "signed": c.get("signed"),
-            "instructions": prompt.addressed_to_ai(p["text"])}       # withheld from the model's copy (T08)
+            "instructions": prompt.addressed_to_ai(p["text"]),       # withheld from the model's copy (T08)
+            **({"amends": p["amends"]} if p.get("amends") else {})}
 
 
 def _save(turn: dict) -> None:
     with get_conn() as conn:
         conn.execute("INSERT INTO legal_research_turns (id, org_id, matter_id, owner_id, question, answer, citations_json, status, "
-                     "auth, created_at, finished_at, evidence_json, conflicts_json, versions, abstention_reason) "
-                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                     "auth, created_at, finished_at, evidence_json, conflicts_json, versions, abstention_reason, amendments_json) "
+                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                      (turn["id"], turn["org_id"], turn["matter_id"], turn["owner_id"], turn["question"], turn["answer"],
                       json.dumps(turn["citations"], ensure_ascii=False), turn["status"], turn["auth"], turn["created_at"],
                       policy.now_iso(), json.dumps(turn.get("evidence") or [], ensure_ascii=False),
-                      json.dumps(turn.get("conflicts") or [], ensure_ascii=False), turn.get("versions"), turn.get("abstention_reason")))
+                      json.dumps(turn.get("conflicts") or [], ensure_ascii=False), turn.get("versions"), turn.get("abstention_reason"),
+                      json.dumps(turn.get("amendments") or [], ensure_ascii=False)))
         conn.commit()
 
 
@@ -131,6 +133,53 @@ def _evidence(claims: list, sources: list[dict]) -> list[dict]:
     return items
 
 
+def _amended(passages: list[dict], links: list[dict]) -> list[dict]:
+    """Add each amending passage (at most amendments.MAX_ADDED) to the sources, marked with what it changes; returns the links
+    with the source index of the amending passage."""
+    out, added = [], 0
+    for link in links:
+        p, target = link["passage"], passages[link["index"]]["citation"]
+        at = next((i for i, q in enumerate(passages) if q["citation"]["version_id"] == p["citation"]["version_id"]
+                   and q["citation"].get("char_start") is not None and q["citation"]["char_start"] < p["citation"]["char_end"]
+                   and p["citation"]["char_start"] < q["citation"]["char_end"]), None)
+        if at is None:
+            if added >= amendments.MAX_ADDED:
+                continue
+            passages.append(p)
+            at, added = len(passages) - 1, added + 1
+        passages[at]["amends"] = {"document_title": target["document_title"], "clause": link["clause"], "how": link["how"],
+                                  "signed": link["signed"], "effective": (link["effective"] or {}).get("words")}
+        w = link.get("when")                       # the amendment's own words on when it applies, citable too
+        if w and added < amendments.MAX_ADDED and not any(
+                q["citation"]["version_id"] == w["citation"]["version_id"] and q["citation"].get("char_start") is not None
+                and q["citation"]["char_start"] < w["citation"]["char_end"] and w["citation"]["char_start"] < q["citation"]["char_end"]
+                for q in passages):
+            passages.append(w)
+            added += 1
+        out.append({**link, "by_index": at})
+    return out
+
+
+def _changed(links: list[dict], sources: list[dict], cited: list[int]) -> list[dict]:
+    """What the answer should know: each cited clause a document replaces or changes (or each amendment it cites), whether
+    the amendment is signed, when it says it applies, and whether the answer cites both."""
+    out, seen = [], set()
+    for link in links:
+        t, a = sources[link["index"]], sources[link["by_index"]]
+        tn, an = link["index"] + 1, link["by_index"] + 1
+        if (tn, an) in seen or (tn not in cited and an not in cited):
+            continue
+        seen.add((tn, an))
+        eff = link["effective"]
+        out.append({"document_id": t["document_id"], "document_title": t["document_title"], "version_id": t["version_id"],
+                    "clause": link["clause"], "n": tn, "how": link["how"], "cited": tn in cited, "amendment_cited": an in cited,
+                    "by": {"document_id": a["document_id"], "document_title": a["document_title"], "version_id": a["version_id"],
+                           "version_number": a["version_number"], "clause": a.get("clause"), "signed": link["signed"], "n": an,
+                           "char_start": a["char_start"], "char_end": a["char_end"],
+                           "effective": ({k: eff[k] for k in ("kind", "date", "words")} if eff else None)}})
+    return out
+
+
 def _status(abstained: bool, claims: list, unsupported: list, failed: list) -> str:
     if abstained:
         return "abstained"
@@ -142,12 +191,13 @@ def _status(abstained: bool, claims: list, unsupported: list, failed: list) -> s
 
 async def _answer(scope, principal: dict, question: str, turn: dict, versions: str = "signed",
                   documents: Optional[list[str]] = None, understood: Optional[dict] = None) -> AsyncIterator[str]:
-    status, answer, citations, items, found, reason = "error", None, [], [], [], None
+    status, answer, citations, items, found, reason, changed = "error", None, [], [], [], None, []
     try:
         if understood:                                      # S5.1b (D-063): what a follow-up was taken to ask
             yield _event({"type": "understood", **understood})
         result = await searchmod.search(scope, question, k=settings.LEGAL_RESEARCH_PASSAGES, versions=versions, documents=documents)
         passages = result["passages"]
+        links = _amended(passages, await run_in_threadpool(amendments.for_passages, scope.matter_id, principal["sub"], passages, versions))
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
         yield _event({"type": "sources", "citations": sources})
         if result["abstained"] or not passages:
@@ -202,9 +252,12 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
         status, answer, reason = _status(abstained, claims, unsupported, failed), text, ("model" if abstained else None)
         found = [] if abstained else await run_in_threadpool(doc_versions.conflicts, citations or sources, versions)
+        changed = [] if abstained else _changed(links, sources, numbers)
+        if status == "answered" and any(a["by"]["signed"] and a["cited"] and not a["amendment_cited"] for a in changed):
+            status = "partial"                     # it relies on wording a signed amendment replaced, without the amendment
         yield _event({"type": "done", "answer": text, "status": status, "abstained": abstained, "abstention_reason": reason,
                       "citations": citations, "evidence": items, "conflicts": found, "unsupported": unsupported, "failed": failed,
-                      "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions})
+                      "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed})
     except scopemod.ScopeRevoked:
         status, answer, citations, items, found = "scope_revoked", None, [], [], []
         yield _event({"type": "scope_revoked"})
@@ -214,7 +267,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
     finally:
         try:
             _save({**turn, "answer": answer, "citations": citations, "status": status, "evidence": items, "conflicts": found,
-                   "versions": versions, "abstention_reason": reason})
+                   "versions": versions, "abstention_reason": reason, "amendments": changed})
             outcome = "deny" if status == "scope_revoked" else "error" if status == "error" else "allow"
             record("research.answer", outcome, principal=principal, object_type="research_turn", object_id=turn["id"],
                    matter_id=turn["matter_id"], reason=status,
@@ -253,7 +306,7 @@ def research_history(matter_id: str, request: Request):
     require(p, "research.query", matter_id)
     with get_conn() as conn:
         rows = conn.execute("SELECT id, question, answer, citations_json, status, created_at, evidence_json, conflicts_json, versions, "
-                            "abstention_reason FROM legal_research_turns "
+                            "abstention_reason, amendments_json FROM legal_research_turns "
                             "WHERE matter_id=? AND owner_id=? ORDER BY created_at DESC LIMIT 50", (matter_id, p["sub"])).fetchall()
     return {"turns": [_turn(r) for r in rows]}
 
@@ -265,7 +318,7 @@ def _turn(r) -> dict:
                    if r[2] and r[4] in ("answered", "partial", "unverified") else [])
     return {"id": r[0], "question": r[1], "answer": r[2], "citations": citations, "status": r[4], "created_at": r[5],
             "unsupported": unsupported, "evidence": json.loads(r[6] or "[]"), "conflicts": json.loads(r[7] or "[]"),
-            "versions": r[8], "abstention_reason": r[9]}
+            "versions": r[8], "abstention_reason": r[9], "amendments": json.loads(r[10] or "[]") if len(r) > 10 else []}
 
 
 @router.post("/matters/{matter_id}/research/{turn_id}/review")

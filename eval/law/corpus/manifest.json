@@ -73,6 +73,22 @@
    "kind": "memo",
    "status": "final",
    "matter": "forbidden"
+  },
+  {
+   "key": "storage",
+   "file": "corpus/storage-agreement.md",
+   "title": "Kestrel Storage Services Agreement",
+   "kind": "contract",
+   "status": "executed",
+   "matter": "eval"
+  },
+  {
+   "key": "storage_amendment",
+   "file": "corpus/storage-amendment-1.md",
+   "title": "Amendment No. 1 to the Kestrel storage agreement",
+   "kind": "contract",
+   "status": "executed",
+   "matter": "eval"
   }
  ]
 }
