@@ -1,0 +1,130 @@
+{
+ "meta": {
+  "set": "golden",
+  "commit": "593aff7+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261027-021529",
+  "limit": null,
+  "only": "g-account-said-alarm,g-account-said-pallets,g-account-said-abstain"
+ },
+ "summary": {
+  "items": 3,
+  "answer_accuracy": "2/2",
+  "abstention_accuracy": "1/1",
+  "false_abstentions": 0,
+  "t06_leaks": 0,
+  "citation_precision": 1.0,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "partial": 1,
+   "answered": 1,
+   "abstained": 1
+  },
+  "latency_total_p50_s": 2.61,
+  "latency_total_p95_s": 4.59,
+  "latency_first_paragraph_p50_s": 2.61,
+  "latency_first_paragraph_p95_s": 4.59
+ },
+ "items": [
+  {
+   "id": "g-account-said-alarm",
+   "tags": [
+    "ACCOUNT"
+   ],
+   "question": "When did Jonas Ekberg say the chiller alarm sounded?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify when Jonas Ekberg said the chiller alarm sounded. The source states that he \"recall[ed] that the temperature alarm sounded at about 02:40 on 18 June 2026,\" but it does not indicate that he made this statement at a specific time [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "I recall that the temperature alarm sounded at about 02:40 on 18 June 2026.",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "2",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.59,
+   "total_s": 4.59
+  },
+  {
+   "id": "g-account-said-pallets",
+   "tags": [
+    "ACCOUNT"
+   ],
+   "question": "What did the shift supervisor say about the Voss-Lindqvist pallets?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The shift supervisor, Jonas Ekberg, stated that the Voss-Lindqvist pallets were moved to Hall 1 by 05:15 on the morning of the chiller failure [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "I remember that we had moved the Voss-Lindqvist pallets to Hall 1 by 05:15 that morning",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "3",
+     "page_start": null,
+     "line": 6
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.61,
+   "total_s": 2.61
+  },
+  {
+   "id": "g-account-said-abstain",
+   "tags": [
+    "ACCOUNT"
+   ],
+   "question": "When did Jonas Ekberg say the chiller was repaired?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.86,
+   "total_s": 0.86
+  }
+ ]
+}

@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 import time
 import uuid
 from typing import AsyncIterator, Literal, Optional
@@ -102,6 +103,13 @@ def _check(raw: str, sources: list[dict]) -> tuple[dict, list]:
                                      for c in claim.citations]})
     return ({"text": para.display, "claims": claims, "unsupported": prompt.unsupported(para.display, len(sources)),
              "failed": [c["sentence"] for c in claims if c["state"] == "failed"]}, para.claims)
+
+
+def _stands(claim) -> bool:
+    """A claim an answer stands on: a verified quote, or a cited sentence with words of its own. Bare markers left after
+    "The documents do not state …" ("[1] [1] [1]", seen 2026-10-27) support nothing."""
+    words = re.search(r"[^\W\d_]{2}", re.sub(r"\[[^\]]*\]", " ", claim.sentence))
+    return claim.state == "supported" or (claim.state == "unquoted" and words is not None)
 
 
 def _evidence(claims: list, sources: list[dict]) -> list[dict]:
@@ -252,7 +260,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         # - the answer opens by saying the documents do not cover the question, and every passage it
         #   cites is only weakly related to the question.
         # A supported answer that also says the abstention sentence is still an answer.
-        nothing = not any(c.state in ("supported", "unquoted") for c in claims)
+        nothing = not any(_stands(c) for c in claims)
         cited_scores = [passages[c.n - 1].get("score") for claim in claims for c in claim.citations
                         if 1 <= c.n <= len(passages) and passages[c.n - 1].get("score") is not None]
         weak = not cited_scores or max(float(x) for x in cited_scores) < settings.LEGAL_ABSTAIN_WEAK_SCORE

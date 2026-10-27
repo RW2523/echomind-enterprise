@@ -1583,15 +1583,10 @@ test('EchoMind Legal chat: a potential inconsistency found, inspected and explai
   await expect(card.locator('.qc-status-chip', { hasText: 'Explained' })).toBeVisible();
   await expect(card.getByRole('list', { name: 'Review history' })).toContainText('Explained by alice');
   // An answer with a verified source, opened beside the conversation.
-  // Asked without "say": the model can read "when did Witness B say…" as when the statement was made. On 2026-10-27 the
-  // running server still withheld this answer in 3 of 3 runs while the same pipeline called directly answered 8 of 8
-  // (IMPLEMENTATION_STATUS, finding 4): asked once more if withheld, so this journey still checks the source panel.
-  const q = 'According to Witness B, when did the delivery take place?';
+  // A question about what someone said: research gives it its plain reading (prompt research-s2.4; IMPLEMENTATION_STATUS
+  // finding 4 — before that, the model withheld it in 10 to 15 asks out of 15).
+  await ask('When did Witness B say the delivery took place?');
   const chip = alice.locator('.qc-cite[data-verified="true"]').first();
-  const withheld = alice.locator('[data-component="source_answer"]').filter({ hasText: /No source found in this matter/ });
-  await ask(q);
-  await Promise.race([chip.waitFor({ timeout: 180_000 }), withheld.first().waitFor({ timeout: 180_000 })]).catch(() => undefined);
-  if (!(await chip.count())) await ask(q);
   await expect(chip).toBeVisible({ timeout: 180_000 });
   await chip.click();
   const panel = alice.getByRole('complementary', { name: 'Source' });

@@ -12,7 +12,7 @@ import re
 ABSTAIN = "The documents in this matter do not answer that."
 
 # Recorded with every research note sent for review (S2.7): which instructions produced the answer.
-VERSION = "research-s2.3"          # S2.3: sources that amend another source's clause are marked
+VERSION = "research-s2.4"          # S2.3: sources that amend another source's clause are marked; S2.4: an account's reading
 
 SYSTEM = (
     "You are a careful legal research assistant. You work only from the numbered sources below, which "
@@ -42,6 +42,21 @@ REMINDER = (
 )
 
 
+# S2.4 (2026-10-27, IMPLEMENTATION_STATUS finding 4): "When did Witness B say the delivery took place?" was read as "when
+# did the witness speak" and withheld, 10 to 15 times in 15 with the real model. A system-prompt rule helped only partly and
+# made other answers drift, so such a question alone gets its plain reading beside it; every other prompt is unchanged.
+# With it: 0 or 1 in 15, and when the person's account does not answer, the abstention still comes (10 in 10).
+_ACCOUNT = re.compile(r"^\s*(?P<wh>when|by when|by what time|at what time|what time|on what date|what date|where|how long|how much|"
+                      r"how many)\s+did\s+(?P<who>[^?]{2,80}?)\s+(?:say|state|recall|remember|testify|claim|report|tell\s+\w+)\s+"
+                      r"(?:that\s+)?(?P<rest>[^?]+?)\s*\?*\s*$", re.I)
+
+
+def account_reading(question: str) -> str | None:
+    """'When did Witness B say the delivery took place?' -> 'when, according to Witness B, the delivery took place'."""
+    m = _ACCOUNT.match(question or "")
+    return f"{m['wh'].lower()}, according to {m['who']}, {m['rest']}" if m else None
+
+
 def _attr(value) -> str:
     return html.escape(str(value if value is not None else ""), quote=True)
 
@@ -61,7 +76,9 @@ def build(question: str, passages: list[dict]) -> list[dict]:
                       f' amendment="{"signed" if a.get("signed") else "unsigned"}"')
         blocks.append(f'<source n="{n}" document="{_attr(c["document_title"])}" version="{_attr(c["version_number"])}" '
                       f'pages="{_attr(pages)}"{clause}{amends}>\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
-    user = f"Question: {question}\n\nSources:\n" + "\n\n".join(blocks) + "\n\n" + REMINDER
+    reading = account_reading(question)
+    user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + "\nSources:\n"
+            + "\n\n".join(blocks) + "\n\n" + REMINDER)
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
 

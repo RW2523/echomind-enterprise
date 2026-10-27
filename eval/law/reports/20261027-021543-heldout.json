@@ -1,0 +1,56 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "593aff7+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261027-021543",
+  "limit": null,
+  "only": "h-account-said-time"
+ },
+ "summary": {
+  "items": 1,
+  "answer_accuracy": "0/1",
+  "abstention_accuracy": "0/0",
+  "false_abstentions": 1,
+  "t06_leaks": 0,
+  "citation_precision": null,
+  "quote_verification_rate": null,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 1
+  },
+  "latency_total_p50_s": 4.08,
+  "latency_total_p95_s": 4.08,
+  "latency_first_paragraph_p50_s": 4.08,
+  "latency_first_paragraph_p95_s": 4.08
+ },
+ "items": [
+  {
+   "id": "h-account-said-time",
+   "tags": [
+    "ACCOUNT"
+   ],
+   "question": "By what time did the shift supervisor say the pallets were in Hall 1?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the exact time the shift supervisor said the pallets were in Hall 1. The statement only mentions that the pallets were moved to Hall 1 by 05:15 that morning [3].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.08,
+   "total_s": 4.08
+  }
+ ]
+}

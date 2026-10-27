@@ -89,6 +89,14 @@
    "kind": "contract",
    "status": "executed",
    "matter": "eval"
+  },
+  {
+   "key": "witness",
+   "file": "corpus/witness-statement.md",
+   "title": "Witness statement of Jonas Ekberg",
+   "kind": "evidence",
+   "status": "received",
+   "matter": "eval"
   }
  ]
 }

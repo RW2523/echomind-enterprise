@@ -242,6 +242,23 @@ def test_an_unsupported_answer_saying_the_documents_do_not_cover_it_is_an_absten
     assert done["status"] == "abstained" and done["abstention_reason"] == "model"
 
 
+def test_saying_the_documents_do_not_cover_it_then_bare_source_markers_is_still_an_abstention(ev):
+    """2026-10-27, evaluation item g-account-said-abstain: the not-stated sentence, then "[1] [1] [1]" with no words."""
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "The documents do not state when Maria Ek said the salary was paid. [1] [1] [1]"
+    done = ask(alice, ev["mid"], "What is the liability cap?")[-1]            # passages are found; the model withholds
+    assert done["status"] == "abstained" and done["abstention_reason"] == "model"
+
+
+def test_a_cited_sentence_with_words_still_counts_without_a_quote(ev):
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    ev["llm"].answer = f"Liability is capped at USD 250,000 [{cap}]."
+    done = ask(alice, ev["mid"], "What is the liability cap?")[-1]
+    assert done["abstained"] is False
+
+
 # ── The legacy defects, as guarantees in Law ─────────────────────────────────────
 def test_r4_a_two_word_legal_term_is_researched_not_treated_as_small_talk(ev):
     alice = as_user(ev, "alice")
@@ -300,3 +317,22 @@ def test_a_purge_removes_the_document_s_quotes_from_saved_evidence(ev, fresh_db)
     with sqlite3.connect(fresh_db) as c:
         stored = " ".join(r[0] or "" for r in c.execute("SELECT evidence_json FROM legal_research_turns"))
     assert "capped at USD 250,000" not in stored
+
+
+def test_a_question_about_what_someone_said_is_read_as_their_account():
+    """2026-10-27 (IMPLEMENTATION_STATUS finding 4): "When did Witness B say the delivery took place?" was read as "when did
+    the witness speak" and withheld 10 to 15 times in 15 with the real model. Such a question alone gets its plain reading
+    beside it (then 0 or 1 in 15); every other prompt is unchanged, and the notes record the instructions' version."""
+    from app.legal.research import prompt
+    assert prompt.account_reading("When did Witness B say the delivery took place?") == "when, according to Witness B, the delivery took place"
+    assert (prompt.account_reading("By what time did the shift supervisor say that the pallets were in Hall 1?")
+            == "by what time, according to the shift supervisor, the pallets were in Hall 1")
+    for q in ("What is the cap on each party's aggregate liability?", "What did the shift supervisor say about the pallets?",
+              "Who signed the notice?", "What does clause 8 say?"):
+        assert prompt.account_reading(q) is None
+    q = "When did Witness B say the delivery took place?"
+    assert prompt.build(q, [])[-1]["content"].startswith(
+        f"Question: {q}\n(That is: when, according to Witness B, the delivery took place.)\n\nSources:")
+    plain = "What is the notice period?"
+    assert prompt.build(plain, [])[-1]["content"].startswith(f"Question: {plain}\n\nSources:")      # as before S2.4
+    assert "\n8. " not in prompt.SYSTEM and prompt.VERSION == "research-s2.4"

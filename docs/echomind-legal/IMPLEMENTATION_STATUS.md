@@ -120,13 +120,21 @@ Seconds are request-to-last-event, single user, measured once: not a benchmark.
    stays `potential` until a person resolves it. Amendments are handled the same way (`amends`).
 3. *Retrieval missed the shipment log* for "Could the witnesses be describing different events?" (the answer used both
    witnesses and the meeting notes). The blueprint's expected answer cites it.
-4. *An answerable question withheld, on the server only (2026-10-27, E2E world).* "When did Witness B say the delivery
-   took place?" was read as "when did the witness make the statement" and withheld; reworded ("According to Witness B,
-   when did the delivery take place?") the running server still withheld it in 3 of 3 chat runs and 1 of 2 direct API
-   calls, while the same research pipeline (`_answer`) called in a script with the same data answered **8 of 8** and the
-   model with the same prompt **20 of 20** (with and without prompt rule 7, so the amendment rule is not the cause). The
-   demo matter answers it ("Witness B said the delivery took place on May 15, 2026, on arrival at the site"). **Open:** why
-   the server path withholds more often; the chat journey now asks once more when withheld, and says why in the test.
+4. *An answerable question about what a witness said was withheld (2026-10-27).* "When did Witness B say the delivery took
+   place?" came back "The documents in this matter do not answer that." **Cause:** not the server — a spy on every model
+   call showed 19 byte-identical prompts (same temperature, no concurrent calls) and the model alone choosing the
+   abstention once; the earlier "server vs script" gap was small samples. The model reads "when did X *say* …" as "when did X
+   speak" and withholds: 10–15 times in 15 on the E2E matter, 10 in 10 for "When did Jonas Ekberg say the chiller alarm
+   sounded?" in the evaluation corpus (an answer opening "The documents state …" and the abstention sentence share their
+   first words, so sampling at 0.1 also flips plain questions about 1 time in 20). A system-prompt rule helped only partly
+   (7 in 10 still withheld) and made unanswerable questions drift into "not stated, but here is related text" (held-out
+   abstention 2/3 → 1/3), so it was not kept. **Fix (prompt `research-s2.4`):** such a question alone gets its plain reading
+   beside it — "(That is: when, according to Witness B, the delivery took place.)" (`prompt.account_reading`); every other
+   prompt is byte-identical. Measured: 10/10 → 0/10 and 10/15 → 1/15 withheld for the answerable ones; the unanswerable
+   "When did Jonas Ekberg say the chiller was repaired?" still withheld 10/10. Also: bare "[1] [1] [1]" markers after a
+   not-stated sentence no longer count as support (`routes._stands`). Evaluation: a fictional witness statement and four
+   ACCOUNT items added (golden 3, held-out 1); results in the test table (EV2–EV4). The chat journey asks the natural
+   question again, without a second try.
 
 ## Test runs on this branch
 
@@ -153,6 +161,11 @@ Seconds are request-to-last-event, single user, measured once: not a benchmark.
 | E5 | Browser E2E, full, after the design refresh (alternate ports, the demo stayed up) | **34 passed, 3 failed** (24.4 min): `research` (no passages: transient, passed on re-run with its documents journey, 14 s), `versions` (two correct "reads differently" warnings — 8.1 and 4.1 — matched one test filter: filter narrowed to 8.1), the chat's source step (finding 4) |
 | E6 | `documents` + `research`; `versions`; the Legal chat journey | **all passed** after the two test fixes |
 | E7 | Browser E2E, full, final code | **36 passed, 1 failed** (19.4 min): `versions`, its "Latest drafts" step (no 500,000 in the evidence) — the same real-model variance as E3; the journey passed alone in E4 and E6 |
+| EV2 | Research evaluation before S2.4 (prompt `research-s2.3`), full sets | golden 72: answers 62/66, abstentions 5/6, 3 false abstentions, 0 leaks; held-out 33: 29/30, 2/3, 0 leaks (reports 20261027-021309, -021454). The new ACCOUNT items on that prompt: held-out `h-account-said-time` **withheld** (-021529, -021543) |
+| EV3 | With a system-prompt account rule (not kept) | golden 75: 66/68, 5/7; held-out 34: 29/31, **1/3** — unanswerable questions drifted into "not stated, but…" (-022015, -022202) |
+| EV4 | Final: `research-s2.4` (a reading beside account questions only) and marker-only claims support nothing | golden 75: answers 65/68, abstentions 5/7, 1 false abstention, 0 leaks, quotes verified 0.98; held-out 34: 29/31, 2/3, 0 leaks; **all four ACCOUNT items pass** (-025933, -030117). Before the marker fix: golden 65/68, 6/7; held-out 30/31, 2/3 (-023608, -023748). Every non-ACCOUNT prompt is byte-identical to `research-s2.3`; their run-to-run swings (salary, non-compete, attendance) occur in the baseline runs too |
+| E8 | Legal chat journey, asking "When did Witness B say the delivery took place?" with no second try | **2 of 2 passed** (15 s each); 0 of 3 before the fix |
+| C13 | Backend: evidence, injection, amendments, counsel (and evaluations, retrieval) | **118 passed** (136 with evaluations and retrieval), pinned image, `--network none` |
 
 ## How to run the demo locally (fictional data only)
 
