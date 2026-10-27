@@ -32,7 +32,7 @@ const ROLE_LABEL: Record<string, string> = {
   records_admin: 'Records', read_only: 'Read only', intake: 'Intake', conflicts: 'Conflicts',
 };
 /** The matter pages offered in the rail when no matter page is open (the tab strip shows them all on a matter page). */
-const RAIL_MATTER_PAGES = ['overview', 'documents', 'research', 'meetings', 'drafting', 'obligations', 'panel'];
+const RAIL_MATTER_PAGES = ['overview', 'documents', 'research', 'meetings', 'conversation', 'drafting', 'obligations', 'summaries', 'panel'];
 
 // ── Header: privacy and capture state ──────────────────────────────────────────
 function PrivacyStatus() {

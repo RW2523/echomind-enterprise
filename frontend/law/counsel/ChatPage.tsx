@@ -8,7 +8,7 @@ import { useLocation, useNavigate, useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowUp, BookOpenText, CalendarClock, CalendarRange, ClipboardList, FilePen, ListChecks, Lock, MessageSquareText, Paperclip, Scale, ScrollText,
+  ArrowUp, BookOpenText, CalendarClock, CalendarRange, ClipboardList, FilePen, ListChecks, Lock, Mic, Paperclip, Scale, ScrollText,
   Square, Users2, X,
 } from 'lucide-react';
 import { ApiError } from '../api/client';
@@ -33,28 +33,28 @@ const EXAMPLES = [
 ];
 
 /** What the home offers. Each tile either asks the chat (one of its four kinds of answer) or opens a real page of the matter. */
-interface Tile { key: string; title: string; about: string; icon: LucideIcon; hue: string; ask?: string; page?: string; focus?: boolean }
+interface Tile { key: string; title: string; about: string; icon: LucideIcon; hue: string; ask?: string; page?: string }
 const ASK_TILES: Tile[] = [
-  { key: 'ask', title: 'Ask a legal question', about: 'Answers from the matter\'s documents, each quote checked', icon: MessageSquareText, hue: 'blue', focus: true },
   { key: 'today', title: 'What matters today?', about: 'Deadlines, reviews and new documents, from records', icon: ListChecks, hue: 'gold', ask: 'What matters today?' },
   { key: 'conflicts', title: 'Find conflicting dates or amounts', about: 'Potential inconsistencies, side by side', icon: Scale, hue: 'rose', ask: 'Find conflicting dates or amounts' },
   { key: 'chronology', title: 'Build a chronology of events', about: 'Every stated date in order, with its source', icon: CalendarRange, hue: 'teal', ask: 'Build a chronology of events' },
   { key: 'summary', title: 'Summarize this matter', about: 'A cited overview from its documents', icon: ScrollText, hue: 'indigo', ask: 'Summarize this matter from its documents' },
 ];
 const PAGE_TILES: Tile[] = [
-  { key: 'meetings', title: 'Prepare for a meeting', about: 'Record with consent: transcript and cited minutes', icon: CalendarClock, hue: 'violet', page: 'meetings' },
+  { key: 'meetings', title: 'Record a meeting', about: 'Live transcript and Silent Assist, with everyone\'s consent', icon: CalendarClock, hue: 'violet', page: 'meetings' },
+  { key: 'conversation', title: 'Ask by voice', about: 'Speak a question; hear the cited answer', icon: Mic, hue: 'blue', page: 'conversation' },
   { key: 'drafting', title: 'Draft a document', about: 'Firm templates; a second lawyer approves', icon: FilePen, hue: 'amber', page: 'drafting' },
   { key: 'panel', title: 'Get four perspectives', about: 'Deal, risk, litigation and specialist views', icon: Users2, hue: 'slate', page: 'panel' },
   { key: 'research', title: 'Research in depth', about: 'Longer answers, saved with their sources', icon: BookOpenText, hue: 'slate', page: 'research' },
   { key: 'diligence', title: 'Run due diligence', about: 'A checklist across the data room, with evidence', icon: ClipboardList, hue: 'slate', page: 'diligence' },
 ];
 
-/** Eight tiles: the five chat answers, then the matter's own pages this person can open (or the matter list to choose one). */
+/** Eight tiles: the chat's four kinds of answer, then the matter's own pages this person can open (or the matter list). */
 function useTiles(matter: Matter | null): (Tile & { to?: string })[] {
   const me = useSession();
-  if (!matter) return [...ASK_TILES, ...PAGE_TILES.slice(0, 3).map((t) => ({ ...t, to: '/matters' }))];
+  if (!matter) return [...ASK_TILES, ...PAGE_TILES.slice(0, 4).map((t) => ({ ...t, to: '/matters' }))];
   const pages = new Map(matterEntries(me, matter).map((e) => [e.key, e.to]));
-  const open = PAGE_TILES.filter((t) => pages.has(t.page!)).slice(0, 3);
+  const open = PAGE_TILES.filter((t) => pages.has(t.page!)).slice(0, 4);
   return [...ASK_TILES, ...open.map((t) => ({ ...t, to: pages.get(t.page!) }))];
 }
 const FINISHED = new Set(['completed', 'abstained']);
@@ -231,7 +231,7 @@ export default function ChatPage() {
           <div className="qc-tiles" role="group" aria-label="Start with">
             {tiles.map((t) => (
               <button key={t.key} type="button" className="qc-tile" aria-label={t.title} aria-describedby={`tile-${t.key}`}
-                onClick={() => { if (t.ask) void ask(t.ask); else if (t.focus) input.current?.focus(); else if (t.to) navigate(t.to); }}>
+                onClick={() => { if (t.ask) void ask(t.ask); else if (t.to) navigate(t.to); }}>
                 <span className="qc-tile-icon" data-hue={t.hue} aria-hidden><t.icon /></span>
                 <span className="qc-tile-text"><b>{t.title}</b><small id={`tile-${t.key}`}>{t.to === '/matters' ? 'Choose a matter first' : t.about}</small></span>
               </button>

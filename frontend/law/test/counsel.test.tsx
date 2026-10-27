@@ -74,13 +74,11 @@ describe('The chat home', () => {
     expect(await screen.findByText('M-101 · MSA renewal', { selector: '.qc-context b' })).toBeTruthy();
     const tiles = within(screen.getByRole('group', { name: 'Start with' })).getAllByRole('button');
     expect(tiles.map((t) => t.querySelector('b')?.textContent)).toEqual([
-      'Ask a legal question', 'What matters today?', 'Find conflicting dates or amounts', 'Build a chronology of events', 'Summarize this matter',
-      'Prepare for a meeting', 'Draft a document', 'Research in depth',
+      'What matters today?', 'Find conflicting dates or amounts', 'Build a chronology of events', 'Summarize this matter',
+      'Record a meeting', 'Draft a document', 'Research in depth', 'Run due diligence',      // Ask by voice and the panel: when on
     ]);
     expect(within(screen.getByRole('group', { name: 'Example questions' })).getAllByRole('button')).toHaveLength(4);
-    fireEvent.click(tiles[0]);
-    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Ask EchoMind' }));
-    fireEvent.click(tiles[5]);
+    fireEvent.click(tiles[4]);
     expect(router.state.location.pathname).toBe('/m/M-101/meetings');
     const rail = screen.getByRole('navigation', { name: 'Workspace' });
     expect(within(rail).getAllByRole('link').map((a) => a.textContent)).toEqual(['Chat', 'Matters', 'Drafts', 'Activity']);
@@ -88,6 +86,25 @@ describe('The chat home', () => {
     expect(screen.getByText('Not recording')).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Private/ })).toBeTruthy();
     expect(await axeClean(container)).toEqual([]);
+  });
+
+  it('with the conversation assistant and the review panel on, the home offers them; meetings open the live transcript', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    mockApi({
+      'GET /api/auth/me': () => [200, { ...me(), features: { intake: false, intake_links: false, conversation: true, panel: true } }],
+      'GET /api/legal/matters': () => [200, { matters: [matter('M-101', 'MSA renewal')] }],
+      'GET /api/legal/reviews': () => [200, { waiting: [], mine: [], count: 0 }],
+      'GET /api/legal/counsel/conversations': () => [200, { conversations: [] }],
+    });
+    const { router } = renderLaw('/chat');
+    const group = await screen.findByRole('group', { name: 'Start with' });
+    await waitFor(() => expect(within(group).getAllByRole('button').map((t) => t.querySelector('b')?.textContent).slice(4)).toEqual(
+      ['Record a meeting', 'Ask by voice', 'Draft a document', 'Get four perspectives']));
+    const rail = screen.getByRole('navigation', { name: 'Current matter' });
+    expect(within(rail).getByRole('link', { name: 'Meetings' }).getAttribute('href')).toBe('/m/M-101/meetings');
+    expect(within(rail).getByRole('link', { name: 'Conversation' }).getAttribute('href')).toBe('/m/M-101/conversation');
+    fireEvent.click(within(group).getByRole('button', { name: 'Ask by voice' }));
+    expect(router.state.location.pathname).toBe('/m/M-101/conversation');
   });
 
   it('the recording status follows the real capture, not the page', async () => {
