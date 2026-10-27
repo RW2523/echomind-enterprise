@@ -65,15 +65,23 @@ beforeEach(() => { localStorage.clear(); _resetCaptureForTests(); });
 afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('The chat home', () => {
-  it('is quiet: one question, the matter, four suggestions, four destinations, private and not recording', async () => {
+  it('one question, the matter, eight real starting points, four example questions, four destinations, private and not recording', async () => {
     localStorage.setItem('echomind.counsel.matter', 'id-M-101');
     world();
     const { container, router } = renderLaw('/');
-    expect(await screen.findByRole('heading', { name: 'How can I help?' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'How can I help you today?' })).toBeTruthy();
     expect(router.state.location.pathname).toBe('/chat');
-    expect(await screen.findByText('M-101 · MSA renewal', { selector: '.qc-context' })).toBeTruthy();
-    const start = screen.getByRole('heading', { name: 'How can I help?' }).parentElement!;
-    expect(within(start).getAllByRole('button')).toHaveLength(4);
+    expect(await screen.findByText('M-101 · MSA renewal', { selector: '.qc-context b' })).toBeTruthy();
+    const tiles = within(screen.getByRole('group', { name: 'Start with' })).getAllByRole('button');
+    expect(tiles.map((t) => t.querySelector('b')?.textContent)).toEqual([
+      'Ask a legal question', 'What matters today?', 'Find conflicting dates or amounts', 'Build a chronology of events', 'Summarize this matter',
+      'Prepare for a meeting', 'Draft a document', 'Research in depth',
+    ]);
+    expect(within(screen.getByRole('group', { name: 'Example questions' })).getAllByRole('button')).toHaveLength(4);
+    fireEvent.click(tiles[0]);
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Ask EchoMind' }));
+    fireEvent.click(tiles[5]);
+    expect(router.state.location.pathname).toBe('/m/M-101/meetings');
     const rail = screen.getByRole('navigation', { name: 'Workspace' });
     expect(within(rail).getAllByRole('link').map((a) => a.textContent)).toEqual(['Chat', 'Matters', 'Drafts', 'Activity']);
     expect(within(rail).getByRole('button', { name: 'New chat' })).toBeTruthy();
@@ -316,7 +324,7 @@ describe('History and the other destinations', () => {
     const recent = await screen.findByRole('navigation', { name: 'Recent conversations' });
     fireEvent.click(within(recent).getByRole('link', { name: /When must Apex complete delivery/ }));
     expect(await screen.findByText('Supported by 1 verified quote')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Matter: M-101 MSA renewal/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Matter: M-101 MSA renewal. Switch matter' })).toBeTruthy();
   });
 
   it('Drafts lists what waits for you and your own drafts', async () => {
@@ -383,7 +391,7 @@ describe('Chronology', () => {
     expect(['Deadline', 'Replaced', 'Confirmed by a lawyer'].every((t) => within(deadline).queryByText(t))).toBe(true);
     expect(within(card).queryByRole('list', { name: 'Events whose date is not stated' })).toBeNull();
     fireEvent.click(within(card).getByRole('button', { name: /Show all \(3 more, 1 without a stated date\)/ }));
-    expect(within(card).getAllByRole('list', { name: 'Dated events' })[0].querySelectorAll('li')).toHaveLength(10);
+    expect(within(card).getAllByRole('list', { name: 'Dated events' })[0].querySelectorAll('li.qc-event')).toHaveLength(10);
     const undated = within(card).getByRole('list', { name: 'Events whose date is not stated' });
     expect(within(undated).getByText('“the 20th”')).toBeTruthy();
     fireEvent.click(within(witness).getByRole('button', { name: 'Inspect Document 2, May 12, 2026' }));
@@ -396,5 +404,56 @@ describe('Chronology', () => {
       events: [{ ...ev(1, '2026-05-12', 'May 12, 2026'), certainty: 'undated' }] } };
     expect(parseComponent(bad).type).toBe('inert');
     expect(parseComponent({ ...bad, props: { ...bad.props, events: [ev(1, '12/05/2026', 'x')] } }).type).toBe('inert');
+  });
+});
+
+describe('A matter at a glance', () => {
+  const compareEnvelope = (comp: object) => ({ ...answerEnvelope(), summary: '1 potential inconsistency found.', components: [comp] });
+  const obl = (id: string, due: string | null, status: string, overdue = false) => ({
+    id, document_id: 'doc1', document_title: 'Services Agreement', version_id: 'v1', clause: '4.2', kind: 'notice', party: null,
+    action: `Deliver the units (${id})`, when: null, due_date: due, due_note: null, timezone: 'UTC', due_at: null, overdue, status, owner: null,
+    source: 'rules', evidence: { start: 0, end: 5, quote: 'x' }, confirmed_by: null, confirmed_at: null, version: 1, created_by: null,
+    created_at: '2026-10-01T00:00:00Z', updated_at: '2026-10-01T00:00:00Z' });
+  const doc = (id: string, title: string, at: string) => ({ id, title, kind: 'contract', status: 'executed', version: 1, created_at: at,
+    updated_at: at, current_version: null, findings: {} });
+
+  it('shows open inconsistencies, the next deadlines and the latest documents from the records; an inconsistency opens in the chat', async () => {
+    const calls = world({
+      'GET /api/legal/counsel/discrepancies': () => [200, { discrepancies: [
+        { id: DSC, title: 'Potential inconsistency in dates', status: 'potential', kind: 'date', version: 1, updated_at: '2026-10-26T12:00:00Z' }] }],
+      'GET /api/legal/matters/id-M-101/obligations': () => [200, { timezone: 'UTC', calendar: false,
+        obligations: [obl('o1', '2026-05-20', 'confirmed'), obl('o2', '2026-05-15', 'proposed', true), obl('o3', null, 'proposed'), obl('o4', '2026-05-10', 'dismissed')] }],
+      'GET /api/legal/matters/id-M-101/documents': () => [200, { documents: [doc('d1', 'Services Agreement', '2026-04-01T00:00:00Z'),
+                                                                          doc('d2', 'Amendment No. 1', '2026-05-14T00:00:00Z')] }],
+      'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(compareEnvelope(comparison()))],
+    });
+    const { router } = renderLaw('/m/M-101/overview');
+    const glance = await screen.findByRole('region', { name: 'At a glance' });
+    const deadlines = await within(glance).findByRole('region', { name: 'Next deadlines' });
+    await waitFor(() => expect(within(deadlines).getAllByRole('listitem')).toHaveLength(2));        // undated and dismissed left out
+    expect(within(deadlines).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      expect.stringMatching(/Deliver the units \(o2\).*Overdue/), expect.stringMatching(/Deliver the units \(o1\).*Confirmed/)]);
+    const docs = await within(glance).findByRole('region', { name: 'Documents (2)' });
+    const docLinks = within(within(docs).getByRole('list')).getAllByRole('link');
+    expect(docLinks[0].textContent).toMatch(/^Amendment No\. 1/);                                    // the latest first
+    expect(docLinks[1].getAttribute('href')).toBe('/m/M-101/documents/d1/read');
+    expect(within(docs).getByRole('link', { name: 'All documents' }).getAttribute('href')).toBe('/m/M-101/documents');
+    const issues = await within(glance).findByRole('region', { name: 'Open inconsistencies' });
+    fireEvent.click(await within(issues).findByRole('button', { name: /^Dates/ }));
+    await screen.findByRole('region', { name: /Potential inconsistency in dates: “May 12, 2026”/ });
+    expect(router.state.location.pathname).toBe('/chat/conv_1');
+    const turn = calls.find((c) => c.method === 'POST' && c.path.endsWith('/turns'));
+    expect(turn?.body).toMatchObject({ text: 'Show this potential inconsistency', focus_discrepancy_id: DSC });
+    expect(calls.filter((c) => c.path.endsWith('/turns'))).toHaveLength(1);                         // asked once
+  });
+
+  it('a part the person may not see is left out, not shown as an error', async () => {
+    world({ 'GET /api/legal/counsel/discrepancies': () => [404, { detail: 'Not Found' }],
+            'GET /api/legal/matters/id-M-101/obligations': () => [200, { obligations: [], timezone: 'UTC', calendar: false }],
+            'GET /api/legal/matters/id-M-101/documents': () => [200, { documents: [] }] });
+    renderLaw('/m/M-101/overview');
+    const glance = await screen.findByRole('region', { name: 'At a glance' });
+    expect(await within(glance).findByText(/No dated deadline is recorded/)).toBeTruthy();
+    await waitFor(() => expect(within(glance).queryByRole('region', { name: 'Open inconsistencies' })).toBeNull());
   });
 });

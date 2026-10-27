@@ -10,6 +10,7 @@ import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Field, MatterStatusPill, roleLabel, SensitivityPill } from '../ui/primitives';
 import { useQueryClient } from '@tanstack/react-query';
 import { HoldNotice } from '../ui/records';
+import MatterGlance from '../counsel/MatterGlance';
 
 export default function MatterOverview() {
   const matter = useMatter();
@@ -55,6 +56,7 @@ export default function MatterOverview() {
             {rows.map(([k, v]) => (<React.Fragment key={k}><dt className="lw-meta" style={{ fontSize: 13 }}>{k}</dt><dd style={{ margin: 0 }}>{v}</dd></React.Fragment>))}
           </dl>
         </section>
+        <MatterGlance matter={matter} />
         <section aria-labelledby="matter-work" style={{ display: 'grid', gap: 10 }}>
           <h2 className="lw-h2" id="matter-work" style={{ padding: '0 4px' }}>Work on this matter</h2>
           <div className="lw-tiles">

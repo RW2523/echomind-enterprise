@@ -4,23 +4,59 @@
  * components arrive. Cards act in place; sources open in the right-hand panel without leaving the conversation.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowUp, Square, X } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowUp, BookOpenText, CalendarClock, CalendarRange, ClipboardList, FilePen, ListChecks, Lock, MessageSquareText, Paperclip, Scale, ScrollText,
+  Square, Users2, X,
+} from 'lucide-react';
 import { ApiError } from '../api/client';
-import { useMatters } from '../api/queries';
+import { useDocuments, useMatters } from '../api/queries';
+import type { Matter } from '../api/types';
+import { matterEntries } from '../app/nav';
+import { useSession } from '../app/session';
 import { counselApi, requestId, type StoredTurn } from './api';
 import { ActionButtons, AnswerText, ComponentView, type CardContext } from './cards';
 import { useChatMatter, usePanel } from './context';
+import Facade from './Facade';
+import MatterPicker, { usePopover } from './MatterPicker';
 import { parseEnvelope, parseTaskProgress } from './validate';
 import type { ChatTurn, SafeComponent } from './types';
 
-const SUGGESTIONS = [
-  'What matters today?',
-  'Find conflicting dates or amounts',
-  'Summarize this matter from its documents',
-  'Build a chronology of events',
+/** Questions any matter's documents can answer (or say they cannot). */
+const EXAMPLES = [
+  'What are the key dates and deadlines?',
+  'Who are the parties, and what are their obligations?',
+  'Summarize the latest correspondence',
+  'What did the most recent amendment change?',
 ];
+
+/** What the home offers. Each tile either asks the chat (one of its four kinds of answer) or opens a real page of the matter. */
+interface Tile { key: string; title: string; about: string; icon: LucideIcon; hue: string; ask?: string; page?: string; focus?: boolean }
+const ASK_TILES: Tile[] = [
+  { key: 'ask', title: 'Ask a legal question', about: 'Answers from the matter\'s documents, each quote checked', icon: MessageSquareText, hue: 'blue', focus: true },
+  { key: 'today', title: 'What matters today?', about: 'Deadlines, reviews and new documents, from records', icon: ListChecks, hue: 'gold', ask: 'What matters today?' },
+  { key: 'conflicts', title: 'Find conflicting dates or amounts', about: 'Potential inconsistencies, side by side', icon: Scale, hue: 'rose', ask: 'Find conflicting dates or amounts' },
+  { key: 'chronology', title: 'Build a chronology of events', about: 'Every stated date in order, with its source', icon: CalendarRange, hue: 'teal', ask: 'Build a chronology of events' },
+  { key: 'summary', title: 'Summarize this matter', about: 'A cited overview from its documents', icon: ScrollText, hue: 'indigo', ask: 'Summarize this matter from its documents' },
+];
+const PAGE_TILES: Tile[] = [
+  { key: 'meetings', title: 'Prepare for a meeting', about: 'Record with consent: transcript and cited minutes', icon: CalendarClock, hue: 'violet', page: 'meetings' },
+  { key: 'drafting', title: 'Draft a document', about: 'Firm templates; a second lawyer approves', icon: FilePen, hue: 'amber', page: 'drafting' },
+  { key: 'panel', title: 'Get four perspectives', about: 'Deal, risk, litigation and specialist views', icon: Users2, hue: 'slate', page: 'panel' },
+  { key: 'research', title: 'Research in depth', about: 'Longer answers, saved with their sources', icon: BookOpenText, hue: 'slate', page: 'research' },
+  { key: 'diligence', title: 'Run due diligence', about: 'A checklist across the data room, with evidence', icon: ClipboardList, hue: 'slate', page: 'diligence' },
+];
+
+/** Eight tiles: the five chat answers, then the matter's own pages this person can open (or the matter list to choose one). */
+function useTiles(matter: Matter | null): (Tile & { to?: string })[] {
+  const me = useSession();
+  if (!matter) return [...ASK_TILES, ...PAGE_TILES.slice(0, 3).map((t) => ({ ...t, to: '/matters' }))];
+  const pages = new Map(matterEntries(me, matter).map((e) => [e.key, e.to]));
+  const open = PAGE_TILES.filter((t) => pages.has(t.page!)).slice(0, 3);
+  return [...ASK_TILES, ...open.map((t) => ({ ...t, to: pages.get(t.page!) }))];
+}
 const FINISHED = new Set(['completed', 'abstained']);
 
 function fromStored(t: StoredTurn): ChatTurn {
@@ -49,6 +85,8 @@ export default function ChatPage() {
   const created = useRef<string | null>(null);
   const abort = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
+  const tiles = useTiles(matter);
   const busy = turns.some((t) => t.status === 'streaming');
 
   useEffect(() => {
@@ -138,6 +176,16 @@ export default function ChatPage() {
     }
   }, [busy, matterId, convId, attached, navigate, patch, qc]);
 
+  const location = useLocation();
+  const handed = useRef(false);
+  useEffect(() => {                                             // a question handed over by another page, asked once
+    const st = location.state as { ask?: unknown; focus?: unknown } | null;
+    if (handed.current || conversationId || !matterId || typeof st?.ask !== 'string' || !st.ask.trim()) return;
+    handed.current = true;
+    navigate('/chat', { replace: true, state: null });
+    void ask(st.ask.slice(0, 2000), typeof st.focus === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(st.focus) ? { focus: st.focus } : {});
+  }, [location.state, conversationId, matterId, navigate, ask]);
+
   useEffect(() => {                                             // a question asked before a matter was chosen
     if (pendingAsk && matterId) { const q = pendingAsk; setPendingAsk(null); void ask(q); }
   }, [pendingAsk, matterId, ask]);
@@ -160,30 +208,55 @@ export default function ChatPage() {
   });
 
   const start = !conversationId && turns.length === 0;
+  const composer = (
+    <Composer value={draft} onChange={setDraft} busy={busy} onSend={() => void ask(draft)} onStop={() => abort.current?.abort()} hero={start}
+      placeholder={matter ? `Ask anything about ${matter.number}: its documents, dates, parties or obligations…` : 'Ask about a matter…'}
+      attached={attached} onAttach={setAttached} matterId={matterId} inputRef={input}
+      onDetach={(id) => setAttached((a) => a.filter((x) => x.id !== id))} />
+  );
   return (
-    <div className="qc-chat">
+    <div className={`qc-chat${start ? ' qc-home' : ''}`}>
       <div className="qc-sr" aria-live="polite">{announce}</div>
       {loadError && <p className="qc-error" role="alert">{loadError}</p>}
       {start ? (
         <div className="qc-start">
-          <h1>How can I help?</h1>
-          <p className="qc-context">{matter ? `${matter.number} · ${matter.title}` : 'Choose a matter in the header, or ask and pick one.'}</p>
-          <div className="qc-suggestions">
-            {SUGGESTIONS.map((s) => <button key={s} type="button" className="qc-suggestion" onClick={() => void ask(s)}>{s}</button>)}
+          <Facade className="qc-facade" />
+          <div className="qc-hero">
+            <span className="qc-eyebrow">Private legal workspace</span>
+            <h1>How can I help you today?</h1>
+            <p className="qc-context">{matter
+              ? <>Working on <b>{matter.number} · {matter.title}</b>. Answers come only from its documents, and every quote is checked.</>
+              : 'Choose a matter, then ask. Answers come only from that matter\'s documents, and every quote is checked.'}</p>
+          </div>
+          <div className="qc-tiles" role="group" aria-label="Start with">
+            {tiles.map((t) => (
+              <button key={t.key} type="button" className="qc-tile" aria-label={t.title} aria-describedby={`tile-${t.key}`}
+                onClick={() => { if (t.ask) void ask(t.ask); else if (t.focus) input.current?.focus(); else if (t.to) navigate(t.to); }}>
+                <span className="qc-tile-icon" data-hue={t.hue} aria-hidden><t.icon /></span>
+                <span className="qc-tile-text"><b>{t.title}</b><small id={`tile-${t.key}`}>{t.to === '/matters' ? 'Choose a matter first' : t.about}</small></span>
+              </button>
+            ))}
+          </div>
+          {pendingAsk && !matterId && (
+            <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId} onCancel={() => setPendingAsk(null)} />
+          )}
+          {composer}
+          <div className="qc-suggestions" role="group" aria-label="Example questions">
+            {EXAMPLES.map((q) => <button key={q} type="button" className="qc-suggestion" onClick={() => void ask(q)}>{q}</button>)}
           </div>
         </div>
       ) : (
-        <div className="qc-thread" aria-label="Conversation">
-          {turns.map((t) => <TurnView key={t.key} t={t} ctx={ctxFor(t)} onRetry={() => void ask(t.question)} onStop={() => abort.current?.abort()} />)}
-        </div>
+        <>
+          <div className="qc-thread" aria-label="Conversation">
+            {turns.map((t) => <TurnView key={t.key} t={t} ctx={ctxFor(t)} onRetry={() => void ask(t.question)} onStop={() => abort.current?.abort()} />)}
+          </div>
+          {pendingAsk && !matterId && (
+            <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId} onCancel={() => setPendingAsk(null)} />
+          )}
+          <div ref={end} />
+          {composer}
+        </>
       )}
-      {pendingAsk && !matterId && (
-        <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId} onCancel={() => setPendingAsk(null)} />
-      )}
-      <div ref={end} />
-      <Composer value={draft} onChange={setDraft} busy={busy} onSend={() => void ask(draft)} onStop={() => abort.current?.abort()}
-        placeholder={matter ? `Ask about ${matter.number}…` : 'Ask about a matter…'} attached={attached}
-        onDetach={(id) => setAttached((a) => a.filter((x) => x.id !== id))} />
     </div>
   );
 }
@@ -235,26 +308,68 @@ function TurnView({ t, ctx, onRetry, onStop }: { t: ChatTurn; ctx: CardContext; 
   );
 }
 
-function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached, onDetach }: {
+/** "Answer only from these documents": up to ten of the matter's documents (the server checks each one again). */
+function DocumentPicker({ matterId, attached, onAttach }: { matterId: string; attached: Attached[]; onAttach: (a: Attached[]) => void }) {
+  const { open, setOpen, button, pop, style } = usePopover();
+  const docs = useDocuments(matterId);
+  const ready = (docs.data ?? []).filter((d) => d.current_version?.index_status === 'indexed');
+  const toggle = (id: string, title: string) => onAttach(attached.some((a) => a.id === id)
+    ? attached.filter((a) => a.id !== id) : [...attached, { id, title }].slice(0, 10));
+  return (
+    <>
+      <button ref={button} type="button" className="qc-tool" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <Paperclip aria-hidden /><span>{attached.length ? `Only from ${attached.length} document${attached.length === 1 ? '' : 's'}` : 'Choose documents'}</span>
+      </button>
+      {open && (
+        <div ref={pop} className="qc-pop" role="dialog" aria-label="Answer only from these documents" style={{ ...style, padding: 10, width: 380 }}>
+          <div className="qc-pop-label" style={{ paddingTop: 2 }}>Answer only from…</div>
+          {docs.isPending ? <p className="qc-meta" style={{ padding: '4px 8px' }}>Loading the documents…</p> : ready.length ? (
+            <div className="qc-docpick">
+              {ready.map((d) => (
+                <label key={d.id}>
+                  <input type="checkbox" checked={attached.some((a) => a.id === d.id)} onChange={() => toggle(d.id, d.title)}
+                    disabled={!attached.some((a) => a.id === d.id) && attached.length >= 10} />
+                  <span style={{ minWidth: 0 }}>{d.title}<span className="qc-meta" style={{ display: 'block' }}>{d.kind} · version {d.version}</span></span>
+                </label>
+              ))}
+            </div>
+          ) : <p className="qc-meta" style={{ padding: '4px 8px' }}>No document of this matter has been read yet.</p>}
+          <p className="qc-meta" style={{ borderTop: '1px solid var(--rule)', margin: '8px 0 0', padding: '8px 8px 2px' }}>
+            With none ticked, answers use every document of the matter you may read.
+          </p>
+        </div>)}
+    </>
+  );
+}
+
+function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached, onAttach, onDetach, matterId, hero, inputRef }: {
   value: string; onChange: (v: string) => void; busy: boolean; onSend: () => void; onStop: () => void; placeholder: string;
-  attached: Attached[]; onDetach: (id: string) => void;
+  attached: Attached[]; onAttach: (a: Attached[]) => void; onDetach: (id: string) => void; matterId: string | null; hero: boolean;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
 }) {
-  const ref = useRef<HTMLTextAreaElement>(null);
+  const ref = inputRef;
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = `${Math.min(200, el.scrollHeight)}px`;
-  }, [value]);
+  }, [value, ref]);
   return (
-    <div className="qc-composer-wrap">
+    <div className="qc-composer-wrap" data-hero={hero ? 'true' : undefined}>
       <form className="qc-composer" onSubmit={(e) => { e.preventDefault(); if (!busy) onSend(); }}>
-        <textarea ref={ref} rows={1} value={value} maxLength={2000} placeholder={placeholder} aria-label="Ask EchoMind"
+        <textarea ref={ref} rows={hero ? 2 : 1} value={value} maxLength={2000} placeholder={placeholder} aria-label="Ask EchoMind"
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (!busy) onSend(); } }} />
-        {busy
-          ? <button type="button" className="qc-send" onClick={onStop} aria-label="Stop the answer"><Square aria-hidden /></button>
-          : <button type="submit" className="qc-send" disabled={!value.trim()} aria-label="Send"><ArrowUp aria-hidden /></button>}
+        <div className="qc-composer-row" style={{ alignItems: 'center' }}>
+          <div className="qc-composer-tools">
+            {matterId && <DocumentPicker matterId={matterId} attached={attached} onAttach={onAttach} />}
+            <MatterPicker variant="composer" />
+          </div>
+          <span className="qc-private qc-hide-small" title="Answered by this appliance's own model; nothing leaves it."><Lock aria-hidden />On this appliance</span>
+          {busy
+            ? <button type="button" className="qc-send" onClick={onStop} aria-label="Stop the answer"><Square aria-hidden /></button>
+            : <button type="submit" className="qc-send" disabled={!value.trim()} aria-label="Send"><ArrowUp aria-hidden /></button>}
+        </div>
       </form>
       <div className="qc-composer-meta">
         {attached.map((a) => (

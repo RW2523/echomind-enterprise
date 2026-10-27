@@ -121,7 +121,7 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
   const unique = Array.from(new Map(p.citations.map((c) => [c.n, c])).values())
     .sort((a, b) => (labels.get(a.n) ?? a.n) - (labels.get(b.n) ?? b.n));
   return (
-    <div className="qc-a" data-component="source_answer">
+    <div className="qc-card qc-answer-card" data-component="source_answer">
       <AnswerState p={p} />
       {p.state === 'abstained'
         ? <p className="qc-answer" style={{ margin: 0 }}>The documents in this matter do not answer that. Try naming the document, clause or party.</p>
@@ -151,17 +151,21 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
   );
 }
 
+function CardIcon({ children }: { children: React.ReactNode }) {
+  return <span className="qc-card-icon" aria-hidden>{children}</span>;
+}
+
 // ── priority_list ──────────────────────────────────────────────────────────────
 function PriorityList({ p, ctx }: { p: PriorityListProps; ctx: CardContext }) {
   return (
     <section className="qc-card" data-component="priority_list" aria-label={p.summary}>
-      <h3 className="qc-card-title">{p.summary}</h3>
+      <h3 className="qc-card-title"><CardIcon><ListChecks aria-hidden /></CardIcon>{p.summary}</h3>
       {p.items.length === 0 ? (
         <p className="qc-state" data-tone="verified"><CheckCircle2 aria-hidden />{p.empty || 'Nothing needs your attention.'}</p>
       ) : (
         <ol className="qc-items">
           {p.items.map((it, i) => (
-            <li key={it.id} className="qc-item">
+            <li key={it.id} className="qc-item" data-kind={it.kind}>
               <span className="qc-item-n" aria-hidden>{i + 1}</span>
               <div className="qc-item-body">
                 <strong>{it.title}</strong>
@@ -244,7 +248,7 @@ function EvidenceComparison({ comp, ctx }: { comp: Extract<SafeComponent, { type
   return (
     <section className="qc-card" data-component="evidence_comparison" aria-label={p.title}>
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-        <h3 className="qc-card-title"><Scale size={16} aria-hidden style={{ verticalAlign: -2, marginRight: 6 }} />{p.title}</h3>
+        <h3 className="qc-card-title"><CardIcon><Scale aria-hidden /></CardIcon>{p.title}</h3>
         <span className="qc-status-chip" data-status={p.status}>{STATUS_LABEL[p.status]}</span>
       </div>
       <div className="qc-compare">
@@ -302,10 +306,12 @@ function EventRow({ e, ctx }: { e: TimelineEvent; ctx: CardContext }) {
   const tags = [KIND_LABEL[e.kind], e.reported ? 'Recollection' : null, e.certainty === 'uncertain' ? 'Uncertain' : null,
     e.superseded ? 'Replaced' : null, e.status ?? null].filter((t): t is string => !!t);
   return (
-    <li className="qc-event" data-certainty={e.certainty} data-superseded={e.superseded ? 'true' : undefined}>
+    <li className="qc-event" data-certainty={e.certainty} data-kind={e.kind} data-reported={e.reported ? 'true' : undefined}
+      data-superseded={e.superseded ? 'true' : undefined}>
       <div className="qc-event-date">
         {e.date ? <time dateTime={e.date}>{e.date_text}</time> : <span>“{e.date_text}”</span>}
       </div>
+      <span className="qc-event-rail" aria-hidden><span className="qc-event-dot" /></span>
       <div className="qc-event-body">
         {tags.length > 0 && <div className="qc-tags">{tags.map((t) => <span key={t} className="qc-tag" data-tag={t}>{t}</span>)}</div>}
         <p className="qc-quote" style={{ fontSize: 14.5 }}>{e.text}</p>
@@ -318,6 +324,19 @@ function EventRow({ e, ctx }: { e: TimelineEvent; ctx: CardContext }) {
   );
 }
 
+/** Dated events under their year, as a list a screen reader reads in order. */
+function DatedEvents({ events, ctx }: { events: TimelineEvent[]; ctx: CardContext }) {
+  const rows: React.ReactNode[] = [];
+  let year: string | undefined;
+  for (const e of events) {
+    const y = e.date?.slice(0, 4);
+    if (y !== year) rows.push(<li key={`y-${y}`} className="qc-year" aria-hidden>{y}</li>);
+    year = y;
+    rows.push(<EventRow key={e.id} e={e} ctx={ctx} />);
+  }
+  return <ol className="qc-timeline" aria-label="Dated events">{rows}</ol>;
+}
+
 function Timeline({ p, ctx }: { p: TimelineProps; ctx: CardContext }) {
   const [all, setAll] = useState(false);
   const dated = p.events.filter((e) => e.certainty !== 'undated');
@@ -326,13 +345,13 @@ function Timeline({ p, ctx }: { p: TimelineProps; ctx: CardContext }) {
   const hidden = dated.length - shownDated.length + (all ? 0 : undated.length);
   return (
     <section className="qc-card" data-component="timeline" aria-label={p.summary}>
-      <h3 className="qc-card-title"><CalendarDays size={16} aria-hidden style={{ verticalAlign: -2, marginRight: 6 }} />{p.summary}</h3>
+      <h3 className="qc-card-title"><CardIcon><CalendarDays aria-hidden /></CardIcon>{p.summary}</h3>
       {p.events.length === 0 ? <p className="qc-meta" style={{ margin: 0 }}>No dates found in the documents you can read.</p> : (
         <>
-          {shownDated.length > 0 && <ol className="qc-timeline" aria-label="Dated events">{shownDated.map((e) => <EventRow key={e.id} e={e} ctx={ctx} />)}</ol>}
+          {shownDated.length > 0 && <DatedEvents events={shownDated} ctx={ctx} />}
           {all && undated.length > 0 && (
             <>
-              <h4 className="qc-card-title" style={{ fontSize: 14 }}>Date not stated</h4>
+              <h4 className="qc-card-title" style={{ fontSize: 15 }}>Date not stated</h4>
               <ol className="qc-timeline" aria-label="Events whose date is not stated">{undated.map((e) => <EventRow key={e.id} e={e} ctx={ctx} />)}</ol>
             </>
           )}

@@ -1,134 +1,38 @@
 /**
- * Popovers are fixed-position in the header and need no portal (nothing above them is transformed).
- *
- * The Quiet Counsel shell (docs/echomind-legal/02): four destinations (Chat, Matters, Drafts, Activity) and recent
- * conversations in a collapsible rail; a header with the matter the chat is about, the privacy state and the real
- * capture state; the page; and a right-hand panel that opens beside the conversation. Settings and the firm's
- * administration pages live under the profile menu. Every existing Law page keeps working inside this shell; a matter's
- * own pages are reached from the tab strip above them.
+ * The EchoMind Legal shell (docs/echomind-legal/02): a navy rail with the workspace (Chat, Matters, Drafts, Activity), the
+ * chosen matter's own pages, recent matters and recent conversations; a header with the matter the chat is about, search
+ * (the command palette), the privacy state, the real capture state and the person; the page; and a right-hand panel that
+ * opens beside the conversation. Settings and the firm's administration pages live under the profile menu. Every existing
+ * Law page keeps working inside this shell; a matter's own pages are reached from the tab strip above them.
  */
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useMatch, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, Briefcase, ChevronsUpDown, FilePen, KeyRound, Lock, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
-  Moon, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun,
+  Activity, Briefcase, FilePen, FolderOpen, KeyRound, Landmark, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
+  Moon, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun, Timer,
 } from 'lucide-react';
 import { api } from '../api/client';
-import { keys, useMatters, useReviews } from '../api/queries';
-import type { Matter } from '../api/types';
+import { useMatters, useReviews } from '../api/queries';
 import { useCapturing } from '../app/capture';
 import { MatterProvider, useCurrentMatter } from '../app/matter';
 import { firmEntries, initials, matterEntries } from '../app/nav';
-import { getBlockers } from '../app/navigationGuard';
 import { setThemeMode } from '../app/preferences';
 import { useSession } from '../app/session';
 import { isMac, PaletteProvider, useOpenPalette } from '../ui/Palette';
-import { Dialog } from '../ui/primitives';
 import { counselApi } from './api';
 import { ChatMatterProvider, PanelProvider, useChatMatter, usePanel } from './context';
+import MatterPicker, { usePopover } from './MatterPicker';
 import SidePanel from './SidePanel';
 import './counsel.css';
 
 const RAIL_KEY = 'echomind.counsel.rail';
-
-function usePopover() {
-  const [open, setOpen] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
-  const pop = useRef<HTMLDivElement>(null);
-  const [at, setAt] = useState<{ top: number; left?: number; right?: number }>({ top: 0 });
-  useLayoutEffect(() => {
-    if (!open) return;
-    const r = button.current?.getBoundingClientRect();
-    if (r) setAt(r.left > window.innerWidth / 2 ? { top: r.bottom + 6, right: Math.max(8, window.innerWidth - r.right) } : { top: r.bottom + 6, left: r.left });
-  }, [open]);
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (!button.current?.contains(t) && !pop.current?.contains(t)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); button.current?.focus(); } };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
-  }, [open]);
-  return { open, setOpen, button, pop, style: { top: at.top, left: at.left, right: at.right } as React.CSSProperties };
-}
-
-// ── Header: matter context ─────────────────────────────────────────────────────
-function MatterPicker() {
-  const matters = useMatters();
-  const routeMatter = useCurrentMatter();
-  const { matter: chatMatter, setMatterId } = useChatMatter();
-  const onChat = !!useMatch('/chat/*');
-  const navigate = useNavigate();
-  const qc = useQueryClient();
-  const { open, setOpen, button, pop, style } = usePopover();
-  const [filter, setFilter] = useState('');
-  const [pending, setPending] = useState<{ target: Matter; reasons: string[] } | null>(null);
-  const current = onChat ? chatMatter : routeMatter ?? chatMatter;
-  const list = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    return (matters.data ?? []).filter((m) => !q || `${m.number} ${m.title} ${m.client.name}`.toLowerCase().includes(q));
-  }, [matters.data, filter]);
-
-  const go = (m: Matter) => {
-    setPending(null);
-    setOpen(false);
-    if (routeMatter && routeMatter.id !== m.id) qc.removeQueries({ queryKey: keys.matter(routeMatter.id) });
-    const changed = chatMatter?.id !== m.id;
-    setMatterId(m.id);
-    if (onChat) { if (changed) navigate('/chat'); }         // a conversation is about one matter: a new matter is a new chat
-    else if (routeMatter) navigate(`/m/${encodeURIComponent(m.number)}/overview`);
-  };
-  const choose = (m: Matter) => {
-    if (current?.id === m.id) { setOpen(false); return; }
-    const reasons = getBlockers();
-    if (reasons.length) setPending({ target: m, reasons });
-    else go(m);
-  };
-
-  return (
-    <>
-      <button ref={button} type="button" className="qc-matter-btn" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}
-        aria-label={current ? `Matter: ${current.number} ${current.title}. Switch matter` : 'Choose a matter'}>
-        {current && current.sensitivity !== 'standard' && <Lock aria-label="Restricted" />}
-        <span>{current ? <>{current.number}<span className="qc-hide-small"> · {current.title}</span></> : 'Choose a matter'}</span>
-        <ChevronsUpDown aria-hidden />
-      </button>
-      {open && (
-        <div ref={pop} className="qc-pop" style={style}>
-          <input className="lw-input" autoFocus placeholder="Find a matter…" aria-label="Find a matter" value={filter} onChange={(e) => setFilter(e.target.value)} />
-          <div className="qc-pop-label">Your matters</div>
-          <div role="listbox" aria-label="Your matters" style={{ maxHeight: 320, overflowY: 'auto' }}>
-            {list.map((m) => (
-              <button key={m.id} type="button" role="option" aria-selected={current?.id === m.id} className="qc-pop-item" onClick={() => choose(m)}>
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: 'block', fontWeight: 600 }}>{m.number} · {m.title}</span>
-                  <span className="qc-meta">{m.client.name}</span>
-                </span>
-              </button>
-            ))}
-            {matters.data && list.length === 0 && <p className="qc-meta" style={{ padding: '6px 10px' }}>No matching matters.</p>}
-          </div>
-          <p className="qc-meta" style={{ borderTop: '1px solid var(--rule)', margin: '6px 0 0', padding: '8px 10px 2px' }}>
-            Only matters you're a member of appear here. Each conversation uses one matter's documents.
-          </p>
-        </div>)}
-      {pending && (
-        <Dialog title={`Switch to ${pending.target.number}?`} onClose={() => setPending(null)}
-          footer={<>
-            <button type="button" className="lw-btn lw-btn-ghost" onClick={() => setPending(null)}>Stay here</button>
-            <button type="button" className="lw-btn lw-btn-primary" onClick={() => go(pending.target)}>Switch matter</button>
-          </>}>
-          <p style={{ margin: 0 }}>Something is still in progress:</p>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>{pending.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
-        </Dialog>
-      )}
-    </>
-  );
-}
+const ROLE_LABEL: Record<string, string> = {
+  managing_partner: 'Managing partner', attorney: 'Attorney', paralegal: 'Paralegal', reviewer: 'Reviewer', firm_admin: 'Firm administrator',
+  records_admin: 'Records', read_only: 'Read only', intake: 'Intake', conflicts: 'Conflicts',
+};
+/** The matter pages offered in the rail when no matter page is open (the tab strip shows them all on a matter page). */
+const RAIL_MATTER_PAGES = ['overview', 'documents', 'research', 'meetings', 'drafting', 'obligations', 'panel'];
 
 // ── Header: privacy and capture state ──────────────────────────────────────────
 function PrivacyStatus() {
@@ -176,9 +80,12 @@ function ProfileMenu() {
   const go = (to: string) => { setOpen(false); navigate(to); };
   return (
     <>
-      <button ref={button} type="button" className="qc-icon-btn" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}
-        aria-label={`Account and settings for ${me.user.username}`} style={{ border: '1px solid var(--rule)', fontWeight: 650, fontSize: 13 }}>
-        {initials(me.user.username)}
+      <button ref={button} type="button" className="qc-me" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}
+        aria-label={`Account and settings for ${me.user.username}`}>
+        <span className="qc-avatar" aria-hidden>{initials(me.user.username)}</span>
+        <span className="qc-me-text qc-hide-medium" aria-hidden>
+          <b>{me.user.username}</b><small>{ROLE_LABEL[me.user.roles[0] ?? me.user.role] ?? 'Member'}</small>
+        </span>
       </button>
       {open && (
         <div ref={pop} className="qc-pop" role="menu" aria-label="Account and settings" style={style}>
@@ -199,15 +106,55 @@ function ProfileMenu() {
 }
 
 // ── Rail ───────────────────────────────────────────────────────────────────────
+/** The chosen matter's main pages, from the chat and the firm pages (on a matter page its tab strip shows them all). */
+function CurrentMatter() {
+  const me = useSession();
+  const routeMatter = useCurrentMatter();
+  const { matter } = useChatMatter();
+  if (routeMatter || !matter) return null;
+  const entries = matterEntries(me, matter).filter((e) => RAIL_MATTER_PAGES.includes(e.key));
+  return (
+    <>
+      <div className="qc-rail-label qc-hide-collapsed" title={`${matter.number} · ${matter.title}`}>{matter.number}</div>
+      <nav aria-label="Current matter">
+        {entries.map((e) => <RailLink key={e.key} to={e.to} icon={<e.icon aria-hidden />} label={e.label}>{e.label}</RailLink>)}
+      </nav>
+    </>
+  );
+}
+
+/** A few of the person's other matters, to open one directly (beside the chat; the Matters page lists them all). */
+function RecentMatters() {
+  const onChat = !!useMatch('/chat/*');
+  const matters = useMatters();
+  const { matter } = useChatMatter();
+  const routeMatter = useCurrentMatter();
+  const current = routeMatter?.id ?? matter?.id;
+  const list = (matters.data ?? []).filter((m) => m.status === 'open' && m.id !== current).slice(0, 4);
+  if (!onChat || !list.length) return null;
+  return (
+    <>
+      <div className="qc-rail-label qc-hide-collapsed">Other matters</div>
+      <nav className="qc-history qc-hide-collapsed" aria-label="Other matters">
+        {list.map((m) => (
+          <NavLink key={m.id} to={`/m/${encodeURIComponent(m.number)}/overview`} className="qc-recent-matter" title={`${m.number} · ${m.title}`}>
+            <FolderOpen aria-hidden /><span>{m.title}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </>
+  );
+}
+
 function History() {
   const q = useQuery({ queryKey: ['counsel', 'conversations'], retry: false, staleTime: 10_000, queryFn: () => counselApi.conversations() });
   const items = q.data?.conversations ?? [];
   if (!items.length) return null;
   return (
     <>
-      <div className="qc-rail-label qc-hide-collapsed">Recent</div>
+      <div className="qc-rail-label qc-hide-collapsed">Recent conversations</div>
       <nav className="qc-history qc-hide-collapsed" aria-label="Recent conversations">
-        {items.slice(0, 20).map((c) => (
+        {items.slice(0, 12).map((c) => (
           <NavLink key={c.id} to={`/chat/${c.id}`} className={({ isActive }) => `qc-history-item${isActive ? ' active' : ''}`}>
             <span>{c.title}</span><small>{c.matter.number}</small>
           </NavLink>
@@ -218,7 +165,11 @@ function History() {
 }
 
 function RailLink({ to, icon, children, end, label }: { to: string; icon: React.ReactNode; children: React.ReactNode; end?: boolean; label?: string }) {
-  return <NavLink to={to} end={end} className="qc-rail-link" aria-label={label}>{icon}<span className="qc-hide-collapsed">{children}</span></NavLink>;
+  return (
+    <NavLink to={to} end={end} className="qc-rail-link" aria-label={label} title={label}>
+      {icon}<span className="qc-rail-text qc-hide-collapsed">{children}</span>
+    </NavLink>
+  );
 }
 
 /** Drafts, with how many items wait for the person's decision (the reviews queue). */
@@ -226,17 +177,18 @@ function DraftsLink() {
   const n = useReviews().data?.count ?? 0;
   return (
     <RailLink to="/drafts" icon={<FilePen aria-hidden />} label={n ? `Drafts, ${n} waiting for you` : 'Drafts'}>
-      Drafts{n > 0 && <span className="lw-nav-count" aria-hidden="true" style={{ marginLeft: 'auto' }}>{n}</span>}
+      Drafts{n > 0 && <span className="qc-rail-count" aria-hidden="true">{n}</span>}
     </RailLink>
   );
 }
 
-/** The command palette (Ctrl/⌘ K) that the Law pages already provide. */
+/** The command palette (Ctrl/⌘ K) that the Law pages already provide: matters, pages and actions. */
 function SearchButton() {
   const open = useOpenPalette();
+  const shortcut = isMac() ? '⌘K' : 'Ctrl K';
   return (
-    <button type="button" className="qc-icon-btn qc-hide-small" onClick={() => open()} aria-label={`Search or jump to (${isMac() ? '⌘K' : 'Ctrl K'})`}>
-      <Search aria-hidden />
+    <button type="button" className="qc-search qc-hide-small" onClick={() => open()} aria-label={`Search or jump to (${shortcut})`}>
+      <Search aria-hidden /><span>Find a matter, page or action…</span><kbd className="qc-kbd">{shortcut}</kbd>
     </button>
   );
 }
@@ -288,22 +240,31 @@ function ShellBody() {
         <button type="button" className="qc-icon-btn qc-hide-narrow" aria-label={collapsed ? 'Expand the sidebar' : 'Collapse the sidebar'} onClick={toggleRail}>
           {collapsed ? <PanelLeftOpen aria-hidden /> : <PanelLeftClose aria-hidden />}
         </button>
-        <NavLink to="/chat" className="qc-brand" aria-label="EchoMind Legal, new chat"><span className="qc-brand-mark" aria-hidden>E</span><span className="qc-hide-narrow">EchoMind</span></NavLink>
         <MatterPicker />
-        <span className="qc-header-spacer" />
         <SearchButton />
+        <span className="qc-header-spacer" />
         <PrivacyStatus />
         <RecordingStatus />
         <ProfileMenu />
       </header>
-      <nav className="qc-rail" aria-label="Workspace">
-        <button type="button" className="qc-new-chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-hide-collapsed">New chat</span></button>
-        <RailLink to="/chat" icon={<MessageSquare aria-hidden />}>Chat</RailLink>
-        <RailLink to="/matters" icon={<Briefcase aria-hidden />}>Matters</RailLink>
-        <DraftsLink />
-        <RailLink to="/activity" icon={<Activity aria-hidden />}>Activity</RailLink>
+      <aside className="qc-rail" aria-label="Sidebar">
+        <NavLink to="/chat" className="qc-brand" aria-label="EchoMind Legal, new chat">
+          <span className="qc-brand-mark" aria-hidden><Landmark /></span>
+          <span className="qc-brand-text qc-hide-collapsed" aria-hidden><b>EchoMind<em>Legal</em></b><small>Private AI for legal work</small></span>
+        </NavLink>
+        <nav aria-label="Workspace">
+          <button type="button" className="qc-new-chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-hide-collapsed">New chat</span></button>
+          <RailLink to="/chat" icon={<MessageSquare aria-hidden />}>Chat</RailLink>
+          <RailLink to="/matters" icon={<Briefcase aria-hidden />}>Matters</RailLink>
+          <DraftsLink />
+          <RailLink to="/activity" icon={<Activity aria-hidden />}>Activity</RailLink>
+          {me.features?.time_entries && <RailLink to="/time" icon={<Timer aria-hidden />}>Time</RailLink>}
+        </nav>
+        <CurrentMatter />
+        <RecentMatters />
         <History />
-      </nav>
+        <div className="qc-rail-foot qc-hide-collapsed"><ShieldCheck aria-hidden />Runs on this appliance. No cloud.</div>
+      </aside>
       {drawer && <button type="button" className="qc-scrim qc-only-narrow" aria-label="Close menu" onClick={() => setDrawer(false)} />}
       <div className="qc-body">
         <main className="qc-main" id="main">

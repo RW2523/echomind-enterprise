@@ -1,7 +1,7 @@
 /** Typed calls to /api/legal/counsel (backend/app/legal/counsel/routes.py). Same-origin; the CSRF header is added globally. */
 import { api, ApiError, postStream } from '../api/client';
 import type { AuditEvent } from '../api/types';
-import type { CitationDetail, ConversationSummary } from './types';
+import type { CitationDetail, ConversationSummary, DiscrepancyStatus } from './types';
 
 const BASE = '/api/legal/counsel';
 
@@ -18,6 +18,8 @@ export interface ActivityPage {
 
 export interface AskBody { text: string; client_request_id: string; document_ids?: string[]; focus_discrepancy_id?: string }
 
+export interface DiscrepancySummary { id: string; title: string; status: DiscrepancyStatus; kind: string; version: number; updated_at: string }
+
 /** The answer to a component action: the updated component, or why not (with the current one on a 409). */
 export interface ActionResult { ok: boolean; status: number; message: string; component?: unknown }
 
@@ -30,6 +32,8 @@ export const counselApi = {
   ask: (id: string, body: AskBody, onEvent: (e: { event: string; data: any }) => void, signal?: AbortSignal) =>
     postStream(`${BASE}/conversations/${encodeURIComponent(id)}/turns`, body, onEvent, signal),
   citation: (id: string) => api.get<{ citation: CitationDetail }>(`${BASE}/citations/${encodeURIComponent(id)}`),
+  discrepancies: (matterId: string, state: 'open' | 'resolved' | 'all' = 'open') =>
+    api.get<{ discrepancies: DiscrepancySummary[] }>(`${BASE}/discrepancies?matter_id=${encodeURIComponent(matterId)}&state=${state}`),
   activity: (before?: number) => api.get<ActivityPage>(`${BASE}/activity${before ? `?before=${before}` : ''}`),
   async action(body: { component_id: string; action_id: 'review'; matter_id: string; expected_version: number;
                       parameters: Record<string, unknown>; idempotency_key: string }): Promise<ActionResult> {
