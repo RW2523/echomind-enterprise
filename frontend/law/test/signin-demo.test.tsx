@@ -10,6 +10,40 @@ const PEOPLE = [{ username: 'alice', roles: ['attorney'] }, { username: 'harper'
 describe('One-click demo sign-in (D-077)', () => {
   afterEach(() => cleanup());
 
+  it("the owner's open demo: no sign-in step, the page enters as the named demo person by itself", async () => {
+    sessionStorage.clear();
+    const calls = mockApi({
+      'GET /api/auth/config': () => [200, { auth_enabled: true, edition: 'law', demo_signin: true }],
+      'GET /api/auth/demo': () => [200, { people: PEOPLE, auto: 'alice' }],
+      'POST /api/auth/demo/alice': () => [200, { status: 'ok', user: { username: 'alice' } }],
+      'GET /api/auth/me': () => [200, me()],
+      'GET /api/legal/matters': () => [200, { matters: [] }],
+    });
+    const { router } = renderLaw('/signin');
+    await waitFor(() => expect(router.state.location.pathname).toBe('/chat'));
+    expect(calls.filter((c) => c.method === 'POST' && c.path === '/api/auth/demo/alice')).toHaveLength(1);
+    expect(calls.some((c) => c.path === '/api/auth/login')).toBe(false);
+  });
+
+  it('the open demo still has a way in for other accounts (?manual=1), and does not loop if entering fails', async () => {
+    sessionStorage.clear();
+    const calls = mockApi({
+      'GET /api/auth/config': () => [200, { auth_enabled: true, edition: 'law', demo_signin: true }],
+      'GET /api/auth/demo': () => [200, { people: PEOPLE, auto: 'alice' }],
+      'POST /api/auth/demo/alice': () => [403, { detail: 'This demo person is not active.' }],
+    });
+    renderLaw('/signin?manual=1');
+    expect(await screen.findByRole('group', { name: 'Enter the demo as' })).toBeTruthy();
+    expect(calls.some((c) => c.method === 'POST')).toBe(false);
+    cleanup();
+    renderLaw('/signin');
+    expect(await screen.findByText('This demo person is not active.')).toBeTruthy();       // tried once, says why
+    cleanup();
+    renderLaw('/signin');                                                                   // a minute later at the earliest
+    expect(await screen.findByRole('group', { name: 'Enter the demo as' })).toBeTruthy();
+    expect(calls.filter((c) => c.method === 'POST')).toHaveLength(1);
+  });
+
   it('lists the demo people; one click signs in as that person and opens the workspace', async () => {
     const calls = mockApi({
       'GET /api/auth/config': () => [200, { auth_enabled: true, edition: 'law', demo_signin: true }],

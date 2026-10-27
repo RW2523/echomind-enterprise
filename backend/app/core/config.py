@@ -290,6 +290,9 @@ class Settings(BaseSettings):
     # only from this server or private addresses, "anywhere" from any address (the owner's choice).
     LEGAL_DEMO_SIGNIN: bool = os.getenv("LEGAL_DEMO_SIGNIN", "0").lower() in ("1", "true", "yes")
     LEGAL_DEMO_SIGNIN_FROM: str = os.getenv("LEGAL_DEMO_SIGNIN_FROM", "private")
+    # The owner's open demo (2026-10-27): with demo sign-in on, the sign-in page enters as this demo person by itself, so a
+    # visitor never sees a sign-in step. Empty (the default): the page lists the demo people to choose from.
+    LEGAL_DEMO_AUTO: str = os.getenv("LEGAL_DEMO_AUTO", "").strip()
     LEGAL_PASSWORD_MIN_LENGTH: int = int(os.getenv("LEGAL_PASSWORD_MIN_LENGTH", "12"))
     LEGAL_WS_RECHECK_SEC: float = float(os.getenv("LEGAL_WS_RECHECK_SEC", "60"))          # re-validate open WebSockets
     LEGAL_OBO_TTL_SEC: int = int(os.getenv("LEGAL_OBO_TTL_SEC", "300"))                   # voice → backend token lifetime

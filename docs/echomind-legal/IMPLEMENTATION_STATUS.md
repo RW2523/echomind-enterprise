@@ -175,6 +175,11 @@ python3 scripts/law/demo_load.py --base http://127.0.0.1:8110/api --data-dir "$P
 LAW_FRONTEND_HOST=localhost scripts/law/dev_frontend.sh                  # http://localhost:5174 → "Enter the demo as" alice
 ```
 Demo sign-in is for this local, fictional setup only; it is off by default and must stay off with real data.
+**Open demo, no sign-in step (owner's request, 2026-10-27):** `LEGAL_DEMO_SIGNIN=1 LEGAL_DEMO_SIGNIN_FROM=anywhere
+LEGAL_DEMO_AUTO=alice` — the sign-in page enters as that demo person by itself, so a visitor opens straight into the
+workspace. Only a demo seed person can be named; `/signin?manual=1` still shows the page (the administrator's way in); a
+failed entry is tried once, not looped. Every visitor is the same person and sees the same conversations. Never with real
+data: unset the three to restore sign-in. Tests: `test_law_demo_signin.py` (open demo), `signin-demo.test.tsx` (2).
 
 ## Next, in order
 

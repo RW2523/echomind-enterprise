@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import QRCode from 'qrcode';
@@ -24,6 +24,8 @@ const OIDC_ERRORS: Record<string, string> = {
   unavailable: 'Your firm\'s sign-in service could not be reached. Sign in with your password, or try again later.',
 };
 
+const AUTO_KEY = 'echomind.law.demo-auto';
+
 export default function SignIn() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -42,18 +44,39 @@ export default function SignIn() {
   const [recovery, setRecovery] = useState<string[]>([]);
   const [error, setError] = useState(OIDC_ERRORS[params.get('oidc_error') ?? ''] ?? '');
   const [busy, setBusy] = useState(false);
+  const [opening, setOpening] = useState(false);       // the owner's open demo: entering as the demo person by itself
+  const tried = useRef(false);
 
   useEffect(() => { document.documentElement.dataset.edition = 'law'; }, []);
   useEffect(() => {
     api.get<{ oidc?: { label: string }; demo_signin?: boolean }>('/api/auth/config').then((c) => {
       setOidc(c.oidc ?? null);
-      if (c.demo_signin) api.get<{ people: { username: string; roles: string[] }[] }>('/api/auth/demo').then((r) => setDemo(r.people)).catch(() => setDemo([]));
+      if (c.demo_signin) api.get<{ people: { username: string; roles: string[] }[]; auto?: string }>('/api/auth/demo').then((r) => {
+        setDemo(r.people);
+        if (r.auto && autoAllowed()) enterAs(r.auto);
+      }).catch(() => setDemo([]));
     }).catch(() => setOidc(null));
   }, []);
 
   const finish = async () => {
     await qc.invalidateQueries({ queryKey: keys.me });
     navigate(safeNext(params.get('next')), { replace: true });
+  };
+  // LEGAL_DEMO_AUTO: no sign-in step at all. Not on an enrolment link, after a sign-in error, with ?manual=1 (the
+  // administrator's way in), or again within a minute of the last try (a browser that refuses the session must not loop).
+  const autoAllowed = () => {
+    if (tried.current || enrolToken || params.get('manual') || params.get('oidc_error')) return false;
+    try {
+      const last = Number(sessionStorage.getItem(AUTO_KEY) || 0);
+      if (Date.now() - last < 60_000) return false;
+      sessionStorage.setItem(AUTO_KEY, String(Date.now()));
+    } catch { /* storage unavailable: one try for this page */ }
+    return true;
+  };
+  const enterAs = (person: string) => {
+    tried.current = true;
+    setOpening(true);
+    void run(async () => { await api.post(`/api/auth/demo/${encodeURIComponent(person)}`); await finish(); }).finally(() => setOpening(false));
   };
   const run = async (fn: () => Promise<void>) => {
     setBusy(true); setError('');
@@ -102,7 +125,8 @@ export default function SignIn() {
             </div>
           </div>
 
-          {step === 'password' && demo.length > 0 && !enrolToken && (
+          {opening && <p className="lw-meta" role="status" style={{ margin: 0 }}>Opening EchoMind Legal…</p>}
+          {!opening && step === 'password' && demo.length > 0 && !enrolToken && (
             <div role="group" aria-label="Enter the demo as" style={{ display: 'grid', gap: 8, marginBottom: 18 }}>
               <h2 className="lw-h2" style={{ margin: 0 }}>Enter the demo as</h2>
               <p className="lw-meta" style={{ margin: 0, fontSize: 13.5 }}>Fictional people with fictional matters. No password or code needed.</p>

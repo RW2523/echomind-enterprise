@@ -82,3 +82,19 @@ def test_by_default_only_from_this_server_or_a_private_address(demo, monkeypatch
     assert outside.post("/api/auth/demo/alice").status_code == 404
     monkeypatch.setattr(settings, "LEGAL_DEMO_SIGNIN_FROM", "anywhere")          # the owner's choice for the pilot
     assert outside.post("/api/auth/demo/alice").status_code == 200
+
+
+def test_the_owner_s_open_demo_names_the_person_the_page_enters_as(demo, monkeypatch):
+    """LEGAL_DEMO_AUTO: the sign-in page enters as this demo person by itself. Only a demo person, only when demo sign-in is
+    available to this caller; the entry itself is the same audited demo session."""
+    from app.core.config import settings
+    c = browser(demo)
+    assert "auto" not in c.get("/api/auth/demo").json()                          # off by default: the page lists the people
+    monkeypatch.setattr(settings, "LEGAL_DEMO_AUTO", "alice")
+    assert c.get("/api/auth/demo").json()["auto"] == "alice"
+    monkeypatch.setattr(settings, "LEGAL_DEMO_AUTO", "admin")                     # never the administrator or a real account
+    assert "auto" not in c.get("/api/auth/demo").json()
+    monkeypatch.setattr(settings, "LEGAL_DEMO_AUTO", "alice")
+    assert browser(demo, PUBLIC).get("/api/auth/demo").status_code == 404        # not from a public address unless "anywhere"
+    monkeypatch.setattr(settings, "LEGAL_DEMO_SIGNIN", False)
+    assert c.get("/api/auth/demo").status_code == 404                             # nothing without demo sign-in

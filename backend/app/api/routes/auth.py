@@ -264,7 +264,8 @@ def demo_people(request: Request):
         acct = accounts.get_by_username(name)
         if acct and acct["status"] == "active":
             people.append({"username": name, "roles": sorted(accounts.roles_of(acct["id"]))})
-    return {"people": people}
+    auto = demo.auto()
+    return {"people": people, **({"auto": auto} if auto and any(p["username"] == auto for p in people) else {})}
 
 
 @router.post("/demo/{username}")

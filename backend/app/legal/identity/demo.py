@@ -40,3 +40,9 @@ def _from_allowed(request) -> bool:
 
 def available(request) -> bool:
     return bool(is_law() and settings.LEGAL_DEMO_SIGNIN and _from_allowed(request) and people())
+
+
+def auto() -> str | None:
+    """The demo person the sign-in page enters as by itself (LEGAL_DEMO_AUTO), if that is one of the demo people."""
+    name = settings.LEGAL_DEMO_AUTO
+    return name if name and name in people() else None
