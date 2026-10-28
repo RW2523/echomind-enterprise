@@ -302,7 +302,10 @@ def _tesseract_version() -> str:
 
 def _ocr_page(page) -> dict:
     """OCR one page: paragraphs of text, each with its low-confidence words, and the mean confidence."""
-    pix = page.get_pixmap(dpi=settings.LEGAL_OCR_DPI, colorspace="gray")
+    # A huge page (a poster, a forged media box) is rendered at a lower resolution, never as a giant image (review F4).
+    area = max(1.0, float(page.rect.width) * float(page.rect.height)) / (72.0 * 72.0)      # square inches
+    dpi = max(36, min(settings.LEGAL_OCR_DPI, int((settings.LEGAL_OCR_MAX_PIXELS / area) ** 0.5)))
+    pix = page.get_pixmap(dpi=dpi, colorspace="gray")
     run = subprocess.run([settings.LEGAL_TESSERACT_CMD, "stdin", "stdout",
                           *_tessdata_args(settings.LEGAL_TESSERACT_CMD, settings.LEGAL_TESSDATA_DIR, settings.LEGAL_OCR_LANG),
                           "-l", settings.LEGAL_OCR_LANG, "--psm", "3", "tsv"],

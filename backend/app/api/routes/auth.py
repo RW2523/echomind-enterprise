@@ -9,7 +9,7 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ...core.config import settings
 from ...core import auth as authmod
@@ -22,8 +22,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 class LoginIn(BaseModel):
-    username: str
-    password: str
+    username: str = Field(max_length=256)
+    password: str = Field(max_length=1024)
 
 
 @router.get("/config")

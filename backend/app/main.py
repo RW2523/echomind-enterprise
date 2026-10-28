@@ -209,12 +209,33 @@ _LAW_LINK_PREFIX = "/api/intake-link/"
 _MUTATING = {"POST", "PUT", "PATCH", "DELETE"}
 
 
+def _body_refused(request: Request):
+    """Commercial-readiness review F4: a request body that is not a file upload is small (LEGAL_MAX_BODY_BYTES), and its size
+    is declared up front — checked before anything parses it, including on the sign-in and intake-link routes."""
+    if request.method not in _MUTATING:
+        return None
+    if (request.headers.get("content-type") or "").lower().startswith("multipart/"):
+        return None                                        # uploads: each route checks its own limits (documents/validate.py)
+    length = request.headers.get("content-length")
+    if length is None:
+        if "chunked" in (request.headers.get("transfer-encoding") or "").lower():
+            return JSONResponse({"detail": "Send the request with its length."}, status_code=411)
+        return None
+    try:
+        too_big = int(length) > settings.LEGAL_MAX_BODY_BYTES
+    except ValueError:
+        return JSONResponse({"detail": "Invalid Content-Length."}, status_code=400)
+    return JSONResponse({"detail": "The request is too large."}, status_code=413) if too_big else None
+
+
 def _law_guard(request: Request):
     """None to let the request through, or the error response to return."""
     from .legal.identity import CSRF_HEADER
     from .legal.identity.principal import PARTIAL_PATHS, PASSWORD_CHANGE_PATHS
     from .legal.identity.sessions import csrf_ok
     path = request.url.path
+    if path.startswith("/api/") and (refused := _body_refused(request)) is not None:
+        return refused
     if request.method == "OPTIONS" or path in _LAW_PUBLIC_PATHS or not path.startswith("/api/") or path.startswith("/api/auth/demo/"):
         return None
     if path.startswith(_LAW_LINK_PREFIX):
@@ -238,6 +259,13 @@ def _law_guard(request: Request):
         from .legal.audit.record import guard_refused
         guard_refused(request, 403, "csrf_failed")
         return JSONResponse({"detail": "CSRF check failed"}, status_code=403)
+    if request.method == "POST":
+        from .legal import quota
+        if quota.MODEL_WORK.match(path) and (wait := quota.take(principal["sub"])):
+            from .legal.audit.record import guard_refused
+            guard_refused(request, 429, "model_rate_limited")
+            return JSONResponse({"detail": "Too many requests for the model at once. Wait a moment and try again."},
+                                status_code=429, headers={"Retry-After": quota.retry_after(wait)})
     return None
 
 
@@ -297,6 +325,9 @@ async def _activity_log(request: Request, call_next):
     try:
         path = request.url.path
         if path.startswith("/api/") and request.method in ("POST", "PUT", "DELETE", "PATCH") and path not in _ACTIVITY_EXCLUDE:
+            if is_law():                                   # an intake link's token is its key: never kept (review F8)
+                from .core.edition import mask_secrets
+                path = mask_secrets(path)
             ip = request.client.host if request.client else ""
             record_activity((payload or {}).get("username"), (payload or {}).get("role"), request.method, path, response.status_code, ip)
     except Exception:

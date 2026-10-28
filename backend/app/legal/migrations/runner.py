@@ -160,6 +160,11 @@ _REFUSE_BELOW = (
     (33, "SELECT COUNT(*) FROM legal_panel_reviews", "delete {n} panel review(s) and the questions asked"),
     (34, "SELECT COUNT(*) FROM legal_regulatory_matches WHERE status <> 'new'",
      "delete {n} lawyers' decision(s) on regulatory updates, with who made them and why"),
+    # Commercial-readiness review R11 (2026-10-28): the chat's records.
+    (36, "SELECT (SELECT COUNT(*) FROM legal_discrepancy_reviews) + (SELECT COUNT(*) FROM legal_conversations)",
+     "delete {n} lawyers' decision(s) on potential inconsistencies and chat conversation(s)"),
+    (38, "SELECT COUNT(*) FROM legal_conversation_matters WHERE position > 0",
+     "drop the other matters of {n} conversation(s) about several matters"),
 )
 
 

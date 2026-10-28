@@ -384,6 +384,12 @@ class Settings(BaseSettings):
     LEGAL_TESSDATA_DIR: str = os.getenv("LEGAL_TESSDATA_DIR", "")                   # empty: next to the tesseract program
     LEGAL_OCR_LANG: str = os.getenv("LEGAL_OCR_LANG", "eng")
     LEGAL_OCR_DPI: int = int(os.getenv("LEGAL_OCR_DPI", "300"))
+    # Largest page image OCR renders (pixels); a bigger page is rendered at a lower resolution (review F4, 2026-10-28).
+    LEGAL_OCR_MAX_PIXELS: int = int(os.getenv("LEGAL_OCR_MAX_PIXELS", "40000000"))
+    # Commercial-readiness review F4 (2026-10-28): requests that start model work, per person per minute (0 = no limit),
+    # and the largest request body that is not a file upload (bytes).
+    LEGAL_MODEL_REQUESTS_PER_MIN: int = int(os.getenv("LEGAL_MODEL_REQUESTS_PER_MIN", "20"))
+    LEGAL_MAX_BODY_BYTES: int = int(os.getenv("LEGAL_MAX_BODY_BYTES", str(2 * 1024 * 1024)))
     LEGAL_OCR_MIN_CHARS: int = int(os.getenv("LEGAL_OCR_MIN_CHARS", "20"))           # a page with less text than this is OCR'd
     LEGAL_OCR_MAX_PAGES: int = int(os.getenv("LEGAL_OCR_MAX_PAGES", "500"))           # beyond this, pages stay unread (reported)
     LEGAL_OCR_TIMEOUT_S: int = int(os.getenv("LEGAL_OCR_TIMEOUT_S", "120"))           # per page

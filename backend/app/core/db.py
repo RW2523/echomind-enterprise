@@ -293,6 +293,9 @@ def get_conn():
     # NORMAL sync: safe on power loss (WAL checkpoint handles durability).
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
+    # Deleted rows are overwritten, not left in free pages: a purged document's text must not survive in the file or in a
+    # backup copied from it (commercial-readiness review R6, 2026-10-28).
+    conn.execute("PRAGMA secure_delete=ON")
     try:
         yield conn
     finally:

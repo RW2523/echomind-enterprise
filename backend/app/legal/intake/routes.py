@@ -23,6 +23,7 @@ Enquirer links (LEGAL_INTAKE and LEGAL_INTAKE_LINKS; no session, the token is th
 """
 from __future__ import annotations
 
+import json
 import threading
 import time
 import uuid
@@ -417,6 +418,14 @@ def _link(token: str, request: Request) -> dict:
 
 class AnswersIn(BaseModel):
     answers: dict
+
+    @field_validator("answers")
+    @classmethod
+    def _small(cls, v: dict) -> dict:
+        # An enquirer's answers are a short form (review F4): bounded before the token is even looked at.
+        if len(v) > 100 or len(json.dumps(v, ensure_ascii=False)) > 64_000:
+            raise ValueError("too many or too long answers")
+        return v
 
 
 @public_router.get("/{token}")

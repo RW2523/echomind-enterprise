@@ -158,6 +158,11 @@ def api_docs_enabled() -> bool:
 _SECRET_IN_PATH = re.compile(r"(/api/intake-link/|/intake/|[?&](?:enrol|token)=)[A-Za-z0-9_\-]{16,}")
 
 
+def mask_secrets(text: str) -> str:
+    """A path or query with any intake-link or enrolment token replaced by <secret>."""
+    return _SECRET_IN_PATH.sub(r"\1<secret>", text)
+
+
 def _redact(value):
     # Free text (anything with whitespace, or long) is a question, quote, title or path derived
     # from matter content. Short single tokens — ids, URLs, model names, reasons — stay readable.
