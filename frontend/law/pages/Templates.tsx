@@ -159,10 +159,10 @@ function TemplateEditor({ template, onClose, onSaved }: { template?: FirmTemplat
     finally { setBusy(false); }
   };
   return (
-    <Dialog title={template ? `New version of ${template.name}` : 'New template'} onClose={onClose}
+    <Dialog width={720} title={template ? `New version of ${template.name}` : 'New template'} onClose={onClose}
       footer={<><button type="button" className="lw-btn" onClick={onClose}>Cancel</button>
         <button type="button" className="lw-btn lw-btn-primary" disabled={busy || (!template && !name.trim())} onClick={save}>{busy ? 'Saving…' : 'Save as a draft version'}</button></>}>
-      <div style={{ display: 'grid', gap: 10, minWidth: 'min(720px, 80vw)' }}>
+      <div style={{ display: 'grid', gap: 10 }}>
         {!template && (
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
             <Field label="Name">{(id) => <input id={id} className="lw-input" value={name} onChange={(e) => setName(e.target.value)} />}</Field>

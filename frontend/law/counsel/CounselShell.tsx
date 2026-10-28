@@ -18,7 +18,7 @@ import { useCapturing } from '../app/capture';
 import { MatterProvider, useCurrentMatter } from '../app/matter';
 import { firmEntries, initials, matterEntries } from '../app/nav';
 import { setThemeMode } from '../app/preferences';
-import { useSession } from '../app/session';
+import { hasFirmRole, useSession } from '../app/session';
 import { whereAnswersComeFrom } from './where';
 import { isMac, PaletteProvider, useOpenPalette } from '../ui/Palette';
 import { counselApi } from './api';
@@ -262,7 +262,8 @@ function ShellBody() {
         <main className="qc-main" id="main">
           {me.features?.demo_signin && (
             <div className="lw-demo-banner" role="status" aria-label="Demo sign-in">
-              Demo sign-in is on: anyone who can open this page can enter as the demo's fictional people, without a password. Turn it off before real data goes in.
+              Demo sign-in is on: anyone who can open this page can enter as the demo's fictional people, without a password.
+              {hasFirmRole(me, 'firm_admin') ? ' Turn it off before real data goes in.' : ' Do not enter real client information.'}
             </div>
           )}
           <MatterTabs />

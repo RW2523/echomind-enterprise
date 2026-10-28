@@ -510,3 +510,8 @@
 .qc-tool-list a svg { width: 16px; height: 16px; color: var(--ink-3); }
 .qc-tool-list .lw-meta { text-align: right; }
 @media (max-width: 560px) { .qc-tool-list li { flex-direction: column; gap: 2px; } .qc-tool-list .lw-meta { text-align: left; } }
+.qc-next { margin: 4px 0 0; font-size: 14px; color: var(--ink-3); }
+.qc-next a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+.qc-next a:hover { color: var(--ink); text-decoration-color: currentColor; }
+/* Dialogs: as wide as they ask (Dialog width), never wider than the screen, scrolling inside when tall (review V2). */
+[data-edition="law"][data-shell="counsel"] .lw-dialog { width: min(var(--dialog-w, 480px), 100%); box-sizing: border-box; }

@@ -9,7 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import { ArrowUp, CalendarRange, Columns3, ListChecks, Lock, Paperclip, Scale, ScrollText, Square, X } from 'lucide-react';
 import { ApiError } from '../api/client';
-import { useDocuments, useMatters } from '../api/queries';
+import { useDocuments, useMatters, useObligations, useReviews } from '../api/queries';
 import type { Matter } from '../api/types';
 import { matterEntries } from '../app/nav';
 import { useSession } from '../app/session';
@@ -35,6 +35,28 @@ const SEVERAL_MATTERS: Starter[] = [
   { label: 'Build one chronology for these matters', ask: 'Build a chronology of events', icon: CalendarRange },
   { label: 'Find conflicting dates inside each matter', ask: 'Find conflicting dates or amounts', icon: Scale },
 ];
+/** One quiet line under the matter (review H1): what waits for the person's decision, and the next dated deadline, each a
+ *  link. Nothing when there is neither. A deadline read from a document but not confirmed by a lawyer says so. */
+function NextUp({ matter }: { matter: Matter }) {
+  const reviews = useReviews();
+  const obligations = useObligations(matter.id);
+  const waiting = (reviews.data?.waiting ?? []).filter((i) => i.matter?.number === matter.number).length;
+  const today = new Date().toISOString().slice(0, 10);
+  const next = (obligations.data?.obligations ?? [])
+    .filter((o) => o.due_date && o.due_date >= today && o.status !== 'dismissed' && o.status !== 'done')
+    .sort((a, b) => (a.due_date ?? '').localeCompare(b.due_date ?? ''))[0];
+  if (!waiting && !next) return null;
+  const base = `/m/${encodeURIComponent(matter.number)}`;
+  return (
+    <p className="qc-next">
+      {waiting > 0 && <Link to="/drafts">{waiting} item{waiting === 1 ? '' : 's'} wait{waiting === 1 ? 's' : ''} for your decision</Link>}
+      {waiting > 0 && next && <span aria-hidden> · </span>}
+      {next && <Link to={`${base}/obligations`}>Next deadline {new Date(`${next.due_date}T12:00:00`).toLocaleDateString([], { day: 'numeric', month: 'short' })}
+        {next.status === 'confirmed' ? '' : ' (not confirmed)'}</Link>}
+    </p>
+  );
+}
+
 /** The matter's own pages that the home links to quietly (the rest are on the matter's tabs). */
 const MATTER_LINKS: { key: string; label: string }[] = [
   { key: 'documents', label: 'Documents' }, { key: 'meetings', label: 'Meetings' }, { key: 'conversation', label: 'Ask by voice' },
@@ -65,6 +87,9 @@ export default function ChatPage() {
   const qc = useQueryClient();
   const matters = useMatters();
   const { matter, matterId, matters: chosen, matterIds, setMatterId, setMatterIds } = useChatMatter();
+  // Someone with a single open matter starts with it chosen (review H1).
+  const open = (matters.data ?? []).filter((m) => m.status === 'open');
+  useEffect(() => { if (!matterId && matters.data && open.length === 1) setMatterId(open[0].id); }, [matterId, matters.data, open.length]);
   const several = chosen.length > 1;
   const panel = usePanel();
   const [turns, setTurns] = useState<ChatTurn[]>([]);
@@ -228,6 +253,7 @@ export default function ChatPage() {
               : matter
                 ? <><b>{matter.number} · {matter.title}</b> · {matter.client.name}</>
                 : 'Choose a matter in the question box, or ask and pick one.'}</p>
+            {!several && matter && <NextUp matter={matter} />}
           </div>
           {pendingAsk && !matterId && (
             <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId} onCancel={() => setPendingAsk(null)} />

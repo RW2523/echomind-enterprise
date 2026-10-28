@@ -130,6 +130,7 @@ export default function SignIn() {
             <div role="group" aria-label="Enter the demo as" style={{ display: 'grid', gap: 8, marginBottom: 18 }}>
               <h2 className="lw-h2" style={{ margin: 0 }}>Enter the demo as</h2>
               <p className="lw-meta" style={{ margin: 0, fontSize: 13.5 }}>Fictional people with fictional matters. No password or code needed.</p>
+              <p className="lw-demo-banner" role="note" style={{ margin: 0 }}>A demonstration: anyone who can open this page can enter. Do not enter real client information.</p>
               <div className="lw-demo-people">
                 {demo.map((p) => (
                   <button key={p.username} type="button" className="lw-btn" disabled={busy}

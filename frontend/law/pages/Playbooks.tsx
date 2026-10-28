@@ -130,9 +130,9 @@ function NewPlaybook({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
     catch (err) { setError(err instanceof ApiError ? err.message : 'The playbook could not be created.'); }
   };
   return (
-    <Dialog title="New playbook" onClose={onClose}
+    <Dialog width={520} title="New playbook" onClose={onClose}
       footer={<><button type="button" className="lw-btn" onClick={onClose}>Cancel</button><button type="button" className="lw-btn lw-btn-primary" disabled={!name.trim()} onClick={save}>Create</button></>}>
-      <div style={{ display: 'grid', gap: 10, minWidth: 'min(520px, 80vw)' }}>
+      <div style={{ display: 'grid', gap: 10 }}>
         <Field label="Name" hint="The kind of contract and side, e.g. Commercial services (supplier)">{(id) => <input id={id} className="lw-input" value={name} onChange={(e) => setName(e.target.value)} />}</Field>
         <Field label="Jurisdiction">{(id) => <input id={id} className="lw-input" value={jurisdiction} onChange={(e) => setJurisdiction(e.target.value)} />}</Field>
         <Field label="Description">{(id) => <textarea id={id} className="lw-input" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />}</Field>
@@ -159,10 +159,10 @@ function PositionEditor({ pb, topics, initial, onClose, onSaved }: { pb: Playboo
     } catch (err) { setError(err instanceof ApiError ? err.message : 'The position could not be saved.'); }
   };
   return (
-    <Dialog title={`Position in ${pb.name}`} onClose={onClose}
+    <Dialog width={640} title={`Position in ${pb.name}`} onClose={onClose}
       footer={<><button type="button" className="lw-btn" onClick={onClose}>Cancel</button>
         <button type="button" className="lw-btn lw-btn-primary" disabled={!d.topic || !d.standard.trim()} onClick={save}>Save as a draft version</button></>}>
-      <div style={{ display: 'grid', gap: 10, minWidth: 'min(640px, 80vw)' }}>
+      <div style={{ display: 'grid', gap: 10 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <Field label="Topic">{(id) => <select id={id} className="lw-input" value={d.topic} onChange={(e) => set({ topic: e.target.value, title: d.title || topics[e.target.value] || '' })}>
             <option value="">Choose a topic</option>{Object.entries(topics).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>}</Field>
@@ -200,8 +200,8 @@ function ImportPrecedent({ pb, topics, onClose, onUse }: { pb: Playbook; topics:
     finally { setBusy(false); }
   };
   return (
-    <Dialog title={`Read a precedent into ${pb.name}`} onClose={onClose}>
-      <div style={{ display: 'grid', gap: 10, minWidth: 'min(640px, 80vw)' }} aria-busy={busy}>
+    <Dialog width={640} title={`Read a precedent into ${pb.name}`} onClose={onClose}>
+      <div style={{ display: 'grid', gap: 10 }} aria-busy={busy}>
         <p className="lw-meta" style={{ margin: 0 }}>The firm's precedent is read clause by clause; each clause is proposed under the topic its words suggest. Nothing is saved until you add it as a position, which then waits for approval.</p>
         <Field label="Precedent (Word, PDF or text)">{(id) => <input id={id} type="file" accept=".docx,.pdf,.txt,.md" onChange={read} />}</Field>
         {error && <ErrorNote>{error}</ErrorNote>}

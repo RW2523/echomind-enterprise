@@ -647,3 +647,36 @@ describe('source panel errors (review S1)', () => {
     spy.mockRestore();
   });
 });
+
+describe('what needs you, on the home (review H1)', () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => cleanup());
+
+  it('one quiet line: items waiting for a decision on this matter and its next dated deadline, each a link', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const soon = new Date(Date.now() + 9 * 86_400_000).toISOString().slice(0, 10);
+    world({
+      'GET /api/legal/reviews': () => [200, { count: 2, mine: [], waiting: [
+        { kind: 'research_note', id: 'a1', title: 'Cap', matter: { number: 'M-101', title: 'MSA renewal' }, by: 'bob', at: null, path: '/x' },
+        { kind: 'minutes', id: 'a2', title: 'Board', matter: { number: 'M-215', title: 'Lease' }, by: 'bob', at: null, path: '/y' }] }],
+      'GET /api/legal/matters/id-M-101/obligations': () => [200, { timezone: 'UTC', calendar: false, obligations: [
+        { id: 'o1', due_date: soon, status: 'proposed', overdue: false }, { id: 'o2', due_date: '2001-01-01', status: 'confirmed', overdue: true }] }],
+    });
+    renderLaw('/chat');
+    expect(await screen.findByRole('link', { name: '1 item waits for your decision' })).toBeTruthy();
+    const deadline = await screen.findByRole('link', { name: /^Next deadline .* \(not confirmed\)$/ });
+    expect(deadline.getAttribute('href')).toBe('/m/M-101/obligations');
+  });
+
+  it('starts with the only open matter chosen', async () => {
+    mockApi({
+      'GET /api/auth/me': () => [200, me(['attorney'])],
+      'GET /api/legal/matters': () => [200, { matters: [matter('M-101', 'MSA renewal')] }],
+      'GET /api/legal/reviews': () => [200, { waiting: [], mine: [], count: 0 }],
+      'GET /api/legal/counsel/conversations': () => [200, { conversations: [] }],
+      'GET /api/legal/matters/id-M-101/obligations': () => [200, { timezone: 'UTC', calendar: false, obligations: [] }],
+    });
+    renderLaw('/chat');
+    expect(await screen.findByText('M-101 · MSA renewal')).toBeTruthy();
+  });
+});

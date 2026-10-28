@@ -79,11 +79,11 @@ function NewDraft({ onClose }: { onClose: () => void }) {
     }
   };
   return (
-    <Dialog title="New draft" onClose={onClose}
+    <Dialog width={560} title="New draft" onClose={onClose}
       footer={<><button type="button" className="lw-btn" onClick={onClose}>Cancel</button>
         <button type="button" className="lw-btn lw-btn-primary" disabled={busy || !template || !title.trim()} onClick={go}>
           <FilePen />{busy ? 'Drafting from the documents…' : 'Draft'}</button></>}>
-      <div style={{ display: 'grid', gap: 10, minWidth: 'min(560px, 80vw)' }} aria-busy={busy}>
+      <div style={{ display: 'grid', gap: 10 }} aria-busy={busy}>
         <Field label="Template">{(id) => (
           <select id={id} className="lw-input" value={template} onChange={(e) => {
             setTemplate(e.target.value);

@@ -58,8 +58,10 @@ export function CopyField({ label, value }: { label: string; value: string }) {
 }
 
 /** Modal sheet: glass frame, paper body (no glass-on-glass). Escape and the close button dismiss it. */
-export function Dialog({ title, onClose, children, footer }: {
+export function Dialog({ title, onClose, children, footer, width }: {
   title: string; onClose: () => void; children: React.ReactNode; footer?: React.ReactNode;
+  /** A wider dialog (px), still never wider than the screen; its content scrolls inside it (review V2). */
+  width?: number;
 }) {
   const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
@@ -73,7 +75,8 @@ export function Dialog({ title, onClose, children, footer }: {
   // dialog opened from inside one would otherwise sit underneath the content.
   return createPortal(
     <div className="lw-scrim" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={ref} className="lw-glass lw-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div ref={ref} className="lw-glass lw-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId}
+        style={width ? ({ ['--dialog-w' as string]: `${width}px` } as React.CSSProperties) : undefined}>
         <div className="lw-paper">
           <div className="lw-card-h">
             <h2 className="lw-h2" id={titleId}>{title}</h2>
