@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { pageTitle } from '../counsel/CounselShell';
 import { me, mockApi, renderLaw } from './harness';
@@ -46,6 +46,18 @@ describe('keyboard', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(rail.hasAttribute('inert')).toBe(true);
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Open menu' }));
+  });
+
+  it('the collapsed rail keeps every link named by its text, with no label that would clash with a field', async () => {
+    world();
+    renderLaw('/activity');
+    fireEvent.click(await screen.findByRole('button', { name: 'Collapse the sidebar' }));
+    const rail = screen.getByRole('navigation', { name: 'Workspace' });
+    for (const name of ['Chat', 'Matters', 'Drafts', 'Activity']) {
+      const link = within(rail).getByRole('link', { name });
+      expect(link.getAttribute('aria-label')).toBeNull();
+    }
+    expect(within(rail).getByRole('button', { name: 'New chat' })).toBeTruthy();
   });
 
   it('every page has its own title', () => {

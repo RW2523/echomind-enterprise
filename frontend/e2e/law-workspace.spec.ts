@@ -145,7 +145,7 @@ test('signing out ends the session for every tab', async ({ page, context }) => 
   await signIn(page, 'carol');
   const other = await context.newPage();
   await other.goto('/matters');
-  await expect(other.getByText('Harrowgate MSA renewal')).toBeVisible();
+  await expect(other.getByRole('link', { name: /Harrowgate MSA renewal/ })).toBeVisible();   // carol's only matter is also in the header
   await firmPage(page, 'Sign out');                 // sign-out is in the account menu
   await page.waitForURL('**/signin');
   await other.reload();

@@ -122,10 +122,12 @@ function History() {
   );
 }
 
-function RailLink({ to, icon, children, end, label }: { to: string; icon: React.ReactNode; children: React.ReactNode; end?: boolean; label?: string }) {
+/** A rail link's name is its text, kept for screen readers when the rail is collapsed (visually hidden, never removed);
+ *  `label` only where the name says more than the text (Drafts' count). `title` is the tooltip. */
+function RailLink({ to, icon, children, end, label, title }: { to: string; icon: React.ReactNode; children: React.ReactNode; end?: boolean; label?: string; title?: string }) {
   return (
-    <NavLink to={to} end={end} className="qc-rail-link" aria-label={label} title={label}>
-      {icon}<span className="qc-rail-text qc-hide-collapsed">{children}</span>
+    <NavLink to={to} end={end} className="qc-rail-link" aria-label={label} title={title}>
+      {icon}<span className="qc-rail-text">{children}</span>
     </NavLink>
   );
 }
@@ -134,7 +136,7 @@ function RailLink({ to, icon, children, end, label }: { to: string; icon: React.
 function DraftsLink() {
   const n = useReviews().data?.count ?? 0;
   return (
-    <RailLink to="/drafts" icon={<FilePen aria-hidden />} label={n ? `Drafts, ${n} waiting for you` : 'Drafts'}>
+    <RailLink to="/drafts" icon={<FilePen aria-hidden />} title="Drafts" label={n ? `Drafts, ${n} waiting for you` : undefined}>
       Drafts{n > 0 && <span className="qc-rail-count" aria-hidden="true">{n}</span>}
     </RailLink>
   );
@@ -250,11 +252,11 @@ function ShellBody() {
           <span className="qc-brand-text qc-hide-collapsed" aria-hidden><b>EchoMind<em>Legal</em></b><small>Private AI for legal work</small></span>
         </NavLink>
         <nav aria-label="Workspace">
-          <button type="button" className="qc-new-chat" aria-label="New chat" title="New chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-hide-collapsed">New chat</span></button>
-          <RailLink to="/chat" icon={<MessageSquare aria-hidden />} label="Chat">Chat</RailLink>
-          <RailLink to="/matters" icon={<Briefcase aria-hidden />} label="Matters">Matters</RailLink>
+          <button type="button" className="qc-new-chat" title="New chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-rail-text">New chat</span></button>
+          <RailLink to="/chat" icon={<MessageSquare aria-hidden />} title="Chat">Chat</RailLink>
+          <RailLink to="/matters" icon={<Briefcase aria-hidden />} title="Matters">Matters</RailLink>
           <DraftsLink />
-          <RailLink to="/activity" icon={<Activity aria-hidden />} label="Activity">Activity</RailLink>
+          <RailLink to="/activity" icon={<Activity aria-hidden />} title="Activity">Activity</RailLink>
         </nav>
         <History />
       </aside>
