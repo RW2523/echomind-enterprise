@@ -64,11 +64,40 @@ def otpauth_uri(secret_b32: str, username: str) -> str:
     return f"otpauth://totp/{label}?{query}"
 
 
+# ── The stored secret: sealed with the master key (commercial-readiness review F5, 2026-10-28) ────────────────────────
+# A copy of the database alone (a stolen disk image, a backup taken apart) must not yield anyone's authenticator. Secrets
+# written before this are read as they are and sealed on first use.
+_SEALED = "sealed:"
+
+
+def _master_key_configured() -> bool:
+    import os
+    return bool(settings.LEGAL_MASTER_KEY_FILE) and os.path.isfile(settings.LEGAL_MASTER_KEY_FILE)
+
+
+def _seal(user_id: str, secret: str) -> str:
+    if not _master_key_configured():
+        return secret                                        # development without a master key (the Law posture requires one)
+    from ..documents import blobs
+    return _SEALED + blobs.seal(secret.encode(), f"mfa:{user_id}")
+
+
+def _open(user_id: str, stored: Optional[str]) -> Optional[str]:
+    if not stored or not stored.startswith(_SEALED):
+        if stored and _master_key_configured():              # an older plain secret: seal it now
+            with get_conn() as conn:
+                conn.execute("UPDATE users SET mfa_secret=? WHERE id=? AND mfa_secret=?", (_seal(user_id, stored), user_id, stored))
+                conn.commit()
+        return stored
+    from ..documents import blobs
+    return blobs.unseal(stored[len(_SEALED):], f"mfa:{user_id}").decode()
+
+
 # ── Enrolment and verification against the users table ─────────────────────────
 def _state(user_id: str) -> tuple[Optional[str], bool, Optional[int]]:
     with get_conn() as conn:
         row = conn.execute("SELECT mfa_secret, mfa_enabled, mfa_last_step FROM users WHERE id=?", (user_id,)).fetchone()
-    return (row[0], bool(row[1]), row[2]) if row else (None, False, None)
+    return (_open(user_id, row[0]), bool(row[1]), row[2]) if row else (None, False, None)
 
 
 def is_enrolled(user_id: str) -> bool:
@@ -79,7 +108,7 @@ def begin_enrollment(user_id: str) -> str:
     """Store a new pending secret (MFA stays off until confirmed) and return it."""
     secret = new_secret()
     with get_conn() as conn:
-        conn.execute("UPDATE users SET mfa_secret=?, mfa_enabled=0, mfa_last_step=NULL WHERE id=?", (secret, user_id))
+        conn.execute("UPDATE users SET mfa_secret=?, mfa_enabled=0, mfa_last_step=NULL WHERE id=?", (_seal(user_id, secret), user_id))
         conn.commit()
     return secret
 

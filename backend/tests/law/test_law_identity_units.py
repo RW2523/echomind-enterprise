@@ -172,3 +172,21 @@ def test_obo_tokens_are_not_legacy_jwts(user):
     from app.legal.identity import obo
     legacy = auth.make_token(user["id"], "user", user["username"])
     assert obo.verify(legacy, audience="voice") is None
+
+
+# ── Commercial-readiness review F5 (2026-10-28): authenticator secrets sealed at rest ────────────────────────────────
+def test_the_authenticator_secret_is_sealed_in_the_database_and_older_ones_are_sealed_on_use(world, fresh_db):
+    import sqlite3
+    import time as _t
+    from app.legal.identity import mfa
+    uid = world["users"]["carol"]["id"]
+    secret = mfa.begin_enrollment(uid)
+    with sqlite3.connect(fresh_db) as c:
+        stored = c.execute("SELECT mfa_secret FROM users WHERE id=?", (uid,)).fetchone()[0]
+    assert stored.startswith("sealed:") and secret not in stored
+    assert mfa.confirm_enrollment(uid, mfa.totp(secret, _t.time()))               # still works through the seal
+    with sqlite3.connect(fresh_db) as c:                                          # a secret from before: plain
+        c.execute("UPDATE users SET mfa_secret=?, mfa_last_step=NULL WHERE id=?", (secret, uid))
+    assert mfa.verify_login_code(uid, mfa.totp(secret, _t.time() + 30))
+    with sqlite3.connect(fresh_db) as c:
+        assert c.execute("SELECT mfa_secret FROM users WHERE id=?", (uid,)).fetchone()[0].startswith("sealed:")
