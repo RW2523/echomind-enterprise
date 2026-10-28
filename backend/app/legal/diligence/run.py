@@ -180,6 +180,12 @@ async def run(job: dict) -> Optional[str]:
         conn.commit()
     matter_id, by, cj = r
     content = json.loads(cj)
+    # The person who started it may still draft on this matter (a queued run outlives a membership; review F13, 2026-10-28).
+    if not policy.authorize({"sub": by, "org_id": job.get("org_id")}, "ai.draft", matter_id).allowed:
+        with get_conn() as conn:
+            conn.execute("UPDATE legal_dd_runs SET status='failed', error='not_allowed', finished_at=? WHERE id=?", (policy.now_iso(), run_id))
+            conn.commit()
+        return "not_allowed"
     try:
         today = datetime.now(timezone.utc).date()
         docs = [d for d in documents.list_documents(matter_id, by) if d.get("current_version") and d["current_version"]["index_status"] == "indexed"]

@@ -7,7 +7,7 @@ from typing import Optional
 
 from ...core.config import settings
 from ...core.db import get_conn
-from .. import artifacts
+from .. import artifacts, policy
 from ..documents import repo as documents
 from . import summarize
 
@@ -28,6 +28,9 @@ def title_of(document_title: str) -> str:
 
 async def run(job: dict) -> Optional[str]:
     matter_id, document_id, by = job["matter_id"], job["object_id"], job["requested_by"]
+    # The person who asked may still draft on this matter (a queued job outlives a membership; review F13, 2026-10-28).
+    if not policy.authorize({"sub": by, "org_id": job.get("org_id")}, "ai.draft", matter_id).allowed:
+        return "not_allowed"
     d = documents.get_document(matter_id, document_id, by)          # still visible to the person who asked
     if not d or not d.get("current_version"):
         return "not_visible"

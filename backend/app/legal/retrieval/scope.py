@@ -54,5 +54,13 @@ def recheck(scope: AuthorizedScope) -> None:
     if not isinstance(scope, AuthorizedScope) or scope._mint is not _MINT:
         raise TypeError("search needs an AuthorizedScope")
     d = policy.authorize({"sub": scope.principal_id, "org_id": scope.org_id}, scope.action, scope.matter_id)
-    if not d.allowed:
+    if not d.allowed or not _active(scope.principal_id):
         raise ScopeRevoked()
+
+
+def _active(user_id: str) -> bool:
+    """A disabled account loses an answer in progress too, not only its next request (review F13, 2026-10-28)."""
+    from ...core.db import get_conn
+    with get_conn() as conn:
+        row = conn.execute("SELECT status FROM users WHERE id=?", (user_id,)).fetchone()
+    return bool(row) and row[0] == "active"

@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import io
 import json
+import os
+import shutil
 import sqlite3
 import zipfile
 
@@ -182,6 +184,8 @@ def test_t09_docx_is_rebuilt_without_comments_revisions_hidden_text_or_metadata(
     assert d.paragraphs[0].style.name.startswith("Heading")
 
 
+@pytest.mark.skipif(not shutil.which("soffice") and not os.getenv("LAW_REQUIRE_SOFFICE"),
+                    reason="LibreOffice is not installed (CI sets LAW_REQUIRE_SOFFICE=1, so it always runs there)")
 def test_t09_the_released_word_file_reads_back_in_libreoffice_without_what_was_redacted(ex, tmp_path):
     """Phase 3 gate (S3.9): the released Word file opened by LibreOffice still holds nothing redacted, and the rest."""
     import subprocess

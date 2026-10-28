@@ -41,6 +41,15 @@ _NUMBER = re.compile(r"^\s*(?:(?:Article|Section|Clause|Schedule|Part)\s+)?\(?(?
 _FOOTNOTE = re.compile(r"\[fn \d+\]")
 
 
+
+# Stored Word files come from outside the firm: never resolve entities, load a DTD or reach the network while reading them
+# (commercial-readiness review F12, 2026-10-28; import refuses no DOCTYPE, so this parser is the guard).
+_SAFE = etree.XMLParser(resolve_entities=False, no_network=True, load_dtd=False, huge_tree=False)
+
+
+def _xml(data):
+    return etree.fromstring(data, _SAFE)
+
 def w(tag: str) -> str:
     return f"{{{W}}}{tag}"
 
@@ -217,7 +226,7 @@ def _ensure_comments(z: dict) -> etree._Element:
     if "word/comments.xml" not in z:
         z["word/comments.xml"] = etree.tostring(etree.Element(w("comments"), nsmap={"w": W}), xml_declaration=True, encoding="UTF-8",
                                                 standalone=True)
-        rels = etree.fromstring(z["word/_rels/document.xml.rels"])
+        rels = _xml(z["word/_rels/document.xml.rels"])
         taken = {r.get("Id") for r in rels}
         n = 1
         while f"rIdCm{n}" in taken:
@@ -227,13 +236,13 @@ def _ensure_comments(z: dict) -> etree._Element:
         rel.set("Type", COMMENTS_REL)
         rel.set("Target", "comments.xml")
         z["word/_rels/document.xml.rels"] = etree.tostring(rels, xml_declaration=True, encoding="UTF-8", standalone=True)
-        ct = etree.fromstring(z["[Content_Types].xml"])
+        ct = _xml(z["[Content_Types].xml"])
         if not any(o.get("PartName") == "/word/comments.xml" for o in ct):
             o = etree.SubElement(ct, f"{{{CT}}}Override")
             o.set("PartName", "/word/comments.xml")
             o.set("ContentType", COMMENTS_CT)
             z["[Content_Types].xml"] = etree.tostring(ct, xml_declaration=True, encoding="UTF-8", standalone=True)
-    return etree.fromstring(z["word/comments.xml"])
+    return _xml(z["word/comments.xml"])
 
 
 def _comment(comments, p_first, p_last, text: str, author: str, when: str, ids: _Ids) -> None:
@@ -263,7 +272,7 @@ def apply(source: Optional[bytes], text: str, changes: list[dict], author: str, 
     with zipfile.ZipFile(io.BytesIO(data)) as zin:
         z = {i.filename: zin.read(i.filename) for i in zin.infolist()}
         order = [i.filename for i in zin.infolist()]
-    doc = etree.fromstring(z["word/document.xml"])
+    doc = _xml(z["word/document.xml"])
     body = doc.find(w("body"))
     paragraphs = [p for p in body.iter(w("p"))]
     when = when or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -324,7 +333,7 @@ def apply(source: Optional[bytes], text: str, changes: list[dict], author: str, 
 def _resolve(data: bytes, accept: bool) -> list[str]:
     """The paragraphs' text once every tracked change is accepted (or rejected)."""
     with zipfile.ZipFile(io.BytesIO(data)) as zin:
-        doc = etree.fromstring(zin.read("word/document.xml"))
+        doc = _xml(zin.read("word/document.xml"))
     gone, kept = (w("del"), w("ins")) if accept else (w("ins"), w("del"))
     drop = [p for p in doc.iter(w("p")) if p.find(f"{w('pPr')}/{w('rPr')}/{gone}") is not None]
     for el in list(doc.iter(gone)):
@@ -354,19 +363,19 @@ def reject_all(data: bytes) -> list[str]:
 
 def _paragraphs_of(data: bytes) -> list:
     with zipfile.ZipFile(io.BytesIO(data)) as zin:
-        return list(etree.fromstring(zin.read("word/document.xml")).iter(w("p")))
+        return list(_xml(zin.read("word/document.xml")).iter(w("p")))
 
 
 def verify(original: bytes, result: bytes, plan: dict) -> dict:
     """T10 checks of a redlined file against the original it was made from."""
     with zipfile.ZipFile(io.BytesIO(result)) as zin:
-        doc = etree.fromstring(zin.read("word/document.xml"))
+        doc = _xml(zin.read("word/document.xml"))
         names = set(zin.namelist())
     base_reject = reject_all(original)
     # the original with its own tracked changes accepted, paragraph by paragraph, and each placed
     # change replayed on exactly the paragraphs it matched
     with zipfile.ZipFile(io.BytesIO(original)) as zin:
-        odoc = etree.fromstring(zin.read("word/document.xml"))
+        odoc = _xml(zin.read("word/document.xml"))
     o_pars = list(odoc.iter(w("p")))
     dropped = {i for i, p in enumerate(o_pars) if p.find(f"{w('pPr')}/{w('rPr')}/{w('del')}") is not None}
     accepted = accept_all(original)
