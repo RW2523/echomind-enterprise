@@ -54,6 +54,7 @@ export function renderLaw(path: string) {
 export const me = (roles: string[] = ['attorney'], extra: Partial<Me['session']> = {}): Me => ({
   user: { id: 'usr_alice', username: 'alice', role: 'user', roles: roles as any },
   session: { auth: 'session', mfa_enrolled: true, must_change_password: false, idle_expires_at: 0, abs_expires_at: 0, ...extra },
+  features: { intake: false, intake_links: false, model_location: 'this_server' },     // the usual appliance
 });
 
 export const matter = (number: string, title: string, client = 'Alpha Holdings', extra: Partial<Matter> = {}): Matter => ({

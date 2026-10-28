@@ -376,7 +376,13 @@ def _law_me(payload: dict) -> dict:
                          "summaries": bool(settings.LEGAL_SUMMARIES), "time_entries": bool(settings.LEGAL_TIME_ENTRIES),
                          "panel": bool(settings.LEGAL_PANEL), "conversation": bool(settings.LEGAL_CONVERSATION),
                          "regulatory": bool(settings.LEGAL_REGULATORY), "translation": bool(settings.LEGAL_TRANSLATION),
-                         "demo_signin": bool(settings.LEGAL_DEMO_SIGNIN)}}
+                         "demo_signin": bool(settings.LEGAL_DEMO_SIGNIN),
+                         "model_location": _model_location()}}
+
+
+def _model_location() -> str:
+    from ...legal.model_location import location
+    return location()
 
 
 def _complete_sign_in(request: Request, response: Response, user_id: str) -> dict:

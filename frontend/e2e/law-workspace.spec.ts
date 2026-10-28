@@ -77,7 +77,7 @@ async function shot(page: Page, name: string) {
 
 test('alice sees only her matters; a matter she is not on is simply not available', async ({ page }) => {
   await page.goto('/signin');
-  await expect(page.getByText('Private legal workspace')).toBeVisible();
+  await expect(page.getByText('Legal workspace', { exact: true })).toBeVisible();
   await shot(page, '01-sign-in-light');
   await signIn(page, 'alice');
   await expect(page.getByRole('heading', { name: 'How can I help?' })).toBeVisible();

@@ -83,7 +83,7 @@ export default function DocumentTranslate() {
               <button type="button" className="lw-btn lw-btn-ghost" onClick={download}><Download />Download (.txt)</button>
             )}
           </div>
-          <p className="lw-meta" style={{ margin: '8px 0 0' }}>Translated by this server's own model, a few paragraphs at a time; nothing leaves this server and nothing is kept. Every figure of the original is looked for in the translation.</p>
+          <p className="lw-meta" style={{ margin: '8px 0 0' }}>Translated by the model configured for this server, a few paragraphs at a time; the translation is not kept. Every figure of the original is looked for in the translation.</p>
         </section>
         {run.label && <TranslationLabel text={run.label} />}
         {run.phase === 'running' && <p className="lw-meta" role="status" style={{ margin: 0 }}>{`Translating into ${run.language?.name ?? '…'}: ${run.rows.length} of ${run.total} paragraphs.`}</p>}

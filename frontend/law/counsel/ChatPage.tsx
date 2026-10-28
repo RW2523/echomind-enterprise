@@ -13,6 +13,7 @@ import { useDocuments, useMatters } from '../api/queries';
 import type { Matter } from '../api/types';
 import { matterEntries } from '../app/nav';
 import { useSession } from '../app/session';
+import { whereAnswersComeFrom } from './where';
 import { counselApi, requestId, type StoredTurn } from './api';
 import { ActionButtons, AnswerText, ComponentView, type CardContext } from './cards';
 import { useChatMatter, usePanel } from './context';
@@ -348,6 +349,7 @@ function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
 }) {
   const ref = inputRef;
+  const where = whereAnswersComeFrom(useSession());
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -365,7 +367,7 @@ function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached
             {matterId && <DocumentPicker matterId={matterId} attached={attached} onAttach={onAttach} />}
             <MatterPicker variant="composer" />
           </div>
-          <span className="qc-private qc-hide-small" title="Answered by this appliance's own model; nothing leaves it."><Lock aria-hidden />On this appliance</span>
+          {where.chip && <span className="qc-private qc-hide-small" data-external={where.external || undefined}><Lock aria-hidden />{where.chip}</span>}
           {busy
             ? <button type="button" className="qc-send" onClick={onStop} aria-label="Stop the answer"><Square aria-hidden /></button>
             : <button type="submit" className="qc-send" disabled={!value.trim()} aria-label="Send"><ArrowUp aria-hidden /></button>}

@@ -251,3 +251,19 @@ def test_config_tells_the_frontend_which_edition_to_load(client, monkeypatch):
     assert client.get("/api/auth/config").json() == {"auth_enabled": True, "edition": "law"}
     monkeypatch.delenv("ECHOMIND_EDITION")
     assert client.get("/api/auth/config").json()["edition"] == "standard"
+
+
+def test_the_session_says_where_the_model_runs_from_its_address(monkeypatch):
+    """Review P1 (2026-10-28): the interface claims no more about privacy than the configured model addresses support."""
+    from app.core.config import settings
+    from app.legal import model_location as ml
+    cases = [("http://127.0.0.1:8355/v1", "http://127.0.0.1:11435/api/embeddings", "this_server"),
+             ("http://localhost:8355/v1", "http://host.docker.internal:11435/api/embeddings", "this_server"),
+             ("http://ollama:11434/v1", "http://ollama:11434/api/embeddings", "firm_network"),
+             ("http://10.1.2.3:8000/v1", "http://127.0.0.1:11435/api/embeddings", "firm_network"),
+             ("https://api.example.com/v1", "http://127.0.0.1:11435/api/embeddings", "external"),
+             ("http://8.8.8.8/v1", "http://127.0.0.1:11435/api/embeddings", "external")]
+    for llm, embed, want in cases:
+        monkeypatch.setattr(settings, "LLM_BASE_URL", llm)
+        monkeypatch.setattr(settings, "OLLAMA_EMBED_URL", embed)
+        assert ml.location() == want, (llm, embed)

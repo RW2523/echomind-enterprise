@@ -19,6 +19,7 @@ import { MatterProvider, useCurrentMatter } from '../app/matter';
 import { firmEntries, initials, matterEntries } from '../app/nav';
 import { setThemeMode } from '../app/preferences';
 import { useSession } from '../app/session';
+import { whereAnswersComeFrom } from './where';
 import { isMac, PaletteProvider, useOpenPalette } from '../ui/Palette';
 import { counselApi } from './api';
 import { ChatMatterProvider, PanelProvider, useChatMatter, usePanel } from './context';
@@ -35,18 +36,17 @@ const ROLE_LABEL: Record<string, string> = {
 // ── Header: privacy and capture state ──────────────────────────────────────────
 function PrivacyStatus() {
   const { open, setOpen, button, pop, style } = usePopover();
+  const where = whereAnswersComeFrom(useSession());
   return (
     <>
-      <button ref={button} type="button" className="qc-status" aria-expanded={open} onClick={() => setOpen((o) => !o)} aria-label="Private: about where answers come from">
-        <ShieldCheck aria-hidden /><span className="qc-narrow-sr">Private</span>
+      <button ref={button} type="button" className="qc-status" aria-expanded={open} onClick={() => setOpen((o) => !o)}
+        aria-label={`${where.label}: about where answers come from`} data-state={where.external ? 'external' : undefined}>
+        <ShieldCheck aria-hidden /><span className="qc-narrow-sr">{where.label}</span>
       </button>
       {open && (<Layer>
-        <div ref={pop} className="qc-pop" role="dialog" aria-label="Private" style={{ ...style, padding: 14 }}>
-          <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Private to this appliance</p>
-          <p className="qc-meta" style={{ margin: 0 }}>
-            Answers are produced on this EchoMind appliance by its own model, only from the documents of the matter you chose and only
-            those you may read. No cloud service is used to answer. Every question, source opened and decision is recorded in the audit trail.
-          </p>
+        <div ref={pop} className="qc-pop" role="dialog" aria-label={where.title} style={{ ...style, padding: 14 }}>
+          <p style={{ margin: '0 0 8px', fontWeight: 600 }}>{where.title}</p>
+          <p className="qc-meta" style={{ margin: 0 }}>{where.text}</p>
         </div></Layer>)}
     </>
   );

@@ -483,3 +483,7 @@
 @media (max-width: 860px) { .lw-two-col { grid-template-columns: minmax(0, 1fr); } }
 /* An empty state inside a panel is text in that panel, not a second card. */
 [data-edition="law"][data-shell="counsel"] .lw-paper .lw-empty { border: none; background: none; padding: 24px 12px !important; }
+/* An external model service is said plainly, in the attention colour (review P1). */
+.qc-status[data-state="external"] { color: var(--attention); border-color: color-mix(in srgb, var(--attention) 40%, transparent); }
+.qc-private[data-external] { color: var(--attention); }
+.qc-private[data-external] svg { color: var(--attention); }

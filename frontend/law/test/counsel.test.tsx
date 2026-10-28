@@ -586,3 +586,18 @@ describe('Several matters in one conversation (owner, 2026-10-28)', () => {
     await waitFor(() => expect(calls.find((c) => c.path === '/api/legal/counsel/actions')?.body.matter_id).toBe('id-M-215'));
   });
 });
+
+describe('where answers come from (review P1)', () => {
+  it('claims no more than the configured model location supports', async () => {
+    const { whereAnswersComeFrom } = await import('../counsel/where');
+    const at = (model_location?: 'this_server' | 'firm_network' | 'external') =>
+      whereAnswersComeFrom({ features: { intake: false, intake_links: false, model_location } } as never);
+    expect(at('this_server').text).toContain('not sent to an outside AI service');
+    expect(at('external').label).toBe('External model');
+    expect(at('external').text).toContain('sent to that service');
+    for (const w of [at('this_server'), at('firm_network'), at('external'), at()]) {
+      expect(w.text).not.toMatch(/nothing leaves|no cloud|air.?gap|guarantee/i);
+    }
+    expect(at().chip).toBe('');
+  });
+});

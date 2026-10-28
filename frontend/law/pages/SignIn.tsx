@@ -121,7 +121,7 @@ export default function SignIn() {
             <span className="lw-monogram" aria-hidden="true">EM</span>
             <div>
               <div style={{ fontWeight: 650, fontSize: 17 }}>EchoMind Legal</div>
-              <div className="lw-meta">Private legal workspace</div>
+              <div className="lw-meta">Legal workspace</div>
             </div>
           </div>
 
