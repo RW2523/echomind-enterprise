@@ -27,7 +27,7 @@ export function firmEntries(me: Me): NavEntry[] {
     !!me.features?.time_entries && { key: 'time', to: '/time', label: 'Time', icon: Timer },
     !!me.features?.regulatory && hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal', 'reviewer')
       && { key: 'regulatory', to: '/regulatory', label: 'Regulatory updates', icon: Landmark },
-    hasFirmRole(me, 'firm_admin') && { key: 'users', to: '/admin/users', label: 'Users & roles', icon: UserCog },
+    hasFirmRole(me, 'firm_admin', 'managing_partner') && { key: 'users', to: '/admin/users', label: 'Users & roles', icon: UserCog },
     hasFirmRole(me, 'firm_admin') && { key: 'connectors', to: '/admin/connectors', label: 'Connectors', icon: FolderSync },
     hasFirmRole(me, 'managing_partner') && { key: 'walls', to: '/admin/walls', label: 'Ethical walls', icon: ShieldOff },
     hasFirmRole(me, 'firm_admin', 'managing_partner') && { key: 'emergency', to: '/admin/emergency-access', label: 'Emergency access', icon: Siren },

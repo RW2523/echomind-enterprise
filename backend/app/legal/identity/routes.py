@@ -69,6 +69,16 @@ def list_users(request: Request):
     return {"users": [_user_out(i) for i in ids]}
 
 
+def has_managing_partner(org_id: str) -> bool:
+    """An active managing partner exists in the firm (until then, an administrator may appoint the first)."""
+    with get_conn() as conn:
+        return conn.execute("SELECT 1 FROM user_roles r JOIN users u ON u.id = r.user_id WHERE r.role='managing_partner' "
+                            "AND u.org_id=? AND u.status='active' LIMIT 1", (org_id,)).fetchone() is not None
+
+
+MP_BY_MP = "Only a managing partner can appoint another managing partner."
+
+
 @router.put("/users/{username}/roles", response_model=RolesOut)
 @audited("roles.set", object_type="user")
 def set_roles(username: str, inp: RolesIn, request: Request):
@@ -81,6 +91,10 @@ def set_roles(username: str, inp: RolesIn, request: Request):
     if target == p["sub"] and "firm_admin" not in new:
         raise HTTPException(status_code=400, detail="You cannot remove your own firm_admin role.")
     old = set(firm_roles_of(target))
+    # Two people for the firm's highest power (commercial-readiness review F6, 2026-10-28): an administrator may not make
+    # managing partners — two of them approve walls and emergency access — except the first one.
+    if "managing_partner" in new - old and has_managing_partner(p["org_id"]):
+        raise HTTPException(status_code=403, detail=MP_BY_MP)
     note(object_id=target, details={"username": username, "added": sorted(new - old), "removed": sorted(old - new)})
     with get_conn() as conn:
         for role in old - new:
@@ -91,3 +105,28 @@ def set_roles(username: str, inp: RolesIn, request: Request):
         conn.commit()
     revoked = sessions.revoke_all_for_user(target, reason="role_changed") if old - new else 0
     return {"user": _user_out(target), "sessions_revoked": revoked}
+
+
+@router.post("/users/{username}/appoint-managing-partner", response_model=RolesOut)
+@audited("roles.set", object_type="user")
+def appoint_managing_partner(username: str, request: Request):
+    """A managing partner appoints another (never themselves); the account must be active (review F6)."""
+    p = principal_of(request)
+    if "managing_partner" not in firm_roles_of(p["sub"]):
+        raise HTTPException(status_code=403, detail=MP_BY_MP)
+    target = _org_user_id(p["org_id"], username)
+    if not target:
+        raise HTTPException(status_code=404, detail="Not Found")
+    if target == p["sub"]:
+        raise HTTPException(status_code=400, detail="You already are a managing partner.")
+    with get_conn() as conn:
+        status = conn.execute("SELECT status FROM users WHERE id=?", (target,)).fetchone()[0]
+    if status != "active":
+        raise HTTPException(status_code=409, detail="This account is disabled.")
+    note(object_id=target, details={"username": username, "added": ["managing_partner"], "removed": [], "appointed_by": "managing_partner"})
+    if "managing_partner" not in firm_roles_of(target):
+        with get_conn() as conn:
+            conn.execute("INSERT INTO user_roles (user_id, role, granted_by, granted_at) VALUES (?,?,?,?)",
+                         (target, "managing_partner", p["sub"], _iso(time.time())))
+            conn.commit()
+    return {"user": _user_out(target), "sessions_revoked": 0}

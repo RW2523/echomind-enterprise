@@ -217,3 +217,31 @@ def test_role_management_is_firm_admin_only_and_cannot_lock_out_the_admin(world)
     assert alice.put("/api/legal/users/alice/roles", json={"roles": ["managing_partner"]}, headers=csrf_headers(alice)).status_code == 403
     assert admin.put("/api/legal/users/admin2/roles", json={"roles": []}, headers=csrf_headers(admin)).status_code == 400
     assert admin.put("/api/legal/users/alice/roles", json={"roles": ["wizard"]}, headers=csrf_headers(admin)).status_code == 422
+
+
+# ── Commercial-readiness review F6 (2026-10-28): two people for the firm's highest power ─────────────────────────────
+def test_an_administrator_cannot_make_managing_partners_once_the_firm_has_one(world):
+    """Two managing partners approve walls and emergency access; an administrator who could make them could approve their
+    own requests. Only a managing partner appoints another (never themselves); the very first may come from an administrator."""
+    admin, mp = as_user(world, "admin"), as_user(world, "mp")
+    r = admin.put("/api/legal/users/carol/roles", json={"roles": ["paralegal", "managing_partner"]}, headers=csrf_headers(admin))
+    assert r.status_code == 403 and "managing partner" in r.json()["detail"]
+    r = admin.post("/api/auth/users", headers=csrf_headers(admin),
+                   json={"username": "puppet", "password": "A long enough pass phrase 42!", "role": "managing_partner"})
+    assert r.status_code == 403
+    assert mp.post("/api/legal/users/mp/appoint-managing-partner", headers=csrf_headers(mp)).status_code == 400   # not self
+    assert as_user(world, "alice").post("/api/legal/users/carol/appoint-managing-partner",
+                                        headers=csrf_headers(as_user(world, "alice"))).status_code == 403
+    r = mp.post("/api/legal/users/carol/appoint-managing-partner", headers=csrf_headers(mp))
+    assert r.status_code == 200 and "managing_partner" in r.json()["user"]["roles"]
+    r = admin.put("/api/legal/users/carol/roles", json={"roles": ["paralegal"]}, headers=csrf_headers(admin))
+    assert r.status_code == 200                                                    # taking the power away needs no second person
+
+
+def test_the_first_managing_partner_may_come_from_an_administrator(world, fresh_db):
+    import sqlite3
+    with sqlite3.connect(fresh_db) as c:
+        c.execute("DELETE FROM user_roles WHERE role='managing_partner'")
+    admin = as_user(world, "admin")
+    r = admin.put("/api/legal/users/carol/roles", json={"roles": ["managing_partner"]}, headers=csrf_headers(admin))
+    assert r.status_code == 200, r.text

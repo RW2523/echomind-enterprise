@@ -122,6 +122,13 @@ def admin_create_user(request: Request, inp: CreateUserIn):
         firm_role = "firm_admin" if inp.role == "admin" else inp.role
         if firm_role not in accounts.FIRM_ROLES and firm_role != "user":
             raise HTTPException(status_code=400, detail=f"Unknown role. Use one of: {', '.join(accounts.FIRM_ROLES)}")
+        if firm_role == "managing_partner":                  # review F6: only the first one comes from an administrator
+            from ...legal.identity.routes import MP_BY_MP, has_managing_partner
+            from ...core.db import get_conn
+            with get_conn() as conn:
+                org = conn.execute("SELECT org_id FROM users WHERE id=?", (admin["sub"],)).fetchone()
+            if has_managing_partner(org[0] if org else ""):
+                raise HTTPException(status_code=403, detail=MP_BY_MP)
         _enforce_password_policy(inp.password, inp.username)
         try:
             user = authmod.create_user(inp.username, inp.password, role="admin" if firm_role == "firm_admin" else "user")

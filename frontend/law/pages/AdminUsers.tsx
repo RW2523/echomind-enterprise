@@ -15,12 +15,16 @@ const linkUrl = (l: EnrollmentLink) => `${window.location.origin}${l.path}`;
 export default function AdminUsers() {
   const me = useSession();
   const isAdmin = hasFirmRole(me, 'firm_admin');
-  const users = useFirmUsers(isAdmin);
+  const isPartner = hasFirmRole(me, 'managing_partner');
+  const users = useFirmUsers(isAdmin || isPartner);
+  const [appointing, setAppointing] = useState<FirmUser | null>(null);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<FirmUser | null>(null);
   const [link, setLink] = useState<{ who: string; link: EnrollmentLink } | null>(null);
   const [error, setError] = useState('');
-  if (!isAdmin) return <NotAvailable />;
+  if (!isAdmin && !isPartner) return <NotAvailable />;
+  // Review F6: managing partners are appointed by another managing partner; an administrator only makes the first one.
+  const firstPartner = !(users.data ?? []).some((x) => x.status === 'active' && x.roles.includes('managing_partner'));
 
   const act = async (fn: () => Promise<unknown>) => {
     setError('');
@@ -30,10 +34,10 @@ export default function AdminUsers() {
   return (
     <>
       <Toolbar title="Users & roles">
-        <button type="button" className="lw-btn lw-btn-primary" onClick={() => setCreating(true)}><UserPlus />New account</button>
+        {isAdmin && <button type="button" className="lw-btn lw-btn-primary" onClick={() => setCreating(true)}><UserPlus />New account</button>}
       </Toolbar>
       <div className="lw-content">
-        <p className="lw-meta" style={{ margin: 0 }}>Firm roles control firm-wide tasks. Access to a matter is granted by that matter's lead, not here. Removing a role signs the person out everywhere.</p>
+        <p className="lw-meta" style={{ margin: 0 }}>Firm roles control firm-wide tasks. Access to a matter is granted by that matter's lead, not here. Removing a role signs the person out everywhere. Managing partners are appointed by another managing partner.</p>
         {error && <ErrorNote>{error}</ErrorNote>}
         <div className="lw-paper" style={{ overflowX: 'auto' }}>
           {users.isPending ? <div style={{ padding: 20 }}><Skeleton /></div> : (
@@ -47,6 +51,9 @@ export default function AdminUsers() {
                     <td>{x.mfa_enabled ? <StatusPill tone="verified">On</StatusPill> : <StatusPill tone="attention">Not set up</StatusPill>}</td>
                     <td>{x.status === 'active' ? 'Active' : <StatusPill tone="conflict">Disabled</StatusPill>}</td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      {isPartner && x.username !== me.user.username && x.status === 'active' && !x.roles.includes('managing_partner') && (
+                        <button type="button" className="lw-btn lw-btn-sm" onClick={() => setAppointing(x)}>Appoint managing partner</button>)}
+                      {isAdmin && <>
                       <button type="button" className="lw-btn lw-btn-sm" onClick={() => setEditing(x)}>Roles</button>
                       {x.mfa_enabled
                         ? <button type="button" className="lw-btn lw-btn-sm" onClick={() => act(async () => setLink({ who: x.username, link: (await api.post<{ enrollment: EnrollmentLink }>(`${u(x.username)}/reset-mfa`)).enrollment }))}>Reset two-step</button>
@@ -54,6 +61,7 @@ export default function AdminUsers() {
                       {x.username !== me.user.username && (x.status === 'active'
                         ? <button type="button" className="lw-btn lw-btn-sm lw-btn-danger" onClick={() => act(() => api.post(`${u(x.username)}/disable`))}>Disable</button>
                         : <button type="button" className="lw-btn lw-btn-sm" onClick={() => act(() => api.post(`${u(x.username)}/enable`))}>Enable</button>)}
+                      </>}
                     </td>
                   </tr>
                 ))}
@@ -63,7 +71,18 @@ export default function AdminUsers() {
         </div>
       </div>
       {creating && <NewAccountDialog onClose={() => setCreating(false)} onCreated={(who, l) => { setCreating(false); setLink({ who, link: l }); users.refetch(); }} />}
-      {editing && <RolesDialog user={editing} self={editing.username === me.user.username} onClose={() => setEditing(null)} />}
+      {editing && <RolesDialog user={editing} self={editing.username === me.user.username} firstPartner={firstPartner} onClose={() => setEditing(null)} />}
+      {appointing && (
+        <Dialog title={`Appoint ${appointing.username} managing partner?`} onClose={() => setAppointing(null)}
+          footer={<>
+            <button type="button" className="lw-btn lw-btn-ghost" onClick={() => setAppointing(null)}>Cancel</button>
+            <button type="button" className="lw-btn lw-btn-primary"
+              onClick={() => { const who = appointing.username; setAppointing(null); void act(() => api.post(`/api/legal/users/${encodeURIComponent(who)}/appoint-managing-partner`)); }}>
+              Appoint</button>
+          </>}>
+          <p style={{ margin: 0 }}>Managing partners approve ethical walls and emergency access, two of them together. The appointment is recorded in the audit trail with your name.</p>
+        </Dialog>
+      )}
       {link && (
         <Dialog title={`Enrolment link for ${link.who}`} onClose={() => setLink(null)}>
           <p style={{ margin: 0 }}>Give this one-time link to {link.who} through a channel you trust. It works once and expires in 72 hours; issuing a new link cancels this one.</p>
@@ -102,7 +121,7 @@ function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; onCreat
   );
 }
 
-function RolesDialog({ user, self, onClose }: { user: FirmUser; self: boolean; onClose: () => void }) {
+function RolesDialog({ user, self, firstPartner, onClose }: { user: FirmUser; self: boolean; firstPartner: boolean; onClose: () => void }) {
   const [roles, setRoles] = useState<FirmRole[]>(user.roles);
   const [error, setError] = useState('');
   const save = useApiMutation(() => api.put(`/api/legal/users/${encodeURIComponent(user.username)}/roles`, { roles }), [keys.users]);
@@ -116,11 +135,14 @@ function RolesDialog({ user, self, onClose }: { user: FirmUser; self: boolean; o
       <form onSubmit={submit} style={{ display: 'grid', gap: 10 }}>
         {FIRM_ROLES.map((r) => (
           <label key={r} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input type="checkbox" checked={roles.includes(r)} disabled={self && r === 'firm_admin'}
+            <input type="checkbox" checked={roles.includes(r)}
+              disabled={(self && r === 'firm_admin') || (r === 'managing_partner' && !firstPartner && !user.roles.includes(r))}
               onChange={(e) => setRoles(e.target.checked ? [...roles, r] : roles.filter((x) => x !== r))} />
             {roleLabel(r)}
           </label>
         ))}
+        {!firstPartner && !user.roles.includes('managing_partner') && (
+          <p className="lw-meta" style={{ margin: 0 }}>A managing partner is appointed by another managing partner, not here.</p>)}
         {removing && <p className="lw-meta" style={{ margin: 0, color: 'var(--attention)' }}>Removing a role signs {user.username} out everywhere.</p>}
         {error && <ErrorNote>{error}</ErrorNote>}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
