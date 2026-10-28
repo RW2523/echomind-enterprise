@@ -680,3 +680,29 @@ describe('what needs you, on the home (review H1)', () => {
     expect(await screen.findByText('M-101 · MSA renewal')).toBeTruthy();
   });
 });
+
+describe('the glance says more (review M2)', () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => cleanup());
+
+  it('documents show version, signed state and date; a document still being read says so; waiting items appear', async () => {
+    world({
+      'GET /api/legal/counsel/discrepancies': () => [200, { discrepancies: [] }],
+      'GET /api/legal/matters/id-M-101/obligations': () => [500, { detail: 'boom' }],
+      'GET /api/legal/reviews': () => [200, { count: 1, mine: [], waiting: [
+        { kind: 'legal_draft', id: 'a1', title: 'Engagement letter', matter: { number: 'M-101', title: 'MSA renewal' }, by: 'bob', at: null, path: '/m/M-101/drafting/a1' }] }],
+      'GET /api/legal/matters/id-M-101/documents': () => [200, { documents: [
+        { id: 'd1', title: 'Signed MSA', kind: 'contract', status: 'executed', created_at: '2026-10-01T10:00:00Z', updated_at: '2026-10-02T10:00:00Z',
+          current_version: { id: 'v3', number: 3, index_status: 'indexed' } },
+        { id: 'd2', title: 'Scan', kind: 'evidence', status: 'received', created_at: '2026-10-03T10:00:00Z', updated_at: null,
+          current_version: { id: 'v1', number: 1, index_status: 'indexing' } }] }],
+    });
+    renderLaw('/m/M-101/overview');
+    const glance = await screen.findByRole('region', { name: 'At a glance' });
+    const docs = await within(glance).findByRole('region', { name: 'Documents (2)' });
+    expect(docs.textContent).toContain('v3 · signed');
+    expect(docs.textContent).toContain('Being read');
+    expect(within(glance).getByRole('region', { name: 'Waiting for your decision' }).textContent).toContain('Engagement letter');
+    expect(await within(glance).findByText(/The deadlines could not be loaded/)).toBeTruthy();       // a failure is said, not hidden
+  });
+});

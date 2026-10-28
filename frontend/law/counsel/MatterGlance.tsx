@@ -6,8 +6,9 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarClock, ChevronRight, Files, Scale } from 'lucide-react';
-import { useDocuments, useObligations } from '../api/queries';
+import { CalendarClock, ChevronRight, ClipboardCheck, Files, Scale } from 'lucide-react';
+import { ApiError } from '../api/client';
+import { useDocuments, useObligations, useReviews } from '../api/queries';
 import type { Matter, Obligation } from '../api/types';
 import { counselApi } from './api';
 import { useChatMatter } from './context';
@@ -35,12 +36,18 @@ function Panel({ icon, title, to, more, children }: { icon: React.ReactNode; tit
   );
 }
 
+/** A panel the person may not see (403/404) is left out; one that could not load says so instead of disappearing (review M2). */
+const refused = (e: unknown) => e instanceof ApiError && (e.status === 403 || e.status === 404);
+const Failed = ({ what }: { what: string }) => <p className="qc-meta" role="status" style={{ margin: 0 }}>{what} could not be loaded. Reload the page to try again.</p>;
+const DOC_STATUS: Record<string, string> = { executed: 'signed', draft: 'draft', received: 'received', final: 'final' };
+const READING: Record<string, string> = { queued: 'Waiting to be read', indexing: 'Being read', failed: 'Could not be read' };
+
 function Issues({ matter }: { matter: Matter }) {
   const navigate = useNavigate();
   const { setMatterId } = useChatMatter();
   const q = useQuery({ queryKey: ['counsel', 'discrepancies', matter.id], retry: false, staleTime: 15_000,
                        queryFn: () => counselApi.discrepancies(matter.id) });
-  if (q.isError) return null;
+  if (q.isError) return refused(q.error) ? null : <Panel icon={<Scale aria-hidden />} title="Open inconsistencies"><Failed what="The inconsistencies" /></Panel>;
   const toChat = (ask: string, focus?: string) => { setMatterId(matter.id); navigate('/chat', { state: { ask, focus } }); };
   const items = q.data?.discrepancies ?? [];
   return (
@@ -70,8 +77,8 @@ function Issues({ matter }: { matter: Matter }) {
 
 function Deadlines({ matter }: { matter: Matter }) {
   const q = useObligations(matter.id);
-  if (q.isError) return null;
   const base = `/m/${encodeURIComponent(matter.number)}/obligations`;
+  if (q.isError) return refused(q.error) ? null : <Panel icon={<CalendarClock aria-hidden />} title="Next deadlines" to={base} more="All obligations"><Failed what="The deadlines" /></Panel>;
   const dated = (q.data?.obligations ?? []).filter((o) => o.due_date && o.status !== 'dismissed' && o.status !== 'done')
     .sort((a, b) => Number(b.overdue) - Number(a.overdue) || (a.due_date ?? '').localeCompare(b.due_date ?? ''));
   return (
@@ -99,8 +106,8 @@ function Deadlines({ matter }: { matter: Matter }) {
 
 function LatestDocuments({ matter }: { matter: Matter }) {
   const q = useDocuments(matter.id);
-  if (q.isError) return null;
   const base = `/m/${encodeURIComponent(matter.number)}/documents`;
+  if (q.isError) return refused(q.error) ? null : <Panel icon={<Files aria-hidden />} title="Documents" to={base} more="All documents"><Failed what="The documents" /></Panel>;
   const docs = [...(q.data ?? [])].sort((a, b) => (b.updated_at ?? b.created_at).localeCompare(a.updated_at ?? a.created_at));
   return (
     <Panel icon={<Files aria-hidden />} title={q.data ? `Documents (${q.data.length})` : 'Documents'} to={base} more="All documents">
@@ -112,7 +119,12 @@ function LatestDocuments({ matter }: { matter: Matter }) {
             <li key={d.id}>
               <Link className="qc-glance-row" to={`${base}/${encodeURIComponent(d.id)}/read`}>
                 <span className="qc-glance-main">{d.title}</span>
-                <span className="qc-meta" style={{ whiteSpace: 'nowrap' }}>{d.kind} · {d.status}</span>
+                <span className="qc-meta" style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
+                  {d.current_version && READING[d.current_version.index_status]
+                    ? <span className="qc-tag" data-tag="Uncertain">{READING[d.current_version.index_status]}</span>
+                    : <>{d.current_version ? `v${d.current_version.number} · ` : ''}{DOC_STATUS[d.status] ?? d.status}</>}
+                  <br />{day(d.updated_at ?? d.created_at)}
+                </span>
               </Link>
             </li>
           ))}
@@ -122,9 +134,32 @@ function LatestDocuments({ matter }: { matter: Matter }) {
   );
 }
 
+/** Drafts, notes and decisions on this matter waiting for the person (the reviews queue), shown only when there are some. */
+function WaitingForYou({ matter }: { matter: Matter }) {
+  const q = useReviews();
+  const items = (q.data?.waiting ?? []).filter((i) => i.matter?.number === matter.number);
+  if (!items.length) return null;
+  return (
+    <Panel icon={<ClipboardCheck aria-hidden />} title="Waiting for your decision" to="/drafts" more="All drafts">
+      <ul className="qc-glance-list">
+        {items.slice(0, 4).map((i) => (
+          <li key={`${i.kind}-${i.id}`}>
+            <Link className="qc-glance-row" to={i.path}>
+              <span className="qc-glance-main">{i.title}</span>
+              <span className="qc-meta" style={{ whiteSpace: 'nowrap' }}>{i.by ? `from ${i.by}` : ''}</span>
+            </Link>
+          </li>
+        ))}
+        {items.length > 4 && <li className="qc-meta">and {items.length - 4} more</li>}
+      </ul>
+    </Panel>
+  );
+}
+
 export default function MatterGlance({ matter }: { matter: Matter }) {
   return (
     <section aria-label="At a glance" className="qc-glance-grid">
+      <WaitingForYou matter={matter} />
       <Issues matter={matter} />
       <Deadlines matter={matter} />
       <LatestDocuments matter={matter} />
