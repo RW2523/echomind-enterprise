@@ -36,19 +36,21 @@ def test_a_run_that_meets_every_bar_passes_and_each_miss_is_named():
 def test_the_held_out_sets_are_frozen_by_their_checksums():
     import hashlib
     t = json.loads((ROOT / "eval" / "law" / "thresholds.json").read_text())
-    for name in ("heldout", "heldout2"):
+    for name in ("heldout", "heldout2", "heldout3"):
         assert hashlib.sha256((ROOT / "eval" / "law" / f"{name}.jsonl").read_bytes()).hexdigest() == t[f"{name}_sha256"], name
 
 
-def test_the_second_held_out_set_measures_abstention_on_enough_items():
-    items = [json.loads(line) for line in (ROOT / "eval" / "law" / "heldout2.jsonl").read_text().splitlines() if line.strip()]
-    assert sum(i["expect"]["abstain"] for i in items) >= 12 and sum(not i["expect"]["abstain"] for i in items) >= 12
-    others = {json.loads(line)["question"].lower() for f in ("golden.jsonl", "heldout.jsonl")
-              for line in (ROOT / "eval" / "law" / f).read_text().splitlines() if line.strip()}
-    assert not any(i["question"].lower() in others for i in items)
+def test_the_later_held_out_sets_measure_abstention_on_enough_items_and_repeat_nothing():
+    sets = ["golden", "heldout", "heldout2", "heldout3"]
+    load = lambda n: [json.loads(line) for line in (ROOT / "eval" / "law" / f"{n}.jsonl").read_text().splitlines() if line.strip()]
+    for k, name in enumerate(sets[2:], start=2):
+        items = load(name)
+        assert sum(i["expect"]["abstain"] for i in items) >= 12 and sum(not i["expect"]["abstain"] for i in items) >= 12, name
+        earlier = {i["question"].lower() for n in sets[:k] for i in load(n)}
+        assert not any(i["question"].lower() in earlier for i in items), name
 
 
 def test_the_thresholds_say_they_await_sign_off():
     t = json.loads((ROOT / "eval" / "law" / "thresholds.json").read_text())
-    assert "proposed" in t["status"] and set(t["bars"]) == {"golden", "heldout", "heldout2"}
+    assert "proposed" in t["status"] and set(t["bars"]) == {"golden", "heldout", "heldout2", "heldout3"}
     assert all(b["t06_leaks_max"] == 0 for b in t["bars"].values())
