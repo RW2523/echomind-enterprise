@@ -37,14 +37,36 @@ export function usePopover() {
   }, [open]);
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (!button.current?.contains(t) && !pop.current?.contains(t)) setOpen(false);
+    // Keyboard (review A3): the popover sits at the end of <body>, so focus moves into it when it opens (unless something in
+    // it took focus itself), leaving it closes it, and a menu answers the arrow keys.
+    const first = requestAnimationFrame(() => {
+      const el = pop.current;
+      if (el && !el.contains(document.activeElement)) {
+        (el.querySelector<HTMLElement>('[role="menuitem"], input, button, [href], [tabindex]:not([tabindex="-1"])') ?? el).focus();
+      }
+    });
+    const inside = (t: EventTarget | null) => !!t && (button.current?.contains(t as Node) || pop.current?.contains(t as Node));
+    const onDown = (e: MouseEvent) => { if (!inside(e.target)) setOpen(false); };
+    const onFocus = (e: FocusEvent) => { if (!inside(e.target)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setOpen(false); button.current?.focus(); return; }
+      const el = pop.current;
+      if (!el || el.getAttribute('role') !== 'menu' || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+      const items = [...el.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])')];
+      if (!items.length) return;
+      e.preventDefault();
+      const at = items.indexOf(document.activeElement as HTMLElement);
+      const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1
+        : e.key === 'ArrowDown' ? (at + 1) % items.length : (at - 1 + items.length) % items.length;
+      items[next].focus();
     };
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); button.current?.focus(); } };
     document.addEventListener('mousedown', onDown);
+    document.addEventListener('focusin', onFocus);
     document.addEventListener('keydown', onKey);
-    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+    return () => {
+      cancelAnimationFrame(first);
+      document.removeEventListener('mousedown', onDown); document.removeEventListener('focusin', onFocus); document.removeEventListener('keydown', onKey);
+    };
   }, [open]);
   return { open, setOpen, button, pop, style: { top: at.top, bottom: at.bottom, left: at.left, right: at.right } as React.CSSProperties };
 }
@@ -95,7 +117,7 @@ export default function MatterPicker({ variant = 'header' }: { variant?: 'header
     : `${current.number} ${current.title}. ${composer ? 'Change the matter' : 'Switch matter'}`;
   return (
     <>
-      <button ref={button} type="button" className={composer ? 'qc-tool' : 'qc-matter-btn'} aria-haspopup="listbox" aria-expanded={open}
+      <button ref={button} type="button" className={composer ? 'qc-tool' : 'qc-matter-btn'} aria-haspopup="dialog" aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         aria-label={current ? `${several ? 'Matters' : 'Matter'}: ${label}` : composer ? 'Pick the matter to ask about' : 'Choose a matter'}>
         {current && current.sensitivity !== 'standard' ? <Lock aria-label="Restricted" /> : <Briefcase className="qc-matter-ico" aria-hidden />}

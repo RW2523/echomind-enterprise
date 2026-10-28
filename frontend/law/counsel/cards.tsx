@@ -135,7 +135,7 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
         ? <p className="qc-answer" style={{ margin: 0 }}>The documents in this matter do not answer that. Try naming the document, clause or party.</p>
         : <AnswerText text={p.answer} citations={p.citations} ctx={ctx} labels={labels} />}
       {unique.length > 0 && (
-        <div className="qc-sources" aria-label="Sources">
+        <div className="qc-sources" role="group" aria-label="Sources">
           {unique.map((c) => (
             <button key={c.id} type="button" className="qc-source" data-verified={c.verified ? 'true' : 'false'} disabled={c.removed}
               onClick={(e) => ctx.openCitation(c, e.currentTarget)}
@@ -297,7 +297,7 @@ function EvidenceComparison({ comp, ctx }: { comp: Extract<SafeComponent, { type
             </div>
           </form>
         ) : (
-          <div className="qc-actions" aria-label="Resolve">
+          <div className="qc-actions" role="group" aria-label="Resolve">
             {RESOLUTIONS.filter((r) => r.to !== p.status && !(r.to === 'in_review' && p.status !== 'potential')).map((r) => (
               <button key={r.to} type="button" className="qc-btn" onClick={() => start(r)}>{r.label}</button>
             ))}
@@ -442,7 +442,7 @@ function Timeline({ p, ctx }: { p: TimelineProps; ctx: CardContext }) {
           )}
           {!shownDated.length && !(open && undated.length) && <p className="qc-meta" style={{ margin: 0 }}>No event matches.</p>}
           {hidden > 0 && (
-            <button type="button" className="qc-btn" onClick={() => setAll(true)} aria-expanded={false}>
+            <button type="button" className="qc-btn" onClick={() => setAll(true)}>
               Show all ({hidden} more{undated.length && !open ? `, ${undated.length} without a stated date` : ''})
             </button>
           )}
@@ -500,7 +500,7 @@ function CaseTable({ p, ctx }: { p: CaseTableProps; ctx: CardContext }) {
                 <td>{r.client}</td>
                 <td className="qc-num">{r.documents}</td>
                 <td className="qc-num">{r.open_inconsistencies === undefined ? '—'
-                  : <span className="qc-tag" data-tag={r.open_inconsistencies ? 'Uncertain' : 'Confirmed by a lawyer'}>{r.open_inconsistencies}</span>}</td>
+                  : r.open_inconsistencies ? <span className="qc-tag" data-tag="Uncertain">{r.open_inconsistencies}</span> : <span>0</span>}</td>
                 <td>{r.next_deadline ? <>
                   <time dateTime={r.next_deadline} style={{ fontWeight: 600 }}>{DAY(r.next_deadline)}</time>
                   {r.deadline_state && <span className="qc-tag" data-tag={r.deadline_state === 'Confirmed by a lawyer' ? r.deadline_state : 'Uncertain'}

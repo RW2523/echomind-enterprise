@@ -230,7 +230,7 @@
 .qc-state[data-tone="verified"] { color: var(--verified); }
 .qc-state[data-tone="attention"] { color: var(--attention); }
 .qc-state[data-tone="neutral"] { color: var(--ink-3); }
-.qc-cite { display: inline-flex; align-items: center; gap: 2px; vertical-align: 2px; margin: 0 1px; padding: 0 6px; height: 20px; border-radius: 6px;
+.qc-cite { display: inline-flex; align-items: center; gap: 2px; vertical-align: 1px; margin: 0 1px; padding: 0 7px; height: 22px; min-width: 24px; border-radius: 6px;
   border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--sans);
   font-size: 11.5px; font-weight: 700; cursor: pointer; }
 .qc-cite:hover { border-color: var(--gold); }
@@ -487,3 +487,7 @@
 .qc-status[data-state="external"] { color: var(--attention); border-color: color-mix(in srgb, var(--attention) 40%, transparent); }
 .qc-private[data-external] { color: var(--attention); }
 .qc-private[data-external] svg { color: var(--attention); }
+/* Small targets reach 24px (WCAG 2.5.8) without changing how they look: the hit area grows, not the chip. */
+.qc-cite { position: relative; }
+.qc-cite::after { content: ""; position: absolute; inset: -2px -1px; }
+@media (min-width: 561px) { .qc-only-small { display: none !important; } }

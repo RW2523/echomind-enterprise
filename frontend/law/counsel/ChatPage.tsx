@@ -248,7 +248,7 @@ export default function ChatPage() {
         </div>
       ) : (
         <>
-          <div className="qc-thread" aria-label="Conversation">
+          <div className="qc-thread" role="group" aria-label="Conversation">
             {turns.map((t) => <TurnView key={t.key} t={t} ctx={ctxFor(t)} onRetry={() => void ask(t.question)} onStop={() => abort.current?.abort()} />)}
           </div>
           {pendingAsk && !matterId && (

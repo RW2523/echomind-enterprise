@@ -145,9 +145,12 @@ function SearchButton() {
   const open = useOpenPalette();
   const shortcut = isMac() ? '⌘K' : 'Ctrl K';
   return (
-    <button type="button" className="qc-search qc-hide-small" onClick={() => open()} aria-label={`Search or jump to (${shortcut})`}>
-      <Search aria-hidden /><span>Find a matter, page or action…</span><kbd className="qc-kbd">{shortcut}</kbd>
-    </button>
+    <>
+      <button type="button" className="qc-search qc-hide-small" onClick={() => open()} aria-label={`Search or jump to (${shortcut})`}>
+        <Search aria-hidden /><span>Find a matter, page or action…</span><kbd className="qc-kbd">{shortcut}</kbd>
+      </button>
+      <button type="button" className="qc-icon-btn qc-only-small" onClick={() => open()} aria-label="Find a matter, page or action"><Search aria-hidden /></button>
+    </>
   );
 }
 
@@ -177,6 +180,18 @@ function ShellBody() {
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(RAIL_KEY) === 'collapsed'; } catch { return false; } });
   const [drawer, setDrawer] = useState(false);
   useEffect(() => { setDrawer(false); }, [location.pathname]);
+  useEffect(() => { document.title = pageTitle(location.pathname); }, [location.pathname]);
+  // The drawer on a narrow screen (review N1): out of the tab order while closed, Escape closes it, focus goes in and back.
+  const narrow = useNarrow();
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const rail = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!narrow || !drawer) return;
+    rail.current?.querySelector<HTMLElement>('a, button')?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setDrawer(false); menuButton.current?.focus(); } };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [narrow, drawer]);
   const toggleRail = () => {
     setCollapsed((c) => { try { localStorage.setItem(RAIL_KEY, c ? 'open' : 'collapsed'); } catch { /* ignore */ } return !c; });
   };
@@ -193,7 +208,7 @@ function ShellBody() {
   return (
     <div className="qc-shell" data-rail={collapsed ? 'collapsed' : 'open'} data-drawer={drawer ? 'open' : 'closed'}>
       <header className="qc-header">
-        <button type="button" className="qc-icon-btn qc-only-narrow" aria-label={drawer ? 'Close menu' : 'Open menu'} aria-expanded={drawer}
+        <button ref={menuButton} type="button" className="qc-icon-btn qc-only-narrow" aria-label={drawer ? 'Close menu' : 'Open menu'} aria-expanded={drawer}
           onClick={() => setDrawer((d) => !d)}><Menu aria-hidden /></button>
         <button type="button" className="qc-icon-btn qc-hide-narrow" aria-label={collapsed ? 'Expand the sidebar' : 'Collapse the sidebar'} onClick={toggleRail}>
           {collapsed ? <PanelLeftOpen aria-hidden /> : <PanelLeftClose aria-hidden />}
@@ -205,7 +220,7 @@ function ShellBody() {
         <RecordingStatus />
         <ProfileMenu />
       </header>
-      <aside className="qc-rail" aria-label="Sidebar">
+      <aside ref={rail} className="qc-rail" aria-label="Sidebar" inert={narrow && !drawer}>
         <NavLink to="/chat" className="qc-brand" aria-label="EchoMind Legal, new chat">
           <span className="qc-brand-mark" aria-hidden><Landmark /></span>
           <span className="qc-brand-text qc-hide-collapsed" aria-hidden><b>EchoMind<em>Legal</em></b><small>Private AI for legal work</small></span>
@@ -236,11 +251,44 @@ function ShellBody() {
   );
 }
 
+function useNarrow(): boolean {
+  const query = '(max-width: 860px)';
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.(query).matches);
+  useEffect(() => {
+    const m = window.matchMedia?.(query);
+    if (!m) return;
+    const on = () => setNarrow(m.matches);
+    m.addEventListener?.('change', on);
+    return () => m.removeEventListener?.('change', on);
+  }, []);
+  return narrow;
+}
+
+const PAGE: Record<string, string> = {
+  chat: 'Chat', matters: 'Matters', drafts: 'Drafts', reviews: 'Drafts', activity: 'Activity', templates: 'Templates', playbooks: 'Playbooks',
+  checklists: 'Checklists', enquiries: 'Enquiries', time: 'Time', regulatory: 'Regulatory updates', home: 'Home',
+};
+const TAB: Record<string, string> = {
+  overview: 'Overview', documents: 'Documents', research: 'Research', conversation: 'Conversation', compare: 'Compare', drafting: 'Drafting',
+  obligations: 'Obligations', diligence: 'Due diligence', summaries: 'Summaries', panel: 'Review panel', regulatory: 'Regulatory',
+  meetings: 'Meetings', members: 'Members', exports: 'Exports', activity: 'Activity',
+};
+
+/** Each page its own title (review A4): screen readers and browser tabs say where you are. */
+export function pageTitle(pathname: string): string {
+  const parts = pathname.split('/').filter(Boolean).map((p) => { try { return decodeURIComponent(p); } catch { return p; } });
+  let name = '';
+  if (parts[0] === 'm' && parts[1]) name = `${parts[1]} · ${TAB[parts[2] ?? 'overview'] ?? 'Matter'}`;
+  else if (parts[0] === 'admin') name = { users: 'Users & roles', walls: 'Ethical walls', audit: 'Audit trail', records: 'Records',
+    connectors: 'Connectors', 'emergency-access': 'Emergency access', evaluations: 'Evaluations' }[parts[1] ?? ''] ?? 'Administration';
+  else name = PAGE[parts[0] ?? 'chat'] ?? '';
+  return name ? `${name} — EchoMind Legal` : 'EchoMind Legal';
+}
+
 export default function CounselShell() {
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.shell = 'counsel';                              // also set app-wide by LawApp; kept for pages mounted alone
-    document.title = 'EchoMind Legal';
   }, []);
   return (
     <MatterProvider>

@@ -16,6 +16,7 @@ export default function MatterOverview() {
   const matter = useMatter();
   const me = useSession();
   const [editing, setEditing] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [error, setError] = useState('');
   const isLead = matter.my_role === 'lead';
   const setStatus = useApiMutation((status: string) =>
@@ -35,7 +36,7 @@ export default function MatterOverview() {
       <Toolbar crumb={matter.number} title="Overview">
         {isLead && matter.status === 'open' && <button type="button" className="lw-btn" onClick={() => setEditing(true)}>Edit details</button>}
         {isLead && (matter.status === 'open'
-          ? <button type="button" className="lw-btn" onClick={() => changeStatus('closed')}>Close matter</button>
+          ? <button type="button" className="lw-btn" onClick={() => setClosing(true)}>Close matter</button>
           : <button type="button" className="lw-btn lw-btn-primary" onClick={() => changeStatus('open')}>Reopen matter</button>)}
       </Toolbar>
       <div className="lw-content" style={{ maxWidth: 1120 }}>
@@ -63,6 +64,15 @@ export default function MatterOverview() {
         <Parties matterId={matter.id} />
       </div>
       {editing && <EditMatterDialog matter={matter} onClose={() => setEditing(false)} />}
+      {closing && (
+        <Dialog title={`Close ${matter.number}?`} onClose={() => setClosing(false)}
+          footer={<>
+            <button type="button" className="lw-btn lw-btn-ghost" onClick={() => setClosing(false)}>Keep it open</button>
+            <button type="button" className="lw-btn lw-btn-primary" onClick={() => { setClosing(false); void changeStatus('closed'); }}>Close matter</button>
+          </>}>
+          <p style={{ margin: 0 }}>Its documents, chats and drafts stay readable, but nothing can be added or changed until a lead reopens it.</p>
+        </Dialog>
+      )}
     </>
   );
 }
