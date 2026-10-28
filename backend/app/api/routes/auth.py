@@ -275,6 +275,8 @@ def demo_signin(username: str, request: Request, response: Response):
     from ...legal.identity import accounts, demo, sessions
     if not demo.available(request) or username not in demo.people():
         raise HTTPException(status_code=404, detail="Not Found")
+    if not demo.from_own_pages(request):
+        raise HTTPException(status_code=403, detail="Demo sign-in only from this application's own pages.")
     acct = accounts.get_by_username(username)
     if acct is None:
         raise HTTPException(status_code=404, detail="Not Found")

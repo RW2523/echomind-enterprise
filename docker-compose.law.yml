@@ -102,6 +102,7 @@ services:
       # "private" = this server and office addresses only, "anywhere" = any address.
       - LEGAL_DEMO_SIGNIN=${LAW_DEMO_SIGNIN:-0}
       - LEGAL_DEMO_SIGNIN_FROM=${LAW_DEMO_SIGNIN_FROM:-private}
+      - LEGAL_PROFILE=${LAW_PROFILE:-production}
 
   voice:
     <<: [*law_host_gateway, *law_capped]

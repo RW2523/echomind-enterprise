@@ -54,6 +54,9 @@ def posture_inputs(settings=None, env: Optional[Mapping[str, str]] = None) -> di
         "AUTH_ADMIN_PASSWORD": settings.AUTH_ADMIN_PASSWORD or "",
         "LEGAL_MASTER_KEY_FILE": settings.LEGAL_MASTER_KEY_FILE or "",
         "DATA_DIR": settings.DATA_DIR or "",
+        "LEGAL_DEMO_SIGNIN": bool(getattr(settings, "LEGAL_DEMO_SIGNIN", False)),
+        "LEGAL_PROFILE": e.get("LEGAL_PROFILE", ""),
+        "LEGAL_OIDC_ISSUER": getattr(settings, "LEGAL_OIDC_ISSUER", "") or "",
     }
 
 
@@ -100,11 +103,28 @@ def posture_violations(inputs: Mapping) -> list[Violation]:
     key_problem = master_key_problem(str(inputs.get("LEGAL_MASTER_KEY_FILE") or ""), str(inputs.get("DATA_DIR") or ""))
     if key_problem:
         out.append(Violation(*key_problem))
+    out.extend(_demo_violations(inputs))
     admin_pw = str(inputs.get("AUTH_ADMIN_PASSWORD") or "")
     if admin_pw:
         from ..legal.identity.passwords import problems
         if problems(admin_pw, str(inputs.get("AUTH_ADMIN_USER") or "admin")):
             out.append(Violation("weak_admin_password", "AUTH_ADMIN_PASSWORD does not meet the Law password policy"))
+    return out
+
+
+def _demo_violations(inputs: Mapping) -> list[Violation]:
+    """One-click demo sign-in (D-077) only on a demo instance: LEGAL_PROFILE=demo, a data folder the demo seed made (its
+    marker, legal/DEMO_INSTANCE) and no link to the firm's identity provider. Commercial-readiness review F1, 2026-10-28."""
+    if not inputs.get("LEGAL_DEMO_SIGNIN"):
+        return []
+    out = []
+    if str(inputs.get("LEGAL_PROFILE") or "").strip().lower() != "demo":
+        out.append(Violation("demo_signin", "LEGAL_DEMO_SIGNIN is only for a demonstration with fictional data: set LEGAL_PROFILE=demo "
+                                            "on a demo instance, or turn demo sign-in off"))
+    elif not os.path.isfile(os.path.join(str(inputs.get("DATA_DIR") or ""), "legal", "DEMO_INSTANCE")):
+        out.append(Violation("demo_not_seeded", "LEGAL_PROFILE=demo needs a data folder made by the demo seed (legal/DEMO_INSTANCE)"))
+    if str(inputs.get("LEGAL_OIDC_ISSUER") or "").strip():
+        out.append(Violation("demo_with_sso", "demo sign-in cannot run beside the firm's single sign-on (LEGAL_OIDC_ISSUER)"))
     return out
 
 

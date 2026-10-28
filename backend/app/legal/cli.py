@@ -42,6 +42,16 @@ def _ts(days: int) -> str:
     return (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 
+def _mark_demo_instance() -> None:
+    """This data folder holds the demo seed's fictional data: the marker a demo instance needs before one-click sign-in can be
+    turned on (core/edition.py, LEGAL_PROFILE=demo)."""
+    from ..core.config import settings
+    folder = os.path.join(settings.DATA_DIR, "legal")
+    os.makedirs(folder, exist_ok=True)
+    with open(os.path.join(folder, "DEMO_INSTANCE"), "w") as fh:
+        fh.write("Made by `python -m app.legal.cli seed-demo`: fictional people, clients and documents only.\n")
+
+
 def seed_demo() -> dict:
     from ..core import auth
     from ..core.config import settings
@@ -53,6 +63,7 @@ def seed_demo() -> dict:
     init_db()
     org = default_org_id()
     path = os.path.join(settings.DATA_DIR, "legal", "demo_credentials.json")
+    _mark_demo_instance()
     if os.path.exists(path):
         with open(path) as fh:
             return json.load(fh)

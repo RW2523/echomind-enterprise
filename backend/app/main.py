@@ -142,6 +142,12 @@ async def lifespan(app: FastAPI):
         # S1.5 (D-069): the audit trail to the firm's SIEM, only when LEGAL_AUDIT_SYSLOG names one.
         from .legal.audit import forward as audit_forward
         audit_forward.start()
+        # Demo sign-in turned off: sessions the demo people still hold end now (commercial-readiness review F1).
+        from .legal.identity import demo as law_demo
+        try:
+            law_demo.end_leftover_sessions()
+        except Exception:                                     # a fresh database without the tables yet: nothing to end
+            logging.getLogger(__name__).warning("could not end demo sessions at start-up", exc_info=False)
     try:
         yield
     finally:

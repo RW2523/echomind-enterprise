@@ -73,6 +73,9 @@ def test_secure_configuration_has_no_violations():
         ({"LEGAL_MASTER_KEY_FILE": _key_file("open.key", open(GOOD_KEY).read(), 0o644)}, "master_key_insecure"),
         ({"LEGAL_MASTER_KEY_FILE": _key_file("short.key", "c2hvcnQ=\n")}, "master_key_invalid"),
         ({"LEGAL_MASTER_KEY_FILE": _key_file("in-data.key", open(GOOD_KEY).read(), folder=_DATA)}, "master_key_in_data"),
+        ({"LEGAL_DEMO_SIGNIN": True}, "demo_signin"),
+        ({"LEGAL_DEMO_SIGNIN": True, "LEGAL_PROFILE": "production"}, "demo_signin"),
+        ({"LEGAL_DEMO_SIGNIN": True, "LEGAL_PROFILE": "demo"}, "demo_not_seeded"),
     ],
 )
 def test_each_insecure_setting_is_a_violation(override, code):
@@ -241,3 +244,24 @@ def test_first_admin_password_goes_to_a_private_file_not_the_log(fresh_db, law_e
     assert auth.authenticate("admin", pw)
     from app.legal.identity import accounts
     assert "firm_admin" in accounts.roles_of(auth.get_user_by_username("admin")["id"])
+
+
+def test_demo_sign_in_runs_only_on_a_demo_instance(tmp_path):
+    """Commercial-readiness review F1 (2026-10-28): one-click entry needs LEGAL_PROFILE=demo and a data folder the demo seed
+    made; never beside the firm's single sign-on. Without demo sign-in, none of this is asked."""
+    data = tmp_path / "data"
+    (data / "legal").mkdir(parents=True)
+    demo = {**SECURE, "DATA_DIR": str(data), "LEGAL_DEMO_SIGNIN": True, "LEGAL_PROFILE": "demo"}
+    assert _codes(demo) == {"demo_not_seeded"}
+    (data / "legal" / "DEMO_INSTANCE").write_text("seed-demo\n")
+    assert _codes(demo) == set()
+    assert _codes({**demo, "LEGAL_OIDC_ISSUER": "https://login.firm.example"}) == {"demo_with_sso"}
+    assert _codes({**SECURE, "LEGAL_PROFILE": "demo"}) == set()
+
+
+def test_the_running_settings_feed_the_demo_check(monkeypatch):
+    from app.core.config import settings
+    from app.core.edition import posture_inputs
+    monkeypatch.setattr(settings, "LEGAL_DEMO_SIGNIN", True)
+    got = posture_inputs(settings, env={"LEGAL_PROFILE": "demo"})
+    assert got["LEGAL_DEMO_SIGNIN"] is True and got["LEGAL_PROFILE"] == "demo"

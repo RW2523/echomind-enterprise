@@ -98,3 +98,42 @@ def test_the_owner_s_open_demo_names_the_person_the_page_enters_as(demo, monkeyp
     assert browser(demo, PUBLIC).get("/api/auth/demo").status_code == 404        # not from a public address unless "anywhere"
     monkeypatch.setattr(settings, "LEGAL_DEMO_SIGNIN", False)
     assert c.get("/api/auth/demo").status_code == 404                             # nothing without demo sign-in
+
+
+
+# ── Commercial-readiness review, 2026-10-28 (F1, F10) ─────────────────────────────────────────────────────────────────
+def _seed_names(names):
+    from app.core.config import settings
+    with open(os.path.join(settings.DATA_DIR, "legal", "demo_credentials.json"), "w") as f:
+        json.dump({n: {"password": "x", "totp_secret": "y"} for n in names}, f)
+
+
+def test_no_one_with_a_firm_wide_power_is_one_click_away(demo):
+    """Administration, records and the managing partners (who make up the two-person rules) keep their password and code."""
+    _seed_names(["alice", "bob", "carol", "mp", "admin2"])
+    c = browser(demo)
+    assert [p["username"] for p in c.get("/api/auth/demo").json()["people"]] == ["alice", "bob", "carol"]
+    for name in ("mp", "admin2"):
+        assert c.post(f"/api/auth/demo/{name}").status_code == 404
+    from app.legal.identity import accounts
+    accounts.grant_role(demo["users"]["bob"]["id"], "records_admin", granted_by="test")     # a power granted later counts too
+    assert "bob" not in [p["username"] for p in c.get("/api/auth/demo").json()["people"]]
+    assert c.post("/api/auth/demo/bob").status_code == 404
+
+
+def test_another_site_cannot_sign_a_visitor_in(demo):
+    c = browser(demo)
+    assert c.post("/api/auth/demo/alice", headers={"Origin": "https://evil.example"}).status_code == 403
+    assert c.get("/api/legal/matters").status_code == 401
+    assert c.post("/api/auth/demo/alice", headers={"Origin": LAW_TEST_ORIGIN}).status_code == 200
+
+
+def test_turning_demo_sign_in_off_ends_the_sessions_it_made(demo, monkeypatch):
+    from app.core.config import settings
+    from app.legal.identity import demo as demo_mod
+    c = browser(demo)
+    assert c.post("/api/auth/demo/alice").status_code == 200 and c.get("/api/legal/matters").status_code == 200
+    assert demo_mod.end_leftover_sessions() == 0                                     # still on: nothing ends
+    monkeypatch.setattr(settings, "LEGAL_DEMO_SIGNIN", False)
+    assert demo_mod.end_leftover_sessions() >= 1
+    assert c.get("/api/legal/matters").status_code == 401
