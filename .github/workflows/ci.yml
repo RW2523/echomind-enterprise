@@ -69,3 +69,27 @@ jobs:
       - name: Unit tests
         working-directory: frontend
         run: npx vitest run
+
+  dependencies:
+    name: Dependency audit
+    # Commercial-readiness review R9 (2026-10-28): known vulnerabilities in what ships. The frontend's production
+    # dependencies must have none rated high or critical (clean on 2026-10-28); the backend and voice requirements are
+    # reported for review (their ranges include large ML stacks, so they inform rather than block).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Frontend (production dependencies)
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Backend and voice requirements (report)
+        continue-on-error: true
+        run: |
+          pip install pip-audit
+          pip-audit -r backend/requirements.txt --progress-spinner off || true
+          pip-audit -r voice/requirements.txt --progress-spinner off || true
