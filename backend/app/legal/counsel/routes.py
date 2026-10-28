@@ -209,17 +209,18 @@ _ACTIONS = {"evidence_comparison": {"review"}}
 def component_action(inp: ActionIn, request: Request):
     p = principal_of(request)
     note(object_id=inp.component_id, matter_id=inp.matter_id, details={"action": inp.action_id})
-    done = store.replay(p["sub"], inp.idempotency_key)
-    if done:
-        if done["component_id"] != inp.component_id or done["action_id"] != inp.action_id:
-            raise HTTPException(status_code=409, detail="That idempotency key was used for another action.")
-        return JSONResponse({**done["result"], "replayed": True}, headers=_NO_STORE)
     comp = store.component(inp.component_id, p["sub"])           # the component must be one this server gave this person
     if not comp or comp["matter_id"] != inp.matter_id:            # its own matter, also in a conversation about several
         raise _not_found()
     conv = store.conversation(comp["conversation_id"], p["sub"])
     primary = conv["matter_id"] if conv else None
     require(p, "research.query", inp.matter_id)                  # the matter is still theirs to open
+    done = store.replay(p["sub"], inp.idempotency_key)            # a repeat: after the checks, and the card as it is now (F9)
+    if done:
+        if done["component_id"] != inp.component_id or done["action_id"] != inp.action_id:
+            raise HTTPException(status_code=409, detail="That idempotency key was used for another action.")
+        return JSONResponse({"component": schemas.validate_component(orchestrator.materialize(p, comp, primary)), "replayed": True},
+                            headers=_NO_STORE)
     if inp.action_id not in _ACTIONS.get(comp["type"], set()):
         raise HTTPException(status_code=400, detail="This card has no such action.")
     try:

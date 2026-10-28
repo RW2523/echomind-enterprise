@@ -195,6 +195,19 @@ def visible(matter_id: str, document_id: str, uid: str) -> bool:
                             (document_id, matter_id, *args)).fetchone() is not None
 
 
+def withheld_from(document_ids, uid: str) -> set[str]:
+    """Of these documents, the ones that still exist but this person may no longer read (a narrowed access list, a stale
+    connector). Deleted documents are not counted: their purge rewrites what was kept of them (records/deletion.py)."""
+    ids = sorted({d for d in document_ids if d})
+    if not ids:
+        return set()
+    marks = ",".join("?" * len(ids))
+    with get_conn() as conn:
+        exist = {r[0] for r in conn.execute(f"SELECT d.id FROM legal_documents d WHERE d.id IN ({marks}) AND d.deleted_at IS NULL", ids)}
+        seen = {r[0] for r in conn.execute(f"SELECT d.id FROM legal_documents d WHERE d.id IN ({marks}) AND {VISIBLE_TO}", (*ids, uid))}
+    return exist - seen
+
+
 def list_versions(matter_id: str, document_id: str, uid: Optional[str] = None) -> list[dict]:
     if not get_document(matter_id, document_id, uid):
         return []
@@ -291,8 +304,10 @@ def acl_of(document_id: str) -> set[str]:
 def set_acl(document_id: str, user_ids: set[str]) -> bool:
     """Replace who the source says may see the document; True if it changed. An empty set means
     nobody (the document stays restricted)."""
-    if acl_of(document_id) == set(user_ids):
-        return False
+    with get_conn() as conn:
+        restricted = conn.execute("SELECT acl_restricted FROM legal_documents WHERE id=?", (document_id,)).fetchone()
+    if restricted and restricted[0] and acl_of(document_id) == set(user_ids):
+        return False                                          # an open document given an empty list becomes restricted too
     with get_conn() as conn:
         conn.execute("DELETE FROM legal_document_acl WHERE document_id=?", (document_id,))
         conn.executemany("INSERT INTO legal_document_acl (document_id, user_id) VALUES (?,?)", [(document_id, u) for u in user_ids])

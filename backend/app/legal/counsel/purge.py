@@ -7,6 +7,11 @@ Called inside the purge's own transaction, so either everything goes or nothing 
   (which name the documents a conflict or an amendment is about) are dropped;
 - a briefing or chronology that named the document is replaced by "no longer available";
 - evidence comparisons need nothing: they are resolved from their discrepancy, which is gone.
+
+Components are found by the document alone (its id is unique across matters): a conversation about several matters stores
+an answer under the conversation's first matter even when it quotes another's document, and that copy must go too
+(commercial-readiness review F2, 2026-10-28). Citations are stored under their own document's matter, but are found the
+same way.
 """
 from __future__ import annotations
 
@@ -21,8 +26,9 @@ REMOVED_TIMELINE = "This chronology quoted a document that has since been delete
 def document(conn, matter_id: str, document_id: str) -> None:
     citations.purge_document(conn, matter_id, document_id)
     discrepancies.purge_document(conn, matter_id, document_id)
-    rows = conn.execute("SELECT c.id, c.type, c.props_json FROM legal_counsel_components c WHERE c.matter_id=? AND EXISTS "
-                        "(SELECT 1 FROM json_each(c.document_ids_json) j WHERE j.value=?)", (matter_id, document_id)).fetchall()
+    conn.execute("DELETE FROM legal_counsel_citations WHERE document_id=?", (document_id,))
+    rows = conn.execute("SELECT c.id, c.type, c.props_json FROM legal_counsel_components c WHERE EXISTS "
+                        "(SELECT 1 FROM json_each(c.document_ids_json) j WHERE j.value=?)", (document_id,)).fetchall()
     for cid, type_, pj in rows:
         props = json.loads(pj)
         if type_ == "source_answer":
@@ -37,11 +43,11 @@ def document(conn, matter_id: str, document_id: str) -> None:
 
 def remaining(conn, matter_id: str, document_id: str) -> int:
     """Rows that would still disclose the document (0 after a purge): the purge's verification counts them."""
-    n = conn.execute("SELECT COUNT(*) FROM legal_counsel_citations WHERE matter_id=? AND document_id=?", (matter_id, document_id)).fetchone()[0]
+    n = conn.execute("SELECT COUNT(*) FROM legal_counsel_citations WHERE document_id=?", (document_id,)).fetchone()[0]
     n += conn.execute("SELECT COUNT(*) FROM legal_discrepancies WHERE matter_id=? AND (document_a_id=? OR document_b_id=?)",
                       (matter_id, document_id, document_id)).fetchone()[0]
-    for type_, pj in conn.execute("SELECT c.type, c.props_json FROM legal_counsel_components c WHERE c.matter_id=? AND EXISTS "
-                                  "(SELECT 1 FROM json_each(c.document_ids_json) j WHERE j.value=?)", (matter_id, document_id)).fetchall():
+    for type_, pj in conn.execute("SELECT c.type, c.props_json FROM legal_counsel_components c WHERE EXISTS "
+                                  "(SELECT 1 FROM json_each(c.document_ids_json) j WHERE j.value=?)", (document_id,)).fetchall():
         props = json.loads(pj)
         if type_ == "source_answer":
             n += sum(1 for c in props.get("citations", []) if c.get("document_id") == document_id and c.get("document_title"))

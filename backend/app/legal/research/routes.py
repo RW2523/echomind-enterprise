@@ -366,11 +366,20 @@ def research_history(matter_id: str, request: Request):
         rows = conn.execute("SELECT id, question, answer, citations_json, status, created_at, evidence_json, conflicts_json, versions, "
                             "abstention_reason, amendments_json FROM legal_research_turns "
                             "WHERE matter_id=? AND owner_id=? ORDER BY created_at DESC LIMIT 50", (matter_id, p["sub"])).fetchall()
-    return {"turns": [_turn(r) for r in rows]}
+    from ..documents import repo as doc_repo
+    cited = {c.get("document_id") for r in rows for c in json.loads(r[3] or "[]")}
+    withheld = doc_repo.withheld_from(cited, p["sub"])
+    return {"turns": [_turn(r, withheld) for r in rows]}
 
 
-def _turn(r) -> dict:
+def _turn(r, withheld: frozenset | set = frozenset()) -> dict:
     citations = json.loads(r[3] or "[]")
+    if withheld and any(c.get("document_id") in withheld for c in citations):
+        # The answer drew on a document the person may no longer read (its access list narrowed): neither its wording nor its
+        # passages are shown again (commercial-readiness review F3, 2026-10-28).
+        return {"id": r[0], "question": r[1], "answer": "", "citations": [], "status": "abstained", "created_at": r[5],
+                "unsupported": [], "evidence": [], "conflicts": [], "versions": r[8], "abstention_reason": "access_changed",
+                "amendments": []}
     # Every valid number the answer cites was saved, so the highest saved one bounds the valid range.
     unsupported = (prompt.unsupported(r[2], max((c["n"] for c in citations), default=0))
                    if r[2] and r[4] in ("answered", "partial", "unverified") else [])

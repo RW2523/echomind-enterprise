@@ -14,7 +14,7 @@ import sqlite3
 import pytest
 from pydantic import ValidationError
 
-from conftest import as_user, csrf_headers
+from conftest import as_user, csrf_headers, make_user
 from test_law_counsel import cs, component, final, names, new_conversation, turn  # noqa: F401  (cs is a fixture)
 
 
@@ -157,3 +157,29 @@ def test_the_contract_for_several_matters():
     with pytest.raises(ValidationError):                                   # at most five matters
         schemas.validate_envelope(env)
     assert len(schemas.validate_envelope({**env, "matters": env["matters"][:5]})["matters"]) == 5
+
+
+def test_purging_a_document_reaches_the_copies_kept_in_a_conversation_about_several_matters(two, fresh_db):
+    """Commercial-readiness review F2 (2026-10-28): an answer quoting M-114 is stored under the conversation's first matter
+    (M-101). Purging the M-114 document removes its title and quote from that answer too, and the purge's own check says so."""
+    two["users"]["rhea"] = make_user("rhea", mfa=True, firm_roles=["records_admin"])
+    alice, rhea = as_user(two, "alice"), as_user(two, "rhea")
+    two["model"].claim, two["model"].quote = "The pre-money valuation is USD 40 million", "pre-money valuation is USD 40 million"
+    conv = several(alice, [two["m101"], two["m114"]])
+    cite = component(final(turn(alice, conv, "What is the pre-money valuation?")), "source_answer")["props"]["citations"][0]
+    did = cite["document_id"]
+    with sqlite3.connect(fresh_db) as c:
+        assert c.execute("SELECT matter_id FROM legal_documents WHERE id=?", (did,)).fetchone()[0] == two["m114"]
+        assert c.execute("SELECT matter_id FROM legal_counsel_components WHERE type='source_answer'").fetchone()[0] == two["m101"]
+    d = alice.post(f"/api/legal/matters/{two['m114']}/documents/{did}/delete", headers=csrf_headers(alice),
+                   json={"reason": "Sent to us by mistake"})
+    assert d.status_code == 200, d.text
+    r = rhea.post(f"/api/legal/deletions/{d.json()['deletion']['id']}/approve", headers=csrf_headers(rhea))
+    assert r.status_code == 200, r.text
+    assert r.json()["deletion"]["verification"]["ok"] is True
+    chips = component(alice.get(f"/api/legal/counsel/conversations/{conv}").json()["turns"][0]["envelope"], "source_answer")["props"]["citations"]
+    assert chips[0]["removed"] is True and chips[0]["document_title"] == ""
+    assert alice.get(f"/api/legal/counsel/citations/{cite['id']}").status_code == 404
+    with sqlite3.connect(fresh_db) as c:
+        from app.legal.counsel import purge
+        assert purge.remaining(c, two["m114"], did) == 0

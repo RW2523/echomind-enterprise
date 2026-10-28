@@ -189,12 +189,12 @@ def save_component(component: dict, turn: dict, document_ids: list[str], matter_
 
 def component(component_id: str, owner_id: str) -> Optional[dict]:
     with get_conn() as conn:
-        r = conn.execute("SELECT id, conversation_id, turn_id, matter_id, owner_id, type, props_json FROM legal_counsel_components "
-                         "WHERE id=? AND owner_id=?", (component_id, owner_id)).fetchone()
+        r = conn.execute("SELECT id, conversation_id, turn_id, matter_id, owner_id, type, props_json, document_ids_json "
+                         "FROM legal_counsel_components WHERE id=? AND owner_id=?", (component_id, owner_id)).fetchone()
     if not r:
         return None
     return {"id": r[0], "conversation_id": r[1], "turn_id": r[2], "matter_id": r[3], "owner_id": r[4], "type": r[5],
-            "props": json.loads(r[6])}
+            "props": json.loads(r[6]), "document_ids": json.loads(r[7] or "[]")}
 
 
 def components(ids: list[str], owner_id: str) -> list[dict]:

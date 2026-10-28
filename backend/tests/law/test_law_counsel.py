@@ -647,3 +647,32 @@ def test_a_turn_refuses_malformed_document_ids(cs):
     r = alice.post(f"/api/legal/counsel/conversations/{conv}/turns", headers=csrf_headers(alice),
                    json={"text": "What is due?", "document_ids": ["x' OR '1'='1"]})
     assert r.status_code == 422
+
+
+# ── Commercial-readiness review, 2026-10-28 (F3, F9) ──────────────────────────────────────────────────────────────────
+def test_a_saved_answer_is_withheld_once_its_document_is_closed_to_the_person(cs, fresh_db):
+    """A connector narrows a document's access list after the answer: the answer, which took its wording from that
+    document, is no longer shown to someone who may not read it; the person who still may sees it as before."""
+    from app.legal.documents import repo as doc_repo
+    alice, bob = as_user(cs, "alice"), as_user(cs, "bob")
+    cs["model"].claim, cs["model"].quote = "Witness B recalls the arrival", "took place on May 15, 2026, on arrival at the site"
+    conv = new_conversation(alice, cs["mid"])
+    env = final(turn(alice, conv, "When did Witness B say the delivery took place?"))
+    did = component(env, "source_answer")["props"]["citations"][0]["document_id"]
+    doc_repo.set_acl(did, {cs["users"]["bob"]["id"]})                       # only bob may read it now
+    again = alice.get(f"/api/legal/counsel/conversations/{conv}").json()["turns"][0]["envelope"]
+    assert [c["type"] for c in again["components"]] == ["unavailable"]
+    assert "May 15" not in json.dumps(again) and "no longer open" in again["components"][0]["props"]["text"]
+    doc_repo.set_acl(did, {cs["users"]["alice"]["id"]})                     # hers again: shown as it was
+    back = alice.get(f"/api/legal/counsel/conversations/{conv}").json()["turns"][0]["envelope"]
+    assert component(back, "source_answer")["props"]["citations"][0]["document_id"] == did
+
+
+def test_repeating_an_action_checks_access_first_and_shows_the_card_as_it_is_now(cs, fresh_db):
+    alice, _, events = _compare(cs)
+    comp = component(final(events), "evidence_comparison")
+    assert _review(alice, cs, comp, key="key-0909").status_code == 200
+    with sqlite3.connect(fresh_db) as c:                                       # her membership ends
+        c.execute("UPDATE matter_memberships SET valid_to='2000-01-01T00:00:00.000Z' WHERE matter_id=? AND user_id=?",
+                  (cs["mid"], cs["users"]["alice"]["id"]))
+    assert _review(alice, cs, comp, key="key-0909").status_code == 404          # the stored result is not handed back

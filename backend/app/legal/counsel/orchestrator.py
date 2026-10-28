@@ -80,9 +80,20 @@ def event(name: str, data: dict) -> dict:
 
 
 # ── Reading stored components back ───────────────────────────────────────────────
+WITHHELD = "This item quoted a document you can no longer open."
+
+
 def materialize(principal: dict, comp: dict, conv_matter: Optional[str] = None) -> dict:
     """A stored component as the person may see it now. An evidence comparison is resolved from its discrepancy (its
-    state may have changed, or a document may no longer be visible); anything gone becomes `unavailable`."""
+    state may have changed, or a document may no longer be visible); anything gone becomes `unavailable`. Anything else that
+    drew on a document the person may no longer read (its access list narrowed after the answer) is withheld whole: its
+    wording came from that document (commercial-readiness review F3, 2026-10-28)."""
+    from ..documents import repo as doc_repo
+    if comp["type"] != "evidence_comparison" and doc_repo.withheld_from(comp.get("document_ids") or [], principal["sub"]):
+        out = {"id": comp["id"], "type": "unavailable", "props": {"text": WITHHELD}}
+        if conv_matter and comp["matter_id"] != conv_matter:
+            out["matter_id"] = comp["matter_id"]
+        return out
     if comp["type"] == "evidence_comparison":
         did = (comp["props"] or {}).get("discrepancy_id")
         row = discrepancies.get(principal, comp["matter_id"], did) if did else None

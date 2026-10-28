@@ -194,3 +194,18 @@ def test_voice_uses_research_through_an_on_behalf_of_token(research):
     assert ask(svc, research["matters"]["M-202"]["id"], "LYNX-2027?", headers=bearer)[0].status_code == 404
     assert svc.get(f"/api/legal/matters/{research['matters']['M-101']['id']}/research", headers=bearer).status_code == 401
     assert svc.post("/api/chat/ask-voice-stream", json={"message": "x"}, headers=bearer).status_code == 404
+
+
+def test_a_saved_research_answer_is_withheld_once_its_document_is_closed_to_the_person(research, fresh_db):
+    """Commercial-readiness review F3 (2026-10-28): the history does not show again the wording or passages of an answer
+    whose document the person may no longer read."""
+    from app.legal.documents import repo as doc_repo
+    alice = as_user(research, "alice")
+    mid = research["matters"]["M-101"]["id"]
+    _, ev = ask(alice, mid, "What does the reference code ZEBRA-1017 identify?")
+    did = ev[-1]["citations"][0]["document_id"]
+    doc_repo.set_acl(did, set())                                               # nobody may read it now
+    t = alice.get(f"/api/legal/matters/{mid}/research").json()["turns"][0]
+    assert t["status"] == "abstained" and t["abstention_reason"] == "access_changed"
+    assert t["answer"] == "" and t["citations"] == []
+    assert "ZEBRA" not in json.dumps({k: v for k, v in t.items() if k != "question"})        # her own question stays
