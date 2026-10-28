@@ -187,3 +187,13 @@ def test_plain_http_is_for_this_server_only_and_https_asks_browsers_to_stay():
     conf = (ROOT / "frontend" / "nginx.law.conf").read_text()
     plain, secure = conf.split("listen 443 ssl;")
     assert "Strict-Transport-Security" not in plain and secure.count('add_header Strict-Transport-Security "max-age=31536000" always;') == 3
+
+
+def test_every_law_container_drops_privileges():
+    """Commercial-readiness review R5 (2026-10-28): no privilege escalation, capabilities dropped, processes bounded; the
+    frontend adds back only what nginx needs."""
+    compose = (ROOT / "docker-compose.law.yml").read_text()
+    capped = compose.split("x-law-capped: &law_capped", 1)[1].split("\nx-", 1)[0]
+    assert 'security_opt: ["no-new-privileges:true"]' in capped and 'cap_drop: ["ALL"]' in capped and "pids_limit:" in capped
+    assert compose.count("*law_capped") >= 3                                  # backend, voice, frontend
+    assert 'cap_add: ["CHOWN", "SETUID", "SETGID", "NET_BIND_SERVICE"]' in compose

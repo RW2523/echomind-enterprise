@@ -17,6 +17,11 @@
 x-law-capped: &law_capped
   pull_policy: never
   oom_score_adj: 800              # killed before production's processes if the host runs out of memory
+  # Commercial-readiness review R5 (2026-10-28): no privilege escalation inside a container, a bounded number of
+  # processes, every capability dropped (the frontend adds back the four nginx needs to bind 80/443 and drop to its user).
+  security_opt: ["no-new-privileges:true"]
+  pids_limit: 1024
+  cap_drop: ["ALL"]
 
 x-law-host-gateway: &law_host_gateway
   extra_hosts:
@@ -142,6 +147,7 @@ services:
     mem_limit: ${LAW_FRONTEND_MEM:-256m}
     memswap_limit: ${LAW_FRONTEND_MEM:-256m}
     container_name: echomind-law-frontend
+    cap_add: ["CHOWN", "SETUID", "SETGID", "NET_BIND_SERVICE"]   # tested with nginx.law.conf on the 1.4.1 image (review R5)
     ports: !override
       - "${LAW_HTTP_BIND:-127.0.0.1}:${LAW_HTTP_PORT:-3110}:80"     # plain HTTP for this server's own scripts only (review F7)
       - "${LAW_HTTPS_PORT:-3553}:443"
