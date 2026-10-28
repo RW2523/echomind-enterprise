@@ -113,6 +113,17 @@ def _stands(claim) -> bool:
     return claim.state == "supported" or (claim.state == "unquoted" and words is not None)
 
 
+def _version_texts(version_ids) -> list[str]:
+    """The stored text of each cited version: the whole document, not only the passage."""
+    from ..documents import repo as doc_repo
+    out = []
+    for vid in sorted(v for v in version_ids if v):
+        body = doc_repo.reader(vid)
+        if body and body.get("text"):
+            out.append(body["text"])
+    return out
+
+
 def _evidence(claims: list, sources: list[dict]) -> list[dict]:
     """Every quote the answer relies on, with where it is: document, version and its status, clause,
     page, line and exact characters of the version's text."""
@@ -295,14 +306,25 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         # Abstention in other words (S2.2, D-038):
         # - nothing is supported, and the text says the documents do not answer; or
         # - the answer opens by saying the documents do not cover the question, and every passage it
-        #   cites is only weakly related to the question.
+        #   cites is only weakly related to the question; or
+        # - the answer opens by saying the documents do not cover the question, every cited sentence after it only says what
+        #   the documents lack or merely mention, and a word of the question is in none of the documents it cites
+        #   (2026-10-28): that is the model declining, with context. When every word of the question is in those documents,
+        #   the answer stands as before (a literal "the documents do not say when he said it" that then gives the time; "no
+        #   deposit for a warehouse … the only mention of a deposit is GBP 21,000", in the warehouse lease).
         # A supported answer that also says the abstention sentence is still an answer.
         nothing = not any(_stands(c) for c in claims)
+        answering = [c for c in claims if _stands(c) and not prompt.only_context(c.sentence)]
+        declined = False
+        if not answering and prompt.opens_not_stated(text):
+            cited = {sources[c.n - 1]["version_id"] for claim in claims for c in claim.citations if 1 <= c.n <= len(sources)}
+            texts = await run_in_threadpool(_version_texts, cited)
+            declined = bool(texts) and bool(prompt.missing_terms(question, texts))
         cited_scores = [passages[c.n - 1].get("score") for claim in claims for c in claim.citations
                         if 1 <= c.n <= len(passages) and passages[c.n - 1].get("score") is not None]
         weak = not cited_scores or max(float(x) for x in cited_scores) < settings.LEGAL_ABSTAIN_WEAK_SCORE
         abstained = (nothing and (prompt.is_abstention(text) or prompt.says_not_stated(text))) or \
-            (prompt.says_not_stated(text) and weak)
+            (prompt.says_not_stated(text) and weak) or declined
         numbers = prompt.cited_numbers(text, len(sources))
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)

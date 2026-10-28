@@ -348,3 +348,98 @@ def test_a_quote_that_itself_contains_quotation_marks_is_read_whole():
     assert [(c.n, c.quote) for cl in para.claims for c in cl.citations] == [
         (5, '1.1 Clause 4.2 is deleted and replaced with: "The Supplier shall complete delivery by May 20, 2026."'),
         (2, "capped at USD 250,000")]
+
+
+# ── Declining with context (2026-10-28, golden g-abstain-salary and g-account-said-abstain) ─────────────────────────────
+def test_not_stated_then_only_what_the_documents_lack_is_an_abstention(ev):
+    """The model says the documents do not answer, then cites only what they lack or merely mention: it declined. The
+    card says so (no "partly supported"), and the passages it consulted stay visible as an abstention's do."""
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    for tail in (f'The source mentions the cap but does not include any information about bonuses [{cap}: "capped at USD 250,000"].',
+                 f'The sources only mention that liability is capped [{cap}: "capped at USD 250,000"].',
+                 f"There is no information about bonuses in the agreement [{cap}]."):
+        ev["llm"].answer = f"The documents do not specify the chief executive's bonus. {tail}"
+        done = ask(alice, ev["mid"], "Is each party's total liability capped for bonuses?")[-1]   # the cap is found; "bonuses" is not
+        assert done["status"] == "abstained" and done["abstention_reason"] == "model", tail
+        assert done["citations"] == []
+
+
+def test_not_stated_then_context_stands_when_the_cited_passage_holds_every_word_asked(ev):
+    """A literal reading ("the documents do not say when she said it") followed by the passage that holds what was asked
+    stays an answer: every word of the question is in the cited passage, so nothing shows the fact is missing."""
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    ev["llm"].answer = (f"The documents do not state when the liability cap was agreed. The agreement only mentions that each "
+                        f'party\'s total liability is capped [{cap}: "capped at USD 250,000"].')
+    done = ask(alice, ev["mid"], "What is each party's total liability cap?")[-1]
+    assert done["abstained"] is False
+
+
+def test_not_stated_then_a_cited_fact_is_still_an_answer(ev):
+    """The model notes the documents do not use the asked words, then states the relevant term with its quote: that is an
+    answer, not a refusal."""
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    ev["llm"].answer = (f'The documents do not use the words "damages limit". However, each party\'s total liability is capped '
+                        f'at USD 250,000 [{cap}: "capped at USD 250,000"].')
+    done = ask(alice, ev["mid"], "What is the liability cap?")[-1]
+    assert done["abstained"] is False and done["status"] in ("answered", "partial")
+
+
+def test_which_cited_sentences_are_only_context():
+    from app.legal.research import prompt
+    context = ["The source mentions her appointment but does not include any information about her compensation [1].",
+               "The sources only mention that he was the supervisor on duty [1].",
+               "There is no information about when the chiller was repaired [1].",
+               "None of these sources provide information about indemnification [1].",
+               "The sources discuss an NDA and an engagement letter, but none reference a non-compete clause [1][2]."]
+    facts = ["However, there is a clause about ending the lease in the Unit 7 Lease [1].",
+             "Clause 8.3 does not limit liability for fraud, wilful misconduct, or breach of Clause 5 [2].",
+             "The engagement does not include tax advice [1].",
+             "The estimate is GBP 45,000 and does not include VAT [1].",
+             "No licence under any patent is granted by the NDA [1].",
+             "The tenant shall not assign or underlet part only of the premises [1].",
+             # golden g-nda-exclusions, 2026-10-28: the NDA's own words, not the documents' silence
+             "However, they indicate that Confidential Information does not include information that is or becomes public [1].",
+             "The Provider does not give any warranty beyond Schedule 1 [1].",
+             "Neither party may refer the dispute to arbitration before mediation [1].",
+             "Neither party is liable for delay caused by events beyond its reasonable control [1]."]
+    assert all(prompt.only_context(s) for s in context)
+    assert not any(prompt.only_context(s) for s in facts)
+
+
+def test_the_words_asked_that_no_cited_passage_holds():
+    from app.legal.research import prompt
+    witness = "I recall that the temperature alarm sounded at about 02:40 on 18 June 2026. The chiller in Hall 3 failed."
+    assert prompt.missing_terms("When did Jonas Ekberg say the chiller was repaired?", [witness]) == ["jonas", "ekberg", "repaired"]
+    assert prompt.missing_terms("When did the chiller alarm sound?", [witness]) == []
+    assert prompt.missing_terms("Does the MSA contain a non-compete clause?", ["Mutual Non-Disclosure Agreement"]) == ["contain", "compete", "clause"]
+
+
+def test_a_decline_after_what_the_documents_do_say_or_with_its_own_citation_is_an_abstention(ev):
+    """Golden 2026-10-28: "The documents state that Maria Ek has been appointed …, but they do not specify her salary. The
+    relevant excerpt is: [1]." and "The documents do not contain any statement from Jonas Ekberg about when the chiller was
+    repaired [1]." Both decline; neither card may read as supported."""
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    for answer in (f"The documents state that liability is capped, but they do not specify any bonuses.\n\nThe relevant excerpt is: [{cap}].",
+                   f'The documents do not contain any statement about bonuses [{cap}: "capped at USD 250,000"].',
+                   f'The documents do not state any bonuses.\n\n[{cap}: "capped at USD 250,000"]'):        # a quoted marker alone
+        ev["llm"].answer = answer
+        done = ask(alice, ev["mid"], "Is each party's total liability capped for bonuses?")[-1]
+        assert done["status"] == "abstained" and done["abstention_reason"] == "model", answer
+
+
+def test_how_an_answer_opens():
+    from app.legal.research import prompt
+    assert prompt.opens_not_stated("The documents state that Maria Ek was appointed, but they do not specify her salary. More.")
+    assert prompt.opens_not_stated("The documents do not contain any statement from Jonas Ekberg about the repair [1].")
+    assert prompt.opens_not_stated("The documents do not specify Maria Ek's salary.")
+    assert not prompt.opens_not_stated("The fee is USD 18,500 per month [1].")
+    assert not prompt.opens_not_stated("The engagement does not include tax advice [1].")
+    assert not prompt.opens_not_stated("The MSA does not contain a non-compete clause [1].")     # a term of the MSA, not silence

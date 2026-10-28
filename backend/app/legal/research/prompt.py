@@ -221,6 +221,76 @@ _NOT_STATED = re.compile(r"^\W*(?:the\s+)?(?:provided\s+|available\s+|given\s+)?
                          re.I)
 
 
+# A cited sentence that only says what the documents lack or merely mention — "the source mentions her appointment but does
+# not include any information about her compensation", "the sources only mention that he was on duty", "there is no
+# information about when it was repaired" — is context, not an answer to the question (2026-10-28, golden g-abstain-salary,
+# g-account-said-abstain). A sentence stating a term with "not" ("clause 8.3 does not limit liability for fraud", "the
+# engagement does not include tax advice") is an answer and is not matched: the negation must be about information ON
+# something ("no information about…"), never a term's own words ("Confidential Information does not include information
+# that is public", golden g-nda-exclusions, 2026-10-28).
+_NO_INFORMATION = re.compile(r"\b(?:no|not|none|neither|nor|never)\b[^.]{0,60}?\b(?:information|details?|mention|reference|indication|"
+                             r"record)\s+(?:about|on|regarding|concerning|as\s+to|of|relating|in\s+relation)\b", re.I)
+_SILENT_VERB = re.compile(r"\b(?:do(?:es)?|did)\s+not\s+(?:explicitly\s+|clearly\s+|directly\s+)?(?:specify|state|say|mention|record|"
+                          r"indicate|address)\b", re.I)
+# "…but none reference a non-compete clause" (golden g-abstain-noncompete, 2026-10-28); not "refer", which terms use
+# ("neither party may refer the dispute to …").
+_NONE_MENTIONS = re.compile(r"\b(?:none|neither)\b[^.]{0,40}?\b(?:references?|mentions?|address(?:es)?|covers?|discuss(?:es)?|"
+                            r"specif(?:y|ies))\b", re.I)
+_ONLY_MENTIONS = re.compile(r"\b(?:only|merely|just)\s+(?:mentions?|states?|says?|refers?|notes?|describes?|records?|discuss(?:es)?)\b", re.I)
+
+
+# "The documents state that Maria Ek was appointed, but they do not specify her salary" (golden g-abstain-salary, 2026-10-28).
+_BUT_NOT_STATED = re.compile(r"\b(?:but|however|although|yet)\b[^.]{0,20}?\b(?:they|it|the\s+(?:documents?|sources?|excerpts?|passages?))\s+"
+                             r"(?:do(?:es)?\s+not|don't|doesn't)\s+(?:explicitly\s+|clearly\s+|directly\s+)?(?:specify|mention|state|say|"
+                             r"contain|provide|address|answer|set\s+out|indicate|identify)\b", re.I)
+
+
+# A sentence that only points at a source and states nothing: "The relevant excerpt is: [1]." "See [2]."
+_POINTER = re.compile(r"^\W*(?:(?:the\s+)?(?:relevant|cited|following)?\s*(?:excerpts?|passages?|text|sources?|quotes?|sections?|"
+                      r"wording)\s+(?:is|are|reads?)|see|source|sources|refer\s+to)\W*$", re.I)
+
+
+def only_context(sentence: str) -> bool:
+    """The sentence speaks about what the documents do not say or only mention, rather than stating a fact. A sentence with
+    no words of its own (a marker alone, even one carrying a quote: golden g-account-said-abstain, 2026-10-28) states nothing."""
+    s = re.sub(r"\[[^\]]*\]", " ", sentence or "")
+    if not re.search(r"[^\W\d_]{2}", s):
+        return True
+    return bool(_NO_INFORMATION.search(s) or _SILENT_VERB.search(s) or _ONLY_MENTIONS.search(s) or _NONE_MENTIONS.search(s)
+                or _NOT_STATED.search(s) or _BUT_NOT_STATED.search(s) or _POINTER.search(s))
+
+
+def opens_not_stated(answer: str) -> bool:
+    """The answer's first sentence says the documents do not cover what was asked — on its own, after what they do say
+    ("…, but they do not specify her salary"), or with a citation ("The documents do not contain any statement … [1]")."""
+    first = _sentences(answer or "")[:1]
+    if not first:
+        return False
+    s = re.sub(r"\[[^\]]*\]", " ", first[0])
+    return bool(_NOT_STATED.search(s) or _BUT_NOT_STATED.search(s))
+
+
+# Words of a question that say nothing about what is asked: question words, the documents themselves, saying.
+_QUESTION_NOISE = frozenset("""what when where which whose whom does did have been being with from that this these those there their
+they them under about into upon after before will would shall must should could might also only than then were your
+document documents matter source sources say says said saying state states stated mention mentioned tell give
+much many long often""".split())
+
+
+def missing_terms(question: str, passages: list[str]) -> list[str]:
+    """The question's own words (four letters or more, compared on their first five) that none of the passages contains:
+    what was asked is not in the passages the answer cites ("repaired", "salary", "compete"). Empty when every word is
+    there, and then nothing is concluded from them."""
+    text = " ".join(passages).lower()
+    words = re.findall(r"[a-z][a-z'-]{3,}", (question or "").lower())
+    out = []
+    for w in words:
+        for part in w.replace("'s", "").split("-"):
+            if len(part) >= 4 and part not in _QUESTION_NOISE and part[:5] not in text and part not in out:
+                out.append(part)
+    return out
+
+
 def says_not_stated(answer: str) -> bool:
     """The answer opens with the model's own words for "the documents do not answer that"."""
     first = _sentences(answer or "")[:1]
