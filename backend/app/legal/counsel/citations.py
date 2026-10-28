@@ -141,7 +141,8 @@ def resolve(principal: dict, citation_id: str) -> dict:
     return {
         "id": citation_id, "n": n, "matter_id": matter_id, "verification": verification, "verified": verification in VERIFIED,
         "document": {"id": document_id, "title": doc["title"], "kind": doc["kind"], "status": doc["status"]},
-        "version": {"id": version_id, "number": v["number"], "status": v["status"], "filename": v["filename"], "sha256": v["sha256"]},
+        "version": {"id": version_id, "number": v["number"], "status": v["status"], "filename": v["filename"], "sha256": v["sha256"],
+                    "uploaded_at": v.get("uploaded_at")},
         "quote": quote, "context": context, "clause": where.get("clause"), "page": where.get("page_start"),
         "page_end": where.get("page_end"), "line": where.get("line"), "newer_version": newer,
         "reader_path": reader_path(number, document_id, version_id, a, b),

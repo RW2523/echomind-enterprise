@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import axe from 'axe-core';
 import { captureStarted, _resetCaptureForTests } from '../app/capture';
@@ -617,5 +617,33 @@ describe('answer card honesty (review C1)', () => {
     const none = render(<ComponentView comp={answer([{ ...cite, verified: false }])} ctx={ctx} />);
     expect(none.container.textContent).toContain('Not verified');
     expect(none.container.textContent).not.toContain('Supported by 0');
+  });
+});
+
+describe('source panel errors (review S1)', () => {
+  it('tells a source that is gone from one that did not load, and offers to try again', async () => {
+    const { ApiError } = await import('../api/client');
+    const { counselApi } = await import('../counsel/api');
+    const { render, screen: s, fireEvent: fe, cleanup: done } = await import('@testing-library/react');
+    const { QueryClient, QueryClientProvider } = await import('@tanstack/react-query');
+    const { MemoryRouter } = await import('react-router');
+    const { PanelProvider, usePanel } = await import('../counsel/context');
+    const { default: SidePanel } = await import('../counsel/SidePanel');
+    const React = await import('react');
+    let fail: unknown = new ApiError(404, 'Not Found');
+    const spy = vi.spyOn(counselApi, 'citation').mockImplementation(async () => { throw fail; });
+    function Open() { const p = usePanel(); React.useEffect(() => { p.open({ kind: 'citation', id: 'c1' } as never); }, []); return null; }
+    const ui = () => render(<QueryClientProvider client={new QueryClient()}><MemoryRouter><PanelProvider><Open /><SidePanel /></PanelProvider></MemoryRouter></QueryClientProvider>);
+    ui();
+    expect(await s.findByText(/no longer available to you/)).toBeTruthy();
+    done();
+    fail = new TypeError('Failed to fetch');
+    ui();
+    expect(await s.findByText(/could not be loaded/)).toBeTruthy();
+    fail = undefined;
+    spy.mockImplementation(async () => { throw new ApiError(404, 'x'); });
+    fe.click(s.getByRole('button', { name: 'Try again' }));
+    expect(await s.findByText(/no longer available to you/)).toBeTruthy();
+    spy.mockRestore();
   });
 });

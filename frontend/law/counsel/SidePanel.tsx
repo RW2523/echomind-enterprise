@@ -25,8 +25,18 @@ function CitationBody({ id, onUse }: { id: string; onUse?: () => void }) {
   const q = useQuery({ queryKey: ['counsel', 'citation', id], retry: false, staleTime: 0, gcTime: 0, queryFn: () => counselApi.citation(id) });
   if (q.isPending) return <p className="qc-meta" aria-busy="true">Opening the source…</p>;
   if (q.isError) {
+    // Say which of the three it is (review S1): the source changed, it is gone or closed to you, or it did not load.
     const status = q.error instanceof ApiError ? q.error.status : 0;
-    return <p className="qc-error" role="alert">{status === 409 ? q.error.message : 'This source is not available to you.'}</p>;
+    if (status === 409) return <p className="qc-error" role="alert">{q.error.message}</p>;
+    if (status === 403 || status === 404 || status === 410) {
+      return <p className="qc-error" role="alert">This source is no longer available to you: the document may have been removed, or your access to it changed.</p>;
+    }
+    return (
+      <div role="alert" style={{ display: 'grid', gap: 8, justifyItems: 'start' }}>
+        <p className="qc-error" style={{ margin: 0 }}>The source could not be loaded. Check the connection and try again.</p>
+        <button type="button" className="qc-btn" onClick={() => void q.refetch()}>Try again</button>
+      </div>
+    );
   }
   const c: CitationDetail = q.data.citation;
   return (
@@ -44,7 +54,8 @@ function CitationBody({ id, onUse }: { id: string; onUse?: () => void }) {
       ) : <p className="qc-meta">No exact passage is stored for this source.</p>}
       <dl className="qc-facts">
         <dt>Document</dt><dd>{c.document.title}</dd>
-        <dt>Version</dt><dd>{c.version.number} · {statusWord(c.version.status)} · {c.version.filename}</dd>
+        <dt>Version</dt><dd>{c.version.number} · {statusWord(c.version.status)} · {c.version.filename}
+          {c.version.uploaded_at ? <>, added <time dateTime={c.version.uploaded_at}>{new Date(c.version.uploaded_at).toLocaleDateString([], { dateStyle: 'medium' })}</time></> : null}</dd>
         {c.page ? <><dt>Page</dt><dd>{c.page}{c.page_end && c.page_end !== c.page ? `–${c.page_end}` : ''}{c.line ? `, line ${c.line}` : ''}</dd></> : null}
         {c.clause ? <><dt>Clause</dt><dd>{c.clause}</dd></> : null}
         <dt>File hash</dt><dd className="qc-mono" title={c.version.sha256}>SHA-256 {c.version.sha256.slice(0, 16)}…</dd>

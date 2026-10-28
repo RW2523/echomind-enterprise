@@ -53,6 +53,15 @@ export default function DocumentReader() {
         <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/definitions`}><BookA />Check definitions</Link>
         {me.features?.translation && <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/translate`}><TranslateIcon />Translate</Link>}
       </Toolbar>
+      {/* Review S1: a cited older version says so, with the way to the current one. */}
+      {params.get('v') && doc.data?.current_version && params.get('v') !== doc.data.current_version.id && (
+        <div className="lw-content" style={{ paddingBottom: 0 }}>
+          <p className="qc-note" role="note" style={{ margin: 0 }}>
+            This is an earlier version of the document. Version {doc.data.current_version.number} is the current one.{' '}
+            <Link to={`/m/${matter.number}/documents/${encodeURIComponent(docId)}/read`}>Open the current version</Link>
+          </p>
+        </div>
+      )}
       {reader.isPending && reader.failureCount > 0 && reader.failureReason instanceof ApiError && reader.failureReason.status === 409
         ? <div className="lw-content"><div className="lw-paper" style={{ padding: 24 }}>
             <p role="status" className="lw-meta" style={{ margin: '0 0 12px' }}>This version is still being read. It opens here when reading finishes.</p>

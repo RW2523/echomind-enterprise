@@ -175,7 +175,7 @@ export interface CitationDetail {
   verification: 'verbatim' | 'normalized' | 'not_quoted' | 'failed';
   verified: boolean;
   document: { id: string; title: string; kind: string; status: string };
-  version: { id: string; number: number; status: string; filename: string; sha256: string };
+  version: { id: string; number: number; status: string; filename: string; sha256: string; uploaded_at?: string | null };
   quote: string | null;
   context: { text: string; highlight_start: number; highlight_end: number; offset: number; truncated_before: boolean; truncated_after: boolean } | null;
   clause?: string | null;
