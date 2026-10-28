@@ -174,7 +174,8 @@ function MatterTabs() {
   return (
     <nav className="qc-tabs" aria-label="Matter">
       <button type="button" className="qc-tab" style={{ border: 'none', background: 'none', font: 'inherit', cursor: 'pointer' }}
-        onClick={() => { setMatterId(matter.id); navigate('/chat'); }}><MessageSquare aria-hidden />Chat about this matter</button>
+        onClick={() => { setMatterId(matter.id); navigate('/chat'); }} aria-label="Chat about this matter">
+        <MessageSquare aria-hidden /><span className="qc-hide-small">Chat about this matter</span><span className="qc-only-small">Chat</span></button>
       {main.map((e) => (
         <NavLink key={e.key} to={e.to} className={({ isActive }) => `qc-tab${isActive ? ' active' : ''}`}><e.icon aria-hidden />{e.label}</NavLink>
       ))}
