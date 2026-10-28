@@ -1616,16 +1616,28 @@ test('EchoMind Legal chat across two matters: chosen together, compared side by 
   await signIn(alice, 'alice');
   await expect(alice.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
   const picker = () => alice.getByRole('button', { name: /Pick the matter to ask about|Change the matter/ });
-  for (const m of [/^M-101 /, /^M-114 /]) {
+  // A second matter of her own, opened here: earlier journeys wall her off M-114, so the suite's order must not matter.
+  const second = 'M-160';
+  await alice.goto('/matters');
+  await alice.getByRole('button', { name: /New matter/ }).first().click();
+  const form = alice.getByRole('dialog', { name: 'New matter' });
+  await form.getByLabel('Client', { exact: true }).selectOption({ label: 'Voss-Lindqvist AB' });
+  await form.getByLabel('Matter number').fill(second);
+  await form.getByLabel('Title', { exact: true }).fill('Supply chain review');
+  await form.getByRole('button', { name: 'Open matter' }).click();
+  await alice.waitForURL(`**/m/${second}/overview`);
+  await alice.goto('/chat');
+  await expect(alice.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
+  for (const m of [/^M-101 /, new RegExp(`^${second} `)]) {
     await picker().click();
     const option = alice.getByRole('option', { name: m });
     if ((await option.getAttribute('aria-selected')) !== 'true') await option.click();
     await alice.keyboard.press('Escape');
   }
   await picker().click();
-  await expect(alice.getByRole('option', { name: /M-202/ })).toHaveCount(0);             // walled off: never offered
+  await expect(alice.getByRole('option', { name: /M-202/ })).toHaveCount(0);             // her membership ended: never offered
   await alice.keyboard.press('Escape');
-  await expect(alice.locator('.qc-context b').first()).toHaveText('M-101, M-114');
+  await expect(alice.locator('.qc-context b').first()).toHaveText(`M-101, ${second}`);
   const ask = async (text: string) => {
     const box = alice.getByRole('textbox', { name: 'Ask EchoMind' });
     await box.fill(text);
@@ -1640,5 +1652,5 @@ test('EchoMind Legal chat across two matters: chosen together, compared side by 
   await shot(alice, '52-legal-chat-two-matters-light');
   await ask('Build a chronology of events');
   await expect(alice.locator('[data-component="timeline"]').first()).toBeVisible({ timeout: 120_000 });
-  await expect(alice.getByRole('navigation', { name: 'Recent conversations' }).getByText('M-101 + M-114').first()).toBeVisible();
+  await expect(alice.getByRole('navigation', { name: 'Recent conversations' }).getByText(`M-101 + ${second}`).first()).toBeVisible();
 });
