@@ -25,6 +25,15 @@ function totp(secretB32: string): string {
 
 /** Sends one authenticator code and reports what the server said (not what the page shows: an
  *  earlier refusal's alert can still be on screen when the next code is sent). */
+
+/** A matter's tab: the six everyday ones are on the strip, the rest under More (review M1). */
+async function matterTab(page: Page, name: string) {
+  const nav = page.getByRole('navigation', { name: 'Matter' });
+  const link = nav.getByRole('link', { name, exact: true });
+  if (!(await link.isVisible())) await nav.getByText('More', { exact: true }).click();
+  await link.click();
+}
+
 async function sendCode(page: Page, code: string): Promise<boolean> {
   const field = page.getByLabel('Authenticator code');
   if (!(await field.waitFor({ state: 'visible', timeout: 15_000 }).then(() => true, () => false))) {
@@ -581,7 +590,7 @@ test('compare: two versions clause by clause, a change explained, and conflicts 
   await expect(alice.getByRole('row', { name: /Order Form No\. 1/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
 
   // Two versions: the signed version against the restructured draft.
-  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Compare' }).click();
+  await matterTab(alice, 'Compare');
   await alice.getByLabel('From: document').selectOption({ label: 'Harrowgate MSA (compare)' });
   await alice.getByLabel('To: document').selectOption({ label: 'Harrowgate MSA (compare)' });
   await alice.getByLabel('From: version').selectOption({ label: 'Version 1 · Executed · msa-v1-signed.md' });
@@ -1072,7 +1081,7 @@ test('obligations: the agreement\'s deadlines read with their words, the non-ren
     await dialog.getByRole('button', { name: /^Import$/ }).click();
     await expect(alice.getByRole('row', { name: /Master Services Agreement \(DEMO\)/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
   }
-  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Obligations' }).click();
+  await matterTab(alice, 'Obligations');
   await alice.getByLabel('Document', { exact: true }).selectOption({ label: 'Master Services Agreement (DEMO)' });
   await alice.getByRole('button', { name: 'Read its obligations' }).click();
   const list = alice.getByRole('article', { name: 'Obligations' });
@@ -1115,7 +1124,7 @@ test('due diligence: the data room run against the firm checklist, missing docum
     await dialog.getByRole('button', { name: /^Import$/ }).click();
     await expect(alice.getByRole('row', { name: /Master Services Agreement \(DEMO\)/ }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
   }
-  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Due diligence' }).click();
+  await matterTab(alice, 'Due diligence');
   await alice.getByLabel('Checklist', { exact: true }).selectOption({ label: 'Share acquisition — core documents (version 1)' });
   await alice.getByRole('button', { name: 'Run against this matter' }).click();
   const reg = alice.getByRole('article', { name: 'Issue register' });
@@ -1171,7 +1180,7 @@ test('governance: a company\'s register, approvals, authority, policies and IP r
     await dialog.getByRole('button', { name: /^Import$/ }).click();
     await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
   }
-  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Due diligence' }).click();
+  await matterTab(alice, 'Due diligence');
   await alice.getByLabel('Checklist', { exact: true }).selectOption({ label: 'Corporate governance review (version 1)' });
   await alice.getByRole('button', { name: 'Run against this matter' }).click();
   const reg = alice.getByRole('article', { name: 'Issue register' });
@@ -1316,7 +1325,7 @@ test('summaries: a consultancy agreement summarised point by point, each point o
     await dialog.getByRole('button', { name: /^Import$/ }).click();
     await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
   }
-  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Summaries' }).click();
+  await matterTab(alice, 'Summaries');
   await alice.getByRole('combobox', { name: 'Document', exact: true }).selectOption({ label: title });
   await alice.getByRole('button', { name: 'Summarise' }).click();
   const row = alice.getByRole('listitem', { name: `Summary — ${title}` });
@@ -1401,7 +1410,7 @@ test('panel: four perspectives on a change-of-control question, each citing the 
     await dialog.getByRole('button', { name: /^Import$/ }).click();
     await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
   }
-  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Review panel' }).click();
+  await matterTab(alice, 'Review panel');
   const form = alice.getByRole('form', { name: 'Ask the panel' });
   await form.getByLabel('Question').fill('If the Reseller undergoes a change of control, can the Supplier terminate the Reseller Agreement, and what is each party\'s liability?');
   await form.getByLabel('Specialist area').selectOption('commercial');
@@ -1467,7 +1476,7 @@ test('conversation: a question to the matter is answered from its documents, wit
     await dialog.getByRole('button', { name: /^Import$/ }).click();
     await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
   }
-  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('link', { name: 'Conversation' }).click();
+  await matterTab(alice, 'Conversation');
   await expect(alice.getByRole('region', { name: 'Talk to this matter' })).toBeVisible();
   await expect(alice.getByRole('button', { name: 'Speak a question' })).toBeEnabled();
   await alice.getByLabel('Or type a question').fill('What is the cap on each party’s aggregate liability?');

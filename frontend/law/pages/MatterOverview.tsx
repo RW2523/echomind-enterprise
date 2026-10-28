@@ -52,14 +52,15 @@ export default function MatterOverview() {
         <MatterGlance matter={matter} />
         <section aria-labelledby="matter-work" style={{ display: 'grid', gap: 10 }}>
           <h2 className="lw-h2" id="matter-work" style={{ padding: '0 4px' }}>Work on this matter</h2>
-          <div className="lw-tiles">
+          {/* A plain directory, one line each (review M1; DESIGN.md), not a wall of same-size tiles. */}
+          <ul className="lw-paper qc-tool-list">
             {matterEntries(me, matter).filter((e) => e.key !== 'overview').map((e) => (
-              <Link key={e.key} to={e.to} className="lw-tile">
-                <span className="lw-icon-badge" style={{ ['--h' as string]: e.hue ?? 228 }}><e.icon aria-hidden /></span>
-                <span><strong>{e.label}</strong><span className="lw-meta">{e.about}</span></span>
-              </Link>
+              <li key={e.key}>
+                <Link to={e.to}><e.icon aria-hidden /><strong>{e.label}</strong></Link>
+                <span className="lw-meta">{e.about}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
         <Parties matterId={matter.id} />
       </div>

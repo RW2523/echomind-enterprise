@@ -491,3 +491,22 @@
 .qc-cite { position: relative; }
 .qc-cite::after { content: ""; position: absolute; inset: -2px -1px; }
 @media (min-width: 561px) { .qc-only-small { display: none !important; } }
+/* A matter's tabs: six every day, the rest under More (review M1). A native disclosure: keyboard and screen readers work. */
+.qc-tabs { overflow: visible; flex-wrap: wrap; }
+.qc-more { position: relative; }
+.qc-more > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.qc-more > summary::-webkit-details-marker { display: none; }
+.qc-more > summary svg { display: inline; width: 14px; height: 14px; }
+.qc-more[open] > summary { color: var(--ink); }
+.qc-more-pop { position: absolute; top: calc(100% + 4px); right: 0; z-index: 20; min-width: 220px; background: var(--paper);
+  border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 8px 24px rgba(10, 14, 20, .14); padding: 6px; display: grid; }
+.qc-more-pop .qc-pop-item.active { background: var(--accent-soft); font-weight: 600; }
+/* The matter's tools on its overview: one line each. */
+.qc-tool-list { list-style: none; margin: 0; padding: 4px 16px; display: grid; }
+.qc-tool-list li { display: flex; gap: 16px; align-items: baseline; justify-content: space-between; padding: 11px 0; border-top: 1px solid var(--rule); }
+.qc-tool-list li:first-child { border-top: none; }
+.qc-tool-list a { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; flex: none; }
+.qc-tool-list a:hover strong { text-decoration: underline; }
+.qc-tool-list a svg { width: 16px; height: 16px; color: var(--ink-3); }
+.qc-tool-list .lw-meta { text-align: right; }
+@media (max-width: 560px) { .qc-tool-list li { flex-direction: column; gap: 2px; } .qc-tool-list .lw-meta { text-align: left; } }

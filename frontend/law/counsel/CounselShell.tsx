@@ -9,7 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, Briefcase, FilePen, KeyRound, Landmark, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
+  Activity, Briefcase, ChevronDown, FilePen, KeyRound, Landmark, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
   Moon, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun,
 } from 'lucide-react';
 import { api } from '../api/client';
@@ -155,19 +155,42 @@ function SearchButton() {
 }
 
 /** A matter's own pages, above them (they used to fill the sidebar). */
+const MAIN_TABS = new Set(['overview', 'documents', 'research', 'drafting', 'obligations', 'meetings']);
+
 function MatterTabs() {
   const me = useSession();
   const matter = useCurrentMatter();
   const { setMatterId } = useChatMatter();
   const navigate = useNavigate();
+  const location = useLocation();
+  const moreRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => { moreRef.current?.removeAttribute('open'); }, [location.pathname]);
   if (!matter) return null;
+  // Six everyday tabs; the rest under More (review M1). The page you are on is always shown as a tab.
+  const all = matterEntries(me, matter);
+  const main = all.filter((e) => MAIN_TABS.has(e.key));
+  const more = all.filter((e) => !MAIN_TABS.has(e.key));
+  const here = more.find((e) => location.pathname === e.to || location.pathname.startsWith(`${e.to}/`));
   return (
     <nav className="qc-tabs" aria-label="Matter">
       <button type="button" className="qc-tab" style={{ border: 'none', background: 'none', font: 'inherit', cursor: 'pointer' }}
         onClick={() => { setMatterId(matter.id); navigate('/chat'); }}><MessageSquare aria-hidden />Chat about this matter</button>
-      {matterEntries(me, matter).map((e) => (
+      {main.map((e) => (
         <NavLink key={e.key} to={e.to} className={({ isActive }) => `qc-tab${isActive ? ' active' : ''}`}><e.icon aria-hidden />{e.label}</NavLink>
       ))}
+      {here && <NavLink to={here.to} className="qc-tab active"><here.icon aria-hidden />{here.label}</NavLink>}
+      {more.length > 0 && (
+        <details className="qc-more" ref={moreRef}>
+          <summary className="qc-tab">More<ChevronDown aria-hidden /></summary>
+          <div className="qc-more-pop" role="group" aria-label="More of this matter">
+            {more.filter((e) => e !== here).map((e) => (
+              <NavLink key={e.key} to={e.to} className="qc-pop-item" onClick={() => moreRef.current?.removeAttribute('open')}>
+                <e.icon aria-hidden />{e.label}
+              </NavLink>
+            ))}
+          </div>
+        </details>
+      )}
     </nav>
   );
 }
