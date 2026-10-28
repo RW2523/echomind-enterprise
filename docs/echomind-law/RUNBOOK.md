@@ -16,7 +16,7 @@ touches it, and nothing else should either (see "Never" at the end).
 | Backup key | `~/.echomind-law/backup.key` (archives cannot be read without it) |
 | Backups | `~/echomind-law-backups/` (newest 14 kept); log `backup.log` |
 | Regulatory bundles | `~/echomind-law-feeds/` (60 days kept); log `regulatory.log` |
-| Daily jobs | `crontab -l` must show both lines below (D-067, D-068). **On 2026-10-28 there was no crontab: the last archive was 9 days old (review R2). Put them back:** |
+| Daily jobs | `crontab -l` must show both lines below (D-067, D-068). Check after every reinstall or reboot that both are there (review R2): |
 
 ```cron
 MAILTO=<the operator's address>

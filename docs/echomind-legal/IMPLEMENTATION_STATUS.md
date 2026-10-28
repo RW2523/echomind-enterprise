@@ -131,7 +131,7 @@ in the review report shared with the owner (not in this public repository).
 | Operations | Containers ran with full capabilities | **Tested** | no-new-privileges, cap_drop ALL, pids — test_law_pilot_config; images smoke-tested |
 | Demo | Ran from an uncommitted script on the host network, code writable, health check probed production | **Done (ops)** | scripts/law/demo_up.sh; the public demo now runs that way |
 | CI | No dependency audit | **Done** | `dependencies` job |
-| Infra | Disk not encrypted (database holds extracted text); egress lock not applied (needs root) | **Owner** | check_disk_encryption.sh says NO on this host; deploy refuses both unless accepted |
+| Infra | Full-disk encryption (the database holds extracted text) and the egress lock (needs root) are host settings | **Owner** | check_disk_encryption.sh and egress_lock.sh --check report them; deploy refuses either missing unless accepted |
 | Release | Thresholds, pricing/contracts, customer model, cross-client multi-matter policy | **Owner** | thresholds marked "proposed" |
 | Open | Non-root containers and read-only roots for the pilot; master-key rotation tool; signed audit anchors; browser E2E and evaluations in CI (need the model); actions pinned by SHA | **Not started** | listed in the report with effort |
 
