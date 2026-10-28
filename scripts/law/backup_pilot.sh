@@ -10,6 +10,10 @@
 # both keys off this host: an archive cannot be read without its backup key, and its documents not without the
 # master key. Touches only the echomind-law-backend container, never production. Never use scripts/backup_data.sh
 # (that is production's).
+# Commercial-readiness review R2/R7 (2026-10-28): the audit trail's hash chain is verified first, and a broken chain fails
+# the backup (an archive of a tampered trail is not a good backup); LAW_BACKUP_OFFHOST_DIR (a mounted disk or share that
+# is not this host's) receives a verified copy; every run appends one line to $DIR/status.log and a failure exits non-zero,
+# so cron mails it (MAILTO) and the health check can read the last line.
 set -euo pipefail
 C=echomind-law-backend
 KEY="${LAW_BACKUP_KEY_FILE:-$HOME/.echomind-law/backup.key}"
@@ -32,6 +36,13 @@ fi
 [[ -r "$KEY" ]] || { echo "no backup key at $KEY (run: $0 --keygen)" >&2; exit 2; }
 docker inspect --format '{{.State.Running}}' "$C" 2>/dev/null | grep -q true || { echo "$C is not running" >&2; exit 3; }
 mkdir -p -m 700 "$DIR"
+STATUS="$DIR/status.log"
+trap 'rc=$?; [[ $rc -ne 0 ]] && echo "$(date -u +%FT%TZ) FAILED (exit $rc)" >> "$STATUS"' ERR
+if ! AUDIT="$(docker exec "$C" python -m app.legal.audit verify 2>&1)"; then
+  echo "$(date -u +%FT%TZ) FAILED audit chain broken" >> "$STATUS"
+  echo "the audit trail's hash chain does not verify; not backing up over it (incident: RUNBOOK §8): $AUDIT" >&2
+  exit 5
+fi
 
 docker exec "$C" sh -c "umask 077; mkdir $TMP"
 trap 'docker exec "$C" rm -rf "$TMP" >/dev/null 2>&1 || true' EXIT
@@ -50,5 +61,13 @@ if [[ "${1:-}" == "--restore-test" ]]; then
   RESULT="$(docker exec "$C" python -m app.legal.backup restore --archive "$TMP/pilot.emlb" --key-file "$TMP/key" --target "$TMP/restored")"
   python3 -c 'import json,sys; r=json.load(sys.stdin); print("restore test: the restored database matches the archive:", r["files"], "files,", r["audit"]["events"], "audit events,", json.dumps(r["counts"]))' <<<"$RESULT"
 fi
+
+if [[ -n "${LAW_BACKUP_OFFHOST_DIR:-}" ]]; then
+  [[ -d "$LAW_BACKUP_OFFHOST_DIR" && -w "$LAW_BACKUP_OFFHOST_DIR" ]] || { echo "LAW_BACKUP_OFFHOST_DIR is not a writable folder" >&2; exit 6; }
+  (umask 077; cp -- "$OUT" "$LAW_BACKUP_OFFHOST_DIR/")
+  [[ "$(sha256sum "$LAW_BACKUP_OFFHOST_DIR/$(basename "$OUT")" | cut -d' ' -f1)" == "$IN_SUM" ]] || { echo "the off-host copy does not match" >&2; exit 4; }
+  log "off-host copy in $LAW_BACKUP_OFFHOST_DIR verified"
+fi
+echo "$(date -u +%FT%TZ) OK $OUT sha256 $IN_SUM" >> "$STATUS"
 
 ls -1t "$DIR"/law-pilot-*.emlb 2>/dev/null | tail -n +"$((KEEP + 1))" | while read -r old; do rm -f -- "$old"; log "removed old backup $old"; done
