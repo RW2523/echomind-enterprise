@@ -88,7 +88,7 @@ export default function Shell() {
         <ShellMatterBlock />
         <div className="lw-nav-label lw-hide-rail">Firm</div>
         <nav aria-label="Firm" style={{ display: 'grid', gap: 2 }}>
-          {firmEntries(me).map((e) => (e.key === 'reviews' ? <ReviewsNavItem key={e.key} />
+          {firmEntries(me).map((e) => (e.key === 'drafts' ? <ReviewsNavItem key={e.key} />
             : <NavItem key={e.key} to={e.to} icon={<e.icon />}>{e.label}</NavItem>))}
         </nav>
         <div style={{ marginTop: 'auto', borderTop: '1px solid var(--rule)', paddingTop: 8, display: 'grid', gap: 2 }}>

@@ -46,7 +46,7 @@
 [data-edition="law"][data-shell="counsel"] body::before,
 [data-edition="law"][data-shell="counsel"] .lw-glass::after,
 [data-edition="law"][data-shell="counsel"] .lw-paper::after { display: none; }
-[data-edition="law"][data-shell="counsel"] ::selection { background: var(--gold-soft); color: var(--ink); }
+[data-edition="law"][data-shell="counsel"] ::selection { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); }
 /* The matter's tool list on its overview: a quiet directory, not a wall of coloured cards. */
 [data-edition="law"][data-shell="counsel"] .lw-icon-badge { background: var(--fill-2) !important; color: var(--ink-2) !important; box-shadow: none !important; }
 [data-edition="law"][data-shell="counsel"] .lw-tile { box-shadow: none; }
@@ -97,8 +97,8 @@
   padding: 12px 10px; overflow-y: auto; min-height: 0; border-right: 1px solid var(--rail-rule); position: relative; z-index: 4; }
 .qc-rail :focus-visible { outline-color: #9CBBEE; }
 .qc-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 14px; color: var(--rail-ink); text-decoration: none; }
-.qc-brand-mark { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; flex: none; color: #E2C68F;
-  box-shadow: inset 0 0 0 1px rgba(226, 198, 143, .45); }
+.qc-brand-mark { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; flex: none; color: var(--rail-ink);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
 .qc-brand-mark svg { width: 16px; height: 16px; }
 .qc-brand-text { display: grid; line-height: 1.15; min-width: 0; }
 .qc-brand-text b { font-size: 15px; font-weight: 650; white-space: nowrap; }
@@ -182,11 +182,10 @@
 .qc-progress { display: flex; align-items: center; gap: 10px; color: var(--ink-3); font-size: 14px; }
 .qc-progress-bar { flex: 0 0 120px; height: 4px; border-radius: 4px; background: var(--fill-2); overflow: hidden; }
 .qc-progress-bar span { display: block; height: 100%; background: var(--ink-3); }
-.qc-composer-wrap { position: sticky; bottom: 0; padding: 12px 0 18px; background: linear-gradient(to bottom, transparent, var(--canvas-a) 26%); }
-[data-theme="dark"] .qc-composer-wrap { background: linear-gradient(to bottom, transparent, var(--canvas-a) 26%); }
+.qc-composer-wrap { position: sticky; bottom: 0; padding: 12px 0 18px; background: var(--canvas-a); }
 .qc-start .qc-composer-wrap, .qc-composer-wrap[data-hero="true"] { position: static; background: none; padding: 0; }
 .qc-composer { display: grid; gap: 6px; border: 1px solid var(--glass-outline); background: var(--glass-fill-strong); border-radius: 18px; padding: 10px 10px 10px 16px; box-shadow: var(--card-shadow); }
-.qc-composer { border-radius: 12px; }
+.qc-composer { border-radius: 12px; grid-template-columns: minmax(0, 1fr); }   /* long matter names shrink, never push Send out */
 .qc-composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .qc-composer-row { display: flex; align-items: flex-end; gap: 8px; }
 [data-edition="law"] .qc-composer textarea:focus-visible { outline: none; }   /* the whole composer shows the focus */
@@ -264,8 +263,8 @@
 .qc-item-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .qc-item-body strong { font-weight: 600; }
 .qc-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.qc-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 10px;
-  padding: 7px 13px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; text-decoration: none;
+.qc-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 8px;
+  padding: 6px 12px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; text-decoration: none;
   transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease); }
 [data-theme="dark"] .qc-btn { background: var(--fill-1); }
 .qc-btn:hover { border-color: var(--neutral-line); background: var(--fill-1); }
@@ -309,14 +308,13 @@
 .qc-pop-item[aria-selected="true"] { background: var(--accent-soft); }
 .qc-pop-item svg { width: 16px; height: 16px; color: var(--ink-3); flex: none; }
 .qc-pop-sep { height: 1px; background: var(--rule); margin: 6px 0; }
-.qc-pop-label { font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); padding: 8px 10px 4px; }
+.qc-pop-label { font-size: 12.5px; font-weight: 600; color: var(--ink-3); padding: 8px 10px 4px; }
 .qc-matter-btn { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 340px; height: 34px; padding: 0 10px; border-radius: 8px;
   border: 1px solid var(--rule); background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; flex: none; }
 [data-theme="dark"] .qc-matter-btn { background: var(--fill-1); }
 .qc-matter-btn:hover { border-color: var(--neutral-line); }
 .qc-matter-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .qc-matter-btn svg { width: 15px; height: 15px; color: var(--ink-3); flex: none; }
-.qc-matter-btn .qc-matter-ico { color: var(--gold-ink); }
 .qc-tabs { display: flex; gap: 2px; overflow-x: auto; padding: 0 20px; border-bottom: 1px solid var(--rule); background: var(--paper); position: sticky; top: 0; z-index: 2; }
 .qc-tab { display: inline-flex; align-items: center; gap: 6px; padding: 11px 10px 9px; color: var(--ink-3); text-decoration: none;
   font-size: 13.5px; white-space: nowrap; border: none; border-bottom: 2px solid transparent; }
@@ -329,13 +327,13 @@
 .qc-list li { border-top: 1px solid var(--rule); padding: 12px 2px; display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
 .qc-list li:first-child { border-top: none; }
 .qc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.qc-linkbtn { border: none; background: none; padding: 0; font: inherit; color: var(--gold-ink); font-weight: 600; text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--gold) 50%, transparent); text-underline-offset: 3px; cursor: pointer; }
+.qc-linkbtn { border: none; background: none; padding: 0; font: inherit; color: var(--accent); font-weight: 600; text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); text-underline-offset: 3px; cursor: pointer; }
 .qc-linkbtn:hover { text-decoration-color: currentColor; }
 
 /* ── Timeline (chronology): a date column, a rail of dots, the event ─────────── */
 .qc-timeline { list-style: none; margin: 0; padding: 0; display: grid; }
-.qc-year { font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--gold-ink); padding: 4px 0 6px; list-style: none; }
+.qc-year { font-family: var(--display); font-size: 20px; font-weight: 600; color: var(--ink); padding: 4px 0 6px; list-style: none; }
 .qc-event { display: grid; grid-template-columns: 116px 22px minmax(0, 1fr); gap: 0 12px; padding: 0; position: relative; }
 .qc-event-date { font-weight: 650; font-size: 14px; font-variant-numeric: tabular-nums; padding: 12px 0; color: var(--ink); }
 .qc-event-rail { position: relative; display: grid; justify-items: center; }
@@ -414,8 +412,8 @@
 .qc-chart { display: flex; align-items: flex-end; gap: 6px; height: 92px; padding-top: 4px; overflow-x: auto; }
 .qc-bar { position: relative; flex: 1 0 34px; max-width: 64px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
   align-items: center; gap: 3px; border: none; background: none; padding: 0 0 16px; cursor: pointer; color: var(--ink-3); font: inherit; }
-.qc-bar-fill { width: 70%; border-radius: 6px 6px 2px 2px; background: color-mix(in srgb, var(--gold) 55%, transparent); transition: background var(--dur-1); }
-.qc-bar:hover .qc-bar-fill { background: var(--gold); }
+.qc-bar-fill { width: 70%; border-radius: 4px 4px 1px 1px; background: var(--fill-3); transition: background var(--dur-1); }
+.qc-bar:hover .qc-bar-fill { background: var(--neutral-line); }
 .qc-bar[aria-pressed="true"] .qc-bar-fill { background: var(--accent); }
 .qc-bar-n { position: absolute; top: 0; font-size: 11px; font-weight: 700; color: var(--ink-2); }
 .qc-bar-label { position: absolute; bottom: 0; font-size: 10.5px; white-space: nowrap; }
@@ -425,14 +423,14 @@
 .qc-table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; }
 .qc-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 620px; }
 .qc-table th, .qc-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--rule); }
-.qc-table thead th { border-top: none; background: var(--fill-1); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
+.qc-table thead th { border-top: none; background: var(--fill-1); font-size: 13px; font-weight: 600; color: var(--ink-3); }
 .qc-table thead button { display: inline-flex; align-items: center; gap: 4px; border: none; background: none; padding: 0; font: inherit; color: inherit;
   text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
 .qc-table thead button svg { width: 13px; height: 13px; }
 .qc-table thead th[aria-sort="ascending"], .qc-table thead th[aria-sort="descending"] { color: var(--ink); }
 .qc-table tbody th { font-weight: 600; }
 .qc-table .qc-num { font-variant-numeric: tabular-nums; }
-.qc-row-lock { width: 13px; height: 13px; margin-left: 6px; color: var(--gold-ink); vertical-align: -2px; }
+.qc-row-lock { width: 13px; height: 13px; margin-left: 6px; color: var(--ink-3); vertical-align: -2px; }
 
 /* ── The Law pages inside the shell: the same quiet surfaces ─────────────────────
    Their "Paper & Glass" layer (liquid.css) is turned flat here: no blur (it also made a panel the frame of fixed popovers),
@@ -443,9 +441,45 @@
 [data-edition="law"][data-shell="counsel"] .lw-tile:hover { transform: none; box-shadow: none; border-color: var(--neutral-line); }
 [data-edition="law"][data-shell="counsel"] .lw-toolbar .lw-glass, [data-edition="law"][data-shell="counsel"] .lw-cluster {
   background: transparent; border: none; box-shadow: none; }
-[data-edition="law"][data-shell="counsel"] .lw-toolbar-wrap { padding: 16px 20px 0; }
+/* Not sticky here: the matter tabs already stick at the top, and a second sticky row drew over them (Phase 0 audit A1). */
+[data-edition="law"][data-shell="counsel"] .lw-toolbar-wrap { position: static; padding: 16px 20px 0; }
 [data-edition="law"][data-shell="counsel"] .lw-title-cap { font-size: 20px; font-weight: 600; }
 [data-edition="law"][data-shell="counsel"] .lw-crumb { background: none; padding: 0; color: var(--ink-3); font-weight: 500; }
 [data-edition="law"][data-shell="counsel"] .lw-avatar { background: var(--fill-2); color: var(--ink-2); box-shadow: none; border-radius: 8px; }
 [data-edition="law"][data-shell="counsel"] .lw-eyebrow { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; color: var(--ink-3); }
 .qc-composer-tools { flex: 1 1 auto; }
+
+/* Law controls inside the shell: one flat accent, standard sizes (34px controls, 8px radius), no blur, gradient or lift.
+ * liquid.css paints primary buttons, counters and the monogram with an accent-to-violet gradient; here --accent-2 is the accent. */
+[data-edition="law"][data-shell="counsel"] { --accent-2: var(--accent); }
+[data-edition="law"][data-shell="counsel"] .lw-btn { border-radius: 8px; min-height: 34px; padding: 6px 12px; box-sizing: border-box; }
+[data-edition="law"][data-shell="counsel"] .lw-btn-sm { min-height: 28px; padding: 4px 10px; }
+[data-edition="law"][data-shell="counsel"] .lw-btn:active { transform: none; }
+[data-edition="law"][data-shell="counsel"] .lw-btn-primary,
+[data-edition="law"][data-shell="counsel"] .lw-btn-primary:hover { background: var(--accent); color: var(--accent-ink); box-shadow: none; filter: none; transform: none; }
+[data-edition="law"][data-shell="counsel"] .lw-btn-primary:hover { background: color-mix(in srgb, var(--accent) 86%, #000); }
+[data-edition="law"][data-shell="counsel"][data-theme="dark"] .lw-btn-primary:hover { background: color-mix(in srgb, var(--accent) 86%, #fff); }
+[data-edition="law"][data-shell="counsel"] .lw-btn-primary[disabled] { opacity: .45; }
+[data-edition="law"][data-shell="counsel"] .lw-btn-ghost { border: 1px solid var(--rule); background: var(--paper); box-shadow: none; }
+[data-edition="law"][data-shell="counsel"] .lw-input { border-radius: 8px; border-color: var(--rule); background: var(--paper); padding: 7px 11px; }
+[data-edition="law"][data-shell="counsel"] .lw-input-sm { padding: 4px 8px; }
+[data-edition="law"][data-shell="counsel"] .lw-nav-count, [data-edition="law"][data-shell="counsel"] .lw-monogram { background: var(--accent); box-shadow: none; }
+[data-edition="law"][data-shell="counsel"] .lw-scrim, [data-edition="law"][data-shell="counsel"] .lw-palette-scrim { -webkit-backdrop-filter: none; backdrop-filter: none; }
+[data-edition="law"][data-shell="counsel"] .lw-scrim { overflow-y: auto; }
+[data-edition="law"][data-shell="counsel"] .lw-dialog { border-radius: 12px; max-height: calc(100dvh - 32px); overflow: auto; }
+[data-edition="law"][data-shell="counsel"] .lw-palette { border-radius: 12px; }
+[data-edition="law"][data-shell="counsel"] .lw-palette-item { border-radius: 8px; }
+[data-edition="law"][data-shell="counsel"] .lw-palette-item[aria-selected="true"] { background: var(--accent-soft); }
+/* Labels in sentence case, not small capitals. */
+[data-edition="law"][data-shell="counsel"] :is(.lw-nav-label, .lw-table th, .lw-ledger-day, .lw-reader-page-h, .lw-reader-part, .lw-palette-group) {
+  text-transform: none; letter-spacing: 0; font-size: 12.5px; }
+/* Notes are tinted blocks, not coloured side bars. */
+[data-edition="law"][data-shell="counsel"] :is(.lw-statement, .lw-intake-disclaimer, .lw-translation) { border-left: none; border-radius: 8px; }
+/* The cited words in the full document are evidence: gold, as in the source panel. */
+[data-edition="law"][data-shell="counsel"] .lw-reader-focus { background: color-mix(in srgb, var(--gold) 30%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 30%, transparent); }
+/* Two columns (work, then what waits on others) that stack on narrow screens. */
+.lw-two-col { grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); align-items: start; }
+@media (max-width: 860px) { .lw-two-col { grid-template-columns: minmax(0, 1fr); } }
+/* An empty state inside a panel is text in that panel, not a second card. */
+[data-edition="law"][data-shell="counsel"] .lw-paper .lw-empty { border: none; background: none; padding: 24px 12px !important; }

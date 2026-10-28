@@ -5,7 +5,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, FileOutput, FilePen,
-  Files, FileText, FolderSync, Gauge, GitCompareArrows, History, Home, Inbox, Landmark, LayoutTemplate, ListCollapse, ListTodo, Mic, ScrollText,
+  Files, FileText, FolderSync, Gauge, GitCompareArrows, History, Inbox, Landmark, LayoutTemplate, ListCollapse, ListTodo, MessageSquare, Mic, ScrollText,
   ShieldOff, Siren, Timer, UserCog, Users, Users2,
 } from 'lucide-react';
 import type { Matter, Me } from '../api/types';
@@ -16,9 +16,9 @@ export interface NavEntry { key: string; to: string; label: string; icon: Lucide
 export function firmEntries(me: Me): NavEntry[] {
   const lawyer = hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal');
   const list: (NavEntry | false)[] = [
-    { key: 'home', to: '/home', label: 'Home', icon: Home },
+    { key: 'chat', to: '/chat', label: 'Chat', icon: MessageSquare },
     { key: 'matters', to: '/matters', label: 'Matters', icon: Briefcase },
-    { key: 'reviews', to: '/reviews', label: 'Reviews', icon: ClipboardCheck },
+    { key: 'drafts', to: '/drafts', label: 'Drafts', icon: ClipboardCheck },
     lawyer && { key: 'templates', to: '/templates', label: 'Templates', icon: LayoutTemplate },
     lawyer && { key: 'playbooks', to: '/playbooks', label: 'Playbooks', icon: BookMarked },
     lawyer && { key: 'checklists', to: '/checklists', label: 'Checklists', icon: ListTodo },

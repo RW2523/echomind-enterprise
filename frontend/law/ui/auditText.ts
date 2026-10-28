@@ -96,9 +96,60 @@ export function describe(e: AuditEvent): string {
     case 'audit.export': return `exported the audit trail${str(d.format) ? ` (${str(d.format).toUpperCase()})` : ''}`;
     case 'request.refused': return 'had a request refused';
     case 'api.request': return `${str(d.method)} ${str(d.route)}`.trim() || 'made a request';
-    default:
-      return `${refused ? 'was refused' : 'performed'} ${e.action}${m ? ` on ${m}` : ''}`;
+    case 'auth.demo_signin': return refused ? 'could not enter the demo' : 'entered the demo';
+    case 'counsel.conversation.create': return refused ? 'could not start a chat' : `started a chat${m ? ` about ${m}` : ''}`;
+    case 'counsel.conversation.read': return `opened a chat${m ? ` about ${m}` : ''}`;
+    case 'counsel.turn': return refused ? `was refused a question${m ? ` about ${m}` : ''}` : `asked a question in chat${m ? ` about ${m}` : ''}`;
+    case 'counsel.answer':
+      return e.outcome === 'deny' ? `lost access to ${m || 'a matter'} while an answer was written`
+        : refused ? `did not get an answer${m ? ` about ${m}` : ''} (stopped or failed)` : `got an answer${m ? ` about ${m}` : ''}`;
+    case 'counsel.citation.open': return refused ? 'tried to open a cited source' : `opened a cited source${m ? ` in ${m}` : ''}`;
+    case 'counsel.action': return `${refused ? 'tried to act' : 'acted'} on an answer${m ? ` about ${m}` : ''}`;
+    case 'counsel.activity.read': return 'looked at their activity';
+    case 'research.query': return `${refused ? 'tried to ask' : 'asked'} a research question${m ? ` about ${m}` : ''}`;
+    case 'research.answer': return refused ? `did not get a research answer${m ? ` about ${m}` : ''}` : `got a research answer${m ? ` about ${m}` : ''}`;
+    case 'research.note.send': return `sent a research note for review${m ? ` on ${m}` : ''}`;
+    default: return plain(e.action, refused, m);
   }
+}
+
+const PAST: Record<string, string> = {
+  read: 'opened', read_text: 'read the text of', create: 'created', update: 'updated', edit: 'edited', run: 'ran', start: 'started',
+  add: 'added', remove: 'removed', approve: 'approved', reject: 'rejected', request: 'requested', file: 'filed', import: 'imported',
+  search: 'searched', review: 'reviewed', draft: 'drafted', decide: 'decided on', export: 'exported', download: 'downloaded',
+  grant: 'gave', withdraw: 'withdrew', end: 'ended', sync: 'synchronised', enable: 'enabled', disable: 'disabled', link: 'linked',
+  unlink: 'unlinked', explain: 'explained', scan: 'scanned', check: 'checked', set: 'set', submit: 'submitted', convert: 'converted',
+  close: 'closed', purge: 'purged', extract: 'extracted', finalise: 'finalised', revise: 'revised', ask: 'asked', preview: 'previewed',
+  list: 'looked at', reindex: 're-read', accept: 'accepted', proceed: 'continued', suggest: 'suggested', reopen: 'reopened',
+  discard: 'discarded', restore: 'restored', release: 'released', plan: 'planned', presets: 'installed the presets for', speak: 'spoke in', transcribe: 'transcribed in',
+};
+const NOUN: Record<string, string> = {
+  documents: 'the documents', document: 'a document', meeting: 'a meeting', minutes: 'minutes', consent: 'consent', export: 'an export',
+  compare: 'a comparison', obligation: 'an obligation', summary: 'a summary', translate: 'a translation of', panel: 'the review panel',
+  conversation: 'the voice conversation', artifact: 'a draft', draft: 'a draft', redline: 'a redline', template: 'a template',
+  playbook: 'a playbook', hold: 'a legal hold', deletion: 'a deletion', retention: 'retention', intake: 'an enquiry', time: 'time entries',
+  regulatory: 'regulatory updates', connector: 'a connector', label: 'a label', transcript: 'a transcript', participant: 'a participant',
+  assist: 'a Silent Assist alert', diligence: 'a due diligence', check: 'a check',
+};
+
+const WHOLE: Record<string, string> = {
+  'translate.document': 'translated a document', 'translate.summary': 'translated a summary', 'obligation.ics': 'downloaded deadlines as a calendar file',
+  'auth.oidc': 'signed in with single sign-on', 'auth.oidc.start': 'started single sign-on', 'meeting.assist': 'used Silent Assist in a meeting',
+  'check.citations': 'checked the citations of a draft', 'check.citations.note': 'noted a citation check', 'check.definitions': 'checked the definitions of a draft',
+  'check.definitions.note': 'noted a definitions check', 'panel.facts': 'set the facts for the review panel', 'regulatory.read.matter': 'read the regulatory updates',
+  'summary.list': 'looked at the summaries', 'time.suggest': 'asked for suggested time entries', 'playbook.position': 'set a playbook position',
+  'playbook.decision': 'decided on a playbook item', 'template.styles': 'changed the styles of a template', 'meeting.transcript.suggestions': 'looked at transcript suggestions',
+};
+
+/** Any other event in words: "opened a meeting transcript in MAT-1042" rather than "meeting.transcript.read". The raw action
+ *  stays in the row's title. */
+function plain(action: string, refused: boolean, m: string): string {
+  const parts = action.split('.');
+  const verb = parts.length > 1 ? parts[parts.length - 1] : '';
+  const [head, ...rest] = parts.length > 1 ? parts.slice(0, -1) : parts;
+  const thing = [NOUN[head] ?? `a ${head.replace(/_/g, ' ')}`, ...rest.map((w) => w.replace(/_/g, ' '))].join(' ');
+  const what = WHOLE[action] ?? (PAST[verb] ? `${PAST[verb]} ${thing}` : `worked on ${thing}`);
+  return `${refused ? `was refused (${what})` : what}${m ? ` in ${m}` : ''}`;
 }
 
 export function actorName(e: AuditEvent): string {

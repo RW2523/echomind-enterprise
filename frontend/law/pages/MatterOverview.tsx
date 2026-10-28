@@ -4,7 +4,7 @@ import { api, ApiError } from '../api/client';
 import { keys, partiesPath, useApiMutation, useParties } from '../api/queries';
 import type { Matter, MatterParty, PartyRole, Sensitivity } from '../api/types';
 import { useMatter } from '../app/matter';
-import { hueOf, initials, matterEntries } from '../app/nav';
+import { matterEntries } from '../app/nav';
 import { useSession } from '../app/session';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Field, MatterStatusPill, roleLabel, SensitivityPill } from '../ui/primitives';
@@ -40,15 +40,7 @@ export default function MatterOverview() {
       </Toolbar>
       <div className="lw-content" style={{ maxWidth: 1120 }}>
         <section className="lw-paper lw-sheet" aria-labelledby="matter-title" style={{ display: 'grid', gap: 18 }}>
-          <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-            <span className="lw-avatar" style={{ ['--h' as string]: hueOf(matter.client.name), width: 48, height: 48, fontSize: 15, borderRadius: 15 }} aria-hidden>
-              {initials(matter.client.name)}
-            </span>
-            <div>
-              <div className="lw-eyebrow">{matter.client.name}</div>
-              <h2 className="lw-h1 lw-serif" id="matter-title" style={{ marginTop: 4 }}>{matter.title}</h2>
-            </div>
-          </div>
+          <h2 className="lw-h1" id="matter-title" style={{ margin: 0, fontSize: 22 }}>{matter.title}</h2>
           {matter.status !== 'open' && <p className="lw-meta" style={{ margin: 0 }}>This matter is {matter.status}. Its content can be read but not changed until it is reopened.</p>}
           {matter.on_hold && <HoldNotice />}
           {error && <ErrorNote>{error}</ErrorNote>}

@@ -23,13 +23,13 @@ import type { ChatTurn, SafeComponent } from './types';
 /** A few plain starters: each one is one of the chat's kinds of answer, about the chosen matter or matters. */
 interface Starter { label: string; ask: string; icon: LucideIcon }
 const ONE_MATTER: Starter[] = [
-  { label: 'What needs my attention today?', ask: 'What matters today?', icon: ListChecks },
+  { label: 'What needs my attention today?', ask: 'What needs my attention today?', icon: ListChecks },
   { label: 'Find conflicting dates or amounts', ask: 'Find conflicting dates or amounts', icon: Scale },
   { label: 'Build a chronology of events', ask: 'Build a chronology of events', icon: CalendarRange },
   { label: 'Summarize this matter', ask: 'Summarize this matter from its documents', icon: ScrollText },
 ];
 const SEVERAL_MATTERS: Starter[] = [
-  { label: 'What needs my attention across these matters?', ask: 'What matters today?', icon: ListChecks },
+  { label: 'What needs my attention across these matters?', ask: 'What needs my attention across these matters?', icon: ListChecks },
   { label: 'Compare these cases side by side', ask: 'Compare these cases side by side', icon: Columns3 },
   { label: 'Build one chronology for these matters', ask: 'Build a chronology of events', icon: CalendarRange },
   { label: 'Find conflicting dates inside each matter', ask: 'Find conflicting dates or amounts', icon: Scale },

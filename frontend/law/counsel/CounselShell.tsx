@@ -71,7 +71,7 @@ function ProfileMenu() {
   const navigate = useNavigate();
   const { open, setOpen, button, pop, style } = usePopover();
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'dark');
-  const firm = firmEntries(me).filter((e) => !['home', 'matters', 'reviews'].includes(e.key));
+  const firm = firmEntries(me).filter((e) => !['chat', 'matters', 'drafts'].includes(e.key));
   const signOut = async () => {
     try { await api.post('/api/auth/logout'); } finally { qc.clear(); navigate('/signin', { replace: true }); }
   };
@@ -112,7 +112,7 @@ function History() {
     <>
       <div className="qc-rail-label qc-hide-collapsed">Recent</div>
       <nav className="qc-history qc-hide-collapsed" aria-label="Recent conversations">
-        {items.slice(0, 12).map((c) => (
+        {items.slice(0, 8).map((c) => (
           <NavLink key={c.id} to={`/chat/${c.id}`} className={({ isActive }) => `qc-history-item${isActive ? ' active' : ''}`}>
             <span>{c.title}</span><small>{(c.matters?.length ?? 0) > 1 ? c.matters!.map((m) => m.number).join(' + ') : c.matter.number}</small>
           </NavLink>
@@ -211,11 +211,11 @@ function ShellBody() {
           <span className="qc-brand-text qc-hide-collapsed" aria-hidden><b>EchoMind<em>Legal</em></b><small>Private AI for legal work</small></span>
         </NavLink>
         <nav aria-label="Workspace">
-          <button type="button" className="qc-new-chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-hide-collapsed">New chat</span></button>
-          <RailLink to="/chat" icon={<MessageSquare aria-hidden />}>Chat</RailLink>
-          <RailLink to="/matters" icon={<Briefcase aria-hidden />}>Matters</RailLink>
+          <button type="button" className="qc-new-chat" aria-label="New chat" title="New chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-hide-collapsed">New chat</span></button>
+          <RailLink to="/chat" icon={<MessageSquare aria-hidden />} label="Chat">Chat</RailLink>
+          <RailLink to="/matters" icon={<Briefcase aria-hidden />} label="Matters">Matters</RailLink>
           <DraftsLink />
-          <RailLink to="/activity" icon={<Activity aria-hidden />}>Activity</RailLink>
+          <RailLink to="/activity" icon={<Activity aria-hidden />} label="Activity">Activity</RailLink>
         </nav>
         <History />
       </aside>

@@ -14,7 +14,7 @@ export function StatusPill({ tone, icon, children }: { tone: Tone; icon?: React.
 
 export function EmptyState({ title, children, action }: { title: string; children?: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="lw-paper lw-sheet" style={{ textAlign: 'center', padding: '40px 24px' }}>
+    <div className="lw-paper lw-sheet lw-empty" style={{ textAlign: 'center', padding: '40px 24px' }}>
       <h2 className="lw-h2">{title}</h2>
       {children && <p className="lw-meta" style={{ margin: '8px auto 0', maxWidth: '52ch', fontSize: 14 }}>{children}</p>}
       {action && <div style={{ marginTop: 16 }}>{action}</div>}
