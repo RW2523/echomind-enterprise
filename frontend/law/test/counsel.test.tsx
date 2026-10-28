@@ -65,30 +65,30 @@ beforeEach(() => { localStorage.clear(); _resetCaptureForTests(); });
 afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('The chat home', () => {
-  it('one question, the matter, eight real starting points, four example questions, four destinations, private and not recording', async () => {
+  it('quiet: one question, the matter, four plain starters, the matter\'s pages one click away, four destinations, private and not recording', async () => {
     localStorage.setItem('echomind.counsel.matter', 'id-M-101');
     world();
     const { container, router } = renderLaw('/');
-    expect(await screen.findByRole('heading', { name: 'How can I help you today?' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'How can I help?' })).toBeTruthy();
     expect(router.state.location.pathname).toBe('/chat');
     expect(await screen.findByText('M-101 · MSA renewal', { selector: '.qc-context b' })).toBeTruthy();
-    const tiles = within(screen.getByRole('group', { name: 'Start with' })).getAllByRole('button');
-    expect(tiles.map((t) => t.querySelector('b')?.textContent)).toEqual([
-      'What matters today?', 'Find conflicting dates or amounts', 'Build a chronology of events', 'Summarize this matter',
-      'Record a meeting', 'Draft a document', 'Research in depth', 'Run due diligence',      // Ask by voice and the panel: when on
-    ]);
-    expect(within(screen.getByRole('group', { name: 'Example questions' })).getAllByRole('button')).toHaveLength(4);
-    fireEvent.click(tiles[4]);
-    expect(router.state.location.pathname).toBe('/m/M-101/meetings');
+    const starters = within(screen.getByRole('list', { name: 'Suggestions' })).getAllByRole('button');
+    expect(starters.map((t) => t.textContent)).toEqual([
+      'What needs my attention today?', 'Find conflicting dates or amounts', 'Build a chronology of events', 'Summarize this matter']);
+    const pages = screen.getByRole('navigation', { name: 'This matter' });
+    expect(within(pages).getAllByRole('link').map((a) => a.textContent)).toEqual(['Open M-101', 'Documents', 'Meetings', 'Drafting']);
+    expect(screen.queryByRole('navigation', { name: 'Current matter' })).toBeNull();       // the rail holds four destinations only
     const rail = screen.getByRole('navigation', { name: 'Workspace' });
     expect(within(rail).getAllByRole('link').map((a) => a.textContent)).toEqual(['Chat', 'Matters', 'Drafts', 'Activity']);
     expect(within(rail).getByRole('button', { name: 'New chat' })).toBeTruthy();
     expect(screen.getByText('Not recording')).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Private/ })).toBeTruthy();
     expect(await axeClean(container)).toEqual([]);
+    fireEvent.click(within(pages).getByRole('link', { name: 'Meetings' }));
+    expect(router.state.location.pathname).toBe('/m/M-101/meetings');
   });
 
-  it('with the conversation assistant and the review panel on, the home offers them; meetings open the live transcript', async () => {
+  it('with the conversation assistant on, the home links to it among the matter\'s pages', async () => {
     localStorage.setItem('echomind.counsel.matter', 'id-M-101');
     mockApi({
       'GET /api/auth/me': () => [200, { ...me(), features: { intake: false, intake_links: false, conversation: true, panel: true } }],
@@ -97,13 +97,10 @@ describe('The chat home', () => {
       'GET /api/legal/counsel/conversations': () => [200, { conversations: [] }],
     });
     const { router } = renderLaw('/chat');
-    const group = await screen.findByRole('group', { name: 'Start with' });
-    await waitFor(() => expect(within(group).getAllByRole('button').map((t) => t.querySelector('b')?.textContent).slice(4)).toEqual(
-      ['Record a meeting', 'Ask by voice', 'Draft a document', 'Get four perspectives']));
-    const rail = screen.getByRole('navigation', { name: 'Current matter' });
-    expect(within(rail).getByRole('link', { name: 'Meetings' }).getAttribute('href')).toBe('/m/M-101/meetings');
-    expect(within(rail).getByRole('link', { name: 'Conversation' }).getAttribute('href')).toBe('/m/M-101/conversation');
-    fireEvent.click(within(group).getByRole('button', { name: 'Ask by voice' }));
+    const pages = await screen.findByRole('navigation', { name: 'This matter' });
+    await waitFor(() => expect(within(pages).getAllByRole('link').map((a) => a.textContent)).toEqual(
+      ['Open M-101', 'Documents', 'Meetings', 'Ask by voice', 'Drafting']));
+    fireEvent.click(within(pages).getByRole('link', { name: 'Ask by voice' }));
     expect(router.state.location.pathname).toBe('/m/M-101/conversation');
   });
 
@@ -498,9 +495,10 @@ describe('Several matters in one conversation (owner, 2026-10-28)', () => {
     await screen.findByText('M-101 · MSA renewal', { selector: '.qc-context b' });
     await pick(/M-215/);
     expect(await screen.findByText('M-101, M-215', { selector: '.qc-context b' })).toBeTruthy();
-    expect(screen.getByText('different clients', { selector: '.qc-context b' })).toBeTruthy();
-    const tiles = within(screen.getByRole('group', { name: 'Start with' })).getAllByRole('button').map((t) => t.getAttribute('aria-label'));
-    expect(tiles).toContain('Compare these cases');
+    expect(document.querySelector('.qc-context')?.textContent).toMatch(/belong to different clients/);
+    const starters = within(screen.getByRole('list', { name: 'Suggestions' })).getAllByRole('button').map((t) => t.textContent);
+    expect(starters).toContain('Compare these cases side by side');
+    expect(screen.queryByRole('navigation', { name: 'This matter' })).toBeNull();           // several matters: no one matter's pages
     expect(screen.queryByRole('button', { name: /Choose documents/ })).toBeNull();        // restricting to documents: one matter only
     await ask('What is the notice period?');
     await waitFor(() => expect(calls.find((c) => c.method === 'POST' && c.path === '/api/legal/counsel/conversations')?.body)

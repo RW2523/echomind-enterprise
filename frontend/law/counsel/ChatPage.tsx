@@ -4,13 +4,10 @@
  * components arrive. Cards act in place; sources open in the right-hand panel without leaving the conversation.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
-import {
-  ArrowUp, BookOpenText, CalendarClock, CalendarRange, ClipboardList, Columns3, FilePen, ListChecks, Lock, Mic, Paperclip, Scale, ScrollText,
-  Square, Users2, X,
-} from 'lucide-react';
+import { ArrowUp, CalendarRange, Columns3, ListChecks, Lock, Paperclip, Scale, ScrollText, Square, X } from 'lucide-react';
 import { ApiError } from '../api/client';
 import { useDocuments, useMatters } from '../api/queries';
 import type { Matter } from '../api/types';
@@ -23,46 +20,32 @@ import MatterPicker, { Layer, usePopover } from './MatterPicker';
 import { parseComponent, parseEnvelope, parseTaskProgress } from './validate';
 import type { ChatTurn, SafeComponent } from './types';
 
-/** Questions any matter's documents can answer (or say they cannot). */
-const EXAMPLES = [
-  'What are the key dates and deadlines?',
-  'Who are the parties, and what are their obligations?',
-  'Summarize the latest correspondence',
-  'What did the most recent amendment change?',
+/** A few plain starters: each one is one of the chat's kinds of answer, about the chosen matter or matters. */
+interface Starter { label: string; ask: string; icon: LucideIcon }
+const ONE_MATTER: Starter[] = [
+  { label: 'What needs my attention today?', ask: 'What matters today?', icon: ListChecks },
+  { label: 'Find conflicting dates or amounts', ask: 'Find conflicting dates or amounts', icon: Scale },
+  { label: 'Build a chronology of events', ask: 'Build a chronology of events', icon: CalendarRange },
+  { label: 'Summarize this matter', ask: 'Summarize this matter from its documents', icon: ScrollText },
+];
+const SEVERAL_MATTERS: Starter[] = [
+  { label: 'What needs my attention across these matters?', ask: 'What matters today?', icon: ListChecks },
+  { label: 'Compare these cases side by side', ask: 'Compare these cases side by side', icon: Columns3 },
+  { label: 'Build one chronology for these matters', ask: 'Build a chronology of events', icon: CalendarRange },
+  { label: 'Find conflicting dates inside each matter', ask: 'Find conflicting dates or amounts', icon: Scale },
+];
+/** The matter's own pages that the home links to quietly (the rest are on the matter's tabs). */
+const MATTER_LINKS: { key: string; label: string }[] = [
+  { key: 'documents', label: 'Documents' }, { key: 'meetings', label: 'Meetings' }, { key: 'conversation', label: 'Ask by voice' },
+  { key: 'drafting', label: 'Drafting' },
 ];
 
-/** What the home offers. Each tile either asks the chat (one of its four kinds of answer) or opens a real page of the matter. */
-interface Tile { key: string; title: string; about: string; icon: LucideIcon; hue: string; ask?: string; page?: string }
-const ASK_TILES: Tile[] = [
-  { key: 'today', title: 'What matters today?', about: 'Deadlines, reviews and new documents, from records', icon: ListChecks, hue: 'gold', ask: 'What matters today?' },
-  { key: 'conflicts', title: 'Find conflicting dates or amounts', about: 'Potential inconsistencies, side by side', icon: Scale, hue: 'rose', ask: 'Find conflicting dates or amounts' },
-  { key: 'chronology', title: 'Build a chronology of events', about: 'Every stated date in order, with its source', icon: CalendarRange, hue: 'teal', ask: 'Build a chronology of events' },
-  { key: 'summary', title: 'Summarize this matter', about: 'A cited overview from its documents', icon: ScrollText, hue: 'indigo', ask: 'Summarize this matter from its documents' },
-];
-/** With several matters: the same answers across all of them, and the matters side by side instead of one summary. */
-const SEVERAL_TILES: Tile[] = [
-  { ...ASK_TILES[0], about: 'One briefing across the chosen matters' },
-  { ...ASK_TILES[1], about: 'Checked inside each matter, never across' },
-  { ...ASK_TILES[2], about: 'Every matter\'s dates in one timeline, labelled' },
-  { key: 'cases', title: 'Compare these cases', about: 'Side by side: deadlines, documents, open items', icon: Columns3, hue: 'indigo', ask: 'Compare these cases side by side' },
-];
-const PAGE_TILES: Tile[] = [
-  { key: 'meetings', title: 'Record a meeting', about: 'Live transcript and Silent Assist, with everyone\'s consent', icon: CalendarClock, hue: 'violet', page: 'meetings' },
-  { key: 'conversation', title: 'Ask by voice', about: 'Speak a question; hear the cited answer', icon: Mic, hue: 'blue', page: 'conversation' },
-  { key: 'drafting', title: 'Draft a document', about: 'Firm templates; a second lawyer approves', icon: FilePen, hue: 'amber', page: 'drafting' },
-  { key: 'panel', title: 'Get four perspectives', about: 'Deal, risk, litigation and specialist views', icon: Users2, hue: 'slate', page: 'panel' },
-  { key: 'research', title: 'Research in depth', about: 'Longer answers, saved with their sources', icon: BookOpenText, hue: 'slate', page: 'research' },
-  { key: 'diligence', title: 'Run due diligence', about: 'A checklist across the data room, with evidence', icon: ClipboardList, hue: 'slate', page: 'diligence' },
-];
-
-/** Eight tiles: the chat's four kinds of answer, then the first matter's own pages this person can open (or the matter list). */
-function useTiles(matter: Matter | null, several: boolean): (Tile & { to?: string })[] {
+function useMatterLinks(matter: Matter | null): { to: string; label: string }[] {
   const me = useSession();
-  const asks = several ? SEVERAL_TILES : ASK_TILES;
-  if (!matter) return [...asks, ...PAGE_TILES.slice(0, 4).map((t) => ({ ...t, to: '/matters' }))];
+  if (!matter) return [];
   const pages = new Map(matterEntries(me, matter).map((e) => [e.key, e.to]));
-  const open = PAGE_TILES.filter((t) => pages.has(t.page!)).slice(0, 4);
-  return [...asks, ...open.map((t) => ({ ...t, to: pages.get(t.page!) }))];
+  return [{ to: pages.get('overview') ?? `/m/${encodeURIComponent(matter.number)}/overview`, label: `Open ${matter.number}` },
+          ...MATTER_LINKS.filter((l) => pages.has(l.key)).map((l) => ({ to: pages.get(l.key)!, label: l.label }))];
 }
 const FINISHED = new Set(['completed', 'abstained']);
 
@@ -94,7 +77,8 @@ export default function ChatPage() {
   const abort = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
-  const tiles = useTiles(matter, several);
+  const links = useMatterLinks(several ? null : matter);
+  const starters = several ? SEVERAL_MATTERS : ONE_MATTER;
   const busy = turns.some((t) => t.status === 'streaming');
 
   useEffect(() => {
@@ -234,33 +218,32 @@ export default function ChatPage() {
       <div className="qc-sr" aria-live="polite">{announce}</div>
       {loadError && <p className="qc-error" role="alert">{loadError}</p>}
       {start ? (
-        <div className="qc-start qc-home-panel">
+        <div className="qc-start">
           <div className="qc-hero">
-            <span className="qc-eyebrow">Private legal workspace</span>
-            <h1>How can I help you today?</h1>
+            <h1>How can I help?</h1>
             <p className="qc-context">{several
-              ? <>Working across <b>{chosen.map((m) => m.number).join(', ')}</b>. Each answer says which matter every source comes from{
-                new Set(chosen.map((m) => m.client.id)).size > 1 ? <>; these matters belong to <b>different clients</b>, so keep each client's information to its own work</> : ''}.</>
+              ? <>Asking across <b>{chosen.map((m) => m.number).join(', ')}</b>. Each answer says which matter every source comes from{
+                new Set(chosen.map((m) => m.client.id)).size > 1 ? '; these belong to different clients, so keep each client\'s information to its own work' : ''}.</>
               : matter
-                ? <>Working on <b>{matter.number} · {matter.title}</b>. Answers come only from its documents, and every quote is checked.</>
-                : 'Choose one matter or several, then ask. Answers come only from those matters\' documents, and every quote is checked.'}</p>
-          </div>
-          <div className="qc-tiles" role="group" aria-label="Start with">
-            {tiles.map((t) => (
-              <button key={t.key} type="button" className="qc-tile" aria-label={t.title} aria-describedby={`tile-${t.key}`}
-                onClick={() => { if (t.ask) void ask(t.ask); else if (t.to) navigate(t.to); }}>
-                <span className="qc-tile-icon" data-hue={t.hue} aria-hidden><t.icon /></span>
-                <span className="qc-tile-text"><b>{t.title}</b><small id={`tile-${t.key}`}>{t.to === '/matters' ? 'Choose a matter first' : t.about}</small></span>
-              </button>
-            ))}
+                ? <><b>{matter.number} · {matter.title}</b> · {matter.client.name}</>
+                : 'Choose a matter in the question box, or ask and pick one.'}</p>
           </div>
           {pendingAsk && !matterId && (
             <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId} onCancel={() => setPendingAsk(null)} />
           )}
           {composer}
-          <div className="qc-suggestions" role="group" aria-label="Example questions">
-            {EXAMPLES.map((q) => <button key={q} type="button" className="qc-suggestion" onClick={() => void ask(q)}>{q}</button>)}
-          </div>
+          <ul className="qc-starters" aria-label="Suggestions">
+            {starters.map((st) => (
+              <li key={st.label}>
+                <button type="button" className="qc-starter" onClick={() => void ask(st.ask)}><st.icon aria-hidden />{st.label}</button>
+              </li>
+            ))}
+          </ul>
+          {links.length > 0 && (
+            <nav className="qc-start-foot" aria-label="This matter">
+              {links.map((l) => <Link key={l.to} to={l.to}>{l.label}</Link>)}
+            </nav>
+          )}
         </div>
       ) : (
         <>

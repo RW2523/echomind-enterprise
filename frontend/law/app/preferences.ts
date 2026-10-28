@@ -11,10 +11,9 @@ function write(key: string, value: string): void {
   try { window.localStorage.setItem(key, value); } catch { /* storage unavailable */ }
 }
 
-/** EchoMind Legal opens in its navy "Chambers" appearance until the person chooses another (2026-10-28, owner's request). */
 export function getThemeMode(): ThemeMode {
   const v = read(THEME_KEY);
-  return v === 'light' || v === 'dark' || v === 'system' ? v : 'dark';
+  return v === 'light' || v === 'dark' ? v : 'system';
 }
 export function getReducedTransparency(): boolean {
   return read(TRANSPARENCY_KEY) === 'reduced';

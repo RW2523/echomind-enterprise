@@ -80,7 +80,7 @@ test('alice sees only her matters; a matter she is not on is simply not availabl
   await expect(page.getByText('Private legal workspace')).toBeVisible();
   await shot(page, '01-sign-in-light');
   await signIn(page, 'alice');
-  await expect(page.getByRole('heading', { name: 'How can I help you today?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
   await shot(page, '02-home-light');
 
   await page.getByRole('link', { name: 'Matters', exact: true }).click();
@@ -1549,7 +1549,7 @@ test('EchoMind Legal chat: a potential inconsistency found, inspected and explai
   const LEGAL = path.resolve(HERE, '../../eval/fixtures/legal/MAT-1042');
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
-  await expect(alice.getByRole('heading', { name: 'How can I help you today?' })).toBeVisible();
+  await expect(alice.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
   // Two fictional witness memos that give different delivery dates, imported into M-101 the usual way.
   await alice.goto('/m/M-101/documents');
   for (const file of ['Witness_A_Interview.txt', 'Witness_B_Interview.txt']) {
@@ -1605,7 +1605,7 @@ test('EchoMind Legal chat across two matters: chosen together, compared side by 
   test.setTimeout(300_000);
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
-  await expect(alice.getByRole('heading', { name: 'How can I help you today?' })).toBeVisible();
+  await expect(alice.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
   const picker = () => alice.getByRole('button', { name: /Pick the matter to ask about|Change the matter/ });
   for (const m of [/^M-101 /, /^M-114 /]) {
     await picker().click();

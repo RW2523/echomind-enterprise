@@ -1,19 +1,19 @@
 /**
- * The EchoMind Legal shell (docs/echomind-legal/02): a navy rail with the workspace (Chat, Matters, Drafts, Activity), the
- * chosen matter's own pages, recent matters and recent conversations; a header with the matter the chat is about, search
+ * The EchoMind Legal shell (docs/echomind-legal/02, DESIGN.md): a rail with four destinations (Chat, Matters, Drafts, Activity)
+ * and recent conversations — a matter's own tools live on its tabs; a header with the matter the chat is about, search
  * (the command palette), the privacy state, the real capture state and the person; the page; and a right-hand panel that
  * opens beside the conversation. Settings and the firm's administration pages live under the profile menu. Every existing
  * Law page keeps working inside this shell; a matter's own pages are reached from the tab strip above them.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation, useMatch, useNavigate } from 'react-router';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, Briefcase, FilePen, FolderOpen, KeyRound, Landmark, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
-  Moon, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun, Timer,
+  Activity, Briefcase, FilePen, KeyRound, Landmark, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
+  Moon, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun,
 } from 'lucide-react';
 import { api } from '../api/client';
-import { useMatters, useReviews } from '../api/queries';
+import { useReviews } from '../api/queries';
 import { useCapturing } from '../app/capture';
 import { MatterProvider, useCurrentMatter } from '../app/matter';
 import { firmEntries, initials, matterEntries } from '../app/nav';
@@ -31,8 +31,6 @@ const ROLE_LABEL: Record<string, string> = {
   managing_partner: 'Managing partner', attorney: 'Attorney', paralegal: 'Paralegal', reviewer: 'Reviewer', firm_admin: 'Firm administrator',
   records_admin: 'Records', read_only: 'Read only', intake: 'Intake', conflicts: 'Conflicts',
 };
-/** The matter pages offered in the rail when no matter page is open (the tab strip shows them all on a matter page). */
-const RAIL_MATTER_PAGES = ['overview', 'documents', 'research', 'meetings', 'conversation', 'drafting', 'obligations', 'summaries', 'panel'];
 
 // ── Header: privacy and capture state ──────────────────────────────────────────
 function PrivacyStatus() {
@@ -106,53 +104,13 @@ function ProfileMenu() {
 }
 
 // ── Rail ───────────────────────────────────────────────────────────────────────
-/** The chosen matter's main pages, from the chat and the firm pages (on a matter page its tab strip shows them all). */
-function CurrentMatter() {
-  const me = useSession();
-  const routeMatter = useCurrentMatter();
-  const { matter } = useChatMatter();
-  if (routeMatter || !matter) return null;
-  const entries = matterEntries(me, matter).filter((e) => RAIL_MATTER_PAGES.includes(e.key));
-  return (
-    <>
-      <div className="qc-rail-label qc-hide-collapsed" title={`${matter.number} · ${matter.title}`}>{matter.number}</div>
-      <nav aria-label="Current matter">
-        {entries.map((e) => <RailLink key={e.key} to={e.to} icon={<e.icon aria-hidden />} label={e.label}>{e.label}</RailLink>)}
-      </nav>
-    </>
-  );
-}
-
-/** A few of the person's other matters, to open one directly (beside the chat; the Matters page lists them all). */
-function RecentMatters() {
-  const onChat = !!useMatch('/chat/*');
-  const matters = useMatters();
-  const { matter } = useChatMatter();
-  const routeMatter = useCurrentMatter();
-  const current = routeMatter?.id ?? matter?.id;
-  const list = (matters.data ?? []).filter((m) => m.status === 'open' && m.id !== current).slice(0, 4);
-  if (!onChat || !list.length) return null;
-  return (
-    <>
-      <div className="qc-rail-label qc-hide-collapsed">Other matters</div>
-      <nav className="qc-history qc-hide-collapsed" aria-label="Other matters">
-        {list.map((m) => (
-          <NavLink key={m.id} to={`/m/${encodeURIComponent(m.number)}/overview`} className="qc-recent-matter" title={`${m.number} · ${m.title}`}>
-            <FolderOpen aria-hidden /><span>{m.title}</span>
-          </NavLink>
-        ))}
-      </nav>
-    </>
-  );
-}
-
 function History() {
   const q = useQuery({ queryKey: ['counsel', 'conversations'], retry: false, staleTime: 10_000, queryFn: () => counselApi.conversations() });
   const items = q.data?.conversations ?? [];
   if (!items.length) return null;
   return (
     <>
-      <div className="qc-rail-label qc-hide-collapsed">Recent conversations</div>
+      <div className="qc-rail-label qc-hide-collapsed">Recent</div>
       <nav className="qc-history qc-hide-collapsed" aria-label="Recent conversations">
         {items.slice(0, 12).map((c) => (
           <NavLink key={c.id} to={`/chat/${c.id}`} className={({ isActive }) => `qc-history-item${isActive ? ' active' : ''}`}>
@@ -258,12 +216,8 @@ function ShellBody() {
           <RailLink to="/matters" icon={<Briefcase aria-hidden />}>Matters</RailLink>
           <DraftsLink />
           <RailLink to="/activity" icon={<Activity aria-hidden />}>Activity</RailLink>
-          {me.features?.time_entries && <RailLink to="/time" icon={<Timer aria-hidden />}>Time</RailLink>}
         </nav>
-        <CurrentMatter />
-        <RecentMatters />
         <History />
-        <div className="qc-rail-foot qc-hide-collapsed"><ShieldCheck aria-hidden />Runs on this appliance. No cloud.</div>
       </aside>
       {drawer && <button type="button" className="qc-scrim qc-only-narrow" aria-label="Close menu" onClick={() => setDrawer(false)} />}
       <div className="qc-body">
