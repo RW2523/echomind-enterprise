@@ -143,7 +143,7 @@ services:
     memswap_limit: ${LAW_FRONTEND_MEM:-256m}
     container_name: echomind-law-frontend
     ports: !override
-      - "${LAW_HTTP_PORT:-3110}:80"
+      - "${LAW_HTTP_BIND:-127.0.0.1}:${LAW_HTTP_PORT:-3110}:80"     # plain HTTP for this server's own scripts only (review F7)
       - "${LAW_HTTPS_PORT:-3553}:443"
 
 volumes:
