@@ -19,8 +19,10 @@ the Law pages the shell hosts.
 ## Navigation
 
 - Rail: New chat, then four destinations — **Chat, Matters, Drafts, Activity** — then recent conversations. Nothing else.
-- A matter's tools (Overview, Documents, Research, Meetings, Drafting, Obligations, …) are its tabs, and its overview lists
-  them with one line each. The chat home links quietly to the most used ones for the chosen matter.
+- A matter's tools are its tabs: six every day (Overview, Documents, Research, Drafting, Obligations, Meetings) and the
+  rest under **More**; the page you are on is always a tab. Its overview lists every tool with one line each. The chat
+  home links quietly to the most used ones for the chosen matter, with one line for what waits for the person's decision
+  and the next dated deadline.
 - Firm and account pages (Templates, Playbooks, Time, administration, Security) live in the profile menu.
 
 ## Tokens
@@ -56,6 +58,12 @@ person chooses light or dark in the profile menu.
 - **Chronology**: date column, a rail of dots coloured by kind, filters (kind, matter) and a month chart that filters.
 - **Cases table**: sortable columns, each row opens its matter.
 - **Notes**: a tinted block with an icon; no thick coloured side borders.
+
+## Words
+
+- Where answers come from follows the configuration (`model_location`): "On this server", "On your network" or, in the
+  attention colour, "External model". Never "nothing leaves", "no cloud", "air-gapped" or "guaranteed".
+- Review states: "Waiting for approval", "Changes requested", "Approved". Activity is a sentence, never an event code.
 
 ## Do not
 

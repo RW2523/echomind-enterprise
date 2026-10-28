@@ -103,6 +103,38 @@ registry: the server still chooses and validates every component; the model writ
   that surface (`backdrop-filter` makes an element the frame of fixed children) — they now render on `<body>`; a quote that
   itself contains quotation marks was shown as raw text — the parser now reads it whole.
 
+## Commercial-readiness review (2026-10-28)
+
+Phase 0 audited security, operations and the interface read-only (three audits, baseline below); the owner then asked for
+everything to be implemented. Each finding below is **Tested** with the named tests, **Done (ops)** where it is a script
+or document checked by running it, or **Owner** where it needs a decision, root or a contract. Detail and the go/no-go are
+in the review report shared with the owner (not in this public repository).
+
+| Area | Finding | Status | Evidence |
+|---|---|---|---|
+| Demo | Demo sign-in could run beside real data; administrators one click away; cross-site entry | **Tested** | backend refuses LEGAL_DEMO_SIGNIN without LEGAL_PROFILE=demo + seed marker, or with SSO; firm-wide powers never one-click; Origin checked; demo sessions end when off — test_law_demo_signin, test_law_edition_posture |
+| Deletion | A purge missed chat copies in conversations about several matters | **Tested** | purge by document id — test_law_counsel_multi |
+| Access | Saved answers stayed readable after a document's access list narrowed; action replay before re-check | **Tested** | withheld whole on read; replay after checks — test_law_counsel, test_law_scoping |
+| Access | `set_acl` with an empty list did not restrict an open document | **Tested** | test_law_counsel (withheld answer) |
+| Abuse | No per-person model limit; unbounded bodies before parsing; giant OCR pages | **Tested** | LEGAL_MODEL_REQUESTS_PER_MIN (20), LEGAL_MAX_BODY_BYTES (2 MiB), OCR pixel cap — test_law_limits |
+| Data | Purged text in SQLite free pages; intake-link tokens in the activity log; rollback below 0036/0038 | **Tested** | secure_delete, token mask, refusal — test_law_limits |
+| Roles | An administrator could make managing partners (two approve walls and emergency access) | **Tested** | only a managing partner appoints another — test_law_matters_api, admin-users.test |
+| Jobs | Queued summaries/diligence ran after the requester left; a disabled account's answer went on | **Tested** | test_law_late_access |
+| Files | Redline generation parsed stored Word XML with entity resolution possible | **Tested** | hardened parser — test_law_late_access |
+| Secrets | Authenticator secrets stored in clear | **Tested** | sealed with the master key, old ones sealed on use — test_law_identity_units |
+| Network | Plain HTTP served the whole app on the LAN; no HSTS | **Tested** | HTTP on 127.0.0.1 only; HSTS on HTTPS — test_law_pilot_config |
+| Claims | "No cloud service", "nothing leaves it" regardless of configuration | **Tested** | wording from `model_location` — test_law_auth_api, counsel.test |
+| Logs | Tracebacks could carry document text | **Tested** | message replaced by its length — test_law_edition_posture |
+| Interface | Design pass, keyboard, screen readers, phone, states, source panel, glance, tabs, home | **Tested** | vitest (audit-wording, keyboard, admin-users, counsel); screenshots light/dark/390 px |
+| Evaluation | Gate always exited 0; held-out set not frozen | **Tested** | thresholds.json (proposed), `--gate`, frozen checksum — test_law_eval_gate |
+| Operations | Deploy without backup; rollback broken by migrations; no restore script; backups silently stopped; no RPO/RTO | **Done (ops)** | deploy_pilot.sh, backup_pilot.sh, restore_pilot.sh (drilled on scratch volumes), RUNBOOK, INSTALL, INCIDENT_RESPONSE |
+| Operations | Containers ran with full capabilities | **Tested** | no-new-privileges, cap_drop ALL, pids — test_law_pilot_config; images smoke-tested |
+| Demo | Ran from an uncommitted script on the host network, code writable, health check probed production | **Done (ops)** | scripts/law/demo_up.sh; the public demo now runs that way |
+| CI | No dependency audit | **Done** | `dependencies` job |
+| Infra | Disk not encrypted (database holds extracted text); egress lock not applied (needs root) | **Owner** | check_disk_encryption.sh says NO on this host; deploy refuses both unless accepted |
+| Release | Thresholds, pricing/contracts, customer model, cross-client multi-matter policy | **Owner** | thresholds marked "proposed" |
+| Open | Non-root containers and read-only roots for the pilot; master-key rotation tool; signed audit anchors; browser E2E and evaluations in CI (need the model); actions pinned by SHA | **Not started** | listed in the report with effort |
+
 ## Live run on the DGX Spark (2026-10-26, real model, isolated dev backend)
 
 Native dev backend (`scripts/law/dev_backend.sh`, fresh `.law-data`, 127.0.0.1 only) with the demo world and the Legal
