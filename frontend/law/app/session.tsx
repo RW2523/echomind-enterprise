@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { keys, useMe } from '../api/queries';
 import { ApiError } from '../api/client';
-import { SESSION_EXPIRED_EVENT } from '../../services/session';
+import { CSRF_COOKIE, readCookie, SESSION_EXPIRED_EVENT } from '../../services/session';
 import type { Me } from '../api/types';
 import ChangePassword from '../pages/ChangePassword';
 import { Skeleton } from '../ui/primitives';
@@ -27,9 +27,18 @@ export function useSessionExpiry(): void {
   }, [qc]);
 }
 
+/** Over HTTPS a session always comes with its readable CSRF cookie; without it there is no session to ask about, so the
+ *  page goes straight to sign-in instead of asking the server and logging a 401 (a first visit to the open demo). Over
+ *  plain HTTP (development, tests) the server is always asked. */
+export function knownSignedOut(protocol: string, cookies: string): boolean {
+  return protocol === 'https:' && !readCookie(CSRF_COOKIE, cookies);
+}
+
 export function RequireSession({ children }: { children: React.ReactNode }) {
-  const me = useMe();
+  const signedOut = knownSignedOut(window.location.protocol, document.cookie);
+  const me = useMe(!signedOut);
   const location = useLocation();
+  if (signedOut) return <Navigate to={`/signin?next=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   if (me.isPending) {
     return <div className="lw-content" aria-busy="true"><Skeleton height={48} /><Skeleton height={240} /></div>;
   }

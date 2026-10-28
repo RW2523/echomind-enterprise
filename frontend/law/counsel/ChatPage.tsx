@@ -19,7 +19,6 @@ import { useSession } from '../app/session';
 import { counselApi, requestId, type StoredTurn } from './api';
 import { ActionButtons, AnswerText, ComponentView, type CardContext } from './cards';
 import { useChatMatter, usePanel } from './context';
-import Facade from './Facade';
 import MatterPicker, { usePopover } from './MatterPicker';
 import { parseEnvelope, parseTaskProgress } from './validate';
 import type { ChatTurn, SafeComponent } from './types';
@@ -219,8 +218,7 @@ export default function ChatPage() {
       <div className="qc-sr" aria-live="polite">{announce}</div>
       {loadError && <p className="qc-error" role="alert">{loadError}</p>}
       {start ? (
-        <div className="qc-start">
-          <Facade className="qc-facade" />
+        <div className="qc-start qc-home-panel">
           <div className="qc-hero">
             <span className="qc-eyebrow">Private legal workspace</span>
             <h1>How can I help you today?</h1>

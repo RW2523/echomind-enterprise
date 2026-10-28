@@ -33,7 +33,7 @@ export const keys = {
   links: (id: string) => ['matter', id, 'connector-links'] as const,
 };
 
-export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false });
+export const useMe = (enabled = true) => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false, enabled });
 export const useMatters = () =>
   useQuery({ queryKey: keys.matters, queryFn: async () => (await api.get<{ matters: Matter[] }>('/api/legal/matters')).matters });
 export const useClients = () =>

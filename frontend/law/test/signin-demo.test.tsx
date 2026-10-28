@@ -91,3 +91,13 @@ describe('One-click demo sign-in (D-077)', () => {
     expect((await screen.findByRole('status', { name: 'Demo sign-in' })).textContent).toMatch(/Demo sign-in is on/);
   });
 });
+
+describe('A first visit over HTTPS without a session', () => {
+  it('goes straight to sign-in without asking the server (no 401 logged); with the CSRF cookie, or over HTTP, it asks', async () => {
+    const { knownSignedOut } = await import('../app/session');
+    expect(knownSignedOut('https:', '')).toBe(true);
+    expect(knownSignedOut('https:', 'theme=dark')).toBe(true);
+    expect(knownSignedOut('https:', '__Host-echomind_csrf=abc; theme=dark')).toBe(false);
+    expect(knownSignedOut('http:', '')).toBe(false);
+  });
+});
