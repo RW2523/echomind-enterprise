@@ -33,7 +33,7 @@ from ..matters.routes import principal_of, require, require_law_edition
 from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import llm as llm_mod
-from . import amendments, evidence, followup, prompt
+from . import amendments, attribution, evidence, followup, prompt
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition)])
@@ -111,6 +111,12 @@ def _stands(claim) -> bool:
     "The documents do not state …" ("[1] [1] [1]", seen 2026-10-27) support nothing."""
     words = re.search(r"[^\W\d_]{2}", re.sub(r"\[[^\]]*\]", " ", claim.sentence))
     return claim.state == "supported" or (claim.state == "unquoted" and words is not None)
+
+
+def _titles(scopes, uid: str) -> dict[str, str]:
+    """The titles of the documents the person may read in the matters asked about (document id → title)."""
+    from ..documents import repo as doc_repo
+    return {d["id"]: d["title"] or "" for sc in scopes for d in doc_repo.list_documents(sc.matter_id, uid)}
 
 
 def _version_texts(version_ids) -> list[str]:
@@ -313,8 +319,33 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         #   the answer stands as before (a literal "the documents do not say when he said it" that then gives the time; "no
         #   deposit for a warehouse … the only mention of a deposit is GBP 21,000", in the warehouse lease).
         # A supported answer that also says the abstention sentence is still an answer.
-        nothing = not any(_stands(c) for c in claims)
-        answering = [c for c in claims if _stands(c) and not prompt.only_context(c.sentence)]
+        # Attribution (2026-10-28, held-out 2 h2-abstain-storage-law; research/attribution.py): a cited sentence that names a
+        # document of the matter must cite that document, or it does not stand; and a question that names a document is not
+        # answered from other documents alone.
+        titles = await run_in_threadpool(_titles, scopes, principal["sub"])
+        # A citation speaks of a document when it is from that document, or its passage itself names it (the board minutes
+        # authorising "the renewal of the Harrowgate Master Services Agreement" speak of the MSA).
+        speaks_of: dict[int, set] = {}
+
+        def spoken(claim) -> set:
+            out = set()
+            for c in claim.citations:
+                if 1 <= c.n <= len(sources):
+                    if c.n not in speaks_of:
+                        speaks_of[c.n] = {sources[c.n - 1]["document_id"]} | attribution.referenced(sources[c.n - 1]["text"], titles)
+                    out |= speaks_of[c.n]
+            return out
+        misattributed = []
+        for claim in claims:
+            named = attribution.referenced(claim.sentence, titles)
+            if named and claim.citations and not (spoken(claim) & named):
+                misattributed.append(claim)
+        unsupported.extend(c.sentence for c in misattributed if c.sentence not in unsupported)
+        standing = [c for c in claims if _stands(c) and c not in misattributed]
+        asked = attribution.referenced(question, titles)
+        off_target = bool(asked) and bool(standing) and not any(spoken(c) & asked for c in standing)
+        nothing = not standing
+        answering = [c for c in standing if not prompt.only_context(c.sentence)]
         declined = False
         if not answering and prompt.opens_not_stated(text):
             cited = {sources[c.n - 1]["version_id"] for claim in claims for c in claim.citations if 1 <= c.n <= len(sources)}
@@ -324,11 +355,12 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                         if 1 <= c.n <= len(passages) and passages[c.n - 1].get("score") is not None]
         weak = not cited_scores or max(float(x) for x in cited_scores) < settings.LEGAL_ABSTAIN_WEAK_SCORE
         abstained = (nothing and (prompt.is_abstention(text) or prompt.says_not_stated(text))) or \
-            (prompt.says_not_stated(text) and weak) or declined
+            (prompt.says_not_stated(text) and weak) or declined or off_target
         numbers = prompt.cited_numbers(text, len(sources))
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
-        status, answer, reason = _status(abstained, claims, unsupported, failed), text, ("model" if abstained else None)
+        status, answer = _status(abstained, claims, unsupported, failed), text
+        reason = None if not abstained else "other_documents" if off_target else "model"
         found = [] if abstained else await run_in_threadpool(doc_versions.conflicts, citations or sources, versions)
         changed = [] if abstained else _changed(links, sources, numbers, items)
         if status == "answered" and any(a["by"]["signed"] and a["cited"] and not a["amendment_cited"] for a in changed):

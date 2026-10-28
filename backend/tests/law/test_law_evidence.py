@@ -443,3 +443,44 @@ def test_how_an_answer_opens():
     assert not prompt.opens_not_stated("The fee is USD 18,500 per month [1].")
     assert not prompt.opens_not_stated("The engagement does not include tax advice [1].")
     assert not prompt.opens_not_stated("The MSA does not contain a non-compete clause [1].")     # a term of the MSA, not silence
+
+
+# ── Attribution (2026-10-28, held-out 2 h2-abstain-storage-law) ───────────────────────────────────────────────────────
+def test_a_sentence_naming_one_document_but_citing_another_does_not_stand(ev):
+    """Real words, verified, from the wrong document: "the side letter caps liability" resting on the MSA's quote. That
+    sentence is not supported; the card can never read as fully supported."""
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    ev["llm"].answer = f'The side letter caps each party\'s total liability at USD 250,000 [{cap}: "capped at USD 250,000"].'
+    done = ask(alice, ev["mid"], "What is the liability cap?")[-1]
+    assert done["status"] != "answered"
+    assert any("side letter" in s for s in done["unsupported"])
+
+
+def test_a_question_about_one_document_is_not_answered_from_another(ev):
+    """Asked about the side letter, the model answers from the MSA's clause: withheld, and the reason says why."""
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    ev["llm"].answer = f'Each party\'s total liability is capped at USD 250,000 [{cap}: "capped at USD 250,000"].'
+    done = ask(alice, ev["mid"], "Is each party's total liability capped in the side letter?")[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "other_documents"
+    done = ask(alice, ev["mid"], "Is each party's total liability capped in the MSA?")[-1]           # the right document
+    assert done["abstained"] is False
+
+
+def test_which_documents_a_text_names():
+    from app.legal.research.attribution import referenced
+    t = {"msa": "Harrowgate MSA", "nda": "Northbridge NDA", "lease": "Unit 7 Lease", "coc": "Change of control notice",
+         "sto": "Kestrel Storage Services Agreement", "amd": "Amendment No. 1 to the Kestrel storage agreement",
+         "wit": "Witness statement of Jonas Ekberg", "eng": "Calder & Wynne engagement letter", "side": "Service credit side letter"}
+    assert referenced("The Kestrel storage agreement is governed by English law.", t) == {"sto", "amd"}
+    assert referenced("What is the cap under the Master Services Agreement?", t) == {"msa"}
+    assert referenced("Which law governs the warehouse lease?", t) == {"lease"}
+    assert referenced("The change of control notice was sent in September.", t) == {"coc"}
+    assert referenced("Calder & Wynne's engagement letter limits liability.", t) == {"eng"}
+    # ordinary nouns and party names name nothing
+    for text in ("Either party may terminate on thirty days' written notice.", "What was Jonas Ekberg's job at Kestrel?",
+                 "Under the agreement, liability is capped.", "Credits are applied against the next invoice."):
+        assert referenced(text, t) == set(), text

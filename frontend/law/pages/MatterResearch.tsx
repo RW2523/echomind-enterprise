@@ -34,6 +34,7 @@ const ABSTAINED: Record<string, string> = {
   no_passages: 'Nothing in this matter’s documents closely matches. Try other words, or check that the document you need is imported.',
   model: 'The passages found do not answer it. Ask more specifically, or read the passages it consulted below.',
   access_changed: 'This answer quoted a document you can no longer open, so it is not shown again.',
+  other_documents: 'The passages found are from other documents than the one you asked about, so they are not given as its answer: that document does not say this.',
 };
 
 /** Research: questions answered only from this matter's documents, each statement tied to the exact

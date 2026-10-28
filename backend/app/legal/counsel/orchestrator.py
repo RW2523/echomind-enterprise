@@ -203,7 +203,8 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
     props = {"answer": done.get("answer") or "", "state": state,
              "citations": [{k: v for k, v in c.items() if k != "instructions"} for c in cites],
              "unsupported": [s[:500] for s in (done.get("unsupported") or [])][:10],
-             "notes": (amend_notes + _notes(cites, done.get("conflicts") or []))[:3]}
+             "notes": (([OTHER_DOCUMENTS] if done.get("abstention_reason") == "other_documents" else [])
+                       + amend_notes + _notes(cites, done.get("conflicts") or []))[:3]}
     if built.understood:
         props["understood"] = built.understood[:400]
     built.add("source_answer", props, [c["document_id"] for c in cites] + [a["by"]["document_id"] for a in changed])
@@ -214,6 +215,10 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
     else:
         verified = sum(1 for c in cites if c["verified"])
         built.summary = f"Answered from {len(cites)} source{'s' if len(cites) != 1 else ''}, {verified} with a verified quote."
+
+
+OTHER_DOCUMENTS = ("The passages found are from other documents than the one asked about, so they are not given as its answer: "
+                   "that document does not say this.")
 
 
 def _comparison(principal: dict, built: Built, rows: list[dict], scanned: Optional[int]) -> None:
