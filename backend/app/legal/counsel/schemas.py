@@ -9,6 +9,9 @@ Rules enforced by the models:
 - every list and string is bounded, so a hostile document cannot inflate a payload;
 - identifiers match a strict pattern; in-app paths match an allow-list of the workspace's own pages; there are no URLs;
 - an envelope holds at most three components (one primary, two supporting) and four suggested actions.
+
+A conversation may cover several of the person's matters (2026-10-28): the envelope lists them, and every citation, event,
+item and component that comes from one names its matter, so nothing from two matters is ever presented as one source.
 """
 from __future__ import annotations
 
@@ -20,8 +23,10 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 SCHEMA_VERSION = "1.0"
 MAX_COMPONENTS = 3
 MAX_PRIORITY_ITEMS = 3
+MAX_MATTERS = 5                                           # matters in one conversation
 
 Ident = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_.:-]{1,80}$")]
+MatterNumber = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9._~ -]{1,40}$")]
 CitationId = Annotated[str, StringConstraints(pattern=r"^cit_[0-9a-f]{32}$")]
 ComponentId = Annotated[str, StringConstraints(pattern=r"^cmp_[0-9a-f]{32}$")]
 DiscrepancyId = Annotated[str, StringConstraints(pattern=r"^dsc_[0-9a-f]{32}$")]
@@ -82,6 +87,7 @@ class CitationRef(Strict):
     clause: Optional[text(40)] = None
     verified: bool                                        # true only when the quote was found in the cited passage
     removed: bool = False                                 # the document was purged after the answer
+    matter: Optional[MatterNumber] = None                 # in a conversation about several matters: the source's matter
 
 
 # ── Component props ──────────────────────────────────────────────────────────────
@@ -109,6 +115,7 @@ class PriorityItem(Strict):
     title: text(160)
     detail: text(400) = ""
     action: Action
+    matter: Optional[MatterNumber] = None
 
 
 class PriorityListProps(Strict):
@@ -182,6 +189,7 @@ class TimelineEvent(Strict):
     status: Optional[text(80)] = None                     # an obligation's review state
     notes: list[text(300)] = Field(default_factory=list, max_length=3)
     source: ComparisonSide
+    matter: Optional[MatterNumber] = None
 
     @model_validator(mode="after")
     def _undated_has_no_date(self):
@@ -194,6 +202,35 @@ class TimelineProps(Strict):
     summary: text(400)
     events: list[TimelineEvent] = Field(default_factory=list, max_length=60)
     more: int = Field(default=0, ge=0)
+    caution: text(400)
+
+
+class CaseRow(Strict):
+    """One matter, as its records stand (counsel/cases.py): nothing in a row is generated."""
+    matter_id: Ident
+    number: MatterNumber
+    title: text(200)
+    client: text(200)
+    status: Literal["open", "closed", "archived"]
+    sensitivity: Literal["standard", "restricted", "highly_restricted"]
+    documents: int = Field(ge=0)                          # documents the person may read
+    open_inconsistencies: Optional[int] = Field(default=None, ge=0)
+    next_deadline: Optional[IsoDate] = None
+    next_deadline_text: Optional[text(200)] = None
+    deadline_state: Optional[text(60)] = None             # "Confirmed by a lawyer" or "Not confirmed", never decided here
+    last_activity: Optional[text(40)] = None
+    path: text(140)
+
+    @model_validator(mode="after")
+    def _own_page(self):
+        if not _PAGE.match(self.path):
+            raise ValueError("a row opens the workspace's own matter page")
+        return self
+
+
+class CaseTableProps(Strict):
+    summary: text(400)
+    rows: list[CaseRow] = Field(min_length=1, max_length=MAX_MATTERS * 2)
     caution: text(400)
 
 
@@ -218,6 +255,7 @@ class UnavailableProps(Strict):
 class _Base(Strict):
     id: ComponentId
     version: int = Field(default=1, ge=1)
+    matter_id: Optional[Ident] = None                    # in a conversation about several matters: the one this belongs to
 
 
 class SourceAnswer(_Base):
@@ -241,6 +279,11 @@ class Timeline(_Base):
     props: TimelineProps
 
 
+class CaseTable(_Base):
+    type: Literal["case_table"]
+    props: CaseTableProps
+
+
 class TaskProgress(_Base):
     type: Literal["task_progress"]
     props: TaskProgressProps
@@ -256,15 +299,23 @@ class Unavailable(_Base):
     props: UnavailableProps
 
 
-Component = Annotated[Union[SourceAnswer, PriorityList, EvidenceComparison, Timeline, TaskProgress, Notice, Unavailable],
+Component = Annotated[Union[SourceAnswer, PriorityList, EvidenceComparison, Timeline, CaseTable, TaskProgress, Notice, Unavailable],
                       Field(discriminator="type")]
-COMPONENT_TYPES = ("source_answer", "priority_list", "evidence_comparison", "timeline", "task_progress", "notice", "unavailable")
+COMPONENT_TYPES = ("source_answer", "priority_list", "evidence_comparison", "timeline", "case_table", "task_progress", "notice",
+                   "unavailable")
+
+
+class MatterRef(Strict):
+    id: Ident
+    number: MatterNumber
+    title: text(200)
 
 
 class Envelope(Strict):
     schema_version: Literal["1.0"] = SCHEMA_VERSION
     message_id: Ident
     matter_id: Ident
+    matters: list[MatterRef] = Field(default_factory=list, max_length=MAX_MATTERS)   # when the conversation covers several
     summary: text(400) = ""
     components: list[Component] = Field(default_factory=list, max_length=MAX_COMPONENTS)
     suggested_actions: list[Action] = Field(default_factory=list, max_length=4)
@@ -280,7 +331,10 @@ class Envelope(Strict):
 
 def validate_envelope(data: dict) -> dict:
     """The envelope as it may be sent: validated, then dumped back to plain JSON. Raises pydantic.ValidationError."""
-    return Envelope.model_validate(data).model_dump(mode="json", exclude_none=True)
+    out = Envelope.model_validate(data).model_dump(mode="json", exclude_none=True)
+    if not out.get("matters"):                             # a conversation about one matter: the envelope it always had
+        out.pop("matters", None)
+    return out
 
 
 def validate_component(data: dict) -> dict:

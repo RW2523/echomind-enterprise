@@ -75,6 +75,34 @@ tiles) and kept to what the product really does:
   graph and firm-wide content search (no backend for either). Each would be a button that does nothing.
 - Light, dark, 390 px and reduced-transparency all render; contrast values are in the header of `counsel.css`.
 
+## Several matters in one conversation, and answers you can work with (2026-10-28)
+
+The owner asked for conversations about one case or several together, and for answers in the spirit of ChatGPT's
+"Intelligent UI" (interactive charts, tappable controls, rendered progressively). Built on the existing trusted component
+registry: the server still chooses and validates every component; the model writes only text.
+
+- **One matter or several (up to five).** The question box's matter button is a multi-select. Each matter is authorized
+  when the conversation starts (`POST /api/legal/counsel/conversations {"matter_ids": [...]}`), on every read and on every
+  turn; losing any one closes the whole conversation (404) and drops it from the list. A highly restricted matter is only
+  ever discussed on its own (409, and the picker enforces it). Matters of different clients get a notice to keep each
+  client's information to its own work. Migration 0038 (`legal_conversation_matters`); a conversation's own matter is
+  still `legal_conversations.matter_id`, so existing conversations are unchanged.
+- **Every source names its matter.** Research searches each matter under its own `AuthorizedScope`, finds amendment links
+  inside that matter, and labels every passage; the prompt tags each source `matter="…"` and asks the model to say which
+  matter each statement comes from and never combine them (prompt `research-s2.5`; a one-matter prompt is byte-identical
+  to before). Citations are stored and re-verified under their own matter. An answer about several matters is kept in its
+  conversation only, never in one matter's research history (so one matter's history never holds another's quotes).
+- **Per-intent behaviour:** the briefing and the chronology are built per matter and merged with labels; the conflict
+  scan runs inside each matter only (documents of different matters are never compared with each other); a comparison
+  card from another matter of the conversation carries that matter, and resolving it acts under it; "Compare these
+  cases" shows a `case_table`.
+- **Interactive answers:** the chronology has filters (kind, matter) and a month chart whose bars filter the list; the
+  cases table sorts by any column and each row opens the matter; cards are sent as `ui.partial` as soon as they are
+  validated (shown while the turn still runs), then the full envelope.
+- **Found in Chrome and fixed:** popovers opened from the glass composer or header were placed and clipped relative to
+  that surface (`backdrop-filter` makes an element the frame of fixed children) — they now render on `<body>`; a quote that
+  itself contains quotation marks was shown as raw text — the parser now reads it whole.
+
 ## Live run on the DGX Spark (2026-10-26, real model, isolated dev backend)
 
 Native dev backend (`scripts/law/dev_backend.sh`, fresh `.law-data`, 127.0.0.1 only) with the demo world and the Legal
@@ -166,6 +194,9 @@ Seconds are request-to-last-event, single user, measured once: not a benchmark.
 | EV4 | Final: `research-s2.4` (a reading beside account questions only) and marker-only claims support nothing | golden 75: answers 65/68, abstentions 5/7, 1 false abstention, 0 leaks, quotes verified 0.98; held-out 34: 29/31, 2/3, 0 leaks; **all four ACCOUNT items pass** (-025933, -030117). Before the marker fix: golden 65/68, 6/7; held-out 30/31, 2/3 (-023608, -023748). Every non-ACCOUNT prompt is byte-identical to `research-s2.3`; their run-to-run swings (salary, non-compete, attendance) occur in the baseline runs too |
 | E8 | Legal chat journey, asking "When did Witness B say the delivery took place?" with no second try | **2 of 2 passed** (15 s each); 0 of 3 before the fix |
 | C13 | Backend: evidence, injection, amendments, counsel (and evaluations, retrieval) | **118 passed** (136 with evaluations and retrieval), pinned image, `--network none` |
+| C14 | Several matters + interactive answers: backend all (`--network none`) | **1503 passed, 3 skipped, 1 failed** (14 min; LibreOffice absent, as at baseline); then the quote-parser change: evidence, injection, counsel, multi-matter, amendments, chronology, retrieval **151 passed** |
+| C15 | Frontend after several matters | **217 passed** (38 files); `tsc` main and strict clean |
+| L5 | Live, public demo, Chrome: MAT-1042 + M-301 | the two chosen in the question box; "Compare these cases" table; a 43-event chronology filtered by matter and month; "What delivery deadlines and late-delivery remedies apply in each case?" answered per matter, **6 verified quotes**, every source tagged with its matter; no console errors, no failed requests. Browser E2E for the new journey is written; the full E2E run follows the UI simplification |
 | L3 | Live, public demo (2026-10-27): meeting recorded in a real browser with spoken audio as the microphone (voice service clip), backend in the Law image with speech recognition on the CPU (the GPU is held by the host's models) | consent from 3 participants, then the transcript appeared live every ~5 s; Silent Assist raised **action**, **commitment to the other side** and **privileged or sensitive information with a counterparty** alerts quoting the words said (commitment and disclosure need the speaker marked: with "Not marked", only the action rule applies, by design) |
 | L4 | Live, public demo: the conversation assistant asked aloud | the clip transcribed (first call 17.6 s including loading the model), answered from MAT-1042's documents with citations, read aloud by the voice service |
 

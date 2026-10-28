@@ -63,7 +63,8 @@ def _source(n: int, p: dict) -> dict:
             "clause": c.get("clause"), "line": c.get("line"), "focus_start": c.get("focus_start"), "focus_end": c.get("focus_end"),
             "version_status": c.get("version_status"), "signed": c.get("signed"),
             "instructions": prompt.addressed_to_ai(p["text"]),       # withheld from the model's copy (T08)
-            **({"amends": p["amends"]} if p.get("amends") else {})}
+            **({"amends": p["amends"]} if p.get("amends") else {}),
+            **({"matter_id": p["matter"]["id"], "matter_number": p["matter"]["number"]} if p.get("matter") else {})}
 
 
 def _save(turn: dict) -> None:
@@ -191,6 +192,7 @@ def _changed(links: list[dict], sources: list[dict], cited: list[int], evidence:
         eff = link["effective"]
         own = link["passage"]["citation"]          # the amending clause itself, even when a wider retrieved passage holds it
         out.append({"document_id": t["document_id"], "document_title": t["document_title"], "version_id": t["version_id"],
+                    **({"matter_number": t["matter_number"]} if t.get("matter_number") else {}),
                     "clause": link["clause"], "n": tn, "how": link["how"], "cited": relies, "amendment_cited": an in cited,
                     "by": {"document_id": own["document_id"], "document_title": own["document_title"], "version_id": own["version_id"],
                            "version_number": own["version_number"], "clause": own.get("clause"), "signed": link["signed"], "n": an,
@@ -208,18 +210,51 @@ def _status(abstained: bool, claims: list, unsupported: list, failed: list) -> s
     return "partial" if failed or unsupported else "answered"
 
 
+async def _search_several(scopes: list, principal: dict, question: str, versions: str, documents: Optional[list[str]]):
+    """A conversation about several matters (2026-10-28): each matter is searched under its own authorized scope, its
+    amendment links are found inside that matter, and the groups are put together with every passage naming its matter.
+    A matter with nothing relevant adds nothing."""
+    k = max(3, settings.LEGAL_RESEARCH_PASSAGES // len(scopes) + 1)
+    groups = []
+    with get_conn() as conn:
+        numbers = {sc.matter_id: conn.execute("SELECT number FROM matters WHERE id=?", (sc.matter_id,)).fetchone()[0] for sc in scopes}
+    for sc in scopes:
+        r = await searchmod.search(sc, question, k=k, versions=versions, documents=documents)
+        ps = r["passages"]
+        if r["abstained"] or not ps:
+            continue
+        ls = _amended(ps, await run_in_threadpool(amendments.for_passages, sc.matter_id, principal["sub"], ps, versions))
+        for p in ps:
+            p["matter"] = {"id": sc.matter_id, "number": numbers[sc.matter_id]}
+        best = max((float(p["score"]) for p in ps if p.get("score") is not None), default=float("-inf"))
+        groups.append((best, ps, ls))
+    passages, links = [], []
+    for _, ps, ls in sorted(groups, key=lambda g: -g[0]):      # the most relevant matter first
+        offset = len(passages)
+        passages.extend(ps)
+        links.extend({**l, "index": l["index"] + offset, "by_index": l["by_index"] + offset} for l in ls)
+    return passages, links, not passages
+
+
 async def _answer(scope, principal: dict, question: str, turn: dict, versions: str = "signed",
-                  documents: Optional[list[str]] = None, understood: Optional[dict] = None) -> AsyncIterator[str]:
+                  documents: Optional[list[str]] = None, understood: Optional[dict] = None,
+                  extra_scopes: tuple = ()) -> AsyncIterator[str]:
     status, answer, citations, items, found, reason, changed = "error", None, [], [], [], None, []
+    scopes = [scope, *extra_scopes]
+    several = len(scopes) > 1
     try:
         if understood:                                      # S5.1b (D-063): what a follow-up was taken to ask
             yield _event({"type": "understood", **understood})
-        result = await searchmod.search(scope, question, k=settings.LEGAL_RESEARCH_PASSAGES, versions=versions, documents=documents)
-        passages = result["passages"]
-        links = _amended(passages, await run_in_threadpool(amendments.for_passages, scope.matter_id, principal["sub"], passages, versions))
+        if several:
+            passages, links, nothing_found = await _search_several(scopes, principal, question, versions, documents)
+        else:
+            result = await searchmod.search(scope, question, k=settings.LEGAL_RESEARCH_PASSAGES, versions=versions, documents=documents)
+            passages = result["passages"]
+            links = _amended(passages, await run_in_threadpool(amendments.for_passages, scope.matter_id, principal["sub"], passages, versions))
+            nothing_found = result["abstained"]
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
         yield _event({"type": "sources", "citations": sources})
-        if result["abstained"] or not passages:
+        if nothing_found or not passages:
             status, answer, reason = "abstained", prompt.ABSTAIN, "no_passages"
             yield _event({"type": "chunk", "text": prompt.ABSTAIN})
             yield _event({"type": "done", "answer": prompt.ABSTAIN, "status": status, "abstained": True, "abstention_reason": reason,
@@ -240,7 +275,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
 
         async for piece in stream:
             if time.monotonic() - last_check >= settings.LEGAL_STREAM_RECHECK_SEC:
-                await run_in_threadpool(scopemod.recheck, scope)        # raises ScopeRevoked
+                for sc in scopes:
+                    await run_in_threadpool(scopemod.recheck, sc)       # raises ScopeRevoked
                 last_check = time.monotonic()
             buf += piece
             while "\n\n" in buf:                                       # a paragraph is shown only once it is checked
@@ -249,7 +285,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                     para = finish(raw)
                     yield _event({"type": "paragraph", "index": len(shown) - 1, **para})
                     yield _event({"type": "chunk", "text": ("\n\n" if len(shown) > 1 else "") + para["text"]})
-        await run_in_threadpool(scopemod.recheck, scope)
+        for sc in scopes:
+            await run_in_threadpool(scopemod.recheck, sc)
         if prompt.clean(buf).strip():
             para = finish(buf)
             yield _event({"type": "paragraph", "index": len(shown) - 1, **para})
@@ -285,12 +322,14 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         yield _event({"type": "error", "message": "The answer could not be completed. Try again."})
     finally:
         try:
-            _save({**turn, "answer": answer, "citations": citations, "status": status, "evidence": items, "conflicts": found,
-                   "versions": versions, "abstention_reason": reason, "amendments": changed})
+            if not several:      # an answer about several matters lives only in its conversation, never in one matter's history
+                _save({**turn, "answer": answer, "citations": citations, "status": status, "evidence": items, "conflicts": found,
+                       "versions": versions, "abstention_reason": reason, "amendments": changed})
             outcome = "deny" if status == "scope_revoked" else "error" if status == "error" else "allow"
             record("research.answer", outcome, principal=principal, object_type="research_turn", object_id=turn["id"],
                    matter_id=turn["matter_id"], reason=status,
-                   details={"citations": len(citations), "verified": sum(1 for e in items if e["verification"] in ("verbatim", "normalized"))})
+                   details={"citations": len(citations), "verified": sum(1 for e in items if e["verification"] in ("verbatim", "normalized")),
+                            **({"matters": [sc.matter_id for sc in scopes]} if several else {})})
         except Exception as e:
             logger.error("Research: could not record the outcome (%s)", type(e).__name__)
 

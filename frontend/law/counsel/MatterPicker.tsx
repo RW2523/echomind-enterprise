@@ -1,18 +1,26 @@
 /**
- * The matter a conversation is about: one button and its list, in the header and again in the composer. Only the
- * person's own matters appear; leaving a page with work in progress asks first.
+ * The matters a conversation is about: in the header, one matter; in the composer, one or several (up to five, owner's
+ * request 2026-10-28). Only the person's own matters appear; leaving a page with work in progress asks first. A highly
+ * restricted matter is only ever discussed on its own.
  * Popovers are fixed-position and need no portal (nothing above them is transformed).
  */
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useMatch, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Briefcase, ChevronsUpDown, Lock } from 'lucide-react';
+import { Briefcase, Check, ChevronsUpDown, Lock } from 'lucide-react';
 import { keys, useMatters } from '../api/queries';
 import type { Matter } from '../api/types';
 import { useCurrentMatter } from '../app/matter';
 import { getBlockers } from '../app/navigationGuard';
 import { Dialog } from '../ui/primitives';
-import { useChatMatter } from './context';
+import { MAX_MATTERS, useChatMatter, withMatter } from './context';
+
+/** Popovers render on <body>: a glass surface (backdrop-filter) becomes the frame of fixed-position children, which would
+ *  place a popover opened from the composer or the header relative to that surface and clip it (found in Chrome, 2026-10-28). */
+export function Layer({ children }: { children: React.ReactNode }) {
+  return createPortal(children, document.body) as React.ReactElement;
+}
 
 export function usePopover() {
   const [open, setOpen] = useState(false);
@@ -44,7 +52,7 @@ export function usePopover() {
 export default function MatterPicker({ variant = 'header' }: { variant?: 'header' | 'composer' }) {
   const matters = useMatters();
   const routeMatter = useCurrentMatter();
-  const { matter: chatMatter, setMatterId } = useChatMatter();
+  const { matter: chatMatter, matters: chosen, setMatterId, setMatterIds } = useChatMatter();
   const onChat = !!useMatch('/chat/*');
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -67,42 +75,64 @@ export default function MatterPicker({ variant = 'header' }: { variant?: 'header
     else if (routeMatter) navigate(`/m/${encodeURIComponent(m.number)}/overview`);
   };
   const choose = (m: Matter) => {
-    if (current?.id === m.id) { setOpen(false); return; }
+    if (current?.id === m.id && chosen.length <= 1) { setOpen(false); return; }
     const reasons = getBlockers();
     if (reasons.length) setPending({ target: m, reasons });
     else go(m);
   };
+  /** The composer: tick matters on and off; a new set is a new conversation. */
+  const toggle = (m: Matter) => {
+    const next = withMatter(chosen, m);
+    if (!next.length) return;                                   // a conversation is about at least one matter
+    setMatterIds(next.map((x) => x.id));
+    if (onChat) navigate('/chat');
+  };
 
   const composer = variant === 'composer';
+  const several = onChat && chosen.length > 1;
+  const label = !current ? '' : several
+    ? `${chosen.map((m) => m.number).join(', ')}. ${composer ? 'Change the matters' : 'Switch matter'}`
+    : `${current.number} ${current.title}. ${composer ? 'Change the matter' : 'Switch matter'}`;
   return (
     <>
       <button ref={button} type="button" className={composer ? 'qc-tool' : 'qc-matter-btn'} aria-haspopup="listbox" aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        aria-label={current ? `Matter: ${current.number} ${current.title}. ${composer ? 'Change the matter' : 'Switch matter'}`
-          : composer ? 'Pick the matter to ask about' : 'Choose a matter'}>
+        aria-label={current ? `${several ? 'Matters' : 'Matter'}: ${label}` : composer ? 'Pick the matter to ask about' : 'Choose a matter'}>
         {current && current.sensitivity !== 'standard' ? <Lock aria-label="Restricted" /> : <Briefcase className="qc-matter-ico" aria-hidden />}
-        <span>{current ? <>{current.number}<span className={composer ? '' : 'qc-hide-small'}> · {current.title}</span></> : 'Choose a matter'}</span>
+        <span>{!current ? 'Choose a matter' : several
+          ? <>{chosen[0].number}<span className="qc-matter-more"> + {chosen.length - 1} more</span></>
+          : <>{current.number}<span className={composer ? '' : 'qc-hide-small'}> · {current.title}</span></>}</span>
         <ChevronsUpDown aria-hidden />
       </button>
-      {open && (
+      {open && (<Layer>
         <div ref={pop} className="qc-pop" style={style}>
           <input className="lw-input" autoFocus placeholder="Find a matter…" aria-label="Find a matter" value={filter} onChange={(e) => setFilter(e.target.value)} />
-          <div className="qc-pop-label">Your matters</div>
-          <div role="listbox" aria-label="Your matters" style={{ maxHeight: 320, overflowY: 'auto' }}>
-            {list.map((m) => (
-              <button key={m.id} type="button" role="option" aria-selected={current?.id === m.id} className="qc-pop-item" onClick={() => choose(m)}>
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: 'block', fontWeight: 600 }}>{m.number} · {m.title}</span>
-                  <span className="qc-meta">{m.client.name}</span>
-                </span>
-              </button>
-            ))}
+          <div className="qc-pop-label">{composer ? `Ask about one matter or several (up to ${MAX_MATTERS})` : 'Your matters'}</div>
+          <div role="listbox" aria-label="Your matters" aria-multiselectable={composer || undefined} style={{ maxHeight: 320, overflowY: 'auto' }}>
+            {list.map((m) => {
+              const on = composer ? chosen.some((x) => x.id === m.id) : current?.id === m.id;
+              const full = composer && !on && chosen.length >= MAX_MATTERS;
+              return (
+                <button key={m.id} type="button" role="option" aria-selected={on} className="qc-pop-item" disabled={full}
+                  onClick={() => (composer ? toggle(m) : choose(m))}>
+                  {composer && <span className="qc-check" data-on={on || undefined} aria-hidden>{on && <Check />}</span>}
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: 'block', fontWeight: 600 }}>
+                      {m.number} · {m.title}{m.sensitivity === 'highly_restricted' && <Lock aria-label="Highly restricted" style={{ marginLeft: 6, verticalAlign: -2 }} />}
+                    </span>
+                    <span className="qc-meta">{m.client.name}</span>
+                  </span>
+                </button>
+              );
+            })}
             {matters.data && list.length === 0 && <p className="qc-meta" style={{ padding: '6px 10px' }}>No matching matters.</p>}
           </div>
           <p className="qc-meta" style={{ borderTop: '1px solid var(--rule)', margin: '6px 0 0', padding: '8px 10px 2px' }}>
-            Only matters you're a member of appear here. Each conversation uses one matter's documents.
+            {composer
+              ? 'Only your own matters appear. With several, every answer says which matter each source comes from; a highly restricted matter is discussed on its own.'
+              : "Only matters you're a member of appear here. To ask about several at once, choose them in the question box."}
           </p>
-        </div>)}
+        </div></Layer>)}
       {pending && (
         <Dialog title={`Switch to ${pending.target.number}?`} onClose={() => setPending(null)}
           footer={<>

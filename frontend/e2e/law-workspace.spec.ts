@@ -1600,3 +1600,36 @@ test('EchoMind Legal chat: a potential inconsistency found, inspected and explai
   await expect(alice.getByText(/uses only the documents in M-101/)).toBeVisible();
   await expect(alice.getByText(/M-202|Board investigation/)).toHaveCount(0);
 });
+
+test('EchoMind Legal chat across two matters: chosen together, compared side by side, every source labelled; a walled matter never offered', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await expect(alice.getByRole('heading', { name: 'How can I help you today?' })).toBeVisible();
+  const picker = () => alice.getByRole('button', { name: /Pick the matter to ask about|Change the matter/ });
+  for (const m of [/^M-101 /, /^M-114 /]) {
+    await picker().click();
+    const option = alice.getByRole('option', { name: m });
+    if ((await option.getAttribute('aria-selected')) !== 'true') await option.click();
+    await alice.keyboard.press('Escape');
+  }
+  await picker().click();
+  await expect(alice.getByRole('option', { name: /M-202/ })).toHaveCount(0);             // walled off: never offered
+  await alice.keyboard.press('Escape');
+  await expect(alice.locator('.qc-context b').first()).toHaveText('M-101, M-114');
+  const ask = async (text: string) => {
+    const box = alice.getByRole('textbox', { name: 'Ask EchoMind' });
+    await box.fill(text);
+    await box.press('Enter');
+  };
+  await ask('Compare these cases side by side');
+  const table = alice.locator('[data-component="case_table"]').first();
+  await expect(table).toBeVisible({ timeout: 60_000 });
+  await expect(table.getByRole('row')).toHaveCount(3);                                     // a header and one row per matter
+  await table.getByRole('button', { name: /Documents/ }).click();
+  await expect(table.getByRole('columnheader', { name: /Documents/ })).toHaveAttribute('aria-sort', 'ascending');
+  await shot(alice, '52-legal-chat-two-matters-light');
+  await ask('Build a chronology of events');
+  await expect(alice.locator('[data-component="timeline"]').first()).toBeVisible({ timeout: 120_000 });
+  await expect(alice.getByRole('navigation', { name: 'Recent conversations' }).getByText('M-101 + M-114').first()).toBeVisible();
+});

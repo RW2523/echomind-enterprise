@@ -21,7 +21,7 @@ from typing import Annotated, Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import BaseModel, Field, StringConstraints, ValidationError
+from pydantic import BaseModel, Field, StringConstraints, ValidationError, model_validator
 from starlette.concurrency import run_in_threadpool
 
 from ..audit.record import audited, note
@@ -38,17 +38,31 @@ def _not_found() -> HTTPException:
 
 
 def _own_conversation(p: dict, conversation_id: str) -> dict:
-    """The caller's conversation in a matter they may still research; anything else is 404."""
+    """The caller's conversation, in matters they may all still research; anything else is 404."""
     conv = store.conversation(conversation_id, p["sub"])
     if not conv or conv["org_id"] != p["org_id"]:
         raise _not_found()
-    require(p, "research.query", conv["matter_id"])
+    for mid in conv["matter_ids"]:
+        require(p, "research.query", mid)
     return conv
 
 
 # ── Conversations ────────────────────────────────────────────────────────────────
+_MatterId = Annotated[str, StringConstraints(min_length=1, max_length=80, pattern=r"^[A-Za-z0-9_.:-]+$")]
+
+
 class ConversationIn(BaseModel):
-    matter_id: str = _Id
+    """One matter (`matter_id`), or several (`matter_ids`, the first being the conversation's own; owner's request 2026-10-28)."""
+    matter_id: Optional[_MatterId] = None
+    matter_ids: list[_MatterId] = Field(default_factory=list, max_length=schemas.MAX_MATTERS)
+
+    @model_validator(mode="after")
+    def _one_or_more(self):
+        ids = list(dict.fromkeys(self.matter_ids or ([self.matter_id] if self.matter_id else [])))
+        if not ids:
+            raise ValueError("choose a matter")
+        self.matter_ids = ids
+        return self
 
 
 @router.get("/conversations")
@@ -63,9 +77,18 @@ def list_conversations(request: Request, matter_id: Optional[str] = None):
 @audited("counsel.conversation.create", object_type="matter", object_param=None)
 def create_conversation(inp: ConversationIn, request: Request):
     p = principal_of(request)
-    require(p, "research.query", inp.matter_id)
-    conv = store.create_conversation(p["org_id"], inp.matter_id, p["sub"])
-    note(object_type="conversation", object_id=conv["id"], matter_id=inp.matter_id)
+    for mid in inp.matter_ids:                                   # each one is the caller's to research (404/403 as anywhere)
+        require(p, "research.query", mid)
+    if len(inp.matter_ids) > 1:
+        from ...core.db import get_conn
+        with get_conn() as conn:
+            marks = {r[0]: r[1] for r in conn.execute(
+                f"SELECT id, sensitivity FROM matters WHERE id IN ({','.join('?' * len(inp.matter_ids))})", inp.matter_ids)}
+        if any(marks.get(m) == "highly_restricted" for m in inp.matter_ids):
+            raise HTTPException(status_code=409, detail="A highly restricted matter can only be discussed on its own.")
+    conv = store.create_conversation(p["org_id"], inp.matter_ids, p["sub"])
+    note(object_type="conversation", object_id=conv["id"], matter_id=inp.matter_ids[0],
+         details={"matters": inp.matter_ids} if len(inp.matter_ids) > 1 else None)
     return {"conversation": conv}
 
 
@@ -79,10 +102,11 @@ def read_conversation(conversation_id: str, request: Request):
         item = {"id": t["id"], "seq": t["seq"], "question": t["question"], "understood": t["understood"], "intent": t["intent"],
                 "status": t["status"], "created_at": t["created_at"], "finished_at": t["finished_at"]}
         if t["status"] in ("completed", "abstained"):
-            item["envelope"] = orchestrator.envelope_for(p, t)
+            item["envelope"] = orchestrator.envelope_for(p, t, conv)
         out.append(item)
-    note(matter_id=conv["matter_id"], details={"turns": len(out)})
-    return JSONResponse({"conversation": {k: conv[k] for k in ("id", "matter_id", "title", "created_at", "updated_at")}, "turns": out},
+    note(matter_id=conv["matter_id"], details={"turns": len(out), **({"matters": conv["matter_ids"]} if len(conv["matter_ids"]) > 1 else {})})
+    return JSONResponse({"conversation": {**{k: conv[k] for k in ("id", "matter_id", "title", "created_at", "updated_at")},
+                                          "matter_ids": conv["matter_ids"]}, "turns": out},
                         headers=_NO_STORE)
 
 
@@ -191,8 +215,10 @@ def component_action(inp: ActionIn, request: Request):
             raise HTTPException(status_code=409, detail="That idempotency key was used for another action.")
         return JSONResponse({**done["result"], "replayed": True}, headers=_NO_STORE)
     comp = store.component(inp.component_id, p["sub"])           # the component must be one this server gave this person
-    if not comp or comp["matter_id"] != inp.matter_id:
+    if not comp or comp["matter_id"] != inp.matter_id:            # its own matter, also in a conversation about several
         raise _not_found()
+    conv = store.conversation(comp["conversation_id"], p["sub"])
+    primary = conv["matter_id"] if conv else None
     require(p, "research.query", inp.matter_id)                  # the matter is still theirs to open
     if inp.action_id not in _ACTIONS.get(comp["type"], set()):
         raise HTTPException(status_code=400, detail="This card has no such action.")
@@ -209,12 +235,12 @@ def component_action(inp: ActionIn, request: Request):
     except discrepancies.Invalid as e:
         raise HTTPException(status_code=422, detail=str(e))
     except discrepancies.Conflict as e:
-        current = orchestrator.materialize(p, comp) if e.current else None
+        current = orchestrator.materialize(p, comp, primary) if e.current else None
         return JSONResponse({"detail": str(e), "code": "VERSION_CONFLICT", "component": current}, status_code=409, headers=_NO_STORE)
     from ..audit.record import record
     record("discrepancy.review", "allow", principal=p, object_type="discrepancy", object_id=did, matter_id=inp.matter_id,
            details={"status": params.resolution, "previous": {"status": row["from_status"]}, "note_chars": len(params.note or "")})
-    result = {"component": schemas.validate_component(orchestrator.materialize(p, comp))}
+    result = {"component": schemas.validate_component(orchestrator.materialize(p, comp, primary))}
     store.remember(p["sub"], inp.idempotency_key, inp.component_id, inp.action_id, result)
     return JSONResponse(result, headers=_NO_STORE)
 

@@ -4,7 +4,8 @@
  * inert placeholder. Limits mirror backend/app/legal/counsel/schemas.py.
  */
 import type {
-  ActionType, AnswerState, CitationRef, ComparisonSide, DiscrepancyStatus, Envelope, EvidenceComparisonProps, NoticeProps,
+  ActionType, AnswerState, CaseRow, CaseTableProps, CitationRef, ComparisonSide, DiscrepancyStatus, Envelope, EvidenceComparisonProps,
+  MatterRef, NoticeProps,
   PriorityItem, PriorityListProps, ReviewEntry, SafeComponent, SourceAnswerProps, TaskProgressProps, TimelineEvent, TimelineProps, UiAction,
 } from './types';
 
@@ -60,6 +61,13 @@ const ident = (v: unknown, what: string) => {
   return s;
 };
 
+const MATTER_NUMBER = /^[A-Za-z0-9._~ -]{1,40}$/;
+const optMatter = (v: unknown, what: string): string | undefined => {
+  const s = optStr(v, 40, what);
+  if (s !== undefined && !MATTER_NUMBER.test(s)) throw new Invalid(`${what}: not a matter number`);
+  return s;
+};
+
 /** The workspace's own pages an action may open (same allow-list as the server). */
 const PAGE = new RegExp(
   '^/m/[A-Za-z0-9._~%-]{1,96}/(?:overview|documents|compare|obligations|drafting|meetings|exports|activity'
@@ -98,6 +106,7 @@ function citation(v: unknown): CitationRef {
     version_status: optStr(o.version_status, 32, 'citation.version_status'), page: optInt(o.page, 'citation.page', 1),
     clause: optStr(o.clause, 40, 'citation.clause'), verified: bool(o.verified, 'citation.verified'),
     removed: o.removed === undefined ? false : bool(o.removed, 'citation.removed'),
+    matter: optMatter(o.matter, 'citation.matter'),
   };
 }
 
@@ -123,7 +132,8 @@ function priorityList(v: unknown): PriorityListProps {
     items: list(o.items, 3, 'items', (x) => {
       const i = obj(x, 'item');
       return { id: ident(i.id, 'item.id'), kind: oneOf(i.kind, ITEM_KINDS, 'item.kind'), title: str(i.title, 160, 'item.title'),
-               detail: i.detail === undefined ? '' : str(i.detail, 400, 'item.detail'), action: parseAction(i.action) };
+               detail: i.detail === undefined ? '' : str(i.detail, 400, 'item.detail'), action: parseAction(i.action),
+               matter: optMatter(i.matter, 'item.matter') };
     }),
     more: o.more === undefined ? 0 : int(o.more, 'more'), more_action: o.more_action === undefined ? undefined : parseAction(o.more_action),
     empty: optStr(o.empty, 300, 'empty'),
@@ -180,10 +190,33 @@ function timeline(v: unknown): TimelineProps {
         kind: oneOf(e.kind, EVENT_KINDS, 'event.kind'), reported: e.reported === undefined ? false : bool(e.reported, 'event.reported'),
         superseded: e.superseded === undefined ? false : bool(e.superseded, 'event.superseded'), text: str(e.text, 400, 'event.text'),
         status: optStr(e.status, 80, 'event.status'), notes: list(e.notes, 3, 'event.notes', (n) => str(n, 300, 'event.note')),
-        source: side(e.source),
+        source: side(e.source), matter: optMatter(e.matter, 'event.matter'),
       };
     }),
   };
+}
+
+function caseTable(v: unknown): CaseTableProps {
+  const o = obj(v, 'props');
+  const rows = list(o.rows, 10, 'rows', (x): CaseRow => {
+    const r = obj(x, 'row');
+    const path = str(r.path, 140, 'row.path');
+    if (!isWorkspacePath(path)) throw new Invalid('row.path outside the workspace');
+    const due = optStr(r.next_deadline, 10, 'row.next_deadline');
+    if (due !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(due)) throw new Invalid('row.next_deadline');
+    const number = str(r.number, 40, 'row.number');
+    if (!MATTER_NUMBER.test(number)) throw new Invalid('row.number');
+    return {
+      matter_id: ident(r.matter_id, 'row.matter_id'), number, title: str(r.title, 200, 'row.title'), client: str(r.client, 200, 'row.client'),
+      status: oneOf(r.status, ['open', 'closed', 'archived'] as const, 'row.status'),
+      sensitivity: oneOf(r.sensitivity, ['standard', 'restricted', 'highly_restricted'] as const, 'row.sensitivity'),
+      documents: int(r.documents, 'row.documents'), open_inconsistencies: optInt(r.open_inconsistencies, 'row.open'),
+      next_deadline: due, next_deadline_text: optStr(r.next_deadline_text, 200, 'row.next_deadline_text'),
+      deadline_state: optStr(r.deadline_state, 60, 'row.deadline_state'), last_activity: optStr(r.last_activity, 40, 'row.last_activity'), path,
+    };
+  });
+  if (!rows.length) throw new Invalid('a table has rows');
+  return { summary: str(o.summary, 400, 'summary'), rows, caution: str(o.caution, 400, 'caution') };
 }
 
 function taskProgress(v: unknown): TaskProgressProps {
@@ -204,15 +237,18 @@ export function parseComponent(v: unknown): SafeComponent {
   const version = typeof o.version === 'number' && Number.isInteger(o.version) && o.version >= 1 ? o.version : 1;
   try {
     if (id === 'cmp_invalid') throw new Invalid('component id');
+    const own = o.matter_id === undefined ? {} : { matter_id: ident(o.matter_id, 'matter_id') };    // its matter, when not the conversation's
+    const base = { id, version, ...own };
     switch (o.type) {
-      case 'source_answer': return { id, version, type: 'source_answer', props: sourceAnswer(o.props) };
-      case 'priority_list': return { id, version, type: 'priority_list', props: priorityList(o.props) };
+      case 'source_answer': return { ...base, type: 'source_answer', props: sourceAnswer(o.props) };
+      case 'priority_list': return { ...base, type: 'priority_list', props: priorityList(o.props) };
       case 'evidence_comparison':
-        return { id, version, type: 'evidence_comparison', data_ref: str(o.data_ref, 40, 'data_ref'), props: evidenceComparison(o.props) };
-      case 'timeline': return { id, version, type: 'timeline', props: timeline(o.props) };
-      case 'task_progress': return { id, version, type: 'task_progress', props: taskProgress(o.props) };
-      case 'notice': return { id, version, type: 'notice', props: notice(o.props) };
-      case 'unavailable': return { id, version, type: 'unavailable', props: { text: str(obj(o.props, 'props').text, 300, 'text') } };
+        return { ...base, type: 'evidence_comparison', data_ref: str(o.data_ref, 40, 'data_ref'), props: evidenceComparison(o.props) };
+      case 'timeline': return { ...base, type: 'timeline', props: timeline(o.props) };
+      case 'case_table': return { ...base, type: 'case_table', props: caseTable(o.props) };
+      case 'task_progress': return { ...base, type: 'task_progress', props: taskProgress(o.props) };
+      case 'notice': return { ...base, type: 'notice', props: notice(o.props) };
+      case 'unavailable': return { ...base, type: 'unavailable', props: { text: str(obj(o.props, 'props').text, 300, 'text') } };
       default: throw new Invalid(`unknown component type ${String(o.type).slice(0, 40)}`);
     }
   } catch (e) {
@@ -228,8 +264,17 @@ export function parseEnvelope(v: unknown): Envelope | null {
   for (const a of Array.isArray(v.suggested_actions) ? v.suggested_actions.slice(0, 4) : []) {
     try { actions.push(parseAction(a)); } catch { /* an action that does not validate is not offered */ }
   }
+  let matters: MatterRef[] | undefined;
+  try {
+    matters = list(v.matters, 5, 'matters', (x): MatterRef => {
+      const m = obj(x, 'matter');
+      const number = str(m.number, 40, 'matter.number');
+      if (!MATTER_NUMBER.test(number)) throw new Invalid('matter.number');
+      return { id: ident(m.id, 'matter.id'), number, title: str(m.title, 200, 'matter.title') };
+    });
+  } catch { matters = undefined; }                       // informational only: an unusable list is left out
   return {
-    schema_version: '1.0', message_id: v.message_id, matter_id: v.matter_id,
+    schema_version: '1.0', message_id: v.message_id, matter_id: v.matter_id, ...(matters?.length ? { matters } : {}),
     summary: typeof v.summary === 'string' ? v.summary.slice(0, 400) : '', components: comps.map(parseComponent), suggested_actions: actions,
   };
 }

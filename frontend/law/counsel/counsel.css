@@ -478,3 +478,44 @@
   [data-shell="counsel"] .lw-toolbar { flex-wrap: wrap; }
   [data-shell="counsel"] .lw-content > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
 }
+
+/* ── Several matters ────────────────────────────────────────────────────────── */
+.qc-check { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--neutral-line); display: inline-grid; place-items: center; flex: none; }
+.qc-check[data-on] { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
+.qc-check svg { width: 13px; height: 13px; color: #FFFFFF !important; }
+.qc-matter-more { color: var(--ink-3); font-weight: 500; }
+.qc-pop-item[disabled] { opacity: .45; cursor: not-allowed; }
+.qc-mtag { display: inline-flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .02em;
+  color: var(--tag-blue); background: var(--tag-blue-bg); white-space: nowrap; vertical-align: 1px; }
+
+/* ── Interactive chronology: filters and a month chart ───────────────────────── */
+.qc-filters { display: grid; gap: 10px; padding: 12px; border-radius: 12px; background: var(--fill-1); border: 1px solid var(--rule); }
+.qc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.qc-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--rule);
+  background: var(--paper); color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+[data-theme="dark"] .qc-chip { background: var(--fill-1); }
+.qc-chip:hover { border-color: var(--neutral-line); color: var(--ink); }
+.qc-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.qc-chip-n { font-size: 11px; opacity: .8; }
+.qc-chart { display: flex; align-items: flex-end; gap: 6px; height: 92px; padding-top: 4px; overflow-x: auto; }
+.qc-bar { position: relative; flex: 1 0 34px; max-width: 64px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
+  align-items: center; gap: 3px; border: none; background: none; padding: 0 0 16px; cursor: pointer; color: var(--ink-3); font: inherit; }
+.qc-bar-fill { width: 70%; border-radius: 6px 6px 2px 2px; background: color-mix(in srgb, var(--gold) 55%, transparent); transition: background var(--dur-1); }
+.qc-bar:hover .qc-bar-fill { background: var(--gold); }
+.qc-bar[aria-pressed="true"] .qc-bar-fill { background: var(--accent); }
+.qc-bar-n { position: absolute; top: 0; font-size: 11px; font-weight: 700; color: var(--ink-2); }
+.qc-bar-label { position: absolute; bottom: 0; font-size: 10.5px; white-space: nowrap; }
+.qc-bar[aria-pressed="true"] .qc-bar-label { color: var(--ink); font-weight: 700; }
+
+/* ── Cases side by side ─────────────────────────────────────────────────────── */
+.qc-table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; }
+.qc-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 620px; }
+.qc-table th, .qc-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--rule); }
+.qc-table thead th { border-top: none; background: var(--fill-1); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
+.qc-table thead button { display: inline-flex; align-items: center; gap: 4px; border: none; background: none; padding: 0; font: inherit; color: inherit;
+  text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
+.qc-table thead button svg { width: 13px; height: 13px; }
+.qc-table thead th[aria-sort="ascending"], .qc-table thead th[aria-sort="descending"] { color: var(--ink); }
+.qc-table tbody th { font-weight: 600; }
+.qc-table .qc-num { font-variant-numeric: tabular-nums; }
+.qc-row-lock { width: 13px; height: 13px; margin-left: 6px; color: var(--gold-ink); vertical-align: -2px; }

@@ -335,4 +335,16 @@ def test_a_question_about_what_someone_said_is_read_as_their_account():
         f"Question: {q}\n(That is: when, according to Witness B, the delivery took place.)\n\nSources:")
     plain = "What is the notice period?"
     assert prompt.build(plain, [])[-1]["content"].startswith(f"Question: {plain}\n\nSources:")      # as before S2.4
-    assert "\n8. " not in prompt.SYSTEM and prompt.VERSION == "research-s2.4"
+    assert "\n8. " not in prompt.SYSTEM and prompt.VERSION.startswith("research-s2.")
+
+
+def test_a_quote_that_itself_contains_quotation_marks_is_read_whole():
+    """Chrome, 2026-10-28: the model quoted a clause that quotes the words it inserts; the citation was shown as raw text."""
+    from app.legal.research import evidence
+    raw = ('An amendment moved it [5: "1.1 Clause 4.2 is deleted and replaced with: "The Supplier shall complete delivery by '
+           'May 20, 2026.""]. The cap is unchanged [2: "capped at USD 250,000"].')
+    para = evidence.parse(raw)
+    assert para.display == "An amendment moved it [5]. The cap is unchanged [2]."
+    assert [(c.n, c.quote) for cl in para.claims for c in cl.citations] == [
+        (5, '1.1 Clause 4.2 is deleted and replaced with: "The Supplier shall complete delivery by May 20, 2026."'),
+        (2, "capped at USD 250,000")]

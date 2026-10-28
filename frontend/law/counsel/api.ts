@@ -26,8 +26,10 @@ export interface ActionResult { ok: boolean; status: number; message: string; co
 export const counselApi = {
   conversations: (matterId?: string) =>
     api.get<{ conversations: ConversationSummary[] }>(`${BASE}/conversations${matterId ? `?matter_id=${encodeURIComponent(matterId)}` : ''}`),
-  create: (matterId: string) => api.post<{ conversation: { id: string; matter_id: string; title: string } }>(`${BASE}/conversations`, { matter_id: matterId }),
-  read: (id: string) => api.get<{ conversation: { id: string; matter_id: string; title: string }; turns: StoredTurn[] }>(
+  /** A conversation about one matter, or several (the first is its own). */
+  create: (matterIds: string[]) => api.post<{ conversation: { id: string; matter_id: string; matter_ids?: string[]; title: string } }>(
+    `${BASE}/conversations`, matterIds.length > 1 ? { matter_ids: matterIds } : { matter_id: matterIds[0] }),
+  read: (id: string) => api.get<{ conversation: { id: string; matter_id: string; matter_ids?: string[]; title: string }; turns: StoredTurn[] }>(
     `${BASE}/conversations/${encodeURIComponent(id)}`),
   ask: (id: string, body: AskBody, onEvent: (e: { event: string; data: any }) => void, signal?: AbortSignal) =>
     postStream(`${BASE}/conversations/${encodeURIComponent(id)}/turns`, body, onEvent, signal),

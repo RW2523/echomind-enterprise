@@ -22,7 +22,7 @@ import { useSession } from '../app/session';
 import { isMac, PaletteProvider, useOpenPalette } from '../ui/Palette';
 import { counselApi } from './api';
 import { ChatMatterProvider, PanelProvider, useChatMatter, usePanel } from './context';
-import MatterPicker, { usePopover } from './MatterPicker';
+import MatterPicker, { Layer, usePopover } from './MatterPicker';
 import SidePanel from './SidePanel';
 import './counsel.css';
 
@@ -42,14 +42,14 @@ function PrivacyStatus() {
       <button ref={button} type="button" className="qc-status" aria-expanded={open} onClick={() => setOpen((o) => !o)} aria-label="Private: about where answers come from">
         <ShieldCheck aria-hidden /><span className="qc-narrow-sr">Private</span>
       </button>
-      {open && (
+      {open && (<Layer>
         <div ref={pop} className="qc-pop" role="dialog" aria-label="Private" style={{ ...style, padding: 14 }}>
           <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Private to this appliance</p>
           <p className="qc-meta" style={{ margin: 0 }}>
             Answers are produced on this EchoMind appliance by its own model, only from the documents of the matter you chose and only
             those you may read. No cloud service is used to answer. Every question, source opened and decision is recorded in the audit trail.
           </p>
-        </div>)}
+        </div></Layer>)}
     </>
   );
 }
@@ -87,7 +87,7 @@ function ProfileMenu() {
           <b>{me.user.username}</b><small>{ROLE_LABEL[me.user.roles[0] ?? me.user.role] ?? 'Member'}</small>
         </span>
       </button>
-      {open && (
+      {open && (<Layer>
         <div ref={pop} className="qc-pop" role="menu" aria-label="Account and settings" style={style}>
           <div className="qc-pop-label">{me.user.username}</div>
           <button type="button" role="menuitem" className="qc-pop-item" onClick={() => go('/account/security')}><KeyRound aria-hidden />Security</button>
@@ -100,7 +100,7 @@ function ProfileMenu() {
           ))}
           <div className="qc-pop-sep" />
           <button type="button" role="menuitem" className="qc-pop-item" onClick={signOut}><LogOut aria-hidden />Sign out</button>
-        </div>)}
+        </div></Layer>)}
     </>
   );
 }
@@ -156,7 +156,7 @@ function History() {
       <nav className="qc-history qc-hide-collapsed" aria-label="Recent conversations">
         {items.slice(0, 12).map((c) => (
           <NavLink key={c.id} to={`/chat/${c.id}`} className={({ isActive }) => `qc-history-item${isActive ? ' active' : ''}`}>
-            <span>{c.title}</span><small>{c.matter.number}</small>
+            <span>{c.title}</span><small>{(c.matters?.length ?? 0) > 1 ? c.matters!.map((m) => m.number).join(' + ') : c.matter.number}</small>
           </NavLink>
         ))}
       </nav>

@@ -27,24 +27,39 @@ def _title(question: str) -> str:
 
 
 # ── Conversations ────────────────────────────────────────────────────────────────
-def create_conversation(org_id: str, matter_id: str, owner_id: str) -> dict:
+def create_conversation(org_id: str, matter_ids: list[str], owner_id: str) -> dict:
+    """A conversation about one matter, or several (the first is its own matter). The caller has authorized each."""
     cid, now = new_id("conv"), policy.now_iso()
     with get_conn() as conn:
         conn.execute("INSERT INTO legal_conversations (id, org_id, matter_id, owner_id, title, created_at, updated_at) "
-                     "VALUES (?,?,?,?,?,?,?)", (cid, org_id, matter_id, owner_id, NEW_TITLE, now, now))
+                     "VALUES (?,?,?,?,?,?,?)", (cid, org_id, matter_ids[0], owner_id, NEW_TITLE, now, now))
+        if len(matter_ids) > 1:
+            conn.executemany("INSERT INTO legal_conversation_matters (conversation_id, matter_id, position) VALUES (?,?,?)",
+                             [(cid, m, i) for i, m in enumerate(matter_ids)])
         conn.commit()
-    return {"id": cid, "matter_id": matter_id, "title": NEW_TITLE, "created_at": now, "updated_at": now, "turns": 0}
+    return {"id": cid, "matter_id": matter_ids[0], "matter_ids": list(matter_ids), "title": NEW_TITLE, "created_at": now,
+            "updated_at": now, "turns": 0}
+
+
+def matter_ids(conn, conversation_id: str, primary: str) -> list[str]:
+    rows = conn.execute("SELECT matter_id FROM legal_conversation_matters WHERE conversation_id=? ORDER BY position",
+                        (conversation_id,)).fetchall()
+    return [r[0] for r in rows] or [primary]
 
 
 def conversation(conversation_id: str, owner_id: str) -> Optional[dict]:
     with get_conn() as conn:
         r = conn.execute("SELECT id, org_id, matter_id, owner_id, title, created_at, updated_at FROM legal_conversations "
                          "WHERE id=? AND owner_id=?", (conversation_id, owner_id)).fetchone()
-    return dict(zip(("id", "org_id", "matter_id", "owner_id", "title", "created_at", "updated_at"), r)) if r else None
+        if not r:
+            return None
+        conv = dict(zip(("id", "org_id", "matter_id", "owner_id", "title", "created_at", "updated_at"), r))
+        conv["matter_ids"] = matter_ids(conn, conv["id"], conv["matter_id"])
+    return conv
 
 
 def list_conversations(principal: dict, matter_id: Optional[str] = None, limit: int = 50) -> list[dict]:
-    """The owner's conversations in matters they can still open, newest first."""
+    """The owner's conversations whose matters they can all still open, newest first."""
     args = {"uid": principal["sub"], "org": principal["org_id"], "now": policy.now_iso(), "lim": int(limit)}
     extra = ""
     if matter_id:
@@ -55,8 +70,18 @@ def list_conversations(principal: dict, matter_id: Optional[str] = None, limit: 
             "(SELECT COUNT(*) FROM legal_conversation_turns t WHERE t.conversation_id = c.id) "
             f"FROM legal_conversations c JOIN matters m ON m.id = c.matter_id WHERE c.owner_id = :uid{extra} "
             f"AND {policy.visible_matters_sql()} ORDER BY c.updated_at DESC LIMIT :lim", args).fetchall()
-    return [{"id": r[0], "title": r[1], "created_at": r[2], "updated_at": r[3],
-             "matter": {"id": r[4], "number": r[5], "title": r[6]}, "turns": r[7]} for r in rows]
+        out = []
+        for r in rows:
+            ids = matter_ids(conn, r[0], r[4])
+            if len(ids) > 1 and not all(policy.authorize(principal, "research.query", m).allowed for m in ids):
+                continue                                   # a conversation is listed only while every one of its matters is open
+            others = [conn.execute("SELECT id, number, title FROM matters WHERE id=?", (m,)).fetchone() for m in ids[1:]]
+            out.append({"id": r[0], "title": r[1], "created_at": r[2], "updated_at": r[3],
+                        "matter": {"id": r[4], "number": r[5], "title": r[6]},
+                        "matters": [{"id": r[4], "number": r[5], "title": r[6]}] + [{"id": o[0], "number": o[1], "title": o[2]}
+                                                                                   for o in others if o],
+                        "turns": r[7]})
+    return out
 
 
 def touch(conversation_id: str, title_from: Optional[str] = None) -> None:
@@ -152,11 +177,12 @@ def history(conversation_id: str, owner_id: str, before_seq: int, limit: int = 4
 
 
 # ── Components ───────────────────────────────────────────────────────────────────
-def save_component(component: dict, turn: dict, document_ids: list[str]) -> None:
+def save_component(component: dict, turn: dict, document_ids: list[str], matter_id: Optional[str] = None) -> None:
+    """A shown component, under the matter it belongs to (in a conversation about several, not always the first)."""
     with get_conn() as conn:
         conn.execute("INSERT INTO legal_counsel_components (id, conversation_id, turn_id, matter_id, owner_id, type, props_json, "
                      "document_ids_json, created_at) VALUES (?,?,?,?,?,?,?,?,?)",
-                     (component["id"], turn["conversation_id"], turn["id"], turn["matter_id"], turn["owner_id"], component["type"],
+                     (component["id"], turn["conversation_id"], turn["id"], matter_id or turn["matter_id"], turn["owner_id"], component["type"],
                       json.dumps(component["props"], ensure_ascii=False), json.dumps(sorted(set(document_ids))), policy.now_iso()))
         conn.commit()
 

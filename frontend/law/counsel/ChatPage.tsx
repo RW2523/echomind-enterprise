@@ -8,7 +8,7 @@ import { useLocation, useNavigate, useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowUp, BookOpenText, CalendarClock, CalendarRange, ClipboardList, FilePen, ListChecks, Lock, Mic, Paperclip, Scale, ScrollText,
+  ArrowUp, BookOpenText, CalendarClock, CalendarRange, ClipboardList, Columns3, FilePen, ListChecks, Lock, Mic, Paperclip, Scale, ScrollText,
   Square, Users2, X,
 } from 'lucide-react';
 import { ApiError } from '../api/client';
@@ -19,8 +19,8 @@ import { useSession } from '../app/session';
 import { counselApi, requestId, type StoredTurn } from './api';
 import { ActionButtons, AnswerText, ComponentView, type CardContext } from './cards';
 import { useChatMatter, usePanel } from './context';
-import MatterPicker, { usePopover } from './MatterPicker';
-import { parseEnvelope, parseTaskProgress } from './validate';
+import MatterPicker, { Layer, usePopover } from './MatterPicker';
+import { parseComponent, parseEnvelope, parseTaskProgress } from './validate';
 import type { ChatTurn, SafeComponent } from './types';
 
 /** Questions any matter's documents can answer (or say they cannot). */
@@ -39,6 +39,13 @@ const ASK_TILES: Tile[] = [
   { key: 'chronology', title: 'Build a chronology of events', about: 'Every stated date in order, with its source', icon: CalendarRange, hue: 'teal', ask: 'Build a chronology of events' },
   { key: 'summary', title: 'Summarize this matter', about: 'A cited overview from its documents', icon: ScrollText, hue: 'indigo', ask: 'Summarize this matter from its documents' },
 ];
+/** With several matters: the same answers across all of them, and the matters side by side instead of one summary. */
+const SEVERAL_TILES: Tile[] = [
+  { ...ASK_TILES[0], about: 'One briefing across the chosen matters' },
+  { ...ASK_TILES[1], about: 'Checked inside each matter, never across' },
+  { ...ASK_TILES[2], about: 'Every matter\'s dates in one timeline, labelled' },
+  { key: 'cases', title: 'Compare these cases', about: 'Side by side: deadlines, documents, open items', icon: Columns3, hue: 'indigo', ask: 'Compare these cases side by side' },
+];
 const PAGE_TILES: Tile[] = [
   { key: 'meetings', title: 'Record a meeting', about: 'Live transcript and Silent Assist, with everyone\'s consent', icon: CalendarClock, hue: 'violet', page: 'meetings' },
   { key: 'conversation', title: 'Ask by voice', about: 'Speak a question; hear the cited answer', icon: Mic, hue: 'blue', page: 'conversation' },
@@ -48,13 +55,14 @@ const PAGE_TILES: Tile[] = [
   { key: 'diligence', title: 'Run due diligence', about: 'A checklist across the data room, with evidence', icon: ClipboardList, hue: 'slate', page: 'diligence' },
 ];
 
-/** Eight tiles: the chat's four kinds of answer, then the matter's own pages this person can open (or the matter list). */
-function useTiles(matter: Matter | null): (Tile & { to?: string })[] {
+/** Eight tiles: the chat's four kinds of answer, then the first matter's own pages this person can open (or the matter list). */
+function useTiles(matter: Matter | null, several: boolean): (Tile & { to?: string })[] {
   const me = useSession();
-  if (!matter) return [...ASK_TILES, ...PAGE_TILES.slice(0, 4).map((t) => ({ ...t, to: '/matters' }))];
+  const asks = several ? SEVERAL_TILES : ASK_TILES;
+  if (!matter) return [...asks, ...PAGE_TILES.slice(0, 4).map((t) => ({ ...t, to: '/matters' }))];
   const pages = new Map(matterEntries(me, matter).map((e) => [e.key, e.to]));
   const open = PAGE_TILES.filter((t) => pages.has(t.page!)).slice(0, 4);
-  return [...ASK_TILES, ...open.map((t) => ({ ...t, to: pages.get(t.page!) }))];
+  return [...asks, ...open.map((t) => ({ ...t, to: pages.get(t.page!) }))];
 }
 const FINISHED = new Set(['completed', 'abstained']);
 
@@ -72,7 +80,8 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const matters = useMatters();
-  const { matter, matterId, setMatterId } = useChatMatter();
+  const { matter, matterId, matters: chosen, matterIds, setMatterId, setMatterIds } = useChatMatter();
+  const several = chosen.length > 1;
   const panel = usePanel();
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [convId, setConvId] = useState<string | undefined>(conversationId);
@@ -85,7 +94,7 @@ export default function ChatPage() {
   const abort = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
-  const tiles = useTiles(matter);
+  const tiles = useTiles(matter, several);
   const busy = turns.some((t) => t.status === 'streaming');
 
   useEffect(() => {
@@ -96,7 +105,7 @@ export default function ChatPage() {
     counselApi.read(conversationId).then((r) => {
       if (!alive) return;
       setConvId(r.conversation.id);
-      setMatterId(r.conversation.matter_id);
+      setMatterIds(r.conversation.matter_ids?.length ? r.conversation.matter_ids : [r.conversation.matter_id]);
       setTurns(r.turns.map(fromStored));
     }).catch((e) => {
       if (!alive) return;
@@ -104,7 +113,7 @@ export default function ChatPage() {
       setLoadError(e instanceof ApiError && e.status === 404 ? 'This conversation is not available.' : 'This conversation could not be opened.');
     });
     return () => { alive = false; };
-  }, [conversationId, setMatterId]);
+  }, [conversationId, setMatterIds]);
 
   useEffect(() => () => abort.current?.abort(), []);
 
@@ -128,7 +137,7 @@ export default function ChatPage() {
     let id = convId;
     if (!id) {
       try {
-        id = (await counselApi.create(matterId)).conversation.id;
+        id = (await counselApi.create(matterIds)).conversation.id;
       } catch (e) {
         setLoadError(e instanceof ApiError ? e.message : 'The conversation could not be started.');
         return;
@@ -153,6 +162,11 @@ export default function ChatPage() {
           case 'turn.understood': patch(key, { understood: String(e.data?.question ?? '') }); break;
           case 'task.progress': patch(key, { progress: parseTaskProgress(e.data) ?? undefined }); break;
           case 'answer.delta': patch(key, (t) => ({ text: t.text + String(e.data?.text ?? '') })); break;
+          case 'ui.partial': {                                    // a card ready before the whole answer
+            const comp = parseComponent(e.data);
+            if (comp.type !== 'inert') patch(key, (t) => ({ partial: [...(t.partial ?? []).filter((c) => c.id !== comp.id), comp] }));
+            break;
+          }
           case 'ui.final': {
             const env = parseEnvelope(e.data);
             patch(key, env ? { envelope: env } : { status: 'failed', error: 'The answer could not be shown.' });
@@ -173,7 +187,7 @@ export default function ChatPage() {
       abort.current = null;
       void qc.invalidateQueries({ queryKey: ['counsel', 'conversations'] });
     }
-  }, [busy, matterId, convId, attached, navigate, patch, qc]);
+  }, [busy, matterId, matterIds, convId, attached, navigate, patch, qc]);
 
   const location = useLocation();
   const handed = useRef(false);
@@ -195,6 +209,7 @@ export default function ChatPage() {
 
   const ctxFor = (t: ChatTurn): CardContext => ({
     matterId: t.envelope?.matter_id ?? matterId ?? '',
+    matterNumber: (id) => (t.envelope?.matters ?? []).find((m) => m.id === id)?.number,
     busy,
     ask: (text, opts) => { void ask(text, opts); },
     openCitation: (c, opener) => panel.open({ kind: 'citation', id: c.id, onUse: c.removed ? undefined : () => {
@@ -209,8 +224,9 @@ export default function ChatPage() {
   const start = !conversationId && turns.length === 0;
   const composer = (
     <Composer value={draft} onChange={setDraft} busy={busy} onSend={() => void ask(draft)} onStop={() => abort.current?.abort()} hero={start}
-      placeholder={matter ? `Ask anything about ${matter.number}: its documents, dates, parties or obligations…` : 'Ask about a matter…'}
-      attached={attached} onAttach={setAttached} matterId={matterId} inputRef={input}
+      placeholder={several ? `Ask across ${chosen.map((m) => m.number).join(', ')}: every source says which matter it is from…`
+        : matter ? `Ask anything about ${matter.number}: its documents, dates, parties or obligations…` : 'Ask about a matter…'}
+      attached={attached} onAttach={setAttached} matterId={several ? null : matterId} inputRef={input}
       onDetach={(id) => setAttached((a) => a.filter((x) => x.id !== id))} />
   );
   return (
@@ -222,9 +238,12 @@ export default function ChatPage() {
           <div className="qc-hero">
             <span className="qc-eyebrow">Private legal workspace</span>
             <h1>How can I help you today?</h1>
-            <p className="qc-context">{matter
-              ? <>Working on <b>{matter.number} · {matter.title}</b>. Answers come only from its documents, and every quote is checked.</>
-              : 'Choose a matter, then ask. Answers come only from that matter\'s documents, and every quote is checked.'}</p>
+            <p className="qc-context">{several
+              ? <>Working across <b>{chosen.map((m) => m.number).join(', ')}</b>. Each answer says which matter every source comes from{
+                new Set(chosen.map((m) => m.client.id)).size > 1 ? <>; these matters belong to <b>different clients</b>, so keep each client's information to its own work</> : ''}.</>
+              : matter
+                ? <>Working on <b>{matter.number} · {matter.title}</b>. Answers come only from its documents, and every quote is checked.</>
+                : 'Choose one matter or several, then ask. Answers come only from those matters\' documents, and every quote is checked.'}</p>
           </div>
           <div className="qc-tiles" role="group" aria-label="Start with">
             {tiles.map((t) => (
@@ -275,7 +294,7 @@ function MatterQuestion({ matters, onPick, onCancel }: { matters: { id: string; 
 }
 
 function TurnView({ t, ctx, onRetry, onStop }: { t: ChatTurn; ctx: CardContext; onRetry: () => void; onStop: () => void }) {
-  const comps = t.envelope?.components ?? [];
+  const comps = t.envelope?.components ?? (t.status === 'streaming' ? t.partial ?? [] : []);
   return (
     <article className="qc-turn" style={{ display: 'grid', gap: 12 }} aria-busy={t.status === 'streaming'}>
       <div className="qc-q">{t.question}</div>
@@ -318,7 +337,7 @@ function DocumentPicker({ matterId, attached, onAttach }: { matterId: string; at
       <button ref={button} type="button" className="qc-tool" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         <Paperclip aria-hidden /><span>{attached.length ? `Only from ${attached.length} document${attached.length === 1 ? '' : 's'}` : 'Choose documents'}</span>
       </button>
-      {open && (
+      {open && (<Layer>
         <div ref={pop} className="qc-pop" role="dialog" aria-label="Answer only from these documents" style={{ ...style, padding: 10, width: 380 }}>
           <div className="qc-pop-label" style={{ paddingTop: 2 }}>Answer only from…</div>
           {docs.isPending ? <p className="qc-meta" style={{ padding: '4px 8px' }}>Loading the documents…</p> : ready.length ? (
@@ -335,7 +354,7 @@ function DocumentPicker({ matterId, attached, onAttach }: { matterId: string; at
           <p className="qc-meta" style={{ borderTop: '1px solid var(--rule)', margin: '8px 0 0', padding: '8px 8px 2px' }}>
             With none ticked, answers use every document of the matter you may read.
           </p>
-        </div>)}
+        </div></Layer>)}
     </>
   );
 }

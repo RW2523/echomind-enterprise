@@ -28,6 +28,7 @@ export interface CitationRef {
   clause?: string;
   verified: boolean;
   removed: boolean;
+  matter?: string;                   // in a conversation about several matters: the source's matter
 }
 
 export interface SourceAnswerProps {
@@ -45,6 +46,7 @@ export interface PriorityItem {
   title: string;
   detail: string;
   action: UiAction;
+  matter?: string;
 }
 
 export interface PriorityListProps {
@@ -99,20 +101,32 @@ export interface TimelineEvent {
   status?: string;
   notes: string[];
   source: ComparisonSide;
+  matter?: string;
 }
 
 export interface TimelineProps { summary: string; events: TimelineEvent[]; more: number; caution: string }
+
+/** One matter as its records stand (several matters side by side). */
+export interface CaseRow {
+  matter_id: string; number: string; title: string; client: string;
+  status: 'open' | 'closed' | 'archived'; sensitivity: 'standard' | 'restricted' | 'highly_restricted';
+  documents: number; open_inconsistencies?: number; next_deadline?: string; next_deadline_text?: string; deadline_state?: string;
+  last_activity?: string; path: string;
+}
+export interface CaseTableProps { summary: string; rows: CaseRow[]; caution: string }
+export interface MatterRef { id: string; number: string; title: string }
 
 export interface TaskProgressProps { label: string; done: number; total: number; state: 'running' | 'done' | 'canceled' | 'failed' }
 export interface NoticeProps { tone: 'info' | 'caution'; text: string }
 export interface UnavailableProps { text: string }
 
-interface Base { id: string; version: number }
+interface Base { id: string; version: number; matter_id?: string }
 export type SafeComponent =
   | (Base & { type: 'source_answer'; props: SourceAnswerProps })
   | (Base & { type: 'priority_list'; props: PriorityListProps })
   | (Base & { type: 'evidence_comparison'; data_ref: string; props: EvidenceComparisonProps })
   | (Base & { type: 'timeline'; props: TimelineProps })
+  | (Base & { type: 'case_table'; props: CaseTableProps })
   | (Base & { type: 'task_progress'; props: TaskProgressProps })
   | (Base & { type: 'notice'; props: NoticeProps })
   | (Base & { type: 'unavailable'; props: UnavailableProps })
@@ -123,6 +137,7 @@ export interface Envelope {
   schema_version: '1.0';
   message_id: string;
   matter_id: string;
+  matters?: MatterRef[];             // when the conversation covers several matters
   summary: string;
   components: SafeComponent[];
   suggested_actions: UiAction[];
@@ -139,6 +154,7 @@ export interface ChatTurn {
   text: string;
   progress?: TaskProgressProps;
   envelope?: Envelope;
+  partial?: SafeComponent[];         // components shown as soon as they are ready, before the whole answer (ui.partial)
   error?: string;
 }
 
@@ -148,6 +164,7 @@ export interface ConversationSummary {
   created_at: string;
   updated_at: string;
   matter: { id: string; number: string; title: string };
+  matters?: { id: string; number: string; title: string }[];
   turns: number;
 }
 

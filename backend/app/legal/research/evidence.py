@@ -24,7 +24,9 @@ from dataclasses import dataclass, field
 from typing import Callable, Optional
 
 # A quote may contain escaped quotes, as models write them: [2: "Harrowgate Systems Inc. (\"Provider\")"].
-_CITE = re.compile(r"\[(\d{1,2})(?::\s*[\"“”]((?:\\.|[^\"“”\\])+)[\"“”]\s*)?\]", re.S)
+# A quote may itself contain quotation marks (a clause quoting the words it inserts: [5: "… replaced with: "The Supplier …""]),
+# so it runs to the first closing mark followed by "]", never past its own bracket (seen in Chrome, 2026-10-28).
+_CITE = re.compile(r"\[(\d{1,2})(?::\s*[\"“”]((?:\\.|[^\\\]])+?)[\"“”]\s*)?\]", re.S)
 _TOKEN = re.compile("\x00(\\d+)\x01")
 # Single and double quotes of every style fold to one mark; Markdown markup (*, #, >, _, `) is not wording (S2.3).
 _FOLD = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201b": "'", "\u2032": "'", "\u201c": "'", "\u201d": "'", "\u201e": "'",

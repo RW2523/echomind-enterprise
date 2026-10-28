@@ -83,15 +83,16 @@ def from_research(turn: dict, done: dict) -> list[dict]:
             cid = store.new_id("cit")
             conn.execute("INSERT INTO legal_counsel_citations (id, turn_id, matter_id, owner_id, n, document_id, version_id, char_start, "
                          "char_end, quote_sha256, verification, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                         (cid, turn["id"], turn["matter_id"], turn["owner_id"], n, src["document_id"], vid, a, b, digest,
-                          verification, now))
+                         (cid, turn["id"], src.get("matter_id") or turn["matter_id"], turn["owner_id"], n, src["document_id"], vid,
+                          a, b, digest, verification, now))
             page = (e or {}).get("page_start") or src.get("page_start")
             out.append({"id": cid, "n": n, "document_id": src["document_id"], "document_title": src.get("document_title") or "",
                         "version_number": src.get("version_number"), "version_status": src.get("version_status"),
                         "page": page if isinstance(page, int) and page >= 1 else None,
                         "clause": ((e or {}).get("clause") or src.get("clause") or None),
                         "verified": verification in VERIFIED,
-                        "instructions": bool(src.get("instructions"))})
+                        "instructions": bool(src.get("instructions")),
+                        **({"matter": src["matter_number"]} if src.get("matter_number") else {})})
         conn.commit()
     return out
 

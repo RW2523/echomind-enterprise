@@ -3,19 +3,21 @@
  * below; anything else is the inert placeholder. Every string from the server is rendered as text (React escapes it);
  * nothing is parsed as HTML or markdown, and only the workspace's own pages can be opened.
  */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  AlertTriangle, BadgeCheck, CalendarDays, CheckCircle2, CircleDashed, FileSearch, FileX, Info, ListChecks, Scale,
+  AlertTriangle, ArrowDown, ArrowUp, BadgeCheck, CalendarDays, CheckCircle2, CircleDashed, Columns3, FileSearch, FileX, Info, ListChecks, Lock,
+  Scale,
 } from 'lucide-react';
 import { counselApi, requestId } from './api';
 import { isWorkspacePath, parseComponent } from './validate';
 import type {
-  CitationRef, ComparisonSide, DiscrepancyStatus, EvidenceComparisonProps, NoticeProps, PriorityListProps, SafeComponent,
-  SourceAnswerProps, TimelineEvent, TimelineProps, UiAction,
+  CaseRow, CaseTableProps, CitationRef, ComparisonSide, DiscrepancyStatus, EvidenceComparisonProps, NoticeProps, PriorityListProps,
+  SafeComponent, SourceAnswerProps, TimelineEvent, TimelineProps, UiAction,
 } from './types';
 
 export interface CardContext {
   matterId: string;
+  matterNumber?: (matterId: string) => string | undefined;   // in a conversation about several matters
   busy: boolean;
   ask: (text: string, opts?: { document_ids?: string[]; focus?: string }) => void;
   openCitation: (c: CitationRef, opener: HTMLElement | null) => void;
@@ -93,11 +95,17 @@ export function AnswerText({ text, citations, ctx, pending, labels }: {
       {paragraphs.map((p, i) => {
         const parts: React.ReactNode[] = [];
         let last = 0;
+        let prev: number | null = null;                   // "[1][1]" (two quotes from one source) shows one chip
         for (const m of p.matchAll(MARK)) {
           const ns = m[1].split(',').map((x) => Number(x.trim()));
           if (!pending && !ns.every((n) => byN.has(n))) continue;
-          parts.push(p.slice(last, m.index));
-          ns.forEach((n) => parts.push(<CitationChip key={`${m.index}-${n}`} n={n} c={byN.get(n)} ctx={ctx} pending={pending} label={labels?.get(n)} />));
+          const between = p.slice(last, m.index);
+          if (between.trim()) prev = null;
+          parts.push(between);
+          ns.forEach((n) => {
+            if (n !== prev) parts.push(<CitationChip key={`${m.index}-${n}`} n={n} c={byN.get(n)} ctx={ctx} pending={pending} label={labels?.get(n)} />);
+            prev = n;
+          });
           last = (m.index ?? 0) + m[0].length;
         }
         parts.push(p.slice(last));
@@ -132,9 +140,10 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
             <button key={c.id} type="button" className="qc-source" data-verified={c.verified ? 'true' : 'false'} disabled={c.removed}
               onClick={(e) => ctx.openCitation(c, e.currentTarget)}
               aria-label={c.removed ? `Source ${labels.get(c.n) ?? c.n}: the document was deleted`
-                : `Open source ${labels.get(c.n) ?? c.n}: ${c.document_title}${c.page ? `, page ${c.page}` : ''}`}>
+                : `Open source ${labels.get(c.n) ?? c.n}: ${c.document_title}${c.page ? `, page ${c.page}` : ''}${c.matter ? `, ${c.matter}` : ''}`}>
               {c.verified ? <BadgeCheck aria-hidden /> : <CircleDashed aria-hidden />}
               <b>{labels.get(c.n) ?? c.n}</b>
+              {c.matter && <MatterTag number={c.matter} />}
               <span>{c.removed ? 'Deleted document' : `${c.document_title}${c.page ? ` · p. ${c.page}` : ''}${c.clause ? ` · cl. ${c.clause}` : ''}`}</span>
             </button>
           ))}
@@ -155,6 +164,11 @@ function CardIcon({ children }: { children: React.ReactNode }) {
   return <span className="qc-card-icon" aria-hidden>{children}</span>;
 }
 
+/** The matter something comes from, in a conversation about several. */
+function MatterTag({ number }: { number: string }) {
+  return <span className="qc-mtag" title={`From ${number}`}>{number}</span>;
+}
+
 // ── priority_list ──────────────────────────────────────────────────────────────
 function PriorityList({ p, ctx }: { p: PriorityListProps; ctx: CardContext }) {
   return (
@@ -168,7 +182,7 @@ function PriorityList({ p, ctx }: { p: PriorityListProps; ctx: CardContext }) {
             <li key={it.id} className="qc-item" data-kind={it.kind}>
               <span className="qc-item-n" aria-hidden>{i + 1}</span>
               <div className="qc-item-body">
-                <strong>{it.title}</strong>
+                <strong>{it.matter && <><MatterTag number={it.matter} />{' '}</>}{it.title}</strong>
                 {it.detail && <span className="qc-meta">{it.detail}</span>}
               </div>
               <button type="button" className="qc-btn" disabled={ctx.busy && it.action.action_type !== 'open_page'}
@@ -230,7 +244,7 @@ function EvidenceComparison({ comp, ctx }: { comp: Extract<SafeComponent, { type
     e.preventDefault();
     if (!choice || (choice.needsNote && note.trim().length < 3)) { setMessage('Say briefly why, so the next reader knows how this was resolved.'); return; }
     setSaving(true);
-    const r = await counselApi.action({ component_id: comp.id, action_id: 'review', matter_id: ctx.matterId, expected_version: comp.version,
+    const r = await counselApi.action({ component_id: comp.id, action_id: 'review', matter_id: comp.matter_id ?? ctx.matterId, expected_version: comp.version,
       parameters: { resolution: choice.to, ...(note.trim() ? { note: note.trim() } : {}) }, idempotency_key: key });
     setSaving(false);
     if (r.ok) {
@@ -248,7 +262,8 @@ function EvidenceComparison({ comp, ctx }: { comp: Extract<SafeComponent, { type
   return (
     <section className="qc-card" data-component="evidence_comparison" aria-label={p.title}>
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-        <h3 className="qc-card-title"><CardIcon><Scale aria-hidden /></CardIcon>{p.title}</h3>
+        <h3 className="qc-card-title"><CardIcon><Scale aria-hidden /></CardIcon>{p.title}
+          {comp.matter_id && ctx.matterNumber?.(comp.matter_id) && <MatterTag number={ctx.matterNumber(comp.matter_id)!} />}</h3>
         <span className="qc-status-chip" data-status={p.status}>{STATUS_LABEL[p.status]}</span>
       </div>
       <div className="qc-compare">
@@ -313,7 +328,8 @@ function EventRow({ e, ctx }: { e: TimelineEvent; ctx: CardContext }) {
       </div>
       <span className="qc-event-rail" aria-hidden><span className="qc-event-dot" /></span>
       <div className="qc-event-body">
-        {tags.length > 0 && <div className="qc-tags">{tags.map((t) => <span key={t} className="qc-tag" data-tag={t}>{t}</span>)}</div>}
+        {(tags.length > 0 || e.matter) && <div className="qc-tags">{e.matter && <MatterTag number={e.matter} />}
+          {tags.map((t) => <span key={t} className="qc-tag" data-tag={t}>{t}</span>)}</div>}
         <p className="qc-quote" style={{ fontSize: 14.5 }}>{e.text}</p>
         <span className="qc-meta">{where} · <button type="button" className="qc-linkbtn"
           onClick={(ev) => ctx.openSide(s, `${e.date_text}: ${s.document_title}`, ev.currentTarget)}
@@ -337,32 +353,165 @@ function DatedEvents({ events, ctx }: { events: TimelineEvent[]; ctx: CardContex
   return <ol className="qc-timeline" aria-label="Dated events">{rows}</ol>;
 }
 
+/** What a reader can narrow the chronology to. Filtering only hides events: nothing is recomputed or inferred. */
+const EVENT_FILTERS: { key: string; label: string; test: (e: TimelineEvent) => boolean }[] = [
+  { key: 'all', label: 'All', test: () => true },
+  { key: 'deadline', label: 'Deadlines', test: (e) => e.kind === 'deadline' || e.kind === 'obligation' },
+  { key: 'document_date', label: 'Document dates', test: (e) => e.kind === 'document_date' },
+  { key: 'recollection', label: 'Recollections', test: (e) => e.reported },
+  { key: 'uncertain', label: 'Uncertain', test: (e) => e.certainty === 'uncertain' },
+];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const monthLabel = (ym: string) => `${MONTHS[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}`;
+
+/** Dated events per month, as bars; choosing a bar shows that month only. */
+function MonthChart({ events, month, onMonth }: { events: TimelineEvent[]; month: string | null; onMonth: (m: string | null) => void }) {
+  const counts = new Map<string, number>();
+  for (const e of events) if (e.date) counts.set(e.date.slice(0, 7), (counts.get(e.date.slice(0, 7)) ?? 0) + 1);
+  const months = [...counts.keys()].sort();
+  if (months.length < 2 || months.length > 36) return null;
+  const top = Math.max(...counts.values());
+  return (
+    <div className="qc-chart" role="group" aria-label="Events by month">
+      {months.map((m) => (
+        <button key={m} type="button" className="qc-bar" aria-pressed={month === m} onClick={() => onMonth(month === m ? null : m)}
+          aria-label={`${monthLabel(m)}: ${counts.get(m)} event${counts.get(m) === 1 ? '' : 's'}`}>
+          <span className="qc-bar-fill" style={{ height: `${Math.max(10, Math.round((100 * counts.get(m)!) / top))}%` }} />
+          <span className="qc-bar-n" aria-hidden>{counts.get(m)}</span>
+          <span className="qc-bar-label" aria-hidden>{monthLabel(m)}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Timeline({ p, ctx }: { p: TimelineProps; ctx: CardContext }) {
   const [all, setAll] = useState(false);
-  const dated = p.events.filter((e) => e.certainty !== 'undated');
-  const undated = p.events.filter((e) => e.certainty === 'undated');
-  const shownDated = all ? dated : dated.slice(0, FIRST_EVENTS);
-  const hidden = dated.length - shownDated.length + (all ? 0 : undated.length);
+  const [kind, setKind] = useState('all');
+  const [matter, setMatter] = useState<string | null>(null);
+  const [month, setMonth] = useState<string | null>(null);
+  const matters = useMemo(() => [...new Set(p.events.map((e) => e.matter).filter((m): m is string => !!m))], [p.events]);
+  const test = EVENT_FILTERS.find((f) => f.key === kind)!.test;
+  const narrowed = kind !== 'all' || matter !== null || month !== null;
+  const keep = (e: TimelineEvent) => test(e) && (!matter || e.matter === matter) && (!month || !!e.date?.startsWith(month));
+  const dated = p.events.filter((e) => e.certainty !== 'undated' && keep(e));
+  const undated = month ? [] : p.events.filter((e) => e.certainty === 'undated' && keep(e));
+  const open = all || narrowed;                           // a narrowed view shows every match
+  const shownDated = open ? dated : dated.slice(0, FIRST_EVENTS);
+  const hidden = dated.length - shownDated.length + (open ? 0 : undated.length);
+  const allDated = p.events.filter((e) => e.certainty !== 'undated' && test(e) && (!matter || e.matter === matter));
   return (
     <section className="qc-card" data-component="timeline" aria-label={p.summary}>
       <h3 className="qc-card-title"><CardIcon><CalendarDays aria-hidden /></CardIcon>{p.summary}</h3>
       {p.events.length === 0 ? <p className="qc-meta" style={{ margin: 0 }}>No dates found in the documents you can read.</p> : (
         <>
+          {p.events.length >= 4 && (
+            <div className="qc-filters">
+              <div className="qc-chips" role="group" aria-label="Show">
+                {EVENT_FILTERS.map((f) => {
+                  const n = p.events.filter((e) => f.test(e) && (!matter || e.matter === matter)).length;
+                  return (f.key === 'all' || n > 0) && (
+                    <button key={f.key} type="button" className="qc-chip" aria-pressed={kind === f.key} onClick={() => setKind(f.key)}>
+                      {f.label} <span className="qc-chip-n">{n}</span>
+                    </button>);
+                })}
+              </div>
+              {matters.length > 1 && (
+                <div className="qc-chips" role="group" aria-label="Matter">
+                  <button type="button" className="qc-chip" aria-pressed={matter === null} onClick={() => setMatter(null)}>All matters</button>
+                  {matters.map((m) => (
+                    <button key={m} type="button" className="qc-chip" aria-pressed={matter === m} onClick={() => setMatter(matter === m ? null : m)}>{m}</button>
+                  ))}
+                </div>
+              )}
+              <MonthChart events={allDated} month={month} onMonth={setMonth} />
+              {narrowed && (
+                <p className="qc-meta" style={{ margin: 0 }} aria-live="polite">
+                  Showing {dated.length + undated.length} of {p.events.length} events{month ? ` in ${monthLabel(month)}` : ''}.{' '}
+                  <button type="button" className="qc-linkbtn" onClick={() => { setKind('all'); setMatter(null); setMonth(null); }}>Show everything</button>
+                </p>
+              )}
+            </div>
+          )}
           {shownDated.length > 0 && <DatedEvents events={shownDated} ctx={ctx} />}
-          {all && undated.length > 0 && (
+          {open && undated.length > 0 && (
             <>
               <h4 className="qc-card-title" style={{ fontSize: 15 }}>Date not stated</h4>
               <ol className="qc-timeline" aria-label="Events whose date is not stated">{undated.map((e) => <EventRow key={e.id} e={e} ctx={ctx} />)}</ol>
             </>
           )}
+          {!shownDated.length && !(open && undated.length) && <p className="qc-meta" style={{ margin: 0 }}>No event matches.</p>}
           {hidden > 0 && (
             <button type="button" className="qc-btn" onClick={() => setAll(true)} aria-expanded={false}>
-              Show all ({hidden} more{undated.length && !all ? `, ${undated.length} without a stated date` : ''})
+              Show all ({hidden} more{undated.length && !open ? `, ${undated.length} without a stated date` : ''})
             </button>
           )}
           {p.more > 0 && <p className="qc-meta" style={{ margin: 0 }}>{p.more} more not shown: ask about a narrower period or document.</p>}
         </>
       )}
+      <p className="qc-note" data-tone="info" role="note"><Info size={15} aria-hidden />{p.caution}</p>
+    </section>
+  );
+}
+
+// ── case_table: several matters side by side ───────────────────────────────────
+type SortKey = 'number' | 'client' | 'documents' | 'open' | 'deadline';
+const COLUMNS: { key: SortKey; label: string; value: (r: CaseRow) => string | number }[] = [
+  { key: 'number', label: 'Matter', value: (r) => r.number },
+  { key: 'client', label: 'Client', value: (r) => r.client.toLowerCase() },
+  { key: 'documents', label: 'Documents', value: (r) => r.documents },
+  { key: 'open', label: 'Open inconsistencies', value: (r) => r.open_inconsistencies ?? -1 },
+  { key: 'deadline', label: 'Next deadline', value: (r) => r.next_deadline ?? '9999' },
+];
+const DAY = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
+function CaseTable({ p, ctx }: { p: CaseTableProps; ctx: CardContext }) {
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'number', dir: 1 });
+  const col = COLUMNS.find((c) => c.key === sort.key)!;
+  const rows = [...p.rows].sort((a, b) => {
+    const x = col.value(a), y = col.value(b);
+    return (x < y ? -1 : x > y ? 1 : 0) * sort.dir;
+  });
+  return (
+    <section className="qc-card" data-component="case_table" aria-label={p.summary}>
+      <h3 className="qc-card-title"><CardIcon><Columns3 aria-hidden /></CardIcon>{p.summary}</h3>
+      <div className="qc-table-wrap">
+        <table className="qc-table">
+          <thead>
+            <tr>
+              {COLUMNS.map((c) => (
+                <th key={c.key} scope="col" aria-sort={sort.key === c.key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
+                  <button type="button" onClick={() => setSort((s) => ({ key: c.key, dir: s.key === c.key ? (s.dir === 1 ? -1 : 1) : 1 }))}>
+                    {c.label}{sort.key === c.key && (sort.dir === 1 ? <ArrowUp aria-hidden /> : <ArrowDown aria-hidden />)}
+                  </button>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.matter_id}>
+                <th scope="row">
+                  <button type="button" className="qc-linkbtn" onClick={() => ctx.go(r.path)} aria-label={`Open ${r.number}, ${r.title}`}>{r.number}</button>
+                  {r.sensitivity !== 'standard' && <Lock className="qc-row-lock" aria-label={r.sensitivity === 'highly_restricted' ? 'Highly restricted' : 'Restricted'} />}
+                  <span className="qc-meta" style={{ display: 'block' }}>{r.title}</span>
+                  {r.status !== 'open' && <span className="qc-tag">{r.status === 'closed' ? 'Closed' : 'Archived'}</span>}
+                </th>
+                <td>{r.client}</td>
+                <td className="qc-num">{r.documents}</td>
+                <td className="qc-num">{r.open_inconsistencies === undefined ? '—'
+                  : <span className="qc-tag" data-tag={r.open_inconsistencies ? 'Uncertain' : 'Confirmed by a lawyer'}>{r.open_inconsistencies}</span>}</td>
+                <td>{r.next_deadline ? <>
+                  <time dateTime={r.next_deadline} style={{ fontWeight: 600 }}>{DAY(r.next_deadline)}</time>
+                  {r.deadline_state && <span className="qc-tag" data-tag={r.deadline_state === 'Confirmed by a lawyer' ? r.deadline_state : 'Uncertain'}
+                    style={{ marginLeft: 6 }}>{r.deadline_state}</span>}
+                  {r.next_deadline_text && <span className="qc-meta" style={{ display: 'block' }}>{r.next_deadline_text}</span>}
+                </> : <span className="qc-meta">None recorded</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <p className="qc-note" data-tone="info" role="note"><Info size={15} aria-hidden />{p.caution}</p>
     </section>
   );
@@ -381,6 +530,7 @@ export function ComponentView({ comp, ctx }: { comp: SafeComponent; ctx: CardCon
     case 'priority_list': return <PriorityList p={comp.props} ctx={ctx} />;
     case 'evidence_comparison': return <EvidenceComparison comp={comp} ctx={ctx} />;
     case 'timeline': return <Timeline p={comp.props} ctx={ctx} />;
+    case 'case_table': return <CaseTable p={comp.props} ctx={ctx} />;
     case 'notice': return <Notice p={comp.props} />;
     case 'unavailable': return <p className="qc-inert" data-component="unavailable">{comp.props.text}</p>;
     case 'task_progress': return <p className="qc-meta"><ListChecks size={14} aria-hidden /> {comp.props.label}</p>;

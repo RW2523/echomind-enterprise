@@ -12,7 +12,7 @@ import re
 ABSTAIN = "The documents in this matter do not answer that."
 
 # Recorded with every research note sent for review (S2.7): which instructions produced the answer.
-VERSION = "research-s2.4"          # S2.3: sources that amend another source's clause are marked; S2.4: an account's reading
+VERSION = "research-s2.5"          # S2.3: amending sources marked; S2.4: an account's reading; S2.5: several matters
 
 SYSTEM = (
     "You are a careful legal research assistant. You work only from the numbered sources below, which "
@@ -74,10 +74,16 @@ def build(question: str, passages: list[dict]) -> list[dict]:
             a = p["amends"]
             amends = (f' amends="{_attr(a["document_title"])} clause {_attr(a["clause"])}"'
                       f' amendment="{"signed" if a.get("signed") else "unsigned"}"')
+        matter = f' matter="{_attr(p["matter"]["number"])}"' if p.get("matter") else ""
         blocks.append(f'<source n="{n}" document="{_attr(c["document_title"])}" version="{_attr(c["version_number"])}" '
-                      f'pages="{_attr(pages)}"{clause}{amends}>\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
+                      f'pages="{_attr(pages)}"{clause}{amends}{matter}>\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
     reading = account_reading(question)
-    user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + "\nSources:\n"
+    # S2.5 (2026-10-28): a conversation about several matters. Each source names its matter; the answer must keep them apart.
+    # A question about one matter gets exactly the prompt it had before.
+    matters = sorted({p["matter"]["number"] for p in passages if p.get("matter")})
+    several = (f"(These sources come from {len(matters)} matters: {', '.join(matters)}. Say which matter each statement comes from, "
+               "and never combine facts from different matters as if they were one.)\n") if len(matters) > 1 else ""
+    user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + several + "\nSources:\n"
             + "\n\n".join(blocks) + "\n\n" + REMINDER)
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 

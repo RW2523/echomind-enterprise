@@ -474,3 +474,117 @@ describe('A matter at a glance', () => {
     await waitFor(() => expect(within(glance).queryByRole('region', { name: 'Open inconsistencies' })).toBeNull());
   });
 });
+
+describe('Several matters in one conversation (owner, 2026-10-28)', () => {
+  const twoWorld = (handlers: Record<string, (body: any) => [number, unknown]> = {}) => mockApi({
+    'GET /api/auth/me': () => [200, me()],
+    'GET /api/legal/matters': () => [200, { matters: [matter('M-101', 'MSA renewal'), matter('M-215', 'Lease dispute', 'Beta Corp'),
+                                                      matter('M-300', 'Board investigation', 'Gamma', { sensitivity: 'highly_restricted' })] }],
+    'GET /api/legal/reviews': () => [200, { waiting: [], mine: [], count: 0 }],
+    'GET /api/legal/counsel/conversations': () => [200, { conversations: [] }],
+    'POST /api/legal/counsel/conversations': (b) => [201, { conversation: { id: 'conv_1', matter_id: (b.matter_ids ?? [b.matter_id])[0],
+                                                                             matter_ids: b.matter_ids ?? [b.matter_id], title: 'New conversation' } }],
+    ...handlers,
+  });
+  const pick = async (name: RegExp) => {
+    fireEvent.click(screen.getByRole('button', { name: /Change the matter|Pick the matter to ask about/ }));
+    fireEvent.click(await screen.findByRole('option', { name }));
+  };
+
+  it('choosing a second matter in the question box asks across both, says they belong to different clients, and offers them side by side', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const calls = twoWorld({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(answerEnvelope())] });
+    renderLaw('/chat');
+    await screen.findByText('M-101 · MSA renewal', { selector: '.qc-context b' });
+    await pick(/M-215/);
+    expect(await screen.findByText('M-101, M-215', { selector: '.qc-context b' })).toBeTruthy();
+    expect(screen.getByText('different clients', { selector: '.qc-context b' })).toBeTruthy();
+    const tiles = within(screen.getByRole('group', { name: 'Start with' })).getAllByRole('button').map((t) => t.getAttribute('aria-label'));
+    expect(tiles).toContain('Compare these cases');
+    expect(screen.queryByRole('button', { name: /Choose documents/ })).toBeNull();        // restricting to documents: one matter only
+    await ask('What is the notice period?');
+    await waitFor(() => expect(calls.find((c) => c.method === 'POST' && c.path === '/api/legal/counsel/conversations')?.body)
+      .toEqual({ matter_ids: ['id-M-101', 'id-M-215'] }));
+  });
+
+  it('a highly restricted matter is chosen on its own, and choosing another replaces it', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    twoWorld();
+    renderLaw('/chat');
+    await screen.findByText('M-101 · MSA renewal', { selector: '.qc-context b' });
+    await pick(/M-300/);
+    expect(await screen.findByText('M-300 · Board investigation', { selector: '.qc-context b' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('option', { name: /M-215/ }));
+    await waitFor(() => expect(screen.getByText('M-215 · Lease dispute', { selector: '.qc-context b' })).toBeTruthy());
+  });
+
+  it('a chronology across matters can be narrowed by kind, by matter and by month', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const side = (n: number, text: string) => ({ document_id: `d${n}`, document_title: `Document ${n}`, version_id: `v${n}`, value: text,
+      context: text, value_start: 0, value_end: text.length, reader_path: `/m/M-101/documents/d${n}/read`, stale: false });
+    const e = (n: number, date: string, kind: string, matterNo: string, extra: object = {}) => ({ id: `ev${n}`, date, date_text: date,
+      certainty: 'stated', kind, reported: false, superseded: false, text: `Event ${n}.`, notes: [], source: side(n, date), matter: matterNo, ...extra });
+    const events = [e(1, '2026-04-01', 'document_date', 'M-101'), e(2, '2026-05-12', 'event', 'M-101', { reported: true }),
+                    e(3, '2026-05-15', 'deadline', 'M-101'), e(4, '2026-05-20', 'deadline', 'M-215'), e(5, '2026-06-02', 'event', 'M-215')];
+    const env = { ...answerEnvelope(), matters: [{ id: 'id-M-101', number: 'M-101', title: 'MSA renewal' }, { id: 'id-M-215', number: 'M-215', title: 'Lease dispute' }],
+      components: [{ id: CMP, version: 1, type: 'timeline', props: { summary: '5 dated events in 2 matters.', more: 0, events, caution: 'c' } }] };
+    twoWorld({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(env)] });
+    renderLaw('/chat');
+    await ask('Build a chronology of events');
+    const card = await screen.findByRole('region', { name: '5 dated events in 2 matters.' });
+    const count = () => card.querySelectorAll('li.qc-event').length;
+    expect(count()).toBe(5);
+    fireEvent.click(within(within(card).getByRole('group', { name: 'Show' })).getByRole('button', { name: /Deadlines/ }));
+    expect(count()).toBe(2);
+    fireEvent.click(within(within(card).getByRole('group', { name: 'Matter' })).getByRole('button', { name: 'M-215' }));
+    expect(count()).toBe(1);
+    expect(within(card).getByText(/Showing 1 of 5 events/)).toBeTruthy();
+    fireEvent.click(within(card).getByRole('button', { name: 'Show everything' }));
+    expect(count()).toBe(5);
+    fireEvent.click(within(within(card).getByRole('group', { name: 'Events by month' })).getByRole('button', { name: 'May 2026: 3 events' }));
+    expect(count()).toBe(3);
+    expect(within(card).getAllByText('M-215', { selector: '.qc-mtag' }).length).toBe(1);
+  });
+
+  it('matters side by side sort by any column, and each opens its own overview', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const row = (n: string, docs: number, open: number, due?: string) => ({ matter_id: `id-${n}`, number: n, title: `${n} title`, client: `Client ${n}`,
+      status: 'open', sensitivity: 'restricted', documents: docs, open_inconsistencies: open, path: `/m/${n}/overview`,
+      ...(due ? { next_deadline: due, deadline_state: 'Not confirmed', next_deadline_text: 'Deliver the units' } : {}) });
+    const env = { ...answerEnvelope(), components: [{ id: CMP, version: 1, type: 'case_table', props: { summary: '2 matters side by side, 2 clients.',
+      rows: [row('M-215', 9, 0), row('M-101', 4, 3, '2026-05-20')], caution: 'From the records.' } }] };
+    twoWorld({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(env)] });
+    const { router } = renderLaw('/chat');
+    await ask('Compare these cases side by side');
+    const card = await screen.findByRole('region', { name: '2 matters side by side, 2 clients.' });
+    const first = () => within(card).getAllByRole('row')[1].querySelector('th button')?.textContent;
+    expect(first()).toBe('M-101');                                        // by matter number
+    fireEvent.click(within(card).getByRole('button', { name: /Documents/ }));
+    expect(first()).toBe('M-101');                                        // 4 before 9
+    fireEvent.click(within(card).getByRole('button', { name: /Documents/ }));
+    expect(first()).toBe('M-215');
+    expect(within(card).getByRole('columnheader', { name: /Documents/ }).getAttribute('aria-sort')).toBe('descending');
+    expect(within(card).getByText('Not confirmed')).toBeTruthy();
+    fireEvent.click(within(card).getByRole('button', { name: 'Open M-215, M-215 title' }));
+    expect(router.state.location.pathname).toBe('/m/M-215/overview');
+  });
+
+  it('resolving a potential inconsistency of another matter of the conversation acts under that matter', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const cmp = { ...comparison(), matter_id: 'id-M-215' };
+    const env = { ...answerEnvelope(), matters: [{ id: 'id-M-101', number: 'M-101', title: 'MSA renewal' }, { id: 'id-M-215', number: 'M-215', title: 'Lease dispute' }],
+      components: [cmp] };
+    const calls = twoWorld({
+      'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(env)],
+      'POST /api/legal/counsel/actions': () => [200, { component: { ...comparison('explained', true, 2), matter_id: 'id-M-215' } }],
+    });
+    renderLaw('/chat');
+    await ask('Find conflicting dates');
+    const card = await screen.findByRole('region', { name: /Potential inconsistency in dates/ });
+    expect(within(card).getByText('M-215', { selector: '.qc-mtag' })).toBeTruthy();
+    fireEvent.click(within(card).getByRole('button', { name: 'Explained' }));
+    fireEvent.change(within(card).getByRole('textbox'), { target: { value: 'Dispatch and arrival.' } });
+    fireEvent.click(within(card).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(calls.find((c) => c.path === '/api/legal/counsel/actions')?.body.matter_id).toBe('id-M-215'));
+  });
+});

@@ -8,7 +8,8 @@ verified quotes, or abstains.
 - `inspect_case`  "What matters today?", "What changed?", "Brief me" → a briefing from records (briefing.py)
 - `chronology`    "Build a chronology", "Timeline of events" → dated events from the documents (chronology.py)
 - `compare`       "Find conflicting dates", "Are there inconsistencies?" → the conflict scan (discrepancies.py)
-- `other_matters` "Use the other matters too" → an explanation that a conversation is limited to its matter
+- `cases_overview` "Compare these cases", "Where do my matters stand?" → the conversation's matters side by side (cases.py)
+- `other_matters` "Use the other matters too" → which matters the conversation covers, and how to add one
 - `draft`         "Draft a client update" → where drafting from firm templates is done
 - `deliberate`    "Challenge our position" → where the review panel is (when the firm has it on)
 - `smalltalk`     "Hi", "Thanks" → a one-line reminder of what can be asked (no search, no model)
@@ -18,7 +19,13 @@ from __future__ import annotations
 
 import re
 
-INTENTS = ("ask_fact", "compare", "inspect_case", "chronology", "other_matters", "draft", "deliberate", "smalltalk")
+INTENTS = ("ask_fact", "compare", "inspect_case", "chronology", "cases_overview", "other_matters", "draft", "deliberate", "smalltalk")
+
+_CASES = re.compile(
+    r"\b(?:compare|comparison\s+of|overview\s+of|status\s+of|summar(?:y|ise|ize)\s+of|side\s+by\s+side)\b[^.?!]{0,30}?"
+    r"\b(?:these|the|my|our|both|all(?:\s+(?:these|my|the|our))?)\s+(?:\w+\s+)?(?:cases|matters)\b"
+    r"|\b(?:these|both|my|our)\s+(?:cases|matters)\s+side\s+by\s+side\b"
+    r"|\bwhere\s+do\s+(?:these|my|our|both|all)\s+(?:the\s+)?(?:cases|matters)\s+stand\b", re.I)
 
 _OTHER_MATTERS = re.compile(
     r"\b(?:other|another|all|every|any|across|different|related)\s+(?:of\s+(?:the|our|my)\s+)?(?:matters?|cases?|clients?|files?)\b"
@@ -46,6 +53,8 @@ def classify(text: str) -> str:
         return "ask_fact"
     if _SMALLTALK.match(t):
         return "smalltalk"
+    if _CASES.search(t):
+        return "cases_overview"
     if _OTHER_MATTERS.search(t):
         return "other_matters"
     if _DRAFT.search(t):

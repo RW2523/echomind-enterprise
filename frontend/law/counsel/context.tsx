@@ -7,31 +7,58 @@ import { useMatters } from '../api/queries';
 import type { Matter } from '../api/types';
 import type { ComparisonSide } from './types';
 
-const STORE_KEY = 'echomind.counsel.matter';
+const STORE_KEY = 'echomind.counsel.matter';          // the first (or only) matter: kept for pages that know one matter
+const LIST_KEY = 'echomind.counsel.matters';          // every matter of the next conversation, the first being its own
+export const MAX_MATTERS = 5;
 
-function readStored(): string | null {
-  try { return window.localStorage.getItem(STORE_KEY); } catch { return null; }
-}
-function writeStored(id: string | null) {
+function readStored(): string[] {
   try {
-    if (id) window.localStorage.setItem(STORE_KEY, id);
-    else window.localStorage.removeItem(STORE_KEY);
+    const list = JSON.parse(window.localStorage.getItem(LIST_KEY) || 'null');
+    if (Array.isArray(list) && list.every((x) => typeof x === 'string')) return list.slice(0, MAX_MATTERS);
+    const one = window.localStorage.getItem(STORE_KEY);
+    return one ? [one] : [];
+  } catch { return []; }
+}
+function writeStored(ids: string[]) {
+  try {
+    if (ids.length) { window.localStorage.setItem(STORE_KEY, ids[0]); window.localStorage.setItem(LIST_KEY, JSON.stringify(ids)); }
+    else { window.localStorage.removeItem(STORE_KEY); window.localStorage.removeItem(LIST_KEY); }
   } catch { /* private window: the choice lasts for this page only */ }
 }
 
-interface ChatMatter { matter: Matter | null; matterId: string | null; setMatterId: (id: string | null) => void }
-const ChatMatterContext = React.createContext<ChatMatter>({ matter: null, matterId: null, setMatterId: () => {} });
+/** A highly restricted matter is only ever discussed on its own (the server refuses it in company too). */
+export function withMatter(current: Matter[], m: Matter): Matter[] {
+  if (current.some((x) => x.id === m.id)) return current.filter((x) => x.id !== m.id);
+  if (m.sensitivity === 'highly_restricted' || current.some((x) => x.sensitivity === 'highly_restricted')) return [m];
+  return [...current, m].slice(0, MAX_MATTERS);
+}
 
-/** The chat's matter: only one of the person's own visible matters; a remembered id that is no longer visible is dropped. */
+interface ChatMatter {
+  matter: Matter | null;                    // the conversation's own matter (the first)
+  matterId: string | null;
+  matters: Matter[];                        // every matter of the conversation, in order
+  matterIds: string[];
+  setMatterId: (id: string | null) => void;
+  setMatterIds: (ids: string[]) => void;
+}
+const ChatMatterContext = React.createContext<ChatMatter>({ matter: null, matterId: null, matters: [], matterIds: [], setMatterId: () => {},
+                                                            setMatterIds: () => {} });
+
+/** The chat's matters: only the person's own visible matters; a remembered id that is no longer visible is dropped. */
 export function ChatMatterProvider({ children }: { children: React.ReactNode }) {
-  const matters = useMatters();
-  const [matterId, setId] = useState<string | null>(readStored);
-  const matter = useMemo(() => (matterId && matters.data?.find((m) => m.id === matterId)) || null, [matterId, matters.data]);
+  const list = useMatters();
+  const [ids, setIds] = useState<string[]>(readStored);
+  const matters = useMemo(() => ids.map((id) => list.data?.find((m) => m.id === id)).filter((m): m is Matter => !!m), [ids, list.data]);
   useEffect(() => {
-    if (matterId && matters.data && !matter) { setId(null); writeStored(null); }
-  }, [matterId, matters.data, matter]);
-  const setMatterId = useCallback((id: string | null) => { setId(id); writeStored(id); }, []);
-  const value = useMemo(() => ({ matter, matterId: matter ? matter.id : null, setMatterId }), [matter, setMatterId]);
+    if (list.data && matters.length !== ids.length) { const keep = matters.map((m) => m.id); setIds(keep); writeStored(keep); }
+  }, [ids, list.data, matters]);
+  const setMatterIds = useCallback((next: string[]) => {
+    const unique = Array.from(new Set(next)).slice(0, MAX_MATTERS);
+    setIds(unique); writeStored(unique);
+  }, []);
+  const setMatterId = useCallback((id: string | null) => setMatterIds(id ? [id] : []), [setMatterIds]);
+  const value = useMemo(() => ({ matter: matters[0] ?? null, matterId: matters[0]?.id ?? null, matters, matterIds: matters.map((m) => m.id),
+                                 setMatterId, setMatterIds }), [matters, setMatterId, setMatterIds]);
   return <ChatMatterContext.Provider value={value}>{children}</ChatMatterContext.Provider>;
 }
 
