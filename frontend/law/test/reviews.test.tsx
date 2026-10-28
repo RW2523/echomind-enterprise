@@ -61,7 +61,7 @@ describe('Reviews (S2.7)', () => {
     const { container } = renderLaw('/m/M-101/notes/a1');
     const note = await screen.findByRole('article', { name: 'Research note' });
     expect(within(note).getByRole('heading', { name: 'What is the liability cap?' })).toBeTruthy();
-    expect(note.textContent).toContain('Draft — not approved');
+    expect(note.textContent).toContain('Waiting for approval');
     expect(note.textContent).toContain('Answered from the documents');
     const ev = within(note).getByRole('region', { name: 'Evidence' });
     expect(ev.textContent).toMatch(/\[1\] “capped at USD 250,000”.*Harrowgate MSA, version 1 \(executed\), clause 12\.1, page 3, line 4 · Found as written/);

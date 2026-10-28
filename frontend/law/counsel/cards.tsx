@@ -97,8 +97,9 @@ export function AnswerText({ text, citations, ctx, pending, labels }: {
         let last = 0;
         let prev: number | null = null;                   // "[1][1]" (two quotes from one source) shows one chip
         for (const m of p.matchAll(MARK)) {
-          const ns = m[1].split(',').map((x) => Number(x.trim()));
-          if (!pending && !ns.every((n) => byN.has(n))) continue;
+          // A finished answer shows only markers that have a source; one without (a number the model made up) is dropped,
+          // never left as text that looks like a citation (review C1). While it streams, every marker waits for its chip.
+          const ns = m[1].split(',').map((x) => Number(x.trim())).filter((n) => pending || byN.has(n));
           const between = p.slice(last, m.index);
           if (between.trim()) prev = null;
           parts.push(between);
@@ -118,6 +119,8 @@ export function AnswerText({ text, citations, ctx, pending, labels }: {
 // ── source_answer ──────────────────────────────────────────────────────────────
 function AnswerState({ p }: { p: SourceAnswerProps }) {
   const verified = p.citations.filter((c) => c.verified && !c.removed).length;
+  // "Supported" needs at least one verified quote (review C1); an answer with none is said to be unverified.
+  if (p.state === 'answered' && verified === 0) return <span className="qc-state" data-tone="attention"><CircleDashed aria-hidden />Not verified: no quote could be matched to the documents</span>;
   if (p.state === 'abstained') return <span className="qc-state" data-tone="neutral"><FileX aria-hidden />No source found in this matter's documents</span>;
   if (p.state === 'unverified') return <span className="qc-state" data-tone="attention"><CircleDashed aria-hidden />Not verified: no quote could be matched to the documents</span>;
   if (p.state === 'partial') return <span className="qc-state" data-tone="attention"><AlertTriangle aria-hidden />Partly supported: some sentences have no verified source</span>;

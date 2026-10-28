@@ -124,7 +124,7 @@ describe('Boardroom: agenda and minutes', () => {
     const flagged = within(renewal).getByRole('listitem', { name: 'Discussed: The cap was raised to USD 900,000.' });
     expect(flagged.textContent).toContain('Not verified against the transcript');
     expect(within(screen.getByRole('region', { name: 'Dividend' })).getByText('Nothing minuted.')).toBeTruthy();
-    expect(screen.getByText('Draft — not approved')).toBeTruthy();
+    expect(screen.getByText('Waiting for approval')).toBeTruthy();
     expect((await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);
   });
 

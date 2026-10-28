@@ -40,7 +40,7 @@ export default function MatterDrafting() {
                         <td>{d.status === 'approved' ? <StatusPill tone="verified">{d.document_id ? 'Approved · filed' : 'Approved'}</StatusPill>
                           : d.sent_back ? <StatusPill tone="conflict">Changes requested</StatusPill>
                             : d.gaps ? <StatusPill tone="attention">{`${d.gaps} ${d.gaps === 1 ? 'gap' : 'gaps'} to fill`}</StatusPill>
-                              : <StatusPill tone="attention">Draft — not approved</StatusPill>}</td>
+                              : <StatusPill tone="attention">Waiting for approval</StatusPill>}</td>
                         <td className="lw-meta">{`v${d.version} · ${d.created_by_name ?? ''}, ${day(d.created_at)}`}</td>
                       </tr>
                     ))}</tbody>

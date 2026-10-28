@@ -690,7 +690,7 @@ test('minutes: drafted from the whole transcript by the real model, approved by 
   await alice.getByRole('tab', { name: 'Minutes' }).click();
   await alice.getByRole('button', { name: 'Draft minutes' }).click();
   const minutes = alice.getByRole('region', { name: 'Minutes', exact: true });
-  await expect(minutes.getByText('Draft — not approved')).toBeVisible({ timeout: 180_000 });
+  await expect(minutes.getByText('Waiting for approval')).toBeVisible({ timeout: 180_000 });
   // The demo call has two promises in the first person; each is an action with its owner from the record.
   await expect(minutes.getByRole('listitem', { name: /^Action: .*redline/ }).first()).toContainText('Owner: Helena Marsh');
   await expect(minutes.getByText('You made this version, so another lawyer approves it.')).toBeVisible();
@@ -739,7 +739,7 @@ test('reviews: a research answer sent for review, approved by a second lawyer fr
   await expect(answer.getByRole('region', { name: 'Evidence' })).toBeVisible({ timeout: 180_000 });
   await answer.getByRole('button', { name: 'Send for review' }).click();
   const note = alice.getByRole('article', { name: 'Research note' });
-  await expect(note.getByText('Draft — not approved')).toBeVisible();
+  await expect(note.getByText('Waiting for approval')).toBeVisible();
   await expect(note.getByRole('region', { name: 'Evidence' }).getByText(/250,000/).first()).toBeVisible();
   await expect(note.getByText('You made this version, so another lawyer approves it.')).toBeVisible();
   await shot(alice, '30-research-note-draft-light');
@@ -800,7 +800,7 @@ test('drafting: an engagement letter from the approved firm template, every fact
   await create.getByLabel('Engagement request (DEMO)', { exact: true }).check();
   await create.getByRole('button', { name: 'Draft' }).click();
   const doc = alice.getByRole('article', { name: 'Draft document' });
-  await expect(doc.getByText('Draft — not approved')).toBeVisible({ timeout: 180_000 });
+  await expect(doc.getByText('Waiting for approval')).toBeVisible({ timeout: 180_000 });
   const fields = alice.getByRole('list', { name: 'Fields' });
   await expect(fields.getByRole('listitem', { name: /^Client: / })).toContainText('From the matter record');
   await expect(fields.getByRole('listitem', { name: /^Responsible lawyer: needs input/ })).toBeVisible();      // a person's field

@@ -601,3 +601,21 @@ describe('where answers come from (review P1)', () => {
     expect(at().chip).toBe('');
   });
 });
+
+describe('answer card honesty (review C1)', () => {
+  it('drops a marker without a source and never says "supported" with no verified quote', async () => {
+    const { render } = await import('@testing-library/react');
+    const { ComponentView } = await import('../counsel/cards');
+    const ctx = { openCitation: () => {}, go: () => {}, matterId: 'm1' } as never;
+    const answer = (citations: unknown[]) => ({ id: 'cmp_' + 'a'.repeat(32), type: 'source_answer',
+      props: { state: 'answered', answer: 'The cap is two times the fees [1] and nothing else [7].', citations, unsupported: [], notes: [] } }) as never;
+    const cite = { n: 1, id: 'c1', document_id: 'd1', document_title: 'MSA', verified: true };
+    const { container, unmount } = render(<ComponentView comp={answer([cite])} ctx={ctx} />);
+    expect(container.textContent).not.toContain('[7]');
+    expect(container.textContent).toContain('Supported by 1 verified quote');
+    unmount();
+    const none = render(<ComponentView comp={answer([{ ...cite, verified: false }])} ctx={ctx} />);
+    expect(none.container.textContent).toContain('Not verified');
+    expect(none.container.textContent).not.toContain('Supported by 0');
+  });
+});

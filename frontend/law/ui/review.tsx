@@ -16,7 +16,7 @@ export function reviewState(v: ArtifactVersion): { label: string; tone: Tone } {
   if (v.status === 'superseded') return { label: 'Replaced by a later version', tone: 'neutral' };
   if (v.status === 'withdrawn') return { label: 'Withdrawn', tone: 'neutral' };
   if (last?.decision === 'changes_requested') return { label: 'Changes requested', tone: 'conflict' };
-  return { label: 'Draft — not approved', tone: 'attention' };
+  return { label: 'Waiting for approval', tone: 'attention' };      // review D1: a state a lawyer acts on, not "not approved"
 }
 
 export function ReviewPill({ v }: { v: ArtifactVersion }) {
