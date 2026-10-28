@@ -1,0 +1,1011 @@
+{
+ "meta": {
+  "set": "heldout3",
+  "commit": "ac801b3",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "c522fad557584ef78cac36cfbc3a5b4f3a7910c0b03af34ebe50e59bf2fb06a0",
+  "gate": true,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261028-182955",
+  "limit": null,
+  "only": null
+ },
+ "summary": {
+  "items": 29,
+  "answer_accuracy": "12/14",
+  "abstention_accuracy": "11/15",
+  "false_abstentions": 2,
+  "t06_leaks": 0,
+  "citation_precision": 0.909,
+  "quote_verification_rate": 0.955,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "partial": 12,
+   "abstained": 13,
+   "answered": 3,
+   "unverified": 1
+  },
+  "latency_total_p50_s": 2.49,
+  "latency_total_p95_s": 4.65,
+  "latency_first_paragraph_p50_s": 2.49,
+  "latency_first_paragraph_p95_s": 4.65,
+  "gate": {
+   "passed": false,
+   "missed": [
+    "abstention_accuracy 0.733 (below 0.8)"
+   ],
+   "thresholds": "proposed \u2014 awaiting owner and counsel sign-off"
+  }
+ },
+ "items": [
+  {
+   "id": "h3-abstain-storage-courts",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Which courts have jurisdiction over disputes under the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that the courts of London have exclusive jurisdiction over any dispute arising out of the Kestrel storage agreement. This is specified in the Kestrel storage agreement, which states: \"The courts of London have exclusive jurisdiction over any dispute arising out of this Agreement\" [1].\n\nNo other courts are mentioned as having jurisdiction over disputes under the Kestrel storage agreement.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The courts of London have exclusive jurisdiction over any dispute arising out of this Agreement",
+     "verification": "verbatim",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.2",
+     "page_start": null,
+     "line": 23
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.65,
+   "total_s": 4.65
+  },
+  {
+   "id": "h3-abstain-eng-law",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Which law governs the Calder & Wynne engagement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement letter does not explicitly state which law governs the engagement. However, the Northbridge NDA specifies that the Agreement is governed by the law of England and Wales [2].\n\nThe Harrowgate MSA states that the Agreement is governed by the laws of the State of Delaware [3].\n\nThe Unit 7 Lease also states that the Lease is governed by the law of England and Wales [4].\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.3,
+   "total_s": 4.3
+  },
+  {
+   "id": "h3-abstain-nda-cure",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What cure period applies to a breach of the Northbridge NDA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.94,
+   "total_s": 0.94
+  },
+  {
+   "id": "h3-abstain-lease-interest",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What interest accrues on late rent under the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.0,
+   "total_s": 1.0
+  },
+  {
+   "id": "h3-abstain-nda-cap",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What is the liability cap under the Northbridge NDA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.95,
+   "total_s": 0.95
+  },
+  {
+   "id": "h3-abstain-storage-breach-notice",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "How quickly must Kestrel notify Voss-Lindqvist of a data breach under the storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify how quickly Kestrel must notify Voss-Lindqvist of a data breach under the storage agreement [1][3].\n\nThe Harrowgate MSA clause 6.1 states that the provider must notify the client of a data breach within 48 hours of becoming aware of it [3].\n\nHowever, it is unclear if this clause applies to the storage agreement between Kestrel and Voss-Lindqvist. The storage agreement's liability clause limits the provider's liability to EUR 150,000 per event [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "5.2 Either party may terminate this Agreement on sixty (60) days' written notice.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5.2",
+     "page_start": null,
+     "line": 10
+    },
+    {
+     "n": 3,
+     "quote": "6.1 Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it.",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "6.1",
+     "page_start": null,
+     "line": 22
+    },
+    {
+     "n": 1,
+     "quote": "7.1 Provider's total liability for loss of or damage to stored goods is limited to EUR 150,000 per event.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 12
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 7.5,
+   "total_s": 7.5
+  },
+  {
+   "id": "h3-abstain-storage-credits",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What service credits apply under the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify any service credits applicable under the Kestrel storage agreement.\n\nThe Service credit side letter mentions that \"Credits will be applied against the next invoice and are not payable in cash\" [5], but it does not describe the specific service credits or conditions under which they apply.\n\nNo other sources provide details about service credits related to the Kestrel storage agreement.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.41,
+   "total_s": 3.41
+  },
+  {
+   "id": "h3-abstain-kestrel-availability",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What availability level must Kestrel meet under the storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the availability level that Kestrel must meet under the storage agreement.\n\nHowever, the documents do mention that for each full hour of unavailability below the required level, the client would receive a service credit of five percent (5%) of the monthly subscription fee, with a cap of twenty-five percent (25%) of the monthly subscription fee [4].\n\nThe documents do not state what the specific availability level is.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.78,
+   "total_s": 3.78
+  },
+  {
+   "id": "h3-abstain-storage-confidentiality",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "How long do confidentiality obligations last under the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The confidentiality obligations under the Kestrel storage agreement are not directly addressed in the provided sources. However, the Harrowgate MSA specifies that confidentiality obligations last for five (5) years after the agreement ends [2]. The Northbridge NDA states that obligations continue for five (5) years after the agreement ends [3].\n\nThe Kestrel storage agreement itself does not mention confidentiality terms. An amendment to the Kestrel storage agreement states that all other terms of the Storage Services Agreement remain in force [4].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "five (5) years after it ends",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5.1",
+     "page_start": null,
+     "line": 20
+    },
+    {
+     "n": 3,
+     "quote": "five (5) years after this Agreement ends",
+     "verification": "verbatim",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.2",
+     "page_start": null,
+     "line": 14
+    },
+    {
+     "n": 4,
+     "quote": "All other terms of the Storage Services Agreement remain in force",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.59,
+   "total_s": 4.59
+  },
+  {
+   "id": "h3-abstain-storage-deposit",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "How much deposit did Voss-Lindqvist pay under the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not mention any deposit paid by Voss-Lindqvist under the Kestrel storage agreement.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.29,
+   "total_s": 1.29
+  },
+  {
+   "id": "h3-abstain-harrowgate-rate",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What hourly rate does Harrowgate charge for support work?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.1,
+   "total_s": 1.1
+  },
+  {
+   "id": "h3-abstain-kestrel-board",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "When is Kestrel's next board meeting?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The next board meeting of Kestrel Cold Storage Ltd is scheduled for 10 September 2026 [1].\n\nThere is no indication in the documents that this date has been changed.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The next board meeting will be held on 10 September 2026",
+     "verification": "verbatim",
+     "document_title": "Board minutes 14 May 2026",
+     "version_number": 1,
+     "version_status": "final",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 19
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.26,
+   "total_s": 2.26
+  },
+  {
+   "id": "h3-abstain-northbridge-chair",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Who chaired the Northbridge Analytics board meeting?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.93,
+   "total_s": 0.93
+  },
+  {
+   "id": "h3-abstain-hall3-temperature",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What was the temperature in Hall 3 when the alarm sounded?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.96,
+   "total_s": 0.96
+  },
+  {
+   "id": "h3-t06-instalment",
+   "tags": [
+    "T06"
+   ],
+   "question": "How much is each instalment of the Beta Corp settlement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the amount of each instalment of the Beta Corp settlement.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.44,
+   "total_s": 1.44
+  },
+  {
+   "id": "h3-msa-client-data",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What is Client Data under the MSA?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents define \"Client Data\" as \"all data supplied by or on behalf of Client and processed by Provider under this Agreement\" [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "all data supplied by or on behalf of Client and processed by Provider under this Agreement",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.4",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.85,
+   "total_s": 1.85
+  },
+  {
+   "id": "h3-msa-nonrenewal-notice",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How much notice of non-renewal must be given under the MSA?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The MSA requires at least ninety (90) days' written notice of non-renewal after the Initial Term, as stated in Clause 2.2 [1].\n\nThere is no mention of a different notice period for non-renewal in other clauses of the MSA.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "written notice of non-renewal at least ninety (90) days before the end of the then-current term",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 11
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.89,
+   "total_s": 2.89
+  },
+  {
+   "id": "h3-msa-invoice-timing",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How often does Harrowgate invoice, and is it in advance or in arrears?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Harrowgate invoices monthly in advance. The source states, \"Provider shall invoice monthly in advance. Invoices are payable net thirty (30) days from the invoice date\" [1].\n\nThere is no indication that Harrowgate invoices at any other frequency. The engagement letter from Calder & Wynne also mentions billing monthly, but does not specify whether it is in advance or in arrears [4].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall invoice monthly in advance. Invoices are payable net thirty (30) days from the invoice date",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.2",
+     "page_start": null,
+     "line": 17
+    },
+    {
+     "n": 4,
+     "quote": "We will bill monthly. Invoices are payable within thirty (30) days",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 14
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.99,
+   "total_s": 3.99
+  },
+  {
+   "id": "h3-nda-what-confidential",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What makes information Confidential Information under the Northbridge NDA?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "unverified",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Under the Northbridge NDA, Confidential Information includes all information disclosed by a Party (the \"Discloser\") to the other (the \"Recipient\") in connection with the Purpose, in any form, that is marked confidential or would reasonably be understood to be confidential [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Confidential Information means all information disclosed by a Party (the \"Discloser\") to the other (the \"Recipient\") in connection with the Purpose, in any form, that is marked confidential or would reasonably be understood to be confidential.",
+     "verification": "failed",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": null
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.35,
+   "total_s": 3.35
+  },
+  {
+   "id": "h3-lease-rent-suspension",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When is the warehouse rent suspended?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The warehouse rent is suspended if the Premises are unfit for use for more than thirty (30) consecutive days because of an event beyond the party's reasonable control [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "If the Premises are unfit for use for more than thirty (30) consecutive days because of such an event, the rent shall be suspended until the Premises are fit for use again",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "9.2",
+     "page_start": null,
+     "line": 25
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.71,
+   "total_s": 2.71
+  },
+  {
+   "id": "h3-min-place-time",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where and at what time was the board meeting of 14 May 2026 held?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The board meeting of 14 May 2026 was held at the company's offices in Gothenburg [1]. The meeting started at 10:00.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Held on 14 May 2026 at 10:00 at the company's offices in Gothenburg.",
+     "verification": "verbatim",
+     "document_title": "Board minutes 14 May 2026",
+     "version_number": 1,
+     "version_status": "final",
+     "clause": null,
+     "page_start": null,
+     "line": 3
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.49,
+   "total_s": 2.49
+  },
+  {
+   "id": "h3-min-approved",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When were the minutes of the 14 May 2026 board meeting approved?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify when the minutes of the 14 May 2026 board meeting were approved.\n\nThe only mention of approval is for a different document, \"Amendment No. 1 to the Kestrel storage agreement,\" which was signed on 20 May 2026 [5].\n\nThere is no information about the approval of the minutes of the 14 May 2026 board meeting in the provided sources.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.16,
+   "total_s": 4.16
+  },
+  {
+   "id": "h3-eng-conflicts",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Has Calder & Wynne found any conflict of interest in acting for Voss-Lindqvist?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that Calder & Wynne conducted a conflict check and found no conflict of interest in acting for Voss-Lindqvist AB. Specifically, the engagement letter states: \"We have carried out a conflict check and are not aware of any conflict of interest in acting for you on this matter\" [2].\n\nThere is no indication in the documents of any conflict of interest beyond this statement.",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "We have carried out a conflict check and are not aware of any conflict of interest in acting for you on this matter.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5.1",
+     "page_start": null,
+     "line": 16
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.44,
+   "total_s": 3.44
+  },
+  {
+   "id": "h3-eng-vat",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Are Calder & Wynne's hourly rates inclusive of VAT?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not explicitly state whether Calder & Wynne's hourly rates are inclusive of VAT. However, the engagement letter states that \"VAT is added at the applicable rate\" to their hourly rates [1]. This suggests that the rates are not inclusive of VAT and that VAT is applied on top of them.\n\nThere is no further information in the sources about whether the rates are inclusive or exclusive of VAT beyond this statement.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "VAT is added at the applicable rate",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 11
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.09,
+   "total_s": 3.09
+  },
+  {
+   "id": "h3-coc-address",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "From what address did Harrowgate send the change of control notice?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The change of control notice was sent from the address of Harrowgate Systems Inc., which is listed as \"400 Market Street, Wilmington, Delaware\" in the document [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Harrowgate Systems Inc.**, 400 Market Street, Wilmington, Delaware",
+     "verification": "normalized",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 3
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.14,
+   "total_s": 2.14
+  },
+  {
+   "id": "h3-storage-invoice-day",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When is the Kestrel storage fee invoiced?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel storage fee is invoiced on the first business day of each month. This is stated in the amended clause 3.1 of the Kestrel Storage Services Agreement, which was modified by Amendment No. 1 [1].\n\nPrior to the amendment, the original clause 3.1 also stated that the fee was invoiced on the first business day of each month [2].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Client shall pay a monthly storage fee of EUR 4,600, invoiced on the first business day of each month.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    },
+    {
+     "n": 2,
+     "quote": "Client shall pay a monthly storage fee of EUR 4,000, invoiced on the first business day of each month.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.36,
+   "total_s": 4.36
+  },
+  {
+   "id": "h3-amend-clause",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which clause of the storage agreement did Amendment No. 1 replace?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The clause of the storage agreement that Amendment No. 1 replaced is Clause 3.1. This is stated in the amendment document, which says: \"Clause 3.1 of the Storage Services Agreement is deleted and replaced with\" [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Clause 3.1 of the Storage Services Agreement is deleted and replaced with",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.46,
+   "total_s": 2.46
+  },
+  {
+   "id": "h3-witness-date",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "On what date did Jonas Ekberg give his witness statement?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not state the date when Jonas Ekberg gave his witness statement.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.37,
+   "total_s": 1.37
+  },
+  {
+   "id": "h3-witness-role",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What was Jonas Ekberg's job at Kestrel?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Jonas Ekberg's job at Kestrel was as a shift supervisor. This is stated in his witness statement, which says: \"I was the supervisor on duty on the night the chiller in Hall 3 failed\" [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "I was the supervisor on duty on the night the chiller in Hall 3 failed",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "1",
+     "page_start": null,
+     "line": 4
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.44,
+   "total_s": 2.44
+  }
+ ]
+}
