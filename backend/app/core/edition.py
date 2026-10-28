@@ -177,7 +177,17 @@ class ContentRedactingFilter(logging.Filter):
     """In the Law edition, replace free-text log arguments with their length (THREAT_MODEL T-11)."""
 
     def filter(self, record: logging.LogRecord) -> bool:
-        if not is_law() or not record.args:
+        if not is_law():
+            return True
+        if record.exc_info and record.exc_info[1] is not None:
+            # A traceback keeps its frames (where it failed) but not the exception's message, which can quote a document,
+            # a question or a path (commercial-readiness review R12, 2026-10-28).
+            import traceback
+            etype, evalue, tb = record.exc_info
+            record.exc_text = ("Traceback (most recent call last):\n" + "".join(traceback.format_tb(tb))
+                               + f"{etype.__name__}: <{len(str(evalue))} chars>")
+            record.exc_info = None
+        if not record.args:
             return True
         if isinstance(record.args, Mapping):
             record.args = {k: _redact(v) for k, v in record.args.items()}

@@ -265,3 +265,19 @@ def test_the_running_settings_feed_the_demo_check(monkeypatch):
     monkeypatch.setattr(settings, "LEGAL_DEMO_SIGNIN", True)
     got = posture_inputs(settings, env={"LEGAL_PROFILE": "demo"})
     assert got["LEGAL_DEMO_SIGNIN"] is True and got["LEGAL_PROFILE"] == "demo"
+
+
+def test_tracebacks_keep_their_frames_but_not_the_message_in_law(monkeypatch):
+    """Review R12 (2026-10-28): an exception's message can quote matter content; its type and frames stay for diagnosis."""
+    import logging
+    import sys
+    from app.core.edition import ContentRedactingFilter
+    monkeypatch.setenv("ECHOMIND_EDITION", "law")
+    quoted = " ".join(["clause 9.2 of the", "Harrow" + "gate", "MSA caps liability"])      # content arrives at run time, not in source
+    try:
+        raise ValueError(quoted)
+    except ValueError:
+        rec = logging.LogRecord("app.legal", logging.ERROR, __file__, 1, "answer failed", None, sys.exc_info())
+    ContentRedactingFilter().filter(rec)
+    text = logging.Formatter().format(rec)
+    assert "Harrowgate" not in text and "ValueError: <" in text and "test_tracebacks_keep_their_frames" in text
