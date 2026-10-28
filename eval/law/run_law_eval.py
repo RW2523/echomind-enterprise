@@ -28,6 +28,7 @@ The report is written to eval/law/reports/<time>-<set>.json and .md, with the co
 from __future__ import annotations
 
 import argparse
+import hashlib
 import base64
 import json
 import os
@@ -87,7 +88,13 @@ def main() -> int:
     ap.add_argument("--keep", action="store_true", help="keep the throwaway data folder")
     ap.add_argument("--search-only", action="store_true", help="retrieval diagnostics: top passages and scores, no answers")
     ap.add_argument("--floor", type=float, default=None, help="override LEGAL_RERANK_MIN_SCORE (diagnostics)")
+    ap.add_argument("--gate", action="store_true", help="release gate: refuse a changed tree or held-out set, apply "
+                                                         "eval/law/thresholds.json, exit 2 when a bar is missed")
+    ap.add_argument("--allow-dirty", action="store_true", help="with --gate: run on uncommitted changes anyway (never for a release)")
     args = ap.parse_args()
+    if args.gate and (problems := gate_preconditions(args)):
+        print("GATE REFUSED: " + "; ".join(problems), file=sys.stderr)
+        return 3
     data = setup_env(args)
     try:
         return run(args, data)
@@ -191,9 +198,54 @@ def run(args, data: Path) -> int:
         print(f"{'PASS' if r_['correct'] else 'FAIL'} {it['id']:28} {done.get('status'):10} {total:5.1f}s  {norm(done.get('answer'))[:110]}",
               flush=True)
     summary = summarise(results)
+    misses = check_bars(args.set, summary) if args.gate else []
+    if args.gate:
+        summary["gate"] = {"passed": not misses, "missed": misses, "thresholds": json.loads(THRESHOLDS.read_text())["status"]}
     report(args, summary, results)
     print(json.dumps(summary, indent=1))
+    if misses:
+        print("GATE FAILED: " + "; ".join(misses), file=sys.stderr, flush=True)
+        return 2
     return 0
+
+
+THRESHOLDS = HERE / "thresholds.json"
+
+
+def _ratio(v) -> float | None:
+    """"5/7" → 0.714; a number stays a number; None stays None."""
+    if isinstance(v, str) and "/" in v:
+        a, b = v.split("/")
+        return int(a) / int(b) if int(b) else None
+    return v
+
+
+def check_bars(set_: str, summary: dict) -> list[str]:
+    """Every bar this set misses, in words (empty when it passes). A measure that could not be computed misses its bar."""
+    bars = json.loads(THRESHOLDS.read_text())["bars"].get(set_, {})
+    misses = []
+    for key, bar in bars.items():
+        name, kind = key.rsplit("_", 1)
+        value = _ratio(summary.get(name))
+        if value is None:
+            misses.append(f"{name} not measured (bar {kind} {bar})")
+        elif (kind == "min" and value < bar) or (kind == "max" and value > bar):
+            misses.append(f"{name} {round(value, 3)} ({'below' if kind == 'min' else 'above'} {bar})")
+    return misses
+
+
+def gate_preconditions(args) -> list[str]:
+    """A release gate runs on committed code and on the frozen held-out set."""
+    problems = []
+    dirty = subprocess.run(["git", "status", "--porcelain", "--", ".", ":!eval/law/reports"], cwd=ROOT, capture_output=True,
+                           text=True).stdout.strip()
+    if dirty and not args.allow_dirty:
+        problems.append("the tree has uncommitted changes (commit them, or --allow-dirty for a trial run that is not a release gate)")
+    want = json.loads(THRESHOLDS.read_text())["heldout_sha256"]
+    have = hashlib.sha256((HERE / "heldout.jsonl").read_bytes()).hexdigest()
+    if have != want:
+        problems.append(f"heldout.jsonl changed (sha256 {have[:12]}…, frozen {want[:12]}…): update thresholds.json deliberately, with a note")
+    return problems
 
 
 def score(it: dict, done: dict, events: list, first, total: float, doc_ids: dict) -> dict:
@@ -256,6 +308,7 @@ def report(args, summary: dict, rs: list[dict]) -> None:
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     dirty = bool(subprocess.run(["git", "status", "--porcelain", "--", ".", ":!eval/law/reports"], cwd=ROOT, capture_output=True, text=True).stdout.strip())
     meta = {"set": args.set, "commit": commit + ("+changes" if dirty else ""), "model": args.model, "embeddings": "nomic-embed-text",
+            "items_sha256": hashlib.sha256((HERE / f"{args.set}.jsonl").read_bytes()).hexdigest(), "gate": bool(getattr(args, "gate", False)),
             "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2", "time": stamp, "limit": args.limit or None, "only": args.only or None}
     (out / f"{stamp}-{args.set}.json").write_text(json.dumps({"meta": meta, "summary": summary, "items": rs}, indent=1))
     lines = [f"# EchoMind Law research evaluation — {args.set}", "", f"- Commit: `{meta['commit']}`", f"- Answer model: `{args.model}`",

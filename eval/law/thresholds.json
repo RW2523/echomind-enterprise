@@ -1,0 +1,12 @@
+{
+  "_about": "Release gate for research answers (commercial-readiness review R8, 2026-10-28). Engineering proposals: they need the owner's and counsel's sign-off before they are release criteria (status). A failed bar fails the run (exit 2); it is never hidden.",
+  "status": "proposed — awaiting owner and counsel sign-off",
+  "heldout_sha256": "e7a80c4f48a25d4e86059de131303256e8f515915bc692824b8ebaa829c71eef",
+  "heldout_note": "Frozen 2026-10-28 (h-account-said-time included). Changing the held-out set needs a new checksum here and a note in docs/echomind-legal/IMPLEMENTATION_STATUS.md; it is never tuned against.",
+  "bars": {
+    "golden":  {"t06_leaks_max": 0, "answer_accuracy_min": 0.90, "abstention_accuracy_min": 0.66, "citation_precision_min": 0.90,
+                "quote_verification_rate_min": 0.95, "latency_total_p95_s_max": 10.0},
+    "heldout": {"t06_leaks_max": 0, "answer_accuracy_min": 0.85, "abstention_accuracy_min": 0.66, "citation_precision_min": 0.90,
+                "quote_verification_rate_min": 0.95, "latency_total_p95_s_max": 10.0}
+  }
+}

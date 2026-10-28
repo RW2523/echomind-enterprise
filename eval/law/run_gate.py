@@ -43,8 +43,8 @@ REPORTS = HERE / "reports"
 PY = sys.executable
 
 STEPS = [
-    ("research", "golden", [str(HERE / "run_law_eval.py"), "--set", "golden"]),
-    ("research", "heldout", [str(HERE / "run_law_eval.py"), "--set", "heldout"]),
+    ("research", "golden", [str(HERE / "run_law_eval.py"), "--set", "golden", "--gate"]),      # bars: eval/law/thresholds.json
+    ("research", "heldout", [str(HERE / "run_law_eval.py"), "--set", "heldout", "--gate"]),
     ("compare", "golden", [str(HERE / "run_compare_eval.py"), "--set", "golden"]),
     ("compare", "heldout", [str(HERE / "run_compare_eval.py"), "--set", "heldout"]),
     ("assist", "golden", [str(HERE / "assist" / "run_assist_eval.py"), "--set", "golden"]),
