@@ -35,6 +35,7 @@ const ABSTAINED: Record<string, string> = {
   model: 'The passages found do not answer it. Ask more specifically, or read the passages it consulted below.',
   access_changed: 'This answer quoted a document you can no longer open, so it is not shown again.',
   other_documents: 'The passages found are from other documents than the one you asked about, so they are not given as its answer: that document does not say this.',
+  other_party: "The passages found are another party's records, so they are not given as the answer: no document of the party you asked about records this.",
 };
 
 /** Research: questions answered only from this matter's documents, each statement tied to the exact

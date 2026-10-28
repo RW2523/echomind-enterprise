@@ -484,3 +484,66 @@ def test_which_documents_a_text_names():
     for text in ("Either party may terminate on thirty days' written notice.", "What was Jonas Ekberg's job at Kestrel?",
                  "Under the agreement, liability is capped.", "Credits are applied against the next invoice."):
         assert referenced(text, t) == set(), text
+
+
+# ── Nothing left standing, a neighbour's terms, another party's record (2026-10-28, held-out 3) ─────────────────────────
+def test_when_every_cited_sentence_named_another_document_the_answer_is_withheld(ev):
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    ev["llm"].answer = f'The side letter caps each party\'s total liability at USD 250,000 [{cap}: "capped at USD 250,000"].'
+    done = ask(alice, ev["mid"], "What is the liability cap?")[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "other_documents"
+
+
+def test_not_stated_for_the_document_asked_then_only_another_document_s_terms_is_withheld(ev, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)               # both clauses reach the model
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    events = ask(alice, ev["mid"], "Is each party's total liability capped in the side letter?")
+    cap, letter = source_n(events, "250,000"), source_n(events, "service credit")
+    ev["llm"].answer = (f"The documents do not state a liability cap in the side letter [{letter}]. "
+                        f'The MSA caps each party\'s total liability at USD 250,000 [{cap}: "capped at USD 250,000"].')
+    done = ask(alice, ev["mid"], "Is each party's total liability capped in the side letter?")[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "other_documents"
+
+
+MINUTES = ("MINUTES OF THE BOARD OF ALDER FINCH LTD (fictional)\n\nPresent: the directors of Alder Finch Ltd.\n\n"
+           "1. Next meeting. The next board meeting of the company will be held on 10 September 2026.")
+SUPPLY = ("SUPPLY AGREEMENT (fictional) between Alder Finch Ltd and Brightwater Ltd.\n\n"
+          "1. Supply. Brightwater Ltd supplies the board meeting rooms used by the company.")
+
+
+def test_another_party_s_record_is_not_given_as_the_answer(ev):
+    """Held-out 3: Voss-Lindqvist's next board meeting was given as Kestrel's. A party's own record rests only on a
+    document that party is party to."""
+    alice = as_user(ev, "alice")
+    upload(alice, ev["mid"], "board-minutes.txt", MINUTES, status="final")
+    upload(alice, ev["mid"], "supply-agreement.txt", SUPPLY, status="executed")
+    index_all()
+    q = "When is the next board meeting of Brightwater?"
+    ev["llm"].answer = "x"
+    meet = source_n(ask(alice, ev["mid"], q), "10 September 2026")
+    ev["llm"].answer = f'The next board meeting of Brightwater is on 10 September 2026 [{meet}: "held on 10 September 2026"].'
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] in ("other_party", "other_documents")
+    q2 = "When is the next board meeting of Alder Finch?"
+    ev["llm"].answer = "x"
+    meet = source_n(ask(alice, ev["mid"], q2), "10 September 2026")
+    ev["llm"].answer = f'The next board meeting of Alder Finch is on 10 September 2026 [{meet}: "held on 10 September 2026"].'
+    assert ask(alice, ev["mid"], q2)[-1]["abstained"] is False                     # its own minutes: stands
+
+
+def test_whose_record_a_text_speaks_of():
+    from app.legal.research.attribution import parties_of, party_records
+    assert parties_of("Board minutes", "MINUTES OF A MEETING OF THE BOARD OF DIRECTORS OF VOSS-LINDQVIST AB\n\n1. Quorum") == {"voss-lindqvist"}
+    assert parties_of("Letter", "**Calder & Wynne LLP**, London\n\nTo: Petra Voss, Voss-Lindqvist AB\n\n## 1. Scope\n\nHarrowgate Systems Inc.") \
+        == {"calder", "voss-lindqvist"}                                         # a company the clauses mention is not a party
+    known = {"kestrel", "harrowgate", "northbridge", "voss-lindqvist"}
+    assert party_records("Who chairs Harrowgate's board?", known) == {"harrowgate"}
+    assert party_records("Where are Northbridge Analytics' offices?", known) == {"northbridge"}
+    assert party_records("The next board meeting of Kestrel Cold Storage Ltd is on 10 September.", known) == {"kestrel"}
+    for text in ("Voss-Lindqvist's pallets were moved to Hall 1.", "What is Harrowgate's obligation to notify a breach?",
+                 "What is Kestrel's liability for stored goods?"):
+        assert party_records(text, known) == set(), text

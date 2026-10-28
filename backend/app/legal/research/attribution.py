@@ -76,3 +76,58 @@ def referenced(text: str, titles: dict[str, str]) -> set[str]:
         if best >= 1:
             out.update(d for d, s in holders.items() if s == best)
     return out
+
+
+# ── Parties (2026-10-28, held-out 3 h3-abstain-kestrel-board) ────────────────────────────────────────────────────────────
+# "The next board meeting of Kestrel Cold Storage Ltd is scheduled for 10 September 2026", from Voss-Lindqvist's board
+# minutes. A party's own internal record — its board, officers, offices, finances, advisers — is stated only by a document
+# that party is party to; a document that merely mentions the party does not say it.
+_COMPANY = re.compile(r"\b([A-Z][\w&'-]*(?:[ \t]+(?:&[ \t]+)?[A-Z][\w&'-]*){0,3})[ \t]+(?:Inc|Ltd|LLP|AB|plc|PLC|NV|GmbH|LLC|SA|BV|Limited)\b\.?")
+_RECORD = (r"(?:board(?:\s+meeting)?|board\s+of\s+directors|directors|chair(?:man|woman|person)?|general\s+counsel|chief\s+\w+\s+officer|"
+           r"ceo|cfo|offices?|headquarters|registered\s+office|employees|staff|revenue|turnover|budget|dividend|shareholders|"
+           r"auditors?|law\s+firm|lawyers|solicitors|advisers|account\s+manager|financial\s+year)")
+
+
+_SMALL = frozenset("of the a an and to for by between with from at on in".split())
+_SUFFIXES = frozenset("LLP PLC LLC GMBH LTD INC".split())
+
+
+def party_key(name: str) -> str:
+    """A party by its first distinctive word: "Kestrel Cold Storage Ltd" → "kestrel", "Calder & Wynne LLP" → "calder"."""
+    words = [w.strip("'-") for w in re.findall(r"[a-z][a-z'-]*", (name or "").lower())]
+    while words and words[0] in _SMALL:
+        words.pop(0)
+    return words[0] if words else ""
+
+
+def parties_of(title: str, text: str) -> set[str]:
+    """The parties of a document: the companies named in its title and preamble — before its first numbered clause — who
+    made, signed or received it. Companies its clauses go on to mention are not its parties."""
+    body = text or ""
+    first = re.search(r"(?m)^\s*(?:#+\s*)?1[.\s]", body)
+    head = "\n".join((title or "", body[:min(first.start() if first else 600, 1200)]))
+    head = re.sub(r"\b[A-Z][A-Z'-]{2,}\b", lambda m: m.group(0) if m.group(0) in _SUFFIXES else m.group(0).title(), head)
+    out = set()
+    for m in _COMPANY.finditer(head):
+        words = m.group(1).split()
+        cut = max((i for i, w in enumerate(words) if w.lower() in _SMALL), default=-1)   # "Board of Directors of Voss-Lindqvist"
+        out.add(party_key(" ".join(words[cut + 1:])))
+    return out - {""}
+
+
+def party_records(text: str, parties: set[str]) -> set[str]:
+    """The known parties whose own internal record the text speaks of: "Harrowgate's board", "Northbridge Analytics'
+    offices", "the general counsel of Kestrel". A party named in passing ("the Voss-Lindqvist pallets") is not counted."""
+    out = set()
+    t = re.sub(r"\[[^\]]*\]", " ", text or "").replace("’", "'")
+    for p in parties:
+        name = re.escape(p) + r"[\w-]*(?:\s+[A-Z][\w&-]*){0,3}"
+        if re.search(rf"\b{name}(?:'s|')\s+(?:\w+\s+){{0,2}}?{_RECORD}\b", t, re.I) or \
+           re.search(rf"\b{_RECORD}\s+of\s+(?:the\s+)?{name}", t, re.I):
+            out.add(p)
+    return out
+
+
+def mentions_record(text: str) -> bool:
+    """Cheap first look: does the text speak of some party's internal record at all (before parties are read)?"""
+    return bool(re.search(_RECORD, text or "", re.I)) and bool(re.search(r"(?:'s|'|’s|’)\s|\bof\s", text or ""))

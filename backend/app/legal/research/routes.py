@@ -119,6 +119,18 @@ def _titles(scopes, uid: str) -> dict[str, str]:
     return {d["id"]: d["title"] or "" for sc in scopes for d in doc_repo.list_documents(sc.matter_id, uid)}
 
 
+def _parties(scopes, uid: str) -> dict[str, set]:
+    """The parties of each document the person may read in the matters asked about (document id → party keys)."""
+    from ..documents import repo as doc_repo
+    out = {}
+    for sc in scopes:
+        for d in doc_repo.list_documents(sc.matter_id, uid):
+            v = d.get("current_version") or {}
+            body = doc_repo.reader(v["id"]) if v.get("id") else None
+            out[d["id"]] = attribution.parties_of(d.get("title") or "", (body or {}).get("text") or "")
+    return out
+
+
 def _version_texts(version_ids) -> list[str]:
     """The stored text of each cited version: the whole document, not only the passage."""
     from ..documents import repo as doc_repo
@@ -335,17 +347,47 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                         speaks_of[c.n] = {sources[c.n - 1]["document_id"]} | attribution.referenced(sources[c.n - 1]["text"], titles)
                     out |= speaks_of[c.n]
             return out
+        # A party's own record (its board, officers, offices, finances, advisers) rests only on a document that party is party
+        # to (2026-10-28, held-out 3: Voss-Lindqvist's next board meeting given as Kestrel's). Parties are read only when the
+        # question or a sentence speaks of one's record.
+        parties: dict[str, set] = {}
+        known: set = set()
+
+        async def load_parties():
+            nonlocal known
+            if not parties:
+                parties.update(await run_in_threadpool(_parties, scopes, principal["sub"]))
+                known = set().union(*parties.values()) if parties else set()
+
+        def of_parties(claim) -> set:
+            return set().union(*(parties.get(sources[c.n - 1]["document_id"], set()) for c in claim.citations
+                                 if 1 <= c.n <= len(sources))) if claim.citations else set()
+        maybe_party = attribution.mentions_record(question) or any(attribution.mentions_record(c.sentence) for c in claims)
+        if maybe_party:
+            await load_parties()
         misattributed = []
         for claim in claims:
             named = attribution.referenced(claim.sentence, titles)
             if named and claim.citations and not (spoken(claim) & named):
                 misattributed.append(claim)
+            elif maybe_party and claim.citations and (owners := attribution.party_records(claim.sentence, known)) \
+                    and not (owners & of_parties(claim)):
+                misattributed.append(claim)
         unsupported.extend(c.sentence for c in misattributed if c.sentence not in unsupported)
         standing = [c for c in claims if _stands(c) and c not in misattributed]
         asked = attribution.referenced(question, titles)
-        off_target = bool(asked) and bool(standing) and not any(spoken(c) & asked for c in standing)
-        nothing = not standing
+        owner = attribution.party_records(question, known) if maybe_party else set()
         answering = [c for c in standing if not prompt.only_context(c.sentence)]
+        off_target = (
+            (bool(asked) and bool(standing) and not any(spoken(c) & asked for c in standing))
+            # every sentence that would have stood named one document and cited another, and nothing else is left (held-out 3)
+            or (bool(misattributed) and not standing)
+            # "not stated" for the document asked about, then only another document's terms (held-out 3: the MSA's 48 hours
+            # for a question about the Kestrel storage agreement)
+            or (bool(asked) and prompt.opens_not_stated(text) and bool(answering)
+                and not any(spoken(c) & asked for c in answering)))
+        off_party = bool(owner) and bool(standing) and not any(owner & of_parties(c) for c in standing)
+        nothing = not standing
         declined = False
         if not answering and prompt.opens_not_stated(text):
             cited = {sources[c.n - 1]["version_id"] for claim in claims for c in claim.citations if 1 <= c.n <= len(sources)}
@@ -355,12 +397,12 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                         if 1 <= c.n <= len(passages) and passages[c.n - 1].get("score") is not None]
         weak = not cited_scores or max(float(x) for x in cited_scores) < settings.LEGAL_ABSTAIN_WEAK_SCORE
         abstained = (nothing and (prompt.is_abstention(text) or prompt.says_not_stated(text))) or \
-            (prompt.says_not_stated(text) and weak) or declined or off_target
+            (prompt.says_not_stated(text) and weak) or declined or off_target or off_party
         numbers = prompt.cited_numbers(text, len(sources))
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
         status, answer = _status(abstained, claims, unsupported, failed), text
-        reason = None if not abstained else "other_documents" if off_target else "model"
+        reason = None if not abstained else "other_documents" if off_target else "other_party" if off_party else "model"
         found = [] if abstained else await run_in_threadpool(doc_versions.conflicts, citations or sources, versions)
         changed = [] if abstained else _changed(links, sources, numbers, items)
         if status == "answered" and any(a["by"]["signed"] and a["cited"] and not a["amendment_cited"] for a in changed):
