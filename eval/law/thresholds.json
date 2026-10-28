@@ -35,10 +35,20 @@
       "citation_precision_min": 0.9,
       "quote_verification_rate_min": 0.95,
       "latency_total_p95_s_max": 10.0
+    },
+    "heldout4": {
+      "t06_leaks_max": 0,
+      "answer_accuracy_min": 0.85,
+      "abstention_accuracy_min": 0.8,
+      "citation_precision_min": 0.9,
+      "quote_verification_rate_min": 0.95,
+      "latency_total_p95_s_max": 10.0
     }
   },
   "heldout2_sha256": "5986c96fa28d33f08a8350aa4e472e2b3cad9353c07a0d936f3cc7b510844213",
   "heldout2_note": "Frozen 2026-10-28 before any change to the answer path: 15 unanswerable near-misses (14 + 1 T06) and 15 answerable look-alikes, written from the corpus alone, none in golden or heldout. Run once per version; never tuned against.",
   "heldout3_sha256": "c522fad557584ef78cac36cfbc3a5b4f3a7910c0b03af34ebe50e59bf2fb06a0",
-  "heldout3_note": "Frozen 2026-10-28 before the attribution work, after held-out 2 had been seen: 15 unanswerable items (13 cross-document traps — the clause exists in another document of the matter, not the one asked about — 1 plain, 1 T06) and 14 answerable look-alikes, none in the earlier sets. Run once per version; never tuned against."
+  "heldout3_note": "Frozen 2026-10-28 before the attribution work, after held-out 2 had been seen: 15 unanswerable items (13 cross-document traps — the clause exists in another document of the matter, not the one asked about — 1 plain, 1 T06) and 14 answerable look-alikes, none in the earlier sets. Run once per version; never tuned against.",
+  "heldout4_sha256": "07540b2b8609fe6b07fb2fd15be738e098ec684d591380d530b54754904c607b",
+  "heldout4_note": "Frozen 2026-10-28 before the standing/party work, after held-out 3 had been seen: 15 unanswerable items (7 party mix-ups — the fact exists for another party — 6 cross-document traps, 1 plain, 1 T06) and 13 answerable look-alikes, none in the earlier sets. Run once per version; never tuned against."
 }
