@@ -118,6 +118,57 @@ def _check(raw: str, sources: list[dict]) -> tuple[dict, list]:
              "failed": [c["sentence"] for c in claims if c["state"] == "failed"]}, para.claims)
 
 
+# A sentence that only says where something is ("These details are found in Section 2 of the agreement"), and a statement
+# followed by an explicit attribution ("… is 60 days. This is stated in the source as: "… 60 days' written notice" [1]")
+# (2026-10-29 QA RAG-001 and RAG-002: both were listed as unsupported beside a verified quote that carries them).
+_LOCATION = re.compile(r"\b(?:section|clause|§|paragraph|article|cl\.)\s*(\d+(?:\.\d+)*)", re.I)
+_POINTER_WORDS = frozenset("""these this that those the a an all both details detail information terms term it they are is be
+can may found set out stated state specified specify provided provide contained contain described describe given listed in of
+under within at on and agreement document documents contract source sources excerpt as above below""".split())
+_ATTRIBUTES = re.compile(r"^\W*(?:(?:this|that|these|it|they)\s+(?:is|are|was|were)\s+(?:stated|set\s+out|specified|provided|"
+                         r"found|confirmed|described|written|recorded|shown)|as\s+(?:stated|set\s+out|provided)\s+in)\b", re.I)
+_NUMBER_WORDS = frozenset("""one two three four five six seven eight nine ten eleven twelve fifteen twenty thirty forty forty-five
+fifty sixty seventy eighty ninety hundred thousand million""".split())
+
+
+def _figures(text: str) -> set:
+    t = text.lower()
+    return set(re.findall(r"\d[\d,.]*\d|\d", t)) | {w for w in re.findall(r"[a-z-]+", t) if w in _NUMBER_WORDS}
+
+
+def _pointed(text: str, unsupported: list, claims: list, items: list) -> list:
+    """`unsupported` without the sentences a verified quote of the answer demonstrably carries: a pointer to the clause the
+    quote is in, and a statement whose every figure is in the quote of the attribution that follows it. Anything else
+    stays unsupported."""
+    verified = [e for e in items if e.get("verification") in ("verbatim", "normalized")]
+    clauses = set()
+    for e in verified:
+        parts = str(e.get("clause") or "").split(".")
+        clauses |= {".".join(parts[:k]) for k in range(1, len(parts) + 1) if parts[0]}
+    sentences = [x.strip() for x in prompt._sentences(text)]
+    by_sentence = {c.sentence.strip(): c for c in claims}
+    out = []
+    for s in unsupported:
+        if _CITED_MARK.search(s):
+            out.append(s)
+            continue
+        m = _LOCATION.search(s)
+        if m and m.group(1) in clauses:
+            rest = (s[:m.start()] + " " + s[m.end():]).lower()
+            if all(w in _POINTER_WORDS for w in re.findall(r"[a-z]+", rest)):
+                continue
+        i = sentences.index(s) if s in sentences else -1
+        nxt = by_sentence.get(sentences[i + 1]) if 0 <= i < len(sentences) - 1 and _ATTRIBUTES.search(sentences[i + 1]) else None
+        quotes = " ".join(c.quote for c in (nxt.citations if nxt else []) if c.quote and c.verification in ("verbatim", "normalized"))
+        if quotes and _figures(s) and _figures(s) <= _figures(quotes):
+            said = {w[:5] for w in re.findall(r"[a-z]{4,}", s.lower())} - {w[:5] for w in _POINTER_WORDS}
+            if said & {w[:5] for w in re.findall(r"[a-z]{4,}", quotes.lower())}:
+                continue
+        out.append(s)
+    return out
+
+
+_CITED_MARK = re.compile(r"\[\d{1,2}\]")
 _HEADING = re.compile(r"^(?:\d+(?:\.\d+)*\.?\s+)?[A-Z][A-Z &/',-]{1,58}$")           # capitals only: no figures, no sentence
 
 
@@ -442,6 +493,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         numbers = prompt.cited_numbers(text, len(sources))
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
+        if not abstained:
+            unsupported = _pointed(text, unsupported, claims, items)
         status, answer = _status(abstained, claims, unsupported, failed), text
         reason = (None if not abstained else "other_documents" if off_target else "other_party" if off_party
                   else "not_in_cited" if elsewhere else "model")

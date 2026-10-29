@@ -488,6 +488,43 @@ def test_rag003_a_heading_alone_supports_only_a_sentence_about_what_it_names():
     assert not routes._heading_only("capped at USD 250,000", "The cap is USD 250,000 [1].")
 
 
+def test_rag001_a_pointer_to_the_cited_clause_is_not_an_unsupported_sentence(ev, monkeypatch):
+    """QA RAG-001: "These details are found in Section 2 of the agreement." beside a verified quote from §2 was listed as
+    unsupported, so the payment answer showed "partly supported". A sentence that only says where the cited text is, and
+    names the clause the verified quote is in, is carried by that quote; a pointer to any other clause is not."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    fees = source_n(ask(alice, ev["mid"], "When are the fees payable?"), "thirty days")
+    quote = f'[{fees}: "The Customer shall pay the fees within thirty days of each invoice"]'
+    ev["llm"].answer = f"The fees are payable within thirty days of each invoice {quote}. These details are found in clause 4.2 of the agreement."
+    done = ask(alice, ev["mid"], "When are the fees payable?")[-1]
+    assert done["evidence"][0]["clause"] == "4.2"
+    assert done["status"] == "answered" and done["unsupported"] == []
+    ev["llm"].answer = f"The fees are payable within thirty days of each invoice {quote}. These details are found in clause 9 of the agreement."
+    done = ask(alice, ev["mid"], "When are the fees payable?")[-1]
+    assert done["status"] == "partial" and done["unsupported"] == ["These details are found in clause 9 of the agreement."]
+
+
+def test_rag001_a_statement_followed_by_its_attribution_is_carried_by_that_quote(ev, monkeypatch):
+    """QA RAG-002's first sentence ("The termination notice period … is 60 days.") came just before "This is stated in the
+    source as: "… 60 days' written notice" [3]". When the next sentence attributes, and the quote holds every figure of the
+    statement, the statement is carried by it; a figure the quote does not hold keeps it unsupported."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    fees = source_n(ask(alice, ev["mid"], "When are the fees payable?"), "thirty days")
+    tail = f'This is stated in the agreement as: "The Customer shall pay the fees within thirty days" [{fees}: "The Customer shall pay the fees within thirty days"].'
+    ev["llm"].answer = f"The fees are due within thirty days. {tail}"
+    done = ask(alice, ev["mid"], "When are the fees payable?")[-1]
+    assert done["status"] == "answered" and done["unsupported"] == []
+    ev["llm"].answer = f"The fees are due within ninety days. {tail}"
+    done = ask(alice, ev["mid"], "When are the fees payable?")[-1]
+    assert done["unsupported"] == ["The fees are due within ninety days."]
+
+
 def test_which_cited_sentences_are_only_context():
     from app.legal.research import prompt
     context = ["The source mentions her appointment but does not include any information about her compensation [1].",
