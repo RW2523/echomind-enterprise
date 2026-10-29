@@ -1,0 +1,106 @@
+{
+ "meta": {
+  "set": "heldout2",
+  "commit": "4ec8bbc",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "5986c96fa28d33f08a8350aa4e472e2b3cad9353c07a0d936f3cc7b510844213",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261028-212847",
+  "limit": null,
+  "only": "h2-abstain-deposit-interest,h2-abstain-account-manager,h2-abstain-iso-audit"
+ },
+ "summary": {
+  "items": 3,
+  "answer_accuracy": "0/0",
+  "abstention_accuracy": "3/3",
+  "false_abstentions": 0,
+  "t06_leaks": 0,
+  "citation_precision": null,
+  "quote_verification_rate": null,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 3
+  },
+  "latency_total_p50_s": 2.05,
+  "latency_total_p95_s": 2.89,
+  "latency_first_paragraph_p50_s": 2.05,
+  "latency_first_paragraph_p95_s": 2.89
+ },
+ "items": [
+  {
+   "id": "h2-abstain-deposit-interest",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Does the Unit 7 rent deposit earn interest for the tenant?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not mention whether the Unit 7 rent deposit earns interest for the tenant.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.89,
+   "total_s": 2.89
+  },
+  {
+   "id": "h2-abstain-account-manager",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Who is Voss-Lindqvist's account manager at Harrowgate?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not identify Voss-Lindqvist's account manager at Harrowgate.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.07,
+   "total_s": 1.07
+  },
+  {
+   "id": "h2-abstain-iso-audit",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How often must Harrowgate be audited against ISO/IEC 27001 under the MSA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify how often Harrowgate must be audited against ISO/IEC 27001 under the MSA [3].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.05,
+   "total_s": 2.05
+  }
+ ]
+}

@@ -1,0 +1,122 @@
+{
+ "meta": {
+  "set": "heldout4",
+  "commit": "4ec8bbc",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "07540b2b8609fe6b07fb2fd15be738e098ec684d591380d530b54754904c607b",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261028-213058",
+  "limit": null,
+  "only": "h4-abstain-harrowgate-chair,h4-abstain-side-termination,h4-abstain-lease-cure"
+ },
+ "summary": {
+  "items": 3,
+  "answer_accuracy": "0/0",
+  "abstention_accuracy": "2/3",
+  "false_abstentions": 0,
+  "t06_leaks": 0,
+  "citation_precision": null,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 2,
+   "partial": 1
+  },
+  "latency_total_p50_s": 2.71,
+  "latency_total_p95_s": 2.77,
+  "latency_first_paragraph_p50_s": 2.71,
+  "latency_first_paragraph_p95_s": 2.77
+ },
+ "items": [
+  {
+   "id": "h4-abstain-harrowgate-chair",
+   "tags": [
+    "ABSTAIN",
+    "PARTY"
+   ],
+   "question": "Who chairs Harrowgate's board?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not state who chairs Harrowgate's board.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.71,
+   "total_s": 2.71
+  },
+  {
+   "id": "h4-abstain-side-termination",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "How much notice is needed to terminate the service credit side letter?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the notice period required to terminate the service credit side letter. The service credit side letter is mentioned but does not include any termination clause [2]. Other documents mention termination clauses, but none specifically address the service credit side letter.",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "This letter supplements the Master Services Agreement dated 2 March 2026 between us. It takes effect on 1 April 2026.",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 4
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.77,
+   "total_s": 2.77
+  },
+  {
+   "id": "h4-abstain-lease-cure",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What cure period applies to a material breach of the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The cure period for a material breach of the warehouse lease is thirty (30) days. This is stated in source [1].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.14,
+   "total_s": 2.14
+  }
+ ]
+}

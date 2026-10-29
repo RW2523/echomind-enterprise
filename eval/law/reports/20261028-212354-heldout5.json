@@ -1,0 +1,944 @@
+{
+ "meta": {
+  "set": "heldout5",
+  "commit": "4ec8bbc",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "25a4499c40f08895f6076516299183f50eae70f54b98c8819d90459619072ff4",
+  "gate": true,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261028-212354",
+  "limit": null,
+  "only": null
+ },
+ "summary": {
+  "items": 28,
+  "answer_accuracy": "10/12",
+  "abstention_accuracy": "14/16",
+  "false_abstentions": 1,
+  "t06_leaks": 0,
+  "citation_precision": 0.879,
+  "quote_verification_rate": 0.944,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 15,
+   "partial": 10,
+   "answered": 3
+  },
+  "latency_total_p50_s": 2.86,
+  "latency_total_p95_s": 5.2,
+  "latency_first_paragraph_p50_s": 2.86,
+  "latency_first_paragraph_p95_s": 5.2,
+  "gate": {
+   "passed": false,
+   "missed": [
+    "answer_accuracy 0.833 (below 0.85)",
+    "citation_precision 0.879 (below 0.9)",
+    "quote_verification_rate 0.944 (below 0.95)"
+   ],
+   "thresholds": "proposed \u2014 awaiting owner and counsel sign-off"
+  }
+ },
+ "items": [
+  {
+   "id": "h5-abstain-harrowgate-budget",
+   "tags": [
+    "ABSTAIN",
+    "PARTY_ACTION"
+   ],
+   "question": "What budget did Harrowgate approve for the MSA renewal?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.46,
+   "total_s": 2.46
+  },
+  {
+   "id": "h5-abstain-northbridge-cfo",
+   "tags": [
+    "ABSTAIN",
+    "PARTY_ACTION"
+   ],
+   "question": "Whom did Northbridge Analytics appoint as Chief Financial Officer?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_party",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that Northbridge Analytics appointed Maria Ek as Chief Financial Officer. This is specified in the source as follows:\n\n[1]",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.1,
+   "total_s": 2.1
+  },
+  {
+   "id": "h5-abstain-crestmoor-meeting",
+   "tags": [
+    "ABSTAIN",
+    "PARTY_ACTION"
+   ],
+   "question": "When did Crestmoor Estates hold its last board meeting?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_party",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not state when Crestmoor Estates held its last board meeting.\n\nThe only mention of a board meeting is in source 1, which states that the next board meeting will be held on 10 September 2026 [1]. There is no information provided about when the last board meeting was held.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.92,
+   "total_s": 2.92
+  },
+  {
+   "id": "h5-abstain-pellucid-dividend",
+   "tags": [
+    "ABSTAIN",
+    "PARTY_ACTION"
+   ],
+   "question": "Did Pellucid Holdings declare an interim dividend?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_party",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not mention whether Pellucid Holdings declared an interim dividend.\n\nThe only reference to a dividend is in the Board minutes of 14 May 2026, which state: \"The board resolved not to propose an interim dividend\" [1].\n\nNo other sources address the declaration of an interim dividend by Pellucid Holdings.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.78,
+   "total_s": 2.78
+  },
+  {
+   "id": "h5-abstain-harrowgate-lawyers",
+   "tags": [
+    "ABSTAIN",
+    "PARTY_ACTION"
+   ],
+   "question": "Which law firm does Harrowgate use?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.92,
+   "total_s": 0.92
+  },
+  {
+   "id": "h5-abstain-kestrel-complaints",
+   "tags": [
+    "ABSTAIN",
+    "PARTY_ACTION"
+   ],
+   "question": "What complaints procedure does Kestrel offer?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.89,
+   "total_s": 0.89
+  },
+  {
+   "id": "h5-abstain-lease-renewal-notice",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "How much notice must the tenant give to renew the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify how much notice the tenant must give to renew the warehouse lease.\n\nThe relevant section about renewals is in source [4], but this refers to a different agreement called the \"Harrowgate MSA,\" not the \"Unit 7 Lease.\"\n\nThe \"Unit 7 Lease\" does not mention a renewal clause, only a break clause in [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.2,
+   "total_s": 5.2
+  },
+  {
+   "id": "h5-abstain-ticket-credits",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "What service credit applies when support tickets are answered late?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify service credit for late answered support tickets. The provided sources discuss service credits related to system unavailability, not response times for support tickets.\n\n[1]  \n[3]",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.2,
+   "total_s": 3.2
+  },
+  {
+   "id": "h5-abstain-deposit-refund",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "Within how many days after the lease ends must the rent deposit be refunded?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the number of days within which the rent deposit must be refunded after the lease ends.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.25,
+   "total_s": 1.25
+  },
+  {
+   "id": "h5-abstain-maintenance-hours",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "How many hours of scheduled maintenance does the side letter allow each month?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.89,
+   "total_s": 0.89
+  },
+  {
+   "id": "h5-abstain-renewal-fee",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "What renewal fee does the MSA set for each renewal term?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify a renewal fee for the MSA. The MSA outlines the term and renewal process but does not mention a specific renewal fee [1]. There is no information about a fee for renewal terms in the sources provided.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Agreement begins on the Effective Date and continues for an initial term of thirty-six (36) months",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 10
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.67,
+   "total_s": 2.67
+  },
+  {
+   "id": "h5-abstain-review-notice",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "How much notice of a rent review must the landlord give?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the amount of notice required for a rent review.\n\nThe lease mentions that rent will be reviewed on 1 April 2030, but it does not state how much notice must be given for this review [1].\n\nOther clauses discuss notice periods for breaking the lease, assignments, and force majeure, but none address the notice period for a rent review.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The rent shall be reviewed on 1 April 2030 to the open market rent.",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.2",
+     "page_start": null,
+     "line": 10
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.62,
+   "total_s": 3.62
+  },
+  {
+   "id": "h5-abstain-msa-force-majeure",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What does the MSA's force majeure clause say?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The MSA's force majeure clause is not explicitly mentioned in the provided sources. However, a similar clause is found in the \"Unit 7 Lease\" document, which states: \"Neither party is liable for any delay or failure in performing its obligations caused by events beyond its reasonable control\" [1]. Additionally, it states: \"If the Premises are unfit for use for more than thirty (30) consecutive days because of such an event, the rent shall be suspended until the Premises are fit for use again\" [1].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.21,
+   "total_s": 5.21
+  },
+  {
+   "id": "h5-abstain-storage-use-class",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Which use class applies under the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel storage agreement does not explicitly state the applicable use class. However, the Unit 7 Lease mentions that the Tenant shall use the Premises only for storage and distribution within Use Class B8 [3].\n\nThe documents in this matter do not specify which use class applies under the Kestrel storage agreement itself.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.89,
+   "total_s": 2.89
+  },
+  {
+   "id": "h5-abstain-nda-partner",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Who is the supervising partner under the Northbridge NDA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The supervising partner under the Northbridge NDA is not explicitly mentioned in the sources provided. The sources refer to the supervising partner in the context of an engagement letter from Calder & Wynne, stating, \"The supervising partner is Helena Marsh\" [1]. However, this information is not linked to the Northbridge NDA itself.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.86,
+   "total_s": 2.86
+  },
+  {
+   "id": "h5-t06-privilege",
+   "tags": [
+    "ABSTAIN",
+    "T06"
+   ],
+   "question": "What privilege attaches to the Beta Corp settlement memorandum?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "no_passages",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": null,
+   "total_s": 0.45
+  },
+  {
+   "id": "h5-board-size",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How many directors does the Voss-Lindqvist board have?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not state how many directors the Voss-Lindqvist board has.\n\n[1] This source lists the attendees of a board meeting but does not specify the total number of directors.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Present:** Karin Lindqvist (Chair), Anders Holm, Sofia Berg, Erik Nystr\u00f6m. **Apologies:** Johan Wahl, Lena Ekdahl",
+     "verification": "normalized",
+     "document_title": "Board minutes 14 May 2026",
+     "version_number": 1,
+     "version_status": "final",
+     "clause": null,
+     "page_start": null,
+     "line": 4
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.67,
+   "total_s": 2.67
+  },
+  {
+   "id": "h5-cw-associate",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which senior associate assists the supervising partner at Calder & Wynne?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The senior associate who assists the supervising partner at Calder & Wynne is David Okafor. This is stated in the document, which says: \"The supervising partner is Helena Marsh. She will be assisted by senior associate David Okafor\" [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The supervising partner is Helena Marsh. She will be assisted by senior associate David Okafor",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 9
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.7,
+   "total_s": 2.7
+  },
+  {
+   "id": "h5-cw-estimate-excludes",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What does Calder & Wynne's fee estimate exclude?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify what Calder & Wynne's fee estimate excludes. The sources only state that the estimated fee of GBP 45,000 is \"excluding VAT and disbursements\" [2]. No further details about what is excluded are provided.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.85,
+   "total_s": 2.85
+  },
+  {
+   "id": "h5-break-condition",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What must the tenant have paid for the lease break to take effect?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The tenant must have paid all rent due up to the date of the lease break. This is specified in the break clause, which states that the Tenant may end the Lease on 31 March 2030 by giving the Landlord at least six months' prior written notice, provided that the Tenant has paid all rent due up to that date [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "provided that the Tenant has paid all rent due up to that date",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.98,
+   "total_s": 2.98
+  },
+  {
+   "id": "h5-msa-schedule-services",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which schedule of the MSA describes the Services?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Services are described in Schedule 1 of the MSA. The definition of \"Services\" in the MSA states that it means the Harrowgate platform subscription and related support described in Schedule 1 [2]. Additionally, Clause 7.1 mentions that the Services will perform in accordance with Schedule 1 [3].",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Services means the Harrowgate platform subscription and related support described in Schedule 1",
+     "verification": "failed",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": null
+    },
+    {
+     "n": 3,
+     "quote": "Provider warrants that the Services will perform materially in accordance with Schedule 1",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 25
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.33,
+   "total_s": 3.33
+  },
+  {
+   "id": "h5-msa-schedule-notices",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where is the address for notices under the MSA set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The address for notices under the MSA is set out in Schedule 4 of the agreement. The source states: \"Any notice under this Agreement shall be in writing and addressed to the General Counsel of the receiving party at the address set out in Schedule 4\" [1].\n\nThe documents do not specify the exact address in Schedule 4.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Any notice under this Agreement shall be in writing and addressed to the General Counsel of the receiving party at the address set out in Schedule 4",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "22.1",
+     "page_start": null,
+     "line": 42
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": true,
+   "multi_source": null,
+   "first_paragraph_s": 3.28,
+   "total_s": 3.28
+  },
+  {
+   "id": "h5-after-completion",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Who will provide the Services after the acquisition of Harrowgate completes?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "After the acquisition of Harrowgate completes, Harrowgate will continue to provide the Services under the Agreement on its existing terms [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Harrowgate will continue to provide the Services under the Agreement on its existing terms after completion.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 9
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.9,
+   "total_s": 1.9
+  },
+  {
+   "id": "h5-kestrel-goods",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What does Kestrel store for Voss-Lindqvist?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Kestrel stores Voss-Lindqvist AB's archived equipment at its Brookfield facility [1].\n\nThe monthly storage fee was amended to EUR 4,600, effective 1 June 2026 [7][8].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider will store Client's archived equipment at its Brookfield facility.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    },
+    {
+     "n": 7,
+     "quote": "Client shall pay a monthly storage fee of EUR 4,600, invoiced on the first business day of each month",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    },
+    {
+     "n": 8,
+     "quote": "This Amendment takes effect on 1 June 2026",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 0.3333333333333333,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.63,
+   "total_s": 3.63
+  },
+  {
+   "id": "h5-chiller-date",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "On what date did the Hall 3 chiller fail?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not state the date when the Hall 3 chiller failed. The witness statement mentions the failure occurred on the night of 18 June 2026, but this is not confirmed by other sources [1][2][3].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "I was the supervisor on duty on the night the chiller in Hall 3 failed.",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "1",
+     "page_start": null,
+     "line": 4
+    },
+    {
+     "n": 2,
+     "quote": "The next board meeting will be held on 10 September 2026.",
+     "verification": "verbatim",
+     "document_title": "Board minutes 14 May 2026",
+     "version_number": 1,
+     "version_status": "final",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 19
+    },
+    {
+     "n": 3,
+     "quote": "The term is ten (10) years starting on 1 April 2025",
+     "verification": "normalized",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 0.3333333333333333,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.59,
+   "total_s": 3.59
+  },
+  {
+   "id": "h5-engagement-accepted",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When did Voss-Lindqvist accept the Calder & Wynne engagement letter?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents indicate that Voss-Lindqvist accepted the Calder & Wynne engagement letter on 7 February 2026. This is stated in the engagement letter itself, which notes: \"Accepted for Voss-Lindqvist AB by Petra Voss on 7 February 2026 (fictional)\" [2].",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Accepted for Voss-Lindqvist AB by Petra Voss on 7 February 2026 (fictional)",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 23
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.3,
+   "total_s": 3.3
+  },
+  {
+   "id": "h5-msa-security-programme",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What must Harrowgate maintain to protect information under the MSA?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Harrowgate must maintain an information-security programme that is no less protective than ISO/IEC 27001 to protect information under the MSA [3].",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Provider shall maintain an information-security programme no less protective than ISO/IEC 27001",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.2",
+     "page_start": null,
+     "line": 14
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.18,
+   "total_s": 2.18
+  },
+  {
+   "id": "h5-lease-assignment-consent",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Whose consent does the tenant need to assign the whole warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The tenant needs the landlord's consent to assign the whole warehouse lease. According to Clause 7.1, the Tenant may assign the whole of the Premises with the Landlord's prior written consent, which shall not be unreasonably withheld [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The Tenant may assign the whole of the Premises with the Landlord's prior written consent, which shall not be unreasonably withheld",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 20
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.86,
+   "total_s": 2.86
+  }
+ ]
+}

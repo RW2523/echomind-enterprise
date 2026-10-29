@@ -1,0 +1,115 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "4ec8bbc",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "e7a80c4f48a25d4e86059de131303256e8f515915bc692824b8ebaa829c71eef",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261028-213024",
+  "limit": null,
+  "only": "h-abstain-side-law,h-t06-instalments,h-abstain-ceo"
+ },
+ "summary": {
+  "items": 3,
+  "answer_accuracy": "0/0",
+  "abstention_accuracy": "2/3",
+  "false_abstentions": 0,
+  "t06_leaks": 0,
+  "citation_precision": null,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 2,
+   "partial": 1
+  },
+  "latency_total_p50_s": 2.4,
+  "latency_total_p95_s": 6.36,
+  "latency_first_paragraph_p50_s": 2.4,
+  "latency_first_paragraph_p95_s": 6.36
+ },
+ "items": [
+  {
+   "id": "h-abstain-side-law",
+   "tags": [],
+   "question": "Which law governs the service credit side letter?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify which law governs the service credit side letter directly. However, the Service Credit Side Letter refers to the Master Services Agreement (MSA), which is governed by the laws of the State of Delaware [2].\n\nThere is no direct mention of the governing law for the service credit side letter itself. The other documents referenced, such as the Unit 7 Lease and the Northbridge NDA, mention England and Wales as the governing law, but these are separate agreements [3][4].\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 6.36,
+   "total_s": 6.36
+  },
+  {
+   "id": "h-t06-instalments",
+   "tags": [
+    "T06"
+   ],
+   "question": "How will the Beta Corp settlement be paid?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.79,
+   "total_s": 0.79
+  },
+  {
+   "id": "h-abstain-ceo",
+   "tags": [],
+   "question": "Who is Harrowgate's chief executive officer?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not identify Harrowgate's chief executive officer.\n\nThe only reference to a person in a leadership role is Thomas Reyes, who is identified as the General Counsel of Harrowgate Systems Inc. [1]. There is no mention of a chief executive officer.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Please direct any questions to our General Counsel, Thomas Reyes.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 10
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.4,
+   "total_s": 2.4
+  }
+ ]
+}

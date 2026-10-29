@@ -1,0 +1,122 @@
+{
+ "meta": {
+  "set": "heldout4",
+  "commit": "4ec8bbc",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "07540b2b8609fe6b07fb2fd15be738e098ec684d591380d530b54754904c607b",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261028-212906",
+  "limit": null,
+  "only": "h4-abstain-harrowgate-chair,h4-abstain-side-termination,h4-abstain-lease-cure"
+ },
+ "summary": {
+  "items": 3,
+  "answer_accuracy": "0/0",
+  "abstention_accuracy": "2/3",
+  "false_abstentions": 0,
+  "t06_leaks": 0,
+  "citation_precision": null,
+  "quote_verification_rate": null,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 2,
+   "partial": 1
+  },
+  "latency_total_p50_s": 2.84,
+  "latency_total_p95_s": 4.39,
+  "latency_first_paragraph_p50_s": 2.84,
+  "latency_first_paragraph_p95_s": 4.39
+ },
+ "items": [
+  {
+   "id": "h4-abstain-harrowgate-chair",
+   "tags": [
+    "ABSTAIN",
+    "PARTY"
+   ],
+   "question": "Who chairs Harrowgate's board?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not state who chairs Harrowgate's board.\n\nThe Change of control notice mentions Thomas Reyes as the General Counsel of Harrowgate Systems Inc. [1], but it does not state that he chairs the board. The other sources also do not mention the chair of the board.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.39,
+   "total_s": 4.39
+  },
+  {
+   "id": "h4-abstain-side-termination",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "How much notice is needed to terminate the service credit side letter?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the notice period required to terminate the service credit side letter.\n\nThe service credit side letter is mentioned in source [2], but it does not include any termination provisions. The other sources discuss termination clauses for different agreements, but none refer to the service credit side letter specifically.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "# SIDE LETTER \u2014 SERVICE CREDITS",
+     "verification": "not_quoted",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 1
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.41,
+   "total_s": 2.41
+  },
+  {
+   "id": "h4-abstain-lease-cure",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What cure period applies to a material breach of the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify a cure period for a material breach of the warehouse lease. However, they do state that a party may terminate the agreement immediately if the other party commits a material breach that is not remedied within thirty (30) days of notice [1].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.84,
+   "total_s": 2.84
+  }
+ ]
+}
