@@ -1,0 +1,3273 @@
+{
+ "meta": {
+  "set": "heldout2",
+  "commit": "c5dd663",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "5986c96fa28d33f08a8350aa4e472e2b3cad9353c07a0d936f3cc7b510844213",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261029-003627",
+  "limit": null,
+  "only": null,
+  "runs": 3,
+  "temperature": 0.1
+ },
+ "summary": {
+  "items": 90,
+  "answer_accuracy": "33/45",
+  "abstention_accuracy": "32/45",
+  "false_abstentions": 4,
+  "t06_leaks": 0,
+  "citation_precision": 0.878,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 36,
+   "partial": 42,
+   "answered": 12
+  },
+  "latency_total_p50_s": 2.53,
+  "latency_total_p95_s": 5.12,
+  "latency_first_paragraph_p50_s": 2.53,
+  "latency_first_paragraph_p95_s": 5.12,
+  "runs": 3,
+  "per_run": [
+   {
+    "answer_accuracy": "11/15",
+    "abstention_accuracy": "10/15",
+    "citation_precision": 0.872,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "11/15",
+    "abstention_accuracy": "11/15",
+    "citation_precision": 0.881,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "11/15",
+    "abstention_accuracy": "11/15",
+    "citation_precision": 0.881,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   }
+  ],
+  "spread": {
+   "answer_accuracy": [
+    0.733,
+    0.733
+   ],
+   "abstention_accuracy": [
+    0.667,
+    0.733
+   ],
+   "citation_precision": [
+    0.872,
+    0.881
+   ],
+   "quote_verification_rate": [
+    1.0,
+    1.0
+   ],
+   "t06_leaks": [
+    0,
+    0
+   ]
+  },
+  "unstable_items": {
+   "h2-abstain-price": "1/3",
+   "h2-abstain-deposit-interest": "2/3",
+   "h2-abstain-kestrel-insurance": "2/3",
+   "h2-abstain-account-manager": "1/3",
+   "h2-abstain-iso-audit": "2/3",
+   "h2-min-apologies": "1/3",
+   "h2-witness-first-contact": "2/3"
+  },
+  "never_correct": [
+   "h2-abstain-eng-interest",
+   "h2-abstain-pallet-count",
+   "h2-eng-billing-frequency",
+   "h2-eng-scope",
+   "h2-coc-questions"
+  ]
+ },
+ "items": [
+  {
+   "id": "h2-abstain-employees",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How many employees does Harrowgate Systems have?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.5,
+   "total_s": 2.5,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-price",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What price is Pellucid Holdings paying for Harrowgate Systems?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the price Pellucid Holdings is paying for Harrowgate Systems. They mention that Pellucid Holdings plc has agreed to acquire all of the shares of Harrowgate Systems Inc., but no purchase price is stated [3].",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Pellucid Holdings plc has agreed to acquire all of the shares of Harrowgate Systems Inc.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.51,
+   "total_s": 2.51,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-eng-interest",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What interest does Calder & Wynne charge on invoices paid late?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the interest rate charged by Calder & Wynne on late payments.\n\nSource 3 states: \"We will bill monthly. Invoices are payable within thirty (30) days\" [3]. However, no interest rate is mentioned for late payments in the Calder & Wynne engagement letter.\n\nOther sources mention interest rates for different agreements, such as the Harrowgate MSA, which states that undisputed amounts not paid when due accrue interest at one percent (1%) per month [1], but this is not applicable to Calder & Wynne.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "We will bill monthly. Invoices are payable within thirty (30) days",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 14
+    },
+    {
+     "n": 1,
+     "quote": "Undisputed amounts not paid when due accrue interest at one percent (1%) per month until paid",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.3",
+     "page_start": null,
+     "line": 18
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.12,
+   "total_s": 5.12,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-nda-early-end",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How much notice is needed to end the Northbridge NDA early?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the notice period required to end the Northbridge NDA early.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.31,
+   "total_s": 1.31,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-storage-law",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Which law governs the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify which law governs the Kestrel storage agreement.\n\nThe Kestrel Storage Services Agreement includes a clause about termination and liability but does not mention governing law [2][2].\n\nOther documents mention governing laws, but they are not the Kestrel storage agreement. For example, the Harrowgate MSA states that it is governed by Delaware law [3], and the Northbridge NDA states that it is governed by English law [4].\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 6.02,
+   "total_s": 6.02,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-deposit-interest",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Does the Unit 7 rent deposit earn interest for the tenant?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not mention whether the Unit 7 rent deposit earns interest for the tenant.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.43,
+   "total_s": 1.43,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-kestrel-insurance",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What insurance must Kestrel hold for the stored equipment?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify what insurance Kestrel must hold for the stored equipment.\n\n[1]  \n[2]",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.4,
+   "total_s": 2.4,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-cfo-vote",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "By how many votes was Maria Ek's appointment as CFO passed?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.92,
+   "total_s": 0.92,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-chiller-service",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "When was the Hall 3 chiller last serviced before it failed?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.89,
+   "total_s": 0.89,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-pallet-count",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How many Voss-Lindqvist pallets were moved to Hall 1?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that the Voss-Lindqvist pallets were moved to Hall 1 by 05:15 on 18 June 2026 [1].\n\nThe documents in this matter do not answer how many pallets were moved.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "I remember that we had moved the Voss-Lindqvist pallets to Hall 1 by 05:15 that morning, before the day shift arrived.",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "3",
+     "page_start": null,
+     "line": 6
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.01,
+   "total_s": 3.01,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-nda-estimate",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What fee estimate did Calder & Wynne give for the Northbridge NDA review on its own?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not provide a specific fee estimate for the Northbridge NDA review alone. They only state that Calder & Wynne estimated fees for the work in Clause 1 at GBP 45,000 excluding VAT and disbursements [5]. This estimate covers the renewal of the Master Services Agreement and the review of the Northbridge NDA, but no separate figure is given for the NDA review alone.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.79,
+   "total_s": 3.79,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-annual-credit-cap",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What is the annual cap on service credits under the side letter?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.82,
+   "total_s": 0.82,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-account-manager",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Who is Voss-Lindqvist's account manager at Harrowgate?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not identify who Voss-Lindqvist's account manager at Harrowgate is.\n\nThe sources mention that Voss-Lindqvist AB is a party to agreements with Harrowgate Systems Inc., and that Petra Voss is the General Counsel of Voss-Lindqvist AB [6]. However, there is no information about an account manager for Voss-Lindqvist at Harrowgate.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 6,
+     "quote": "Petra Voss (General Counsel, secretary to the meeting)",
+     "verification": "verbatim",
+     "document_title": "Board minutes 14 May 2026",
+     "version_number": 1,
+     "version_status": "final",
+     "clause": null,
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.62,
+   "total_s": 3.62,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-iso-audit",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How often must Harrowgate be audited against ISO/IEC 27001 under the MSA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify how often Harrowgate must be audited against ISO/IEC 27001.\n\nThe relevant clause states that Harrowgate must maintain an information-security programme no less protective than ISO/IEC 27001 [3]. However, there is no mention of audit frequency.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Provider shall maintain an information-security programme no less protective than ISO/IEC 27001",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.2",
+     "page_start": null,
+     "line": 14
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.28,
+   "total_s": 3.28,
+   "run": 1
+  },
+  {
+   "id": "h2-t06-merger-date",
+   "tags": [
+    "T06"
+   ],
+   "question": "On what date did Beta Corp's board approve its merger?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not state the date on which Beta Corp's board approved its merger.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.36,
+   "total_s": 1.36,
+   "run": 1
+  },
+  {
+   "id": "h2-coc-condition",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What is completion of the Harrowgate acquisition subject to?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The completion of the Harrowgate acquisition is subject to regulatory clearance. This is stated in the Change of Control notice, which mentions that completion is expected on 15 October 2026, subject to regulatory clearance [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Completion is expected on 15 October 2026, subject to regulatory clearance",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.4,
+   "total_s": 2.4,
+   "run": 1
+  },
+  {
+   "id": "h2-eng-billing-frequency",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How often will Calder & Wynne bill Voss-Lindqvist?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not specify how often Calder & Wynne will bill Voss-Lindqvist. There is no information about billing frequency in the provided sources.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.68,
+   "total_s": 1.68,
+   "run": 1
+  },
+  {
+   "id": "h2-nda-registration",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Under what number is Northbridge Analytics registered?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Northbridge Analytics is registered under number **09876543**. This is stated in the Northbridge NDA document [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Northbridge Analytics Ltd**, a company registered in England and Wales under number 09876543",
+     "verification": "normalized",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 3
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.02,
+   "total_s": 2.02,
+   "run": 1
+  },
+  {
+   "id": "h2-lease-law",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which law governs the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The warehouse lease is governed by the law of England and Wales. This is stated in the document \"Unit 7 Lease\" at clause 10.1, which says: \"This Lease is governed by the law of England and Wales\" [1].\n\nAnother document, \"Harrowgate MSA,\" states that the agreement is governed by the laws of the State of Delaware, but this document is not the warehouse lease in question [3].\n\nThe document \"Northbridge NDA\" also mentions the law of England and Wales, but it is not related to the warehouse lease [4].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Lease is governed by the law of England and Wales",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "10.1",
+     "page_start": null,
+     "line": 27
+    },
+    {
+     "n": 3,
+     "quote": "This Agreement is governed by the laws of the State of Delaware, without regard to its conflict-of-laws rules",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "21.1",
+     "page_start": null,
+     "line": 40
+    },
+    {
+     "n": 4,
+     "quote": "This Agreement is governed by the law of England and Wales",
+     "verification": "verbatim",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": 0.3333333333333333,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.17,
+   "total_s": 5.17,
+   "run": 1
+  },
+  {
+   "id": "h2-lease-deposit-held",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Until when does the landlord hold the Unit 7 rent deposit?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The landlord holds the Unit 7 rent deposit until the end of the Term, as stated in the lease [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "held by the Landlord until the end of the Term",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.53,
+   "total_s": 1.53,
+   "run": 1
+  },
+  {
+   "id": "h2-kestrel-liability",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What is Kestrel's liability for loss of or damage to stored goods limited to?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Kestrel's liability for loss of or damage to stored goods is limited to EUR 150,000 per event [1].\n\nThere is no indication that this limit has been changed by an amendment that is signed. The only amendment mentioned, Amendment No. 1, states that all other terms of the Storage Services Agreement remain in force [2].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider's total liability for loss of or damage to stored goods is limited to EUR 150,000 per event.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 12
+    },
+    {
+     "n": 2,
+     "quote": "All other terms of the Storage Services Agreement remain in force.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.85,
+   "total_s": 3.85,
+   "run": 1
+  },
+  {
+   "id": "h2-min-apologies",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which directors sent apologies for the board meeting of 14 May 2026?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that Johan Wahl and Lena Ekdahl sent apologies for the board meeting of 14 May 2026 [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Apologies:** Johan Wahl, Lena Ekdahl",
+     "verification": "normalized",
+     "document_title": "Board minutes 14 May 2026",
+     "version_number": 1,
+     "version_status": "final",
+     "clause": null,
+     "page_start": null,
+     "line": 4
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.74,
+   "total_s": 1.74,
+   "run": 1
+  },
+  {
+   "id": "h2-chiller-hall",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "In which hall did the chiller fail?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that the chiller failed in Hall 3.\n\n[1]",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Statement of Jonas Ekberg, shift supervisor at Kestrel Cold Storage Ltd, given on 2 July 2026 about the chiller failure in Hall 3.",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 3
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.98,
+   "total_s": 1.98,
+   "run": 1
+  },
+  {
+   "id": "h2-witness-first-contact",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When did Jonas Ekberg first speak to Voss-Lindqvist about the chiller failure?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify when Jonas Ekberg first spoke to Voss-Lindqvist about the chiller failure. They only state that he did not speak to anyone at Voss-Lindqvist AB about the failure until the following day [1].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.6,
+   "total_s": 2.6,
+   "run": 1
+  },
+  {
+   "id": "h2-eng-scope",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What work does the Calder & Wynne engagement cover?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement letter does not specify the exact work covered by the engagement. The documents provided only mention that the letter is a \"Letter of Engagement\" and include clauses related to termination and liability [1], [2], and [3].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "LETTER OF ENGAGEMENT",
+     "verification": "normalized",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 1
+    },
+    {
+     "n": 2,
+     "quote": "Either of us may end this engagement at any time by written notice",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    },
+    {
+     "n": 3,
+     "quote": "Our aggregate liability to you in connection with this engagement is limited to GBP 5 million",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "6.1",
+     "page_start": null,
+     "line": 18
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.25,
+   "total_s": 3.25,
+   "run": 1
+  },
+  {
+   "id": "h2-credit-cap-period",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Is the service credit cap set per month or per year?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The service credit cap is set per calendar month. The relevant text states: \"Service credits in any calendar month are capped at twenty-five percent (25%) of the monthly subscription fee for that month\" [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Service credits in any calendar month are capped at twenty-five percent (25%) of the monthly subscription fee for that month",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.39,
+   "total_s": 2.39,
+   "run": 1
+  },
+  {
+   "id": "h2-coc-questions",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Who should Voss-Lindqvist direct questions about the change of control to?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not specify who Voss-Lindqvist should direct questions about the change of control to.\n\nThe Change of Control Notice was sent to \"The General Counsel, Voss-Lindqvist AB\" [1], but there is no further information on who within Voss-Lindqvist AB should handle such inquiries.\n\nThe Board minutes mention Petra Voss as the General Counsel and secretary to the meeting [2], but there is no indication that she is the point of contact for change of control matters.\n\nNo other sources provide information on the appropriate contact for change of control issues at Voss-Lindqvist AB.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "To: The General Counsel, Voss-Lindqvist AB",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 4
+    },
+    {
+     "n": 2,
+     "quote": "In attendance:** Petra Voss (General Counsel, secretary to the meeting)",
+     "verification": "normalized",
+     "document_title": "Board minutes 14 May 2026",
+     "version_number": 1,
+     "version_status": "final",
+     "clause": null,
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.0,
+   "total_s": 5.0,
+   "run": 1
+  },
+  {
+   "id": "h2-msa-service-levels",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where are the MSA's service levels set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The MSA's service levels are set out in Schedule 2 of the Harrowgate MSA [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall provide the Services in accordance with the service levels in Schedule 2.",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 13
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.57,
+   "total_s": 1.57,
+   "run": 1
+  },
+  {
+   "id": "h2-lease-length",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How many years does the warehouse lease run for?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The warehouse lease runs for ten (10) years, starting on 1 April 2025 and ending on 31 March 2035 [3].",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "The term is ten (10) years starting on 1 April 2025 and ending on 31 March 2035 (the \"Term\")",
+     "verification": "normalized",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.49,
+   "total_s": 2.49,
+   "run": 1
+  },
+  {
+   "id": "h2-kestrel-facility",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "At which facility does Kestrel store Voss-Lindqvist's equipment?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents indicate that Kestrel stores Voss-Lindqvist's equipment at the Brookfield facility. This is stated in the Storage Services Agreement between Voss-Lindqvist AB and Kestrel Cold Storage Ltd [1].\n\nThere is no mention of any other facility in the sources provided.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider will store Client's archived equipment at its Brookfield facility",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.59,
+   "total_s": 2.59,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-employees",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How many employees does Harrowgate Systems have?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.79,
+   "total_s": 0.79,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-price",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What price is Pellucid Holdings paying for Harrowgate Systems?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not state the price Pellucid Holdings is paying for Harrowgate Systems. The sources mention a monthly platform subscription fee of USD 18,500 for the Harrowgate platform [1], but they do not provide the total price or purchase price for Harrowgate Systems.\n\nThe documents also mention that Pellucid Holdings plc has agreed to acquire all of the shares of Harrowgate Systems Inc., with completion expected on 15 October 2026 [3]. However, the price of this acquisition is not specified in the sources provided.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Client shall pay a platform subscription fee of USD 18,500 per month for the Harrowgate platform",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 16
+    },
+    {
+     "n": 3,
+     "quote": "Pellucid Holdings plc has agreed to acquire all of the shares of Harrowgate Systems Inc.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": true,
+   "multi_source": null,
+   "first_paragraph_s": 5.08,
+   "total_s": 5.08,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-eng-interest",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What interest does Calder & Wynne charge on invoices paid late?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the interest rate charged by Calder & Wynne on late payments.\n\nThe Calder & Wynne engagement letter states that invoices are payable within thirty (30) days [3], but it does not mention any interest for late payment.\n\nOther sources discuss different agreements, such as the Harrowgate MSA, which states that undisputed amounts not paid when due accrue interest at one percent (1%) per month [1], but this is not related to Calder & Wynne.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Invoices are payable within thirty (30) days",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 14
+    },
+    {
+     "n": 1,
+     "quote": "Undisputed amounts not paid when due accrue interest at one percent (1%) per month until paid",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.3",
+     "page_start": null,
+     "line": 18
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.43,
+   "total_s": 4.43,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-nda-early-end",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How much notice is needed to end the Northbridge NDA early?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the notice period required to end the Northbridge NDA early.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.32,
+   "total_s": 1.32,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-storage-law",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Which law governs the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel storage agreement is governed by the law of England and Wales. This is stated in the Northbridge NDA, which specifies that the agreement is governed by the law of England and Wales [4]. Additionally, the Unit 7 Lease also states that the lease is governed by the law of England and Wales [5].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.19,
+   "total_s": 3.19,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-deposit-interest",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Does the Unit 7 rent deposit earn interest for the tenant?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not mention whether the Unit 7 rent deposit earns interest for the tenant.\n\n[2]",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.24,
+   "total_s": 2.24,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-kestrel-insurance",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What insurance must Kestrel hold for the stored equipment?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify what insurance Kestrel must hold for the stored equipment.\n\nThe sources mention liability limits and amendments to the agreement, but none state the insurance requirements for the stored equipment [1][2].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider's total liability for loss of or damage to stored goods is limited to EUR 150,000 per event",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 12
+    },
+    {
+     "n": 2,
+     "quote": "All other terms of the Storage Services Agreement remain in force",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.04,
+   "total_s": 3.04,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-cfo-vote",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "By how many votes was Maria Ek's appointment as CFO passed?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.87,
+   "total_s": 0.87,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-chiller-service",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "When was the Hall 3 chiller last serviced before it failed?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.79,
+   "total_s": 0.79,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-pallet-count",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How many Voss-Lindqvist pallets were moved to Hall 1?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that the Voss-Lindqvist pallets were moved to Hall 1 by 05:15 on 18 June 2026 [1].\n\nThe documents in this matter do not specify how many pallets were moved.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "I remember that we had moved the Voss-Lindqvist pallets to Hall 1 by 05:15 that morning, before the day shift arrived.",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "3",
+     "page_start": null,
+     "line": 6
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.97,
+   "total_s": 2.97,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-nda-estimate",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What fee estimate did Calder & Wynne give for the Northbridge NDA review on its own?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not provide a specific fee estimate for the Northbridge NDA review alone. They only state that Calder & Wynne estimated fees for the work in Clause 1, which includes both the renewal of the Master Services Agreement and the review of the Northbridge NDA, at GBP 45,000 excluding VAT and disbursements [5].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.22,
+   "total_s": 3.22,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-annual-credit-cap",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What is the annual cap on service credits under the side letter?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.8,
+   "total_s": 0.8,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-account-manager",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Who is Voss-Lindqvist's account manager at Harrowgate?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.83,
+   "total_s": 0.83,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-iso-audit",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How often must Harrowgate be audited against ISO/IEC 27001 under the MSA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify how often Harrowgate must be audited against ISO/IEC 27001 under the MSA [3].\n\nThere is no mention of audit frequency in the provided sources.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.31,
+   "total_s": 2.31,
+   "run": 2
+  },
+  {
+   "id": "h2-t06-merger-date",
+   "tags": [
+    "T06"
+   ],
+   "question": "On what date did Beta Corp's board approve its merger?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the date on which Beta Corp's board approved its merger.\n\nThe documents mention a \"Change of Control Notice\" dated 3 September 2026, but they do not state when the board approved the merger [4].\n\nNo other source provides the date of board approval for a merger. [The documents in this matter do not answer that.]",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.91,
+   "total_s": 2.91,
+   "run": 2
+  },
+  {
+   "id": "h2-coc-condition",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What is completion of the Harrowgate acquisition subject to?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The completion of the Harrowgate acquisition is subject to regulatory clearance.\n\n[1]",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Completion is expected on 15 October 2026, subject to regulatory clearance.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.54,
+   "total_s": 1.54,
+   "run": 2
+  },
+  {
+   "id": "h2-eng-billing-frequency",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How often will Calder & Wynne bill Voss-Lindqvist?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not specify how often Calder & Wynne will bill Voss-Lindqvist. There is no information provided about billing frequency in the engagement letter or other documents [4].",
+   "evidence": [
+    {
+     "n": 4,
+     "quote": "Either of us may end this engagement at any time by written notice.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.98,
+   "total_s": 1.98,
+   "run": 2
+  },
+  {
+   "id": "h2-nda-registration",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Under what number is Northbridge Analytics registered?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Northbridge Analytics is registered under number 09876543.\n\n[1]",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Northbridge Analytics Ltd**, a company registered in England and Wales under number 09876543",
+     "verification": "normalized",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 3
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.73,
+   "total_s": 1.73,
+   "run": 2
+  },
+  {
+   "id": "h2-lease-law",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which law governs the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The warehouse lease is governed by the law of England and Wales. This is stated in the lease document, which specifies: \"This Lease is governed by the law of England and Wales\" [1].\n\nAnother document, the Harrowgate MSA, refers to a different agreement governed by the laws of the State of Delaware [3], but this does not apply to the warehouse lease.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Lease is governed by the law of England and Wales",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "10.1",
+     "page_start": null,
+     "line": 27
+    },
+    {
+     "n": 3,
+     "quote": "This Agreement is governed by the laws of the State of Delaware",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "21.1",
+     "page_start": null,
+     "line": 40
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.29,
+   "total_s": 3.29,
+   "run": 2
+  },
+  {
+   "id": "h2-lease-deposit-held",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Until when does the landlord hold the Unit 7 rent deposit?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The landlord holds the Unit 7 rent deposit until the end of the Term, as stated in the lease agreement [1]. The Term is not explicitly defined in the provided sources, but the lease can be ended by the Tenant on 31 March 2030, as noted in the Break Clause [3].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "held by the Landlord until the end of the Term",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12
+    },
+    {
+     "n": 3,
+     "quote": "The Tenant may end this Lease on 31 March 2030",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.03,
+   "total_s": 3.03,
+   "run": 2
+  },
+  {
+   "id": "h2-kestrel-liability",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What is Kestrel's liability for loss of or damage to stored goods limited to?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Kestrel's liability for loss of or damage to stored goods is limited to EUR 150,000 per event, according to Clause 7.1 of the Kestrel Storage Services Agreement [1].\n\nThere is no indication that this limit was changed by an amendment, as Amendment No. 1 states that all other terms of the Storage Services Agreement remain in force [2].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider's total liability for loss of or damage to stored goods is limited to EUR 150,000 per event.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 12
+    },
+    {
+     "n": 2,
+     "quote": "All other terms of the Storage Services Agreement remain in force.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.81,
+   "total_s": 3.81,
+   "run": 2
+  },
+  {
+   "id": "h2-min-apologies",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which directors sent apologies for the board meeting of 14 May 2026?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.81,
+   "total_s": 0.81,
+   "run": 2
+  },
+  {
+   "id": "h2-chiller-hall",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "In which hall did the chiller fail?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The chiller failed in Hall 3, as stated in the witness statement of Jonas Ekberg. He mentions, \"the chiller in Hall 3 failed\" [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "the chiller in Hall 3 failed",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "1",
+     "page_start": null,
+     "line": 4
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.74,
+   "total_s": 1.74,
+   "run": 2
+  },
+  {
+   "id": "h2-witness-first-contact",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When did Jonas Ekberg first speak to Voss-Lindqvist about the chiller failure?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not state when Jonas Ekberg first spoke to Voss-Lindqvist about the chiller failure. However, Jonas Ekberg stated that he did not speak to anyone at Voss-Lindqvist AB about the failure until the following day [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "I did not speak to anyone at Voss-Lindqvist AB about the failure until the following day.",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "4",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.65,
+   "total_s": 2.65,
+   "run": 2
+  },
+  {
+   "id": "h2-eng-scope",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What work does the Calder & Wynne engagement cover?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement letter does not specify the exact work covered by the engagement. The documents provided only include a letter of engagement template and clauses related to termination and liability, but no detailed description of the services or work to be performed [1].\n\nThe documents mention that either party may terminate the engagement at any time with written notice, and that the client will pay for work done up to the termination point [2].\n\nThe liability of Calder & Wynne is capped at GBP 5 million in connection with the engagement [3].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "FICTIONAL EVALUATION FIXTURE. The firm, people, rates and terms are invented.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 2
+    },
+    {
+     "n": 2,
+     "quote": "Either of us may end this engagement at any time by written notice. You will pay our fees for work done up to that point.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    },
+    {
+     "n": 3,
+     "quote": "Our aggregate liability to you in connection with this engagement is limited to GBP 5 million.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "6.1",
+     "page_start": null,
+     "line": 18
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.21,
+   "total_s": 5.21,
+   "run": 2
+  },
+  {
+   "id": "h2-credit-cap-period",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Is the service credit cap set per month or per year?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The service credit cap is set per calendar month. The document states, \"Service credits in any calendar month are capped at twenty-five percent (25%) of the monthly subscription fee for that month\" [1].\n\nThere is no mention of a yearly cap in the provided sources.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Service credits in any calendar month are capped at twenty-five percent (25%) of the monthly subscription fee for that month",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.7,
+   "total_s": 2.7,
+   "run": 2
+  },
+  {
+   "id": "h2-coc-questions",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Who should Voss-Lindqvist direct questions about the change of control to?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not specify who Voss-Lindqvist should direct questions about the change of control to.\n\nThe Change of Control notice was sent to \"The General Counsel, Voss-Lindqvist AB\" [1], but there is no further information on whom within Voss-Lindqvist AB to contact for such matters.\n\nNo other source provides additional details on the appropriate contact for questions regarding the change of control.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "To: The General Counsel, Voss-Lindqvist AB",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 4
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.48,
+   "total_s": 3.48,
+   "run": 2
+  },
+  {
+   "id": "h2-msa-service-levels",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where are the MSA's service levels set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The MSA's service levels are set out in Schedule 2 of the Harrowgate MSA [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall provide the Services in accordance with the service levels in Schedule 2",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 13
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.55,
+   "total_s": 1.55,
+   "run": 2
+  },
+  {
+   "id": "h2-lease-length",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How many years does the warehouse lease run for?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The warehouse lease runs for ten (10) years, starting on 1 April 2025 and ending on 31 March 2035 [3].",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "The term is ten (10) years starting on 1 April 2025 and ending on 31 March 2035 (the \"Term\")",
+     "verification": "normalized",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.52,
+   "total_s": 2.52,
+   "run": 2
+  },
+  {
+   "id": "h2-kestrel-facility",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "At which facility does Kestrel store Voss-Lindqvist's equipment?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents indicate that Kestrel stores Voss-Lindqvist's equipment at the Brookfield facility. This is stated in the Storage Services Agreement, which specifies: \"Provider will store Client's archived equipment at its Brookfield facility\" [1].\n\nThere is no indication in the documents that this location changed, as the amendment only modifies the monthly fee and does not mention a change in storage location [2].\n\nAdditionally, a witness statement mentions that Voss-Lindqvist pallets were moved to Hall 1, but this appears to be an internal operational detail and does not indicate a change in the primary storage facility [3].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider will store Client's archived equipment at its Brookfield facility",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    },
+    {
+     "n": 2,
+     "quote": "All other terms of the Storage Services Agreement remain in force",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    },
+    {
+     "n": 3,
+     "quote": "I remember that we had moved the Voss-Lindqvist pallets to Hall 1 by 05:15 that morning",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "3",
+     "page_start": null,
+     "line": 6
+    }
+   ],
+   "citation_precision": 0.3333333333333333,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.47,
+   "total_s": 5.47,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-employees",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How many employees does Harrowgate Systems have?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.83,
+   "total_s": 0.83,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-price",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What price is Pellucid Holdings paying for Harrowgate Systems?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not state the price Pellucid Holdings is paying for Harrowgate Systems.\n\nThe documents mention that Pellucid Holdings plc has agreed to acquire all of the shares of Harrowgate Systems Inc., but they do not specify the purchase price [3].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.56,
+   "total_s": 2.56,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-eng-interest",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What interest does Calder & Wynne charge on invoices paid late?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the interest rate charged by Calder & Wynne for late payment of invoices.\n\nThe Calder & Wynne engagement letter mentions that invoices are payable within thirty (30) days [3], but it does not mention any interest rate for late payments.\n\nOther sources, such as the Harrowgate MSA, mention an interest rate of one percent (1%) per month for undisputed amounts not paid when due [1], but this is not linked to Calder & Wynne.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Invoices are payable within thirty (30) days",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 14
+    },
+    {
+     "n": 1,
+     "quote": "Undisputed amounts not paid when due accrue interest at one percent (1%) per month until paid",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.3",
+     "page_start": null,
+     "line": 18
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.45,
+   "total_s": 4.45,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-nda-early-end",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How much notice is needed to end the Northbridge NDA early?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the notice period required to end the Northbridge NDA early.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.32,
+   "total_s": 1.32,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-storage-law",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Which law governs the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel storage agreement is governed by the law of England and Wales. This is stated in the Northbridge NDA, which specifies that the Agreement is governed by the law of England and Wales [4]. Additionally, the Unit 7 Lease also states that the Lease is governed by the law of England and Wales [5].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.98,
+   "total_s": 2.98,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-deposit-interest",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Does the Unit 7 rent deposit earn interest for the tenant?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not mention whether the Unit 7 rent deposit earns interest for the tenant. The lease states that the tenant must pay a rent deposit of GBP 21,000, which is to be held by the landlord until the end of the term [2]. However, there is no information provided about the deposit earning interest.",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000, to be held by the Landlord until the end of the Term.",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.4,
+   "total_s": 3.4,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-kestrel-insurance",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What insurance must Kestrel hold for the stored equipment?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify what insurance Kestrel must hold for the stored equipment.\n\n[1]  \n[2]  \n[4]",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.1,
+   "total_s": 3.1,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-cfo-vote",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "By how many votes was Maria Ek's appointment as CFO passed?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.82,
+   "total_s": 0.82,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-chiller-service",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "When was the Hall 3 chiller last serviced before it failed?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.8,
+   "total_s": 0.8,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-pallet-count",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How many Voss-Lindqvist pallets were moved to Hall 1?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that the Voss-Lindqvist pallets were moved to Hall 1 by 05:15 on 18 June 2026 [1].\n\nNo other information about the number of pallets is provided in the sources.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "I remember that we had moved the Voss-Lindqvist pallets to Hall 1 by 05:15 that morning",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "3",
+     "page_start": null,
+     "line": 6
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.08,
+   "total_s": 3.09,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-nda-estimate",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What fee estimate did Calder & Wynne give for the Northbridge NDA review on its own?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not provide a specific fee estimate for the Northbridge NDA review alone. The engagement letter states that Calder & Wynne estimated fees for the work in Clause 1 at GBP 45,000 excluding VAT and disbursements [5]. However, this estimate covers the renewal of the Master Services Agreement and the review of the NDA, without breaking down the cost for the NDA review specifically.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.54,
+   "total_s": 3.54,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-annual-credit-cap",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What is the annual cap on service credits under the side letter?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.78,
+   "total_s": 0.78,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-account-manager",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Who is Voss-Lindqvist's account manager at Harrowgate?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not identify Voss-Lindqvist's account manager at Harrowgate.\n\nThe sources mention that the General Counsel of Voss-Lindqvist AB is Petra Voss, as noted in the board minutes [6]. However, there is no mention of an account manager specifically for Harrowgate.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 6,
+     "quote": "Petra Voss (General Counsel, secretary to the meeting)",
+     "verification": "verbatim",
+     "document_title": "Board minutes 14 May 2026",
+     "version_number": 1,
+     "version_status": "final",
+     "clause": null,
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.96,
+   "total_s": 2.96,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-iso-audit",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How often must Harrowgate be audited against ISO/IEC 27001 under the MSA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify how often Harrowgate must be audited against ISO/IEC 27001 under the MSA [3].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.97,
+   "total_s": 1.97,
+   "run": 3
+  },
+  {
+   "id": "h2-t06-merger-date",
+   "tags": [
+    "T06"
+   ],
+   "question": "On what date did Beta Corp's board approve its merger?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the date on which Beta Corp's board approved its merger.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.3,
+   "total_s": 1.3,
+   "run": 3
+  },
+  {
+   "id": "h2-coc-condition",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What is completion of the Harrowgate acquisition subject to?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The completion of the Harrowgate acquisition is subject to regulatory clearance.\n\n[1]",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Completion is expected on 15 October 2026, subject to regulatory clearance.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.89,
+   "total_s": 1.89,
+   "run": 3
+  },
+  {
+   "id": "h2-eng-billing-frequency",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How often will Calder & Wynne bill Voss-Lindqvist?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not specify how often Calder & Wynne will bill Voss-Lindqvist.\n\nThe engagement letter mentions that Voss-Lindqvist will pay fees for work done up to the point of termination [4], but it does not state the billing frequency.\n\nNo other source addresses the billing schedule.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 4,
+     "quote": "You will pay our fees for work done up to that point.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.98,
+   "total_s": 2.98,
+   "run": 3
+  },
+  {
+   "id": "h2-nda-registration",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Under what number is Northbridge Analytics registered?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Northbridge Analytics is registered under number 09876543. This is stated in the Northbridge NDA, which refers to it as \"Northbridge Analytics Ltd, a company registered in England and Wales under number 09876543\" [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Northbridge Analytics Ltd**, a company registered in England and Wales under number 09876543",
+     "verification": "normalized",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 3
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.77,
+   "total_s": 2.77,
+   "run": 3
+  },
+  {
+   "id": "h2-lease-law",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which law governs the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The warehouse lease is governed by the law of England and Wales. This is stated in the document \"Unit 7 Lease\" at clause 10.1, which says: \"This Lease is governed by the law of England and Wales\" [1].\n\nAnother document, \"Northbridge NDA,\" also mentions that the agreement is governed by the law of England and Wales, but this applies to a different agreement [4].\n\nThere is also a mention of Delaware law in another document, \"Harrowgate MSA,\" but this applies to a different agreement [3].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Lease is governed by the law of England and Wales",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "10.1",
+     "page_start": null,
+     "line": 27
+    },
+    {
+     "n": 4,
+     "quote": "This Agreement is governed by the law of England and Wales",
+     "verification": "verbatim",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    },
+    {
+     "n": 3,
+     "quote": "This Agreement is governed by the laws of the State of Delaware",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "21.1",
+     "page_start": null,
+     "line": 40
+    }
+   ],
+   "citation_precision": 0.3333333333333333,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.65,
+   "total_s": 4.65,
+   "run": 3
+  },
+  {
+   "id": "h2-lease-deposit-held",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Until when does the landlord hold the Unit 7 rent deposit?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The landlord holds the Unit 7 rent deposit until the end of the Term [1]. The Term may be ended by the Tenant on 31 March 2030, provided the Tenant has paid all rent due up to that date [3].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "held by the Landlord until the end of the Term",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12
+    },
+    {
+     "n": 3,
+     "quote": "The Tenant may end this Lease on 31 March 2030 by giving the Landlord at least six (6) months' prior written notice, provided that the Tenant has paid all rent due up to that date",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.55,
+   "total_s": 3.55,
+   "run": 3
+  },
+  {
+   "id": "h2-kestrel-liability",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What is Kestrel's liability for loss of or damage to stored goods limited to?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "Kestrel's liability for loss of or damage to stored goods is limited to EUR 150,000 per event, according to Clause 7.1 of the Kestrel Storage Services Agreement [1].\n\nThere is no indication that this limit has been changed by an amendment, as Amendment No. 1 only states that all other terms of the Storage Services Agreement remain in force [2].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider's total liability for loss of or damage to stored goods is limited to EUR 150,000 per event.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 12
+    },
+    {
+     "n": 2,
+     "quote": "All other terms of the Storage Services Agreement remain in force.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.85,
+   "total_s": 3.85,
+   "run": 3
+  },
+  {
+   "id": "h2-min-apologies",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which directors sent apologies for the board meeting of 14 May 2026?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.85,
+   "total_s": 0.85,
+   "run": 3
+  },
+  {
+   "id": "h2-chiller-hall",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "In which hall did the chiller fail?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The chiller failed in Hall 3.\n\nThis is stated in the witness statement of Jonas Ekberg, who was the supervisor on duty on the night the chiller in Hall 3 failed [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Statement of Jonas Ekberg, shift supervisor at Kestrel Cold Storage Ltd, given on 2 July 2026 about the chiller failure in Hall 3.",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 3
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.66,
+   "total_s": 2.66,
+   "run": 3
+  },
+  {
+   "id": "h2-witness-first-contact",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When did Jonas Ekberg first speak to Voss-Lindqvist about the chiller failure?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify when Jonas Ekberg first spoke to Voss-Lindqvist about the chiller failure. The only relevant statement is that he did not speak to anyone at Voss-Lindqvist AB about the failure until the following day [1]. The documents do not provide the date of the chiller failure or the day it occurred.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "I did not speak to anyone at Voss-Lindqvist AB about the failure until the following day.",
+     "verification": "verbatim",
+     "document_title": "Witness statement of Jonas Ekberg",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": "4",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.08,
+   "total_s": 3.08,
+   "run": 3
+  },
+  {
+   "id": "h2-eng-scope",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What work does the Calder & Wynne engagement cover?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement covers legal services provided under a letter of engagement dated 5 February 2026. The specific scope of work is not detailed in the provided sources [1].\n\nThe engagement includes terms related to termination, stating that either party may end the engagement at any time by written notice, and the client will pay fees for work done up to that point [2].\n\nThe engagement also includes a liability clause limiting the firm's aggregate liability to GBP 5 million [3].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "FICTIONAL EVALUATION FIXTURE. The firm, people, rates and terms are invented.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 2
+    },
+    {
+     "n": 2,
+     "quote": "Either of us may end this engagement at any time by written notice. You will pay our fees for work done up to that point.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    },
+    {
+     "n": 3,
+     "quote": "Our aggregate liability to you in connection with this engagement is limited to GBP 5 million.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "6.1",
+     "page_start": null,
+     "line": 18
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.06,
+   "total_s": 5.06,
+   "run": 3
+  },
+  {
+   "id": "h2-credit-cap-period",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Is the service credit cap set per month or per year?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The service credit cap is set per calendar month. The relevant text states: \"Service credits in any calendar month are capped at twenty-five percent (25%) of the monthly subscription fee for that month\" [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Service credits in any calendar month are capped at twenty-five percent (25%) of the monthly subscription fee for that month",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.6,
+   "total_s": 2.6,
+   "run": 3
+  },
+  {
+   "id": "h2-coc-questions",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Who should Voss-Lindqvist direct questions about the change of control to?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not specify who Voss-Lindqvist should direct questions about the change of control to.\n\nThe Change of Control Notice was sent to \"The General Counsel, Voss-Lindqvist AB\" [1], but there is no further information about who within Voss-Lindqvist should handle such inquiries.\n\nThe Board minutes mention Petra Voss as the General Counsel of Voss-Lindqvist AB [2], but they do not state that she is the point of contact for change of control matters.\n\nNo other source provides guidance on who to contact regarding a change of control.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "To: The General Counsel, Voss-Lindqvist AB",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 4
+    },
+    {
+     "n": 2,
+     "quote": "In attendance:** Petra Voss (General Counsel, secretary to the meeting)",
+     "verification": "normalized",
+     "document_title": "Board minutes 14 May 2026",
+     "version_number": 1,
+     "version_status": "final",
+     "clause": null,
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.0,
+   "total_s": 5.0,
+   "run": 3
+  },
+  {
+   "id": "h2-msa-service-levels",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where are the MSA's service levels set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The MSA's service levels are set out in Schedule 2 of the Harrowgate MSA [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall provide the Services in accordance with the service levels in Schedule 2",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 13
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.52,
+   "total_s": 1.52,
+   "run": 3
+  },
+  {
+   "id": "h2-lease-length",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How many years does the warehouse lease run for?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The warehouse lease runs for ten (10) years, starting on 1 April 2025 and ending on 31 March 2035 [3].",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "The term is ten (10) years starting on 1 April 2025 and ending on 31 March 2035 (the \"Term\")",
+     "verification": "normalized",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.53,
+   "total_s": 2.53,
+   "run": 3
+  },
+  {
+   "id": "h2-kestrel-facility",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "At which facility does Kestrel store Voss-Lindqvist's equipment?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that Kestrel stores Voss-Lindqvist's equipment at the Brookfield facility.\n\n[1]",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider will store Client's archived equipment at its Brookfield facility.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.62,
+   "total_s": 1.62,
+   "run": 3
+  }
+ ]
+}
