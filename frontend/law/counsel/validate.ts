@@ -118,8 +118,10 @@ function sourceAnswer(v: unknown): SourceAnswerProps {
     answer: str(o.answer, 8000, 'answer'), state: oneOf(o.state, ANSWER_STATES, 'state'),
     citations: list(o.citations, 30, 'citations', citation), unsupported: list(o.unsupported, 10, 'unsupported', (x) => str(x, 500, 'unsupported')),
     notes: list(o.notes, 3, 'notes', (x) => str(x, 400, 'note')), understood: optStr(o.understood, 400, 'understood'),
+    absence: optStr(o.absence, 400, 'absence'),
   };
   if (p.state === 'abstained' && p.citations.length) throw new Invalid('an abstention cites nothing');
+  if (p.absence !== undefined && p.state !== 'abstained') throw new Invalid('only a decline says what is missing');
   return p;
 }
 

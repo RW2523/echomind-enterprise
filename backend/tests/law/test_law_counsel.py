@@ -676,3 +676,31 @@ def test_repeating_an_action_checks_access_first_and_shows_the_card_as_it_is_now
         c.execute("UPDATE matter_memberships SET valid_to='2000-01-01T00:00:00.000Z' WHERE matter_id=? AND user_id=?",
                   (cs["mid"], cs["users"]["alice"]["id"]))
     assert _review(alice, cs, comp, key="key-0909").status_code == 404          # the stored result is not handed back
+
+
+def test_ux001_a_declined_card_shows_what_is_missing_and_lists_no_unsupported_sentence(cs, monkeypatch):
+    """QA UX-001 (2026-10-29): the decline card showed only "The documents in this matter do not answer that. Try naming the
+    document, clause or party.", and the useful sentence sat in the unsupported list. The card now says what was found
+    missing, cites nothing, and a decline lists no unsupported sentences."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)
+    alice = as_user(cs, "alice")
+    said = ("The early termination penalty amount specified in the Services Agreement is not mentioned in the provided sources.\n\n"
+            "The documents in this matter do not answer that.")
+
+    async def stream(messages, temperature, max_tokens):
+        for piece in re.findall(r"\S+\s*|\n+", said):
+            yield piece
+    monkeypatch.setattr(cs["model"], "chat_stream", stream)
+    env = final(turn(alice, new_conversation(alice, cs["mid"]), "What is the early termination penalty?"))
+    card = component(env, "source_answer")["props"]
+    assert card["state"] == "abstained" and card["citations"] == [] and card["unsupported"] == []
+    assert card["absence"] == "The early termination penalty amount specified in the Services Agreement is not mentioned in the provided sources."
+
+
+def test_ux001_only_a_decline_may_say_what_is_missing():
+    from pydantic import ValidationError
+    from app.legal.counsel.schemas import SourceAnswerProps
+    assert SourceAnswerProps(answer="x", state="abstained", absence="No penalty is stated.").absence
+    with pytest.raises(ValidationError):
+        SourceAnswerProps(answer="x", state="answered", absence="No penalty is stated.")

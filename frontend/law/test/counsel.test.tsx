@@ -620,6 +620,31 @@ describe('answer card honesty (review C1)', () => {
   });
 });
 
+describe('a decline says what is missing (QA UX-001, 2026-10-29)', () => {
+  it('shows the absence, bounded and without a source, instead of the generic decline', async () => {
+    const { render } = await import('@testing-library/react');
+    const { ComponentView } = await import('../counsel/cards');
+    const ctx = { openCitation: () => {}, go: () => {}, matterId: 'm1' } as never;
+    const declined = (props: Record<string, unknown>) => ({ id: 'cmp_' + 'b'.repeat(32), type: 'source_answer',
+      props: { state: 'abstained', answer: 'The documents in this matter do not answer that.', citations: [], unsupported: [], notes: [], ...props } }) as never;
+    const said = 'The early termination penalty amount specified in the agreement is not mentioned in the provided sources.';
+    const one = render(<ComponentView comp={declined({ absence: said })} ctx={ctx} />);
+    expect(one.container.textContent).toContain(said);
+    expect(one.container.textContent).toContain('nothing is cited; this is not a full legal review');
+    expect(one.container.textContent).not.toContain('Try naming the document');
+    expect(one.container.querySelector('details')).toBeNull();
+    one.unmount();
+    const plain = render(<ComponentView comp={declined({})} ctx={ctx} />);
+    expect(plain.container.textContent).toContain('Try naming the document, clause or party.');
+  });
+
+  it('refuses an absence on anything but a decline', () => {
+    const props = { answer: 'x', state: 'answered', citations: [], unsupported: [], notes: [], absence: 'No penalty is stated.' };
+    expect(parseComponent({ id: CMP, type: 'source_answer', props }).type).toBe('inert');
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...props, state: 'abstained' } }).type).toBe('source_answer');
+  });
+});
+
 describe('source panel errors (review S1)', () => {
   it('tells a source that is gone from one that did not load, and offers to try again', async () => {
     const { ApiError } = await import('../api/client');

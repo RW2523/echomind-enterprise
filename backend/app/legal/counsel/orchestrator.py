@@ -202,13 +202,16 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
     amend_notes, amend_actions = await run_in_threadpool(_amendment_notes, changed, (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
     props = {"answer": done.get("answer") or "", "state": state,
              "citations": [{k: v for k, v in c.items() if k != "instructions"} for c in cites],
-             "unsupported": [s[:500] for s in (done.get("unsupported") or [])][:10],
+             # a decline supports nothing, so it lists no unsupported sentences; what it says is missing is shown instead (QA UX-001)
+             "unsupported": [] if state == "abstained" else [s[:500] for s in (done.get("unsupported") or [])][:10],
              "notes": (([OTHER_DOCUMENTS] if done.get("abstention_reason") == "other_documents" else [])
                        + ([OTHER_PARTY] if done.get("abstention_reason") == "other_party" else [])
                        + ([NOT_IN_CITED] if done.get("abstention_reason") == "not_in_cited" else [])
                        + amend_notes + _notes(cites, done.get("conflicts") or []))[:3]}
     if built.understood:
         props["understood"] = built.understood[:400]
+    if state == "abstained" and done.get("absence"):
+        props["absence"] = done["absence"][:400]
     built.add("source_answer", props, [c["document_id"] for c in cites] + [a["by"]["document_id"] for a in changed])
     built.actions = amend_actions
     if state == "abstained":

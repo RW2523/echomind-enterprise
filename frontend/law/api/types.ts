@@ -115,6 +115,8 @@ export interface ResearchTurn {
   unsupported?: string[];
   evidence?: ResearchEvidence[]; conflicts?: ResearchConflict[]; versions?: VersionPolicy | null; abstention_reason?: string | null;
   amendments?: ResearchAmendment[];
+  /** A decline: what the documents were found not to state, in the model's words, without a source. */
+  absence?: string | null;
 }
 /** S2.2: answers come from signed versions (default) or the latest drafts. */
 export type VersionPolicy = 'signed' | 'current';

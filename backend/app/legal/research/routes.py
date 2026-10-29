@@ -136,17 +136,16 @@ def _figures(text: str) -> set:
     return set(re.findall(r"\d[\d,.]*\d|\d", t)) | {w for w in re.findall(r"[a-z-]+", t) if w in _NUMBER_WORDS}
 
 
-def _pointed(text: str, unsupported: list, claims: list, items: list) -> list:
+def _pointed(text: str, unsupported: list, items: list) -> list:
     """`unsupported` without the sentences a verified quote of the answer demonstrably carries: a pointer to the clause the
     quote is in, and a statement whose every figure is in the quote of the attribution that follows it. Anything else
-    stays unsupported."""
+    stays unsupported. `items` is the answer's evidence, so a saved answer reads the same when it is opened again."""
     verified = [e for e in items if e.get("verification") in ("verbatim", "normalized")]
     clauses = set()
     for e in verified:
         parts = str(e.get("clause") or "").split(".")
         clauses |= {".".join(parts[:k]) for k in range(1, len(parts) + 1) if parts[0]}
     sentences = [x.strip() for x in prompt._sentences(text)]
-    by_sentence = {c.sentence.strip(): c for c in claims}
     out = []
     for s in unsupported:
         if _CITED_MARK.search(s):
@@ -158,8 +157,9 @@ def _pointed(text: str, unsupported: list, claims: list, items: list) -> list:
             if all(w in _POINTER_WORDS for w in re.findall(r"[a-z]+", rest)):
                 continue
         i = sentences.index(s) if s in sentences else -1
-        nxt = by_sentence.get(sentences[i + 1]) if 0 <= i < len(sentences) - 1 and _ATTRIBUTES.search(sentences[i + 1]) else None
-        quotes = " ".join(c.quote for c in (nxt.citations if nxt else []) if c.quote and c.verification in ("verbatim", "normalized"))
+        nxt = sentences[i + 1] if 0 <= i < len(sentences) - 1 and _ATTRIBUTES.search(sentences[i + 1]) else ""
+        ns = {int(n) for n in re.findall(r"\[(\d{1,2})\]", nxt)}
+        quotes = " ".join(e.get("quote") or "" for e in verified if e.get("n") in ns)
         if quotes and _figures(s) and _figures(s) <= _figures(quotes):
             said = {w[:5] for w in re.findall(r"[a-z]{4,}", s.lower())} - {w[:5] for w in _POINTER_WORDS}
             if said & {w[:5] for w in re.findall(r"[a-z]{4,}", quotes.lower())}:
@@ -366,7 +366,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             yield _event({"type": "chunk", "text": prompt.ABSTAIN})
             yield _event({"type": "done", "answer": prompt.ABSTAIN, "status": status, "abstained": True, "abstention_reason": reason,
                           "citations": [], "evidence": [], "conflicts": [], "unsupported": [], "failed": [], "uncited": False,
-                          "turn_id": turn["id"], "versions": versions})
+                          "turn_id": turn["id"], "versions": versions, "absence": None})
             return
         buf, shown, claims, unsupported, failed, last_check = "", [], [], [], [], time.monotonic()
         stream = llm_mod.get().chat_stream(prompt.build(question, passages), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
@@ -494,7 +494,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
         if not abstained:
-            unsupported = _pointed(text, unsupported, claims, items)
+            unsupported = _pointed(text, unsupported, items)
         status, answer = _status(abstained, claims, unsupported, failed), text
         reason = (None if not abstained else "other_documents" if off_target else "other_party" if off_party
                   else "not_in_cited" if elsewhere else "model")
@@ -504,7 +504,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             status = "partial"                     # it relies on wording a signed amendment replaced, without the amendment
         yield _event({"type": "done", "answer": text, "status": status, "abstained": abstained, "abstention_reason": reason,
                       "citations": citations, "evidence": items, "conflicts": found, "unsupported": unsupported, "failed": failed,
-                      "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed})
+                      "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed,
+                      "absence": prompt.absence(text) if abstained else None})
     except scopemod.ScopeRevoked:
         status, answer, citations, items, found = "scope_revoked", None, [], [], []
         yield _event({"type": "scope_revoked"})
@@ -572,11 +573,13 @@ def _turn(r, withheld: frozenset | set = frozenset()) -> dict:
                 "unsupported": [], "evidence": [], "conflicts": [], "versions": r[8], "abstention_reason": "access_changed",
                 "amendments": []}
     # Every valid number the answer cites was saved, so the highest saved one bounds the valid range.
-    unsupported = (prompt.unsupported(r[2], max((c["n"] for c in citations), default=0))
+    evidence = json.loads(r[6] or "[]")
+    unsupported = (_pointed(r[2], prompt.unsupported(r[2], max((c["n"] for c in citations), default=0)), evidence)
                    if r[2] and r[4] in ("answered", "partial", "unverified") else [])
     return {"id": r[0], "question": r[1], "answer": r[2], "citations": citations, "status": r[4], "created_at": r[5],
-            "unsupported": unsupported, "evidence": json.loads(r[6] or "[]"), "conflicts": json.loads(r[7] or "[]"),
-            "versions": r[8], "abstention_reason": r[9], "amendments": json.loads(r[10] or "[]") if len(r) > 10 else []}
+            "unsupported": unsupported, "evidence": evidence, "conflicts": json.loads(r[7] or "[]"),
+            "versions": r[8], "abstention_reason": r[9], "amendments": json.loads(r[10] or "[]") if len(r) > 10 else [],
+            "absence": prompt.absence(r[2]) if r[4] == "abstained" and r[2] else None}
 
 
 @router.post("/matters/{matter_id}/research/{turn_id}/review")

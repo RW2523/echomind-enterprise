@@ -16,6 +16,7 @@ export interface Answer {
   failed?: string[]; paragraphs?: ResearchParagraph[]; evidence?: ResearchEvidence[]; conflicts?: ResearchConflict[];
   amendments?: ResearchAmendment[];
   status?: string | null; reason?: string | null; turnId?: string;
+  absence?: string | null;          // a decline: what the documents were found not to state (QA UX-001)
   asked?: string;                                        // S5.1b: the follow-up as asked, when it was made to stand alone
 }
 
@@ -59,7 +60,7 @@ export async function streamAnswer(matterId: string, body: Record<string, unknow
     else if (ev.type === 'done') update({ text: ev.answer ?? state.text, cited: (ev.citations ?? []).map((c: ResearchSource) => c.n),
       phase: ev.abstained ? 'abstained' : 'done', uncited: !!ev.uncited, unsupported: ev.unsupported ?? [], failed: ev.failed ?? [],
       evidence: ev.evidence ?? undefined, conflicts: ev.conflicts ?? [], status: ev.status ?? null, reason: ev.abstention_reason ?? null,
-      turnId: ev.turn_id ?? undefined, amendments: ev.amendments ?? [] });
+      turnId: ev.turn_id ?? undefined, amendments: ev.amendments ?? [], absence: ev.absence ?? null });
     else if (ev.type === 'scope_revoked') update({ text: '', sources: [], paragraphs: [], phase: 'revoked' });
     else if (ev.type === 'error') update({ phase: 'error' });
   }, signal);
@@ -107,7 +108,7 @@ export default function MatterResearch() {
     const done = ['answered', 'partial', 'unverified'].includes(t.status);
     setAnswer({ question: t.question, text: t.answer ?? '', sources: t.citations, cited: t.citations.map((c) => c.n), unsupported: t.unsupported ?? [],
       evidence: t.evidence?.length ? t.evidence : undefined, conflicts: t.conflicts ?? [], status: t.status, reason: t.abstention_reason, turnId: t.id,
-      amendments: t.amendments ?? [],
+      amendments: t.amendments ?? [], absence: t.absence ?? null,
       phase: done ? 'done' : t.status === 'abstained' ? 'abstained' : t.status === 'scope_revoked' ? 'revoked' : 'error' });
   };
 
@@ -196,7 +197,7 @@ export function AnswerSheet({ a, focus, onFocus }: { a: Answer; focus: number | 
         {a.phase === 'error' && <p role="alert" className="lw-answer-text">The answer could not be completed. Try again.</p>}
         {a.phase === 'abstained' && (
           <div className="lw-answer-text">
-            <p style={{ margin: 0 }}>The documents in this matter do not answer that.</p>
+            <p style={{ margin: 0 }}>{a.absence ?? 'The documents in this matter do not answer that.'}</p>
             <p className="lw-meta" style={{ margin: '6px 0 0', fontFamily: 'var(--sans)' }}>{ABSTAINED[a.reason ?? 'no_passages'] ?? ABSTAINED.no_passages}</p>
           </div>
         )}

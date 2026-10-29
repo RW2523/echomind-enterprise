@@ -101,11 +101,14 @@ class SourceAnswerProps(Strict):
     unsupported: list[text(500)] = Field(default_factory=list, max_length=10)
     notes: list[text(400)] = Field(default_factory=list, max_length=3)
     understood: Optional[text(400)] = None                # what a follow-up was taken to ask
+    absence: Optional[text(400)] = None                   # a decline: what the documents were found not to state (QA UX-001)
 
     @model_validator(mode="after")
     def _abstained_has_no_sources(self):
         if self.state == "abstained" and self.citations:
             raise ValueError("an abstention cites nothing")
+        if self.absence is not None and self.state != "abstained":
+            raise ValueError("only a decline says what is missing")
         return self
 
 

@@ -38,6 +38,8 @@ export interface SourceAnswerProps {
   unsupported: string[];
   notes: string[];
   understood?: string;
+  /** A decline: what the documents were found not to state, in the model's words, without a source. */
+  absence?: string;
 }
 
 export interface PriorityItem {

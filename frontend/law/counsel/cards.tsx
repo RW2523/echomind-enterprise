@@ -135,7 +135,12 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
     <div className="qc-card qc-answer-card" data-component="source_answer">
       <AnswerState p={p} />
       {p.state === 'abstained'
-        ? <p className="qc-answer" style={{ margin: 0 }}>The documents in this matter do not answer that. Try naming the document, clause or party.</p>
+        ? (p.absence
+          ? <>
+              <p className="qc-answer" style={{ margin: 0 }}>{p.absence}</p>
+              <p className="qc-note" role="note">Checked against the documents in this matter that you can open. No passage states it, so nothing is cited; this is not a full legal review.</p>
+            </>
+          : <p className="qc-answer" style={{ margin: 0 }}>The documents in this matter do not answer that. Try naming the document, clause or party.</p>)
         : <AnswerText text={p.answer} citations={p.citations} ctx={ctx} labels={labels} />}
       {unique.length > 0 && (
         <div className="qc-sources" role="group" aria-label="Sources">

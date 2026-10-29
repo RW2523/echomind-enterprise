@@ -250,6 +250,14 @@ _POINTER = re.compile(r"^\W*(?:(?:the\s+)?(?:relevant|cited|following)?\s*(?:exc
                       r"wording)\s+(?:is|are|reads?)|see|source|sources|refer\s+to)\W*$", re.I)
 
 
+# "X is not mentioned in the provided sources [1]": an absence said of the documents themselves (2026-10-29 QA UX-001: it was
+# cited as if a fact, so the answer stood). Not "is not included": "Tax advice is not included" is a term of the engagement.
+_ABSENT = re.compile(r"\b(?:is|are|was|were)\s+not\s+(?:explicitly\s+|expressly\s+|specifically\s+)?(?:mentioned|specified|stated|"
+                     r"addressed|identified|set\s+out|given|provided|listed)\s+(?:in|by|anywhere\s+in)\s+(?:the\s+|any\s+of\s+the\s+|"
+                     r"these\s+)?(?:provided\s+|available\s+|cited\s+|relevant\s+|above\s+)?(?:documents?|sources?|text|excerpts?|"
+                     r"passages?|materials?|agreement|contract|lease|letter|notice|minutes|statement|clauses?|sections?)\b", re.I)
+
+
 def only_context(sentence: str) -> bool:
     """The sentence speaks about what the documents do not say or only mention, rather than stating a fact. A sentence with
     no words of its own (a marker alone, even one carrying a quote: golden g-account-said-abstain, 2026-10-28) states nothing."""
@@ -257,7 +265,7 @@ def only_context(sentence: str) -> bool:
     if not re.search(r"[^\W\d_]{2}", s):
         return True
     return bool(_NO_INFORMATION.search(s) or _SILENT_VERB.search(s) or _ONLY_MENTIONS.search(s) or _NONE_MENTIONS.search(s)
-                or _NOT_STATED.search(s) or _BUT_NOT_STATED.search(s) or _POINTER.search(s))
+                or _NOT_STATED.search(s) or _BUT_NOT_STATED.search(s) or _POINTER.search(s) or _ABSENT.search(s))
 
 
 def opens_not_stated(answer: str) -> bool:
@@ -267,7 +275,7 @@ def opens_not_stated(answer: str) -> bool:
     if not first:
         return False
     s = re.sub(r"\[[^\]]*\]", " ", first[0])
-    return bool(_NOT_STATED.search(s) or _BUT_NOT_STATED.search(s))
+    return bool(_NOT_STATED.search(s) or _BUT_NOT_STATED.search(s) or _ABSENT.search(s))
 
 
 # Words of a question that say nothing about what is asked: question words, the documents themselves, saying.
@@ -294,6 +302,26 @@ def missing_terms(question: str, passages: list[str]) -> list[str]:
             if len(part) >= 4 and part not in _QUESTION_NOISE and part[:5] not in text and part not in out:
                 out.append(part)
     return out
+
+
+_IS_NOT = re.compile(r"\b(?:is|are|was|were)\s+not\s+(?:explicitly\s+|expressly\s+)?(?:mentioned|specified|stated|addressed|included|"
+                     r"provided|set\s+out|given|found|identified|defined|recorded)\b", re.I)
+_MIXED = re.compile(r"\b(?:but|however|although|though|except|instead|whereas|only)\b", re.I)
+
+
+def absence(answer: str) -> str | None:
+    """What a declined answer says is missing, as the model put it ("The early termination penalty amount … is not mentioned
+    in the provided sources."), for the reader instead of the generic decline (2026-10-29 QA UX-001). Only a first
+    sentence that states an absence and nothing else; never one that goes on to what the documents do say, and never
+    with a citation marker: an absence has no source."""
+    first = next((s for s in _sentences(answer or "") if s.strip()), "")
+    s = " ".join(re.sub(r"\[[^\]]*\]", " ", first).split()).strip()
+    if not s or ABSTAIN.lower().rstrip(".") in s.lower() or len(s) > 300 or _MIXED.search(s) or '"' in s:
+        return None
+    if not (_NOT_STATED.search(s) or _SILENT_VERB.search(s) or _IS_NOT.search(s)):
+        return None
+    s = re.sub(r"\s+([.,;:])", r"\1", s)
+    return s if s.endswith((".", "?", "!")) else s + "."
 
 
 def says_not_stated(answer: str) -> bool:

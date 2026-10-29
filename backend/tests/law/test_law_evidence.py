@@ -525,6 +525,36 @@ def test_rag001_a_statement_followed_by_its_attribution_is_carried_by_that_quote
     assert done["unsupported"] == ["The fees are due within ninety days."]
 
 
+def test_ux001_a_decline_says_what_the_model_found_missing_without_a_source(ev, monkeypatch):
+    """QA UX-001: "The early termination penalty amount … is not mentioned in the provided sources." was hidden among the
+    unsupported sentences of a decline, under the generic "do not answer that". The decline now carries that sentence, as
+    the model put it and without any marker: an absence has no source."""
+    from app.core.config import settings
+    from app.legal.research import prompt
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)               # passages reach the model, which declines
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = ("The early termination penalty amount specified in the agreement is not mentioned in the provided sources [1].\n\n"
+                        "The documents in this matter do not answer that.")
+    done = ask(alice, ev["mid"], "What is the early termination penalty?")[-1]
+    assert done["status"] == "abstained" and done["citations"] == []
+    assert done["absence"] == "The early termination penalty amount specified in the agreement is not mentioned in the provided sources."
+    assert prompt.absence("The documents in this matter do not answer that.") is None
+    assert prompt.absence("The agreement does not state a penalty, but clause 3 allows termination on notice [1].") is None
+    assert prompt.absence("The fee is USD 5 [1].") is None
+    assert prompt.absence('The documents do not say "penalty" anywhere.') is None
+
+
+def test_ux001_an_absence_said_of_the_documents_is_context_not_a_fact():
+    """"X is not mentioned in the provided sources [1]" cites an absence: it is context, and an answer opening with it
+    opens by saying the documents do not state the thing. A term that excludes something is still a fact."""
+    from app.legal.research import prompt
+    said = "The early termination penalty amount is not mentioned in the provided sources [1]."
+    assert prompt.only_context(said) and prompt.opens_not_stated(said)
+    assert prompt.only_context("The term end date is not specified in the agreement [1].")
+    assert not prompt.only_context("Tax advice is not included in the engagement [1].")
+    assert not prompt.only_context("Liability for fraud is not limited by the cap [1].")
+
+
 def test_which_cited_sentences_are_only_context():
     from app.legal.research import prompt
     context = ["The source mentions her appointment but does not include any information about her compensation [1].",
