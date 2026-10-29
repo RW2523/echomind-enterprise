@@ -1,0 +1,44 @@
+[
+ {
+  "name": "rag001-payment",
+  "matter": "M-101",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "text": "What is the monthly payment and when must invoices be paid?\nSupported by 1 verified quote\n\nThe monthly payment is $12,000 1\n. Invoices must be paid within 30 days 1\n.\n\n1\nsample_msa_test · cl. 2"
+ },
+ {
+  "name": "rag002-termination",
+  "matter": "M-101",
+  "question": "What is the termination notice period, and can either party terminate? Cite the supporting clause.",
+  "text": "What is the termination notice period, and can either party terminate? Cite the supporting clause.\nNot verified: no quote could be matched to the documents\n\nThe termination notice period is 60 days. Either party may terminate the agreement by providing 60 days' written notice .\n\nSentences without a verified source (2)\nThe termination notice period is 60 days.\nEither party may terminate the agreement by providing 60 days' written notice [3]."
+ },
+ {
+  "name": "rag003-renewal",
+  "matter": "M-101",
+  "question": "When does the term end, what is the non-renewal deadline, what happens on renewal, and what assumptions apply?",
+  "text": "When does the term end, what is the non-renewal deadline, what happens on renewal, and what assumptions apply?\nPartly supported: some sentences have no verified source\n\nThe term ends when either party provides written notice of non-renewal at least 45 days before the current term ends 1\n.\n\nThe non-renewal deadline is 45 days before the current term ends 1\n.\n\nThe documents do not specify what happens on renewal, nor do they state any assumptions that apply.\n\n1\nsample_msa_test · cl. 6\nSentences without a verified source (1)\nThe documents do not specify what happens on renewal, nor do they state any assumptions that apply."
+ },
+ {
+  "name": "ux001-penalty",
+  "matter": "M-101",
+  "question": "What is the early termination penalty?",
+  "text": "What is the early termination penalty?\nNo source found in this matter's documents\n\nThe documents in this matter do not answer that. Try naming the document, clause or party.\n\nSentences without a verified source (1)\nThe early termination penalty is not mentioned in the provided documents."
+ },
+ {
+  "name": "chat001-inventory-m101",
+  "matter": "M-101",
+  "question": "Which documents are available in this matter?",
+  "text": "Which documents are available in this matter?\nSupported by 1 verified quote\n\nThe documents available in this matter include a Master Services Agreement, as referenced in the source provided 1\n. The document is labeled as a \"TEST DOCUMENT — FICTIONAL DATA — NOT A REAL CONTRACT\" 1\n.\n\n1\nsample_msa_test"
+ },
+ {
+  "name": "chat001-inventory-m114",
+  "matter": "M-114",
+  "question": "Which documents are available in this matter?",
+  "text": "Which documents are available in this matter?\nNo source found in this matter's documents\n\nThe documents in this matter do not answer that. Try naming the document, clause or party."
+ },
+ {
+  "name": "isolation-m114",
+  "matter": "M-114",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "text": "What is the monthly payment and when must invoices be paid?\nNo source found in this matter's documents\n\nThe documents in this matter do not answer that. Try naming the document, clause or party."
+ }
+]

@@ -1,0 +1,44 @@
+[
+ {
+  "name": "rag001-payment",
+  "matter": "M-101",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "text": "What is the monthly payment and when must invoices be paid?\nSupported by 1 verified quote\n\nThe monthly payment is $12,000 per month 1\n. Invoices must be paid within 30 days 1\n.\n\n1\nsample_msa_test · cl. 2"
+ },
+ {
+  "name": "rag002-termination",
+  "matter": "M-101",
+  "question": "What is the termination notice period, and can either party terminate? Cite the supporting clause.",
+  "text": "What is the termination notice period, and can either party terminate? Cite the supporting clause.\nPartly supported: some sentences have no verified source\n\nThe termination notice period is 60 days. The documents state, \"Either party may terminate this agreement by providing 60 days' written notice\" 1\n.\n\nEither party can terminate the agreement, as the clause allows termination by either party with 60 days' written notice 1\n.\n\n1\nsample_msa_test · cl. 3\nSentences without a verified source (1)\nThe termination notice period is 60 days."
+ },
+ {
+  "name": "rag003-renewal",
+  "matter": "M-101",
+  "question": "When does the term end, what is the non-renewal deadline, what happens on renewal, and what assumptions apply?",
+  "text": "When does the term end, what is the non-renewal deadline, what happens on renewal, and what assumptions apply?\nPartly supported: some sentences have no verified source\n\nThe term ends when the current term expires, as the agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal 1\n.\n\nThe non-renewal deadline is 45 days before the current term ends 1\n.\n\nOn renewal, the agreement automatically renews for an additional 12 months 1\n.\n\nThere are no specific assumptions mentioned in the sources regarding the renewal process.\n\n1\nsample_msa_test · cl. 6\n\nCalculated, not stated in sample_msa_test\n\nCurrent term ends\n31 January 2027\nLast day to give notice of non-renewal\n17 December 2026\nIf no notice is given, the next term\n1 February 2027 to 31 January 2028\ncl. 1 Start: “begins February 1, 2026”\ncl. 1 Term: “remains effective for 12 months”\ncl. 6 Notice before the term ends: “at least 45 days before the current term ends”\ncl. 6 Renewal: “renews for an additional 12 months”\nAssumptions (3)\nThe term runs for 12 calendar months from and including 1 February 2026, to the day before the corresponding date (or the month's last day when it has none).\n45 calendar days counted back from 31 January 2027, the term's last day; notice is in time if it is received on or before that date. Rules on how notice is delivered or deemed received, and any business-day rule, are not applied.\nNo earlier termination, amendment or extension; only this document's text is used.\nSentences without a verified source (1)\nThere are no specific assumptions mentioned in the sources regarding the renewal process."
+ },
+ {
+  "name": "ux001-penalty",
+  "matter": "M-101",
+  "question": "What is the early termination penalty?",
+  "text": "What is the early termination penalty?\nNo source found in this matter's documents\n\nThe documents in this matter do not provide information about an early termination penalty.\n\nChecked against the documents in this matter that you can open. No passage states it, so nothing is cited; this is not a full legal review."
+ },
+ {
+  "name": "chat001-inventory-m101",
+  "matter": "M-101",
+  "question": "Which documents are available in this matter?",
+  "text": "Which documents are available in this matter?\n\nM-101 has 1 document that you can open: sample_msa_test (contract, draft, version 1).\n\nOpen the documents"
+ },
+ {
+  "name": "chat001-inventory-m114",
+  "matter": "M-114",
+  "question": "Which documents are available in this matter?",
+  "text": "Which documents are available in this matter?\n\nM-114 has no documents that you can open."
+ },
+ {
+  "name": "isolation-m114",
+  "matter": "M-114",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "text": "What is the monthly payment and when must invoices be paid?\nNo source found in this matter's documents\n\nThe documents in this matter do not answer that. Try naming the document, clause or party."
+ }
+]
