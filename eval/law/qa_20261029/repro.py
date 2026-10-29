@@ -122,6 +122,12 @@ def run(args) -> int:
                 for ci in card["citations"]:
                     print(f"  cite n={ci['n']} clause={ci.get('clause')!r} verified={ci['verified']} doc={ci['document_title']!r}")
                 print(f"  unsupported={card.get('unsupported')}\n  notes={card.get('notes')}")
+                if card.get("absence"):
+                    print(f"  absence={card['absence']!r}")
+                if card.get("calculation"):
+                    calc = card["calculation"]
+                    print("  calculated=" + "; ".join(f"{d['label']}: {d['display']}" for d in calc["derived"])
+                          + "  from " + ", ".join(f"{x['label']} cl. {x.get('clause')}" for x in calc["facts"]))
             else:
                 print("  " + json.dumps(row["other"])[:600])
             for raw in row["raw"]:

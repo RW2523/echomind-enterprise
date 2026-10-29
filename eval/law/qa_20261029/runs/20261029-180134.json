@@ -1,0 +1,492 @@
+[
+ {
+  "run": 1,
+  "issue": "RAG-001",
+  "matter": "QA-101",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "seconds": 3.7,
+  "status": null,
+  "summary": "Answered from 1 source, 1 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The monthly payment is $12,000 [1]. Invoices must be paid within 30 days [1].",
+   "state": "answered",
+   "citations": [
+    {
+     "id": "cit_08f96f74318d2ee0b91594a94be669ff",
+     "n": 1,
+     "document_id": "6e38518f-df97-4e08-81c7-5d83ede0b8ed",
+     "document_title": "sample_msa_test",
+     "version_number": 1,
+     "version_status": "draft",
+     "clause": "2",
+     "verified": true,
+     "removed": false
+    }
+   ],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The monthly payment is $12,000 [1: \"The Client will pay $12,000 per month\"]. Invoices must be paid within 30 days [1: \"Invoices must be paid within 30 days\"].\n"
+  ]
+ },
+ {
+  "run": 1,
+  "issue": "RAG-002",
+  "matter": "QA-101",
+  "question": "What is the termination notice period, and can either party terminate? Cite the supporting clause.",
+  "seconds": 1.5,
+  "status": null,
+  "summary": "Answered from 1 source, 1 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The termination notice period is 60 days. Either party may terminate the agreement by providing 60 days' written notice [1].",
+   "state": "partial",
+   "citations": [
+    {
+     "id": "cit_8a603c0b4d0d423cd3d19cb123645a58",
+     "n": 1,
+     "document_id": "6e38518f-df97-4e08-81c7-5d83ede0b8ed",
+     "document_title": "sample_msa_test",
+     "version_number": 1,
+     "version_status": "draft",
+     "clause": "3",
+     "verified": true,
+     "removed": false
+    }
+   ],
+   "unsupported": [
+    "The termination notice period is 60 days."
+   ],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The termination notice period is 60 days. Either party may terminate the agreement by providing 60 days' written notice [3: \"Either party may terminate this agreement by providing 60 days' written notice.\"].\n"
+  ]
+ },
+ {
+  "run": 1,
+  "issue": "RAG-003",
+  "matter": "QA-101",
+  "question": "When does the current term end, what is the deadline to give notice of non-renewal, what happens if no notice is given, and what assumptions does that rely on?",
+  "seconds": 6.6,
+  "status": null,
+  "summary": "Answered from 1 source, 1 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The current term ends when the agreement automatically renews, as stated in the source [1].\n\nThe deadline to give notice of non-renewal is at least 45 days before the current term ends, as stated in the source [1].\n\nIf no notice is given, the agreement automatically renews for an additional 12 months, as stated in the source [1].\n\nThe assumption is that the agreement will automatically renew unless notice is given, as stated in the source [1].",
+   "state": "answered",
+   "citations": [
+    {
+     "id": "cit_64a6d1524fc34b6decc9e13181f438fd",
+     "n": 1,
+     "document_id": "6e38518f-df97-4e08-81c7-5d83ede0b8ed",
+     "document_title": "sample_msa_test",
+     "version_number": 1,
+     "version_status": "draft",
+     "clause": "6",
+     "verified": true,
+     "removed": false
+    }
+   ],
+   "unsupported": [],
+   "notes": [],
+   "calculation": {
+    "document_title": "sample_msa_test",
+    "facts": [
+     {
+      "label": "Start",
+      "value": "1 February 2026",
+      "quote": "begins February 1, 2026",
+      "clause": "1",
+      "path": "/m/QA-101/documents/6e38518f-df97-4e08-81c7-5d83ede0b8ed/read?v=88102481-4ca8-457e-9c95-9e5c395e2b58&at=226-249"
+     },
+     {
+      "label": "Term",
+      "value": "12 months",
+      "quote": "remains effective for 12 months",
+      "clause": "1",
+      "path": "/m/QA-101/documents/6e38518f-df97-4e08-81c7-5d83ede0b8ed/read?v=88102481-4ca8-457e-9c95-9e5c395e2b58&at=254-285"
+     },
+     {
+      "label": "Notice before the term ends",
+      "value": "at least 45 days",
+      "quote": "at least 45 days before the current term ends",
+      "clause": "6",
+      "path": "/m/QA-101/documents/6e38518f-df97-4e08-81c7-5d83ede0b8ed/read?v=88102481-4ca8-457e-9c95-9e5c395e2b58&at=757-802"
+     },
+     {
+      "label": "Renewal",
+      "value": "12 months",
+      "quote": "renews for an additional 12 months",
+      "clause": "6",
+      "path": "/m/QA-101/documents/6e38518f-df97-4e08-81c7-5d83ede0b8ed/read?v=88102481-4ca8-457e-9c95-9e5c395e2b58&at=663-697"
+     }
+    ],
+    "derived": [
+     {
+      "label": "Current term ends",
+      "display": "31 January 2027"
+     },
+     {
+      "label": "Last day to give notice of non-renewal",
+      "display": "17 December 2026"
+     },
+     {
+      "label": "If no notice is given, the next term",
+      "display": "1 February 2027 to 31 January 2028"
+     }
+    ],
+    "assumptions": [
+     "The term runs for 12 calendar months from and including 1 February 2026, to the day before the corresponding date (or the month's last day when it has none).",
+     "45 calendar days counted back from 31 January 2027, the term's last day; notice is in time if it is received on or before that date. Rules on how notice is delivered or deemed received, and any business-day rule, are not applied.",
+     "No earlier termination, amendment or extension; only this document's text is used."
+    ],
+    "not_calculated": []
+   }
+  },
+  "other": [],
+  "raw": [
+   "The current term ends when the agreement automatically renews, as stated in the source [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends.\"].\n\nThe deadline to give notice of non-renewal is at least 45 days before the current term ends, as stated in the source [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends.\"].\n\nIf no notice is given, the agreement automatically renews for an additional 12 months, as stated in the source [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends.\"].\n\nThe assumption is that the agreement will automatically renew unless notice is given, as stated in the source [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends.\"].\n"
+  ]
+ },
+ {
+  "run": 1,
+  "issue": "UX-001",
+  "matter": "QA-101",
+  "question": "What is the early termination penalty under the agreement?",
+  "seconds": 0.5,
+  "status": null,
+  "summary": "No source found in this matter's documents.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The documents in this matter do not answer that.",
+   "state": "abstained",
+   "citations": [],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The documents in this matter do not answer that.\n"
+  ]
+ },
+ {
+  "run": 1,
+  "issue": "CHAT-001",
+  "matter": "QA-101",
+  "question": "Which documents are available in this matter?",
+  "seconds": 0.0,
+  "status": null,
+  "summary": "1 document you can open.",
+  "components": [
+   "notice"
+  ],
+  "card": null,
+  "other": [
+   {
+    "tone": "info",
+    "text": "QA-101 has 1 document that you can open: sample_msa_test (contract, draft, version 1)."
+   }
+  ],
+  "raw": []
+ },
+ {
+  "run": 1,
+  "issue": "CHAT-001",
+  "matter": "QA-114",
+  "question": "Which documents are available in this matter?",
+  "seconds": 0.0,
+  "status": null,
+  "summary": "No documents that you can open.",
+  "components": [
+   "notice"
+  ],
+  "card": null,
+  "other": [
+   {
+    "tone": "info",
+    "text": "QA-114 has no documents that you can open."
+   }
+  ],
+  "raw": []
+ },
+ {
+  "run": 1,
+  "issue": "ISOLATION",
+  "matter": "QA-114",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "seconds": 0.0,
+  "status": null,
+  "summary": "No source found in this matter's documents.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The documents in this matter do not answer that.",
+   "state": "abstained",
+   "citations": [],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": []
+ },
+ {
+  "run": 2,
+  "issue": "RAG-001",
+  "matter": "QA-101",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "seconds": 1.6,
+  "status": null,
+  "summary": "Answered from 1 source, 1 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The monthly payment is $12,000 [1]. Invoices must be paid within 30 days [1].",
+   "state": "answered",
+   "citations": [
+    {
+     "id": "cit_94a71ba5c81cff42a8beb3023eb0edd7",
+     "n": 1,
+     "document_id": "6e38518f-df97-4e08-81c7-5d83ede0b8ed",
+     "document_title": "sample_msa_test",
+     "version_number": 1,
+     "version_status": "draft",
+     "clause": "2",
+     "verified": true,
+     "removed": false
+    }
+   ],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The monthly payment is $12,000 [1: \"The Client will pay $12,000 per month\"]. Invoices must be paid within 30 days [1: \"Invoices must be paid within 30 days\"].\n"
+  ]
+ },
+ {
+  "run": 2,
+  "issue": "RAG-002",
+  "matter": "QA-101",
+  "question": "What is the termination notice period, and can either party terminate? Cite the supporting clause.",
+  "seconds": 1.6,
+  "status": null,
+  "summary": "Answered from 1 source, 1 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The termination notice period is 60 days. Either party may terminate the agreement by providing 60 days' written notice. This is stated in the termination clause [1].",
+   "state": "partial",
+   "citations": [
+    {
+     "id": "cit_b0d517b50cd985a3c84e5f4b72dabcc0",
+     "n": 1,
+     "document_id": "6e38518f-df97-4e08-81c7-5d83ede0b8ed",
+     "document_title": "sample_msa_test",
+     "version_number": 1,
+     "version_status": "draft",
+     "clause": "3",
+     "verified": true,
+     "removed": false
+    }
+   ],
+   "unsupported": [
+    "The termination notice period is 60 days."
+   ],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The termination notice period is 60 days. Either party may terminate the agreement by providing 60 days' written notice. This is stated in the termination clause [3: \"Either party may terminate this agreement by providing 60 days' written notice.\"].\n"
+  ]
+ },
+ {
+  "run": 2,
+  "issue": "RAG-003",
+  "matter": "QA-101",
+  "question": "When does the current term end, what is the deadline to give notice of non-renewal, what happens if no notice is given, and what assumptions does that rely on?",
+  "seconds": 4.9,
+  "status": null,
+  "summary": "Answered from 1 source, 1 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The current term ends on the date specified in the agreement, but the exact end date is not provided in the source [1].\n\nThe deadline to give notice of non-renewal is at least 45 days before the current term ends [1].\n\nIf no notice is given, the agreement automatically renews for an additional 12 months [1].\n\nThe assumption is that the current term has a defined end date, which is not specified in the source.",
+   "state": "partial",
+   "citations": [
+    {
+     "id": "cit_a0c4939364ac7893dee21ba4ce18ac21",
+     "n": 1,
+     "document_id": "6e38518f-df97-4e08-81c7-5d83ede0b8ed",
+     "document_title": "sample_msa_test",
+     "version_number": 1,
+     "version_status": "draft",
+     "clause": "6",
+     "verified": true,
+     "removed": false
+    }
+   ],
+   "unsupported": [
+    "The assumption is that the current term has a defined end date, which is not specified in the source."
+   ],
+   "notes": [],
+   "calculation": {
+    "document_title": "sample_msa_test",
+    "facts": [
+     {
+      "label": "Start",
+      "value": "1 February 2026",
+      "quote": "begins February 1, 2026",
+      "clause": "1",
+      "path": "/m/QA-101/documents/6e38518f-df97-4e08-81c7-5d83ede0b8ed/read?v=88102481-4ca8-457e-9c95-9e5c395e2b58&at=226-249"
+     },
+     {
+      "label": "Term",
+      "value": "12 months",
+      "quote": "remains effective for 12 months",
+      "clause": "1",
+      "path": "/m/QA-101/documents/6e38518f-df97-4e08-81c7-5d83ede0b8ed/read?v=88102481-4ca8-457e-9c95-9e5c395e2b58&at=254-285"
+     },
+     {
+      "label": "Notice before the term ends",
+      "value": "at least 45 days",
+      "quote": "at least 45 days before the current term ends",
+      "clause": "6",
+      "path": "/m/QA-101/documents/6e38518f-df97-4e08-81c7-5d83ede0b8ed/read?v=88102481-4ca8-457e-9c95-9e5c395e2b58&at=757-802"
+     },
+     {
+      "label": "Renewal",
+      "value": "12 months",
+      "quote": "renews for an additional 12 months",
+      "clause": "6",
+      "path": "/m/QA-101/documents/6e38518f-df97-4e08-81c7-5d83ede0b8ed/read?v=88102481-4ca8-457e-9c95-9e5c395e2b58&at=663-697"
+     }
+    ],
+    "derived": [
+     {
+      "label": "Current term ends",
+      "display": "31 January 2027"
+     },
+     {
+      "label": "Last day to give notice of non-renewal",
+      "display": "17 December 2026"
+     },
+     {
+      "label": "If no notice is given, the next term",
+      "display": "1 February 2027 to 31 January 2028"
+     }
+    ],
+    "assumptions": [
+     "The term runs for 12 calendar months from and including 1 February 2026, to the day before the corresponding date (or the month's last day when it has none).",
+     "45 calendar days counted back from 31 January 2027, the term's last day; notice is in time if it is received on or before that date. Rules on how notice is delivered or deemed received, and any business-day rule, are not applied.",
+     "No earlier termination, amendment or extension; only this document's text is used."
+    ],
+    "not_calculated": []
+   }
+  },
+  "other": [],
+  "raw": [
+   "The current term ends on the date specified in the agreement, but the exact end date is not provided in the source [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends.\"].\n\nThe deadline to give notice of non-renewal is at least 45 days before the current term ends [1: \"at least 45 days before the current term ends\"].\n\nIf no notice is given, the agreement automatically renews for an additional 12 months [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends.\"].\n\nThe assumption is that the current term has a defined end date, which is not specified in the source.\n"
+  ]
+ },
+ {
+  "run": 2,
+  "issue": "UX-001",
+  "matter": "QA-101",
+  "question": "What is the early termination penalty under the agreement?",
+  "seconds": 0.5,
+  "status": null,
+  "summary": "No source found in this matter's documents.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The documents in this matter do not answer that.",
+   "state": "abstained",
+   "citations": [],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The documents in this matter do not answer that.\n"
+  ]
+ },
+ {
+  "run": 2,
+  "issue": "CHAT-001",
+  "matter": "QA-101",
+  "question": "Which documents are available in this matter?",
+  "seconds": 0.0,
+  "status": null,
+  "summary": "1 document you can open.",
+  "components": [
+   "notice"
+  ],
+  "card": null,
+  "other": [
+   {
+    "tone": "info",
+    "text": "QA-101 has 1 document that you can open: sample_msa_test (contract, draft, version 1)."
+   }
+  ],
+  "raw": []
+ },
+ {
+  "run": 2,
+  "issue": "CHAT-001",
+  "matter": "QA-114",
+  "question": "Which documents are available in this matter?",
+  "seconds": 0.0,
+  "status": null,
+  "summary": "No documents that you can open.",
+  "components": [
+   "notice"
+  ],
+  "card": null,
+  "other": [
+   {
+    "tone": "info",
+    "text": "QA-114 has no documents that you can open."
+   }
+  ],
+  "raw": []
+ },
+ {
+  "run": 2,
+  "issue": "ISOLATION",
+  "matter": "QA-114",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "seconds": 0.0,
+  "status": null,
+  "summary": "No source found in this matter's documents.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The documents in this matter do not answer that.",
+   "state": "abstained",
+   "citations": [],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": []
+ }
+]

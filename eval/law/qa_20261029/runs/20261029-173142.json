@@ -1,0 +1,200 @@
+[
+ {
+  "run": 1,
+  "issue": "RAG-001",
+  "matter": "QA-101",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "seconds": 3.4,
+  "status": null,
+  "summary": "Answered from 1 source, 1 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The monthly payment is $12,000 [1]. Invoices must be paid within 30 days [1].",
+   "state": "answered",
+   "citations": [
+    {
+     "id": "cit_d0b8bde1100ec1c1069f17c1f664a98c",
+     "n": 1,
+     "document_id": "4b6fa443-2473-494a-a28f-1afd9c853da8",
+     "document_title": "sample_msa_test",
+     "version_number": 1,
+     "version_status": "draft",
+     "clause": "2",
+     "verified": true,
+     "removed": false
+    }
+   ],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The monthly payment is $12,000 [1: \"The Client will pay $12,000 per month\"]. Invoices must be paid within 30 days [1: \"Invoices must be paid within 30 days\"].\n"
+  ]
+ },
+ {
+  "run": 1,
+  "issue": "RAG-002",
+  "matter": "QA-101",
+  "question": "What is the termination notice period, and can either party terminate? Cite the supporting clause.",
+  "seconds": 2.3,
+  "status": null,
+  "summary": "Answered from 0 sources, 0 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The termination notice period is 60 days. The documents state, \"Either party may terminate this agreement by providing 60 days' written notice\" [3].\n\nThe documents do not specify any other conditions for termination, so it appears that either party can terminate the agreement with the stated notice period.",
+   "state": "unverified",
+   "citations": [],
+   "unsupported": [
+    "The termination notice period is 60 days.",
+    "The documents state, \"Either party may terminate this agreement by providing 60 days' written notice\" [3].",
+    "The documents do not specify any other conditions for termination, so it appears that either party can terminate the agreement with the stated notice period."
+   ],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The termination notice period is 60 days. The documents state, \"Either party may terminate this agreement by providing 60 days' written notice\" [3: \"Either party may terminate this agreement by providing 60 days' written notice\"]. \n\nThe documents do not specify any other conditions for termination, so it appears that either party can terminate the agreement with the stated notice period.\n"
+  ]
+ },
+ {
+  "run": 1,
+  "issue": "RAG-003",
+  "matter": "QA-101",
+  "question": "When does the current term end, what is the deadline to give notice of non-renewal, what happens if no notice is given, and what assumptions does that rely on?",
+  "seconds": 6.7,
+  "status": null,
+  "summary": "Answered from 1 source, 1 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The current term ends when the agreement automatically renews for an additional 12 months, unless notice of non-renewal is given [1].\n\nThe deadline to give notice of non-renewal is at least 45 days before the current term ends [1].\n\nIf no notice is given, the agreement automatically renews for an additional 12 months [1].\n\nThe assumption is that the agreement will automatically renew unless notice is given, and that the term is 12 months [1].",
+   "state": "answered",
+   "citations": [
+    {
+     "id": "cit_252b7aa9b43a6be5e8c5475bdaf111e2",
+     "n": 1,
+     "document_id": "4b6fa443-2473-494a-a28f-1afd9c853da8",
+     "document_title": "sample_msa_test",
+     "version_number": 1,
+     "version_status": "draft",
+     "clause": "6",
+     "verified": true,
+     "removed": false
+    }
+   ],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The current term ends when the agreement automatically renews for an additional 12 months, unless notice of non-renewal is given [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends\"].\n\nThe deadline to give notice of non-renewal is at least 45 days before the current term ends [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends\"].\n\nIf no notice is given, the agreement automatically renews for an additional 12 months [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends\"].\n\nThe assumption is that the agreement will automatically renew unless notice is given, and that the term is 12 months [1: \"The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends\"].\n"
+  ]
+ },
+ {
+  "run": 1,
+  "issue": "UX-001",
+  "matter": "QA-101",
+  "question": "What is the early termination penalty under the agreement?",
+  "seconds": 0.6,
+  "status": null,
+  "summary": "No source found in this matter's documents.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The documents in this matter do not answer that.",
+   "state": "abstained",
+   "citations": [],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The documents in this matter do not answer that.\n"
+  ]
+ },
+ {
+  "run": 1,
+  "issue": "CHAT-001",
+  "matter": "QA-101",
+  "question": "Which documents are available in this matter?",
+  "seconds": 2.0,
+  "status": null,
+  "summary": "Answered from 1 source, 1 with a verified quote.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The documents available in this matter include a Master Services Agreement, as referenced in the source provided [1]. The document is labeled as a \"TEST DOCUMENT \u2014 FICTIONAL DATA \u2014 NOT A REAL CONTRACT,\" [1] indicating it is not an actual legal contract but a sample. No other documents are mentioned in the provided source.",
+   "state": "partial",
+   "citations": [
+    {
+     "id": "cit_aea4f56958d5b642293091e3e1666e8b",
+     "n": 1,
+     "document_id": "4b6fa443-2473-494a-a28f-1afd9c853da8",
+     "document_title": "sample_msa_test",
+     "version_number": 1,
+     "version_status": "draft",
+     "verified": true,
+     "removed": false
+    }
+   ],
+   "unsupported": [
+    "No other documents are mentioned in the provided source."
+   ],
+   "notes": []
+  },
+  "other": [],
+  "raw": [
+   "The documents available in this matter include a Master Services Agreement, as referenced in the source provided [1: \"MASTER SERVICES AGREEMENT\"]. The document is labeled as a \"TEST DOCUMENT \u2014 FICTIONAL DATA \u2014 NOT A REAL CONTRACT,\" indicating it is not an actual legal contract but a sample. No other documents are mentioned in the provided source.\n"
+  ]
+ },
+ {
+  "run": 1,
+  "issue": "CHAT-001",
+  "matter": "QA-114",
+  "question": "Which documents are available in this matter?",
+  "seconds": 0.1,
+  "status": null,
+  "summary": "No source found in this matter's documents.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The documents in this matter do not answer that.",
+   "state": "abstained",
+   "citations": [],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": []
+ },
+ {
+  "run": 1,
+  "issue": "ISOLATION",
+  "matter": "QA-114",
+  "question": "What is the monthly payment and when must invoices be paid?",
+  "seconds": 0.1,
+  "status": null,
+  "summary": "No source found in this matter's documents.",
+  "components": [
+   "source_answer"
+  ],
+  "card": {
+   "answer": "The documents in this matter do not answer that.",
+   "state": "abstained",
+   "citations": [],
+   "unsupported": [],
+   "notes": []
+  },
+  "other": [],
+  "raw": []
+ }
+]
