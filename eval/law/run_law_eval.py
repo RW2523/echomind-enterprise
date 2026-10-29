@@ -79,7 +79,7 @@ def pct(values: list[float], q: float) -> float | None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--set", choices=["golden", "heldout", "heldout2", "heldout3", "heldout4"], default="golden")
+    ap.add_argument("--set", choices=["golden", "heldout", "heldout2", "heldout3", "heldout4", "heldout5"], default="golden")
     ap.add_argument("--limit", type=int, default=0, help="first N items only (smoke runs)")
     ap.add_argument("--only", default="", help="comma-separated item ids")
     ap.add_argument("--llm", default=os.getenv("LAW_LLM_BASE_URL", "http://localhost:8355/v1"))
@@ -242,7 +242,7 @@ def gate_preconditions(args) -> list[str]:
     if dirty and not args.allow_dirty:
         problems.append("the tree has uncommitted changes (commit them, or --allow-dirty for a trial run that is not a release gate)")
     frozen = json.loads(THRESHOLDS.read_text())
-    for name in ("heldout", "heldout2", "heldout3", "heldout4"):
+    for name in ("heldout", "heldout2", "heldout3", "heldout4", "heldout5"):
         want = frozen.get(f"{name}_sha256")
         have = hashlib.sha256((HERE / f"{name}.jsonl").read_bytes()).hexdigest()
         if want and have != want:
