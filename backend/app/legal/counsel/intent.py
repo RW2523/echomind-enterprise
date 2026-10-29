@@ -19,7 +19,8 @@ from __future__ import annotations
 
 import re
 
-INTENTS = ("ask_fact", "compare", "inspect_case", "chronology", "cases_overview", "other_matters", "draft", "deliberate", "smalltalk")
+INTENTS = ("ask_fact", "compare", "inspect_case", "chronology", "cases_overview", "other_matters", "documents", "draft", "deliberate",
+           "smalltalk")
 
 _CASES = re.compile(
     r"\b(?:compare|comparison\s+of|overview\s+of|status\s+of|summar(?:y|ise|ize)\s+of|side\s+by\s+side)\b[^.?!]{0,30}?"
@@ -37,6 +38,17 @@ _INSPECT = re.compile(
     r"|\bwhat\s+matters\s+today\b|\bwhat\s+changed\s+(?:in|on|since)\b", re.I)
 _COMPARE = re.compile(
     r"\b(?:conflict(?:s|ing)?|contradict\w*|inconsisten\w*|discrepanc\w*|mismatch\w*|disagree\w*|compare|comparison)\b", re.I)
+# The matter's list of documents, read from their records (2026-10-29 QA CHAT-001: "Which documents are available?" went to
+# document search and came back "do not answer that"). A question about what documents say ("Which documents mention the
+# deposit?") stays a research question.
+_DOCUMENTS = re.compile(
+    r"^\s*(?:please\s+|can\s+you\s+|could\s+you\s+)?(?:"
+    r"(?:which|what)\s+(?:documents?|files?)\s+(?:are|is|do|does|have|has)\b"
+    r"(?![^?]*\b(?:mention|say|said|state|refer|contain|discuss|cover|show|support|prove|deal|address|govern|include|provide|set|"
+    r"name|quote|cite|describe|record|confirm|list)\w*)"
+    r"|(?:list|show)\s+(?:me\s+)?(?:all\s+|the\s+|my\s+|our\s+)?(?:documents|files)\b(?!\s+(?:that|which|about|on|mentioning|saying|where))"
+    r"|what(?:'s|\s+is)\s+(?:in|on)\s+(?:this|the)\s+(?:matter|file|case)(?:\s+file)?\s*\??\s*$"
+    r"|how\s+many\s+documents\s+(?:are|do|does|have|has)\b(?![^?]*\b(?:mention|say|state|refer)\w*))", re.I)
 _DRAFT = re.compile(r"^\s*(?:please\s+|can\s+you\s+|could\s+you\s+)?(?:draft|write|prepare|compose)\b"
                     r"|\b(?:draft|write|prepare)\s+(?:a|an|the|me\s+a)\s+(?:\w+\s+){0,3}(?:letter|update|memo|email|reply|notice|agreement|contract)\b", re.I)
 _SMALLTALK = re.compile(r"^\s*(?:hi|hello|hey|thanks|thank\s+you|thx|cheers|ok(?:ay)?|good\s+(?:morning|afternoon|evening))"
@@ -57,6 +69,8 @@ def classify(text: str) -> str:
         return "cases_overview"
     if _OTHER_MATTERS.search(t):
         return "other_matters"
+    if _DOCUMENTS.search(t):
+        return "documents"
     if _DRAFT.search(t):
         return "draft"
     if _DELIBERATE.search(t):

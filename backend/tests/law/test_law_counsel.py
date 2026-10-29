@@ -704,3 +704,52 @@ def test_ux001_only_a_decline_may_say_what_is_missing():
     assert SourceAnswerProps(answer="x", state="abstained", absence="No penalty is stated.").absence
     with pytest.raises(ValidationError):
         SourceAnswerProps(answer="x", state="answered", absence="No penalty is stated.")
+
+
+def test_chat001_which_documents_are_available_is_read_from_the_records_not_searched(cs):
+    """QA CHAT-001 (2026-10-29): "Which documents are available?" went to document search and came back with the generic
+    decline (or, where there were documents, an answer quoting a heading). It is now answered from the matter's records:
+    every document this person may open, with its kind, status and version, and no model call."""
+    alice = as_user(cs, "alice")
+    before = len(cs["model"].stream_calls)
+    env = final(turn(alice, new_conversation(alice, cs["mid"]), "Which documents are available in this matter?"))
+    note = component(env, "notice")["props"]["text"]
+    assert note.startswith("M-101 has 4 documents that you can open: ")
+    for title in ("services-agreement", "witness-a", "witness-b", "meeting-notes"):
+        assert title in note
+    assert "term-sheet" not in note                                      # M-114's document
+    assert len(cs["model"].stream_calls) == before
+    assert env["suggested_actions"][0]["path"] == "/m/M-101/documents"
+
+
+def test_chat001_an_empty_matter_says_so_and_a_document_one_may_not_open_is_never_listed(cs):
+    from app.core.db import get_conn
+    alice = as_user(cs, "alice")
+    empty = cs["matters"]["M-114"]["id"]
+    with get_conn() as conn:                                              # M-114's only document, now on an access list without alice
+        conn.execute("UPDATE legal_documents SET acl_restricted=1 WHERE id=?", (cs["other_doc"]["id"],))
+        conn.commit()
+    env = final(turn(alice, new_conversation(alice, empty), "What documents do we have?"))
+    assert component(env, "notice")["props"]["text"] == "M-114 has no documents that you can open."
+    assert "term-sheet" not in json.dumps(env) and env.get("suggested_actions", []) == []
+
+
+def test_chat001_a_read_only_member_sees_the_same_list_and_research_questions_stay_research(cs):
+    carol = as_user(cs, "carol")
+    env = final(turn(carol, new_conversation(carol, cs["mid"]), "List the documents"))
+    assert component(env, "notice")["props"]["text"].startswith("M-101 has 4 documents that you can open: ")
+    alice = as_user(cs, "alice")
+    cs["model"].claim, cs["model"].quote = "x", "zz-no-such-quote"
+    env = final(turn(alice, new_conversation(alice, cs["mid"]), "Which documents mention the delivery date?"))
+    assert any(c["type"] == "source_answer" for c in env["components"])
+
+
+def test_chat001_the_inventory_intent_is_not_a_question_about_what_documents_say():
+    from app.legal.counsel.intent import classify
+    for q in ("Which documents are available in this matter?", "What documents do we have?", "List the documents",
+              "Show me all documents", "What's in this matter?", "How many documents are there?"):
+        assert classify(q) == "documents", q
+    for q in ("Which documents mention the deposit?", "What documents does the MSA refer to?", "Which documents say the cap is 250,000?",
+              "List the documents that mention Harrowgate", "What is the liability cap?"):
+        assert classify(q) == "ask_fact", q
+    assert classify("Which documents are available across all matters?") == "other_matters"

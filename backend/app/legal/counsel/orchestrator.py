@@ -309,6 +309,39 @@ def _notice(built: Built, text: str, tone: str = "info", actions: Optional[list[
     built.summary = summary or text[:400]
 
 
+INVENTORY_SHOWN = 12
+
+
+def _inventory(principal: dict, matters: list[dict], built: Built) -> None:
+    """The documents of the conversation's matters that this person may open, from their records: never from search, and
+    never a document they may not open (2026-10-29 QA CHAT-001). A matter whose documents they may not read is said so."""
+    from ..documents import repo as doc_repo
+    parts, total = [], 0
+    for m in matters:
+        head = f"{m['number']}: " if len(matters) > 1 else f"{m['number']} "
+        if not policy.authorize(principal, "documents.read", m["id"]).allowed:
+            parts.append(f"{head}— your role here does not include reading its documents." if len(matters) == 1
+                         else f"{head}your role does not include reading its documents.")
+            continue
+        docs = doc_repo.list_documents(m["id"], principal["sub"])
+        total += len(docs)
+        if not docs:
+            parts.append(f"{head}has no documents that you can open." if len(matters) == 1 else f"{head}no documents that you can open.")
+            continue
+        listed = "; ".join(f"{d['title'] or 'Untitled'} ({', '.join(x for x in (d.get('kind'), d.get('status')) if x)}"
+                           f"{', version ' + str(d['version']) if d.get('version') else ''})" for d in docs[:INVENTORY_SHOWN])
+        more = f"; and {len(docs) - INVENTORY_SHOWN} more" if len(docs) > INVENTORY_SHOWN else ""
+        n = f"{len(docs)} document{'s' if len(docs) != 1 else ''}"
+        parts.append(f"{head}has {n} that you can open: {listed}{more}." if len(matters) == 1 else f"{head}{n}: {listed}{more}.")
+    text = " ".join(parts)
+    if len(text) > 800:
+        text = text[:797].rsplit(" ", 1)[0] + "…"
+    actions = ([{"id": "open_documents", "label": "Open the documents", "action_type": "open_page",
+                 "path": f"/m/{urlquote(matters[0]['number'], safe='')}/documents"}] if len(matters) == 1 and total else [])
+    _notice(built, text, actions=actions,
+            summary=(f"{total} document{'s' if total != 1 else ''} you can open." if total else "No documents that you can open."))
+
+
 def _other_matters(matters: list[dict], built: Built) -> None:
     if len(matters) == 1:
         _notice(built, f"This conversation uses only the documents in {matters[0]['number']}. To work across cases, start a new "
@@ -476,6 +509,8 @@ async def run(principal: dict, conv: dict, text: str, client_request_id: Optiona
             built.summary = props["summary"]
         elif kind == "other_matters":
             _other_matters(matters, built)
+        elif kind == "documents":
+            await run_in_threadpool(_inventory, principal, matters, built)
         elif kind == "draft":
             await run_in_threadpool(_draft, principal, matter, built)
         elif kind == "deliberate":
