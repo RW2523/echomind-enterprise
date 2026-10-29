@@ -432,6 +432,62 @@ def test_a_defined_term_quoted_without_its_quotation_marks_is_still_the_source_s
     assert source[found.start:found.end] == 'Client Data" means all data'
 
 
+# ── 2026-10-29 functional QA (EchoMind Legal fix brief) ─────────────────────────────────────────────────────────────
+def test_rag002_a_quote_under_its_clause_number_is_cited_to_the_source_that_holds_it(ev, monkeypatch):
+    """QA RAG-002: with one source, the model wrote [3: "… 60 days' written notice"] — §3's number, not a source's — and the
+    card said every sentence was unverified. The quote is cited where it is, with the marker the reader sees; the number
+    the model wrote is kept for the record."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    events = ask(alice, ev["mid"], "What is the liability cap?")
+    cap = source_n(events, "250,000")
+    wrong = len(events[0]["citations"]) + 3
+    ev["llm"].answer = f'Each party\'s total liability is capped at USD 250,000 [{wrong}: "capped at USD 250,000"].'
+    done = ask(alice, ev["mid"], "What is the liability cap?")[-1]
+    assert done["status"] == "answered" and done["answer"] == f"Each party's total liability is capped at USD 250,000 [{cap}]."
+    assert [e["verification"] for e in done["evidence"]] == ["verbatim"] and done["evidence"][0]["n"] == cap
+    assert done["unsupported"] == []
+
+
+def test_rag002_a_quote_found_in_two_documents_or_nowhere_stays_unverified():
+    from app.legal.research import evidence
+    two = evidence.parse('It is fictional [4: "fictional"].', relocate=lambda n, q: None)
+    assert two.claims[0].citations[0].n == 4 and two.claims[0].citations[0].moved_from is None
+    moved = evidence.parse('Notice is 60 days [3: "60 days\' written notice"].', relocate=lambda n, q: 1)
+    assert moved.display == "Notice is 60 days [1]." and moved.claims[0].citations[0].moved_from == 3
+    kept = evidence.parse('Notice is 60 days [1: "60 days"].', relocate=lambda n, q: None)
+    assert kept.display == "Notice is 60 days [1]." and kept.claims[0].citations[0].moved_from is None
+
+
+def test_rag002_relocation_needs_one_document_to_hold_the_quote(ev, monkeypatch):
+    """A quote both documents contain ("fictional") names no single source: it is not moved, and fails as before."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    events = ask(alice, ev["mid"], "Is the liability capped and is a service credit granted?")
+    assert len({c["document_id"] for c in events[0]["citations"]}) == 2
+    wrong = len(events[0]["citations"]) + 2
+    ev["llm"].answer = f'Both documents are fictional [{wrong}: "fictional"].'
+    done = ask(alice, ev["mid"], "Is the liability capped and is a service credit granted?")[-1]
+    assert done["evidence"] == [] or all(e["verification"] == "failed" for e in done["evidence"])
+    assert f"[{wrong}]" in done["answer"]
+
+
+def test_rag003_a_heading_alone_supports_only_a_sentence_about_what_it_names():
+    """QA RAG-003: an answer about renewal stood on the one verified quote "GOVERNING LAW" (§5's heading), so its source
+    showed "cl. 5". A heading names a clause; it states nothing, and supports a sentence only about what it names."""
+    from app.legal.research import routes
+    assert routes._heading_only("GOVERNING LAW", "The initial 12-month term end date is not specified [1].")
+    assert routes._heading_only("5. GOVERNING LAW", "It renews automatically for 12 months [1].")
+    assert not routes._heading_only("GOVERNING LAW", "The governing law is that of Maryland [1].")
+    assert not routes._heading_only("USD 250,000", "The cap is 250,000 dollars [1].")
+    assert not routes._heading_only("VAT", "Rates exclude tax [1].")
+    assert not routes._heading_only("capped at USD 250,000", "The cap is USD 250,000 [1].")
+
+
 def test_which_cited_sentences_are_only_context():
     from app.legal.research import prompt
     context = ["The source mentions her appointment but does not include any information about her compensation [1].",

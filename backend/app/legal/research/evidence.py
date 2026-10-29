@@ -47,6 +47,7 @@ class Citation:
     start: Optional[int] = None          # in the source passage
     end: Optional[int] = None
     matched: bool = False                # cited by the system: the model quoted the source but gave no [n] (D-073)
+    moved_from: Optional[int] = None     # the number the model wrote, when the quote is in another source (RAG-002)
 
 
 @dataclass
@@ -77,9 +78,12 @@ class Found:
     end: Optional[int] = None
 
 
-def parse(raw: str, match: Optional[Callable[[str], Optional[int]]] = None) -> Paragraph:
+def parse(raw: str, match: Optional[Callable[[str], Optional[int]]] = None,
+          relocate: Optional[Callable[[int, str], Optional[int]]] = None) -> Paragraph:
     """Citations out of the text: the display text keeps `[n]`; quotes go to the claims. With `match` (quote ->
-    source number or None), a quote in a sentence that cites nothing is cited where it is found (D-073)."""
+    source number or None), a quote in a sentence that cites nothing is cited where it is found (D-073). With `relocate`
+    ((n, quote) -> the number of the one source that holds the quote, or None), a quote written under a number that does
+    not hold it is cited to where it is, and the reader's marker says so (RAG-002)."""
     from .prompt import _ONLY_CITES, _sentences
     cites: list[Citation] = []
 
@@ -89,6 +93,10 @@ def parse(raw: str, match: Optional[Callable[[str], Optional[int]]] = None) -> P
         return f"\x00{len(cites) - 1}\x01"
 
     tokens = _CITE.sub(keep, raw or "")
+    if relocate is not None:
+        for c in cites:
+            if c.quote and (n := relocate(c.n, c.quote)) is not None and n != c.n:
+                c.moved_from, c.n = c.n, n
     if match is not None:
         tokens = _matched(tokens, cites, match)
 

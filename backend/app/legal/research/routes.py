@@ -87,7 +87,16 @@ def _check(raw: str, sources: list[dict]) -> tuple[dict, list]:
     def where(quote: str):
         return next((s["n"] for s in sources if not s.get("instructions")
                      and evidence.verify(quote, s["text"]).verification != "failed"), None)
-    para = evidence.parse(raw, match=where)
+
+    def relocate(n: int, quote: str):
+        # 2026-10-29 QA RAG-002: "[3: "Either party may terminate … 60 days' written notice"]" with one source — the model wrote
+        # the clause number (§3) as the source number, and every sentence went unverified. A quote that is not in the source it
+        # names is cited where it is, but only when one document holds it; anywhere else, or in several, it stays failed.
+        if 1 <= n <= len(sources) and evidence.verify(quote, sources[n - 1]["text"]).verification != "failed":
+            return None
+        found = [s for s in sources if not s.get("instructions") and evidence.verify(quote, s["text"]).verification != "failed"]
+        return found[0]["n"] if found and len({s["document_id"] for s in found}) == 1 else None
+    para = evidence.parse(raw, match=where, relocate=relocate)
     claims = []
     for claim in para.claims:
         for c in claim.citations:
@@ -99,11 +108,29 @@ def _check(raw: str, sources: list[dict]) -> tuple[dict, list]:
             else:
                 found = evidence.verify(c.quote, src["text"])
                 c.verification, c.start, c.end = found.verification, found.start, found.end
+                if c.verification != "failed" and _heading_only(c.quote, claim.sentence):
+                    c.verification, c.start, c.end = "failed", None, None
         claims.append({"sentence": claim.sentence, "state": claim.state,
-                       "citations": [{"n": c.n, "quote": c.quote, "verification": c.verification, **({"matched": True} if c.matched else {})}
+                       "citations": [{"n": c.n, "quote": c.quote, "verification": c.verification, **({"matched": True} if c.matched else {}),
+                                      **({"moved_from": c.moved_from} if c.moved_from else {})}
                                      for c in claim.citations]})
     return ({"text": para.display, "claims": claims, "unsupported": prompt.unsupported(para.display, len(sources)),
              "failed": [c["sentence"] for c in claims if c["state"] == "failed"]}, para.claims)
+
+
+_HEADING = re.compile(r"^(?:\d+(?:\.\d+)*\.?\s+)?[A-Z][A-Z &/',-]{1,58}$")           # capitals only: no figures, no sentence
+
+
+def _heading_only(quote: str, sentence: str) -> bool:
+    """A quote that is only a heading ("GOVERNING LAW") is the clause's name, not a statement: it supports a sentence only
+    when the sentence speaks of what it names (2026-10-29 QA RAG-003: it was the one verified quote of an answer about
+    renewal, and the source showed "cl. 5")."""
+    q = quote.strip(" .:;\"'")
+    if not _HEADING.match(q) or len(q.split()) > 6:
+        return False
+    named = {w[:5] for w in re.findall(r"[a-z]{4,}", q.lower())}
+    said = {w[:5] for w in re.findall(r"[a-z]{4,}", re.sub(r"\[[^\]]*\]", " ", sentence).lower())}
+    return bool(named) and not (named & said)
 
 
 def _stands(claim) -> bool:

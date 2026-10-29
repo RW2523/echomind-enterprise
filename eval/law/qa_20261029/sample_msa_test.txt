@@ -1,0 +1,26 @@
+MASTER SERVICES AGREEMENT
+TEST DOCUMENT — FICTIONAL DATA — NOT A REAL CONTRACT
+
+Agreement Date: January 15, 2026
+
+Parties:
+Client: Harrowgate Technologies LLC
+Service Provider: Northstar Solutions Inc.
+
+1. TERM
+This agreement begins February 1, 2026 and remains effective for 12 months.
+
+2. PAYMENT
+The Client will pay $12,000 per month. Invoices must be paid within 30 days.
+
+3. TERMINATION
+Either party may terminate this agreement by providing 60 days' written notice.
+
+4. CONFIDENTIALITY
+Both parties must protect confidential business information.
+
+5. GOVERNING LAW
+This agreement is governed by the laws of Maryland.
+
+6. RENEWAL
+The agreement automatically renews for an additional 12 months unless either party provides written notice of non-renewal at least 45 days before the current term ends.
