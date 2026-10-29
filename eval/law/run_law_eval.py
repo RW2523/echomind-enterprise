@@ -295,7 +295,7 @@ def score(it: dict, done: dict, events: list, first, total: float, doc_ids: dict
             "expect_abstain": exp["abstain"], "status": status, "abstention_reason": done.get("abstention_reason"),
             "correct": correct, "facts_found": facts, "leaked": leaked, "answer": answer,
             "evidence": [{k: e.get(k) for k in ("n", "quote", "verification", "document_title", "version_number", "version_status",
-                                                 "clause", "page_start", "line")} for e in evidence],
+                                                 "clause", "page_start", "line", "moved_from")} for e in evidence],
             "citation_precision": precision, "verified_quotes": len(verified), "quotes": len(quoted),
             "conflict_expected": exp["conflict"], "conflict_found": bool(done.get("conflicts")), "multi_source": multi,
             "first_paragraph_s": round(first, 2) if first is not None else None, "total_s": round(total, 2)}

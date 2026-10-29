@@ -275,7 +275,8 @@ def _evidence(claims: list, sources: list[dict]) -> list[dict]:
                               "version_number": src["version_number"], "version_status": src.get("version_status"),
                               "signed": src.get("signed"), "clause": where.get("clause") or src.get("clause"),
                               "page_start": where.get("page_start", src["page_start"]), "page_end": where.get("page_end", src["page_end"]),
-                              "line": where.get("line"), "char_start": a, "char_end": b, **({"matched": True} if c.matched else {})})
+                              "line": where.get("line"), "char_start": a, "char_end": b, **({"matched": True} if c.matched else {}),
+                              **({"moved_from": c.moved_from} if c.moved_from else {})})
     return items
 
 
