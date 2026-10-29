@@ -64,6 +64,9 @@ def setup_env(args) -> Path:
         "CORS_ALLOW_ORIGINS": "https://testserver", "LLM_BASE_URL": args.llm, "LLM_MODEL": args.model,
         "OLLAMA_EMBED_URL": args.embed, "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1", "CUDA_VISIBLE_DEVICES": "",
         "DOCGEN_IMAGE_BACKEND": "none", "ECHOMIND_EXIT_ON_FATAL_CUDA": "0",
+        # One person asking one question at a time, back to back: the per-person model limit (review F4) protects a shared
+        # model from a stuck tab, and refused this script's bursts of quick declines when --repeat ran (2026-10-29).
+        "LEGAL_MODEL_REQUESTS_PER_MIN": "100000",
     })
     sys.path[:0] = [str(BACKEND), str(BACKEND / "tests" / "law")]
     return data
@@ -192,6 +195,9 @@ def run(args, data: Path) -> int:
         events = []
         with alice_c.stream("POST", f"/api/legal/matters/{m_eval['id']}/research/query", headers=csrf_headers(alice_c),
                             json={"question": it["question"], "versions": it["versions"]}) as r:
+            if r.status_code != 200:
+                r.read()
+                raise SystemExit(f"{it['id']}: the research endpoint answered {r.status_code} {r.text[:200]}")
             for line in r.iter_lines():
                 if not line.strip():
                     continue
