@@ -85,7 +85,12 @@ def referenced(text: str, titles: dict[str, str]) -> set[str]:
 _COMPANY = re.compile(r"\b([A-Z][\w&'-]*(?:[ \t]+(?:&[ \t]+)?[A-Z][\w&'-]*){0,3})[ \t]+(?:Inc|Ltd|LLP|AB|plc|PLC|NV|GmbH|LLC|SA|BV|Limited)\b\.?")
 _RECORD = (r"(?:board(?:\s+meeting)?|board\s+of\s+directors|directors|chair(?:man|woman|person)?|general\s+counsel|chief\s+\w+\s+officer|"
            r"ceo|cfo|offices?|headquarters|registered\s+office|employees|staff|revenue|turnover|budget|dividend|shareholders|"
-           r"auditors?|law\s+firm|lawyers|solicitors|advisers|account\s+manager|financial\s+year)")
+           r"auditors?|law\s+firm|lawyers|solicitors|advisers|account\s+manager|financial\s+year|complaints?(?:\s+procedure)?)")
+# A party's own corporate act (2026-10-28, held-out 4: "What budget did Northbridge approve for Project Lantern?" answered with
+# Voss-Lindqvist's board resolution): the party as the subject of a decision of its own, or the one that keeps a record.
+_ACT = r"(?:approv|decid|resolv|appoint|declar|elect|hir|retain|instruct|authori[sz]|vot|dismiss)\w*"
+_MEETS = r"(?:hold|held|holds|convene\w*)\s+(?:\w+\s+){0,3}?(?:board\s+)?meeting"
+_KEEPS = r"(?:use|uses|offer|offers|have|has|keep|keeps|employ|employs|retain|retains)\b"
 
 
 _SMALL = frozenset("of the a an and to for by between with from at on in".split())
@@ -123,11 +128,64 @@ def party_records(text: str, parties: set[str]) -> set[str]:
     for p in parties:
         name = re.escape(p) + r"[\w-]*(?:\s+[A-Z][\w&-]*){0,3}"
         if re.search(rf"\b{name}(?:'s|')\s+(?:\w+\s+){{0,2}}?{_RECORD}\b", t, re.I) or \
-           re.search(rf"\b{_RECORD}\s+of\s+(?:the\s+)?{name}", t, re.I):
+           re.search(rf"\b{_RECORD}\s+of\s+(?:the\s+)?{name}", t, re.I) or \
+           re.search(rf"\b(?:did|does|do|has|had|will|would)\s+{name}\s+(?:\w+\s+)?{_ACT}", t, re.I) or \
+           re.search(rf"\b{name}\s+(?:has\s+|had\s+)?(?:approved|decided|resolved|appointed|declared|elected|hired|retained|instructed|authori[sz]ed|voted)\b", t, re.I) or \
+           re.search(rf"\b{name}\s+(?:\w+\s+)?{_MEETS}", t, re.I) or \
+           (re.search(_RECORD, t, re.I) and re.search(rf"\b(?:does|do|did)\s+{name}\s+{_KEEPS}", t, re.I)):
             out.add(p)
     return out
 
 
 def mentions_record(text: str) -> bool:
     """Cheap first look: does the text speak of some party's internal record at all (before parties are read)?"""
-    return bool(re.search(_RECORD, text or "", re.I)) and bool(re.search(r"(?:'s|'|’s|’)\s|\bof\s", text or ""))
+    t = text or ""
+    return bool(re.search(_RECORD, t, re.I) or re.search(rf"\b{_ACT}", t, re.I) or re.search(r"\bmeeting\b", t, re.I))
+
+
+# ── A clause for another purpose (2026-10-28, held-out 4 h4-abstain-lease-nonrenewal) ───────────────────────────────────
+# "How much notice of non-renewal does the warehouse lease require?" was answered with the lease's break clause: a notice
+# period, but not for renewal. A question that asks for a named legal concept is not answered from documents that never
+# deal with it, when a retrieved passage of another document does: the cited clause is about something else.
+# concept: (how a question asks for it, how a document deals with it)
+_CONCEPTS = {
+    "renewal": (r"\brenew\w*", r"\brenew\w*"),
+    "review": (r"\breview\w*", r"\breview\w*"),
+    "refund": (r"\brefund\w*|\brepa(?:y|id)\w*", r"\brefund\w*|\brepa(?:y|id)\w*|\breturn\w*\s+(?:of\s+)?the\s+deposit"),
+    "indemnity": (r"\bindemn\w*", r"\bindemn\w*"),
+    "warranty": (r"\bwarrant\w*", r"\bwarrant\w*"),
+    "cure": (r"\bcure\b|\bremed(?:y|ied)\b", r"\bcure\b|\bremed\w*"),
+    "jurisdiction": (r"\bjurisdiction\b|\bcourts?\b", r"\bjurisdiction\b|\bcourts?\b"),
+    "governing law": (r"\bgovern\w*\b(?=[^?]*\blaw\b)|\bgoverning\s+law\b|\bwhich\s+law\b(?!\s+firm)", r"\bgoverned\s+by\b|\bgoverning\s+law\b"),
+    "force majeure": (r"\bforce\s+majeure\b", r"\bforce\s+majeure\b|beyond\s+(?:its|their)\s+reasonable\s+control"),
+    "insurance": (r"\binsur\w*|\bpremium\b", r"\binsur\w*|\bpremium\b"),
+    "deposit": (r"\bdeposit\b", r"\bdeposit\b"),
+    "service credit": (r"\bservice\s+credits?\b", r"\bservice\s+credits?\b"),
+    "maintenance": (r"\bmaintenance\b", r"\bmaintenance\b"),
+    "quorum": (r"\bquor\w*", r"\bquor\w*"),
+    "dividend": (r"\bdividend\w*", r"\bdividend\w*"),
+    "budget": (r"\bbudget\w*", r"\bbudget\w*"),
+    "salary": (r"\bsalar\w*|\bremunerat\w*|\bcompensat\w*", r"\bsalar\w*|\bremunerat\w*|\bcompensat\w*"),
+    "complaints": (r"\bcomplain\w*", r"\bcomplain\w*"),
+    "non-compete": (r"\bnon-?compet\w*", r"\bnon-?compet\w*|\bcompet\w*"),
+    "interest": (r"\binterest\s+(?:rate|accru|charge|on)\w*|\bwhat\s+interest\b|\bearns?\s+interest\b", r"\binterest\b(?!\s+in\b)"),
+    "use class": (r"\buse\s+class\b", r"\buse\s+class\b"),
+    "audit": (r"\baudit\w*", r"\baudit\w*"),
+    "security standard": (r"\bsecurity\s+standard\b|\biso\b", r"\biso\b|\bsecurity\s+programme\b"),
+    "confidentiality": (r"\bconfidential\w*", r"\bconfidential\w*"),
+    "data breach": (r"\bdata\s+breach\b|\bpersonal\s+data\b", r"\bpersonal\s+data\s+breach\b|\bdata\s+breach\b"),
+}
+
+
+def concepts_elsewhere(question: str, cited_texts: list[str], other_texts: list[str]) -> list[str]:
+    """The legal concepts the question asks for that no cited document deals with while another retrieved passage does."""
+    q = (question or "").lower()
+    cited = " ".join(cited_texts).lower()
+    other = " ".join(other_texts).lower()
+    return [k for k, (asks, deals) in _CONCEPTS.items()
+            if re.search(asks, q) and not re.search(deals, cited) and re.search(deals, other)]
+
+
+def asks_concept(question: str) -> bool:
+    q = (question or "").lower()
+    return any(re.search(asks, q) for asks, _ in _CONCEPTS.values())

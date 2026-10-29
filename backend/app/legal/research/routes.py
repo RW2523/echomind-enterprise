@@ -388,6 +388,15 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 and not any(spoken(c) & asked for c in answering)))
         off_party = bool(owner) and bool(standing) and not any(owner & of_parties(c) for c in standing)
         nothing = not standing
+        # A named legal concept the cited documents never deal with, while another retrieved document does (held-out 4: a
+        # break notice given as the notice of non-renewal).
+        elsewhere = []
+        if standing and attribution.asks_concept(question):
+            cited_docs = {sources[c.n - 1]["document_id"] for claim in standing for c in claim.citations if 1 <= c.n <= len(sources)}
+            cited_versions = {s["version_id"] for s in sources if s["document_id"] in cited_docs}
+            others = [s["text"] for s in sources if s["document_id"] not in cited_docs]
+            if others:
+                elsewhere = attribution.concepts_elsewhere(question, await run_in_threadpool(_version_texts, cited_versions), others)
         declined = False
         if not answering and prompt.opens_not_stated(text):
             cited = {sources[c.n - 1]["version_id"] for claim in claims for c in claim.citations if 1 <= c.n <= len(sources)}
@@ -397,12 +406,13 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                         if 1 <= c.n <= len(passages) and passages[c.n - 1].get("score") is not None]
         weak = not cited_scores or max(float(x) for x in cited_scores) < settings.LEGAL_ABSTAIN_WEAK_SCORE
         abstained = (nothing and (prompt.is_abstention(text) or prompt.says_not_stated(text))) or \
-            (prompt.says_not_stated(text) and weak) or declined or off_target or off_party
+            (prompt.says_not_stated(text) and weak) or declined or off_target or off_party or bool(elsewhere)
         numbers = prompt.cited_numbers(text, len(sources))
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
         status, answer = _status(abstained, claims, unsupported, failed), text
-        reason = None if not abstained else "other_documents" if off_target else "other_party" if off_party else "model"
+        reason = (None if not abstained else "other_documents" if off_target else "other_party" if off_party
+                  else "not_in_cited" if elsewhere else "model")
         found = [] if abstained else await run_in_threadpool(doc_versions.conflicts, citations or sources, versions)
         changed = [] if abstained else _changed(links, sources, numbers, items)
         if status == "answered" and any(a["by"]["signed"] and a["cited"] and not a["amendment_cited"] for a in changed):

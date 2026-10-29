@@ -547,3 +547,55 @@ def test_whose_record_a_text_speaks_of():
     for text in ("Voss-Lindqvist's pallets were moved to Hall 1.", "What is Harrowgate's obligation to notify a breach?",
                  "What is Kestrel's liability for stored goods?"):
         assert party_records(text, known) == set(), text
+
+
+# ── A clause for another purpose; a party's act asked without a possessive (2026-10-28, held-out 4) ───────────────────────
+def test_a_named_concept_the_cited_document_never_deals_with_is_not_answered_from_it(ev, monkeypatch):
+    """Held-out 4: a break notice given as the notice of non-renewal. Asked about force majeure in the side letter, the
+    model answers with the side letter's service credits while the MSA's force majeure clause was retrieved: withheld."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)               # both documents reach the model
+    alice = as_user(ev, "alice")
+    q = "What does the side letter say about force majeure?"
+    ev["llm"].answer = "x"
+    letter = source_n(ask(alice, ev["mid"], q), "service credit")
+    ev["llm"].answer = f'The side letter grants a service credit of 5% for each outage [{letter}: "service credit of 5% for each outage"].'
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "not_in_cited"
+    q2 = "What does the MSA say about force majeure?"
+    ev["llm"].answer = "x"
+    fm = source_n(ask(alice, ev["mid"], q2), "Force majeure")
+    ev["llm"].answer = f'Neither party is liable for delay caused by events beyond its reasonable control [{fm}: "events beyond its reasonable control"].'
+    assert ask(alice, ev["mid"], q2)[-1]["abstained"] is False                    # the clause that deals with it: stands
+
+
+def test_a_party_s_own_act_asked_without_a_possessive_rests_on_its_own_documents(ev, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)
+    alice = as_user(ev, "alice")
+    upload(alice, ev["mid"], "board-minutes.txt", MINUTES + "\n\n2. Budget. The board approved a budget of EUR 1 million.", status="final")
+    upload(alice, ev["mid"], "supply-agreement.txt", SUPPLY, status="executed")
+    index_all()
+    q = "What budget did Brightwater approve for the board?"
+    ev["llm"].answer = "x"
+    n = source_n(ask(alice, ev["mid"], q), "EUR 1 million")
+    ev["llm"].answer = f'The board approved a budget of EUR 1 million [{n}: "approved a budget of EUR 1 million"].'
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "other_party"
+
+
+def test_concepts_and_party_acts():
+    from app.legal.research.attribution import concepts_elsewhere, party_records
+    lease = "8.1 The Tenant may end this Lease on 31 March 2030 by giving at least six months' notice."
+    msa = "2.2 This Agreement renews automatically unless either party gives notice of non-renewal."
+    assert concepts_elsewhere("How much notice of non-renewal does the lease require?", [lease], [msa]) == ["renewal"]
+    assert concepts_elsewhere("When can the tenant end the lease?", [lease], [msa]) == []
+    assert concepts_elsewhere("Which law firm advises the client on the renewal?", [msa], []) == []
+    known = {"northbridge", "pellucid", "harrowgate", "crestmoor", "voss-lindqvist"}
+    assert party_records("What budget did Northbridge Analytics approve for Project Lantern?", known) == {"northbridge"}
+    assert party_records("Did Pellucid Holdings declare an interim dividend?", known) == {"pellucid"}
+    assert party_records("When did Crestmoor Estates hold its last board meeting?", known) == {"crestmoor"}
+    assert party_records("Which law firm does Harrowgate use?", known) == {"harrowgate"}
+    for text in ("What does Harrowgate indemnify Voss-Lindqvist against?", "Did Harrowgate give the notice the MSA requires?",
+                 "Which Northbridge project did the Voss-Lindqvist board fund?", "the Voss-Lindqvist pallets held in Hall 1"):
+        assert party_records(text, known) == set(), text

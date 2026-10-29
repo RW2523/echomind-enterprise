@@ -205,6 +205,7 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
              "unsupported": [s[:500] for s in (done.get("unsupported") or [])][:10],
              "notes": (([OTHER_DOCUMENTS] if done.get("abstention_reason") == "other_documents" else [])
                        + ([OTHER_PARTY] if done.get("abstention_reason") == "other_party" else [])
+                       + ([NOT_IN_CITED] if done.get("abstention_reason") == "not_in_cited" else [])
                        + amend_notes + _notes(cites, done.get("conflicts") or []))[:3]}
     if built.understood:
         props["understood"] = built.understood[:400]
@@ -218,6 +219,8 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
         built.summary = f"Answered from {len(cites)} source{'s' if len(cites) != 1 else ''}, {verified} with a verified quote."
 
 
+NOT_IN_CITED = ("The documents that were cited do not deal with what was asked; another document of this matter does, so the "
+                "passages are not given as the answer. Ask about that document, or read the passages consulted.")
 OTHER_PARTY = ("The passages found are another party's records, so they are not given as the answer: no document of the "
                "party asked about records this.")
 OTHER_DOCUMENTS = ("The passages found are from other documents than the one asked about, so they are not given as its answer: "
