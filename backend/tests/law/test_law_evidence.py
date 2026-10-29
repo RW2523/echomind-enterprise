@@ -390,6 +390,35 @@ def test_not_stated_then_a_cited_fact_is_still_an_answer(ev):
     assert done["abstained"] is False and done["status"] in ("answered", "partial")
 
 
+def test_not_stated_then_an_unrelated_cited_fact_is_a_decline_with_context(ev, monkeypatch):
+    """EV14 (2026-10-28): "The documents do not state who chairs Harrowgate's board. Thomas Reyes is General Counsel [1]."
+    The fact is true and verified, but the documents it cites hold none of several words asked ("chairs", "board"): the
+    answer declines, with what the documents do say left as context."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    cap = source_n(ask(alice, ev["mid"], "What is the liability cap?"), "250,000")
+    ev["llm"].answer = (f"The documents do not state who chairs the Customer's board. The agreement caps each party's total "
+                        f'liability at USD 250,000 [{cap}: "capped at USD 250,000"].')
+    done = ask(alice, ev["mid"], "Who chairs the Customer's board?")[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "model" and done["citations"] == []
+
+
+def test_not_stated_then_a_cited_fact_stands_when_only_one_word_asked_is_missing(ev, monkeypatch):
+    """One word of the question missing from the cited document is often the model's paraphrase ("responsible" for "shall
+    pay"): the fact it then states stays an answer."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -1.0)
+    alice = as_user(ev, "alice")
+    ev["llm"].answer = "x"
+    fees = source_n(ask(alice, ev["mid"], "When are the fees payable?"), "thirty days")
+    ev["llm"].answer = (f"The documents do not specify who is responsible for the fees. The Customer shall pay the fees within "
+                        f'thirty days of each invoice [{fees}: "The Customer shall pay the fees within thirty days"].')
+    done = ask(alice, ev["mid"], "Who is responsible for the fees?")[-1]
+    assert done["abstained"] is False and done["status"] in ("answered", "partial")
+
+
 def test_which_cited_sentences_are_only_context():
     from app.legal.research import prompt
     context = ["The source mentions her appointment but does not include any information about her compensation [1].",

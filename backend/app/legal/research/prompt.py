@@ -277,6 +277,11 @@ document documents matter source sources say says said saying state states state
 much many long often""".split())
 
 
+# Words of the question missing from every cited document before "not stated" sets aside a cited fact that stands
+# (replayed over stored answers 2026-10-28: on one word 36 more correct declines and 29 correct answers lost; on two, 24 and 2).
+MISSING_TO_SET_ASIDE = 2
+
+
 def missing_terms(question: str, passages: list[str]) -> list[str]:
     """The question's own words (four letters or more, compared on their first five) that none of the passages contains:
     what was asked is not in the passages the answer cites ("repaired", "salary", "compete"). Empty when every word is

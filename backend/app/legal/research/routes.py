@@ -398,10 +398,15 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             if others:
                 elsewhere = attribution.concepts_elsewhere(question, await run_in_threadpool(_version_texts, cited_versions), others)
         declined = False
-        if not answering and prompt.opens_not_stated(text):
+        if prompt.opens_not_stated(text):
             cited = {sources[c.n - 1]["version_id"] for claim in claims for c in claim.citations if 1 <= c.n <= len(sources)}
             texts = await run_in_threadpool(_version_texts, cited)
-            declined = bool(texts) and bool(prompt.missing_terms(question, texts))
+            missing = prompt.missing_terms(question, texts) if texts else []
+            # "Not stated", then only context; or "not stated", then a true but unrelated cited fact (EV14, 2026-10-28: "Who
+            # chairs Harrowgate's board?" — "Thomas Reyes is General Counsel [1]"), when the documents cited hold none of
+            # several of the question's own words. One missing word is often the model's paraphrase ("responsible" for
+            # "shall keep … in repair"), so a fact that stands is set aside only on two.
+            declined = bool(missing) and (not answering or len(missing) >= prompt.MISSING_TO_SET_ASIDE)
         cited_scores = [passages[c.n - 1].get("score") for claim in claims for c in claim.citations
                         if 1 <= c.n <= len(passages) and passages[c.n - 1].get("score") is not None]
         weak = not cited_scores or max(float(x) for x in cited_scores) < settings.LEGAL_ABSTAIN_WEAK_SCORE
