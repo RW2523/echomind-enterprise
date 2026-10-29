@@ -33,7 +33,7 @@ from ..matters.routes import principal_of, require, require_law_edition
 from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import llm as llm_mod
-from . import amendments, attribution, evidence, followup, prompt
+from . import amendments, attribution, dates, evidence, followup, prompt
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition)])
@@ -218,6 +218,36 @@ def _version_texts(version_ids) -> list[str]:
         if body and body.get("text"):
             out.append(body["text"])
     return out
+
+
+def _calculation(sources: list[dict], question: str, titles: dict) -> Optional[dict]:
+    """Term and notice dates calculated from one document's stated words (2026-10-29 QA RAG-003): the document the question
+    names, or else the best-ranked one among the sources that states a start and a term. Every fact keeps its exact words,
+    clause and characters; every derived date says it is calculated and on what assumptions. Only sources already
+    authorized for this answer are read."""
+    from ..documents import repo as doc_repo
+    named = attribution.referenced(question, titles)
+    order = []
+    for s in sources:
+        if (s["document_id"], s["version_id"]) not in order and (not named or s["document_id"] in named) and not s.get("instructions"):
+            order.append((s["document_id"], s["version_id"]))
+    with get_conn() as conn:
+        for document_id, version_id in order:
+            body = doc_repo.reader(version_id)
+            text = (body or {}).get("text") or ""
+            calc = dates.calculate(text) if text else None
+            if not calc or not (calc.derived or calc.not_calculated):
+                continue
+            src = next(s for s in sources if s["version_id"] == version_id)
+            facts = []
+            for f in calc.facts:
+                where = searchmod.locate(conn, version_id, f.start, f.end)
+                facts.append({"label": f.label, "value": f.value, "quote": f.words(text), "clause": where.get("clause"),
+                              "char_start": f.start, "char_end": f.end})
+            return {"document_id": document_id, "document_title": src["document_title"], "version_id": version_id,
+                    "version_number": src.get("version_number"), **({"matter_number": src["matter_number"]} if src.get("matter_number") else {}),
+                    "facts": facts, "derived": calc.derived, "assumptions": calc.assumptions, "not_calculated": calc.not_calculated}
+    return None
 
 
 def _evidence(claims: list, sources: list[dict]) -> list[dict]:
@@ -476,7 +506,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             if others:
                 elsewhere = attribution.concepts_elsewhere(question, await run_in_threadpool(_version_texts, cited_versions), others)
         declined = False
-        if prompt.opens_not_stated(text):
+        if prompt.opens_not_stated(text) or (not answering and prompt.opens_absent(text)):
             cited = {sources[c.n - 1]["version_id"] for claim in claims for c in claim.citations if 1 <= c.n <= len(sources)}
             texts = await run_in_threadpool(_version_texts, cited)
             missing = prompt.missing_terms(question, texts) if texts else []
@@ -499,13 +529,15 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         reason = (None if not abstained else "other_documents" if off_target else "other_party" if off_party
                   else "not_in_cited" if elsewhere else "model")
         found = [] if abstained else await run_in_threadpool(doc_versions.conflicts, citations or sources, versions)
+        calculation = (await run_in_threadpool(_calculation, sources, question, titles)
+                       if not abstained and dates.asks_term_dates(question) else None)
         changed = [] if abstained else _changed(links, sources, numbers, items)
         if status == "answered" and any(a["by"]["signed"] and a["cited"] and not a["amendment_cited"] for a in changed):
             status = "partial"                     # it relies on wording a signed amendment replaced, without the amendment
         yield _event({"type": "done", "answer": text, "status": status, "abstained": abstained, "abstention_reason": reason,
                       "citations": citations, "evidence": items, "conflicts": found, "unsupported": unsupported, "failed": failed,
                       "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed,
-                      "absence": prompt.absence(text) if abstained else None})
+                      "absence": prompt.absence(text) if abstained else None, "calculation": calculation})
     except scopemod.ScopeRevoked:
         status, answer, citations, items, found = "scope_revoked", None, [], [], []
         yield _event({"type": "scope_revoked"})

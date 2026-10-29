@@ -549,7 +549,7 @@ def test_ux001_an_absence_said_of_the_documents_is_context_not_a_fact():
     opens by saying the documents do not state the thing. A term that excludes something is still a fact."""
     from app.legal.research import prompt
     said = "The early termination penalty amount is not mentioned in the provided sources [1]."
-    assert prompt.only_context(said) and prompt.opens_not_stated(said)
+    assert prompt.only_context(said) and prompt.opens_absent(said) and not prompt.opens_not_stated(said)
     assert prompt.only_context("The term end date is not specified in the agreement [1].")
     assert not prompt.only_context("Tax advice is not included in the engagement [1].")
     assert not prompt.only_context("Liability for fraud is not limited by the cap [1].")

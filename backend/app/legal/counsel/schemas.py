@@ -94,6 +94,34 @@ class CitationRef(Strict):
 AnswerState = Literal["answered", "partial", "unverified", "abstained"]
 
 
+class CalculationFact(Strict):
+    label: text(60)
+    value: text(80)
+    quote: text(300)                                      # the document's own words, as stored
+    clause: Optional[text(40)] = None
+    path: text(300)                                       # opens those words in the reader
+
+    @model_validator(mode="after")
+    def _own_page(self):
+        if not _PAGE.match(self.path):
+            raise ValueError("a fact opens the workspace's own reader")
+        return self
+
+
+class DerivedDate(Strict):
+    label: text(80)
+    display: text(80)
+
+
+class CalculationProps(Strict):
+    """Dates calculated from what one document states, never presented as stated (2026-10-29 QA RAG-003)."""
+    document_title: text(300)
+    facts: list[CalculationFact] = Field(default_factory=list, max_length=6)
+    derived: list[DerivedDate] = Field(default_factory=list, max_length=4)
+    assumptions: list[text(400)] = Field(default_factory=list, max_length=4)
+    not_calculated: list[text(300)] = Field(default_factory=list, max_length=3)
+
+
 class SourceAnswerProps(Strict):
     answer: text(8000)
     state: AnswerState
@@ -102,6 +130,7 @@ class SourceAnswerProps(Strict):
     notes: list[text(400)] = Field(default_factory=list, max_length=3)
     understood: Optional[text(400)] = None                # what a follow-up was taken to ask
     absence: Optional[text(400)] = None                   # a decline: what the documents were found not to state (QA UX-001)
+    calculation: Optional[CalculationProps] = None        # dates calculated from a document's words (QA RAG-003)
 
     @model_validator(mode="after")
     def _abstained_has_no_sources(self):
@@ -109,6 +138,8 @@ class SourceAnswerProps(Strict):
             raise ValueError("an abstention cites nothing")
         if self.absence is not None and self.state != "abstained":
             raise ValueError("only a decline says what is missing")
+        if self.calculation is not None and self.state == "abstained":
+            raise ValueError("a decline calculates nothing")
         return self
 
 

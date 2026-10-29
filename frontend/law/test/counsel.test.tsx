@@ -645,6 +645,58 @@ describe('a decline says what is missing (QA UX-001, 2026-10-29)', () => {
   });
 });
 
+describe('the answer card says what the backend verified (QA 2026-10-29)', () => {
+  const ctxWith = (go = vi.fn()) => ({ ctx: { openCitation: () => {}, go, matterId: 'm1' } as never, go });
+  const comp = (props: Record<string, unknown>) => ({ id: 'cmp_' + 'c'.repeat(32), type: 'source_answer',
+    props: { answer: 'x', citations: [], unsupported: [], notes: [], ...props } }) as never;
+  const cite = { n: 1, id: 'c1', document_id: 'd1', document_title: 'sample_msa_test', clause: '3', verified: true };
+
+  it('a verified clause-3 quote reads as supported, with its clause, and no unsupported list (RAG-002)', async () => {
+    const { render } = await import('@testing-library/react');
+    const { ComponentView } = await import('../counsel/cards');
+    const { ctx } = ctxWith();
+    const r = render(<ComponentView comp={comp({ state: 'answered', answer: 'Either party may terminate on 60 days notice [1].', citations: [cite] })} ctx={ctx} />);
+    expect(r.container.textContent).toContain('Supported by 1 verified quote');
+    expect(r.container.textContent).toContain('sample_msa_test · cl. 3');
+    expect(r.container.querySelector('details')).toBeNull();
+    r.unmount();
+    const partial = render(<ComponentView comp={comp({ state: 'partial', answer: 'A [1]. B.', citations: [cite], unsupported: ['B.'] })} ctx={ctx} />);
+    expect(partial.container.textContent).toContain('Partly supported');
+    expect(partial.container.textContent).toContain('Sentences without a verified source (1)');
+    partial.unmount();
+    const none = render(<ComponentView comp={comp({ state: 'unverified', answer: 'A [1].', citations: [{ ...cite, verified: false }] })} ctx={ctx} />);
+    expect(none.container.textContent).toContain('Not verified');
+  });
+
+  it('calculated dates are labelled as calculated, list their words by clause, and open them (RAG-003)', async () => {
+    const { render, fireEvent: fire } = await import('@testing-library/react');
+    const { ComponentView } = await import('../counsel/cards');
+    const { ctx, go } = ctxWith();
+    const path = '/m/M-101/documents/d1/read?v=v1&at=226-249';
+    const calculation = { document_title: 'sample_msa_test',
+      facts: [{ label: 'Start', value: '1 February 2026', quote: 'begins February 1, 2026', clause: '1', path },
+              { label: 'Notice before the term ends', value: 'at least 45 days', quote: 'at least 45 days before the current term ends', clause: '6', path }],
+      derived: [{ label: 'Current term ends', display: '31 January 2027' }, { label: 'Last day to give notice of non-renewal', display: '17 December 2026' }],
+      assumptions: ['The term runs for 12 calendar months from and including 1 February 2026.'], not_calculated: [] };
+    const r = render(<ComponentView comp={comp({ state: 'partial', answer: 'It renews [1].', citations: [cite], unsupported: [], calculation })} ctx={ctx} />);
+    const box = r.getByRole('region', { name: 'Calculated dates' });
+    expect(box.textContent).toContain('Calculated, not stated in sample_msa_test');
+    expect(box.textContent).toContain('Current term ends31 January 2027');
+    expect(box.textContent).toContain('Last day to give notice of non-renewal17 December 2026');
+    expect(box.textContent).toContain('Assumptions (1)');
+    fire.click(r.getByRole('button', { name: 'Open clause 6 of sample_msa_test: Notice before the term ends' }));
+    expect(go).toHaveBeenCalledWith(path);
+  });
+
+  it('refuses a calculation on a decline, or a fact that opens anything but the reader', () => {
+    const calc = (path: string) => ({ document_title: 't', facts: [{ label: 'Start', value: 'v', quote: 'q', path }], derived: [], assumptions: [], not_calculated: [] });
+    const base = { answer: 'x', citations: [], unsupported: [], notes: [] };
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'partial', calculation: calc('/m/M-101/documents/d1/read?v=v1&at=1-2') } }).type).toBe('source_answer');
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'abstained', calculation: calc('/m/M-101/documents/d1/read?v=v1') } }).type).toBe('inert');
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'partial', calculation: calc('https://example.com/x') } }).type).toBe('inert');
+  });
+});
+
 describe('source panel errors (review S1)', () => {
   it('tells a source that is gone from one that did not load, and offers to try again', async () => {
     const { ApiError } = await import('../api/client');

@@ -40,6 +40,17 @@ export interface SourceAnswerProps {
   understood?: string;
   /** A decline: what the documents were found not to state, in the model's words, without a source. */
   absence?: string;
+  /** Dates calculated from one document's stated words, never presented as stated (QA RAG-003). */
+  calculation?: CalculationProps;
+}
+
+export interface CalculationFact { label: string; value: string; quote: string; clause?: string; path: string }
+export interface CalculationProps {
+  document_title: string;
+  facts: CalculationFact[];
+  derived: { label: string; display: string }[];
+  assumptions: string[];
+  not_calculated: string[];
 }
 
 export interface PriorityItem {

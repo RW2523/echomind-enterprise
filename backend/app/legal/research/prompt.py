@@ -275,7 +275,16 @@ def opens_not_stated(answer: str) -> bool:
     if not first:
         return False
     s = re.sub(r"\[[^\]]*\]", " ", first[0])
-    return bool(_NOT_STATED.search(s) or _BUT_NOT_STATED.search(s) or _ABSENT.search(s))
+    return bool(_NOT_STATED.search(s) or _BUT_NOT_STATED.search(s))
+
+
+def opens_absent(answer: str) -> bool:
+    """The first sentence says the documents do not cover it, in either form: "the documents do not state …" or "X is not
+    mentioned in the provided sources" (QA UX-001). The second form only ever declines an answer with nothing else of its
+    own; it never sets aside a fact that stands (QA RAG-003: "The initial 12-month term end date is not specified in the
+    provided text", then two verified facts, must not be declined)."""
+    first = _sentences(answer or "")[:1]
+    return opens_not_stated(answer) or (bool(first) and bool(_ABSENT.search(re.sub(r"\[[^\]]*\]", " ", first[0]))))
 
 
 # Words of a question that say nothing about what is asked: question words, the documents themselves, saying.

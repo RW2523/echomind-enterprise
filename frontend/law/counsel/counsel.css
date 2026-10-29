@@ -253,6 +253,14 @@
 .qc-note[data-tone="info"] svg { color: var(--ink-3); }
 .qc-note svg { flex: none; margin-top: 2px; }
 .qc-disclosure summary { cursor: pointer; font-size: 13.5px; color: var(--ink-3); }
+/* Dates calculated from a document's words (QA RAG-003): plain, set apart only by a rule and its label. */
+.qc-calc { border-top: 1px solid var(--rule); padding-top: 10px; display: grid; gap: 8px; }
+.qc-calc-title { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+.qc-calc-dates { margin: 0; display: grid; gap: 4px; }
+.qc-calc-dates div { display: flex; gap: 10px; flex-wrap: wrap; }
+.qc-calc-dates dt { color: var(--ink-2); font-size: 14px; }
+.qc-calc-dates dd { margin: 0; font-weight: 600; font-size: 14px; }
+.qc-calc-facts { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; color: var(--ink-2); }
 .qc-disclosure ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; color: var(--ink-2); }
 .qc-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .qc-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--rule); }

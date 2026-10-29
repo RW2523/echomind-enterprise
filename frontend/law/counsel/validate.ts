@@ -6,7 +6,7 @@
 import type {
   ActionType, AnswerState, CaseRow, CaseTableProps, CitationRef, ComparisonSide, DiscrepancyStatus, Envelope, EvidenceComparisonProps,
   MatterRef, NoticeProps,
-  PriorityItem, PriorityListProps, ReviewEntry, SafeComponent, SourceAnswerProps, TaskProgressProps, TimelineEvent, TimelineProps, UiAction,
+  CalculationProps, PriorityItem, PriorityListProps, ReviewEntry, SafeComponent, SourceAnswerProps, TaskProgressProps, TimelineEvent, TimelineProps, UiAction,
 } from './types';
 
 class Invalid extends Error {}
@@ -112,14 +112,36 @@ function citation(v: unknown): CitationRef {
 
 const ANSWER_STATES: readonly AnswerState[] = ['answered', 'partial', 'unverified', 'abstained'];
 
+function calculation(v: unknown): CalculationProps | undefined {
+  if (v === undefined || v === null) return undefined;
+  const o = obj(v, 'calculation');
+  return {
+    document_title: str(o.document_title, 300, 'calculation.document_title'),
+    facts: list(o.facts, 6, 'calculation.facts', (x) => {
+      const f = obj(x, 'fact');
+      const path = str(f.path, 300, 'fact.path');
+      if (!isWorkspacePath(path)) throw new Invalid('a fact opens the workspace\'s own reader');
+      return { label: str(f.label, 60, 'fact.label'), value: str(f.value, 80, 'fact.value'), quote: str(f.quote, 300, 'fact.quote'),
+               clause: optStr(f.clause, 40, 'fact.clause'), path };
+    }),
+    derived: list(o.derived, 4, 'calculation.derived', (x) => {
+      const d = obj(x, 'derived');
+      return { label: str(d.label, 80, 'derived.label'), display: str(d.display, 80, 'derived.display') };
+    }),
+    assumptions: list(o.assumptions, 4, 'calculation.assumptions', (x) => str(x, 400, 'assumption')),
+    not_calculated: list(o.not_calculated, 3, 'calculation.not_calculated', (x) => str(x, 300, 'not_calculated')),
+  };
+}
+
 function sourceAnswer(v: unknown): SourceAnswerProps {
   const o = obj(v, 'props');
   const p: SourceAnswerProps = {
     answer: str(o.answer, 8000, 'answer'), state: oneOf(o.state, ANSWER_STATES, 'state'),
     citations: list(o.citations, 30, 'citations', citation), unsupported: list(o.unsupported, 10, 'unsupported', (x) => str(x, 500, 'unsupported')),
     notes: list(o.notes, 3, 'notes', (x) => str(x, 400, 'note')), understood: optStr(o.understood, 400, 'understood'),
-    absence: optStr(o.absence, 400, 'absence'),
+    absence: optStr(o.absence, 400, 'absence'), calculation: calculation(o.calculation),
   };
+  if (p.calculation && p.state === 'abstained') throw new Invalid('a decline calculates nothing');
   if (p.state === 'abstained' && p.citations.length) throw new Invalid('an abstention cites nothing');
   if (p.absence !== undefined && p.state !== 'abstained') throw new Invalid('only a decline says what is missing');
   return p;

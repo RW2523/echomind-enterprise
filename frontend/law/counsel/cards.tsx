@@ -12,7 +12,7 @@ import { counselApi, requestId } from './api';
 import { isWorkspacePath, parseComponent } from './validate';
 import type {
   CaseRow, CaseTableProps, CitationRef, ComparisonSide, DiscrepancyStatus, EvidenceComparisonProps, NoticeProps, PriorityListProps,
-  SafeComponent, SourceAnswerProps, TimelineEvent, TimelineProps, UiAction,
+  CalculationProps, SafeComponent, SourceAnswerProps, TimelineEvent, TimelineProps, UiAction,
 } from './types';
 
 export interface CardContext {
@@ -138,7 +138,7 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
         ? (p.absence
           ? <>
               <p className="qc-answer" style={{ margin: 0 }}>{p.absence}</p>
-              <p className="qc-note" role="note">Checked against the documents in this matter that you can open. No passage states it, so nothing is cited; this is not a full legal review.</p>
+              <p className="qc-note" data-tone="info" role="note">Checked against the documents in this matter that you can open. No passage states it, so nothing is cited; this is not a full legal review.</p>
             </>
           : <p className="qc-answer" style={{ margin: 0 }}>The documents in this matter do not answer that. Try naming the document, clause or party.</p>)
         : <AnswerText text={p.answer} citations={p.citations} ctx={ctx} labels={labels} />}
@@ -157,6 +157,7 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
           ))}
         </div>
       )}
+      {p.calculation && <Calculated c={p.calculation} ctx={ctx} />}
       {p.notes.map((n, i) => <p key={i} className="qc-note" role="note"><AlertTriangle size={15} aria-hidden />{n}</p>)}
       {p.unsupported.length > 0 && (
         <details className="qc-disclosure">
@@ -165,6 +166,39 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
         </details>
       )}
     </div>
+  );
+}
+
+/** Dates the system calculated from the document's words: labelled as calculated, with the words and the assumptions (QA RAG-003). */
+function Calculated({ c, ctx }: { c: CalculationProps; ctx: CardContext }) {
+  return (
+    <section className="qc-calc" aria-label="Calculated dates">
+      <p className="qc-calc-title"><b>Calculated, not stated in {c.document_title}</b></p>
+      {c.derived.length > 0 && (
+        <dl className="qc-calc-dates">
+          {c.derived.map((d, i) => <div key={i}><dt>{d.label}</dt><dd>{d.display}</dd></div>)}
+        </dl>
+      )}
+      {c.facts.length > 0 && (
+        <ul className="qc-calc-facts" aria-label="From the document's words">
+          {c.facts.map((f, i) => (
+            <li key={i}>
+              <button type="button" className="qc-linkbtn" onClick={() => ctx.go(f.path)}
+                aria-label={`Open ${f.clause ? `clause ${f.clause}` : 'the words'} of ${c.document_title}: ${f.label}`}>
+                {f.clause ? `cl. ${f.clause}` : 'Open'}
+              </button>{' '}{f.label}: “{f.quote}”
+            </li>
+          ))}
+        </ul>
+      )}
+      {c.not_calculated.map((n, i) => <p key={i} className="qc-note" role="note">{n}</p>)}
+      {c.assumptions.length > 0 && (
+        <details className="qc-disclosure">
+          <summary>Assumptions ({c.assumptions.length})</summary>
+          <ul>{c.assumptions.map((a, i) => <li key={i}>{a}</li>)}</ul>
+        </details>
+      )}
+    </section>
   );
 }
 

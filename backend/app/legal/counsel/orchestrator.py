@@ -212,6 +212,8 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
         props["understood"] = built.understood[:400]
     if state == "abstained" and done.get("absence"):
         props["absence"] = done["absence"][:400]
+    if state != "abstained" and done.get("calculation"):
+        props["calculation"] = _calculation_props(done["calculation"], (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
     built.add("source_answer", props, [c["document_id"] for c in cites] + [a["by"]["document_id"] for a in changed])
     built.actions = amend_actions
     if state == "abstained":
@@ -220,6 +222,18 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
     else:
         verified = sum(1 for c in cites if c["verified"])
         built.summary = f"Answered from {len(cites)} source{'s' if len(cites) != 1 else ''}, {verified} with a verified quote."
+
+
+def _calculation_props(calc: dict, matter_number: str) -> dict:
+    """The answer's calculated dates for the card, each fact opening its clause in the reader (QA RAG-003)."""
+    number = calc.get("matter_number") or matter_number
+    return {"document_title": calc["document_title"][:300],
+            "facts": [{"label": f["label"][:60], "value": f["value"][:80], "quote": f["quote"][:300], "clause": (f.get("clause") or None),
+                       "path": citations.reader_path(number, calc["document_id"], calc["version_id"], f["char_start"], f["char_end"])}
+                      for f in calc["facts"][:6]],
+            "derived": [{"label": d["label"][:80], "display": d["display"][:80]} for d in calc["derived"][:4]],
+            "assumptions": [a[:400] for a in calc["assumptions"][:4]],
+            "not_calculated": [n[:300] for n in calc["not_calculated"][:3]]}
 
 
 NOT_IN_CITED = ("The documents that were cited do not deal with what was asked; another document of this matter does, so the "
@@ -328,8 +342,10 @@ def _inventory(principal: dict, matters: list[dict], built: Built) -> None:
         if not docs:
             parts.append(f"{head}has no documents that you can open." if len(matters) == 1 else f"{head}no documents that you can open.")
             continue
+        def number(d):
+            return (d.get("current_version") or {}).get("number")
         listed = "; ".join(f"{d['title'] or 'Untitled'} ({', '.join(x for x in (d.get('kind'), d.get('status')) if x)}"
-                           f"{', version ' + str(d['version']) if d.get('version') else ''})" for d in docs[:INVENTORY_SHOWN])
+                           f"{', version ' + str(number(d)) if number(d) else ''})" for d in docs[:INVENTORY_SHOWN])
         more = f"; and {len(docs) - INVENTORY_SHOWN} more" if len(docs) > INVENTORY_SHOWN else ""
         n = f"{len(docs)} document{'s' if len(docs) != 1 else ''}"
         parts.append(f"{head}has {n} that you can open: {listed}{more}." if len(matters) == 1 else f"{head}{n}: {listed}{more}.")
