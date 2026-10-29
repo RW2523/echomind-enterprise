@@ -23,6 +23,11 @@ Scores, per item and overall:
 - **R-7 multi-source:** every expected document appears in the evidence;
 - **latency:** p50 and p95, to the first checked paragraph and to the end of the answer.
 
+`--repeat N` asks every question N times on the same corpus and scores the pooled answers (EV14, 2026-10-28: at the
+answer model's sampling one run of a 12-16 item set moves by 2-4 items, so one run cannot show a change that small).
+The report adds each run's scores, their spread, and the items whose outcome changed between runs. A gate runs at
+least `gate_runs` times (eval/law/thresholds.json).
+
 The report is written to eval/law/reports/<time>-<set>.json and .md, with the commit and models.
 """
 from __future__ import annotations
@@ -91,7 +96,10 @@ def main() -> int:
     ap.add_argument("--gate", action="store_true", help="release gate: refuse a changed tree or held-out set, apply "
                                                          "eval/law/thresholds.json, exit 2 when a bar is missed")
     ap.add_argument("--allow-dirty", action="store_true", help="with --gate: run on uncommitted changes anyway (never for a release)")
+    ap.add_argument("--repeat", type=int, default=0, help="ask every question N times and score the pooled answers "
+                                                           "(default 1; a gate: thresholds.json gate_runs)")
     args = ap.parse_args()
+    args.repeat = args.repeat or (int(json.loads(THRESHOLDS.read_text()).get("gate_runs", 1)) if args.gate else 1)
     if args.gate and (problems := gate_preconditions(args)):
         print("GATE REFUSED: " + "; ".join(problems), file=sys.stderr)
         return 3
@@ -178,7 +186,7 @@ def run(args, data: Path) -> int:
         print(f"facts present in the passages for {found} of {sum(1 for i in items if i['expect']['facts'])} answerable items")
         return 0
     results = []
-    for it in items:
+    for run_no, it in ((k, it) for k in range(1, args.repeat + 1) for it in items):
         start = time.monotonic()
         first = None
         events = []
@@ -193,11 +201,11 @@ def run(args, data: Path) -> int:
                 events.append(ev)
         total = time.monotonic() - start
         done = next((e for e in events if e["type"] == "done"), {"status": "error", "answer": ""})
-        results.append(score(it, done, events, first, total, doc_ids))
+        results.append(score(it, done, events, first, total, doc_ids) | ({"run": run_no} if args.repeat > 1 else {}))
         r_ = results[-1]
         print(f"{'PASS' if r_['correct'] else 'FAIL'} {it['id']:28} {done.get('status'):10} {total:5.1f}s  {norm(done.get('answer'))[:110]}",
               flush=True)
-    summary = summarise(results)
+    summary = summarise(results) | (repeated(results, args.repeat) if args.repeat > 1 else {})
     misses = check_bars(args.set, summary) if args.gate else []
     if args.gate:
         summary["gate"] = {"passed": not misses, "missed": misses, "thresholds": json.loads(THRESHOLDS.read_text())["status"]}
@@ -234,9 +242,20 @@ def check_bars(set_: str, summary: dict) -> list[str]:
     return misses
 
 
+def _temperature() -> float | None:
+    try:
+        from app.core.config import settings
+        return settings.LEGAL_RESEARCH_TEMPERATURE
+    except Exception:                                   # noqa: BLE001 — the report says so instead of failing
+        return None
+
+
 def gate_preconditions(args) -> list[str]:
-    """A release gate runs on committed code and on the frozen held-out set."""
+    """A release gate runs on committed code and on the frozen held-out set, at least `gate_runs` times."""
     problems = []
+    need = int(json.loads(THRESHOLDS.read_text()).get("gate_runs", 1))
+    if getattr(args, "repeat", 1) < need:
+        problems.append(f"a gate asks every question at least {need} times (--repeat {need}; thresholds.json gate_runs)")
     dirty = subprocess.run(["git", "status", "--porcelain", "--", ".", ":!eval/law/reports"], cwd=ROOT, capture_output=True,
                            text=True).stdout.strip()
     if dirty and not args.allow_dirty:
@@ -303,6 +322,26 @@ def summarise(rs: list[dict]) -> dict:
     }
 
 
+SPREAD = ("answer_accuracy", "abstention_accuracy", "citation_precision", "quote_verification_rate", "t06_leaks")
+
+
+def repeated(rs: list[dict], runs: int) -> dict:
+    """What N runs of the same questions add to the pooled scores: each run's scores, their range, and the items whose
+    outcome changed from run to run (an item right in some runs and wrong in others is a coin, not a result)."""
+    per_run = [summarise([r for r in rs if r["run"] == k]) for k in range(1, runs + 1)]
+    spread = {}
+    for key in SPREAD:
+        values = [_ratio(p[key]) for p in per_run if _ratio(p[key]) is not None]
+        if values:
+            spread[key] = [round(min(values), 3), round(max(values), 3)]
+    by_item: dict[str, list[bool]] = {}
+    for r in rs:
+        by_item.setdefault(r["id"], []).append(bool(r["correct"]))
+    return {"runs": runs, "per_run": [{key: p[key] for key in SPREAD} for p in per_run], "spread": spread,
+            "unstable_items": {i: f"{sum(v)}/{len(v)}" for i, v in by_item.items() if 0 < sum(v) < len(v)},
+            "never_correct": [i for i, v in by_item.items() if not any(v)]}
+
+
 def report(args, summary: dict, rs: list[dict]) -> None:
     out = HERE / "reports"
     out.mkdir(exist_ok=True)
@@ -311,13 +350,18 @@ def report(args, summary: dict, rs: list[dict]) -> None:
     dirty = bool(subprocess.run(["git", "status", "--porcelain", "--", ".", ":!eval/law/reports"], cwd=ROOT, capture_output=True, text=True).stdout.strip())
     meta = {"set": args.set, "commit": commit + ("+changes" if dirty else ""), "model": args.model, "embeddings": "nomic-embed-text",
             "items_sha256": hashlib.sha256((HERE / f"{args.set}.jsonl").read_bytes()).hexdigest(), "gate": bool(getattr(args, "gate", False)),
-            "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2", "time": stamp, "limit": args.limit or None, "only": args.only or None}
+            "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2", "time": stamp, "limit": args.limit or None, "only": args.only or None,
+            "runs": args.repeat, "temperature": _temperature()}
     (out / f"{stamp}-{args.set}.json").write_text(json.dumps({"meta": meta, "summary": summary, "items": rs}, indent=1))
     lines = [f"# EchoMind Law research evaluation — {args.set}", "", f"- Commit: `{meta['commit']}`", f"- Answer model: `{args.model}`",
              "- Embeddings: nomic-embed-text; reranker: ms-marco-MiniLM-L-6-v2", f"- Run: {stamp}", "", "| Measure | Result |", "|---|---|"]
-    lines += [f"| {k.replace('_', ' ')} | {v} |" for k, v in summary.items()]
-    lines += ["", "| Item | Expected | Status | Correct | Precision | Quotes verified | Seconds |", "|---|---|---|---|---|---|---|"]
-    lines += [f"| {r['id']} | {'abstain' if r['expect_abstain'] else 'answer'} | {r['status']} | {'yes' if r['correct'] else '**no**'} | "
+    lines += [f"| {k.replace('_', ' ')} | {v} |" for k, v in summary.items() if k not in ("per_run", "unstable_items")]
+    if summary.get("per_run"):
+        lines += ["", "| Run | " + " | ".join(k.replace("_", " ") for k in SPREAD) + " |", "|---" * (len(SPREAD) + 1) + "|"]
+        lines += [f"| {k} | " + " | ".join(str(p[key]) for key in SPREAD) + " |" for k, p in enumerate(summary["per_run"], start=1)]
+        lines += ["", "Changed between runs (correct/runs): " + (", ".join(f"{i} {v}" for i, v in summary["unstable_items"].items()) or "none")]
+    lines += ["", "| Item | Run | Expected | Status | Correct | Precision | Quotes verified | Seconds |", "|---|---|---|---|---|---|---|---|"]
+    lines += [f"| {r['id']} | {r.get('run', 1)} | {'abstain' if r['expect_abstain'] else 'answer'} | {r['status']} | {'yes' if r['correct'] else '**no**'} | "
               f"{r['citation_precision'] if r['citation_precision'] is not None else '—'} | {r['verified_quotes']}/{r['quotes']} | {r['total_s']} |"
               for r in rs]
     (out / f"{stamp}-{args.set}.md").write_text("\n".join(lines) + "\n")

@@ -316,6 +316,7 @@ class Settings(BaseSettings):
     # Matter research (S1.7).
     LEGAL_RESEARCH_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_PASSAGES", "6"))          # sources given to the model
     LEGAL_RESEARCH_MAX_TOKENS: int = int(os.getenv("LEGAL_RESEARCH_MAX_TOKENS", "700"))
+    LEGAL_RESEARCH_TEMPERATURE: float = float(os.getenv("LEGAL_RESEARCH_TEMPERATURE", "0.1"))  # research answers; EV14: 0.1 swings single runs
     LEGAL_STREAM_RECHECK_SEC: float = float(os.getenv("LEGAL_STREAM_RECHECK_SEC", "2"))    # live scope check while streaming
     # Compare and contradictions (S2.3; D-039).
     LEGAL_COMPARE_MATCH_MIN: float = float(os.getenv("LEGAL_COMPARE_MATCH_MIN", "0.5"))       # shared wording to pair clauses in place

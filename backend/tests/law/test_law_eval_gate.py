@@ -54,3 +54,36 @@ def test_the_thresholds_say_they_await_sign_off():
     t = json.loads((ROOT / "eval" / "law" / "thresholds.json").read_text())
     assert "proposed" in t["status"] and set(t["bars"]) == {"golden", "heldout", "heldout2", "heldout3", "heldout4", "heldout5", "heldout6"}
     assert all(b["t06_leaks_max"] == 0 for b in t["bars"].values())
+
+
+def _result(item: str, run: int, correct: bool, abstain: bool = False) -> dict:
+    return {"id": item, "run": run, "expect_abstain": abstain, "status": "abstained" if abstain == correct else "answered",
+            "correct": correct, "leaked": [], "citation_precision": 1.0 if correct else 0.5, "verified_quotes": 1, "quotes": 1,
+            "conflict_expected": False, "conflict_found": False, "multi_source": None, "total_s": 2.0, "first_paragraph_s": 1.0}
+
+
+def test_repeated_runs_are_pooled_and_name_the_items_that_changed():
+    """EV14: one run of a small set moves by several items on sampling; N runs are scored together, with each run's scores,
+    their range and the items right in some runs and wrong in others."""
+    m = _runner()
+    rs = [_result("a", 1, True), _result("a", 2, True), _result("a", 3, True),
+          _result("b", 1, True), _result("b", 2, False), _result("b", 3, True),
+          _result("c", 1, False, abstain=True), _result("c", 2, False, abstain=True), _result("c", 3, False, abstain=True)]
+    pooled = m.summarise(rs) | m.repeated(rs, 3)
+    assert pooled["answer_accuracy"] == "5/6" and pooled["abstention_accuracy"] == "0/3"
+    assert pooled["runs"] == 3 and [p["answer_accuracy"] for p in pooled["per_run"]] == ["2/2", "1/2", "2/2"]
+    assert pooled["spread"]["answer_accuracy"] == [0.5, 1.0]
+    assert pooled["unstable_items"] == {"b": "2/3"} and pooled["never_correct"] == ["c"]
+    assert m.check_bars("heldout", {**GOOD, "answer_accuracy": pooled["answer_accuracy"]}) == ["answer_accuracy 0.833 (below 0.85)"]
+
+
+def test_a_gate_is_refused_with_fewer_runs_than_the_thresholds_ask_for(monkeypatch, tmp_path):
+    m = _runner()
+    t = json.loads(m.THRESHOLDS.read_text())
+    frozen = tmp_path / "thresholds.json"
+    frozen.write_text(json.dumps({**t, "gate_runs": 3}))
+    monkeypatch.setattr(m, "THRESHOLDS", frozen)
+    args = type("A", (), {"repeat": 1, "allow_dirty": True})()
+    assert any("at least 3 times" in p for p in m.gate_preconditions(args))
+    args.repeat = 3
+    assert not any("at least" in p for p in m.gate_preconditions(args))

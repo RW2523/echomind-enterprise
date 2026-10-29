@@ -291,7 +291,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                           "turn_id": turn["id"], "versions": versions})
             return
         buf, shown, claims, unsupported, failed, last_check = "", [], [], [], [], time.monotonic()
-        stream = llm_mod.get().chat_stream(prompt.build(question, passages), temperature=0.1,
+        stream = llm_mod.get().chat_stream(prompt.build(question, passages), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
                                            max_tokens=settings.LEGAL_RESEARCH_MAX_TOKENS)
 
         def finish(raw: str):
