@@ -419,6 +419,33 @@ def test_not_stated_then_a_cited_fact_stands_when_only_one_word_asked_is_missing
     assert done["abstained"] is False and done["status"] in ("answered", "partial")
 
 
+def test_a_defined_term_quoted_without_its_quotation_marks_is_still_the_source_s_words():
+    """2026-10-29: 16 of 29 failed quotes on the development sets were a definition quoted without the marks around its
+    term ("Client Data means all data …" for '"Client Data" means all data …'). Quotation marks are not wording; every word
+    still has to be there."""
+    from app.legal.research import evidence
+    source = '1.4 "Client Data" means all data supplied by or on behalf of Client and processed by Provider.'
+    assert evidence.verify("Client Data means all data supplied by or on behalf of Client", source).verification == "normalized"
+    assert evidence.verify("'Client Data' means all data supplied", source).verification == "normalized"
+    assert evidence.verify("Client Data means all data bought by Client", source).verification == "failed"
+    found = evidence.verify("Client Data means all data", source)
+    assert source[found.start:found.end] == 'Client Data" means all data'
+
+
+def test_a_question_that_names_a_document_is_answered_from_it():
+    """S2.6 (EV18): "Which law governs the warehouse lease?" drew the MSA's and the NDA's governing law in too. A question that
+    names one of the sources' documents gets a note to answer from it; any other question gets exactly the prompt it had."""
+    from app.legal.research import prompt
+    ps = [{"citation": {"document_id": "d1", "document_title": "Unit 7 Lease", "version_number": 1, "page_start": 1},
+           "text": "10.1 This Lease is governed by the law of England and Wales."},
+          {"citation": {"document_id": "d2", "document_title": "Harrowgate MSA", "version_number": 1, "page_start": 1},
+           "text": "21.1 This Agreement is governed by the laws of the State of Delaware."}]
+    user = prompt.build("Which law governs the warehouse lease?", ps)[1]["content"]
+    assert '(The question is about the document "Unit 7 Lease". Answer from that document;' in user
+    plain = prompt.build("Which law governs?", ps)[1]["content"]
+    assert "The question is about" not in plain and plain.startswith("Question: Which law governs?\n\nSources:")
+
+
 def test_which_cited_sentences_are_only_context():
     from app.legal.research import prompt
     context = ["The source mentions her appointment but does not include any information about her compensation [1].",

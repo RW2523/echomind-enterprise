@@ -28,7 +28,9 @@ from typing import Callable, Optional
 # so it runs to the first closing mark followed by "]", never past its own bracket (seen in Chrome, 2026-10-28).
 _CITE = re.compile(r"\[(\d{1,2})(?::\s*[\"“”]((?:\\.|[^\\\]])+?)[\"“”]\s*)?\]", re.S)
 _TOKEN = re.compile("\x00(\\d+)\x01")
-# Single and double quotes of every style fold to one mark; Markdown markup (*, #, >, _, `) is not wording (S2.3).
+# Single and double quotes of every style fold to one mark; Markdown markup (*, #, >, _, `) is not wording (S2.3), and
+# neither is that mark: a defined term is quoted without its own quotation marks ("Client Data means all data …" for
+# '"Client Data" means all data …', 16 of 29 failed quotes on the development sets, 2026-10-29).
 _FOLD = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201b": "'", "\u2032": "'", "\u201c": "'", "\u201d": "'", "\u201e": "'",
                        '"': "'", "\u2013": "-", "\u2014": "-", "\u2212": "-", "\u00a0": " "})
 _MARKUP = set("*#>_`")
@@ -131,7 +133,7 @@ def _folded(text: str) -> tuple[str, list[int]]:
     out, where, space = [], [], False
     for i, ch in enumerate(text):
         for c in unicodedata.normalize("NFKC", ch).translate(_FOLD).casefold():
-            if c in _MARKUP:
+            if c in _MARKUP or c == "'":
                 continue
             if c.isspace():
                 if out and not space:

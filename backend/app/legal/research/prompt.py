@@ -9,10 +9,13 @@ from __future__ import annotations
 import html
 import re
 
+from . import attribution
+
 ABSTAIN = "The documents in this matter do not answer that."
 
 # Recorded with every research note sent for review (S2.7): which instructions produced the answer.
-VERSION = "research-s2.5"          # S2.3: amending sources marked; S2.4: an account's reading; S2.5: several matters
+VERSION = "research-s2.6"          # S2.3: amending sources marked; S2.4: an account's reading; S2.5: several matters;
+                                   # S2.6: a question that names a document is answered from it
 
 SYSTEM = (
     "You are a careful legal research assistant. You work only from the numbered sources below, which "
@@ -83,7 +86,15 @@ def build(question: str, passages: list[dict]) -> list[dict]:
     matters = sorted({p["matter"]["number"] for p in passages if p.get("matter")})
     several = (f"(These sources come from {len(matters)} matters: {', '.join(matters)}. Say which matter each statement comes from, "
                "and never combine facts from different matters as if they were one.)\n") if len(matters) > 1 else ""
-    user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + several + "\nSources:\n"
+    # S2.6 (2026-10-29, EV18): "Which law governs the warehouse lease?" was answered, then the MSA's and the NDA's governing law
+    # were added for comparison, 5 quotes in 3 runs on held-out 2 alone. Like the account reading, only a question that names a
+    # document gets the note; every other prompt is unchanged.
+    named = sorted({titles[d] for d in attribution.referenced(question, titles)}) if (titles := {
+        p["citation"]["document_id"]: p["citation"]["document_title"] for p in passages if p["citation"].get("document_id")}) else []
+    about = (f"(The question is about the document{'s' if len(named) > 1 else ''} {' and '.join(f'\"{t}\"' for t in named)}. Answer from "
+             f"{'those documents' if len(named) > 1 else 'that document'}; "
+             "cite another document only where it changes or adds to its terms.)\n") if named and not several else ""
+    user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + about + several + "\nSources:\n"
             + "\n\n".join(blocks) + "\n\n" + REMINDER)
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
