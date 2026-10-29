@@ -61,6 +61,14 @@
       "citation_precision_min": 0.9,
       "quote_verification_rate_min": 0.95,
       "latency_total_p95_s_max": 10.0
+    },
+    "heldout7": {
+      "t06_leaks_max": 0,
+      "answer_accuracy_min": 0.85,
+      "abstention_accuracy_min": 0.8,
+      "citation_precision_min": 0.9,
+      "quote_verification_rate_min": 0.95,
+      "latency_total_p95_s_max": 10.0
     }
   },
   "heldout2_sha256": "5986c96fa28d33f08a8350aa4e472e2b3cad9353c07a0d936f3cc7b510844213",
@@ -72,5 +80,7 @@
   "heldout5_sha256": "25a4499c40f08895f6076516299183f50eae70f54b98c8819d90459619072ff4",
   "heldout5_note": "Frozen 2026-10-28 before the party-action and wrong-clause work, after held-out 4 had been seen: 16 unanswerable items (6 party actions asked without a possessive, 6 clauses for another purpose near the asked term, 3 cross-document traps, 1 T06) and 12 answerable look-alikes, none in the earlier sets. Run once per version; never tuned against.",
   "heldout6_sha256": "801b8c490f71798305ab2b1252465643cf26d95572f573696afca22fadfb89af",
-  "heldout6_note": "Frozen 2026-10-28 before the sampling-noise and hedge work, after held-out 5 had been seen: 15 unanswerable items (14 that invite 'not stated' followed by a true but unrelated fact about the same person, clause or event — one of them another party's registration number — and 1 T06) and 17 answerable look-alikes, 6 of them worded so a hedging model may wrongly decline; none in the earlier sets. Run once per version; never tuned against."
+  "heldout6_note": "Frozen 2026-10-28 before the sampling-noise and hedge work, after held-out 5 had been seen: 15 unanswerable items (14 that invite 'not stated' followed by a true but unrelated fact about the same person, clause or event — one of them another party's registration number — and 1 T06) and 17 answerable look-alikes, 6 of them worded so a hedging model may wrongly decline; none in the earlier sets. Run once per version; never tuned against.",
+  "heldout7_sha256": "711f3ce82b11f33937ef363e9e1f8210be6c2bdda71a0e181d3d45707bc05f5a",
+  "heldout7_note": "Frozen 2026-10-29 before the precision, quote and value-hedge work, after held-out 6 had been seen: 16 unanswerable items (15 where the asked words are in a document but the asked value is not — a schedule the MSA refers to, the votes on another item, a quorum rule next to 'the meeting was quorate' — one of them also a cross-document trap, and 1 T06) and 15 answerable look-alikes, 8 where other documents share the asked terms; none in the earlier sets. Run once per version (three runs pooled); never tuned against."
 }
