@@ -1,0 +1,1049 @@
+{
+ "meta": {
+  "set": "heldout6",
+  "commit": "7862077+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "801b8c490f71798305ab2b1252465643cf26d95572f573696afca22fadfb89af",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261029-144712",
+  "limit": null,
+  "only": "h6-abstain-breach-penalty,h6-nda-recipient-term,h6-cw-addressee,h6-side-letter-date,h6-coc-clause,h6-storage-end-date,h6-amendment-other-terms,h6-storage-old-fee",
+  "runs": 3,
+  "temperature": 0.1
+ },
+ "summary": {
+  "items": 24,
+  "answer_accuracy": "20/21",
+  "abstention_accuracy": "0/3",
+  "false_abstentions": 1,
+  "t06_leaks": 0,
+  "citation_precision": 0.892,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "partial": 15,
+   "answered": 8,
+   "abstained": 1
+  },
+  "latency_total_p50_s": 3.2,
+  "latency_total_p95_s": 4.29,
+  "latency_first_paragraph_p50_s": 3.2,
+  "latency_first_paragraph_p95_s": 4.29,
+  "runs": 3,
+  "per_run": [
+   {
+    "answer_accuracy": "7/7",
+    "abstention_accuracy": "0/1",
+    "citation_precision": 0.929,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "6/7",
+    "abstention_accuracy": "0/1",
+    "citation_precision": 0.833,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "7/7",
+    "abstention_accuracy": "0/1",
+    "citation_precision": 0.905,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   }
+  ],
+  "spread": {
+   "answer_accuracy": [
+    0.857,
+    1.0
+   ],
+   "abstention_accuracy": [
+    0.0,
+    0.0
+   ],
+   "citation_precision": [
+    0.833,
+    0.929
+   ],
+   "quote_verification_rate": [
+    1.0,
+    1.0
+   ],
+   "t06_leaks": [
+    0,
+    0
+   ]
+  },
+  "unstable_items": {
+   "h6-storage-old-fee": "2/3"
+  },
+  "never_correct": [
+   "h6-abstain-breach-penalty"
+  ]
+ },
+ "items": [
+  {
+   "id": "h6-abstain-breach-penalty",
+   "tags": [
+    "ABSTAIN",
+    "HEDGE_BAIT"
+   ],
+   "question": "What penalty does the MSA impose if Harrowgate notifies a personal data breach late?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA requires the Provider to notify the Client of a personal data breach without undue delay and in any event within forty-eight (48) hours of becoming aware of it [1]. The documents in this matter do not specify a penalty for late notification.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it.",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "6.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.52,
+   "total_s": 4.52,
+   "run": 1
+  },
+  {
+   "id": "h6-nda-recipient-term",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What does the Northbridge NDA call the party that receives information?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Northbridge NDA refers to the party that receives information as the \"Recipient.\"\n\n[3]",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Confidential Information\" means all information disclosed by a Party (the \"Discloser\") to the other (the \"Recipient\") in connection with the Purpose, in any form, that is marked confidential or would reasonably be understood to be confidential",
+     "verification": "normalized",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.43,
+   "total_s": 2.43,
+   "run": 1
+  },
+  {
+   "id": "h6-cw-addressee",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "To whom is the Calder & Wynne engagement letter addressed?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement letter is addressed to Petra Voss, General Counsel, Voss-Lindqvist AB [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "To: Petra Voss, General Counsel, Voss-Lindqvist AB \u2014 5 February 2026",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 4
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.06,
+   "total_s": 2.06,
+   "run": 1
+  },
+  {
+   "id": "h6-side-letter-date",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "On what date was the service credit side letter signed?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Service credit side letter was signed on 28 March 2026. This is stated in the document, which notes: \"Signed for Harrowgate Systems Inc. and agreed by Voss-Lindqvist AB on 28 March 2026 (fictional)\" [2].",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Signed for Harrowgate Systems Inc. and agreed by Voss-Lindqvist AB on 28 March 2026 (fictional)",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5",
+     "page_start": null,
+     "line": 10
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.99,
+   "total_s": 3.99,
+   "run": 1
+  },
+  {
+   "id": "h6-coc-clause",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Under which clause of the MSA was the change of control notice given?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The change of control notice was given under Clause 14.2 of the Harrowgate MSA. The notice states, \"We write under Clause 14.2 of the Master Services Agreement dated 2 March 2026 to notify you of an expected change of control of Harrowgate Systems Inc.\" [2].",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "We write under Clause 14.2 of the Master Services Agreement dated 2 March 2026 to notify you of an expected change of control of Harrowgate Systems Inc.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.59,
+   "total_s": 3.59,
+   "run": 1
+  },
+  {
+   "id": "h6-storage-end-date",
+   "tags": [
+    "LOOKALIKE",
+    "HEDGE_PRONE"
+   ],
+   "question": "Does the Kestrel storage agreement have a fixed end date?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel Storage Services Agreement does not have a fixed end date. It states that the agreement \"continues until terminated\" [1].\n\nAmendment No. 1 to the Kestrel storage agreement does not specify an end date for the agreement either. It only states that \"All other terms of the Storage Services Agreement remain in force\" [2].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Agreement continues until terminated",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5.1",
+     "page_start": null,
+     "line": 9
+    },
+    {
+     "n": 2,
+     "quote": "All other terms of the Storage Services Agreement remain in force",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.43,
+   "total_s": 3.43,
+   "run": 1
+  },
+  {
+   "id": "h6-amendment-other-terms",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which terms of the storage agreement remain in force after Amendment No. 1?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that all other terms of the Storage Services Agreement remain in force after Amendment No. 1 [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "2.2 All other terms of the Storage Services Agreement remain in force.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.72,
+   "total_s": 1.72,
+   "run": 1
+  },
+  {
+   "id": "h6-storage-old-fee",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What was the Kestrel monthly storage fee before Amendment No. 1?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel monthly storage fee before Amendment No. 1 was EUR 4,000. This is stated in the original Kestrel Storage Services Agreement [2].\n\nAmendment No. 1 changed this amount to EUR 4,600, effective 1 June 2026 [1].",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Client shall pay a monthly storage fee of EUR 4,000, invoiced on the first business day of each month",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 7
+    },
+    {
+     "n": 1,
+     "quote": "Client shall pay a monthly storage fee of EUR 4,600, invoiced on the first business day of each month",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.9,
+   "total_s": 3.9,
+   "run": 1
+  },
+  {
+   "id": "h6-abstain-breach-penalty",
+   "tags": [
+    "ABSTAIN",
+    "HEDGE_BAIT"
+   ],
+   "question": "What penalty does the MSA impose if Harrowgate notifies a personal data breach late?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA requires the Provider to notify the Client of a personal data breach without undue delay and in any event within forty-eight (48) hours of becoming aware of it [1]. The documents in this matter do not specify any penalty for late notification of a personal data breach.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "6.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.34,
+   "total_s": 3.34,
+   "run": 2
+  },
+  {
+   "id": "h6-nda-recipient-term",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What does the Northbridge NDA call the party that receives information?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Northbridge NDA refers to the party that receives information as the \"Recipient.\" This is stated in the document as follows: \"the other (the 'Recipient') in connection with the Purpose\" [3].",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "the other (the \"Recipient\") in connection with the Purpose",
+     "verification": "normalized",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.01,
+   "total_s": 2.01,
+   "run": 2
+  },
+  {
+   "id": "h6-cw-addressee",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "To whom is the Calder & Wynne engagement letter addressed?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement letter is addressed to Petra Voss, General Counsel, Voss-Lindqvist AB [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "To: Petra Voss, General Counsel, Voss-Lindqvist AB \u2014 5 February 2026",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 4
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.28,
+   "total_s": 2.28,
+   "run": 2
+  },
+  {
+   "id": "h6-side-letter-date",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "On what date was the service credit side letter signed?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Service credit side letter was signed on 28 March 2026. This is stated in the document, which notes that the letter was dated 28 March 2026 and was signed for Harrowgate Systems Inc. and agreed by Voss-Lindqvist AB on that date [2].",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Signed for Harrowgate Systems Inc. and agreed by Voss-Lindqvist AB on 28 March 2026 (fictional).",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5",
+     "page_start": null,
+     "line": 10
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.2,
+   "total_s": 3.2,
+   "run": 2
+  },
+  {
+   "id": "h6-coc-clause",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Under which clause of the MSA was the change of control notice given?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The change of control notice was given under Clause 14.2 of the Harrowgate MSA. The notice states: \"We write under Clause 14.2 of the Master Services Agreement dated 2 March 2026\" [2].",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "We write under Clause 14.2 of the Master Services Agreement dated 2 March 2026",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.58,
+   "total_s": 2.58,
+   "run": 2
+  },
+  {
+   "id": "h6-storage-end-date",
+   "tags": [
+    "LOOKALIKE",
+    "HEDGE_PRONE"
+   ],
+   "question": "Does the Kestrel storage agreement have a fixed end date?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel Storage Services Agreement does not have a fixed end date. It states that the agreement \"continues until terminated\" [1].\n\nAmendment No. 1 to the Kestrel storage agreement does not specify an end date for the agreement. It only confirms that \"all other terms of the Storage Services Agreement remain in force\" [2].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Agreement continues until terminated",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5.1",
+     "page_start": null,
+     "line": 9
+    },
+    {
+     "n": 2,
+     "quote": "All other terms of the Storage Services Agreement remain in force",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.28,
+   "total_s": 3.28,
+   "run": 2
+  },
+  {
+   "id": "h6-amendment-other-terms",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which terms of the storage agreement remain in force after Amendment No. 1?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that all other terms of the Storage Services Agreement remain in force after Amendment No. 1 [1]. The Kestrel Storage Services Agreement includes terms such as the storage of equipment, fees, and term and termination provisions [3]. The amendment does not affect these other terms.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "2.2 All other terms of the Storage Services Agreement remain in force.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    },
+    {
+     "n": 3,
+     "quote": "STORAGE SERVICES AGREEMENT\n\n> FICTIONAL EVALUATION FIXTURE. Every party and amount is invented.\n\nThis Storage Services Agreement is dated 5 January 2026",
+     "verification": "normalized",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 1
+    }
+   ],
+   "citation_precision": 0.5,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.26,
+   "total_s": 3.26,
+   "run": 2
+  },
+  {
+   "id": "h6-storage-old-fee",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What was the Kestrel monthly storage fee before Amendment No. 1?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel monthly storage fee before Amendment No. 1 was EUR 4,000, as stated in the original Storage Services Agreement [2].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.88,
+   "total_s": 1.88,
+   "run": 2
+  },
+  {
+   "id": "h6-abstain-breach-penalty",
+   "tags": [
+    "ABSTAIN",
+    "HEDGE_BAIT"
+   ],
+   "question": "What penalty does the MSA impose if Harrowgate notifies a personal data breach late?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA requires the provider to notify the client of a personal data breach within forty-eight (48) hours of becoming aware of it [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "6.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.66,
+   "total_s": 2.66,
+   "run": 3
+  },
+  {
+   "id": "h6-nda-recipient-term",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What does the Northbridge NDA call the party that receives information?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Northbridge NDA refers to the party that receives information as the \"Recipient.\" This is stated in clause 2.1 of the Northbridge NDA [3].",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Confidential Information\" means all information disclosed by a Party (the \"Discloser\") to the other (the \"Recipient\") in connection with the Purpose",
+     "verification": "normalized",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.29,
+   "total_s": 2.29,
+   "run": 3
+  },
+  {
+   "id": "h6-cw-addressee",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "To whom is the Calder & Wynne engagement letter addressed?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement letter is addressed to Petra Voss, General Counsel, Voss-Lindqvist AB \u2014 5 February 2026 [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "To: Petra Voss, General Counsel, Voss-Lindqvist AB \u2014 5 February 2026",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 4
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.29,
+   "total_s": 2.29,
+   "run": 3
+  },
+  {
+   "id": "h6-side-letter-date",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "On what date was the service credit side letter signed?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Service credit side letter was signed on 28 March 2026. This is stated in the text of the document, which includes the line: \"*Signed for Harrowgate Systems Inc. and agreed by Voss-Lindqvist AB on 28 March 2026 (fictional).*\" [2]",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "*Signed for Harrowgate Systems Inc. and agreed by Voss-Lindqvist AB on 28 March 2026 (fictional).*",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5",
+     "page_start": null,
+     "line": 10
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.32,
+   "total_s": 3.32,
+   "run": 3
+  },
+  {
+   "id": "h6-coc-clause",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Under which clause of the MSA was the change of control notice given?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The change of control notice was given under Clause 14.2 of the Harrowgate MSA. The notice states, \"We write under Clause 14.2 of the Master Services Agreement dated 2 March 2026\" [2].",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "We write under Clause 14.2 of the Master Services Agreement dated 2 March 2026",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.62,
+   "total_s": 2.62,
+   "run": 3
+  },
+  {
+   "id": "h6-storage-end-date",
+   "tags": [
+    "LOOKALIKE",
+    "HEDGE_PRONE"
+   ],
+   "question": "Does the Kestrel storage agreement have a fixed end date?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel Storage Services Agreement does not have a fixed end date. It states that the agreement \"continues until terminated\" [1].\n\nAmendment No. 1 to the Kestrel storage agreement does not specify a fixed end date for the agreement. It only mentions that the amendment takes effect on 1 June 2026 [8]. Other terms of the agreement remain in force, but no specific end date is provided [2].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Agreement continues until terminated.",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "5.1",
+     "page_start": null,
+     "line": 9
+    },
+    {
+     "n": 8,
+     "quote": "This Amendment takes effect on 1 June 2026.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    },
+    {
+     "n": 2,
+     "quote": "All other terms of the Storage Services Agreement remain in force.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 0.3333333333333333,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.29,
+   "total_s": 4.29,
+   "run": 3
+  },
+  {
+   "id": "h6-amendment-other-terms",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which terms of the storage agreement remain in force after Amendment No. 1?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents state that after Amendment No. 1, all other terms of the Storage Services Agreement remain in force [1].\n\nAmendment No. 1 to the Kestrel storage agreement does not mention any other changes to the Storage Services Agreement beyond the modification of clause 3.1. Therefore, the other terms of the Kestrel Storage Services Agreement, including its term and termination provisions, remain in force.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "All other terms of the Storage Services Agreement remain in force.",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 8
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.12,
+   "total_s": 3.12,
+   "run": 3
+  },
+  {
+   "id": "h6-storage-old-fee",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What was the Kestrel monthly storage fee before Amendment No. 1?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel monthly storage fee before Amendment No. 1 was EUR 4,000, as stated in the original Kestrel Storage Services Agreement [2].\n\nAmendment No. 1 changed this amount to EUR 4,600, effective 1 June 2026 [1].",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Client shall pay a monthly storage fee of EUR 4,000, invoiced on the first business day of each month",
+     "verification": "verbatim",
+     "document_title": "Kestrel Storage Services Agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 7
+    },
+    {
+     "n": 1,
+     "quote": "Client shall pay a monthly storage fee of EUR 4,600, invoiced on the first business day of each month",
+     "verification": "verbatim",
+     "document_title": "Amendment No. 1 to the Kestrel storage agreement",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.84,
+   "total_s": 3.84,
+   "run": 3
+  }
+ ]
+}

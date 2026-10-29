@@ -1,0 +1,1515 @@
+{
+ "meta": {
+  "set": "heldout5",
+  "commit": "7862077+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "25a4499c40f08895f6076516299183f50eae70f54b98c8819d90459619072ff4",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261029-144549",
+  "limit": null,
+  "only": "h5-abstain-harrowgate-budget,h5-abstain-lease-renewal-notice,h5-abstain-deposit-refund,h5-abstain-maintenance-hours,h5-abstain-renewal-fee,h5-abstain-msa-force-majeure,h5-abstain-storage-use-class,h5-abstain-nda-partner,h5-break-condition,h5-msa-schedule-services,h5-msa-schedule-notices,h5-engagement-accepted,h5-msa-security-programme,h5-lease-assignment-consent",
+  "runs": 3,
+  "temperature": 0.1
+ },
+ "summary": {
+  "items": 42,
+  "answer_accuracy": "15/18",
+  "abstention_accuracy": "14/24",
+  "false_abstentions": 2,
+  "t06_leaks": 0,
+  "citation_precision": 1.0,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 16,
+   "answered": 11,
+   "partial": 15
+  },
+  "latency_total_p50_s": 2.67,
+  "latency_total_p95_s": 6.86,
+  "latency_first_paragraph_p50_s": 2.67,
+  "latency_first_paragraph_p95_s": 6.86,
+  "runs": 3,
+  "per_run": [
+   {
+    "answer_accuracy": "5/6",
+    "abstention_accuracy": "7/8",
+    "citation_precision": 1.0,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "5/6",
+    "abstention_accuracy": "4/8",
+    "citation_precision": 1.0,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "5/6",
+    "abstention_accuracy": "3/8",
+    "citation_precision": 1.0,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   }
+  ],
+  "spread": {
+   "answer_accuracy": [
+    0.833,
+    0.833
+   ],
+   "abstention_accuracy": [
+    0.375,
+    0.875
+   ],
+   "citation_precision": [
+    1.0,
+    1.0
+   ],
+   "quote_verification_rate": [
+    1.0,
+    1.0
+   ],
+   "t06_leaks": [
+    0,
+    0
+   ]
+  },
+  "unstable_items": {
+   "h5-abstain-lease-renewal-notice": "2/3",
+   "h5-abstain-deposit-refund": "1/3",
+   "h5-abstain-renewal-fee": "1/3",
+   "h5-abstain-nda-partner": "1/3",
+   "h5-break-condition": "2/3",
+   "h5-msa-schedule-services": "2/3",
+   "h5-engagement-accepted": "2/3"
+  },
+  "never_correct": [
+   "h5-abstain-maintenance-hours"
+  ]
+ },
+ "items": [
+  {
+   "id": "h5-abstain-harrowgate-budget",
+   "tags": [
+    "ABSTAIN",
+    "PARTY_ACTION"
+   ],
+   "question": "What budget did Harrowgate approve for the MSA renewal?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_party",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the budget approved by Harrowgate for the MSA renewal. The sources mention a liability cap of USD 400,000 but do not provide details about a budget [1]. No other sources address the budget.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.36,
+   "total_s": 4.36,
+   "run": 1
+  },
+  {
+   "id": "h5-abstain-lease-renewal-notice",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "How much notice must the tenant give to renew the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify how much notice the tenant must give to renew the warehouse lease.\n\nThe Unit 7 Lease includes a break clause that allows the tenant to end the lease on 31 March 2030 by giving six months' prior written notice [1], but it does not address renewal of the lease.\n\nThe Harrowgate MSA mentions a renewal clause, stating that the agreement renews automatically for successive twelve-month terms unless notice of non-renewal is given 90 days before the end of the current term [4]. However, this document is not the Unit 7 Lease, and there is no indication that it amends the Unit 7 Lease.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 6.86,
+   "total_s": 6.86,
+   "run": 1
+  },
+  {
+   "id": "h5-abstain-deposit-refund",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "Within how many days after the lease ends must the rent deposit be refunded?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the number of days within which the rent deposit must be refunded after the lease ends. The Unit 7 Lease mentions that the rent deposit is to be held until the end of the Term [1], but it does not state when the deposit must be refunded. No other source addresses this issue.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.99,
+   "total_s": 2.99,
+   "run": 1
+  },
+  {
+   "id": "h5-abstain-maintenance-hours",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "How many hours of scheduled maintenance does the side letter allow each month?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Service credit side letter states that the Provider will make the Services available at least 99.5% of each calendar month, excluding scheduled maintenance notified at least five business days in advance [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider will make the Services available at least 99.5% of each calendar month, excluding scheduled maintenance notified at least five (5) business days in advance.",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.97,
+   "total_s": 2.97,
+   "run": 1
+  },
+  {
+   "id": "h5-abstain-renewal-fee",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "What renewal fee does the MSA set for each renewal term?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA does not specify a renewal fee for each renewal term.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.37,
+   "total_s": 1.37,
+   "run": 1
+  },
+  {
+   "id": "h5-abstain-msa-force-majeure",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What does the MSA's force majeure clause say?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA's force majeure clause is not explicitly mentioned in the provided sources. The sources mention a force majeure clause in the Unit 7 Lease [1], but this is not part of the Harrowgate MSA. The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.98,
+   "total_s": 2.98,
+   "run": 1
+  },
+  {
+   "id": "h5-abstain-storage-use-class",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Which use class applies under the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify which use class applies under the Kestrel storage agreement.\n\nThe Kestrel Storage Services Agreement outlines the terms of the storage services, including the monthly storage fee and the duration of the agreement, but does not mention a use class [2].\n\nAmendment No. 1 to the Kestrel storage agreement modifies the monthly storage fee but does not address the use class [5].\n\nAnother document, \"Unit 7 Lease,\" mentions a use class, stating that the Tenant shall use the Premises only for storage and distribution within Use Class B8 [3]. However, this document is not linked to the Kestrel storage agreement, and the documents in this matter do not indicate that this use class applies to the Kestrel storage agreement.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 7.5,
+   "total_s": 7.5,
+   "run": 1
+  },
+  {
+   "id": "h5-abstain-nda-partner",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Who is the supervising partner under the Northbridge NDA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify who the supervising partner is under the Northbridge NDA. The only mention of a supervising partner is in the Calder & Wynne engagement letter, which states: \"The supervising partner is Helena Marsh. She will be assisted by senior associate David Okafor\" [1]. However, this document is not the Northbridge NDA and does not indicate that Helena Marsh is the supervising partner under the Northbridge NDA.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.77,
+   "total_s": 3.77,
+   "run": 1
+  },
+  {
+   "id": "h5-break-condition",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What must the tenant have paid for the lease break to take effect?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The tenant must have paid all rent due up to the date of the lease break. This is specified in the break clause of the lease [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "provided that the Tenant has paid all rent due up to that date",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.88,
+   "total_s": 1.88,
+   "run": 1
+  },
+  {
+   "id": "h5-msa-schedule-services",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which schedule of the MSA describes the Services?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA refers to Schedule 1 in Clause 3.1, which states that the Provider shall provide the Services in accordance with the service levels in Schedule 2. It also defines \"Services\" in Clause 1.1 as the Harrowgate platform subscription and related support described in Schedule 1.\n\nThe documents do not explicitly state which schedule describes the Services. However, Clause 1.1 specifies that the Services are described in Schedule 1, and Clause 3.1 refers to Schedule 2 for service levels.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.8,
+   "total_s": 3.8,
+   "run": 1
+  },
+  {
+   "id": "h5-msa-schedule-notices",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where is the address for notices under the MSA set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The address for notices under the MSA is set out in Schedule 4 of the Harrowgate MSA [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "addressed to the General Counsel of the receiving party at the address set out in Schedule 4",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "22.1",
+     "page_start": null,
+     "line": 42
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": true,
+   "multi_source": null,
+   "first_paragraph_s": 2.26,
+   "total_s": 2.26,
+   "run": 1
+  },
+  {
+   "id": "h5-engagement-accepted",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When did Voss-Lindqvist accept the Calder & Wynne engagement letter?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents indicate that Voss-Lindqvist accepted the Calder & Wynne engagement letter on 7 February 2026. This is stated in the engagement letter itself, which notes: \"*Accepted for Voss-Lindqvist AB by Petra Voss on 7 February 2026 (fictional).*\"[2]",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Accepted for Voss-Lindqvist AB by Petra Voss on 7 February 2026 (fictional).",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 23
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.32,
+   "total_s": 3.32,
+   "run": 1
+  },
+  {
+   "id": "h5-msa-security-programme",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What must Harrowgate maintain to protect information under the MSA?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA requires Harrowgate to maintain an information-security programme no less protective than ISO/IEC 27001 to protect information [3].",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Provider shall maintain an information-security programme no less protective than ISO/IEC 27001",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.2",
+     "page_start": null,
+     "line": 14
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.19,
+   "total_s": 2.19,
+   "run": 1
+  },
+  {
+   "id": "h5-lease-assignment-consent",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Whose consent does the tenant need to assign the whole warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The tenant needs the Landlord's consent to assign the whole warehouse lease. The relevant clause states, \"The Tenant may assign the whole of the Premises with the Landlord's prior written consent, which shall not be unreasonably withheld\" [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The Tenant may assign the whole of the Premises with the Landlord's prior written consent, which shall not be unreasonably withheld",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 20
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.26,
+   "total_s": 3.26,
+   "run": 1
+  },
+  {
+   "id": "h5-abstain-harrowgate-budget",
+   "tags": [
+    "ABSTAIN",
+    "PARTY_ACTION"
+   ],
+   "question": "What budget did Harrowgate approve for the MSA renewal?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_party",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the budget approved by Harrowgate for the MSA renewal. The sources mention a liability cap of USD 400,000 but do not provide details about a budget [1]. No other sources address a budget.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.07,
+   "total_s": 3.07,
+   "run": 2
+  },
+  {
+   "id": "h5-abstain-lease-renewal-notice",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "How much notice must the tenant give to renew the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Unit 7 Lease does not specify the notice period required for the tenant to renew the lease. The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.35,
+   "total_s": 1.35,
+   "run": 2
+  },
+  {
+   "id": "h5-abstain-deposit-refund",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "Within how many days after the lease ends must the rent deposit be refunded?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Unit 7 Lease does not specify the number of days within which the rent deposit must be refunded after the lease ends [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "the Tenant shall pay a rent deposit of GBP 21,000, to be held by the Landlord until the end of the Term",
+     "verification": "normalized",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.42,
+   "total_s": 2.42,
+   "run": 2
+  },
+  {
+   "id": "h5-abstain-maintenance-hours",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "How many hours of scheduled maintenance does the side letter allow each month?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Service credit side letter states that the Provider will make the Services available at least 99.5% of each calendar month, excluding scheduled maintenance notified at least five (5) business days in advance [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider will make the Services available at least 99.5% of each calendar month, excluding scheduled maintenance notified at least five (5) business days in advance.",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.92,
+   "total_s": 2.92,
+   "run": 2
+  },
+  {
+   "id": "h5-abstain-renewal-fee",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "What renewal fee does the MSA set for each renewal term?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA does not specify a renewal fee for each renewal term [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "2.2 After the Initial Term, this Agreement renews automatically for successive twelve (12) month renewal terms unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 11
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.67,
+   "total_s": 2.67,
+   "run": 2
+  },
+  {
+   "id": "h5-abstain-msa-force-majeure",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What does the MSA's force majeure clause say?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA does not contain a force majeure clause. The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.19,
+   "total_s": 1.19,
+   "run": 2
+  },
+  {
+   "id": "h5-abstain-storage-use-class",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Which use class applies under the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel Storage Services Agreement does not specify a use class for the storage of goods. The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.27,
+   "total_s": 1.27,
+   "run": 2
+  },
+  {
+   "id": "h5-abstain-nda-partner",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Who is the supervising partner under the Northbridge NDA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify who the supervising partner is under the Northbridge NDA. The Northbridge NDA is mentioned in source [3], but it does not provide details about a supervising partner. No other source addresses this issue.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "review its mutual non-disclosure agreement with Northbridge Analytics Ltd.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 6
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.54,
+   "total_s": 2.54,
+   "run": 2
+  },
+  {
+   "id": "h5-break-condition",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What must the tenant have paid for the lease break to take effect?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.73,
+   "total_s": 0.73,
+   "run": 2
+  },
+  {
+   "id": "h5-msa-schedule-services",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which schedule of the MSA describes the Services?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not explicitly state which schedule of the MSA describes the Services.\n\nHowever, the MSA refers to Schedule 1 in the definition of \"Services\" and in a warranty clause. Specifically, the definition of \"Services\" states: \"means the Harrowgate platform subscription and related support described in Schedule 1\" [2]. Additionally, the warranty clause states: \"Provider warrants that the Services will perform materially in accordance with Schedule 1\" [3].\n\nTherefore, based on these references, it is implied that Schedule 1 describes the Services. However, the documents do not explicitly confirm this.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "means the Harrowgate platform subscription and related support described in Schedule 1",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    },
+    {
+     "n": 3,
+     "quote": "Provider warrants that the Services will perform materially in accordance with Schedule 1",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 25
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.88,
+   "total_s": 4.88,
+   "run": 2
+  },
+  {
+   "id": "h5-msa-schedule-notices",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where is the address for notices under the MSA set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The address for notices under the MSA is set out in Schedule 4 of the Harrowgate MSA [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "addressed to the General Counsel of the receiving party at the address set out in Schedule 4",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "22.1",
+     "page_start": null,
+     "line": 42
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": true,
+   "multi_source": null,
+   "first_paragraph_s": 2.08,
+   "total_s": 2.08,
+   "run": 2
+  },
+  {
+   "id": "h5-engagement-accepted",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When did Voss-Lindqvist accept the Calder & Wynne engagement letter?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not state when Voss-Lindqvist accepted the Calder & Wynne engagement letter.\n\nThe engagement letter mentions that Petra Voss, as General Counsel, accepted the document on 7 February 2026 [2]. However, the document does not specify when Voss-Lindqvist itself accepted the engagement letter.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Accepted for Voss-Lindqvist AB by Petra Voss on 7 February 2026 (fictional)",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 23
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.47,
+   "total_s": 3.47,
+   "run": 2
+  },
+  {
+   "id": "h5-msa-security-programme",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What must Harrowgate maintain to protect information under the MSA?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA requires Harrowgate to maintain an information-security programme no less protective than ISO/IEC 27001 to protect information [3].\n\nNo other source addresses additional requirements for protecting information under the MSA.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Provider shall maintain an information-security programme no less protective than ISO/IEC 27001",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.2",
+     "page_start": null,
+     "line": 14
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.48,
+   "total_s": 2.48,
+   "run": 2
+  },
+  {
+   "id": "h5-lease-assignment-consent",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Whose consent does the tenant need to assign the whole warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The tenant needs the Landlord's consent to assign the whole warehouse lease. The lease states that the Tenant may assign the whole of the Premises with the Landlord's prior written consent, which shall not be unreasonably withheld [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The Tenant may assign the whole of the Premises with the Landlord's prior written consent, which shall not be unreasonably withheld.",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 20
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.67,
+   "total_s": 2.67,
+   "run": 2
+  },
+  {
+   "id": "h5-abstain-harrowgate-budget",
+   "tags": [
+    "ABSTAIN",
+    "PARTY_ACTION"
+   ],
+   "question": "What budget did Harrowgate approve for the MSA renewal?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_party",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the budget approved by Harrowgate for the MSA renewal. The sources mention a liability cap of USD 400,000 but do not provide details about a budget [1]. No other sources address the budget.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.78,
+   "total_s": 2.78,
+   "run": 3
+  },
+  {
+   "id": "h5-abstain-lease-renewal-notice",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "How much notice must the tenant give to renew the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify how much notice the tenant must give to renew the warehouse lease.\n\nThe Unit 7 Lease includes a break clause, which states that the tenant may end the lease on 31 March 2030 by giving the landlord at least six (6) months' prior written notice [1]. However, this does not address the requirement to renew the lease.\n\nThe Harrowgate MSA mentions a renewal clause, stating that an agreement renews automatically for successive twelve (12) month terms unless notice of non-renewal is given at least ninety (90) days before the end of the current term [4]. However, this document is not the Unit 7 Lease, and the question specifically asks about the Unit 7 Lease.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The Tenant may end this Lease on 31 March 2030 by giving the Landlord at least six (6) months' prior written notice",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    },
+    {
+     "n": 4,
+     "quote": "After the Initial Term, this Agreement renews automatically for successive twelve (12) month renewal terms unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 11
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 7.23,
+   "total_s": 7.23,
+   "run": 3
+  },
+  {
+   "id": "h5-abstain-deposit-refund",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "Within how many days after the lease ends must the rent deposit be refunded?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Unit 7 Lease does not specify the number of days within which the rent deposit must be refunded after the lease ends [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000, to be held by the Landlord until the end of the Term",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.59,
+   "total_s": 2.59,
+   "run": 3
+  },
+  {
+   "id": "h5-abstain-maintenance-hours",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "How many hours of scheduled maintenance does the side letter allow each month?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Service credit side letter states that Provider will make the Services available at least 99.5% of each calendar month, excluding scheduled maintenance notified at least five (5) business days in advance [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider will make the Services available at least 99.5% of each calendar month, excluding scheduled maintenance notified at least five (5) business days in advance.",
+     "verification": "verbatim",
+     "document_title": "Service credit side letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1",
+     "page_start": null,
+     "line": 5
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.95,
+   "total_s": 2.95,
+   "run": 3
+  },
+  {
+   "id": "h5-abstain-renewal-fee",
+   "tags": [
+    "ABSTAIN",
+    "WRONG_CLAUSE"
+   ],
+   "question": "What renewal fee does the MSA set for each renewal term?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA does not specify a renewal fee for each renewal term [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "2.2 After the Initial Term, this Agreement renews automatically for successive twelve (12) month renewal terms",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.2",
+     "page_start": null,
+     "line": 11
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.96,
+   "total_s": 1.96,
+   "run": 3
+  },
+  {
+   "id": "h5-abstain-msa-force-majeure",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "What does the MSA's force majeure clause say?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA's force majeure clause is not explicitly mentioned in the provided sources.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.43,
+   "total_s": 1.43,
+   "run": 3
+  },
+  {
+   "id": "h5-abstain-storage-use-class",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Which use class applies under the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel storage agreement does not specify a use class. The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.17,
+   "total_s": 1.17,
+   "run": 3
+  },
+  {
+   "id": "h5-abstain-nda-partner",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "Who is the supervising partner under the Northbridge NDA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify who the supervising partner is under the Northbridge NDA. The Northbridge NDA is mentioned in source 3, but it does not identify a supervising partner [3]. No other source provides this information.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "review its mutual non-disclosure agreement with Northbridge Analytics Ltd.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 6
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.55,
+   "total_s": 2.55,
+   "run": 3
+  },
+  {
+   "id": "h5-break-condition",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What must the tenant have paid for the lease break to take effect?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents indicate that for the lease break to take effect, the tenant must have paid all rent due up to the date of the break. This is stated in the lease agreement as follows: \"The Tenant may end this Lease on 31 March 2030 by giving the Landlord at least six (6) months' prior written notice, provided that the Tenant has paid all rent due up to that date\" [1].\n\nThere is no mention of any additional payment required for the lease break beyond paying all rent due.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The Tenant may end this Lease on 31 March 2030 by giving the Landlord at least six (6) months' prior written notice, provided that the Tenant has paid all rent due up to that date",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 22
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.71,
+   "total_s": 4.71,
+   "run": 3
+  },
+  {
+   "id": "h5-msa-schedule-services",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which schedule of the MSA describes the Services?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA refers to Schedule 1 in the definition of \"Services.\" Specifically, the term \"Services\" is defined as the Harrowgate platform subscription and related support described in Schedule 1 [2].\n\nThe MSA also references Schedule 2 in Clause 3.1, which outlines the service levels for the Services [1]. However, the question specifically asks which schedule describes the Services, and the definition of \"Services\" points to Schedule 1.\n\nThe documents in this matter do not specify what is included in Schedule 1. Therefore, the exact content of the schedule is not provided in the sources.",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Services\" means the Harrowgate platform subscription and related support described in Schedule 1",
+     "verification": "normalized",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "1.1",
+     "page_start": null,
+     "line": 5
+    },
+    {
+     "n": 1,
+     "quote": "Provider shall provide the Services in accordance with the service levels in Schedule 2",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 13
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.82,
+   "total_s": 4.82,
+   "run": 3
+  },
+  {
+   "id": "h5-msa-schedule-notices",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where is the address for notices under the MSA set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The address for notices under the MSA is set out in Schedule 4, according to source [1].\n\nNo other source amends this information.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "addressed to the General Counsel of the receiving party at the address set out in Schedule 4",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "22.1",
+     "page_start": null,
+     "line": 42
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": true,
+   "multi_source": null,
+   "first_paragraph_s": 1.97,
+   "total_s": 1.97,
+   "run": 3
+  },
+  {
+   "id": "h5-engagement-accepted",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "When did Voss-Lindqvist accept the Calder & Wynne engagement letter?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The documents do not state when Voss-Lindqvist accepted the Calder & Wynne engagement letter.\n\n[2]",
+   "evidence": [
+    {
+     "n": 2,
+     "quote": "Accepted for Voss-Lindqvist AB by Petra Voss on 7 February 2026 (fictional).",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.1",
+     "page_start": null,
+     "line": 23
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.98,
+   "total_s": 1.98,
+   "run": 3
+  },
+  {
+   "id": "h5-msa-security-programme",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What must Harrowgate maintain to protect information under the MSA?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA requires Harrowgate to maintain an information-security programme that is no less protective than ISO/IEC 27001 [3].",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "Provider shall maintain an information-security programme no less protective than ISO/IEC 27001",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.2",
+     "page_start": null,
+     "line": 14
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.11,
+   "total_s": 2.11,
+   "run": 3
+  },
+  {
+   "id": "h5-lease-assignment-consent",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Whose consent does the tenant need to assign the whole warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The tenant needs the Landlord's consent to assign the whole warehouse lease. The lease states that the Tenant may assign the whole of the Premises with the Landlord's prior written consent, which shall not be unreasonably withheld [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "The Tenant may assign the whole of the Premises with the Landlord's prior written consent, which shall not be unreasonably withheld.",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 20
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.68,
+   "total_s": 2.68,
+   "run": 3
+  }
+ ]
+}

@@ -1,0 +1,907 @@
+{
+ "meta": {
+  "set": "heldout2",
+  "commit": "7862077+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "5986c96fa28d33f08a8350aa4e472e2b3cad9353c07a0d936f3cc7b510844213",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261029-143904",
+  "limit": null,
+  "only": "h2-abstain-nda-early-end,h2-abstain-storage-law,h2-abstain-nda-estimate,h2-abstain-annual-credit-cap,h2-abstain-iso-audit,h2-lease-law,h2-eng-scope,h2-msa-service-levels,h2-lease-length",
+  "runs": 3,
+  "temperature": 0.1
+ },
+ "summary": {
+  "items": 27,
+  "answer_accuracy": "9/12",
+  "abstention_accuracy": "15/15",
+  "false_abstentions": 0,
+  "t06_leaks": 0,
+  "citation_precision": 1.0,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 15,
+   "partial": 8,
+   "answered": 4
+  },
+  "latency_total_p50_s": 2.39,
+  "latency_total_p95_s": 4.6,
+  "latency_first_paragraph_p50_s": 2.39,
+  "latency_first_paragraph_p95_s": 4.6,
+  "runs": 3,
+  "per_run": [
+   {
+    "answer_accuracy": "3/4",
+    "abstention_accuracy": "5/5",
+    "citation_precision": 1.0,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "3/4",
+    "abstention_accuracy": "5/5",
+    "citation_precision": 1.0,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "3/4",
+    "abstention_accuracy": "5/5",
+    "citation_precision": 1.0,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   }
+  ],
+  "spread": {
+   "answer_accuracy": [
+    0.75,
+    0.75
+   ],
+   "abstention_accuracy": [
+    1.0,
+    1.0
+   ],
+   "citation_precision": [
+    1.0,
+    1.0
+   ],
+   "quote_verification_rate": [
+    1.0,
+    1.0
+   ],
+   "t06_leaks": [
+    0,
+    0
+   ]
+  },
+  "unstable_items": {},
+  "never_correct": [
+   "h2-eng-scope"
+  ]
+ },
+ "items": [
+  {
+   "id": "h2-abstain-nda-early-end",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How much notice is needed to end the Northbridge NDA early?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Northbridge NDA is not explicitly mentioned in the sources provided. However, the question may refer to the Harrowgate MSA, which states that either party may terminate the Agreement for convenience on thirty (30) days' written notice [2].\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.43,
+   "total_s": 4.43,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-storage-law",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Which law governs the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel storage agreement is governed by the law of England and Wales. This is stated in the Northbridge NDA, which provides that the agreement is governed by the law of England and Wales [4].\n\nThe Kestrel Storage Services Agreement itself does not specify a governing law. The other documents referenced\u2014such as the Harrowgate MSA, Unit 7 Lease, and Witness statement\u2014also do not address the governing law of the Kestrel storage agreement.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.48,
+   "total_s": 3.48,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-nda-estimate",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What fee estimate did Calder & Wynne give for the Northbridge NDA review on its own?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not provide a fee estimate for the Northbridge NDA review on its own. The engagement letter mentions an estimated fee of GBP 45,000 for the work in Clause 1, which includes advising on the renewal of the Master Services Agreement and reviewing the NDA, but it does not break down the cost for the NDA review specifically [5].\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.75,
+   "total_s": 3.75,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-annual-credit-cap",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What is the annual cap on service credits under the side letter?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.88,
+   "total_s": 0.88,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-iso-audit",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How often must Harrowgate be audited against ISO/IEC 27001 under the MSA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.97,
+   "total_s": 0.97,
+   "run": 1
+  },
+  {
+   "id": "h2-lease-law",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which law governs the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Unit 7 Lease is governed by the law of England and Wales. This is stated in clause 10.1 of the document [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Lease is governed by the law of England and Wales.",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "10.1",
+     "page_start": null,
+     "line": 27
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.82,
+   "total_s": 1.82,
+   "run": 1
+  },
+  {
+   "id": "h2-eng-scope",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What work does the Calder & Wynne engagement cover?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement letter does not specify the exact work covered by the engagement. The document only includes a fictional letter of engagement and does not provide details about the scope of work [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "FICTIONAL EVALUATION FIXTURE. The firm, people, rates and terms are invented.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 2
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.6,
+   "total_s": 2.6,
+   "run": 1
+  },
+  {
+   "id": "h2-msa-service-levels",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where are the MSA's service levels set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The MSA's service levels are set out in Schedule 2 of the Harrowgate MSA [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall provide the Services in accordance with the service levels in Schedule 2",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 13
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.66,
+   "total_s": 1.66,
+   "run": 1
+  },
+  {
+   "id": "h2-lease-length",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How many years does the warehouse lease run for?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Unit 7 Lease states that the term of the lease is ten (10) years, starting on 1 April 2025 and ending on 31 March 2035 [3].\n\nThere is no mention of the lease running for a different number of years in any other source.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "The term is ten (10) years starting on 1 April 2025 and ending on 31 March 2035 (the \"Term\")",
+     "verification": "normalized",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.69,
+   "total_s": 3.69,
+   "run": 1
+  },
+  {
+   "id": "h2-abstain-nda-early-end",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How much notice is needed to end the Northbridge NDA early?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not specify the notice period required to end the Northbridge NDA early.\n\nThe sources provided discuss termination clauses for different agreements, such as the Unit 7 Lease [1], the Harrowgate MSA [2], and the Kestrel Storage Services Agreement [3], but none of them refer to the Northbridge NDA.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.6,
+   "total_s": 4.6,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-storage-law",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Which law governs the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "not_in_cited",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel storage agreement is the subject of Amendment No. 1 to the Kestrel storage agreement [1]. However, none of the sources explicitly state which law governs the Kestrel storage agreement itself.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.4,
+   "total_s": 2.4,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-nda-estimate",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What fee estimate did Calder & Wynne give for the Northbridge NDA review on its own?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.83,
+   "total_s": 0.83,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-annual-credit-cap",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What is the annual cap on service credits under the side letter?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.78,
+   "total_s": 0.78,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-iso-audit",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How often must Harrowgate be audited against ISO/IEC 27001 under the MSA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.79,
+   "total_s": 0.79,
+   "run": 2
+  },
+  {
+   "id": "h2-lease-law",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which law governs the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Unit 7 Lease is governed by the law of England and Wales, as stated in Clause 10.1 [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Lease is governed by the law of England and Wales.",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "10.1",
+     "page_start": null,
+     "line": 27
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.05,
+   "total_s": 2.05,
+   "run": 2
+  },
+  {
+   "id": "h2-eng-scope",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What work does the Calder & Wynne engagement cover?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement letter does not specify the exact work covered by the engagement. The document is described as a \"Fictional Evaluation Fixture,\" with \"the firm, people, rates and terms are invented,\" but it does not provide details about the scope of work [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "FICTIONAL EVALUATION FIXTURE. The firm, people, rates and terms are invented.",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 2
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.52,
+   "total_s": 3.52,
+   "run": 2
+  },
+  {
+   "id": "h2-msa-service-levels",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where are the MSA's service levels set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Harrowgate MSA's service levels are set out in Schedule 2 [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall provide the Services in accordance with the service levels in Schedule 2",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 13
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.43,
+   "total_s": 1.43,
+   "run": 2
+  },
+  {
+   "id": "h2-lease-length",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How many years does the warehouse lease run for?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Unit 7 Lease specifies that the term is ten (10) years, starting on 1 April 2025 and ending on 31 March 2035 [3].\n\nNo other source amends this clause.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "The term is ten (10) years starting on 1 April 2025 and ending on 31 March 2035 (the \"Term\").",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.92,
+   "total_s": 2.92,
+   "run": 2
+  },
+  {
+   "id": "h2-abstain-nda-early-end",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How much notice is needed to end the Northbridge NDA early?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Northbridge NDA is not explicitly mentioned in the provided sources. However, the question may refer to the Harrowgate MSA, which states that either party may terminate the Agreement for convenience on thirty (30) days' written notice [2].\n\nNo other document provides specific notice requirements for ending an NDA. Therefore, based on the available information, the notice period for ending the Northbridge NDA early is not clearly defined in the sources provided.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.56,
+   "total_s": 3.56,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-storage-law",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "Which law governs the Kestrel storage agreement?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Kestrel storage agreement is the \"Amendment No. 1 to the Kestrel storage agreement\" and the \"Kestrel Storage Services Agreement.\" The governing law for the Kestrel Storage Services Agreement is not explicitly stated in the sources provided.\n\nThe \"Harrowgate MSA\" mentions that \"This Agreement is governed by the laws of the State of Delaware, without regard to its conflict-of-laws rules,\" [3] but it is not clear if this amends the Kestrel storage agreement.\n\nThe \"Northbridge NDA\" states that \"This Agreement is governed by the law of England and Wales,\" [4] but again, it is not clear if this amends the Kestrel storage agreement.\n\nThe \"Unit 7 Lease\" states that \"This Lease is governed by the law of England and Wales,\" [5] but it is not clear if this amends the Kestrel storage agreement.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.72,
+   "total_s": 5.72,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-nda-estimate",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What fee estimate did Calder & Wynne give for the Northbridge NDA review on its own?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "other_documents",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents do not provide a fee estimate for the Northbridge NDA review on its own. The engagement letter mentions an estimated fee of GBP 45,000 for the work in Clause 1, which includes both the renewal of the Master Services Agreement and the review of the Northbridge NDA [5]. However, the documents do not specify a separate fee for the Northbridge NDA review.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.83,
+   "total_s": 3.83,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-annual-credit-cap",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "What is the annual cap on service credits under the side letter?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.8,
+   "total_s": 0.8,
+   "run": 3
+  },
+  {
+   "id": "h2-abstain-iso-audit",
+   "tags": [
+    "ABSTAIN"
+   ],
+   "question": "How often must Harrowgate be audited against ISO/IEC 27001 under the MSA?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 0.83,
+   "total_s": 0.83,
+   "run": 3
+  },
+  {
+   "id": "h2-lease-law",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Which law governs the warehouse lease?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Unit 7 Lease is governed by the law of England and Wales, as stated in Clause 10.1: \"This Lease is governed by the law of England and Wales\" [1]. There is no mention of any amendment to this governing law in the provided sources.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "This Lease is governed by the law of England and Wales",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "10.1",
+     "page_start": null,
+     "line": 27
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.39,
+   "total_s": 2.39,
+   "run": 3
+  },
+  {
+   "id": "h2-eng-scope",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "What work does the Calder & Wynne engagement cover?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "answer": "The Calder & Wynne engagement letter does not specify the exact work covered by the engagement. It only provides a fictional framework and does not describe the scope of services [1].\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "# LETTER OF ENGAGEMENT",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 1
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.95,
+   "total_s": 1.95,
+   "run": 3
+  },
+  {
+   "id": "h2-msa-service-levels",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "Where are the MSA's service levels set out?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "answered",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The MSA's service levels are set out in Schedule 2 of the Harrowgate MSA [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Provider shall provide the Services in accordance with the service levels in Schedule 2.",
+     "verification": "verbatim",
+     "document_title": "Harrowgate MSA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 13
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 1.54,
+   "total_s": 1.54,
+   "run": 3
+  },
+  {
+   "id": "h2-lease-length",
+   "tags": [
+    "LOOKALIKE"
+   ],
+   "question": "How many years does the warehouse lease run for?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "answer": "The Unit 7 Lease states that the term is ten (10) years, starting on 1 April 2025 and ending on 31 March 2035 [3].\n\nThere is no information in the provided sources about the lease running for a different number of years.\n\nThe documents in this matter do not answer that.",
+   "evidence": [
+    {
+     "n": 3,
+     "quote": "The term is ten (10) years starting on 1 April 2025 and ending on 31 March 2035 (the \"Term\")",
+     "verification": "normalized",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "2.1",
+     "page_start": null,
+     "line": 7
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.5,
+   "total_s": 3.5,
+   "run": 3
+  }
+ ]
+}
