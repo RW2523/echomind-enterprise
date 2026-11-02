@@ -119,7 +119,7 @@ export function visiblePath(turns: ChatTurn[], chosen: Record<string, string>): 
   return out;
 }
 
-interface AskOptions { document_ids?: string[]; focus?: string; retryOf?: ChatTurn }
+interface AskOptions { document_ids?: string[]; focus?: string; retryOf?: ChatTurn; form?: { component_id: string; values: Record<string, string> } }
 
 export default function ChatPage() {
   const { conversationId } = useParams();
@@ -172,14 +172,26 @@ export default function ChatPage() {
 
   useEffect(() => () => abort.current?.abort(), []);
 
-  const lastText = path[path.length - 1]?.turn.text;
+  const last = path[path.length - 1]?.turn;
+  const lastText = last?.text;
+  // What the last turn shows: its text, its cards as they arrive, its end (a card can arrive with no text before it).
+  const lastShape = last ? `${last.status}:${last.partial?.length ?? 0}:${last.envelope ? last.envelope.components.length : -1}:${last.progress?.done ?? ''}` : '';
+  const sent = useRef(false);                                   // the person just sent something: show it
+  const atBottom = useRef(true);                                // where the reader was before the content grew
+  const watched = useRef<HTMLElement | null>(null);
   useEffect(() => {
     const el = end.current;
     const scroller = el?.closest('.qc-main') as HTMLElement | null;
     if (!el || !scroller || typeof el.scrollIntoView !== 'function') return;
-    const near = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 160;
-    if (near) el.scrollIntoView({ block: 'end' });                // never pull a reader away from earlier context
-  }, [path.length, lastText]);
+    if (watched.current !== scroller) {
+      watched.current = scroller;
+      scroller.addEventListener('scroll', () => {
+        atBottom.current = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 160;
+      }, { passive: true });
+    }
+    if (atBottom.current || sent.current) el.scrollIntoView({ block: 'end' });   // otherwise never pull a reader away from earlier context
+    sent.current = false;
+  }, [path.length, lastText, lastShape]);
 
   const patch = useCallback((key: string, change: Partial<ChatTurn> | ((t: ChatTurn) => Partial<ChatTurn>)) => {
     setTurns((ts) => ts.map((t) => (t.key === key ? { ...t, ...(typeof change === 'function' ? change(t) : change) } : t)));
@@ -215,6 +227,7 @@ export default function ChatPage() {
     const key = requestId();
     const docs = opts.document_ids ?? attached.map((a) => a.id);
     // A question the server never started (refused before it began) is replaced, not kept as a version.
+    sent.current = true;
     setTurns((ts) => [...ts.filter((t) => t.id || t.status === 'streaming'), { key, parent, question, status: 'streaming', text: '' }]);
     setPicked((c) => ({ ...c, [parent ?? '']: key }));
     setDraft('');
@@ -224,9 +237,15 @@ export default function ChatPage() {
     let terminal = false;
     try {
       await counselApi.ask(id, { text: question, client_request_id: key, ...(docs.length ? { document_ids: docs } : {}),
-                                 ...(opts.focus ? { focus_discrepancy_id: opts.focus } : {}), ...place }, (e) => {
+                                 ...(opts.focus ? { focus_discrepancy_id: opts.focus } : {}), ...(opts.form ? { form: opts.form } : {}),
+                                 ...place }, (e) => {
         switch (e.event) {
-          case 'turn.started': patch(key, { id: e.data?.turn_id, ...(e.data && 'parent_turn_id' in e.data ? { parent: e.data.parent_turn_id ?? null } : {}) }); break;
+          case 'turn.started': {
+            patch(key, { id: e.data?.turn_id, ...(e.data && 'parent_turn_id' in e.data ? { parent: e.data.parent_turn_id ?? null } : {}) });
+            // Where the server placed it is where it is shown (the new version stays the one on screen).
+            if (e.data && 'parent_turn_id' in e.data) setPicked((c) => ({ ...c, [e.data.parent_turn_id ?? '']: key }));
+            break;
+          }
           case 'turn.understood': patch(key, { understood: String(e.data?.question ?? '') }); break;
           case 'task.progress': patch(key, { progress: parseTaskProgress(e.data) ?? undefined }); break;
           case 'answer.delta': patch(key, (t) => ({ text: t.text + String(e.data?.text ?? '') })); break;
@@ -275,6 +294,22 @@ export default function ChatPage() {
     patch(turnKey, (t) => (t.envelope ? { envelope: { ...t.envelope, components: t.envelope.components.map((c) => (c.id === comp.id ? comp : c)) } } : {}));
   }, [patch]);
 
+  // A card drawn from changing records (a checklist, a draft, a panel run, a meeting) asks the server for itself again.
+  const refreshers = useRef(new Map<string, (id: string) => Promise<void>>());
+  const refresher = useCallback((turnKey: string) => {
+    let fn = refreshers.current.get(turnKey);
+    if (!fn) {
+      fn = async (id: string) => {
+        try {
+          const comp = parseComponent((await counselApi.component(id)).component);
+          if (comp.type !== 'inert') replace(turnKey)(comp);
+        } catch { /* keep what is shown; the next refresh tries again */ }
+      };
+      refreshers.current.set(turnKey, fn);
+    }
+    return fn;
+  }, [replace]);
+
   const rate = useCallback(async (t: ChatTurn, next: { rating: 'up' | 'down' | null; reason?: FeedbackReason; note?: string }) => {
     if (!t.id) return false;
     try {
@@ -299,6 +334,9 @@ export default function ChatPage() {
     openSide: (side, label, opener) => panel.open({ kind: 'side', side, label }, opener),
     go: (path) => navigate(path),
     replace: replace(t.key),
+    submitForm: (comp, values, label) => { void ask(label, { form: { component_id: comp.id, values } }); },
+    refresh: refresher(t.key),
+    openDraft: (mid, artifactId, label, canEdit, opener, onSaved) => panel.open({ kind: 'draft', matterId: mid, artifactId, label, canEdit, onSaved }, opener),
   });
 
   const start = !conversationId && turns.length === 0;
@@ -562,7 +600,7 @@ function DocumentPicker({ matterId, attached, onAttach, adding, onError }: {
                 <label key={d.id}>
                   <input type="checkbox" checked={attached.some((a) => a.id === d.id)} onChange={() => toggle(d.id, d.title)}
                     disabled={!attached.some((a) => a.id === d.id) && attached.length >= 10} />
-                  <span style={{ minWidth: 0 }}>{d.title}<span className="qc-meta" style={{ display: 'block' }}>{d.kind} · version {d.version}</span></span>
+                  <span style={{ minWidth: 0 }}>{d.title}<span className="qc-meta" style={{ display: 'block' }}>{d.kind} · version {d.current_version?.number ?? 1}</span></span>
                 </label>
               ))}
             </div>

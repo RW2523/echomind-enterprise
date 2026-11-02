@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { counselApi, requestId } from './api';
 import { blocks, boldPieces } from './format';
+import { WorkCard } from './workcards';
 import { isWorkspacePath, parseComponent } from './validate';
 import type {
   CaseRow, CaseTableProps, CitationRef, ComparisonSide, DiscrepancyStatus, EvidenceComparisonProps, NoticeProps, PriorityListProps,
@@ -26,6 +27,12 @@ export interface CardContext {
   openSide: (side: ComparisonSide, label: string, opener: HTMLElement | null) => void;
   go: (path: string) => void;
   replace: (component: SafeComponent) => void;
+  /** Send a guided form's answers as the next turn (the server checks them against the questions it asked). */
+  submitForm?: (component: SafeComponent, values: Record<string, string>, label: string) => void;
+  /** Rebuild one card from its records (GET /counsel/components/{id}). */
+  refresh?: (componentId: string) => Promise<void>;
+  /** A draft beside the conversation; onSaved runs after each saved version. */
+  openDraft?: (matterId: string, artifactId: string, label: string, canEdit: boolean, opener: HTMLElement | null, onSaved: () => void) => void;
 }
 
 /** Run a suggested or item action. Only the four contract action types exist; an unknown one does nothing. */
@@ -601,6 +608,7 @@ export function ComponentView({ comp, ctx }: { comp: SafeComponent; ctx: CardCon
     case 'notice': return <Notice p={comp.props} />;
     case 'unavailable': return <p className="qc-inert" data-component="unavailable">{comp.props.text}</p>;
     case 'task_progress': return <p className="qc-meta"><ListChecks size={14} aria-hidden /> {comp.props.label}</p>;
-    default: return <p className="qc-inert" data-component="inert">This part of the answer could not be shown.</p>;
+    case 'inert': return <p className="qc-inert" data-component="inert">This part of the answer could not be shown.</p>;
+    default: return WorkCard({ comp, ctx }) ?? <p className="qc-inert" data-component="inert">This part of the answer could not be shown.</p>;
   }
 }

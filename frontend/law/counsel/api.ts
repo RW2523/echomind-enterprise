@@ -20,6 +20,7 @@ export interface AskBody {
   text: string; client_request_id: string; document_ids?: string[]; focus_discrepancy_id?: string;
   after_turn_id?: string;            // the turn this question follows
   retry_of?: string;                 // asked again, or edited: another version of that turn
+  form?: { component_id: string; values: Record<string, string> };   // answers to a form the server asked
 }
 
 export interface DiscrepancySummary { id: string; title: string; status: DiscrepancyStatus; kind: string; version: number; updated_at: string }
@@ -51,7 +52,9 @@ export const counselApi = {
   discrepancies: (matterId: string, state: 'open' | 'resolved' | 'all' = 'open') =>
     api.get<{ discrepancies: DiscrepancySummary[] }>(`${BASE}/discrepancies?matter_id=${encodeURIComponent(matterId)}&state=${state}`),
   activity: (before?: number) => api.get<ActivityPage>(`${BASE}/activity${before ? `?before=${before}` : ''}`),
-  async action(body: { component_id: string; action_id: 'review'; matter_id: string; expected_version: number;
+  /** One card as its records stand now. */
+  component: (id: string) => api.get<{ component: unknown }>(`${BASE}/components/${encodeURIComponent(id)}`),
+  async action(body: { component_id: string; action_id: 'review' | 'obligation' | 'decide'; matter_id: string; expected_version: number;
                       parameters: Record<string, unknown>; idempotency_key: string }): Promise<ActionResult> {
     const r = await fetch(`${BASE}/actions`, {
       method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),

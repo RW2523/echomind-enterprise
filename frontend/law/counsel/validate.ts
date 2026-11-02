@@ -4,8 +4,9 @@
  * inert placeholder. Limits mirror backend/app/legal/counsel/schemas.py.
  */
 import type {
-  ActionType, AnswerState, CaseRow, CaseTableProps, CitationRef, ComparisonSide, DiscrepancyStatus, Envelope, EvidenceComparisonProps,
-  MatterRef, NoticeProps,
+  ActionType, AnswerState, ApprovalItem, ApprovalRequestProps, CaseRow, CaseTableProps, ChartBar, ChecklistItem, ChecklistProps, CitationRef,
+  ComparisonSide, CouncilSummaryProps, DiscrepancyStatus, DocumentPreviewProps, Envelope, EvidenceComparisonProps, GraphExcerptProps,
+  GuidedQuestion, GuidedQuestionsProps, LiveTranscriptProps, MatterRef, NoticeProps, NumericChartProps,
   CalculationProps, PriorityItem, PriorityListProps, ReviewEntry, SafeComponent, SourceAnswerProps, TaskProgressProps, TimelineEvent, TimelineProps, UiAction,
 } from './types';
 
@@ -254,6 +255,160 @@ function notice(v: unknown): NoticeProps {
   return { tone: oneOf(o.tone, ['info', 'caution'] as const, 'tone'), text: str(o.text, 800, 'text') };
 }
 
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+const page = (v: unknown, max: number, what: string) => {
+  const p = str(v, max, what);
+  if (!isWorkspacePath(p)) throw new Invalid(`${what} outside the workspace`);
+  return p;
+};
+
+function checklist(v: unknown): ChecklistProps {
+  const o = obj(v, 'props');
+  return {
+    summary: str(o.summary, 400, 'summary'), more: o.more === undefined ? 0 : int(o.more, 'more'), can_done: bool(o.can_done, 'can_done'),
+    can_confirm: bool(o.can_confirm, 'can_confirm'), caution: str(o.caution, 400, 'caution'), register_path: page(o.register_path, 140, 'register_path'),
+    items: list(o.items, 12, 'items', (x): ChecklistItem => {
+      const i = obj(x, 'item');
+      const due = optStr(i.due_date, 10, 'item.due_date');
+      if (due !== undefined && !ISO.test(due)) throw new Invalid('item.due_date');
+      return {
+        id: ident(i.id, 'item.id'), title: str(i.title, 300, 'item.title'), party: optStr(i.party, 80, 'item.party'), when: optStr(i.when, 300, 'item.when'),
+        due_date: due, status: oneOf(i.status, ['proposed', 'confirmed', 'done', 'dismissed'] as const, 'item.status'),
+        overdue: i.overdue === undefined ? false : bool(i.overdue, 'item.overdue'), owner: optStr(i.owner, 80, 'item.owner'),
+        document_title: str(i.document_title, 300, 'item.document_title'), clause: optStr(i.clause, 40, 'item.clause'),
+        path: page(i.path, 300, 'item.path'), version: int(i.version, 'item.version', 1),
+      };
+    }),
+  };
+}
+
+function approvalRequest(v: unknown): ApprovalRequestProps {
+  const o = obj(v, 'props');
+  return {
+    summary: str(o.summary, 400, 'summary'), more: o.more === undefined ? 0 : int(o.more, 'more'), caution: str(o.caution, 400, 'caution'),
+    items: list(o.items, 3, 'items', (x): ApprovalItem => {
+      const i = obj(x, 'item');
+      return {
+        artifact_id: ident(i.artifact_id, 'item.artifact_id'), kind: str(i.kind, 40, 'item.kind'), title: str(i.title, 200, 'item.title'),
+        version: int(i.version, 'item.version', 1), author: str(i.author, 80, 'item.author'), created_at: str(i.created_at, 40, 'item.created_at'),
+        preview: list(i.preview, 4, 'item.preview', (p) => str(p, 600, 'preview')), gaps: i.gaps === undefined ? 0 : int(i.gaps, 'item.gaps'),
+        consequence: str(i.consequence, 400, 'item.consequence'), path: page(i.path, 300, 'item.path'),
+        state: i.state === undefined ? 'waiting' : oneOf(i.state, ['waiting', 'approved', 'changes_requested', 'changed', 'gone'] as const, 'item.state'),
+        decided_by: optStr(i.decided_by, 80, 'item.decided_by'), can_decide: bool(i.can_decide, 'item.can_decide'),
+      };
+    }),
+  };
+}
+
+const QUESTION_ID = /^[a-z][a-z0-9_]{0,31}$/;
+
+function guidedQuestions(v: unknown): GuidedQuestionsProps {
+  const o = obj(v, 'props');
+  const questions = list(o.questions, 3, 'questions', (x): GuidedQuestion => {
+    const q = obj(x, 'question');
+    const id = str(q.id, 32, 'question.id');
+    if (!QUESTION_ID.test(id)) throw new Invalid('question.id');
+    const kind = oneOf(q.kind, ['choice', 'text'] as const, 'question.kind');
+    const options = list(q.options, 12, 'question.options', (y) => {
+      const op = obj(y, 'option');
+      return { value: ident(op.value, 'option.value'), label: str(op.label, 200, 'option.label'), detail: optStr(op.detail, 200, 'option.detail') };
+    });
+    const dflt = optStr(q.default, 1000, 'question.default');
+    if (kind === 'choice' && (!options.length || (dflt !== undefined && !options.some((op) => op.value === dflt)))) throw new Invalid('choice options');
+    if (kind === 'text' && options.length) throw new Invalid('a text question has no options');
+    const max = q.max_length === undefined ? 200 : int(q.max_length, 'question.max_length', 1);
+    return { id, label: str(q.label, 160, 'question.label'), kind, options, default: dflt,
+             required: q.required === undefined ? true : bool(q.required, 'question.required'), max_length: Math.min(max, 1000) };
+  });
+  if (!questions.length) throw new Invalid('a form asks something');
+  return { purpose: oneOf(o.purpose, ['draft', 'panel'] as const, 'purpose'), title: str(o.title, 160, 'title'), intro: str(o.intro, 400, 'intro'),
+           questions, submit_label: str(o.submit_label, 48, 'submit_label'), note: str(o.note, 400, 'note') };
+}
+
+function documentPreview(v: unknown): DocumentPreviewProps {
+  const o = obj(v, 'props');
+  return {
+    artifact_id: ident(o.artifact_id, 'artifact_id'), title: str(o.title, 200, 'title'), template: str(o.template, 200, 'template'),
+    version: int(o.version, 'version', 1), status: oneOf(o.status, ['draft', 'approved', 'superseded', 'filed'] as const, 'status'),
+    gaps: int(o.gaps, 'gaps'), sources: int(o.sources, 'sources'),
+    fields: list(o.fields, 12, 'fields', (x) => {
+      const f = obj(x, 'field');
+      return { label: str(f.label, 120, 'field.label'), value: str(f.value, 300, 'field.value'),
+               status: oneOf(f.status, ['sourced', 'matter', 'system', 'entered', 'needs_input'] as const, 'field.status') };
+    }),
+    blocks: list(o.blocks, 8, 'blocks', (x) => {
+      const b = obj(x, 'block');
+      return { type: oneOf(b.type, ['heading', 'paragraph'] as const, 'block.type'), text: str(b.text, 1500, 'block.text'),
+               origin: oneOf(b.origin, ['template', 'written', 'edited'] as const, 'block.origin') };
+    }),
+    more_blocks: o.more_blocks === undefined ? 0 : int(o.more_blocks, 'more_blocks'), review: str(o.review, 300, 'review'),
+    path: page(o.path, 300, 'path'), can_edit: bool(o.can_edit, 'can_edit'),
+  };
+}
+
+function councilSummary(v: unknown): CouncilSummaryProps {
+  const o = obj(v, 'props');
+  return {
+    review_id: ident(o.review_id, 'review_id'), question: str(o.question, 2000, 'question'), area: str(o.area, 80, 'area'),
+    status: oneOf(o.status, ['queued', 'running', 'done', 'needs_facts', 'failed', 'not_allowed'] as const, 'status'),
+    issues: list(o.issues, 6, 'issues', (x) => {
+      const i = obj(x, 'issue');
+      return { issue: str(i.issue, 300, 'issue.issue'), disagreement: i.disagreement === undefined ? false : bool(i.disagreement, 'issue.disagreement'),
+               positions: list(i.positions, 5, 'issue.positions', (y) => {
+                 const p = obj(y, 'position');
+                 return { role: str(p.role, 60, 'position.role'), text: str(p.text, 600, 'position.text') };
+               }) };
+    }),
+    missing_facts: list(o.missing_facts, 6, 'missing_facts', (x) => str(x, 300, 'missing_fact')), approval: optStr(o.approval, 80, 'approval'),
+    path: page(o.path, 300, 'path'), caution: str(o.caution, 400, 'caution'),
+  };
+}
+
+function numericChart(v: unknown): NumericChartProps {
+  const o = obj(v, 'props');
+  return {
+    summary: str(o.summary, 400, 'summary'), unit: str(o.unit, 12, 'unit'), more: o.more === undefined ? 0 : int(o.more, 'more'),
+    other_units: list(o.other_units, 6, 'other_units', (x) => str(x, 12, 'unit')), caution: str(o.caution, 400, 'caution'),
+    bars: list(o.bars, 24, 'bars', (x): ChartBar => {
+      const b = obj(x, 'bar');
+      if (typeof b.value !== 'number' || !Number.isFinite(b.value) || b.value < 0) throw new Invalid('bar.value');
+      return { id: ident(b.id, 'bar.id'), shown: str(b.shown, 80, 'bar.shown'), value: b.value, document_title: str(b.document_title, 300, 'bar.document_title'),
+               clause: optStr(b.clause, 40, 'bar.clause'), source: side(b.source) };
+    }),
+  };
+}
+
+function graphExcerpt(v: unknown): GraphExcerptProps {
+  const o = obj(v, 'props');
+  const nodes = list(o.nodes, 18, 'nodes', (x) => {
+    const n = obj(x, 'node');
+    return { id: ident(n.id, 'node.id'), label: str(n.label, 160, 'node.label'), kind: oneOf(n.kind, ['party', 'document'] as const, 'node.kind'),
+             role: optStr(n.role, 40, 'node.role') };
+  });
+  const ids = new Set(nodes.map((n) => n.id));
+  const edges = list(o.edges, 40, 'edges', (x) => {
+    const e = obj(x, 'edge');
+    const out = { id: ident(e.id, 'edge.id'), source: ident(e.source, 'edge.source'), target: ident(e.target, 'edge.target'),
+                  label: oneOf(e.label, ['party to', 'named in'] as const, 'edge.label'), evidence: side(e.evidence) };
+    if (!ids.has(out.source) || !ids.has(out.target)) throw new Invalid('an edge joins two shown nodes');
+    return out;
+  });
+  return { summary: str(o.summary, 400, 'summary'), nodes, edges, more: o.more === undefined ? 0 : int(o.more, 'more'), caution: str(o.caution, 400, 'caution') };
+}
+
+function liveTranscript(v: unknown): LiveTranscriptProps {
+  const o = obj(v, 'props');
+  return {
+    meeting_id: ident(o.meeting_id, 'meeting_id'), title: str(o.title, 200, 'title'),
+    state: oneOf(o.state, ['recording', 'paused', 'not_recording'] as const, 'state'), consent: str(o.consent, 200, 'consent'),
+    segments: list(o.segments, 12, 'segments', (x) => {
+      const g = obj(x, 'segment');
+      return { speaker: optStr(g.speaker, 80, 'segment.speaker'), text: str(g.text, 1000, 'segment.text'), at: optStr(g.at, 40, 'segment.at') };
+    }),
+    earlier: o.earlier === undefined ? 0 : int(o.earlier, 'earlier'), path: page(o.path, 300, 'path'), caution: str(o.caution, 400, 'caution'),
+  };
+}
+
 /** One component, or an inert placeholder when it is unknown or does not match the contract. */
 export function parseComponent(v: unknown): SafeComponent {
   const o = isObj(v) ? v : {};
@@ -273,6 +428,14 @@ export function parseComponent(v: unknown): SafeComponent {
       case 'task_progress': return { ...base, type: 'task_progress', props: taskProgress(o.props) };
       case 'notice': return { ...base, type: 'notice', props: notice(o.props) };
       case 'unavailable': return { ...base, type: 'unavailable', props: { text: str(obj(o.props, 'props').text, 300, 'text') } };
+      case 'checklist': return { ...base, type: 'checklist', data_ref: str(o.data_ref, 40, 'data_ref'), props: checklist(o.props) };
+      case 'approval_request': return { ...base, type: 'approval_request', data_ref: str(o.data_ref, 40, 'data_ref'), props: approvalRequest(o.props) };
+      case 'guided_questions': return { ...base, type: 'guided_questions', props: guidedQuestions(o.props) };
+      case 'document_preview': return { ...base, type: 'document_preview', data_ref: str(o.data_ref, 40, 'data_ref'), props: documentPreview(o.props) };
+      case 'council_summary': return { ...base, type: 'council_summary', data_ref: str(o.data_ref, 40, 'data_ref'), props: councilSummary(o.props) };
+      case 'numeric_chart': return { ...base, type: 'numeric_chart', props: numericChart(o.props) };
+      case 'graph_excerpt': return { ...base, type: 'graph_excerpt', props: graphExcerpt(o.props) };
+      case 'live_transcript': return { ...base, type: 'live_transcript', data_ref: str(o.data_ref, 40, 'data_ref'), props: liveTranscript(o.props) };
       default: throw new Invalid(`unknown component type ${String(o.type).slice(0, 40)}`);
     }
   } catch (e) {

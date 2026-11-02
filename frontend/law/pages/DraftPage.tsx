@@ -16,7 +16,8 @@ const STATUS: Record<DraftField['status'], [string, Tone]> = {
   entered: ['Entered by a lawyer', 'accent'], needs_input: ['Needs input', 'attention'],
 };
 
-function Text({ text }: { text: string }) {
+/** A draft's text with its [[NEEDS INPUT]] gaps marked (also the chat's draft preview). */
+export function Text({ text }: { text: string }) {
   return <>{text.split('\n').map((line, i) => (
     <React.Fragment key={i}>{i > 0 && <br />}{line.split(GAP).map((piece, j) => (GAP.test(piece)
       ? <mark key={j} className="lw-gap">{piece.replace(/^\[\[NEEDS INPUT:\s*/, '').replace(/\]\]$/, '')}</mark> : <React.Fragment key={j}>{piece}</React.Fragment>))}
@@ -75,7 +76,7 @@ export default function DraftPage() {
           {c.blocks.map((b, i) => <Block key={i} b={b} />)}
         </article>
         <aside className="lw-paper lw-sheet" aria-label="Fields and review">
-          {editing ? <DraftEditor v={v} onClose={() => setEditing(false)}
+          {editing ? <DraftEditor v={v} matterId={matter.id} onClose={() => setEditing(false)}
             onSaved={async (id) => { setEditing(false); await refresh(); navigate(`/m/${matter.number}/drafting/${encodeURIComponent(id)}`); }} />
             : <FieldList fields={c.fields} />}
           {!editing && canDraft && latest && v.status !== 'superseded' && (
@@ -139,8 +140,8 @@ function FieldList({ fields }: { fields: DraftField[] }) {
   );
 }
 
-function DraftEditor({ v, onClose, onSaved }: { v: LegalDraft; onClose: () => void; onSaved: (id: string) => void }) {
-  const matter = useMatter();
+/** Fill in or correct a draft: each save is a new version (the Drafting page, and the chat's panel beside a conversation). */
+export function DraftEditor({ v, matterId, onClose, onSaved }: { v: LegalDraft; matterId: string; onClose: () => void; onSaved: (id: string) => void }) {
   const [values, setValues] = useState<Record<string, string>>(Object.fromEntries(v.content.fields.map((f) => [f.key, f.value ?? ''])));
   const written = v.content.blocks.map((b, i) => [b, i] as const).filter(([b]) => b.origin !== 'template');
   const [texts, setTexts] = useState<Record<number, string>>(Object.fromEntries(written.map(([b, i]) => [i, b.text])));
@@ -152,7 +153,7 @@ function DraftEditor({ v, onClose, onSaved }: { v: LegalDraft; onClose: () => vo
     const fields = v.content.fields.filter((f) => (values[f.key] ?? '') !== (f.value ?? '')).map((f) => ({ key: f.key, value: values[f.key] || null }));
     const blocks = written.filter(([b, i]) => texts[i] !== b.text).map(([, i]) => ({ index: i, text: texts[i] }));
     try {
-      const r = await api.post<{ draft: { id: string } }>(`${draftsPath(matter.id)}/${encodeURIComponent(v.id)}/edit`,
+      const r = await api.post<{ draft: { id: string } }>(`${draftsPath(matterId)}/${encodeURIComponent(v.id)}/edit`,
         { content_sha256: v.content_sha256, fields, blocks, reason: reason.trim() || null });
       onSaved(r.draft.id);                             // a change is a new version, with its own id
     }

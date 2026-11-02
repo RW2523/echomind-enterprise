@@ -105,7 +105,12 @@ def _visible(a: dict, uid: str) -> bool:
 @router.post("/matters/{matter_id}/panel")
 @audited("panel.ask", object_type="matter", object_param="matter_id")
 def ask(matter_id: str, inp: AskIn, request: Request):
-    p = principal_of(request)
+    return start(principal_of(request), matter_id, inp)
+
+
+def start(p: dict, matter_id: str, inp: AskIn) -> dict:
+    """Queue a panel review with every check of the route (the chat calls this too; the panel must be on)."""
+    panel_on()
     require(p, "ai.draft", matter_id)
     chosen = list(dict.fromkeys(inp.documents))
     if any(not documents.visible(matter_id, did, p["sub"]) for did in chosen):

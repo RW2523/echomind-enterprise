@@ -285,6 +285,248 @@ class UnavailableProps(Strict):
     text: text(300)
 
 
+def _own_page(path: Optional[str], what: str) -> None:
+    if path is not None and not _PAGE.match(path):
+        raise ValueError(f"{what} opens only the workspace's own pages")
+
+
+# ── checklist: the matter's open obligations (counsel/tasks.py) ──────────────────
+class ChecklistItem(Strict):
+    id: Ident                                             # the obligation's id
+    title: text(300)                                      # what is to be done, as the register words it
+    party: Optional[text(80)] = None
+    when: Optional[text(300)] = None                      # the document's words for when
+    due_date: Optional[IsoDate] = None
+    status: Literal["proposed", "confirmed", "done", "dismissed"]
+    overdue: bool = False
+    owner: Optional[text(80)] = None
+    document_title: text(300)
+    clause: Optional[text(40)] = None
+    path: text(300)                                       # the document's words, in the reader
+    version: int = Field(ge=1)                            # the obligation's version (each change is checked against it)
+
+    @model_validator(mode="after")
+    def _paths(self):
+        _own_page(self.path, "an item")
+        return self
+
+
+class ChecklistProps(Strict):
+    summary: text(400)
+    items: list[ChecklistItem] = Field(default_factory=list, max_length=12)
+    more: int = Field(default=0, ge=0)
+    can_done: bool                                        # may tick items done or reopen them
+    can_confirm: bool                                     # may confirm a deadline read from a document
+    caution: text(400)
+    register_path: text(140)
+
+    @model_validator(mode="after")
+    def _paths(self):
+        _own_page(self.register_path, "the register link")
+        return self
+
+
+# ── approval_request: drafts waiting for this person's decision (counsel/approvals.py) ─
+class ApprovalItem(Strict):
+    artifact_id: Ident
+    kind: text(40)                                        # "Legal draft", "Minutes", …
+    title: text(200)
+    version: int = Field(ge=1)
+    author: text(80)
+    created_at: text(40)
+    preview: list[text(600)] = Field(default_factory=list, max_length=4)   # the first lines, as written
+    gaps: int = Field(default=0, ge=0)                    # [[NEEDS INPUT]] gaps left (a legal draft needs none to be approved)
+    consequence: text(400)                                # what approving does, and what it does not
+    path: text(300)
+    state: Literal["waiting", "approved", "changes_requested", "changed", "gone"] = "waiting"
+    decided_by: Optional[text(80)] = None
+    can_decide: bool
+
+    @model_validator(mode="after")
+    def _paths(self):
+        _own_page(self.path, "an item")
+        return self
+
+
+class ApprovalRequestProps(Strict):
+    summary: text(400)
+    items: list[ApprovalItem] = Field(default_factory=list, max_length=MAX_PRIORITY_ITEMS)
+    more: int = Field(default=0, ge=0)
+    caution: text(400)
+
+
+# ── guided_questions: at most three questions before something is made ────────────
+class GuidedOption(Strict):
+    value: Ident
+    label: text(200)
+    detail: Optional[text(200)] = None
+
+
+class GuidedQuestion(Strict):
+    id: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
+    label: text(160)
+    kind: Literal["choice", "text"]
+    options: list[GuidedOption] = Field(default_factory=list, max_length=12)
+    default: Optional[text(1000)] = None
+    required: bool = True
+    max_length: int = Field(default=200, ge=1, le=1000)
+
+    @model_validator(mode="after")
+    def _shape(self):
+        if self.kind == "choice" and not self.options:
+            raise ValueError("a choice has options")
+        if self.kind == "choice" and self.default is not None and self.default not in {o.value for o in self.options}:
+            raise ValueError("a choice's default is one of its options")
+        if self.kind == "text" and self.options:
+            raise ValueError("a text question has no options")
+        return self
+
+
+class GuidedQuestionsProps(Strict):
+    purpose: Literal["draft", "panel"]
+    title: text(160)
+    intro: text(400)
+    questions: list[GuidedQuestion] = Field(min_length=1, max_length=3)
+    submit_label: text(48)
+    note: text(400)
+
+
+# ── document_preview: a draft made from the chat (counsel/drafting.py) ───────────
+class PreviewField(Strict):
+    label: text(120)
+    value: text(300)
+    status: Literal["sourced", "matter", "system", "entered", "needs_input"]
+
+
+class PreviewBlock(Strict):
+    type: Literal["heading", "paragraph"]
+    text: text(1500)
+    origin: Literal["template", "written", "edited"]
+
+
+class DocumentPreviewProps(Strict):
+    artifact_id: Ident
+    title: text(200)
+    template: text(200)
+    version: int = Field(ge=1)
+    status: Literal["draft", "approved", "superseded", "filed"]
+    gaps: int = Field(ge=0)
+    sources: int = Field(ge=0)
+    fields: list[PreviewField] = Field(default_factory=list, max_length=12)
+    blocks: list[PreviewBlock] = Field(default_factory=list, max_length=8)
+    more_blocks: int = Field(default=0, ge=0)
+    review: text(300)                                     # where it stands with the second lawyer
+    path: text(300)
+    can_edit: bool
+
+    @model_validator(mode="after")
+    def _paths(self):
+        _own_page(self.path, "the draft")
+        return self
+
+
+# ── council_summary: the review panel's run (counsel/deliberation.py) ────────────
+class PanelPosition(Strict):
+    role: text(60)
+    text: text(600)
+
+
+class PanelIssue(Strict):
+    issue: text(300)
+    positions: list[PanelPosition] = Field(default_factory=list, max_length=5)
+    disagreement: bool = False
+
+
+class CouncilSummaryProps(Strict):
+    review_id: Ident
+    question: text(2000)
+    area: text(80)
+    status: Literal["queued", "running", "done", "needs_facts", "failed", "not_allowed"]
+    issues: list[PanelIssue] = Field(default_factory=list, max_length=6)
+    missing_facts: list[text(300)] = Field(default_factory=list, max_length=6)
+    approval: Optional[text(80)] = None
+    path: text(300)
+    caution: text(400)
+
+    @model_validator(mode="after")
+    def _paths(self):
+        _own_page(self.path, "the review")
+        return self
+
+
+# ── numeric_chart: amounts the documents state (counsel/amounts.py) ──────────────
+class ChartBar(Strict):
+    id: Ident
+    shown: text(80)                                       # the amount as written
+    value: float = Field(ge=0)
+    document_title: text(300)
+    clause: Optional[text(40)] = None
+    source: ComparisonSide
+
+
+class NumericChartProps(Strict):
+    summary: text(400)
+    unit: text(12)                                        # one currency per chart: never added across currencies
+    bars: list[ChartBar] = Field(default_factory=list, max_length=24)
+    more: int = Field(default=0, ge=0)
+    other_units: list[text(12)] = Field(default_factory=list, max_length=6)
+    caution: text(400)
+
+
+# ── graph_excerpt: parties and the documents that name them (counsel/parties.py) ─
+class GraphNode(Strict):
+    id: Ident
+    label: text(160)
+    kind: Literal["party", "document"]
+    role: Optional[text(40)] = None                      # from the matter's records ("Client", "Adverse"), never inferred
+
+
+class GraphEdge(Strict):
+    id: Ident
+    source: Ident                                         # a party node
+    target: Ident                                         # a document node
+    label: Literal["party to", "named in"]
+    evidence: ComparisonSide
+
+
+class GraphExcerptProps(Strict):
+    summary: text(400)
+    nodes: list[GraphNode] = Field(default_factory=list, max_length=18)
+    edges: list[GraphEdge] = Field(default_factory=list, max_length=40)
+    more: int = Field(default=0, ge=0)
+    caution: text(400)
+
+    @model_validator(mode="after")
+    def _edges_join_nodes(self):
+        ids = {n.id for n in self.nodes}
+        if any(e.source not in ids or e.target not in ids for e in self.edges):
+            raise ValueError("every edge joins two shown nodes")
+        return self
+
+
+# ── live_transcript: a meeting being recorded (counsel/live.py) ──────────────────
+class LiveSegment(Strict):
+    speaker: Optional[text(80)] = None
+    text: text(1000)
+    at: Optional[text(40)] = None
+
+
+class LiveTranscriptProps(Strict):
+    meeting_id: Ident
+    title: text(200)
+    state: Literal["recording", "paused", "not_recording"]
+    consent: text(200)
+    segments: list[LiveSegment] = Field(default_factory=list, max_length=12)
+    earlier: int = Field(default=0, ge=0)
+    path: text(300)
+    caution: text(400)
+
+    @model_validator(mode="after")
+    def _paths(self):
+        _own_page(self.path, "the meeting")
+        return self
+
+
 # ── Components and the envelope ──────────────────────────────────────────────────
 class _Base(Strict):
     id: ComponentId
@@ -333,10 +575,61 @@ class Unavailable(_Base):
     props: UnavailableProps
 
 
-Component = Annotated[Union[SourceAnswer, PriorityList, EvidenceComparison, Timeline, CaseTable, TaskProgress, Notice, Unavailable],
+class Checklist(_Base):
+    type: Literal["checklist"]
+    data_ref: ComponentId
+    props: ChecklistProps
+
+
+class ApprovalRequest(_Base):
+    type: Literal["approval_request"]
+    data_ref: ComponentId
+    props: ApprovalRequestProps
+
+
+class GuidedQuestions(_Base):
+    type: Literal["guided_questions"]
+    props: GuidedQuestionsProps
+
+
+class DocumentPreview(_Base):
+    type: Literal["document_preview"]
+    data_ref: ComponentId
+    props: DocumentPreviewProps
+
+
+class CouncilSummary(_Base):
+    type: Literal["council_summary"]
+    data_ref: ComponentId
+    props: CouncilSummaryProps
+
+
+class NumericChart(_Base):
+    type: Literal["numeric_chart"]
+    props: NumericChartProps
+
+
+class GraphExcerpt(_Base):
+    type: Literal["graph_excerpt"]
+    props: GraphExcerptProps
+
+
+class LiveTranscript(_Base):
+    type: Literal["live_transcript"]
+    data_ref: ComponentId
+    props: LiveTranscriptProps
+
+
+Component = Annotated[Union[SourceAnswer, PriorityList, EvidenceComparison, Timeline, CaseTable, TaskProgress, Notice, Unavailable,
+                            Checklist, ApprovalRequest, GuidedQuestions, DocumentPreview, CouncilSummary, NumericChart, GraphExcerpt,
+                            LiveTranscript],
                       Field(discriminator="type")]
 COMPONENT_TYPES = ("source_answer", "priority_list", "evidence_comparison", "timeline", "case_table", "task_progress", "notice",
-                   "unavailable")
+                   "unavailable", "checklist", "approval_request", "guided_questions", "document_preview", "council_summary",
+                   "numeric_chart", "graph_excerpt", "live_transcript")
+# Components drawn from records that change (an obligation's state, a draft's newest version, a meeting): only a
+# reference is stored, and they are rebuilt from the records, as the reader may see them, every time they are shown.
+LIVE_TYPES = ("checklist", "approval_request", "document_preview", "council_summary", "live_transcript")
 
 
 class MatterRef(Strict):

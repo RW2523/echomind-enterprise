@@ -532,7 +532,7 @@ def test_draft_and_other_requests_point_to_real_pages_or_say_what_is_not_availab
     env = final(turn(alice, conv, "Draft a client status update"))
     assert env["suggested_actions"] == [{"id": "open_drafting", "label": "Open Drafting", "action_type": "open_page",
                                          "path": "/m/M-101/drafting", "document_ids": []}]
-    assert "not available yet" in component(env, "notice")["props"]["text"]
+    assert "no approved drafting template yet" in component(env, "notice")["props"]["text"]
     env = final(turn(carol, new_conversation(carol, cs["mid"]), "Draft a client status update"))
     assert env["suggested_actions"] == []                                  # read-only: no way into drafting is offered
     calls = len(cs["model"].stream_calls) + len(cs["model"].chat_calls)

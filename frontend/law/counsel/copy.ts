@@ -79,10 +79,30 @@ function plainComponent(c: SafeComponent): string {
   }
 }
 
-/** Cards added after the first registry write their own plain text here (kept apart so the switch above stays exhaustive). */
+/** The cards that work on records (workcards.tsx). */
 function plainExtra(c: SafeComponent): string {
-  const p = (c as { props?: { summary?: string; text?: string; title?: string } }).props;
-  return p?.summary ?? p?.title ?? p?.text ?? '';
+  switch (c.type) {
+    case 'checklist':
+      return [c.props.summary, ...c.props.items.map((i) => `[${i.status === 'done' ? 'x' : ' '}] ${i.title}${i.due_date ? ` (due ${i.due_date}${i.status === 'confirmed' ? ', confirmed' : i.status === 'proposed' ? ', not confirmed' : ''})` : ''}`
+        + ` · ${i.document_title}${i.clause ? `, cl. ${i.clause}` : ''}`), c.props.caution].join('\n');
+    case 'approval_request':
+      return [c.props.summary, ...c.props.items.map((i) => `- ${i.kind}: ${i.title}, version ${i.version} by ${i.author}`)].join('\n');
+    case 'guided_questions': return '';
+    case 'document_preview':
+      return [`${c.props.title} (version ${c.props.version}, ${c.props.status})`, ...c.props.blocks.map((b) => b.text), c.props.review].join('\n\n');
+    case 'council_summary':
+      return [`Review panel (${c.props.area}): ${c.props.question}`, ...c.props.issues.map((i) => `- ${i.issue}${i.disagreement ? ' (they differ)' : ''}\n`
+        + i.positions.map((x) => `  ${x.role}: ${x.text}`).join('\n')), c.props.caution].join('\n');
+    case 'numeric_chart':
+      return [c.props.summary, ...c.props.bars.map((b) => `- ${b.shown} · ${b.document_title}${b.clause ? `, cl. ${b.clause}` : ''}`), c.props.caution].join('\n');
+    case 'graph_excerpt': {
+      const label = new Map(c.props.nodes.map((n) => [n.id, n.label]));
+      return [c.props.summary, ...c.props.edges.map((e) => `- ${label.get(e.source)} ${e.label} ${label.get(e.target)}`), c.props.caution].join('\n');
+    }
+    case 'live_transcript':
+      return [`${c.props.title} (${c.props.state.replace('_', ' ')})`, ...c.props.segments.map((g) => `${g.speaker ? `${g.speaker}: ` : ''}${g.text}`)].join('\n');
+    default: return '';
+  }
 }
 
 export function plainTurn(question: string, envelope: Envelope | undefined, streamed: string): string {

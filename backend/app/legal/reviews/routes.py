@@ -89,7 +89,11 @@ def read_artifact(matter_id: str, artifact_id: str, request: Request):
 @audited("artifact.review", object_type="ai_artifact", object_param="artifact_id")
 def review_artifact(matter_id: str, artifact_id: str, inp: ReviewIn, request: Request):
     """Approve the version you read (by its content hash), or ask for changes with a reason."""
-    p = principal_of(request)
+    return decide_review(principal_of(request), matter_id, artifact_id, inp)
+
+
+def decide_review(p: dict, matter_id: str, artifact_id: str, inp: ReviewIn) -> dict:
+    """A decision with every check of the review route (the chat's approval card calls this too)."""
     require(p, "artifacts.approve", matter_id)
     a = _artifact(p, matter_id, artifact_id)
     if a["kind"] == "panel":                             # S4.5 (D-057): a partner decides, once the facts are in

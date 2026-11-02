@@ -6,8 +6,11 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, BadgeCheck, CircleDashed, FileText, Plus, X } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, CircleDashed, FileText, PenLine, Plus, X } from 'lucide-react';
 import { ApiError } from '../api/client';
+import { useArtifact } from '../api/queries';
+import type { DraftContent } from '../api/types';
+import { DraftEditor, Text as DraftText } from '../pages/DraftPage';
 import { counselApi } from './api';
 import { usePanel, type PanelContent } from './context';
 import { isWorkspacePath } from './validate';
@@ -91,6 +94,44 @@ function SideBody({ side }: { side: ComparisonSide }) {
   );
 }
 
+/** A draft beside the conversation: read it whole, and correct its fields and written passages (a new version each save). */
+function DraftBody({ matterId, artifactId, mayEdit, onSaved }: { matterId: string; artifactId: string; mayEdit: boolean; onSaved?: () => void }) {
+  const [id, setId] = React.useState(artifactId);
+  const [editing, setEditing] = React.useState(false);
+  const view = useArtifact<DraftContent>(matterId, id);
+  if (view.isPending) return <p className="qc-meta" aria-busy="true">Opening the draft…</p>;
+  if (view.isError) return <p className="qc-error" role="alert">This draft is no longer available to you.</p>;
+  const { artifact: v, versions } = view.data;
+  const latest = versions[0]?.id === v.id;
+  const canEdit = mayEdit && latest && v.status === 'draft' && !v.document_id;          // the server checks the role again
+  if (editing) {
+    return <DraftEditor v={v} matterId={matterId} onClose={() => setEditing(false)}
+      onSaved={(next) => { setEditing(false); setId(next); onSaved?.(); }} />;
+  }
+  return (
+    <>
+      <p className="qc-meta" style={{ margin: 0 }}>Version {v.version} · {v.status === 'draft' ? 'draft' : v.status}
+        {v.content.gaps ? ` · ${v.content.gaps} gap${v.content.gaps === 1 ? '' : 's'} to fill` : ''}</p>
+      <article className="qc-draft" aria-label={v.content.title}>
+        {v.content.blocks.map((b, i) => b.type === 'heading'
+          ? <h3 key={i} className="qc-draft-h">{b.text}</h3>
+          : <p key={i}><DraftText text={b.text} /></p>)}
+      </article>
+      {v.content.fields.length > 0 && (
+        <details className="qc-disclosure">
+          <summary>Fields and where each came from ({v.content.fields.length})</summary>
+          <ul>{v.content.fields.map((f) => <li key={f.key}><b>{f.label}</b>: {f.value ?? 'needs input'}{f.sources[0] ? ` — “${f.sources[0].quote}”, ${f.sources[0].document_title}` : ''}</li>)}</ul>
+        </details>
+      )}
+      <div className="qc-actions">
+        {canEdit && <button type="button" className="qc-btn qc-btn-primary" onClick={() => setEditing(true)}><PenLine aria-hidden />Fill in or correct</button>}
+        <Link className="qc-btn" to={`/m/${encodeURIComponent(v.content.matter.number)}/drafting/${encodeURIComponent(v.id)}`}><FileText aria-hidden />Open in Drafting</Link>
+      </div>
+      <p className="qc-meta" style={{ margin: 0 }}>A second lawyer approves the draft before anything leaves the matter. Nothing is filed or sent from here.</p>
+    </>
+  );
+}
+
 function titleOf(c: PanelContent): string {
   return c.kind === 'citation' ? 'Source' : c.label;
 }
@@ -107,7 +148,9 @@ export default function SidePanel() {
         <button type="button" className="qc-icon-btn" onClick={close} aria-label="Close panel"><X aria-hidden /></button>
       </div>
       <div className="qc-panel-body">
-        {content.kind === 'citation' ? <CitationBody key={content.id} id={content.id} onUse={content.onUse} /> : <SideBody side={content.side} />}
+        {content.kind === 'citation' ? <CitationBody key={content.id} id={content.id} onUse={content.onUse} />
+          : content.kind === 'draft' ? <DraftBody key={content.artifactId} matterId={content.matterId} artifactId={content.artifactId} mayEdit={content.canEdit} onSaved={content.onSaved} />
+          : <SideBody side={content.side} />}
       </div>
     </aside>
   );

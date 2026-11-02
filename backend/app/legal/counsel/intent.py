@@ -10,8 +10,14 @@ verified quotes, or abstains.
 - `compare`       "Find conflicting dates", "Are there inconsistencies?" → the conflict scan (discrepancies.py)
 - `cases_overview` "Compare these cases", "Where do my matters stand?" → the conversation's matters side by side (cases.py)
 - `other_matters` "Use the other matters too" → which matters the conversation covers, and how to add one
-- `draft`         "Draft a client update" → where drafting from firm templates is done
-- `deliberate`    "Challenge our position" → where the review panel is (when the firm has it on)
+- `approvals`     "What is waiting for my approval?" → the review queue's items in these matters, to decide (approvals.py)
+- `live`          "Show the live transcript" → the meeting being recorded, or the latest transcript (live.py)
+- `amounts`       "Chart the amounts in the documents" → stated amounts as bars, each with its sentence (amounts.py)
+- `parties`       "How are the parties connected?" → parties and the documents naming them (parties.py)
+- `tasks`         "What are the open obligations?", "List upcoming deadlines" → the obligations register (tasks.py);
+                  a question about what a document says about deadlines stays `ask_fact`
+- `draft`         "Draft a client update" → three questions, then a draft from a firm template (drafting.py)
+- `deliberate`    "Challenge our position" → the review panel, when the firm has it on (deliberation.py)
 - `smalltalk`     "Hi", "Thanks" → a one-line reminder of what can be asked (no search, no model)
 - `ask_fact`      everything else
 """
@@ -20,7 +26,7 @@ from __future__ import annotations
 import re
 
 INTENTS = ("ask_fact", "compare", "inspect_case", "chronology", "cases_overview", "other_matters", "documents", "draft", "deliberate",
-           "smalltalk")
+           "smalltalk", "approvals", "live", "amounts", "parties", "tasks")
 
 _CASES = re.compile(
     r"\b(?:compare|comparison\s+of|overview\s+of|status\s+of|summar(?:y|ise|ize)\s+of|side\s+by\s+side)\b[^.?!]{0,30}?"
@@ -55,6 +61,29 @@ _SMALLTALK = re.compile(r"^\s*(?:hi|hello|hey|thanks|thank\s+you|thx|cheers|ok(?
                         r"(?:\s+(?:there|again|so\s+much|echomind))?\s*[!.?]*\s*$", re.I)
 _CHRONOLOGY = re.compile(r"\b(?:chronology|chronological|timeline|time\s+line|sequence\s+of\s+events|order\s+of\s+events"
                          r"|what\s+happened\s+when)\b", re.I)
+_APPROVALS = re.compile(
+    r"\b(?:waiting|pending|awaiting)\s+(?:for\s+)?(?:my\s+|a\s+|your\s+)?(?:approval|sign[- ]?off|decision|review)\b"
+    r"|\b(?:my|pending|outstanding)\s+(?:approvals|sign[- ]?offs|reviews)\b"
+    r"|\b(?:need|needs|needing)\s+my\s+(?:approval|sign[- ]?off|decision)\b"
+    r"|\b(?:anything|what(?:'s|\s+is)?|is\s+there\s+anything)\s+(?:for\s+me\s+)?to\s+(?:approve|sign\s+off)\b", re.I)
+_LIVE = re.compile(r"\blive\s+transcript\b|\b(?:current|live|ongoing)\s+meeting\b|\bwhat(?:'s|\s+is)\s+being\s+said\b"
+                   r"|\bshow\s+(?:me\s+)?the\s+(?:meeting\s+)?transcript\b|\bis\s+(?:anything|the\s+meeting)\s+being\s+recorded\b", re.I)
+_AMOUNTS = re.compile(
+    r"\b(?:chart|graph|plot|visuali[sz]e)\b[^.?!]{0,40}\b(?:amounts?|sums?|figures|payments?|fees|money|prices?|costs?|values)\b"
+    r"|\b(?:amounts?|sums?|figures|payments?|fees)\b[^.?!]{0,30}\b(?:as\s+a\s+|in\s+a\s+)?(?:chart|graph)\b"
+    r"|^\s*(?:please\s+)?(?:list|show)\s+(?:me\s+)?(?:all\s+|the\s+)?(?:amounts|sums|figures|payments)\b"
+    r"|^\s*(?:what|which)\s+amounts\b", re.I)
+_PARTIES = re.compile(
+    r"\b(?:relationships?|connections?|connected|network|graph|map)\b[^.?!]{0,40}\b(?:parties|people|companies|entities|organi[sz]ations)\b"
+    r"|\b(?:parties|people|companies|entities|organi[sz]ations)\b[^.?!]{0,40}\b(?:relationships?|connections?|connected|network|graph|map)\b"
+    r"|\bwho\s+is\s+connected\s+to\s+whom\b|\bmap\s+(?:out\s+)?the\s+parties\b|\brelationship\s+(?:map|graph)\b", re.I)
+# The register's list, not what a document says: "What are the open obligations?" is a list; "What deadlines does the lease
+# set?" is a research question.
+_TASKS = re.compile(r"\b(?:obligations|deadlines|tasks|to-?dos|to-do\s+list|checklist)\b", re.I)
+_TASKS_LIST = re.compile(r"^\s*(?:please\s+)?(?:show|list|give\s+me|what\s+are|which\s+are|are\s+there\s+any|any)\b"
+                         r"|\b(?:open|outstanding|upcoming|pending|overdue|my|our|register|next)\b", re.I)
+_ABOUT_DOCUMENTS = re.compile(r"\b(?:clause|section|agreement|contract|lease|letter|documents?|says?|stated?|states|sets?|under|mention\w*"
+                              r"|requires?|according)\b", re.I)
 _DELIBERATE = re.compile(r"\b(?:challenge|devil'?s\s+advocate|counter-?arguments?|poke\s+holes|stress[- ]test|argue\s+against"
                          r"|what\s+would\s+(?:opposing|the\s+other\s+side'?s?)\s+counsel)\b", re.I)
 
@@ -71,12 +100,22 @@ def classify(text: str) -> str:
         return "other_matters"
     if _DOCUMENTS.search(t):
         return "documents"
-    if _DRAFT.search(t):
-        return "draft"
     if _DELIBERATE.search(t):
         return "deliberate"
+    if _APPROVALS.search(t):
+        return "approvals"
+    if _LIVE.search(t):
+        return "live"
     if _CHRONOLOGY.search(t):
         return "chronology"
+    if _AMOUNTS.search(t):
+        return "amounts"
+    if _PARTIES.search(t):
+        return "parties"
+    if _DRAFT.search(t):
+        return "draft"
+    if _TASKS.search(t) and _TASKS_LIST.search(t) and not _ABOUT_DOCUMENTS.search(t):
+        return "tasks"
     if _COMPARE.search(t):
         return "compare"
     if _INSPECT.search(t):

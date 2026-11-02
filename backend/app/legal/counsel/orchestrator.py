@@ -35,7 +35,8 @@ from ..compare import scan
 from ..research import followup
 from ..research import routes as research
 from ..retrieval import scope as scopemod
-from . import briefing, cases, chronology, citations, discrepancies, intent as intents, schemas, store
+from . import (amounts, approvals, briefing, cases, chronology, citations, deliberation, discrepancies, drafting, intent as intents, live,
+               parties, schemas, store, tasks)
 
 logger = logging.getLogger(__name__)
 
@@ -83,12 +84,40 @@ def event(name: str, data: dict) -> dict:
 WITHHELD = "This item quoted a document you can no longer open."
 
 
+def _live_props(principal: dict, comp: dict) -> Optional[dict]:
+    """A component drawn from records that change, rebuilt from them as the person may see them now (None: gone)."""
+    stored, mid = comp["props"] or {}, comp["matter_id"]
+    if comp["type"] == "checklist":
+        return tasks.build(principal, _matter(mid), only=stored.get("obligation_ids") or [])[0]
+    if comp["type"] == "approval_request":
+        refs = stored.get("items") or []
+        return approvals.build(principal, [_matter(m) for m in dict.fromkeys([mid] + [r["matter_id"] for r in refs])], stored=refs)[0]
+    if comp["type"] == "document_preview":
+        a = drafting.newest(principal, mid, stored.get("artifact_id") or "")
+        return drafting.preview(principal, _matter(mid)["number"], a) if a else None
+    if comp["type"] == "council_summary":
+        return deliberation.summary(principal, mid, stored.get("review_id") or "")
+    if comp["type"] == "live_transcript":
+        return live.build(principal, mid, stored.get("meeting_id") or "")
+    return None
+
+
 def materialize(principal: dict, comp: dict, conv_matter: Optional[str] = None) -> dict:
     """A stored component as the person may see it now. An evidence comparison is resolved from its discrepancy (its
     state may have changed, or a document may no longer be visible); anything gone becomes `unavailable`. Anything else that
     drew on a document the person may no longer read (its access list narrowed after the answer) is withheld whole: its
-    wording came from that document (commercial-readiness review F3, 2026-10-28)."""
+    wording came from that document (commercial-readiness review F3, 2026-10-28). Components drawn from records that change
+    (schemas.LIVE_TYPES) store only references and are rebuilt here; keys starting with "_" are the server's own."""
     from ..documents import repo as doc_repo
+    if comp["type"] in schemas.LIVE_TYPES:
+        props = _live_props(principal, comp)
+        if props is None:
+            out = {"id": comp["id"], "type": "unavailable", "props": {"text": "This item is no longer available."}}
+        else:
+            out = {"id": comp["id"], "type": comp["type"], "data_ref": comp["id"], "props": props}
+        if conv_matter and comp["matter_id"] != conv_matter:
+            out["matter_id"] = comp["matter_id"]
+        return out
     if comp["type"] != "evidence_comparison" and doc_repo.withheld_from(comp.get("document_ids") or [], principal["sub"]):
         out = {"id": comp["id"], "type": "unavailable", "props": {"text": WITHHELD}}
         if conv_matter and comp["matter_id"] != conv_matter:
@@ -102,7 +131,7 @@ def materialize(principal: dict, comp: dict, conv_matter: Optional[str] = None) 
         out = {"id": comp["id"], "type": "evidence_comparison", "data_ref": comp["id"], "version": row["version"],
                "props": discrepancies.render(principal, row)}
     else:
-        out = {"id": comp["id"], "type": comp["type"], "props": comp["props"]}
+        out = {"id": comp["id"], "type": comp["type"], "props": {k: v for k, v in (comp["props"] or {}).items() if not k.startswith("_")}}
     if conv_matter and comp["matter_id"] != conv_matter:
         out["matter_id"] = comp["matter_id"]
     return out
@@ -419,25 +448,33 @@ def _briefing_several(principal: dict, matters: list[dict]) -> tuple[dict, list[
             "items": shown, "more": max(0, total - len(shown))}, sorted(set(named))
 
 
-def _draft(principal: dict, matter: dict, built: Built) -> None:
+def _draft(principal: dict, matter: dict, built: Built, request: str = "", document_ids: Optional[list[str]] = None) -> None:
     base = f"/m/{urlquote(matter['number'], safe='')}"
-    if policy.authorize(principal, "ai.draft", matter["id"]).allowed:
-        _notice(built, "Drafting from the conversation is not available yet. Drafts are made from your firm's approved templates in "
-                       "Drafting: every fact is cited to the matter's documents, anything unsupported is left as a gap, and a "
-                       "second lawyer approves before anything leaves the matter.",
-                actions=[{"id": "open_drafting", "label": "Open Drafting", "action_type": "open_page", "path": f"{base}/drafting"}],
-                summary="Drafts are made in Drafting, from firm templates.")
-    else:
+    if not policy.authorize(principal, "ai.draft", matter["id"]).allowed:
         _notice(built, "Your role in this matter does not include drafting.", summary="Drafting is not part of your role here.")
+        return
+    asked = drafting.form(principal, matter, request, list(document_ids or []))
+    if asked is None:
+        _notice(built, "Your firm has no approved drafting template yet. A managing partner approves templates in Drafting; drafts "
+                       "are then made from them, every fact cited to the matter's documents.",
+                actions=[{"id": "open_drafting", "label": "Open Drafting", "action_type": "open_page", "path": f"{base}/drafting"}],
+                summary="No approved template yet.")
+        return
+    props, private = asked
+    built.add("guided_questions", props, list(document_ids or []), stored={**props, "_form": private})
+    built.summary = "Three questions before the draft is written."
 
 
-def _deliberate(matter: dict, built: Built) -> None:
+def _deliberate(principal: dict, matter: dict, built: Built, request: str = "", document_ids: Optional[list[str]] = None) -> None:
     base = f"/m/{urlquote(matter['number'], safe='')}"
-    if settings.LEGAL_PANEL:
-        _notice(built, "The review panel looks at one question from four perspectives, each citing the matter's documents, and a "
-                       "partner approves its summary. It gives options for you to consider, never a decision.",
+    if settings.LEGAL_PANEL and not policy.authorize(principal, "ai.draft", matter["id"]).allowed:
+        _notice(built, "Asking the review panel is for the matter's lawyers and paralegals. You can read its reviews on the panel page.",
                 actions=[{"id": "open_panel", "label": "Open the review panel", "action_type": "open_page", "path": f"{base}/panel"}],
-                summary="Use the review panel to test an argument.")
+                summary="The review panel is for the matter's lawyers.")
+    elif settings.LEGAL_PANEL:
+        props, private = deliberation.form(matter, request, list(document_ids or []))
+        built.add("guided_questions", props, list(document_ids or []), stored={**props, "_form": private})
+        built.summary = "Two questions before the panel starts."
     else:
         _notice(built, "Testing an argument from several perspectives (the review panel) is not turned on for this firm. You can "
                        "still ask what the documents say for and against a point.",
@@ -449,9 +486,76 @@ _SMALLTALK = ("Ask about this matter's documents, for example: what a clause say
 
 
 # ── The turn ─────────────────────────────────────────────────────────────────────
+def _live(principal: dict, matter: dict, built: Built) -> None:
+    base = f"/m/{urlquote(matter['number'], safe='')}"
+    meetings = [{"id": "open_meetings", "label": "Open Meetings", "action_type": "open_page", "path": f"{base}/meetings"}]
+    if not policy.authorize(principal, "meetings.read", matter["id"]).allowed:
+        _notice(built, "Your role in this matter does not include its meetings.", summary="Meetings are not part of your role here.")
+        return
+    mid = live.pick(matter["id"])
+    props = live.build(principal, matter["id"], mid) if mid else None
+    if not props:
+        _notice(built, f"No meeting of {matter['number']} is being recorded, and none has a transcript yet. Recording starts on the "
+                       "meeting page, only with every participant's consent.", actions=meetings, summary="No meeting transcript.")
+        return
+    built.add("live_transcript", props, [], data_ref=True, stored={"meeting_id": mid})
+    built.summary = (f"{props['title']}: recording." if props["state"] == "recording" else f"{props['title']}: paused."
+                     if props["state"] == "paused" else f"{props['title']}: not being recorded now.")
+
+
+def form_values(props: dict, values: dict) -> dict:
+    """The answers to a guided form, each checked against the questions the server asked (choices only from their options)."""
+    out = {}
+    for q in props["questions"]:
+        v = values.get(q["id"])
+        if v is None or not str(v).strip():
+            v = q.get("default")
+        if q["kind"] == "choice":
+            if v not in {o["value"] for o in q["options"]}:
+                raise TurnFailed(f"Choose one of the options for “{q['label']}”.")
+        else:
+            v = " ".join(str(v or "").split())[:q.get("max_length", 200)]
+            if q.get("required", True) and not v:
+                raise TurnFailed(f"“{q['label']}” is needed.")
+        out[q["id"]] = v
+    return out
+
+
+async def _answer_form(principal: dict, conv: dict, matter: dict, form: dict, built: Built):
+    """A guided form's answers: write the draft, or queue the review panel."""
+    comp, values = form["component"], form["values"]
+    stored = comp["props"]
+    private = stored.get("_form") or {}
+    asked = form_values(stored, values)
+    target = await run_in_threadpool(_matter, comp["matter_id"])
+    if private.get("purpose") == "draft":
+        yield event("task.progress", {"label": f"Writing “{asked['title'][:80]}”: each field is read from the documents and cited",
+                                      "done": 0, "total": 0, "state": "running"})
+        try:
+            a = await drafting.run(principal, target, asked, private)
+        except LookupError:
+            raise TurnFailed("That template has no approved version any more. Choose another.")
+        props = await run_in_threadpool(drafting.preview, principal, target["number"], a)
+        built.add("document_preview", props, [], data_ref=True, stored={"artifact_id": a["id"]},
+                  matter_id=target["id"] if target["id"] != conv["matter_id"] else None)
+        built.summary = (f"Draft “{props['title']}” written" + (f", {props['gaps']} gap{'s' if props['gaps'] != 1 else ''} to fill" if props["gaps"] else "")
+                         + ". A second lawyer approves it before anything leaves the matter.")[:400]
+    elif private.get("purpose") == "panel":
+        rid = await run_in_threadpool(deliberation.start, principal, target, asked, private)
+        props = await run_in_threadpool(deliberation.summary, principal, target["id"], rid)
+        built.add("council_summary", props, [], data_ref=True, stored={"review_id": rid},
+                  matter_id=target["id"] if target["id"] != conv["matter_id"] else None)
+        built.summary = "The review panel is working on it."
+    else:
+        raise TurnFailed(FAILED)
+
+
 async def run(principal: dict, conv: dict, text: str, client_request_id: Optional[str], document_ids: list[str],
-              focus: Optional[str], parent=store._FOLLOW_NEWEST) -> AsyncIterator[dict]:
-    kind = "compare" if focus else intents.classify(text)
+              focus: Optional[str], parent=store._FOLLOW_NEWEST, form: Optional[dict] = None) -> AsyncIterator[dict]:
+    if form:
+        kind = "draft_run" if (form["component"]["props"].get("_form") or {}).get("purpose") == "draft" else "panel_run"
+    else:
+        kind = "compare" if focus else intents.classify(text)
     turn = await run_in_threadpool(store.start_turn, conv, principal["sub"], text, kind, client_request_id, parent)
     built = Built()
     final_status = "failed"
@@ -528,9 +632,32 @@ async def run(principal: dict, conv: dict, text: str, client_request_id: Optiona
         elif kind == "documents":
             await run_in_threadpool(_inventory, principal, matters, built)
         elif kind == "draft":
-            await run_in_threadpool(_draft, principal, matter, built)
+            await run_in_threadpool(_draft, principal, matter, built, text, document_ids)
         elif kind == "deliberate":
-            _deliberate(matter, built)
+            await run_in_threadpool(_deliberate, principal, matter, built, text, document_ids)
+        elif kind == "tasks":
+            for m in matters[:schemas.MAX_COMPONENTS]:
+                props, named, shown = await run_in_threadpool(tasks.build, principal, m)
+                built.add("checklist", props, named, data_ref=True, stored={"obligation_ids": shown},
+                          matter_id=m["id"] if m["id"] != conv["matter_id"] else None)
+            built.summary = props["summary"] if len(matters) == 1 else f"Open obligations in {len(matters[:3])} matters."
+        elif kind == "approvals":
+            props, refs = await run_in_threadpool(approvals.build, principal, matters)
+            built.add("approval_request", props, [], data_ref=True, stored={"items": refs})
+            built.summary = props["summary"]
+        elif kind == "live":
+            await run_in_threadpool(_live, principal, matter, built)
+        elif kind == "amounts":
+            props, named = await run_in_threadpool(amounts.build, principal, matter, document_ids)
+            built.add("numeric_chart", props, named)
+            built.summary = props["summary"]
+        elif kind == "parties":
+            props, named = await run_in_threadpool(parties.build, principal, matter, document_ids)
+            built.add("graph_excerpt", props, named)
+            built.summary = props["summary"]
+        elif kind in ("draft_run", "panel_run"):
+            async for e in _answer_form(principal, conv, matter, form, built):
+                yield e
         else:
             _notice(built, _SMALLTALK)
         for sc in scopes:

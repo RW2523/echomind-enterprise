@@ -66,7 +66,9 @@ export const useChatMatter = () => useContext(ChatMatterContext);
 
 export type PanelContent =
   | { kind: 'citation'; id: string; onUse?: () => void }
-  | { kind: 'side'; side: ComparisonSide; label: string };
+  | { kind: 'side'; side: ComparisonSide; label: string }
+  /** A draft written from the chat, open beside it to read and correct (each save a new version). */
+  | { kind: 'draft'; matterId: string; artifactId: string; label: string; canEdit: boolean; onSaved?: () => void };
 
 interface Panel { content: PanelContent | null; open: (c: PanelContent, opener?: HTMLElement | null) => void; close: () => void }
 const PanelContext = React.createContext<Panel>({ content: null, open: () => {}, close: () => {} });

@@ -103,6 +103,44 @@ registry: the server still chooses and validates every component; the model writ
   that surface (`backdrop-filter` makes an element the frame of fixed children) — they now render on `<body>`; a quote that
   itself contains quotation marks was shown as raw text — the parser now reads it whole.
 
+## Chat controls and the rest of the card registry (2026-11-02)
+
+The owner asked for the chat to work like other assistants, and for everything listed as missing to be built. The
+server still chooses and validates every component; the model writes only text.
+
+| Area | What was built | Status | Evidence |
+|---|---|---|---|
+| Formatted answers | Headings, bulleted and numbered lists, tables and bold, parsed into React text (`counsel/format.ts`); no HTML, links or images; a marker without a source is still dropped | **Tested** | `counsel-controls.test.tsx` (hostile link, image and markup stay words) |
+| Copy | The answer, the source list with each quote's verification, a partly supported or calculated note, to the clipboard (`counsel/copy.ts`) | **Tested** | `counsel-controls.test.tsx` |
+| Ask again, edit and resend | Another version of the turn (migration 0039 `parent_turn_id`); every shown answer stays on record; "‹ 2 / 3 ›" switches; what follows stays with its version; a follow-up is rewritten from its own path only | **Tested** | `test_law_counsel_controls.py` (versions, own path, foreign ids 404, migration backfill and refused rollback); `counsel-controls.test.tsx` |
+| Rating | Thumbs up/down, a reason and note on thumbs down; one per answer and asker (`legal_counsel_feedback`); the audit keeps the note's length only | **Tested** | `test_law_counsel_controls.py`; no screen reads ratings yet (owner decision: who reviews them) |
+| Conversations | Rename, delete (off the list; kept as the matter's work product, purge and retention still apply), search by title or question with the matching words | **Tested** | `test_law_counsel_controls.py` (`%` and `_` literal, other people's never); `counsel-controls.test.tsx` |
+| Question box | Add a document (contributors only, as a draft, from the menu or by dropping a file; asking waits until it is read); dictate where voice is on (the "Ask by voice" transcription, not kept) | **Tested** | `counsel-controls.test.tsx` (read-only member not offered; file type refused before sending; no microphone where voice is off) |
+| `checklist` | Open obligations from the register; tick done, reopen, confirm a date (after an explicit step) through the register's own change (`obligations/routes.change_obligation`), at the item's version | **Tested** | `test_law_counsel_cards.py`; `counsel-cards.test.tsx` |
+| `approval_request` | The review queue's items in the conversation's matters; approve (the person confirms they read that version) or ask for changes (a reason) through the review route's own rules (`reviews/routes.decide_review`); approving never files or sends | **Tested** | `test_law_counsel_cards.py` (gaps block a legal draft, author and readers cannot decide, replay, no filing) |
+| `guided_questions` + `document_preview` | "Draft …" asks up to three questions with defaults (template, title, instructions), then writes with the Drafting engine; the draft opens beside the chat to correct (each save a new version) and waits for a second lawyer | **Tested** | `test_law_counsel_cards.py` (answers checked against the options asked, another conversation's form refused, newest version shown) |
+| `council_summary` | "Challenge our position …" (panel on, contributors) asks the question and the specialist area, queues the panel (`panel/routes.start`); the card follows the run and shows where the perspectives differ | **Tested** | `test_law_counsel_cards.py`, `counsel-cards.test.tsx` (stops asking when done) |
+| `numeric_chart` | Amounts the documents state, read by rule; one currency per chart; never added or converted; an amount whose digits do not match its value is left out; each bar opens its sentence | **Tested** | `test_law_counsel_cards.py` (other matter excluded, no model call) |
+| `graph_excerpt` | Companies read by rule and the documents naming them ("party to" or "named in"), each edge with its sentence; roles only from the matter's records; a list view for screen readers and phones | **Tested** | `test_law_counsel_cards.py`; `counsel-cards.test.tsx` |
+| `live_transcript` | The meeting being recorded (or the latest transcript): state, consent count, latest segments; follows for ten minutes; never records, pauses or stops (that stays with the person capturing) | **Tested** | `test_law_counsel_cards.py` (deleted transcript leaves the card) |
+| Reading a card again | `GET /api/legal/counsel/components/{id}`: the owner's card, rebuilt from its records; cards drawn from changing records store references only | **Tested** | `test_law_counsel_cards.py` |
+
+Intents added (rules, no model): `tasks`, `approvals`, `live`, `amounts`, `parties`; `draft` and `deliberate` now ask
+their questions. A question about what a document says ("What deadlines does the lease set?") stays a research question.
+
+Test runs: backend full suite **1608 passed, 4 skipped** (pinned image, `--network none`); frontend **261 passed**
+(43 files); `tsc` main and strict clean.
+
+Off in the demo, so not shown there: dictation (`LEGAL_CONVERSATION`) and the review panel (`LEGAL_PANEL`).
+
+Screenshots (`chat-2026-11-02/`, fictional DEMO documents on a throwaway stack, real model): the question box, a formatted
+answer with its toolbar, asked again (versions), rating, editing, the checklist before and after a tick, approvals, the
+three questions and the draft beside the chat, amounts, parties, the meeting transcript, the panel's two questions, its
+run and its result, history search and delete, and a phone-width chart. Found while taking them and fixed: a class name
+clash that stacked the checklist, the version counter wrapping, list bullets missing, the template guess choosing
+"Engagement letter" for a letter before claim, the chat not following a card that arrives without text, and the
+document picker showing a row revision as the version.
+
 ## Commercial-readiness review (2026-10-28)
 
 Phase 0 audited security, operations and the interface read-only (three audits, baseline below); the owner then asked for

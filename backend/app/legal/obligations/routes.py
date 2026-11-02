@@ -259,7 +259,11 @@ def add_obligation(matter_id: str, inp: AddIn, request: Request):
 @router.patch("/matters/{matter_id}/obligations/{obligation_id}")
 @audited("obligation.update", object_type="obligation", object_param="obligation_id")
 def update_obligation(matter_id: str, obligation_id: str, inp: PatchIn, request: Request):
-    p = principal_of(request)
+    return change_obligation(principal_of(request), matter_id, obligation_id, inp)
+
+
+def change_obligation(p: dict, matter_id: str, obligation_id: str, inp: PatchIn) -> dict:
+    """One change to an obligation, with every check of the PATCH route (the chat's checklist calls this too)."""
     require(p, "artifacts.approve" if inp.action in ("confirm", "dismiss") else "ai.draft", matter_id)
     cur = _one(p, matter_id, obligation_id)
     if cur["version"] != inp.expected_version:

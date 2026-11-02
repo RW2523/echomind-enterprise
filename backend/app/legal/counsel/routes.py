@@ -10,9 +10,12 @@
 - `POST /counsel/conversations/{id}/turns`       ask (after a given turn, or again as another version of one); NDJSON
                                                  events (orchestrator.py); idempotent on client_request_id
 - `PUT  /counsel/turns/{id}/feedback`            the asker's rating of one answer
+- `GET  /counsel/components/{id}`                one card as its records stand now (a checklist, a draft, a panel run,
+                                                 a meeting refresh themselves from here)
 - `GET  /counsel/citations/{id}`                 the cited passage, re-authorized and re-verified (citations.py)
 - `POST /counsel/actions`                        a component action: identity, matter right, component origin,
-                                                 version (CAS) and idempotency key are all checked here
+                                                 version (CAS) and idempotency key are all checked here; resolving an
+                                                 inconsistency, ticking an obligation, deciding on a draft
 - `GET  /counsel/discrepancies?matter_id=`       potential inconsistencies the caller may see, with their state
 - `GET  /counsel/activity`                       the caller's own recent actions, and documents still being read in
                                                  their matters (the Activity destination)
@@ -154,6 +157,14 @@ def delete_conversation(conversation_id: str, request: Request):
 _TurnId = Field(default=None, pattern=r"^turn_[0-9a-f]{32}$")
 
 
+class FormIn(BaseModel):
+    """The answers to a guided form the server asked in this conversation (guided_questions)."""
+    model_config = {"extra": "forbid"}
+    component_id: str = Field(pattern=r"^cmp_[0-9a-f]{32}$")
+    values: dict[Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,31}$")],
+                 Annotated[str, StringConstraints(max_length=1000)]] = Field(default_factory=dict, max_length=3)
+
+
 class TurnIn(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
     client_request_id: Optional[str] = Field(default=None, min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
@@ -161,6 +172,7 @@ class TurnIn(BaseModel):
     focus_discrepancy_id: Optional[str] = Field(default=None, pattern=r"^dsc_[0-9a-f]{32}$")
     after_turn_id: Optional[str] = _TurnId                # the turn this question follows (default: the newest)
     retry_of: Optional[str] = _TurnId                     # ask again, or edited: another version of that turn
+    form: Optional[FormIn] = None                         # answers to a form the server asked
 
     @model_validator(mode="after")
     def _one_place(self):
@@ -214,7 +226,14 @@ async def ask(conversation_id: str, inp: TurnIn, request: Request):
             parent = t["id"] if tid == inp.after_turn_id else t["parent_turn_id"]
     if inp.retry_of:
         note(details={"chars": len(text), "documents": len(inp.document_ids), "version_of": inp.retry_of})
-    return _ndjson(orchestrator.run(p, conv, text, inp.client_request_id, inp.document_ids, inp.focus_discrepancy_id, parent))
+    form = None
+    if inp.form:                                            # a form this server asked, in this conversation, of this person
+        comp = await run_in_threadpool(store.component, inp.form.component_id, p["sub"])
+        if not comp or comp["conversation_id"] != conv["id"] or comp["type"] != "guided_questions" or comp["matter_id"] not in conv["matter_ids"]:
+            raise _not_found()
+        form = {"component": comp, "values": inp.form.values}
+        note(details={"form": (comp["props"].get("_form") or {}).get("purpose")})
+    return _ndjson(orchestrator.run(p, conv, text, inp.client_request_id, inp.document_ids, inp.focus_discrepancy_id, parent, form))
 
 
 class FeedbackIn(BaseModel):
@@ -222,6 +241,19 @@ class FeedbackIn(BaseModel):
     rating: Optional[Literal["up", "down"]]
     reason: Optional[Literal[store.FEEDBACK_REASONS]] = None
     note: Optional[str] = Field(default=None, max_length=500)
+
+
+@router.get("/components/{component_id}")
+@audited("counsel.component.read", object_type="component", object_param="component_id")
+def read_component(component_id: str, request: Request):
+    """One card of the caller's own conversation, rebuilt from its records as they may see them now."""
+    p = principal_of(request)
+    comp = store.component(component_id, p["sub"])
+    if not comp:
+        raise _not_found()
+    conv = _own_conversation(p, comp["conversation_id"])
+    note(matter_id=comp["matter_id"], details={"type": comp["type"]})
+    return JSONResponse({"component": schemas.validate_component(orchestrator.materialize(p, comp, conv["matter_id"]))}, headers=_NO_STORE)
 
 
 @router.put("/turns/{turn_id}/feedback")
@@ -275,7 +307,7 @@ def list_discrepancies(request: Request, matter_id: str, state: Literal["open", 
 # ── Actions ──────────────────────────────────────────────────────────────────────
 class ActionIn(BaseModel):
     component_id: str = Field(pattern=r"^cmp_[0-9a-f]{32}$")
-    action_id: Literal["review"]
+    action_id: Literal["review", "obligation", "decide"]
     matter_id: str = _Id
     expected_version: int = Field(ge=1)
     parameters: dict[str, Any] = Field(default_factory=dict)
@@ -288,7 +320,25 @@ class ReviewParams(BaseModel):
     note: Optional[str] = Field(default=None, max_length=1000)
 
 
-_ACTIONS = {"evidence_comparison": {"review"}}
+class ObligationParams(BaseModel):
+    model_config = {"extra": "forbid"}
+    obligation_id: str = _Id
+    action: Literal["done", "reopen", "confirm"]
+
+
+class DecideParams(BaseModel):
+    model_config = {"extra": "forbid"}
+    artifact_id: str = _Id
+    decision: Literal["approved", "changes_requested"]
+    reason: Optional[str] = Field(default=None, max_length=500)
+    read_it: bool = False                                  # the person says they read the version before approving it
+
+
+_ACTIONS = {"evidence_comparison": {"review"}, "checklist": {"obligation"}, "approval_request": {"decide"}}
+
+
+def _conflict(e: HTTPException, current: Optional[dict]) -> JSONResponse:
+    return JSONResponse({"detail": e.detail, "code": "VERSION_CONFLICT", "component": current}, status_code=409, headers=_NO_STORE)
 
 
 @router.post("/actions")
@@ -300,7 +350,9 @@ def component_action(inp: ActionIn, request: Request):
     if not comp or comp["matter_id"] != inp.matter_id:            # its own matter, also in a conversation about several
         raise _not_found()
     conv = store.conversation(comp["conversation_id"], p["sub"])
-    primary = conv["matter_id"] if conv else None
+    if not conv:                                                  # its conversation was deleted from the person's list
+        raise _not_found()
+    primary = conv["matter_id"]
     require(p, "research.query", inp.matter_id)                  # the matter is still theirs to open
     done = store.replay(p["sub"], inp.idempotency_key)            # a repeat: after the checks, and the card as it is now (F9)
     if done:
@@ -310,6 +362,10 @@ def component_action(inp: ActionIn, request: Request):
                             headers=_NO_STORE)
     if inp.action_id not in _ACTIONS.get(comp["type"], set()):
         raise HTTPException(status_code=400, detail="This card has no such action.")
+    if inp.action_id == "obligation":
+        return _obligation(p, inp, comp, primary)
+    if inp.action_id == "decide":
+        return _decide(p, inp, comp, conv, primary)
     try:
         params = ReviewParams.model_validate(inp.parameters)
     except ValidationError:
@@ -329,6 +385,60 @@ def component_action(inp: ActionIn, request: Request):
     record("discrepancy.review", "allow", principal=p, object_type="discrepancy", object_id=did, matter_id=inp.matter_id,
            details={"status": params.resolution, "previous": {"status": row["from_status"]}, "note_chars": len(params.note or "")})
     result = {"component": schemas.validate_component(orchestrator.materialize(p, comp, primary))}
+    store.remember(p["sub"], inp.idempotency_key, inp.component_id, inp.action_id, result)
+    return JSONResponse(result, headers=_NO_STORE)
+
+
+def _current(p: dict, comp: dict, primary: Optional[str]) -> dict:
+    return schemas.validate_component(orchestrator.materialize(p, comp, primary))
+
+
+def _obligation(p: dict, inp: ActionIn, comp: dict, primary: Optional[str]) -> JSONResponse:
+    """Tick done, reopen or confirm an obligation the checklist showed, through the register's own change."""
+    from ..audit.record import record
+    from . import tasks
+    try:
+        params = ObligationParams.model_validate(inp.parameters)
+    except ValidationError:
+        raise HTTPException(status_code=422, detail="Choose done, reopen or confirm.")
+    if params.obligation_id not in (comp["props"].get("obligation_ids") or []):
+        raise _not_found()                                   # only what this card showed
+    try:
+        out = tasks.change(p, inp.matter_id, params.obligation_id, params.action, inp.expected_version)
+    except HTTPException as e:
+        if e.status_code == 409:
+            return _conflict(e, _current(p, comp, primary))
+        raise
+    record("obligation.update", "allow", principal=p, object_type="obligation", object_id=params.obligation_id, matter_id=inp.matter_id,
+           details={"action": params.action, "version": out["obligation"]["version"], "mode": "chat"})
+    result = {"component": _current(p, comp, primary)}
+    store.remember(p["sub"], inp.idempotency_key, inp.component_id, inp.action_id, result)
+    return JSONResponse(result, headers=_NO_STORE)
+
+
+def _decide(p: dict, inp: ActionIn, comp: dict, conv: Optional[dict], primary: Optional[str]) -> JSONResponse:
+    """Approve, or ask for changes to, a version the approval card showed, through the review route's own checks."""
+    from ..audit.record import record
+    from . import approvals
+    try:
+        params = DecideParams.model_validate(inp.parameters)
+    except ValidationError:
+        raise HTTPException(status_code=422, detail="Choose approve or ask for changes.")
+    ref = next((r for r in comp["props"].get("items") or [] if r["artifact_id"] == params.artifact_id), None)
+    if not ref or ref["matter_id"] not in ((conv or {}).get("matter_ids") or []):
+        raise _not_found()
+    require(p, "research.query", ref["matter_id"])
+    if params.decision == "approved" and not params.read_it:
+        raise HTTPException(status_code=422, detail="Confirm that you read this version before approving it.")
+    try:
+        out = approvals.decide(p, ref, params.decision, (params.reason or "").strip() or None)
+    except HTTPException as e:
+        if e.status_code == 409:
+            return _conflict(e, _current(p, comp, primary))
+        raise
+    record("artifact.review", "allow", principal=p, object_type="ai_artifact", object_id=params.artifact_id, matter_id=ref["matter_id"],
+           details={"decision": params.decision, "kind": out["artifact"]["kind"], "version": out["artifact"]["version"], "mode": "chat"})
+    result = {"component": _current(p, comp, primary)}
     store.remember(p["sub"], inp.idempotency_key, inp.component_id, inp.action_id, result)
     return JSONResponse(result, headers=_NO_STORE)
 

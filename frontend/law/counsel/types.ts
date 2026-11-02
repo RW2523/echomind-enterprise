@@ -133,6 +133,51 @@ export interface TaskProgressProps { label: string; done: number; total: number;
 export interface NoticeProps { tone: 'info' | 'caution'; text: string }
 export interface UnavailableProps { text: string }
 
+// ── Cards added 2026-11-02 (docs/echomind-legal/03 registry): each rebuilt by the server from its records ──
+export interface ChecklistItem {
+  id: string; title: string; party?: string; when?: string; due_date?: string; status: 'proposed' | 'confirmed' | 'done' | 'dismissed';
+  overdue: boolean; owner?: string; document_title: string; clause?: string; path: string; version: number;
+}
+export interface ChecklistProps { summary: string; items: ChecklistItem[]; more: number; can_done: boolean; can_confirm: boolean; caution: string; register_path: string }
+
+export interface ApprovalItem {
+  artifact_id: string; kind: string; title: string; version: number; author: string; created_at: string; preview: string[]; gaps: number;
+  consequence: string; path: string; state: 'waiting' | 'approved' | 'changes_requested' | 'changed' | 'gone'; decided_by?: string; can_decide: boolean;
+}
+export interface ApprovalRequestProps { summary: string; items: ApprovalItem[]; more: number; caution: string }
+
+export interface GuidedOption { value: string; label: string; detail?: string }
+export interface GuidedQuestion {
+  id: string; label: string; kind: 'choice' | 'text'; options: GuidedOption[]; default?: string; required: boolean; max_length: number;
+}
+export interface GuidedQuestionsProps { purpose: 'draft' | 'panel'; title: string; intro: string; questions: GuidedQuestion[]; submit_label: string; note: string }
+
+export interface PreviewField { label: string; value: string; status: 'sourced' | 'matter' | 'system' | 'entered' | 'needs_input' }
+export interface PreviewBlock { type: 'heading' | 'paragraph'; text: string; origin: 'template' | 'written' | 'edited' }
+export interface DocumentPreviewProps {
+  artifact_id: string; title: string; template: string; version: number; status: 'draft' | 'approved' | 'superseded' | 'filed'; gaps: number;
+  sources: number; fields: PreviewField[]; blocks: PreviewBlock[]; more_blocks: number; review: string; path: string; can_edit: boolean;
+}
+
+export interface PanelIssue { issue: string; positions: { role: string; text: string }[]; disagreement: boolean }
+export interface CouncilSummaryProps {
+  review_id: string; question: string; area: string; status: 'queued' | 'running' | 'done' | 'needs_facts' | 'failed' | 'not_allowed';
+  issues: PanelIssue[]; missing_facts: string[]; approval?: string; path: string; caution: string;
+}
+
+export interface ChartBar { id: string; shown: string; value: number; document_title: string; clause?: string; source: ComparisonSide }
+export interface NumericChartProps { summary: string; unit: string; bars: ChartBar[]; more: number; other_units: string[]; caution: string }
+
+export interface GraphNode { id: string; label: string; kind: 'party' | 'document'; role?: string }
+export interface GraphEdge { id: string; source: string; target: string; label: 'party to' | 'named in'; evidence: ComparisonSide }
+export interface GraphExcerptProps { summary: string; nodes: GraphNode[]; edges: GraphEdge[]; more: number; caution: string }
+
+export interface LiveSegment { speaker?: string; text: string; at?: string }
+export interface LiveTranscriptProps {
+  meeting_id: string; title: string; state: 'recording' | 'paused' | 'not_recording'; consent: string; segments: LiveSegment[]; earlier: number;
+  path: string; caution: string;
+}
+
 interface Base { id: string; version: number; matter_id?: string }
 export type SafeComponent =
   | (Base & { type: 'source_answer'; props: SourceAnswerProps })
@@ -143,6 +188,14 @@ export type SafeComponent =
   | (Base & { type: 'task_progress'; props: TaskProgressProps })
   | (Base & { type: 'notice'; props: NoticeProps })
   | (Base & { type: 'unavailable'; props: UnavailableProps })
+  | (Base & { type: 'checklist'; data_ref: string; props: ChecklistProps })
+  | (Base & { type: 'approval_request'; data_ref: string; props: ApprovalRequestProps })
+  | (Base & { type: 'guided_questions'; props: GuidedQuestionsProps })
+  | (Base & { type: 'document_preview'; data_ref: string; props: DocumentPreviewProps })
+  | (Base & { type: 'council_summary'; data_ref: string; props: CouncilSummaryProps })
+  | (Base & { type: 'numeric_chart'; props: NumericChartProps })
+  | (Base & { type: 'graph_excerpt'; props: GraphExcerptProps })
+  | (Base & { type: 'live_transcript'; data_ref: string; props: LiveTranscriptProps })
   /** Client-side only: a component that was unknown or did not validate. Rendered without any control. */
   | (Base & { type: 'inert'; reason: string });
 
