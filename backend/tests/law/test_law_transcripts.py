@@ -416,3 +416,51 @@ def test_a_rollback_refuses_to_delete_corrections(tx):
     revise(alice, tx, seg["id"], text="Corrected text.", reason="Checked")
     with sqlite3.connect(settings.DB_PATH) as conn, pytest.raises(Exception, match="transcript correction"):
         runner.migrate_down(conn, 17)
+
+
+# ── The live line (2026-11-02, from the original EchoMind) ───────────────────────
+def test_the_words_being_said_are_shown_live_joined_but_never_stored(tx, fresh_db):
+    from app.core.config import settings
+    alice = as_user(tx, "alice")
+    tx["model"]["t"] = Scripted(["When does the initial term. ", "Of the master. ", "Services agreement end? "])
+    got = record(alice, tx, [FRAME, ("sleep", 0.3), FRAME, ("sleep", 0.3), FRAME, ("sleep", 0.3)])
+    partials = [m["text"] for m in got if m["type"] == "partial"]
+    assert partials and partials[-1] in ("When does the initial term of the master services agreement end?", "")
+    assert "When does the initial term of the master services agreement end?" in partials
+    segs = view(alice, tx)["segments"]                       # the record is what the model produced
+    assert [s["raw_text"] for s in segs] == ["When does the initial term. Of the master. Services agreement end?"]
+    assert all("partial" not in r[0] for r in q(fresh_db, "SELECT kind FROM legal_capture_marks"))
+
+
+def test_a_short_sentence_followed_by_silence_is_a_segment_at_once(tx):
+    alice = as_user(tx, "alice")
+    tx["model"]["t"] = Scripted(["Agreed. "] + [""] * 14)        # then 1.4 s of audio with nothing said
+    got = record(alice, tx, [FRAME] * 15 + [("sleep", 0.3)])
+    kinds = [m["type"] for m in got]
+    assert "segment" in kinds and kinds.index("segment") < kinds.index("stopped")
+    seg = next(m for m in got if m["type"] == "segment")
+    assert seg["text"] == "Agreed."
+
+
+def test_no_live_line_is_sent_once_consent_is_withdrawn(tx):
+    alice = as_user(tx, "alice")
+    tx["model"]["t"] = Scripted(["We will pay ", "the fee ", "by Friday "] * 5)
+    got = []
+    with alice.websocket_connect(f"{WSS}{tx['base']}/capture", headers=ORIGIN) as ws:
+        got.append(ws.receive_json())
+        ws.send_bytes(FRAME)
+        pid = tx["people"]["Petra Voss"]["id"]
+        alice.post(f"{tx['base']}/participants/{pid}/consent/withdraw", headers=csrf_headers(alice))
+        while True:
+            msg = ws.receive_json()
+            got.append(msg)
+            if msg["type"] == "stopped":
+                break
+        for _ in range(3):
+            try:
+                ws.send_bytes(FRAME)
+            except Exception:
+                break
+    after = got[[m["type"] for m in got].index("stopped"):]
+    assert not any(m["type"] == "partial" for m in after)
+    assert next(m for m in got if m["type"] == "stopped")["reason"] == "consent_withdrawn"

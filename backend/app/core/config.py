@@ -331,6 +331,10 @@ class Settings(BaseSettings):
     LEGAL_CUSTODY_BATCH_BYTES: int = int(os.getenv("LEGAL_CUSTODY_BATCH_BYTES", "160000"))       # ~5 s of 16 kHz PCM16 per custody record
     # Legal transcription (S2.4; D-017, D-040).
     LEGAL_SEGMENT_MIN_WORDS: int = int(os.getenv("LEGAL_SEGMENT_MIN_WORDS", "12"))     # a segment ends at a sentence end after this many words
+    # A sentence followed by this much silence (on the audio clock) is a segment even when short (2026-11-02).
+    LEGAL_SEGMENT_SILENCE_MS: int = int(os.getenv("LEGAL_SEGMENT_SILENCE_MS", "1200"))
+    # The live line under the transcript (never stored) is sent at most this often.
+    LEGAL_PARTIAL_INTERVAL_MS: int = int(os.getenv("LEGAL_PARTIAL_INTERVAL_MS", "250"))
     LEGAL_CAPTURE_LAG_WARN_SEC: float = float(os.getenv("LEGAL_CAPTURE_LAG_WARN_SEC", "5"))  # model this far behind: "degraded"
     LEGAL_CAPTURE_BACKLOG_SEC: float = float(os.getenv("LEGAL_CAPTURE_BACKLOG_SEC", "120"))   # audio waiting for the model beyond this: a marked gap
     LEGAL_CAPTURE_FINISH_SEC: float = float(os.getenv("LEGAL_CAPTURE_FINISH_SEC", "300"))     # at a stop, waiting audio may still be transcribed

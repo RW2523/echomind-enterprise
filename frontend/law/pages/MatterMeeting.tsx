@@ -261,6 +261,7 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
   const [note, setNote] = useState('');
   const [transcription, setTranscription] = useState<'available' | 'unavailable' | null>(null);
   const [live, setLive] = useState<Segment[]>([]);
+  const [partialText, setPartialText] = useState('');        // the words being said now (never stored)
   const [started, setStarted] = useState<number | null>(null);
   const [speaker, setSpeaker] = useState<string | null>(null);
   const [liveAlerts, setLiveAlerts] = useState<AssistAlert[]>([]);
@@ -281,11 +282,11 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
 
   const end = (message: string) => {
     mic.current?.stop(); mic.current = null;
-    setPhase('stopped'); setNote(message); setStarted(null);
+    setPhase('stopped'); setNote(message); setStarted(null); setPartialText('');
     void refresh(); void alerts.refetch();
   };
   const start = () => {
-    setNote(''); setLive([]); setPhase('connecting'); setSpeaker(null); setWarning(''); setLiveAlerts([]);
+    setNote(''); setLive([]); setPartialText(''); setPhase('connecting'); setSpeaker(null); setWarning(''); setLiveAlerts([]);
     const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const sock = new WebSocket(`${scheme}://${window.location.host}${meetingsPath(matterId)}/${encodeURIComponent(m.id)}/capture?sample_rate=16000`);
     sock.binaryType = 'arraybuffer';
@@ -304,6 +305,7 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
           stopped = true;
         }
       } else if (msg.type === 'segment') setLive((s) => [...s, msg]);
+      else if (msg.type === 'partial') setPartialText(typeof msg.text === 'string' ? msg.text : '');
       else if (msg.type === 'speaker') setSpeaker(msg.participant_id ?? null);
       else if (msg.type === 'degraded') setWarning(msg.reason === 'behind'
         ? `Transcription is ${msg.lag_s} s behind. Speech is still being received; the transcript will catch up, and this is noted in the record.`
@@ -392,7 +394,7 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
         <AlertsPanel alerts={recording ? liveAlerts : alerts.data?.alerts ?? []} assist={recording ? m.assist : alerts.data?.assist}
           telemetry={alerts.data?.telemetry} matterId={matterId} meetingId={m.id} canDecide={canCorrect} live={recording} />
       )}
-      {(live.length > 0 || (m.transcript?.length ?? 0) > 0) && (
+      {(live.length > 0 || (recording && !!partialText) || (m.transcript?.length ?? 0) > 0) && (
         <section className="lw-paper lw-sheet" aria-label="Transcript">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
             <h2 className="lw-h2" style={{ marginRight: 'auto' }}>Transcript</h2>
@@ -406,6 +408,9 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
             <TranscriptRecord matterId={matterId} meetingId={m.id} data={m.transcriptData} canCorrect={canCorrect && !recording}
               canFinalise={canCorrect && m.status === 'ended' && !recording && (m.transcript?.length ?? 0) > 0}
               live={recording ? live : undefined} />
+          )}
+          {recording && partialText && (
+            <p className="lw-live-line" data-testid="live-line"><span className="lw-meta">Now: </span>{partialText}</p>
           )}
         </section>
       )}

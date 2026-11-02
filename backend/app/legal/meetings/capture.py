@@ -59,7 +59,7 @@ from .. import policy
 from ..audit.record import record
 from ..identity import sessions
 from ..identity.principal import from_websocket, origin_allowed
-from . import consent, repo
+from . import consent, repo, stitch
 from . import transcript as transcript_mod
 
 logger = logging.getLogger(__name__)
@@ -264,7 +264,10 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
              "rx_ms": 0.0,              # audio accepted so far: the same clock, ahead of audio_ms while the model catches up
              "queued_ms": 0.0,          # audio waiting for the model
              "skipping": False,         # waiting audio passed LEGAL_CAPTURE_BACKLOG_SEC: frames are counted, not transcribed
-             "in_gap": False, "degraded": False}
+             "in_gap": False, "degraded": False,
+             "shown": "",               # the live line: the uncommitted text as the original EchoMind joins it (display only)
+             "last_piece_ms": None,     # audio clock of the last piece, for silence commits and same-breath joins
+             "partial_sent": "", "partial_at": 0.0}
     anchors: list[tuple[float, float]] = []      # (audio_ms, wall-clock seconds) at each accepted frame
     work: asyncio.Queue = asyncio.Queue()        # audio and turns, in the order received, for the model
     def roster() -> set[str]:
@@ -334,27 +337,52 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
         state["seq"] += 1
         return seg
 
+    async def partial(force: bool = False) -> None:
+        """The words heard but not yet committed, sent (rate-limited) to the person capturing; never stored, and never
+        once capture has stopped for any reason."""
+        text = state["shown"].strip()
+        now = time.monotonic()
+        if h.reason is not None or text == state["partial_sent"]:
+            return
+        if not force and text and now - state["partial_at"] < settings.LEGAL_PARTIAL_INTERVAL_MS / 1000.0:
+            return
+        state["partial_sent"], state["partial_at"] = text, now
+        await send({"type": "partial", "text": text})
+
     async def emit(pieces) -> None:
         for piece, ts in pieces:
             if not piece.strip():
                 continue
             at = int(state["base_ms"] + (ts or 0))      # on the capture's audio clock
+            same_breath = state["last_piece_ms"] is not None and 0 <= at - state["last_piece_ms"] <= stitch.SAME_BREATH_MS
+            shown, shown_piece = stitch.join(state["shown"], piece, same_breath)
+            state["shown"] = shown + shown_piece
+            state["last_piece_ms"] = at
             state["text"] += piece
             state["t0"] = at if state["t0"] is None else state["t0"]
             state["t1"] = at
             enough = len(state["text"].split()) >= settings.LEGAL_SEGMENT_MIN_WORDS
             if (enough and _SENTENCE_END.search(state["text"])) or len(state["text"]) > 400:
                 await commit()
+        await partial()
+
+    async def after_silence() -> None:
+        """A sentence followed by silence is said: commit it even when short (the original's silence commit)."""
+        last = state["last_piece_ms"]
+        if (state["text"].strip() and last is not None and _SENTENCE_END.search(state["text"])
+                and state["audio_ms"] - last >= settings.LEGAL_SEGMENT_SILENCE_MS):
+            await commit()
 
     async def commit() -> None:
         text = state["text"].strip()
         t0, t1 = state["t0"], state["t1"]
-        state["text"], state["t0"] = "", None
+        state["text"], state["t0"], state["shown"] = "", None, ""
         if not text:
             return
         seg = await asyncio.to_thread(store_segment, text, t0, t1, state["speaker"])
         if seg is not None:
             await send({"type": "segment", **seg})
+            await partial(force=True)                 # the live line starts again
             if assist is not None:
                 task = asyncio.create_task(check(seg, policy.now_iso()))
                 pending.add(task)
@@ -480,6 +508,7 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
                 if transcriber is not None:
                     try:
                         await emit(await transcriber.feed(data, sample_rate))
+                        await after_silence()
                     except Exception as e:
                         # Never silent (D-017): the transcript shows a gap here, and the person is told.
                         logger.warning("Capture: transcription error (%s)", type(e).__name__)

@@ -144,4 +144,20 @@ describe('Transcripts', () => {
     await act(async () => { FakeSocket.last!.server({ type: 'segment', id: 'n1', seq: 0, text: 'Hello.', speaker_participant_id: 'p2', wall_start: '2026-10-10T10:00:00Z' }); });
     expect(within(await screen.findByRole('list', { name: 'Transcript segments' })).getByText('Petra Voss')).toBeTruthy();
   });
+
+  it('shows the words being said now under the transcript, and clears them when the sentence is committed', async () => {
+    world(meeting({ status: 'planned' }), { ...DATA, segments: [], marks: [] });
+    renderLaw('/m/M-101/meetings/mt1');
+    await openRecordTab();
+    fireEvent.click(await screen.findByRole('button', { name: 'Start recording' }));
+    await act(async () => { FakeSocket.last!.server({ type: 'ready', capture_id: 'c1', consent_snapshot: 'abc', transcription: 'available' }); });
+    await act(async () => { FakeSocket.last!.server({ type: 'partial', text: 'When does the initial term of the master' }); });
+    expect((await screen.findByTestId('live-line')).textContent).toBe('Now: When does the initial term of the master');
+    await act(async () => { FakeSocket.last!.server({ type: 'segment', id: 'n1', seq: 0, text: 'When does the initial term end?', speaker_participant_id: 'p2', wall_start: '2026-10-10T10:00:00Z' }); });
+    await act(async () => { FakeSocket.last!.server({ type: 'partial', text: '' }); });
+    expect(screen.queryByTestId('live-line')).toBeNull();
+    await act(async () => { FakeSocket.last!.server({ type: 'partial', text: 'And the notice' }); });
+    await act(async () => { FakeSocket.last!.server({ type: 'stopped', reason: 'ended' }); });
+    expect(screen.queryByTestId('live-line')).toBeNull();
+  });
 });
