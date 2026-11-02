@@ -88,20 +88,22 @@ describe('The chat home', () => {
     expect(router.state.location.pathname).toBe('/m/M-101/meetings');
   });
 
-  it('with the conversation assistant on, the home links to it among the matter\'s pages', async () => {
+  it('with the conversation assistant on, the home offers it beside the matter\'s pages', async () => {
     localStorage.setItem('echomind.counsel.matter', 'id-M-101');
     mockApi({
       'GET /api/auth/me': () => [200, { ...me(), features: { intake: false, intake_links: false, conversation: true, panel: true } }],
       'GET /api/legal/matters': () => [200, { matters: [matter('M-101', 'MSA renewal')] }],
       'GET /api/legal/reviews': () => [200, { waiting: [], mine: [], count: 0 }],
       'GET /api/legal/counsel/conversations': () => [200, { conversations: [] }],
+      'POST /api/legal/counsel/conversations': (b) => [201, { conversation: { id: 'conv_1', matter_id: b.matter_id, title: 'New conversation' } }],
     });
     const { router } = renderLaw('/chat');
     const pages = await screen.findByRole('navigation', { name: 'This matter' });
     await waitFor(() => expect(within(pages).getAllByRole('link').map((a) => a.textContent)).toEqual(
-      ['Open M-101', 'Documents', 'Meetings', 'Ask by voice', 'Drafting']));
-    fireEvent.click(within(pages).getByRole('link', { name: 'Ask by voice' }));
-    expect(router.state.location.pathname).toBe('/m/M-101/conversation');
+      ['Open M-101', 'Documents', 'Meetings', 'Drafting']));
+    fireEvent.click(within(pages).getByRole('button', { name: 'Talk by voice' }));         // voice mode here, in a new chat
+    expect(await screen.findByRole('region', { name: 'Voice conversation' })).toBeTruthy();
+    expect(router.state.location.pathname).toBe('/chat/conv_1');
   });
 
   it('the recording status follows the real capture, not the page', async () => {

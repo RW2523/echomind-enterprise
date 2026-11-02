@@ -287,11 +287,13 @@ def opens_absent(answer: str) -> bool:
     return opens_not_stated(answer) or (bool(first) and bool(_ABSENT.search(re.sub(r"\[[^\]]*\]", " ", first[0]))))
 
 
-# Words of a question that say nothing about what is asked: question words, the documents themselves, saying.
+# Words of a question that say nothing about what is asked: question words, the documents themselves, saying, and words
+# for anyone or anything ("Can either party assign the agreement to someone else?" was declined because no document says
+# "someone" or "else", though clause 14.1 answers it: owner's voice test 2026-11-02).
 _QUESTION_NOISE = frozenset("""what when where which whose whom does did have been being with from that this these those there their
 they them under about into upon after before will would shall must should could might also only than then were your
 document documents matter source sources say says said saying state states stated mention mentioned tell give
-much many long often""".split())
+much many long often someone somebody anyone anybody everyone everybody something anything everything else""".split())
 
 
 # Words of the question missing from every cited document before "not stated" sets aside a cited fact that stands

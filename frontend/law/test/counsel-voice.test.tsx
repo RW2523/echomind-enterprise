@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { _resetCaptureForTests } from '../app/capture';
 import { INITIAL, reduce } from '../counsel/voice/useVoice';
 import { matter, me, mockApi, renderLaw } from './harness';
@@ -61,6 +61,39 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); localStorage.clear(); });
 
+describe('Read aloud', () => {
+  it('reads an answer in the server\'s voice, stops when pressed again, and says when it cannot', async () => {
+    let said: any = null;
+    let available = true;
+    (URL as any).createObjectURL = vi.fn(() => 'blob:answer');
+    (URL as any).revokeObjectURL = vi.fn();
+    const play = vi.fn(async () => undefined);
+    HTMLMediaElement.prototype.play = play;
+    HTMLMediaElement.prototype.pause = vi.fn();
+    world({ 'GET /api/legal/counsel/conversations/conv_1': () => [200, saved],
+            'POST /api/legal/matters/id-M-101/conversation/speak': (b) => { said = b; return available ? [200, { __binary: 'audio/wav' }]
+              : [503, { detail: 'Reading aloud is not available on this server.' }]; } });
+    renderLaw('/chat/conv_1');
+    const read = await screen.findByRole('button', { name: 'Read aloud' });
+    fireEvent.click(read);
+    expect(await screen.findByRole('button', { name: 'Stop reading' })).toBeTruthy();
+    expect(said).toEqual({ text: 'Delivery is due by May 15, 2026 [1].' });                 // the server removes the source marks
+    await waitFor(() => expect(play).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: 'Stop reading' }));
+    expect(await screen.findByRole('button', { name: 'Read aloud' })).toBeTruthy();
+    available = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Read aloud' }));
+    expect(await screen.findByText('Reading aloud is not available on this server.')).toBeTruthy();
+  });
+
+  it('is offered only where voice is on', async () => {
+    world({ 'GET /api/legal/counsel/conversations/conv_1': () => [200, saved] }, false);
+    renderLaw('/chat/conv_1');
+    await screen.findByRole('button', { name: 'Copy answer' });
+    expect(screen.queryByRole('button', { name: 'Read aloud' })).toBeNull();
+  });
+});
+
 describe('What the voice panel shows', () => {
   it('follows the voice service: listening, the words being heard, checking, what it says', () => {
     let v = reduce(INITIAL, { type: 'hello' });
@@ -73,13 +106,14 @@ describe('What the voice panel shows', () => {
     expect(v.holding).toBe('Let me check the documents.');
     v = reduce(v, { type: 'assistant_text_partial', text: 'Delivery is due by May 15, 2026.' });
     expect(v.saying).toBe('Delivery is due by May 15, 2026.');
+    expect(reduce(v, { type: 'turn_saved', turn_id: T1 })).toMatchObject({ heard: '', saying: '' });   // the thread shows it now
     expect(reduce(v, { type: 'error', fatal: true, where: 'stt' }).phase).toBe('error');
     expect(reduce(v, { type: 'error', where: 'tts' })).toBe(v);                 // a passing problem does not end voice
   });
 });
 
 describe('Voice mode in the chat', () => {
-  it('is offered only where voice is on, for a matter, with an empty question box', async () => {
+  it('is offered only where voice is on, with an empty question box', async () => {
     world({}, false);
     renderLaw('/chat');
     await screen.findByRole('textbox', { name: 'Ask EchoMind' });
@@ -91,6 +125,51 @@ describe('Voice mode in the chat', () => {
     expect(await screen.findByRole('button', { name: 'Talk with voice' })).toBeTruthy();
     fireEvent.change(box, { target: { value: 'typed' } });
     expect(screen.queryByRole('button', { name: 'Talk with voice' })).toBeNull();   // Send takes its place
+  });
+
+  it('without a chosen matter, asks which one first and then starts', async () => {
+    fakeAudio();
+    localStorage.removeItem('echomind.counsel.matter');
+    world({ 'GET /api/legal/matters': () => [200, { matters: [matter('M-101', 'MSA renewal', 'Alpha Holdings', { my_role: 'attorney' as any }),
+                                                           matter('M-114', 'Series B', 'Beta Ltd', { my_role: 'attorney' as any })] }] });
+    renderLaw('/chat');
+    fireEvent.click(await screen.findByRole('button', { name: 'Talk with voice' }));
+    const pick = await screen.findByRole('region', { name: 'Which matter is this about?' });
+    expect(FakeSocket.all).toHaveLength(0);
+    fireEvent.click(within(pick).getByRole('button', { name: 'M-101 · MSA renewal' }));
+    await waitFor(() => expect(FakeSocket.all.length).toBe(1));
+    expect(FakeSocket.all[0].url).toMatch(/\?matter=id-M-101&conversation=conv_1$/);
+  });
+
+  it('a matter\'s "Talk by voice" opens voice mode in a new chat about that matter', async () => {
+    fakeAudio();
+    localStorage.removeItem('echomind.counsel.matter');
+    world();
+    const { router } = renderLaw('/m/M-101/conversation');
+    expect(await screen.findByRole('region', { name: 'Voice conversation' })).toBeTruthy();
+    await waitFor(() => expect(FakeSocket.all.length).toBe(1));
+    expect(router.state.location.pathname).toBe('/chat/conv_1');
+  });
+
+  it('shows what is asked and answered in the thread as it is spoken, then the saved turn in its place', async () => {
+    fakeAudio();
+    world({ 'GET /api/legal/counsel/conversations/conv_1': () => [200, saved] });
+    renderLaw('/chat');
+    fireEvent.click(await screen.findByRole('button', { name: 'Talk with voice' }));
+    await waitFor(() => expect(FakeSocket.all.length).toBe(1));
+    const ws = FakeSocket.all[0];
+    act(() => ws.onopen?.());
+    ws.say({ type: 'hello' });
+    ws.say({ type: 'asr_final', text: 'When is delivery due?' });
+    const live = await screen.findByRole('article', { name: 'Being answered by voice' });
+    expect(live.textContent).toContain('When is delivery due?');
+    expect(live.textContent).toContain("Searching this matter's documents…");
+    ws.say({ type: 'assistant_text_partial', text: 'Delivery is due by May 15' });
+    expect(live.textContent).toContain('Delivery is due by May 15');
+    ws.say({ type: 'turn_saved', turn_id: T1, conversation_id: 'conv_1' });
+    expect(await screen.findByRole('button', { name: /Source 1: Services Agreement/ })).toBeTruthy();
+    await waitFor(() => expect(screen.queryByRole('article', { name: 'Being answered by voice' })).toBeNull());
+    expect(screen.getAllByText('When is delivery due?')).toHaveLength(1);                     // shown once, as the saved turn
   });
 
   it('starts a conversation, speaks in it, and shows each saved answer in the thread with its sources', async () => {

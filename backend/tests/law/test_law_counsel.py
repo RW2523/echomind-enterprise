@@ -177,12 +177,29 @@ def test_an_abstention_cannot_carry_sources_and_highlights_stay_inside_their_con
     ("Compare the May 12 and May 15 claims", "compare"), ("Let other case materials inform this", "other_matters"),
     ("Search across all matters for the cap", "other_matters"), ("Draft a client status update", "draft"),
     ("Challenge our preferred position", "deliberate"), ("Thanks!", "smalltalk"), ("hello", "smalltalk"),
+    ("Hello, can you hear me?", "smalltalk"), ("Thanks, that's all for now.", "smalltalk"), ("Okay, got it.", "smalltalk"),
+    ("What can you do?", "smalltalk"), ("Good morning EchoMind", "smalltalk"), ("Hello, when does the term end?", "ask_fact"),
+    ("Thanks. What is the notice period?", "ask_fact"), ("Help me draft a reply to the supplier", "draft"),
     ("Which contractual deadline applied?", "ask_fact"), ("Could these refer to different events?", "ask_fact"),
     ("What is the liability cap?", "ask_fact"), ("", "ask_fact"),
 ])
 def test_intents(text, expected):
     from app.legal.counsel import intent
     assert intent.classify(text) == expected
+
+
+def test_small_talk_gets_its_own_short_reply_without_a_search(cs):
+    alice = as_user(cs, "alice")
+    conv = new_conversation(alice, cs["mid"])
+    said = {}
+    for text in ("Hello, can you hear me?", "What can you do?", "Thanks, that's all for now.", "Okay."):
+        env = final(turn(alice, conv, text))
+        [n] = env["components"]
+        said[text] = n["props"]["text"]
+    assert said["Hello, can you hear me?"].startswith("Yes, I can hear you. Ask me about M-101:")
+    assert said["What can you do?"].startswith("I'm EchoMind Legal. I answer questions about M-101 only from its own documents")
+    assert said["Thanks, that's all for now."] == "Goodbye. This conversation is saved in your chats." and said["Okay."] == "All right."
+    assert cs["model"].stream_calls == []                               # no search, no model
 
 
 # ── Conversations are the owner's, in matters they can open ──────────────────────

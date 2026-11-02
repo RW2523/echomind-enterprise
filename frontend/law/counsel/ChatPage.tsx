@@ -7,6 +7,10 @@
  * question edited. Asking again or editing adds another version of that turn (the server keeps every answer that was
  * shown); "‹ 2 / 3 ›" moves between versions, and what follows a version stays with it. Documents can be added from the
  * question box, and questions dictated where voice is turned on.
+ *
+ * Voice is part of the chat, as in ChatGPT: "Talk with voice" (or any "Talk by voice" link in the app) opens voice mode in
+ * this conversation; what is said and answered appears in the thread as it happens and is saved as an ordinary turn. Any
+ * answer can be read aloud.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
@@ -15,9 +19,9 @@ import { keys } from '../api/queries';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowUp, AudioLines, CalendarRange, Check, ChevronLeft, ChevronRight, Columns3, Copy, ListChecks, Loader2, Lock, Paperclip, Pencil, RefreshCw, Scale,
-  ScrollText, Square, ThumbsDown, ThumbsUp, X,
+  ScrollText, Square, ThumbsDown, ThumbsUp, Volume2, X,
 } from 'lucide-react';
-import { ApiError } from '../api/client';
+import { ApiError, postForBlob } from '../api/client';
 import { useDocuments, useMatters, useObligations, useReviews } from '../api/queries';
 import type { Matter } from '../api/types';
 import { matterEntries } from '../app/nav';
@@ -26,7 +30,7 @@ import { whereAnswersComeFrom } from './where';
 import { counselApi, requestId, type StoredTurn } from './api';
 import { ActionButtons, AnswerText, ComponentView, type CardContext } from './cards';
 import { AddDocument, addDocument, Dictate, droppedFile } from './ComposerTools';
-import { plainTurn, toClipboard } from './copy';
+import { plainTurn, spokenTurn, toClipboard } from './copy';
 import VoiceStage from './voice/VoiceStage';
 import { useChatMatter, usePanel } from './context';
 import MatterPicker, { Layer, usePopover } from './MatterPicker';
@@ -71,8 +75,7 @@ function NextUp({ matter }: { matter: Matter }) {
 
 /** The matter's own pages that the home links to quietly (the rest are on the matter's tabs). */
 const MATTER_LINKS: { key: string; label: string }[] = [
-  { key: 'documents', label: 'Documents' }, { key: 'meetings', label: 'Meetings' }, { key: 'conversation', label: 'Ask by voice' },
-  { key: 'drafting', label: 'Drafting' },
+  { key: 'documents', label: 'Documents' }, { key: 'meetings', label: 'Meetings' }, { key: 'drafting', label: 'Drafting' },
 ];
 
 function useMatterLinks(matter: Matter | null): { to: string; label: string }[] {
@@ -128,6 +131,7 @@ export default function ChatPage() {
   const qc = useQueryClient();
   const matters = useMatters();
   const { matter, matterId, matters: chosen, matterIds, setMatterId, setMatterIds } = useChatMatter();
+  const me = useSession();
   // Someone with a single open matter starts with it chosen (review H1).
   const open = (matters.data ?? []).filter((m) => m.status === 'open');
   useEffect(() => { if (!matterId && matters.data && open.length === 1) setMatterId(open[0].id); }, [matterId, matters.data, open.length]);
@@ -142,6 +146,8 @@ export default function ChatPage() {
   const [pendingAsk, setPendingAsk] = useState<string | null>(null);
   const [announce, setAnnounce] = useState('');
   const [voiceConv, setVoiceConv] = useState<string | null>(null);     // the conversation voice mode is speaking in
+  const [pendingVoice, setPendingVoice] = useState(false);              // voice asked for before a matter was chosen
+  const [live, setLive] = useState<{ question: string; text: string } | null>(null);   // the spoken turn not yet saved
   const created = useRef<string | null>(null);
   const abort = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -193,7 +199,7 @@ export default function ChatPage() {
     }
     if (atBottom.current || sent.current) el.scrollIntoView({ block: 'end' });   // otherwise never pull a reader away from earlier context
     sent.current = false;
-  }, [path.length, lastText, lastShape]);
+  }, [path.length, lastText, lastShape, live?.question, live?.text]);              // a spoken turn grows the thread too
 
   const patch = useCallback((key: string, change: Partial<ChatTurn> | ((t: ChatTurn) => Partial<ChatTurn>)) => {
     setTurns((ts) => ts.map((t) => (t.key === key ? { ...t, ...(typeof change === 'function' ? change(t) : change) } : t)));
@@ -305,7 +311,8 @@ export default function ChatPage() {
     void qc.invalidateQueries({ queryKey: ['counsel', 'conversations'] });
   }, [convId, qc]);
   const startVoice = useCallback(async () => {
-    if (!matterId || busy) return;
+    if (busy) return;
+    if (!matterId) { setPendingVoice(true); return; }
     let id = convId;
     if (!id) {
       try {
@@ -321,8 +328,24 @@ export default function ChatPage() {
     setVoiceConv(id);
   }, [matterId, busy, convId, matterIds, navigate]);
   useEffect(() => {                                             // leaving the conversation (another one, a new chat) ends voice
-    if (voiceConv && convId !== voiceConv) setVoiceConv(null);
+    if (voiceConv && convId !== voiceConv) { setVoiceConv(null); setLive(null); }
   }, [convId, voiceConv]);
+  useEffect(() => {                                             // voice asked for before a matter was chosen
+    if (pendingVoice && matterId) { setPendingVoice(false); void startVoice(); }
+  }, [pendingVoice, matterId, startVoice]);
+  const voiceHanded = useRef(false);
+  useEffect(() => {                                             // "Talk by voice" from another page: voice mode in a new chat
+    const st = location.state as { voice?: unknown } | null;
+    if (voiceHanded.current || conversationId || !matterId || st?.voice !== true) return;
+    voiceHanded.current = true;
+    navigate('/chat', { replace: true, state: null });
+    void startVoice();
+  }, [location.state, conversationId, matterId, navigate, startVoice]);
+  const onLive = useCallback((next: { question: string; text: string } | null) => {
+    if (!next) return;
+    setLive((prev) => { if (prev?.question !== next.question) sent.current = true; return next; });   // just spoken: show it
+  }, []);
+  const onVoiceSaved = useCallback(() => { void reload().then(() => setLive(null)); }, [reload]);
 
   const replace = useCallback((turnKey: string) => (comp: SafeComponent) => {
     patch(turnKey, (t) => (t.envelope ? { envelope: { ...t.envelope, components: t.envelope.components.map((c) => (c.id === comp.id ? comp : c)) } } : {}));
@@ -376,7 +399,7 @@ export default function ChatPage() {
   const start = !conversationId && turns.length === 0;
   const composer = (
     <Composer value={draft} onChange={setDraft} busy={busy} onSend={() => void ask(draft)} onStop={() => abort.current?.abort()} hero={start}
-      matter={several ? null : matter} onVoice={() => void startVoice()}
+      matter={several ? null : matter} onVoice={several ? undefined : () => void startVoice()}
       placeholder={several ? `Ask across ${chosen.map((m) => m.number).join(', ')}: every source says which matter it is from…`
         : matter ? `Ask anything about ${matter.number}: its documents, dates, parties or obligations…` : 'Ask about a matter…'}
       attached={attached} onAttach={setAttached} matterId={several ? null : matterId} inputRef={input}
@@ -398,8 +421,9 @@ export default function ChatPage() {
                 : 'Choose a matter in the question box, or ask and pick one.'}</p>
             {!several && matter && <NextUp matter={matter} />}
           </div>
-          {pendingAsk && !matterId && (
-            <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId} onCancel={() => setPendingAsk(null)} />
+          {(pendingAsk || pendingVoice) && !matterId && (
+            <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId}
+              onCancel={() => { setPendingAsk(null); setPendingVoice(false); }} />
           )}
           {composer}
           <ul className="qc-starters" aria-label="Suggestions">
@@ -412,6 +436,7 @@ export default function ChatPage() {
           {links.length > 0 && (
             <nav className="qc-start-foot" aria-label="This matter">
               {links.map((l) => <Link key={l.to} to={l.to}>{l.label}</Link>)}
+              {me.features?.conversation && <button type="button" onClick={() => void startVoice()}>Talk by voice</button>}
             </nav>
           )}
         </div>
@@ -424,14 +449,24 @@ export default function ChatPage() {
                 onRetry={() => void ask(t.question, { retryOf: t })} onEdit={(text) => void ask(text, { retryOf: t })}
                 onRate={(next) => rate(t, next)} onStop={() => abort.current?.abort()} />
             ))}
+            {live && voiceConv === convId && (
+              <article className="qc-turn" style={{ display: 'grid', gap: 12 }} aria-busy="true" aria-label="Being answered by voice">
+                <div className="qc-q-row"><div className="qc-q">{live.question}</div></div>
+                <div className="qc-a">
+                  {live.text ? <AnswerText text={live.text} citations={[]} pending />
+                    : <div className="qc-progress" role="status"><span>Searching this matter's documents…</span></div>}
+                </div>
+              </article>
+            )}
           </div>
-          {pendingAsk && !matterId && (
-            <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId} onCancel={() => setPendingAsk(null)} />
+          {(pendingAsk || pendingVoice) && !matterId && (
+            <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId}
+              onCancel={() => { setPendingAsk(null); setPendingVoice(false); }} />
           )}
           <div ref={end} />
           {voiceConv && voiceConv === convId && matterId
             ? <VoiceStage matterId={matterId} matterNumber={chosen.map((m) => m.number).join(', ') || 'this matter'} conversationId={voiceConv}
-                onTurnSaved={() => void reload()} onClose={() => { setVoiceConv(null); void reload(); }} />
+                onTurnSaved={onVoiceSaved} onLive={onLive} onClose={() => { setVoiceConv(null); setLive(null); void reload(); }} />
             : composer}
         </>
       )}
@@ -462,7 +497,44 @@ const REASONS: { key: FeedbackReason; label: string }[] = [
 type Rate = (next: { rating: 'up' | 'down' | null; reason?: FeedbackReason; note?: string }) => Promise<boolean>;
 
 /** Copy, ask again, and whether the answer helped (a thumbs down may say why). */
-function TurnTools({ t, busy, onRetry, onRate }: { t: ChatTurn; busy: boolean; onRetry: () => void; onRate: Rate }) {
+/** "Read aloud": the answer in this server's voice, as voice mode says it; one answer at a time, and again to stop. */
+let reading: (() => void) | null = null;
+function ReadAloud({ matterId, text, onSay }: { matterId: string; text: string; onSay: (message: string) => void }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'playing'>('idle');
+  const stopRef = useRef<() => void>(() => {});
+  useEffect(() => () => stopRef.current(), []);
+  const play = async () => {
+    if (state !== 'idle') { stopRef.current(); return; }
+    reading?.();
+    let player: HTMLAudioElement | null = null;
+    let url = '';
+    const stop = () => { player?.pause(); if (url) URL.revokeObjectURL(url); player = null; url = ''; setState('idle'); if (reading === stop) reading = null; };
+    stopRef.current = stop;
+    reading = stop;
+    setState('loading');
+    try {
+      const wav = await postForBlob(`/api/legal/matters/${encodeURIComponent(matterId)}/conversation/speak`, { text });
+      if (reading !== stop || typeof URL.createObjectURL !== 'function') { stop(); return; }
+      url = URL.createObjectURL(wav);
+      player = new Audio(url);
+      player.onended = stop;
+      setState('playing');
+      await player.play();
+    } catch (err) {
+      stop();
+      onSay(err instanceof ApiError ? err.message : 'The answer could not be read aloud.');
+    }
+  };
+  return (
+    <button type="button" className="qc-icon-btn" onClick={() => void play()} aria-pressed={state !== 'idle'}
+      aria-label={state === 'idle' ? 'Read aloud' : 'Stop reading'} title={state === 'idle' ? 'Read aloud' : 'Stop reading'}>
+      {state === 'loading' ? <Loader2 aria-hidden className="qc-spin" /> : state === 'playing' ? <Square aria-hidden /> : <Volume2 aria-hidden />}
+    </button>
+  );
+}
+
+function TurnTools({ t, busy, onRetry, onRate, matterId }: { t: ChatTurn; busy: boolean; onRetry: () => void; onRate: Rate; matterId: string }) {
+  const me = useSession();
   const [copied, setCopied] = useState<boolean | null>(null);
   const [asking, setAsking] = useState(false);
   const [reason, setReason] = useState<FeedbackReason | null>(null);
@@ -496,6 +568,9 @@ function TurnTools({ t, busy, onRetry, onRate }: { t: ChatTurn; busy: boolean; o
         <button type="button" className="qc-icon-btn" onClick={() => void copy()} aria-label={copied ? 'Copied' : 'Copy answer'} title="Copy, with its sources">
           {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
         </button>
+        {me.features?.conversation && matterId && spokenTurn(t.envelope, t.text).trim() && (
+          <ReadAloud matterId={matterId} text={spokenTurn(t.envelope, t.text).slice(0, 20000)} onSay={setSaid} />
+        )}
         <button type="button" className="qc-icon-btn" onClick={onRetry} disabled={busy} aria-label="Ask again"
           title="Ask again (this answer is kept as a version)"><RefreshCw aria-hidden /></button>
         {t.id && <>
@@ -591,7 +666,7 @@ function TurnView({ t, ctx, busy, versions, onChoose, onRetry, onEdit, onRate, o
         {t.status === 'streaming' && t.text && !t.envelope && <AnswerText text={t.text} citations={[]} pending />}
         {comps.map((c) => <ComponentView key={c.id} comp={c} ctx={ctx} />)}
         {t.envelope && <ActionButtons actions={t.envelope.suggested_actions} ctx={ctx} />}
-        {done && <TurnTools t={t} busy={busy} onRetry={onRetry} onRate={onRate} />}
+        {done && <TurnTools t={t} busy={busy} onRetry={onRetry} onRate={onRate} matterId={ctx.matterId} />}
         {t.status === 'failed' && (
           <div className="qc-actions"><p className="qc-error" role="alert" style={{ margin: 0 }}>{t.error}</p>
             <button type="button" className="qc-btn" onClick={onRetry} disabled={busy}>Try again</button></div>
@@ -730,7 +805,7 @@ function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached
               onText={(t) => { onChange(value.trim() ? `${value.trimEnd()} ${t}` : t); ref.current?.focus(); }} />}
           </div>
           {where.chip && <span className="qc-private qc-hide-small" data-external={where.external || undefined}><Lock aria-hidden />{where.chip}</span>}
-          {canDictate && onVoice && !value.trim() && !busy && (
+          {!!me.features?.conversation && onVoice && !value.trim() && !busy && (
             <button type="button" className="qc-send qc-voice-start" onClick={onVoice} aria-label="Talk with voice"
               title="Voice: speak and hear answers from this matter's documents"><AudioLines aria-hidden /></button>
           )}

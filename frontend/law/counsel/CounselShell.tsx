@@ -10,14 +10,14 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity, Briefcase, ChevronDown, FilePen, KeyRound, Landmark, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
-  Moon, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun,
+  Moon, MoreHorizontal, Palette, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useReviews } from '../api/queries';
 import { useCapturing } from '../app/capture';
 import { MatterProvider, useCurrentMatter } from '../app/matter';
 import { firmEntries, initials, matterEntries } from '../app/nav';
-import { setThemeMode } from '../app/preferences';
+import { getPalette, setPalette, setThemeMode } from '../app/preferences';
 import { hasFirmRole, useSession } from '../app/session';
 import { whereAnswersComeFrom } from './where';
 import { isMac, PaletteProvider, useOpenPalette } from '../ui/Palette';
@@ -72,6 +72,7 @@ function ProfileMenu() {
   const navigate = useNavigate();
   const { open, setOpen, button, pop, style } = usePopover();
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'dark');
+  const [palette, setPaletteState] = useState(getPalette);
   const firm = firmEntries(me).filter((e) => !['chat', 'matters', 'drafts'].includes(e.key));
   const signOut = async () => {
     try { await api.post('/api/auth/logout'); } finally { qc.clear(); navigate('/signin', { replace: true }); }
@@ -92,6 +93,10 @@ function ProfileMenu() {
           <button type="button" role="menuitem" className="qc-pop-item" onClick={() => go('/account/security')}><KeyRound aria-hidden />Security</button>
           <button type="button" role="menuitem" className="qc-pop-item" onClick={() => { setThemeMode(dark ? 'light' : 'dark'); setDark(!dark); }}>
             {dark ? <Sun aria-hidden /> : <Moon aria-hidden />}{dark ? 'Light appearance' : 'Dark appearance'}
+          </button>
+          <button type="button" role="menuitem" className="qc-pop-item"
+            onClick={() => { const next = palette === 'walnut' ? 'classic' : 'walnut'; setPalette(next); setPaletteState(next); }}>
+            <Palette aria-hidden />{palette === 'walnut' ? 'Navy colours' : 'Walnut and gold colours'}
           </button>
           {firm.length > 0 && <><div className="qc-pop-sep" /><div className="qc-pop-label">Firm</div></>}
           {firm.map((e) => (

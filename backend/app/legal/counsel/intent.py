@@ -24,6 +24,7 @@ verified quotes, or abstains.
 from __future__ import annotations
 
 import re
+from typing import Optional
 
 INTENTS = ("ask_fact", "compare", "inspect_case", "chronology", "cases_overview", "other_matters", "documents", "draft", "deliberate",
            "smalltalk", "approvals", "live", "amounts", "parties", "tasks")
@@ -57,8 +58,44 @@ _DOCUMENTS = re.compile(
     r"|how\s+many\s+documents\s+(?:are|do|does|have|has)\b(?![^?]*\b(?:mention|say|state|refer)\w*))", re.I)
 _DRAFT = re.compile(r"^\s*(?:please\s+|can\s+you\s+|could\s+you\s+)?(?:draft|write|prepare|compose)\b"
                     r"|\b(?:draft|write|prepare)\s+(?:a|an|the|me\s+a)\s+(?:\w+\s+){0,3}(?:letter|update|memo|email|reply|notice|agreement|contract)\b", re.I)
-_SMALLTALK = re.compile(r"^\s*(?:hi|hello|hey|thanks|thank\s+you|thx|cheers|ok(?:ay)?|good\s+(?:morning|afternoon|evening))"
-                        r"(?:\s+(?:there|again|so\s+much|echomind))?\s*[!.?]*\s*$", re.I)
+# Small talk, spoken or typed: every part of what was said is social ("Hello, can you hear me?", "Thanks, that's all for
+# now."); a question in any part ("Hello, when does the term end?") goes to the documents. The kind picks the reply.
+_SOCIAL = (
+    ("closing", r"(?:that'?s|that\s+is|that'?ll\s+be|that\s+will\s+be)\s+(?:all|it|everything)(?:\s+for\s+(?:now|today))?"
+                r"|(?:good\s*)?bye(?:\s+(?:now|then|for\s+now))?|see\s+you(?:\s+(?:later|soon|tomorrow))?"
+                r"|talk\s+(?:to\s+you\s+)?(?:later|soon)|nothing\s+else|(?:we'?re|i'?m|we\s+are|i\s+am)\s+done(?:\s+for\s+(?:now|today))?"
+                r"|no,?\s+(?:thanks|thank\s+you)|no,?\s+that'?s\s+(?:all|it)"),
+    ("identity", r"who\s+are\s+you|what\s+are\s+you|what\s+(?:can|do)\s+you\s+do|what\s+can\s+i\s+ask(?:\s+you)?"
+                 r"|how\s+(?:does\s+this|do\s+you)\s+work|help(?:\s+me)?"),
+    ("check", r"(?:can|do)\s+you\s+hear\s+me(?:\s+(?:ok(?:ay)?|now|clearly|well))?|are\s+you\s+(?:there|listening|ready|on)"
+              r"|is\s+(?:this|it)\s+(?:working|on)|testing(?:\s+(?:one\s+two(?:\s+three)?|1\s*2(?:\s*3)?))?"),
+    ("greeting", r"hi|hello|hey|hiya|good\s+(?:morning|afternoon|evening|day)|how\s+are\s+you(?:\s+(?:doing|today))?"
+                 r"|how'?s\s+it\s+going"),
+    ("thanks", r"thanks?(?:\s+(?:you|a\s+lot|again))?(?:\s+(?:so|very)\s+much)?|thank\s+you(?:\s+(?:so|very)\s+much)?(?:\s+again)?"
+               r"|thx|cheers|much\s+appreciated|(?:that'?s\s+)?(?:very\s+)?helpful"),
+    ("ack", r"ok(?:ay)?|got\s+it|understood|alright|all\s+right|sure|fine|right|great|perfect|lovely|excellent|brilliant|noted"
+            r"|(?:that'?s\s+)?(?:great|perfect|fine)"),
+)
+_SOCIAL_RE = [(k, re.compile(rf"^(?:(?:oh|well|um+|uh+|yes|yeah|so|and|ok(?:ay)?)\s+)?(?:{p})(?:\s+(?:there|again|echomind|echo\s+mind))?$", re.I))
+              for k, p in _SOCIAL]
+_SOCIAL_ORDER = ("closing", "identity", "check", "greeting", "thanks", "ack")
+
+
+def social(text: str) -> Optional[str]:
+    """The kind of small talk when every part of `text` is social, else None."""
+    t = " ".join((text or "").split())
+    if not t or len(t.split()) > 16:
+        return None
+    kinds = set()
+    for part in re.split(r"\s*[,.!?;:\u2014\u2013]+\s*", t):
+        part = part.strip(" '\"").replace("\u2019", "'")
+        if not part:
+            continue
+        kind = next((k for k, rx in _SOCIAL_RE if rx.match(part)), None)
+        if kind is None:
+            return None
+        kinds.add(kind)
+    return next((k for k in _SOCIAL_ORDER if k in kinds), None)
 _CHRONOLOGY = re.compile(r"\b(?:chronology|chronological|timeline|time\s+line|sequence\s+of\s+events|order\s+of\s+events"
                          r"|what\s+happened\s+when)\b", re.I)
 _APPROVALS = re.compile(
@@ -92,7 +129,7 @@ def classify(text: str) -> str:
     t = " ".join((text or "").split())
     if not t:
         return "ask_fact"
-    if _SMALLTALK.match(t):
+    if social(t):
         return "smalltalk"
     if _CASES.search(t):
         return "cases_overview"

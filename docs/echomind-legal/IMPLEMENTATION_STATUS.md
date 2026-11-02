@@ -184,6 +184,37 @@ in `meetings-2026-11-02/`. Still as before: the recogniser's stray full stops ca
 once it passes 12 words (the live line shows it whole); names it mishears ("Harrogate") are fixed with the matter
 vocabulary suggestions.
 
+## The conversation assistant is the chat, and the walnut-and-gold palette (2026-11-02)
+
+The owner's next request: the conversation assistant tied to the chat as in ChatGPT, answering properly, and a brown, gold
+and black look to try. Checked first with a spoken eight-question conversation on the private copy (fictional data, real
+models), which found what is fixed below.
+
+| Area | What was built | Status | Evidence |
+|---|---|---|---|
+| One assistant | Every "talk" entry — the matter's tab (now "Talk by voice"), the home tile and command palette, the chat home's link, the old `/m/…/conversation` address — opens voice mode in a new chat about that matter; the separate push-to-talk page is gone. The voice button is offered without a chosen matter and asks which one first | **Tested** | `counsel-voice.test.tsx`, `navigation.test.tsx`, `counsel.test.tsx` |
+| Live in the thread | While voice is on, the spoken question and the answer as it is spoken appear in the conversation at once; the saved turn (sources, copy, rating) takes their place. The voice panel keeps the orb, the state and the words being heard | **Tested** | `counsel-voice.test.tsx` |
+| Read aloud | Every answer has "Read aloud" (where voice is on), said as voice mode says it — the answer without its source marks, "partly supported" when so, calculated dates as calculated, a card's own summary — and again to stop | **Tested** | `counsel-voice.test.tsx` |
+| Small talk | "Hello, can you hear me?" was answered "The documents in this matter do not answer that." Now any utterance made only of greetings, checks, thanks, acknowledgements, goodbyes or "what can you do" gets a short reply with no search and no model; a question in any part still goes to the documents; spoken without "the details are on your screen" | **Tested** | `test_law_counsel.py` (intents table, replies, no model call); voice tests |
+| Declined for words like "someone else" | "Can either party assign the agreement to someone else?" was declined because no document says "someone" or "else", though clause 14.1 answers it. Words for anyone or anything (someone, anyone, something, else…) no longer count as missing words of the question; "Can someone else chair the board?" is still declined on "chair" and "board" | **Tested** | `test_law_evidence.py`; spoken: now answered from cl. 14.1 |
+| Voice says what the chat shows | Calculated dates as a sentence ("the current term ends on 1 March 2029, and the last day to give notice of non-renewal is 1 December 2028", still introduced as calculated, not stated); after a partly supported answer, "Part of that has no verified source in the documents; it is marked in the chat"; when the server sets aside an answer whose paragraphs were already said, "On checking, that is not given as the answer" and its reason (not when what was said already declined) | **Tested** | voice tests (162 passed) |
+| Walnut and gold | A second token set in `counsel.css` (black rail, parchment and paper, brown actions, gold for the current place and evidence), default; "Navy colours" in the profile menu switches back, kept per browser; the few colours written in place now read tokens. DESIGN.md updated | **Tested** | WCAG AA pairs in the `counsel.css` header; screenshots |
+
+Tried and withdrawn: dropping an opening "the documents do not address…" when the next, cited sentence seemed to answer.
+It removed true qualifiers ("The documents do not specify a penalty. However, they state delivery is due by May 15 [1]"
+would have read as if the date answered the penalty question), so research's own rules stay in charge of such openings.
+
+**Spoken end to end on the private copy** (Piper-spoken fictional questions into Chromium's microphone, real models, CPU
+speech recognition): greetings, "What can you do?", "What is waiting for my approval?" and goodbyes answered in 0.3–0.6 s
+after the words were heard, with no hold phrase; document questions answered with their sources in about 4–8 s (term end
+with calculated dates, payment terms across two agreements, parties, assignment from cl. 14.1); a late-payment "penalty"
+the documents do not provide was declined aloud and in the chat alike; the weather was declined. Each spoken question and
+its answer appeared in the thread as they were said. Still to know: the recogniser sometimes hears "assign" as "a sign"
+(the matter vocabulary used for meetings is not yet applied to voice mode), and a lone one-word "Hello." can be too short
+to be taken as speech. Screenshots in `palette-2026-11-02/`. Tests: backend **1631 passed, 4 skipped** (all of
+`backend/tests`, `--network none`); voice service **162 passed**; frontend **266 passed**; `tsc` main and strict clean.
+
+
 ## Review of the rest of the app (2026-11-02)
 
 The last part of the same request: every main page opened at desktop (1360 px), phone (390 px) and dark, on the private

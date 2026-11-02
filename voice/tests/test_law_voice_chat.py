@@ -20,6 +20,25 @@ def test_a_question_is_a_turn_of_the_chat_conversation():
     assert body["text"] == "When is delivery due?" and len(body["client_request_id"]) == 24 and set(body) == {"text", "client_request_id"}
 
 
+def test_an_answer_set_aside_after_it_was_said_is_withdrawn_aloud():
+    from app.session import law_withdrawn_speech
+    declined = {"summary": "No source found.", "components": [{"type": "source_answer", "props": {"state": "abstained",
+                "absence": "The documents do not say whether it may be assigned to anyone."}}]}
+    assert law_withdrawn_speech(declined) == ("On checking, that is not given as the answer. The documents do not say whether "
+                                              "it may be assigned to anyone.")
+    assert law_withdrawn_speech({"components": [{"type": "source_answer", "props": {"state": "answered"}}]}) == ""
+    assert law_withdrawn_speech(declined, "The documents in this matter do not answer that.") == ""     # already declined aloud
+    assert law_withdrawn_speech(declined, "The documents do not say whether it may be assigned to anyone. They cover fees.") == ""
+
+
+def test_an_answer_not_fully_supported_says_so_as_the_chat_does():
+    from app.session import law_support_speech
+    said = lambda state: law_support_speech({"components": [{"type": "source_answer", "props": {"state": state}}]})
+    assert said("partial") == "Part of that has no verified source in the documents; it is marked in the chat."
+    assert said("unverified") == "That could not be matched to the documents' own words, so it is not verified."
+    assert said("answered") == "" and law_support_speech(None) == ""
+
+
 def test_what_is_said_for_a_card_or_a_decline_is_the_servers_own_wording():
     from app.session import law_card_speech
     decline = {"summary": "No source found.", "components": [{"type": "source_answer", "props": {"state": "abstained",
@@ -30,6 +49,9 @@ def test_what_is_said_for_a_card_or_a_decline_is_the_servers_own_wording():
     assert law_card_speech({"summary": "14 open obligations in M-101.", "components": [{"type": "checklist", "props": {}}]}) == \
         "14 open obligations in M-101. The details are on your screen."
     assert law_card_speech(None) == "The answer is on your screen."
+    hello = {"summary": "Hello. Ask me about M-101: …", "components": [{"type": "notice", "props": {
+        "tone": "info", "text": "Hello. Ask me about M-101: what a clause says, or “What matters today?”."}}]}
+    assert law_card_speech(hello) == "Hello. Ask me about M-101: what a clause says, or What matters today?."   # no "on your screen"
 
 
 class _Resp:
@@ -195,8 +217,8 @@ def test_calculated_dates_are_said_as_calculated(monkeypatch):
         "document_title": "Master Services Agreement", "derived": [{"label": "Current term ends", "display": "1 March 2029"},
                                                               {"label": "Last day to give notice of non-renewal", "display": "1 December 2028"},
                                                               {"label": "If no notice is given, the next term", "display": "x"}]}}}]}
-    assert law_calculation_speech(env) == ("Calculated from Master Services Agreement, not stated in it: current term ends: 1 March 2029; "
-                                           "last day to give notice of non-renewal: 1 December 2028.")
+    assert law_calculation_speech(env) == ("Calculated from Master Services Agreement, not stated in it: the current term ends on "
+                                           "1 March 2029, and the last day to give notice of non-renewal is 1 December 2028.")
     assert law_calculation_speech({"components": [{"type": "source_answer", "props": {"state": "answered"}}]}) == ""
     s, calls, sent, spoken = _session(monkeypatch, [_Resp(_lines(
         ("turn.started", {"turn_id": "turn_9"}), ("answer.delta", {"text": "The term is 36 months [1]."}),

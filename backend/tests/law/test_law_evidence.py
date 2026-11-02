@@ -583,6 +583,10 @@ def test_the_words_asked_that_no_cited_passage_holds():
     assert prompt.missing_terms("When did Jonas Ekberg say the chiller was repaired?", [witness]) == ["jonas", "ekberg", "repaired"]
     assert prompt.missing_terms("When did the chiller alarm sound?", [witness]) == []
     assert prompt.missing_terms("Does the MSA contain a non-compete clause?", ["Mutual Non-Disclosure Agreement"]) == ["contain", "compete", "clause"]
+    # words for anyone or anything say nothing about what is asked (owner's voice test 2026-11-02)
+    assert prompt.missing_terms("Can either party assign the agreement to someone else?",
+                                ["Neither party may assign this Agreement without the prior written consent of the other party"]) == []
+    assert prompt.missing_terms("Can someone else chair the board?", ["Thomas Reyes is General Counsel"]) == ["chair", "board"]
 
 
 def test_a_decline_after_what_the_documents_do_say_or_with_its_own_citation_is_an_abstention(ev):

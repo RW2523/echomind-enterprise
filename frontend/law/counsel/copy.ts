@@ -110,6 +110,27 @@ export function plainTurn(question: string, envelope: Envelope | undefined, stre
   return body.trim() ? body.trim() : question;
 }
 
+/** What "Read aloud" says for a turn, as voice mode says it: the answer (the server removes its source marks), how well it is
+ *  supported when not fully, dates calculated rather than stated, and for a card the server's own summary of it. */
+export function spokenTurn(envelope: Envelope | undefined, streamed: string): string {
+  if (!envelope) return streamed;
+  const answer = envelope.components.find((c) => c.type === 'source_answer');
+  if (answer && answer.type === 'source_answer') {
+    const p = answer.props;
+    if (p.state === 'abstained') return p.absence ?? 'The documents in this matter do not answer that.';
+    const out = [p.answer];
+    const state = stateLine(p);
+    if (state) out.push(state);
+    if (p.calculation?.derived.length) {
+      out.push(`Calculated, not stated in ${p.calculation.document_title}: ${p.calculation.derived.map((d) => `${d.label}, ${d.display}`).join('; ')}.`);
+    }
+    return out.join('\n\n');
+  }
+  const notices = envelope.components.filter((c) => c.type === 'notice' || c.type === 'unavailable');
+  if (notices.length && notices.length === envelope.components.length) return notices.map(plainComponent).join(' ');
+  return envelope.summary ? `${envelope.summary} The details are on your screen.` : '';
+}
+
 /** Into the clipboard; true when it worked. The fallback serves pages opened without a secure context. */
 export async function toClipboard(text: string): Promise<boolean> {
   try {

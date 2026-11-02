@@ -35,6 +35,7 @@ export function reduce(view: VoiceView, msg: Msg): VoiceView {
     case 'partial_transcript': return { ...view, partial: str(msg.text), phase: view.phase === 'speaking' ? view.phase : 'hearing' };
     case 'asr_final': return { ...view, heard: str(msg.text), partial: '', saying: '', holding: '', phase: 'thinking' };
     case 'assistant_text_partial': case 'assistant_text': return { ...view, saying: str(msg.text) || view.saying };
+    case 'turn_saved': return { ...view, heard: '', saying: '', holding: '' };       // the saved turn is in the thread now
     case 'error':
       return msg.fatal ? { ...view, phase: 'error', error: 'Voice stopped: the speech service had a problem. Start voice again in a moment.' } : view;
     case 'event':

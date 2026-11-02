@@ -10,8 +10,9 @@ the Law pages the shell hosts.
    there to impress.
 2. **One dominant action per view.** On the chat home it is the question box; on a matter page, the page's own task.
    Specialist tools stay reachable on the matter's tabs, never all at once on the home.
-3. **Evidence is the signature.** Gold is used for one job only: citation chips and the highlighted words of a source.
-   Wherever gold appears, a reader can open the exact passage.
+3. **Evidence is the signature.** In an answer, gold is used for one job only: citation chips and the highlighted words of
+   a source; wherever gold appears there, a reader can open the exact passage. Outside answers, the walnut palette also uses
+   gold for where you are (the current rail item and matter tab) and the brand mark — never for a button or a status.
 4. **Say what is known.** Answer states (supported, partly supported, not verified, no source), review states (draft,
    pending review, approved) and potential inconsistencies are always shown in words, never as scores or percentages.
 5. **Familiar controls.** Standard buttons, tabs, inputs, lists and sortable tables. No custom metaphors.
@@ -26,6 +27,28 @@ the Law pages the shell hosts.
 - Firm and account pages (Templates, Playbooks, Time, administration, Security) live in the profile menu.
 
 ## Tokens
+
+Two palettes share every token name (`counsel.css`); the profile menu switches between them and the choice is kept per
+browser (`echomind.law.palette`).
+
+**Walnut and gold** (default since 2026-11-02, the owner's brown/gold/black request): a black rail, warm parchment and
+paper, brown for actions, gold for the current place and for evidence.
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| canvas | `#F5F0E8` | `#110E0B` | page ground |
+| paper | `#FFFCF7` | `#1A1612` | cards, panels, header |
+| ink / ink-2 / ink-3 | `#231912` / `#4A3B2E` / `#6B5A4A` | `#F1E8DA` / `#D3C6B3` / `#AC9D8C` | text, secondary, muted |
+| rule | `#E6DCCC` | `#2F2821` | 1px borders and dividers |
+| accent | `#6B4A1E` (brown, white text) | `#CFAA66` (gold, black text) | primary actions, focus, selection |
+| tab-line / rail active | `#9C7536` / `#E2C27F` on `#14100C` | `#CFAA66` / `#E2C27F` | the current tab and rail item |
+| gold (evidence) | `#B08D57`, text `#7A5A1E` | `#D9B776`, text `#E2C68F` | citations and highlighted source words |
+| rail | `#14100C` | `#0B0907` | the navigation rail |
+
+Contrast (WCAG AA): ink on paper 16.8:1, muted on canvas 5.8:1, accent with white 8.0:1, evidence text 6.2:1, rail text
+10.5:1; dark muted 6.8:1, dark accent 8.8:1.
+
+**Navy** (the palette before 2026-11-02):
 
 | Token | Light | Dark | Use |
 |---|---|---|---|

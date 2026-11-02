@@ -172,8 +172,44 @@ def law_card_speech(envelope: Optional[dict]) -> str:
         p = c.get("props") or {}
         if c.get("type") == "source_answer" and p.get("state") == "abstained":
             return str(p.get("absence") or "The documents in this matter do not answer that.")
+    if comps and all(c.get("type") == "notice" for c in comps):       # a plain reply (small talk, "not turned on"): said as it is
+        said = " ".join(str((c.get("props") or {}).get("text") or "") for c in comps).strip()
+        if said:
+            return said.replace("“", "").replace("”", "")
     summary = str((envelope or {}).get("summary") or "").strip()
     return f"{summary} The details are on your screen." if summary else "The answer is on your screen."
+
+
+def law_withdrawn_speech(envelope: Optional[dict], said: str = "") -> str:
+    """Paragraphs already said, then the server set the answer aside (its checks run on the whole answer): say so, in the
+    server's own words, so what was heard matches the chat, which shows no answer — unless what was said already declined."""
+    for c in (envelope or {}).get("components") or []:
+        if c.get("type") == "source_answer" and (c.get("props") or {}).get("state") == "abstained":
+            decline = law_card_speech(envelope)
+            if "do not answer that" in said.lower() or decline.lower().rstrip(".") in said.lower():
+                return ""
+            return f"On checking, that is not given as the answer. {decline}"
+    return ""
+
+
+def law_support_speech(envelope: Optional[dict]) -> str:
+    """What the chat shows above an answer that is not fully supported, said after it: the paragraphs are released as
+    research writes them, and only the whole answer tells which sentences have no verified source."""
+    for c in (envelope or {}).get("components") or []:
+        state = (c.get("props") or {}).get("state") if c.get("type") == "source_answer" else None
+        if state == "partial":
+            return "Part of that has no verified source in the documents; it is marked in the chat."
+        if state == "unverified":
+            return "That could not be matched to the documents' own words, so it is not verified."
+    return ""
+
+
+# The server's calculated dates, said as a sentence: "the current term ends on 1 March 2029".
+_LAW_DERIVED_SPEECH = {
+    "current term ends": "the current term ends on {d}",
+    "last day to give notice of non-renewal": "the last day to give notice of non-renewal is {d}",
+    "if no notice is given, the next term": "if no notice is given, the next term runs from {d}",
+}
 
 
 def law_calculation_speech(envelope: Optional[dict]) -> str:
@@ -182,7 +218,8 @@ def law_calculation_speech(envelope: Optional[dict]) -> str:
         calc = (c.get("props") or {}).get("calculation") if c.get("type") == "source_answer" else None
         derived = [d for d in (calc or {}).get("derived") or [] if d.get("label") and d.get("display")][:2]
         if derived:
-            said = "; ".join(f"{d['label'].lower()}: {d['display']}" for d in derived)
+            parts = [_LAW_DERIVED_SPEECH.get(d["label"].lower(), "{l}: {d}").format(l=d["label"].lower(), d=d["display"]) for d in derived]
+            said = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + ", and " + parts[-1]
             return f"Calculated from {calc.get('document_title') or 'the document'}, not stated in it: {said}."
     return ""
 
@@ -1725,10 +1762,12 @@ class OmniSessionA:
                         assistant_text = said
                         phrase_buf += said
                     else:
-                        calc = law_calculation_speech(item["__final__"])
-                        if calc:
-                            assistant_text += " " + calc
-                            phrase_buf += " " + calc
+                        final_env = item["__final__"]
+                        extra = law_withdrawn_speech(final_env, assistant_text) or " ".join(
+                            x for x in (law_calculation_speech(final_env), law_support_speech(final_env)) if x)
+                        if extra:
+                            assistant_text += " " + extra
+                            phrase_buf += " " + extra
                     continue
 
                 if t_first_chunk is None:

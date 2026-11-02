@@ -28,7 +28,7 @@ import MatterActivity from '../pages/MatterActivity';
 import MatterDocuments from '../pages/MatterDocuments';
 import DocumentReader from '../pages/DocumentReader';
 import MatterResearch from '../pages/MatterResearch';
-import MatterConversation from '../pages/MatterConversation';
+import TalkByVoice from '../pages/TalkByVoice';
 import MatterCompare from '../pages/MatterCompare';
 import MatterMeetings from '../pages/MatterMeetings';
 import ResearchNote from '../pages/ResearchNote';
@@ -105,7 +105,7 @@ export const lawRoutes = [
               { path: 'documents/:docId/translate', element: <DocumentTranslate /> },
               { path: 'redlines/:artifactId', element: <RedlinePage /> },
               { path: 'research', element: <MatterResearch /> },
-              { path: 'conversation', element: <MatterConversation /> },
+              { path: 'conversation', element: <TalkByVoice /> },          // voice mode in the chat
               { path: 'compare', element: <MatterCompare /> },
               { path: 'meetings', element: <MatterMeetings /> },
               { path: 'meetings/:meetingId', element: <MatterMeeting /> },

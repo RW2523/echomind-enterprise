@@ -16,7 +16,9 @@ function world(who: Me = withFeatures(['attorney'])) {
       by: 'bob', at: '2026-10-11T10:00:00Z', path: '/m/M-101/notes/n1' }], mine: [], count: 1 }],
     'GET /api/legal/matters/id-M-101/research': () => [200, { turns: [] }],
     'GET /api/legal/matters/id-M-301/research': () => [200, { turns: [] }],
-    'GET /api/legal/matters/id-M-301/conversation': () => [200, {}],
+    'GET /api/legal/counsel/conversations': () => [200, { conversations: [] }],
+    'POST /api/legal/counsel/conversations': (b) => [201, { conversation: { id: 'conv_1', matter_id: b.matter_id, title: 'New conversation' } }],
+    'GET /api/legal/counsel/conversations/conv_1': () => [200, { conversation: { id: 'conv_1', matter_id: 'id-M-301', title: 'New conversation' }, turns: [] }],
     'GET /api/legal/matters/id-M-101/parties': () => [200, { parties: [] }],
   });
 }
@@ -49,7 +51,7 @@ describe('Home, the command palette and the matter tools (D-065)', () => {
     fireEvent.change(input, { target: { value: 'northwind' } });
     expect(within(palette).getAllByRole('option').map((o) => o.textContent)).toEqual([expect.stringContaining('M-301 · Northwind v Calder Freight')]);
     fireEvent.keyDown(input, { key: 'Enter' });
-    expect(await screen.findByRole('region', { name: 'Talk to this matter' })).toBeTruthy();
+    expect(await screen.findByRole('region', { name: 'Voice conversation' })).toBeTruthy();       // voice mode in the chat
   });
 
   it('Ctrl+K opens the palette anywhere; a matter searched for brings its tools; Escape closes it', async () => {
@@ -76,7 +78,7 @@ describe('Home, the command palette and the matter tools (D-065)', () => {
     const names = within(work).getAllByRole('link').map((a) => a.querySelector('strong')?.textContent);
     expect(names).toContain('Research');
     expect(names).toContain('Meetings');
-    expect(names).not.toContain('Conversation');
+    expect(names).not.toContain('Talk by voice');
     expect(names).not.toContain('Review panel');
   });
 });

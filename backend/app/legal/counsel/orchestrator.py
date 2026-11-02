@@ -485,6 +485,21 @@ _SMALLTALK = ("Ask about this matter's documents, for example: what a clause say
               "disagree on, or “What matters today?”.")
 
 
+def _social_reply(kind: Optional[str], matter: dict) -> str:
+    """A short reply to small talk (spoken or typed): no search, no model, and nothing said about the matter's content."""
+    about = f"Ask me about {matter['number']}: what a clause says, a date or amount in its documents, or what waits for your decision."
+    return {
+        "greeting": f"Hello. {about}",
+        "check": f"Yes, I can hear you. {about}",
+        "thanks": "You're welcome.",
+        "ack": "All right.",
+        "closing": "Goodbye. This conversation is saved in your chats.",
+        "identity": (f"I'm EchoMind Legal. I answer questions about {matter['number']} only from its own documents, with the exact "
+                     "words each answer relies on, and I can list deadlines, compare documents, build a chronology or start a "
+                     "draft for a lawyer's review."),
+    }.get(kind or "", _SMALLTALK)
+
+
 # ── The turn ─────────────────────────────────────────────────────────────────────
 def _live(principal: dict, matter: dict, built: Built) -> None:
     base = f"/m/{urlquote(matter['number'], safe='')}"
@@ -659,7 +674,7 @@ async def run(principal: dict, conv: dict, text: str, client_request_id: Optiona
             async for e in _answer_form(principal, conv, matter, form, built):
                 yield e
         else:
-            _notice(built, _SMALLTALK)
+            _notice(built, _social_reply(intents.social(text), matter))
         for sc in scopes:
             await run_in_threadpool(scopemod.recheck, sc)
         envelope = schemas.validate_envelope({"message_id": turn["id"], "matter_id": conv["matter_id"], "summary": built.summary,

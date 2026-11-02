@@ -1,7 +1,7 @@
 /**
  * The voice panel that takes the question box's place while voice mode is on (owner's request 2026-11-02): an orb that
- * follows who is speaking, what is being heard, what the assistant is saying, mute and end. The answers themselves
- * land in the conversation above as ordinary turns, with their sources, copy and rating.
+ * follows who is speaking, the words being heard, mute and end. What was asked and what is being answered appear in the
+ * conversation above as it happens (`onLive`), and each answer then stays there as an ordinary turn with its sources.
  */
 import React, { useEffect, useRef } from 'react';
 import { Mic, MicOff, PhoneOff } from 'lucide-react';
@@ -34,10 +34,12 @@ function Orb({ phase, mic, speech, muted }: { phase: VoicePhase; mic: AnalyserNo
   return <div ref={ref} className="qc-orb" data-phase={phase} data-muted={muted || undefined} aria-hidden><span /></div>;
 }
 
-export default function VoiceStage({ matterId, matterNumber, conversationId, onTurnSaved, onClose }: {
-  matterId: string; matterNumber: string; conversationId: string; onTurnSaved: (turnId: string) => void; onClose: () => void;
+export default function VoiceStage({ matterId, matterNumber, conversationId, onTurnSaved, onLive, onClose }: {
+  matterId: string; matterNumber: string; conversationId: string; onTurnSaved: (turnId: string) => void;
+  onLive?: (live: { question: string; text: string } | null) => void; onClose: () => void;
 }) {
   const { view, muted, setMuted, stop, micAnalyser, speechAnalyser } = useVoice({ matterId, conversationId, onTurnSaved });
+  useEffect(() => { onLive?.(view.heard ? { question: view.heard, text: view.saying } : null); }, [view.heard, view.saying, onLive]);
   const end = () => { stop(); onClose(); };
   const over = view.phase === 'closed' || view.phase === 'error';
   return (
@@ -47,9 +49,7 @@ export default function VoiceStage({ matterId, matterNumber, conversationId, onT
         <div className="qc-voice-text">
           <p className="qc-voice-state" role="status">{muted && !over ? 'Microphone muted' : PHASE_TEXT[view.phase]}</p>
           {view.partial && <p className="qc-voice-heard" data-live>“{view.partial}”</p>}
-          {!view.partial && view.heard && <p className="qc-voice-heard">You: {view.heard}</p>}
-          {view.phase === 'thinking' && view.holding && !view.saying && <p className="qc-voice-saying">{view.holding}</p>}
-          {view.saying && <p className="qc-voice-saying">{view.saying}</p>}
+          {!view.partial && view.phase === 'thinking' && view.holding && !view.saying && <p className="qc-voice-heard">{view.holding}</p>}
           {view.error && <p className="qc-error" role="alert" style={{ margin: 0 }}>{view.error}</p>}
           {view.phase === 'listening' && !view.heard && !muted && (
             <p className="qc-meta" style={{ margin: 0 }}>Ask about {matterNumber}. Speak over the answer to interrupt it.</p>
