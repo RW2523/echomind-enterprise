@@ -7,6 +7,7 @@ works only on the caller's own conversation in matters they can still open; anyt
 """
 from __future__ import annotations
 
+import json
 import sqlite3
 
 import pytest
@@ -224,3 +225,28 @@ def test_migration_0039_makes_existing_conversations_one_line_and_refuses_to_dro
     runner.migrate_down(conn, 38)
     assert "parent_turn_id" not in [r[1] for r in conn.execute("PRAGMA table_info(legal_conversation_turns)")]
     conn.close()
+
+
+def test_the_voice_service_asks_turns_of_the_persons_own_conversation_and_nothing_else(cs):
+    """Voice mode (2026-11-02): the voice service asks each spoken question as a turn of the open conversation, with the
+    person's short-lived on-behalf-of token. That token reaches that route only; the route still checks everything."""
+    from fastapi.testclient import TestClient
+    alice, carol = as_user(cs, "alice"), as_user(cs, "carol")
+    conv = new_conversation(alice, cs["mid"])
+    other = new_conversation(carol, cs["mid"])
+    token = alice.post("/api/auth/obo-token", headers=csrf_headers(alice), json={"audience": "voice"}).json()["token"]
+    svc = TestClient(cs["app"], base_url="https://testserver")                  # no cookies: a service
+    bearer = {"Authorization": f"Bearer {token}"}
+    answer(cs, DELIVERY)
+    r = svc.post(f"/api/legal/counsel/conversations/{conv}/turns", headers=bearer, json={"text": "When is delivery due?"})
+    assert r.status_code == 200, r.text
+    events = [json.loads(line) for line in r.text.splitlines() if line.strip()]
+    assert events[-1]["event"] == "turn.completed"
+    assert read(alice, conv)[0]["question"] == "When is delivery due?"            # saved in the chat, with its sources
+    assert svc.post(f"/api/legal/counsel/conversations/{other}/turns", headers=bearer, json={"text": "x"}).status_code == 404
+    assert svc.get(f"/api/legal/counsel/conversations/{conv}", headers=bearer).status_code == 401
+    assert svc.patch(f"/api/legal/counsel/conversations/{conv}", headers=bearer, json={"title": "x"}).status_code == 401
+    assert svc.post("/api/legal/counsel/conversations", headers=bearer, json={"matter_id": cs["mid"]}).status_code == 401
+    assert svc.post("/api/legal/counsel/actions", headers=bearer, json={}).status_code == 401
+    alice.post("/api/auth/logout", headers=csrf_headers(alice))
+    assert svc.post(f"/api/legal/counsel/conversations/{conv}/turns", headers=bearer, json={"text": "x"}).status_code == 401

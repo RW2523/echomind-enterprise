@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 # The EchoMind Legal public demo, apart from production (commercial-readiness review R1, 2026-10-28). Fictional data only.
 #   DEMO_PUBLIC_URL=https://… scripts/law/demo_up.sh api     # (re)create the backend container
-#   scripts/law/demo_up.sh web                                # (re)create the nginx serving DEMO_DIST and proxying /api
+#   DEMO_PUBLIC_URL=https://… scripts/law/demo_up.sh voice   # (re)create the voice container (speech to speech, read-aloud)
+#   scripts/law/demo_up.sh web                                # (re)create the nginx serving DEMO_DIST and proxying /api, /voice/ws
 #   scripts/law/demo_up.sh status
+# DEMO_PREFIX / DEMO_API_PORT / DEMO_VOICE_PORT run a private copy beside the demo (another data folder; never the same names).
 # Backend: the Law backend image, its own bridge network (no host network), code read-only, a read-only root with /tmp on its own
 # volume (the speech model unpacks there), no new privileges, every capability dropped, 12 GB memory and 512 processes at most, a health check on its own
 # port. It reaches the host's model servers through the bridge gateway and publishes only 127.0.0.1:8110.
 # Data: DEMO_DATA_DIR (default .law-data, made by seed-demo; the backend refuses demo sign-in without its DEMO_INSTANCE
 # marker) and DEMO_MASTER_KEY (default .law-secrets/master.key, the development key that only protects fictional data).
+# Voice (2026-11-02): the Law voice service (voice/app, image echomind-law-voice) on the CPU, code read-only, on the demo's
+# own network with the backend. It accepts only the Law-gated /ws (a signed-in session, an allowed origin, a matter and a
+# conversation; every spoken question is a chat turn the backend authorises) and publishes only 127.0.0.1:DEMO_VOICE_PORT;
+# nginx forwards /voice/ws to it and nothing else. The backend's read-aloud (/speak) uses it on the private network, so the
+# demo no longer calls production's voice service.
 # The public address is a Cloudflare tunnel to 127.0.0.1:3125, started separately (its quick-tunnel URL changes when it
 # restarts). Never touches production's containers, volumes or keys.
 set -euo pipefail
@@ -17,28 +24,55 @@ DATA="$(realpath "${DEMO_DATA_DIR:-$ROOT/.law-data}")"
 KEY="$(realpath "${DEMO_MASTER_KEY:-$ROOT/.law-secrets/master.key}")"
 HF="${DEMO_HF_CACHE:-$HOME/.cache/huggingface}"
 DIST="${DEMO_DIST:-$ROOT/frontend/dist}"
-API=echomind-legal-demo-api WEB=echomind-legal-demo-web
+PREFIX="${DEMO_PREFIX:-echomind-legal-demo}"
+API="$PREFIX-api" WEB="$PREFIX-web" VOICE="$PREFIX-voice" NET="$PREFIX-net"
+API_PORT="${DEMO_API_PORT:-8110}" VOICE_PORT="${DEMO_VOICE_PORT:-8112}"
+VOICE_IMAGE="${DEMO_VOICE_IMAGE:-echomind-law-voice:latest}"
+net() { docker network inspect "$NET" >/dev/null 2>&1 || docker network create "$NET" >/dev/null; }
 
 case "${1:-}" in
   api)
     [[ -f "$DATA/legal/DEMO_INSTANCE" ]] || { echo "refusing: $DATA was not made by the demo seed (no legal/DEMO_INSTANCE)" >&2; exit 2; }
     : "${DEMO_PUBLIC_URL:?set DEMO_PUBLIC_URL to the public address of the demo}"
-    GW="$(docker network inspect bridge --format '{{(index .IPAM.Config 0).Gateway}}')"
+    net
+    GW="$(docker network inspect "$NET" --format '{{(index .IPAM.Config 0).Gateway}}')"
     docker rm -f "$API" >/dev/null 2>&1 || true
-    docker volume create echomind-legal-demo-tmp >/dev/null
-    docker run --rm -v echomind-legal-demo-tmp:/t alpine:3 chown 1000:1000 /t 2>/dev/null \
-      || docker run --rm --user 0 --entrypoint chown -v echomind-legal-demo-tmp:/t "$IMAGE" 1000:1000 /t
-    docker run -d --name "$API" --restart unless-stopped --user 1000:1000 \
-      --add-host host.docker.internal:host-gateway -p 127.0.0.1:8110:8110 \
-      --read-only -v echomind-legal-demo-tmp:/tmp --security-opt no-new-privileges:true --cap-drop ALL \
+    docker volume create "$PREFIX-tmp" >/dev/null
+    docker run --rm -v "$PREFIX-tmp":/t alpine:3 chown 1000:1000 /t 2>/dev/null \
+      || docker run --rm --user 0 --entrypoint chown -v "$PREFIX-tmp":/t "$IMAGE" 1000:1000 /t
+    docker run -d --name "$API" --restart unless-stopped --user 1000:1000 --network "$NET" \
+      --add-host host.docker.internal:host-gateway -p "127.0.0.1:$API_PORT:8110" \
+      --read-only -v "$PREFIX-tmp":/tmp --security-opt no-new-privileges:true --cap-drop ALL \
       --memory 12g --memory-swap 12g --pids-limit 512 \
-      -e PUBLIC_URL="$DEMO_PUBLIC_URL" -e DEMO_TRUSTED_PROXY="$GW" ${DEMO_TTS_URL+-e DEMO_TTS_URL="$DEMO_TTS_URL"} \
+      -e PUBLIC_URL="$DEMO_PUBLIC_URL" -e DEMO_TRUSTED_PROXY="$GW" -e DEMO_TTS_URL="${DEMO_TTS_URL-http://$VOICE:8000/speak}" \
       -v "$ROOT/backend:/repo/backend:ro" -v "$DATA:/data" -v "$KEY:/run/secrets/master.key:ro" -v "$HF:/hf:ro" \
       -v "$ROOT/scripts/law/demo/launch-api.sh:/run/demo/launch-api.sh:ro" \
       --health-cmd "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8110/health', timeout=5)\"" \
       --health-interval 30s --health-timeout 8s --health-start-period 180s --health-retries 3 \
       --entrypoint bash "$IMAGE" /run/demo/launch-api.sh >/dev/null
-    echo "started $API (bridge network, 127.0.0.1:8110); trusted proxy $GW"
+    echo "started $API (network $NET, 127.0.0.1:$API_PORT); trusted proxy $GW"
+    ;;
+  voice)
+    : "${DEMO_PUBLIC_URL:?set DEMO_PUBLIC_URL to the public address of the demo}"
+    net
+    docker rm -f "$VOICE" >/dev/null 2>&1 || true
+    docker volume create "$PREFIX-voice-tmp" >/dev/null
+    docker run -d --name "$VOICE" --restart unless-stopped --network "$NET" --add-host host.docker.internal:host-gateway \
+      -p "127.0.0.1:$VOICE_PORT:8000" --read-only -v "$PREFIX-voice-tmp":/tmp --security-opt no-new-privileges:true --cap-drop ALL \
+      --memory "${DEMO_VOICE_MEM:-10g}" --memory-swap "${DEMO_VOICE_MEM:-10g}" --pids-limit 512 --oom-score-adj 800 \
+      -v "$ROOT/voice/app:/workspace/app:ro" -v "$ROOT/voice/voices:/voices:ro" \
+      -e HF_HOME=/root/.cache/huggingface \
+      -e ECHOMIND_EDITION=law -e VOICE_AUTH_ENABLED=1 -e VOICE_OFFLINE=1 -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 \
+      -e VOICE_ALLOWED_ORIGINS="$DEMO_PUBLIC_URL${DEMO_EXTRA_ORIGINS:+,$DEMO_EXTRA_ORIGINS}" \
+      -e BACKEND_CHAT_URL="http://$API:8110" -e LLM_URL=http://host.docker.internal:8355/v1/chat/completions \
+      -e ECHOMIND_ASR_DEVICE=cpu -e ECHOMIND_ASR_REQUIRE_CUDA=0 -e CUDA_VISIBLE_DEVICES= -e VOICE_PIPER_USE_CUDA=0 \
+      -e VOICE_USE_PARAKEET="${DEMO_VOICE_PARAKEET:-1}" -e VOICE_PARAKEET_DEVICE=cpu -e VOICE_PARAKEET_CUDA_GRAPHS=0 \
+      -e VOICE_NEMOTRON_STARTUP_LOAD=1 -e WAKE_WORD_FILE=/tmp/wake_word.json -e HOME=/tmp/home -e NUMBA_CACHE_DIR=/tmp/numba \
+      -e MPLCONFIGDIR=/tmp/mpl \
+      --health-cmd "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)\"" \
+      --health-interval 30s --health-timeout 8s --health-start-period 240s --health-retries 3 \
+      "$VOICE_IMAGE" >/dev/null
+    echo "started $VOICE (network $NET, 127.0.0.1:$VOICE_PORT; answers through $API)"
     ;;
   web)
     docker rm -f "$WEB" >/dev/null 2>&1 || true
@@ -49,7 +83,7 @@ case "${1:-}" in
     echo "started $WEB on 127.0.0.1:3125 serving $DIST"
     ;;
   status)
-    docker ps --filter "name=echomind-legal-demo" --format '{{.Names}}\t{{.Status}}\t{{.Ports}}'
+    docker ps --filter "name=$PREFIX-" --format '{{.Names}}\t{{.Status}}\t{{.Ports}}'
     ;;
-  *) echo "usage: $0 api|web|status" >&2; exit 2 ;;
+  *) echo "usage: $0 api|voice|web|status" >&2; exit 2 ;;
 esac

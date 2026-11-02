@@ -154,6 +154,39 @@ _SPOKEN_REF_RE = re.compile(
 _SPOKEN_TEMPLATE_RE = re.compile(r"[ \t]*\(\s*<[^()<>]{1,40}>(?:\s*[\u2014,\u2013-]\s*<?[^()<>]{0,40}>?)*\s*\)")
 
 
+# EchoMind Legal chat: an answer's source marks ("[1]", "[1, 2]") are for the screen, never spoken.
+_SOURCE_MARK_RE = re.compile(r"[ \t]*\[\d{1,2}(?:\s*,\s*\d{1,2})*\]")
+LAW_CONVERSATION_ID = re.compile(r"^conv_[0-9a-f]{32}$")
+
+
+# EchoMind Legal's spoken greeting: what it does, and the limit — never "your legal advisor".
+LAW_INTRO = ("Ask me about this matter's documents. I answer only from them, and each answer is saved in the chat "
+             "with its sources, for a lawyer's review.")
+
+
+def law_card_speech(envelope: Optional[dict]) -> str:
+    """What to say for a chat turn whose answer is a card (a checklist, a chart…) or a decline: the server's own
+    summary of it, never anything the model wrote beyond that; the card itself is on the person's screen."""
+    comps = (envelope or {}).get("components") or []
+    for c in comps:
+        p = c.get("props") or {}
+        if c.get("type") == "source_answer" and p.get("state") == "abstained":
+            return str(p.get("absence") or "The documents in this matter do not answer that.")
+    summary = str((envelope or {}).get("summary") or "").strip()
+    return f"{summary} The details are on your screen." if summary else "The answer is on your screen."
+
+
+def law_calculation_speech(envelope: Optional[dict]) -> str:
+    """Dates the server calculated from a document's words (counsel `calculation`), said as calculated, never as stated."""
+    for c in (envelope or {}).get("components") or []:
+        calc = (c.get("props") or {}).get("calculation") if c.get("type") == "source_answer" else None
+        derived = [d for d in (calc or {}).get("derived") or [] if d.get("label") and d.get("display")][:2]
+        if derived:
+            said = "; ".join(f"{d['label'].lower()}: {d['display']}" for d in derived)
+            return f"Calculated from {calc.get('document_title') or 'the document'}, not stated in it: {said}."
+    return ""
+
+
 def strip_spoken_refs(text: str) -> str:
     out = _SPOKEN_REF_RE.sub("", text or "")
     out = _SPOKEN_TEMPLATE_RE.sub("", out)
@@ -735,6 +768,11 @@ class OmniSessionA:
         # EchoMind Law (S1.7, D-025): the matter this conversation is about. Grounded answers come only
         # from that matter's research stream; the backend decides on every call whether the user may.
         self.law_matter_id = None
+        # EchoMind Legal (2026-11-02): the chat conversation the spoken turns belong to. Each question is asked as a
+        # turn of it (/api/legal/counsel/conversations/{id}/turns), so it is answered from the matter's documents with
+        # checked quotes, kept with its sources, and shown in the chat; the backend re-authorises every turn.
+        self.law_conversation_id = None
+        self._law_turn: Dict[str, Any] = {}
 
         self.sr = SETTINGS.SR
         self.frame_ms = SETTINGS.FRAME_MS
@@ -1088,6 +1126,9 @@ class OmniSessionA:
                 self.global_profile["location"] = str(data.get("location", "")).strip()
             prev_listen = self.listen_only
             self.listen_only = bool(data.get("listen_only", False))
+            if self.backend_auth is not None:
+                # EchoMind Law (D-025): no ambient room listening — recording people needs a meeting and their consent.
+                self.listen_only = False
             if prev_listen and not self.listen_only:
                 logger.warning("[LISTEN_MODE_OFF] Reason: client set_context listen_only=False (UI or API)")
             triggers = data.get("trigger_phrases")
@@ -1122,10 +1163,14 @@ class OmniSessionA:
                 self.system_prompt = _persona_system_prompt(self.persona)
             except Exception:
                 pass
+            # EchoMind Legal: no spoken greeting — the voice panel says it is listening, and a greeting talks over the
+            # first question (the bot's own speech raises the barge-in threshold).
+            if self.backend_auth is not None:
+                self._pending_intro = False
             # Fire persona-specific intro on the first set_context (deferred from start())
             if self._pending_intro:
                 self._pending_intro = False
-                intro_phrase = _get_persona_intro(self.persona)
+                intro_phrase = LAW_INTRO if self.backend_auth is not None else _get_persona_intro(self.persona)
                 phrase_speech = strip_markdown_for_speech(intro_phrase) if intro_phrase else ""
                 if phrase_speech:
                     self._is_playing_intro = True
@@ -1499,6 +1544,10 @@ class OmniSessionA:
         if self.backend_auth is None:
             return (f"{base}/api/chat/ask-voice-stream" if stream else f"{base}/api/chat/ask-voice"), payload
         question = payload.get("question") or payload.get("message") or ""
+        if getattr(self, "law_conversation_id", None):
+            import secrets
+            return (f"{base}/api/legal/counsel/conversations/{self.law_conversation_id}/turns",
+                    {"text": question[:2000], "client_request_id": secrets.token_hex(12)})
         return f"{base}/api/legal/matters/{self.law_matter_id}/research/query", {"question": question}
 
     def _backend_headers(self) -> dict:
@@ -1546,13 +1595,15 @@ class OmniSessionA:
             try:
                 if backend_handle.stop.is_set():
                     return
-                with requests.post(
-                    stream_url,
-                    json=payload,
-                    stream=True,
-                    timeout=180,
-                    headers=self._backend_headers(),
-                ) as r:
+                # A chat turn the person just interrupted may still be closing on the server (409 "wait for the
+                # answer in progress"): try again briefly rather than drop the new question.
+                for attempt in range(8):
+                    r = requests.post(stream_url, json=payload, stream=True, timeout=180, headers=self._backend_headers())
+                    if r.status_code != 409 or not self.law_conversation_id or attempt == 7 or backend_handle.stop.is_set():
+                        break
+                    r.close()
+                    time.sleep(0.5)
+                with r:
                     backend_handle.response = r
                     r.raise_for_status()
                     for line in r.iter_lines(decode_unicode=True):
@@ -1563,6 +1614,24 @@ class OmniSessionA:
                         try:
                             obj = json.loads(line)
                         except json.JSONDecodeError:
+                            continue
+                        ev = obj.get("event")
+                        if ev:                                # EchoMind Legal chat turn (counsel/orchestrator.py)
+                            d = obj.get("data") or {}
+                            if ev == "turn.started":
+                                put({"__turn__": d.get("turn_id")})
+                            elif ev == "answer.delta":    # a paragraph, released only after its quotes were checked
+                                tx = _SOURCE_MARK_RE.sub("", d.get("text") or "")
+                                if tx:
+                                    put(tx)
+                            elif ev == "ui.final":
+                                put({"__final__": d})
+                            elif ev == "turn.failed":
+                                put({"__error__": "turn_failed"})
+                                return
+                            elif ev == "scope_revoked":
+                                put({"__error__": "scope_revoked"})
+                                return
                             continue
                         t = obj.get("type")
                         if t == "chunk":
@@ -1645,6 +1714,22 @@ class OmniSessionA:
                     if server_ans and len(server_ans) > len(assistant_text.strip()):
                         assistant_text = server_ans
                     continue
+                if isinstance(item, dict) and "__turn__" in item:
+                    self._law_turn["id"] = item["__turn__"]
+                    continue
+                if isinstance(item, dict) and "__final__" in item:
+                    self._law_turn["final"] = item["__final__"]
+                    first_evidence.set()
+                    if not assistant_text.strip():
+                        said = law_card_speech(item["__final__"])
+                        assistant_text = said
+                        phrase_buf += said
+                    else:
+                        calc = law_calculation_speech(item["__final__"])
+                        if calc:
+                            assistant_text += " " + calc
+                            phrase_buf += " " + calc
+                    continue
 
                 if t_first_chunk is None:
                     t_first_chunk = time.monotonic()
@@ -1695,6 +1780,15 @@ class OmniSessionA:
                 else:
                     await tts_q.put(apology)
                 return assistant_text
+            if self.law_conversation_id:
+                # EchoMind Legal: never ask the turn again behind the person's back; one honest sentence instead.
+                said = ("You no longer have access to this matter." if str(e) == "scope_revoked"
+                        else "The answer could not be completed. Please ask again.")
+                if own_pipeline:
+                    await self._speak_phrase(my_gen, said)
+                else:
+                    await tts_q.put(said)
+                return said
             _abort_tts = own_pipeline
             if own_pipeline:
                 try:
@@ -1786,8 +1880,32 @@ class OmniSessionA:
                     except asyncio.CancelledError:
                         pass
 
+    async def _law_reply(self, my_gen: int, user_text: str) -> None:
+        """EchoMind Legal: the question is asked as a turn of the open chat conversation. Only what that turn returns
+        is spoken — its checked paragraphs, or the server's summary of a card — and the browser is told which turn to
+        show. No voice commands, memory recaps or direct model answers: nothing is said without the documents."""
+        self._discard_spec("law_turn")
+        self.turn_id += 1
+        await self.send({"type": "asr_final", "turn_id": self.turn_id, "generation_id": my_gen, "text": user_text})
+        await self.send({"type": "event", "event": "SPEAKING", "generation_id": my_gen})
+        self._assistant_active_gen = my_gen
+        self._law_turn = {}
+        backend_url = (getattr(SETTINGS, "BACKEND_CHAT_URL", None) or "").strip().rstrip("/")
+        try:
+            await self._reply_from_backend_rag_stream(my_gen, user_text, backend_url, {"question": user_text},
+                                                      hold={"tool": "search_knowledge_base", "tone": "legal", "topic": None})
+        finally:
+            if self._law_turn.get("id"):
+                await self.send({"type": "turn_saved", "generation_id": my_gen, "turn_id": self._law_turn["id"],
+                                 "conversation_id": self.law_conversation_id})
+            await self.send({"type": "event", "event": "BACK_TO_LISTENING", "generation_id": my_gen})
+            self._assistant_active_gen = None
+
     async def _finalize_and_reply_impl(self, my_gen: int, user_text: str):
         """Inner implementation; _last_user_utterance is set by caller after return."""
+        if self.backend_auth is not None and self.law_conversation_id:
+            await self._law_reply(my_gen, user_text)
+            return
         # Always store user utterance in EchoMind conversation memory
         try:
             self.conversation_memory.add_text(user_text, speaker="user")
@@ -2146,6 +2264,8 @@ class OmniSessionA:
         Only launched when the partial already looks like a complete, substantive, non-command
         utterance; nothing is spoken or recorded until the final transcript confirms it."""
         self._discard_spec("superseded")
+        if self.backend_auth is not None:
+            return None                       # EchoMind Law: every answer is a chat turn, asked once, on the final words
         if not SETTINGS.SPECULATIVE_REPLY_ENABLED or self.listen_only or not partial:
             return None
         text = preprocess_english_only(strip_markdown_for_speech(partial))

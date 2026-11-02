@@ -128,7 +128,7 @@ server still chooses and validates every component; the model writes only text.
 Intents added (rules, no model): `tasks`, `approvals`, `live`, `amounts`, `parties`; `draft` and `deliberate` now ask
 their questions. A question about what a document says ("What deadlines does the lease set?") stays a research question.
 
-Test runs: backend full suite **1608 passed, 4 skipped** (pinned image, `--network none`); frontend **261 passed**
+Test runs: backend full suite **1608 passed, 4 skipped** (1610 after the voice work) (pinned image, `--network none`); frontend **261 passed**
 (43 files); `tsc` main and strict clean.
 
 Off in the demo, so not shown there: dictation (`LEGAL_CONVERSATION`) and the review panel (`LEGAL_PANEL`).
@@ -140,6 +140,28 @@ run and its result, history search and delete, and a phone-width chart. Found wh
 clash that stacked the checklist, the version counter wrapping, list bullets missing, the template guess choosing
 "Engagement letter" for a letter before claim, the chat not following a card that arrives without text, and the
 document picker showing a row revision as the version.
+
+## Voice mode: the original EchoMind voice conversation, in the chat (2026-11-02)
+
+The owner asked for the original EchoMind speech-to-speech bot, Silent Assistant and live transcript in this application
+(plan approved 2026-11-02; decisions: a separate CPU voice container reusing `voice/app`; on the public demo only after the
+owner reviews it). This part is the voice bot; the meeting transcript and Silent Assistant follow separately.
+
+| Area | What was built | Status | Evidence |
+|---|---|---|---|
+| Voice service, Law mode | `voice/app` (webrtcvad, adaptive end of turn, Nemotron partials, Parakeet final words, phrase-by-phrase Piper speech, barge-in) asks every spoken question as a **turn of the open chat conversation** (`?conversation=`), with the person's on-behalf-of token, so it is answered only from the matter's documents with checked quotes and saved with its sources; speaks the checked paragraphs without source marks, a card's server summary, and calculated dates labelled as calculated; tells the browser which turn was saved. No speculative answer, no ambient listening, no voice commands or recaps, no "legal advisor" greeting; a failed turn is said once, never asked again behind the person's back; a question right after an interruption waits for the stopped turn | **Tested** | `voice/tests/test_law_voice_chat.py` (9) and the voice suite **160 passed** (Law voice image) |
+| Backend | On-behalf-of tokens reach one more route only: asking a turn in one of the person's own conversations | **Tested** | `test_law_counsel_controls.py` (service token: own conversation only; read, rename, create and actions refused; dead after sign-out) |
+| Chat | A Voice button beside Send (where voice is on, for a matter); the voice panel takes the question box's place: an orb following who speaks, the words being heard, what is said, mute and end; saved answers appear in the thread as ordinary turns; the header shows the open microphone; audio frames from a static AudioWorklet (`/law-voice-framer.js`, the CSP allows no blob modules) | **Tested** | `counsel-voice.test.tsx` (4); frontend **265 passed**; `tsc` main and strict clean |
+| Deployment | `scripts/law/demo_up.sh voice`: the Law voice image on the CPU, code read-only, read-only root, every capability dropped, 10 GB, `oom-score-adj` 800, on the demo's own network with the backend, published on 127.0.0.1 only; nginx passes `location = /voice/ws` and nothing else (D-062 holds for its HTTP routes); the backend's read-aloud uses it on the private network instead of production's voice service; meeting transcription uses the pilot's look-ahead (13 / 1120 ms, D-072). `DEMO_PREFIX`/`DEMO_API_PORT`/`DEMO_VOICE_PORT` run a private copy | **Tested** | `test_law_pilot_config.py` (only the socket is passed; the demo never calls port 8002); private copy below |
+| Read-aloud speed | The voice service built a new Piper voice per `/speak` and synthesised on its event loop; now one cached voice in a worker thread | **Tested** | 0.95 s first call, then 0.13–0.16 s |
+
+**End to end on a private copy** (law-image backend on 8121 with fictional DEMO documents, voice container on 8122, real
+models, Chromium with a fake microphone playing a Piper-spoken question): "When does the initial term of the Master
+Services Agreement end?" was heard cleanly, answered from the agreement with its source and the calculated end date
+(1 March 2029, said as calculated), saved in the conversation, and shown in the thread. End of speech to final words
+**0.8 s**, to first audio (a hold phrase) **1.4 s**, to the answer itself **3.9 s** (CPU speech, Parakeet final words; with
+Nemotron final words the final decode took 5.2 s and inserted stray full stops, so Parakeet is on). A second question spoken
+over the answer stopped the playback and was answered. Screenshots in `voice-2026-11-02/`.
 
 ## Commercial-readiness review (2026-10-28)
 

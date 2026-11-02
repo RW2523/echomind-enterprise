@@ -1,4 +1,5 @@
 import asyncio
+import threading
 import base64
 import json
 import logging
@@ -25,7 +26,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from .session import OmniSessionA
+from .session import LAW_CONVERSATION_ID, OmniSessionA
 from .voice_download import list_installed_voices, download_voice
 
 logger = logging.getLogger(__name__)
@@ -137,6 +138,24 @@ class SpeakBody(BaseModel):
     voice_id: str | None = None
 
 
+_speak_tts = None
+_speak_lock = threading.Lock()
+
+
+def _speak_synth(text: str):
+    """One Piper voice for the read-aloud route, loaded once (it was rebuilt on every request) and used by one caller at a
+    time; run in a worker thread so synthesis never stalls the live voice sessions on the event loop."""
+    global _speak_tts
+    from .config import SETTINGS
+    from .adapters.tts_piper import PiperTTS  # (H7) was referenced but never imported -> always 500
+    with _speak_lock:
+        if _speak_tts is None:
+            _speak_tts = PiperTTS(model_path=SETTINGS.PIPER_MODEL, speaker_id=SETTINGS.PIPER_SPEAKER,
+                                  noise_scale=SETTINGS.PIPER_NOISE_SCALE, length_scale=SETTINGS.PIPER_LENGTH_SCALE,
+                                  use_cuda=SETTINGS.PIPER_USE_CUDA)
+        return _speak_tts.synth(text), _speak_tts.sr
+
+
 @app.post("/speak")
 async def speak_tts(body: SpeakBody):
     """
@@ -144,27 +163,16 @@ async def speak_tts(body: SpeakBody):
     Used internally by the backend /api/transcribe/speak endpoint.
     """
     from fastapi.responses import Response as FastAPIResponse
-    import io, wave
+    import io
     import soundfile as sf
-    import numpy as np
 
     text = (body.text or "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="text is required")
-
-    from .config import SETTINGS
-    from .adapters.tts_piper import PiperTTS  # (H7) was referenced but never imported -> always 500
     try:
-        tts = PiperTTS(
-            model_path=SETTINGS.PIPER_MODEL,
-            speaker_id=SETTINGS.PIPER_SPEAKER,
-            noise_scale=SETTINGS.PIPER_NOISE_SCALE,
-            length_scale=SETTINGS.PIPER_LENGTH_SCALE,
-            use_cuda=SETTINGS.PIPER_USE_CUDA,
-        )
-        audio = tts.synth(text[:2000])
+        audio, sr = await asyncio.to_thread(_speak_synth, text[:2000])
         buf = io.BytesIO()
-        sf.write(buf, audio, tts.sr, format="WAV", subtype="PCM_16")
+        sf.write(buf, audio, sr, format="WAV", subtype="PCM_16")
         buf.seek(0)
         return FastAPIResponse(content=buf.read(), media_type="audio/wav")
     except Exception as e:
@@ -211,12 +219,18 @@ _MATTER_ID = re.compile(r"^[A-Za-z0-9-]{1,64}$")
 
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
-    backend_auth, watcher, matter_id = None, None, None
+    backend_auth, watcher, matter_id, conversation_id = None, None, None, ""
     if is_law():
         # S1.7 (D-025): a Law voice conversation is about one matter (?matter=<id>); without one it
         # is refused. Whether the user may use that matter is decided by the backend on every answer.
         matter_id = ws.query_params.get("matter") or ""
         if not _MATTER_ID.match(matter_id):
+            await ws.close(code=1008)
+            return
+        # EchoMind Legal (2026-11-02): spoken questions are turns of one chat conversation (?conversation=conv_…);
+        # the backend checks on every turn that it is this person's, in matters they may still open.
+        conversation_id = ws.query_params.get("conversation") or ""
+        if conversation_id and not LAW_CONVERSATION_ID.match(conversation_id):
             await ws.close(code=1008)
             return
         backend_auth = await _law_ws_gate(ws)
@@ -233,6 +247,8 @@ async def ws_endpoint(ws: WebSocket):
     sess = OmniSessionA(ws)
     sess.backend_auth = backend_auth
     sess.law_matter_id = matter_id
+    if backend_auth is not None:
+        sess.law_conversation_id = conversation_id or None
     if backend_auth is not None:
         watcher = asyncio.create_task(_law_ws_watch(ws, backend_auth))
     await sess.start(str(uuid.uuid4()))

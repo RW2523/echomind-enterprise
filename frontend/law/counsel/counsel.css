@@ -670,3 +670,30 @@
 @media (max-width: 560px) { .qc-graph { display: none; } .qc-graph-text { display: block; } .qc-graph-text[open] summary { display: none; } }
 .qc-transcript { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14.5px; line-height: 1.5; max-height: 320px; overflow-y: auto; }
 .qc-transcript li { overflow-wrap: anywhere; }
+
+/* ── Voice mode (2026-11-02): the panel that takes the question box's place, with a calm orb ── */
+.qc-voice-start { background: var(--fill-2); color: var(--ink); }
+.qc-voice-start:hover { background: var(--accent); color: var(--accent-ink); }
+.qc-voice { position: sticky; bottom: 0; display: grid; gap: 10px; margin: 12px 0 18px; padding: 16px 18px; border: 1px solid var(--glass-outline);
+  border-radius: 12px; background: var(--glass-fill-strong); box-shadow: var(--card-shadow); }
+.qc-voice-main { display: flex; gap: 18px; align-items: center; min-height: 96px; }
+.qc-voice-text { display: grid; gap: 6px; min-width: 0; flex: 1; }
+.qc-voice-state { margin: 0; font-weight: 650; font-size: 15px; color: var(--ink); }
+.qc-voice-heard { margin: 0; font-size: 14.5px; color: var(--ink-2); overflow-wrap: anywhere; }
+.qc-voice-heard[data-live] { font-style: italic; color: var(--ink-3); }
+.qc-voice-saying { margin: 0; font-family: var(--serif); font-size: 15.5px; line-height: 1.55; color: var(--ink); overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.qc-voice-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.qc-voice-end { margin-left: auto; }
+.qc-voice-note { margin: 0; font-size: 12.5px; }
+.qc-orb { --level: 0; width: 88px; height: 88px; flex: none; display: grid; place-items: center; }
+.qc-orb span { width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--accent) 55%, #fff), var(--accent));
+  box-shadow: 0 0 0 calc(4px + var(--level) * 18px) color-mix(in srgb, var(--accent) 16%, transparent);
+  transform: scale(calc(1 + var(--level) * .18)); transition: transform 90ms linear, box-shadow 90ms linear; }
+.qc-orb[data-phase="thinking"] span { opacity: .75; }
+.qc-orb[data-phase="connecting"] span, .qc-orb[data-phase="closed"] span, .qc-orb[data-phase="error"] span, .qc-orb[data-muted] span {
+  background: var(--fill-2); box-shadow: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .qc-orb[data-phase="thinking"] span { animation: qc-pulse 1.6s ease-in-out infinite; }
+}
+@media (max-width: 560px) { .qc-voice-main { gap: 12px; } .qc-orb { width: 64px; height: 64px; } .qc-orb span { width: 48px; height: 48px; } }

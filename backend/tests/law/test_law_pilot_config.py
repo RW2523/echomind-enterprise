@@ -162,22 +162,37 @@ def test_the_pilot_loads_speech_models_on_first_use_only():
 
 
 # D-062: the pilot's nginx passed /voice/* to the voice service, whose HTTP routes (/speak, /voices/installed, its test
-# page) answer without a session. The Law interface never calls them; speech goes through the signed-in backend.
-def test_the_law_frontend_refuses_the_voice_service_and_otherwise_matches_the_standard_config():
+# page) answer without a session; they stay refused. Voice mode (2026-11-02) needs exactly one path, the Law-gated
+# socket (/ws: a signed-in session, an allowed origin, a matter and a conversation), and nothing else.
+def test_the_law_frontend_passes_only_the_voice_socket_and_otherwise_matches_the_standard_config():
     conf = (ROOT / "frontend" / "nginx.law.conf").read_text()
-    assert "proxy_pass http://voice" not in conf
+    sockets = re.findall(r"location = /voice/ws \{([^}]*)\}", conf)
+    assert len(sockets) == 2 and all("proxy_pass http://voice:8000/ws;" in b and 'Upgrade $http_upgrade' in b for b in sockets)
+    assert conf.count("proxy_pass http://voice") == 2                                   # nowhere else
     blocks = re.findall(r"location /voice/ \{([^}]*)\}", conf)
     assert len(blocks) == 2 and all("return 404;" in b for b in blocks)                 # the HTTP and the HTTPS server
     # EchoMind Legal adds a Content-Security-Policy to the Law app only (docs/echomind-legal/08): its comment and two
     # add_header lines are the one other allowed difference; everything else must stay identical.
     legal_csp = re.compile(r"\n[ ]*# EchoMind Legal \((?:docs/echomind-legal/08|review F7)\)[^\n]*"
                            r"|\n[ ]*add_header (?:Content-Security-Policy|X-Content-Type-Options|Strict-Transport-Security) [^\n]*")
-    strip = lambda t: legal_csp.sub("", re.sub(r"\n\s*location /voice/ \{[^}]*\}", "", t))     # noqa: E731
+    strip = lambda t: legal_csp.sub("", re.sub(r"\n\s*location (?:= /voice/ws|/voice/) \{[^}]*\}", "", t))     # noqa: E731
     assert strip(conf) == strip((ROOT / "frontend" / "nginx.conf").read_text())           # cannot drift apart
     assert conf.count("add_header Content-Security-Policy \"default-src 'self'") == 4      # every location serving the app
     assert "COPY frontend/nginx.law.conf /etc/nginx/conf.d/default.conf" in (ROOT / "frontend" / "Dockerfile.law").read_text()
     assert "frontend/nginx.law.conf" in (ROOT / "scripts" / "law" / "build_images.sh").read_text()
 
+
+
+def test_the_public_demo_passes_only_the_voice_socket_to_its_own_voice_service():
+    conf = (ROOT / "scripts" / "law" / "demo" / "nginx.conf").read_text()
+    sockets = re.findall(r"location = /voice/ws \{([^}]*)\}", conf)
+    assert len(sockets) == 1 and "proxy_pass http://127.0.0.1:8112/ws;" in sockets[0]
+    assert conf.count("proxy_pass") == 2 and re.search(r"location /voice/ \{ return 404; \}", conf)
+    up = (ROOT / "scripts" / "law" / "demo_up.sh").read_text()
+    assert '-p "127.0.0.1:$VOICE_PORT:8000"' in up and "-e ECHOMIND_EDITION=law -e VOICE_AUTH_ENABLED=1 -e VOICE_OFFLINE=1" in up
+    assert "--cap-drop ALL" in up.split("voice)")[1] and "--read-only" in up.split("voice)")[1]
+    launch = (ROOT / "scripts" / "law" / "demo" / "launch-api.sh").read_text()
+    assert "8002" not in launch                                                         # never production's voice service
 
 
 def test_plain_http_is_for_this_server_only_and_https_asks_browsers_to_stay():

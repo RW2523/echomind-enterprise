@@ -14,7 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { keys } from '../api/queries';
 import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowUp, CalendarRange, Check, ChevronLeft, ChevronRight, Columns3, Copy, ListChecks, Loader2, Lock, Paperclip, Pencil, RefreshCw, Scale,
+  ArrowUp, AudioLines, CalendarRange, Check, ChevronLeft, ChevronRight, Columns3, Copy, ListChecks, Loader2, Lock, Paperclip, Pencil, RefreshCw, Scale,
   ScrollText, Square, ThumbsDown, ThumbsUp, X,
 } from 'lucide-react';
 import { ApiError } from '../api/client';
@@ -27,6 +27,7 @@ import { counselApi, requestId, type StoredTurn } from './api';
 import { ActionButtons, AnswerText, ComponentView, type CardContext } from './cards';
 import { AddDocument, addDocument, Dictate, droppedFile } from './ComposerTools';
 import { plainTurn, toClipboard } from './copy';
+import VoiceStage from './voice/VoiceStage';
 import { useChatMatter, usePanel } from './context';
 import MatterPicker, { Layer, usePopover } from './MatterPicker';
 import { parseComponent, parseEnvelope, parseTaskProgress } from './validate';
@@ -140,6 +141,7 @@ export default function ChatPage() {
   const [attached, setAttached] = useState<Attached[]>([]);
   const [pendingAsk, setPendingAsk] = useState<string | null>(null);
   const [announce, setAnnounce] = useState('');
+  const [voiceConv, setVoiceConv] = useState<string | null>(null);     // the conversation voice mode is speaking in
   const created = useRef<string | null>(null);
   const abort = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -290,6 +292,38 @@ export default function ChatPage() {
     if (pendingAsk && matterId) { const q = pendingAsk; setPendingAsk(null); void ask(q); }
   }, [pendingAsk, matterId, ask]);
 
+  // Voice mode: the voice service asks each spoken question as a turn of this conversation; when one is saved, the
+  // thread is read again so it shows like any other answer (sources, copy, rating).
+  const reload = useCallback(async () => {
+    if (!convId) return;
+    try {
+      const r = await counselApi.read(convId);
+      setTurns(r.turns.map(fromStored));
+      setPicked({});
+      sent.current = true;
+    } catch { /* the next saved turn reads it again */ }
+    void qc.invalidateQueries({ queryKey: ['counsel', 'conversations'] });
+  }, [convId, qc]);
+  const startVoice = useCallback(async () => {
+    if (!matterId || busy) return;
+    let id = convId;
+    if (!id) {
+      try {
+        id = (await counselApi.create(matterIds)).conversation.id;
+        created.current = id;
+        setConvId(id);
+        navigate(`/chat/${id}`);
+      } catch (e) {
+        setLoadError(e instanceof ApiError ? e.message : 'The conversation could not be started.');
+        return;
+      }
+    }
+    setVoiceConv(id);
+  }, [matterId, busy, convId, matterIds, navigate]);
+  useEffect(() => {                                             // leaving the conversation (another one, a new chat) ends voice
+    if (voiceConv && convId !== voiceConv) setVoiceConv(null);
+  }, [convId, voiceConv]);
+
   const replace = useCallback((turnKey: string) => (comp: SafeComponent) => {
     patch(turnKey, (t) => (t.envelope ? { envelope: { ...t.envelope, components: t.envelope.components.map((c) => (c.id === comp.id ? comp : c)) } } : {}));
   }, [patch]);
@@ -342,7 +376,7 @@ export default function ChatPage() {
   const start = !conversationId && turns.length === 0;
   const composer = (
     <Composer value={draft} onChange={setDraft} busy={busy} onSend={() => void ask(draft)} onStop={() => abort.current?.abort()} hero={start}
-      matter={several ? null : matter}
+      matter={several ? null : matter} onVoice={() => void startVoice()}
       placeholder={several ? `Ask across ${chosen.map((m) => m.number).join(', ')}: every source says which matter it is from…`
         : matter ? `Ask anything about ${matter.number}: its documents, dates, parties or obligations…` : 'Ask about a matter…'}
       attached={attached} onAttach={setAttached} matterId={several ? null : matterId} inputRef={input}
@@ -395,7 +429,10 @@ export default function ChatPage() {
             <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId} onCancel={() => setPendingAsk(null)} />
           )}
           <div ref={end} />
-          {composer}
+          {voiceConv && voiceConv === convId && matterId
+            ? <VoiceStage matterId={matterId} matterNumber={chosen.map((m) => m.number).join(', ') || 'this matter'} conversationId={voiceConv}
+                onTurnSaved={() => void reload()} onClose={() => { setVoiceConv(null); void reload(); }} />
+            : composer}
         </>
       )}
     </div>
@@ -641,10 +678,10 @@ function AttachedChips({ matterId, attached, onDetach, onReading }: {
 
 const CONTRIBUTORS = new Set(['lead', 'attorney', 'paralegal']);
 
-function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached, onAttach, onDetach, matterId, matter, hero, inputRef }: {
+function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached, onAttach, onDetach, matterId, matter, hero, inputRef, onVoice }: {
   value: string; onChange: (v: string) => void; busy: boolean; onSend: () => void; onStop: () => void; placeholder: string;
   attached: Attached[]; onAttach: (a: Attached[]) => void; onDetach: (id: string) => void; matterId: string | null; matter: Matter | null;
-  hero: boolean; inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  hero: boolean; inputRef: React.RefObject<HTMLTextAreaElement | null>; onVoice?: () => void;
 }) {
   const ref = inputRef;
   const me = useSession();
@@ -693,6 +730,10 @@ function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached
               onText={(t) => { onChange(value.trim() ? `${value.trimEnd()} ${t}` : t); ref.current?.focus(); }} />}
           </div>
           {where.chip && <span className="qc-private qc-hide-small" data-external={where.external || undefined}><Lock aria-hidden />{where.chip}</span>}
+          {canDictate && onVoice && !value.trim() && !busy && (
+            <button type="button" className="qc-send qc-voice-start" onClick={onVoice} aria-label="Talk with voice"
+              title="Voice: speak and hear answers from this matter's documents"><AudioLines aria-hidden /></button>
+          )}
           {busy
             ? <button type="button" className="qc-send" onClick={onStop} aria-label="Stop the answer"><Square aria-hidden /></button>
             : <button type="submit" className="qc-send" disabled={!value.trim() || !!reading} aria-label="Send"><ArrowUp aria-hidden /></button>}
