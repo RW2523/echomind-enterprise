@@ -121,6 +121,24 @@ def test_signing_the_draft_makes_it_the_version_answers_come_from(two_versions):
     assert all("250,000" not in h["text"] for h in hits)
 
 
+def test_a_signed_version_replaced_before_it_was_read_is_still_read(docs, monkeypatch):
+    """A signed agreement and its redraft uploaded one after the other, before either was read: the signed one is still
+    read, answers come from it by default, and both versions can be compared (2026-11-02, the demo's M-130)."""
+    from app.legal.research import llm
+    monkeypatch.setattr(llm, "_override", Quoting())
+    alice = as_user(docs, "alice")
+    mid = docs["matters"]["M-101"]["id"]
+    v1 = upload(alice, mid, "msa.txt", SIGNED, status="executed").json()["document"]
+    upload(alice, mid, "msa-redraft.txt", DRAFT, status="draft", version_of=v1["id"])
+    index_all()
+    hits = search_in(alice, mid, CAP_Q).json()["passages"]
+    assert "250,000" in hits[0]["text"] and hits[0]["citation"]["version_number"] == 1 and hits[0]["citation"]["signed"] is True
+    versions = sorted(alice.get(f"/api/legal/matters/{mid}/documents/{v1['id']}/versions").json()["versions"], key=lambda v: v["number"])
+    r = alice.post(f"/api/legal/matters/{mid}/compare", headers=csrf_headers(alice),
+                   json={"left_version_id": versions[0]["id"], "right_version_id": versions[1]["id"]})
+    assert r.status_code == 200, r.text
+
+
 def test_an_unsigned_older_version_leaves_the_index_when_replaced(docs, fresh_db):
     import sqlite3
     alice = as_user(docs, "alice")

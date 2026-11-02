@@ -343,6 +343,19 @@ def test_a_follow_up_is_answered_as_the_question_it_was_taken_to_ask(cs):
     assert ans["understood"] == "What fees must Morgan pay under the Services Agreement?" and ans["citations"][0]["clause"] == "9.1"
 
 
+def test_a_follow_up_to_a_comparison_is_understood_with_what_was_compared(cs):
+    """Demo script step 4 (docs/echomind-legal/13): after the May 12 / May 15 comparison, "Could these refer to different
+    events?" is rewritten with both dates, then answered from the documents as any question is."""
+    c, conv, _ = _compare(cs)
+    m = cs["model"]
+    m.standalone = "Could the delivery dates May 12, 2026 and May 15, 2026 refer to different events?"
+    m.claim, m.quote = "Delivery was due by May 15, 2026", "complete delivery by May 15, 2026"
+    events = turn(c, conv, "Could these refer to different events?")
+    rewrite = m.chat_calls[-1][-1]["content"]
+    assert "May 12, 2026" in rewrite and "May 15, 2026" in rewrite                 # the comparison was in the history
+    assert {"event": "turn.understood", "data": {"question": m.standalone}} in events
+
+
 def test_the_same_request_id_replays_the_same_answer_without_asking_again(cs):
     alice = as_user(cs, "alice")
     cs["model"].claim, cs["model"].quote = "Delivery was due by May 15, 2026", "complete delivery by May 15, 2026"

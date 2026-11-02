@@ -230,21 +230,25 @@ def finish_turn(turn_id: str, status: str, summary: str, component_ids: list[str
 
 def history(conversation_id: str, owner_id: str, turn: dict, limit: int = 4) -> list[dict]:
     """The answered questions this turn follows on its own path (never another version's), oldest first, as research's
-    follow-up rewriting wants them."""
+    follow-up rewriting wants them. A comparison counts too, with its own title as the answer ("Potential inconsistency in
+    dates: “May 12, 2026” and “May 15, 2026”"), so "Could these refer to different events?" is understood (demo script
+    step 4); the follow-up is still answered only from the documents."""
     with get_conn() as conn:
         rows = {r[0]: r[1:] for r in conn.execute(
-            "SELECT id, parent_turn_id, question, understood, component_ids_json, status, intent FROM legal_conversation_turns "
+            "SELECT id, parent_turn_id, question, understood, component_ids_json, status, intent, summary FROM legal_conversation_turns "
             "WHERE conversation_id=? AND owner_id=?", (conversation_id, owner_id)).fetchall()}
         chain, seen, pid = [], set(), turn.get("parent_turn_id")
         while pid and pid in rows and pid not in seen and len(chain) < limit:
             seen.add(pid)
-            parent, q, understood, cj, status, intent = rows[pid]
+            parent, q, understood, cj, status, intent, summary = rows[pid]
             if status in ("completed", "abstained") and intent == "ask_fact":
-                chain.append((q, understood, cj))
+                chain.append((q, understood, cj, None))
+            elif status == "completed" and intent == "compare":
+                chain.append((q, understood, "[]", _compared(conn, cj, owner_id) or summary or ""))
             pid = parent
         out = []
-        for q, understood, cj in reversed(chain):
-            answer = ""
+        for q, understood, cj, said in reversed(chain):
+            answer = said or ""
             for cid in json.loads(cj or "[]"):
                 r = conn.execute("SELECT type, props_json FROM legal_counsel_components WHERE id=?", (cid,)).fetchone()
                 if r and r[0] == "source_answer":
@@ -252,6 +256,21 @@ def history(conversation_id: str, owner_id: str, turn: dict, limit: int = 4) -> 
                     break
             out.append({"question": understood or q, "answer": answer[:2000]})
     return out
+
+
+def _compared(conn, component_ids_json: Optional[str], owner_id: str) -> str:
+    """What a comparison turn showed, in words: each card's title and its two documents (those the person may still see)."""
+    from . import discrepancies
+    said = []
+    for cid in json.loads(component_ids_json or "[]"):
+        r = conn.execute("SELECT type, props_json, matter_id FROM legal_counsel_components WHERE id=?", (cid,)).fetchone()
+        if not r or r[0] != "evidence_comparison":
+            continue
+        row = discrepancies.get({"sub": owner_id}, r[2], json.loads(r[1]).get("discrepancy_id") or "")
+        if row:
+            a, b = row["detail"]["a"], row["detail"]["b"]
+            said.append(f"{discrepancies.title(row)}, in {a.get('document_title') or 'one document'} and {b.get('document_title') or 'another'}.")
+    return " ".join(said[:3])
 
 
 # ── Components ───────────────────────────────────────────────────────────────────

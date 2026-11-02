@@ -13,6 +13,21 @@ export async function getAuthConfig(): Promise<{ auth_enabled: boolean; edition?
   } catch (_) { return { auth_enabled: false }; }
 }
 
+/** The backend's edition. A network or server error on the first request is asked again before the standard edition is
+ *  assumed, so a passing blip never opens the wrong product (2026-11-02: the public Legal demo once showed the standard
+ *  app after its first request failed through the tunnel). */
+export async function getEdition(tries = 4): Promise<string> {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(`${API_BASE}/api/auth/config`);
+      if (r.ok) return ((await r.json()).edition as string) || 'standard';
+      if (r.status < 500) return 'standard';          // no such endpoint: an older backend, the standard edition
+    } catch (_) { /* a network error: ask again */ }
+    if (i < tries - 1) await new Promise((done) => setTimeout(done, 400 * 2 ** i));
+  }
+  return 'standard';
+}
+
 export async function getMe(): Promise<AuthUser | null> {
   try {
     const r = await fetch(`${API_BASE}/api/auth/me`);

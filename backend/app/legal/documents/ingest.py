@@ -72,7 +72,11 @@ async def run(job: dict) -> str | None:
                object_id=v["id"], matter_id=v["matter_id"], reason=reason, details=details or None)
 
     try:
-        if v["current_version_id"] != v["id"]:
+        # A deleted document is not read. An older version still is, even when a newer one arrived before its turn: the
+        # latest signed version stays searchable (answers come from it by default) and every version keeps its text for the
+        # reader and for comparison; _commit makes exactly the searchable versions active (documents/versions.py). Skipping
+        # it left a signed agreement uploaded just before its redraft with no text and out of signed answers (2026-11-02).
+        if v["current_version_id"] is None:
             _set_status(v["id"], "superseded")
             audit("allow", "superseded")
             return None

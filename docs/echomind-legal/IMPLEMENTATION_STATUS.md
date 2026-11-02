@@ -215,6 +215,40 @@ to be taken as speech. Screenshots in `palette-2026-11-02/`. Tests: backend **16
 `backend/tests`, `--network none`); voice service **162 passed**; frontend **266 passed**; `tsc` main and strict clean.
 
 
+## The public demo's data: every feature ready to use (2026-11-02)
+
+The owner's request: demo data with which every feature can be used and experienced end to end. The public demo had 14
+matters but documents in only three; M-101 held a visitor's "sample_msa_test" and nothing else, and 49 test conversations.
+It now runs on a fresh, fully fictional world built by three committed scripts (the old folder is kept as a backup):
+
+- `scripts/law/demo_seed.sh <folder>`: sign-in secrets, `seed-demo` (people, matters, templates, playbook, an ended client
+  call with its transcript and Silent Assist alerts), the newest evaluation reports, 48 regulatory updates dated to today;
+- `scripts/law/demo_load.py`: the practice cases and all 64 fictional documents of 14 matters (M-101 MSA renewal, M-114
+  Series B diligence, M-130 base corpus with a signed and a draft version, M-301–306 six practice cases, MAT-1042 Morgan v.
+  Apex, the restricted M-202 / M-215 / MAT-2033, R-001 real public law), every one searchable;
+- `scripts/law/demo_enrich.py`: through the product's own API, as the lawyer who would do it — alice (the one-click
+  visitor) joins the six practice cases (the restricted matters stay closed to her); obligations read from six agreements,
+  two confirmed with their dates; conflict scans (MAT-1042: May 12 / 15 / 20); three drafts from firm templates (carol's
+  engagement letter waits for alice); a research note sent for review; a playbook check of the MSA, a citation check that
+  flags an authority that cannot be real, a definitions check finding the planted duplicate "Price"; two summaries; a
+  signed-versus-draft comparison; two due-diligence runs with quoted issues; a review-panel question ready for a partner;
+  time suggestions; two enquiries (one naming Harrowgate, so screening refers it to the conflicts team); and chats showing
+  a briefing, sourced answers, the May 12 / May 15 comparison with its follow-up, a chronology and an amounts chart.
+
+Found and fixed while building it:
+
+| Found | Fix | Status | Evidence |
+|---|---|---|---|
+| "Could these refer to different events?" after the May 12 / May 15 comparison (demo script step 4) was declined: follow-ups saw only plain answers, not comparisons | A comparison turn joins the follow-up history as its cards' titles and documents (those the person may still see); the follow-up is then answered from the documents as any question: "The shipment log states that the pickup … occurred on May 12, 2026 [1]. The arrival … May 15, 2026 [1]" | **Tested** | `test_law_counsel.py` |
+| A signed agreement uploaded just before its redraft was never read (its job found it no longer current), so it had no text to read or compare and was missing from answers from signed versions | Every version of a document that is not deleted is read; the existing step makes only the searchable versions (current + latest signed) active | **Tested** | `test_law_versions.py` (signed answer from v1, versions compared) |
+| A failed first request through the tunnel opened the standard EchoMind app instead of Legal | The edition is asked again after a network or server error before the standard edition is assumed | **Tested** | `edition.test.ts` |
+
+Checked on a private copy, then on the public demo: every one of 37 feature pages opened at desktop, phone and dark with
+no console error, failed call or sideways scroll (two network-change blips from the host during one public run); voice
+through the public address answered a greeting, the term end with calculated dates, what waits for approval and the
+liability caps with their sources. Tests: backend **1633 passed, 4 skipped** (all of `backend/tests`, `--network none`),
+frontend **268 passed**, voice **162 passed**.
+
 ## Review of the rest of the app (2026-11-02)
 
 The last part of the same request: every main page opened at desktop (1360 px), phone (390 px) and dark, on the private
@@ -404,6 +438,12 @@ Seconds are request-to-last-event, single user, measured once: not a benchmark.
 | L4 | Live, public demo: the conversation assistant asked aloud | the clip transcribed (first call 17.6 s including loading the model), answered from MAT-1042's documents with citations, read aloud by the voice service |
 
 ## How to run the demo locally (fictional data only)
+
+Rebuilding the public demo's data (2026-11-02): `scripts/law/demo_seed.sh <new folder>`, a backend on it
+(`DEMO_PREFIX=echomind-legal-test DEMO_API_PORT=8121 DEMO_DATA_DIR=<folder> DEMO_PUBLIC_URL=http://localhost:5181
+scripts/law/demo_up.sh api`), then `demo_load.py --base http://127.0.0.1:8121/api --data-dir <folder>` and
+`demo_enrich.py` with the same arguments; check it, stop that backend, and put the folder in place of `.law-data` before
+`scripts/law/demo_up.sh api` for the demo (keep the old folder outside the repository).
 
 ```bash
 LAW_SEED_DEMO=1 LEGAL_DEMO_SIGNIN=1 scripts/law/dev_backend.sh          # 127.0.0.1:8110, fresh .law-data

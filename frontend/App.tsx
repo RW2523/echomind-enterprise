@@ -15,7 +15,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { useVoiceConnection } from './hooks/useVoiceConnection';
 import { useLiveTranscription } from './hooks/useLiveTranscription';
 import { useKnowledgeChat } from './hooks/useKnowledgeChat';
-import { defaultTranscriptName, getAuthConfig, getMe, logout as apiLogout, AuthUser } from './services/backend';
+import { defaultTranscriptName, getAuthConfig, getEdition, getMe, logout as apiLogout, AuthUser } from './services/backend';
 import { SESSION_EXPIRED_EVENT } from './services/session';
 
 const SETTINGS_KEY = "echomind_settings";
@@ -180,7 +180,7 @@ const App: React.FC = () => {
   const [edition, setEdition] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
-    getAuthConfig().then((cfg: any) => { if (!cancelled) setEdition(cfg.edition || 'standard'); });
+    getEdition().then((e) => { if (!cancelled) setEdition(e); });
     return () => { cancelled = true; };
   }, []);
   if (edition === null) return <div style={{ height: '100dvh' }} aria-busy="true" />;
