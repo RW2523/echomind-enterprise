@@ -184,6 +184,33 @@ in `meetings-2026-11-02/`. Still as before: the recogniser's stray full stops ca
 once it passes 12 words (the live line shows it whole); names it mishears ("Harrogate") are fixed with the matter
 vocabulary suggestions.
 
+## Review of the rest of the app (2026-11-02)
+
+The last part of the same request: every main page opened at desktop (1360 px), phone (390 px) and dark, on the private
+copy with fictional data, recording console errors, failed API calls and anything wider than the screen (including rows
+that only scrolled inside the main column), then looked at. No console errors and no failed calls on any page; what was
+wrong is fixed below.
+
+| Found | Fix | Status | Evidence |
+|---|---|---|---|
+| "Ask by voice" never read a long answer aloud: the 2,000-character limit counted the quoted citations the answer carries, so a long cited answer was refused before they were removed | The request takes up to 20,000 characters; what is *said* is at most 2,000, cut at a sentence end with "The rest of the answer is on screen." | **Tested** | `test_law_conversation.py` (a 1,550-character answer says 50; a 4,000-character one stops at a sentence) |
+| Phone: the meeting page was 424 px wide (its tabs set the width of the whole column) and the document reader 577 px | The page column can shrink (`minmax(0, 1fr)`; pages with their own columns keep them); the meeting tabs scroll inside their strip | **Tested** | review script: 0 pages wider than 390 px |
+| Phone: with no matter chosen, the account button was pushed off the right edge | The matter button gives way (it was set never to shrink) | **Tested** | header measured: ends at 382 of 390 px |
+| Reader: its five buttons ran off a phone and broke into two-line labels on a desktop; the title sat beside its breadcrumb on a phone | Buttons keep one-line labels and wrap as whole buttons; on a phone the title sits under its breadcrumb | **Tested** | screenshots |
+| Reader, research and inspector side panels started 76 px lower than the page and never stuck while scrolling: liquid.css makes every paper `position: relative`, which left their `top: 76px` as an offset | The sticky rules name `.lw-paper` too, so they win; the panels line up and stick again | **Tested** | positions measured: all three columns start together, `position: sticky` |
+| Drafts: in the narrow "Yours, with others" column (and on a phone) the date took a column, leaving titles a few words wide | A narrow list puts the date under the title (a container query, so it follows the list's width, not the screen's) | **Tested** | screenshots |
+
+| A frontend test failed about one run in four: the due-diligence page loads lazily and its first lookup waited only 1 s | 5 s, as the other lazily loaded pages' tests already do | **Tested** | frontend **267 passed**, three runs in a row |
+
+Left as they are, on purpose: wide tables (documents, drafting, meetings) scroll sideways inside their panel on a phone;
+the reader shows a Markdown file's own characters (`#`, `>`), because quotes are matched to the document's exact text.
+
+**Full browser journeys** (Playwright, fresh seeded backend on spare ports, real model): **37 of 38 passed** in 19 min.
+The "conversation" journey failed once — the real model answered "The documents in this matter do not answer that." for
+the liability-cap question late in the full run, when the matter also holds the earlier journeys' filed notes — and passed
+when run on its own (23 s). Backend **1621 passed, 4 skipped** (all of `backend/tests`, `--network none`). Screenshots in
+`review-2026-11-02/`.
+
 ## Commercial-readiness review (2026-10-28)
 
 Phase 0 audited security, operations and the interface read-only (three audits, baseline below); the owner then asked for

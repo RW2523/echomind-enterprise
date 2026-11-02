@@ -88,6 +88,17 @@ def test_an_answer_is_read_aloud_without_its_citation_marks(cv):
     assert cv["voice"].calls == ["The cap is USD 250,000 under clause 9.1. Note: check 9.2."]
 
 
+def test_a_long_answer_is_read_up_to_a_sentence_end_and_its_citations_do_not_count(cv):
+    alice = as_user(cv, "alice")
+    quote = ' [1: "' + "q" * 1500 + '"]'
+    assert speak(alice, cv["base"], "The cap is USD 250,000." + quote + " It applies to direct loss.").status_code == 200
+    assert cv["voice"].calls[-1] == "The cap is USD 250,000. It applies to direct loss."      # 1,550 characters sent, 50 said
+    long = " ".join(f"Sentence {i} of the answer is here." for i in range(120))                 # about 4,000 characters
+    assert speak(alice, cv["base"], long).status_code == 200
+    said = cv["voice"].calls[-1]
+    assert len(said) <= 2000 and said.endswith("is here. The rest of the answer is on screen.")
+
+
 def test_only_people_on_the_matter_can_use_it(cv):
     bob = as_user(cv, "bob")                                              # not on M-101: the matter does not exist for him
     assert hear(bob, cv["base"]).status_code == 404 and speak(bob, cv["base"], "x").status_code == 404
@@ -102,7 +113,7 @@ def test_a_clip_is_bounded_and_must_be_audio(cv, monkeypatch):
     assert hear(alice, cv["base"], b"").status_code == 400
     assert hear(alice, cv["base"], PCM + b"\x00").status_code == 400                           # not 16-bit samples
     assert hear(alice, cv["base"], rate=4000).status_code == 400
-    assert speak(alice, cv["base"], "x" * 2001).status_code == 422
+    assert speak(alice, cv["base"], "x" * 20001).status_code == 422
     assert speak(alice, cv["base"], " [1] ").status_code == 400                                # nothing to say
     assert cv["ears"].calls == [] and cv["voice"].calls == []
 

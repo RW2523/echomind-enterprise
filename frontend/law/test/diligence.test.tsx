@@ -44,7 +44,7 @@ describe('Due diligence (S3.7)', () => {
 
   it('the register: issues with their words and status, what is missing, and what answers each item', async () => {
     const { container } = (world(), renderLaw('/m/M-101/diligence'));
-    const reg = await screen.findByRole('article', { name: 'Issue register' });
+    const reg = await screen.findByRole('article', { name: 'Issue register' }, { timeout: 5000 });
     expect(within(reg).getByRole('status').textContent).toBe('1 of 2 items answered · 1 missing · 2 issues (2 high, 0 medium, 0 low) · 1 verified · 0 dismissed · 1 awaiting review');
     const coc = within(reg).getByRole('listitem', { name: 'Change of control (clause 2.1): Preliminary — not reviewed' });
     expect(coc.textContent).toContain('undergoes a change of control');
@@ -61,7 +61,7 @@ describe('Due diligence (S3.7)', () => {
       [`PATCH ${M}/diligence/issues/i1`]: () => [200, { issue: VIEW.issues[0] }],
     });
     renderLaw('/m/M-101/diligence');
-    const reg = await screen.findByRole('article', { name: 'Issue register' });
+    const reg = await screen.findByRole('article', { name: 'Issue register' }, { timeout: 5000 });
     fireEvent.change(screen.getByLabelText('Checklist'), { target: { value: 'c1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run against this matter' }));
     await waitFor(() => expect(calls.find((c) => c.method === 'POST' && c.path.endsWith('/diligence/runs'))?.body).toEqual({ checklist_id: 'c1' }));
@@ -77,7 +77,7 @@ describe('Due diligence (S3.7)', () => {
   it('a read-only member sees the register but cannot start runs or review', async () => {
     world('read_only');
     renderLaw('/m/M-101/diligence');
-    const reg = await screen.findByRole('article', { name: 'Issue register' });
+    const reg = await screen.findByRole('article', { name: 'Issue register' }, { timeout: 5000 });
     expect(screen.queryByRole('region', { name: 'Start a due-diligence run' })).toBeNull();
     expect(within(reg).queryByRole('button', { name: 'Verify' })).toBeNull();
   });

@@ -69,9 +69,19 @@ _CITATION = re.compile(r'\s*\[\d+(?:\s*,\s*\d+)*(?::\s*"[^"]*")?\]')
 _MARKUP = re.compile(r"\*\*|__|`|^#{1,6}\s+|^\s*[-*]\s+", re.M)
 
 
+SPOKEN_MAX = 2000
+_REST_ON_SCREEN = " The rest of the answer is on screen."
+
+
 def spoken(text: str) -> str:
-    """An answer as it is read aloud: without citation marks or markup."""
-    return " ".join(_MARKUP.sub("", _CITATION.sub("", text)).split())
+    """An answer as it is read aloud: without citation marks or markup, and at most SPOKEN_MAX characters, cut at the
+    end of a sentence (the limit applies to what is said, not to the quoted citations the answer carries)."""
+    said = " ".join(_MARKUP.sub("", _CITATION.sub("", text)).split())
+    if len(said) <= SPOKEN_MAX:
+        return said
+    head = said[:SPOKEN_MAX - len(_REST_ON_SCREEN)]
+    end = max(head.rfind(". "), head.rfind("? "), head.rfind("! "))
+    return (head[:end + 1] if end > 0 else head.rsplit(" ", 1)[0]) + _REST_ON_SCREEN
 
 
 @router.post("/matters/{matter_id}/conversation/transcribe")
@@ -99,7 +109,7 @@ async def transcribe(matter_id: str, request: Request, sample_rate: int = 16000)
 
 
 class SpeakIn(BaseModel):
-    text: str = Field(min_length=1, max_length=2000)
+    text: str = Field(min_length=1, max_length=20000)          # an answer with its quoted citations; what is said is shorter
 
 
 @router.post("/matters/{matter_id}/conversation/speak")

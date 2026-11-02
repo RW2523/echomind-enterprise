@@ -152,6 +152,7 @@
 @media (max-width: 560px) {
   .qc-header { gap: 6px; padding: 0 8px; }
   .qc-matter-btn { max-width: 42vw; padding: 0 8px; }
+  .qc-header .qc-matter-btn { flex: 0 1 auto; }          /* it gives way, so the account button stays on screen */
   .qc-status { padding: 0 8px; }
   .qc-narrow-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .qc-hide-small { display: none !important; }
@@ -391,12 +392,17 @@
 
 /* Law pages inside the shell: a table scrolls inside its panel, never the page; on a phone it keeps a readable width. */
 [data-shell="counsel"] .lw-content { min-width: 0; }
+/* One column that can shrink (pages with their own columns keep them): a wide row inside no longer widens the page. */
+:where([data-shell="counsel"]) .lw-content { grid-template-columns: minmax(0, 1fr); }
 [data-shell="counsel"] .lw-paper:has(> .lw-table), [data-shell="counsel"] section:has(> .lw-table) { overflow-x: auto; }
 [data-shell="counsel"] .lw-crumb { white-space: nowrap; }
 @media (max-width: 560px) { [data-shell="counsel"] .lw-table { min-width: 540px; } }
 @media (max-width: 560px) {
   [data-shell="counsel"] .lw-toolbar { flex-wrap: wrap; }
   [data-shell="counsel"] .lw-content > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
+  /* A phone: the page title under its breadcrumb, and a page's buttons wrap instead of running off the screen. */
+  [data-edition="law"][data-shell="counsel"] .lw-title-cap { flex-direction: column; align-items: flex-start; gap: 2px; }
+  [data-edition="law"][data-shell="counsel"] .lw-toolbar-wrap .lw-toolbar .lw-cluster { justify-content: flex-start; }
 }
 
 /* ── Several matters ────────────────────────────────────────────────────────── */
@@ -451,6 +457,9 @@
   background: transparent; border: none; box-shadow: none; }
 /* Not sticky here: the matter tabs already stick at the top, and a second sticky row drew over them (Phase 0 audit A1). */
 [data-edition="law"][data-shell="counsel"] .lw-toolbar-wrap { position: static; padding: 16px 20px 0; }
+/* A page's buttons keep their labels on one line and wrap as whole buttons when there are many (the reader has five). */
+[data-edition="law"][data-shell="counsel"] .lw-toolbar .lw-cluster { flex-wrap: wrap; justify-content: flex-end; }
+[data-edition="law"][data-shell="counsel"] .lw-toolbar .lw-btn { white-space: nowrap; }
 [data-edition="law"][data-shell="counsel"] .lw-title-cap { font-size: 20px; font-weight: 600; }
 [data-edition="law"][data-shell="counsel"] .lw-crumb { background: none; padding: 0; color: var(--ink-3); font-weight: 500; }
 [data-edition="law"][data-shell="counsel"] .lw-avatar { background: var(--fill-2); color: var(--ink-2); box-shadow: none; border-radius: 8px; }
