@@ -92,6 +92,7 @@ class Context:
     built: Optional[list] = None
     interests: list = field(default_factory=list)  # (participant id, topic words, segment id, quote)
     previous: Optional[tuple] = None              # (speaker, text) of the segment before, for a figure split across two
+    principal: Optional[dict] = None              # the person capturing: statement checks search under their own scope
 
     @property
     def counterparty(self) -> bool:

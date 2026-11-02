@@ -266,7 +266,8 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
              "skipping": False,         # waiting audio passed LEGAL_CAPTURE_BACKLOG_SEC: frames are counted, not transcribed
              "in_gap": False, "degraded": False,
              "shown": "",               # the live line: the uncommitted text as the original EchoMind joins it (display only)
-             "last_piece_ms": None,     # audio clock of the last piece, for silence commits and same-breath joins
+             "last_piece_ms": None,     # audio clock of the last piece (its timestamp), for same-breath joins
+             "heard_at_ms": None,       # how much audio had been given to the model when it last produced words (silence)
              "partial_sent": "", "partial_at": 0.0}
     anchors: list[tuple[float, float]] = []      # (audio_ms, wall-clock seconds) at each accepted frame
     work: asyncio.Queue = asyncio.Queue()        # audio and turns, in the order received, for the model
@@ -283,23 +284,47 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
             names = {r[0]: {"name": r[1], "role": r[2]} for r in conn.execute(
                 "SELECT id, name, role FROM legal_meeting_participants WHERE meeting_id=? AND removed_at IS NULL", (meeting_id,))}
         pack = assist_packs.pack_for(row[0], row[1]) if row else None
-        return assist_engine.Context(matter_id, meeting_id, p["sub"], pack, names) if pack and transcriber is not None else None
+        return (assist_engine.Context(matter_id, meeting_id, p["sub"], pack, names, principal=p)
+                if pack and transcriber is not None else None)
     assist = await asyncio.to_thread(assist_context)
     pending: set[asyncio.Task] = set()
 
     async def check(seg: dict, heard_at: str) -> None:
+        """Silent Assist for one committed segment: the figure and phrase rules, then (when they raised nothing) the
+        statement check against the matter's documents (assist/claims.py). The person capturing sees each segment
+        being checked; every document quote is re-verified against its version's text before it is stored."""
+        from ..assist import claims as assist_claims
         from ..assist import engine as assist_engine
         from ..assist import repo as assist_repo
+        live = lambda: h.reason not in ("access_revoked", "signed_out", "consent_withdrawn", "meeting_ended")   # noqa: E731
+        # Figures are the rule engine's (it has its own model check); any other statement a document could settle is checked.
+        claim = assist_claims.is_claim(seg.get("text") or "") and not assist_claims.has_figure(seg.get("text") or "")
+        if claim and live():
+            await send({"type": "check", "segment_id": seg["id"], "state": "checking"})
+        raised = 0
         try:
-            for a in await assist_engine.consider(assist, seg):
+            found = await assist_engine.consider(assist, seg)
+            if not found and claim:
+                found = [a for a in await assist_claims.consider(assist, seg)
+                         if a.confidence >= settings.LEGAL_ASSIST_MIN_CONFIDENCE]
+            if found:
+                await asyncio.to_thread(assist_engine.load_documents, assist)
+                texts = {d["version_id"]: d["text"] for d in assist.docs or []}
+            for a in found:
+                if not assist_engine.verify_source(a, texts):
+                    logger.warning("Assist: an alert's quote did not match its document; not raised")
+                    continue
                 saved = await asyncio.to_thread(assist_repo.save, matter_id, meeting_id, capture_id, seg, assist.pack, a, heard_at)
-                if h.reason not in ("access_revoked", "signed_out"):
+                raised += 1
+                if live():
                     try:
                         await send({"type": "alert", **saved})
                     except Exception:
                         pass                          # the socket closed; the alert is stored
         except Exception as e:
             logger.warning("Assist: a segment could not be checked (%s)", type(e).__name__)
+        if claim and live():
+            await send({"type": "check", "segment_id": seg["id"], "state": "checked", "alerts": raised})
 
     def wall(audio_ms, end: bool = False) -> Optional[str]:
         """Wall-clock time of a point in the audio given to the model. A point between two frames is the
@@ -349,6 +374,27 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
         state["partial_sent"], state["partial_at"] = text, now
         await send({"type": "partial", "text": text})
 
+    def mentions(text: str) -> list[dict]:
+        """Parties, amounts, dates, periods and clauses said in a segment (compare/facts.py, as spoken), for the
+        "Mentioned so far" list beside the transcript; a party is marked when it is one of the matter's records."""
+        from ..compare import facts as factsmod
+        out, seen = [], set()
+        try:
+            found = factsmod.extract(text, [(0, len(text))], spoken=True)
+        except Exception:
+            return []
+        for f in found:
+            kind = {"money": "amount", "date": "date", "period": "period", "percent": "percent", "entity": "party"}.get(f.kind)
+            if kind and (kind, f.shown) not in seen:
+                seen.add((kind, f.shown))
+                out.append({"kind": kind, "shown": f.shown[:120]})
+        for m in re.finditer(r"\b(?:clause|section)[.,]?\s+(\d+(?:\.\d+)*|[A-Za-z]+(?:-[A-Za-z]+)?)\b", text, re.I):
+            number = m.group(1) if m.group(1)[0].isdigit() else factsmod._word_number(m.group(1))   # "clause twelve" as spoken
+            if number is not None and ("clause", str(number)) not in seen:
+                seen.add(("clause", str(number)))
+                out.append({"kind": "clause", "shown": str(number)})
+        return out[:12]
+
     async def emit(pieces) -> None:
         for piece, ts in pieces:
             if not piece.strip():
@@ -358,6 +404,7 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
             shown, shown_piece = stitch.join(state["shown"], piece, same_breath)
             state["shown"] = shown + shown_piece
             state["last_piece_ms"] = at
+            state["heard_at_ms"] = state["audio_ms"]
             state["text"] += piece
             state["t0"] = at if state["t0"] is None else state["t0"]
             state["t1"] = at
@@ -367,10 +414,14 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
         await partial()
 
     async def after_silence() -> None:
-        """A sentence followed by silence is said: commit it even when short (the original's silence commit)."""
-        last = state["last_piece_ms"]
+        """A sentence followed by silence is said: commit it even when short (the original's silence commit). Silence
+        is audio given to the model with no new words from it — measured from when the model last produced words, not
+        from their timestamps (which lag behind by the model's look-ahead), and longer than one model chunk, which
+        produces nothing between its own boundaries."""
+        last = state["heard_at_ms"]
+        need = max(settings.LEGAL_SEGMENT_SILENCE_MS, int(1.6 * settings.TRANSCRIPT_NEMOTRON_CHUNK_MS))
         if (state["text"].strip() and last is not None and _SENTENCE_END.search(state["text"])
-                and state["audio_ms"] - last >= settings.LEGAL_SEGMENT_SILENCE_MS):
+                and state["audio_ms"] - last >= need):
             await commit()
 
     async def commit() -> None:
@@ -383,6 +434,9 @@ async def handle(ws: WebSocket, matter_id: str, meeting_id: str) -> None:
         if seg is not None:
             await send({"type": "segment", **seg})
             await partial(force=True)                 # the live line starts again
+            said = mentions(text)
+            if said:
+                await send({"type": "mentioned", "segment_id": seg["id"], "items": said})
             if assist is not None:
                 task = asyncio.create_task(check(seg, policy.now_iso()))
                 pending.add(task)

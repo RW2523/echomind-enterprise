@@ -163,6 +163,27 @@ Services Agreement end?" was heard cleanly, answered from the agreement with its
 Nemotron final words the final decode took 5.2 s and inserted stray full stops, so Parakeet is on). A second question spoken
 over the answer stopped the playback and was answered. Screenshots in `voice-2026-11-02/`.
 
+## Live meeting transcript and the Silent Assistant, from the original EchoMind (2026-11-02)
+
+The rest of the same request: the original EchoMind live transcript and Silent Assistant, inside the Legal meeting
+capture (consent, custody, pause and withdrawal unchanged).
+
+| Area | What was built | Status | Evidence |
+|---|---|---|---|
+| Live line | Capture sends rate-limited `partial` messages with the words not yet committed, joined as the original joins them (`meetings/stitch.py` reuses `transcribe/session_state.py`'s chunk-boundary rules); display only, never stored, never sent once capture stops for any reason; the record keeps the model's text unchanged (segments are immutable, corrections are revisions) | **Tested** | `test_law_transcripts.py` (shown joined, stored as produced, nothing after a withdrawal); `transcript.test.tsx` |
+| Silence commit | A sentence followed by silence is a segment at once, even short; silence is audio with no new words from the model, at least 1.6 model chunks (word times lag by the look-ahead) | **Tested** | `test_law_transcripts.py` (short sentence then silence; lagging word times not taken for silence) |
+| Statement checks | `assist/claims.py`: the original's tiers 2–3 for any statement a document could settle (its legal-profile classifier); the research search under the capturing person's own scope (signed versions, per-document access); one model call citing a numbered passage; an alert only when the model's quote is in that passage; a contradiction is critical, agreement only when the agreement or a clause was named, "not addressed" raises nothing; figures stay with the rule engine, including the first half of a figure the segmenter split ("…the cap is five." then "Hundred thousand dollars"; a sentence ending on a clause number is still checked); passages and the statement fenced, text addressed to an AI withheld; every document quote re-checked against its version (`engine.verify_source`, previously unused) before it is stored | **Tested** | `test_law_assist_claims.py` (6: contradiction with exact words, invented quote / not addressed / unnamed agreement raise nothing, questions and asides skipped, another matter never offered, injected text withheld) |
+| Live view | Record view in two columns: transcript with "Checking against the documents…" on the sentence being checked and each alert marked under its sentence (a link to its card); Silent Assist and "Mentioned so far" (parties, amounts, dates, periods, clauses, spoken clause numbers included) beside it | **Tested** | `assist.test.tsx`; frontend **267 passed** |
+
+**End to end on the private copy** (law-image backend with CPU speech-to-text and the pilot's look-ahead, real models,
+Chromium with a fake microphone playing two Piper-spoken fictional statements): the live line followed the speech;
+"Under the agreement, either party can assign it to anyone without the other party's consent" raised **"Said differently
+in Master Services Agreement (DEMO) (cl. 14.1)"** about 3 s after it was said, quoting "Neither party may assign this
+Agreement without the prior written consent of the other party…"; "clause twelve" was listed as mentioned. Screenshots
+in `meetings-2026-11-02/`. Still as before: the recogniser's stray full stops can split a sentence across two segments
+once it passes 12 words (the live line shows it whole); names it mishears ("Harrogate") are fixed with the matter
+vocabulary suggestions.
+
 ## Commercial-readiness review (2026-10-28)
 
 Phase 0 audited security, operations and the interface read-only (three audits, baseline below); the owner then asked for

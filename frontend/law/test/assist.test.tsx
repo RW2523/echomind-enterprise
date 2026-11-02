@@ -106,4 +106,33 @@ describe('Silent Assist', () => {
     fireEvent.change(pack, { target: { value: 'off' } });
     await waitFor(() => expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ pack: 'off' }));
   });
+
+  it('beside the live transcript: each statement being checked, its alert marked on the segment, and what was mentioned', async () => {
+    world(meeting(), [], { [`GET ${BASE}/mt1/transcript`]: () => [200, { segments: [], marks: [], participants: [
+      { id: 'p2', name: 'Thomas Reyes', role: 'counterparty', removed: false }], finalised: null }] });
+    renderLaw('/m/M-101/meetings/mt1');
+    fireEvent.click(await screen.findByRole('tab', { name: 'Record' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start recording' }));
+    await act(async () => { FakeSocket.last!.server({ type: 'ready', capture_id: 'c1', consent_snapshot: 'x', transcription: 'available' }); });
+    const said = 'Under the agreement invoices are payable on receipt.';
+    await act(async () => { FakeSocket.last!.server({ type: 'segment', id: 's1', seq: 0, text: said, speaker_participant_id: 'p2', wall_start: '2026-10-10T10:00:00Z' }); });
+    await act(async () => { FakeSocket.last!.server({ type: 'check', segment_id: 's1', state: 'checking' }); });
+    const rows = await screen.findByRole('list', { name: 'Transcript segments' });
+    expect(within(rows).getByText('Checking against the documents…')).toBeTruthy();
+    await act(async () => { FakeSocket.last!.server({ type: 'alert', ...ALERT, id: 'a9', rule: 'statement', title: 'Said differently in Harrowgate MSA (cl. 4.2)',
+      said: { segment_id: 's1', start: 0, end: said.length, quote: said } }); });
+    await act(async () => { FakeSocket.last!.server({ type: 'check', segment_id: 's1', state: 'checked', alerts: 1 }); });
+    expect(within(rows).queryByText('Checking against the documents…')).toBeNull();
+    const mark = within(rows).getByRole('link', { name: 'Said differently in Harrowgate MSA (cl. 4.2)' });
+    expect(mark.getAttribute('href')).toBe('#alert-a9');
+    const side = screen.getByRole('complementary', { name: 'Beside the transcript' });
+    expect(within(side).getByRole('listitem', { name: 'Said differently in Harrowgate MSA (cl. 4.2)' }).id).toBe('alert-a9');
+    await act(async () => { FakeSocket.last!.server({ type: 'mentioned', segment_id: 's1', items: [{ kind: 'party', shown: 'Harrowgate Systems Inc.' },
+      { kind: 'amount', shown: 'USD 19,750' }, { kind: 'clause', shown: '4.1' }] }); });
+    await act(async () => { FakeSocket.last!.server({ type: 'mentioned', segment_id: 's2', items: [{ kind: 'amount', shown: 'USD 19,750' }] }); });
+    const mentioned = within(side).getByRole('region', { name: 'Mentioned so far' });
+    expect(within(mentioned).getAllByText('USD 19,750')).toHaveLength(1);
+    expect(mentioned.textContent).toContain('Harrowgate Systems Inc.');
+    expect(mentioned.textContent).toContain('cl. 4.1');
+  });
 });

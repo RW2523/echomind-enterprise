@@ -464,3 +464,30 @@ def test_no_live_line_is_sent_once_consent_is_withdrawn(tx):
     after = got[[m["type"] for m in got].index("stopped"):]
     assert not any(m["type"] == "partial" for m in after)
     assert next(m for m in got if m["type"] == "stopped")["reason"] == "consent_withdrawn"
+
+
+class Lagging(Scripted):
+    """A model whose word times lag the audio by its look-ahead (as with longer chunks): times are 1.5 s behind."""
+    async def feed(self, pcm16, sample_rate):
+        got = await super().feed(pcm16, sample_rate)
+        return [(t, max(0, ts - 1500)) for t, ts in got]
+
+
+def test_lagging_word_times_are_not_mistaken_for_silence(tx):
+    alice = as_user(tx, "alice")
+    tx["model"]["t"] = Lagging(["Harrowgate Systems. ", "Wants clause twelve. ", "Looked at again. ", "Before the renewal. "])
+    got = record(alice, tx, [FRAME] * 4)
+    segs = [m["text"] for m in got if m["type"] == "segment"]
+    assert segs == ["Harrowgate Systems. Wants clause twelve. Looked at again. Before the renewal."]     # one, at stop
+
+
+def test_a_clause_said_in_words_is_listed_as_mentioned(tx):
+    from app.legal.assist import packs
+    alice = as_user(tx, "alice")
+    tx["model"]["t"] = Scripted(["Harrowgate Systems Inc. wants clause twelve and section 4.2 reviewed before the renewal on 1 June 2026, "
+                                 "and clause. Fourteen too. "])
+    got = record(alice, tx, [FRAME])
+    items = [i for m in got if m["type"] == "mentioned" for i in m["items"]]
+    assert {"kind": "clause", "shown": "12"} in items and {"kind": "clause", "shown": "4.2"} in items
+    assert {"kind": "clause", "shown": "14"} in items                      # the recogniser's stray full stop is no barrier
+    assert packs is not None

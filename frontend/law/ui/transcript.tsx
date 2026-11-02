@@ -4,7 +4,7 @@ import { BookOpenText, Check, PenLine } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { keys, meetingsPath } from '../api/queries';
-import type { CaptureMark, Segment, TranscriptData, VocabularySuggestion } from '../api/types';
+import type { AssistAlert, CaptureMark, Segment, TranscriptData, VocabularySuggestion } from '../api/types';
 import { useMatter } from '../app/matter';
 import { Dialog, ErrorNote, Field, StatusPill } from './primitives';
 
@@ -18,8 +18,10 @@ const pos = (r: Row) => (r.kind === 'segment' ? r.s.t_start_ms : r.m.audio_ms) ?
 
 /** The transcript as a record: each segment with its time and speaker, corrections marked with
  *  their history, gaps where nothing could be transcribed, and matter-vocabulary suggestions. */
-export function TranscriptRecord({ matterId, meetingId, data, canCorrect, canFinalise, live }: {
+export function TranscriptRecord({ matterId, meetingId, data, canCorrect, canFinalise, live, checking, alerts }: {
   matterId: string; meetingId: string; data: TranscriptData; canCorrect: boolean; canFinalise: boolean; live?: Segment[];
+  /** Silent Assist (2026-11-02): segments being checked against the documents, and each segment's alerts. */
+  checking?: Set<string>; alerts?: AssistAlert[];
 }) {
   const matter = useMatter();
   const qc = useQueryClient();
@@ -89,6 +91,12 @@ export function TranscriptRecord({ matterId, meetingId, data, canCorrect, canFin
             <div style={{ minWidth: 0 }}>
               <div className="lw-transcript-who">{r.s.speaker ?? (r.s.speaker_participant_id ? names[r.s.speaker_participant_id] : null) ?? 'Unattributed'}</div>
               <p className="lw-serif" style={{ margin: 0 }}>{r.s.text}</p>
+              {checking?.has(r.s.id) && <span className="lw-checking" role="status">Checking against the documents…</span>}
+              {(alerts ?? []).filter((a) => a.said?.segment_id === r.s.id).map((a) => (
+                <a key={a.id} href={`#alert-${a.id}`} className="lw-alert-mark" data-severity={a.severity}
+                  onClick={(e) => { e.preventDefault(); const el = document.getElementById(`alert-${a.id}`); el?.scrollIntoView?.({ block: 'center' }); el?.focus(); }}>
+                  {a.title}</a>
+              ))}
               {r.s.revised && <History s={r.s} names={names} />}
             </div>
             {canCorrect && !live && (

@@ -557,3 +557,21 @@
 /* The words being said now, under a live transcript (2026-11-02): never stored, shown until the sentence is committed. */
 [data-edition="law"] .lw-live-line { margin: 10px 0 0; padding: 8px 12px; border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
   background: var(--fill-1, rgba(0,0,0,.03)); font-size: 15px; line-height: 1.5; color: var(--ink-2); font-style: italic; overflow-wrap: anywhere; }
+/* Silent Assist beside the live transcript (2026-11-02): transcript left, checks and what was mentioned right. */
+[data-edition="law"] .lw-live-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 16px; align-items: start; }
+[data-edition="law"] .lw-live-grid > section, [data-edition="law"] .lw-live-side > section { margin: 0; }
+[data-edition="law"] .lw-live-side { display: grid; gap: 16px; position: sticky; top: 12px; }
+@media (max-width: 960px) { [data-edition="law"] .lw-live-grid { grid-template-columns: minmax(0, 1fr); } [data-edition="law"] .lw-live-side { position: static; } }
+[data-edition="law"] .lw-checking { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12.5px; color: var(--ink-3); }
+[data-edition="law"] .lw-checking::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) { [data-edition="law"] .lw-checking::before { animation: lw-check-pulse 1.2s ease-in-out infinite; } }
+@keyframes lw-check-pulse { 50% { opacity: .3; } }
+[data-edition="law"] .lw-alert-mark { display: inline-block; margin: 4px 6px 0 0; padding: 1px 8px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
+  text-decoration: none; color: var(--attention); background: color-mix(in srgb, var(--attention) 10%, var(--paper)); }
+[data-edition="law"] .lw-alert-mark[data-severity="critical"] { color: var(--danger, #A3352C); background: color-mix(in srgb, var(--danger, #A3352C) 10%, var(--paper)); }
+[data-edition="law"] .lw-alert:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+[data-edition="law"] .lw-mentioned { display: grid; gap: 8px; margin: 6px 0 0; }
+[data-edition="law"] .lw-mentioned > div { display: grid; gap: 4px; }
+[data-edition="law"] .lw-mentioned dt { font-size: 12px; font-weight: 650; color: var(--ink-3); }
+[data-edition="law"] .lw-mentioned dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+[data-edition="law"] .lw-chip-flat { padding: 2px 8px; border-radius: 6px; font-size: 13px; background: var(--fill-1, rgba(0,0,0,.04)); border: 1px solid var(--rule); }

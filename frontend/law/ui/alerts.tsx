@@ -35,7 +35,7 @@ export function AlertCard({ a, matterId, meetingId, canDecide, onDecided }: {
     } finally { setBusy(false); }
   };
   return (
-    <li className="lw-alert" data-verdict={a.verdict} data-severity={a.severity} data-status={a.status} aria-label={a.title}>
+    <li id={`alert-${a.id}`} tabIndex={-1} className="lw-alert" data-verdict={a.verdict} data-severity={a.severity} data-status={a.status} aria-label={a.title}>
       <div className="lw-alert-h">
         <StatusPill tone={a.rule === 'action' ? 'neutral' : VERDICT[a.verdict]}>
           {a.rule === 'action' ? 'Action' : a.verdict === 'differs' ? 'Differs' : a.verdict === 'matches' ? 'Matches' : 'Needs review'}</StatusPill>

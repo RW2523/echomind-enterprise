@@ -262,6 +262,8 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
   const [transcription, setTranscription] = useState<'available' | 'unavailable' | null>(null);
   const [live, setLive] = useState<Segment[]>([]);
   const [partialText, setPartialText] = useState('');        // the words being said now (never stored)
+  const [checking, setChecking] = useState<Set<string>>(new Set());   // segments being checked against the documents
+  const [mentioned, setMentioned] = useState<Mention[]>([]);
   const [started, setStarted] = useState<number | null>(null);
   const [speaker, setSpeaker] = useState<string | null>(null);
   const [liveAlerts, setLiveAlerts] = useState<AssistAlert[]>([]);
@@ -286,7 +288,7 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
     void refresh(); void alerts.refetch();
   };
   const start = () => {
-    setNote(''); setLive([]); setPartialText(''); setPhase('connecting'); setSpeaker(null); setWarning(''); setLiveAlerts([]);
+    setNote(''); setLive([]); setPartialText(''); setChecking(new Set()); setMentioned([]); setPhase('connecting'); setSpeaker(null); setWarning(''); setLiveAlerts([]);
     const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const sock = new WebSocket(`${scheme}://${window.location.host}${meetingsPath(matterId)}/${encodeURIComponent(m.id)}/capture?sample_rate=16000`);
     sock.binaryType = 'arraybuffer';
@@ -306,6 +308,15 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
         }
       } else if (msg.type === 'segment') setLive((s) => [...s, msg]);
       else if (msg.type === 'partial') setPartialText(typeof msg.text === 'string' ? msg.text : '');
+      else if (msg.type === 'check') setChecking((c) => {
+        const next = new Set(c);
+        if (msg.state === 'checking') next.add(msg.segment_id); else next.delete(msg.segment_id);
+        return next;
+      });
+      else if (msg.type === 'mentioned' && Array.isArray(msg.items)) setMentioned((xs) => {
+        const seen = new Set(xs.map((x) => `${x.kind}:${x.shown}`));
+        return [...xs, ...msg.items.filter((x: Mention) => typeof x?.shown === 'string' && !seen.has(`${x.kind}:${x.shown}`))].slice(-60);
+      });
       else if (msg.type === 'speaker') setSpeaker(msg.participant_id ?? null);
       else if (msg.type === 'degraded') setWarning(msg.reason === 'behind'
         ? `Transcription is ${msg.lag_s} s behind. Speech is still being received; the transcript will catch up, and this is noted in the record.`
@@ -390,9 +401,10 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
         {warning && recording && <p role="alert" className="lw-capture-warning">{warning}</p>}
         {note && <p role="alert" className="lw-meta" style={{ margin: recording ? '10px 0 0' : '12px 0 0', fontSize: 13.5, color: 'var(--ink-2)' }}>{note}</p>}
       </section>
-      {(recording ? m.assist?.pack : (alerts.data?.alerts.length ?? 0) > 0) && (
-        <AlertsPanel alerts={recording ? liveAlerts : alerts.data?.alerts ?? []} assist={recording ? m.assist : alerts.data?.assist}
-          telemetry={alerts.data?.telemetry} matterId={matterId} meetingId={m.id} canDecide={canCorrect} live={recording} />
+      <div className={recording ? 'lw-live-grid' : undefined}>
+      {!recording && (alerts.data?.alerts.length ?? 0) > 0 && (
+        <AlertsPanel alerts={alerts.data?.alerts ?? []} assist={alerts.data?.assist}
+          telemetry={alerts.data?.telemetry} matterId={matterId} meetingId={m.id} canDecide={canCorrect} />
       )}
       {(live.length > 0 || (recording && !!partialText) || (m.transcript?.length ?? 0) > 0) && (
         <section className="lw-paper lw-sheet" aria-label="Transcript">
@@ -407,13 +419,24 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
           {m.transcriptData && (
             <TranscriptRecord matterId={matterId} meetingId={m.id} data={m.transcriptData} canCorrect={canCorrect && !recording}
               canFinalise={canCorrect && m.status === 'ended' && !recording && (m.transcript?.length ?? 0) > 0}
-              live={recording ? live : undefined} />
+              live={recording ? live : undefined} checking={recording ? checking : undefined}
+              alerts={recording ? liveAlerts : alerts.data?.alerts} />
           )}
           {recording && partialText && (
             <p className="lw-live-line" data-testid="live-line"><span className="lw-meta">Now: </span>{partialText}</p>
           )}
         </section>
       )}
+      {recording && (
+        <aside className="lw-live-side" aria-label="Beside the transcript">
+          {m.assist?.pack && (
+            <AlertsPanel alerts={liveAlerts} assist={m.assist} telemetry={alerts.data?.telemetry} matterId={matterId} meetingId={m.id}
+              canDecide={canCorrect} live />
+          )}
+          <Mentioned items={mentioned} />
+        </aside>
+      )}
+      </div>
       {m.captures.length > 0 && <Timeline captures={m.captures} />}
       {exporting && <ExportDialog matterId={matterId} number={matter.number} objectType="meeting_transcript" objectId={m.id} title={`Transcript of ${m.title}`} onClose={() => setExporting(false)} />}
       {deleting && (
@@ -421,6 +444,26 @@ function Record({ m, matterId, canRecord, waiting, canDelete, onHold, canCorrect
           onClose={() => setDeleting(false)} onDone={() => { setDeleting(false); void refresh(); }} />
       )}
     </>
+  );
+}
+
+interface Mention { kind: 'party' | 'amount' | 'date' | 'period' | 'percent' | 'clause'; shown: string }
+const MENTION_GROUPS: [Mention['kind'], string][] = [['party', 'Parties'], ['amount', 'Amounts'], ['date', 'Dates'], ['period', 'Periods'],
+  ['percent', 'Percentages'], ['clause', 'Clauses']];
+
+/** What has been said so far that a document might hold: parties, amounts, dates, periods, clauses (from the speech, by rule). */
+function Mentioned({ items }: { items: Mention[] }) {
+  return (
+    <section className="lw-paper lw-sheet" aria-label="Mentioned so far">
+      <h2 className="lw-h2">Mentioned so far</h2>
+      {items.length === 0 ? <p className="lw-meta" style={{ margin: 0 }}>Parties, amounts, dates and clauses appear here as they are said.</p> : (
+        <dl className="lw-mentioned">
+          {MENTION_GROUPS.filter(([k]) => items.some((i) => i.kind === k)).map(([k, label]) => (
+            <div key={k}><dt>{label}</dt><dd>{items.filter((i) => i.kind === k).map((i) => <span key={i.shown} className="lw-chip-flat">{k === 'clause' ? `cl. ${i.shown}` : i.shown}</span>)}</dd></div>
+          ))}
+        </dl>
+      )}
+    </section>
   );
 }
 
