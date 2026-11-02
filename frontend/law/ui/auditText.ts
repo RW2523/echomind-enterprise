@@ -99,6 +99,9 @@ export function describe(e: AuditEvent): string {
     case 'auth.demo_signin': return refused ? 'could not enter the demo' : 'entered the demo';
     case 'counsel.conversation.create': return refused ? 'could not start a chat' : `started a chat${m ? ` about ${m}` : ''}`;
     case 'counsel.conversation.read': return `opened a chat${m ? ` about ${m}` : ''}`;
+    case 'counsel.conversation.rename': return refused ? 'tried to rename a chat' : `renamed a chat${m ? ` about ${m}` : ''}`;
+    case 'counsel.conversation.delete': return refused ? 'tried to delete a chat' : `deleted a chat from their list${m ? ` (${m})` : ''}`;
+    case 'counsel.feedback': return refused ? 'tried to rate an answer' : `rated an answer${m ? ` about ${m}` : ''}`;
     case 'counsel.turn': return refused ? `was refused a question${m ? ` about ${m}` : ''}` : `asked a question in chat${m ? ` about ${m}` : ''}`;
     case 'counsel.answer':
       return e.outcome === 'deny' ? `lost access to ${m || 'a matter'} while an answer was written`

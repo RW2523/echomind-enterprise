@@ -1,7 +1,8 @@
 /**
  * The trusted component registry (docs/echomind-legal/03): each validated component type maps to exactly one card
  * below; anything else is the inert placeholder. Every string from the server is rendered as text (React escapes it);
- * nothing is parsed as HTML or markdown, and only the workspace's own pages can be opened.
+ * nothing is parsed as HTML, and only the workspace's own pages can be opened. An answer's headings, lists, tables and
+ * bold words (format.ts) become React elements holding text, never markup, links or images.
  */
 import React, { useMemo, useState } from 'react';
 import {
@@ -9,6 +10,7 @@ import {
   Scale,
 } from 'lucide-react';
 import { counselApi, requestId } from './api';
+import { blocks, boldPieces } from './format';
 import { isWorkspacePath, parseComponent } from './validate';
 import type {
   CaseRow, CaseTableProps, CitationRef, ComparisonSide, DiscrepancyStatus, EvidenceComparisonProps, NoticeProps, PriorityListProps,
@@ -50,7 +52,7 @@ export function ActionButtons({ actions, ctx }: { actions: UiAction[]; ctx: Card
 }
 
 // ── Answer text with inline citation chips ─────────────────────────────────────
-const MARK = /\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]/g;
+export const MARK = /\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]/g;
 
 /** Display numbers: sources numbered 1, 2, 3 in the order the answer first cites them (research numbers its passages). */
 export function displayNumbers(text: string, citations: CitationRef[]): Map<number, number> {
@@ -84,33 +86,56 @@ export function CitationChip({ n, c, ctx, pending, label }: { n: number; c?: Cit
   );
 }
 
-/** Paragraphs of plain text; "[n]" markers become chips only for sources this answer actually has. */
+/** The answer's text: paragraphs, headings, lists and tables (format.ts); "[n]" markers become chips only for sources this
+ *  answer actually has. */
 export function AnswerText({ text, citations, ctx, pending, labels }: {
   text: string; citations: CitationRef[]; ctx?: CardContext; pending?: boolean; labels?: Map<number, number>;
 }) {
   const byN = new Map(citations.map((c) => [c.n, c]));
-  const paragraphs = text.replace(/\*\*(.+?)\*\*/g, '$1').split(/\n{2,}/).filter((p) => p.trim());
+  // One piece of text (a paragraph, item or cell): bold spans, and chips in place of markers.
+  const inline = (line: string, key: string): React.ReactNode[] => {
+    const parts: React.ReactNode[] = [];
+    let prev: number | null = null;                     // "[1][1]" (two quotes from one source) shows one chip
+    boldPieces(line).forEach(([piece, bold], b) => {
+      const here: React.ReactNode[] = [];
+      let last = 0;
+      for (const m of piece.matchAll(MARK)) {
+        // A finished answer shows only markers that have a source; one without (a number the model made up) is dropped,
+        // never left as text that looks like a citation (review C1). While it streams, every marker waits for its chip.
+        const ns = (m[1] ?? '').split(',').map((x) => Number(x.trim())).filter((n) => pending || byN.has(n));
+        const between = piece.slice(last, m.index);
+        if (between.trim()) prev = null;
+        here.push(between);
+        ns.forEach((n) => {
+          if (n !== prev) here.push(<CitationChip key={`${key}-${b}-${m.index}-${n}`} n={n} c={byN.get(n)} ctx={ctx} pending={pending} label={labels?.get(n)} />);
+          prev = n;
+        });
+        last = (m.index ?? 0) + m[0].length;
+      }
+      here.push(piece.slice(last));
+      if (piece.slice(last).trim()) prev = null;
+      parts.push(bold ? <strong key={`${key}-b${b}`}>{here}</strong> : <React.Fragment key={`${key}-t${b}`}>{here}</React.Fragment>);
+    });
+    return parts;
+  };
   return (
     <div className="qc-answer">
-      {paragraphs.map((p, i) => {
-        const parts: React.ReactNode[] = [];
-        let last = 0;
-        let prev: number | null = null;                   // "[1][1]" (two quotes from one source) shows one chip
-        for (const m of p.matchAll(MARK)) {
-          // A finished answer shows only markers that have a source; one without (a number the model made up) is dropped,
-          // never left as text that looks like a citation (review C1). While it streams, every marker waits for its chip.
-          const ns = m[1].split(',').map((x) => Number(x.trim())).filter((n) => pending || byN.has(n));
-          const between = p.slice(last, m.index);
-          if (between.trim()) prev = null;
-          parts.push(between);
-          ns.forEach((n) => {
-            if (n !== prev) parts.push(<CitationChip key={`${m.index}-${n}`} n={n} c={byN.get(n)} ctx={ctx} pending={pending} label={labels?.get(n)} />);
-            prev = n;
-          });
-          last = (m.index ?? 0) + m[0].length;
+      {blocks(text).map((bl, i) => {
+        switch (bl.kind) {
+          case 'h': return <h4 key={i} className="qc-answer-h">{inline(bl.text, `${i}`)}</h4>;
+          case 'ul': return <ul key={i}>{bl.items.map((it, j) => <li key={j}>{inline(it, `${i}.${j}`)}</li>)}</ul>;
+          case 'ol': return <ol key={i} start={bl.start}>{bl.items.map((it, j) => <li key={j}>{inline(it, `${i}.${j}`)}</li>)}</ol>;
+          case 'table': return (
+            <div key={i} className="qc-table-wrap">
+              <table className="qc-table qc-answer-table">
+                <thead><tr>{bl.head.map((h, j) => <th key={j} scope="col">{inline(h, `${i}.h${j}`)}</th>)}</tr></thead>
+                <tbody>{bl.rows.map((r, j) => (
+                  <tr key={j}>{bl.head.map((_, k) => <td key={k}>{inline(r[k] ?? '', `${i}.${j}.${k}`)}</td>)}</tr>
+                ))}</tbody>
+              </table>
+            </div>);
+          default: return <p key={i}>{inline(bl.text, `${i}`)}</p>;
         }
-        parts.push(p.slice(last));
-        return <p key={i}>{parts}</p>;
       })}
     </div>
   );

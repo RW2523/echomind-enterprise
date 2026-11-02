@@ -164,7 +164,7 @@ def _notes(cites: list[dict], conflicts: list[dict]) -> list[str]:
 
 async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, document_ids: list[str], built: Built,
                extra_scopes: tuple = ()):
-    hist = await run_in_threadpool(store.history, conv["id"], principal["sub"], turn["seq"])
+    hist = await run_in_threadpool(store.history, conv["id"], principal["sub"], turn)
     if hist:
         rewritten_q, rewritten = await followup.standalone(question, hist)
         if rewritten:
@@ -450,15 +450,15 @@ _SMALLTALK = ("Ask about this matter's documents, for example: what a clause say
 
 # ── The turn ─────────────────────────────────────────────────────────────────────
 async def run(principal: dict, conv: dict, text: str, client_request_id: Optional[str], document_ids: list[str],
-              focus: Optional[str]) -> AsyncIterator[dict]:
+              focus: Optional[str], parent=store._FOLLOW_NEWEST) -> AsyncIterator[dict]:
     kind = "compare" if focus else intents.classify(text)
-    turn = await run_in_threadpool(store.start_turn, conv, principal["sub"], text, kind, client_request_id)
+    turn = await run_in_threadpool(store.start_turn, conv, principal["sub"], text, kind, client_request_id, parent)
     built = Built()
     final_status = "failed"
     ids = conv.get("matter_ids") or [conv["matter_id"]]
     several = len(ids) > 1
     yield event("turn.started", {"turn_id": turn["id"], "conversation_id": conv["id"], "matter_id": conv["matter_id"], "intent": kind,
-                                 **({"matter_ids": ids} if several else {})})
+                                 "parent_turn_id": turn["parent_turn_id"], **({"matter_ids": ids} if several else {})})
     try:
         scopes = [await run_in_threadpool(scopemod.authorize, principal, m) for m in ids]
         scope = scopes[0]

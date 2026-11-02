@@ -7,10 +7,10 @@
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity, Briefcase, ChevronDown, FilePen, KeyRound, Landmark, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
-  Moon, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun,
+  Moon, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useReviews } from '../api/queries';
@@ -22,6 +22,7 @@ import { hasFirmRole, useSession } from '../app/session';
 import { whereAnswersComeFrom } from './where';
 import { isMac, PaletteProvider, useOpenPalette } from '../ui/Palette';
 import { counselApi } from './api';
+import type { ConversationSummary } from './types';
 import { ChatMatterProvider, PanelProvider, useChatMatter, usePanel } from './context';
 import MatterPicker, { Layer, usePopover } from './MatterPicker';
 import SidePanel from './SidePanel';
@@ -104,19 +105,92 @@ function ProfileMenu() {
 }
 
 // ── Rail ───────────────────────────────────────────────────────────────────────
+const SHOWN = 30;
+
+/** One conversation in the rail: open it, or rename it or take it off the list from its "…" menu. */
+function HistoryItem({ c, onChanged }: { c: ConversationSummary; onChanged: (deleted: boolean) => void }) {
+  const [mode, setMode] = useState<'idle' | 'menu' | 'rename' | 'delete'>('idle');
+  const [title, setTitle] = useState(c.title);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const where = (c.matters?.length ?? 0) > 1 ? c.matters!.map((m) => m.number).join(' + ') : c.matter.number;
+  const rename = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const t = title.trim();
+    if (!t || t === c.title) { setMode('idle'); return; }
+    setSaving(true);
+    try { await counselApi.rename(c.id, t); setMode('idle'); setError(null); onChanged(false); }
+    catch (err) { setError(err instanceof Error ? err.message : 'The name could not be saved.'); }
+    setSaving(false);
+  };
+  const remove = async () => {
+    setSaving(true);
+    try { await counselApi.remove(c.id); setMode('idle'); onChanged(true); }
+    catch (err) { setError(err instanceof Error ? err.message : 'The conversation could not be deleted.'); }
+    setSaving(false);
+  };
+  if (mode === 'rename') {
+    return (
+      <form className="qc-history-edit" onSubmit={(e) => void rename(e)}>
+        <input value={title} maxLength={80} autoFocus aria-label="Conversation name" onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Escape') { setMode('idle'); setTitle(c.title); } }} onBlur={(e) => void rename(e)} disabled={saving} />
+        {error && <small role="alert">{error}</small>}
+      </form>
+    );
+  }
+  return (
+    <div className="qc-history-row" data-open={mode !== 'idle' || undefined}>
+      <NavLink to={`/chat/${c.id}`} className={({ isActive }) => `qc-history-item${isActive ? ' active' : ''}`}>
+        <span>{c.title}</span>
+        {c.match && c.match !== c.title && <small className="qc-history-match">{c.match}</small>}
+        <small>{where}</small>
+      </NavLink>
+      <button type="button" className="qc-history-more" aria-label={`More for ${c.title}`} aria-expanded={mode !== 'idle'}
+        onClick={() => { setMode(mode === 'idle' ? 'menu' : 'idle'); setError(null); }}><MoreHorizontal aria-hidden /></button>
+      {mode === 'menu' && (
+        <div className="qc-history-menu" role="group" aria-label={`${c.title}: actions`}>
+          <button type="button" onClick={() => { setTitle(c.title); setMode('rename'); }}>Rename</button>
+          <button type="button" onClick={() => setMode('delete')}>Delete</button>
+        </div>
+      )}
+      {mode === 'delete' && (
+        <div className="qc-history-menu" role="alertdialog" aria-label={`Delete ${c.title}?`}>
+          <p>Delete “{c.title}”? It leaves your list. The firm keeps its record as the matter's work product.</p>
+          <button type="button" className="qc-danger" onClick={() => void remove()} disabled={saving}>{saving ? 'Deleting…' : 'Delete'}</button>
+          <button type="button" onClick={() => setMode('idle')}>Cancel</button>
+        </div>
+      )}
+      {error && mode !== 'idle' && <small role="alert" className="qc-history-error">{error}</small>}
+    </div>
+  );
+}
+
 function History() {
-  const q = useQuery({ queryKey: ['counsel', 'conversations'], retry: false, staleTime: 10_000, queryFn: () => counselApi.conversations() });
-  const items = q.data?.conversations ?? [];
-  if (!items.length) return null;
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [q, setQ] = useState('');
+  const [term, setTerm] = useState('');
+  useEffect(() => { const t = window.setTimeout(() => setTerm(q.trim()), 250); return () => window.clearTimeout(t); }, [q]);
+  const list = useQuery({ queryKey: ['counsel', 'conversations', term], retry: false, staleTime: 10_000, placeholderData: keepPreviousData,
+                          queryFn: () => counselApi.conversations(undefined, term || undefined) });
+  const items = list.data?.conversations ?? [];
+  if (!items.length && !term && !q) return null;
+  const changed = (id: string) => (deleted: boolean) => {
+    void qc.invalidateQueries({ queryKey: ['counsel', 'conversations'] });
+    if (deleted && location.pathname === `/chat/${id}`) navigate('/chat');
+  };
   return (
     <>
       <div className="qc-rail-label qc-hide-collapsed">Recent</div>
-      <nav className="qc-history qc-hide-collapsed" aria-label="Recent conversations">
-        {items.slice(0, 8).map((c) => (
-          <NavLink key={c.id} to={`/chat/${c.id}`} className={({ isActive }) => `qc-history-item${isActive ? ' active' : ''}`}>
-            <span>{c.title}</span><small>{(c.matters?.length ?? 0) > 1 ? c.matters!.map((m) => m.number).join(' + ') : c.matter.number}</small>
-          </NavLink>
-        ))}
+      <div className="qc-history-search qc-hide-collapsed">
+        <Search aria-hidden />
+        <input type="search" value={q} maxLength={100} onChange={(e) => setQ(e.target.value)} placeholder="Search chats"
+          aria-label="Search your conversations" />
+      </div>
+      <nav className="qc-history qc-hide-collapsed" aria-label={term ? `Conversations matching ${term}` : 'Recent conversations'}>
+        {items.slice(0, SHOWN).map((c) => <HistoryItem key={c.id} c={c} onChanged={changed(c.id)} />)}
+        {term && !items.length && !list.isFetching && <p className="qc-history-none">No conversation mentions “{term}”.</p>}
       </nav>
     </>
   );

@@ -1,9 +1,15 @@
 """/api/legal/counsel — the chat-first workspace (docs/echomind-legal/03 and 09).
 
-- `GET  /counsel/conversations[?matter_id=]`     the caller's conversations in matters they can still open
+- `GET  /counsel/conversations[?matter_id=&q=]`  the caller's conversations in matters they can still open (`q` searches
+                                                 titles and questions)
 - `POST /counsel/conversations`                  start one in a matter (`research.query` on it)
-- `GET  /counsel/conversations/{id}`             its turns, each with its validated component envelope
-- `POST /counsel/conversations/{id}/turns`       ask; NDJSON events (orchestrator.py); idempotent on client_request_id
+- `GET  /counsel/conversations/{id}`             its turns (a tree: each names the turn it follows), each with its validated
+                                                 component envelope and the caller's rating
+- `PATCH  /counsel/conversations/{id}`           rename it
+- `DELETE /counsel/conversations/{id}`           take it off the caller's list (kept as work product)
+- `POST /counsel/conversations/{id}/turns`       ask (after a given turn, or again as another version of one); NDJSON
+                                                 events (orchestrator.py); idempotent on client_request_id
+- `PUT  /counsel/turns/{id}/feedback`            the asker's rating of one answer
 - `GET  /counsel/citations/{id}`                 the cited passage, re-authorized and re-verified (citations.py)
 - `POST /counsel/actions`                        a component action: identity, matter right, component origin,
                                                  version (CAS) and idempotency key are all checked here
@@ -19,7 +25,7 @@ from __future__ import annotations
 import json
 from typing import Annotated, Any, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, StringConstraints, ValidationError, model_validator
 from starlette.concurrency import run_in_threadpool
@@ -66,11 +72,12 @@ class ConversationIn(BaseModel):
 
 
 @router.get("/conversations")
-def list_conversations(request: Request, matter_id: Optional[str] = None):
+def list_conversations(request: Request, matter_id: Optional[str] = None, q: Optional[str] = Query(None, max_length=100)):
     p = principal_of(request)
     if matter_id:
         require(p, "research.query", matter_id)
-    return JSONResponse({"conversations": store.list_conversations(p, matter_id)}, headers=_NO_STORE)
+    q = " ".join((q or "").split()) or None
+    return JSONResponse({"conversations": store.list_conversations(p, matter_id, q=q)}, headers=_NO_STORE)
 
 
 @router.post("/conversations", status_code=201)
@@ -98,11 +105,15 @@ def read_conversation(conversation_id: str, request: Request):
     p = principal_of(request)
     conv = _own_conversation(p, conversation_id)
     out = []
+    rated = store.feedback(conv["id"], p["sub"])
     for t in store.turns(conv["id"], p["sub"]):
-        item = {"id": t["id"], "seq": t["seq"], "question": t["question"], "understood": t["understood"], "intent": t["intent"],
-                "status": t["status"], "created_at": t["created_at"], "finished_at": t["finished_at"]}
+        item = {"id": t["id"], "seq": t["seq"], "parent_turn_id": t["parent_turn_id"], "question": t["question"],
+                "understood": t["understood"], "intent": t["intent"], "status": t["status"], "created_at": t["created_at"],
+                "finished_at": t["finished_at"]}
         if t["status"] in ("completed", "abstained"):
             item["envelope"] = orchestrator.envelope_for(p, t, conv)
+        if t["id"] in rated:
+            item["feedback"] = rated[t["id"]]
         out.append(item)
     note(matter_id=conv["matter_id"], details={"turns": len(out), **({"matters": conv["matter_ids"]} if len(conv["matter_ids"]) > 1 else {})})
     return JSONResponse({"conversation": {**{k: conv[k] for k in ("id", "matter_id", "title", "created_at", "updated_at")},
@@ -110,11 +121,52 @@ def read_conversation(conversation_id: str, request: Request):
                         headers=_NO_STORE)
 
 
+class ConversationPatch(BaseModel):
+    model_config = {"extra": "forbid"}
+    title: str = Field(min_length=1, max_length=store.TITLE_MAX)
+
+
+@router.patch("/conversations/{conversation_id}")
+@audited("counsel.conversation.rename", object_type="conversation", object_param="conversation_id")
+def rename_conversation(conversation_id: str, inp: ConversationPatch, request: Request):
+    p = principal_of(request)
+    conv = _own_conversation(p, conversation_id)
+    title = " ".join(inp.title.split())
+    if not title:
+        raise HTTPException(status_code=422, detail="Give the conversation a name.")
+    store.rename(conv["id"], p["sub"], title)
+    note(matter_id=conv["matter_id"], details={"chars": len(title)})
+    return JSONResponse({"conversation": {"id": conv["id"], "title": store.conversation(conv["id"], p["sub"])["title"]}}, headers=_NO_STORE)
+
+
+@router.delete("/conversations/{conversation_id}", status_code=204)
+@audited("counsel.conversation.delete", object_type="conversation", object_param="conversation_id")
+def delete_conversation(conversation_id: str, request: Request):
+    """Off the caller's list. Allowed while they can still open its matters (otherwise it is not theirs to see either);
+    the records stay as the matter's work product."""
+    p = principal_of(request)
+    conv = _own_conversation(p, conversation_id)
+    store.delete(conv["id"], p["sub"])
+    note(matter_id=conv["matter_id"])
+    return Response(status_code=204, headers=_NO_STORE)
+
+
+_TurnId = Field(default=None, pattern=r"^turn_[0-9a-f]{32}$")
+
+
 class TurnIn(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
     client_request_id: Optional[str] = Field(default=None, min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
     document_ids: list[Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_.:-]{1,80}$")]] = Field(default_factory=list, max_length=10)
     focus_discrepancy_id: Optional[str] = Field(default=None, pattern=r"^dsc_[0-9a-f]{32}$")
+    after_turn_id: Optional[str] = _TurnId                # the turn this question follows (default: the newest)
+    retry_of: Optional[str] = _TurnId                     # ask again, or edited: another version of that turn
+
+    @model_validator(mode="after")
+    def _one_place(self):
+        if self.after_turn_id and self.retry_of:
+            raise ValueError("a question either follows a turn or is another version of one")
+        return self
 
 
 def _ndjson(events):
@@ -153,7 +205,42 @@ async def ask(conversation_id: str, inp: TurnIn, request: Request):
             return _ndjson(_replay(p, prior))
     if await run_in_threadpool(store.running_turn, conv["id"]):
         raise HTTPException(status_code=409, detail="Wait for the answer in progress, or stop it, before asking again.")
-    return _ndjson(orchestrator.run(p, conv, text, inp.client_request_id, inp.document_ids, inp.focus_discrepancy_id))
+    parent = store._FOLLOW_NEWEST
+    for tid in (inp.after_turn_id, inp.retry_of):
+        if tid:
+            t = await run_in_threadpool(store.turn, tid, p["sub"])
+            if not t or t["conversation_id"] != conv["id"]:
+                raise _not_found()
+            parent = t["id"] if tid == inp.after_turn_id else t["parent_turn_id"]
+    if inp.retry_of:
+        note(details={"chars": len(text), "documents": len(inp.document_ids), "version_of": inp.retry_of})
+    return _ndjson(orchestrator.run(p, conv, text, inp.client_request_id, inp.document_ids, inp.focus_discrepancy_id, parent))
+
+
+class FeedbackIn(BaseModel):
+    model_config = {"extra": "forbid"}
+    rating: Optional[Literal["up", "down"]]
+    reason: Optional[Literal[store.FEEDBACK_REASONS]] = None
+    note: Optional[str] = Field(default=None, max_length=500)
+
+
+@router.put("/turns/{turn_id}/feedback")
+@audited("counsel.feedback", object_type="counsel_turn", object_param="turn_id")
+def rate_answer(turn_id: str, inp: FeedbackIn, request: Request):
+    """Whether an answer helped, from the person who asked it, while they can still open its conversation."""
+    p = principal_of(request)
+    t = store.turn(turn_id, p["sub"])
+    if not t:
+        raise _not_found()
+    conv = _own_conversation(p, t["conversation_id"])
+    if t["status"] not in ("completed", "abstained"):
+        raise HTTPException(status_code=409, detail="Only a finished answer can be rated.")
+    if inp.rating != "down" and (inp.reason or inp.note):
+        raise HTTPException(status_code=422, detail="Say what was wrong only with a thumbs down.")
+    note_text = " ".join((inp.note or "").split()) or None
+    out = store.set_feedback(t, p["org_id"], inp.rating, inp.reason, note_text)
+    note(matter_id=conv["matter_id"], details={"rating": inp.rating, "reason": inp.reason, "note_chars": len(note_text or "")})
+    return JSONResponse({"feedback": out}, headers=_NO_STORE)
 
 
 # ── Sources ──────────────────────────────────────────────────────────────────────

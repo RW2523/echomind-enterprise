@@ -1,7 +1,11 @@
-"""Conversations, turns, stored components and action idempotency (migration 0036).
+"""Conversations, turns, stored components and action idempotency (migrations 0036, 0039).
 
 Every function takes the owner and the matter and answers None when either does not match, so a guessed id of
-someone else's conversation, turn or component behaves exactly like one that does not exist.
+someone else's conversation, turn or component behaves exactly like one that does not exist. A conversation its owner
+deleted behaves the same way (it is kept as work product, never listed, opened or continued).
+
+Turns form a tree (0039): each names the turn it follows. Asking again, or with the question edited, adds a sibling
+(another version of that step), so every answer that was shown stays on record; the browser shows one path through it.
 """
 from __future__ import annotations
 
@@ -50,7 +54,7 @@ def matter_ids(conn, conversation_id: str, primary: str) -> list[str]:
 def conversation(conversation_id: str, owner_id: str) -> Optional[dict]:
     with get_conn() as conn:
         r = conn.execute("SELECT id, org_id, matter_id, owner_id, title, created_at, updated_at FROM legal_conversations "
-                         "WHERE id=? AND owner_id=?", (conversation_id, owner_id)).fetchone()
+                         "WHERE id=? AND owner_id=? AND deleted_at IS NULL", (conversation_id, owner_id)).fetchone()
         if not r:
             return None
         conv = dict(zip(("id", "org_id", "matter_id", "owner_id", "title", "created_at", "updated_at"), r))
@@ -58,17 +62,36 @@ def conversation(conversation_id: str, owner_id: str) -> Optional[dict]:
     return conv
 
 
-def list_conversations(principal: dict, matter_id: Optional[str] = None, limit: int = 50) -> list[dict]:
-    """The owner's conversations whose matters they can all still open, newest first."""
+def _like(q: str) -> str:
+    return "%" + q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+
+
+def _snippet(question: str, q: str, width: int = 110) -> str:
+    """The words around the first match of `q` in a question, for a search result."""
+    at = question.lower().find(q.lower())
+    if at < 0 or len(question) <= width:
+        return question[:width]
+    start = max(0, at - width // 3)
+    end = min(len(question), start + width)
+    return ("…" if start else "") + question[start:end].strip() + ("…" if end < len(question) else "")
+
+
+def list_conversations(principal: dict, matter_id: Optional[str] = None, limit: int = 50, q: Optional[str] = None) -> list[dict]:
+    """The owner's conversations whose matters they can all still open, newest first. With `q`: those whose title or one
+    of whose questions contains it (case-insensitive), each with the words around the first matching question."""
     args = {"uid": principal["sub"], "org": principal["org_id"], "now": policy.now_iso(), "lim": int(limit)}
     extra = ""
     if matter_id:
         extra, args["mid"] = " AND c.matter_id = :mid", matter_id
+    if q:
+        extra += (" AND (c.title LIKE :q ESCAPE '\\' OR EXISTS (SELECT 1 FROM legal_conversation_turns t "
+                  "WHERE t.conversation_id = c.id AND t.question LIKE :q ESCAPE '\\'))")
+        args["q"] = _like(q)
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT c.id, c.title, c.created_at, c.updated_at, m.id, m.number, m.title, "
             "(SELECT COUNT(*) FROM legal_conversation_turns t WHERE t.conversation_id = c.id) "
-            f"FROM legal_conversations c JOIN matters m ON m.id = c.matter_id WHERE c.owner_id = :uid{extra} "
+            f"FROM legal_conversations c JOIN matters m ON m.id = c.matter_id WHERE c.owner_id = :uid AND c.deleted_at IS NULL{extra} "
             f"AND {policy.visible_matters_sql()} ORDER BY c.updated_at DESC LIMIT :lim", args).fetchall()
         out = []
         for r in rows:
@@ -76,12 +99,35 @@ def list_conversations(principal: dict, matter_id: Optional[str] = None, limit: 
             if len(ids) > 1 and not all(policy.authorize(principal, "research.query", m).allowed for m in ids):
                 continue                                   # a conversation is listed only while every one of its matters is open
             others = [conn.execute("SELECT id, number, title FROM matters WHERE id=?", (m,)).fetchone() for m in ids[1:]]
-            out.append({"id": r[0], "title": r[1], "created_at": r[2], "updated_at": r[3],
-                        "matter": {"id": r[4], "number": r[5], "title": r[6]},
-                        "matters": [{"id": r[4], "number": r[5], "title": r[6]}] + [{"id": o[0], "number": o[1], "title": o[2]}
-                                                                                   for o in others if o],
-                        "turns": r[7]})
+            item = {"id": r[0], "title": r[1], "created_at": r[2], "updated_at": r[3],
+                    "matter": {"id": r[4], "number": r[5], "title": r[6]},
+                    "matters": [{"id": r[4], "number": r[5], "title": r[6]}] + [{"id": o[0], "number": o[1], "title": o[2]}
+                                                                               for o in others if o],
+                    "turns": r[7]}
+            if q:
+                hit = conn.execute("SELECT question FROM legal_conversation_turns WHERE conversation_id=? AND question LIKE ? "
+                                   "ESCAPE '\\' ORDER BY seq LIMIT 1", (r[0], args["q"])).fetchone()
+                if hit:
+                    item["match"] = _snippet(hit[0], q)
+            out.append(item)
     return out
+
+
+def rename(conversation_id: str, owner_id: str, title: str) -> bool:
+    with get_conn() as conn:
+        n = conn.execute("UPDATE legal_conversations SET title=? WHERE id=? AND owner_id=? AND deleted_at IS NULL",
+                         (_title(title), conversation_id, owner_id)).rowcount
+        conn.commit()
+    return n == 1
+
+
+def delete(conversation_id: str, owner_id: str) -> bool:
+    """Off its owner's list for good. The rows stay (work product, purge and retention apply), unreachable through the chat."""
+    with get_conn() as conn:
+        n = conn.execute("UPDATE legal_conversations SET deleted_at=? WHERE id=? AND owner_id=? AND deleted_at IS NULL",
+                         (policy.now_iso(), conversation_id, owner_id)).rowcount
+        conn.commit()
+    return n == 1
 
 
 def touch(conversation_id: str, title_from: Optional[str] = None) -> None:
@@ -93,7 +139,8 @@ def touch(conversation_id: str, title_from: Optional[str] = None) -> None:
 
 # ── Turns ────────────────────────────────────────────────────────────────────────
 _TURN_COLS = ("id", "conversation_id", "matter_id", "owner_id", "seq", "client_request_id", "question", "understood", "intent",
-              "status", "summary", "component_ids_json", "actions_json", "research_turn_id", "created_at", "finished_at")
+              "status", "summary", "component_ids_json", "actions_json", "research_turn_id", "created_at", "finished_at",
+              "parent_turn_id")
 
 
 def _turn(r) -> dict:
@@ -108,6 +155,20 @@ def turn_by_request(owner_id: str, client_request_id: str) -> Optional[dict]:
         r = conn.execute(f"SELECT {', '.join(_TURN_COLS)} FROM legal_conversation_turns WHERE owner_id=? AND client_request_id=?",
                          (owner_id, client_request_id)).fetchone()
     return _turn(r) if r else None
+
+
+def turn(turn_id: str, owner_id: str) -> Optional[dict]:
+    with get_conn() as conn:
+        r = conn.execute(f"SELECT {', '.join(_TURN_COLS)} FROM legal_conversation_turns WHERE id=? AND owner_id=?",
+                         (turn_id, owner_id)).fetchone()
+    return _turn(r) if r else None
+
+
+def newest_turn(conversation_id: str) -> Optional[str]:
+    with get_conn() as conn:
+        r = conn.execute("SELECT id FROM legal_conversation_turns WHERE conversation_id=? ORDER BY seq DESC LIMIT 1",
+                         (conversation_id,)).fetchone()
+    return r[0] if r else None
 
 
 def turns(conversation_id: str, owner_id: str) -> list[dict]:
@@ -133,18 +194,28 @@ def running_turn(conversation_id: str) -> Optional[str]:
     return r[0] if time.time() - started < STALE_RUNNING_SEC else None
 
 
-def start_turn(conversation: dict, owner_id: str, question: str, intent: str, client_request_id: Optional[str]) -> dict:
+_FOLLOW_NEWEST = object()
+
+
+def start_turn(conversation: dict, owner_id: str, question: str, intent: str, client_request_id: Optional[str],
+               parent_turn_id=_FOLLOW_NEWEST) -> dict:
+    """A new turn following `parent_turn_id` (None: a first question, or another version of one). By default it follows
+    the conversation's newest turn, as a conversation without versions always did."""
     tid, now = new_id("turn"), policy.now_iso()
     with get_conn() as conn:
         seq = conn.execute("SELECT COALESCE(MAX(seq), 0) + 1 FROM legal_conversation_turns WHERE conversation_id=?",
                            (conversation["id"],)).fetchone()[0]
+        if parent_turn_id is _FOLLOW_NEWEST:
+            r = conn.execute("SELECT id FROM legal_conversation_turns WHERE conversation_id=? ORDER BY seq DESC LIMIT 1",
+                             (conversation["id"],)).fetchone()
+            parent_turn_id = r[0] if r else None
         conn.execute("INSERT INTO legal_conversation_turns (id, conversation_id, matter_id, owner_id, seq, client_request_id, question, "
-                     "intent, status, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                     "intent, status, created_at, parent_turn_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                      (tid, conversation["id"], conversation["matter_id"], owner_id, seq, client_request_id, question, intent,
-                      "running", now))
+                      "running", now, parent_turn_id))
         conn.commit()
     return {"id": tid, "conversation_id": conversation["id"], "matter_id": conversation["matter_id"], "owner_id": owner_id,
-            "seq": seq, "question": question, "intent": intent, "status": "running", "created_at": now}
+            "seq": seq, "question": question, "intent": intent, "status": "running", "created_at": now, "parent_turn_id": parent_turn_id}
 
 
 def finish_turn(turn_id: str, status: str, summary: str, component_ids: list[str], actions: list[dict],
@@ -157,15 +228,22 @@ def finish_turn(turn_id: str, status: str, summary: str, component_ids: list[str
         conn.commit()
 
 
-def history(conversation_id: str, owner_id: str, before_seq: int, limit: int = 4) -> list[dict]:
-    """Earlier answered questions of the conversation, oldest first, as research's follow-up rewriting wants them."""
+def history(conversation_id: str, owner_id: str, turn: dict, limit: int = 4) -> list[dict]:
+    """The answered questions this turn follows on its own path (never another version's), oldest first, as research's
+    follow-up rewriting wants them."""
     with get_conn() as conn:
-        rows = conn.execute("SELECT t.question, t.understood, t.component_ids_json FROM legal_conversation_turns t "
-                            "WHERE t.conversation_id=? AND t.owner_id=? AND t.seq < ? AND t.status IN ('completed','abstained') "
-                            "AND t.intent = 'ask_fact' "
-                            "ORDER BY t.seq DESC LIMIT ?", (conversation_id, owner_id, before_seq, limit)).fetchall()
+        rows = {r[0]: r[1:] for r in conn.execute(
+            "SELECT id, parent_turn_id, question, understood, component_ids_json, status, intent FROM legal_conversation_turns "
+            "WHERE conversation_id=? AND owner_id=?", (conversation_id, owner_id)).fetchall()}
+        chain, seen, pid = [], set(), turn.get("parent_turn_id")
+        while pid and pid in rows and pid not in seen and len(chain) < limit:
+            seen.add(pid)
+            parent, q, understood, cj, status, intent = rows[pid]
+            if status in ("completed", "abstained") and intent == "ask_fact":
+                chain.append((q, understood, cj))
+            pid = parent
         out = []
-        for q, understood, cj in reversed(rows):
+        for q, understood, cj in reversed(chain):
             answer = ""
             for cid in json.loads(cj or "[]"):
                 r = conn.execute("SELECT type, props_json FROM legal_counsel_components WHERE id=?", (cid,)).fetchone()
@@ -215,6 +293,34 @@ def remember(owner_id: str, key: str, component_id: str, action_id: str, result:
                      "created_at) VALUES (?,?,?,?,?,?)",
                      (owner_id, key, component_id, action_id, json.dumps(result, ensure_ascii=False), policy.now_iso()))
         conn.commit()
+
+
+# ── Feedback ─────────────────────────────────────────────────────────────────────
+FEEDBACK_REASONS = ("wrong_source", "missed", "not_asked", "unclear", "other")
+
+
+def set_feedback(turn: dict, org_id: str, rating: Optional[str], reason: Optional[str], note: Optional[str]) -> Optional[dict]:
+    """The asker's rating of one answer (None removes it)."""
+    now = policy.now_iso()
+    with get_conn() as conn:
+        if rating is None:
+            conn.execute("DELETE FROM legal_counsel_feedback WHERE turn_id=? AND owner_id=?", (turn["id"], turn["owner_id"]))
+            conn.commit()
+            return None
+        conn.execute("INSERT INTO legal_counsel_feedback (turn_id, owner_id, org_id, matter_id, rating, reason, note, created_at, updated_at) "
+                     "VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(turn_id, owner_id) DO UPDATE SET rating=excluded.rating, "
+                     "reason=excluded.reason, note=excluded.note, updated_at=excluded.updated_at",
+                     (turn["id"], turn["owner_id"], org_id, turn["matter_id"], rating, reason, note, now, now))
+        conn.commit()
+    return {"rating": rating, **({"reason": reason} if reason else {})}
+
+
+def feedback(conversation_id: str, owner_id: str) -> dict[str, dict]:
+    """turn id -> the asker's rating, for one conversation."""
+    with get_conn() as conn:
+        rows = conn.execute("SELECT f.turn_id, f.rating, f.reason FROM legal_counsel_feedback f JOIN legal_conversation_turns t "
+                            "ON t.id = f.turn_id WHERE t.conversation_id=? AND f.owner_id=?", (conversation_id, owner_id)).fetchall()
+    return {r[0]: {"rating": r[1], **({"reason": r[2]} if r[2] else {})} for r in rows}
 
 
 # ── Briefing bookkeeping ─────────────────────────────────────────────────────────

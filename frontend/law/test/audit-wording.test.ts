@@ -13,6 +13,9 @@ describe('audit wording', () => {
     expect(say(ev('counsel.answer'))).toBe('got an answer about MAT-1042');
     expect(say(ev('counsel.answer', 'error'))).toBe('did not get an answer about MAT-1042 (stopped or failed)');
     expect(say(ev('counsel.citation.open'))).toBe('opened a cited source in MAT-1042');
+    expect(say(ev('counsel.conversation.rename'))).toBe('renamed a chat about MAT-1042');
+    expect(say(ev('counsel.conversation.delete'))).toBe('deleted a chat from their list (MAT-1042)');
+    expect(say(ev('counsel.feedback'))).toBe('rated an answer about MAT-1042');
     expect(say(ev('research.answer'))).toBe('got a research answer about MAT-1042');
   });
   it('never shows a raw event code, even for events without their own sentence', () => {

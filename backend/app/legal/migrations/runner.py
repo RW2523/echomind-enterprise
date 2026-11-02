@@ -165,6 +165,10 @@ _REFUSE_BELOW = (
      "delete {n} lawyers' decision(s) on potential inconsistencies and chat conversation(s)"),
     (38, "SELECT COUNT(*) FROM legal_conversation_matters WHERE position > 0",
      "drop the other matters of {n} conversation(s) about several matters"),
+    (39, "SELECT (SELECT COUNT(*) FROM legal_counsel_feedback) + (SELECT COUNT(*) FROM legal_conversations WHERE deleted_at IS NOT NULL) "
+         "+ (SELECT COUNT(*) FROM legal_conversation_turns t WHERE EXISTS (SELECT 1 FROM legal_conversation_turns s "
+         "WHERE s.conversation_id = t.conversation_id AND s.parent_turn_id IS t.parent_turn_id AND s.id <> t.id))",
+     "drop {n} answer rating(s), deleted-conversation mark(s) or asked-again version(s) of chat answers"),
 )
 
 

@@ -158,9 +158,15 @@ export interface Envelope {
 
 /** A turn as the chat shows it: the question, then either the stream in progress or the finished envelope. */
 export type TurnStatus = 'streaming' | 'completed' | 'abstained' | 'failed' | 'scope_revoked' | 'canceled';
+export type FeedbackReason = 'wrong_source' | 'missed' | 'not_asked' | 'unclear' | 'other';
+export interface Feedback { rating: 'up' | 'down'; reason?: FeedbackReason }
+
 export interface ChatTurn {
   key: string;
   id?: string;
+  /** The turn this one follows (its server id), null for a first question. Turns with the same parent are versions. */
+  parent?: string | null;
+  feedback?: Feedback;
   question: string;
   understood?: string;
   status: TurnStatus;
@@ -179,6 +185,7 @@ export interface ConversationSummary {
   matter: { id: string; number: string; title: string };
   matters?: { id: string; number: string; title: string }[];
   turns: number;
+  match?: string;                    // a search result: the words around the matching question
 }
 
 export interface CitationDetail {
