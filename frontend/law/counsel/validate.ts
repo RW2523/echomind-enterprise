@@ -141,7 +141,9 @@ function sourceAnswer(v: unknown): SourceAnswerProps {
     citations: list(o.citations, 30, 'citations', citation), unsupported: list(o.unsupported, 10, 'unsupported', (x) => str(x, 500, 'unsupported')),
     notes: list(o.notes, 3, 'notes', (x) => str(x, 400, 'note')), understood: optStr(o.understood, 400, 'understood'),
     absence: optStr(o.absence, 400, 'absence'), calculation: calculation(o.calculation),
+    not_stated: o.not_stated === undefined ? undefined : bool(o.not_stated, 'not_stated'),
   };
+  if (p.not_stated && p.state === 'abstained') throw new Invalid('a decline is shown as a decline');
   if (p.calculation && p.state === 'abstained') throw new Invalid('a decline calculates nothing');
   if (p.state === 'abstained' && p.citations.length) throw new Invalid('an abstention cites nothing');
   if (p.absence !== undefined && p.state !== 'abstained') throw new Invalid('only a decline says what is missing');

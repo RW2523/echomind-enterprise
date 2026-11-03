@@ -276,6 +276,30 @@ the liability-cap question late in the full run, when the matter also holds the 
 when run on its own (23 s). Backend **1621 passed, 4 skipped** (all of `backend/tests`, `--network none`). Screenshots in
 `review-2026-11-02/`.
 
+## The whole RAG system evaluated again, and what it found fixed (2026-11-03)
+
+The owner asked for the RAG system to be evaluated again, end to end ("it should be smart and answer properly"). Two
+measures: the Phase 2 gate on `16671f0` (every research set three times, EV22), and a new chat-level set of 66 items / 80
+turns asked through the chat itself (intent routing, follow-up rewriting, cards) on a private copy of the demo data, each
+answer read by hand: 61/80 right; no restricted-matter leak, injections refused, conflicting documents flagged. Retrieval
+alone found the asked fact for 177 of 185 answerable research items; 30 of 47 answerable misses had the fact in front of
+the model. Every fix below was developed on those sets; held-out 8 and a fresh chat set were written first by a separate
+pass, frozen, and not read until the fixes were measured on them.
+
+| Found | Fix | Status | Evidence |
+|---|---|---|---|
+| Follow-ups asked as written: the rewrite prompt said to return a follow-up that "already stands alone" unchanged, and the model returned "Was that late under the contract?" and "Does the draft SPA say the same?" as they were, so the documents were searched for "that" | The prompt names the words that point back (it, that, they, then, the same, the other one, "And …?") and shows three examples from other matters (`research/followup.py`) | **Tested** | offline on the 14 failed follow-ups: 12 resolved, stand-alone questions kept their meaning; `test_law_followup.py` |
+| "How does the liability cap in the reseller agreement compare with the one in the MSA?" got the conflict scan's card about notice periods: any "compare" went to the scan | Conflict words still go to the scan, and "compare" does when the documents' facts are compared ("Compare the May 12 and May 15 claims", "the witness accounts"); a term in named documents is a question (`counsel/intent.py`) | **Tested** | `test_intents` |
+| "Thanks, that's really helpful." and "What can you do for me on this matter?" were researched and declined | Small talk covers praise in other words and "what can you (help me with \| do for me) on this matter/case" | **Tested** | `test_intents` |
+| A contract's parties by name, its clauses by role: "What subscription fee does Orbis pay?" declined over "The Customer shall pay the Provider …", "What does Harrowgate indemnify Voss-Lindqvist against?" never retrieved "Provider shall indemnify Client" (rank 9) | The roles a preamble defines (`attribution.roles_of`: "Harrowgate Systems Inc., a Delaware corporation ("Provider")") are read once per version; the search reads "Harrowgate (Provider)" (`with_roles`, from the documents that define every party named), and each source tells the model its document's parties (`parties="Lumen Software Ltd is the Provider; …"`, with a note only when a source has them; prompt research-s2.6) | **Tested** | indemnity clause rank 9 → 2; `test_law_evidence.py` |
+| A 600-character window of an 896-character notice left out "Please direct any questions to our General Counsel, Thomas Reyes" and "Your account team will not change" | Research gives the model each passage whole (up to 1,800 characters around its best window); the window still ranks it and marks the sentence the reader opens on; drafting, Silent Assist and playbooks keep exact windows (`retrieval/search.py` `wide`) | **Tested** | `test_law_evidence.py` |
+| "The supply agreement with Alder Retail" answered GBP 120,000 with a verified quote from the other supply agreement (Northwind and Tidewater): titles did not tell them apart | A document named by its party ("the agreement with Alder Retail", "Harrowgate's MSA") also searches the documents that party is party to; a sentence that names it and cites a document that party is not party to does not stand, and an answer that rests only on such documents is withheld (`attribution.named_parties`, `routes._answer`) | **Tested** | `test_law_evidence.py` |
+| "The consultancy agreement … is governed by the laws of Sweden.\n\n[2]", [2] being the reseller agreement: the sentence was unsupported, the bare marker supported nothing, the card read "partly supported" | A bare marker in a paragraph of its own cites the sentence before it, so the claim is checked as one (withheld: other documents); an answer with nothing standing is "unverified", never "partly supported" | **Tested** | `test_law_evidence.py` |
+| "The documents do not state when her appointment ends. She was appointed from 1 June 2026 [1]" read "Partly supported: some sentences have no verified source", which describes neither (EV19's narrower option) | Such an answer's card says "Not stated in the documents: related passages are cited" (`not_stated` on source_answer; a decline can never carry it) | **Tested** | `test_law_counsel.py`, `counsel.test.tsx` |
+
+Not changed: the decline rules (EV16), the threshold for what counts as declined, the quote checks. Retrieval measured as
+research now searches: the asked fact in the passages for **182 of 185** answerable research items (was 177), none lost.
+
 ## Commercial-readiness review (2026-10-28)
 
 Phase 0 audited security, operations and the interface read-only (three audits, baseline below); the owner then asked for

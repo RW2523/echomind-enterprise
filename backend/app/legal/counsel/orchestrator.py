@@ -241,6 +241,8 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
         props["understood"] = built.understood[:400]
     if state == "abstained" and done.get("absence"):
         props["absence"] = done["absence"][:400]
+    if state != "abstained" and research.prompt.opens_not_stated(done.get("answer") or ""):
+        props["not_stated"] = True
     if state != "abstained" and done.get("calculation"):
         props["calculation"] = _calculation_props(done["calculation"], (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
     built.add("source_answer", props, [c["document_id"] for c in cites] + [a["by"]["document_id"] for a in changed])

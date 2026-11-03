@@ -12,7 +12,8 @@ import re
 ABSTAIN = "The documents in this matter do not answer that."
 
 # Recorded with every research note sent for review (S2.7): which instructions produced the answer.
-VERSION = "research-s2.5"          # S2.3: amending sources marked; S2.4: an account's reading; S2.5: several matters
+VERSION = "research-s2.6"          # S2.3: amending sources marked; S2.4: an account's reading; S2.5: several matters;
+                                   # S2.6 (2026-11-03): the parties each source's document defines by a role
 
 SYSTEM = (
     "You are a careful legal research assistant. You work only from the numbered sources below, which "
@@ -61,10 +62,15 @@ def _attr(value) -> str:
     return html.escape(str(value if value is not None else ""), quote=True)
 
 
-def build(question: str, passages: list[dict]) -> list[dict]:
+def build(question: str, passages: list[dict], roles: dict | None = None) -> list[dict]:
+    """roles: document id → the (company, role) pairs its preamble defines (attribution.roles_of), given on each of its
+    sources so the model can tell who "the Customer" is (2026-11-03 evaluation: "What subscription fee does Orbis pay?" was
+    declined over "The Customer shall pay the Provider a subscription fee of GBP 360,000")."""
     blocks = []
     for n, p in enumerate(passages, start=1):
         c = p["citation"]
+        rs = (roles or {}).get(c.get("document_id")) or []
+        parties = f' parties="{_attr("; ".join(f"{name} is the {role}" for name, role in rs[:4]))}"' if rs else ""
         pages = c.get("page_start") or ""
         if pages and c.get("page_end") and c["page_end"] != c["page_start"]:
             pages = f"{c['page_start']}-{c['page_end']}"
@@ -76,14 +82,18 @@ def build(question: str, passages: list[dict]) -> list[dict]:
                       f' amendment="{"signed" if a.get("signed") else "unsigned"}"')
         matter = f' matter="{_attr(p["matter"]["number"])}"' if p.get("matter") else ""
         blocks.append(f'<source n="{n}" document="{_attr(c["document_title"])}" version="{_attr(c["version_number"])}" '
-                      f'pages="{_attr(pages)}"{clause}{amends}{matter}>\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
+                      f'pages="{_attr(pages)}"{clause}{amends}{matter}{parties}>\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
     reading = account_reading(question)
     # S2.5 (2026-10-28): a conversation about several matters. Each source names its matter; the answer must keep them apart.
     # A question about one matter gets exactly the prompt it had before.
     matters = sorted({p["matter"]["number"] for p in passages if p.get("matter")})
     several = (f"(These sources come from {len(matters)} matters: {', '.join(matters)}. Say which matter each statement comes from, "
                "and never combine facts from different matters as if they were one.)\n") if len(matters) > 1 else ""
-    user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + several + "\nSources:\n"
+    # S2.6: as with an account's reading, only a prompt whose sources define their parties by a role gets the note.
+    defined = ("(A source's parties attribute is how its document names its parties; its clauses speak of them by those roles, "
+               "so a question that names a party is answered by the clauses about its role.)\n") if any(
+        (roles or {}).get(p["citation"].get("document_id")) for p in passages) else ""
+    user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + several + defined + "\nSources:\n"
             + "\n\n".join(blocks) + "\n\n" + REMINDER)
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 

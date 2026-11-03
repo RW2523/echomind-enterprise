@@ -768,3 +768,118 @@ def test_concepts_and_party_acts():
     for text in ("What does Harrowgate indemnify Voss-Lindqvist against?", "Did Harrowgate give the notice the MSA requires?",
                  "Which Northbridge project did the Voss-Lindqvist board fund?", "the Voss-Lindqvist pallets held in Hall 1"):
         assert party_records(text, known) == set(), text
+
+
+# ── Defined roles, a document named by its party, whole passages (2026-11-03 evaluation) ──────────────────────────────────
+NORTHWIND = ("SUPPLY AGREEMENT (fictional)\n\nThis Agreement is made between Northwind Components Ltd (the \"Supplier\") and "
+             "Tidewater Holdings Ltd (the \"Customer\").\n\n1.1 The total price payable under this Agreement is GBP 120,000.")
+ALDER = ("SUPPLY AGREEMENT (fictional)\n\nThis Supply Agreement is made between Northwind Components Ltd (the \"Supplier\") and "
+         "Alder Retail Ltd (the \"Customer\").\n\n1.1 The Customer shall pay the Price monthly.\n\nSchedule 2 Price\n\n"
+         "The Price is EUR 10,000 per month.")
+
+
+def test_the_roles_a_preamble_defines_and_the_question_searched_with():
+    from app.legal.research.attribution import roles_of, with_roles
+    msa = ('This Master Services Agreement ("Agreement") is entered into as of 2 March 2026 between **Harrowgate Systems Inc.**, '
+           'a Delaware corporation ("Provider"), and **Voss-Lindqvist AB**, a Swedish limited company ("Client").\n\n## 1. Services')
+    assert roles_of(msa) == [("Harrowgate Systems Inc.", "Provider"), ("Voss-Lindqvist AB", "Client")]
+    assert roles_of("This Agreement is made between Voss-Lindqvist AB (the Supplier) and Harrowgate Systems Inc. (the Reseller).") \
+        == [("Voss-Lindqvist AB", "Supplier"), ("Harrowgate Systems Inc.", "Reseller")]
+    assert roles_of('WHEREAS, Kestrel Robotics, Inc., a Delaware corporation (the "Company"), and Aldermoor Ventures LP '
+                    '(the "Investor")') == [("Kestrel Robotics, Inc.", "Company"), ("Aldermoor Ventures LP", "Investor")]
+    assert roles_of('between Voss-Lindqvist AB ("VL") and Northbridge Analytics Ltd ("Northbridge")') == [("Voss-Lindqvist AB", "VL")]
+    assert roles_of("THIS LEASE is made between Pembroke Estates Ltd of 12 High Street and Harbourview Studios Ltd.") == []
+    roles = {"msa": roles_of(msa), "nda": [("Voss-Lindqvist AB", "VL")]}
+    assert with_roles("What does Harrowgate indemnify Voss-Lindqvist against?", roles) == \
+        "What does Harrowgate (Provider) indemnify Voss-Lindqvist (Client) against?"          # the document defining both
+    assert with_roles("What is Voss-Lindqvist's notice address?", roles) == "What is Voss-Lindqvist's (Client, VL) notice address?"
+    assert with_roles("What is the notice period?", roles) == "What is the notice period?"
+
+
+def test_which_parties_a_text_names_as_parties_to_the_document_it_speaks_of():
+    from app.legal.research.attribution import named_parties
+    known = {"alder", "northwind", "tidewater", "harrowgate", "calder"}
+    assert named_parties("What is the total price under Tidewater's supply agreement with Alder Retail?", known) == {"alder"}
+    assert named_parties("the agreement between Northwind and Alder Retail", known) == {"northwind", "alder"}
+    assert named_parties("What is the cap in Harrowgate's MSA?", known) == {"harrowgate"}
+    assert named_parties("Was the Northwind supply agreement signed in line with Tidewater's delegation of authority?", known) == {"northwind"}
+    for text in ("What did Calder Freight say in response to the notice?", "What monthly fee does Northwind pay Calder?",
+                 "What is the liability cap?"):
+        assert named_parties(text, known) == set(), text
+
+
+def test_a_document_named_by_its_party_is_answered_only_from_one_that_party_is_party_to(ev, monkeypatch):
+    """2026-11-03: "the supply agreement with Alder Retail" was answered with the other supply agreement's GBP 120,000, a
+    verified quote from a document Alder Retail is not party to. Such a question also searches Alder Retail's documents, the
+    model is told who "the Customer" is in each, and an answer resting only on the other agreement is withheld."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    alice = as_user(ev, "alice")
+    upload(alice, ev["mid"], "supply-tidewater.txt", NORTHWIND, status="executed")
+    upload(alice, ev["mid"], "supply-alder.txt", ALDER, status="executed")
+    index_all()
+    q = "What is the price under the supply agreement with Alder Retail?"
+    ev["llm"].answer = "x"
+    events = ask(alice, ev["mid"], q)
+    other, own = source_n(events, "GBP 120,000"), source_n(events, "EUR 10,000")
+    sent = ev["llm"].calls[-1][-1]["content"]
+    assert 'parties="Northwind Components Ltd is the Supplier; Alder Retail Ltd is the Customer"' in sent
+    assert "its clauses speak of them by those roles" in sent
+    ev["llm"].answer = f'The total price payable is GBP 120,000 [{other}: "total price payable under this Agreement is GBP 120,000"].'
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "other_documents"
+    ev["llm"].answer = f'The Price is EUR 10,000 per month [{own}: "The Price is EUR 10,000 per month"].'
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["abstained"] is False and "EUR 10,000" in done["answer"]
+    # a sentence that names the agreement by its party and cites the other one does not stand
+    ev["llm"].answer = (f'The Price is EUR 10,000 per month [{own}: "The Price is EUR 10,000 per month"]. Under the agreement with '
+                        f'Alder Retail the total price is GBP 120,000 [{other}: "total price payable under this Agreement is GBP 120,000"].')
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["status"] == "partial" and any("GBP 120,000" in s for s in done["unsupported"])
+
+
+def test_the_model_reads_the_whole_passage_around_its_best_window(ev):
+    """2026-11-03: a 600-character window of a short notice left out who to ask, so the model declined. The window still
+    ranks the passage; the model is given the passage it sits in."""
+    alice = as_user(ev, "alice")
+    body = ("NOTICE OF CHANGE OF CONTROL (fictional)\n\nWe write to tell you that Pellucid Holdings has agreed to acquire the "
+            "whole of the issued share capital of the Provider. " + "Completion is expected in the fourth quarter. " * 9 +
+            "\n\nPlease direct any questions to our General Counsel, Thomas Reyes.")
+    assert 600 < len(body) < 900
+    upload(alice, ev["mid"], "change-of-control.txt", body, status="received")
+    index_all()
+    ev["llm"].answer = "x"
+    events = ask(alice, ev["mid"], "Who is acquiring the Provider?")
+    letter = next(s for s in events[0]["citations"] if "Pellucid" in s["text"])
+    assert "Thomas Reyes" in letter["text"]
+
+
+CONSULTANCY = ("CONSULTANCY AGREEMENT (fictional)\n\nThis Agreement is made between Voss-Lindqvist AB (the Client) and Northbridge "
+               "Analytics AB (the Consultant).\n\n2.1 The Consultant shall provide data-migration services.")
+RESELLER = ("RESELLER AGREEMENT (fictional)\n\nThis Agreement is made between Voss-Lindqvist AB (the Supplier) and Harrowgate "
+            "Systems Inc. (the Reseller).\n\n19.1 This Agreement is governed by the laws of Sweden.")
+
+
+def test_a_bare_marker_in_its_own_paragraph_cites_the_sentence_before_it(ev, monkeypatch):
+    """2026-11-03: "The consultancy agreement … is governed by the laws of Sweden.\\n\\n[2]", [2] being the reseller agreement.
+    The sentence was unsupported and the marker supported nothing, so nothing was left for the attribution checks and the
+    card read "partly supported". Joined, the claim names one document and points at another: withheld. A sentence whose
+    marker points at the right document is carried by it."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    alice = as_user(ev, "alice")
+    upload(alice, ev["mid"], "consultancy.txt", CONSULTANCY, status="executed", title="Consultancy Agreement")
+    upload(alice, ev["mid"], "reseller.txt", RESELLER, status="executed", title="Reseller Agreement")
+    index_all()
+    q = "Which law governs the consultancy agreement?"
+    ev["llm"].answer = "x"
+    res = source_n(ask(alice, ev["mid"], q), "laws of Sweden")
+    ev["llm"].answer = f"The consultancy agreement is governed by the laws of Sweden.\n\n[{res}]"
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "other_documents"
+    q2 = "Which law governs the reseller agreement?"
+    ev["llm"].answer = "x"
+    res = source_n(ask(alice, ev["mid"], q2), "laws of Sweden")
+    ev["llm"].answer = f"The reseller agreement is governed by the laws of Sweden.\n\n[{res}]"
+    done = ask(alice, ev["mid"], q2)[-1]
+    assert done["abstained"] is False and done["unsupported"] == []

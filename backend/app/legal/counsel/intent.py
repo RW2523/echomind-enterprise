@@ -43,8 +43,13 @@ _INSPECT = re.compile(
     r"|brief\s+me|catch\s+me\s+up|give\s+me\s+(?:a|the)\s+(?:briefing|status|summary\s+of\s+what'?s\s+new)"
     r"|anything\s+new|where\s+(?:are|do)\s+we\s+stand|status\s+update)\b"
     r"|\bwhat\s+matters\s+today\b|\bwhat\s+changed\s+(?:in|on|since)\b", re.I)
-_COMPARE = re.compile(
-    r"\b(?:conflict(?:s|ing)?|contradict\w*|inconsisten\w*|discrepanc\w*|mismatch\w*|disagree\w*|compare|comparison)\b", re.I)
+_COMPARE = re.compile(r"\b(?:conflict(?:s|ing)?|contradict\w*|inconsisten\w*|discrepanc\w*|mismatch\w*|disagree\w*)\b", re.I)
+# "Compare" asks for the conflict scan when what is compared is the documents' facts ("Compare the May 12 and May 15 claims",
+# "compare the witness accounts"). A term in named documents is a question for the documents (2026-11-03 evaluation: "How
+# does the liability cap in the reseller agreement compare with the one in the MSA?" was answered with a scan card about
+# notice periods).
+_COMPARE_FACTS = re.compile(r"\bcompar(?:e|es|ed|ing|ison(?:\s+of)?)\s+(?:the\s+|all\s+(?:the\s+)?|these\s+|both\s+)?(?:[\w-]+\s+){0,6}?"
+                            r"(?:dates|claims|accounts|statements|witness(?:es)?|figures|amounts|documents|versions|facts|values)\b", re.I)
 # The matter's list of documents, read from their records (2026-10-29 QA CHAT-001: "Which documents are available?" went to
 # document search and came back "do not answer that"). A question about what documents say ("Which documents mention the
 # deposit?") stays a research question.
@@ -65,16 +70,21 @@ _SOCIAL = (
                 r"|(?:good\s*)?bye(?:\s+(?:now|then|for\s+now))?|see\s+you(?:\s+(?:later|soon|tomorrow))?"
                 r"|talk\s+(?:to\s+you\s+)?(?:later|soon)|nothing\s+else|(?:we'?re|i'?m|we\s+are|i\s+am)\s+done(?:\s+for\s+(?:now|today))?"
                 r"|no,?\s+(?:thanks|thank\s+you)|no,?\s+that'?s\s+(?:all|it)"),
-    ("identity", r"who\s+are\s+you|what\s+are\s+you|what\s+(?:can|do)\s+you\s+do|what\s+can\s+i\s+ask(?:\s+you)?"
-                 r"|how\s+(?:does\s+this|do\s+you)\s+work|help(?:\s+me)?"),
+    # "What can you do for me on this matter?", "what can you help me with on this case?" (2026-11-03 evaluation)
+    ("identity", r"(?:who\s+are\s+you|what\s+are\s+you|what\s+(?:can|do)\s+you\s+do|what\s+can\s+i\s+ask(?:\s+you)?"
+                 r"|what\s+(?:can|could)\s+you\s+help\s+(?:me|us)\s+with|how\s+can\s+you\s+help(?:\s+(?:me|us))?"
+                 r"|how\s+(?:does\s+this|do\s+you)\s+work|help(?:\s+me)?)"
+                 r"(?:\s+(?:for|with)\s+(?:me|us))?(?:\s+(?:on|with|in|for)\s+(?:this|the|my|our)\s+(?:matter|case|file))?"),
     ("check", r"(?:can|do)\s+you\s+hear\s+me(?:\s+(?:ok(?:ay)?|now|clearly|well))?|are\s+you\s+(?:there|listening|ready|on)"
               r"|is\s+(?:this|it)\s+(?:working|on)|testing(?:\s+(?:one\s+two(?:\s+three)?|1\s*2(?:\s*3)?))?"),
     ("greeting", r"hi|hello|hey|hiya|good\s+(?:morning|afternoon|evening|day)|how\s+are\s+you(?:\s+(?:doing|today))?"
                  r"|how'?s\s+it\s+going"),
     ("thanks", r"thanks?(?:\s+(?:you|a\s+lot|again))?(?:\s+(?:so|very)\s+much)?|thank\s+you(?:\s+(?:so|very)\s+much)?(?:\s+again)?"
-               r"|thx|cheers|much\s+appreciated|(?:that'?s\s+)?(?:very\s+)?helpful"),
+               r"|thx|cheers|much\s+appreciated"
+               r"|(?:that'?s|that\s+is|that\s+was|this\s+is|very|really|so|super)?\s*(?:(?:very|really|so|super|extremely)\s+)?(?:helpful|useful)"),
     ("ack", r"ok(?:ay)?|got\s+it|understood|alright|all\s+right|sure|fine|right|great|perfect|lovely|excellent|brilliant|noted"
-            r"|(?:that'?s\s+)?(?:great|perfect|fine)"),
+            r"|(?:that'?s|that\s+is|that\s+was)\s+(?:(?:very|really|so|just)\s+)?(?:great|perfect|fine|clear|brilliant|excellent|lovely)"
+            r"|ok(?:ay)?\s+(?:great|perfect|thanks|cool)|cool|nice"),
 )
 _SOCIAL_RE = [(k, re.compile(rf"^(?:(?:oh|well|um+|uh+|yes|yeah|so|and|ok(?:ay)?)\s+)?(?:{p})(?:\s+(?:there|again|echomind|echo\s+mind))?$", re.I))
               for k, p in _SOCIAL]
@@ -153,7 +163,7 @@ def classify(text: str) -> str:
         return "draft"
     if _TASKS.search(t) and _TASKS_LIST.search(t) and not _ABOUT_DOCUMENTS.search(t):
         return "tasks"
-    if _COMPARE.search(t):
+    if _COMPARE.search(t) or _COMPARE_FACTS.search(t):
         return "compare"
     if _INSPECT.search(t):
         return "inspect_case"

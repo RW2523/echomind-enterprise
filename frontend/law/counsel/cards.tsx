@@ -155,6 +155,9 @@ function AnswerState({ p }: { p: SourceAnswerProps }) {
   if (p.state === 'answered' && verified === 0) return <span className="qc-state" data-tone="attention"><CircleDashed aria-hidden />Not verified: no quote could be matched to the documents</span>;
   if (p.state === 'abstained') return <span className="qc-state" data-tone="neutral"><FileX aria-hidden />No source found in this matter's documents</span>;
   if (p.state === 'unverified') return <span className="qc-state" data-tone="attention"><CircleDashed aria-hidden />Not verified: no quote could be matched to the documents</span>;
+  // "The documents do not state when … She was appointed with effect from 1 June 2026 [1]": neither a supported answer nor
+  // one with unsupported sentences (EV19's narrower option, 2026-11-03)
+  if (p.not_stated) return <span className="qc-state" data-tone="neutral"><FileX aria-hidden />Not stated in the documents: related passages are cited</span>;
   if (p.state === 'partial') return <span className="qc-state" data-tone="attention"><AlertTriangle aria-hidden />Partly supported: some sentences have no verified source</span>;
   return <span className="qc-state" data-tone="verified"><BadgeCheck aria-hidden />Supported by {verified} verified quote{verified === 1 ? '' : 's'}</span>;
 }

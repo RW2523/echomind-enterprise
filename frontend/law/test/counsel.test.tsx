@@ -668,6 +668,19 @@ describe('the answer card says what the backend verified (QA 2026-10-29)', () =>
     partial.unmount();
     const none = render(<ComponentView comp={comp({ state: 'unverified', answer: 'A [1].', citations: [{ ...cite, verified: false }] })} ctx={ctx} />);
     expect(none.container.textContent).toContain('Not verified');
+    none.unmount();
+    // "The documents do not state when … She was appointed from 1 June 2026 [1]" says so, not "partly supported" (2026-11-03)
+    const notStated = render(<ComponentView comp={comp({ state: 'partial', not_stated: true, citations: [cite],
+      answer: 'The documents do not state when her appointment ends. She was appointed from 1 June 2026 [1].' })} ctx={ctx} />);
+    expect(notStated.container.textContent).toContain('Not stated in the documents: related passages are cited');
+    expect(notStated.container.textContent).not.toContain('Partly supported');
+  });
+
+  it('a decline can never be shown as "not stated" (2026-11-03)', async () => {
+    const { parseComponent } = await import('../counsel/validate');
+    expect(parseComponent(comp({ state: 'abstained', not_stated: true })).type).toBe('inert');
+    expect(parseComponent(comp({ state: 'partial', not_stated: 'yes' })).type).toBe('inert');
+    expect(parseComponent(comp({ state: 'partial', not_stated: true })).type).toBe('source_answer');
   });
 
   it('calculated dates are labelled as calculated, list their words by clause, and open them (RAG-003)', async () => {

@@ -189,3 +189,75 @@ def concepts_elsewhere(question: str, cited_texts: list[str], other_texts: list[
 def asks_concept(question: str) -> bool:
     q = (question or "").lower()
     return any(re.search(asks, q) for asks, _ in _CONCEPTS.values())
+
+
+# ── Defined roles (2026-11-03 evaluation) ────────────────────────────────────────────────────────────────────────────────
+# A contract names its parties once and then speaks of "the Provider" and "the Customer". "What subscription fee does Orbis
+# pay?" was declined over "The Customer shall pay the Provider a subscription fee of GBP 360,000", and "What does Harrowgate
+# indemnify Voss-Lindqvist against?" never retrieved "Provider shall indemnify Client …" (rank 9; rank 2 with the roles in the
+# query). The preamble says who is who: "Harrowgate Systems Inc., a Delaware corporation ("Provider")".
+_ROLE_COMPANY = re.compile(r"\b[A-Z][\w&'-]*(?:,?[ \t]+(?:&[ \t]+)?[A-Z][\w&'-]*){0,4},?[ \t]+"
+                           r"(?:Inc|Ltd|LLP|LP|AB|plc|PLC|NV|GmbH|LLC|SA|BV|Limited|Corp|Corporation)\b\.?")
+_ROLE_AFTER = re.compile(r"[^()\n]{0,220}?\(\s*(?:the\s+|hereinafter\s+(?:called\s+)?(?:the\s+)?)?[\"“']?"
+                         r"(?P<role>[A-Z][A-Za-z]+(?:[ -][A-Z][a-z]+)?)[\"”']?\s*\)")
+_NOT_ROLES = frozenset("agreement effective date term premises purpose services service units schedule".split())
+
+
+def roles_of(text: str) -> list[tuple[str, str]]:
+    """(company, role) for each party the preamble defines by a role, before the first numbered clause."""
+    body = text or ""
+    first = re.search(r"(?m)^\s*(?:#+\s*)?1[.\s]", body)
+    head = body[:min(first.start() if first else 1500, 1500)].replace("**", "").replace("__", "")
+    found = list(_ROLE_COMPANY.finditer(head))
+    out = []
+    for i, m in enumerate(found):
+        nxt = found[i + 1].start() if i + 1 < len(found) else len(head)
+        r = _ROLE_AFTER.match(head, m.end(), nxt)
+        name = re.sub(r"^(?:(?:WHEREAS|BETWEEN|AND|AMONG|BY|THIS)[,:]?\s+)+", "", m.group(0)).rstrip(" ,")
+        role = r["role"] if r else ""
+        if role and role.lower() not in _NOT_ROLES and role.lower() != party_key(name):   # "Northbridge" names, not a role
+            out.append((name, role))
+    return out
+
+
+def with_roles(question: str, roles: dict[str, list[tuple[str, str]]]) -> str:
+    """The question to search with: each party it names followed by the role its documents give it ("Harrowgate
+    (Provider)"). Roles come from the documents that define every party named, when there are such documents; a party with
+    more than two roles is left as it is (the role would not tell its clauses apart)."""
+    by_party: dict[str, dict[str, str]] = {}
+    for did, rs in roles.items():
+        for name, role in rs:
+            if (k := party_key(name)):
+                by_party.setdefault(k, {})[did] = role
+    words = set(re.findall(r"[a-z][a-z'-]*", (question or "").lower().replace("’", "'")))
+    named = [k for k in by_party if k in words or f"{k}'s" in words]
+    if not named:
+        return question
+    both = set.intersection(*(set(by_party[k]) for k in named))
+    q = question
+    for k in named:
+        rs = sorted({by_party[k][d] for d in (both or by_party[k])})
+        if 1 <= len(rs) <= 2:
+            q = re.sub(rf"\b((?i:{re.escape(k)})[\w'’-]*(?:[ \t]+[A-Z][\w&'-]*){{0,3}})", lambda m: f"{m.group(1)} ({', '.join(rs)})", q, count=1)
+    return q
+
+
+# ── A document named by its party (2026-11-03 evaluation) ────────────────────────────────────────────────────────────────
+# "What is the total price payable under the supply agreement with Alder Retail?" was answered "GBP 120,000" from the
+# matter's other supply agreement (Northwind and Tidewater): a verified quote from a document Alder Retail is not party to.
+# Titles do not tell the two apart ("Supply Agreement (DEMO)"), their parties do.
+_DOC_NOUN = r"(?:agreement|contract|lease|licen[cs]e|nda|msa|side\s+letter|engagement\s+letter|deed|term\s+sheet)"
+
+
+def named_parties(text: str, known: set[str]) -> set[str]:
+    """The known parties the text names as parties to the document it speaks of: those after "with"/"between" ("the supply
+    agreement with Alder Retail"), else those naming it ("Harrowgate's MSA", "the Northwind supply agreement")."""
+    t = re.sub(r"\[[^\]]*\]", " ", text or "").replace("’", "'")
+    withs: set[str] = set()
+    gap = r"(?:(?!in\b|line\b|accordance\b|compliance\b|keeping\b|together\b|along\b)[\w-]+\s+){0,2}?"     # not "signed in line with"
+    for m in re.finditer(rf"\b{_DOC_NOUN}\s+{gap}(?:with|between)\s+((?:[\w&'-]+[ \t]*){{1,8}})", t, re.I):
+        seg = m.group(1).lower()
+        withs |= {p for p in known if re.search(rf"\b{re.escape(p)}", seg)}
+    if withs:
+        return withs
+    return {p for p in known if re.search(rf"\b{re.escape(p)}[\w-]*(?:'s|')?\s+(?:[\w-]+\s+){{0,2}}?{_DOC_NOUN}\b", t, re.I)}

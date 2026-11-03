@@ -191,21 +191,56 @@ def _stands(claim) -> bool:
     return claim.state == "supported" or (claim.state == "unquoted" and words is not None)
 
 
+def _carried(claims: list, text: str, unsupported: list) -> tuple[list, list]:
+    """A bare marker in a paragraph of its own cites the sentence before it ("… is governed by the laws of Sweden.\n\n[2]",
+    2026-11-03 evaluation): the two are one claim, so what the sentence says is checked against the source it points at, and
+    a sentence that names the consultancy agreement and points at the reseller agreement does not stand. Before, the sentence
+    was unsupported, the marker supported nothing, and nothing was left for the attribution checks to see. Returns the
+    claims and, for each joined claim, the sentence it carries."""
+    sentences = [x.strip() for x in prompt._sentences(text)]
+    out: list = []
+    joined: list = []
+    at = 0
+    for c in claims:
+        bare = not re.search(r"[^\W\d_]{2}", re.sub(r"\[[^\]]*\]", " ", c.sentence))
+        i = next((k for k in range(at, len(sentences)) if sentences[k] == c.sentence.strip()), None)
+        if i is not None:
+            at = i + 1
+        before = sentences[i - 1] if i else None
+        if bare and c.citations and before and before in unsupported:
+            c = evidence.Claim(sentence=f"{before} {c.sentence.strip()}", citations=c.citations)
+            joined.append((before, c))
+        out.append(c)
+    return out, joined
+
+
 def _titles(scopes, uid: str) -> dict[str, str]:
     """The titles of the documents the person may read in the matters asked about (document id → title)."""
     from ..documents import repo as doc_repo
     return {d["id"]: d["title"] or "" for sc in scopes for d in doc_repo.list_documents(sc.matter_id, uid)}
 
 
-def _parties(scopes, uid: str) -> dict[str, set]:
-    """The parties of each document the person may read in the matters asked about (document id → party keys)."""
+_HEADS: dict[tuple[str, str], tuple[set, list]] = {}       # (version id, title) → (parties, roles); a version's text is fixed
+
+
+def _heads(scopes, uid: str) -> dict[str, tuple[set, list]]:
+    """For each document the person may read in the matters asked about (document id →): its parties (the companies of its
+    title and preamble, and those it defines by a role) and the roles it defines ("Provider", "Client"). Each version is
+    read once."""
     from ..documents import repo as doc_repo
     out = {}
     for sc in scopes:
         for d in doc_repo.list_documents(sc.matter_id, uid):
             v = d.get("current_version") or {}
-            body = doc_repo.reader(v["id"]) if v.get("id") else None
-            out[d["id"]] = attribution.parties_of(d.get("title") or "", (body or {}).get("text") or "")
+            key = (v.get("id") or "", d.get("title") or "")
+            if key not in _HEADS:
+                body = doc_repo.reader(v["id"]) if v.get("id") else None
+                text = (body or {}).get("text") or ""
+                roles = attribution.roles_of(text)
+                if len(_HEADS) > 20000:
+                    _HEADS.clear()
+                _HEADS[key] = (attribution.parties_of(key[1], text) | ({attribution.party_key(n) for n, _ in roles} - {""}), roles)
+            out[d["id"]] = _HEADS[key]
     return out
 
 
@@ -342,8 +377,7 @@ def _changed(links: list[dict], sources: list[dict], cited: list[int], evidence:
 def _status(abstained: bool, claims: list, unsupported: list, failed: list) -> str:
     if abstained:
         return "abstained"
-    states = [c.state for c in claims]
-    if not any(s in ("supported", "unquoted") for s in states):
+    if not any(_stands(c) for c in claims):            # a bare marker supports nothing (2026-11-03)
         return "unverified"
     return "partial" if failed or unsupported else "answered"
 
@@ -357,7 +391,7 @@ async def _search_several(scopes: list, principal: dict, question: str, versions
     with get_conn() as conn:
         numbers = {sc.matter_id: conn.execute("SELECT number FROM matters WHERE id=?", (sc.matter_id,)).fetchone()[0] for sc in scopes}
     for sc in scopes:
-        r = await searchmod.search(sc, question, k=k, versions=versions, documents=documents)
+        r = await searchmod.search(sc, question, k=k, versions=versions, documents=documents, wide=True)
         ps = r["passages"]
         if r["abstained"] or not ps:
             continue
@@ -383,13 +417,27 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
     try:
         if understood:                                      # S5.1b (D-063): what a follow-up was taken to ask
             yield _event({"type": "understood", **understood})
+        # 2026-11-03 evaluation: the documents' parties and defined roles. The search reads "Harrowgate (Provider)" where the
+        # question says "Harrowgate", and the model is told who "the Provider" is; a question about "the supply agreement
+        # with Alder Retail" also searches the documents Alder Retail is party to.
+        heads = await run_in_threadpool(_heads, scopes, principal["sub"])
+        roles = {did: h[1] for did, h in heads.items() if h[1]}
+        known = set().union(*(h[0] for h in heads.values())) if heads else set()
+        search_q = attribution.with_roles(question, roles)
+        asked_parties = attribution.named_parties(question, known)
+        target = [] if documents or not asked_parties else [did for did, h in heads.items() if asked_parties <= h[0]]
         if several:
-            passages, links, nothing_found = await _search_several(scopes, principal, question, versions, documents)
+            passages, links, nothing_found = await _search_several(scopes, principal, search_q, versions, documents)
         else:
-            result = await searchmod.search(scope, question, k=settings.LEGAL_RESEARCH_PASSAGES, versions=versions, documents=documents)
-            passages = result["passages"]
+            result = await searchmod.search(scope, search_q, k=settings.LEGAL_RESEARCH_PASSAGES, versions=versions, documents=documents,
+                                            wide=True)
+            passages, nothing_found = result["passages"], result["abstained"]
+            if target and len(target) < len(heads):
+                named = await searchmod.search(scope, search_q, k=2, versions=versions, documents=target, wide=True)
+                have = {p["chunk_id"] for p in named["passages"]}
+                passages = named["passages"] + [p for p in passages if p["chunk_id"] not in have]
+                nothing_found = nothing_found and named["abstained"]
             links = _amended(passages, await run_in_threadpool(amendments.for_passages, scope.matter_id, principal["sub"], passages, versions))
-            nothing_found = result["abstained"]
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
         yield _event({"type": "sources", "citations": sources})
         if nothing_found or not passages:
@@ -400,7 +448,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                           "turn_id": turn["id"], "versions": versions, "absence": None})
             return
         buf, shown, claims, unsupported, failed, last_check = "", [], [], [], [], time.monotonic()
-        stream = llm_mod.get().chat_stream(prompt.build(question, passages), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
+        stream = llm_mod.get().chat_stream(prompt.build(question, passages, roles), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
                                            max_tokens=settings.LEGAL_RESEARCH_MAX_TOKENS)
 
         def finish(raw: str):
@@ -430,6 +478,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             yield _event({"type": "paragraph", "index": len(shown) - 1, **para})
             yield _event({"type": "chunk", "text": ("\n\n" if len(shown) > 1 else "") + para["text"]})
         text = "\n\n".join(shown)
+        claims, joined = _carried(claims, text, unsupported)
         # Abstention in other words (S2.2, D-038):
         # - nothing is supported, and the text says the documents do not answer; or
         # - the answer opens by saying the documents do not cover the question, and every passage it
@@ -459,21 +508,16 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         # A party's own record (its board, officers, offices, finances, advisers) rests only on a document that party is party
         # to (2026-10-28, held-out 3: Voss-Lindqvist's next board meeting given as Kestrel's). Parties are read only when the
         # question or a sentence speaks of one's record.
-        parties: dict[str, set] = {}
-        known: set = set()
-
-        async def load_parties():
-            nonlocal known
-            if not parties:
-                parties.update(await run_in_threadpool(_parties, scopes, principal["sub"]))
-                known = set().union(*parties.values()) if parties else set()
+        parties: dict[str, set] = {did: h[0] for did, h in heads.items()}
 
         def of_parties(claim) -> set:
             return set().union(*(parties.get(sources[c.n - 1]["document_id"], set()) for c in claim.citations
                                  if 1 <= c.n <= len(sources))) if claim.citations else set()
+
+        def party_to(claim, wanted: set) -> bool:
+            """Some document the claim cites has every one of `wanted` as a party."""
+            return any(wanted <= parties.get(sources[c.n - 1]["document_id"], set()) for c in claim.citations if 1 <= c.n <= len(sources))
         maybe_party = attribution.mentions_record(question) or any(attribution.mentions_record(c.sentence) for c in claims)
-        if maybe_party:
-            await load_parties()
         misattributed = []
         for claim in claims:
             named = attribution.referenced(claim.sentence, titles)
@@ -482,8 +526,16 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             elif maybe_party and claim.citations and (owners := attribution.party_records(claim.sentence, known)) \
                     and not (owners & of_parties(claim)):
                 misattributed.append(claim)
+            # "The price under the supply agreement with Alder Retail is GBP 120,000", resting on an agreement Alder Retail
+            # is not party to (2026-11-03 evaluation)
+            elif claim.citations and (said := attribution.named_parties(claim.sentence, known)) and \
+                    any(said <= h[0] for h in heads.values()) and not party_to(claim, said):
+                misattributed.append(claim)
         unsupported.extend(c.sentence for c in misattributed if c.sentence not in unsupported)
         standing = [c for c in claims if _stands(c) and c not in misattributed]
+        for said, claim in joined:                     # a sentence its marker now carries is no longer unsupported
+            if claim in standing and said in unsupported:
+                unsupported.remove(said)
         asked = attribution.referenced(question, titles)
         owner = attribution.party_records(question, known) if maybe_party else set()
         answering = [c for c in standing if not prompt.only_context(c.sentence)]
@@ -494,7 +546,10 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             # "not stated" for the document asked about, then only another document's terms (held-out 3: the MSA's 48 hours
             # for a question about the Kestrel storage agreement)
             or (bool(asked) and prompt.opens_not_stated(text) and bool(answering)
-                and not any(spoken(c) & asked for c in answering)))
+                and not any(spoken(c) & asked for c in answering))
+            # a question about the document a party is party to ("the supply agreement with Alder Retail"), answered only
+            # from documents that party is not party to (2026-11-03 evaluation)
+            or (bool(target) and bool(answering) and not any(party_to(c, asked_parties) for c in answering)))
         off_party = bool(owner) and bool(standing) and not any(owner & of_parties(c) for c in standing)
         nothing = not standing
         # A named legal concept the cited documents never deal with, while another retrieved document does (held-out 4: a

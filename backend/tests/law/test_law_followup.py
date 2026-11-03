@@ -82,6 +82,16 @@ def test_a_follow_up_is_understood_from_the_conversation_and_answered_from_the_d
     assert turns[0]["question"] == STANDALONE                                         # kept as what was answered
 
 
+def test_the_rewrite_is_told_to_resolve_words_that_point_back():
+    """2026-11-03: told only to return a follow-up that "already stands alone" unchanged, the model returned "Was that late
+    under the contract?" as asked; the instruction names the words to resolve and shows how, on other matters' examples."""
+    from app.legal.research import followup
+    system = followup.messages("Was that late?", HISTORY)[0]["content"]
+    assert "it, that, this, they, them, then" in system and "the same" in system
+    assert "unchanged only when it needs nothing from the conversation" in system
+    assert "liability cap" not in system.split("Examples")[1]          # the examples never come from the matter asked about
+
+
 def test_without_a_conversation_nothing_changes(fu):
     alice = as_user(fu, "alice")
     fu["model"].answer = 'The cap is USD 250,000 [1: "capped at USD 250,000"].'

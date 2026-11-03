@@ -119,7 +119,7 @@ def _windowed(hits: list[dict]) -> list[dict]:
     out = []
     for h in hits:
         for a, b in windows(h["text"]):
-            out.append({**h, "text": h["text"][a:b], "window": (a, b)})
+            out.append({**h, "text": h["text"][a:b], "window": (a, b), "chunk_text": h["text"]})
             if len(out) >= _MAX_WINDOWS:
                 return out
     return out
@@ -160,6 +160,22 @@ def _load(matter_id: str, chunk_ids: list[str], uid: str, versions: str = "signe
                         "char_end": r[5], "document_id": r[6], "version_id": r[7], "document_title": r[8],
                         "version_number": r[9], "filename": r[10], "version_status": r[11], "matter_id": matter_id})
     return out
+
+
+# Research reads the whole passage around its best window (2026-11-03 evaluation): a 600-character window of an 896-character
+# change of control notice left out "Please direct any questions to our General Counsel, Thomas Reyes" and "Your account
+# team will not change", so the model declined questions the document answers. The window still ranks the passage and
+# still marks the sentence the reader opens on; callers that check values against exact windows keep them.
+WIDE_CHARS = 1800
+
+
+def _wide(h: dict) -> dict:
+    full = h.get("chunk_text") or h["text"]
+    a, b = h.get("window") or (0, len(full))
+    if len(full) <= WIDE_CHARS:
+        return {**h, "text": full, "window": (0, len(full))}
+    lo = max(0, min(a - (WIDE_CHARS - (b - a)) // 2, len(full) - WIDE_CHARS))
+    return {**h, "text": full[lo:lo + WIDE_CHARS], "window": (lo, lo + WIDE_CHARS)}
 
 
 def _passage(h: dict) -> dict:
@@ -233,9 +249,10 @@ def _located(passages: list[dict], query: str = "") -> list[dict]:
 
 
 async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Iterable[str] = ALL_MODES,
-                 versions: str = "signed", documents: Optional[list[str]] = None, floor: bool = True) -> dict:
+                 versions: str = "signed", documents: Optional[list[str]] = None, floor: bool = True, wide: bool = False) -> dict:
     """floor=False keeps windows below LEGAL_RERANK_MIN_SCORE: for callers that check every value against its
-    quote (drafting, s3.1d) rather than abstain, a short document's one window must not be dropped."""
+    quote (drafting, s3.1d) rather than abstain, a short document's one window must not be dropped. wide=True gives each
+    passage whole (up to WIDE_CHARS around its best window) for a model to read."""
     recheck(scope)                                    # raises TypeError for anything but a real scope
     modes = [m for m in modes if m in ALL_MODES] or list(ALL_MODES)
     idx = registry.for_matter(scope.matter_id)
@@ -260,4 +277,4 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
     if floor and ranked and ranked[0].get("score_kind") == "ce_logit":
         ranked = [h for h in ranked if float(h["score"]) >= settings.LEGAL_RERANK_MIN_SCORE]
     recheck(scope)                                    # rights may have changed while this ran
-    return {"passages": _located([_passage(h) for h in ranked[:k]], query), "abstained": not ranked}
+    return {"passages": _located([_passage(_wide(h) if wide else h) for h in ranked[:k]], query), "abstained": not ranked}

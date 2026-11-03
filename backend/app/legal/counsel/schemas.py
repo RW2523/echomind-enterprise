@@ -131,6 +131,9 @@ class SourceAnswerProps(Strict):
     understood: Optional[text(400)] = None                # what a follow-up was taken to ask
     absence: Optional[text(400)] = None                   # a decline: what the documents were found not to state (QA UX-001)
     calculation: Optional[CalculationProps] = None        # dates calculated from a document's words (QA RAG-003)
+    # The answer opens by saying the documents do not state what was asked, then gives related cited text (EV19's narrower
+    # option, 2026-11-03): the card says so instead of "partly supported", which describes neither.
+    not_stated: bool = False
 
     @model_validator(mode="after")
     def _abstained_has_no_sources(self):
@@ -140,6 +143,8 @@ class SourceAnswerProps(Strict):
             raise ValueError("only a decline says what is missing")
         if self.calculation is not None and self.state == "abstained":
             raise ValueError("a decline calculates nothing")
+        if self.not_stated and self.state == "abstained":
+            raise ValueError("a decline is shown as a decline")
         return self
 
 

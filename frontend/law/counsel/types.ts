@@ -42,6 +42,8 @@ export interface SourceAnswerProps {
   absence?: string;
   /** Dates calculated from one document's stated words, never presented as stated (QA RAG-003). */
   calculation?: CalculationProps;
+  /** The answer opens by saying the documents do not state what was asked, then cites related text. */
+  not_stated?: boolean;
 }
 
 export interface CalculationFact { label: string; value: string; quote: string; clause?: string; path: string }

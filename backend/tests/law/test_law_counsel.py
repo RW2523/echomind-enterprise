@@ -165,6 +165,9 @@ def test_an_abstention_cannot_carry_sources_and_highlights_stay_inside_their_con
     cite = {"id": "cit_" + "0" * 32, "n": 1, "document_id": "d1", "document_title": "D", "verified": True}
     with pytest.raises(ValidationError):
         schemas.SourceAnswerProps.model_validate({"answer": "x", "state": "abstained", "citations": [cite]})
+    with pytest.raises(ValidationError):                    # a decline is shown as a decline, never as "not stated"
+        schemas.SourceAnswerProps.model_validate({"answer": "x", "state": "abstained", "not_stated": True})
+    assert schemas.SourceAnswerProps.model_validate({"answer": "x", "state": "partial", "not_stated": True}).not_stated
     side = {"document_id": "d", "document_title": "D", "version_id": "v", "value": "May 12", "context": "on May 12",
             "value_start": 3, "value_end": 99}
     with pytest.raises(ValidationError):
@@ -182,6 +185,13 @@ def test_an_abstention_cannot_carry_sources_and_highlights_stay_inside_their_con
     ("Thanks. What is the notice period?", "ask_fact"), ("Help me draft a reply to the supplier", "draft"),
     ("Which contractual deadline applied?", "ask_fact"), ("Could these refer to different events?", "ask_fact"),
     ("What is the liability cap?", "ask_fact"), ("", "ask_fact"),
+    # 2026-11-03 evaluation: a term compared across named documents is a question; small talk in other words is small talk
+    ("How does the liability cap in the reseller agreement compare with the one in the MSA?", "ask_fact"),
+    ("Compare the notice periods in the lease and the licence", "ask_fact"), ("Compare the witness accounts", "compare"),
+    ("Compare the delivery dates in the documents", "compare"), ("Thanks, that's really helpful.", "smalltalk"),
+    ("What can you do for me on this matter?", "smalltalk"), ("What can you help me with on this case?", "smalltalk"),
+    ("Cheers, that's great", "smalltalk"), ("ok perfect", "smalltalk"), ("That was very useful, thank you", "smalltalk"),
+    ("Thanks, that's helpful. What is the deposit?", "ask_fact"),
 ])
 def test_intents(text, expected):
     from app.legal.counsel import intent
