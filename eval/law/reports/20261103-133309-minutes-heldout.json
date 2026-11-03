@@ -1,0 +1,237 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "a7fc503",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261103-133309"
+ },
+ "summary": {
+  "items": 7,
+  "planted": 7,
+  "recall": 0.857,
+  "action_owners": "3/3",
+  "action_deadlines": "2/3",
+  "verified": 1.0,
+  "invented_specifics": 0,
+  "batches": 1,
+  "failed_batches": 0,
+  "lines": 12,
+  "turns": 12,
+  "seconds": 8.9
+ },
+ "planted": [
+  {
+   "planted": {
+    "kind": "decision",
+    "must": [
+     "break"
+    ]
+   },
+   "item": "The committee decided to keep the break option open and not to waive it in any negotiation."
+  },
+  {
+   "planted": {
+    "kind": "decision",
+    "must": [
+     "reject|roof"
+    ]
+   },
+   "item": "The committee agreed to reject the landlord's demand and ask them to repair the roof."
+  },
+  {
+   "planted": {
+    "kind": "action",
+    "must": [
+     "diar|notice"
+    ],
+    "owner": "Helena Marsh",
+    "deadline": "next week"
+   },
+   "item": "Helena Marsh said: “Then I will diarise the last date for serving notice and confirm it to you in writing next week.”"
+  },
+  {
+   "planted": {
+    "kind": "action",
+    "must": [
+     "photograph"
+    ],
+    "owner": "Lena Ekdahl",
+    "deadline": "fifteenth"
+   },
+   "item": "Lena Ekdahl will collect the photographs and repair invoices by the fifteenth."
+  },
+  {
+   "planted": {
+    "kind": "action",
+    "must": [
+     "landlord|write"
+    ],
+    "owner": "Helena Marsh"
+   },
+   "item": "Helena Marsh said: “I will write to the landlord about the roof once Lena sends me the photographs.”"
+  },
+  {
+   "planted": {
+    "kind": "unresolved",
+    "must": [
+     "insur"
+    ]
+   },
+   "item": "It is unclear whether the insurer will cover the stock damaged by the leak."
+  },
+  {
+   "planted": {
+    "kind": "unresolved",
+    "must": [
+     "cost|model"
+    ]
+   },
+   "item": null
+  }
+ ],
+ "invented": [],
+ "items": [
+  {
+   "deadline": null,
+   "id": "m1",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "f1d1a544-29ac-44f6-a00b-25a03526cb58",
+     "line": 4,
+     "quote": "We decide today to keep the break option open and not to waive it in any negotiation.",
+     "segment_id": "286a6f3a-d26e-4bbb-9444-647ce8e1643e",
+     "speaker": "Oskar Lund",
+     "time": "2026-11-03T18:33:00.740Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The committee decided to keep the break option open and not to waive it in any negotiation.",
+   "section": "Break option"
+  },
+  {
+   "by_rule": true,
+   "deadline": "next week",
+   "id": "m2",
+   "kind": "action",
+   "owner": "Helena Marsh",
+   "sources": [
+    {
+     "agenda_item": "f1d1a544-29ac-44f6-a00b-25a03526cb58",
+     "line": 5,
+     "quote": "Then I will diarise the last date for serving notice and confirm it to you in writing next week.",
+     "segment_id": "e6b072bd-297b-4345-928c-754f356036b6",
+     "speaker": "Helena Marsh",
+     "time": "2026-11-03T18:33:00.743Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Helena Marsh said: “Then I will diarise the last date for serving notice and confirm it to you in writing next week.”",
+   "section": "Break option"
+  },
+  {
+   "deadline": null,
+   "id": "m3",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "147c6e74-8e27-48ac-ad05-af9166f8059e",
+     "line": 8,
+     "quote": "We agree to reject the landlord's demand and ask them to repair the roof.",
+     "segment_id": "bd020316-5831-4e33-941c-8c084eda7474",
+     "speaker": "Oskar Lund",
+     "time": "2026-11-03T18:33:00.807Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The committee agreed to reject the landlord's demand and ask them to repair the roof.",
+   "section": "Repairs"
+  },
+  {
+   "deadline": "15",
+   "id": "m4",
+   "kind": "action",
+   "owner": "Lena Ekdahl",
+   "sources": [
+    {
+     "agenda_item": "147c6e74-8e27-48ac-ad05-af9166f8059e",
+     "line": 9,
+     "quote": "I will collect the photographs and repair invoices by the fifteenth.",
+     "segment_id": "683cf951-5ea0-44ce-848c-3612b8b54a80",
+     "speaker": "Lena Ekdahl",
+     "time": "2026-11-03T18:33:00.829Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Lena Ekdahl will collect the photographs and repair invoices by the fifteenth.",
+   "section": "Repairs"
+  },
+  {
+   "deadline": null,
+   "id": "m5",
+   "kind": "unresolved",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "147c6e74-8e27-48ac-ad05-af9166f8059e",
+     "line": 10,
+     "quote": "It is unclear whether the insurer will cover the stock damaged by the leak.",
+     "segment_id": "b7141f4c-d99a-4846-91a6-488d26e86441",
+     "speaker": "Oskar Lund",
+     "time": "2026-11-03T18:33:00.833Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "It is unclear whether the insurer will cover the stock damaged by the leak.",
+   "section": "Repairs"
+  },
+  {
+   "by_rule": true,
+   "deadline": null,
+   "id": "m6",
+   "kind": "action",
+   "owner": "Helena Marsh",
+   "sources": [
+    {
+     "agenda_item": "7d40fdc5-9fab-487f-b587-d7c6ef1531de",
+     "line": 11,
+     "quote": "I will write to the landlord about the roof once Lena sends me the photographs.",
+     "segment_id": "7ed1c492-356d-42c5-825c-f4ed06f298ff",
+     "speaker": "Helena Marsh",
+     "time": "2026-11-03T18:33:00.839Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "Helena Marsh said: “I will write to the landlord about the roof once Lena sends me the photographs.”",
+   "section": "Next steps"
+  },
+  {
+   "deadline": null,
+   "id": "m7",
+   "kind": "decision",
+   "owner": null,
+   "sources": [
+    {
+     "agenda_item": "7d40fdc5-9fab-487f-b587-d7c6ef1531de",
+     "line": 12,
+     "quote": "Let's meet again in a month to decide on the break.",
+     "segment_id": "6d2666f3-0e48-488f-8006-bab3bc4f2627",
+     "speaker": "Oskar Lund",
+     "time": "2026-11-03T18:33:00.843Z",
+     "verification": "verbatim"
+    }
+   ],
+   "status": "verified",
+   "text": "The committee decided to meet again in a month to decide on the break.",
+   "section": "Next steps"
+  }
+ ]
+}
