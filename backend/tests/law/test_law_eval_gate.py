@@ -63,6 +63,26 @@ def _result(item: str, run: int, correct: bool, abstain: bool = False) -> dict:
             "conflict_expected": False, "conflict_found": False, "multi_source": None, "total_s": 2.0, "first_paragraph_s": 1.0}
 
 
+def test_a_t06_leak_is_any_event_and_a_same_matter_trap_value_is_the_answer():
+    """2026-11-03: held-out 8 put forbidden values on cross-document traps of the same matter (the cap of another lease).
+    That lease is the person's to read and its passage was among the sources, so every correct decline counted as a T06
+    leak. T06 still looks at every event; a trap value is looked for in the answer, and an answer giving it is wrong."""
+    m = _runner()
+    def item(tags):
+        return {"id": "x", "question": "q", "versions": "signed", "tags": tags,
+                "expect": {"abstain": True, "facts": [], "docs": [], "docs_all": [], "conflict": False, "forbidden": ["GBP 250,000"]}}
+    declined = {"answer": "The documents in this matter do not answer that.", "status": "abstained"}
+    events = [{"type": "sources", "citations": [{"text": "liability is capped at GBP 250,000"}]}, {"type": "done", **declined}]
+    t06 = m.score(item(["ABSTAIN", "T06"]), declined, events, None, 1.0, {})
+    assert t06["leaked"] == ["GBP 250,000"] and not t06["correct"]
+    trap = m.score(item(["ABSTAIN", "CROSS_DOC"]), declined, events, None, 1.0, {})
+    assert trap["leaked"] == [] and trap["trapped"] == [] and trap["correct"]
+    gave = {"answer": "Each party's liability is capped at GBP 250,000 [1].", "status": "partial"}
+    trap = m.score(item(["ABSTAIN", "CROSS_DOC"]), gave, events, None, 1.0, {})
+    assert trap["trapped"] == ["GBP 250,000"] and not trap["correct"]
+    assert m.summarise([{**trap, "run": 1}])["trap_values_in_answers"] == 1 and m.summarise([{**trap, "run": 1}])["t06_leaks"] == 0
+
+
 def test_repeated_runs_are_pooled_and_name_the_items_that_changed():
     """EV14: one run of a small set moves by several items on sampling; N runs are scored together, with each run's scores,
     their range and the items right in some runs and wrong in others."""

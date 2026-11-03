@@ -220,6 +220,13 @@ def roles_of(text: str) -> list[tuple[str, str]]:
     return out
 
 
+def named_in(question: str, roles: dict[str, list[tuple[str, str]]]) -> set[str]:
+    """The party keys of the parties defined by a role that the question names ("Harrowgate", "Voss-Lindqvist's")."""
+    words = set(re.findall(r"[a-z][a-z'-]*", (question or "").lower().replace("’", "'")))
+    keys = {party_key(name) for rs in roles.values() for name, _ in rs} - {""}
+    return {k for k in keys if k in words or f"{k}'s" in words}
+
+
 def with_roles(question: str, roles: dict[str, list[tuple[str, str]]]) -> str:
     """The question to search with: each party it names followed by the role its documents give it ("Harrowgate
     (Provider)"). Roles come from the documents that define every party named, when there are such documents; a party with
@@ -229,8 +236,7 @@ def with_roles(question: str, roles: dict[str, list[tuple[str, str]]]) -> str:
         for name, role in rs:
             if (k := party_key(name)):
                 by_party.setdefault(k, {})[did] = role
-    words = set(re.findall(r"[a-z][a-z'-]*", (question or "").lower().replace("’", "'")))
-    named = [k for k in by_party if k in words or f"{k}'s" in words]
+    named = [k for k in by_party if k in named_in(question, roles)]
     if not named:
         return question
     both = set.intersection(*(set(by_party[k]) for k in named))

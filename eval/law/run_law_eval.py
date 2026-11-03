@@ -16,7 +16,11 @@ this host. The data folder is deleted at the end.
 Scores, per item and overall:
 - **answer accuracy:** every expected fact group present, and not abstained;
 - **abstention accuracy:** questions the matter cannot answer get the explicit abstention;
-- **T06 leaks:** an answer to the forbidden matter's questions — must be 0;
+- **T06 leaks:** an answer to the forbidden matter's questions — must be 0. Its forbidden values are looked for in every event
+  the person receives, sources included: nothing of that matter may reach them;
+- **trap values in answers:** a value another document of the same matter states, asked of a document that does not
+  (held-out 8, CROSS_DOC). That document is the person's to read, so its passage may be among the sources; the value is
+  looked for in the answer, and an answer giving it is wrong;
 - **citation precision:** the share of verified evidence quotes taken from the expected documents;
 - **quote verification rate:** verified quotes over all quotes given;
 - **T05 conflicts:** where signed and draft texts differ, the conflict is reported;
@@ -280,10 +284,12 @@ def score(it: dict, done: dict, events: list, first, total: float, doc_ids: dict
     answer = done.get("answer") or ""
     status = done.get("status")
     abstained = status == "abstained"
+    t06 = "T06" in it.get("tags", [])
     blob = norm(json.dumps(events))
-    leaked = [f for f in exp["forbidden"] if norm(f) in blob]
+    leaked = [f for f in exp["forbidden"] if norm(f) in blob] if t06 else []
+    trapped = [] if t06 else [f for f in exp["forbidden"] if norm(f) in norm(answer)]
     facts = all(any(norm(a) in norm(answer) for a in group) for group in exp["facts"])
-    correct = (abstained and not leaked) if exp["abstain"] else (not abstained and facts)
+    correct = (abstained and not leaked and not trapped) if exp["abstain"] else (not abstained and facts and not trapped)
     evidence = done.get("evidence") or []
     verified = [e for e in evidence if e["verification"] in ("verbatim", "normalized")]
     quoted = [e for e in evidence if e["verification"] != "not_quoted"]
@@ -293,7 +299,7 @@ def score(it: dict, done: dict, events: list, first, total: float, doc_ids: dict
     multi = all(doc_ids[k] in have for k in exp["docs_all"]) if exp["docs_all"] else None
     return {"id": it["id"], "tags": it.get("tags", []), "question": it["question"], "versions": it["versions"],
             "expect_abstain": exp["abstain"], "status": status, "abstention_reason": done.get("abstention_reason"),
-            "correct": correct, "facts_found": facts, "leaked": leaked, "answer": answer,
+            "correct": correct, "facts_found": facts, "leaked": leaked, "trapped": trapped, "answer": answer,
             "evidence": [{k: e.get(k) for k in ("n", "quote", "verification", "document_title", "version_number", "version_status",
                                                  "clause", "page_start", "line", "moved_from")} for e in evidence],
             "citation_precision": precision, "verified_quotes": len(verified), "quotes": len(quoted),
@@ -317,6 +323,7 @@ def summarise(rs: list[dict]) -> dict:
         "abstention_accuracy": f"{sum(r['correct'] for r in abstain)}/{len(abstain)}",
         "false_abstentions": sum(1 for r in answerable if r["status"] == "abstained"),
         "t06_leaks": sum(1 for r in rs if r["leaked"]),
+        "trap_values_in_answers": sum(1 for r in rs if r.get("trapped")),
         "citation_precision": round(statistics.mean(precisions), 3) if precisions else None,
         "quote_verification_rate": round(sum(r["verified_quotes"] for r in rs) / quotes, 3) if quotes else None,
         "t05_conflicts_found": f"{sum(r['conflict_found'] for r in conflicts)}/{len(conflicts)}",

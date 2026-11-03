@@ -811,7 +811,7 @@ def test_which_parties_a_text_names_as_parties_to_the_document_it_speaks_of():
 def test_a_document_named_by_its_party_is_answered_only_from_one_that_party_is_party_to(ev, monkeypatch):
     """2026-11-03: "the supply agreement with Alder Retail" was answered with the other supply agreement's GBP 120,000, a
     verified quote from a document Alder Retail is not party to. Such a question also searches Alder Retail's documents, the
-    model is told who "the Customer" is in each, and an answer resting only on the other agreement is withheld."""
+    model reads who "the Customer" is in each, and an answer resting only on the other agreement is withheld."""
     from app.core.config import settings
     monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
     alice = as_user(ev, "alice")
@@ -823,8 +823,8 @@ def test_a_document_named_by_its_party_is_answered_only_from_one_that_party_is_p
     events = ask(alice, ev["mid"], q)
     other, own = source_n(events, "GBP 120,000"), source_n(events, "EUR 10,000")
     sent = ev["llm"].calls[-1][-1]["content"]
-    assert 'parties="Northwind Components Ltd is the Supplier; Alder Retail Ltd is the Customer"' in sent
-    assert "its clauses speak of them by those roles" in sent
+    assert 'parties="' not in sent                         # S2.6's attribute was quoted as if a document said it
+    assert 'Alder Retail Ltd (the &quot;Customer&quot;)' in sent or 'Alder Retail Ltd (the "Customer")' in sent
     ev["llm"].answer = f'The total price payable is GBP 120,000 [{other}: "total price payable under this Agreement is GBP 120,000"].'
     done = ask(alice, ev["mid"], q)[-1]
     assert done["status"] == "abstained" and done["abstention_reason"] == "other_documents"
@@ -836,6 +836,38 @@ def test_a_document_named_by_its_party_is_answered_only_from_one_that_party_is_p
                         f'Alder Retail the total price is GBP 120,000 [{other}: "total price payable under this Agreement is GBP 120,000"].')
     done = ask(alice, ev["mid"], q)[-1]
     assert done["status"] == "partial" and any("GBP 120,000" in s for s in done["unsupported"])
+
+
+LEASE = ("LEASE OF UNIT 7 (fictional)\n\nThis Lease is made between Crestmoor Estates Ltd (the \"Landlord\") and Harbourview "
+         "Studios Ltd (the \"Tenant\").\n\n" + "".join(f"{n}. Clause {n} deals with the condition of the premises and the "
+         f"keeping of records about the building, its fixtures and its common parts in good order. " * 2 + "\n\n" for n in range(2, 8))
+         + "8.1 The Tenant shall pay an annual rent of GBP 84,000 by equal quarterly instalments.")
+
+
+def test_a_question_naming_a_party_gets_the_opening_that_defines_its_role(ev, monkeypatch):
+    """2026-11-03: S2.6 gave each source a 'parties="Crestmoor Estates Ltd is the Landlord"' attribute; the model quoted it, a
+    quote of no document, and "Who is the landlord?" failed its check 13 times in 15. The document's own opening passage is
+    given instead, when the sources lack it, and a quote of it is checked like any other."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 1)
+    alice = as_user(ev, "alice")
+    upload(alice, ev["mid"], "lease.txt", LEASE, status="executed")
+    index_all()
+    q = "What annual rent does Crestmoor receive by quarterly instalments?"
+    ev["llm"].answer = "x"
+    sources = ask(alice, ev["mid"], q)[0]["citations"]
+    sent = ev["llm"].calls[-1][-1]["content"]
+    assert 'parties="' not in sent
+    assert len(sources) == 2 and "annual rent" in sources[0]["text"] and "Crestmoor Estates Ltd" in sources[1]["text"]
+    assert sources[1]["char_start"] == 0 and "the opening of their document" in sent
+    ev["llm"].answer = ('Crestmoor Estates Ltd is the Landlord [2: "Crestmoor Estates Ltd (the \"Landlord\")"], and the Tenant pays '
+                        'it an annual rent of GBP 84,000 [1: "annual rent of GBP 84,000"].')
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["status"] == "answered" and all(e["verification"] != "failed" for e in done["evidence"])
+    ev["llm"].answer = "x"
+    ask(alice, ev["mid"], "What annual rent is payable by quarterly instalments?")       # names no party: no opening
+    assert "the opening of their document" not in ev["llm"].calls[-1][-1]["content"]
 
 
 def test_the_model_reads_the_whole_passage_around_its_best_window(ev):

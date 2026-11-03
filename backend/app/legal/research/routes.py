@@ -244,6 +244,29 @@ def _heads(scopes, uid: str) -> dict[str, tuple[set, list]]:
     return out
 
 
+MAX_OPENINGS = 2
+
+
+def _openings(scope, question: str, passages: list[dict], roles: dict, versions: str) -> list[dict]:
+    """The opening passage of each source document (at most two, best ranked first) that defines by a role a party the
+    question names, when the sources do not already include it. Only documents already among the sources: nothing new is
+    brought in."""
+    named = attribution.named_in(question, roles)
+    have, docs = {p["chunk_id"] for p in passages}, []
+    for p in passages:
+        c = p["citation"]
+        rs = roles.get(c["document_id"]) or []
+        if (c["document_id"], c["version_id"]) not in docs and any(attribution.party_key(n) in named for n, _ in rs):
+            docs.append((c["document_id"], c["version_id"]))
+    out = []
+    for did, vid in docs[:MAX_OPENINGS]:
+        op = searchmod.opening(scope, vid, [n for n, _ in roles[did]], versions)
+        if op and op["chunk_id"] not in have:
+            have.add(op["chunk_id"])
+            out.append({**op, "opening": True})
+    return out
+
+
 def _version_texts(version_ids) -> list[str]:
     """The stored text of each cited version: the whole document, not only the passage."""
     from ..documents import repo as doc_repo
@@ -418,8 +441,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         if understood:                                      # S5.1b (D-063): what a follow-up was taken to ask
             yield _event({"type": "understood", **understood})
         # 2026-11-03 evaluation: the documents' parties and defined roles. The search reads "Harrowgate (Provider)" where the
-        # question says "Harrowgate", and the model is told who "the Provider" is; a question about "the supply agreement
-        # with Alder Retail" also searches the documents Alder Retail is party to.
+        # question says "Harrowgate", and the model is given the opening passage saying who "the Provider" is; a question
+        # about "the supply agreement with Alder Retail" also searches the documents Alder Retail is party to.
         heads = await run_in_threadpool(_heads, scopes, principal["sub"])
         roles = {did: h[1] for did, h in heads.items() if h[1]}
         known = set().union(*(h[0] for h in heads.values())) if heads else set()
@@ -437,6 +460,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 have = {p["chunk_id"] for p in named["passages"]}
                 passages = named["passages"] + [p for p in passages if p["chunk_id"] not in have]
                 nothing_found = nothing_found and named["abstained"]
+            passages = passages + await run_in_threadpool(_openings, scope, question, passages, roles, versions)
             links = _amended(passages, await run_in_threadpool(amendments.for_passages, scope.matter_id, principal["sub"], passages, versions))
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
         yield _event({"type": "sources", "citations": sources})
@@ -448,7 +472,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                           "turn_id": turn["id"], "versions": versions, "absence": None})
             return
         buf, shown, claims, unsupported, failed, last_check = "", [], [], [], [], time.monotonic()
-        stream = llm_mod.get().chat_stream(prompt.build(question, passages, roles), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
+        stream = llm_mod.get().chat_stream(prompt.build(question, passages), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
                                            max_tokens=settings.LEGAL_RESEARCH_MAX_TOKENS)
 
         def finish(raw: str):

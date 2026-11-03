@@ -178,6 +178,22 @@ def _wide(h: dict) -> dict:
     return {**h, "text": full[lo:lo + WIDE_CHARS], "window": (lo, lo + WIDE_CHARS)}
 
 
+def opening(scope: AuthorizedScope, version_id: str, names: Iterable[str] = (), versions: str = "signed") -> Optional[dict]:
+    """The passage where a version's preamble defines its parties (2026-11-03 evaluation): the earliest of its first three
+    passages that names one of them, else its first. Read like a search: this matter, what this person may see, the version
+    policy."""
+    recheck(scope)
+    with get_conn() as conn:
+        ids = [r[0] for r in conn.execute("SELECT id FROM legal_chunks WHERE matter_id = ? AND version_id = ? AND active = 1 "
+                                          "ORDER BY char_start LIMIT 3", (scope.matter_id, version_id)).fetchall()]
+    hits = _load(scope.matter_id, ids, scope.principal_id, versions if versions in ("signed", "current") else "signed")
+    keys = [n.lower() for n in names if n]
+    h = next((h for h in hits if any(k in h["text"].replace("**", "").lower() for k in keys)), hits[0] if hits else None)
+    if not h:
+        return None
+    return _located([_passage(_wide(h))], " ".join(names))[0]
+
+
 def _passage(h: dict) -> dict:
     a, b = h.get("window") or (0, len(h["text"]))
     base = h["char_start"]
