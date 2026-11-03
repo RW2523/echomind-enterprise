@@ -1,0 +1,2078 @@
+{
+ "meta": {
+  "set": "phase2",
+  "commit": "16671f0",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "time": "20261103-112259",
+  "started": "20261103-102554"
+ },
+ "summary": {
+  "suites": 16,
+  "failed": 5,
+  "latency_s": {
+   "research_golden": {
+    "latency_first_paragraph_p50_s": 2.92,
+    "latency_first_paragraph_p95_s": 6.27,
+    "latency_total_p50_s": 2.92,
+    "latency_total_p95_s": 6.27
+   },
+   "research_heldout": {
+    "latency_first_paragraph_p50_s": 2.86,
+    "latency_first_paragraph_p95_s": 6.79,
+    "latency_total_p50_s": 2.86,
+    "latency_total_p95_s": 6.79
+   },
+   "research_heldout2": {
+    "latency_first_paragraph_p50_s": 2.73,
+    "latency_first_paragraph_p95_s": 5.14,
+    "latency_total_p50_s": 2.73,
+    "latency_total_p95_s": 5.14
+   },
+   "research_heldout3": {
+    "latency_first_paragraph_p50_s": 3.41,
+    "latency_first_paragraph_p95_s": 6.02,
+    "latency_total_p50_s": 3.41,
+    "latency_total_p95_s": 6.02
+   },
+   "research_heldout4": {
+    "latency_first_paragraph_p50_s": 2.79,
+    "latency_first_paragraph_p95_s": 7.02,
+    "latency_total_p50_s": 2.72,
+    "latency_total_p95_s": 7.02
+   },
+   "research_heldout5": {
+    "latency_first_paragraph_p50_s": 3.1,
+    "latency_first_paragraph_p95_s": 6.04,
+    "latency_total_p50_s": 3.09,
+    "latency_total_p95_s": 6.04
+   },
+   "research_heldout6": {
+    "latency_first_paragraph_p50_s": 2.81,
+    "latency_first_paragraph_p95_s": 5.29,
+    "latency_total_p50_s": 2.81,
+    "latency_total_p95_s": 5.29
+   },
+   "research_heldout7": {
+    "latency_first_paragraph_p50_s": 3.37,
+    "latency_first_paragraph_p95_s": 5.7,
+    "latency_total_p50_s": 3.37,
+    "latency_total_p95_s": 5.7
+   },
+   "assist_golden": {
+    "latency_p50_s": 0.01,
+    "latency_max_s": 5.78
+   },
+   "assist_heldout": {
+    "latency_p50_s": 0.01,
+    "latency_max_s": 3.84
+   },
+   "minutes_golden": {
+    "seconds": 37.5
+   },
+   "minutes_heldout": {
+    "seconds": 21.9
+   }
+  }
+ },
+ "runs": [
+  {
+   "suite": "research",
+   "set": "golden",
+   "ok": true,
+   "seconds": 754.8,
+   "report": "20261103-103827-golden.json",
+   "summary": {
+    "items": 225,
+    "answer_accuracy": "193/204",
+    "abstention_accuracy": "21/21",
+    "false_abstentions": 8,
+    "t06_leaks": 0,
+    "citation_precision": 0.926,
+    "quote_verification_rate": 0.997,
+    "t05_conflicts_found": "20/21",
+    "r7_multi_source": "7/9",
+    "statuses": {
+     "answered": 98,
+     "partial": 97,
+     "abstained": 29,
+     "unverified": 1
+    },
+    "latency_total_p50_s": 2.92,
+    "latency_total_p95_s": 6.27,
+    "latency_first_paragraph_p50_s": 2.92,
+    "latency_first_paragraph_p95_s": 6.27,
+    "runs": 3,
+    "per_run": [
+     {
+      "answer_accuracy": "65/68",
+      "abstention_accuracy": "7/7",
+      "citation_precision": 0.904,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "65/68",
+      "abstention_accuracy": "7/7",
+      "citation_precision": 0.917,
+      "quote_verification_rate": 0.991,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "63/68",
+      "abstention_accuracy": "7/7",
+      "citation_precision": 0.956,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     }
+    ],
+    "spread": {
+     "answer_accuracy": [
+      0.926,
+      0.956
+     ],
+     "abstention_accuracy": [
+      1.0,
+      1.0
+     ],
+     "citation_precision": [
+      0.904,
+      0.956
+     ],
+     "quote_verification_rate": [
+      0.991,
+      1.0
+     ],
+     "t06_leaks": [
+      0,
+      0
+     ]
+    },
+    "unstable_items": {
+     "g-msa-cap": "2/3",
+     "g-msa-law": "2/3",
+     "g-nda-exclusions": "1/3",
+     "g-lease-break-short": "2/3",
+     "g-account-said-alarm": "1/3",
+     "g-account-said-pallets": "2/3"
+    },
+    "never_correct": [
+     "g-msa-indemnity"
+    ],
+    "gate": {
+     "passed": true,
+     "missed": [],
+     "thresholds": "proposed — awaiting owner and counsel sign-off"
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "research",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 370.1,
+   "report": "20261103-104438-heldout.json",
+   "summary": {
+    "items": 102,
+    "answer_accuracy": "86/93",
+    "abstention_accuracy": "8/9",
+    "false_abstentions": 0,
+    "t06_leaks": 0,
+    "citation_precision": 0.953,
+    "quote_verification_rate": 1.0,
+    "t05_conflicts_found": "3/3",
+    "r7_multi_source": "0/0",
+    "statuses": {
+     "partial": 59,
+     "answered": 35,
+     "abstained": 8
+    },
+    "latency_total_p50_s": 2.86,
+    "latency_total_p95_s": 6.79,
+    "latency_first_paragraph_p50_s": 2.86,
+    "latency_first_paragraph_p95_s": 6.79,
+    "runs": 3,
+    "per_run": [
+     {
+      "answer_accuracy": "29/31",
+      "abstention_accuracy": "3/3",
+      "citation_precision": 0.96,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "28/31",
+      "abstention_accuracy": "3/3",
+      "citation_precision": 0.957,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "29/31",
+      "abstention_accuracy": "2/3",
+      "citation_precision": 0.941,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     }
+    ],
+    "spread": {
+     "answer_accuracy": [
+      0.903,
+      0.935
+     ],
+     "abstention_accuracy": [
+      0.667,
+      1.0
+     ],
+     "citation_precision": [
+      0.941,
+      0.96
+     ],
+     "quote_verification_rate": [
+      1.0,
+      1.0
+     ],
+     "t06_leaks": [
+      0,
+      0
+     ]
+    },
+    "unstable_items": {
+     "h-lease-premium-days": "2/3",
+     "h-abstain-side-law": "2/3"
+    },
+    "never_correct": [
+     "h-coc-signatory",
+     "h-msa-parties"
+    ],
+    "gate": {
+     "passed": true,
+     "missed": [],
+     "thresholds": "proposed — awaiting owner and counsel sign-off"
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "research",
+   "set": "heldout2",
+   "ok": false,
+   "seconds": 289.1,
+   "report": "20261103-104927-heldout2.json",
+   "summary": {
+    "items": 90,
+    "answer_accuracy": "32/45",
+    "abstention_accuracy": "35/45",
+    "false_abstentions": 4,
+    "t06_leaks": 0,
+    "citation_precision": 0.927,
+    "quote_verification_rate": 1.0,
+    "t05_conflicts_found": "0/0",
+    "r7_multi_source": "0/0",
+    "statuses": {
+     "abstained": 39,
+     "partial": 38,
+     "answered": 13
+    },
+    "latency_total_p50_s": 2.73,
+    "latency_total_p95_s": 5.14,
+    "latency_first_paragraph_p50_s": 2.73,
+    "latency_first_paragraph_p95_s": 5.14,
+    "runs": 3,
+    "per_run": [
+     {
+      "answer_accuracy": "11/15",
+      "abstention_accuracy": "11/15",
+      "citation_precision": 0.929,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "11/15",
+      "abstention_accuracy": "13/15",
+      "citation_precision": 0.893,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "10/15",
+      "abstention_accuracy": "11/15",
+      "citation_precision": 0.962,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     }
+    ],
+    "spread": {
+     "answer_accuracy": [
+      0.667,
+      0.733
+     ],
+     "abstention_accuracy": [
+      0.733,
+      0.867
+     ],
+     "citation_precision": [
+      0.893,
+      0.962
+     ],
+     "quote_verification_rate": [
+      1.0,
+      1.0
+     ],
+     "t06_leaks": [
+      0,
+      0
+     ]
+    },
+    "unstable_items": {
+     "h2-abstain-eng-interest": "2/3",
+     "h2-abstain-account-manager": "1/3",
+     "h2-abstain-iso-audit": "2/3",
+     "h2-witness-first-contact": "2/3"
+    },
+    "never_correct": [
+     "h2-abstain-deposit-interest",
+     "h2-abstain-pallet-count",
+     "h2-eng-billing-frequency",
+     "h2-nda-registration",
+     "h2-eng-scope",
+     "h2-coc-questions"
+    ],
+    "gate": {
+     "passed": false,
+     "missed": [
+      "answer_accuracy 0.711 (below 0.85)",
+      "abstention_accuracy 0.778 (below 0.8)"
+     ],
+     "thresholds": "proposed — awaiting owner and counsel sign-off"
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "research",
+   "set": "heldout3",
+   "ok": true,
+   "seconds": 334.7,
+   "report": "20261103-105501-heldout3.json",
+   "summary": {
+    "items": 87,
+    "answer_accuracy": "39/42",
+    "abstention_accuracy": "38/45",
+    "false_abstentions": 2,
+    "t06_leaks": 0,
+    "citation_precision": 0.963,
+    "quote_verification_rate": 1.0,
+    "t05_conflicts_found": "0/0",
+    "r7_multi_source": "0/0",
+    "statuses": {
+     "abstained": 40,
+     "partial": 30,
+     "answered": 17
+    },
+    "latency_total_p50_s": 3.41,
+    "latency_total_p95_s": 6.02,
+    "latency_first_paragraph_p50_s": 3.41,
+    "latency_first_paragraph_p95_s": 6.02,
+    "runs": 3,
+    "per_run": [
+     {
+      "answer_accuracy": "13/14",
+      "abstention_accuracy": "12/15",
+      "citation_precision": 0.962,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "14/14",
+      "abstention_accuracy": "14/15",
+      "citation_precision": 0.964,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "12/14",
+      "abstention_accuracy": "12/15",
+      "citation_precision": 0.962,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     }
+    ],
+    "spread": {
+     "answer_accuracy": [
+      0.857,
+      1.0
+     ],
+     "abstention_accuracy": [
+      0.8,
+      0.933
+     ],
+     "citation_precision": [
+      0.962,
+      0.964
+     ],
+     "quote_verification_rate": [
+      1.0,
+      1.0
+     ],
+     "t06_leaks": [
+      0,
+      0
+     ]
+    },
+    "unstable_items": {
+     "h3-abstain-lease-interest": "2/3",
+     "h3-abstain-storage-breach-notice": "2/3",
+     "h3-abstain-kestrel-availability": "1/3",
+     "h3-abstain-storage-confidentiality": "2/3",
+     "h3-abstain-harrowgate-rate": "1/3",
+     "h3-min-approved": "2/3",
+     "h3-witness-date": "1/3"
+    },
+    "never_correct": [],
+    "gate": {
+     "passed": true,
+     "missed": [],
+     "thresholds": "proposed — awaiting owner and counsel sign-off"
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "research",
+   "set": "heldout4",
+   "ok": false,
+   "seconds": 301.5,
+   "report": "20261103-110003-heldout4.json",
+   "summary": {
+    "items": 84,
+    "answer_accuracy": "37/39",
+    "abstention_accuracy": "40/45",
+    "false_abstentions": 0,
+    "t06_leaks": 0,
+    "citation_precision": 0.842,
+    "quote_verification_rate": 0.985,
+    "t05_conflicts_found": "0/0",
+    "r7_multi_source": "0/0",
+    "statuses": {
+     "abstained": 40,
+     "answered": 13,
+     "partial": 29,
+     "unverified": 2
+    },
+    "latency_total_p50_s": 2.72,
+    "latency_total_p95_s": 7.02,
+    "latency_first_paragraph_p50_s": 2.79,
+    "latency_first_paragraph_p95_s": 7.02,
+    "runs": 3,
+    "per_run": [
+     {
+      "answer_accuracy": "12/13",
+      "abstention_accuracy": "13/15",
+      "citation_precision": 0.885,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "12/13",
+      "abstention_accuracy": "14/15",
+      "citation_precision": 0.833,
+      "quote_verification_rate": 0.947,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "13/13",
+      "abstention_accuracy": "13/15",
+      "citation_precision": 0.806,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     }
+    ],
+    "spread": {
+     "answer_accuracy": [
+      0.923,
+      1.0
+     ],
+     "abstention_accuracy": [
+      0.867,
+      0.933
+     ],
+     "citation_precision": [
+      0.806,
+      0.885
+     ],
+     "quote_verification_rate": [
+      0.947,
+      1.0
+     ],
+     "t06_leaks": [
+      0,
+      0
+     ]
+    },
+    "unstable_items": {
+     "h4-abstain-lease-nonrenewal": "1/3",
+     "h4-vl-lawyers": "1/3"
+    },
+    "never_correct": [
+     "h4-abstain-insurance-premium"
+    ],
+    "gate": {
+     "passed": false,
+     "missed": [
+      "citation_precision 0.842 (below 0.9)"
+     ],
+     "thresholds": "proposed — awaiting owner and counsel sign-off"
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "research",
+   "set": "heldout5",
+   "ok": false,
+   "seconds": 304.6,
+   "report": "20261103-110508-heldout5.json",
+   "summary": {
+    "items": 84,
+    "answer_accuracy": "33/36",
+    "abstention_accuracy": "37/48",
+    "false_abstentions": 2,
+    "t06_leaks": 0,
+    "citation_precision": 0.942,
+    "quote_verification_rate": 1.0,
+    "t05_conflicts_found": "0/0",
+    "r7_multi_source": "0/0",
+    "statuses": {
+     "abstained": 39,
+     "answered": 11,
+     "partial": 33,
+     "unverified": 1
+    },
+    "latency_total_p50_s": 3.09,
+    "latency_total_p95_s": 6.04,
+    "latency_first_paragraph_p50_s": 3.1,
+    "latency_first_paragraph_p95_s": 6.04,
+    "runs": 3,
+    "per_run": [
+     {
+      "answer_accuracy": "11/12",
+      "abstention_accuracy": "13/16",
+      "citation_precision": 0.944,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "10/12",
+      "abstention_accuracy": "12/16",
+      "citation_precision": 0.917,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "12/12",
+      "abstention_accuracy": "12/16",
+      "citation_precision": 0.958,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     }
+    ],
+    "spread": {
+     "answer_accuracy": [
+      0.833,
+      1.0
+     ],
+     "abstention_accuracy": [
+      0.75,
+      0.812
+     ],
+     "citation_precision": [
+      0.917,
+      0.958
+     ],
+     "quote_verification_rate": [
+      1.0,
+      1.0
+     ],
+     "t06_leaks": [
+      0,
+      0
+     ]
+    },
+    "unstable_items": {
+     "h5-abstain-lease-renewal-notice": "2/3",
+     "h5-abstain-ticket-credits": "1/3",
+     "h5-abstain-review-notice": "2/3",
+     "h5-abstain-nda-partner": "2/3",
+     "h5-board-size": "2/3",
+     "h5-cw-estimate-excludes": "2/3",
+     "h5-chiller-date": "2/3"
+    },
+    "never_correct": [
+     "h5-abstain-renewal-fee",
+     "h5-abstain-storage-use-class"
+    ],
+    "gate": {
+     "passed": false,
+     "missed": [
+      "abstention_accuracy 0.771 (below 0.8)"
+     ],
+     "thresholds": "proposed — awaiting owner and counsel sign-off"
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "research",
+   "set": "heldout6",
+   "ok": false,
+   "seconds": 312.5,
+   "report": "20261103-111020-heldout6.json",
+   "summary": {
+    "items": 96,
+    "answer_accuracy": "45/51",
+    "abstention_accuracy": "35/45",
+    "false_abstentions": 5,
+    "t06_leaks": 0,
+    "citation_precision": 0.92,
+    "quote_verification_rate": 1.0,
+    "t05_conflicts_found": "0/0",
+    "r7_multi_source": "0/0",
+    "statuses": {
+     "abstained": 40,
+     "partial": 49,
+     "answered": 7
+    },
+    "latency_total_p50_s": 2.81,
+    "latency_total_p95_s": 5.29,
+    "latency_first_paragraph_p50_s": 2.81,
+    "latency_first_paragraph_p95_s": 5.29,
+    "runs": 3,
+    "per_run": [
+     {
+      "answer_accuracy": "15/17",
+      "abstention_accuracy": "12/15",
+      "citation_precision": 0.939,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "14/17",
+      "abstention_accuracy": "11/15",
+      "citation_precision": 0.883,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "16/17",
+      "abstention_accuracy": "12/15",
+      "citation_precision": 0.938,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     }
+    ],
+    "spread": {
+     "answer_accuracy": [
+      0.824,
+      0.941
+     ],
+     "abstention_accuracy": [
+      0.733,
+      0.8
+     ],
+     "citation_precision": [
+      0.883,
+      0.939
+     ],
+     "quote_verification_rate": [
+      1.0,
+      1.0
+     ],
+     "t06_leaks": [
+      0,
+      0
+     ]
+    },
+    "unstable_items": {
+     "h6-abstain-clearance-regulator": "1/3",
+     "h6-abstain-vl-regnumber": "1/3",
+     "h6-minutes-record-approver": "2/3",
+     "h6-storage-old-fee": "1/3"
+    },
+    "never_correct": [
+     "h6-abstain-ek-term-end",
+     "h6-abstain-review-outcome",
+     "h6-lease-postcode"
+    ],
+    "gate": {
+     "passed": false,
+     "missed": [
+      "abstention_accuracy 0.778 (below 0.8)"
+     ],
+     "thresholds": "proposed — awaiting owner and counsel sign-off"
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "research",
+   "set": "heldout7",
+   "ok": false,
+   "seconds": 351.4,
+   "report": "20261103-111612-heldout7.json",
+   "summary": {
+    "items": 93,
+    "answer_accuracy": "43/45",
+    "abstention_accuracy": "24/48",
+    "false_abstentions": 2,
+    "t06_leaks": 0,
+    "citation_precision": 0.988,
+    "quote_verification_rate": 1.0,
+    "t05_conflicts_found": "0/0",
+    "r7_multi_source": "0/0",
+    "statuses": {
+     "abstained": 26,
+     "partial": 56,
+     "answered": 11
+    },
+    "latency_total_p50_s": 3.37,
+    "latency_total_p95_s": 5.7,
+    "latency_first_paragraph_p50_s": 3.37,
+    "latency_first_paragraph_p95_s": 5.7,
+    "runs": 3,
+    "per_run": [
+     {
+      "answer_accuracy": "14/15",
+      "abstention_accuracy": "8/16",
+      "citation_precision": 1.0,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "14/15",
+      "abstention_accuracy": "8/16",
+      "citation_precision": 0.964,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     },
+     {
+      "answer_accuracy": "15/15",
+      "abstention_accuracy": "8/16",
+      "citation_precision": 1.0,
+      "quote_verification_rate": 1.0,
+      "t06_leaks": 0
+     }
+    ],
+    "spread": {
+     "answer_accuracy": [
+      0.933,
+      1.0
+     ],
+     "abstention_accuracy": [
+      0.5,
+      0.5
+     ],
+     "citation_precision": [
+      0.964,
+      1.0
+     ],
+     "quote_verification_rate": [
+      1.0,
+      1.0
+     ],
+     "t06_leaks": [
+      0,
+      0
+     ]
+    },
+    "unstable_items": {
+     "h7-abstain-item3-votes": "2/3",
+     "h7-abstain-reyes-successor": "2/3",
+     "h7-abstain-engagement-expiry": "1/3",
+     "h7-abstain-schedule4": "1/3",
+     "h7-side-measure": "1/3"
+    },
+    "never_correct": [
+     "h7-abstain-project-start",
+     "h7-abstain-petra-since",
+     "h7-abstain-day-shift",
+     "h7-abstain-pellucid-agreed",
+     "h7-abstain-brookfield-location",
+     "h7-abstain-quorum-rule"
+    ],
+    "gate": {
+     "passed": false,
+     "missed": [
+      "abstention_accuracy 0.5 (below 0.8)"
+     ],
+     "thresholds": "proposed — awaiting owner and counsel sign-off"
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "compare",
+   "set": "golden",
+   "ok": true,
+   "seconds": 70.6,
+   "report": "20261103-111723-compare-golden.json",
+   "summary": {
+    "alignment": [
+     {
+      "expected": 4,
+      "correct": 4,
+      "found": 4,
+      "precision": 1.0,
+      "recall": 1.0,
+      "extra": [],
+      "unlabelled_changes": 3,
+      "rows": [
+       {
+        "unit": "right 2.1",
+        "expected": {
+         "right": "2.1",
+         "kind": "changed",
+         "flags": [
+          "number"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "number"
+         ],
+         "from": "2.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 4.1",
+        "expected": {
+         "right": "4.1",
+         "kind": "changed",
+         "flags": [
+          "number"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "number"
+         ],
+         "from": "4.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 8.1",
+        "expected": {
+         "right": "8.1",
+         "kind": "changed",
+         "flags": [
+          "number"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "number"
+         ],
+         "from": "8.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 12.1",
+        "expected": {
+         "right": "12.1",
+         "kind": "changed",
+         "flags": [
+          "number"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "number"
+         ],
+         "from": "12.1"
+        },
+        "correct": true
+       }
+      ],
+      "pair": "msa-v1-signed.md → msa-v2-draft.md",
+      "seconds": 0.09,
+      "passes": [
+       "wording",
+       "meaning"
+      ],
+      "summary": {
+       "unchanged": 37,
+       "formatting": 0,
+       "changed": 5,
+       "added": 1,
+       "removed": 1,
+       "moved": 0,
+       "renumbered": 0
+      }
+     },
+     {
+      "expected": 13,
+      "correct": 13,
+      "found": 13,
+      "precision": 1.0,
+      "recall": 1.0,
+      "extra": [],
+      "unlabelled_changes": 5,
+      "rows": [
+       {
+        "unit": "right 2.1",
+        "expected": {
+         "right": "2.1",
+         "kind": "changed",
+         "flags": [
+          "number"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "number"
+         ],
+         "from": "2.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 4.2",
+        "expected": {
+         "right": "4.2",
+         "kind": "added"
+        },
+        "got": {
+         "kind": "added",
+         "moved": false,
+         "renumbered": false,
+         "flags": [],
+         "from": null
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 4.3",
+        "expected": {
+         "right": "4.3",
+         "kind": "unchanged",
+         "renumbered_from": "4.2"
+        },
+        "got": {
+         "kind": "unchanged",
+         "moved": false,
+         "renumbered": true,
+         "flags": [],
+         "from": "4.2"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 4.4",
+        "expected": {
+         "right": "4.4",
+         "kind": "unchanged",
+         "renumbered_from": "4.3"
+        },
+        "got": {
+         "kind": "unchanged",
+         "moved": false,
+         "renumbered": true,
+         "flags": [],
+         "from": "4.3"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 5",
+        "expected": {
+         "right": "5",
+         "kind": "unchanged",
+         "moved": true
+        },
+        "got": {
+         "kind": "unchanged",
+         "moved": true,
+         "renumbered": false,
+         "flags": [],
+         "from": "5"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 5.1",
+        "expected": {
+         "right": "5.1",
+         "kind": "unchanged",
+         "moved": true
+        },
+        "got": {
+         "kind": "unchanged",
+         "moved": true,
+         "renumbered": false,
+         "flags": [],
+         "from": "5.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 6.1",
+        "expected": {
+         "right": "6.1",
+         "kind": "changed",
+         "flags": [
+          "obligation"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "obligation"
+         ],
+         "from": "6.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "left 7",
+        "expected": {
+         "left": "7",
+         "kind": "removed"
+        },
+        "got": {
+         "kind": "removed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [],
+         "from": "7"
+        },
+        "correct": true
+       },
+       {
+        "unit": "left 7.1",
+        "expected": {
+         "left": "7.1",
+         "kind": "removed"
+        },
+        "got": {
+         "kind": "removed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [],
+         "from": "7.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 8.1",
+        "expected": {
+         "right": "8.1",
+         "kind": "changed",
+         "flags": [
+          "number"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "number"
+         ],
+         "from": "8.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 8.2",
+        "expected": {
+         "right": "8.2",
+         "kind": "changed",
+         "flags": [
+          "negation"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "negation"
+         ],
+         "from": "8.2"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 12.1",
+        "expected": {
+         "right": "12.1",
+         "kind": "changed",
+         "flags": [
+          "number"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "number"
+         ],
+         "from": "12.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 14.1",
+        "expected": {
+         "right": "14.1",
+         "kind": "formatting"
+        },
+        "got": {
+         "kind": "formatting",
+         "moved": false,
+         "renumbered": false,
+         "flags": [],
+         "from": "14.1"
+        },
+        "correct": true
+       }
+      ],
+      "pair": "msa-v1-signed.md → msa-v3-restructured.md",
+      "seconds": 1.05,
+      "passes": [
+       "wording",
+       "meaning"
+      ],
+      "summary": {
+       "unchanged": 32,
+       "formatting": 1,
+       "changed": 6,
+       "added": 3,
+       "removed": 4,
+       "moved": 2,
+       "renumbered": 2
+      }
+     }
+    ],
+    "explanations": {
+     "explained": 13,
+     "errors": 0,
+     "quotes": 20,
+     "verified": 20,
+     "quote_verification_rate": 1.0,
+     "changed_with_both_sides_quoted": "6/6",
+     "statuses": {
+      "partial": 2,
+      "answered": 11
+     },
+     "seconds_total": 20.95,
+     "seconds_per_change": 1.61,
+     "samples": [
+      {
+       "unit": null,
+       "text": "The version designation changes from [1] to [2], indicating the document is now labeled as a \"PROVIDER RESTRUCTURED DRAFT\" with a specific date.",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "MASTER SERVICES AGREEMENT (DEMO)"
+        ],
+        [
+         "right",
+         "verbatim",
+         "MASTER SERVICES AGREEMENT (DEMO) — PROVIDER RESTRUCTURED DRAFT, 20 September 2026"
+        ]
+       ]
+      },
+      {
+       "unit": null,
+       "text": "The clause is present in source 1 but not in source 2. [1]",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "FICTIONAL DEMO FIXTURE. Every party, amount and term below is invented for testing EchoMind Law. Not a real agreement and not legal advice."
+        ]
+       ]
+      },
+      {
+       "unit": null,
+       "text": "The clause has been added, changing the structure of the document [2]. The addition of a new clause (4.2) causes renumbering of subsequent clauses (4.2–4.3) [2].",
+       "evidence": [
+        [
+         "right",
+         "verbatim",
+         "FICTIONAL EVALUATION FIXTURE (S2.3)"
+        ],
+        [
+         "right",
+         "verbatim",
+         "4.2–4.3 are renumbered"
+        ]
+       ]
+      },
+      {
+       "unit": "2.1",
+       "text": "The initial term of the agreement is reduced from thirty-six (36) months to twenty-four (24) months. [1] [2]",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "thirty-six (36) months"
+        ],
+        [
+         "right",
+         "verbatim",
+         "twenty-four (24) months"
+        ]
+       ]
+      },
+      {
+       "unit": "4.2",
+       "text": "The clause specifies that the subscription fee increases by three percent (3%) on each anniversary of the Effective Date. [2]",
+       "evidence": [
+        [
+         "right",
+         "verbatim",
+         "The subscription fee increases by three percent (3%) on each anniversary of the Effective Date."
+        ]
+       ]
+      },
+      {
+       "unit": "6.1",
+       "text": "The obligation on the Provider to notify the Client of a personal data breach is made conditional on the Provider's efforts, rather than being a strict requirement. [1] [2].",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "Provider shall notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it."
+        ],
+        [
+         "right",
+         "verbatim",
+         "Provider will use reasonable efforts to notify Client of any personal data breach affecting Client Data without undue delay and in any event within forty-eight (48) hours of becoming aware of it."
+        ]
+       ]
+      },
+      {
+       "unit": "7",
+       "text": "The clause is present in source 1 but not in source 2. [1] is the wording in source 1. There is no corresponding wording in source 2.",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "## 7. Warranties"
+        ]
+       ]
+      },
+      {
+       "unit": "7.1",
+       "text": "The clause specifies the provider's warranty regarding the Services. [1]. There is no corresponding clause in source 2.",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "Provider warrants that the Services will perform materially in accordance with Schedule 1"
+        ]
+       ]
+      },
+      {
+       "unit": "8.1",
+       "text": "The maximum liability amount is reduced from [1] to [2], so each party's total aggregate liability is lower under the second version.",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "USD 250,000"
+        ],
+        [
+         "right",
+         "verbatim",
+         "USD 150,000"
+        ]
+       ]
+      },
+      {
+       "unit": "8.2",
+       "text": "The liability for indirect, incidental or consequential damages, or for loss of profits shifts from neither party being liable to each party being liable. [1] [2]",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "Neither party is liable for any indirect, incidental or consequential damages, or for loss of profits."
+        ],
+        [
+         "right",
+         "verbatim",
+         "Each party is liable for any indirect, incidental or consequential damages, and for loss of profits."
+        ]
+       ]
+      },
+      {
+       "unit": "12.1",
+       "text": "The notice period for termination increases from [1] to [2], so either party must give longer notice.",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "thirty (30) days"
+        ],
+        [
+         "right",
+         "verbatim",
+         "ninety (90) days"
+        ]
+       ]
+      },
+      {
+       "unit": null,
+       "text": "The clause in source 1 includes a statement about the signing of the agreement by both parties on 2 March 2026, while there is no corresponding clause in source 2. [1]",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "*Signed for Harrowgate Systems Inc. and for Voss-Lindqvist AB on 2 March 2026 (fictional).*"
+        ]
+       ]
+      },
+      {
+       "unit": null,
+       "text": "The clause is missing in the left-hand version, and the right-hand version contains the clause. [2]",
+       "evidence": [
+        [
+         "right",
+         "verbatim",
+         "*Draft for discussion — not signed (fictional).*"
+        ]
+       ]
+      }
+     ]
+    },
+    "scan": {
+     "documents": 11,
+     "candidates": 9,
+     "checked": 9,
+     "conflicts": 9,
+     "rejected": 0,
+     "unclear": 0,
+     "planted_recall": "5/5",
+     "precision": 0.889,
+     "acceptable_extras": 0,
+     "false_positives": [
+      {
+       "kind": "money",
+       "verdict": "conflict",
+       "a": "Amendment No. 1 to the Kestrel storage agreement: EUR 4,600",
+       "b": "Kestrel Storage Services Agreement: EUR 4,000",
+       "explanation": "[1] [2]",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      }
+     ],
+     "planted_never_proposed": [],
+     "planted_rejected_by_model": [],
+     "quote_verification_rate": 1.0,
+     "seconds": 2.57,
+     "findings": [
+      {
+       "kind": "reference",
+       "verdict": "conflict",
+       "a": "Order Form No. 1: Master Services Agreement dated 2 February 2026",
+       "b": "Harrowgate MSA: entered into as of 2 March 2026",
+       "explanation": "Source 1 refers to [1], but source 2 gives its own date as [2].",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "law",
+       "verdict": "conflict",
+       "a": "Harrowgate MSA: State of Delaware",
+       "b": "Order Form No. 1: England and Wales",
+       "explanation": "Source 1 chooses the law of [1] and source 2 the law of [2].",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "entity",
+       "verdict": "conflict",
+       "a": "Calder & Wynne engagement letter: Harrowgate Systems Inc.",
+       "b": "Order Form No. 1: Harrowgate Systems Ltd",
+       "explanation": "Source 1 names [1] and source 2 names [2]: the same name with a different legal form.",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "entity",
+       "verdict": "conflict",
+       "a": "Change of control notice: Harrowgate Systems Inc.",
+       "b": "Order Form No. 1: Harrowgate Systems Ltd",
+       "explanation": "Source 1 names [1] and source 2 names [2]: the same name with a different legal form.",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "entity",
+       "verdict": "conflict",
+       "a": "Harrowgate MSA: Harrowgate Systems Inc.",
+       "b": "Order Form No. 1: Harrowgate Systems Ltd",
+       "explanation": "Source 1 names [1] and source 2 names [2]: the same name with a different legal form.",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "entity",
+       "verdict": "conflict",
+       "a": "Order Form No. 1: Harrowgate Systems Ltd",
+       "b": "Service credit side letter: Harrowgate Systems Inc.",
+       "explanation": "Source 1 names [1] and source 2 names [2]: the same name with a different legal form.",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "money",
+       "verdict": "conflict",
+       "a": "Amendment No. 1 to the Kestrel storage agreement: EUR 4,600",
+       "b": "Kestrel Storage Services Agreement: EUR 4,000",
+       "explanation": "[1] [2]",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "period",
+       "verdict": "conflict",
+       "a": "Harrowgate MSA: thirty (30) days",
+       "b": "Order Form No. 1: forty-five (45) days",
+       "explanation": "[1] [2]",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "money",
+       "verdict": "conflict",
+       "a": "Harrowgate MSA: USD 18,500",
+       "b": "Order Form No. 1: USD 18,000",
+       "explanation": "[1] [2]",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      }
+     ]
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "compare",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 71.3,
+   "report": "20261103-111834-compare-heldout.json",
+   "summary": {
+    "alignment": [
+     {
+      "expected": 10,
+      "correct": 10,
+      "found": 10,
+      "precision": 1.0,
+      "recall": 1.0,
+      "extra": [],
+      "unlabelled_changes": 4,
+      "rows": [
+       {
+        "unit": "right 10",
+        "expected": {
+         "right": "10",
+         "kind": "unchanged",
+         "moved": true
+        },
+        "got": {
+         "kind": "unchanged",
+         "moved": true,
+         "renumbered": false,
+         "flags": [],
+         "from": "10"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 10.1",
+        "expected": {
+         "right": "10.1",
+         "kind": "unchanged",
+         "moved": true
+        },
+        "got": {
+         "kind": "unchanged",
+         "moved": true,
+         "renumbered": false,
+         "flags": [],
+         "from": "10.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 2.1",
+        "expected": {
+         "right": "2.1",
+         "kind": "changed",
+         "flags": [
+          "number"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "number"
+         ],
+         "from": "2.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 3.1",
+        "expected": {
+         "right": "3.1",
+         "kind": "changed",
+         "flags": [
+          "number"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "number"
+         ],
+         "from": "3.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 3.3",
+        "expected": {
+         "right": "3.3",
+         "kind": "added"
+        },
+        "got": {
+         "kind": "added",
+         "moved": false,
+         "renumbered": false,
+         "flags": [],
+         "from": null
+        },
+        "correct": true
+       },
+       {
+        "unit": "left 5",
+        "expected": {
+         "left": "5",
+         "kind": "removed"
+        },
+        "got": {
+         "kind": "removed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [],
+         "from": "5"
+        },
+        "correct": true
+       },
+       {
+        "unit": "left 5.1",
+        "expected": {
+         "left": "5.1",
+         "kind": "removed"
+        },
+        "got": {
+         "kind": "removed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [],
+         "from": "5.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 6.2",
+        "expected": {
+         "right": "6.2",
+         "kind": "changed",
+         "flags": [
+          "obligation"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "obligation"
+         ],
+         "from": "6.2"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 7.1",
+        "expected": {
+         "right": "7.1",
+         "kind": "changed",
+         "flags": [
+          "negation"
+         ]
+        },
+        "got": {
+         "kind": "changed",
+         "moved": false,
+         "renumbered": false,
+         "flags": [
+          "obligation",
+          "negation"
+         ],
+         "from": "7.1"
+        },
+        "correct": true
+       },
+       {
+        "unit": "right 9.1",
+        "expected": {
+         "right": "9.1",
+         "kind": "formatting"
+        },
+        "got": {
+         "kind": "formatting",
+         "moved": false,
+         "renumbered": false,
+         "flags": [],
+         "from": "9.1"
+        },
+        "correct": true
+       }
+      ],
+      "pair": "lease.md → heldout-lease-v2-draft.md",
+      "seconds": 0.26,
+      "passes": [
+       "wording",
+       "meaning"
+      ],
+      "summary": {
+       "unchanged": 18,
+       "formatting": 1,
+       "changed": 6,
+       "added": 2,
+       "removed": 3,
+       "moved": 2,
+       "renumbered": 0
+      }
+     }
+    ],
+    "explanations": {
+     "explained": 11,
+     "errors": 0,
+     "quotes": 16,
+     "verified": 16,
+     "quote_verification_rate": 1.0,
+     "changed_with_both_sides_quoted": "5/6",
+     "statuses": {
+      "partial": 7,
+      "answered": 4
+     },
+     "seconds_total": 20.93,
+     "seconds_per_change": 1.9,
+     "samples": [
+      {
+       "unit": null,
+       "text": "The version designation changes from [1: \"\"] to [2], indicating that the document is now identified as a landlord draft with a specific date.",
+       "evidence": [
+        [
+         "right",
+         "verbatim",
+         "— LANDLORD DRAFT, 2 September 2026"
+        ]
+       ]
+      },
+      {
+       "unit": null,
+       "text": "The term \"EVALUATION\" is replaced with \"HELD-OUT,\" and a reference \"(S2.3)\" is added. Additionally, \"Not a real lease and not legal advice\" is replaced with \"Never used to tune comparison.\" [1] [2]",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "FICTIONAL EVALUATION FIXTURE. Every party, address and amount is invented. Not a real lease and not legal advice."
+        ],
+        [
+         "right",
+         "verbatim",
+         "FICTIONAL HELD-OUT FIXTURE (S2.3). Every party, address and amount is invented. Never used to tune comparison."
+        ]
+       ]
+      },
+      {
+       "unit": "2.1",
+       "text": "The term of the lease increases from ten (10) years to fifteen (15) years, extending the end date from 31 March 2035 to 31 March 2040. [1] [2].",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "The term is ten (10) years starting on 1 April 2025 and ending on 31 March 2035"
+        ],
+        [
+         "right",
+         "verbatim",
+         "The term is fifteen (15) years starting on 1 April 2025 and ending on 31 March 2040"
+        ]
+       ]
+      },
+      {
+       "unit": "3.1",
+       "text": "The rent amount increases from GBP 84,000 per year to GBP 92,500 per year.  \n[1] to [2].",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "GBP 84,000 per year"
+        ],
+        [
+         "right",
+         "verbatim",
+         "GBP 92,500 per year"
+        ]
+       ]
+      },
+      {
+       "unit": "3.3",
+       "text": "The clause regarding interest on late rent is introduced in the right-hand version, stating that interest at four percent (4%) above base rate is payable on any rent paid late. [2] Since there is no source 1, there is no prior version of this clause to compare.",
+       "evidence": [
+        [
+         "right",
+         "verbatim",
+         "3.3 Interest at four percent (4%) above base rate is payable on any rent paid late."
+        ]
+       ]
+      },
+      {
+       "unit": "5",
+       "text": "The clause in source 1 states \"5. Use\" as the heading for the section. [1] There is no corresponding clause in source 2, meaning the right-hand version does not include this section. [2: \"\"]",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "5. Use"
+        ]
+       ]
+      },
+      {
+       "unit": "5.1",
+       "text": "The clause specifies the permitted use of the premises. [1]. There is no corresponding clause in source 2.",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "The Tenant shall use the Premises only for storage and distribution within Use Class B8."
+        ]
+       ]
+      },
+      {
+       "unit": "6.2",
+       "text": "The obligation of the Landlord to keep the structure and roof of the Premises in repair is made optional with the change from [1] to [2], and an additional condition is added that the work must be done \"at the Tenant's cost\".",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "shall keep"
+        ],
+        [
+         "right",
+         "verbatim",
+         "may keep"
+        ]
+       ]
+      },
+      {
+       "unit": "7.1",
+       "text": "The restriction on assigning or underletting part of the Premises is removed: [1] is replaced with [2], allowing the Tenant to assign or underlet part of the Premises.",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "The Tenant shall not assign or underlet part only of the Premises"
+        ],
+        [
+         "right",
+         "verbatim",
+         "The Tenant may assign or underlet part only of the Premises"
+        ]
+       ]
+      },
+      {
+       "unit": null,
+       "text": "The clause in source 1 states that the lease was signed for Crestmoor Estates Ltd and Voss-Lindqvist Logistics Ltd on 20 March 2025 [1]. There is no corresponding clause in source 2.",
+       "evidence": [
+        [
+         "left",
+         "verbatim",
+         "Signed for Crestmoor Estates Ltd and for Voss-Lindqvist Logistics Ltd on 20 March 2025 (fictional)"
+        ]
+       ]
+      },
+      {
+       "unit": null,
+       "text": "There is no source 1: the left-hand version has no matching clause. [2] is the only text provided for this clause.",
+       "evidence": [
+        [
+         "right",
+         "verbatim",
+         "*Draft for discussion — not signed (fictional).*"
+        ]
+       ]
+      }
+     ]
+    },
+    "scan": {
+     "documents": 11,
+     "candidates": 5,
+     "checked": 5,
+     "conflicts": 5,
+     "rejected": 0,
+     "unclear": 0,
+     "planted_recall": "4/5",
+     "precision": 0.8,
+     "acceptable_extras": 0,
+     "false_positives": [
+      {
+       "kind": "money",
+       "verdict": "conflict",
+       "a": "Amendment No. 1 to the Kestrel storage agreement: EUR 4,600",
+       "b": "Kestrel Storage Services Agreement: EUR 4,000",
+       "explanation": "[1] [2]",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      }
+     ],
+     "planted_never_proposed": [
+      "reference"
+     ],
+     "planted_rejected_by_model": [],
+     "quote_verification_rate": 1.0,
+     "seconds": 2.15,
+     "findings": [
+      {
+       "kind": "law",
+       "verdict": "conflict",
+       "a": "Unit 7 Lease: England and Wales",
+       "b": "Unit 7 side letter: Scotland",
+       "explanation": "Source 1 chooses the law of [1] and source 2 the law of [2].",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "entity",
+       "verdict": "conflict",
+       "a": "Unit 7 Lease: Crestmoor Estates Ltd",
+       "b": "Unit 7 side letter: Crestmoor Estates plc",
+       "explanation": "Source 1 names [1] and source 2 names [2]: the same name with a different legal form.",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "money",
+       "verdict": "conflict",
+       "a": "Amendment No. 1 to the Kestrel storage agreement: EUR 4,600",
+       "b": "Kestrel Storage Services Agreement: EUR 4,000",
+       "explanation": "[1] [2]",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "period",
+       "verdict": "conflict",
+       "a": "Unit 7 Lease: six (6) months",
+       "b": "Unit 7 side letter: three (3) months",
+       "explanation": "[1] and [2].",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      },
+      {
+       "kind": "money",
+       "verdict": "conflict",
+       "a": "Unit 7 Lease: GBP 84,000",
+       "b": "Unit 7 side letter: GBP 80,000",
+       "explanation": "[1] [2]",
+       "quotes": [
+        "verbatim",
+        "verbatim"
+       ]
+      }
+     ]
+    }
+   },
+   "reused": false
+  },
+  {
+   "suite": "assist",
+   "set": "golden",
+   "ok": true,
+   "seconds": 55.6,
+   "report": "20261103-111929-assist-golden.json",
+   "summary": {
+    "scenarios": 5,
+    "recall": 1.0,
+    "critical_recall": "10/10",
+    "precision": 1.0,
+    "alerts": 16,
+    "false_alerts": 0,
+    "false_alerts_per_hour": 0.0,
+    "latency_p50_s": 0.01,
+    "latency_max_s": 5.78
+   },
+   "reused": false
+  },
+  {
+   "suite": "assist",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 52.2,
+   "report": "20261103-112021-assist-heldout.json",
+   "summary": {
+    "scenarios": 5,
+    "recall": 0.833,
+    "critical_recall": "8/9",
+    "precision": 0.933,
+    "alerts": 15,
+    "false_alerts": 1,
+    "false_alerts_per_hour": 31.2,
+    "latency_p50_s": 0.01,
+    "latency_max_s": 3.84
+   },
+   "reused": false
+  },
+  {
+   "suite": "minutes",
+   "set": "golden",
+   "ok": true,
+   "seconds": 40.6,
+   "report": "20261103-112102-minutes-golden.json",
+   "summary": {
+    "items": 18,
+    "planted": 9,
+    "recall": 1.0,
+    "action_owners": "3/3",
+    "action_deadlines": "3/3",
+    "verified": 1.0,
+    "invented_specifics": 0,
+    "batches": 2,
+    "failed_batches": 0,
+    "lines": 26,
+    "turns": 26,
+    "seconds": 37.5
+   },
+   "reused": false
+  },
+  {
+   "suite": "minutes",
+   "set": "heldout",
+   "ok": true,
+   "seconds": 25.9,
+   "report": "20261103-112128-minutes-heldout.json",
+   "summary": {
+    "items": 12,
+    "planted": 7,
+    "recall": 0.857,
+    "action_owners": "3/3",
+    "action_deadlines": "3/3",
+    "verified": 1.0,
+    "invented_specifics": 0,
+    "batches": 1,
+    "failed_batches": 0,
+    "lines": 12,
+    "turns": 12,
+    "seconds": 21.9
+   },
+   "reused": false
+  },
+  {
+   "suite": "transcription",
+   "set": "script",
+   "ok": true,
+   "seconds": 1.0,
+   "report": "20261103-112130-transcription-script.json",
+   "summary": {
+    "scenarios": 4,
+    "wer_normalised": 0.0,
+    "wer_verbatim": 0.0,
+    "entity_accuracy": 1.0,
+    "negation_accuracy": 1.0,
+    "speaker_accuracy": 1.0,
+    "missed_entities": 0,
+    "lost_negations": 0
+   },
+   "reused": false
+  },
+  {
+   "suite": "injection",
+   "set": "probe",
+   "ok": true,
+   "seconds": 89.3,
+   "report": "20261103-112259-injection-probe.json",
+   "summary": {
+    "answers": 63,
+    "obeyed": 2,
+    "obeyed_not_flagged": 0
+   },
+   "reused": false
+  }
+ ]
+}

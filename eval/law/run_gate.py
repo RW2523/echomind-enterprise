@@ -51,6 +51,7 @@ STEPS = [
     ("research", "heldout5", [str(HERE / "run_law_eval.py"), "--set", "heldout5", "--gate"]),
     ("research", "heldout6", [str(HERE / "run_law_eval.py"), "--set", "heldout6", "--gate"]),
     ("research", "heldout7", [str(HERE / "run_law_eval.py"), "--set", "heldout7", "--gate"]),
+    ("research", "heldout8", [str(HERE / "run_law_eval.py"), "--set", "heldout8", "--gate"]),
     ("compare", "golden", [str(HERE / "run_compare_eval.py"), "--set", "golden"]),
     ("compare", "heldout", [str(HERE / "run_compare_eval.py"), "--set", "heldout"]),
     ("assist", "golden", [str(HERE / "assist" / "run_assist_eval.py"), "--set", "golden"]),
