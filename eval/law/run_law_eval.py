@@ -91,7 +91,7 @@ def pct(values: list[float], q: float) -> float | None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--set", choices=["golden", "heldout", "heldout2", "heldout3", "heldout4", "heldout5", "heldout6", "heldout7", "heldout8"], default="golden")
+    ap.add_argument("--set", choices=["golden", "heldout", "heldout2", "heldout3", "heldout4", "heldout5", "heldout6", "heldout7", "heldout8", "heldout9"], default="golden")
     ap.add_argument("--limit", type=int, default=0, help="first N items only (smoke runs)")
     ap.add_argument("--only", default="", help="comma-separated item ids")
     ap.add_argument("--llm", default=os.getenv("LAW_LLM_BASE_URL", "http://localhost:8355/v1"))
@@ -271,7 +271,7 @@ def gate_preconditions(args) -> list[str]:
     if dirty and not args.allow_dirty:
         problems.append("the tree has uncommitted changes (commit them, or --allow-dirty for a trial run that is not a release gate)")
     frozen = json.loads(THRESHOLDS.read_text())
-    for name in ("heldout", "heldout2", "heldout3", "heldout4", "heldout5", "heldout6", "heldout7", "heldout8"):
+    for name in ("heldout", "heldout2", "heldout3", "heldout4", "heldout5", "heldout6", "heldout7", "heldout8", "heldout9"):
         want = frozen.get(f"{name}_sha256")
         have = hashlib.sha256((HERE / f"{name}.jsonl").read_bytes()).hexdigest()
         if want and have != want:
@@ -299,6 +299,7 @@ def score(it: dict, done: dict, events: list, first, total: float, doc_ids: dict
     multi = all(doc_ids[k] in have for k in exp["docs_all"]) if exp["docs_all"] else None
     return {"id": it["id"], "tags": it.get("tags", []), "question": it["question"], "versions": it["versions"],
             "expect_abstain": exp["abstain"], "status": status, "abstention_reason": done.get("abstention_reason"),
+            "stated": done.get("stated"), "stated_shadow": done.get("stated_shadow"),
             "correct": correct, "facts_found": facts, "leaked": leaked, "trapped": trapped, "answer": answer,
             "evidence": [{k: e.get(k) for k in ("n", "quote", "verification", "document_title", "version_number", "version_status",
                                                  "clause", "page_start", "line", "moved_from")} for e in evidence],
