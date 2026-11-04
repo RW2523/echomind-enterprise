@@ -311,6 +311,25 @@ where the fixes moved most; what it still fails on is mostly the model's "not st
 card now labels honestly but which is still scored as an answer that is not a decline. Held-out 1-8 and both chat sets
 have now been seen; another round needs a new blind set first.
 
+## The remaining failures fixed, measured on a new blind set (2026-11-04)
+
+The owner asked for a new blind set and the remaining issues fixed. A separate pass wrote held-out 9 (32 research items)
+and a third chat set (60 conversations, 79 turns) and both were frozen (`aadab70`) before any fix was measured on them;
+every fix below was developed on the sets already seen. Of the last gate's 155 failures, 61 were answers that opened
+"the documents do not state …", then cited something related, and so were not declines; 44 were the reverse, the model
+saying "not stated" before the answer or instead of it.
+
+| Found | Fix | Status | Evidence |
+|---|---|---|---|
+| "Not stated, but …": a decline with context ("The lease does not say whether the deposit earns interest. The deposit is GBP 21,000 [1]") and a hedged answer ("The documents do not state who Harrowgate's General Counsel is … Thomas Reyes is the General Counsel [1]") read alike (EV19) | The passages the answer's facts cite are asked one narrow question with no answer of their own to defend: what is asked, which words give it, YES or NO (`research/stated.py`). NO declines; YES keeps the answer and drops the "Not stated" card label; a YES counts only with words the passages hold; no verdict changes nothing. Asked only of answers that open "not stated" or with a named document's silence ("The Northbridge NDA does not specify …"), never of a term's dates (`dates.py`), and after the document and party checks, which it cannot undo. The cited documents' defined roles are given to it ("the Client" is Voss-Lindqvist AB) | **Tested** | on 65 checks captured from the seen sets: 55 right (a one-word YES/NO: 48). Asked of every answer it would set aside 4 of 54 correct golden answers to gain 1 decline, so it is not (`LEGAL_RESEARCH_STATED_CHECK` hedged, with all/shadow/off for evaluation); `test_law_evidence.py` |
+| "Within how many days of invoice must Tidewater pay Northwind under their supply agreement?" answered from the supply agreement between Northwind and Alder Retail | Two parties named with a document they share search that document, and a sentence naming them rests only on a document both are party to, or on a passage naming both (`attribution.named_parties`) | **Tested** | `test_law_evidence.py` |
+| "Which comparable lettings does our surveyor rely on?" named one of four: "The following four comparable lettings have been reviewed" ended one passage, the list was the next | A passage that announces what follows is read on into the next passage of the same version, within the 1,800 characters, every character in its place (`search._continued`) | **Tested** | `test_law_evidence.py` (a quote from the list verified and located) |
+| "Compare the length of the current lease with the new lease" missed the current lease's 15 years | Each side of a comparison is also searched on its own, what the first side asks carried to a second that names only a document ("… with the one in the MSA") (`prompt.compare_sides`) | **Tested** | `test_law_evidence.py` |
+| "What service credit is that month worth?" answered 5% of the fee, where the clause gives 5% for each of 5 points | A question needing a calculation asks the model to quote each figure and show the working (prompt research-s2.8); not on "total" alone, which made "What is each party's total liability cap?" hedge 3 times in 3 | **Tested** | `test_law_evidence.py` |
+| "the supply agreement" in a matter with two was answered from whichever ranked first | A kind of document that two to four documents are titled with, when the question names neither a party nor one of their titles, searches each and tells the model they are several, to answer for each and name it (`research/kinds.py`) | **Tested** | `test_law_evidence.py` |
+| "This is stated in the Supply Agreement as follows: [1]." | The words pointing at a quote the marker holds are not shown | **Tested** | `test_law_evidence.py` |
+| "Brilliant, thank you - that was really clear and quick." and "That's everything for now, thanks - speak tomorrow." were researched | A spaced dash parts what was said; closings, praise and checks in other words are small talk; a question after a dash still goes to the documents | **Tested** | `test_intents` |
+
 ## Commercial-readiness review (2026-10-28)
 
 Phase 0 audited security, operations and the interface read-only (three audits, baseline below); the owner then asked for
