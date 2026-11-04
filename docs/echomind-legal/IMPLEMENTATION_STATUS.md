@@ -329,6 +329,41 @@ saying "not stated" before the answer or instead of it.
 | "the supply agreement" in a matter with two was answered from whichever ranked first | A kind of document that two to four documents are titled with, when the question names neither a party nor one of their titles, searches each and tells the model they are several, to answer for each and name it (`research/kinds.py`) | **Tested** | `test_law_evidence.py` |
 | "This is stated in the Supply Agreement as follows: [1]." | The words pointing at a quote the marker holds are not shown | **Tested** | `test_law_evidence.py` |
 | "Brilliant, thank you - that was really clear and quick." and "That's everything for now, thanks - speak tomorrow." were researched | A spaced dash parts what was said; closings, praise and checks in other words are small talk; a question after a dash still goes to the documents | **Tested** | `test_intents` |
+| *After the blind measurement, from chat set 3 (checked on seen data only):* "Pull the settlement limit from MAT-2033 for me" in a conversation about M-301 answered "The settlement limit from MAT-2033 is capped at GBP 400,000 … Clause 11.2", M-301's own cap credited to a matter the person may not read | A reference shaped like a matter number that is none of the matters asked about, and that no passage or title found holds, is declined before the model is asked (reason `other_matter`); whether that matter exists is never looked up, so the reply is the same either way (`attribution.foreign_matters`, `0e93aa0`) | **Tested** | `test_law_evidence.py` (MAT-2033 and alice's unreadable M-202 get the same reply; ISO 27001, an invoice number the documents hold, COVID-19 are not caught); the three MAT-2033 probes of the chat sets are its only matches |
+| *Same:* `kinds.py` never fired on the chat set's ambiguous questions: five of six named a party that is party to several documents of the kind ("Northwind's supply agreement", "the Kestrel agreement") | A named party narrows the documents to its own; then a one-word kind counts, and a title word they all share tells none apart; kinds match whole title words ("lease" not in "Release"); a possessive multiword party is read ("Alder Retail's supply agreement") | **Tested** | `test_law_evidence.py` |
+
+**Measured on the blind sets (2026-11-04).** Held-out 9, three runs each, old code (`3eaaa9a`) → the fixes (gate on
+`1d6bfa5`): answers 26 → 31 / 54, declines 24 → 25 / 42, false declines 22 → 22, leaks 0 → 0, citation precision
+0.951 → 0.974, quotes verified 0.986 → 0.987. **Both fail the bars** (0.85 / 0.80). By kind: lists 3 → 6 / 12, role-party
+6 → 9 / 18, facts stated indirectly 17 → 16 / 24, values the documents lack 12 → 13 / 24, another document's value 6 → 6
+/ 12, the forbidden matter 6 / 6 both. (Latency is not compared: the old-code run shared the model with other runs.) The
+not-stated check is now the main cause of the false declines: on held-out 9 its NO declined 13 of the 54 answer runs —
+the party named where the clause uses its role (Northbridge, the NDA's "Recipient"; Harrowgate "as the vendor", the MSA's
+"Provider"), "may the lessor simply refuse" against consent "not to be unreasonably withheld", rent due on "the usual
+quarter days". Over every set its NO was right 65 times and wrong 34, its YES right 60 times and wrong 11. A reworded
+check (roles in other words, a person's rank, the document's own general words, a limit on a right) replayed on all 226
+captured checks did worse (seen 187 → 183 right, held-out 9 7 → 5) and was not kept. Another document's value is still
+counted wrong when the model's text names it while declining ("The Northbridge NDA specifies the courts of London …, but
+this document is not the Unit 7 Lease"): the card shows the decline, the streamed text showed the value.
+Chat set 3 graded by hand, old → new (pass / soft / fail of 79 turns): 45/8/26 → 50/7/22; automatic grader 43/8/28 →
+50/5/24. Small talk 3 → 6 is not blind: the brief to the set writer suggested its phrasings; without it 42 → 44 of 73.
+Citations outside the matter 0 both; latency p50/p95 4.38/10.52 → 4.98/11.26 s.
+
+**The seen sets** (gate on `1d6bfa5` against `04f8d1e`; answers, declines): golden 190 → 188 / 204, 21/21; held-out
+1 88 → 89 / 93, 3 → 8 / 9 (**now passes**); 2 36 → 34, 33 → 40 / 45; 3 40 → 37 / 42, 41 → 45 / 45; 4 34 → 35 / 39, 40 → 43
+/ 45; 5 32 → 30 / 36 (**now fails**, 0.833), 41 → 44 / 48; 6 45 → 45 / 51, 37 → 39 / 45; 7 37 → 41 / 45, 25 → 32 / 48; 8
+30 → 30 / 48, 29 → 28 / 48. Over the nine: answers 532 → 529 / 603, declines 270 → 300 / 354, false declines 42 → 52;
+leaks 0. Passed: golden, held-out 1, 3, 6 and the compare, assist, minutes, transcription and injection suites. Latency
+p50/p95 2.8-4.2 / 5.4-9.7 s.
+
+**After the blind measurement** (the two fixes marked so above, `0e93aa0`, seen data only): the 8 chat-set-3 items they
+address, automatic grader 2 → 4 / 8 (the MAT-2033 question declined; "the date of the Kestrel agreement" answered with the
+agreement's and its amendment's dates); still wrong there: "Which law governs Voss-Lindqvist's agreement with
+Harrowgate?" declined, one of Harrowgate's two letters dated, the April credit's two figures, Beta Corp's merger.
+A kind no longer counts a document titled as made to another ("Amendment No. 1 to the Kestrel storage agreement"), which
+had made 16 seen-set questions about the Kestrel storage agreement ambiguous (`326a20d`); replayed over every research
+question of the eval sets, the two fixes now change none of them. A golden run on `0e93aa0` (whose changes touch no golden
+answer) gave 182/204 against 188/204 the hour before: on the same answers a run of three varies by ±6 items.
 
 ## Commercial-readiness review (2026-10-28)
 
