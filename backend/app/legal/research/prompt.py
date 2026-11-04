@@ -12,9 +12,10 @@ import re
 ABSTAIN = "The documents in this matter do not answer that."
 
 # Recorded with every research note sent for review (S2.7): which instructions produced the answer.
-VERSION = "research-s2.7"          # S2.3: amending sources marked; S2.4: an account's reading; S2.5: several matters;
+VERSION = "research-s2.8"          # S2.3: amending sources marked; S2.4: an account's reading; S2.5: several matters;
                                    # S2.6 (2026-11-03): the parties each source's document defines by a role; S2.7: given as
-                                   # the document's own opening passage, not as an attribute
+                                   # the document's own opening passage, not as an attribute; S2.8 (2026-11-04): a note for a
+                                   # calculation and for a kind of document several share
 
 SYSTEM = (
     "You are a careful legal research assistant. You work only from the numbered sources below, which "
@@ -59,11 +60,49 @@ def account_reading(question: str) -> str | None:
     return f"{m['wh'].lower()}, according to {m['who']}, {m['rest']}" if m else None
 
 
+# A question whose answer is worked out from stated figures (2026-11-03 chat set: "What service credit is that month
+# worth?" answered 5% of the fee, GBP 7,000, where the clause gives 5% for each of the 5 points, GBP 35,000). Only such a
+# question gets the note asking for the working; every other prompt is unchanged. Not "total" alone: with the note, "What is
+# each party's total liability cap?" opened "the documents do not specify" three times in three.
+_CALCULATES = re.compile(r"\b(?:in\s+total|the\s+total\s+of|altogether|combined|worth|calculate[ds]?|work(?:ed)?\s+out|add(?:ed)?\s+up|sum\s+of"
+                         r"|how\s+much\s+(?:would|will|is|are|does|do)\b[^?]{0,60}\b(?:owe|owed|due|payable|come\s+to|amount\s+to|cost)"
+                         r"|per\s*cent\s+of|percentage\s+of|\d+\s*%\s+of|how\s+many\s+(?:days|weeks|months|years)\s+(?:after|before|from|between|until)"
+                         r"|what\s+date\s+(?:is|falls|would\s+be)\s+\w+\s+(?:days|weeks|months)\s+(?:after|before|from))\b", re.I)
+CALCULATION_NOTE = ("(If the answer is worked out from figures in the sources, quote each figure, show each step of the "
+                    "working as the clause sets it, then give the result.)\n")
+
+
+# "Compare the length of the current lease with the new lease being proposed": each side is also searched on its own
+# (2026-11-03 chat set: the current lease's 15-year term was never retrieved). What the first side asks about is carried
+# to a second side that names only its document ("…with the one in the MSA", "…and the licence").
+_COMPARE = (re.compile(r"^\s*(?:please\s+)?compare\s+(?P<a>.+?)\s+(?:with|to|against|and|versus|vs\.?)\s+(?P<b>.+?)\W*$", re.I),
+            re.compile(r"^\s*how\s+(?:does|do|did|would)\s+(?P<a>.+?)\s+(?:compare|differ)\s+(?:with|to|from|against)\s+(?P<b>.+?)\W*$", re.I),
+            re.compile(r"^\s*what(?:'s|\s+is|\s+are)\s+the\s+differences?\s+between\s+(?P<a>.+?)\s+and\s+(?P<b>.+?)\W*$", re.I))
+_SIDE_ABOUT = re.compile(r"^(?P<what>.+?)\s+(?:in|under|of|from|for)\s+(?P<where>.+)$", re.I)
+_SIDE_ONE = re.compile(r"^(?:the\s+one|that|those|the\s+ones|it)\s+(?=in\b|under\b|of\b|from\b|for\b)", re.I)
+
+
+def compare_sides(question: str) -> list[str]:
+    """The two things a comparison question compares, each a search of its own, or [] for any other question."""
+    for rx in _COMPARE:
+        m = rx.match(question or "")
+        if not m:
+            continue
+        a, b = m["a"].strip(), m["b"].strip()
+        about = _SIDE_ABOUT.match(a)
+        if about and _SIDE_ONE.match(b):
+            b = _SIDE_ONE.sub(about["what"] + " ", b)
+        elif about and not _SIDE_ABOUT.match(b):
+            b = f"{about['what']} of {b}"
+        return [a, b] if len(a.split()) >= 2 and len(b.split()) >= 2 else []
+    return []
+
+
 def _attr(value) -> str:
     return html.escape(str(value if value is not None else ""), quote=True)
 
 
-def build(question: str, passages: list[dict]) -> list[dict]:
+def build(question: str, passages: list[dict], note: str = "") -> list[dict]:
     blocks = []
     for n, p in enumerate(passages, start=1):
         c = p["citation"]
@@ -93,7 +132,9 @@ def build(question: str, passages: list[dict]) -> list[dict]:
     defined = ("(Some sources are the opening of their document, where it names its parties and the roles its clauses call them "
                "by, such as \"the Customer\"; a question that names a party is answered by the clauses about its role.)\n") if any(
         p.get("opening") for p in passages) else ""
-    user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + several + defined + "\nSources:\n"
+    calculate = CALCULATION_NOTE if _CALCULATES.search(question or "") else ""
+    user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + several + defined + calculate + note
+            + "\nSources:\n"
             + "\n\n".join(blocks) + "\n\n" + REMINDER)
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
@@ -286,6 +327,13 @@ def opens_not_stated(answer: str) -> bool:
         return False
     s = re.sub(r"\[[^\]]*\]", " ", first[0])
     return bool(_NOT_STATED.search(s) or _BUT_NOT_STATED.search(s))
+
+
+def opens_silent(answer: str) -> bool:
+    """The first sentence says some document is silent on it: "The Northbridge NDA does not specify a fixed amount", which
+    opens_not_stated reads only for "the documents"/"the sources" (EV20)."""
+    first = _sentences(answer or "")[:1]
+    return bool(first) and bool(_SILENT_VERB.search(re.sub(r"\[[^\]]*\]", " ", first[0])))
 
 
 def opens_absent(answer: str) -> bool:

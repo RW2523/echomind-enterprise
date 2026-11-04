@@ -178,6 +178,29 @@ def _wide(h: dict) -> dict:
     return {**h, "text": full[lo:lo + WIDE_CHARS], "window": (lo, lo + WIDE_CHARS)}
 
 
+# A passage that announces what follows ends before it: "The following four comparable lettings have been reviewed …" was
+# one passage and the four lettings the next, so "Which comparables does our surveyor rely on?" named one of four
+# (2026-11-03 chat set). Such a passage is read on into the next passage of the same version, within WIDE_CHARS; the gap
+# between them is kept as spaces so every character keeps its place in the document.
+_ANNOUNCES = re.compile(r"\bthe\s+following\b(?!\s+(?:day|week|month|year|business|working|calendar|quarter|period|morning"
+                        r"|afternoon|evening|meeting)\b)|\bas\s+follows\b|\b(?:set\s+out|listed|shown|described)\s+below\b|:\s*$", re.I)
+
+
+def _continued(scope: AuthorizedScope, h: dict, versions: str, documents: Optional[list[str]]) -> dict:
+    full = h.get("chunk_text") or h["text"]
+    if h.get("char_start") is None or len(full) >= WIDE_CHARS or not _ANNOUNCES.search(full.rstrip()[-600:]):
+        return h
+    end = h["char_start"] + len(full)
+    with get_conn() as conn:
+        row = conn.execute("SELECT id FROM legal_chunks WHERE matter_id = ? AND version_id = ? AND active = 1 AND char_start >= ? "
+                           "ORDER BY char_start LIMIT 1", (scope.matter_id, h["version_id"], end)).fetchone()
+    nxt = _load(scope.matter_id, [row[0]], scope.principal_id, versions, documents) if row else []
+    if not nxt or nxt[0]["char_start"] is None or nxt[0]["char_start"] - h["char_start"] + len(nxt[0]["text"]) > WIDE_CHARS:
+        return h
+    joined = full + " " * (nxt[0]["char_start"] - end) + nxt[0]["text"]
+    return {**h, "chunk_text": joined, "page_end": nxt[0]["page_end"] or h.get("page_end")}
+
+
 def opening(scope: AuthorizedScope, version_id: str, names: Iterable[str] = (), versions: str = "signed") -> Optional[dict]:
     """The passage where a version's preamble defines its parties (2026-11-03 evaluation): the earliest of its first three
     passages that names one of them, else its first. Read like a search: this matter, what this person may see, the version
@@ -292,5 +315,9 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
     ranked = list(best.values())
     if floor and ranked and ranked[0].get("score_kind") == "ce_logit":
         ranked = [h for h in ranked if float(h["score"]) >= settings.LEGAL_RERANK_MIN_SCORE]
+    top = ranked[:k]
+    if wide:
+        policy = versions if versions in ("signed", "current") else "signed"
+        top = [_continued(scope, h, policy, documents) for h in top]
     recheck(scope)                                    # rights may have changed while this ran
-    return {"passages": _located([_passage(_wide(h) if wide else h) for h in ranked[:k]], query), "abstained": not ranked}
+    return {"passages": _located([_passage(_wide(h) if wide else h) for h in top], query), "abstained": not ranked}

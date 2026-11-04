@@ -20,13 +20,15 @@ logger = logging.getLogger(__name__)
 # follow-ups as asked ("Was that late under the contract?", "Does the investor's draft SPA say the same?"), so the
 # documents were searched for "that" and "the same". Naming the words that point back, with two examples from other
 # matters, resolved 12 of the 14 offline; questions that stand alone kept their meaning. A third example covers "they"
-# and "them", which the two left as they were.
+# and "them", which the two left as they were. 2026-11-04: "How many shares does each of them hold?", after an answer naming
+# two founders, became "… each party hold", so the people are kept as the conversation names them.
 SYSTEM = (
     "You rewrite a lawyer's follow-up question about the documents of a legal matter so that it can be understood "
     "without the conversation.\n"
     "Replace every word that points back to the conversation (it, that, this, they, them, then, there, the same, "
     "the other one, before then, at that point, a question starting \"And\" or \"So\") with what it refers to in the "
-    "conversation: the document, clause, party, date, amount or topic.\n"
+    "conversation: the document, clause, party, date, amount or topic, named as the conversation names them (never a general "
+    "word such as \"the parties\" for the people or companies it names).\n"
     "Keep names, clause numbers, amounts and dates exactly as written. Do not answer the question and add nothing "
     "that was not asked.\n"
     "Return the follow-up unchanged only when it needs nothing from the conversation.\n"

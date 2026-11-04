@@ -34,6 +34,8 @@ from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import llm as llm_mod
 from . import amendments, attribution, dates, evidence, followup, prompt
+from . import kinds
+from . import stated as statedmod
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition)])
@@ -449,6 +451,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         search_q = attribution.with_roles(question, roles)
         asked_parties = attribution.named_parties(question, known)
         target = [] if documents or not asked_parties else [did for did, h in heads.items() if asked_parties <= h[0]]
+        titles = await run_in_threadpool(_titles, scopes, principal["sub"])
+        same = None if several or documents or asked_parties else kinds.same_kind(question, titles)
         if several:
             passages, links, nothing_found = await _search_several(scopes, principal, search_q, versions, documents)
         else:
@@ -460,6 +464,17 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 have = {p["chunk_id"] for p in named["passages"]}
                 passages = named["passages"] + [p for p in passages if p["chunk_id"] not in have]
                 nothing_found = nothing_found and named["abstained"]
+            for side in prompt.compare_sides(question):     # each side of a comparison on its own (2026-11-04)
+                got = await searchmod.search(scope, attribution.with_roles(side, roles), k=2, versions=versions, documents=documents,
+                                             wide=True)
+                have = {p["chunk_id"] for p in passages}
+                passages = passages + [p for p in got["passages"] if p["chunk_id"] not in have]
+                nothing_found = nothing_found and got["abstained"]
+            for did in (same[1] if same else []):           # each document of a kind several share (research/kinds.py)
+                got = await searchmod.search(scope, search_q, k=1, versions=versions, documents=[did], wide=True)
+                have = {p["chunk_id"] for p in passages}
+                passages = passages + [p for p in got["passages"] if p["chunk_id"] not in have]
+                nothing_found = nothing_found and got["abstained"]
             passages = passages + await run_in_threadpool(_openings, scope, question, passages, roles, versions)
             links = _amended(passages, await run_in_threadpool(amendments.for_passages, scope.matter_id, principal["sub"], passages, versions))
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
@@ -472,7 +487,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                           "turn_id": turn["id"], "versions": versions, "absence": None})
             return
         buf, shown, claims, unsupported, failed, last_check = "", [], [], [], [], time.monotonic()
-        stream = llm_mod.get().chat_stream(prompt.build(question, passages), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
+        several_of = kinds.note(same[0], [titles[d] for d in same[1]]) if same else ""
+        stream = llm_mod.get().chat_stream(prompt.build(question, passages, several_of), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
                                            max_tokens=settings.LEGAL_RESEARCH_MAX_TOKENS)
 
         def finish(raw: str):
@@ -516,7 +532,6 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         # Attribution (2026-10-28, held-out 2 h2-abstain-storage-law; research/attribution.py): a cited sentence that names a
         # document of the matter must cite that document, or it does not stand; and a question that names a document is not
         # answered from other documents alone.
-        titles = await run_in_threadpool(_titles, scopes, principal["sub"])
         # A citation speaks of a document when it is from that document, or its passage itself names it (the board minutes
         # authorising "the renewal of the Harrowgate Master Services Agreement" speak of the MSA).
         speaks_of: dict[int, set] = {}
@@ -541,6 +556,10 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         def party_to(claim, wanted: set) -> bool:
             """Some document the claim cites has every one of `wanted` as a party."""
             return any(wanted <= parties.get(sources[c.n - 1]["document_id"], set()) for c in claim.citations if 1 <= c.n <= len(sources))
+        def names_all(claim, wanted: set) -> bool:
+            """Some passage the claim cites names every one of `wanted` itself."""
+            return any(all(re.search(rf"\b{re.escape(p)}", sources[c.n - 1]["text"], re.I) for p in wanted)
+                       for c in claim.citations if 1 <= c.n <= len(sources))
         maybe_party = attribution.mentions_record(question) or any(attribution.mentions_record(c.sentence) for c in claims)
         misattributed = []
         for claim in claims:
@@ -552,8 +571,10 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 misattributed.append(claim)
             # "The price under the supply agreement with Alder Retail is GBP 120,000", resting on an agreement Alder Retail
             # is not party to (2026-11-03 evaluation)
+            # A passage that itself names them all still speaks of them (minutes approving "the supply agreement between
+            # Tidewater and Northwind").
             elif claim.citations and (said := attribution.named_parties(claim.sentence, known)) and \
-                    any(said <= h[0] for h in heads.values()) and not party_to(claim, said):
+                    any(said <= h[0] for h in heads.values()) and not party_to(claim, said) and not names_all(claim, said):
                 misattributed.append(claim)
         unsupported.extend(c.sentence for c in misattributed if c.sentence not in unsupported)
         standing = [c for c in claims if _stands(c) and c not in misattributed]
@@ -598,8 +619,30 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         cited_scores = [passages[c.n - 1].get("score") for claim in claims for c in claim.citations
                         if 1 <= c.n <= len(passages) and passages[c.n - 1].get("score") is not None]
         weak = not cited_scores or max(float(x) for x in cited_scores) < settings.LEGAL_ABSTAIN_WEAK_SCORE
+        # "Not stated", then cited facts: a decline with context or a hedged answer, which the words cannot tell apart; the
+        # passages those facts cite are asked whether they state what was asked (research/stated.py, 2026-11-04). The checks
+        # of which document and party a sentence rests on come first and are never undone by it.
+        mode = settings.LEGAL_RESEARCH_STATED_CHECK
+        hedged = prompt.opens_not_stated(text) or prompt.opens_silent(text)
+        stated = shadow = None
+        # A term's dates are worked out and labelled by research/dates.py (QA RAG-003), never declined for not being stated.
+        if mode in ("hedged", "all", "shadow") and answering and (hedged or mode != "hedged") \
+                and not (off_target or off_party or elsewhere) and not dates.asks_term_dates(question):
+            cited_n = dict.fromkeys(c.n for claim in answering for c in claim.citations if 1 <= c.n <= len(passages))
+            cited_docs = dict.fromkeys(passages[n - 1]["citation"]["document_id"] for n in cited_n)
+            shown = [passages[n - 1] for n in cited_n] + [p for n, p in enumerate(passages, start=1)
+                                                          if p.get("opening") and n not in cited_n]
+            defined = [f'in "{titles.get(did) or did}", ' + ", ".join(f'"the {role}" is {name}' for name, role in roles[did])
+                       for did in cited_docs if roles.get(did)]
+            verdict = await statedmod.answers(question, shown, defined)
+            if hedged or mode == "all":
+                stated = verdict
+                if stated is not None:
+                    declined = not stated
+            else:
+                shadow = verdict
         abstained = (nothing and (prompt.is_abstention(text) or prompt.says_not_stated(text))) or \
-            (prompt.says_not_stated(text) and weak) or declined or off_target or off_party or bool(elsewhere)
+            (prompt.says_not_stated(text) and weak and stated is not True) or declined or off_target or off_party or bool(elsewhere)
         numbers = prompt.cited_numbers(text, len(sources))
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
@@ -617,7 +660,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         yield _event({"type": "done", "answer": text, "status": status, "abstained": abstained, "abstention_reason": reason,
                       "citations": citations, "evidence": items, "conflicts": found, "unsupported": unsupported, "failed": failed,
                       "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed,
-                      "absence": prompt.absence(text) if abstained else None, "calculation": calculation})
+                      "absence": prompt.absence(text) if abstained else None, "calculation": calculation,
+                      "stated": stated, **({"stated_shadow": shadow} if mode == "shadow" else {})})
     except scopemod.ScopeRevoked:
         status, answer, citations, items, found = "scope_revoked", None, [], [], []
         yield _event({"type": "scope_revoked"})

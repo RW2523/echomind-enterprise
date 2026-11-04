@@ -803,8 +803,11 @@ def test_which_parties_a_text_names_as_parties_to_the_document_it_speaks_of():
     assert named_parties("the agreement between Northwind and Alder Retail", known) == {"northwind", "alder"}
     assert named_parties("What is the cap in Harrowgate's MSA?", known) == {"harrowgate"}
     assert named_parties("Was the Northwind supply agreement signed in line with Tidewater's delegation of authority?", known) == {"northwind"}
+    # two parties and the document between them (2026-11-04)
+    assert named_parties("Within how many days must Tidewater pay Northwind under their supply agreement?", known) == {
+        "tidewater", "northwind"}
     for text in ("What did Calder Freight say in response to the notice?", "What monthly fee does Northwind pay Calder?",
-                 "What is the liability cap?"):
+                 "What is the liability cap?", "Tidewater pays Northwind monthly."):
         assert named_parties(text, known) == set(), text
 
 
@@ -915,3 +918,162 @@ def test_a_bare_marker_in_its_own_paragraph_cites_the_sentence_before_it(ev, mon
     ev["llm"].answer = f"The reseller agreement is governed by the laws of Sweden.\n\n[{res}]"
     done = ask(alice, ev["mid"], q2)[-1]
     assert done["abstained"] is False and done["unsupported"] == []
+
+
+def test_two_parties_and_their_agreement_are_answered_only_from_an_agreement_between_them(ev, monkeypatch):
+    """2026-11-03 chat set: "Within how many days of invoice must Tidewater pay Northwind under their supply agreement?" was
+    answered from the supply agreement between Northwind and Alder Retail. Two parties named with a document they share
+    search it, and a sentence naming them rests only on a passage of a document they are both party to, or one naming both."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    alice = as_user(ev, "alice")
+    upload(alice, ev["mid"], "supply-tidewater.txt", NORTHWIND, status="executed")
+    upload(alice, ev["mid"], "supply-alder.txt", ALDER, status="executed")
+    index_all()
+    q = "When must Tidewater pay Northwind under their supply agreement?"
+    ev["llm"].answer = "x"
+    events = ask(alice, ev["mid"], q)
+    alder, tidewater = source_n(events, "pay the Price monthly"), source_n(events, "Tidewater Holdings Ltd")
+    ev["llm"].answer = f'Under the supply agreement, Tidewater must pay Northwind monthly [{alder}: "The Customer shall pay the Price monthly"].'
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["status"] == "abstained" and done["abstention_reason"] == "other_documents"
+    ev["llm"].answer = (f'The supply agreement is between Northwind and Tidewater [{tidewater}: "made between Northwind Components '
+                        f'Ltd"], and the total price payable is GBP 120,000 [{tidewater}: "total price payable under this Agreement is '
+                        f'GBP 120,000"].')
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["abstained"] is False and not done["unsupported"]
+
+
+def test_not_stated_then_a_cited_fact_is_a_decline_or_an_answer_as_the_cited_passages_say(ev, monkeypatch):
+    """2026-11-04: "The documents do not state X", then a cited fact, is a decline with context or a hedged answer, and the
+    words cannot tell which (EV19). The passages the fact cites are asked whether they state what was asked: no is a decline,
+    yes an answer; no verdict leaves the answer as it was. Nothing is asked of an answer that does not open that way."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    alice, asked, verdict = as_user(ev, "alice"), [], {"word": "NO"}
+
+    async def chat(messages, temperature, max_tokens):
+        asked.append(messages)
+        return verdict["word"]
+    monkeypatch.setattr(ev["llm"], "chat", chat, raising=False)
+    q = "Is interest charged on fees the Customer pays late?"
+    ev["llm"].answer = "x"
+    n = source_n(ask(alice, ev["mid"], q), "thirty days")
+    assert not asked
+    hedged = (f'The documents do not state whether interest is charged on late fees. The Customer shall pay the fees within '
+              f'thirty days of each invoice [{n}: "pay the fees within thirty days of each invoice"].')
+    ev["llm"].answer = hedged
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["status"] == "abstained" and done["stated"] is False and done["citations"] == []
+    sent = asked[-1][-1]["content"]
+    assert "Question: Is interest charged" in sent and "within thirty days of each invoice" in sent and "<passage" in sent
+    verdict["word"] = "YES"
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["abstained"] is False and done["stated"] is True and done["citations"]
+    verdict["word"] = "It depends on the clause."
+    assert ask(alice, ev["mid"], q)[-1]["stated"] is None
+    before = len(asked)
+    ev["llm"].answer = f'The Customer shall pay the fees within thirty days of each invoice [{n}: "pay the fees within thirty days"].'
+    assert ask(alice, ev["mid"], q)[-1]["stated"] is None and len(asked) == before
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_STATED_CHECK", "off")
+    ev["llm"].answer = hedged
+    assert ask(alice, ev["mid"], q)[-1]["stated"] is None and len(asked) == before
+    # a named document's silence is a hedge too, and "shadow" asks of every answer but acts only on hedged ones
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_STATED_CHECK", "hedged")
+    verdict["word"] = "NO"
+    ev["llm"].answer = (f'The MSA does not specify any interest on late fees. The Customer shall pay the fees within thirty days of '
+                        f'each invoice [{n}: "pay the fees within thirty days of each invoice"].')
+    assert ask(alice, ev["mid"], q)[-1]["status"] == "abstained"
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_STATED_CHECK", "shadow")
+    ev["llm"].answer = f'The Customer shall pay the fees within thirty days of each invoice [{n}: "pay the fees within thirty days"].'
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["stated"] is None and done["stated_shadow"] is False and done["abstained"] is False
+
+
+def test_the_check_is_told_who_a_cited_documents_roles_are():
+    from app.legal.research import stated
+    p = {"text": "6.2 Provider shall return all Client Data, at Client's option.", "citation": {"document_title": "MSA"}}
+    sent = stated.messages("Does Voss-Lindqvist decide?", [p], ['in "MSA", "the Client" is Voss-Lindqvist AB'])[1]["content"]
+    assert '"the Client" is Voss-Lindqvist AB' in sent and "<passage document=\"MSA\">" in sent
+
+
+COMPARABLES = ("COMPARABLES NOTE (fictional)\n\n" + "This note sets out the evidence the surveyor relies on for the rent review of "
+               "Unit 12, prepared from the lettings of the last six months in the same estate and checked against the agent's "
+               "records. " * 4 + "\n\nThe following three comparable lettings have been reviewed by the surveyor."
+               + "".join(f"\n\n{i}. Unit {u}, Riverside Works, let on {d} for GBP {r} a year. The unit is of similar size and "
+                         f"condition and lies in the same estate, with the same access and services."
+                         for i, (u, d, r) in enumerate([(14, "15 March 2026", "110,000"), (22, "12 April 2026", "108,000"),
+                                                        (5, "21 May 2026", "112,000")], start=1)))
+
+
+def test_a_passage_announcing_a_list_is_read_on_into_the_list(ev, monkeypatch):
+    """2026-11-03 chat set: "The following four comparable lettings have been reviewed" ended one passage and the lettings
+    were the next, so the answer named one of four. Such a passage is read on into the next one of the same version, every
+    character in its place, so a quote from the list is checked and located like any other."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 1)
+    alice = as_user(ev, "alice")
+    upload(alice, ev["mid"], "comparables.txt", COMPARABLES, status="final")
+    index_all()
+    q = "Which comparable lettings has the surveyor reviewed?"
+    ev["llm"].answer = "x"
+    source = next(s for s in ask(alice, ev["mid"], q)[0]["citations"] if "following three" in s["text"])
+    assert "Unit 14" in source["text"] and "Unit 5" in source["text"]
+    assert COMPARABLES[source["char_start"]:source["char_end"]].split() == source["text"].split()
+    ev["llm"].answer = f'The surveyor relies on Unit 22 [{source["n"]}: "Unit 22, Riverside Works, let on 12 April 2026"].'
+    done = ask(alice, ev["mid"], q)[-1]
+    e = done["evidence"][0]
+    assert e["verification"] == "verbatim" and COMPARABLES[e["char_start"]:e["char_end"]] == "Unit 22, Riverside Works, let on 12 April 2026"
+
+
+def test_each_side_of_a_comparison_is_searched_and_a_calculation_asks_for_its_working():
+    from app.legal.research import prompt
+    assert prompt.compare_sides("Compare the length of the current lease with the new lease being proposed.") == [
+        "the length of the current lease", "the length of the new lease being proposed"]
+    assert prompt.compare_sides("How does the liability cap in the reseller agreement compare with the one in the MSA?") == [
+        "the liability cap in the reseller agreement", "the liability cap in the MSA"]
+    assert prompt.compare_sides("What is the liability cap?") == [] and prompt.compare_sides("How does Harrowgate compare?") == []
+    p = {"text": "t", "citation": {"document_title": "D", "version_number": 1}}
+    assert prompt.CALCULATION_NOTE in prompt.build("What service credit is that month worth?", [p])[1]["content"]
+    assert prompt.CALCULATION_NOTE not in prompt.build("When does the lease end?", [p])[1]["content"]
+
+
+def test_words_pointing_at_a_quote_the_marker_holds_are_not_shown():
+    from app.legal.research import evidence
+    para = evidence.parse('This is stated in the Supply Agreement as follows: [1: "within thirty Business Days"].')
+    assert para.display == "This is stated in the Supply Agreement [1]." and para.claims[0].citations[0].quote
+    assert evidence.parse("The terms are as follows: the fee is GBP 10 [1].").display == "The terms are as follows: the fee is GBP 10 [1]."
+
+
+def test_a_kind_of_document_several_share_searches_each_and_says_they_are_several(ev, monkeypatch):
+    """2026-11-04: "the supply agreement" in a matter holding two was answered from whichever ranked first. Each is searched
+    and the model is told there are several, unless the question names a party or one of them."""
+    from app.core.config import settings
+    from app.legal.research import kinds
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 1)
+    alice = as_user(ev, "alice")
+    upload(alice, ev["mid"], "Supply Agreement - Northwind.txt", NORTHWIND, status="executed", title="Supply Agreement - Northwind")
+    upload(alice, ev["mid"], "Supply Agreement.txt", ALDER, status="executed", title="Supply Agreement")
+    index_all()
+    ev["llm"].answer = "x"
+    sources = ask(alice, ev["mid"], "What are the payment terms in the supply agreement?")[0]["citations"]
+    sent = ev["llm"].calls[-1][-1]["content"]
+    assert {s["document_title"] for s in sources} >= {"Supply Agreement - Northwind", "Supply Agreement"}
+    assert 'documents that are a "supply agreement"' in sent
+    ask(alice, ev["mid"], "What are the payment terms in the Northwind supply agreement?")
+    assert "documents that are a" not in ev["llm"].calls[-1][-1]["content"]
+    titles = {"a": "Supply Agreement (DEMO)", "b": "Supply Agreement - Northwind (DEMO)", "c": "Board procedures policy (DEMO)"}
+    assert kinds.same_kind("When does their supply agreement end?", titles) == ("supply agreement", ["a", "b"])
+    assert kinds.same_kind("What does the board procedures policy say?", titles) is None
+    assert kinds.same_kind("Who chairs the board?", titles) is None
+
+
+def test_a_yes_counts_only_with_words_the_passages_hold():
+    from app.legal.research import stated
+    p = [{"text": "On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000.", "citation": {"document_title": "L"}}]
+    assert stated.verdict('Asked: when\nWords: "On the date of this Lease the Tenant shall pay a rent deposit"\nVerdict: YES', p) is True
+    assert stated.verdict("Asked: when\nWords: payable on signing\nVerdict: YES", p) is None
+    assert stated.verdict("Asked: when\nWords: NONE\nVerdict: NO", p) is False
+    assert stated.verdict("YES", p) is True and stated.verdict("maybe", p) is None

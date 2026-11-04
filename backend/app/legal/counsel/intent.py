@@ -68,20 +68,30 @@ _DRAFT = re.compile(r"^\s*(?:please\s+|can\s+you\s+|could\s+you\s+)?(?:draft|wri
 _SOCIAL = (
     ("closing", r"(?:that'?s|that\s+is|that'?ll\s+be|that\s+will\s+be)\s+(?:all|it|everything)(?:\s+for\s+(?:now|today))?"
                 r"|(?:good\s*)?bye(?:\s+(?:now|then|for\s+now))?|see\s+you(?:\s+(?:later|soon|tomorrow))?"
-                r"|talk\s+(?:to\s+you\s+)?(?:later|soon)|nothing\s+else|(?:we'?re|i'?m|we\s+are|i\s+am)\s+done(?:\s+for\s+(?:now|today))?"
+                r"|(?:talk|speak|chat)\s+(?:to\s+you\s+|with\s+you\s+)?(?:later|soon|tomorrow|next\s+week|on\s+\w+day)"
+                r"|catch\s+you\s+(?:later|soon|tomorrow)|until\s+next\s+time|good\s*night"
+                r"|have\s+a\s+(?:good|great|nice|lovely)\s+(?:day|evening|weekend|one)"
+                r"|nothing\s+else|(?:we'?re|i'?m|we\s+are|i\s+am)\s+done(?:\s+for\s+(?:now|today))?"
                 r"|no,?\s+(?:thanks|thank\s+you)|no,?\s+that'?s\s+(?:all|it)"),
     # "What can you do for me on this matter?", "what can you help me with on this case?" (2026-11-03 evaluation)
     ("identity", r"(?:who\s+are\s+you|what\s+are\s+you|what\s+(?:can|do)\s+you\s+do|what\s+can\s+i\s+ask(?:\s+you)?"
                  r"|what\s+(?:can|could)\s+you\s+help\s+(?:me|us)\s+with|how\s+can\s+you\s+help(?:\s+(?:me|us))?"
-                 r"|how\s+(?:does\s+this|do\s+you)\s+work|help(?:\s+me)?)"
+                 r"|how\s+(?:does\s+this|do\s+you)\s+work|how\s+(?:do|should|can)\s+(?:i|we)\s+use\s+(?:you|this)|help(?:\s+me)?)"
                  r"(?:\s+(?:for|with)\s+(?:me|us))?(?:\s+(?:on|with|in|for)\s+(?:this|the|my|our)\s+(?:matter|case|file))?"),
     ("check", r"(?:can|do)\s+you\s+hear\s+me(?:\s+(?:ok(?:ay)?|now|clearly|well))?|are\s+you\s+(?:there|listening|ready|on)"
+              r"|(?:are\s+you\s+)?still\s+(?:there|here|with\s+me|with\s+us)"
               r"|is\s+(?:this|it)\s+(?:working|on)|testing(?:\s+(?:one\s+two(?:\s+three)?|1\s*2(?:\s*3)?))?"),
     ("greeting", r"hi|hello|hey|hiya|good\s+(?:morning|afternoon|evening|day)|how\s+are\s+you(?:\s+(?:doing|today))?"
                  r"|how'?s\s+it\s+going"),
     ("thanks", r"thanks?(?:\s+(?:you|a\s+lot|again))?(?:\s+(?:so|very)\s+much)?|thank\s+you(?:\s+(?:so|very)\s+much)?(?:\s+again)?"
                r"|thx|cheers|much\s+appreciated"
-               r"|(?:that'?s|that\s+is|that\s+was|this\s+is|very|really|so|super)?\s*(?:(?:very|really|so|super|extremely)\s+)?(?:helpful|useful)"),
+               r"|(?:that'?s|that\s+is|that\s+was|this\s+is|very|really|so|super)?\s*(?:(?:very|really|so|super|extremely)\s+)?(?:helpful|useful)"
+               # praise in other words: "that was really clear and quick", "you've been a great help" (2026-11-04)
+               r"|(?:that'?s|that\s+is|that\s+was|this\s+is|this\s+was|it\s+was|you'?re|you\s+are|you'?ve\s+been|you\s+have\s+been)\s+"
+               r"(?:(?:very|really|so|super|extremely|just|incredibly)\s+)?(?:a\s+(?:great|big|real)\s+help"
+               r"|(?:helpful|useful|clear|quick|fast|great|brilliant|excellent|perfect|spot\s+on|thorough|amazing|fantastic)"
+               r"(?:\s+and\s+(?:(?:very|really|so)\s+)?(?:helpful|useful|clear|quick|fast|great|thorough|concise))?)"
+               r"|(?:exactly|just)\s+what\s+(?:i|we)\s+(?:needed|wanted|was\s+after|were\s+after)|great\s+(?:work|job|stuff)|well\s+done"),
     ("ack", r"ok(?:ay)?|got\s+it|understood|alright|all\s+right|sure|fine|right|great|perfect|lovely|excellent|brilliant|noted"
             r"|(?:that'?s|that\s+is|that\s+was)\s+(?:(?:very|really|so|just)\s+)?(?:great|perfect|fine|clear|brilliant|excellent|lovely)"
             r"|ok(?:ay)?\s+(?:great|perfect|thanks|cool)|cool|nice"),
@@ -97,7 +107,7 @@ def social(text: str) -> Optional[str]:
     if not t or len(t.split()) > 16:
         return None
     kinds = set()
-    for part in re.split(r"\s*[,.!?;:\u2014\u2013]+\s*", t):
+    for part in re.split(r"\s*[,.!?;:\u2014\u2013]+\s*|\s+-+\s+", t):        # "thank you - that was clear"
         part = part.strip(" '\"").replace("\u2019", "'")
         if not part:
             continue

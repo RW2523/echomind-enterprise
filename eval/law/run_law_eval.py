@@ -105,6 +105,8 @@ def main() -> int:
     ap.add_argument("--allow-dirty", action="store_true", help="with --gate: run on uncommitted changes anyway (never for a release)")
     ap.add_argument("--repeat", type=int, default=0, help="ask every question N times and score the pooled answers "
                                                            "(default 1; a gate: thresholds.json gate_runs)")
+    ap.add_argument("--trace-stated", default="", help="diagnostics: append each not-stated check's question, passages and "
+                                                         "verdict to this JSONL file (fictional corpus text; keep it out of the repository)")
     args = ap.parse_args()
     args.repeat = args.repeat or (int(json.loads(THRESHOLDS.read_text()).get("gate_runs", 1)) if args.gate else 1)
     if args.gate and (problems := gate_preconditions(args)):
@@ -134,6 +136,17 @@ def run(args, data: Path) -> int:
     from app.legal.matters import repo
     from app.legal.orgs import default_org_id
     from conftest import csrf_headers, make_user, sign_in
+    if args.trace_stated:
+        from app.legal.research import stated as stated_mod
+        checked, trace = stated_mod.answers, open(args.trace_stated, "a", encoding="utf-8")
+
+        async def traced(question, passages, defined=()):
+            verdict = await checked(question, passages, defined)
+            trace.write(json.dumps({"question": question, "defined": list(defined), "verdict": verdict, "passages": [
+                {"document": p["citation"]["document_title"], "text": p["text"]} for p in passages]}) + "\n")
+            trace.flush()
+            return verdict
+        stated_mod.answers = traced
 
     org = default_org_id()
     alice = make_user("alice", mfa=True, firm_roles=["attorney"])

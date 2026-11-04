@@ -266,4 +266,13 @@ def named_parties(text: str, known: set[str]) -> set[str]:
         withs |= {p for p in known if re.search(rf"\b{re.escape(p)}", seg)}
     if withs:
         return withs
-    return {p for p in known if re.search(rf"\b{re.escape(p)}[\w-]*(?:'s|')?\s+(?:[\w-]+\s+){{0,2}}?{_DOC_NOUN}\b", t, re.I)}
+    owners = {p for p in known if re.search(rf"\b{re.escape(p)}[\w-]*(?:'s|')?\s+(?:[\w-]+\s+){{0,2}}?{_DOC_NOUN}\b", t, re.I)}
+    if owners:
+        return owners
+    # "Within how many days must Tidewater pay Northwind under their supply agreement?": two parties and the document between
+    # them, answered from the other supply agreement (2026-11-04, from the 2026-11-03 chat set)
+    if re.search(rf"\b{_DOC_NOUN}\b", t, re.I):
+        both = {p for p in known if re.search(rf"\b{re.escape(p)}", t, re.I)}
+        if len(both) >= 2:
+            return both
+    return set()

@@ -318,6 +318,9 @@ class Settings(BaseSettings):
     LEGAL_RESEARCH_MAX_TOKENS: int = int(os.getenv("LEGAL_RESEARCH_MAX_TOKENS", "700"))
     LEGAL_RESEARCH_TEMPERATURE: float = float(os.getenv("LEGAL_RESEARCH_TEMPERATURE", "0.1"))  # research answers; EV14: 0.1 swings single runs
     LEGAL_STREAM_RECHECK_SEC: float = float(os.getenv("LEGAL_STREAM_RECHECK_SEC", "2"))    # live scope check while streaming
+    # research/stated.py: "hedged" asks of answers that open "not stated"; "all" of every answer; "shadow" asks of every answer
+    # but acts only on hedged ones, recording the rest (evaluation); "off"
+    LEGAL_RESEARCH_STATED_CHECK: str = os.getenv("LEGAL_RESEARCH_STATED_CHECK", "hedged").strip().lower()
     # Compare and contradictions (S2.3; D-039).
     LEGAL_COMPARE_MATCH_MIN: float = float(os.getenv("LEGAL_COMPARE_MATCH_MIN", "0.5"))       # shared wording to pair clauses in place
     LEGAL_COMPARE_MOVE_MIN: float = float(os.getenv("LEGAL_COMPARE_MOVE_MIN", "0.8"))         # shared wording to call a clause moved

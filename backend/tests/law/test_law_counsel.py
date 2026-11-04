@@ -192,6 +192,12 @@ def test_an_abstention_cannot_carry_sources_and_highlights_stay_inside_their_con
     ("What can you do for me on this matter?", "smalltalk"), ("What can you help me with on this case?", "smalltalk"),
     ("Cheers, that's great", "smalltalk"), ("ok perfect", "smalltalk"), ("That was very useful, thank you", "smalltalk"),
     ("Thanks, that's helpful. What is the deposit?", "ask_fact"),
+    # 2026-11-04: a spaced dash parts what was said; closings, praise and checks in other words
+    ("Brilliant, thank you - that was really clear and quick.", "smalltalk"),
+    ("That's everything for now, thanks - speak tomorrow.", "smalltalk"), ("Have a good weekend", "smalltalk"),
+    ("You've been a great help", "smalltalk"), ("Are you still there?", "smalltalk"), ("How do I use this?", "smalltalk"),
+    ("Thanks - what about the tenant?", "ask_fact"), ("That was quick - when does the lease end?", "ask_fact"),
+    ("Speak to the landlord about the repairs?", "ask_fact"), ("Was the notice clear?", "ask_fact"),
 ])
 def test_intents(text, expected):
     from app.legal.counsel import intent

@@ -78,6 +78,11 @@ class Found:
     end: Optional[int] = None
 
 
+# "This is stated in the Supply Agreement as follows: [1].": the quote is in the marker, so the words pointing at it are
+# left out of what is shown (2026-11-03 chat set).
+_POINTING = re.compile(r",?\s+(?:as\s+follows|the\s+following)\s*:\s*(?=\x00)", re.I)
+
+
 def parse(raw: str, match: Optional[Callable[[str], Optional[int]]] = None,
           relocate: Optional[Callable[[int, str], Optional[int]]] = None) -> Paragraph:
     """Citations out of the text: the display text keeps `[n]`; quotes go to the claims. With `match` (quote ->
@@ -93,6 +98,7 @@ def parse(raw: str, match: Optional[Callable[[str], Optional[int]]] = None,
         return f"\x00{len(cites) - 1}\x01"
 
     tokens = _CITE.sub(keep, raw or "")
+    tokens = _POINTING.sub(" ", tokens)
     if relocate is not None:
         for c in cites:
             if c.quote and (n := relocate(c.n, c.quote)) is not None and n != c.n:
