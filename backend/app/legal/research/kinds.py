@@ -49,7 +49,13 @@ def same_kind(question: str, titles: dict[str, str], among: Optional[list[str]] 
 
 
 def _titled(pool: dict[str, str], kind: str) -> list[str]:
-    return [did for did, t in pool.items() if re.search(rf"\b{re.escape(kind)}\b", t)]
+    """The documents titled with the kind, not those titled as made to or under another of it ("Amendment No. 1 to the
+    Kestrel storage agreement" is not a second agreement)."""
+    return [did for did, t in pool.items()
+            if any(not _OF_ANOTHER.search(t[:m.start()]) for m in re.finditer(rf"\b{re.escape(kind)}\b", t))]
+
+
+_OF_ANOTHER = re.compile(r"\b(?:to|of|under|amending|supplementing)\s+(?:the\s+)?(?:[\w&'-]+\s+){0,3}$")
 
 
 def _distinct(title: str, kind: str) -> str:

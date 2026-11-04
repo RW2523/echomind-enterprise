@@ -1092,6 +1092,8 @@ def test_a_party_with_several_documents_of_the_kind_asked_has_each_searched(ev, 
     assert kinds.same_kind("What does the Kestrel side letter say?", titles, ["c", "d"]) is None
     assert kinds.same_kind("What does the letter say?", titles) is None                    # one word, no party: not a kind
     assert kinds.same_kind("What does the lease say?", {"x": "Unit 7 Lease", "y": "Release deed"}) is None
+    storage = {"k": "Kestrel Storage Services Agreement", "a": "Amendment No. 1 to the Kestrel storage agreement"}
+    assert kinds.same_kind("What is the fee under the Kestrel storage agreement?", storage, ["k", "a"]) is None
 
 
 def test_a_question_about_another_matter_by_its_number_is_not_answered_from_this_one(ev, monkeypatch):
