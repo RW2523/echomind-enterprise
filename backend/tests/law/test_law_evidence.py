@@ -1070,6 +1070,54 @@ def test_a_kind_of_document_several_share_searches_each_and_says_they_are_severa
     assert kinds.same_kind("Who chairs the board?", titles) is None
 
 
+def test_a_party_with_several_documents_of_the_kind_asked_has_each_searched(ev, monkeypatch):
+    """2026-11-04 chat set 3: "Northwind's supply agreement" when Northwind is party to two; the party narrows the documents
+    to its own, and a title word they all share tells none of them apart."""
+    from app.core.config import settings
+    from app.legal.research import kinds
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 1)
+    alice = as_user(ev, "alice")
+    upload(alice, ev["mid"], "supply-1.txt", NORTHWIND, status="executed", title="Supply Agreement 1")
+    upload(alice, ev["mid"], "supply-2.txt", ALDER, status="executed", title="Supply Agreement 2")
+    index_all()
+    ev["llm"].answer = "x"
+    sources = ask(alice, ev["mid"], "What price does Northwind's supply agreement set?")[0]["citations"]
+    assert {s["document_title"] for s in sources} >= {"Supply Agreement 1", "Supply Agreement 2"}
+    assert 'documents that are a "supply agreement"' in ev["llm"].calls[-1][-1]["content"]
+    ask(alice, ev["mid"], "What price does Alder Retail's supply agreement set?")          # party to one of them only
+    assert "documents that are a" not in ev["llm"].calls[-1][-1]["content"]
+    titles = {"c": "Kestrel engagement letter", "d": "Kestrel side letter", "e": "Northwind side letter"}
+    assert kinds.same_kind("What does the Kestrel letter say?", titles, ["c", "d"]) == ("letter", ["c", "d"])
+    assert kinds.same_kind("What does the Kestrel side letter say?", titles, ["c", "d"]) is None
+    assert kinds.same_kind("What does the letter say?", titles) is None                    # one word, no party: not a kind
+    assert kinds.same_kind("What does the lease say?", {"x": "Unit 7 Lease", "y": "Release deed"}) is None
+
+
+def test_a_question_about_another_matter_by_its_number_is_not_answered_from_this_one(ev, monkeypatch):
+    """2026-11-04 chat set 3: "Pull the settlement limit from MAT-2033" in a conversation about another matter was answered
+    with this matter's cap credited to MAT-2033. It is declined before the model is asked, the same whether that matter
+    exists (M-202, which alice may not read) or not, and a reference the documents hold is answered as before."""
+    from app.core.config import settings
+    from app.legal.research.attribution import foreign_matters
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    alice = as_user(ev, "alice")
+    replies = []
+    for ref in ("MAT-2033", "M-202"):
+        calls = len(ev["llm"].calls)
+        done = ask(alice, ev["mid"], f"Pull the liability cap from {ref} for me.")[-1]
+        assert len(ev["llm"].calls) == calls
+        assert done["abstained"] and done["abstention_reason"] == "other_matter" and not done["citations"]
+        assert "M-101" in done["answer"] and done["absence"] == done["answer"]
+        replies.append(done["answer"].replace(ref, "#"))
+    assert replies[0] == replies[1]
+    ev["llm"].answer = 'The cap is USD 250,000 [1: "capped at USD 250,000"].'
+    assert ask(alice, ev["mid"], "What is the liability cap in M-101?")[-1]["abstention_reason"] is None
+    assert foreign_matters("Is it ISO-27001 certified, and what does invoice INV-2026-014 or COVID-19 change?", ["M-101"],
+                           ["certified to ISO 27001"]) == []
+    assert foreign_matters("What does NW-0042 say?", ["M-101"], ["Invoice NW-0042 for GBP 3,000"]) == []
+
+
 def test_a_yes_counts_only_with_words_the_passages_hold():
     from app.legal.research import stated
     p = [{"text": "On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000.", "citation": {"document_title": "L"}}]

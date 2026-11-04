@@ -216,6 +216,12 @@ def _carried(claims: list, text: str, unsupported: list) -> tuple[list, list]:
     return out, joined
 
 
+def _numbers(scopes) -> list[str]:
+    """The numbers of the matters asked about."""
+    with get_conn() as conn:
+        return [conn.execute("SELECT number FROM matters WHERE id=?", (sc.matter_id,)).fetchone()[0] for sc in scopes]
+
+
 def _titles(scopes, uid: str) -> dict[str, str]:
     """The titles of the documents the person may read in the matters asked about (document id → title)."""
     from ..documents import repo as doc_repo
@@ -452,7 +458,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         asked_parties = attribution.named_parties(question, known)
         target = [] if documents or not asked_parties else [did for did, h in heads.items() if asked_parties <= h[0]]
         titles = await run_in_threadpool(_titles, scopes, principal["sub"])
-        same = None if several or documents or asked_parties else kinds.same_kind(question, titles)
+        same = None if several or documents else kinds.same_kind(question, titles, target if asked_parties else None)
         if several:
             passages, links, nothing_found = await _search_several(scopes, principal, search_q, versions, documents)
         else:
@@ -485,6 +491,20 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             yield _event({"type": "done", "answer": prompt.ABSTAIN, "status": status, "abstained": True, "abstention_reason": reason,
                           "citations": [], "evidence": [], "conflicts": [], "unsupported": [], "failed": [], "uncited": False,
                           "turn_id": turn["id"], "versions": versions, "absence": None})
+            return
+        # A question about another matter by its number is not answered from this one's documents (research/attribution.py)
+        numbers = await run_in_threadpool(_numbers, scopes)
+        foreign = attribution.foreign_matters(question, numbers, [p["text"] for p in passages] + list(titles.values()))
+        if foreign:
+            own = ", ".join(numbers)
+            status, answer, reason = "abstained", (
+                f"The question refers to {foreign[0][:20]}, which is not the matter asked about ({own}), and no document found "
+                f"mentions it, so nothing is answered for it. Answers here come only from {own}; to work on another matter, "
+                "start a conversation with it."), "other_matter"
+            yield _event({"type": "chunk", "text": answer})
+            yield _event({"type": "done", "answer": answer, "status": status, "abstained": True, "abstention_reason": reason,
+                          "citations": [], "evidence": [], "conflicts": [], "unsupported": [], "failed": [], "uncited": False,
+                          "turn_id": turn["id"], "versions": versions, "absence": answer, "stated": None})
             return
         buf, shown, claims, unsupported, failed, last_check = "", [], [], [], [], time.monotonic()
         several_of = kinds.note(same[0], [titles[d] for d in same[1]]) if same else ""

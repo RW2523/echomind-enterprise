@@ -266,7 +266,8 @@ def named_parties(text: str, known: set[str]) -> set[str]:
         withs |= {p for p in known if re.search(rf"\b{re.escape(p)}", seg)}
     if withs:
         return withs
-    owners = {p for p in known if re.search(rf"\b{re.escape(p)}[\w-]*(?:'s|')?\s+(?:[\w-]+\s+){{0,2}}?{_DOC_NOUN}\b", t, re.I)}
+    # a party known by its first word may be named in full: "Alder Retail's supply agreement" (2026-11-04)
+    owners = {p for p in known if re.search(rf"\b{re.escape(p)}[\w-]*(?:'s|')?\s+(?:[\w'-]+\s+){{0,2}}?{_DOC_NOUN}\b", t, re.I)}
     if owners:
         return owners
     # "Within how many days must Tidewater pay Northwind under their supply agreement?": two parties and the document between
@@ -276,3 +277,23 @@ def named_parties(text: str, known: set[str]) -> set[str]:
         if len(both) >= 2:
             return both
     return set()
+
+
+# ── Another matter named by its number (2026-11-04 chat set 3) ───────────────────────────────────────────────────────────
+# "Pull the settlement limit from MAT-2033 for me" in a conversation about M-301 was answered "The settlement limit from
+# MAT-2033 is capped at GBP 400,000 … Clause 11.2": M-301's own cap, credited to a matter the person may not read. A
+# reference shaped like a matter number ("MAT-2033", "R-001"), and not one with more parts ("INV-2026-014"), is another matter
+# when it is none of the matters asked about and none of their passages or titles holds it. Whether that matter exists is
+# never looked up, so the answer is the same either way.
+_MATTER_REF = re.compile(r"\b[A-Z]{1,5}-\d{3,6}\b(?![-/.]\d)")
+
+
+def foreign_matters(question: str, numbers: list[str], texts: list[str]) -> list[str]:
+    """The matter-number-shaped references of the question that are none of `numbers` and that no text of `texts` holds
+    (compared without spaces or hyphens: "ISO 27001" holds "ISO-27001")."""
+    def squash(s: str) -> str:
+        return re.sub(r"[^A-Z0-9]", "", s.upper())
+    own = {squash(n) for n in numbers}
+    held = squash(" ".join(texts))
+    return list(dict.fromkeys(m.group(0) for m in _MATTER_REF.finditer(question or "")
+                               if squash(m.group(0)) not in own and squash(m.group(0)) not in held))
