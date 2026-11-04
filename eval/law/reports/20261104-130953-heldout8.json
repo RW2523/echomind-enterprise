@@ -1,0 +1,726 @@
+{
+ "meta": {
+  "set": "heldout8",
+  "commit": "3eaaa9a+changes",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "98f2113367ca934354a472589c6d9618fdb7526b7350e67c56255e3850973dda",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261104-130953",
+  "limit": null,
+  "only": "h8-rp-data-choice,h8-rp-deposit-holder,h8-rp-deposit-when,h8-rp-side-full-hour,h8-pp-harrowgate-gc,h8-rp-nda-staff,h8-xdoc-pellucid-northbridge,h8-abstain-nda-liquidated",
+  "runs": 2,
+  "temperature": 0.1
+ },
+ "summary": {
+  "items": 16,
+  "answer_accuracy": "6/12",
+  "abstention_accuracy": "1/4",
+  "false_abstentions": 6,
+  "t06_leaks": 0,
+  "trap_values_in_answers": 1,
+  "citation_precision": 1.0,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "abstained": 7,
+   "partial": 8,
+   "answered": 1
+  },
+  "latency_total_p50_s": 4.07,
+  "latency_total_p95_s": 9.74,
+  "latency_first_paragraph_p50_s": 4.07,
+  "latency_first_paragraph_p95_s": 9.74,
+  "runs": 2,
+  "per_run": [
+   {
+    "answer_accuracy": "3/6",
+    "abstention_accuracy": "1/2",
+    "citation_precision": 1.0,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "3/6",
+    "abstention_accuracy": "0/2",
+    "citation_precision": 1.0,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   }
+  ],
+  "spread": {
+   "answer_accuracy": [
+    0.5,
+    0.5
+   ],
+   "abstention_accuracy": [
+    0.0,
+    0.5
+   ],
+   "citation_precision": [
+    1.0,
+    1.0
+   ],
+   "quote_verification_rate": [
+    1.0,
+    1.0
+   ],
+   "t06_leaks": [
+    0,
+    0
+   ]
+  },
+  "unstable_items": {
+   "h8-xdoc-pellucid-northbridge": "1/2"
+  },
+  "never_correct": [
+   "h8-rp-data-choice",
+   "h8-rp-nda-staff",
+   "h8-rp-side-full-hour",
+   "h8-abstain-nda-liquidated"
+  ]
+ },
+ "items": [
+  {
+   "id": "h8-rp-data-choice",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "When the MSA ends, does Harrowgate or Voss-Lindqvist decide whether the data is returned or destroyed?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "stated": null,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not specify who decides whether the data is returned or destroyed when the MSA ends. The relevant clause, 6.2, states that the Provider must return or securely destroy all Client Data at the Client's option within thirty days after termination. However, the documents do not indicate who makes the decision about returning or destroying the data [5].",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 9.74,
+   "total_s": 9.74,
+   "run": 1
+  },
+  {
+   "id": "h8-rp-nda-staff",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "May Northbridge pass information it receives from Voss-Lindqvist under the NDA on to its own employees?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "stated": false,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not explicitly address whether Northbridge may pass information it receives from Voss-Lindqvist under the NDA to its own employees.\n\nThe Northbridge NDA is between Voss-Lindqvist AB and Northbridge Analytics Ltd [2].\n\nThere is no mention of restrictions on sharing information with employees in the Northbridge NDA [2].\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 10.3,
+   "total_s": 10.3,
+   "run": 1
+  },
+  {
+   "id": "h8-rp-deposit-holder",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "Which company holds the Unit 7 rent deposit, Crestmoor Estates or Voss-Lindqvist Logistics?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents indicate that the rent deposit for Unit 7 is held by the Landlord. The Lease states that the Tenant shall pay a rent deposit of GBP 21,000 to be held by the Landlord until the end of the Term [5].\n\nThe Landlord in this Lease is **Crestmoor Estates Ltd** [1].\n\nTherefore, **Crestmoor Estates** holds the Unit 7 rent deposit.",
+   "evidence": [
+    {
+     "n": 5,
+     "quote": "On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000, to be held by the Landlord until the end of the Term",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12,
+     "moved_from": null
+    },
+    {
+     "n": 1,
+     "quote": "This Lease is made on 20 March 2025 between **Crestmoor Estates Ltd** (the \"Landlord\") and **Voss-Lindqvist Logistics Ltd** (the \"Tenant\")",
+     "verification": "normalized",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 3,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 6.73,
+   "total_s": 6.73,
+   "run": 1
+  },
+  {
+   "id": "h8-rp-deposit-when",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "When did Voss-Lindqvist Logistics have to pay Crestmoor the rent deposit?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents indicate that Voss-Lindqvist Logistics had to pay a rent deposit to Crestmoor Estates Ltd under the Unit 7 Lease.\n\nAccording to the lease, the Tenant was required to pay a rent deposit of GBP 21,000 on the date of the Lease.\n\nThe Lease was made on 20 March 2025, and the Tenant is identified as Voss-Lindqvist Logistics Ltd.\n\nThus, Voss-Lindqvist Logistics had to pay the rent deposit on 20 March 2025.\n\n[4] [1]",
+   "evidence": [
+    {
+     "n": 4,
+     "quote": "On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000, to be held by the Landlord until the end of the Term",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12,
+     "moved_from": null
+    },
+    {
+     "n": 1,
+     "quote": "This Lease is made on 20 March 2025 between **Crestmoor Estates Ltd** (the \"Landlord\") and **Voss-Lindqvist Logistics Ltd** (the \"Tenant\").",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 3,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 6.72,
+   "total_s": 6.72,
+   "run": 1
+  },
+  {
+   "id": "h8-rp-side-full-hour",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "Does Voss-Lindqvist earn a service credit from Harrowgate for a partial hour of downtime?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "stated": false,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not specify whether Voss-Lindqvist earns a service credit for a partial hour of downtime.\n\nThe relevant service credit provision states that \"for each full hour of unavailability below that level, Client will receive a service credit of five percent (5%) of the monthly subscription fee\" [1].\n\nThere is no mention of how partial hours are treated in the documents.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.07,
+   "total_s": 4.07,
+   "run": 1
+  },
+  {
+   "id": "h8-pp-harrowgate-gc",
+   "tags": [
+    "LOOKALIKE",
+    "PRECISION_PRONE"
+   ],
+   "question": "Who is Harrowgate's General Counsel?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": true,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not identify who Harrowgate's General Counsel is. However, they mention that Thomas Reyes is the General Counsel for Harrowgate Systems Inc. in a notice addressed to the General Counsel of Voss-Lindqvist AB [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Please direct any questions to our General Counsel, Thomas Reyes.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 10,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.86,
+   "total_s": 2.86,
+   "run": 1
+  },
+  {
+   "id": "h8-abstain-nda-liquidated",
+   "tags": [
+    "ABSTAIN",
+    "VALUE_ABSENT"
+   ],
+   "question": "What amount of liquidated damages does the Northbridge NDA fix for a breach?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The Northbridge NDA does not specify a fixed amount of liquidated damages for a breach. The documents do not mention any specific sum or formula for liquidated damages in the event of a breach [1][2].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "8. Governing Law and Jurisdiction",
+     "verification": "verbatim",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 21,
+     "moved_from": null
+    },
+    {
+     "n": 2,
+     "quote": "7. Remedies",
+     "verification": "verbatim",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "6.1",
+     "page_start": null,
+     "line": 19,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.25,
+   "total_s": 3.25,
+   "run": 1
+  },
+  {
+   "id": "h8-xdoc-pellucid-northbridge",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "When is Pellucid Holdings' acquisition of Northbridge Analytics expected to complete?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "stated": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not specify when Pellucid Holdings' acquisition of Northbridge Analytics is expected to complete.\n\n[1]",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.71,
+   "total_s": 2.71,
+   "run": 1
+  },
+  {
+   "id": "h8-rp-data-choice",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "When the MSA ends, does Harrowgate or Voss-Lindqvist decide whether the data is returned or destroyed?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "stated": false,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not specify who decides whether the data is returned or destroyed when the MSA ends.\n\nThe relevant clause, 6.2 of the Harrowgate MSA, states: \"Within thirty (30) days after termination, Provider shall return or securely destroy all Client Data, at Client's option.\" [5]\n\nThis clause places the responsibility on the Provider to return or destroy the data, but it does not state who decides the method of disposal. The documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 4.61,
+   "total_s": 4.61,
+   "run": 2
+  },
+  {
+   "id": "h8-rp-nda-staff",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "May Northbridge pass information it receives from Voss-Lindqvist under the NDA on to its own employees?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "stated": false,
+   "correct": false,
+   "facts_found": false,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not explicitly address whether Northbridge may pass information it receives from Voss-Lindqvist under the NDA to its own employees.\n\nThe Northbridge NDA names Voss-Lindqvist AB and Northbridge Analytics Ltd as the parties to the agreement [2]. However, the specific terms regarding the disclosure of information to employees are not included in the provided sources.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.87,
+   "total_s": 5.87,
+   "run": 2
+  },
+  {
+   "id": "h8-rp-deposit-holder",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "Which company holds the Unit 7 rent deposit, Crestmoor Estates or Voss-Lindqvist Logistics?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents indicate that the rent deposit for Unit 7 is held by the Landlord. The Lease states that the Tenant shall pay a rent deposit of GBP 21,000 to be held by the Landlord until the end of the Term [5].\n\nThe Landlord in the Unit 7 Lease is Crestmoor Estates Ltd [1].\n\nTherefore, the company that holds the Unit 7 rent deposit is Crestmoor Estates Ltd [1][5].",
+   "evidence": [
+    {
+     "n": 5,
+     "quote": "the Tenant shall pay a rent deposit of GBP 21,000, to be held by the Landlord until the end of the Term",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12,
+     "moved_from": null
+    },
+    {
+     "n": 1,
+     "quote": "Crestmoor Estates Ltd** (the \"Landlord\")",
+     "verification": "normalized",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": null,
+     "page_start": null,
+     "line": 3,
+     "moved_from": null
+    },
+    {
+     "n": 5,
+     "quote": "to be held by the Landlord",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 3,
+   "quotes": 3,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 5.16,
+   "total_s": 5.16,
+   "run": 2
+  },
+  {
+   "id": "h8-rp-deposit-when",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "When did Voss-Lindqvist Logistics have to pay Crestmoor the rent deposit?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents state that Voss-Lindqvist Logistics had to pay a rent deposit to Crestmoor Estates Ltd when the lease was signed. The relevant clause states that the Tenant shall pay a rent deposit of GBP 21,000 on the date of the Lease [4].",
+   "evidence": [
+    {
+     "n": 4,
+     "quote": "On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000, to be held by the Landlord until the end of the Term.",
+     "verification": "verbatim",
+     "document_title": "Unit 7 Lease",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "4.1",
+     "page_start": null,
+     "line": 12,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.36,
+   "total_s": 3.36,
+   "run": 2
+  },
+  {
+   "id": "h8-rp-side-full-hour",
+   "tags": [
+    "LOOKALIKE",
+    "ROLE_PARTY"
+   ],
+   "question": "Does Voss-Lindqvist earn a service credit from Harrowgate for a partial hour of downtime?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "stated": false,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not specify whether Voss-Lindqvist earns a service credit for a partial hour of downtime.\n\nThe relevant clause states that \"for each full hour of unavailability below that level, Client will receive a service credit of five percent (5%) of the monthly subscription fee\" [1]. There is no mention of partial hours.\n\nThe documents in this matter do not answer that.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.78,
+   "total_s": 3.78,
+   "run": 2
+  },
+  {
+   "id": "h8-pp-harrowgate-gc",
+   "tags": [
+    "LOOKALIKE",
+    "PRECISION_PRONE"
+   ],
+   "question": "Who is Harrowgate's General Counsel?",
+   "versions": "signed",
+   "expect_abstain": false,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": true,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not state who Harrowgate's General Counsel is. However, they do mention that Thomas Reyes is the General Counsel for Harrowgate Systems Inc. [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Please direct any questions to our General Counsel, Thomas Reyes.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 10,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": 1.0,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.97,
+   "total_s": 2.97,
+   "run": 2
+  },
+  {
+   "id": "h8-abstain-nda-liquidated",
+   "tags": [
+    "ABSTAIN",
+    "VALUE_ABSENT"
+   ],
+   "question": "What amount of liquidated damages does the Northbridge NDA fix for a breach?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The Northbridge NDA does not specify a fixed amount of liquidated damages for a breach. The documents do not include any clause that sets a specific monetary amount for liquidated damages.\n\n[1][2]",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "8.2 The courts of London have exclusive jurisdiction over any dispute arising out of this Agreement.",
+     "verification": "verbatim",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "8.2",
+     "page_start": null,
+     "line": 23,
+     "moved_from": null
+    },
+    {
+     "n": 2,
+     "quote": "7.1 Each Party acknowledges that damages alone may not be an adequate remedy for breach and that the Discloser may seek injunctive relief.",
+     "verification": "verbatim",
+     "document_title": "Northbridge NDA",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "7.1",
+     "page_start": null,
+     "line": 20,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 2,
+   "quotes": 2,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 3.34,
+   "total_s": 3.34,
+   "run": 2
+  },
+  {
+   "id": "h8-xdoc-pellucid-northbridge",
+   "tags": [
+    "ABSTAIN",
+    "CROSS_DOC"
+   ],
+   "question": "When is Pellucid Holdings' acquisition of Northbridge Analytics expected to complete?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "answered",
+   "abstention_reason": null,
+   "stated": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [
+    "15 october"
+   ],
+   "answer": "The documents state that Pellucid Holdings' acquisition of Northbridge Analytics is expected to complete on 15 October 2026, subject to regulatory clearance [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "Completion is expected on 15 October 2026, subject to regulatory clearance.",
+     "verification": "verbatim",
+     "document_title": "Change of control notice",
+     "version_number": 1,
+     "version_status": "received",
+     "clause": null,
+     "page_start": null,
+     "line": 8,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.17,
+   "total_s": 2.17,
+   "run": 2
+  }
+ ]
+}

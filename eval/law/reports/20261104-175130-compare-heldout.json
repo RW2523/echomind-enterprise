@@ -1,0 +1,479 @@
+{
+ "meta": {
+  "set": "heldout",
+  "commit": "65e4e57",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "time": "20261104-175130"
+ },
+ "alignment": [
+  {
+   "expected": 10,
+   "correct": 10,
+   "found": 10,
+   "precision": 1.0,
+   "recall": 1.0,
+   "extra": [],
+   "unlabelled_changes": 4,
+   "rows": [
+    {
+     "unit": "right 10",
+     "expected": {
+      "right": "10",
+      "kind": "unchanged",
+      "moved": true
+     },
+     "got": {
+      "kind": "unchanged",
+      "moved": true,
+      "renumbered": false,
+      "flags": [],
+      "from": "10"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 10.1",
+     "expected": {
+      "right": "10.1",
+      "kind": "unchanged",
+      "moved": true
+     },
+     "got": {
+      "kind": "unchanged",
+      "moved": true,
+      "renumbered": false,
+      "flags": [],
+      "from": "10.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 2.1",
+     "expected": {
+      "right": "2.1",
+      "kind": "changed",
+      "flags": [
+       "number"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "number"
+      ],
+      "from": "2.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 3.1",
+     "expected": {
+      "right": "3.1",
+      "kind": "changed",
+      "flags": [
+       "number"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "number"
+      ],
+      "from": "3.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 3.3",
+     "expected": {
+      "right": "3.3",
+      "kind": "added"
+     },
+     "got": {
+      "kind": "added",
+      "moved": false,
+      "renumbered": false,
+      "flags": [],
+      "from": null
+     },
+     "correct": true
+    },
+    {
+     "unit": "left 5",
+     "expected": {
+      "left": "5",
+      "kind": "removed"
+     },
+     "got": {
+      "kind": "removed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [],
+      "from": "5"
+     },
+     "correct": true
+    },
+    {
+     "unit": "left 5.1",
+     "expected": {
+      "left": "5.1",
+      "kind": "removed"
+     },
+     "got": {
+      "kind": "removed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [],
+      "from": "5.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 6.2",
+     "expected": {
+      "right": "6.2",
+      "kind": "changed",
+      "flags": [
+       "obligation"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "obligation"
+      ],
+      "from": "6.2"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 7.1",
+     "expected": {
+      "right": "7.1",
+      "kind": "changed",
+      "flags": [
+       "negation"
+      ]
+     },
+     "got": {
+      "kind": "changed",
+      "moved": false,
+      "renumbered": false,
+      "flags": [
+       "obligation",
+       "negation"
+      ],
+      "from": "7.1"
+     },
+     "correct": true
+    },
+    {
+     "unit": "right 9.1",
+     "expected": {
+      "right": "9.1",
+      "kind": "formatting"
+     },
+     "got": {
+      "kind": "formatting",
+      "moved": false,
+      "renumbered": false,
+      "flags": [],
+      "from": "9.1"
+     },
+     "correct": true
+    }
+   ],
+   "pair": "lease.md → heldout-lease-v2-draft.md",
+   "seconds": 0.65,
+   "passes": [
+    "wording",
+    "meaning"
+   ],
+   "summary": {
+    "unchanged": 18,
+    "formatting": 1,
+    "changed": 6,
+    "added": 2,
+    "removed": 3,
+    "moved": 2,
+    "renumbered": 0
+   }
+  }
+ ],
+ "explanations": {
+  "explained": 11,
+  "errors": 0,
+  "quotes": 20,
+  "verified": 20,
+  "quote_verification_rate": 1.0,
+  "changed_with_both_sides_quoted": "6/6",
+  "statuses": {
+   "answered": 5,
+   "partial": 6
+  },
+  "seconds_total": 23.3,
+  "seconds_per_change": 2.12,
+  "samples": [
+   {
+    "unit": null,
+    "text": "The version designation changes from no additional text to \"— LANDLORD DRAFT, 2 September 2026\".  \n[1] [2]",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "# LEASE OF WAREHOUSE PREMISES"
+     ],
+     [
+      "right",
+      "verbatim",
+      "# LEASE OF WAREHOUSE PREMISES — LANDLORD DRAFT, 2 September 2026"
+     ]
+    ]
+   },
+   {
+    "unit": null,
+    "text": "The term \"EVALUATION\" is replaced with \"HELD-OUT,\" and a reference \"(S2.3)\" is added. The original notice about the document being fictional is replaced with a statement about not being used for tuning comparisons. [1] is replaced with [2]. [1] is replaced with [2].",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "Not a real lease and not legal advice"
+     ],
+     [
+      "right",
+      "verbatim",
+      "Never used to tune comparison"
+     ],
+     [
+      "left",
+      "verbatim",
+      "FICTIONAL EVALUATION FIXTURE"
+     ],
+     [
+      "right",
+      "verbatim",
+      "FICTIONAL HELD-OUT FIXTURE (S2.3)"
+     ]
+    ]
+   },
+   {
+    "unit": "2.1",
+    "text": "The term of the lease is extended from ten (10) years to fifteen (15) years, changing the end date from 31 March 2035 to 31 March 2040. [1] [2]",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "The term is ten (10) years starting on 1 April 2025 and ending on 31 March 2035"
+     ],
+     [
+      "right",
+      "verbatim",
+      "The term is fifteen (15) years starting on 1 April 2025 and ending on 31 March 2040"
+     ]
+    ]
+   },
+   {
+    "unit": "3.1",
+    "text": "The rent amount changes from GBP 84,000 per year to GBP 92,500 per year.  \n[1] and [2].",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "GBP 84,000 per year"
+     ],
+     [
+      "right",
+      "verbatim",
+      "GBP 92,500 per year"
+     ]
+    ]
+   },
+   {
+    "unit": "3.3",
+    "text": "The clause specifies the interest rate for late rent payment. [2]",
+    "evidence": [
+     [
+      "right",
+      "verbatim",
+      "3.3 Interest at four percent (4%) above base rate is payable on any rent paid late."
+     ]
+    ]
+   },
+   {
+    "unit": "5",
+    "text": "The clause \"Use\" is present in the left-hand version [1], but there is no corresponding clause in the right-hand version.",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "5. Use"
+     ]
+    ]
+   },
+   {
+    "unit": "5.1",
+    "text": "The clause specifies the permitted use of the premises. [1] This indicates that the Tenant is restricted to using the Premises for storage and distribution under Use Class B8. There is no corresponding clause in source 2.",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "The Tenant shall use the Premises only for storage and distribution within Use Class B8."
+     ]
+    ]
+   },
+   {
+    "unit": "6.2",
+    "text": "The obligation of the Landlord to keep the structure and roof of the Premises in repair is made optional in the second version, as \"shall\" is replaced with \"may\" [2]. Additionally, the second version introduces a condition that the repair is to be done \"at the Tenant's cost\" [2], which is not present in the first version [1].",
+    "evidence": [
+     [
+      "right",
+      "verbatim",
+      "The Landlord may keep the structure and roof of the Premises in repair"
+     ],
+     [
+      "right",
+      "verbatim",
+      ", at the Tenant's cost"
+     ],
+     [
+      "left",
+      "verbatim",
+      "The Landlord shall keep the structure and roof of the Premises in repair"
+     ]
+    ]
+   },
+   {
+    "unit": "7.1",
+    "text": "The restriction on the Tenant's ability to assign or underlet part of the Premises is removed. In source 1, the Tenant \"shall not assign or underlet part only of the Premises,\" [1], while in source 2, the Tenant \"may assign or underlet part only of the Premises,\" [2]. This change allows the Tenant to assign or underlet part of the Premises, which was previously prohibited.",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "The Tenant shall not assign or underlet part only of the Premises"
+     ],
+     [
+      "right",
+      "verbatim",
+      "The Tenant may assign or underlet part only of the Premises"
+     ]
+    ]
+   },
+   {
+    "unit": null,
+    "text": "The clause in source 1 states that the lease was signed for two parties on 20 March 2025. [1] There is no corresponding clause in source 2.",
+    "evidence": [
+     [
+      "left",
+      "verbatim",
+      "*Signed for Crestmoor Estates Ltd and for Voss-Lindqvist Logistics Ltd on 20 March 2025 (fictional).*"
+     ]
+    ]
+   },
+   {
+    "unit": null,
+    "text": "[2] is the only source provided. Since there is no source 1, there is no clause to compare. The text in source 2 is a notice stating that the document is a draft for discussion and is not yet signed.",
+    "evidence": [
+     [
+      "right",
+      "verbatim",
+      "*Draft for discussion — not signed (fictional).*"
+     ]
+    ]
+   }
+  ]
+ },
+ "scan": {
+  "documents": 11,
+  "candidates": 5,
+  "checked": 5,
+  "conflicts": 5,
+  "rejected": 0,
+  "unclear": 0,
+  "planted_recall": "4/5",
+  "precision": 0.8,
+  "acceptable_extras": 0,
+  "false_positives": [
+   {
+    "kind": "money",
+    "verdict": "conflict",
+    "a": "Amendment No. 1 to the Kestrel storage agreement: EUR 4,600",
+    "b": "Kestrel Storage Services Agreement: EUR 4,000",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   }
+  ],
+  "planted_never_proposed": [
+   "reference"
+  ],
+  "planted_rejected_by_model": [],
+  "quote_verification_rate": 1.0,
+  "seconds": 2.96,
+  "findings": [
+   {
+    "kind": "law",
+    "verdict": "conflict",
+    "a": "Unit 7 Lease: England and Wales",
+    "b": "Unit 7 side letter: Scotland",
+    "explanation": "Source 1 chooses the law of [1] and source 2 the law of [2].",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "entity",
+    "verdict": "conflict",
+    "a": "Unit 7 Lease: Crestmoor Estates Ltd",
+    "b": "Unit 7 side letter: Crestmoor Estates plc",
+    "explanation": "Source 1 names [1] and source 2 names [2]: the same name with a different legal form.",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "period",
+    "verdict": "conflict",
+    "a": "Unit 7 Lease: six (6) months",
+    "b": "Unit 7 side letter: three (3) months",
+    "explanation": "[1] and [2].",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "money",
+    "verdict": "conflict",
+    "a": "Unit 7 Lease: GBP 84,000",
+    "b": "Unit 7 side letter: GBP 80,000",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   },
+   {
+    "kind": "money",
+    "verdict": "conflict",
+    "a": "Amendment No. 1 to the Kestrel storage agreement: EUR 4,600",
+    "b": "Kestrel Storage Services Agreement: EUR 4,000",
+    "explanation": "[1] [2]",
+    "quotes": [
+     "verbatim",
+     "verbatim"
+    ]
+   }
+  ]
+ }
+}
