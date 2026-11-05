@@ -1,0 +1,215 @@
+{
+ "meta": {
+  "set": "heldout8",
+  "commit": "a578891",
+  "model": "nvidia/Qwen3-30B-A3B-FP4",
+  "embeddings": "nomic-embed-text",
+  "items_sha256": "98f2113367ca934354a472589c6d9618fdb7526b7350e67c56255e3850973dda",
+  "gate": false,
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "time": "20261105-140436",
+  "limit": null,
+  "only": "h8-abstain-vat-rate,h8-abstain-nda-signatory",
+  "runs": 2,
+  "temperature": 0.1
+ },
+ "summary": {
+  "items": 4,
+  "answer_accuracy": "0/0",
+  "abstention_accuracy": "2/4",
+  "false_abstentions": 0,
+  "t06_leaks": 0,
+  "trap_values_in_answers": 0,
+  "citation_precision": null,
+  "quote_verification_rate": 1.0,
+  "t05_conflicts_found": "0/0",
+  "r7_multi_source": "0/0",
+  "statuses": {
+   "partial": 2,
+   "abstained": 2
+  },
+  "latency_total_p50_s": 8.95,
+  "latency_total_p95_s": 12.06,
+  "latency_first_paragraph_p50_s": 8.95,
+  "latency_first_paragraph_p95_s": 12.06,
+  "runs": 2,
+  "per_run": [
+   {
+    "answer_accuracy": "0/0",
+    "abstention_accuracy": "1/2",
+    "citation_precision": null,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   },
+   {
+    "answer_accuracy": "0/0",
+    "abstention_accuracy": "1/2",
+    "citation_precision": null,
+    "quote_verification_rate": 1.0,
+    "t06_leaks": 0
+   }
+  ],
+  "spread": {
+   "abstention_accuracy": [
+    0.5,
+    0.5
+   ],
+   "quote_verification_rate": [
+    1.0,
+    1.0
+   ],
+   "t06_leaks": [
+    0,
+    0
+   ]
+  },
+  "unstable_items": {},
+  "never_correct": [
+   "h8-abstain-vat-rate"
+  ]
+ },
+ "items": [
+  {
+   "id": "h8-abstain-vat-rate",
+   "tags": [
+    "ABSTAIN",
+    "VALUE_ABSENT"
+   ],
+   "question": "At what percentage is VAT added to Calder & Wynne's fees?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": null,
+   "stated_shadow": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents state that VAT is added at the applicable rate to Calder & Wynne's fees. However, they do not specify the percentage at which VAT is applied [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "VAT is added at the applicable rate",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 11,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 8.48,
+   "total_s": 8.48,
+   "run": 1
+  },
+  {
+   "id": "h8-abstain-nda-signatory",
+   "tags": [
+    "ABSTAIN",
+    "VALUE_ABSENT"
+   ],
+   "question": "Who signed the NDA on behalf of Northbridge Analytics?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "stated": null,
+   "stated_shadow": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not explicitly state who signed the NDA on behalf of Northbridge Analytics. However, the NDA states: \"*Signed for Voss-Lindqvist AB and for Northbridge Analytics Ltd on 10 January 2026 (fictional).*\" [1] This indicates that someone signed on behalf of both parties, but it does not specify who signed for Northbridge Analytics.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 12.06,
+   "total_s": 12.06,
+   "run": 1
+  },
+  {
+   "id": "h8-abstain-vat-rate",
+   "tags": [
+    "ABSTAIN",
+    "VALUE_ABSENT"
+   ],
+   "question": "At what percentage is VAT added to Calder & Wynne's fees?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "partial",
+   "abstention_reason": null,
+   "stated": null,
+   "stated_shadow": null,
+   "correct": false,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents state that VAT is added at the applicable rate to Calder & Wynne's fees. The specific percentage is not provided in the sources [1].",
+   "evidence": [
+    {
+     "n": 1,
+     "quote": "VAT is added at the applicable rate",
+     "verification": "verbatim",
+     "document_title": "Calder & Wynne engagement letter",
+     "version_number": 1,
+     "version_status": "executed",
+     "clause": "3.1",
+     "page_start": null,
+     "line": 11,
+     "moved_from": null
+    }
+   ],
+   "citation_precision": null,
+   "verified_quotes": 1,
+   "quotes": 1,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 2.99,
+   "total_s": 2.99,
+   "run": 2
+  },
+  {
+   "id": "h8-abstain-nda-signatory",
+   "tags": [
+    "ABSTAIN",
+    "VALUE_ABSENT"
+   ],
+   "question": "Who signed the NDA on behalf of Northbridge Analytics?",
+   "versions": "signed",
+   "expect_abstain": true,
+   "status": "abstained",
+   "abstention_reason": "model",
+   "stated": false,
+   "stated_shadow": null,
+   "correct": true,
+   "facts_found": true,
+   "leaked": [],
+   "trapped": [],
+   "answer": "The documents do not explicitly state who signed the NDA on behalf of Northbridge Analytics. However, the NDA was signed for Northbridge Analytics Ltd on 10 January 2026 [1]. The specific individual who signed on behalf of Northbridge Analytics is not identified in the provided sources.",
+   "evidence": [],
+   "citation_precision": null,
+   "verified_quotes": 0,
+   "quotes": 0,
+   "conflict_expected": false,
+   "conflict_found": false,
+   "multi_source": null,
+   "first_paragraph_s": 8.95,
+   "total_s": 8.95,
+   "run": 2
+  }
+ ]
+}
