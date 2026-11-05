@@ -377,6 +377,9 @@ class Settings(BaseSettings):
     LEGAL_TIME_ENTRIES: bool = os.getenv("LEGAL_TIME_ENTRIES", "0").lower() in ("1", "true", "yes")
     # S4.5 review panel (OPT-05, D-057): off unless the firm turns it on.
     LEGAL_PANEL: bool = os.getenv("LEGAL_PANEL", "0").lower() in ("1", "true", "yes")
+    # Council Discovery (council/discovery.py, 2026-11-05): questions found by rules in the matter's records; only with the panel
+    LEGAL_COUNCIL_DISCOVERY: bool = os.getenv("LEGAL_COUNCIL_DISCOVERY", "1").lower() in ("1", "true", "yes")
+    LEGAL_DISCOVERY_DEADLINE_DAYS: int = int(os.getenv("LEGAL_DISCOVERY_DEADLINE_DAYS", "30"))
     # S5.1 (D-062): the conversation assistant — spoken questions on a matter, answered and read aloud. Off by default.
     LEGAL_CONVERSATION: bool = os.getenv("LEGAL_CONVERSATION", "0").lower() in ("1", "true", "yes")
     LEGAL_CONVERSATION_MAX_SECONDS: int = int(os.getenv("LEGAL_CONVERSATION_MAX_SECONDS", "60"))

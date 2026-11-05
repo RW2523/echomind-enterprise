@@ -150,7 +150,7 @@ function sourceAnswer(v: unknown): SourceAnswerProps {
   return p;
 }
 
-const ITEM_KINDS: readonly PriorityItem['kind'][] = ['discrepancy', 'new_documents', 'review', 'obligation', 'scan'];
+const ITEM_KINDS: readonly PriorityItem['kind'][] = ['discrepancy', 'new_documents', 'review', 'obligation', 'scan', 'council'];
 
 function priorityList(v: unknown): PriorityListProps {
   const o = obj(v, 'props');

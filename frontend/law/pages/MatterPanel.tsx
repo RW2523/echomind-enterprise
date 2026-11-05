@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Users2 } from 'lucide-react';
+import { RefreshCw, Users2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { panelPath, useDocuments, usePanelReviews } from '../api/queries';
-import type { PanelReview } from '../api/types';
+import type { CouncilQuestion, PanelReview } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { EmptyState, ErrorNote, Field, Skeleton, StatusPill, type Tone } from '../ui/primitives';
@@ -46,6 +46,11 @@ export default function MatterPanel() {
       <Toolbar crumb={matter.number} title="Review panel" />
       <div className="lw-content">
         <p className="lw-meta" style={{ margin: 0 }}>Several perspectives on one question, chosen for it — for a challenge, lead counsel, an opposing reading and an evidence investigator; otherwise a deal lawyer, risk and compliance, a litigator and a specialist — each answering alone from this matter's documents and citing them. The first answer is then challenged, and a chair gives the conclusion and where they differ. If the answer depends on facts the documents do not give, the panel stops and asks you. These are drafted by the same AI model: they are not independent experts, and a partner reviews them before anyone relies on them.</p>
+        {q.data?.discovery && (
+          <SuggestedQuestions questions={q.data.questions ?? []} more={q.data.more_questions ?? 0} canAct={q.data.can.ask} matterId={matter.id}
+            onConvened={(id) => navigate(`/m/${encodeURIComponent(matter.number)}/panel/${encodeURIComponent(id)}`)} area={area} depth={depth}
+            refresh={() => qc.invalidateQueries({ queryKey: ['matter', matter.id, 'panel'] })} />
+        )}
         {q.data?.can.ask && (
           <form className="lw-paper lw-sheet" aria-label="Ask the panel" onSubmit={submit} style={{ display: 'grid', gap: 10 }}>
             <Field label="Question">{(id) => <textarea id={id} className="lw-input" rows={3} maxLength={2000} value={question} onChange={(e) => setQuestion(e.target.value)} />}</Field>
@@ -94,5 +99,72 @@ export default function MatterPanel() {
               )}
       </div>
     </>
+  );
+}
+
+/** Questions EchoMind found in the matter's own records (council/discovery.py): at most three, each with its sources. A
+ *  person convenes one (a Council run asked in its words) or dismisses it with a reason; nothing runs by itself. */
+function SuggestedQuestions({ questions, more, canAct, matterId, onConvened, area, depth, refresh }: {
+  questions: CouncilQuestion[]; more: number; canAct: boolean; matterId: string; onConvened: (reviewId: string) => void;
+  area: string; depth: 'focused' | 'deep'; refresh: () => Promise<unknown>;
+}) {
+  const [dismissing, setDismissing] = useState<string | null>(null);
+  const [why, setWhy] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const base = `/api/legal/matters/${encodeURIComponent(matterId)}/council`;
+  const act = async (fn: () => Promise<void>) => {
+    setBusy(true); setError('');
+    try { await fn(); } catch (e) { setError(e instanceof ApiError ? e.message : 'That did not work. Try again.'); } finally { setBusy(false); }
+  };
+  const convene = (id: string) => act(async () => {
+    const r = await api.post<{ review: { id: string } }>(`${base}/questions/${encodeURIComponent(id)}/convene`, { specialist: area, depth });
+    await refresh(); onConvened(r.review.id);
+  });
+  const dismiss = (id: string) => act(async () => {
+    await api.post(`${base}/questions/${encodeURIComponent(id)}/dismiss`, { reason: why.trim() });
+    setDismissing(null); setWhy(''); await refresh();
+  });
+  const look = () => act(async () => { await api.post(`${base}/discover`, {}); await refresh(); });
+  return (
+    <section className="lw-paper lw-sheet" aria-label="Suggested questions">
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' }}>
+        <h2 className="lw-h2" style={{ margin: 0 }}>Questions worth putting to the Council</h2>
+        {canAct && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" disabled={busy} onClick={look}><RefreshCw />Look again</button>}
+      </div>
+      <p className="lw-meta" style={{ margin: '2px 0 8px' }}>Found by rules in this matter's records: unresolved inconsistencies, amended clauses, deadlines no one has confirmed. Nothing runs until you convene one, with the specialist area and depth chosen below.</p>
+      {questions.length === 0 ? <p className="lw-meta" style={{ margin: 0 }}>Nothing found in the records you can see.</p> : (
+        <ul className="lw-check-lines" aria-label="Questions found">
+          {questions.map((x) => (
+            <li key={x.id} aria-label={x.title}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <b>{x.title}</b>
+                <StatusPill tone={x.priority === 'high' ? 'attention' : 'neutral'}>{x.priority === 'high' ? 'High priority' : 'Medium priority'}</StatusPill>
+              </div>
+              <span className="lw-meta">{x.reason}</span>
+              {x.sources.length > 0 && (
+                <div className="lw-meta">From: {x.sources.map((s, i) => (
+                  <React.Fragment key={i}>{i > 0 && '; '}{s.href ? <Link className="lw-linklike" to={s.href}>{s.document_title ?? 'a document'}</Link> : s.document_title}</React.Fragment>))}</div>
+              )}
+              {canAct && (dismissing === x.id ? (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap', marginTop: 6 }}>
+                  <Field label="Not worth asking, because" hint="Kept with your name; it is not suggested again until its sources change.">
+                    {(id) => <input id={id} className="lw-input" maxLength={500} value={why} onChange={(e) => setWhy(e.target.value)} />}</Field>
+                  <button type="button" className="lw-btn" disabled={busy || !why.trim()} onClick={() => dismiss(x.id)}>Dismiss</button>
+                  <button type="button" className="lw-btn lw-btn-ghost" onClick={() => { setDismissing(null); setWhy(''); }}>Cancel</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                  <button type="button" className="lw-btn lw-btn-sm lw-btn-primary" disabled={busy} onClick={() => convene(x.id)}><Users2 />Convene the Council</button>
+                  <button type="button" className="lw-btn lw-btn-sm" disabled={busy} onClick={() => setDismissing(x.id)}>Dismiss…</button>
+                </div>
+              ))}
+            </li>
+          ))}
+        </ul>
+      )}
+      {more > 0 && <p className="lw-meta" style={{ margin: '6px 0 0' }}>{`${more} more, shown when one of these is convened or dismissed.`}</p>}
+      {error && <ErrorNote>{error}</ErrorNote>}
+    </section>
   );
 }

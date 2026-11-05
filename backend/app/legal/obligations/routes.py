@@ -178,6 +178,9 @@ def _store(p: dict, matter_id: str, document_id: str, vid: str, found: list[dict
                           json.dumps(o["evidence"], ensure_ascii=False), o.get("source", "rules"), None, None, 1, p["sub"], now, now))
             _event(conn, oid, "proposed", p["sub"])
             added += 1
+        if added:
+            from ..council import discovery             # new deadlines may be questions for the Council (rules only)
+            discovery.enqueue(conn, p["org_id"], matter_id, p["sub"])
         conn.commit()
     return {"obligations": _visible_rows(p, matter_id, "AND document_id=?", (document_id,)), "added": added}, added
 
@@ -311,6 +314,8 @@ def change_obligation(p: dict, matter_id: str, obligation_id: str, inp: PatchIn)
         if n != 1:
             raise HTTPException(status_code=409, detail="This obligation changed since you opened it. Reload and try again.")
         _event(conn, obligation_id, inp.action, p["sub"], changes, reason)
+        from ..council import discovery                 # a confirmed deadline is no longer a question (rules only)
+        discovery.enqueue(conn, p["org_id"], matter_id, p["sub"])
         conn.commit()
     note(details={"action": inp.action, "fields": sorted(k for k in changes if k != "status"), "version": cur["version"] + 1})
     return {"obligation": _one(p, matter_id, obligation_id)}

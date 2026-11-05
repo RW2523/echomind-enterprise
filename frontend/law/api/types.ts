@@ -575,6 +575,11 @@ export interface PanelReview {
   facts: { question: string; answer: string }[]; created_by: string | null; created_at: string; finished_at: string | null; mine: boolean;
   version?: number | null; approval?: string | null; documents?: { id: string; title: string | null }[];
 }
+/** A question worth putting to the Council, found by rules in the matter's records (council/discovery.py, 2026-11-05). */
+export interface CouncilQuestion {
+  id: string; title: string; reason: string; priority: 'high' | 'medium'; detector: string; status: 'suggested' | 'convened' | 'dismissed' | 'stale';
+  created_at: string; sources: { document_title: string | null; href: string | null }[];
+}
 export interface PanelView {
   review: PanelReview; artifact: ArtifactVersion<PanelContent> | null;
   versions: { id: string; version: number; status: string; created_at: string }[]; can: { approve: boolean; facts: boolean; author: boolean };

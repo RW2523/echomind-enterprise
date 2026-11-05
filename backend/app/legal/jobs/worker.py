@@ -27,9 +27,11 @@ _stop = threading.Event()
 def _handlers():
     from ..diligence import run as diligence
     from ..documents import ingest
+    from ..council import discovery
     from ..panel import run as panel
     from ..summaries import run as summaries
-    return {"document.index": ingest.run, "diligence.run": diligence.run, "summary.run": summaries.run, "panel.run": panel.run}
+    return {"document.index": ingest.run, "diligence.run": diligence.run, "summary.run": summaries.run, "panel.run": panel.run,
+            "discovery.run": discovery.run}
 
 
 def claim() -> Optional[dict]:
@@ -56,9 +58,18 @@ def run_one(job: dict) -> None:
     try:
         error = asyncio.run(handler(job))
         _finish(job["id"], "failed" if error else "done", error)
+        if not error and job["kind"] == "document.index" and job.get("matter_id"):
+            _discover(job)                          # a document was read: look for questions worth asking (rules only)
     except Exception as e:
         # The handler already recorded its own outcome; the job keeps only the error class.
         _finish(job["id"], "failed", type(e).__name__)
+
+
+def _discover(job: dict) -> None:
+    from ..council import discovery
+    with get_conn() as conn:
+        if discovery.enqueue(conn, job["org_id"], job["matter_id"], job.get("requested_by") or "system"):
+            conn.commit()
 
 
 def run_pending(limit: Optional[int] = None) -> int:
@@ -98,6 +109,12 @@ def _daily() -> None:
     from ..connectors import sync as connectors
     for cid in connectors.due():                  # S1.11: scheduled connector syncs
         connectors.sync(cid)
+    from ..council import discovery               # deadlines come nearer each day (2026-11-05)
+    if discovery.enabled():
+        with get_conn() as conn:
+            for org_id, mid in conn.execute("SELECT org_id, id FROM matters WHERE status = 'open'").fetchall():
+                discovery.enqueue(conn, org_id, mid, "system")
+            conn.commit()
 
 
 def _loop() -> None:

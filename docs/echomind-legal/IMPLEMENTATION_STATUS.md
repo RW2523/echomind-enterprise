@@ -44,7 +44,7 @@ the firm's pages are in the account menu. Screens: [`screens/`](screens/).
 | LEGAL-015 | Backup and restore | **Tested (Law)** | `app/legal/backup`, `test_law_dr.py`; the chat's tables are in the same database and purge |
 | LEGAL-016 | Security / prompt-injection suite | **Tested (Law)** + chat cases | `test_law_injection.py`; chat: injected notes withheld from the model, no extra words, no other matter; live: `INJECTION-CANARY` never shown |
 | LEGAL-017 | Offline acceptance | Backend tests run with `--network none`; live UI made **no** request to a non-local host; enforcement **Blocked (owner, root)** | `sudo scripts/law/egress_lock.sh` (D-071) |
-| LEGAL-018 | Advanced agents (Council, GraphRAG, MCP) | Council iteration 1 (manual Council on the review panel, off: `LEGAL_PANEL`): **Tested**; discovery, actions, autonomy: In progress / Not started; GraphRAG, MCP: Not started | section "Counsel Intelligence: the Council" |
+| LEGAL-018 | Advanced agents (Council, GraphRAG, MCP) | Council iteration 1 (manual Council) and 2 (discovery) on the review panel (off: `LEGAL_PANEL`): **Tested**; actions, autonomy: Not started; GraphRAG, MCP: Not started | section "Counsel Intelligence: the Council" |
 | — | Purge covers the chat | **Tested** | `test_purging_a_document_removes_what_the_chat_kept_of_it`; purge verification counts the chat's tables |
 | — | Conflict finder recognises delivery dates | **Tested** | `compare/facts.py` anchor `delivery`; `test_law_compare.py` green |
 | — | Content-Security-Policy | **Tested** (config) | `frontend/nginx.law.conf`: `default-src 'self'` …, validated with `nginx -t`; the built bundle references no CDN |
@@ -302,6 +302,24 @@ the default four perspectives now make 6 model calls (4 answers, 1 challenge, th
 8. Opinions and challenges are stored in the review's artifact (versioned, visible only to those who may read it, approved
 through the review route) rather than a separate table. Not yet measured with the real model: a live run waits until the shared
 GPU is free of the RAG gate. Backend suite **1680 passed**, 4 skipped; frontend **259 passed**; `tsc` main and strict clean.
+
+**Iteration 2, Council Discovery.** Existing code touched: `jobs/worker.py`, `counsel/discrepancies.py`, `obligations/routes.py`,
+`panel/routes.py`, `counsel/briefing.py`, `counsel/schemas.py`, the panel page; new `council/discovery.py`. Migration 0041 adds
+`legal_council_questions` and `question_id` on `legal_panel_reviews`. Settings: `LEGAL_COUNCIL_DISCOVERY` (on; only with the
+panel) and `LEGAL_DISCOVERY_DEADLINE_DAYS` (30).
+
+| Built | How | Status | Evidence |
+|---|---|---|---|
+| Questions from the records, by rule | Three detectors, no model: an unresolved potential inconsistency ("Are “15 May 2026” in Services Agreement and “20 May 2026” in Amendment No. 1 genuinely inconsistent?"), a sentence that amends another agreement's clause ("How does Amendment No. 1 change clause 4.2 of the Services Agreement?"), a deadline read from a clause, not confirmed, within the window ("What must be ready before … under clause 4.2 of …?"); each keeps its sources (document, version, characters) and opens at them | **Tested** | `test_questions_come_from_the_records_by_rule_and_the_model_is_never_called` |
+| Suggested once; dismissals hold | Fingerprint = detector + exact sources; a dismissal needs a reason and holds until the sources change (a moved deadline is a new question); a finding resolved or confirmed makes its question stale | **Tested** | `test_a_question_is_suggested_once_and_a_dismissal_holds_until_its_sources_change`, `test_a_question_whose_finding_is_gone_becomes_stale` |
+| Who sees a question | Only someone who may read every document it quotes (document ACLs too); at most three, highest score first (10 × severity + deadline urgency, fixed in the code) | **Tested** | `test_only_people_who_may_read_every_source_see_a_question` |
+| Convening | A person with `ai.draft` convenes: a Council run asked in the question's words, linked both ways, roles by the same rules; the audit keeps lengths and kinds, never the words | **Tested** | `test_convening_puts_the_question_to_the_council_in_its_own_words` |
+| When it runs | A `discovery.run` job after each document is read, after the register or the obligations change, daily for open matters, and on "Look again"; one queued run per matter covers them all | **Tested** | `test_discovery_runs_after_a_document_is_read` |
+| Where it shows | The panel page ("Questions worth putting to the Council": priority, reason, sources, Convene / Dismiss with a reason) and the briefing ("3 questions worth putting to the Council") | **Tested** | `test_the_briefing_offers_the_questions`; `panel.test.tsx` (axe clean) |
+| Off switch | Off with the panel or `LEGAL_COUNCIL_DISCOVERY`: no listing, 404 on the routes, nothing queued | **Tested** | `test_discovery_is_off_with_the_panel_or_its_own_switch` |
+
+Not yet: model-checked conflict candidates in the background (iteration 4, with budgets and yielding to live work), and the
+chronology detectors (single-source and hedged dates). Backend suite **1688 passed**, 4 skipped; frontend **260 passed**.
 
 ## The whole RAG system evaluated again, and what it found fixed (2026-11-03)
 

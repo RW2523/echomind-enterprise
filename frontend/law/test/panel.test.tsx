@@ -133,6 +133,43 @@ describe('Review panel (S4.5)', () => {
     expect(screen.queryByRole('group', { name: 'Review this panel review' })).toBeNull();
   });
 
+  it('questions found in the records can be convened with the chosen area and depth, or dismissed with a reason', async () => {
+    const question = { id: 'q1', title: 'How does Amendment No. 1 change clause 4.2 of the Services Agreement?', reason: 'Amendment No. 1 says clause 4.2 is deleted and replaced.',
+      priority: 'high', detector: 'amended', status: 'suggested', created_at: '2026-11-05T10:00:00.000Z',
+      sources: [{ document_title: 'Amendment No. 1', href: '/m/M-101/documents/d2/read?v=v2&at=10-90' }] };
+    const calls = mockApi({
+      'GET /api/auth/me': () => [200, withPanel(['attorney'])],
+      'GET /api/legal/matters': () => [200, { matters: [matter('M-101', 'MSA renewal')] }],
+      [`GET ${M}/panel`]: () => [200, { reviews: [], specialisms: { commercial: 'commercial contracts', employment: 'employment law' }, can: { ask: true, approve: false },
+        discovery: true, questions: [question, { ...question, id: 'q2', title: 'What must be ready before 2026-11-15 under clause 4.2?', priority: 'medium', detector: 'deadline' }], more_questions: 1 }],
+      [`GET ${M}/documents`]: () => [200, { documents: [] }],
+      [`POST ${M}/council/questions/q1/convene`]: () => [200, { review: { id: 'r1', status: 'queued' }, question: { id: 'q1', status: 'convened' } }],
+      [`POST ${M}/council/questions/q2/dismiss`]: () => [200, { question: { id: 'q2', status: 'dismissed' } }],
+      [`POST ${M}/council/discover`]: () => [200, { queued: true }],
+      [`GET ${M}/panel/r1`]: () => [200, view({ review: { ...view().review, status: 'running' }, artifact: null })],
+    });
+    const { container } = renderLaw('/m/M-101/panel');
+    const found = await screen.findByRole('region', { name: 'Suggested questions' });
+    const first = within(found).getByRole('listitem', { name: question.title });
+    expect(first.textContent).toContain('High priority');
+    expect(within(first).getByRole('link', { name: 'Amendment No. 1' }).getAttribute('href')).toBe('/m/M-101/documents/d2/read?v=v2&at=10-90');
+    expect(found.textContent).toContain('1 more, shown when one of these is convened or dismissed.');
+    expect((await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);
+    const second = within(found).getByRole('listitem', { name: 'What must be ready before 2026-11-15 under clause 4.2?' });
+    fireEvent.click(within(second).getByRole('button', { name: 'Dismiss…' }));
+    const go = within(second).getByRole('button', { name: 'Dismiss' }) as HTMLButtonElement;
+    expect(go.disabled).toBe(true);                                                    // a reason first
+    fireEvent.change(within(second).getByLabelText('Not worth asking, because'), { target: { value: 'Already in the delivery plan.' } });
+    fireEvent.click(go);
+    await waitFor(() => expect(calls.find((c) => c.path === `${M}/council/questions/q2/dismiss`)?.body).toEqual({ reason: 'Already in the delivery plan.' }));
+    fireEvent.click(within(found).getByRole('button', { name: 'Look again' }));
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST' && c.path === `${M}/council/discover`)).toBe(true));
+    fireEvent.change(screen.getByLabelText('Depth'), { target: { value: 'deep' } });
+    fireEvent.click(within(first).getByRole('button', { name: 'Convene the Council' }));
+    await waitFor(() => expect(calls.find((c) => c.path === `${M}/council/questions/q1/convene`)?.body).toEqual({ specialist: 'commercial', depth: 'deep' }));
+    expect(await screen.findByRole('status')).toBeTruthy();                            // the review page, working
+  });
+
   it('asking the panel sends the question and the specialist area, and opens the review', async () => {
     const calls = mockApi({
       'GET /api/auth/me': () => [200, withPanel(['attorney'])],

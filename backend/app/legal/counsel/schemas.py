@@ -150,7 +150,7 @@ class SourceAnswerProps(Strict):
 
 class PriorityItem(Strict):
     id: Ident
-    kind: Literal["discrepancy", "new_documents", "review", "obligation", "scan"]
+    kind: Literal["discrepancy", "new_documents", "review", "obligation", "scan", "council"]
     title: text(160)
     detail: text(400) = ""
     action: Action

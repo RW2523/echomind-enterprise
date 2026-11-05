@@ -142,6 +142,8 @@ def upsert(org_id: str, matter_id: str, checked: list[dict], by: str) -> list[st
                          (did, org_id, matter_id, fp, c["kind"], c["verdict"], method, "potential", float(c.get("score") or 0),
                           c["a"]["document_id"], c["b"]["document_id"], c["a"]["version_id"], c["b"]["version_id"], detail, by, now, now))
             ids.append(did)
+        from ..council import discovery                 # new findings may be questions for the Council (rules only)
+        discovery.enqueue(conn, org_id, matter_id, by)
         conn.commit()
     return ids
 
@@ -276,6 +278,8 @@ def review(principal: dict, matter_id: str, discrepancy_id: str, to_status: str,
         conn.execute("INSERT INTO legal_discrepancy_reviews (id, discrepancy_id, matter_id, from_status, to_status, note, by_user, at) "
                      "VALUES (?,?,?,?,?,?,?,?)", (store.new_id("dsr"), discrepancy_id, matter_id, row["status"], to_status, note,
                                                   principal["sub"], now))
+        from ..council import discovery                 # a resolved inconsistency is no longer a question (rules only)
+        discovery.enqueue(conn, principal["org_id"], matter_id, principal["sub"])
         conn.commit()
     return {**get(principal, matter_id, discrepancy_id), "from_status": row["status"]}
 

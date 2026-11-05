@@ -60,6 +60,30 @@ class AskIn(BaseModel):
         return v
 
 
+class ConveneIn(BaseModel):
+    specialist: str = Field(default="commercial", min_length=1, max_length=40)
+    depth: Literal["focused", "deep"] = "focused"
+
+    @field_validator("specialist")
+    @classmethod
+    def _area(cls, v: str) -> str:
+        if v not in SPECIALISMS:
+            raise ValueError(f"Choose one of: {', '.join(SPECIALISMS)}.")
+        return v
+
+
+class DismissIn(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+    @field_validator("reason")
+    @classmethod
+    def _said(cls, v: str) -> str:
+        v = " ".join(v.split())
+        if not v:
+            raise ValueError("Say why this question is not worth asking.")
+        return v
+
+
 class Fact(BaseModel):
     question: str = Field(min_length=1, max_length=300)
     answer: str = Field(min_length=1, max_length=1000)
@@ -146,8 +170,80 @@ def listing(matter_id: str, request: Request):
             if a and not _visible(a, p["sub"]):
                 continue
             out.append({**_review(conn, r, p), "version": a["version"] if a else None, "approval": a["status"] if a else None})
+    from ..council import discovery
+    questions, more = discovery.listed(p, matter_id) if discovery.enabled() else ([], 0)
+    number = _number(matter_id)
     return {"reviews": out, "specialisms": SPECIALISMS, "roles": [{"role": r, "label": label} for r, (label, _) in LIBRARY.items()],
+            "discovery": discovery.enabled(), "questions": [discovery.shown(q, number) for q in questions], "more_questions": more,
             "can": {"ask": policy.authorize(p, "ai.draft", matter_id).allowed, "approve": is_partner(p, matter_id)}}
+
+
+def _number(matter_id: str) -> str:
+    with get_conn() as conn:
+        r = conn.execute("SELECT number FROM matters WHERE id=?", (matter_id,)).fetchone()
+    return r[0] if r else "?"
+
+
+def _discovery_on() -> None:
+    from ..council import discovery
+    if not discovery.enabled():
+        raise HTTPException(status_code=404, detail="Not Found")
+
+
+@router.post("/matters/{matter_id}/council/questions/{question_id}/convene")
+@audited("council.convene", object_type="council_question", object_param="question_id")
+def convene(matter_id: str, question_id: str, inp: ConveneIn, request: Request):
+    """Put a suggested question to the Council: a review asked with the question's words, linked to it."""
+    from ..council import discovery
+    _discovery_on()
+    p = principal_of(request)
+    require(p, "ai.draft", matter_id)
+    q = discovery.get(p, matter_id, question_id)
+    if not q:
+        raise HTTPException(status_code=404, detail="Not Found")
+    if q["status"] != "suggested":
+        raise HTTPException(status_code=409, detail="This question was already convened, dismissed or replaced.")
+    out = start(p, matter_id, AskIn(question=q["title"], specialist=inp.specialist, depth=inp.depth))
+    rid = out["review"]["id"]
+    with get_conn() as conn:
+        conn.execute("UPDATE legal_panel_reviews SET question_id=? WHERE id=?", (question_id, rid))
+        conn.commit()
+    if not discovery.decide(question_id, "convened", p["sub"], review_id=rid):
+        raise HTTPException(status_code=409, detail="This question was already convened, dismissed or replaced.")
+    note(matter_id=matter_id, details={"detector": q["detector"], "depth": inp.depth})
+    return {"review": out["review"], "question": {"id": question_id, "status": "convened"}}
+
+
+@router.post("/matters/{matter_id}/council/questions/{question_id}/dismiss")
+@audited("council.dismiss", object_type="council_question", object_param="question_id")
+def dismiss(matter_id: str, question_id: str, inp: DismissIn, request: Request):
+    """Not worth asking: kept with the person's reason, and not suggested again until its sources change."""
+    from ..council import discovery
+    _discovery_on()
+    p = principal_of(request)
+    require(p, "ai.draft", matter_id)
+    q = discovery.get(p, matter_id, question_id)
+    if not q:
+        raise HTTPException(status_code=404, detail="Not Found")
+    if not discovery.decide(question_id, "dismissed", p["sub"], reason=inp.reason):
+        raise HTTPException(status_code=409, detail="This question was already convened, dismissed or replaced.")
+    note(matter_id=matter_id, details={"detector": q["detector"]})
+    return {"question": {"id": question_id, "status": "dismissed"}}
+
+
+@router.post("/matters/{matter_id}/council/discover")
+@audited("council.discover", object_type="matter", object_param="matter_id")
+def discover(matter_id: str, request: Request):
+    """Look for questions now (rules only; it also runs after each document is read, and daily)."""
+    from ..council import discovery
+    _discovery_on()
+    p = principal_of(request)
+    require(p, "ai.draft", matter_id)
+    with get_conn() as conn:
+        queued = discovery.enqueue(conn, p["org_id"], matter_id, p["sub"])
+        conn.commit()
+    worker.wake()
+    return {"queued": queued}
 
 
 @router.get("/matters/{matter_id}/panel/{review_id}")

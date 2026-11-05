@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, PanelReview, PanelView, RegulatoryFirmUpdate, RegulatoryMatch, SummaryVersion, TimeEntry, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { CouncilQuestion, AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, PanelReview, PanelView, RegulatoryFirmUpdate, RegulatoryMatch, SummaryVersion, TimeEntry, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -272,7 +272,8 @@ export const useMatterRegulatory = (matterId: string) =>
 export const panelPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/panel`;
 export const usePanelReviews = (matterId: string) =>
   useQuery({ queryKey: ['matter', matterId, 'panel'] as const,
-    queryFn: () => api.get<{ reviews: PanelReview[]; specialisms: Record<string, string>; can: { ask: boolean; approve: boolean } }>(panelPath(matterId)),
+    queryFn: () => api.get<{ reviews: PanelReview[]; specialisms: Record<string, string>; can: { ask: boolean; approve: boolean };
+      discovery?: boolean; questions?: CouncilQuestion[]; more_questions?: number }>(panelPath(matterId)),
     refetchInterval: (q) => (q.state.data?.reviews.some((r) => r.status === 'queued' || r.status === 'running') ? 2000 : false) });
 export const usePanelReview = (matterId: string, reviewId: string) =>
   useQuery({ queryKey: ['matter', matterId, 'panel', reviewId] as const,

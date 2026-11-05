@@ -57,7 +57,7 @@ export interface CalculationProps {
 
 export interface PriorityItem {
   id: string;
-  kind: 'discrepancy' | 'new_documents' | 'review' | 'obligation' | 'scan';
+  kind: 'discrepancy' | 'new_documents' | 'review' | 'obligation' | 'scan' | 'council';
   title: string;
   detail: string;
   action: UiAction;
