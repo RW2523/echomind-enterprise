@@ -9,8 +9,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, Briefcase, ChevronDown, FilePen, KeyRound, Landmark, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
-  Moon, MoreHorizontal, Palette, PanelLeftClose, PanelLeftOpen, Search, ShieldCheck, Sun,
+  Activity, AudioLines, Bell, Briefcase, ChevronDown, FilePen, Files, KeyRound, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
+  Moon, MoreHorizontal, Palette, PanelLeftClose, PanelLeftOpen, Scale, Search, Settings, ShieldCheck, Sun,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useReviews } from '../api/queries';
@@ -26,7 +26,9 @@ import type { ConversationSummary } from './types';
 import { ChatMatterProvider, PanelProvider, useChatMatter, usePanel } from './context';
 import MatterPicker, { Layer, usePopover } from './MatterPicker';
 import SidePanel from './SidePanel';
+import BrandMark from './BrandMark';
 import './counsel.css';
+import './courthouse.css';
 
 const RAIL_KEY = 'echomind.counsel.rail';
 const ROLE_LABEL: Record<string, string> = {
@@ -66,7 +68,7 @@ function RecordingStatus() {
 }
 
 // ── Header: profile menu ───────────────────────────────────────────────────────
-function ProfileMenu() {
+function ProfileMenu({ variant = 'header' }: { variant?: 'header' | 'rail' }) {
   const me = useSession();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -80,12 +82,13 @@ function ProfileMenu() {
   const go = (to: string) => { setOpen(false); navigate(to); };
   return (
     <>
-      <button ref={button} type="button" className="qc-me" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}
-        aria-label={`Account and settings for ${me.user.username}`}>
+      <button ref={button} type="button" className={variant === 'rail' ? 'qc-me qc-rail-me' : 'qc-me'} aria-haspopup="menu" aria-expanded={open}
+        onClick={() => setOpen((o) => !o)} aria-label={`Account and settings for ${me.user.username}`}>
         <span className="qc-avatar" aria-hidden>{initials(me.user.username)}</span>
-        <span className="qc-me-text qc-hide-medium" aria-hidden>
+        <span className={`qc-me-text ${variant === 'rail' ? 'qc-hide-collapsed' : 'qc-hide-medium'}`} aria-hidden>
           <b>{me.user.username}</b><small>{ROLE_LABEL[me.user.roles[0] ?? me.user.role] ?? 'Member'}</small>
         </span>
+        {variant === 'rail' && <Settings className="qc-rail-me-gear qc-hide-collapsed" aria-hidden />}
       </button>
       {open && (<Layer>
         <div ref={pop} className="qc-pop" role="menu" aria-label="Account and settings" style={style}>
@@ -221,6 +224,42 @@ function DraftsLink() {
   );
 }
 
+/** The current matter's own pages, reached from the rail (2026-11-05): its documents, its Council (where the panel is on) and
+ *  its meetings, which say "Live" while EchoMind is recording here. Without a matter they lead to the matters list. */
+function MatterRailLinks() {
+  const me = useSession();
+  const routeMatter = useCurrentMatter();
+  const { matter: chatMatter } = useChatMatter();
+  const capturing = useCapturing();
+  const m = routeMatter ?? chatMatter;
+  const to = (tab: string) => (m ? `/m/${encodeURIComponent(m.number)}/${tab}` : '/matters');
+  const of = m ? ` of ${m.number}` : '';
+  return (
+    <>
+      <RailLink to={to('documents')} icon={<Files aria-hidden />} title={`Documents${of}`} label={m ? `Documents of ${m.number}` : 'Documents: choose a matter'}>Documents</RailLink>
+      {me.features?.panel && (
+        <RailLink to={to('panel')} icon={<Scale aria-hidden />} title={`Council${of}`} label={m ? `Council of ${m.number}` : 'Council: choose a matter'}>Council</RailLink>
+      )}
+      <RailLink to={to('meetings')} icon={<AudioLines aria-hidden />} title={`Transcription${of}`}
+        label={capturing ? `Transcription${of}, recording now` : m ? `Transcription of ${m.number}` : 'Transcription: choose a matter'}>
+        Transcription{capturing && <span className="qc-rail-live" aria-hidden="true">Live</span>}
+      </RailLink>
+    </>
+  );
+}
+
+/** What waits for the person's decision (the reviews queue), as a bell beside search; it opens Drafts. */
+function WaitingBell() {
+  const navigate = useNavigate();
+  const n = useReviews().data?.count ?? 0;
+  return (
+    <button type="button" className="qc-icon-btn qc-bell" onClick={() => navigate('/drafts')}
+      aria-label={n ? `${n} item${n === 1 ? '' : 's'} waiting for your decision` : 'Nothing waiting for your decision'} title="Waiting for your decision">
+      <Bell aria-hidden />{n > 0 && <span className="qc-bell-count" aria-hidden="true">{n > 9 ? '9+' : n}</span>}
+    </button>
+  );
+}
+
 /** The command palette (Ctrl/⌘ K) that the Law pages already provide: matters, pages and actions. */
 function SearchButton() {
   const open = useOpenPalette();
@@ -311,33 +350,39 @@ function ShellBody() {
     if (before[1] !== now[1] || (before[1] === 'chat' && before[2] && before[2] !== now[2])) close();
   }, [location.pathname, close]);
   return (
-    <div className="qc-shell" data-rail={collapsed ? 'collapsed' : 'open'} data-drawer={drawer ? 'open' : 'closed'}>
+    <div className="qc-shell" data-rail={collapsed ? 'collapsed' : 'open'} data-drawer={drawer ? 'open' : 'closed'}
+      data-route={location.pathname.startsWith('/chat') ? 'chat' : 'page'}>
       <header className="qc-header">
         <button ref={menuButton} type="button" className="qc-icon-btn qc-only-narrow" aria-label={drawer ? 'Close menu' : 'Open menu'} aria-expanded={drawer}
           onClick={() => setDrawer((d) => !d)}><Menu aria-hidden /></button>
         <button type="button" className="qc-icon-btn qc-hide-narrow" aria-label={collapsed ? 'Expand the sidebar' : 'Collapse the sidebar'} onClick={toggleRail}>
           {collapsed ? <PanelLeftOpen aria-hidden /> : <PanelLeftClose aria-hidden />}
         </button>
-        <MatterPicker />
-        <SearchButton />
         <span className="qc-header-spacer" />
+        <SearchButton />
         <PrivacyStatus />
         <RecordingStatus />
-        <ProfileMenu />
+        <WaitingBell />
+        {narrow && <ProfileMenu />}
       </header>
       <aside ref={rail} className="qc-rail" aria-label="Sidebar" inert={narrow && !drawer}>
-        <NavLink to="/chat" className="qc-brand" aria-label="EchoMind Legal, new chat">
-          <span className="qc-brand-mark" aria-hidden><Landmark /></span>
-          <span className="qc-brand-text qc-hide-collapsed" aria-hidden><b>EchoMind<em>Legal</em></b><small>Private AI for legal work</small></span>
+        <NavLink to="/chat" className="qc-brand" aria-label="EchoMind Legal by AJACE, new chat">
+          <span className="qc-brand-mark" aria-hidden><BrandMark size={30} /></span>
+          <span className="qc-brand-text qc-hide-collapsed" aria-hidden><small>AJACE</small><b>EchoMind Legal</b></span>
         </NavLink>
         <nav aria-label="Workspace">
           <button type="button" className="qc-new-chat" title="New chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-rail-text">New chat</span></button>
           <RailLink to="/chat" icon={<MessageSquare aria-hidden />} title="Chat">Chat</RailLink>
-          <RailLink to="/matters" icon={<Briefcase aria-hidden />} title="Matters">Matters</RailLink>
+          <RailLink to="/matters" icon={<Briefcase aria-hidden />} title="Matters" end>Matters</RailLink>
+          <MatterRailLinks />
           <DraftsLink />
           <RailLink to="/activity" icon={<Activity aria-hidden />} title="Activity">Activity</RailLink>
         </nav>
         <History />
+        <div className="qc-rail-foot">
+          <MatterPicker variant="rail" />
+          {!narrow && <ProfileMenu variant="rail" />}
+        </div>
       </aside>
       {drawer && <button type="button" className="qc-scrim qc-only-narrow" aria-label="Close menu" onClick={() => setDrawer(false)} />}
       <div className="qc-body">
@@ -376,7 +421,7 @@ const PAGE: Record<string, string> = {
 };
 const TAB: Record<string, string> = {
   overview: 'Overview', documents: 'Documents', research: 'Research', conversation: 'Conversation', compare: 'Compare', drafting: 'Drafting',
-  obligations: 'Obligations', diligence: 'Due diligence', summaries: 'Summaries', panel: 'Review panel', regulatory: 'Regulatory',
+  obligations: 'Obligations', diligence: 'Due diligence', summaries: 'Summaries', panel: 'Council', regulatory: 'Regulatory',
   meetings: 'Meetings', members: 'Members', exports: 'Exports', activity: 'Activity',
 };
 

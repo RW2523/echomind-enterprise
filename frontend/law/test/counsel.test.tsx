@@ -65,11 +65,11 @@ beforeEach(() => { localStorage.clear(); _resetCaptureForTests(); });
 afterEach(() => { cleanup(); localStorage.clear(); });
 
 describe('The chat home', () => {
-  it('quiet: one question, the matter, four plain starters, the matter\'s pages one click away, four destinations, private and not recording', async () => {
+  it('a greeting, one question, the matter, four plain starters, the matter\'s pages one click away, the rail\'s destinations, private and not recording', async () => {
     localStorage.setItem('echomind.counsel.matter', 'id-M-101');
     world();
     const { container, router } = renderLaw('/');
-    expect(await screen.findByRole('heading', { name: 'How can I help?' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 1, name: /^Good (morning|afternoon|evening), Alice\.$/ })).toBeTruthy();
     expect(router.state.location.pathname).toBe('/chat');
     expect(await screen.findByText('M-101 · MSA renewal', { selector: '.qc-context b' })).toBeTruthy();
     const starters = within(screen.getByRole('list', { name: 'Suggestions' })).getAllByRole('button');
@@ -77,9 +77,10 @@ describe('The chat home', () => {
       'What needs my attention today?', 'Find conflicting dates or amounts', 'Build a chronology of events', 'Summarize this matter']);
     const pages = screen.getByRole('navigation', { name: 'This matter' });
     expect(within(pages).getAllByRole('link').map((a) => a.textContent)).toEqual(['Open M-101', 'Documents', 'Meetings', 'Drafting']);
-    expect(screen.queryByRole('navigation', { name: 'Current matter' })).toBeNull();       // the rail holds four destinations only
-    const rail = screen.getByRole('navigation', { name: 'Workspace' });
-    expect(within(rail).getAllByRole('link').map((a) => a.textContent)).toEqual(['Chat', 'Matters', 'Drafts', 'Activity']);
+    const rail = screen.getByRole('navigation', { name: 'Workspace' });            // the current matter's pages sit under Matters
+    expect(within(rail).getAllByRole('link').map((a) => a.textContent)).toEqual(['Chat', 'Matters', 'Documents', 'Transcription', 'Drafts', 'Activity']);
+    expect(within(rail).getByRole('link', { name: 'Documents of M-101' }).getAttribute('href')).toBe('/m/M-101/documents');
+    expect(screen.getByRole('button', { name: 'Current matter: M-101 MSA renewal. Switch matter' })).toBeTruthy();
     expect(within(rail).getByRole('button', { name: 'New chat' })).toBeTruthy();
     expect(screen.getByText('Not recording')).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Private/ })).toBeTruthy();
@@ -340,7 +341,7 @@ describe('History and the other destinations', () => {
     const recent = await screen.findByRole('navigation', { name: 'Recent conversations' });
     fireEvent.click(within(recent).getByRole('link', { name: /When must Apex complete delivery/ }));
     expect(await screen.findByText('Supported by 1 verified quote')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Matter: M-101 MSA renewal. Switch matter' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Current matter: M-101 MSA renewal. Switch matter' })).toBeTruthy();
   });
 
   it('Drafts lists what waits for you and your own drafts', async () => {

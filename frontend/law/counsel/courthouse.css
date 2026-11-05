@@ -1,0 +1,254 @@
+/* EchoMind Legal — "Courthouse" (owner's request 2026-11-05: the attached UI and photographs, "professional, not dull").
+ * Loaded after counsel.css. The two photographs are the firm's own assets, served from this server (/law/…): the courthouse
+ * in morning fog behind the light workspace, the gavel on the desk at the foot of the rail and behind the dark workspace.
+ * Surfaces sit on them as paper, slightly translucent, so the room shows at the edges and never behind text.
+ * Contrast (WCAG AA): ink #231912 on the stage (≥ #FBF7F0 after compositing) 15.9:1; muted #6B5A4A on it 5.6:1; rail text
+ * #D8CBB6 on #1A120C 11.0:1, rail muted #A8957E 6.2:1; dark ink #F1E8DA on the dark stage (≈ #1B1611) 14.6:1. */
+
+[data-edition="law"][data-shell="counsel"] {
+  --qc-rail: 272px; --qc-header: 64px; --qc-column: 860px; --qc-context: 344px;
+  --stage-fill: rgba(255, 252, 247, .9); --stage-line: rgba(208, 192, 168, .62);
+  --stage-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset, 0 28px 64px -40px rgba(58, 38, 18, .42), 0 2px 8px -4px rgba(58, 38, 18, .10);
+  --card-fill: #FFFDF9; --card-line: #EBE1D2; --card-head: #FAF5EC;
+  --chip-fill: rgba(255, 252, 247, .82);
+  --rail-grad: linear-gradient(180deg, #23180F 0%, #1A120C 46%, #130D09 100%);
+  --rail-ink: #F6EEDF; --rail-ink-2: #D8CBB6; --rail-ink-3: #A8957E; --rail-rule: rgba(226, 194, 127, .12);
+  --rail-fill: rgba(246, 238, 223, .06); --rail-active: rgba(246, 238, 223, .11); --rail-active-ink: #F6EEDF; --rail-icon-active: #E2C27F;
+  --room: url("/law/court-light.webp");
+}
+[data-edition="law"][data-shell="counsel"][data-theme="dark"] {
+  --stage-fill: rgba(27, 22, 17, .88); --stage-line: rgba(92, 74, 54, .5);
+  --stage-shadow: 0 1px 0 rgba(255, 240, 215, .04) inset, 0 30px 70px -40px rgba(0, 0, 0, .8);
+  --card-fill: #1E1813; --card-line: #33291F; --card-head: #231C16; --chip-fill: rgba(30, 24, 19, .8);
+  --rail-grad: linear-gradient(180deg, #17100B 0%, #110C08 50%, #0C0806 100%);
+  --room: url("/law/gavel-dark.webp");
+}
+
+/* ── The room: the photograph behind the workspace, faded into parchment where the work is ───────────────────────── */
+[data-shell="counsel"] .qc-shell { grid-template-rows: minmax(0, 1fr); background: var(--canvas-a); }
+[data-shell="counsel"] .qc-body, [data-shell="counsel"] .qc-header { isolation: isolate; }
+[data-shell="counsel"][data-palette="walnut"] .qc-shell::before {
+  content: ""; position: fixed; inset: 0 0 0 var(--qc-rail); z-index: 0; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(244, 238, 228, 0) 0%, rgba(244, 238, 228, .35) 30%, rgba(244, 238, 228, .9) 58%, #F4EEE4 78%),
+    linear-gradient(90deg, #F4EEE4 0%, rgba(244, 238, 228, .92) 34%, rgba(244, 238, 228, .45) 64%, rgba(244, 238, 228, .1) 100%),
+    var(--room) right top / auto 100% no-repeat;
+}
+[data-shell="counsel"][data-palette="walnut"][data-theme="dark"] .qc-shell::before {
+  background:
+    linear-gradient(180deg, rgba(15, 11, 8, .2) 0%, rgba(15, 11, 8, .55) 45%, rgba(15, 11, 8, .94) 85%, #0F0B08 100%),
+    linear-gradient(270deg, #0F0B08 0%, rgba(15, 11, 8, .82) 40%, rgba(15, 11, 8, .35) 75%, rgba(15, 11, 8, .2) 100%),
+    var(--room) left bottom / cover no-repeat;
+}
+[data-shell="counsel"] .qc-shell[data-rail="collapsed"]::before { inset-inline-start: 72px; }
+[data-shell="counsel"][data-palette="walnut"][data-theme="dark"] { --canvas-a: #0F0B08; }
+[data-shell="counsel"][data-palette="walnut"]:not([data-theme="dark"]) { --canvas-a: #F4EEE4; }
+
+/* ── Top bar: no band; search and the states float over the room ──────────────────────────────────────────────── */
+[data-shell="counsel"] .qc-shell { grid-template-columns: var(--qc-rail) minmax(0, 1fr); grid-template-rows: var(--qc-header) minmax(0, 1fr); }
+[data-shell="counsel"] .qc-shell[data-rail="collapsed"] { grid-template-columns: 72px minmax(0, 1fr); }
+[data-shell="counsel"] .qc-header { background: transparent; border-bottom: none; padding: 0 28px; gap: 8px; z-index: 3; }
+[data-shell="counsel"] .qc-search { flex: 0 1 380px; height: 40px; border-radius: 12px; background: var(--chip-fill); border-color: var(--stage-line);
+  box-shadow: 0 1px 2px rgba(58, 38, 18, .06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+[data-shell="counsel"] .qc-status { height: 34px; background: var(--chip-fill); border-color: var(--stage-line); backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); }
+[data-shell="counsel"] .qc-bell { position: relative; width: 40px; height: 40px; border-radius: 12px; background: var(--chip-fill);
+  border: 1px solid var(--stage-line); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+[data-shell="counsel"] .qc-bell-count { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+  border-radius: 999px; background: #A3352C; color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center;
+  box-shadow: 0 0 0 2px var(--canvas-a); }
+[data-shell="counsel"] .qc-body { position: relative; z-index: 1; }
+
+/* ── Rail: walnut, the gavel at its foot ──────────────────────────────────────────────────────────────────────── */
+[data-shell="counsel"] .qc-rail { background: var(--rail-grad); padding: 18px 14px 14px; gap: 2px; border-right: 1px solid rgba(0, 0, 0, .35); }
+[data-shell="counsel"][data-palette="walnut"] .qc-rail::after {
+  content: ""; position: absolute; inset: auto 0 0 0; height: 250px; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, #1A120C 0%, rgba(26, 18, 12, .82) 34%, rgba(20, 14, 9, .2) 100%),
+    url("/law/gavel-rail.webp") left bottom / 100% auto no-repeat;
+  opacity: .9;
+}
+[data-shell="counsel"][data-palette="walnut"][data-theme="dark"] .qc-rail::after { opacity: .7; }
+[data-shell="counsel"] .qc-rail { isolation: isolate; }
+[data-shell="counsel"] .qc-brand { gap: 12px; padding: 2px 6px 20px; }
+[data-shell="counsel"] .qc-brand-mark { width: 38px; height: 38px; border-radius: 10px; background: transparent; box-shadow: none; color: #E9D3A3; }
+[data-shell="counsel"] .qc-brand-mark svg { width: 34px; height: 34px; }
+[data-shell="counsel"] .qc-brand-text { gap: 1px; }
+[data-shell="counsel"] .qc-brand-text small { display: block; font-size: 10.5px; font-weight: 650; letter-spacing: .22em; color: #C9AE7A; }
+[data-shell="counsel"] .qc-brand-text b { font-family: var(--serif); font-size: 19px; font-weight: 600; letter-spacing: -.005em; color: var(--rail-ink); }
+[data-shell="counsel"] .qc-new-chat { height: 40px; border-radius: 11px; margin: 0 0 12px; border: 1px solid rgba(226, 194, 127, .3);
+  background: rgba(246, 238, 223, .04); color: var(--rail-ink); }
+[data-shell="counsel"] .qc-new-chat:hover { background: rgba(246, 238, 223, .09); border-color: rgba(226, 194, 127, .45); }
+[data-shell="counsel"] .qc-rail-link { height: 40px; padding: 0 12px; border-radius: 11px; font-size: 14.5px; color: var(--rail-ink-2); gap: 12px; }
+[data-shell="counsel"] .qc-rail-link svg { width: 18px; height: 18px; color: var(--rail-ink-3); }
+[data-shell="counsel"] .qc-rail-link:hover svg { color: var(--rail-ink-2); }
+[data-shell="counsel"] .qc-rail-link.active { background: var(--rail-active); color: var(--rail-active-ink); font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(246, 238, 223, .06); }
+[data-shell="counsel"] .qc-rail-link.active svg { color: var(--rail-icon-active); }
+[data-shell="counsel"] .qc-rail-live { margin-left: auto; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 650; letter-spacing: .02em;
+  color: #F6EEDF; background: rgba(180, 47, 47, .55); box-shadow: inset 0 0 0 1px rgba(242, 149, 138, .45); }
+[data-shell="counsel"] .qc-rail-count { background: rgba(226, 194, 127, .22); color: #F1DDB0; }
+[data-shell="counsel"] .qc-rail-label { padding: 22px 12px 6px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--rail-ink-3); }
+[data-shell="counsel"] .qc-history-search { margin: 0 2px 6px; }
+[data-shell="counsel"] .qc-history { flex: 1 1 auto; min-height: 60px; overflow-y: auto; padding-bottom: 12px;
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 40px), transparent); }
+[data-shell="counsel"] .qc-rail { overflow: hidden; }
+[data-shell="counsel"] .lw-demo-banner { max-width: 1304px; margin: 0 auto 14px; border-radius: 12px; font-size: 13px; padding: 8px 14px;
+  background: rgba(248, 239, 221, .88); border: 1px solid rgba(183, 121, 31, .28); color: #5A3E12; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+[data-shell="counsel"][data-theme="dark"] .lw-demo-banner { background: rgba(48, 36, 20, .85); color: #F1DDB0; border-color: rgba(233, 184, 103, .3); }
+[data-shell="counsel"] .qc-history-item { padding: 6px 12px; border-radius: 9px; }
+[data-shell="counsel"] .qc-rail-foot { margin-top: auto; display: grid; gap: 8px; padding-top: 12px; position: sticky; bottom: 0; }
+[data-shell="counsel"] .qc-rail-matter { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; padding: 10px 12px;
+  border-radius: 12px; border: 1px solid rgba(226, 194, 127, .2); background: rgba(14, 10, 7, .55); color: var(--rail-ink); text-align: left;
+  font: inherit; cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+[data-shell="counsel"] .qc-rail-matter:hover { border-color: rgba(226, 194, 127, .4); }
+[data-shell="counsel"] .qc-rail-matter > svg { width: 16px; height: 16px; color: var(--rail-ink-3); flex: none; }
+[data-shell="counsel"] .qc-rail-matter-ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none;
+  background: rgba(226, 194, 127, .12); color: #E2C27F; }
+[data-shell="counsel"] .qc-rail-matter-ico svg { width: 16px; height: 16px; }
+[data-shell="counsel"] .qc-rail-matter-text { display: grid; min-width: 0; flex: 1; line-height: 1.25; }
+[data-shell="counsel"] .qc-rail-matter-text small { font-size: 11px; color: var(--rail-ink-3); }
+[data-shell="counsel"] .qc-rail-matter-text b { font-size: 14px; font-weight: 650; }
+[data-shell="counsel"] .qc-rail-matter-text span { font-size: 12.5px; color: var(--rail-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-shell="counsel"] .qc-rail-me { width: 100%; box-sizing: border-box; padding: 8px 8px; border-radius: 12px; color: var(--rail-ink); gap: 10px; }
+[data-shell="counsel"] .qc-rail-me:hover { background: var(--rail-fill); }
+[data-shell="counsel"] .qc-rail-me .qc-avatar { width: 34px; height: 34px; background: #3A2A1D; color: #F1DDB0; box-shadow: 0 0 0 1px rgba(226, 194, 127, .35); }
+[data-shell="counsel"] .qc-rail-me .qc-me-text { flex: 1; min-width: 0; }
+[data-shell="counsel"] .qc-rail-me .qc-me-text b { color: var(--rail-ink); text-transform: capitalize; }
+[data-shell="counsel"] .qc-rail-me .qc-me-text small { color: var(--rail-ink-3); }
+[data-shell="counsel"] .qc-rail-me-gear { width: 17px; height: 17px; color: var(--rail-ink-3); flex: none; }
+[data-shell="counsel"] .qc-shell[data-rail="collapsed"] .qc-rail-matter { justify-content: center; padding: 8px 0; }
+[data-shell="counsel"] .qc-shell[data-rail="collapsed"] .qc-rail-me { justify-content: center; }
+
+@media (max-width: 860px) {
+  [data-shell="counsel"] .qc-shell, [data-shell="counsel"] .qc-shell[data-rail="collapsed"] { grid-template-columns: minmax(0, 1fr); }
+  [data-shell="counsel"] .qc-shell::before { inset: 0 !important; }
+  [data-shell="counsel"] .lw-demo-banner { margin: 0 12px 10px; font-size: 12.5px; }
+  [data-shell="counsel"] .qc-header { padding: 0 12px; }
+  [data-shell="counsel"] .qc-search { flex: none; width: 40px; }
+}
+
+/* ── The chat: a greeting, the conversation on one stage, the context column beside it ─────────────────────────── */
+[data-shell="counsel"] .qc-chat { max-width: 1360px; padding: 4px 28px 0; }
+[data-shell="counsel"] .qc-greeting { padding: 4px 4px 18px; max-width: 760px; }
+[data-shell="counsel"] .qc-greeting h1 { font-family: var(--serif); font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: -.018em;
+  margin: 0 0 8px; color: var(--ink); }
+[data-shell="counsel"] .qc-greeting p { margin: 0; font-size: 16.5px; color: var(--ink-2); }
+[data-shell="counsel"] .qc-chat-grid { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) var(--qc-context); gap: 22px; align-items: start;
+  min-height: 0; }
+[data-shell="counsel"] .qc-chat[data-panel="open"] .qc-chat-grid { grid-template-columns: minmax(0, 1fr); }
+[data-shell="counsel"] .qc-chat[data-panel="open"] .qc-ctx { display: none; }
+[data-shell="counsel"] .qc-stage { min-width: 0; display: flex; flex-direction: column; min-height: calc(100dvh - var(--qc-header) - 24px);
+  background: var(--stage-fill); border: 1px solid var(--stage-line); border-radius: 20px; box-shadow: var(--stage-shadow); padding: 26px 30px 0;
+  box-sizing: border-box; backdrop-filter: blur(14px) saturate(1.05); -webkit-backdrop-filter: blur(14px) saturate(1.05); }
+[data-shell="counsel"] .qc-home .qc-stage { min-height: 0; padding-bottom: 24px; }
+[data-shell="counsel"] .qc-start { padding: 0; align-content: start; gap: 14px; }
+[data-shell="counsel"] .qc-hero .qc-context { font-size: 14.5px; color: var(--ink-2); }
+[data-shell="counsel"] .qc-thread { gap: 0; padding-bottom: 8px; }
+[data-shell="counsel"] .qc-thread > .qc-turn { padding: 22px 0; border-top: 1px solid var(--card-line); }
+[data-shell="counsel"] .qc-thread > .qc-turn:first-child { border-top: none; padding-top: 4px; }
+[data-shell="counsel"] .qc-q { background: #EFE5D6; color: var(--ink); border-radius: 16px 16px 4px 16px; padding: 11px 16px; font-size: 15.5px;
+  box-shadow: inset 0 0 0 1px rgba(160, 130, 90, .14); }
+[data-shell="counsel"][data-theme="dark"] .qc-q { background: #2C231B; box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .1); }
+[data-shell="counsel"] .qc-a { padding-left: 46px; position: relative; }
+[data-shell="counsel"] .qc-a::before { content: ""; position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%;
+  background: #1F1610 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'><path d='M6 26 16 6l10 20' stroke='%23E9D3A3' stroke-width='2.6' stroke-linejoin='round' stroke-linecap='round'/><path d='M11 19h10' stroke='%23E9D3A3' stroke-width='2.2' stroke-linecap='round'/></svg>") center / 20px no-repeat;
+  box-shadow: 0 0 0 1px rgba(226, 194, 127, .35); }
+[data-shell="counsel"] .qc-composer-wrap { background: linear-gradient(180deg, rgba(255, 252, 247, 0) 0%, var(--stage-fill) 28%);
+  margin: 0 -30px; padding: 14px 30px 20px; border-radius: 0 0 20px 20px; }
+[data-shell="counsel"][data-theme="dark"] .qc-composer-wrap { background: linear-gradient(180deg, rgba(27, 22, 17, 0) 0%, var(--stage-fill) 28%); }
+[data-shell="counsel"] .qc-home .qc-composer-wrap { margin: 0; padding: 0; background: none; }
+[data-shell="counsel"] .qc-composer { border-radius: 16px; border-color: var(--card-line); background: var(--card-fill); padding: 12px 12px 12px 18px;
+  box-shadow: 0 1px 2px rgba(58, 38, 18, .05), 0 12px 32px -24px rgba(58, 38, 18, .35); }
+[data-shell="counsel"] .qc-composer:focus-within { border-color: #A07E4C; box-shadow: 0 0 0 4px rgba(160, 126, 76, .14); }
+[data-shell="counsel"] .qc-composer textarea { font-size: 16px; }
+[data-shell="counsel"] .qc-tool { height: 32px; border-radius: 10px; background: var(--paper-2); border-color: var(--card-line); }
+[data-shell="counsel"] .qc-send { width: 40px; height: 40px; border-radius: 12px; background: #2A1D13; color: #F6EEDF; }
+[data-shell="counsel"][data-theme="dark"] .qc-send { background: #CFAA66; color: #17120D; }
+[data-shell="counsel"] .qc-voice-start { width: auto; padding: 0 14px; background: #2A1D13; color: #F6EEDF; }
+[data-shell="counsel"] .qc-starters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 6px; }
+[data-shell="counsel"] .qc-starter { padding: 14px 16px; border-radius: 14px; border: 1px solid var(--card-line); background: var(--card-fill);
+  font-size: 14.5px; color: var(--ink); box-shadow: 0 1px 2px rgba(58, 38, 18, .04); transition: border-color var(--dur-2) var(--ease), transform var(--dur-2) var(--ease); }
+[data-shell="counsel"] .qc-starter:hover, [data-shell="counsel"] .qc-starter:focus-visible { background: var(--card-fill); border-color: #C9AE7A; }
+[data-shell="counsel"] .qc-starter svg { width: 18px; height: 18px; color: #9C7536; }
+[data-shell="counsel"] .qc-start-foot { padding-top: 6px; border-top: 1px solid var(--card-line); margin-top: 6px; padding-top: 14px; }
+
+/* Cards in the conversation and the column: paper on the stage, a quiet head */
+[data-shell="counsel"] .qc-card { background: var(--card-fill); border-color: var(--card-line); border-radius: 14px; box-shadow: 0 1px 2px rgba(58, 38, 18, .04); }
+[data-shell="counsel"] .qc-card-icon { width: 28px; height: 28px; border-radius: 8px; background: rgba(176, 141, 87, .14); color: #8A6526; }
+[data-shell="counsel"][data-theme="dark"] .qc-card-icon { background: rgba(217, 183, 118, .12); color: #E2C68F; }
+
+/* ── Context column ─────────────────────────────────────────────────────────────────────────────────────────── */
+[data-shell="counsel"] .qc-ctx { position: sticky; top: 0; display: grid; gap: 14px; align-content: start; max-height: calc(100dvh - var(--qc-header) - 24px);
+  overflow-y: auto; padding: 14px; box-sizing: border-box; background: var(--stage-fill); border: 1px solid var(--stage-line); border-radius: 20px;
+  box-shadow: var(--stage-shadow); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+[data-shell="counsel"] .qc-ctx-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 12px;
+  background: rgba(160, 130, 90, .1); }
+[data-shell="counsel"] .qc-ctx-tab { height: 36px; border: none; border-radius: 9px; background: transparent; font: inherit; font-size: 14px; font-weight: 600;
+  color: var(--ink-2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+[data-shell="counsel"] .qc-ctx-tab[aria-selected="true"] { background: #6B4A2B; color: #FBF5EA; box-shadow: 0 1px 2px rgba(35, 25, 18, .25); }
+[data-shell="counsel"][data-theme="dark"] .qc-ctx-tab[aria-selected="true"] { background: #CFAA66; color: #17120D; }
+[data-shell="counsel"] .qc-ctx-count { min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px; font-size: 11px;
+  display: inline-grid; place-items: center; background: rgba(255, 255, 255, .25); }
+[data-shell="counsel"] .qc-ctx-body { display: grid; gap: 12px; }
+[data-shell="counsel"] .qc-ctx-body .qc-card { padding: 14px; gap: 10px; }
+[data-shell="counsel"] .qc-ctx-empty { margin: 4px 2px; }
+[data-shell="counsel"] .qc-ctx-matter { margin: 0; display: grid; gap: 2px; }
+[data-shell="counsel"] .qc-ctx-matter b { font-size: 15px; }
+[data-shell="counsel"] .qc-ctx-matter span { font-size: 14px; color: var(--ink); }
+[data-shell="counsel"] .qc-ctx-matter small { font-size: 12.5px; color: var(--ink-3); }
+[data-shell="counsel"] .qc-ctx-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+[data-shell="counsel"] .qc-ctx-row { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; padding: 10px 12px;
+  border-radius: 10px; border: 1px solid var(--card-line); background: var(--paper); color: var(--ink); font: inherit; font-size: 13.5px;
+  text-align: left; text-decoration: none; cursor: pointer; }
+[data-shell="counsel"] .qc-ctx-row:hover { border-color: #C9AE7A; }
+[data-shell="counsel"] .qc-ctx-row > span { flex: 1; min-width: 0; }
+[data-shell="counsel"] .qc-ctx-row > svg { width: 15px; height: 15px; color: var(--ink-3); flex: none; }
+[data-shell="counsel"] .qc-ctx-source > span { display: grid; }
+[data-shell="counsel"] .qc-ctx-source small { color: var(--ink-3); font-size: 12px; }
+[data-shell="counsel"] .qc-voice-card { justify-items: center; text-align: center; }
+[data-shell="counsel"] .qc-voice-card .qc-card-head { justify-self: stretch; }
+[data-shell="counsel"] .qc-voice-orb { width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer; display: grid; place-items: center;
+  color: #F6EEDF; background: radial-gradient(circle at 35% 30%, #8A6239 0%, #5A3B22 55%, #3A2616 100%);
+  box-shadow: 0 0 0 6px rgba(160, 126, 76, .14), 0 10px 24px -10px rgba(58, 38, 18, .6); }
+[data-shell="counsel"] .qc-voice-orb:hover { box-shadow: 0 0 0 8px rgba(160, 126, 76, .2), 0 10px 24px -10px rgba(58, 38, 18, .6); }
+[data-shell="counsel"] .qc-voice-orb svg { width: 26px; height: 26px; }
+
+@media (max-width: 1360px) {
+  [data-shell="counsel"] .qc-chat-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-shell="counsel"] .qc-ctx { display: none; }
+  [data-shell="counsel"] .qc-chat { max-width: 980px; }
+}
+@media (max-width: 860px) {
+  [data-shell="counsel"] .qc-chat { padding: 0 12px; }
+  [data-shell="counsel"] .qc-greeting h1 { font-size: 30px; }
+  [data-shell="counsel"] .qc-greeting p { font-size: 15px; }
+  [data-shell="counsel"] .qc-stage { padding: 18px 16px 0; border-radius: 16px; }
+  [data-shell="counsel"] .qc-composer-wrap { margin: 0 -16px; padding: 12px 16px 14px; }
+  [data-shell="counsel"] .qc-a { padding-left: 0; padding-top: 40px; }
+  [data-shell="counsel"] .qc-starters { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Pages (a matter's tools, firm pages): the room only behind the top; the page on parchment ────────────────────── */
+[data-shell="counsel"][data-palette="walnut"] .qc-shell[data-route="page"]::before {
+  background:
+    linear-gradient(180deg, rgba(244, 238, 228, .1) 0%, rgba(244, 238, 228, .7) 120px, #F4EEE4 210px),
+    linear-gradient(90deg, #F4EEE4 0%, rgba(244, 238, 228, .9) 40%, rgba(244, 238, 228, .4) 100%),
+    var(--room) right top / auto 340px no-repeat;
+}
+[data-shell="counsel"][data-palette="walnut"][data-theme="dark"] .qc-shell[data-route="page"]::before {
+  background:
+    linear-gradient(180deg, rgba(15, 11, 8, .35) 0%, rgba(15, 11, 8, .85) 140px, #0F0B08 240px),
+    var(--room) left top / cover no-repeat;
+}
+[data-shell="counsel"] .qc-tabs { background: rgba(244, 238, 228, .84); border-bottom: 1px solid var(--stage-line); padding: 0 28px; margin: 0 0 4px;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+[data-shell="counsel"][data-theme="dark"] .qc-tabs { background: rgba(15, 11, 8, .84); }
+[data-shell="counsel"] .qc-tab { font-size: 14.5px; padding: 12px 12px 10px; }
+[data-shell="counsel"] .qc-tab.active { border-bottom-color: #9C7536; }
+[data-shell="counsel"] .qc-main .lw-paper { border-radius: 16px; }
+[data-shell="counsel"] .qc-main .lw-content > .lw-meta:first-child { max-width: 90ch; }
+
+/* Quiet links in cards ("All documents", "Review") and serif page titles, like the greeting */
+[data-shell="counsel"] .qc-card .qc-linkbtn { text-decoration: none; color: #8A6526; font-weight: 600; font-size: 13.5px; }
+[data-shell="counsel"] .qc-card .qc-linkbtn:hover { text-decoration: underline; text-underline-offset: 3px; }
+[data-shell="counsel"][data-theme="dark"] .qc-card .qc-linkbtn { color: #E2C68F; }

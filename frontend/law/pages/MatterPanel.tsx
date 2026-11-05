@@ -43,7 +43,7 @@ export default function MatterPanel() {
   };
   return (
     <>
-      <Toolbar crumb={matter.number} title="Review panel" />
+      <Toolbar crumb={matter.number} title="Council" />
       <div className="lw-content">
         <p className="lw-meta" style={{ margin: 0 }}>Several perspectives on one question, chosen for it — for a challenge, lead counsel, an opposing reading and an evidence investigator; otherwise a deal lawyer, risk and compliance, a litigator and a specialist — each answering alone from this matter's documents and citing them. The first answer is then challenged, and a chair gives the conclusion and where they differ. If the answer depends on facts the documents do not give, the panel stops and asks you. These are drafted by the same AI model: they are not independent experts, and a partner reviews them before anyone relies on them.</p>
         {q.data?.discovery && (

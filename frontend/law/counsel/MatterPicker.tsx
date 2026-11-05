@@ -71,7 +71,7 @@ export function usePopover() {
   return { open, setOpen, button, pop, style: { top: at.top, bottom: at.bottom, left: at.left, right: at.right } as React.CSSProperties };
 }
 
-export default function MatterPicker({ variant = 'header' }: { variant?: 'header' | 'composer' }) {
+export default function MatterPicker({ variant = 'header' }: { variant?: 'header' | 'composer' | 'rail' }) {
   const matters = useMatters();
   const routeMatter = useCurrentMatter();
   const { matter: chatMatter, matters: chosen, setMatterId, setMatterIds } = useChatMatter();
@@ -115,8 +115,21 @@ export default function MatterPicker({ variant = 'header' }: { variant?: 'header
   const label = !current ? '' : several
     ? `${chosen.map((m) => m.number).join(', ')}. ${composer ? 'Change the matters' : 'Switch matter'}`
     : `${current.number} ${current.title}. ${composer ? 'Change the matter' : 'Switch matter'}`;
+  const rail = variant === 'rail';
   return (
     <>
+      {rail ? (
+        <button ref={button} type="button" className="qc-rail-matter" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((o) => !o)}
+          aria-label={current ? `Current matter: ${label}` : 'Choose a matter'}>
+          <span className="qc-rail-matter-ico" aria-hidden>{current && current.sensitivity !== 'standard' ? <Lock /> : <Briefcase />}</span>
+          <span className="qc-rail-matter-text qc-hide-collapsed" aria-hidden>
+            <small>{several ? 'Current matters' : 'Current matter'}</small>
+            <b>{!current ? 'Choose a matter' : several ? `${chosen[0].number} + ${chosen.length - 1} more` : current.number}</b>
+            {current && !several && <span>{current.title}</span>}
+          </span>
+          <ChevronsUpDown className="qc-hide-collapsed" aria-hidden />
+        </button>
+      ) : (
       <button ref={button} type="button" className={composer ? 'qc-tool' : 'qc-matter-btn'} aria-haspopup="dialog" aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         aria-label={current ? `${several ? 'Matters' : 'Matter'}: ${label}` : composer ? 'Pick the matter to ask about' : 'Choose a matter'}>
@@ -126,6 +139,7 @@ export default function MatterPicker({ variant = 'header' }: { variant?: 'header
           : <>{current.number}<span className={composer ? '' : 'qc-hide-small'}> · {current.title}</span></>}</span>
         <ChevronsUpDown aria-hidden />
       </button>
+      )}
       {open && (<Layer>
         <div ref={pop} className="qc-pop" style={style}>
           <input className="lw-input" autoFocus placeholder="Find a matter…" aria-label="Find a matter" value={filter} onChange={(e) => setFilter(e.target.value)} />

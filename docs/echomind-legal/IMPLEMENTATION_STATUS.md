@@ -276,6 +276,24 @@ the liability-cap question late in the full run, when the matter also holds the 
 when run on its own (23 s). Backend **1621 passed, 4 skipped** (all of `backend/tests`, `--network none`). Screenshots in
 `review-2026-11-02/`.
 
+## "Courthouse": the redesigned workspace (2026-11-05)
+
+The owner sent a UI concept and two photographs ("I don't want a dull UI … professional, not AI-made"). Built from them, with
+every control doing something real and nothing the records do not back (`DESIGN.md`, rewritten for the new direction):
+
+| Built | Status | Evidence |
+|---|---|---|
+| The room: the courthouse photograph behind the light workspace (faded into parchment where the work is; only above the tabs on a matter's pages), the gavel behind the dark one and at the rail's foot; local assets in `frontend/public/law/` | **Tested** | screenshots light/dark/390 px (session scratch `ui/final`) |
+| Walnut rail: the AJACE mark and "EchoMind Legal", Chat, Matters, the current matter's Documents, Council and Transcription ("Live" while recording), Drafts, Activity; recent chats; the current matter and the person at its foot | **Tested** | `counsel.test.tsx` (rail links, the current-matter button), `keyboard.test.tsx` |
+| Top bar without a band: search (⌘K), privacy, recording, a bell counting what waits for the person's decision | **Tested** | `counsel.test.tsx` |
+| Chat: serif greeting by the person's clock, the conversation on one paper stage with the composer docked, answers under the AJACE mark | **Tested** | `counsel.test.tsx` (greeting, axe clean) |
+| Context column (≥ 1361 px, hidden while the source panel is open): Context (matter, latest documents, questions found for the Council or the starters, talk by voice), Sources (the passages this conversation cites, each reopened by the server), Actions (waiting, deadlines not confirmed, inconsistencies open) | **Tested** | vitest suite; a document without dates no longer breaks the shared list |
+| "Review panel" is called "Council" everywhere | **Tested** | `navigation.test.tsx` |
+
+Not built from the concept, on purpose: the model-made "Risk level: High" meter and a "Council Reviewed" badge on ordinary
+answers (scores and badges the records do not back), and "Workflows / Knowledge / Reports", which are not features. Frontend
+**260 passed**; `tsc` main and strict clean.
+
 ## Counsel Intelligence: the Council (2026-11-05)
 
 The owner asked to make the "Counsel Intelligence" idea workable and build it. The spec (four iterations, each with a gate) is

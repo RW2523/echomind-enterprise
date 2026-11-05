@@ -19,16 +19,16 @@ export default function PanelReviewPage() {
   const qc = useQueryClient();
   const q = usePanelReview(matter.id, reviewId);
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['matter', matter.id, 'panel'] }), qc.invalidateQueries({ queryKey: ['reviews'] })]);
-  const back = <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/panel`}><ArrowLeft />Review panel</Link>;
-  if (q.isPending) return <><Toolbar crumb={`${matter.number} · Review panel`} title="Panel review">{back}</Toolbar><div className="lw-content"><Skeleton height={200} /></div></>;
-  if (q.isError) return <><Toolbar crumb={`${matter.number} · Review panel`} title="Panel review">{back}</Toolbar><div className="lw-content"><ErrorNote>This panel review is not available.</ErrorNote></div></>;
+  const back = <Link className="lw-btn lw-btn-sm lw-btn-ghost" to={`/m/${matter.number}/panel`}><ArrowLeft />Council</Link>;
+  if (q.isPending) return <><Toolbar crumb={`${matter.number} · Council`} title="Council review">{back}</Toolbar><div className="lw-content"><Skeleton height={200} /></div></>;
+  if (q.isError) return <><Toolbar crumb={`${matter.number} · Council`} title="Council review">{back}</Toolbar><div className="lw-content"><ErrorNote>This panel review is not available.</ErrorNote></div></>;
   const { review, artifact: a, can } = q.data;
   const working = review.status === 'queued' || review.status === 'running';
   const [label, tone] = PANEL_STATUS[review.status];
   const c = a?.content as PanelContent | undefined;
   return (
     <>
-      <Toolbar crumb={`${matter.number} · Review panel`} title="Panel review">{back}</Toolbar>
+      <Toolbar crumb={`${matter.number} · Council`} title="Council review">{back}</Toolbar>
       <div className="lw-content" style={{ maxWidth: 1180 }}>
         <section className="lw-paper lw-sheet" aria-label="Question">
           <p className="lw-eyebrow" style={{ margin: 0 }}>{[`Question · specialist: ${review.area ?? review.specialist}`,

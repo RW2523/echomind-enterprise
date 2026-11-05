@@ -1,13 +1,15 @@
 # EchoMind Legal — design system
 
-Quiet, familiar professional software for lawyers. The product earns trust through evidence and precision, not through
-decoration. Implemented in `frontend/law/counsel/counsel.css` (tokens under `[data-shell="counsel"]`), which also re-skins
-the Law pages the shell hosts.
+Professional software for lawyers with the presence of a good chambers: a walnut rail, parchment and paper, brass for where
+you are, and the firm's own photographs of the courthouse and the desk behind the work. It earns trust through evidence and
+precision; the room sets the tone and never sits behind text. Implemented in `frontend/law/counsel/counsel.css` (tokens
+under `[data-shell="counsel"]`, which also re-skins the Law pages the shell hosts) and `frontend/law/counsel/courthouse.css`
+(the "Courthouse" layer, owner's request 2026-11-05, which replaced the earlier "quiet, no photographs" direction).
 
 ## Principles
 
-1. **The work is the interface.** A screen shows the matter, the question box and the next useful action. Nothing on it is
-   there to impress.
+1. **The work is the interface.** A screen shows the matter, the question box and the next useful action. The room (the
+   photographs, the walnut) frames it; every control on screen does something real.
 2. **One dominant action per view.** On the chat home it is the question box; on a matter page, the page's own task.
    Specialist tools stay reachable on the matter's tabs, never all at once on the home.
 3. **Evidence is the signature.** In an answer, gold is used for one job only: citation chips and the highlighted words of
@@ -19,7 +21,16 @@ the Law pages the shell hosts.
 
 ## Navigation
 
-- Rail: New chat, then four destinations — **Chat, Matters, Drafts, Activity** — then recent conversations. Nothing else.
+- Rail (walnut, the gavel photograph faded in at its foot): the AJACE mark and "EchoMind Legal", New chat, then **Chat,
+  Matters**, the current matter's **Documents, Council** (where the panel is on) and **Transcription** ("Live" while EchoMind
+  records here), then **Drafts** (with what waits for you) and **Activity**; recent conversations; at the foot the current
+  matter (the matter picker) and the person (the profile menu). Without a matter, the matter's links lead to Matters.
+- Top bar, no band: search (the command palette, ⌘K), where answers come from, the recording state, and a bell counting
+  what waits for the person's decision (it opens Drafts).
+- Chat: a serif greeting by the person's clock on the home; the conversation on one paper "stage"; beside it on wide screens
+  (≥ 1361px) the column **Context · Sources · Actions** — the matter, its latest documents, questions found for the Council
+  (or the starters), talking by voice; the passages this conversation cites; what waits, deadlines not confirmed,
+  inconsistencies open. Every line is a record and opens where it can be acted on.
 - A matter's tools are its tabs: six every day (Overview, Documents, Research, Drafting, Obligations, Meetings) and the
   rest under **More**; the page you are on is always a tab. Its overview lists every tool with one line each. The chat
   home links quietly to the most used ones for the chosen matter, with one line for what waits for the person's decision
@@ -88,8 +99,17 @@ person chooses light or dark in the profile menu.
   attention colour, "External model". Never "nothing leaves", "no cloud", "air-gapped" or "guaranteed".
 - Review states: "Waiting for approval", "Changes requested", "Approved". Activity is a sentence, never an event code.
 
+## The room
+
+- Light: the courthouse in fog (`/law/court-light.webp`) at the top right, faded into parchment `#F4EEE4` where the work
+  is; behind a matter's pages it shows only above the tabs. Dark: the gavel and books (`/law/gavel-dark.webp`), faded into
+  `#0F0B08`. The rail's foot: a crop of the gavel (`/law/gavel-rail.webp`). All three are served by this server.
+- Surfaces on the room are paper at 88–90% with a light blur (stage, context column, chips); text never sits on the
+  photograph itself. Stage radius 20px, cards 14px, controls 10–12px.
+- Type: page and greeting headings in Source Serif 4 (40px greeting, 19px brand); UI in Inter.
+
 ## Do not
 
-Photographs or illustrations as decoration, glass or blur, gradient fills, eyebrow labels above headings, walls of
-same-size feature cards, confidence percentages, decorative motion, emoji, more top-level navigation, external fonts or
-assets (the product runs offline).
+Model-made scores, risk meters or confidence percentages; a "reviewed" or "verified" badge the records do not back; a button
+or tab that does nothing; illustrations or stock imagery beyond the firm's two photographs; emoji; decorative motion;
+external fonts or assets (the product runs offline).

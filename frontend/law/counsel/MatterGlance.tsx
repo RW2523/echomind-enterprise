@@ -22,7 +22,7 @@ const DUE_STATE: Record<Obligation['status'], string> = {
 };
 /** "Potential inconsistency in dates: “May 20” and “May 15”" reads "Dates: “May 20” and “May 15”" beside its status chip. */
 const shortTitle = (t: string) => { const r = t.replace(/^potential inconsistency in\s+/i, ''); return r.charAt(0).toUpperCase() + r.slice(1); };
-const day = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+const day = (iso?: string | null) => (iso ? new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
 function Panel({ icon, title, to, more, children }: { icon: React.ReactNode; title: string; to?: string; more?: string; children: React.ReactNode }) {
   return (
@@ -42,7 +42,7 @@ const Failed = ({ what }: { what: string }) => <p className="qc-meta" role="stat
 const DOC_STATUS: Record<string, string> = { executed: 'signed', draft: 'draft', received: 'received', final: 'final' };
 const READING: Record<string, string> = { queued: 'Waiting to be read', indexing: 'Being read', failed: 'Could not be read' };
 
-function Issues({ matter }: { matter: Matter }) {
+export function Issues({ matter }: { matter: Matter }) {
   const navigate = useNavigate();
   const { setMatterId } = useChatMatter();
   const q = useQuery({ queryKey: ['counsel', 'discrepancies', matter.id], retry: false, staleTime: 15_000,
@@ -75,7 +75,7 @@ function Issues({ matter }: { matter: Matter }) {
   );
 }
 
-function Deadlines({ matter }: { matter: Matter }) {
+export function Deadlines({ matter }: { matter: Matter }) {
   const q = useObligations(matter.id);
   const base = `/m/${encodeURIComponent(matter.number)}/obligations`;
   if (q.isError) return refused(q.error) ? null : <Panel icon={<CalendarClock aria-hidden />} title="Next deadlines" to={base} more="All obligations"><Failed what="The deadlines" /></Panel>;
@@ -104,11 +104,11 @@ function Deadlines({ matter }: { matter: Matter }) {
   );
 }
 
-function LatestDocuments({ matter }: { matter: Matter }) {
+export function LatestDocuments({ matter }: { matter: Matter }) {
   const q = useDocuments(matter.id);
   const base = `/m/${encodeURIComponent(matter.number)}/documents`;
   if (q.isError) return refused(q.error) ? null : <Panel icon={<Files aria-hidden />} title="Documents" to={base} more="All documents"><Failed what="The documents" /></Panel>;
-  const docs = [...(q.data ?? [])].sort((a, b) => (b.updated_at ?? b.created_at).localeCompare(a.updated_at ?? a.created_at));
+  const docs = [...(q.data ?? [])].sort((a, b) => (b.updated_at ?? b.created_at ?? '').localeCompare(a.updated_at ?? a.created_at ?? ''));
   return (
     <Panel icon={<Files aria-hidden />} title={q.data ? `Documents (${q.data.length})` : 'Documents'} to={base} more="All documents">
       {q.isPending ? <p className="qc-meta" style={{ margin: 0 }}>Loading…</p> : docs.length === 0 ? (
@@ -135,7 +135,7 @@ function LatestDocuments({ matter }: { matter: Matter }) {
 }
 
 /** Drafts, notes and decisions on this matter waiting for the person (the reviews queue), shown only when there are some. */
-function WaitingForYou({ matter }: { matter: Matter }) {
+export function WaitingForYou({ matter }: { matter: Matter }) {
   const q = useReviews();
   const items = (q.data?.waiting ?? []).filter((i) => i.matter?.number === matter.number);
   if (!items.length) return null;

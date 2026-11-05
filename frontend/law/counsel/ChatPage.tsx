@@ -32,10 +32,11 @@ import { ActionButtons, AnswerText, ComponentView, type CardContext } from './ca
 import { AddDocument, addDocument, Dictate, droppedFile } from './ComposerTools';
 import { plainTurn, spokenTurn, toClipboard } from './copy';
 import VoiceStage from './voice/VoiceStage';
+import ContextColumn from './ContextColumn';
 import { useChatMatter, usePanel } from './context';
 import MatterPicker, { Layer, usePopover } from './MatterPicker';
 import { parseComponent, parseEnvelope, parseTaskProgress } from './validate';
-import type { ChatTurn, Feedback, FeedbackReason, SafeComponent } from './types';
+import type { ChatTurn, CitationRef, Feedback, FeedbackReason, SafeComponent } from './types';
 
 /** A few plain starters: each one is one of the chat's kinds of answer, about the chosen matter or matters. */
 interface Starter { label: string; ask: string; icon: LucideIcon }
@@ -51,6 +52,30 @@ const SEVERAL_MATTERS: Starter[] = [
   { label: 'Build one chronology for these matters', ask: 'Build a chronology of events', icon: CalendarRange },
   { label: 'Find conflicting dates inside each matter', ask: 'Find conflicting dates or amounts', icon: Scale },
 ];
+/** "Good morning, Alice." by the person's own clock (2026-11-05). */
+function greeting(name: string): string {
+  const h = new Date().getHours();
+  const part = h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const who = name ? name.charAt(0).toUpperCase() + name.slice(1) : 'Counsel';
+  return `${part}, ${who}.`;
+}
+
+/** The sources this conversation's answers cite, once each, newest answer first (for the column beside it). */
+function citedSources(steps: Step[]): CitationRef[] {
+  const seen = new Set<string>();
+  const out: CitationRef[] = [];
+  for (const { turn } of [...steps].reverse()) {
+    for (const c of turn.envelope?.components ?? []) {
+      if (c.type !== 'source_answer') continue;
+      for (const ref of c.props.citations) {
+        const key = `${ref.document_id}:${ref.clause ?? ''}:${ref.page ?? ''}:${ref.n}`;
+        if (!seen.has(ref.id) && !seen.has(key)) { seen.add(ref.id); seen.add(key); out.push(ref); }
+      }
+    }
+  }
+  return out.slice(0, 30);
+}
+
 /** One quiet line under the matter (review H1): what waits for the person's decision, and the next dated deadline, each a
  *  link. Nothing when there is neither. A deadline read from a document but not confirmed by a lawyer says so. */
 function NextUp({ matter }: { matter: Matter }) {
@@ -405,14 +430,28 @@ export default function ChatPage() {
       attached={attached} onAttach={setAttached} matterId={several ? null : matterId} inputRef={input}
       onDetach={(id) => setAttached((a) => a.filter((x) => x.id !== id))} />
   );
+  const sources = useMemo(() => citedSources(path), [path]);
+  const column = (
+    <ContextColumn matter={several ? null : matter} several={several} sources={sources} starters={starters.map((st) => st.label)}
+      onAsk={(label) => { const st = starters.find((x) => x.label === label); void ask(st ? st.ask : label); }}
+      onVoice={several ? undefined : () => void startVoice()} />
+  );
   return (
-    <div className={`qc-chat${start ? ' qc-home' : ''}`}>
+    <div className={`qc-chat${start ? ' qc-home' : ''}`} data-panel={panel.content ? 'open' : undefined}>
       <div className="qc-sr" aria-live="polite">{announce}</div>
       {loadError && <p className="qc-error" role="alert">{loadError}</p>}
+      {start && (
+        <header className="qc-greeting">
+          <h1>{greeting(me.user.username)}</h1>
+          <p>Ask, analyze, draft, or discuss your matter with EchoMind.</p>
+        </header>
+      )}
+      <div className="qc-chat-grid">
+      <div className="qc-stage">
       {start ? (
         <div className="qc-start">
           <div className="qc-hero">
-            <h1>How can I help?</h1>
+            <h2 className="qc-sr">Ask EchoMind</h2>
             <p className="qc-context">{several
               ? <>Asking across <b>{chosen.map((m) => m.number).join(', ')}</b>. Each answer says which matter every source comes from{
                 new Set(chosen.map((m) => m.client.id)).size > 1 ? '; these belong to different clients, so keep each client\'s information to its own work' : ''}.</>
@@ -470,6 +509,9 @@ export default function ChatPage() {
             : composer}
         </>
       )}
+      </div>
+      {column}
+      </div>
     </div>
   );
 }

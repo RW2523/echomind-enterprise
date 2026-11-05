@@ -52,7 +52,7 @@ export function matterEntries(me: Me, matter: Pick<Matter, 'number' | 'my_role'>
     { key: 'diligence', to: `${base}/diligence`, label: 'Due diligence', icon: ClipboardList, about: 'A checklist run across a data room.', hue: 168 },
     !!me.features?.summaries && { key: 'summaries', to: `${base}/summaries`, label: 'Summaries', icon: ListCollapse,
       about: 'Key points of a document, each cited.', hue: 32 },
-    !!me.features?.panel && { key: 'panel', to: `${base}/panel`, label: 'Review panel', icon: Users2,
+    !!me.features?.panel && { key: 'panel', to: `${base}/panel`, label: 'Council', icon: Users2,
       about: 'Four perspectives on one question; a partner approves.', hue: 300 },
     !!me.features?.regulatory && { key: 'regulatory', to: `${base}/regulatory`, label: 'Regulatory', icon: Landmark,
       about: 'New legislation and rules that may concern it.', hue: 120 },

@@ -1,7 +1,8 @@
 /* EchoMind Legal — quiet professional software (docs/echomind-legal/DESIGN.md).
  * Scoped under [data-shell="counsel"] (set by CounselShell) so it re-skins the Law pages it hosts through their own tokens,
  * and nothing outside the shell changes. Neutral surfaces, one restrained accent for actions, and gold reserved for one
- * job: evidence (citation chips and highlighted source passages). No photographs, glass, gradients or decorative motion.
+ * job: evidence (citation chips and highlighted source passages). The photographs, the walnut rail and the paper surfaces on
+ * them are the "Courthouse" layer in courthouse.css (2026-11-05), loaded after this file.
  * Contrast (WCAG AA for 13–16px text): light — ink #1E242C on #FFFFFF 15.9:1, muted #5B6370 on #F6F5F2 5.5:1, accent #1F3A5F
  * with white 11.4:1, evidence #7A5A1E on #FFFFFF 6.3:1; dark — muted #A3ABB8 on #1C1F25 7.4:1, accent #8FB0DC on #16181D 8.0:1. */
 
