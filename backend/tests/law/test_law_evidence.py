@@ -1305,6 +1305,53 @@ def test_each_place_an_answer_quotes_has_its_own_citation_opening_its_own_words(
     assert as_user(named, "bob").get(f"/api/legal/counsel/citations/{msa[0]['id']}").status_code == 404   # not on the matter
 
 
+MEMO_ON = ("ADVICE MEMORANDUM (fictional)\n\n## 4. Fees and Payment\n\n4.2 Clause 4.2 provides that Harrowgate shall invoice "
+           "monthly in advance and that \"Invoices are payable net sixty (60) days from the invoice date.\"\n")
+MINUTES_ON = ("BOARD MINUTES (fictional)\n\n3.1 The board noted that the Master Services Agreement renews automatically on "
+              "2 March 2027 unless notice is given.\n")
+
+
+def test_a_memo_on_the_named_document_quoting_its_clause_by_number_is_checked_and_a_passage_naming_it_still_answers(named, monkeypatch):
+    """2026-11-05 end-to-end run: the demo memo wrote "Clause 4.2 provides that … net sixty (60) days" without naming the MSA,
+    so its misquote went unnoticed; and requiring the MSA's own text withheld answers resting on a passage that names the MSA
+    (minutes, a draft amendment), which the misquote rule alone now guards."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 4)
+    alice = as_user(named, "alice")
+    on = upload(alice, named["mid"], "memo-on.md", MEMO_ON, status="final", title="Fee note on the MSA").json()["document"]
+    upload(alice, named["mid"], "minutes.md", MINUTES_ON, status="final", title="Board minutes")
+    index_all()
+    named["model"].lines = [("The fee note says net sixty days", "Invoices are payable net sixty (60) days from the invoice date"),
+                            ("The MSA says net thirty days", "Invoices are payable net thirty (30) days from the invoice date")]
+    done = ask(alice, named["mid"], "Does the fee note state the MSA's payment terms correctly?")[-1]
+    assert {(m["by_id"], m["of_id"]) for m in done["misquotes"]} >= {(on["id"], named["msa"]["id"])}
+    named["model"].lines = [("The MSA renews automatically on 2 March 2027", "renews automatically on 2 March 2027 unless notice is given")]
+    done = ask(alice, named["mid"], "When does the Master Services Agreement renew, and what do the payment terms say?")[-1]
+    assert not done["abstained"] and {e["document_title"] for e in done["evidence"]} == {"Board minutes"}
+
+
+def test_inside_a_named_document_the_words_naming_it_are_not_searched_for():
+    from app.legal.research.attribution import parties_of, subject, without_titles
+    t = ["Advice memo on the MSA (DEMO)", "Master Services Agreement (DEMO)"]
+    assert without_titles("Does the advice memo state the MSA's payment terms correctly?", t) == "Does the state the payment terms correctly?"
+    assert without_titles("What services does the MSA cover?", t[1:]) == "What services does the cover?"
+    assert without_titles("What is the Consultancy Agreement?", ["Consultancy Agreement"]) == ""      # nothing left: the question
+    assert subject("Advice memo on the MSA (DEMO)", {"m": "Master Services Agreement (DEMO)", "a": "Advice memo on the MSA (DEMO)"}) == {"m"}
+    assert subject("Board minutes", {"m": "Master Services Agreement"}) == set()
+    head = ('This Agreement is made between:\n\n(1) Voss-Lindqvist AB (the "Supplier"); and\n\n(2) Fjellstad Distribution AS, '
+            'a Norwegian company (the "Reseller").\n\n(3) APEX INDUSTRIES, INC. (the "Carrier").\n\nNOW, THEREFORE, THE PARTIES AGREE AS FOLLOWS:\n')
+    assert parties_of("Reseller Agreement", head) == {"voss-lindqvist", "fjellstad", "apex"}
+
+
+def test_officer_initials_are_searched_as_written_out_and_a_list_cut_at_a_semicolon_is_read_on():
+    from app.legal.retrieval import search
+    assert search.spelled_out("Up to what value can the CFO sign?") == "Up to what value can the CFO (Chief Financial Officer) sign?"
+    assert search.spelled_out("The CEO (Chief Executive Officer) signs.") == "The CEO (Chief Executive Officer) signs."
+    assert search._ANNOUNCES.search("(a) to approve the renewal within the limits in paragraphs (b) to (d);")
+    assert search._ANNOUNCES.search("(b) the fee may rise; and")
+    assert not search._ANNOUNCES.search("The fee is fixed. Invoices are payable net thirty (30) days.")
+
+
 def test_a_clause_named_by_number_is_read_from_the_contract_first(named, monkeypatch):
     """2026-11-05 end-to-end run: "What does clause 14 actually cover?" was answered from letters describing clause 14, never
     from the agreement's own clause; a question naming clause numbers now reads those clauses first, as search would."""

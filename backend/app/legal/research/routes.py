@@ -280,6 +280,9 @@ def _openings(scope, question: str, passages: list[dict], roles: dict, versions:
     return out
 
 
+_CLAUSE_CITED = re.compile(r"\b[Cc]lauses?\s+\d")
+
+
 def _misquotes(passages: list[dict], named: list[str], titles: dict) -> list[dict]:
     """Words another document puts in quotation marks as a named document's, in a sentence that names it, that the named
     document's own text (the version among the sources) does not contain (2026-11-05 brief: the advice memo quoting clause
@@ -300,9 +303,13 @@ def _misquotes(passages: list[dict], named: list[str], titles: dict) -> list[dic
             own[did] = body["text"]
     out, seen = [], set()
     for p in passages:                                  # any other document's sentence that quotes a named one
+        # … or that names none, in a document whose title says it is about one ("Advice memo on the MSA": "Clause 4.2
+        # provides that … \"Invoices are payable net sixty (60) days\"", 2026-11-05 end-to-end run)
+        of_title = attribution.subject(p["citation"]["document_title"], titles)
         for a, b in prompt.document_sentences(p["text"]):
             sentence = p["text"][a:b]
-            about = [d for d in attribution.referenced(sentence, titles) if d in own and d != p["citation"]["document_id"]]
+            named_here = attribution.referenced(sentence, titles) or (of_title if _CLAUSE_CITED.search(sentence) else set())
+            about = [d for d in named_here if d in own and d != p["citation"]["document_id"]]
             for q in attribution.quoted_words(sentence):
                 for d in about:
                     key = (p["citation"]["document_id"], d, q)
@@ -529,8 +536,9 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 nothing_found = nothing_found and got["abstained"]
             if named_docs and len(named_docs) < len(titles):
                 first = []                                  # each named document on its own, so one cannot crowd out another
+                inside = attribution.without_titles(search_q, [titles[d] for d in named_docs]) or search_q
                 for did in named_docs[:3]:
-                    own = await searchmod.search(scope, search_q, k=settings.LEGAL_RESEARCH_NAMED_PASSAGES if len(named_docs) == 1 else 2,
+                    own = await searchmod.search(scope, inside, k=settings.LEGAL_RESEARCH_NAMED_PASSAGES if len(named_docs) == 1 else 2,
                                                  versions=versions, documents=[did], wide=True)
                     first += [p for p in own["passages"] if p["chunk_id"] not in {q["chunk_id"] for q in first}]
                     nothing_found = nothing_found and own["abstained"]
@@ -696,17 +704,17 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             if claim in standing and said in unsupported:
                 unsupported.remove(said)
         asked = attribution.referenced(question, titles)
-        # When the named document's own text is among the sources, only its own passages speak for it: an advice memo that
-        # names the MSA is not the MSA (2026-11-05 brief). Without its own text, a passage naming it still counts (minutes
-        # approving "the renewal of the MSA").
-        own_text = bool(asked) and any(src["document_id"] in asked for src in sources)
+        # The named document's own passages (and its amendments) speak for it, and so does a passage of another document that
+        # names it (minutes approving "the renewal of the MSA", a draft amendment changing its clause 4.1) — unless that
+        # document misquotes it: an advice memo whose quote of the MSA the MSA does not hold is not the MSA (2026-11-05 brief;
+        # requiring the own text always withheld "Which clauses would the draft amendment change?", end-to-end run).
         of_asked = set(asked) | {link["passage"]["citation"]["document_id"] for link in links       # and its amendments
                                  if link["index"] < len(sources) and sources[link["index"]]["document_id"] in asked}
+        misquoting = {m["by_id"] for m in misquoted}
 
         def for_asked(claim) -> bool:
-            if own_text:
-                return any(1 <= c.n <= len(sources) and sources[c.n - 1]["document_id"] in of_asked for c in claim.citations)
-            return bool(spoken(claim) & asked)
+            cited = {sources[c.n - 1]["document_id"] for c in claim.citations if 1 <= c.n <= len(sources)}
+            return bool(cited & of_asked) or (not cited & misquoting and bool(spoken(claim) & asked))
         owner = attribution.party_records(question, known) if maybe_party else set()
         answering = [c for c in standing if not prompt.only_context(c.sentence)]
         off_target = (

@@ -71,6 +71,18 @@ def _keyword(matter_id: str, query: str, k: int) -> list[tuple[str, float]]:
     return [(r[0], float(r[1])) for r in rows]
 
 
+# An officer the question names by initials, which documents write out (2026-11-05 end-to-end run: "Up to what contract
+# value can Alder Finch's CFO sign?" matched every "CFO" but not the delegation's "the Chief Financial Officer may sign").
+_INITIALS = {"CEO": "Chief Executive Officer", "CFO": "Chief Financial Officer", "COO": "Chief Operating Officer",
+             "CTO": "Chief Technology Officer", "CIO": "Chief Information Officer", "GC": "General Counsel"}
+_INITIALS_RE = re.compile(r"\b(" + "|".join(_INITIALS) + r")\b(?!\s*\()")
+
+
+def spelled_out(query: str) -> str:
+    """The query with each officer's initials followed by the title they stand for: "the CFO (Chief Financial Officer)"."""
+    return _INITIALS_RE.sub(lambda m: f"{m.group(1)} ({_INITIALS[m.group(1)]})", query or "")
+
+
 # ── Windows ──────────────────────────────────────────────────────────────────────
 WINDOW_CHARS = 600
 _MAX_WINDOWS = 160
@@ -182,8 +194,11 @@ def _wide(h: dict) -> dict:
 # one passage and the four lettings the next, so "Which comparables does our surveyor rely on?" named one of four
 # (2026-11-03 chat set). Such a passage is read on into the next passage of the same version, within WIDE_CHARS; the gap
 # between them is kept as spaces so every character keeps its place in the document.
+# A passage ending on a list item's ";" (or "; and") is cut mid-list the same way: the minutes' "(a) to approve the renewal
+# … within the limits in paragraphs (b) to (d);" and the limits themselves were two passages (2026-11-05 end-to-end run).
 _ANNOUNCES = re.compile(r"\bthe\s+following\b(?!\s+(?:day|week|month|year|business|working|calendar|quarter|period|morning"
-                        r"|afternoon|evening|meeting)\b)|\bas\s+follows\b|\b(?:set\s+out|listed|shown|described)\s+below\b|:\s*$", re.I)
+                        r"|afternoon|evening|meeting)\b)|\bas\s+follows\b|\b(?:set\s+out|listed|shown|described)\s+below\b|:\s*$"
+                        r"|;\s*(?:and|or)?\s*$", re.I)
 
 
 def _continued(scope: AuthorizedScope, h: dict, versions: str, documents: Optional[list[str]]) -> dict:
@@ -333,6 +348,7 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
     quote (drafting, s3.1d) rather than abstain, a short document's one window must not be dropped. wide=True gives each
     passage whole (up to WIDE_CHARS around its best window) for a model to read."""
     recheck(scope)                                    # raises TypeError for anything but a real scope
+    query = spelled_out(query)
     modes = [m for m in modes if m in ALL_MODES] or list(ALL_MODES)
     idx = registry.for_matter(scope.matter_id)
     n = max(k, settings.LEGAL_SEARCH_CANDIDATES) * (5 if documents else 1)    # more candidates when only some documents count

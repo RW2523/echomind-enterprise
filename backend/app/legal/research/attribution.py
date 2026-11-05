@@ -56,6 +56,13 @@ def _own(title: str) -> set[str]:
     return _words(_ABOUT.split(title or "", maxsplit=1)[0])
 
 
+def subject(title: str, titles: dict[str, str]) -> set[str]:
+    """The documents a title says it is about ("Advice memo on the MSA" → the MSA): what an unattributed "Clause 4.2
+    provides …" in it quotes (2026-11-05 end-to-end run)."""
+    parts = _ABOUT.split(title or "", maxsplit=1)
+    return referenced(parts[1], titles) if len(parts) == 2 else set()
+
+
 def _qualifiers(title: str) -> set[str]:
     """The words of a title that tell it from others of its type: not the type, not a number, not a small word."""
     return {w for w in _words(title) - _TYPES if not w.isdigit()}
@@ -92,7 +99,12 @@ def referenced(text: str, titles: dict[str, str]) -> set[str]:
 # "The next board meeting of Kestrel Cold Storage Ltd is scheduled for 10 September 2026", from Voss-Lindqvist's board
 # minutes. A party's own internal record — its board, officers, offices, finances, advisers — is stated only by a document
 # that party is party to; a document that merely mentions the party does not say it.
-_COMPANY = re.compile(r"\b([A-Z][\w&'-]*(?:[ \t]+(?:&[ \t]+)?[A-Z][\w&'-]*){0,3})[ \t]+(?:Inc|Ltd|LLP|AB|plc|PLC|NV|GmbH|LLC|SA|BV|Limited)\b\.?")
+# Nordic and German forms too (2026-11-05 end-to-end run: "Fjellstad Distribution AS" was no party of its own reseller
+# agreement, so a question about Fjellstad's change of control was not read as one about that agreement).
+_FORMS = r"Inc|INC|Ltd|LTD|LLP|AB|plc|PLC|NV|GmbH|GMBH|LLC|SA|BV|Limited|AS|ASA|Oy|Oyj|AG|ApS"
+_COMPANY = re.compile(rf"\b([A-Z][\w&'-]*(?:[ \t]+(?:&[ \t]+)?[A-Z][\w&'-]*){{0,3}}),?[ \t]+(?:{_FORMS})\b\.?")
+# "… SUCH AS", "KNOWN AS", "THE PARTIES AGREE AS FOLLOWS" in capitals are no company
+_NOT_NAMES = frozenset("such known same so as agree agreed parties hereby follows".split())
 _RECORD = (r"(?:board(?:\s+meeting)?|board\s+of\s+directors|directors|chair(?:man|woman|person)?|general\s+counsel|chief\s+\w+\s+officer|"
            r"ceo|cfo|offices?|headquarters|registered\s+office|employees|staff|revenue|turnover|budget|dividend|shareholders|"
            r"auditors?|law\s+firm|lawyers|solicitors|advisers|account\s+manager|financial\s+year|complaints?(?:\s+procedure)?)")
@@ -126,7 +138,8 @@ def parties_of(title: str, text: str) -> set[str]:
     for m in _COMPANY.finditer(head):
         words = m.group(1).split()
         cut = max((i for i, w in enumerate(words) if w.lower() in _SMALL), default=-1)   # "Board of Directors of Voss-Lindqvist"
-        out.add(party_key(" ".join(words[cut + 1:])))
+        if words[cut + 1:] and not any(w.lower() in _NOT_NAMES for w in words[cut + 1:]):
+            out.add(party_key(" ".join(words[cut + 1:])))
     return out - {""}
 
 
@@ -207,7 +220,7 @@ def asks_concept(question: str) -> bool:
 # indemnify Voss-Lindqvist against?" never retrieved "Provider shall indemnify Client …" (rank 9; rank 2 with the roles in the
 # query). The preamble says who is who: "Harrowgate Systems Inc., a Delaware corporation ("Provider")".
 _ROLE_COMPANY = re.compile(r"\b[A-Z][\w&'-]*(?:,?[ \t]+(?:&[ \t]+)?[A-Z][\w&'-]*){0,4},?[ \t]+"
-                           r"(?:Inc|Ltd|LLP|LP|AB|plc|PLC|NV|GmbH|LLC|SA|BV|Limited|Corp|Corporation)\b\.?")
+                           r"(?:Inc|Ltd|LLP|LP|AB|plc|PLC|NV|GmbH|LLC|SA|BV|Limited|Corp|Corporation|AS|ASA|Oy|Oyj|AG|ApS)\b\.?")
 _ROLE_AFTER = re.compile(r"[^()\n]{0,220}?\(\s*(?:the\s+|hereinafter\s+(?:called\s+)?(?:the\s+)?)?[\"“']?"
                          r"(?P<role>[A-Z][A-Za-z]+(?:[ -][A-Z][a-z]+)?)[\"”']?\s*\)")
 _NOT_ROLES = frozenset("agreement effective date term premises purpose services service units schedule".split())
@@ -264,12 +277,37 @@ def without_parties(question: str, known: set[str]) -> str:
     it only to its employees … who need to know it"; asked without the names, first)."""
     q = (question or "").replace("\u2019", "'")
     for k in sorted(known, key=len, reverse=True):
-        q = re.sub(rf"(?:\b[Tt]he\s+)?\b(?i:{re.escape(k)})[\w-]*(?:[ \t]+(?!{_KEEP}\b)[A-Z][\w&-]*){{0,3}}('s|')?",
+        q = re.sub(rf"(?:\b[Tt]he\s+)?\b(?i:{re.escape(k)})[\w-]*(?:[ \t]+(?:&[ \t]+)?(?!{_KEEP}\b)[A-Z][\w&-]*){{0,3}}('s|')?",
                    lambda m: "the party's" if m.group(1) else "the party", q)
     return q
 
 
 _KEEP = r"(?i:nda|msa|agreement|lease|letter|notice|deed|contract|licen[cs]e|amendment|side|engagement|storage|supply|services?)"
+
+
+def without_titles(question: str, titles: list[str]) -> str:
+    """The question without the words that name the given documents (2026-11-05 end-to-end run): searched inside the advice
+    memo, "Does the advice memo state the MSA's payment terms correctly?" drew the memo's passages that say "MSA" most, not its
+    Fees and Payment section. A run of title words is dropped only when it holds the document's type ("the advice memo",
+    "the MSA's", "the Master Services Agreement"); "What services does the MSA cover?" keeps "services". Returns "" when too
+    little is left to search with."""
+    words = set().union(*(_words(t) for t in titles)) if titles else set()
+    toks = list(re.finditer(r"[A-Za-z0-9]+(?:['’]s)?", question or ""))
+    drop: list[tuple[int, int]] = []
+    run: list[re.Match] = []
+    for m in toks + [None]:
+        w = re.sub(r"['’]s$", "", m.group(0)).lower() if m else ""
+        if m and w in words and (not run or not question[run[-1].end():m.start()].strip()):
+            run.append(m)
+            continue
+        if run and any(re.sub(r"['’]s$", "", r.group(0)).lower() in _TYPES for r in run):
+            drop.append((run[0].start(), run[-1].end()))
+        run = [m] if m and w in words else []
+    out = question
+    for a, b in reversed(drop):
+        out = out[:a] + out[b:]
+    out = re.sub(r"\s+([,.?;:])", r"\1", re.sub(r"\s{2,}", " ", out)).strip()
+    return out if len(_words(out) - _TYPES) >= 2 else ""
 
 
 _QUOTED_WORDS = re.compile(r'["\u201c]([^"\u201c\u201d]{12,400})["\u201d]')
