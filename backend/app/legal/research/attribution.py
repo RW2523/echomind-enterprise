@@ -220,6 +220,48 @@ def roles_of(text: str) -> list[tuple[str, str]]:
     return out
 
 
+# A mutual NDA names its parties once ("VL", "Northbridge") and then speaks of "the Recipient" and "the Discloser", roles it
+# defines for "a Party" and "the other", not for either company (2026-11-05): "May Northbridge use what Voss-Lindqvist tells
+# it for some other project?" was declined over "The Recipient shall use Confidential Information only for the Purpose".
+_DEFINED_ROLE = re.compile(r'\(\s*(?:the\s+)?["\u201c](?P<role>[A-Z][A-Za-z]+(?:[ -][A-Z][a-z]+)?)["\u201d]\s*\)')
+_FOR_A_PARTY = re.compile(r"\b(?:party|the\s+other)\s*$", re.I)
+MAX_TAKEN = 3
+
+
+def taken_roles(text: str) -> list[tuple[list[str], str]]:
+    """(the roles, the sentence defining them) for each sentence defining roles that whichever party acts takes — "disclosed
+    by a Party (the "Discloser") to the other (the "Recipient")" — rather than a named company (`roles_of`)."""
+    out = []
+    for line in (text or "").replace("**", "").split("\n"):
+        for sentence in re.split(r"(?<=[.;])\s+(?=[A-Z\"\u201c(])", line):
+            rs = [m["role"] for m in _DEFINED_ROLE.finditer(sentence) if _FOR_A_PARTY.search(sentence[:m.start()])]
+            rs = [r for r in dict.fromkeys(rs) if r.lower() not in _NOT_ROLES]
+            if rs:
+                out.append((rs, sentence.strip()[:320]))
+    return out[:MAX_TAKEN]
+
+
+def mentioned(text: str, known: set[str]) -> set[str]:
+    """The known parties the text mentions at all, as a word ("Harrowgate", "Voss-Lindqvist's")."""
+    t = (text or "").replace("\u2019", "'")
+    return {p for p in known if re.search(rf"\b{re.escape(p)}(?![\w-])", t, re.I)}
+
+
+def without_parties(question: str, known: set[str]) -> str:
+    """The question with each party it names put as "the party" (2026-11-05): a clause speaks of "the Recipient", "each
+    party", "Client", and the names otherwise draw the search to passages that name the companies ("May Northbridge pass
+    information it receives from Voss-Lindqvist on to its own employees?" never reached "The Recipient … shall disclose
+    it only to its employees … who need to know it"; asked without the names, first)."""
+    q = (question or "").replace("\u2019", "'")
+    for k in sorted(known, key=len, reverse=True):
+        q = re.sub(rf"(?:\b[Tt]he\s+)?\b(?i:{re.escape(k)})[\w-]*(?:[ \t]+(?!{_KEEP}\b)[A-Z][\w&-]*){{0,3}}('s|')?",
+                   lambda m: "the party's" if m.group(1) else "the party", q)
+    return q
+
+
+_KEEP = r"(?i:nda|msa|agreement|lease|letter|notice|deed|contract|licen[cs]e|amendment|side|engagement|storage|supply|services?)"
+
+
 def named_in(question: str, roles: dict[str, list[tuple[str, str]]]) -> set[str]:
     """The party keys of the parties defined by a role that the question names ("Harrowgate", "Voss-Lindqvist's")."""
     words = set(re.findall(r"[a-z][a-z'-]*", (question or "").lower().replace("’", "'")))

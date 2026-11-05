@@ -228,13 +228,13 @@ def _titles(scopes, uid: str) -> dict[str, str]:
     return {d["id"]: d["title"] or "" for sc in scopes for d in doc_repo.list_documents(sc.matter_id, uid)}
 
 
-_HEADS: dict[tuple[str, str], tuple[set, list]] = {}       # (version id, title) → (parties, roles); a version's text is fixed
+_HEADS: dict[tuple[str, str], tuple[set, list, list]] = {}       # (version id, title) → (parties, roles); a version's text is fixed
 
 
-def _heads(scopes, uid: str) -> dict[str, tuple[set, list]]:
+def _heads(scopes, uid: str) -> dict[str, tuple[set, list, list]]:
     """For each document the person may read in the matters asked about (document id →): its parties (the companies of its
-    title and preamble, and those it defines by a role) and the roles it defines ("Provider", "Client"). Each version is
-    read once."""
+    title and preamble, and those it defines by a role), the roles it defines ("Provider", "Client") and the roles whichever
+    party acts takes ("the Recipient", with the sentence defining them). Each version is read once."""
     from ..documents import repo as doc_repo
     out = {}
     for sc in scopes:
@@ -247,7 +247,8 @@ def _heads(scopes, uid: str) -> dict[str, tuple[set, list]]:
                 roles = attribution.roles_of(text)
                 if len(_HEADS) > 20000:
                     _HEADS.clear()
-                _HEADS[key] = (attribution.parties_of(key[1], text) | ({attribution.party_key(n) for n, _ in roles} - {""}), roles)
+                _HEADS[key] = (attribution.parties_of(key[1], text) | ({attribution.party_key(n) for n, _ in roles} - {""}), roles,
+                               attribution.taken_roles(text))
             out[d["id"]] = _HEADS[key]
     return out
 
@@ -257,8 +258,8 @@ MAX_OPENINGS = 2
 
 def _openings(scope, question: str, passages: list[dict], roles: dict, versions: str) -> list[dict]:
     """The opening passage of each source document (at most two, best ranked first) that defines by a role a party the
-    question names, when the sources do not already include it. Only documents already among the sources: nothing new is
-    brought in."""
+    question names, when the sources do not already include it, else that source is marked as the opening. Only documents
+    already among the sources: nothing new is brought in."""
     named = attribution.named_in(question, roles)
     have, docs = {p["chunk_id"] for p in passages}, []
     for p in passages:
@@ -272,6 +273,10 @@ def _openings(scope, question: str, passages: list[dict], roles: dict, versions:
         if op and op["chunk_id"] not in have:
             have.add(op["chunk_id"])
             out.append({**op, "opening": True})
+        elif op:                                        # found by a search already: it is still the opening (2026-11-05)
+            for p in passages:
+                if p["chunk_id"] == op["chunk_id"]:
+                    p["opening"] = True
     return out
 
 
@@ -453,6 +458,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         # about "the supply agreement with Alder Retail" also searches the documents Alder Retail is party to.
         heads = await run_in_threadpool(_heads, scopes, principal["sub"])
         roles = {did: h[1] for did, h in heads.items() if h[1]}
+        taken = {did: h[2] for did, h in heads.items() if h[2]}
         known = set().union(*(h[0] for h in heads.values())) if heads else set()
         search_q = attribution.with_roles(question, roles)
         asked_parties = attribution.named_parties(question, known)
@@ -470,6 +476,13 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 have = {p["chunk_id"] for p in named["passages"]}
                 passages = named["passages"] + [p for p in passages if p["chunk_id"] not in have]
                 nothing_found = nothing_found and named["abstained"]
+            if (said := attribution.mentioned(question, known)):     # the clause's own words, without the names (2026-11-05)
+                among = documents or target or [did for did, h in heads.items() if said <= h[0]] or None
+                got = await searchmod.search(scope, attribution.without_parties(question, said), k=2, versions=versions,
+                                             documents=among, wide=True)
+                have = {p["chunk_id"] for p in passages}
+                passages = passages + [p for p in got["passages"] if p["chunk_id"] not in have]
+                nothing_found = nothing_found and got["abstained"]
             for side in prompt.compare_sides(question):     # each side of a comparison on its own (2026-11-04)
                 got = await searchmod.search(scope, attribution.with_roles(side, roles), k=2, versions=versions, documents=documents,
                                              wide=True)
@@ -654,6 +667,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                                                           if p.get("opening") and n not in cited_n]
             defined = [f'in "{titles.get(did) or did}", ' + ", ".join(f'"the {role}" is {name}' for name, role in roles[did])
                        for did in cited_docs if roles.get(did)]
+            defined += [f'in "{titles.get(did) or did}", either party may be ' + " or ".join(f'"the {r}"' for r in rs)
+                        + f', as it defines: "{sentence}"' for did in cited_docs for rs, sentence in taken.get(did, [])]
             verdict = await statedmod.answers(question, shown, defined)
             if hedged or mode == "all":
                 stated = verdict

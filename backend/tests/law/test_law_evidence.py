@@ -950,7 +950,7 @@ def test_not_stated_then_a_cited_fact_is_a_decline_or_an_answer_as_the_cited_pas
     yes an answer; no verdict leaves the answer as it was. Nothing is asked of an answer that does not open that way."""
     from app.core.config import settings
     monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
-    alice, asked, verdict = as_user(ev, "alice"), [], {"word": "NO"}
+    alice, asked, verdict = as_user(ev, "alice"), [], {"word": "NOT GIVEN"}
 
     async def chat(messages, temperature, max_tokens):
         asked.append(messages)
@@ -967,7 +967,7 @@ def test_not_stated_then_a_cited_fact_is_a_decline_or_an_answer_as_the_cited_pas
     assert done["status"] == "abstained" and done["stated"] is False and done["citations"] == []
     sent = asked[-1][-1]["content"]
     assert "Question: Is interest charged" in sent and "within thirty days of each invoice" in sent and "<passage" in sent
-    verdict["word"] = "YES"
+    verdict["word"] = "GIVEN"
     done = ask(alice, ev["mid"], q)[-1]
     assert done["abstained"] is False and done["stated"] is True and done["citations"]
     verdict["word"] = "It depends on the clause."
@@ -980,7 +980,7 @@ def test_not_stated_then_a_cited_fact_is_a_decline_or_an_answer_as_the_cited_pas
     assert ask(alice, ev["mid"], q)[-1]["stated"] is None and len(asked) == before
     # a named document's silence is a hedge too, and "shadow" asks of every answer but acts only on hedged ones
     monkeypatch.setattr(settings, "LEGAL_RESEARCH_STATED_CHECK", "hedged")
-    verdict["word"] = "NO"
+    verdict["word"] = "NOT GIVEN"
     ev["llm"].answer = (f'The MSA does not specify any interest on late fees. The Customer shall pay the fees within thirty days of '
                         f'each invoice [{n}: "pay the fees within thirty days of each invoice"].')
     assert ask(alice, ev["mid"], q)[-1]["status"] == "abstained"
@@ -1120,10 +1120,70 @@ def test_a_question_about_another_matter_by_its_number_is_not_answered_from_this
     assert foreign_matters("What does NW-0042 say?", ["M-101"], ["Invoice NW-0042 for GBP 3,000"]) == []
 
 
-def test_a_yes_counts_only_with_words_the_passages_hold():
+def test_given_counts_only_with_words_the_passages_hold():
     from app.legal.research import stated
     p = [{"text": "On the date of this Lease the Tenant shall pay a rent deposit of GBP 21,000.", "citation": {"document_title": "L"}}]
-    assert stated.verdict('Asked: when\nWords: "On the date of this Lease the Tenant shall pay a rent deposit"\nVerdict: YES', p) is True
-    assert stated.verdict("Asked: when\nWords: payable on signing\nVerdict: YES", p) is None
-    assert stated.verdict("Asked: when\nWords: NONE\nVerdict: NO", p) is False
-    assert stated.verdict("YES", p) is True and stated.verdict("maybe", p) is None
+    assert stated.verdict('Asked: when\nWords: "On the date of this Lease the Tenant shall pay a rent deposit"\nVerdict: GIVEN', p) is True
+    assert stated.verdict("Asked: when\nWords: payable on signing\nVerdict: GIVEN", p) is None
+    assert stated.verdict("Asked: when\nWords: NONE\nVerdict: NOT GIVEN", p) is False
+    assert stated.verdict("GIVEN", p) is True and stated.verdict("NOT GIVEN.", p) is False and stated.verdict("maybe", p) is None
+
+
+def test_a_no_that_answers_the_question_is_not_read_as_the_verdict():
+    """2026-11-05: with YES/NO verdicts, "Did the board propose an interim dividend?" over "The board resolved not to propose
+    an interim dividend" ended NO — the question's answer — and declined a stated fact. A YES or NO is no verdict now, and
+    the check is told a no that settles the question gives the answer."""
+    from app.legal.research import stated
+    p = [{"text": "The board resolved not to propose an interim dividend.", "citation": {"document_title": "Minutes"}}]
+    words = "Asked: whether the board proposed an interim dividend\nWords: The board resolved not to propose an interim dividend.\n"
+    assert stated.verdict(words + "Verdict: NO", p) is None and stated.verdict(words + "Verdict: YES", p) is None
+    assert stated.verdict(words + "Verdict: GIVEN", p) is True and stated.verdict("NO", p) is None
+    system = stated.messages("Did the board propose an interim dividend?", p)[0]["content"]
+    assert "not what the answer is" in system and "GIVEN or NOT GIVEN" in system
+
+
+MUTUAL_NDA = ("MUTUAL NON-DISCLOSURE AGREEMENT (fictional)\n\nThis Agreement is made between Fenwick Analytics Ltd (\"Fenwick\") and "
+              "Orrin Freight AB (\"Orrin\").\n\n1. Confidential Information\n\n1.1 \"Confidential Information\" means information "
+              "disclosed by a Party (the \"Discloser\") to the other (the \"Recipient\").\n\n2. Use\n\n2.1 The Recipient shall use "
+              "Confidential Information only for the evaluation of a joint warehouse project and shall disclose it only to its "
+              "employees who need to know it.\n")
+
+
+def test_roles_either_party_takes_reach_the_search_and_the_check(ev, monkeypatch):
+    """2026-11-05: a mutual NDA names its parties, then speaks only of "the Recipient" and "the Discloser", roles whichever
+    party discloses or receives takes. A question naming a party is also searched without the names, among the documents
+    that party is party to, and the not-stated check is told how the document defines the roles."""
+    from app.core.config import settings
+    from app.legal.research import attribution
+    from app.legal.retrieval import search as searchmod
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    alice = as_user(ev, "alice")
+    nda = upload(alice, ev["mid"], "nda.txt", MUTUAL_NDA, status="executed", title="Fenwick NDA").json()["document"]
+    index_all()
+    searched, real = [], searchmod.search
+
+    async def search(scope, q, **kw):
+        searched.append((q, kw.get("documents")))
+        return await real(scope, q, **kw)
+    monkeypatch.setattr(searchmod, "search", search)
+    asked = []
+
+    async def chat(messages, temperature, max_tokens):
+        asked.append(messages)
+        return "Asked: whether Fenwick may tell its staff\nWords: shall disclose it only to its employees who need to know it\nVerdict: GIVEN"
+    monkeypatch.setattr(ev["llm"], "chat", chat, raising=False)
+    q = "May Fenwick pass what Orrin tells it on to its own staff?"
+    ev["llm"].answer = "x"
+    n = source_n(ask(alice, ev["mid"], q), "only to its employees")
+    assert ("May the party pass what the party tells it on to its own staff?", [nda["id"]]) in searched
+    ev["llm"].answer = (f'The documents do not state whether Fenwick may tell its staff. The Recipient shall disclose it only to its '
+                        f'employees who need to know it [{n}: "shall disclose it only to its employees who need to know it"].')
+    done = ask(alice, ev["mid"], q)[-1]
+    assert done["stated"] is True and done["abstained"] is False
+    sent = asked[-1][-1]["content"]
+    assert 'in "Fenwick NDA", either party may be "the Discloser" or "the Recipient", as it defines:' in sent
+    assert attribution.taken_roles(MUTUAL_NDA) == [(["Discloser", "Recipient"], '1.1 "Confidential Information" means information '
+                                                   'disclosed by a Party (the "Discloser") to the other (the "Recipient").')]
+    assert attribution.taken_roles(NORTHWIND) == []                       # "(the "Supplier")" is a company's role
+    assert attribution.without_parties("Under the Northbridge NDA, may Northbridge tell Voss-Lindqvist AB's staff?",
+                                       {"northbridge", "voss-lindqvist"}) == "Under the party NDA, may the party tell the party's staff?"
