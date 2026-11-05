@@ -1,0 +1,76 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+PRIVILEGED AND CONFIDENTIAL - ATTORNEY WORK PRODUCT - PREPARED IN ANTICIPATION OF LITIGATION
+
+INTERVIEW RECORD - WITNESS A
+
+Matter: MAT-1042, Morgan v. Apex Industries
+Date: June 30, 2026
+Time: 10:00 to 11:05
+Place: Conference Room B, Morgan Company LLC, 400 Harbor Road, Port Ellison, Delaware
+Witness: Gareth Pell, Warehouse Supervisor, Morgan Company LLC
+Interviewer: Imogen Castellano, outside counsel to Morgan Company LLC
+Also present: Nadia Kessler, General Counsel, Morgan Company LLC
+Record prepared by: Imogen Castellano
+Status: Final. Mr. Pell read this record on July 2, 2026 and confirmed that it accurately reflects what he said.
+
+PRELIMINARY
+
+1. Ms. Castellano explained that she acts for Morgan Company LLC ("Morgan") and not for Mr. Pell personally, that the interview is confidential and privileged, that the privilege belongs to Morgan, and that Morgan may decide to disclose what he says. Mr. Pell said he understood and was happy to continue.
+
+2. Mr. Pell was asked to give his own recollection and not to guess. He was told that it is fine to say that he does not know or does not remember. He was not shown the shipment log, the email correspondence or any other document before or during the interview, so that his account would be his own memory.
+
+BACKGROUND
+
+3. Mr. Pell has worked at the Port Ellison facility since 2017 and has been Warehouse Supervisor since 2022. He supervises the receiving team at Docks 1 to 4 and reports to Owen Tremblay, Vice President, Operations. He normally works the early shift, starting at 06:00.
+
+4. Mr. Pell knew that Morgan had ordered forty chiller units from Apex Industries, Inc. ("Apex") for the plant expansion. He did not know the contract terms and had not seen the Services Agreement or Amendment No. 1. He did not know that the delivery date had been changed.
+
+THE ARRIVAL OF THE UNITS
+
+5. Mr. Pell recalls that the units arrived at Dock 3 on May 12, 2026. In his words: "I'm fairly sure it was the 12th. It was the week of our quarterly cycle count, and I remember the trucks coming in first thing, before eight."
+
+6. Asked how sure he was of the date, he said: "Fairly sure. Not a hundred percent. I didn't write the date down myself. But that's my memory of it." He said he did not check the date on the delivery note when it was signed.
+
+7. He recalls two Quillon Freight Lines trailers backing onto Dock 3 at around 07:45, shortly before eight. Unloading took most of the morning. He counted twenty crates, each holding two units.
+
+CONDITION OF THE CRATES
+
+8. One crate had visible damage. Mr. Pell identified it as crate 7. The bottom corner on the driver's side was crushed, the shrink-wrap was torn and one of the forklift pockets was split. He said: "You could see it had taken a knock. The others looked fine from the outside."
+
+9. Mr. Pell told the receiving clerk not to sign the delivery note "clean". He asked him to write the damage on it before signing.
+
+10. Mr. Pell took about three photographs of crate 7 on his work phone before it was moved. He has not yet found them. He thinks they may have been backed up when his phone was replaced in late May. He agreed to ask IT to look for them.
+
+THE DELIVERY NOTE
+
+11. The delivery note was signed by Tomas Reyes, the receiving clerk on duty. Mr. Pell did not sign it. Mr. Reyes wrote on the note, at Mr. Pell's request: "Crate 7 corner damage - contents not inspected". Mr. Pell initialled that remark. He said that is the usual practice when packaging is damaged.
+
+12. Asked whether the driver said anything about the damage, Mr. Pell said the driver told them the crate was already like that when he took over the trailer at the carrier's hub, but Mr. Pell did not see anything to confirm this.
+
+THE INSPECTION
+
+13. Mr. Pell said the units were not opened on the day they arrived. The crates were moved to the test bay. The quality team, led by Hector Lindgren, Quality Engineer, carried out the inspection "on the Saturday". Mr. Pell was present for part of it.
+
+14. When crate 7 was opened, one unit had a cracked panel on the condenser housing. Mr. Pell saw the crack himself. He understood that a second unit from another crate failed a leak test later that day, but he was not present for that test.
+
+15. He understands that two units were rejected and set aside in the quarantine bay. Replacement units arrived "early June, about three or four weeks later". He does not remember the exact date of the replacement delivery.
+
+OTHER MATTERS
+
+16. Mr. Pell had no contact with anyone at Apex about the delivery. He did not take part in any call with Apex.
+
+17. Asked whether anyone else would remember the arrival, Mr. Pell named Tomas Reyes and Simone Achterberg, Logistics Coordinator, who he said "deals with the bookings". He said the gatehouse keeps its own record of every truck that comes in.
+
+18. Mr. Pell said he had not discussed the dates with Ms. Achterberg or anyone else before the interview, apart from mentioning to Mr. Tremblay in June that he thought the trucks "came in earlier that week".
+
+19. At the end of the interview Mr. Pell repeated that his recollection is that the units arrived on May 12, 2026, while accepting that he could be mistaken about the date.
+
+FOLLOW-UP
+
+20. Mr. Pell to ask IT to recover the photographs of crate 7 from his old work phone.
+
+21. Ms. Castellano to compare Mr. Pell's account with the gatehouse record and the carrier's tracking data, without discussing his account with other witnesses before they are interviewed.
+
+Imogen Castellano
+June 30, 2026

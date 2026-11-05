@@ -1,0 +1,51 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+APEX INDUSTRIES, INC.
+Contracts Department
+1800 Foundry Lane, Ridgeport, Colorado 80659
+
+Date: June 22, 2026
+
+BY EMAIL (legal@morgan-company.example)
+
+Morgan Company LLC
+Address: 400 Harbor Road, Port Ellison, Delaware 19720
+Attention: Nadia Kessler, General Counsel
+
+Re: Your notice of June 15, 2026 - Purchase Order PO-4471 - Services Agreement dated April 1, 2026, as amended by Amendment No. 1
+
+Dear Ms. Kessler,
+
+1. We refer to your notice of June 15, 2026 claiming liquidated damages of USD 55,800. Apex Industries, Inc. ("Apex") rejects the claim in full, for the reasons below. Terms defined in the Services Agreement have the same meanings in this letter.
+
+DELIVERY WAS ON TIME
+
+2. All forty (40) Units arrived at the Delivery Point on May 15, 2026 at 07:40. That is shown by the carrier's records and confirmed by Morgan's own email of May 18, 2026. The Delivery Date, as amended by Amendment No. 1, is May 20, 2026. Apex therefore delivered five days early.
+
+3. Apex's position is that Delivery took place on May 15, 2026. The later replacement of two Units under clause 6.3 was a quality matter. It did not turn an early delivery into a late one, and no liquidated damages are payable under clause 7.1.
+
+FORCE MAJEURE
+
+4. In any event, any delay in delivering the two replacement Units was caused by a Force Majeure Event. On May 21, 2026, a storm flooded the plant of Apex's compressor supplier, Corvane Compressor Works, and damaged the compressor modules that had been ordered for the replacement Units. A flood is a Force Majeure Event under clause 8.1, and clause 8.4(b) does not exclude it, because the flood would have been a Force Majeure Event if it had affected Apex directly.
+
+5. Apex notified Morgan of the flood promptly, by the email of its Program Manager, Priya Raman, to Morgan's Project Contact, Owen Tremblay, on June 2, 2026. That email described the event and the expected delivery of the replacement Units on June 10, 2026. Apex considers that it satisfied clause 8.2 and that it is entitled to relief under clause 8.3 for the whole period from May 21, 2026 to June 10, 2026.
+
+6. Apex used all reasonable efforts to mitigate the delay. It obtained two compressor modules from Corvane's undamaged stock and shipped the replacement Units by expedited carrier on June 8, 2026.
+
+PAYMENT
+
+7. Apex does not accept the set-off. Invoice INV-2026-0518 for the Balance of USD 992,000 was issued on May 18, 2026 after Delivery on May 15, 2026, and fell due on June 17, 2026. It has not been paid. Interest at one percent (1%) per month runs on USD 992,000 from June 18, 2026 under clause 3.8 until payment.
+
+DISPUTE NOTICE
+
+8. This letter is a Dispute Notice under clause 13.2. Apex proposes a meeting of senior executives, by video, within the period set by that clause. Victor Halloran, President, will attend for Apex.
+
+9. Apex reserves all of its rights and remedies.
+
+Yours sincerely,
+
+/s/ Douglas Whitfield
+Douglas Whitfield
+Director of Contracts, Apex Industries, Inc.
+
+cc: Victor Halloran, President; Priya Raman, Program Manager

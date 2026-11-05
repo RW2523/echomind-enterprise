@@ -1,0 +1,43 @@
+{
+ "note": "FICTIONAL EchoMind Legal demo set for MAT-1042 (and the restricted MAT-2033). Every party, person, figure and event is invented. Titles match eval/fixtures/legal/manifest.json; four documents are new (purchase order, invoice, Morgan's claim notice, Apex's response). Answer key: answer_key_mat1042.jsonl. Presenter guide: guide_mat1042.md.",
+ "cases": [
+  {
+   "number": "MAT-1042",
+   "title": "Morgan v. Apex Industries",
+   "practice_area": "Commercial litigation",
+   "jurisdiction": "Delaware",
+   "lead": "alice",
+   "members": {"carol": "paralegal", "nakamura": "reviewer"},
+   "client": {"name": "Morgan Company LLC", "code": "MORGAN"},
+   "parties": [["Apex Industries, Inc.", "adverse"]],
+   "documents": [
+    {"file": "MAT-1042/Services_Agreement_2026-04-01.txt", "title": "Services Agreement (DEMO)", "kind": "contract", "status": "executed"},
+    {"file": "MAT-1042/Amendment_1_2026-05-14.txt", "title": "Amendment No. 1 (DEMO)", "kind": "contract", "status": "executed"},
+    {"file": "MAT-1042/Witness_A_Interview.txt", "title": "Witness A interview (DEMO)", "kind": "evidence", "status": "final"},
+    {"file": "MAT-1042/Witness_B_Interview.txt", "title": "Witness B interview (DEMO)", "kind": "evidence", "status": "final"},
+    {"file": "MAT-1042/Shipment_Log.txt", "title": "Shipment log (DEMO)", "kind": "evidence", "status": "received"},
+    {"file": "MAT-1042/Email_Thread.txt", "title": "Email thread on delivery timing (DEMO)", "kind": "correspondence", "status": "received"},
+    {"file": "MAT-1042/Draft_Meeting_Notes.txt", "title": "Draft meeting notes (DEMO)", "kind": "note", "status": "draft"},
+    {"file": "MAT-1042/Research_Memo_Liquidated_Damages.txt", "title": "Research memo with an unverified citation (DEMO)", "kind": "memo", "status": "draft"},
+    {"file": "MAT-1042/Purchase_Order_PO-4471.txt", "title": "Purchase order PO-4471 (DEMO)", "kind": "other", "status": "final"},
+    {"file": "MAT-1042/Invoice_INV-2026-0518.txt", "title": "Invoice INV-2026-0518 (DEMO)", "kind": "other", "status": "received"},
+    {"file": "MAT-1042/Notice_of_Late_Delivery_2026-06-15.txt", "title": "Notice of late delivery and claim (DEMO)", "kind": "correspondence", "status": "final"},
+    {"file": "MAT-1042/Apex_Response_2026-06-22.txt", "title": "Apex response to the claim (DEMO)", "kind": "correspondence", "status": "received"}
+   ]
+  },
+  {
+   "number": "MAT-2033",
+   "title": "Rivera Confidential Matter",
+   "practice_area": "Employment",
+   "jurisdiction": "New York",
+   "sensitivity": "highly_restricted",
+   "lead": "bob",
+   "members": {},
+   "client": {"name": "Rivera (DEMO)", "code": "RIVERA"},
+   "parties": [],
+   "documents": [
+    {"file": "MAT-2033/Rivera_Confidential_Note.txt", "title": "Rivera confidential note (DEMO)", "kind": "note", "status": "final"}
+   ]
+  }
+ ]
+}

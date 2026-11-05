@@ -1,0 +1,62 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+SHIPMENT AND RECEIVING LOG - PURCHASE ORDER PO-4471
+
+Report date: June 26, 2026
+Exported by: S. Achterberg, Logistics Coordinator, Morgan Company LLC
+Consignee: Morgan Company LLC, Receiving Dock 3, 400 Harbor Road, Port Ellison, Delaware 19720
+Shipper: Apex Industries, Inc., 1800 Foundry Lane, Ridgeport, Colorado 80659
+Carrier: Quillon Freight Lines, Inc.
+
+Sources of entries:
+[Q] Quillon Freight Lines tracking portal (carrier events, carrier time stamps)
+[G] Morgan gatehouse system (automatic entry and exit scans of trailer numbers)
+[R] Morgan receiving and quality records
+
+SHIPMENT 1 - ORIGINAL DELIVERY
+Carrier tracking number (PRO): QFL-88213457
+Apex delivery note: DN-7719
+Contents: 20 crates, 40 Units (serial numbers IC450-1101 to IC450-1140), two Units per crate
+Trailers: QFL-5531 and QFL-5547
+
+| Date | Time | Source | Event | Location | Reference / remarks |
+|---|---|---|---|---|---|
+| May 10, 2026 | 14:20 | Q | Picked up from shipper; 20 crates loaded on trailers QFL-5531 and QFL-5547 | Apex Industries plant, Ridgeport, Colorado | PRO QFL-88213457; DN-7719; PO-4471 |
+| May 10, 2026 | 16:05 | Q | Departed origin | Ridgeport, Colorado | Both trailers |
+| May 11, 2026 | 18:30 | Q | In transit - checkpoint scan | Quillon relay terminal T-22 | On schedule |
+| May 13, 2026 | 21:15 | Q | In transit - arrived at carrier hub | Quillon Eastern Hub T-40 | Driver change |
+| May 14, 2026 | 15:05 | Q | Held at hub for delivery appointment | Quillon Eastern Hub T-40 | Appointment May 15, 2026, 07:30, booked by consignee |
+| May 14, 2026 | 23:50 | Q | Departed hub - out for delivery | Quillon Eastern Hub T-40 | Both trailers |
+| May 15, 2026 | 07:40 | G | Gate-in: trailers QFL-5531 and QFL-5547 | Morgan gatehouse, 400 Harbor Road | Gate pass G-0391 |
+| May 15, 2026 | 07:55 | R | Unloading started | Receiving Dock 3 | Receiving clerk: T. Reyes |
+| May 15, 2026 | 10:40 | R | Unloading complete - 20 crates received | Receiving Dock 3 | Crates moved to test bay |
+| May 15, 2026 | 10:45 | Q | Delivered - delivery note DN-7719 signed "T. Reyes" | Receiving Dock 3 | Exception noted on delivery note: "Crate 7 corner damage - contents not inspected" (initialled G.P.) |
+| May 15, 2026 | 11:10 | G | Gate-out: trailers QFL-5531 and QFL-5547 | Morgan gatehouse | - |
+| May 16, 2026 | 08:00 | R | Inspection started | Test bay | Quality: H. Lindgren |
+| May 16, 2026 | 16:30 | R | Inspection complete: 38 Units pass, 2 Units fail | Test bay | Fail: IC450-1113 (crate 7), cracked condenser housing; IC450-1134 (crate 17), refrigerant leak at brazed joint, circuit 2 |
+| May 16, 2026 | 16:45 | R | Units IC450-1113 and IC450-1134 tagged REJECTED and quarantined | Quarantine bay Q2 | - |
+| May 18, 2026 | 09:12 | R | Rejection notice for IC450-1113 and IC450-1134 sent to Apex | - | Sent by O. Tremblay to contracts@apex-industries.example |
+
+SHIPMENT 2 - REPLACEMENT UNITS
+Carrier tracking number (PRO): QFL-88297702
+Apex delivery note: DN-7784
+Contents: 1 crate, 2 Units (serial numbers IC450-1141 and IC450-1142)
+Trailer: QFL-5602 (expedited service, team drivers)
+
+| Date | Time | Source | Event | Location | Reference / remarks |
+|---|---|---|---|---|---|
+| June 8, 2026 | 13:30 | Q | Picked up from shipper; 1 crate loaded on trailer QFL-5602 | Apex Industries plant, Ridgeport, Colorado | PRO QFL-88297702; DN-7784; PO-4471 |
+| June 8, 2026 | 14:10 | Q | Departed origin | Ridgeport, Colorado | Expedited |
+| June 10, 2026 | 08:15 | G | Gate-in: trailer QFL-5602 | Morgan gatehouse, 400 Harbor Road | Gate pass G-0517 |
+| June 10, 2026 | 08:50 | Q | Delivered - delivery note DN-7784 signed "T. Reyes" | Receiving Dock 3 | No exceptions |
+| June 10, 2026 | 09:30 | R | Rejected Units IC450-1113 and IC450-1134 loaded on trailer QFL-5602 for return to Apex | Receiving Dock 3 | Return authorized by Apex |
+| June 10, 2026 | 09:55 | G | Gate-out: trailer QFL-5602 | Morgan gatehouse | - |
+| June 11, 2026 | 14:00 | R | Inspection of replacement Units complete: 2 Units pass | Test bay | Quality: H. Lindgren |
+| June 12, 2026 | 11:00 | R | Acceptance Certificate AC-4471 issued for all 40 Units | - | Units IC450-1101 to IC450-1140 (except IC450-1113 and IC450-1134), plus IC450-1141 and IC450-1142 |
+
+SUMMARY
+Original delivery: dispatched May 10, 2026; arrived (gate-in) May 15, 2026 at 07:40; inspected May 16, 2026; 38 Units passed, 2 Units rejected.
+Replacement delivery: dispatched June 8, 2026; arrived (gate-in) June 10, 2026 at 08:15; inspected June 11, 2026; 2 Units passed.
+Acceptance Certificate AC-4471 issued June 12, 2026.
+
+End of report.

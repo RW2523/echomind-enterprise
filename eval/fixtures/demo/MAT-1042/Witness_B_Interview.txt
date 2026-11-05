@@ -1,0 +1,78 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+PRIVILEGED AND CONFIDENTIAL - ATTORNEY WORK PRODUCT - PREPARED IN ANTICIPATION OF LITIGATION
+
+INTERVIEW RECORD - WITNESS B
+
+Matter: MAT-1042, Morgan v. Apex Industries
+Date: July 1, 2026
+Time: 14:00 to 15:00
+Place: Conference Room B, Morgan Company LLC, 400 Harbor Road, Port Ellison, Delaware
+Witness: Simone Achterberg, Logistics Coordinator, Morgan Company LLC
+Interviewer: Imogen Castellano, outside counsel to Morgan Company LLC
+Also present: Nadia Kessler, General Counsel, Morgan Company LLC
+Record prepared by: Imogen Castellano
+Status: Final. Ms. Achterberg read this record on July 2, 2026 and confirmed that it accurately reflects what she said.
+
+PRELIMINARY
+
+1. Ms. Castellano explained that she acts for Morgan Company LLC ("Morgan") and not for Ms. Achterberg personally, that the interview is confidential and privileged, that the privilege belongs to Morgan, and that Morgan may decide to disclose what she says. Ms. Achterberg said she understood.
+
+2. Ms. Achterberg was asked to give her own recollection. She was not told what any other witness had said. She was allowed to refer to the shipment and receiving log, which she exported herself on June 26, 2026 from the gatehouse system, the receiving records and the Quillon Freight Lines tracking portal.
+
+BACKGROUND
+
+3. Ms. Achterberg has been Logistics Coordinator at the Port Ellison facility since 2021. She schedules inbound deliveries, books dock appointments, deals with carriers and keeps the receiving records. She reports to Owen Tremblay, Vice President, Operations, who is Morgan's Project Contact for the Apex order.
+
+4. She knew the order as purchase order PO-4471 for forty IC-450 chiller units. She knew the original delivery date was May 15, 2026, and she learned from Mr. Tremblay in mid-May that it had been moved to May 20, 2026 by an amendment. She did not see the amendment itself.
+
+THE DISPATCH NOTICE AND THE BOOKING
+
+5. Ms. Achterberg was copied on the email from Priya Raman, Program Manager at Apex Industries, Inc. ("Apex"), of May 4, 2026. That email gave the planned dispatch date of May 10, 2026, the carrier (Quillon Freight Lines), the tracking number QFL-88213457, the number of crates (twenty) and an estimated arrival on the morning of May 15, 2026.
+
+6. On May 5, 2026 she booked Dock 3 for Friday, May 15, 2026 at 07:30, and confirmed the booking to Ms. Raman by email. She said Dock 3 is the only dock that takes two trailers side by side.
+
+THE PHONE CALL WITH APEX
+
+7. On May 14, 2026, at about 15:00, Ms. Achterberg telephoned Marcus Delacroix, Shipping Supervisor at Apex, to check that the delivery was still on schedule. She had not had a tracking update for a day. Mr. Delacroix told her that both trailers were at the Quillon hub, that the drivers had changed there, and that the trailers would leave the hub that night and arrive "first thing Friday" for the 07:30 slot. He gave her the trailer numbers, QFL-5531 and QFL-5547.
+
+8. She made a note of the call in the booking record. Asked whether anything was said about damage or about the delivery date, she said no. The call was about timing only.
+
+THE ARRIVAL
+
+9. Ms. Achterberg says the units arrived on May 15, 2026. She went to the gatehouse that morning because the delivery was large and she wanted to make sure both trailers were sent straight to Dock 3. She was at the gatehouse when the trailers checked in together at 07:40.
+
+10. She referred to the shipment log, which records the gate-in of trailers QFL-5531 and QFL-5547 on May 15, 2026 at 07:40, the start of unloading at 07:55, the end of unloading at 10:40 with twenty crates received, and the signing of the delivery note at 10:45.
+
+11. Asked whether the units could have arrived earlier that week, she said: "No. I booked that slot for the Friday and I was standing at the gate when they came in. There was nothing from Apex on site before the 15th."
+
+12. She did not see the delivery note being signed, but she saw it afterwards. It was signed by Tomas Reyes and carried a handwritten remark about damage to crate 7, initialled by Gareth Pell, Warehouse Supervisor. She did not take any photographs.
+
+THE INSPECTION AND THE REJECTION
+
+13. The quality team, led by Hector Lindgren, Quality Engineer, inspected the units in the test bay on Saturday, May 16, 2026. At about 17:00 that day Mr. Lindgren emailed Ms. Achterberg and Mr. Tremblay the results: thirty-eight units passed and two failed. Unit IC450-1113, from crate 7, had a cracked condenser housing. Unit IC450-1134, from crate 17, had a refrigerant leak at a brazed joint in circuit 2.
+
+14. The two units were tagged as rejected and moved to quarantine bay Q2. Mr. Tremblay sent the rejection notice to Apex on Monday, May 18, 2026. Ms. Achterberg was copied.
+
+THE REPLACEMENT UNITS
+
+15. Ms. Achterberg was not copied on Apex's email of June 2, 2026 about the delay to the replacement units. Mr. Tremblay told her about it the next day so that she could book a slot.
+
+16. The two replacement units, IC450-1141 and IC450-1142, arrived in one crate on a single trailer, QFL-5602. The trailer checked in at the gate on June 10, 2026 at 08:15, and Mr. Reyes signed the delivery note at 08:50 with no exceptions. The two rejected units were loaded onto the same trailer for return to Apex.
+
+17. The quality team tested the replacement units on June 11, 2026 and both passed. She understands that an acceptance certificate for all forty units was issued on June 12, 2026, but she did not prepare it.
+
+OTHER MATTERS
+
+18. Ms. Achterberg had no other telephone calls with Apex about this order. All her other contact with Apex was by email.
+
+19. She confirmed that the gatehouse system records every vehicle entry automatically when the guard scans the trailer number, and that the times in the log come from that system, from Morgan's receiving and quality records and from the Quillon portal.
+
+20. At the end of the interview Ms. Achterberg confirmed that, in her recollection and according to the shipment log, the units arrived at Dock 3 on May 15, 2026.
+
+FOLLOW-UP
+
+21. Ms. Achterberg to provide the booking record with her note of the call of May 14, 2026, and her email of May 5, 2026 confirming the dock booking.
+
+Imogen Castellano
+July 1, 2026

@@ -184,7 +184,7 @@ def _seed_meeting(org: str, matter_id: str, by: str) -> None:
     at = lambda s: (start + timedelta(seconds=s)).strftime("%Y-%m-%dT%H:%M:%S.000Z")   # noqa: E731
     lines = [(helena, 0, "Thank you for joining. Harrowgate has sent its redline of the Master Services Agreement."),
              (petra, 9, "What does the new fee look like?"),
-             (helena, 14, "The monthly fee rises to USD 19,750 and the liability cap to USD 500,000."),
+             (helena, 14, "The monthly fee rises to USD 19,750, and the cap would drop to the fees of the last twelve months."),
              (petra, 31, "We will not accept the fee increase unless they agree to a longer term."),
              (helena, 40, "Noted. petra fos will confirm the board's position by Friday."),
              (helena, 47, "Between us, our client's bottom line is a cap of USD 400,000 and no lower."),

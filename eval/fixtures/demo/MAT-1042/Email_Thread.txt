@@ -1,0 +1,173 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+EMAIL THREAD - DELIVERY TIMING - PURCHASE ORDER PO-4471
+
+Collected from the mailboxes of Owen Tremblay and Nadia Kessler, Morgan Company LLC, on June 26, 2026. Nine messages, in date order. Attachments are not reproduced.
+
+------------------------------------------------------------
+MESSAGE 1 OF 9
+From: Priya Raman <praman@apex-industries.example>
+To: Owen Tremblay <otremblay@morgan-company.example>
+Date: April 24, 2026, 16:12
+Subject: IC-450 units - compressor supply update
+
+Owen,
+
+I want to flag an issue early. Our supplier of scroll compressor modules, Corvane Compressor Works, has told us that its April shipment of modules for the IC-450 build will arrive about a week late because of a tooling problem on its line.
+
+We are re-sequencing assembly and factory testing to protect your date, but May 15 is now at risk. I will confirm where we stand by May 4.
+
+Best regards,
+Priya Raman
+Program Manager, Apex Industries, Inc.
+
+------------------------------------------------------------
+MESSAGE 2 OF 9
+From: Priya Raman <praman@apex-industries.example>
+To: Owen Tremblay <otremblay@morgan-company.example>
+Cc: Simone Achterberg <sachterberg@morgan-company.example>
+Date: May 4, 2026, 11:47
+Subject: PO-4471 - request to move the delivery date, and dispatch notice
+
+Owen,
+
+The compressor modules arrived on April 30. Factory acceptance testing is complete for 34 of the 40 Units, and the last 6 will finish by May 8.
+
+Dispatch notice under clause 4.1 of the Services Agreement:
+- Planned dispatch date: May 10, 2026
+- Carrier: Quillon Freight Lines
+- Tracking number (PRO): QFL-88213457
+- Number of crates: 20 (two Units per crate)
+- Estimated arrival at Dock 3: morning of May 15, 2026
+
+Transit takes four to five days, so May 15 leaves us no margin if anything goes wrong on the road. We therefore ask Morgan to agree to move the Delivery Date in clause 4.2 to May 20, 2026. Douglas Whitfield in our contracts team can prepare the paperwork.
+
+Simone, could you book a dock slot for the morning of May 15?
+
+Best regards,
+Priya
+
+------------------------------------------------------------
+MESSAGE 3 OF 9
+From: Owen Tremblay <otremblay@morgan-company.example>
+To: Priya Raman <praman@apex-industries.example>
+Cc: Nadia Kessler <nkessler@morgan-company.example>
+Date: May 6, 2026, 09:31
+Subject: RE: PO-4471 - request to move the delivery date, and dispatch notice
+
+Priya,
+
+Morgan can agree to a Delivery Date of May 20, 2026 on one condition: the liquidated damages rate in clause 7.1 goes up from 1% to 1.5% of the Total Contract Price for each week of delay after the new date. The cap in clause 7.2 stays at 10%.
+
+Any change must be made in a written amendment signed by both companies, as clause 15.2 requires. Until that amendment is signed, clause 4.2 continues to apply as written, and Morgan reserves all of its rights under the Services Agreement.
+
+Regards,
+Owen Tremblay
+Vice President, Operations, Morgan Company LLC
+
+------------------------------------------------------------
+MESSAGE 4 OF 9
+From: Douglas Whitfield <dwhitfield@apex-industries.example>
+To: Nadia Kessler <nkessler@morgan-company.example>
+Cc: Owen Tremblay <otremblay@morgan-company.example>; Priya Raman <praman@apex-industries.example>
+Date: May 14, 2026, 10:05
+Subject: Amendment No. 1 - Services Agreement - signed by Apex
+
+Nadia,
+
+Following Priya's call with Owen on May 8, I attach Amendment No. 1, signed for Apex by Victor Halloran, our President. It replaces clause 4.2 of the Services Agreement (new Delivery Date of May 20, 2026) and clause 7.1 (liquidated damages of 1.5% per week). Everything else stays as it is.
+
+Please countersign and return a copy.
+
+Kind regards,
+Douglas Whitfield
+Director of Contracts, Apex Industries, Inc.
+
+------------------------------------------------------------
+MESSAGE 5 OF 9
+From: Nadia Kessler <nkessler@morgan-company.example>
+To: Douglas Whitfield <dwhitfield@apex-industries.example>
+Cc: Owen Tremblay <otremblay@morgan-company.example>; Priya Raman <praman@apex-industries.example>
+Date: May 14, 2026, 15:40
+Subject: RE: Amendment No. 1 - Services Agreement - signed by Apex
+
+Douglas,
+
+I attach the fully signed Amendment No. 1, countersigned for Morgan today by Lydia Farrow-Kent, our Chief Executive Officer. It takes effect today, May 14, 2026.
+
+Regards,
+Nadia Kessler
+General Counsel, Morgan Company LLC
+
+------------------------------------------------------------
+MESSAGE 6 OF 9
+From: Owen Tremblay <otremblay@morgan-company.example>
+To: Douglas Whitfield <contracts@apex-industries.example>; Priya Raman <praman@apex-industries.example>
+Cc: Nadia Kessler <legal@morgan-company.example>; Simone Achterberg <sachterberg@morgan-company.example>
+Date: May 18, 2026, 09:12
+Subject: PO-4471 - notice of rejection of two Units under clause 6.2
+
+Douglas, Priya,
+
+This is a notice of rejection under clause 6.2 of the Services Agreement, sent to the notice address in clause 14.1.
+
+The 40 Units arrived at the Delivery Point on May 15, 2026. Our quality team inspected them on May 16, 2026. Morgan rejects the following two Units:
+
+- IC450-1113 (crate 7): cracked condenser housing. The damage to crate 7 was recorded on delivery note DN-7719 when the Units arrived.
+- IC450-1134 (crate 17): refrigerant leak at a brazed joint in circuit 2, found in leak testing.
+
+Please remove both Units and deliver conforming replacement Units under clause 6.3. Under clause 4.4, Delivery is not complete until the replacement Units have been delivered to the Delivery Point.
+
+Regards,
+Owen Tremblay
+Vice President, Operations, Morgan Company LLC
+
+------------------------------------------------------------
+MESSAGE 7 OF 9
+From: Priya Raman <praman@apex-industries.example>
+To: Owen Tremblay <otremblay@morgan-company.example>
+Date: June 2, 2026, 17:26
+Subject: Replacement units - update
+
+Owen,
+
+I am sorry to report a setback on the two replacement Units. Corvane's plant was flooded after a storm on May 21 (they called us that afternoon), and the compressor modules we had ordered for the replacements were among the stock affected.
+
+Corvane has now released two modules from undamaged stock. We expect to ship the two replacement Units on June 8 for arrival at Dock 3 on June 10. I will send the tracking number when they ship.
+
+Apologies for the delay.
+
+Priya
+
+------------------------------------------------------------
+MESSAGE 8 OF 9
+From: Owen Tremblay <otremblay@morgan-company.example>
+To: Priya Raman <praman@apex-industries.example>
+Cc: Nadia Kessler <nkessler@morgan-company.example>; Douglas Whitfield <dwhitfield@apex-industries.example>
+Date: June 3, 2026, 08:47
+Subject: RE: Replacement units - update
+
+Priya,
+
+Thank you for the update. For the record: under clause 4.4 of the Services Agreement, Delivery is not complete until conforming replacement Units have been delivered, and liquidated damages under clause 7.1, as amended by Amendment No. 1, have been accruing since May 21, 2026.
+
+Morgan reserves all of its rights. Nadia will write to Apex formally once the replacement Units have arrived.
+
+Regards,
+Owen
+
+------------------------------------------------------------
+MESSAGE 9 OF 9
+From: Nadia Kessler <legal@morgan-company.example>
+To: Douglas Whitfield <contracts@apex-industries.example>
+Cc: Owen Tremblay <otremblay@morgan-company.example>
+Date: June 15, 2026, 11:30
+Subject: PO-4471 - notice of late delivery and claim for liquidated damages
+
+Douglas,
+
+Please find attached Morgan's notice under clauses 7 and 14 of the Services Agreement. It claims liquidated damages of USD 55,800 under clause 7.1, as amended by Amendment No. 1, for the delay in completing Delivery from May 20, 2026 to June 10, 2026. The original follows by overnight courier.
+
+Regards,
+Nadia Kessler
+General Counsel, Morgan Company LLC

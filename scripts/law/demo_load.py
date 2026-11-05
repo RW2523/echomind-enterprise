@@ -42,6 +42,10 @@ CORPUS = ROOT / "eval" / "law" / "corpus"
 REF = FIX / "reference"
 SYN = FIX / "synthetic"
 LEGAL = ROOT / "eval" / "fixtures" / "legal"        # EchoMind Legal demo (docs/echomind-legal/13): MAT-1042, MAT-2033
+# The demo's own documents since 2026-11-05 (owner: "create advance end to end demo data with all details"): full documents for
+# M-101, M-114, MAT-1042 and MAT-2033 with their answer keys (eval/fixtures/demo/manifest_*.json, answer_key_*.jsonl). The
+# fixtures above stay as they are for the tests and evaluations; --legacy-content loads them into the demo instead.
+CONTENT = ROOT / "eval" / "fixtures" / "demo"
 LAWYERS = ["alice", "bob", "carol", "nakamura", "harper", "sofia", "kenji", "lena", "omar", "theo"]
 # matter number: (who imports it, [(file, kind, status)])
 DEMO = {
@@ -95,6 +99,15 @@ def plan() -> tuple[dict, dict]:
     return {"team": syn["team"], "matters": matters}, docs
 
 
+def content() -> dict:
+    """The documents of eval/fixtures/demo by matter: number -> [(path, kind, status, None, title)]."""
+    out = {}
+    for m in sorted(CONTENT.glob("manifest_*.json")):
+        for c in json.loads(m.read_text())["cases"]:
+            out[c["number"]] = [(CONTENT / d["file"], d["kind"], d["status"], None, d["title"]) for d in c["documents"]]
+    return out
+
+
 def _native_env(data_dir: str) -> dict:
     return {**os.environ, "ECHOMIND_EDITION": "law", "ECHOMIND_DATA_DIR": data_dir, "LEGAL_ALLOW_DEMO_SEED": "1"}
 
@@ -137,6 +150,7 @@ def main() -> int:
     ap.add_argument("--wait", type=int, default=900, help="seconds to wait for indexing")
     ap.add_argument("--data-dir", default="", help="a native dev backend's data folder (scripts/law/dev_backend.sh) instead of a container")
     ap.add_argument("--only", default="", help="comma-separated matter numbers to import (default: all)")
+    ap.add_argument("--legacy-content", action="store_true", help="the test fixtures instead of eval/fixtures/demo for M-101, M-114, MAT-1042, MAT-2033")
     args = ap.parse_args()
     practice, more = plan()
     _seed_practice(args.container, practice, args.data_dir)
@@ -144,6 +158,10 @@ def main() -> int:
     sessions = {}
     work = {n: (u, [(f, k, s, None) for f, k, s in files]) for n, (u, files) in DEMO.items()}
     work.update(more)
+    if not args.legacy_content:
+        for number, files in content().items():
+            if number in work:
+                work[number] = (work[number][0], files)
     if args.only:
         wanted = {n.strip() for n in args.only.split(",") if n.strip()}
         work = {n: w for n, w in work.items() if n in wanted}

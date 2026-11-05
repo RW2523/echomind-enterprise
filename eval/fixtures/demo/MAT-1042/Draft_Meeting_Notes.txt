@@ -1,0 +1,65 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+DRAFT - NOT YET REVIEWED BY ATTENDEES
+PRIVILEGED AND CONFIDENTIAL
+
+MEETING NOTES - APEX INDUSTRIES / PO-4471
+
+Date: June 24, 2026
+Time: 14:00 to 15:10
+Place: Conference Room B, Port Ellison, and by video
+Attendees: Nadia Kessler (General Counsel), Owen Tremblay (Vice President, Operations), Simone Achterberg (Logistics Coordinator), Imogen Castellano (outside counsel, by video)
+Notes: Rhea Mangal (legal assistant)
+
+1. APEX'S LETTER OF JUNE 22
+
+- Apex rejects our liquidated damages claim in full. Two arguments: (i) all Units arrived on May 15, before the amended Delivery Date of May 20, so in Apex's view Delivery was on time; (ii) in any case, force majeure, because of the flood at Corvane's plant on or about May 21.
+- Apex also says invoice INV-2026-0518 was due on June 17 and is claiming interest at 1% per month.
+- Apex calls its letter a Dispute Notice under clause 13.2. Nadia: we need to propose dates for the executive meeting.
+
+2. DELIVERY TIMELINE
+
+- Units arrived on or about May 15. Simone: the gate record shows the trailers checking in first thing that morning. Simone to export the full shipment and receiving log, including the Quillon tracking events.
+- Owen said Gareth Pell thinks the trucks came in earlier in the week, possibly the 12th. This needs to be checked before we rely on any date.
+- Imogen: the date matters. If the Units arrived on the 12th, our rejection notice of the 18th would fall outside the three Business Day inspection window, and Apex could argue that the Units were accepted.
+- Replacement Units came in on June 10 and passed testing the next day.
+
+3. LIQUIDATED DAMAGES CLAIM
+
+- Claim as notified on June 15: USD 55,800, i.e. three weeks at 1.5% of USD 1,240,000.
+- Owen: the cap on liquidated damages is 15% of the contract price (about USD 186,000), so the claim is well inside the cap.
+- Imogen to check whether the 1.5% weekly rate could be attacked as a penalty. She noted that clause 7.3 records the parties' agreement that the rate is a genuine pre-estimate of loss.
+- Nadia: Apex has not paid or agreed anything yet. Our notice says we will set off the claim against the invoice.
+
+4. FORCE MAJEURE
+
+- Priya Raman's email about the Corvane flood came on or about June 2, and went to Owen only. Owen to forward the original with full headers.
+- Imogen: clause 8.2 requires written notice within five Business Days, sent to the notice address and stating that it is a clause 8.2 notice. Her initial view is that the June 2 email does not meet that, but she wants to check the exact wording and whether Apex sent anything earlier.
+- Nadia is not sure whether anyone at Apex phoned us about the flood in May. Owen and Simone to check call logs.
+
+5. INVOICE INV-2026-0518
+
+- Pay the undisputed USD 936,200 by July 10, as our notice of June 15 says. Do not pay the USD 55,800 set off.
+- Owen thinks finance may have scheduled the full USD 992,000 for payment. To be stopped.
+
+6. EVIDENCE
+
+- Gareth may have photographs of crate 7 on his old work phone. IT to try to recover them. The photo metadata could settle the arrival date.
+- Litigation hold to go to operations, logistics and quality.
+
+ACTION ITEMS
+
+| No. | Action | Owner | Due |
+|---|---|---|---|
+| A1 | Export the shipment and receiving log (gatehouse, receiving, quality, Quillon tracking) | Simone Achterberg | June 26, 2026 |
+| A2 | Forward Priya Raman's June 2 email with full headers; check call logs for May 21 to June 2 | Owen Tremblay | June 26, 2026 |
+| A3 | Stop any payment run for the full amount of INV-2026-0518 | Owen Tremblay | June 25, 2026 |
+| A4 | Send litigation hold notice to operations, logistics and quality | Nadia Kessler | June 25, 2026 |
+| A5 | Interview Gareth Pell and Simone Achterberg, separately | Imogen Castellano | July 1, 2026 |
+| A6 | Recover the photographs of crate 7 from Gareth Pell's old work phone | Owen Tremblay with IT | July 3, 2026 |
+| A7 | Research memo: Delivery Date, liquidated damages, force majeure notice | Imogen Castellano | July 8, 2026 |
+| A8 | Reply to Apex's Dispute Notice and propose dates for the executive meeting under clause 13.2 | Nadia Kessler | June 29, 2026 |
+
+Next meeting: on or about July 9, after the research memo.
+
+[Draft prepared by R. Mangal. Not checked against the contract documents.]

@@ -1,0 +1,71 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+MORGAN COMPANY LLC
+Legal Department
+Address: 400 Harbor Road, Port Ellison, Delaware 19720
+
+Date: June 15, 2026
+
+BY EMAIL (contracts@apex-industries.example) AND BY OVERNIGHT COURIER
+
+Apex Industries, Inc.
+1800 Foundry Lane, Ridgeport, Colorado 80659
+Attention: Douglas Whitfield, Director of Contracts
+
+Re: Services Agreement dated April 1, 2026, as amended by Amendment No. 1 dated May 14, 2026 - Purchase Order PO-4471 - Notice of late delivery and claim for liquidated damages
+
+Dear Mr. Whitfield,
+
+1. This is a notice under clauses 7 and 14 of the Services Agreement between Morgan Company LLC ("Morgan", the Buyer) and Apex Industries, Inc. ("Apex", the Supplier). Terms defined in the Services Agreement have the same meanings in this notice.
+
+THE DELIVERY DATE
+
+2. Clause 4.2 of the Services Agreement originally required Apex to deliver all Units by May 15, 2026. Clause 1.1 of Amendment No. 1 replaced clause 4.2 with a Delivery Date of May 20, 2026. Clause 2.1 of Amendment No. 1 replaced clause 7.1 with a rate of liquidated damages of one and one-half percent (1.5%) of the Total Contract Price for each week of delay.
+
+THE FACTS
+
+3. All forty (40) Units arrived at the Delivery Point on May 15, 2026. Morgan inspected them on May 16, 2026.
+
+4. By notice of May 18, 2026 under clause 6.2, Morgan rejected Unit IC450-1113 (cracked condenser housing) and Unit IC450-1134 (refrigerant leak at a brazed joint in circuit 2).
+
+5. The replacement Units, IC450-1141 and IC450-1142, were delivered to the Delivery Point on June 10, 2026 and passed inspection on June 11, 2026.
+
+6. Under clause 4.4, a rejected Unit is treated as not delivered until a conforming replacement Unit has been delivered. Delivery was therefore complete on June 10, 2026, and not before.
+
+CALCULATION OF LIQUIDATED DAMAGES
+
+7. Liquidated damages are calculated under clause 7.1, as amended, as follows:
+
+   Delivery Date (as amended): May 20, 2026
+   Delivery complete: June 10, 2026
+   Period of delay: May 21, 2026 to June 10, 2026 inclusive = 21 days = 3 weeks
+   Total Contract Price (clause 3.3): USD 1,240,000
+   Rate (clause 7.1, as amended): 1.5% of the Total Contract Price per week
+   Amount per week: 1.5% x USD 1,240,000 = USD 18,600
+   Liquidated damages: 3 weeks x USD 18,600 = USD 55,800
+
+8. The cap in clause 7.2 is ten percent (10%) of the Total Contract Price, which is USD 124,000. The amount claimed does not exceed the cap.
+
+DEMAND AND SET-OFF
+
+9. Morgan demands payment of liquidated damages of USD 55,800 under clause 7.5. Under clause 3.10, Morgan will set off that amount against the Balance of USD 992,000 shown on Apex's invoice INV-2026-0518 dated May 18, 2026.
+
+10. Under clause 3.6, the Balance may be invoiced only on or after the date on which Delivery is complete. Invoice INV-2026-0518 was issued before that date. Morgan will treat the invoice as received on June 10, 2026, so that payment falls due on July 10, 2026 under clause 3.7. Under clause 3.9, Morgan disputes the invoice to the extent of USD 55,800 and will pay the undisputed amount of USD 936,200 by July 10, 2026.
+
+FORCE MAJEURE
+
+11. Morgan has not received any notice from Apex under clause 8.2.
+
+RESERVATION OF RIGHTS
+
+12. Morgan reserves all of its rights and remedies under the Services Agreement and at law. Nothing in this notice is a waiver of any right or remedy (clause 15.3).
+
+13. Please confirm within ten (10) Business Days after receiving this notice that Apex accepts the claim and the set-off.
+
+Yours sincerely,
+
+/s/ Nadia Kessler
+Nadia Kessler
+General Counsel, Morgan Company LLC
+
+cc: Owen Tremblay, Vice President, Operations, Morgan Company LLC

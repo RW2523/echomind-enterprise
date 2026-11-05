@@ -1,0 +1,296 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+SERVICES AGREEMENT
+
+This Services Agreement (this "Agreement") is dated April 1, 2026 (the "Effective Date") and is made between:
+
+(1) MORGAN COMPANY LLC, a Delaware limited liability company whose principal place of business is at 400 Harbor Road, Port Ellison, Delaware 19720 (the "Buyer"); and
+
+(2) APEX INDUSTRIES, INC., a Colorado corporation whose principal place of business is at 1800 Foundry Lane, Ridgeport, Colorado 80659 (the "Supplier"),
+
+each a "Party" and together the "Parties".
+
+RECITALS
+
+(A) The Supplier designs and manufactures industrial process chiller units.
+
+(B) The Buyer wishes to purchase forty (40) IC-450 industrial process chiller units for its facility at Port Ellison, Delaware, and the Supplier wishes to manufacture, test and deliver them, and to perform the related Services, on the terms of this Agreement.
+
+THE PARTIES AGREE AS FOLLOWS:
+
+1. DEFINITIONS AND INTERPRETATION
+
+1.1 Definitions. In this Agreement:
+
+"Acceptance" means acceptance of a Unit under clause 6.4, and "Accepted" is construed accordingly.
+
+"Acceptance Certificate" means a certificate issued by the Buyer confirming Acceptance of one or more Units.
+
+"Balance" has the meaning given in clause 3.6.
+
+"Business Day" means a day other than a Saturday, a Sunday or a public holiday in the State of Delaware.
+
+"Confidential Information" has the meaning given in clause 12.1.
+
+"Delivery" means delivery of the Units to the Delivery Point in accordance with clause 4, and "Delivered" is construed accordingly.
+
+"Delivery Date" means the date by which the Supplier must deliver the Units, as set out in clause 4.2.
+
+"Delivery Point" means Receiving Dock 3 at the Buyer's facility at 400 Harbor Road, Port Ellison, Delaware 19720.
+
+"Deposit" has the meaning given in clause 3.5.
+
+"Inspection Period" has the meaning given in clause 6.1.
+
+"Project Contacts" means the persons named in clause 14.4.
+
+"Purchase Order" means the Buyer's purchase order number PO-4471 issued under this Agreement.
+
+"Services" means the services described in clause 2.3.
+
+"Specifications" means the technical specifications for the Units set out in Schedule 1.
+
+"Total Contract Price" has the meaning given in clause 3.3.
+
+"Unit" means one IC-450 industrial process chiller unit manufactured by the Supplier in accordance with the Specifications, and "Units" means all forty (40) of them.
+
+"Unit Price" has the meaning given in clause 3.2.
+
+1.2 Interpretation. In this Agreement:
+(a) clause and Schedule headings do not affect its interpretation;
+(b) a reference to a clause or a Schedule is to a clause of, or a Schedule to, this Agreement;
+(c) the word "including" means including without limitation;
+(d) a "week" means a period of seven (7) consecutive days;
+(e) "days" means calendar days unless Business Days are specified; and
+(f) times of day are local times at the Delivery Point.
+
+2. SCOPE AND SPECIFICATIONS
+
+2.1 Scope. The Supplier shall manufacture, test, pack and deliver the Units, and perform the Services, in accordance with this Agreement, the Specifications and good industry practice.
+
+2.2 Quantity. The Buyer shall purchase, and the Supplier shall supply, forty (40) Units.
+
+2.3 Services. The Services comprise:
+(a) factory acceptance testing of each Unit at the Supplier's plant before dispatch, including a run test and a pressure and leak test of each refrigerant circuit, and the issue of a signed test certificate for each Unit;
+(b) packing of the Units in crates suitable for road transport, two (2) Units to a crate;
+(c) transport of the Units to, and unloading at, the Delivery Point;
+(d) supervision of the Buyer's installation contractor during commissioning, for up to ten (10) technician days; and
+(e) supply of operation and maintenance manuals in English.
+
+2.4 Specifications. Each Unit shall conform to the Specifications. The Supplier shall not change the design, materials or principal components of the Units without the Buyer's prior written consent.
+
+2.5 Order of precedence. If there is a conflict between this Agreement, the Specifications and the Purchase Order, this Agreement prevails, then the Specifications, then the Purchase Order.
+
+3. PRICE AND PAYMENT
+
+3.1 Purchase Order. The Buyer shall issue the Purchase Order within five (5) Business Days after the Effective Date. The Purchase Order is issued under, and is governed by, this Agreement.
+
+3.2 Unit Price. The price of each Unit is USD 31,000 (the "Unit Price").
+
+3.3 Total Contract Price. The total price for the Units and the Services is USD 1,240,000 (the "Total Contract Price"), being forty (40) Units at the Unit Price.
+
+3.4 Inclusions and taxes. The Total Contract Price is fixed. It includes packing, transport, insurance in transit, unloading at the Delivery Point, the Services and all duties. It excludes any sales or use tax, which the Buyer shall pay, if any applies, against a valid invoice.
+
+3.5 Deposit. The Supplier may invoice a deposit of twenty percent (20%) of the Total Contract Price, being USD 248,000 (the "Deposit"), on or after the Effective Date. The Buyer shall pay the Deposit within ten (10) Business Days after receiving the invoice.
+
+3.6 Balance. The Supplier may invoice the remaining eighty percent (80%) of the Total Contract Price, being USD 992,000 (the "Balance"), on or after the date on which Delivery is complete.
+
+3.7 Payment terms. Except as stated in clause 3.5, the Buyer shall pay each undisputed invoice within thirty (30) days after receiving it. Payments shall be made in US dollars by wire transfer to the bank account stated in the invoice.
+
+3.8 Late payment. The Supplier may charge interest on any undisputed amount that the Buyer does not pay when due at the rate of one percent (1%) per month, from the due date until the date of payment, calculated daily.
+
+3.9 Disputed invoices. If the Buyer disputes an invoice in good faith, it shall notify the Supplier in writing of the disputed amount and its reasons, and shall pay any undisputed part of the invoice when due.
+
+3.10 Set-off. The Buyer may set off any liquidated damages payable under clause 7 against any amount due to the Supplier under this Agreement.
+
+4. DELIVERY
+
+4.1 Dispatch notice. The Supplier shall notify the Buyer's Project Contact in writing, at least three (3) Business Days before dispatch, of the planned dispatch date, the carrier, the tracking number, the number of crates and the estimated time of arrival at the Delivery Point.
+
+4.2 Delivery Date. The Supplier shall deliver all Units to the Delivery Point on or before May 15, 2026.
+
+4.3 Delivery hours and delivery note. Deliveries shall be made between 07:00 and 17:00 on a Business Day, at a time booked in advance with the Buyer's Project Contact. Each delivery shall be accompanied by a delivery note stating the Purchase Order number, the serial number of each Unit and the number of crates. Signature of a delivery note by the Buyer's personnel confirms receipt of the number of crates stated on it only. It is not Acceptance and does not waive any right of the Buyer.
+
+4.4 Completion of Delivery. Delivery is complete only when all forty (40) Units have been delivered to the Delivery Point. A Unit rejected under clause 6.2 is treated as not delivered until a conforming replacement Unit has been delivered to the Delivery Point.
+
+4.5 Information about delays. The Supplier shall tell the Buyer's Project Contact of any circumstance likely to delay Delivery as soon as it becomes aware of it. Information given under this clause 4.5 is not a notice under clause 8.2.
+
+5. RISK AND TITLE
+
+5.1 Risk. Risk of loss of or damage to each Unit passes to the Buyer when that Unit has been unloaded at the Delivery Point.
+
+5.2 Title. Title to each Unit passes to the Buyer on Delivery of that Unit, free of all liens and encumbrances.
+
+5.3 Insurance. Until risk in a Unit passes to the Buyer, the Supplier shall keep that Unit insured for its full replacement value.
+
+6. INSPECTION AND ACCEPTANCE
+
+6.1 Inspection. The Buyer may inspect and test the Units within three (3) Business Days after the day on which they arrive at the Delivery Point (the "Inspection Period").
+
+6.2 Rejection. The Buyer may reject any Unit that does not conform to the Specifications, or that is damaged, by written notice to the Supplier given within the Inspection Period. The notice shall state the serial number of each rejected Unit and the reasons for its rejection.
+
+6.3 Replacement. The Supplier shall, at its own cost, remove each rejected Unit and deliver a conforming replacement Unit to the Delivery Point within ten (10) Business Days after the notice of rejection. A replacement Unit may be inspected and rejected under clauses 6.1 and 6.2 as if it were a Unit delivered under clause 4.
+
+6.4 Acceptance. A Unit is Accepted on the earlier of:
+(a) the Buyer's issue of an Acceptance Certificate for that Unit; and
+(b) the end of the Inspection Period for that Unit without a notice of rejection under clause 6.2.
+
+6.5 Effect of Acceptance. Acceptance does not limit the Supplier's obligations under clause 9.
+
+7. LIQUIDATED DAMAGES FOR LATE DELIVERY
+
+7.1 Rate. If Delivery is not complete by the Delivery Date, the Supplier shall pay the Buyer liquidated damages of one percent (1%) of the Total Contract Price for each week of delay, from the day after the Delivery Date until the day on which Delivery is complete, calculated pro rata on a daily basis for any part of a week.
+
+7.2 Cap. The total liquidated damages payable under clause 7.1 shall not exceed ten percent (10%) of the Total Contract Price.
+
+7.3 Genuine pre-estimate. The Parties agree that the Buyer's losses from late Delivery would be difficult to estimate at the Effective Date, that the amounts in clause 7.1 are a reasonable pre-estimate of those losses and not a penalty, and that the Buyer is not required to prove its loss.
+
+7.4 Sole financial remedy for delay. Liquidated damages under this clause 7 are the Buyer's sole financial remedy for late Delivery, without prejudice to its rights under clauses 6, 9 and 11.
+
+7.5 Payment. Liquidated damages are payable within thirty (30) days after the Buyer's written demand, or may be set off under clause 3.10.
+
+8. FORCE MAJEURE
+
+8.1 Definition. A "Force Majeure Event" means an event beyond the reasonable control of the Party affected by it (the "Affected Party") that prevents or delays the performance of its obligations, including flood, fire, earthquake, storm, epidemic, war, terrorism, riot, government order and industry-wide strikes, but excluding the matters listed in clause 8.4.
+
+8.2 Notice. The Affected Party may claim relief under this clause 8 only if it gives the other Party written notice, in accordance with clause 14, within five (5) Business Days after it first becomes aware of the Force Majeure Event. The notice must state that it is given under this clause 8.2 and must describe:
+(a) the Force Majeure Event and the date on which it began;
+(b) the obligations whose performance it prevents or delays;
+(c) its expected duration; and
+(d) the steps the Affected Party is taking to mitigate its effects.
+
+8.3 Relief. Subject to clause 8.2, the Affected Party is not in breach of this Agreement, and is not liable for liquidated damages under clause 7, for any failure or delay in performance caused by the Force Majeure Event, for as long as the Force Majeure Event continues. No relief is available for any period before a notice that complies with clause 8.2 is given.
+
+8.4 Exclusions. None of the following is a Force Majeure Event:
+(a) lack of funds;
+(b) a delay or failure of any subcontractor or supplier of the Affected Party, unless it is caused by an event that would be a Force Majeure Event if it affected the Affected Party directly;
+(c) a strike or labor dispute involving only the Affected Party's own workforce; and
+(d) breakdown of the Affected Party's own plant or equipment.
+
+8.5 Mitigation and updates. The Affected Party shall use all reasonable efforts to mitigate the effects of the Force Majeure Event and shall give the other Party a written update at least every ten (10) Business Days while it continues.
+
+8.6 Prolonged Force Majeure. If a Force Majeure Event prevents performance for more than sixty (60) consecutive days, either Party may terminate this Agreement by written notice to the other.
+
+9. WARRANTIES
+
+9.1 Product warranty. The Supplier warrants that each Unit will, for twenty-four (24) months from its Acceptance (the "Warranty Period"):
+(a) conform to the Specifications;
+(b) be free from defects in design, materials and workmanship; and
+(c) be fit for continuous operation in an industrial process cooling application.
+
+9.2 Remedy. If a Unit does not comply with clause 9.1 during the Warranty Period, the Supplier shall, at its option and cost, repair or replace that Unit within fifteen (15) Business Days after the Buyer's written notice.
+
+9.3 Services. The Supplier warrants that it will perform the Services with reasonable skill and care.
+
+9.4 Authority. Each Party warrants that it has full power and authority to enter into and perform this Agreement and that the person signing it for that Party is duly authorized to do so.
+
+9.5 Exclusion of other warranties. EXCEPT AS EXPRESSLY STATED IN THIS AGREEMENT, ALL OTHER WARRANTIES, EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY, ARE EXCLUDED TO THE EXTENT PERMITTED BY LAW.
+
+10. LIMITATION OF LIABILITY
+
+10.1 Excluded losses. Neither Party is liable to the other for any indirect, consequential, special or punitive loss, or for any loss of profit, revenue or business opportunity, arising out of or in connection with this Agreement, whether in contract, tort or otherwise.
+
+10.2 Cap. Each Party's total liability arising out of or in connection with this Agreement shall not exceed USD 620,000, being fifty percent (50%) of the Total Contract Price. Liquidated damages paid or set off under clause 7 count towards this limit.
+
+10.3 Exceptions. Clauses 10.1 and 10.2 do not limit liability for:
+(a) fraud or willful misconduct;
+(b) death or personal injury caused by negligence;
+(c) breach of clause 12; or
+(d) the Buyer's obligation to pay the Total Contract Price.
+
+11. TERMINATION
+
+11.1 Termination for convenience. The Buyer may terminate this Agreement for convenience at any time before Delivery is complete by giving the Supplier at least thirty (30) days' written notice. The Buyer shall then pay the Supplier for the Units delivered and for the Supplier's reasonable, documented and unavoidable costs incurred before the date of the notice, not exceeding the Total Contract Price in total.
+
+11.2 Termination for cause. Either Party may terminate this Agreement by written notice if the other Party commits a material breach of this Agreement and, where the breach can be remedied, fails to remedy it within fifteen (15) Business Days after receiving written notice that specifies the breach and requires it to be remedied (the "Cure Period").
+
+11.3 Termination at the cap. The Buyer may terminate this Agreement by written notice if the liquidated damages payable under clause 7.1 reach the cap in clause 7.2.
+
+11.4 Insolvency. Either Party may terminate this Agreement with immediate effect by written notice if the other Party becomes insolvent, makes an assignment for the benefit of its creditors, or becomes subject to bankruptcy proceedings that are not dismissed within sixty (60) days.
+
+11.5 Consequences. Termination does not affect the rights and remedies of the Parties that have accrued before termination. Clauses 7, 10, 12, 13 and 14 survive termination.
+
+12. CONFIDENTIALITY
+
+12.1 Obligation. Each Party shall keep confidential all information of a confidential nature disclosed to it by the other Party under or in connection with this Agreement, including the terms of this Agreement, pricing, technical data and the Specifications ("Confidential Information"), and shall use it only to perform this Agreement.
+
+12.2 Exceptions. Clause 12.1 does not apply to information that:
+(a) is or becomes public other than through a breach of this clause 12;
+(b) was lawfully known to the recipient before it was disclosed;
+(c) is received from a third party who owes no duty of confidence in respect of it; or
+(d) must be disclosed by law, court order or the rules of a stock exchange, provided that the recipient gives the other Party prompt notice of the disclosure where it is lawful to do so.
+
+12.3 Permitted disclosure. A Party may disclose Confidential Information to its employees, professional advisers, insurers and financiers who need to know it and who are bound by obligations of confidence equivalent to this clause 12.
+
+12.4 Duration. The obligations in this clause 12 continue for three (3) years after the termination or expiry of this Agreement.
+
+13. GOVERNING LAW AND DISPUTE RESOLUTION
+
+13.1 Governing law. This Agreement, and any dispute arising out of or in connection with it, is governed by the laws of the State of Delaware, without regard to its conflict of laws principles.
+
+13.2 Negotiation. A Party may refer any dispute arising out of or in connection with this Agreement (a "Dispute") to negotiation by written notice to the other Party (a "Dispute Notice"). Within ten (10) Business Days after the Dispute Notice, a senior executive of each Party with authority to settle the Dispute shall meet, in person or by video, and negotiate in good faith to resolve it.
+
+13.3 Courts. If the Dispute is not resolved within thirty (30) days after the Dispute Notice, either Party may commence proceedings. The state and federal courts located in the State of Delaware have exclusive jurisdiction over any Dispute, and each Party submits to that jurisdiction and waives any objection to venue in those courts.
+
+13.4 Interim relief. Nothing in this clause 13 prevents a Party from seeking urgent injunctive or other interim relief from a court at any time.
+
+13.5 Jury waiver. EACH PARTY WAIVES ANY RIGHT TO TRIAL BY JURY IN ANY PROCEEDINGS ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT.
+
+14. NOTICES
+
+14.1 Form and addresses. Any notice under this Agreement must be in writing in English and delivered by hand, by nationally recognized overnight courier or by email, to the address of the receiving Party set out below, or to any other address that Party notifies under this clause 14:
+
+Buyer: Morgan Company LLC, 400 Harbor Road, Port Ellison, Delaware 19720. Attention: Nadia Kessler, General Counsel. Email: legal@morgan-company.example
+
+Supplier: Apex Industries, Inc., 1800 Foundry Lane, Ridgeport, Colorado 80659. Attention: Douglas Whitfield, Director of Contracts. Email: contracts@apex-industries.example
+
+14.2 Receipt. A notice is received:
+(a) if delivered by hand or by courier, on delivery; and
+(b) if sent by email, at the time of sending, unless the sender receives an automated message that the email was not delivered.
+A notice received after 17:00, or on a day that is not a Business Day, is treated as received at 09:00 on the next Business Day.
+
+14.3 Notices and operational communications. Notices under clauses 6, 7, 8, 11 and 13 are valid only if sent to the addresses in clause 14.1. Day-to-day operational communications, including dispatch notices under clause 4.1 and information under clause 4.5, may be sent by email between the Project Contacts, but they are not notices under any other clause of this Agreement.
+
+14.4 Project Contacts. The Project Contacts are, for the Buyer, Owen Tremblay, Vice President, Operations (otremblay@morgan-company.example) and, for the Supplier, Priya Raman, Program Manager (praman@apex-industries.example). A Party may change its Project Contact by email to the other Party's Project Contact.
+
+15. GENERAL
+
+15.1 Entire agreement. This Agreement, including Schedule 1, and the Purchase Order constitute the entire agreement between the Parties about their subject matter and supersede all prior negotiations, proposals and understandings.
+
+15.2 Amendments. No amendment of this Agreement is effective unless it is in writing, refers to this Agreement and is signed by an authorized signatory of each Party.
+
+15.3 Waiver. No failure or delay in exercising any right or remedy is a waiver of it. A waiver is effective only if it is in writing and signed by the Party giving it.
+
+15.4 Assignment. Neither Party may assign this Agreement without the prior written consent of the other Party, which shall not be unreasonably withheld.
+
+15.5 Subcontracting. The Supplier may subcontract the manufacture of components, but it remains responsible for the acts and omissions of its subcontractors and suppliers as if they were its own.
+
+15.6 Severability. If any provision of this Agreement is held invalid or unenforceable, the remainder of this Agreement continues in effect.
+
+15.7 Counterparts. This Agreement may be signed in counterparts, including by electronic signature, each of which is an original and which together form one agreement.
+
+SIGNATURES
+
+Signed for and on behalf of MORGAN COMPANY LLC
+By: /s/ Lydia Farrow-Kent
+Name: Lydia Farrow-Kent
+Title: Chief Executive Officer
+Date: April 1, 2026
+
+Signed for and on behalf of APEX INDUSTRIES, INC.
+By: /s/ Victor Halloran
+Name: Victor Halloran
+Title: President
+Date: April 1, 2026
+
+SCHEDULE 1 - SPECIFICATIONS
+
+1. Model. Apex IC-450 industrial process chiller, air-cooled, packaged for outdoor installation.
+2. Cooling capacity. Not less than 60 kW at 7 degrees C leaving water temperature and 35 degrees C ambient air temperature.
+3. Refrigerant circuits. Two independent refrigerant circuits using refrigerant R-513A, each driven by one scroll compressor module.
+4. Electrical supply. 480 V, three-phase, 60 Hz.
+5. Controls. Microprocessor controller with a Modbus TCP interface and a local display.
+6. Dimensions and weight. Approximately 2.1 m long, 1.1 m wide and 1.9 m high; approximately 640 kg per Unit.
+7. Factory acceptance test. Each Unit to be run-tested for not less than four (4) hours, and each refrigerant circuit pressure-tested and leak-tested, at the Supplier's plant before dispatch.
+8. Serial numbers. Each Unit to carry a unique serial number in the form IC450-11XX.
+9. Documentation. Operation and maintenance manual, wiring diagrams and a signed factory test certificate for each Unit.

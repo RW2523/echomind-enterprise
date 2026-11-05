@@ -1,0 +1,123 @@
+{
+ "note": "FICTIONAL EchoMind Legal demo documents for M-101 (Harrowgate MSA renewal, client Voss-Lindqvist AB) and M-114 (Series B due diligence, client Alder Finch Ltd). Every party, person, figure and event is invented. Titles are the exact document titles the demo scripts look up. Answer key: answer_key_m101_m114.jsonl; presenter guide: guide_m101_m114.md.",
+ "cases": [
+  {
+   "number": "M-101",
+   "documents": [
+    {
+     "file": "M-101/Master Services Agreement (DEMO).md",
+     "title": "Master Services Agreement (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "M-101/Advice memo on the MSA (DEMO).md",
+     "title": "Advice memo on the MSA (DEMO)",
+     "kind": "memo",
+     "status": "final"
+    },
+    {
+     "file": "M-101/Engagement request (DEMO).md",
+     "title": "Engagement request (DEMO)",
+     "kind": "correspondence",
+     "status": "received"
+    },
+    {
+     "file": "M-101/Reseller Agreement (DEMO).md",
+     "title": "Reseller Agreement (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "M-101/Consultancy Agreement (DEMO).md",
+     "title": "Consultancy Agreement (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "M-101/Renewal proposal from Harrowgate (DEMO).md",
+     "title": "Renewal proposal from Harrowgate (DEMO)",
+     "kind": "correspondence",
+     "status": "received"
+    },
+    {
+     "file": "M-101/Service level report Q3 2026 (DEMO).md",
+     "title": "Service level report Q3 2026 (DEMO)",
+     "kind": "other",
+     "status": "received"
+    },
+    {
+     "file": "M-101/Board minutes approving the renewal (DEMO).md",
+     "title": "Board minutes approving the renewal (DEMO)",
+     "kind": "note",
+     "status": "final"
+    }
+   ]
+  },
+  {
+   "number": "M-114",
+   "documents": [
+    {
+     "file": "M-114/Articles of Association (DEMO).md",
+     "title": "Articles of Association (DEMO)",
+     "kind": "other",
+     "status": "final"
+    },
+    {
+     "file": "M-114/Board minutes January 2026 (DEMO).md",
+     "title": "Board minutes January 2026 (DEMO)",
+     "kind": "note",
+     "status": "final"
+    },
+    {
+     "file": "M-114/Board procedures policy (DEMO).md",
+     "title": "Board procedures policy (DEMO)",
+     "kind": "other",
+     "status": "final"
+    },
+    {
+     "file": "M-114/Delegation of authority (DEMO).md",
+     "title": "Delegation of authority (DEMO)",
+     "kind": "other",
+     "status": "final"
+    },
+    {
+     "file": "M-114/IP Assignment - A Moreau (DEMO).md",
+     "title": "IP Assignment - A Moreau (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "M-114/Register of members (DEMO).md",
+     "title": "Register of members (DEMO)",
+     "kind": "other",
+     "status": "final"
+    },
+    {
+     "file": "M-114/Supply Agreement - Northwind (DEMO).md",
+     "title": "Supply Agreement - Northwind (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "M-114/Supply Agreement (DEMO).md",
+     "title": "Supply Agreement (DEMO)",
+     "kind": "contract",
+     "status": "executed"
+    },
+    {
+     "file": "M-114/Series B term sheet (DEMO).md",
+     "title": "Series B term sheet (DEMO)",
+     "kind": "other",
+     "status": "final"
+    },
+    {
+     "file": "M-114/Disclosure letter (draft) (DEMO).md",
+     "title": "Disclosure letter (draft) (DEMO)",
+     "kind": "correspondence",
+     "status": "draft"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,52 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+PURCHASE ORDER
+
+Morgan Company LLC - Purchasing
+Address: 400 Harbor Road, Port Ellison, Delaware 19720
+
+PO number: PO-4471
+PO date: April 2, 2026
+Supplier number: V-20931
+
+SUPPLIER
+Apex Industries, Inc.
+1800 Foundry Lane, Ridgeport, Colorado 80659
+Attention: Priya Raman, Program Manager (praman@apex-industries.example)
+
+SHIP TO
+Morgan Company LLC, Receiving Dock 3
+Address: 400 Harbor Road, Port Ellison, Delaware 19720
+Attention: Simone Achterberg, Logistics Coordinator
+Deliveries by booked appointment only, 07:00 to 17:00 on Business Days.
+
+BILL TO
+Morgan Company LLC, Accounts Payable
+Address: 400 Harbor Road, Port Ellison, Delaware 19720
+ap@morgan-company.example
+
+GOVERNING CONTRACT
+This Purchase Order is issued under the Services Agreement dated April 1, 2026 between Morgan Company LLC (Buyer) and Apex Industries, Inc. (Supplier). The terms of the Services Agreement apply. If this Purchase Order conflicts with the Services Agreement, the Services Agreement prevails.
+
+| Line | Item | Description | Quantity | Unit price | Amount |
+|---|---|---|---|---|---|
+| 1 | IC-450 | Apex IC-450 industrial process chiller unit, to the Specifications in Schedule 1 of the Services Agreement, including factory acceptance test and test certificate | 40 | USD 31,000.00 | USD 1,240,000.00 |
+| 2 | SVC | Packing, transport, insurance in transit, unloading at Receiving Dock 3, commissioning supervision (up to 10 technician days) and manuals | 1 | Included | Included |
+
+Total (excluding any sales or use tax): USD 1,240,000.00
+
+DELIVERY
+Delivery Point: Receiving Dock 3, 400 Harbor Road, Port Ellison, Delaware 19720.
+Required delivery: all 40 Units on or before the Delivery Date in clause 4.2 of the Services Agreement.
+Dispatch notice: at least three (3) Business Days before dispatch, to the Buyer's Project Contact, as required by clause 4.1 of the Services Agreement.
+Each delivery note must show this PO number, the serial number of each Unit and the number of crates.
+
+PAYMENT
+Deposit: 20% of the total, USD 248,000.00, invoiced on or after April 1, 2026 and payable within ten (10) Business Days after receipt of the invoice.
+Balance: 80% of the total, USD 992,000.00, invoiced on or after completion of Delivery and payable within thirty (30) days after receipt of the invoice.
+Invoices must quote PO-4471 and be sent to ap@morgan-company.example.
+
+APPROVAL
+Requested by: Owen Tremblay, Vice President, Operations
+Approved by: Owen Tremblay, Vice President, Operations
+Approval date: April 2, 2026

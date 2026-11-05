@@ -1,0 +1,65 @@
+> FICTIONAL DEMO DOCUMENT. All parties, people, amounts and events are invented. Not legal advice.
+
+AMENDMENT No. 1 TO THE SERVICES AGREEMENT
+
+This Amendment No. 1 (this "Amendment") is dated May 14, 2026 and is made between:
+
+(1) MORGAN COMPANY LLC, a Delaware limited liability company whose principal place of business is at 400 Harbor Road, Port Ellison, Delaware 19720 (the "Buyer"); and
+
+(2) APEX INDUSTRIES, INC., a Colorado corporation whose principal place of business is at 1800 Foundry Lane, Ridgeport, Colorado 80659 (the "Supplier").
+
+BACKGROUND
+
+(A) The Buyer and the Supplier are parties to a Services Agreement dated April 1, 2026 (the "Agreement") for the supply of forty (40) IC-450 industrial process chiller units.
+
+(B) By email of May 4, 2026, the Supplier asked the Buyer to agree to a later Delivery Date because of a delay in the supply of compressor modules by one of the Supplier's own suppliers.
+
+(C) The Buyer has agreed to the later Delivery Date in return for the Supplier's agreement to the revised rate of liquidated damages set out in this Amendment.
+
+(D) Clause 15.2 of the Agreement requires any amendment to be in writing, to refer to the Agreement and to be signed by an authorized signatory of each Party. This Amendment is made in accordance with that clause.
+
+THE PARTIES AGREE AS FOLLOWS:
+
+1. DELIVERY DATE
+
+1.1 Clause 4.2 of the Services Agreement is deleted and replaced with: "4.2 Delivery Date. The Supplier shall deliver all Units to the Delivery Point on or before May 20, 2026."
+
+1.2 Accordingly, the Delivery Date for all purposes of the Agreement, including clauses 7 and 11.3 of the Agreement, is May 20, 2026.
+
+2. RATE OF LIQUIDATED DAMAGES
+
+2.1 Clause 7.1 of the Services Agreement is deleted and replaced with: "7.1 Rate. If Delivery is not complete by the Delivery Date, the Supplier shall pay the Buyer liquidated damages of one and one-half percent (1.5%) of the Total Contract Price for each week of delay, from the day after the Delivery Date until the day on which Delivery is complete, calculated pro rata on a daily basis for any part of a week."
+
+2.2 The cap in clause 7.2 of the Agreement, of ten percent (10%) of the Total Contract Price, continues to apply without change.
+
+3. EFFECT
+
+3.1 This Amendment takes effect on May 14, 2026, the date on which it has been signed by both Parties.
+
+3.2 Except as set out in clauses 1 and 2 of this Amendment, all other terms of the Agreement remain in force.
+
+3.3 Nothing in this Amendment waives any right or remedy of either Party in respect of any failure to complete Delivery by May 20, 2026.
+
+3.4 From the date on which this Amendment takes effect, a reference in the Agreement to "this Agreement" is a reference to the Agreement as amended by this Amendment.
+
+4. GENERAL
+
+4.1 Terms defined in the Agreement have the same meanings in this Amendment.
+
+4.2 Clauses 13 (Governing Law and Dispute Resolution) and 14 (Notices) of the Agreement apply to this Amendment as if set out in full.
+
+4.3 This Amendment may be signed in counterparts, including by electronic signature, each of which is an original and which together form one document.
+
+SIGNATURES
+
+Signed for and on behalf of MORGAN COMPANY LLC
+By: /s/ Lydia Farrow-Kent
+Name: Lydia Farrow-Kent
+Title: Chief Executive Officer
+Date: May 14, 2026
+
+Signed for and on behalf of APEX INDUSTRIES, INC.
+By: /s/ Victor Halloran
+Name: Victor Halloran
+Title: President
+Date: May 14, 2026
