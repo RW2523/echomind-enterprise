@@ -29,6 +29,8 @@ export interface CitationRef {
   verified: boolean;
   removed: boolean;
   matter?: string;                   // in a conversation about several matters: the source's matter
+  /** The answer's sentences this span supports (2026-11-05): a source quoted in several places has one citation per place. */
+  sentences?: string[];
 }
 
 export interface SourceAnswerProps {

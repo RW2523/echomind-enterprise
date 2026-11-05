@@ -315,6 +315,8 @@ class Settings(BaseSettings):
     LEGAL_JOB_MAX_ATTEMPTS: int = int(os.getenv("LEGAL_JOB_MAX_ATTEMPTS", "3"))
     # Matter research (S1.7).
     LEGAL_RESEARCH_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_PASSAGES", "6"))          # sources given to the model
+    # a document the question names: this many of its own passages are also searched and put first (2026-11-05 brief)
+    LEGAL_RESEARCH_NAMED_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_NAMED_PASSAGES", "3"))
     LEGAL_RESEARCH_MAX_TOKENS: int = int(os.getenv("LEGAL_RESEARCH_MAX_TOKENS", "700"))
     LEGAL_RESEARCH_TEMPERATURE: float = float(os.getenv("LEGAL_RESEARCH_TEMPERATURE", "0.1"))  # research answers; EV14: 0.1 swings single runs
     LEGAL_STREAM_RECHECK_SEC: float = float(os.getenv("LEGAL_STREAM_RECHECK_SEC", "2"))    # live scope check while streaming

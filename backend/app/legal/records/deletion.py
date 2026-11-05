@@ -346,7 +346,7 @@ def _purge_document(conn, d: dict) -> dict:
         kept = [a for a in json.loads(aj or "[]") if doc not in (a.get("document_id"), (a.get("by") or {}).get("document_id"))]
         conn.execute("UPDATE legal_research_turns SET amendments_json=? WHERE id=?", (json.dumps(kept), tid))
     for tid, ej, cj in _evidence_turns(conn, d["matter_id"], doc):          # S2.2: saved evidence and conflicts too
-        ev = [({**e, "quote": "", "document_title": "", "removed": True} if e.get("document_id") == doc else e) for e in ej]
+        ev = [({**e, "quote": "", "document_title": "", "sentences": [], "removed": True} if e.get("document_id") == doc else e) for e in ej]
         conn.execute("UPDATE legal_research_turns SET evidence_json=?, conflicts_json=? WHERE id=?",
                      (json.dumps(ev), json.dumps([c for c in cj if c.get("document_id") != doc]), tid))
     conn.execute("UPDATE legal_ai_artifacts SET document_id=NULL WHERE document_id=?", (doc,))   # S2.6: filed minutes purged

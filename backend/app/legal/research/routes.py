@@ -280,6 +280,40 @@ def _openings(scope, question: str, passages: list[dict], roles: dict, versions:
     return out
 
 
+def _misquotes(passages: list[dict], named: list[str], titles: dict) -> list[dict]:
+    """Words another document puts in quotation marks as a named document's, in a sentence that names it, that the named
+    document's own text (the version among the sources) does not contain (2026-11-05 brief: the advice memo quoting clause
+    4.2 of the MSA as "net sixty (60) days" where the MSA says thirty). Rules only; nothing is asked of the model."""
+    from ..documents import repo as doc_repo
+    from ..documents import versions as doc_versions
+    own, version = {}, {p["citation"]["document_id"]: p["citation"]["version_id"] for p in passages}
+    with get_conn() as conn:                            # a named document none of whose passages was retrieved: its signed text
+        for did in named:
+            if did not in version:
+                r = conn.execute(f"SELECT COALESCE({doc_versions._LATEST_SIGNED.format(doc='d.id')}, d.current_version_id) "
+                                 "FROM legal_documents d WHERE d.id=? AND d.deleted_at IS NULL", (did,)).fetchone()
+                if r and r[0]:
+                    version[did] = r[0]
+    for did in named:
+        body = doc_repo.reader(version[did]) if version.get(did) else None
+        if body and body.get("text"):
+            own[did] = body["text"]
+    out, seen = [], set()
+    for p in passages:                                  # any other document's sentence that quotes a named one
+        for a, b in prompt.document_sentences(p["text"]):
+            sentence = p["text"][a:b]
+            about = [d for d in attribution.referenced(sentence, titles) if d in own and d != p["citation"]["document_id"]]
+            for q in attribution.quoted_words(sentence):
+                for d in about:
+                    key = (p["citation"]["document_id"], d, q)
+                    if key in seen or evidence.verify(q, own[d]).verification != "failed":
+                        continue
+                    seen.add(key)
+                    out.append({"by": p["citation"]["document_title"], "by_id": p["citation"]["document_id"], "of": titles.get(d, ""),
+                                "of_id": d, "quote": q[:300]})
+    return out[:3]
+
+
 def _version_texts(version_ids) -> list[str]:
     """The stored text of each cited version: the whole document, not only the passage."""
     from ..documents import repo as doc_repo
@@ -324,13 +358,18 @@ def _calculation(sources: list[dict], question: str, titles: dict) -> Optional[d
 def _evidence(claims: list, sources: list[dict]) -> list[dict]:
     """Every quote the answer relies on, with where it is: document, version and its status, clause,
     page, line and exact characters of the version's text."""
-    items, seen, cache = [], set(), {}
+    items, seen, cache = [], {}, {}
     with get_conn() as conn:
         for claim in claims:
             for c in claim.citations:
-                if not 1 <= c.n <= len(sources) or (c.n, c.quote) in seen:
+                if not 1 <= c.n <= len(sources):
                     continue
-                seen.add((c.n, c.quote))
+                if (c.n, c.quote) in seen:                 # the same quote for another sentence: it supports that one too
+                    said = items[seen[(c.n, c.quote)]]["sentences"]
+                    if claim.sentence not in said:
+                        said.append(claim.sentence)
+                    continue
+                seen[(c.n, c.quote)] = len(items)
                 src, base = sources[c.n - 1], sources[c.n - 1]["char_start"]
                 if c.verification in ("verbatim", "normalized") and base is not None:
                     a, b, quote = base + c.start, base + c.end, src["text"][c.start:c.end]
@@ -346,8 +385,8 @@ def _evidence(claims: list, sources: list[dict]) -> list[dict]:
                               "version_number": src["version_number"], "version_status": src.get("version_status"),
                               "signed": src.get("signed"), "clause": where.get("clause") or src.get("clause"),
                               "page_start": where.get("page_start", src["page_start"]), "page_end": where.get("page_end", src["page_end"]),
-                              "line": where.get("line"), "char_start": a, "char_end": b, **({"matched": True} if c.matched else {}),
-                              **({"moved_from": c.moved_from} if c.moved_from else {})})
+                              "line": where.get("line"), "char_start": a, "char_end": b, "sentences": [claim.sentence],
+                              **({"matched": True} if c.matched else {}), **({"moved_from": c.moved_from} if c.moved_from else {})})
     return items
 
 
@@ -465,6 +504,11 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         target = [] if documents or not asked_parties else [did for did, h in heads.items() if asked_parties <= h[0]]
         titles = await run_in_threadpool(_titles, scopes, principal["sub"])
         same = None if several or documents else kinds.same_kind(question, titles, target if asked_parties else None)
+        # A document the question names ("the payment terms in the Master Services Agreement"): its own passages are searched
+        # as well and come first, so another document that describes it (an advice memo quoting it) cannot take its place;
+        # that one stays among the sources, marked secondary (2026-11-05 brief: the memo's misquote answered for the MSA).
+        # Not when the person chose the documents (their choice stands) or several matters are asked about.
+        named_docs = [] if several or documents else sorted(attribution.referenced(question, titles))
         if several:
             passages, links, nothing_found = await _search_several(scopes, principal, search_q, versions, documents)
         else:
@@ -483,6 +527,23 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 have = {p["chunk_id"] for p in passages}
                 passages = passages + [p for p in got["passages"] if p["chunk_id"] not in have]
                 nothing_found = nothing_found and got["abstained"]
+            if named_docs and len(named_docs) < len(titles):
+                first = []                                  # each named document on its own, so one cannot crowd out another
+                for did in named_docs[:3]:
+                    own = await searchmod.search(scope, search_q, k=settings.LEGAL_RESEARCH_NAMED_PASSAGES if len(named_docs) == 1 else 2,
+                                                 versions=versions, documents=[did], wide=True)
+                    first += [p for p in own["passages"] if p["chunk_id"] not in {q["chunk_id"] for q in first}]
+                    nothing_found = nothing_found and own["abstained"]
+                have = {p["chunk_id"] for p in first}
+                passages = first + [p for p in passages if p["chunk_id"] not in have]
+            # A clause the question names by number ("What does clause 14 cover?", "clauses 4.1, 4.2 and 4.3"): its own passage,
+            # from the named document or else the matter's contracts, is read first (2026-11-05 end-to-end run).
+            if (numbers := searchmod.clause_numbers(question)):
+                held = await run_in_threadpool(searchmod.clause_passages, scope, numbers, versions, documents or named_docs or None)
+                if not held and named_docs and not documents:          # the named document has no such clause: the contracts
+                    held = await run_in_threadpool(searchmod.clause_passages, scope, numbers, versions, None)
+                have = {p["chunk_id"] for p in held}
+                passages = held + [p for p in passages if p["chunk_id"] not in have]
             for side in prompt.compare_sides(question):     # each side of a comparison on its own (2026-11-04)
                 got = await searchmod.search(scope, attribution.with_roles(side, roles), k=2, versions=versions, documents=documents,
                                              wide=True)
@@ -496,6 +557,25 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 nothing_found = nothing_found and got["abstained"]
             passages = passages + await run_in_threadpool(_openings, scope, question, passages, roles, versions)
             links = _amended(passages, await run_in_threadpool(amendments.for_passages, scope.matter_id, principal["sub"], passages, versions))
+        # A named document (above): another document's words it puts in quotation marks as the named one's are checked against
+        # the named document's own text, by rule; where they are not there, the named document's passage nearest to them is read
+        # too, and the model is told, so the answer can set the two side by side (2026-11-05 brief).
+        misquoted: list[dict] = []
+        named_note = ""
+        if named_docs and any(p["citation"]["document_id"] in named_docs for p in passages):
+            misquoted = await run_in_threadpool(_misquotes, passages, named_docs, titles)
+            for m in misquoted:
+                near = await searchmod.search(scope, m["quote"], k=1, versions=versions, documents=[m["of_id"]], wide=True)
+                passages += [q for q in near["passages"] if q["chunk_id"] not in {x["chunk_id"] for x in passages}]
+                named_note += (f'(Checked against the documents: "{m["by"]}" quotes "{m["of"]}" as "{m["quote"]}"; those words are '
+                               f'not in "{m["of"]}".)\n')
+            # an amendment of the named document is part of its terms, not another document's description of them
+            amending = {link["passage"]["citation"]["document_id"] for link in links
+                        if passages[link["index"]]["citation"]["document_id"] in named_docs}
+            for p in passages:
+                if p["citation"]["document_id"] not in named_docs and p["citation"]["document_id"] not in amending and not p.get("amends"):
+                    p["secondary"] = True
+            named_note += prompt.named_note([titles[d] for d in named_docs if d in titles])
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
         yield _event({"type": "sources", "citations": sources})
         if nothing_found or not passages:
@@ -521,6 +601,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             return
         buf, shown, claims, unsupported, failed, last_check = "", [], [], [], [], time.monotonic()
         several_of = kinds.note(same[0], [titles[d] for d in same[1]]) if same else ""
+        several_of += named_note
         stream = llm_mod.get().chat_stream(prompt.build(question, passages, several_of), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
                                            max_tokens=settings.LEGAL_RESEARCH_MAX_TOKENS)
 
@@ -615,16 +696,27 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             if claim in standing and said in unsupported:
                 unsupported.remove(said)
         asked = attribution.referenced(question, titles)
+        # When the named document's own text is among the sources, only its own passages speak for it: an advice memo that
+        # names the MSA is not the MSA (2026-11-05 brief). Without its own text, a passage naming it still counts (minutes
+        # approving "the renewal of the MSA").
+        own_text = bool(asked) and any(src["document_id"] in asked for src in sources)
+        of_asked = set(asked) | {link["passage"]["citation"]["document_id"] for link in links       # and its amendments
+                                 if link["index"] < len(sources) and sources[link["index"]]["document_id"] in asked}
+
+        def for_asked(claim) -> bool:
+            if own_text:
+                return any(1 <= c.n <= len(sources) and sources[c.n - 1]["document_id"] in of_asked for c in claim.citations)
+            return bool(spoken(claim) & asked)
         owner = attribution.party_records(question, known) if maybe_party else set()
         answering = [c for c in standing if not prompt.only_context(c.sentence)]
         off_target = (
-            (bool(asked) and bool(standing) and not any(spoken(c) & asked for c in standing))
+            (bool(asked) and bool(standing) and not any(for_asked(c) for c in standing))
             # every sentence that would have stood named one document and cited another, and nothing else is left (held-out 3)
             or (bool(misattributed) and not standing)
             # "not stated" for the document asked about, then only another document's terms (held-out 3: the MSA's 48 hours
             # for a question about the Kestrel storage agreement)
             or (bool(asked) and prompt.opens_not_stated(text) and bool(answering)
-                and not any(spoken(c) & asked for c in answering))
+                and not any(for_asked(c) for c in answering))
             # a question about the document a party is party to ("the supply agreement with Alder Retail"), answered only
             # from documents that party is not party to (2026-11-03 evaluation)
             or (bool(target) and bool(answering) and not any(party_to(c, asked_parties) for c in answering)))
@@ -696,7 +788,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                       "citations": citations, "evidence": items, "conflicts": found, "unsupported": unsupported, "failed": failed,
                       "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed,
                       "absence": prompt.absence(text) if abstained else None, "calculation": calculation,
-                      "stated": stated, **({"stated_shadow": shadow} if mode == "shadow" else {})})
+                      "stated": stated, "misquotes": misquoted, **({"stated_shadow": shadow} if mode == "shadow" else {})})
     except scopemod.ScopeRevoked:
         status, answer, citations, items, found = "scope_revoked", None, [], [], []
         yield _event({"type": "scope_revoked"})

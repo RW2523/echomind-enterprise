@@ -46,6 +46,16 @@ def _words(text: str) -> set[str]:
     return out - _NOISE
 
 
+# What a title says the document IS comes before a word naming what it is about: "Advice memo on the MSA" is a memo, not
+# the MSA; "Amendment No. 1 to the Kestrel storage agreement" an amendment; "Heads of terms for a new lease" not a lease
+# (2026-11-05 brief: a question naming the Master Services Agreement also named the memo on it, whose misquote answered).
+_ABOUT = re.compile(r"\b(?:on|about|re|regarding|concerning|to|under|amending|supplementing|for)\b", re.I)
+
+
+def _own(title: str) -> set[str]:
+    return _words(_ABOUT.split(title or "", maxsplit=1)[0])
+
+
 def _qualifiers(title: str) -> set[str]:
     """The words of a title that tell it from others of its type: not the type, not a number, not a small word."""
     return {w for w in _words(title) - _TYPES if not w.isdigit()}
@@ -61,7 +71,7 @@ def referenced(text: str, titles: dict[str, str]) -> set[str]:
     words = _words(text)
     out: set[str] = set()
     for t in words & _STRONG:
-        holders = [did for did, title in titles.items() if t in _words(title)]
+        holders = [did for did, title in titles.items() if t in _own(title)]
         if len(holders) == 1:
             out.update(holders)
     for i, t in enumerate(toks):
@@ -71,7 +81,7 @@ def referenced(text: str, titles: dict[str, str]) -> set[str]:
         for phrase, short in _PHRASES.items():                      # "Master Services Agreement" stands for the MSA
             if tuple(toks[max(0, i - len(phrase) + 1):i + 1]) == phrase:
                 before |= set(_EXPAND[short]) | {short}
-        holders = {did: len(_qualifiers(title) & before) for did, title in titles.items() if t in _words(title)}
+        holders = {did: len(_qualifiers(title) & before) for did, title in titles.items() if t in _own(title)}
         best = max(holders.values(), default=0)
         if best >= 1:
             out.update(d for d, s in holders.items() if s == best)
@@ -260,6 +270,14 @@ def without_parties(question: str, known: set[str]) -> str:
 
 
 _KEEP = r"(?i:nda|msa|agreement|lease|letter|notice|deed|contract|licen[cs]e|amendment|side|engagement|storage|supply|services?)"
+
+
+_QUOTED_WORDS = re.compile(r'["\u201c]([^"\u201c\u201d]{12,400})["\u201d]')
+
+
+def quoted_words(sentence: str) -> list[str]:
+    """Words a sentence puts in quotation marks, six words or more (a defined term in quotes is not a quotation)."""
+    return [m.group(1).strip() for m in _QUOTED_WORDS.finditer(sentence or "") if len(m.group(1).split()) >= 6]
 
 
 def named_in(question: str, roles: dict[str, list[tuple[str, str]]]) -> set[str]:

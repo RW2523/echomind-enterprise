@@ -32,7 +32,7 @@ def document(conn, matter_id: str, document_id: str) -> None:
     for cid, type_, pj in rows:
         props = json.loads(pj)
         if type_ == "source_answer":
-            props["citations"] = [({**c, "document_title": "", "removed": True, "clause": None, "page": None}
+            props["citations"] = [({**c, "document_title": "", "removed": True, "clause": None, "page": None, "sentences": []}
                                    if c.get("document_id") == document_id else c) for c in props.get("citations", [])]
             props["notes"] = []                    # notes name the documents they are about (conflicts, amendments)
             conn.execute("UPDATE legal_counsel_components SET props_json=? WHERE id=?", (json.dumps(props, ensure_ascii=False), cid))

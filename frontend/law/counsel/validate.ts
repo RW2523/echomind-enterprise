@@ -108,6 +108,7 @@ function citation(v: unknown): CitationRef {
     clause: optStr(o.clause, 40, 'citation.clause'), verified: bool(o.verified, 'citation.verified'),
     removed: o.removed === undefined ? false : bool(o.removed, 'citation.removed'),
     matter: optMatter(o.matter, 'citation.matter'),
+    sentences: o.sentences === undefined ? undefined : list(o.sentences, 8, 'citation.sentences', (x) => str(x, 600, 'citation.sentence')),
   };
 }
 

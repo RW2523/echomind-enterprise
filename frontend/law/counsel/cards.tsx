@@ -60,6 +60,8 @@ export function ActionButtons({ actions, ctx }: { actions: UiAction[]; ctx: Card
 
 // ── Answer text with inline citation chips ─────────────────────────────────────
 export const MARK = /\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]/g;
+/** A sentence without its markers, spacing and case, to match an answer's sentence to the citation that supports it. */
+const plainSentence = (s: string) => s.replace(MARK, ' ').replace(/[*_`]/g, '').replace(/\s+/g, ' ').trim().replace(/[.!?:;]+$/, '').toLowerCase();
 
 /** Display numbers: sources numbered 1, 2, 3 in the order the answer first cites them (research numbers its passages). */
 export function displayNumbers(text: string, citations: CitationRef[]): Map<number, number> {
@@ -98,11 +100,34 @@ export function CitationChip({ n, c, ctx, pending, label }: { n: number; c?: Cit
 export function AnswerText({ text, citations, ctx, pending, labels }: {
   text: string; citations: CitationRef[]; ctx?: CardContext; pending?: boolean; labels?: Map<number, number>;
 }) {
-  const byN = new Map(citations.map((c) => [c.n, c]));
+  const byN = new Map<number, CitationRef>();
+  const allOf = new Map<number, CitationRef[]>();
+  for (const c of citations) {
+    if (!byN.has(c.n)) byN.set(c.n, c);
+    allOf.set(c.n, [...(allOf.get(c.n) ?? []), c]);
+  }
+  // A source quoted in several places has one citation per place (2026-11-05): the marker opens the one whose sentences
+  // include the sentence it ends, so "net 30 days [2]" opens clause 4.2's words, not clause 4.1's.
+  const pick = (n: number, before: string): CitationRef | undefined => {
+    const all = allOf.get(n) ?? [];
+    if (all.length < 2) return all[0];
+    const said = plainSentence(before.split(/(?<=[.!?:;])\s+/).pop() ?? before);
+    let best: CitationRef | undefined;
+    let score = 0;
+    for (const c of all) {
+      for (const s of c.sentences ?? []) {
+        const t = plainSentence(s);
+        const hit = said && (t.includes(said) || said.includes(t)) ? Math.min(t.length, said.length) : 0;
+        if (hit > score) { score = hit; best = c; }
+      }
+    }
+    return best ?? all[0];
+  };
   // One piece of text (a paragraph, item or cell): bold spans, and chips in place of markers.
   const inline = (line: string, key: string): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
-    let prev: number | null = null;                     // "[1][1]" (two quotes from one source) shows one chip
+    let prev: string | null = null;                     // "[1][1]" (two quotes from one place) shows one chip
+    let seen = '';
     boldPieces(line).forEach(([piece, bold], b) => {
       const here: React.ReactNode[] = [];
       let last = 0;
@@ -113,13 +138,17 @@ export function AnswerText({ text, citations, ctx, pending, labels }: {
         const between = piece.slice(last, m.index);
         if (between.trim()) prev = null;
         here.push(between);
+        seen += between;
         ns.forEach((n) => {
-          if (n !== prev) here.push(<CitationChip key={`${key}-${b}-${m.index}-${n}`} n={n} c={byN.get(n)} ctx={ctx} pending={pending} label={labels?.get(n)} />);
-          prev = n;
+          const c = pick(n, seen);
+          const id = c?.id ?? `n${n}`;
+          if (id !== prev) here.push(<CitationChip key={`${key}-${b}-${m.index}-${n}`} n={n} c={c} ctx={ctx} pending={pending} label={labels?.get(n)} />);
+          prev = id;
         });
         last = (m.index ?? 0) + m[0].length;
       }
       here.push(piece.slice(last));
+      seen += piece.slice(last);
       if (piece.slice(last).trim()) prev = null;
       parts.push(bold ? <strong key={`${key}-b${b}`}>{here}</strong> : <React.Fragment key={`${key}-t${b}`}>{here}</React.Fragment>);
     });
@@ -164,8 +193,9 @@ function AnswerState({ p }: { p: SourceAnswerProps }) {
 
 function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
   const labels = displayNumbers(p.answer, p.citations);
-  const unique = Array.from(new Map(p.citations.map((c) => [c.n, c])).values())
-    .sort((a, b) => (labels.get(a.n) ?? a.n) - (labels.get(b.n) ?? b.n));
+  // Every place the answer quotes (2026-11-05): a source quoted at clauses 4.1, 4.2 and 4.3 shows three chips, one per span.
+  const unique = p.citations.map((c, i) => ({ c, i }))
+    .sort((a, b) => (labels.get(a.c.n) ?? a.c.n) - (labels.get(b.c.n) ?? b.c.n) || a.i - b.i).map(({ c }) => c);
   return (
     <div className="qc-card qc-answer-card" data-component="source_answer">
       <AnswerState p={p} />
@@ -183,7 +213,7 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
             <button key={c.id} type="button" className="qc-source" data-verified={c.verified ? 'true' : 'false'} disabled={c.removed}
               onClick={(e) => ctx.openCitation(c, e.currentTarget)}
               aria-label={c.removed ? `Source ${labels.get(c.n) ?? c.n}: the document was deleted`
-                : `Open source ${labels.get(c.n) ?? c.n}: ${c.document_title}${c.page ? `, page ${c.page}` : ''}${c.matter ? `, ${c.matter}` : ''}`}>
+                : `Open source ${labels.get(c.n) ?? c.n}: ${c.document_title}${c.page ? `, page ${c.page}` : ''}${c.clause ? `, clause ${c.clause}` : ''}${c.matter ? `, ${c.matter}` : ''}`}>
               {c.verified ? <BadgeCheck aria-hidden /> : <CircleDashed aria-hidden />}
               <b>{labels.get(c.n) ?? c.n}</b>
               {c.matter && <MatterTag number={c.matter} />}

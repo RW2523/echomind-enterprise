@@ -644,7 +644,9 @@ def test_which_documents_a_text_names():
     t = {"msa": "Harrowgate MSA", "nda": "Northbridge NDA", "lease": "Unit 7 Lease", "coc": "Change of control notice",
          "sto": "Kestrel Storage Services Agreement", "amd": "Amendment No. 1 to the Kestrel storage agreement",
          "wit": "Witness statement of Jonas Ekberg", "eng": "Calder & Wynne engagement letter", "side": "Service credit side letter"}
-    assert referenced("The Kestrel storage agreement is governed by English law.", t) == {"sto", "amd"}
+    # an amendment "to the Kestrel storage agreement" is an amendment, not the agreement (2026-11-05); it still speaks for the
+    # agreement through its amendment link and the passages naming it
+    assert referenced("The Kestrel storage agreement is governed by English law.", t) == {"sto"}
     assert referenced("What is the cap under the Master Services Agreement?", t) == {"msa"}
     assert referenced("Which law governs the warehouse lease?", t) == {"lease"}
     assert referenced("The change of control notice was sent in September.", t) == {"coc"}
@@ -1187,3 +1189,142 @@ def test_roles_either_party_takes_reach_the_search_and_the_check(ev, monkeypatch
     assert attribution.taken_roles(NORTHWIND) == []                       # "(the "Supplier")" is a company's role
     assert attribution.without_parties("Under the Northbridge NDA, may Northbridge tell Voss-Lindqvist AB's staff?",
                                        {"northbridge", "voss-lindqvist"}) == "Under the party NDA, may the party tell the party's staff?"
+
+
+# ── A document the question names, and another document's quote of it (2026-11-05 brief) ──────────────────────────────
+NAMED_MSA = ("MASTER SERVICES AGREEMENT (fictional)\n\n## 4. Fees and Payment\n\n"
+             "4.1 Client shall pay a platform subscription fee of USD 9,100 per month.\n\n"
+             "4.2 Provider shall invoice monthly in advance. Invoices are payable net thirty (30) days from the invoice date.\n\n"
+             "4.3 Undisputed amounts not paid when due accrue interest at one percent (1%) per month until paid.\n")
+ADVICE = ("ADVICE MEMORANDUM (fictional)\n\n## 1. Payment\n\n1.1 Clause 4.2 of the Master Services Agreement provides that "
+          "\"Invoices are payable net sixty (60) days from the invoice date.\" The client should diarise invoice payment accordingly.\n")
+
+
+class Quoting:
+    """Answers with the sentences the test sets, each citing the source that holds its quote; records the prompt."""
+    def __init__(self):
+        self.lines, self.calls = [], []
+
+    async def chat_stream(self, messages, temperature, max_tokens):
+        self.calls.append(messages)
+        user = messages[-1]["content"]
+        found = {}
+        for claim, quote in self.lines:
+            n = next((m.group(1) for m in re.finditer(r'<source n="(\d+)"[^>]*>(.*?)</source>', user, re.S) if quote in m.group(2)), None)
+            found[(claim, quote)] = n
+        text = " ".join(f'{c} [{found[(c, q)]}: "{q}"].' for c, q in self.lines if found[(c, q)]) or "The documents in this matter do not answer that."
+        for piece in re.findall(r"\S+\s*|\n+", text):
+            yield piece
+
+    async def chat(self, messages, temperature, max_tokens):
+        return "?"
+
+
+@pytest.fixture
+def named(docs, monkeypatch):
+    from app.core.config import settings
+    from app.legal.research import llm
+    monkeypatch.setattr(settings, "LEGAL_STREAM_RECHECK_SEC", 0.0)
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)
+    model = Quoting()
+    monkeypatch.setattr(llm, "_override", model)
+    alice = as_user(docs, "alice")
+    mid = docs["matters"]["M-114"]["id"]
+    msa = upload(alice, mid, "msa.md", NAMED_MSA, status="executed", title="Master Services Agreement").json()["document"]
+    memo = upload(alice, mid, "memo.md", ADVICE, status="final", title="Advice memo on the MSA").json()["document"]
+    index_all()
+    docs.update(mid=mid, model=model, msa=msa, memo=memo)
+    return docs
+
+
+Q_TERMS = "What are the payment terms in the Master Services Agreement? Include amounts, invoice deadlines and late-payment provisions."
+
+
+def test_a_named_document_is_searched_and_put_first_and_another_documents_account_of_it_is_secondary(named, monkeypatch):
+    from app.core.config import settings
+    from app.legal.research import attribution
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 1)        # the main search alone would read one passage
+    alice = as_user(named, "alice")
+    named["model"].lines = [("Invoices are payable net thirty days", "Invoices are payable net thirty (30) days from the invoice date")]
+    events = ask(alice, named["mid"], Q_TERMS)
+    sources = events[0]["citations"]
+    assert sources[0]["document_title"] == "Master Services Agreement"
+    sent = named["model"].calls[-1][-1]["content"]
+    assert 'The question names "Master Services Agreement"' in sent
+    if any(s["document_title"] == "Advice memo on the MSA" for s in sources):
+        assert re.search(r'document="Advice memo on the MSA"[^>]*secondary="yes"', sent)
+    assert not re.search(r'document="Master Services Agreement"[^>]*secondary', sent)
+    titles = {named["msa"]["id"]: "Master Services Agreement", named["memo"]["id"]: "Advice memo on the MSA"}
+    assert attribution.referenced(Q_TERMS, titles) == {named["msa"]["id"]}            # the memo on the MSA is not the MSA
+    assert attribution.referenced("What are the payment terms in the MSA?", titles) == {named["msa"]["id"]}
+    assert attribution.referenced("What does the advice memo say?", titles) == {named["memo"]["id"]}
+    assert attribution.referenced("When does the lease end?", {"l": "Lease of Unit 12", "h": "Heads of terms for a new lease"}) == {"l"}
+
+
+def test_an_answer_about_the_named_document_from_another_documents_quote_of_it_does_not_stand(named, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 4)
+    alice = as_user(named, "alice")
+    named["model"].lines = [("The agreement says invoices are payable net sixty days",
+                             "Invoices are payable net sixty (60) days from the invoice date")]
+    done = ask(alice, named["mid"], Q_TERMS)[-1]
+    assert done["abstained"] and done["abstention_reason"] == "other_documents"      # the memo is not the MSA
+    assert done["misquotes"] == [{"by": "Advice memo on the MSA", "by_id": named["memo"]["id"], "of": "Master Services Agreement",
+                                  "of_id": named["msa"]["id"], "quote": "Invoices are payable net sixty (60) days from the invoice date."}]
+    named["model"].lines = [
+        ("The fee is USD 9,100 per month", "Client shall pay a platform subscription fee of USD 9,100 per month"),
+        ("Invoices are issued monthly in advance and payable net thirty days", "Invoices are payable net thirty (30) days from the invoice date"),
+        ("Overdue amounts accrue interest at 1% per month", "accrue interest at one percent (1%) per month until paid"),
+        ("The advice memo instead says net sixty days", "Invoices are payable net sixty (60) days from the invoice date")]
+    done = ask(alice, named["mid"], Q_TERMS)[-1]
+    assert not done["abstained"] and done["misquotes"]
+    spans = {(e["char_start"], e["char_end"]) for e in done["evidence"] if e["document_id"] == named["msa"]["id"]}
+    assert len(spans) == 3 and all(e["sentences"] for e in done["evidence"])
+
+
+def test_each_place_an_answer_quotes_has_its_own_citation_opening_its_own_words(named, monkeypatch):
+    """2026-11-05 brief: four sentences quoting clauses 4.1, 4.2 and 4.3 were shown as one chip whose span was clause 4.1."""
+    from test_law_counsel import final, new_conversation, turn
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 4)
+    alice = as_user(named, "alice")
+    named["model"].lines = [
+        ("The fee is USD 9,100 per month", "Client shall pay a platform subscription fee of USD 9,100 per month"),
+        ("Invoices are payable net thirty days", "Invoices are payable net thirty (30) days from the invoice date"),
+        ("Overdue amounts accrue interest at 1% per month", "accrue interest at one percent (1%) per month until paid")]
+    env = final(turn(alice, new_conversation(alice, named["mid"]), Q_TERMS))
+    props = next(c for c in env["components"] if c["type"] == "source_answer")["props"]
+    msa = [c for c in props["citations"] if c["document_title"] == "Master Services Agreement"]
+    assert [c["clause"] for c in msa] == ["4.1", "4.2", "4.3"] and all(c["verified"] for c in msa)
+    assert len({c["id"] for c in msa}) == 3 and len({c["n"] for c in msa}) == 1                  # one source, three places
+    assert ["net thirty" in " ".join(c["sentences"]) for c in msa] == [False, True, False]
+    for c in msa:                                                                                   # each opens its own words
+        got = alice.get(f"/api/legal/counsel/citations/{c['id']}").json()["citation"]
+        words = got["context"]["text"][got["context"]["highlight_start"]:got["context"]["highlight_end"]]
+        assert words.startswith({"4.1": "Client shall pay", "4.2": "Invoices are payable", "4.3": "accrue interest"}[c["clause"]])
+    assert as_user(named, "bob").get(f"/api/legal/counsel/citations/{msa[0]['id']}").status_code == 404   # not on the matter
+
+
+def test_a_clause_named_by_number_is_read_from_the_contract_first(named, monkeypatch):
+    """2026-11-05 end-to-end run: "What does clause 14 actually cover?" was answered from letters describing clause 14, never
+    from the agreement's own clause; a question naming clause numbers now reads those clauses first, as search would."""
+    from app.core.config import settings
+    from app.legal.retrieval.search import clause_numbers
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 1)
+    alice = as_user(named, "alice")
+    named["model"].lines = [("Interest is 1% per month", "accrue interest at one percent (1%) per month until paid")]
+    sources = ask(alice, named["mid"], "Our advice memo talks about payment. What does clause 4.3 provide?")[0]["citations"]
+    assert sources[0]["document_title"] == "Master Services Agreement" and "4.3 Undisputed amounts" in sources[0]["text"]
+    assert clause_numbers("Cite Clauses 4.1, 4.2, and 4.3.") == ["4.1", "4.2", "4.3"]
+    assert clause_numbers("Is the notice in clause 12 or section 9?") == ["12", "9"]
+    assert clause_numbers("Pay within 30 days of the invoice.") == []
+    bob = as_user(named, "bob")                                          # not on the matter: nothing is read for him
+    r = bob.post(f"/api/legal/matters/{named['mid']}/research/query", headers=csrf_headers(bob), json={"question": "What does clause 4.3 provide?"})
+    assert r.status_code == 404
+
+
+def test_a_question_about_documents_someone_asked_for_is_researched_not_listed():
+    from app.legal.counsel import intent
+    assert intent.classify("What documents has the Authority asked Meridian for?") == "ask_fact"
+    assert intent.classify("Which documents has the client sent us?") == "ask_fact"
+    assert intent.classify("Which documents are available?") == "documents"

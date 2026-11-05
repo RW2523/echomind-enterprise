@@ -51,17 +51,43 @@ def _best(n: int, evidence: list[dict]) -> Optional[dict]:
     return items[0] if items else None
 
 
+def _spans(n: int, evidence: list[dict]) -> list[Optional[dict]]:
+    """One evidence item per distinct verified span the answer quotes from source n, in reading order, and one more for the
+    sentences that cite n without a verified quote (2026-11-05 brief: four sentences from clauses 4.1–4.3 shown as one chip
+    whose span was clause 4.1 alone). A source with no verified quote keeps one record, as before."""
+    items = [e for e in evidence if e.get("n") == n]
+    verified, other, at = [], [], {}
+    for e in items:
+        if e.get("verification") in VERIFIED and e.get("char_start") is not None and e.get("char_end") is not None:
+            key = (e.get("version_id"), e["char_start"], e["char_end"])
+            if key in at:
+                at[key]["sentences"] = list(dict.fromkeys([*at[key].get("sentences", []), *e.get("sentences", [])]))
+                continue
+            at[key] = {**e}
+            verified.append(at[key])
+        else:
+            other.append(e)
+    if not verified:
+        return [_best(n, evidence)]
+    verified.sort(key=lambda e: e["char_start"])
+    loose = [x for e in other for x in e.get("sentences", []) if not any(x in v.get("sentences", []) for v in verified)]
+    if loose:
+        e = next((o for o in other if o.get("char_start") is not None), None) or {}
+        verified.append({**e, "verification": e.get("verification") or "not_quoted", "sentences": list(dict.fromkeys(loose))})
+    return verified
+
+
 def from_research(turn: dict, done: dict) -> list[dict]:
-    """Citation records for every source a finished research answer cites, saved; their public references back."""
+    """Citation records for every span a finished research answer quotes from each source it cites, saved; their public
+    references back. Each carries the sentences it supports, so the answer's marker in a sentence opens that sentence's words."""
     if done.get("abstained"):
         return []
     evidence = done.get("evidence") or []
     texts: dict[str, Optional[str]] = {}
     out, now = [], policy.now_iso()
     with get_conn() as conn:
-        for src in done.get("citations") or []:
+        for src, e in [(src, e) for src in done.get("citations") or [] for e in _spans(int(src["n"]), evidence)]:
             n = int(src["n"])
-            e = _best(n, evidence)
             vid = (e or {}).get("version_id") or src["version_id"]
             a, b = (e or {}).get("char_start"), (e or {}).get("char_end")
             verification = (e or {}).get("verification") or "not_quoted"
@@ -91,6 +117,7 @@ def from_research(turn: dict, done: dict) -> list[dict]:
                         "page": page if isinstance(page, int) and page >= 1 else None,
                         "clause": ((e or {}).get("clause") or src.get("clause") or None),
                         "verified": verification in VERIFIED,
+                        "sentences": [x[:600] for x in ((e or {}).get("sentences") or [])][:8],
                         "instructions": bool(src.get("instructions")),
                         **({"matter": src["matter_number"]} if src.get("matter_number") else {})})
         conn.commit()

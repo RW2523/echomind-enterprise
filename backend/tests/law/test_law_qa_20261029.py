@@ -83,7 +83,11 @@ def test_rag001_payment_is_supported_and_the_pointer_to_section_2_is_not_flagged
                           "These details are found in Section 2 of the agreement.")
     p = card(chat(as_user(qa, "alice"), qa["mid"], "What is the monthly payment and when must invoices be paid?"))
     assert p["state"] == "answered" and p["unsupported"] == []
-    assert [(c["clause"], c["verified"]) for c in p["citations"]] == [("2", True)]
+    # one citation per place quoted (2026-11-05 brief), each opening the words its sentence relies on
+    assert [(c["clause"], c["verified"]) for c in p["citations"]] == [("2", True), ("2", True)]
+    alice = as_user(qa, "alice")
+    opened = [json.dumps(alice.get(f"/api/legal/counsel/citations/{c['id']}").json()) for c in p["citations"]]
+    assert "pay $12,000" in opened[0] and "within 30 days" in opened[1]
 
 
 def test_rag002_the_termination_quote_under_3_is_verified_against_clause_3_and_opens_there(qa):

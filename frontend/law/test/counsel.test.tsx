@@ -132,7 +132,7 @@ describe('Asking', () => {
     expect(turn.text).toBe('When must Apex complete delivery?');
     expect(turn.client_request_id).toMatch(/^[0-9a-f]{32}$/);
     expect(screen.getByRole('button', { name: /Source 1: Services Agreement, page 2, clause 4.2\. Verified quote/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Open source 1: Services Agreement, page 2' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open source 1: Services Agreement, page 2, clause 4.2' })).toBeTruthy();
   });
 
   it('opens a source in the side panel, highlighted, and Escape returns focus to the chip', async () => {

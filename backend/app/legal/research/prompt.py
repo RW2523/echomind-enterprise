@@ -102,6 +102,18 @@ def _attr(value) -> str:
     return html.escape(str(value if value is not None else ""), quote=True)
 
 
+def named_note(titles: list[str]) -> str:
+    """The question names these documents (2026-11-05 brief): their terms come from their own sources; another document that
+    describes them is secondary, and where it differs both are given."""
+    if not titles:
+        return ""
+    names = " and ".join(f'"{t}"' for t in titles[:3])
+    return (f"(The question names {names}. State its terms from its own sources, every term of the kind asked about that they "
+            "state, not a selection. A source marked secondary is another document "
+            "that may describe it: never give a secondary source's words as its terms; where a secondary source states them "
+            "differently, give both, say which document each comes from, and say that they differ.)\n")
+
+
 def build(question: str, passages: list[dict], note: str = "") -> list[dict]:
     blocks = []
     for n, p in enumerate(passages, start=1):
@@ -116,8 +128,9 @@ def build(question: str, passages: list[dict], note: str = "") -> list[dict]:
             amends = (f' amends="{_attr(a["document_title"])} clause {_attr(a["clause"])}"'
                       f' amendment="{"signed" if a.get("signed") else "unsigned"}"')
         matter = f' matter="{_attr(p["matter"]["number"])}"' if p.get("matter") else ""
+        secondary = ' secondary="yes"' if p.get("secondary") else ""
         blocks.append(f'<source n="{n}" document="{_attr(c["document_title"])}" version="{_attr(c["version_number"])}" '
-                      f'pages="{_attr(pages)}"{clause}{amends}{matter}>\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
+                      f'pages="{_attr(pages)}"{clause}{amends}{matter}{secondary}>\n{html.escape(withhold(p["text"]), quote=False)}\n</source>')
     reading = account_reading(question)
     # S2.5 (2026-10-28): a conversation about several matters. Each source names its matter; the answer must keep them apart.
     # A question about one matter gets exactly the prompt it had before.

@@ -52,12 +52,14 @@ _COMPARE_FACTS = re.compile(r"\bcompar(?:e|es|ed|ing|ison(?:\s+of)?)\s+(?:the\s+
                             r"(?:dates|claims|accounts|statements|witness(?:es)?|figures|amounts|documents|versions|facts|values)\b", re.I)
 # The matter's list of documents, read from their records (2026-10-29 QA CHAT-001: "Which documents are available?" went to
 # document search and came back "do not answer that"). A question about what documents say ("Which documents mention the
-# deposit?") stays a research question.
+# deposit?") stays a research question, as does one about documents someone asked for, sent or signed ("What documents has the
+# Authority asked Meridian for?", 2026-11-05 end-to-end run).
 _DOCUMENTS = re.compile(
     r"^\s*(?:please\s+|can\s+you\s+|could\s+you\s+)?(?:"
     r"(?:which|what)\s+(?:documents?|files?)\s+(?:are|is|do|does|have|has)\b"
     r"(?![^?]*\b(?:mention|say|said|state|refer|contain|discuss|cover|show|support|prove|deal|address|govern|include|provide|set|"
-    r"name|quote|cite|describe|record|confirm|list)\w*)"
+    r"name|quote|cite|describe|record|confirm|list|ask|request|want|need|seek|require|demand|send|sent|receiv|produc|disclos|"
+    r"give|gave|sign|attach|exchang|serve|file)\w*)"
     r"|(?:list|show)\s+(?:me\s+)?(?:all\s+|the\s+|my\s+|our\s+)?(?:documents|files)\b(?!\s+(?:that|which|about|on|mentioning|saying|where))"
     r"|what(?:'s|\s+is)\s+(?:in|on)\s+(?:this|the)\s+(?:matter|file|case)(?:\s+file)?\s*\??\s*$"
     r"|how\s+many\s+documents\s+(?:are|do|does|have|has)\b(?![^?]*\b(?:mention|say|state|refer)\w*))", re.I)

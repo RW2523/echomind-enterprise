@@ -180,6 +180,12 @@ def _amendment_notes(changed: list[dict], matter_number: str) -> tuple[list[str]
     return notes, actions
 
 
+def _misquote_note(m: dict) -> str:
+    """Another document quotes the named one with words it does not contain (research/routes._misquotes)."""
+    return (f"{m.get('by') or 'Another document'} quotes {m.get('of') or 'the named document'} as “{m.get('quote', '')}”; "
+            f"those words are not in {m.get('of') or 'it'}.")[:400]
+
+
 def _notes(cites: list[dict], conflicts: list[dict]) -> list[str]:
     notes = []
     for c in conflicts[:2]:
@@ -236,6 +242,7 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
              "notes": (([OTHER_DOCUMENTS] if done.get("abstention_reason") == "other_documents" else [])
                        + ([OTHER_PARTY] if done.get("abstention_reason") == "other_party" else [])
                        + ([NOT_IN_CITED] if done.get("abstention_reason") == "not_in_cited" else [])
+                       + [_misquote_note(m) for m in (done.get("misquotes") or [])]
                        + amend_notes + _notes(cites, done.get("conflicts") or []))[:3]}
     if built.understood:
         props["understood"] = built.understood[:400]

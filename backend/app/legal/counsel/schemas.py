@@ -87,6 +87,7 @@ class CitationRef(Strict):
     clause: Optional[text(40)] = None
     verified: bool                                        # true only when the quote was found in the cited passage
     removed: bool = False                                 # the document was purged after the answer
+    sentences: list[text(600)] = Field(default_factory=list, max_length=8)   # the answer's sentences this span supports
     matter: Optional[MatterNumber] = None                 # in a conversation about several matters: the source's matter
 
 

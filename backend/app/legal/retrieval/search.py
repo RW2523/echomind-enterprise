@@ -217,6 +217,46 @@ def opening(scope: AuthorizedScope, version_id: str, names: Iterable[str] = (), 
     return _located([_passage(_wide(h))], " ".join(names))[0]
 
 
+_CLAUSE_REF = re.compile(r"\b(?:clauses?|sections?|cl\.|§)\s*(\d{1,2}(?:\.\d{1,2}){0,2})((?:(?:\s*(?:,|and|&|to|-|–))+\s*\d{1,2}(?:\.\d{1,2}){0,2})*)", re.I)
+
+
+def clause_numbers(text: str) -> list[str]:
+    """The clause numbers a question names: "clause 14", "clauses 4.1, 4.2 and 4.3", "section 9" (2026-11-05)."""
+    out = []
+    for m in _CLAUSE_REF.finditer(text or ""):
+        out.append(m.group(1))
+        out += re.findall(r"\d{1,2}(?:\.\d{1,2}){0,2}", m.group(2) or "")
+    return list(dict.fromkeys(out))[:6]
+
+
+def clause_passages(scope: AuthorizedScope, numbers: list[str], versions: str = "signed", documents: Optional[list[str]] = None,
+                    kinds: tuple = ("contract",), limit: int = 4) -> list[dict]:
+    """The passages holding the clauses a question names, from the matter's documents of these kinds (or only `documents`),
+    read like a search: this matter, what this person may see, the version policy (2026-11-05 end-to-end run: "What does clause
+    14 actually cover?" was answered from the letters describing it, not from the agreement's clause 14)."""
+    if not numbers:
+        return []
+    numbers = list(dict.fromkeys(x for n in numbers for x in ([n] if "." in n else [n, f"{n}.1"])))   # "clause 14": 14, else 14.1
+    recheck(scope)
+    with get_conn() as conn:
+        rows = conn.execute(
+            f"SELECT c.version_id, c.number, c.char_start FROM legal_clauses c JOIN legal_document_versions v ON v.id = c.version_id "
+            f"JOIN legal_documents d ON d.id = v.document_id WHERE c.matter_id = ? AND d.deleted_at IS NULL "
+            f"AND c.number IN ({','.join('?' * len(numbers))}) "
+            + (f"AND d.id IN ({','.join('?' * len(documents))}) " if documents else f"AND d.kind IN ({','.join('?' * len(kinds))}) ")
+            + "ORDER BY c.char_start", (scope.matter_id, *numbers, *(documents or kinds))).fetchall()
+        ids = []
+        for vid, _number, start in rows:
+            r = conn.execute("SELECT id FROM legal_chunks WHERE matter_id = ? AND version_id = ? AND active = 1 AND char_start <= ? "
+                             "AND ? < char_end ORDER BY char_start LIMIT 1", (scope.matter_id, vid, start, start)).fetchone()
+            if r and r[0] not in ids:
+                ids.append(r[0])
+    hits = _load(scope.matter_id, ids, scope.principal_id, versions if versions in ("signed", "current") else "signed", documents)
+    order = {cid: i for i, cid in enumerate(ids)}
+    hits.sort(key=lambda h: order.get(h["chunk_id"], 99))
+    return [_located([_passage(_wide(h))], " ".join(numbers))[0] for h in hits[:limit]]
+
+
 def _passage(h: dict) -> dict:
     a, b = h.get("window") or (0, len(h["text"]))
     base = h["char_start"]
