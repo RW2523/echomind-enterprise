@@ -452,6 +452,12 @@ class CouncilSummaryProps(Strict):
     approval: Optional[text(80)] = None
     path: text(300)
     caution: text(400)
+    # the Council (2026-11-05): the chair's conclusion first, then at most three points and gaps; figures in them no answer gave
+    conclusion: Optional[text(400)] = None
+    points: list[text(400)] = Field(default_factory=list, max_length=3)
+    gaps: list[text(300)] = Field(default_factory=list, max_length=3)
+    outcome: Optional[Literal["answered", "inconclusive", "stopped"]] = None
+    figures_unsupported: list[text(40)] = Field(default_factory=list, max_length=6)
 
     @model_validator(mode="after")
     def _paths(self):

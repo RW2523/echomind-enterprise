@@ -213,15 +213,18 @@ def test_the_review_panel_is_queued_from_the_chat_when_the_firm_has_it(dr, monke
     alice = as_user(dr, "alice")
     conv = new_conversation(alice, dr["mid"])
     form = card(final(turn(alice, conv, "Challenge our position on the fee")), "guided_questions")
-    assert form["props"]["purpose"] == "panel" and [q["id"] for q in form["props"]["questions"]] == ["question", "specialist"]
+    assert form["props"]["purpose"] == "panel" and [q["id"] for q in form["props"]["questions"]] == ["question", "specialist", "depth"]
+    assert "Lead counsel, Opposing reading, Evidence investigator" in form["props"]["intro"]      # chosen by rule for a challenge
     ev = turn(alice, conv, "Ask the review panel: is the fixed fee binding?",
               form={"component_id": form["id"], "values": {"question": "Is the fixed fee of USD 18,000 binding on the client?",
-                                                           "specialist": "commercial"}})
+                                                           "specialist": "commercial", "depth": "deep"}})
     summary = card(final(ev), "council_summary")
     assert summary["props"]["status"] == "queued" and summary["props"]["area"] == "commercial contracts"
     assert summary["props"]["path"] == f"/m/M-101/panel/{summary['props']['review_id']}"
     with sqlite3.connect(fresh_db) as db:
         assert db.execute("SELECT kind FROM legal_jobs WHERE object_id=?", (summary["props"]["review_id"],)).fetchone() == ("panel.run",)
+        assert db.execute("SELECT depth, roles_json FROM legal_panel_reviews WHERE id=?", (summary["props"]["review_id"],)).fetchone() == \
+            ("deep", '["deal", "risk", "litigation", "specialist"]')
     assert read_card(alice, summary["id"])["props"]["status"] == "queued"
     carol = as_user(dr, "carol")
     env = final(turn(carol, new_conversation(carol, dr["mid"]), "Challenge our position on the fee"))

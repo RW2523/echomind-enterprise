@@ -15,9 +15,10 @@ export const PANEL_STATUS: Record<PanelReview['status'], [string, Tone]> = {
   needs_facts: ['Stopped: facts needed', 'conflict'], failed: ['Could not finish', 'conflict'], not_allowed: ['No longer allowed', 'neutral'],
 };
 
-/** The review panel (S4.5, D-057): one question answered from four angles (deal, risk and compliance, litigation and a
- *  specialist area), each citing the matter's documents, compared by a moderator. Drafted by the same model; a partner
- *  reviews it before anyone relies on it. */
+/** The review panel (S4.5, D-057), grown into the Council (2026-11-05): one question answered from the angles its rules
+ *  choose (four by default: deal, risk and compliance, litigation and a specialist area), each citing the matter's
+ *  documents; the first answer is challenged, and a chair gives the conclusion and where they differ. Drafted by the same
+ *  model; a partner reviews it before anyone relies on it. */
 export default function MatterPanel() {
   const matter = useMatter();
   const q = usePanelReviews(matter.id);
@@ -25,6 +26,7 @@ export default function MatterPanel() {
   const navigate = useNavigate();
   const [question, setQuestion] = useState('');
   const [area, setArea] = useState('commercial');
+  const [depth, setDepth] = useState<'focused' | 'deep'>('focused');
   const [chosen, setChosen] = useState<string[]>([]);
   const docs = useDocuments(matter.id);
   const ready = (docs.data ?? []).filter((d) => d.current_version?.index_status === 'indexed');
@@ -34,7 +36,7 @@ export default function MatterPanel() {
     e.preventDefault();
     setBusy(true); setError('');
     try {
-      const r = await api.post<{ review: { id: string } }>(panelPath(matter.id), { question, specialist: area, documents: chosen });
+      const r = await api.post<{ review: { id: string } }>(panelPath(matter.id), { question, specialist: area, documents: chosen, depth });
       await qc.invalidateQueries({ queryKey: ['matter', matter.id, 'panel'] });
       navigate(`/m/${encodeURIComponent(matter.number)}/panel/${encodeURIComponent(r.review.id)}`);
     } catch (err) { setError(err instanceof ApiError ? err.message : 'The question could not be sent.'); } finally { setBusy(false); }
@@ -43,7 +45,7 @@ export default function MatterPanel() {
     <>
       <Toolbar crumb={matter.number} title="Review panel" />
       <div className="lw-content">
-        <p className="lw-meta" style={{ margin: 0 }}>Four perspectives on one question — a deal lawyer, risk and compliance, a litigator and a specialist — each answering alone from this matter's documents and citing them. A moderator lays out where they agree and differ. If the answer depends on facts the documents do not give, the panel stops and asks you. These are drafted by the same AI model: they are not independent experts, and a partner reviews them before anyone relies on them.</p>
+        <p className="lw-meta" style={{ margin: 0 }}>Several perspectives on one question, chosen for it — for a challenge, lead counsel, an opposing reading and an evidence investigator; otherwise a deal lawyer, risk and compliance, a litigator and a specialist — each answering alone from this matter's documents and citing them. The first answer is then challenged, and a chair gives the conclusion and where they differ. If the answer depends on facts the documents do not give, the panel stops and asks you. These are drafted by the same AI model: they are not independent experts, and a partner reviews them before anyone relies on them.</p>
         {q.data?.can.ask && (
           <form className="lw-paper lw-sheet" aria-label="Ask the panel" onSubmit={submit} style={{ display: 'grid', gap: 10 }}>
             <Field label="Question">{(id) => <textarea id={id} className="lw-input" rows={3} maxLength={2000} value={question} onChange={(e) => setQuestion(e.target.value)} />}</Field>
@@ -51,6 +53,11 @@ export default function MatterPanel() {
               <Field label="Specialist area">{(id) => (
                 <select id={id} className="lw-input" value={area} onChange={(e) => setArea(e.target.value)}>
                   {Object.entries(q.data.specialisms).map(([k, label]) => <option key={k} value={k}>{label[0].toUpperCase() + label.slice(1)}</option>)}
+                </select>)}</Field>
+              <Field label="Depth">{(id) => (
+                <select id={id} className="lw-input" value={depth} onChange={(e) => setDepth(e.target.value === 'deep' ? 'deep' : 'focused')}>
+                  <option value="focused">Focused: answers and one challenge round</option>
+                  <option value="deep">Deep: the first answer also replies to the objections</option>
                 </select>)}</Field>
               <button type="submit" className="lw-btn lw-btn-primary" disabled={busy || question.trim().length < 10}><Users2 />Ask the panel</button>
             </div>

@@ -44,7 +44,7 @@ the firm's pages are in the account menu. Screens: [`screens/`](screens/).
 | LEGAL-015 | Backup and restore | **Tested (Law)** | `app/legal/backup`, `test_law_dr.py`; the chat's tables are in the same database and purge |
 | LEGAL-016 | Security / prompt-injection suite | **Tested (Law)** + chat cases | `test_law_injection.py`; chat: injected notes withheld from the model, no extra words, no other matter; live: `INJECTION-CANARY` never shown |
 | LEGAL-017 | Offline acceptance | Backend tests run with `--network none`; live UI made **no** request to a non-local host; enforcement **Blocked (owner, root)** | `sudo scripts/law/egress_lock.sh` (D-071) |
-| LEGAL-018 | Advanced agents (Council, GraphRAG, MCP) | Not started (Review panel exists, off: Tested (Law)) | — |
+| LEGAL-018 | Advanced agents (Council, GraphRAG, MCP) | Council iteration 1 (manual Council on the review panel, off: `LEGAL_PANEL`): **Tested**; discovery, actions, autonomy: In progress / Not started; GraphRAG, MCP: Not started | section "Counsel Intelligence: the Council" |
 | — | Purge covers the chat | **Tested** | `test_purging_a_document_removes_what_the_chat_kept_of_it`; purge verification counts the chat's tables |
 | — | Conflict finder recognises delivery dates | **Tested** | `compare/facts.py` anchor `delivery`; `test_law_compare.py` green |
 | — | Content-Security-Policy | **Tested** (config) | `frontend/nginx.law.conf`: `default-src 'self'` …, validated with `nginx -t`; the built bundle references no CDN |
@@ -275,6 +275,33 @@ The "conversation" journey failed once — the real model answered "The document
 the liability-cap question late in the full run, when the matter also holds the earlier journeys' filed notes — and passed
 when run on its own (23 s). Backend **1621 passed, 4 skipped** (all of `backend/tests`, `--network none`). Screenshots in
 `review-2026-11-02/`.
+
+## Counsel Intelligence: the Council (2026-11-05)
+
+The owner asked to make the "Counsel Intelligence" idea workable and build it. The spec (four iterations, each with a gate) is
+kept outside the public repository until the owner decides on an IP filing. It builds on the review panel (S4.5, D-057), which
+stays off unless the firm turns it on (`LEGAL_PANEL`).
+
+**Iteration 1, the manual Council.** Existing code touched: `panel/run.py`, `panel/routes.py`, `counsel/deliberation.py`,
+`counsel/schemas.py`, the panel pages and the `council_summary` card. Migration 0040 adds `roles_json` and `depth` to
+`legal_panel_reviews`; reviews asked before it read as the four default perspectives, focused.
+
+| Built | How | Status | Evidence |
+|---|---|---|---|
+| Perspectives chosen for the question | Rules, not the model (`run.assemble`), first match wins: a challenge ("strongest argument against", "weaknesses", "opposing") → lead counsel, an opposing reading, an evidence investigator, the specialist; evidence (witness, statement, timeline, inconsistent) → lead, opposing, evidence, contract specialist; clauses (amendment, clause, obligation, deadline, breach) → lead, opposing, contract, specialist; strategy (settle, exposure, "should we") → lead, opposing, risk, specialist; anything else → the four default perspectives. Kept with the question, so a rerun with the lawyer's facts asks the same ones. "Opposing reading" is an analytical role that speaks for no real person | **Tested** | `test_rules_choose_the_perspectives_for_the_question_and_keep_them_with_it` |
+| Challenge round | The opposing reading and the evidence investigator (else the litigator) read the first perspective's answer, only its sentences whose quotes verified, fenced as material, and object with quotes from the sources; "NO OBJECTION", or objections with no verified quote, count as none | **Tested** | `test_challengers_read_only_the_verified_sentences_of_the_first_answer` |
+| Rebuttal at "deep" depth | Only when an objection cites a verified quote the challenged answer did not; the first perspective answers the objections, checked as any answer; the chair reads the reply in place of the first answer | **Tested** | `test_deep_adds_a_rebuttal_only_when_an_objection_found_something_new` |
+| The chair | The moderator reads only verified sentences of the answers and objections, never the sources, and writes a one-sentence conclusion, at most three points (with the roles that support each; unknown roles dropped), gaps and the matrix. A figure in the conclusion or the points that no answer, objection or cited clause gave is flagged ("Check: 900,000 is in no answer") | **Tested** | `test_the_chair_reads_only_verified_sentences_and_its_conclusion_is_checked` |
+| Inconclusive | Fewer than two verified quotes in the answers: no challenge, no chair, no conclusion; the page and card say so | **Tested** | `test_too_few_verified_quotes_end_the_run_as_inconclusive`; vitest |
+| Evidence snapshot | The artifact's inputs pin each passage read (chunk, version, sha256 prefix) | **Tested** | same test |
+| Conclusion first | Panel page: the chair's conclusion, what matters most (with roles), gaps, then the answers, the challenge round, the reply, the matrix (columns follow the roles that answered); the chat card leads with the conclusion; depth in the ask form and the chat form (third question) | **Tested** | `panel.test.tsx` (8), `counsel-cards.test.tsx` (12), axe clean; `test_the_chat_card_shows_the_conclusion_first`; `test_the_review_panel_is_queued_from_the_chat_when_the_firm_has_it` (depth stored) |
+| Kept as it was | Missing facts stop the run and ask the lawyer; continuing without them is recorded; a partner other than the asker approves; the audit keeps counts, never the question; chosen documents; text addressed to an AI withheld | **Tested** | the 19 earlier panel tests, one updated for the challenge call |
+
+Not changed from the panel: every perspective is the same model, and the notice says they are not independent experts. Cost:
+the default four perspectives now make 6 model calls (4 answers, 1 challenge, the chair); a challenge question 7; "deep" up to
+8. Opinions and challenges are stored in the review's artifact (versioned, visible only to those who may read it, approved
+through the review route) rather than a separate table. Not yet measured with the real model: a live run waits until the shared
+GPU is free of the RAG gate. Backend suite **1680 passed**, 4 skipped; frontend **259 passed**; `tsc` main and strict clean.
 
 ## The whole RAG system evaluated again, and what it found fixed (2026-11-03)
 

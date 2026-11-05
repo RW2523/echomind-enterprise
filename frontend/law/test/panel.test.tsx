@@ -88,6 +88,44 @@ describe('Review panel (S4.5)', () => {
     expect(note.textContent).toContain('Left open: the notice date.');
   });
 
+  it('a Council run shows the chair\'s conclusion first, then the answers, the challenge round and the reply', async () => {
+    const council: Partial<PanelContent> = {
+      roles: ['lead', 'opposing', 'evidence', 'specialist'], depth: 'deep', outcome: 'answered', verified_quotes: 6,
+      perspectives: [persp('lead', 'Lead counsel', 'The cap protects the Customer.'), persp('opposing', 'Opposing reading', 'The Supplier may end the contract.'),
+        persp('evidence', 'Evidence investigator', 'The cap is stated once.'), persp('specialist', 'Specialist (commercial contracts)', 'A standard right.')],
+      challenges: [{ ...persp('opposing', 'Opposing reading', 'The answer misses clause 14.2.'), target: 'lead', objects: true },
+        { ...persp('evidence', 'Evidence investigator', 'NO OBJECTION', { evidence: [] }), target: 'lead', objects: false }],
+      revised: persp('lead', 'Lead counsel', 'The cap protects the Customer, but the Supplier may terminate on notice.'),
+      conclusion: 'The Supplier may terminate on a change of control; the cap is USD 250,000.',
+      points: [{ text: 'Clause 14.2 needs only written notice.', roles: ['opposing', 'evidence'] }], gaps: ['Whether a sale is planned'], figures_unsupported: ['900,000'],
+      matrix: [{ issue: 'Can the Supplier terminate?', positions: { lead: 'unlikely', opposing: 'yes, on notice' }, disagreement: true, summary: null, figures_unsupported: [] }],
+    };
+    const { container } = (world(view({ review: { ...view().review, depth: 'deep', roles: [{ role: 'lead', label: 'Lead counsel' }] } }, council)), renderLaw('/m/M-101/panel/r1'));
+    const conclusion = await screen.findByRole('region', { name: 'Conclusion' });
+    expect(conclusion.textContent).toContain('The Supplier may terminate on a change of control');
+    expect(conclusion.textContent).toContain('Clause 14.2 needs only written notice. — Opposing reading, Evidence investigator');
+    expect(conclusion.textContent).toContain('Check: 900,000 is in no answer');
+    expect(conclusion.textContent).toContain('Not established by the documents: Whether a sale is planned.');
+    const regions = screen.getAllByRole('region').map((r) => r.getAttribute('aria-label'));
+    expect(regions.indexOf('Conclusion')).toBeLessThan(regions.indexOf('Perspectives'));
+    const round = screen.getByRole('region', { name: 'Challenge round' });
+    expect(within(round).getByRole('article', { name: 'Opposing reading: objections to the Lead counsel answer' })).toBeTruthy();
+    expect(within(round).getByRole('article', { name: 'Evidence investigator: challenge' }).textContent).toContain('No objection to the Lead counsel answer');
+    expect(screen.getByRole('region', { name: 'Reply to the objections' }).textContent).toContain('but the Supplier may terminate on notice');
+    const head = within(screen.getByRole('table', { name: 'Disagreement matrix' })).getAllByRole('columnheader').map((h) => h.textContent);
+    expect(head).toEqual(['Issue', 'Lead counsel', 'Opposing reading', 'Evidence investigator', 'Specialist (commercial contracts)']);
+    expect(screen.getByText(/Question · specialist: commercial contracts · deep · Lead counsel/)).toBeTruthy();
+    expect((await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);
+  });
+
+  it('an inconclusive Council run says that no conclusion was drawn', async () => {
+    world(view({}, { outcome: 'inconclusive', conclusion: null, points: [], challenges: [] }));
+    renderLaw('/m/M-101/panel/r1');
+    const c = await screen.findByRole('region', { name: 'Conclusion' });
+    expect(c.textContent).toContain('No conclusion');
+    expect(screen.queryByRole('region', { name: 'Challenge round' })).toBeNull();
+  });
+
   it('a lawyer who is not a partner sees that a partner decides', async () => {
     world(view({ can: { approve: false, facts: true, author: false } }));
     renderLaw('/m/M-101/panel/r1');
@@ -110,9 +148,10 @@ describe('Review panel (S4.5)', () => {
     fireEvent.change(within(form).getByLabelText('Question'), { target: { value: 'Can the employer change the bonus scheme unilaterally?' } });
     fireEvent.change(within(form).getByLabelText('Specialist area'), { target: { value: 'employment' } });
     fireEvent.click(await within(form).findByLabelText('Service Agreement.txt'));
+    fireEvent.change(within(form).getByLabelText('Depth'), { target: { value: 'deep' } });
     fireEvent.click(within(form).getByRole('button', { name: 'Ask the panel' }));
     await waitFor(() => expect(calls.find((c) => c.method === 'POST' && c.path === `${M}/panel`)?.body).toEqual({
-      question: 'Can the employer change the bonus scheme unilaterally?', specialist: 'employment', documents: ['d1'] }));
+      question: 'Can the employer change the bonus scheme unilaterally?', specialist: 'employment', documents: ['d1'], depth: 'deep' }));
     expect(await screen.findByRole('status')).toBeTruthy();                                // the panel is working
   });
 });

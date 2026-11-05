@@ -551,19 +551,27 @@ export interface TimeEntry {
 }
 
 // ── Review panel (S4.5, D-057) ────────────────────────────────────────────────────
-export type PanelRole = 'deal' | 'risk' | 'litigation' | 'specialist';
+/** Who answers: the four default perspectives, or those the Council's rules chose for the question (2026-11-05). */
+export type PanelRole = 'deal' | 'risk' | 'litigation' | 'specialist' | 'lead' | 'opposing' | 'evidence' | 'contract';
 export interface PanelPerspective {
   role: PanelRole; label: string; text: string; evidence: ResearchEvidence[]; unsupported: string[]; failed: string[];
-  missing_facts: string[]; abstained: boolean;
+  missing_facts: string[]; abstained?: boolean;
 }
-export interface PanelIssue { issue: string; positions: Record<PanelRole, string>; disagreement: boolean; summary: string | null; figures_unsupported: string[] }
+/** A challenger's objections to the first perspective's verified answer; `objects` only with a verified quote. */
+export interface PanelChallenge extends PanelPerspective { target: PanelRole; objects: boolean }
+export interface PanelIssue { issue: string; positions: Partial<Record<PanelRole, string>>; disagreement: boolean; summary: string | null; figures_unsupported: string[] }
 export interface PanelContent {
   title: string; question: string; specialist: string; area: string; perspectives: PanelPerspective[]; matrix: PanelIssue[];
   missing_facts: string[]; stopped: boolean; facts_given: { question: string; answer: string }[]; notice: string; sources: number;
   proceeded_without?: { facts: string[]; by: string; reason: string; at: string };
+  // the Council (absent on reviews made before 2026-11-05)
+  roles?: PanelRole[]; depth?: 'focused' | 'deep'; challenges?: PanelChallenge[]; revised?: PanelPerspective | null;
+  conclusion?: string | null; points?: { text: string; roles: PanelRole[] }[]; gaps?: string[]; figures_unsupported?: string[];
+  outcome?: 'answered' | 'inconclusive' | 'stopped'; verified_quotes?: number;
 }
 export interface PanelReview {
   id: string; question: string; specialist: string; area: string | null; status: 'queued' | 'running' | 'done' | 'needs_facts' | 'failed' | 'not_allowed';
+  roles?: { role: PanelRole; label: string }[]; depth?: 'focused' | 'deep';
   facts: { question: string; answer: string }[]; created_by: string | null; created_at: string; finished_at: string | null; mine: boolean;
   version?: number | null; approval?: string | null; documents?: { id: string; title: string | null }[];
 }

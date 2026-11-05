@@ -293,7 +293,7 @@ function DocumentPreview({ comp, ctx }: { comp: Of<'document_preview'>; ctx: Car
 
 // ── council_summary ────────────────────────────────────────────────────────────
 const PANEL_STATE: Record<string, string> = {
-  queued: 'Waiting to start…', running: 'The four perspectives are reading the documents…', done: 'Done', failed: 'The panel could not finish.',
+  queued: 'Waiting to start…', running: 'The perspectives are reading the documents and challenging the first answer…', done: 'Done', failed: 'The panel could not finish.',
   needs_facts: 'The panel needs facts the documents do not give.', not_allowed: 'The panel did not run for this matter.',
 };
 
@@ -307,6 +307,16 @@ function CouncilSummary({ comp, ctx }: { comp: Of<'council_summary'>; ctx: CardC
       <p style={{ margin: 0 }}>“{p.question}”</p>
       <p className="qc-state" data-tone={p.status === 'done' ? 'verified' : p.status === 'failed' ? 'attention' : 'neutral'} role="status">
         {PANEL_STATE[p.status]}{working && !following && <> <button type="button" className="qc-linkbtn" onClick={follow}>Check again</button></>}</p>
+      {p.outcome === 'inconclusive' && <p style={{ margin: 0 }}>No conclusion: fewer than two of the answers' quotes could be verified in the documents.</p>}
+      {p.conclusion && (
+        <div className="qc-conclusion" aria-label="The chair's conclusion">
+          <p className="qc-meta" style={{ margin: 0 }}>The chair's conclusion</p>
+          <p style={{ margin: '2px 0 0' }}><b>{p.conclusion}</b></p>
+          {p.figures_unsupported.length > 0 && <p className="qc-meta" style={{ margin: '4px 0 0' }}>{`Check: ${p.figures_unsupported.join(', ')} is in no answer.`}</p>}
+        </div>
+      )}
+      {p.points.length > 0 && <ul className="qc-history-list" aria-label="What matters most">{p.points.map((x, i) => <li key={i}>{x}</li>)}</ul>}
+      {p.gaps.length > 0 && <p className="qc-meta" style={{ margin: 0 }}>{`Not established by the documents: ${p.gaps.join('; ')}.`}</p>}
       {p.issues.length > 0 && (
         <div className="qc-table-wrap">
           <table className="qc-table qc-panel-table">

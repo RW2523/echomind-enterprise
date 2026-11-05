@@ -4,16 +4,15 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { artifactPath, panelPath, usePanelReview } from '../api/queries';
-import type { PanelContent, PanelPerspective, PanelRole, ResearchEvidence } from '../api/types';
+import type { PanelChallenge, PanelContent, PanelPerspective, ResearchEvidence } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { ErrorNote, Field, Skeleton, StatusPill } from '../ui/primitives';
 import { ApprovalDialog, ReviewBanner, ReviewDecisions } from '../ui/review';
 import { PANEL_STATUS } from './MatterPanel';
 
-const ROLES: PanelRole[] = ['deal', 'risk', 'litigation', 'specialist'];
-
-/** One panel review (S4.5, D-057). */
+/** One panel review (S4.5, D-057); since 2026-11-05 a Council run: the chair's conclusion first, then the answers, the
+ *  challenge round and, at "deep", the first answer's reply to the objections. */
 export default function PanelReviewPage() {
   const { reviewId = '' } = useParams();
   const matter = useMatter();
@@ -32,13 +31,14 @@ export default function PanelReviewPage() {
       <Toolbar crumb={`${matter.number} · Review panel`} title="Panel review">{back}</Toolbar>
       <div className="lw-content" style={{ maxWidth: 1180 }}>
         <section className="lw-paper lw-sheet" aria-label="Question">
-          <p className="lw-eyebrow" style={{ margin: 0 }}>{`Question · specialist: ${review.area ?? review.specialist}`}</p>
+          <p className="lw-eyebrow" style={{ margin: 0 }}>{[`Question · specialist: ${review.area ?? review.specialist}`,
+            review.depth === 'deep' ? 'deep' : review.depth ? 'focused' : '', review.roles?.map((r) => r.label).join(', ') ?? ''].filter(Boolean).join(' · ')}</p>
           <h2 className="lw-h2 lw-serif" style={{ margin: '2px 0 8px' }}>{review.question}</h2>
           <p className="lw-meta" style={{ margin: '0 0 8px' }}>{review.documents && review.documents.length
             ? `Consulted: ${review.documents.map((d) => d.title ?? 'a document no longer available').join('; ')}` : "Consulted: all of the matter's documents"}</p>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <StatusPill tone={a?.status === 'approved' ? 'verified' : tone}>{a?.status === 'approved' ? 'Approved by a partner' : label}</StatusPill>
-            {working && <span className="lw-meta" role="status">Five answers are being drafted and checked; this takes about a minute.</span>}
+            {working && <span className="lw-meta" role="status">The answers are being drafted, challenged and checked; this takes a minute or two.</span>}
           </div>
           {c && <p className="lw-panel-notice">{c.notice}</p>}
         </section>
@@ -58,13 +58,26 @@ export default function PanelReviewPage() {
                 <dl className="lw-intake-answers">{c.facts_given.map((f) => <React.Fragment key={f.question}><dt>{f.question}</dt><dd>{f.answer}</dd></React.Fragment>)}</dl>
               </section>
             )}
+            {!c.stopped && <Conclusion c={c} />}
             <section className="lw-panel-grid" aria-label="Perspectives">
               {c.perspectives.map((p) => <Perspective key={p.role} p={p} number={matter.number} />)}
             </section>
+            {(c.challenges?.length ?? 0) > 0 && (
+              <section aria-label="Challenge round">
+                <h3 className="lw-h3">Challenge round</h3>
+                <p className="lw-meta" style={{ margin: '0 0 8px' }}>{`Each challenger read only the verified sentences of the ${c.perspectives[0]?.label ?? 'first'} answer and objected where the sources show it wrong or incomplete.`}</p>
+                <div className="lw-panel-grid">{c.challenges!.map((x) => <Challenge key={x.role} x={x} target={c.perspectives.find((p) => p.role === x.target)?.label} number={matter.number} />)}</div>
+              </section>
+            )}
+            {c.revised && (
+              <section className="lw-panel-grid" aria-label="Reply to the objections">
+                <Perspective p={{ ...c.revised, label: `${c.revised.label}: reply to the objections` }} number={matter.number} />
+              </section>
+            )}
             {c.matrix.length > 0 && (
               <section className="lw-paper lw-sheet" aria-label="Where they agree and differ">
                 <h3 className="lw-h3" style={{ marginTop: 0 }}>Where they agree and differ</h3>
-                <p className="lw-meta" style={{ margin: '0 0 8px' }}>Drawn by the moderator from the four answers only. Check each against the answer it summarises.</p>
+                <p className="lw-meta" style={{ margin: '0 0 8px' }}>Drawn by the chair from the answers' verified sentences only. Check each against the answer it summarises.</p>
                 <div style={{ overflowX: 'auto' }}>
                   <table className="lw-table" aria-label="Disagreement matrix">
                     <thead><tr><th>Issue</th>{c.perspectives.map((p) => <th key={p.role}>{p.label}</th>)}</tr></thead>
@@ -73,7 +86,7 @@ export default function PanelReviewPage() {
                         <td><b>{m.issue}</b>{m.disagreement && <div><StatusPill tone="attention">They differ</StatusPill></div>}
                           {m.summary && <div className="lw-meta">{m.summary}</div>}
                           {m.figures_unsupported.length > 0 && <div><StatusPill tone="conflict">{`Check: ${m.figures_unsupported.join(', ')} is in no answer`}</StatusPill></div>}</td>
-                        {ROLES.map((r) => <td key={r}>{m.positions[r]}</td>)}
+                        {c.perspectives.map((p) => <td key={p.role}>{m.positions[p.role] ?? 'not addressed'}</td>)}
                       </tr>))}</tbody>
                   </table>
                 </div>
@@ -106,6 +119,48 @@ function Perspective({ p, number }: { p: PanelPerspective; number: string }) {
       {p.missing_facts.length > 0 && <p className="lw-meta" style={{ margin: 0 }}>{`Says it lacks: ${p.missing_facts.join('; ')}`}</p>}
     </article>
   );
+}
+
+function Conclusion({ c }: { c: PanelContent }) {
+  if (c.outcome === 'inconclusive') {
+    return (
+      <section className="lw-paper lw-sheet" aria-label="Conclusion">
+        <h3 className="lw-h3" style={{ marginTop: 0 }}>No conclusion</h3>
+        <p style={{ margin: 0 }}>Fewer than two of the answers' quotes could be verified in the documents, so nothing was challenged and the chair drew no conclusion.</p>
+        {(c.gaps?.length ?? 0) > 0 && <p className="lw-meta" style={{ margin: '6px 0 0' }}>{`Not established: ${c.gaps!.join('; ')}.`}</p>}
+      </section>
+    );
+  }
+  if (!c.conclusion && !(c.points?.length)) return null;
+  const label = (r: string) => c.perspectives.find((p) => p.role === r)?.label ?? r;
+  return (
+    <section className="lw-paper lw-sheet lw-panel-conclusion" aria-label="Conclusion">
+      <p className="lw-eyebrow" style={{ margin: 0 }}>The chair's conclusion</p>
+      {c.conclusion && <p className="lw-serif lw-panel-answer" style={{ margin: '2px 0 8px' }}>{c.conclusion}</p>}
+      {(c.figures_unsupported?.length ?? 0) > 0 && <p style={{ margin: '0 0 8px' }}><StatusPill tone="conflict">{`Check: ${c.figures_unsupported!.join(', ')} is in no answer`}</StatusPill></p>}
+      {(c.points?.length ?? 0) > 0 && (
+        <>
+          <p className="lw-eyebrow" style={{ margin: '0 0 2px' }}>What matters most</p>
+          <ul style={{ margin: '0 0 8px' }}>{c.points!.map((x, i) => (
+            <li key={i}>{x.text}{x.roles.length > 0 && <span className="lw-meta">{` — ${x.roles.map(label).join(', ')}`}</span>}</li>))}</ul>
+        </>
+      )}
+      {(c.gaps?.length ?? 0) > 0 && <p className="lw-meta" style={{ margin: 0 }}>{`Not established by the documents: ${c.gaps!.join('; ')}.`}</p>}
+      <p className="lw-meta" style={{ margin: '6px 0 0' }}>Drawn from the verified sentences of the answers and objections below; options to consider, not a decision.</p>
+    </section>
+  );
+}
+
+function Challenge({ x, target, number }: { x: PanelChallenge; target?: string; number: string }) {
+  if (!x.objects) {
+    return (
+      <article className="lw-paper lw-sheet lw-panel-card" aria-label={`${x.label}: challenge`}>
+        <h3 className="lw-h3" style={{ margin: 0 }}>{x.label}</h3>
+        <p className="lw-meta" style={{ margin: 0 }}>{`No objection to the ${target ?? 'first'} answer that the sources support.`}</p>
+      </article>
+    );
+  }
+  return <Perspective p={{ ...x, label: `${x.label}: objections to the ${target ?? 'first'} answer` }} number={number} />;
 }
 
 function Evidence({ e, number }: { e: ResearchEvidence; number: string }) {

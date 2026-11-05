@@ -27,7 +27,17 @@ ROLE_LINES = {
     "risk": 'A change of control lets the Supplier end the contract [n: "terminate this Agreement on written notice"]. This is a real risk.',
     "litigation": 'A dispute would be under Delaware law [n: "laws of the State of Delaware"].',
     "specialist": 'Termination on a change of control is a standard commercial right [n: "undergoes a change of control"].',
+    "lead": 'The Customer is protected by a cap of USD 250,000 [n: "limited to USD 250,000"]. The Supplier will never terminate.',
+    "opposing": 'The Supplier may end the contract on a change of control [n: "terminate this Agreement on written notice"].',
+    "evidence": 'The cap is stated once, in clause 9.1 [n: "limited to USD 250,000"].',
+    "contract": 'Clause 14.2 needs only written notice [n: "terminate this Agreement on written notice"].',
 }
+
+
+def cite(line: str, user: str) -> str:
+    """Each [n: "quote"] in a scripted line becomes the number of the source that holds the quote."""
+    sources = {int(n): t for n, t in re.findall(r'<source n="(\d+)"[^>]*>\n?(.*?)\n?</source>', user, re.S)}
+    return re.sub(r'\[n: "(.*?)"\]', lambda m: f'[{next((k for k, t in sources.items() if m.group(1) in t), 1)}: "{m.group(1)}"]', line)
 
 
 class Panel:
@@ -35,9 +45,18 @@ class Panel:
     the moderator answers with a matrix. Records every call with the role it was for."""
     def __init__(self):
         self.calls, self.missing, self.moderator_extra, self.raw, self.moderator_stop = [], {}, {}, {}, None
+        self.objections, self.rebuttal, self.chair = {}, None, {}
 
     async def chat(self, messages, temperature, max_tokens):
         system, user = messages[0]["content"], messages[-1]["content"]
+        challenge = re.search(r"CHALLENGE: (\w+)", system)
+        if challenge:
+            self.calls.append((f"challenge:{challenge.group(1)}", user))
+            return cite(self.objections.get(challenge.group(1), "NO OBJECTION"), user)
+        rebuttal = re.search(r"REBUTTAL: (\w+)", system)
+        if rebuttal:
+            self.calls.append((f"rebuttal:{rebuttal.group(1)}", user))
+            return cite(self.rebuttal or ROLE_LINES[rebuttal.group(1)], user) + "\n\nMISSING FACTS: none"
         role = re.search(r"PERSPECTIVE: (\w+)", system)
         if role:
             role = role.group(1)
@@ -55,7 +74,7 @@ class Panel:
                                        "positions": {"deal": "low risk", "risk": "real risk", "litigation": "not addressed", "specialist": "standard"},
                                        "disagreement": True, **self.moderator_extra}],
                            "missing_facts": [m for m in self.missing.values()],
-                           "stop": bool(self.missing) if self.moderator_stop is None else self.moderator_stop})
+                           "stop": bool(self.missing) if self.moderator_stop is None else self.moderator_stop, **self.chair})
     chat_raw = chat
 
 
@@ -80,9 +99,10 @@ def pn(docs, monkeypatch):
 QUESTION = "Can the Supplier terminate this Agreement if the Customer undergoes a change of control, and what is the liability?"
 
 
-def ask(w, who="alice", question=QUESTION, specialist="commercial"):
+def ask(w, who="alice", question=QUESTION, specialist="commercial", depth=None):
     c = as_user(w, who)
-    r = c.post(f"{w['base']}/panel", headers=csrf_headers(c), json={"question": question, "specialist": specialist})
+    r = c.post(f"{w['base']}/panel", headers=csrf_headers(c),
+               json={"question": question, "specialist": specialist, **({"depth": depth} if depth else {})})
     if r.status_code != 200:
         return r
     index_all()
@@ -121,12 +141,12 @@ def test_each_perspective_answers_alone_and_the_moderator_reads_only_the_answers
     ask(pn)
     calls = pn["model"].calls
     roles = [r for r, _ in calls]
-    assert roles == ["deal", "risk", "litigation", "specialist", "moderator"]
+    assert roles == ["deal", "risk", "litigation", "specialist", "challenge:litigation", "moderator"]
     for role, user in calls[:4]:
         others = [ROLE_LINES[o].split("[")[0].strip() for o in ROLE_LINES if o != role]
         assert QUESTION in user and "<source" in user and not any(o in user for o in others), role
-    mod = calls[4][1]
-    assert "<source" not in mod and all(ROLE_LINES[r].split("[")[0].strip() in mod for r in ROLE_LINES)
+    mod = calls[5][1]
+    assert "<source" not in mod and all(ROLE_LINES[r].split("[")[0].strip() in mod for r in ("deal", "risk", "litigation", "specialist"))
 
 
 def test_text_addressed_to_an_ai_reaches_no_perspective(pn):
@@ -305,3 +325,91 @@ def test_a_lawyer_can_continue_without_the_missing_facts_and_it_is_recorded(pn):
     r = mp.post(f"{art}/review", headers=csrf_headers(mp), json={"decision": "approved", "content_sha256": v2["artifact"]["content_sha256"]})
     assert r.status_code == 200
     assert alice.post(url, headers=csrf_headers(alice), json={"reason": "again"}).status_code == 409   # not stopped any more
+
+
+
+# ── The Council (EchoMind Counsel Intelligence, iteration 1, 2026-11-05) ─────────────────────────────────────────────────
+ADVERSARIAL = "What is the strongest argument against our position that the Customer is protected if it undergoes a change of control?"
+
+
+@pytest.fixture
+def loose(pn, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RERANK_MIN_SCORE", -100.0)       # every source of the small fixture is read
+    return pn
+
+
+def test_rules_choose_the_perspectives_for_the_question_and_keep_them_with_it(loose):
+    pn = loose
+    from app.legal.panel.run import assemble
+    assert assemble(QUESTION) == ["deal", "risk", "litigation", "specialist"]
+    assert assemble(ADVERSARIAL) == ["lead", "opposing", "evidence", "specialist"]
+    assert assemble("Are the two witness statements inconsistent about the delivery date?") == ["lead", "opposing", "evidence", "contract"]
+    assert assemble("How does the amendment change clause 4?") == ["lead", "opposing", "contract", "specialist"]
+    assert assemble("Should we settle now?") == ["lead", "opposing", "risk", "specialist"]
+    v = ask(pn, question=ADVERSARIAL).json()
+    assert [r["label"] for r in v["review"]["roles"]] == ["Lead counsel", "Opposing reading", "Evidence investigator",
+                                                         "Specialist (commercial contracts)"] and v["review"]["depth"] == "focused"
+    assert [p["role"] for p in v["artifact"]["content"]["perspectives"]] == ["lead", "opposing", "evidence", "specialist"]
+    assert [r for r, _ in pn["model"].calls] == ["lead", "opposing", "evidence", "specialist", "challenge:opposing", "challenge:evidence", "moderator"]
+
+
+def test_challengers_read_only_the_verified_sentences_of_the_first_answer(loose):
+    pn = loose
+    pn["model"].objections = {"opposing": 'It is wrong that the Supplier will never terminate: it may [n: "terminate this Agreement on written notice"].'}
+    c = ask(pn, question=ADVERSARIAL).json()["artifact"]["content"]
+    sent = dict(pn["model"].calls)["challenge:opposing"]
+    assert "protected by a cap of USD 250,000" in sent and "<source" in sent
+    assert "never terminate" not in sent                                   # uncited in the lead answer: never shown to a challenger
+    by = {x["role"]: x for x in c["challenges"]}
+    assert by["opposing"]["objects"] is True and by["opposing"]["target"] == "lead"
+    assert by["opposing"]["evidence"][0]["verification"] == "verbatim"
+    assert by["evidence"]["objects"] is False and by["evidence"]["text"].startswith("NO OBJECTION")
+    assert c["revised"] is None                                            # focused: no rebuttal
+
+
+def test_deep_adds_a_rebuttal_only_when_an_objection_found_something_new(loose):
+    pn = loose
+    ask(pn, question=ADVERSARIAL, depth="deep")
+    assert not any(r.startswith("rebuttal") for r, _ in pn["model"].calls)   # nothing objected
+    pn["model"].calls.clear()
+    pn["model"].objections = {"evidence": 'The answer misses that the Supplier may end the contract [n: "terminate this Agreement on written notice"].'}
+    pn["model"].rebuttal = 'The cap is USD 250,000 [n: "limited to USD 250,000"], but the Supplier may terminate on notice [n: "terminate this Agreement on written notice"].'
+    c = ask(pn, question=ADVERSARIAL, depth="deep").json()["artifact"]["content"]
+    calls = dict(pn["model"].calls)
+    assert "rebuttal:lead" in calls and "<objection" in calls["rebuttal:lead"] and "misses that the Supplier" in calls["rebuttal:lead"]
+    assert c["revised"]["role"] == "lead" and len(c["revised"]["evidence"]) == 2 and c["depth"] == "deep"
+    assert "Supplier may terminate on notice" in calls["moderator"] and "Supplier will never terminate" not in calls["moderator"]
+
+
+def test_the_chair_reads_only_verified_sentences_and_its_conclusion_is_checked(pn):
+    pn["model"].chair = {"conclusion": "The Supplier may terminate on a change of control, and liability is capped at USD 900,000.",
+                         "points": [{"text": "Clause 14.2 lets the Supplier terminate on written notice.", "roles": ["risk", "nobody"]}],
+                         "gaps": ["Whether a change of control is planned."]}
+    v = ask(pn).json()
+    c = v["artifact"]["content"]
+    mod = dict(pn["model"].calls)["moderator"]
+    assert "This is a real risk." not in mod and "A change of control lets the Supplier end the contract" in mod
+    assert c["outcome"] == "answered" and c["conclusion"].startswith("The Supplier may terminate")
+    assert c["points"] == [{"text": "Clause 14.2 lets the Supplier terminate on written notice.", "roles": ["risk"]}]
+    assert c["gaps"] == ["Whether a change of control is planned"] and c["figures_unsupported"] == ["900,000"]
+    assert c["verified_quotes"] >= 4 and all(set(x) == {"chunk", "version", "sha256"} for x in v["artifact"]["inputs"]["snapshot"])
+
+
+def test_too_few_verified_quotes_end_the_run_as_inconclusive(pn):
+    pn["model"].raw = {r: "The documents do not say.\n\nMISSING FACTS: none" for r in ("deal", "risk", "litigation")}
+    c = ask(pn).json()["artifact"]["content"]
+    assert c["outcome"] == "inconclusive" and c["conclusion"] is None and c["points"] == [] and c["challenges"] == []
+    assert [r for r, _ in pn["model"].calls] == ["deal", "risk", "litigation", "specialist"]       # no challenge, no chair
+
+
+def test_the_chat_card_shows_the_conclusion_first(pn):
+    from app.legal.counsel import deliberation
+    from app.legal.counsel.schemas import CouncilSummaryProps
+    pn["model"].chair = {"conclusion": "The Supplier may terminate on a change of control.",
+                         "points": [{"text": "Notice is enough under clause 14.2.", "roles": ["risk"]}], "gaps": ["Whether a sale is planned"]}
+    v = ask(pn).json()
+    props = deliberation.summary({"sub": pn["users"]["alice"]["id"]}, pn["mid"], v["review"]["id"])
+    assert props["conclusion"] == "The Supplier may terminate on a change of control." and props["outcome"] == "answered"
+    assert props["points"] == ["Notice is enough under clause 14.2. (Risk and compliance)"] and props["gaps"] == ["Whether a sale is planned"]
+    CouncilSummaryProps(**props)

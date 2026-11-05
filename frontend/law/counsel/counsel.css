@@ -690,6 +690,7 @@
 .qc-gap, .qc-draft mark { background: var(--tag-amber-bg); color: var(--tag-amber); border-radius: 4px; padding: 0 3px; font-family: var(--sans, inherit); font-size: .9em; }
 .qc-panel .qc-draft { font-size: 14.5px; }
 .qc-panel-table { min-width: 0; }
+.qc-conclusion { padding: 6px 12px; border-left: 3px solid var(--accent); }
 .qc-panel-table tbody th { width: 30%; }
 .qc-positions { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: 13.5px; }
 .qc-hbars { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }

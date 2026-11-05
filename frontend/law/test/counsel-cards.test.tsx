@@ -195,13 +195,28 @@ describe('Panel, chart, graph, live meeting', () => {
     });
     renderLaw('/chat');
     await ask('Challenge our position on the fee');
-    expect(await screen.findByText('The four perspectives are reading the documents…')).toBeTruthy();
+    expect(await screen.findByText('The perspectives are reading the documents and challenging the first answer…')).toBeTruthy();
     await act(async () => { await vi.advanceTimersByTimeAsync(6500); });
     expect(await screen.findByText('They differ')).toBeTruthy();
     expect(screen.getByText('Arguably not.')).toBeTruthy();
     const n = reads;
     await act(async () => { await vi.advanceTimersByTimeAsync(6500); });
     expect(reads).toBe(n);                                              // done: no more asking
+  });
+
+  it('the panel card puts the chair\'s conclusion first, then what matters most and the gaps', async () => {
+    const card = { id: CMP, version: 1, type: 'council_summary', data_ref: CMP, props: { review_id: 'rv1', question: 'Is the fee binding?', area: 'commercial contracts',
+      status: 'done', issues: [], missing_facts: [], path: '/m/M-101/panel/rv1', caution: 'Options, never a decision.', outcome: 'answered',
+      conclusion: 'The fixed fee binds the client for the first phase.', points: ['Clause 4 fixes the fee. (Lead counsel)'], gaps: ['Whether phase two was agreed'],
+      figures_unsupported: ['18,500'] } };
+    world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(card)] });
+    renderLaw('/chat');
+    await ask('Challenge our position on the fee');
+    const conclusion = await screen.findByLabelText("The chair's conclusion");
+    expect(conclusion.textContent).toContain('The fixed fee binds the client for the first phase.');
+    expect(conclusion.textContent).toContain('Check: 18,500 is in no answer.');
+    expect(within(screen.getByRole('list', { name: 'What matters most' })).getByText('Clause 4 fixes the fee. (Lead counsel)')).toBeTruthy();
+    expect(screen.getByText('Not established by the documents: Whether phase two was agreed.')).toBeTruthy();
   });
 
   it('the chart draws stated amounts as bars, each opening its sentence; one currency, never added', async () => {

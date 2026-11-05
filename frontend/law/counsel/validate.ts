@@ -363,6 +363,11 @@ function councilSummary(v: unknown): CouncilSummaryProps {
     }),
     missing_facts: list(o.missing_facts, 6, 'missing_facts', (x) => str(x, 300, 'missing_fact')), approval: optStr(o.approval, 80, 'approval'),
     path: page(o.path, 300, 'path'), caution: str(o.caution, 400, 'caution'),
+    conclusion: optStr(o.conclusion, 400, 'conclusion'),
+    points: o.points === undefined ? [] : list(o.points, 3, 'points', (x) => str(x, 400, 'point')),
+    gaps: o.gaps === undefined ? [] : list(o.gaps, 3, 'gaps', (x) => str(x, 300, 'gap')),
+    outcome: o.outcome === undefined || o.outcome === null ? undefined : oneOf(o.outcome, ['answered', 'inconclusive', 'stopped'] as const, 'outcome'),
+    figures_unsupported: o.figures_unsupported === undefined ? [] : list(o.figures_unsupported, 6, 'figures_unsupported', (x) => str(x, 40, 'figure')),
   };
 }
 

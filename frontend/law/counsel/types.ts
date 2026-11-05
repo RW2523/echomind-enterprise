@@ -165,6 +165,8 @@ export interface PanelIssue { issue: string; positions: { role: string; text: st
 export interface CouncilSummaryProps {
   review_id: string; question: string; area: string; status: 'queued' | 'running' | 'done' | 'needs_facts' | 'failed' | 'not_allowed';
   issues: PanelIssue[]; missing_facts: string[]; approval?: string; path: string; caution: string;
+  /** The Council (2026-11-05): the chair's conclusion first, at most three points and gaps, figures no answer gave. */
+  conclusion?: string; points: string[]; gaps: string[]; outcome?: 'answered' | 'inconclusive' | 'stopped'; figures_unsupported: string[];
 }
 
 export interface ChartBar { id: string; shown: string; value: number; document_title: string; clause?: string; source: ComparisonSide }

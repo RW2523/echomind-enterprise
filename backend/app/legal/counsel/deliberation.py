@@ -22,19 +22,23 @@ _GUESS = {"employment": ("employ", "dismiss", "worker"), "ip": ("patent", "trade
 
 
 def form(matter: dict, request: str, document_ids: list[str]) -> tuple[dict, dict]:
-    from ..panel.run import SPECIALISMS
+    from ..panel.run import SPECIALISMS, assemble, label_of
     low = request.lower()
     area = next((k for k, words in _GUESS.items() if any(w in low for w in words)), "commercial")
     using = (f"Only the {len(document_ids)} document{'s' if len(document_ids) != 1 else ''} you chose." if document_ids
              else f"All the documents of {matter['number']} you may read.")
+    who = ", ".join(label_of(r, "the chosen area") for r in assemble(request))
     props = {"purpose": "panel", "title": "Ask the review panel",
-             "intro": f"Four perspectives (deal, risk, litigation and a specialist) each answer from the documents, and a moderator "
-                      f"sets out where they agree and differ. Sources: {using}"[:400],
+             "intro": f"For this question: {who}. Each answers from the documents, the first answer is challenged, and a chair sets out "
+                      f"the conclusion and where they differ. Sources: {using}"[:400],
              "questions": [
                  {"id": "question", "label": "The question for the panel", "kind": "text", "default": " ".join(request.split())[:1000],
                   "max_length": 1000},
                  {"id": "specialist", "label": "Specialist area", "kind": "choice", "default": area,
-                  "options": [{"value": k, "label": v[:1].upper() + v[1:]} for k, v in SPECIALISMS.items()]}],
+                  "options": [{"value": k, "label": v[:1].upper() + v[1:]} for k, v in SPECIALISMS.items()]},
+                 {"id": "depth", "label": "Depth", "kind": "choice", "default": "focused",
+                  "options": [{"value": "focused", "label": "Focused", "detail": "Answers, one challenge round and the chair"},
+                              {"value": "deep", "label": "Deep", "detail": "Also lets the first answer reply to the objections"}]}],
              "submit_label": "Ask the panel",
              "note": "It runs in the background, about a minute; you can keep asking here meanwhile."}
     return props, {"purpose": "panel", "document_ids": list(document_ids)}
@@ -45,7 +49,8 @@ def start(principal: dict, matter: dict, values: dict, stored: dict) -> str:
     from ..panel.routes import AskIn
     from ..panel.routes import start as start_panel
     out = start_panel(principal, matter["id"], AskIn(question=values["question"], specialist=values["specialist"],
-                                                      documents=(stored.get("document_ids") or [])[:20]))
+                                                      documents=(stored.get("document_ids") or [])[:20],
+                                                      depth=values.get("depth") if values.get("depth") in ("focused", "deep") else "focused"))
     from ..audit.record import record
     record("panel.ask", "allow", principal=principal, object_type="matter", object_id=matter["id"], matter_id=matter["id"],
            details={"kind": values["specialist"], "documents": len(stored.get("document_ids") or []), "mode": "chat"})
@@ -54,7 +59,7 @@ def start(principal: dict, matter: dict, values: dict, stored: dict) -> str:
 
 def summary(principal: dict, matter_id: str, review_id: str) -> Optional[dict]:
     """The council_summary props as the person may see the review now, or None when it is gone or not theirs to see."""
-    from ..panel.run import ROLES, SPECIALISMS
+    from ..panel.run import SPECIALISMS, label_of
     with get_conn() as conn:
         r = conn.execute("SELECT question, specialist, status FROM legal_panel_reviews WHERE id=? AND matter_id=?", (review_id, matter_id)).fetchone()
         number = (conn.execute("SELECT number FROM matters WHERE id=?", (matter_id,)).fetchone() or ["?"])[0]
@@ -66,10 +71,16 @@ def summary(principal: dict, matter_id: str, review_id: str) -> Optional[dict]:
     if a and not artifacts.visible_to(a, principal["sub"]):
         return None
     area = SPECIALISMS.get(specialist, specialist)
-    labels = {role: label.format(area=area) for role, label, _ in ROLES}
-    issues, missing, approval = [], [], None
+    issues, missing, approval, points, gaps, conclusion, outcome, check = [], [], None, [], [], None, None, []
     if a:
         c = a["content"]
+        labels = {v["role"]: v.get("label") or label_of(v["role"], area) for v in c.get("perspectives") or []}
+        conclusion = " ".join(str(c.get("conclusion") or "").split())[:400] or None
+        points = [(" ".join(str(x.get("text")).split()) + (f" ({', '.join(labels.get(r, r) for r in x.get('roles') or [])})" if x.get("roles") else ""))[:400]
+                  for x in (c.get("points") or [])[:3] if isinstance(x, dict) and x.get("text")]
+        gaps = [" ".join(str(g).split())[:300] for g in (c.get("gaps") or [])[:3] if str(g).strip()]
+        outcome = c.get("outcome") if c.get("outcome") in ("answered", "inconclusive", "stopped") else None
+        check = [str(f)[:40] for f in (c.get("figures_unsupported") or [])][:6]
         for row in (c.get("matrix") or [])[:6]:
             positions = [{"role": labels.get(k, k)[:60], "text": " ".join(str(v).split())[:600]}
                          for k, v in (row.get("positions") or {}).items() if v]
@@ -80,5 +91,6 @@ def summary(principal: dict, matter_id: str, review_id: str) -> Optional[dict]:
     return {"review_id": review_id, "question": question[:2000], "area": area[:80],
             "status": status if status in ("queued", "running", "done", "needs_facts", "failed", "not_allowed") else "failed",
             "issues": issues, "missing_facts": [m for m in missing if m], "approval": approval,
+            "conclusion": conclusion, "points": points, "gaps": gaps, "outcome": outcome, "figures_unsupported": check,
             "path": f"/m/{urlquote(number, safe='')}/panel/{review_id}", "caution": CAUTION}
 

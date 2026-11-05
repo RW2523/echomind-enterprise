@@ -53,7 +53,7 @@ def test_the_later_held_out_sets_measure_abstention_on_enough_items_and_repeat_n
 def test_the_thresholds_say_they_await_sign_off():
     t = json.loads((ROOT / "eval" / "law" / "thresholds.json").read_text())
     assert "proposed" in t["status"] and set(t["bars"]) == {"golden", "heldout", "heldout2", "heldout3", "heldout4", "heldout5", "heldout6", "heldout7",
-                                                    "heldout8", "heldout9"}
+                                                    "heldout8", "heldout9", "heldout10"}
     assert all(b["t06_leaks_max"] == 0 for b in t["bars"].values())
 
 

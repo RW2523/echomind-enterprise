@@ -1,6 +1,7 @@
 """The four-perspective review panel (S4.5, OPT-05; decision D-057). Off unless LEGAL_PANEL is on (404 otherwise).
 
-- `POST /api/legal/matters/{id}/panel` (`ai.draft`) {question, specialist}: ask the panel (a job).
+- `POST /api/legal/matters/{id}/panel` (`ai.draft`) {question, specialist, depth}: ask the panel (a job); the perspectives are
+  chosen by rule from the question when it is asked (run.assemble) and kept with it.
 - `GET  /api/legal/matters/{id}/panel`: the matter's panel reviews, for its members.
 - `GET  /api/legal/matters/{id}/panel/{rid}`: one review, its newest version and the earlier ones.
 - `POST /api/legal/matters/{id}/panel/{rid}/facts` (`ai.draft`) {facts}: the lawyer's answers to the missing facts; the
@@ -13,6 +14,8 @@ import json
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.config import settings
@@ -22,7 +25,7 @@ from ..audit.record import audited, note
 from ..documents import repo as documents
 from ..jobs import worker
 from ..matters.routes import principal_of, require, require_law_edition
-from .run import ROLES, SPECIALISMS, is_partner
+from .run import LIBRARY, SPECIALISMS, assemble, is_partner, label_of
 
 
 def panel_on() -> None:
@@ -32,13 +35,14 @@ def panel_on() -> None:
 
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition), Depends(panel_on)])
 _COLS = ("id", "matter_id", "question", "specialist", "facts_json", "status", "artifact_id", "created_by", "created_at", "finished_at",
-         "documents_json")
+         "documents_json", "roles_json", "depth")
 
 
 class AskIn(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     specialist: str = Field(min_length=1, max_length=40)
     documents: list[str] = Field(default_factory=list, max_length=20)     # consult only these (all the matter's when empty)
+    depth: Literal["focused", "deep"] = "focused"                         # deep: the first perspective also answers the objections
 
     @field_validator("question")
     @classmethod
@@ -93,8 +97,10 @@ def _review(conn, r, p: dict) -> dict:
     for did in json.loads(d["documents_json"] or "[]"):
         doc = documents.get_document(d["matter_id"], did, p["sub"])
         docs.append({"id": did, "title": doc["title"] if doc else None})
+    area = SPECIALISMS.get(d["specialist"], d["specialist"])
+    roles = [r for r in json.loads(d["roles_json"] or "[]") if r in LIBRARY]
     return {"id": d["id"], "question": d["question"], "specialist": d["specialist"], "area": SPECIALISMS.get(d["specialist"]), "documents": docs,
-            "status": d["status"], "facts": json.loads(d["facts_json"]), "created_by": _username(conn, d["created_by"]),
+            "roles": [{"role": r, "label": label_of(r, area)} for r in roles], "depth": d["depth"], "status": d["status"], "facts": json.loads(d["facts_json"]), "created_by": _username(conn, d["created_by"]),
             "created_at": d["created_at"], "finished_at": d["finished_at"], "mine": d["created_by"] == p["sub"]}
 
 
@@ -118,12 +124,13 @@ def start(p: dict, matter_id: str, inp: AskIn) -> dict:
     rid = str(uuid.uuid4())
     with get_conn() as conn:
         conn.execute("INSERT INTO legal_panel_reviews (id, org_id, matter_id, question, specialist, facts_json, documents_json, status, created_by, "
-                     "created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
-                     (rid, p["org_id"], matter_id, inp.question, inp.specialist, "[]", json.dumps(chosen), "queued", p["sub"], policy.now_iso()))
+                     "created_at, roles_json, depth) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                     (rid, p["org_id"], matter_id, inp.question, inp.specialist, "[]", json.dumps(chosen), "queued", p["sub"], policy.now_iso(),
+                      json.dumps(assemble(inp.question)), inp.depth))
         _enqueue(conn, p["org_id"], matter_id, rid, p["sub"])
         conn.commit()
     worker.wake()
-    note(matter_id=matter_id, details={"kind": inp.specialist, "documents": len(chosen)})
+    note(matter_id=matter_id, details={"kind": inp.specialist, "documents": len(chosen), "depth": inp.depth})
     return {"review": {"id": rid, "status": "queued"}}
 
 
@@ -139,7 +146,7 @@ def listing(matter_id: str, request: Request):
             if a and not _visible(a, p["sub"]):
                 continue
             out.append({**_review(conn, r, p), "version": a["version"] if a else None, "approval": a["status"] if a else None})
-    return {"reviews": out, "specialisms": SPECIALISMS, "roles": [{"role": r, "label": label} for r, label, _ in ROLES],
+    return {"reviews": out, "specialisms": SPECIALISMS, "roles": [{"role": r, "label": label} for r, (label, _) in LIBRARY.items()],
             "can": {"ask": policy.authorize(p, "ai.draft", matter_id).allowed, "approve": is_partner(p, matter_id)}}
 
 
