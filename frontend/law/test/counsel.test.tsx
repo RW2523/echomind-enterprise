@@ -237,6 +237,9 @@ describe('Trusted components only', () => {
     expect(parseComponent({ id: CMP, type: 'source_answer', props: { answer: 'x', state: 'abstained', citations: [answerEnvelope().components[0].props.citations[0]] } }).type).toBe('inert');
     expect(parseComponent({ ...comparison(), props: { ...comparison().props, a: { ...comparison().props.a, value_end: 999 } } }).type).toBe('inert');
     expect(() => parseAction({ id: 'x', label: 'x', action_type: 'open_page', path: '/m/M-1/../admin' })).toThrow();
+    expect(parseAction({ id: 'd', label: 'Open the definitions check', action_type: 'open_page', path: '/m/M-114/documents/doc_1/definitions' }).path)
+      .toBe('/m/M-114/documents/doc_1/definitions');                                   // the chat's definitions check (2026-11-05)
+    expect(() => parseAction({ id: 'd', label: 'x', action_type: 'open_page', path: '/m/M-114/documents/doc_1/definitions/x' })).toThrow();
     expect(() => parseAction({ id: 'x', label: 'x', action_type: 'ask' })).toThrow();
     const many = Array.from({ length: 5 }, (_, i) => ({ id: `cmp_${String(i).repeat(32)}`, type: 'notice', props: { tone: 'info', text: `${i}` } }));
     expect(parseEnvelope({ schema_version: '1.0', message_id: 'm', matter_id: 'x', components: many })!.components).toHaveLength(3);

@@ -72,7 +72,7 @@ const optMatter = (v: unknown, what: string): string | undefined => {
 /** The workspace's own pages an action may open (same allow-list as the server). */
 const PAGE = new RegExp(
   '^/m/[A-Za-z0-9._~%-]{1,96}/(?:overview|documents|compare|obligations|drafting|meetings|exports|activity'
-  + '|documents/[A-Za-z0-9_-]{1,64}/read(?:\\?v=[A-Za-z0-9_-]{1,64}(?:&at=\\d{1,9}-\\d{1,9})?)?'
+  + '|documents/[A-Za-z0-9_-]{1,64}/read(?:\\?v=[A-Za-z0-9_-]{1,64}(?:&at=\\d{1,9}-\\d{1,9})?)?|documents/[A-Za-z0-9_-]{1,64}/definitions'
   + '|notes/[A-Za-z0-9_-]{1,64}|drafting/[A-Za-z0-9_-]{1,64}|meetings/[A-Za-z0-9_-]{1,64}(?:\\?tab=minutes)?'
   + '|redlines/[A-Za-z0-9_-]{1,64}|summaries/[A-Za-z0-9_-]{1,64}|exports/[A-Za-z0-9_-]{1,64}|panel(?:/[A-Za-z0-9_-]{1,64})?)$'
   + '|^/(?:reviews|matters|drafts|activity)$');

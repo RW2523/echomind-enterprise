@@ -272,6 +272,23 @@ def clause_passages(scope: AuthorizedScope, numbers: list[str], versions: str = 
     return [_located([_passage(_wide(h))], " ".join(numbers))[0] for h in hits[:limit]]
 
 
+def passages_at(scope: AuthorizedScope, places: list[tuple[str, int]], versions: str = "signed") -> list[dict]:
+    """The passages holding these characters ((version id, offset) each), read like a search: this matter, what this person may
+    see, the version policy (2026-11-05: both definitions of a term the document defines twice)."""
+    recheck(scope)
+    ids = []
+    with get_conn() as conn:
+        for vid, at in places:
+            r = conn.execute("SELECT id FROM legal_chunks WHERE matter_id = ? AND version_id = ? AND active = 1 AND char_start <= ? "
+                             "AND ? < char_end ORDER BY char_start LIMIT 1", (scope.matter_id, vid, at, at)).fetchone()
+            if r and r[0] not in ids:
+                ids.append(r[0])
+    hits = _load(scope.matter_id, ids, scope.principal_id, versions if versions in ("signed", "current") else "signed", None)
+    order = {cid: i for i, cid in enumerate(ids)}
+    hits.sort(key=lambda h: order.get(h["chunk_id"], 99))
+    return [_located([_passage(_wide(h))])[0] for h in hits]
+
+
 def _passage(h: dict) -> dict:
     a, b = h.get("window") or (0, len(h["text"]))
     base = h["char_start"]

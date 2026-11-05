@@ -232,6 +232,48 @@ def test_the_review_panel_is_queued_from_the_chat_when_the_firm_has_it(dr, monke
 
 
 # ── amounts and parties ──────────────────────────────────────────────────────────
+# ── the definitions check, asked in the chat (2026-11-05 end-to-end run) ──────────
+SUPPLY = ("SUPPLY AGREEMENT (fictional)\n\n## 1. Definitions\n\n1.1 In this Agreement:\n\n"
+          "\"Products\" means the goods in Schedule 1.\n\n"
+          "\"Price\" means the price for each Product set out in Schedule 2.\n\n"
+          "\"Territory\" means England and Wales.\n\n"
+          "## 2. Term\n\n2.1 This Agreement starts on the Commencement Date and continues for three years.\n\n"
+          "## 3. Price\n\n3.1 The Customer shall pay for the Products at the price stated in the relevant Order (the \"Price\").\n\n"
+          "3.2 The Price excludes VAT.\n\n## Schedule 1 - Products\n\nPallets.\n\n## Schedule 2 - Prices\n\nGBP 10 per pallet.\n")
+
+
+def test_a_definitions_check_asked_in_the_chat_runs_the_rules_on_the_named_document_and_cites_each_finding(cs, fresh_db):
+    from app.legal.counsel import intent
+    from conftest import index_all, upload
+    for q in ("Run a definitions check on the Supply Agreement", "What drafting problems does it have?",
+              "Are any terms defined twice?", "Check the definitions in the lease"):
+        assert intent.classify(q) == "definitions", q
+    for q in ("How is Price defined?", "What does the term Territory mean?", "Which price applies to the Products?"):
+        assert intent.classify(q) == "ask_fact", q
+    alice, bob = as_user(cs, "alice"), as_user(cs, "bob")
+    supply = upload(alice, cs["mid"], "supply.txt", SUPPLY, status="executed", title="Supply Agreement (fictional)").json()["document"]
+    index_all()
+    calls = len(cs["model"].stream_calls) + len(cs["model"].chat_calls)
+    conv = new_conversation(alice, cs["mid"])
+    asked = final(turn(alice, conv, "Run a definitions check"))                  # two contracts, none named: which one?
+    assert card(asked, "notice")["props"]["text"].startswith("Which document should be checked?")
+    env = final(turn(alice, conv, "Run a definitions check on the Supply Agreement (fictional): what drafting problems does it have?"))
+    props = card(env, "source_answer")["props"]
+    assert props["state"] == "answered" and "3 findings" in props["answer"] and "not by the model" in props["answer"]
+    for words in ("“Price” is defined twice, with different meanings", "“Commencement Date” reads as a defined term",
+                  "“Territory” is defined but never used", "means the price for each Product set out in Schedule 2"):
+        assert words in props["answer"], words
+    assert len(props["citations"]) == 4 and all(c["verified"] for c in props["citations"])
+    opened = alice.get(f"/api/legal/counsel/citations/{props['citations'][0]['id']}").json()["citation"]
+    assert opened["document"]["id"] == supply["id"] and opened["quote"] in SUPPLY
+    assert env["suggested_actions"][0]["path"] == f"/m/M-101/documents/{supply['id']}/definitions"
+    assert len(cs["model"].stream_calls) + len(cs["model"].chat_calls) == calls        # rules only
+    with sqlite3.connect(fresh_db) as db:
+        assert db.execute("SELECT COUNT(*) FROM legal_definition_checks WHERE document_id=?", (supply["id"],)).fetchone()[0] == 1
+        assert db.execute("SELECT COUNT(*) FROM audit_events WHERE action='check.definitions' AND object_id=?", (supply["id"],)).fetchone()[0] == 1
+    assert bob.get(f"/api/legal/counsel/citations/{props['citations'][0]['id']}").status_code == 404   # owner-bound
+
+
 def test_amounts_and_parties_come_from_the_documents_by_rule(cs):
     alice = as_user(cs, "alice")
     calls = len(cs["model"].stream_calls) + len(cs["model"].chat_calls)

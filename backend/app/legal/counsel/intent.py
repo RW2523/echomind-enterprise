@@ -14,6 +14,8 @@ verified quotes, or abstains.
 - `live`          "Show the live transcript" → the meeting being recorded, or the latest transcript (live.py)
 - `amounts`       "Chart the amounts in the documents" → stated amounts as bars, each with its sentence (amounts.py)
 - `parties`       "How are the parties connected?" → parties and the documents naming them (parties.py)
+- `definitions`   "Run a definitions check on the supply agreement", "What drafting problems does it have?" → the rules-only
+                  definitions, numbering and cross-reference check of one document (definitions_check.py)
 - `tasks`         "What are the open obligations?", "List upcoming deadlines" → the obligations register (tasks.py);
                   a question about what a document says about deadlines stays `ask_fact`
 - `draft`         "Draft a client update" → three questions, then a draft from a firm template (drafting.py)
@@ -27,7 +29,7 @@ import re
 from typing import Optional
 
 INTENTS = ("ask_fact", "compare", "inspect_case", "chronology", "cases_overview", "other_matters", "documents", "draft", "deliberate",
-           "smalltalk", "approvals", "live", "amounts", "parties", "tasks")
+           "smalltalk", "approvals", "live", "amounts", "parties", "tasks", "definitions")
 
 _CASES = re.compile(
     r"\b(?:compare|comparison\s+of|overview\s+of|status\s+of|summar(?:y|ise|ize)\s+of|side\s+by\s+side)\b[^.?!]{0,30}?"
@@ -143,6 +145,14 @@ _TASKS_LIST = re.compile(r"^\s*(?:please\s+)?(?:show|list|give\s+me|what\s+are|w
                          r"|\b(?:open|outstanding|upcoming|pending|overdue|my|our|register|next)\b", re.I)
 _ABOUT_DOCUMENTS = re.compile(r"\b(?:clause|section|agreement|contract|lease|letter|documents?|says?|stated?|states|sets?|under|mention\w*"
                               r"|requires?|according)\b", re.I)
+# A document's own drafting, checked by rule (2026-11-05 end-to-end run: "Run a definitions check on the Supply Agreement" was
+# answered by research from a few passages). What a term means stays a question for the documents ("How is Price defined?").
+_DEFINITIONS = re.compile(
+    r"\bdefinitions?\s+(?:check|review|problems?|issues?|errors?)\b|\bcheck\s+(?:the\s+|its\s+|their\s+)?(?:definitions|defined\s+terms)\b"
+    r"|\bdrafting\s+(?:problems?|issues?|errors?|defects?|mistakes?)\b|\bundefined\s+terms?\b"
+    r"|\bdefined\s+(?:twice|more\s+than\s+once)\b|\bdefined\s+but\s+(?:never|not)\s+used\b"
+    r"|\b(?:problems?|issues?|errors?|inconsistenc\w*)\s+(?:with|in)\s+(?:the\s+|its\s+)?(?:defined\s+terms|definitions|numbering|cross[- ]references)\b"
+    r"|\b(?:broken|wrong|dangling)\s+cross[- ]references?\b|\bnumbering\s+(?:gaps?|errors?|problems?)\b", re.I)
 _DELIBERATE = re.compile(r"\b(?:challenge|devil'?s\s+advocate|counter-?arguments?|poke\s+holes|stress[- ]test|argue\s+against"
                          r"|what\s+would\s+(?:opposing|the\s+other\s+side'?s?)\s+counsel)\b", re.I)
 
@@ -157,6 +167,8 @@ def classify(text: str) -> str:
         return "cases_overview"
     if _OTHER_MATTERS.search(t):
         return "other_matters"
+    if _DEFINITIONS.search(t):
+        return "definitions"
     if _DOCUMENTS.search(t):
         return "documents"
     if _DELIBERATE.search(t):

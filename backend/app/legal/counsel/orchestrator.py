@@ -35,7 +35,8 @@ from ..compare import scan
 from ..research import followup
 from ..research import routes as research
 from ..retrieval import scope as scopemod
-from . import (amounts, approvals, briefing, cases, chronology, citations, deliberation, discrepancies, drafting, intent as intents, live,
+from . import (amounts, approvals, briefing, cases, chronology, citations, definitions_check, deliberation, discrepancies, drafting,
+               intent as intents, live,
                parties, schemas, store, tasks)
 
 logger = logging.getLogger(__name__)
@@ -186,6 +187,14 @@ def _misquote_note(m: dict) -> str:
             f"those words are not in {m.get('of') or 'it'}.")[:400]
 
 
+def _twice_note(t: dict) -> str:
+    """The document defines the term asked about more than once, with different meanings (research/routes._defined_twice)."""
+    clauses = t.get("clauses") or []
+    where = f" (clauses {' and '.join(clauses)})" if len(clauses) > 1 else ""
+    return (f"{t.get('document') or 'The document'} defines “{t.get('term', '')}” more than once, with different meanings{where}, "
+            "so it is ambiguous on this point. Found by rule.")[:400]
+
+
 def _notes(cites: list[dict], conflicts: list[dict]) -> list[str]:
     notes = []
     for c in conflicts[:2]:
@@ -243,6 +252,7 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
                        + ([OTHER_PARTY] if done.get("abstention_reason") == "other_party" else [])
                        + ([NOT_IN_CITED] if done.get("abstention_reason") == "not_in_cited" else [])
                        + [_misquote_note(m) for m in (done.get("misquotes") or [])]
+                       + ([] if state == "abstained" else [_twice_note(t) for t in (done.get("defined_twice") or [])])
                        + amend_notes + _notes(cites, done.get("conflicts") or []))[:3]}
     if built.understood:
         props["understood"] = built.understood[:400]
@@ -511,6 +521,29 @@ def _social_reply(kind: Optional[str], matter: dict) -> str:
 
 
 # ── The turn ─────────────────────────────────────────────────────────────────────
+async def _definitions(principal: dict, turn: dict, matter: dict, text: str, document_ids: list[str], built: Built) -> AsyncIterator[dict]:
+    """The rules-only definitions check of the one document asked about, shown as a cited answer (counsel/definitions_check.py)."""
+    document, docs = await run_in_threadpool(definitions_check.choose, principal, matter, text, document_ids)
+    if document is None:
+        _notice(built, definitions_check.ask_which(matter, docs))
+        return
+    yield event("task.progress", {"label": f"Checking the definitions, numbering and cross-references of “{document['title'][:80]}”",
+                                  "done": 0, "total": 0, "state": "running"})
+    answer, done, check = await run_in_threadpool(definitions_check.build, principal, matter, document)
+    record("check.definitions", principal=principal, object_type="document", object_id=document["id"], matter_id=matter["id"],
+           details={"check": check["id"], "from": "chat", **check["summary"]})
+    cites = await run_in_threadpool(citations.from_research, turn, done)
+    for c in cites:
+        yield event("citation.verified", {"citation_id": c["id"], "n": c["n"], "document_id": c["document_id"], "page": c.get("page")})
+    built.add("source_answer", {"answer": answer, "state": "answered",
+                                "citations": [{k: v for k, v in c.items() if k != "instructions"} for c in cites],
+                                "unsupported": [], "notes": []}, [document["id"]])
+    page = f"/m/{urlquote(matter['number'], safe='')}/documents/{document['id']}/definitions"
+    built.actions = [{"id": "open_definitions", "label": "Open the definitions check", "action_type": "open_page", "path": page}]
+    n = len(check["findings"])
+    built.summary = f"Definitions check of {document['title'][:200]}: {n} finding{'s' if n != 1 else ''}, found by rule."[:400]
+
+
 def _live(principal: dict, matter: dict, built: Built) -> None:
     base = f"/m/{urlquote(matter['number'], safe='')}"
     meetings = [{"id": "open_meetings", "label": "Open Meetings", "action_type": "open_page", "path": f"{base}/meetings"}]
@@ -672,6 +705,9 @@ async def run(principal: dict, conv: dict, text: str, client_request_id: Optiona
             built.summary = props["summary"]
         elif kind == "live":
             await run_in_threadpool(_live, principal, matter, built)
+        elif kind == "definitions":
+            async for e in _definitions(principal, turn, matter, text, document_ids, built):
+                yield e
         elif kind == "amounts":
             props, named = await run_in_threadpool(amounts.build, principal, matter, document_ids)
             built.add("numeric_chart", props, named)

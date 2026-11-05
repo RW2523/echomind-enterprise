@@ -1343,6 +1343,72 @@ def test_inside_a_named_document_the_words_naming_it_are_not_searched_for():
     assert parties_of("Reseller Agreement", head) == {"voss-lindqvist", "fjellstad", "apex"}
 
 
+TWICE = ("SUPPLY AGREEMENT (fictional)\n\n## 1. Definitions\n\n\"Price\" means the price for each Product set out in Schedule 2.\n\n"
+         "\"Products\" means the goods in Schedule 1.\n\n## 5. Price and Payment\n\n"
+         "5.1 The Customer shall pay for each Product at the price stated in the relevant Order (the \"Price\").\n\n"
+         "5.2 Invoices are payable within thirty (30) days.\n")
+
+
+def test_a_term_the_document_defines_twice_is_answered_with_both_definitions_even_when_the_model_declines(named, monkeypatch):
+    """2026-11-05 end-to-end run: "Which price applies to Products?" was declined with both definitions of "Price" among its
+    sources. Found by rule, both are read, the model is told the document is ambiguous; when it still declines, the two
+    definitions, verified like any quote, are the answer."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 2)
+    alice = as_user(named, "alice")
+    upload(alice, named["mid"], "supply.md", TWICE, status="executed", title="Supply Agreement")
+    index_all()
+    named["model"].lines = []                                                    # the model declines
+    q = "Which price applies to Products under the Supply Agreement?"
+    events = ask(alice, named["mid"], q)
+    done = events[-1]
+    assert 'defines "Price" more than once' in named["model"].calls[-1][-1]["content"]
+    assert done["defined_twice"] == [{"document": "Supply Agreement", "term": "Price", "clauses": done["defined_twice"][0]["clauses"]}]
+    assert not done["abstained"] and "ambiguous" in done["answer"]
+    assert "set out in Schedule 2" in done["answer"] and "stated in the relevant Order" in done["answer"]   # in the words, too
+    quotes = {e["quote"] for e in done["evidence"]}
+    assert all(e["verification"] == "verbatim" for e in done["evidence"])
+    assert any("set out in Schedule 2" in x for x in quotes) and any("stated in the relevant Order" in x for x in quotes)
+    named["model"].lines = []
+    done = ask(alice, named["mid"], "When are invoices payable under the Supply Agreement?")[-1]
+    assert done["defined_twice"] == [] and done["abstained"]                     # a question about another term: nothing added
+
+
+SHARED_HEAD = "Between Alpha Freight Ltd and Brook & Hale LLP (fictional).\n\n"
+SHARED = {
+    "memo.md": ("MEMO (fictional)\n\n" + SHARED_HEAD + "## A\n\nWhat fee arrangement the party did ask for, and for what, the party "
+                "noted.\n\n## B\n\nThe party did ask what fee arrangement was usual for the party, and for how long.\n"),
+    "minutes.md": ("MINUTES (fictional)\n\n" + SHARED_HEAD + "## A\n\nThe party asked what fee arrangement the party did want for "
+                   "the work.\n\n## B\n\nWhat the party did ask for: a fee arrangement for the party, to be agreed.\n"),
+    "letter.md": ("LETTER (fictional)\n\nFrom: Alpha Freight Ltd\nTo: Brook & Hale LLP\n\n## 1. Scope\n\nPlease review the "
+                  "supply terms.\n\n## 2. Fees\n\nFor the work, the party would like a fixed fee of GBP 9,000 in two instalments.\n"),
+}
+
+
+def test_each_document_the_named_parties_share_gives_its_best_passage(named, monkeypatch):
+    """2026-11-05 end-to-end run: "What fee arrangement did Voss-Lindqvist ask Calder & Wynne for?" read two passages of the
+    advice memo, both naming the parties and the fee, and never the engagement letter's "We would like a fixed fee of USD
+    28,000". The search without the names keeps its best two and the best passage of each of a few documents the parties
+    share."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "LEGAL_RESEARCH_PASSAGES", 2)
+    alice = as_user(named, "alice")
+    for name, text in SHARED.items():
+        upload(alice, named["mid"], name, text, status="final")
+    index_all()
+    named["model"].lines = []
+    sources = ask(alice, named["mid"], "What fee arrangement did Alpha Freight ask Brook & Hale for?")[0]["citations"]
+    assert any("fixed fee of GBP 9,000" in s["text"] for s in sources)
+
+
+def test_quotation_marks_pair_around_quotes_not_between_defined_terms():
+    from app.legal.research.attribution import quoted_words
+    assert quoted_words('This Supply Agreement (the "Agreement") is dated 16 February 2026 and is made between Alder Finch '
+                        'Ltd and Tidewater Retail Ltd (the "Supplier").') == []
+    assert quoted_words('Clause 4.2 provides that "Invoices are payable net sixty (60) days from the invoice date."') == [
+        "Invoices are payable net sixty (60) days from the invoice date."]
+
+
 def test_officer_initials_are_searched_as_written_out_and_a_list_cut_at_a_semicolon_is_read_on():
     from app.legal.retrieval import search
     assert search.spelled_out("Up to what value can the CFO sign?") == "Up to what value can the CFO (Chief Financial Officer) sign?"

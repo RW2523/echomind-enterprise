@@ -310,7 +310,9 @@ def without_titles(question: str, titles: list[str]) -> str:
     return out if len(_words(out) - _TYPES) >= 2 else ""
 
 
-_QUOTED_WORDS = re.compile(r'["\u201c]([^"\u201c\u201d]{12,400})["\u201d]')
+# An opening mark after a space or bracket, a closing one before none: '(the "Agreement") is dated … (the "Supplier")' holds two
+# defined terms, not the quotation ') is dated … (the ' (2026-11-05 end-to-end run).
+_QUOTED_WORDS = re.compile(r'(?<![\w"\u201c\u201d])["\u201c](?=\S)([^"\u201c\u201d]{12,400}?)(?<=\S)["\u201d](?![\w])')
 
 
 def quoted_words(sentence: str) -> list[str]:

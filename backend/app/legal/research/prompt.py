@@ -114,6 +114,13 @@ def named_note(titles: list[str]) -> str:
             "differently, give both, say which document each comes from, and say that they differ.)\n")
 
 
+def twice_note(title: str, term: str, wordings: list[str]) -> str:
+    """The document defines the term asked about more than once, with different meanings (research/routes._defined_twice)."""
+    each = "; ".join(f'"{w}"' for w in wordings[:3])
+    return (f'(Checked by rule: "{title}" defines "{term}" more than once, with different meanings: {each}. Give each definition '
+            "with its source, say that the document is ambiguous on this point, and do not choose between them.)\n")
+
+
 def build(question: str, passages: list[dict], note: str = "") -> list[dict]:
     blocks = []
     for n, p in enumerate(passages, start=1):

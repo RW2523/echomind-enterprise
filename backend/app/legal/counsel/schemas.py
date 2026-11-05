@@ -39,7 +39,7 @@ def text(limit: int):
 # The workspace's own pages an action may open, and nothing else (no scheme, host, "..", query other than v/at).
 _PAGE = re.compile(
     r"^/m/[A-Za-z0-9._~%-]{1,96}/(?:overview|documents|compare|obligations|drafting|meetings|exports|activity"
-    r"|documents/[A-Za-z0-9_-]{1,64}/read(?:\?v=[A-Za-z0-9_-]{1,64}(?:&at=\d{1,9}-\d{1,9})?)?"
+    r"|documents/[A-Za-z0-9_-]{1,64}/read(?:\?v=[A-Za-z0-9_-]{1,64}(?:&at=\d{1,9}-\d{1,9})?)?|documents/[A-Za-z0-9_-]{1,64}/definitions"
     r"|notes/[A-Za-z0-9_-]{1,64}|drafting/[A-Za-z0-9_-]{1,64}|meetings/[A-Za-z0-9_-]{1,64}(?:\?tab=minutes)?"
     r"|redlines/[A-Za-z0-9_-]{1,64}|summaries/[A-Za-z0-9_-]{1,64}|exports/[A-Za-z0-9_-]{1,64}|panel(?:/[A-Za-z0-9_-]{1,64})?)$"
     r"|^/(?:reviews|matters|drafts|activity)$")

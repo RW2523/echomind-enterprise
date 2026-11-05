@@ -115,18 +115,24 @@ async def run_check(matter_id: str, document_id: str, request: Request, inp: Opt
     if not await run_in_threadpool(documents.visible, matter_id, document_id, p["sub"]):
         raise _not_found()
     try:
-        result = await run_in_threadpool(run, matter_id, document_id, inp.version_id if inp else None)
+        out = await run_in_threadpool(save, p, matter_id, document_id, inp.version_id if inp else None)
     except LookupError:
         raise _not_found()
+    note(details={"check": out["id"], **out["summary"]})
+    return {"check": out}
+
+
+def save(p: dict, matter_id: str, document_id: str, version_id: Optional[str] = None) -> dict:
+    """Run the check on one version and keep it, as the document's page and the chat both do. The caller has authorized
+    `research.query` on the matter and the document's visibility. Raises LookupError when there is no such version."""
+    result = run(matter_id, document_id, version_id)
     cid = str(uuid.uuid4())
     with get_conn() as conn:
         conn.execute("INSERT INTO legal_definition_checks (id, matter_id, document_id, version_id, results_json, created_by, created_at) "
                      "VALUES (?,?,?,?,?,?,?)", (cid, matter_id, document_id, result["version_id"], json.dumps(result, ensure_ascii=False),
                                                 p["sub"], policy.now_iso()))
         conn.commit()
-    out = await run_in_threadpool(_check, p, matter_id, cid)
-    note(details={"check": cid, **out["summary"]})
-    return {"check": out}
+    return _check(p, matter_id, cid)
 
 
 @router.get("/matters/{matter_id}/documents/{document_id}/definitions-checks")

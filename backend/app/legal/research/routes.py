@@ -254,6 +254,7 @@ def _heads(scopes, uid: str) -> dict[str, tuple[set, list, list]]:
 
 
 MAX_OPENINGS = 2
+MAX_PARTY_DOCUMENTS = 3          # the documents the parties a question names share, each searched for its best passage
 
 
 def _openings(scope, question: str, passages: list[dict], roles: dict, versions: str) -> list[dict]:
@@ -309,7 +310,9 @@ def _misquotes(passages: list[dict], named: list[str], titles: dict) -> list[dic
         for a, b in prompt.document_sentences(p["text"]):
             sentence = p["text"][a:b]
             named_here = attribution.referenced(sentence, titles) or (of_title if _CLAUSE_CITED.search(sentence) else set())
-            about = [d for d in named_here if d in own and d != p["citation"]["document_id"]]
+            if p["citation"]["document_id"] in named_here:       # "This Supply Agreement (the …)": the document speaks of itself
+                continue
+            about = [d for d in named_here if d in own]
             for q in attribution.quoted_words(sentence):
                 for d in about:
                     key = (p["citation"]["document_id"], d, q)
@@ -319,6 +322,70 @@ def _misquotes(passages: list[dict], named: list[str], titles: dict) -> list[dic
                     out.append({"by": p["citation"]["document_title"], "by_id": p["citation"]["document_id"], "of": titles.get(d, ""),
                                 "of_id": d, "quote": q[:300]})
     return out[:3]
+
+
+_NOT_TERMS = attribution._TYPES | {"party", "parties", "company"}
+
+
+def _defined_twice(question: str, passages: list[dict], named: list[str], roles: dict) -> list[dict]:
+    """Terms the question asks about ("Which price applies to Products?") that a document answering it defines more than once,
+    with different meanings: "Price" as the Schedule 2 price in 1.1 and as the Order's price in 5.1 (2026-11-05 end-to-end run;
+    the definitions check's own reader, rules only). The documents named, else those of the first passages; at most three."""
+    from ..definitions import check as defcheck
+    from ..documents import repo as doc_repo
+    asked = set(re.findall(r"[a-z]+", (question or "").lower()))
+    first: dict[str, dict] = {}
+    for p in passages:
+        first.setdefault(p["citation"]["document_id"], p["citation"])
+    order = list(dict.fromkeys([d for d in named if d in first] + [p["citation"]["document_id"] for p in passages[:4]]))[:3]
+    out = []
+    with get_conn() as conn:
+        for did in order:
+            c = first[did]
+            text = (doc_repo.reader(c["version_id"]) or {}).get("text") or ""
+            own_roles = {r.lower() for _, r in roles.get(did, [])}
+            groups: dict[str, list[dict]] = {}
+            for d in defcheck.definitions(text):
+                if not d.get("signpost"):
+                    groups.setdefault(d["term"], []).append(d)
+            for term, ds in groups.items():
+                words = re.findall(r"[a-z]+", term.lower())
+                if len(ds) < 2 or len({d["meaning"] for d in ds}) < 2 or not words or term.lower() in own_roles \
+                        or set(words) & _NOT_TERMS or not all(w in asked or f"{w}s" in asked for w in words):
+                    continue
+                out.append({"document_id": did, "document_title": c["document_title"], "version_id": c["version_id"], "term": term,
+                            "definitions": [{"start": d["sentence"][0], "end": d["sentence"][1],
+                                             "text": " ".join(text[d["sentence"][0]:d["sentence"][1]].split())[:300],
+                                             "clause": searchmod.locate(conn, c["version_id"], d["start"], d["end"]).get("clause")}
+                                            for d in ds[:3]]})
+    return out[:2]
+
+
+def _twice_answer(twice: list[dict], sources: list[dict]) -> str:
+    """The definitions of a term the document defines twice, each quoted from its own source, as an answer (the model declined).
+    Each quote is the longest run of the definition without quotation marks, so the marker reads like any other."""
+    def run_of(words: str) -> str:
+        return max((p.strip(" ,;.") for p in re.split(r"[\"\u201c\u201d]", words)), key=len, default="")
+
+    out = []
+    for t in twice:
+        quoted = []
+        for d in t["definitions"]:
+            q = run_of(d["text"])
+            n = next((x["n"] for x in sources if x["version_id"] == t["version_id"]
+                      and evidence.verify(q, x["text"]).verification != "failed"), None) if len(q) >= 12 else None
+            if n:
+                quoted.append((d.get("clause"), n, q))
+        if len(quoted) < 2:
+            continue
+        (c1, n1, q1), rest = quoted[0], quoted[1:]
+        lines = [f'{t["document_title"]} defines "{t["term"]}"{f" in clause {c1}" if c1 else ""}: \u201c{q1}\u201d [{n1}: "{q1}"].']
+        lines += [f'It defines "{t["term"]}" again{f" in clause {c}" if c else ""}, differently: \u201c{q}\u201d [{n}: "{q}"].'
+                  for c, n, q in rest]
+        lines.append(f'The document does not say which definition applies, so it is ambiguous on this point '
+                     f'[{n1}: "{q1}"] [{rest[0][1]}: "{rest[0][2]}"].')
+        out.append(" ".join(lines))
+    return "\n\n".join(out)
 
 
 def _version_texts(version_ids) -> list[str]:
@@ -529,10 +596,21 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 nothing_found = nothing_found and named["abstained"]
             if (said := attribution.mentioned(question, known)):     # the clause's own words, without the names (2026-11-05)
                 among = documents or target or [did for did, h in heads.items() if said <= h[0]] or None
-                got = await searchmod.search(scope, attribution.without_parties(question, said), k=2, versions=versions,
-                                             documents=among, wide=True)
+                few = among if among and len(among) <= MAX_PARTY_DOCUMENTS else None
+                got = await searchmod.search(scope, attribution.without_parties(question, said), k=20 if few else 2,  # all reranked anyway
+                                             versions=versions, documents=among, wide=True)
+                # the best two, and the best of each of a few documents the parties share, so one cannot crowd out the rest
+                # ("What fee arrangement did Voss-Lindqvist ask Calder & Wynne for?": two memo passages, never the engagement
+                # letter's "We would like a fixed fee of USD 28,000", end-to-end run 2026-11-05)
+                best = got["passages"][:2]
+                if few:
+                    shown = {p["citation"]["document_id"] for p in best}
+                    for p in got["passages"][2:]:
+                        if p["citation"]["document_id"] not in shown:
+                            best.append(p)
+                            shown.add(p["citation"]["document_id"])
                 have = {p["chunk_id"] for p in passages}
-                passages = passages + [p for p in got["passages"] if p["chunk_id"] not in have]
+                passages = passages + [p for p in best if p["chunk_id"] not in have]
                 nothing_found = nothing_found and got["abstained"]
             if named_docs and len(named_docs) < len(titles):
                 first = []                                  # each named document on its own, so one cannot crowd out another
@@ -584,6 +662,14 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 if p["citation"]["document_id"] not in named_docs and p["citation"]["document_id"] not in amending and not p.get("amends"):
                     p["secondary"] = True
             named_note += prompt.named_note([titles[d] for d in named_docs if d in titles])
+        # A term the question asks about that the answering document defines twice, with different meanings: both definitions
+        # are read and the model is told the document is ambiguous on it (2026-11-05 end-to-end run: "Which price applies?").
+        twice = [] if several else await run_in_threadpool(_defined_twice, question, passages, named_docs, roles)
+        if twice:
+            held = await run_in_threadpool(searchmod.passages_at, scope, [(t["version_id"], d["start"]) for t in twice
+                                                                           for d in t["definitions"]], versions)
+            passages += [q for q in held if q["chunk_id"] not in {x["chunk_id"] for x in passages}]
+            named_note += "".join(prompt.twice_note(t["document_title"], t["term"], [d["text"] for d in t["definitions"]]) for t in twice)
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
         yield _event({"type": "sources", "citations": sources})
         if nothing_found or not passages:
@@ -778,6 +864,16 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 shadow = verdict
         abstained = (nothing and (prompt.is_abstention(text) or prompt.says_not_stated(text))) or \
             (prompt.says_not_stated(text) and weak and stated is not True) or declined or off_target or off_party or bool(elsewhere)
+        # The model declined a question about a term the answering document defines twice, with different meanings: the
+        # definitions, in the document's own words and verified like any quote, are the answer (2026-11-05 end-to-end run:
+        # "Which price applies to Products under the Tidewater supply agreement?" declined with both definitions in its sources).
+        if abstained and twice and not (off_target or off_party or elsewhere):
+            ruled = _twice_answer(twice, sources)
+            para, para_claims = _check(ruled, sources) if ruled else ({}, [])
+            if para_claims and not para["failed"] and all(c.verification in ("verbatim", "normalized")
+                                                          for claim in para_claims for c in claim.citations):
+                text, claims, unsupported, failed, abstained = para["text"], para_claims, list(para["unsupported"]), [], False
+                yield _event({"type": "paragraph", "index": 0, **para})
         numbers = prompt.cited_numbers(text, len(sources))
         citations = [] if abstained else [sources[n - 1] for n in numbers]
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
@@ -796,7 +892,9 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                       "citations": citations, "evidence": items, "conflicts": found, "unsupported": unsupported, "failed": failed,
                       "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed,
                       "absence": prompt.absence(text) if abstained else None, "calculation": calculation,
-                      "stated": stated, "misquotes": misquoted, **({"stated_shadow": shadow} if mode == "shadow" else {})})
+                      "stated": stated, "misquotes": misquoted,
+                      "defined_twice": [{"document": t["document_title"], "term": t["term"],
+                                         "clauses": [d["clause"] for d in t["definitions"] if d["clause"]]} for t in twice], **({"stated_shadow": shadow} if mode == "shadow" else {})})
     except scopemod.ScopeRevoked:
         status, answer, citations, items, found = "scope_revoked", None, [], [], []
         yield _event({"type": "scope_revoked"})
