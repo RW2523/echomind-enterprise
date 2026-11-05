@@ -492,6 +492,43 @@ open with a related fact are not checked; a verified quote introduced by a colon
 15 of about 1,400 answers); a decline whose text names another document's value is scored wrong although it is shown as a
 decline; one quote copied "&amp;" from the escaped prompt.
 
+## Retrieval and citation brief, new demo data and an end-to-end run (2026-11-05)
+
+The owner sent a "Retrieval & Citation Fix Brief" (P0: a question naming the Master Services Agreement was answered from the
+advice memo's misquote of it, "net sixty (60) days" where the MSA says thirty; P1: four sentences quoting clauses 4.1, 4.2
+and 4.3 shared one citation whose span was 4.1), then asked for full demo data and an end-to-end test of the chat on it.
+Nothing below hard-codes a document, title, amount or clause; verification, authorization and fail-closed behaviour are
+unchanged.
+
+| Found | Fix | Status | Evidence |
+|---|---|---|---|
+| P0: the memo's passages outranked the MSA's own for "the payment terms in the Master Services Agreement", and its quote answered for the MSA | A document the question names is searched on its own and put first (`LEGAL_RESEARCH_NAMED_PASSAGES`), without the words naming it; another document's account of it is marked `secondary`; a title's own words come before "on/about/to/under …" ("Advice memo on the MSA" is a memo) | **Tested** | `test_a_named_document_is_searched_and_put_first…`, `test_inside_a_named_document_the_words_naming_it_are_not_searched_for` |
+| P0: a quote another document gives as the named one's, which that one does not hold | Rule-checked against the named document's text, also in a memo "on" it that quotes "Clause 4.2" without naming it; the answer says so ("Checked against the documents: …"), the nearest passage of the named document is added, and a misquoting document cannot answer for it | **Tested** | `test_an_answer_about_the_named_document_from_another_documents_quote_of_it_does_not_stand`, `test_a_memo_on_the_named_document_quoting_its_clause_by_number…` |
+| P1: one citation for several quoted places | One citation per verified span, each with the sentences it supports; each marker in the answer opens its own clause | **Tested** | `test_each_place_an_answer_quotes_has_its_own_citation…`, `answer-citations.test.tsx`; live: 4.1, 4.2, 4.3 open their own words; bob gets 404 |
+| A clause named by number was answered from letters describing it | The clause's own passage, from the named document or the matter's contracts, is read first | **Tested** | `test_a_clause_named_by_number_is_read_from_the_contract_first` |
+| End-to-end run: requiring the named document's own text withheld answers resting on minutes or a draft amendment that name it | Such a passage answers again, unless its document misquotes the named one | **Tested** | second half of `test_a_memo_on_the_named_document…` |
+| End-to-end run: a list cut at "(a) … within the limits in paragraphs (b) to (d);" | A passage ending on a list item's ";" is read on into the next one | **Tested** | `test_officer_initials_are_searched_as_written_out_and_a_list_cut_at_a_semicolon_is_read_on` |
+| End-to-end run: "the CFO" never matched "the Chief Financial Officer"; "Fjellstad Distribution AS" and "APEX INDUSTRIES, INC." were no parties; "THE PARTIES AGREE AS FOLLOWS" was one | Officer initials are searched written out; AS/ASA/Oy/AG/ApS and ", Inc." end a company name; capitalised boilerplate is not a party | **Tested** | same tests |
+
+**Live check of the brief on a private copy** (five runs each): the memo's net sixty never answered for the MSA (5/5), net
+thirty and 1% interest given (5/5), USD 18,500 3-4/5, "monthly in advance" 1-2/5 (the model's selection); "Does the advice
+memo state the MSA's payment terms correctly?" contrasts sixty with thirty (3/3).
+
+**Demo data** (`eval/fixtures/demo/`, all fictional, loaded by `scripts/law/demo_load.py`): M-101 (8 documents), M-114 (10),
+MAT-1042 (12) and MAT-2033 (1), each with a presenter guide and an answer key whose every evidence string was checked against
+its document (59 + 34 items), plus the 72 items of the M-301 … M-306 sets.
+
+**End-to-end run through the chat** (alice, 165 questions, private copy, each answer scored against its key): 107 → 111 /
+165 after the second round of fixes (M-101 16 → 20 / 29, M-114 17 → 20 / 30, MAT-1042 21 → 20 / 34, M-301 … M-306 53 → 51 /
+72). 12 items fixed, 8 lost; the 8 rerun or read as run-to-run variance of the model (calculations, a signer named from the
+email instead of the amendment), so the overall gain is within it. By kind: facts 38 / 45, not stated 17 / 21, role-party 16
+/ 22, conflicts 6 → 9 / 14, calculations 9 / 16, cross-document 9 / 16, follow-ups 7 / 12, lists 4 / 9, amendments 1 / 4,
+definitions 0 / 2, chronology 0 / 2. **Not done:** definitions questions go to research, not the definitions check; the
+chronology card's ISO dates fail the scorer's spelled dates; "What fee arrangement did Voss-Lindqvist ask Calder & Wynne
+for?" is never answered (the reranker scores the letter's "We would like a fixed fee of USD 28,000" far below its header);
+calculations and lists still depend on the model. Backend suite 1696 passed, 4 skipped; frontend 262 passed. Golden research set on this code: answers 63 / 68, declines 7 / 7, quotes 1.0, citation precision 0.984 (the gate on
+`a578891`: 190 / 204 and 21 / 21 over three runs), report 20261105-155937; the held-out sets were not rerun.
+
 ## Commercial-readiness review (2026-10-28)
 
 Phase 0 audited security, operations and the interface read-only (three audits, baseline below); the owner then asked for
