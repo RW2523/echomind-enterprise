@@ -173,7 +173,7 @@ def check_meeting(p: Pilot) -> tuple[bool, str]:
 
     async def run():
         url = f"{BASE.replace('http', 'ws', 1)}/api{base}/capture?sample_rate={rate}"
-        headers = [("Cookie", p.cookie_header("alice")), ("Origin", BASE)]
+        headers = [("Cookie", p.cookie_header("alice")), ("Origin", os.getenv("LAW_CHECK_ORIGIN", BASE))]   # the stack's public address
         async with websockets.connect(url, extra_headers=headers, max_size=2 ** 22, open_timeout=60) as ws:
             first = json.loads(await asyncio.wait_for(ws.recv(), 60))
             if first.get("type") != "ready":
