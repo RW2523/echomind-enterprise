@@ -230,3 +230,19 @@ def test_synced_permissions_also_bind_exports(dms):
     assert r.status_code == 404                                              # carol is not named on msa
     assert carol.get(f"/api/legal/matters/{mid}/exports").json()["exports"] == []   # nor sees that it exists
     assert carol.get(f"/api/legal/matters/{mid}/exports/{e['id']}").status_code == 404
+
+
+def test_a_closed_matter_takes_nothing_from_its_linked_folder_until_it_is_reopened(dms):
+    """2026-11-07 route sweep: a link made while the matter was open kept importing after it was closed."""
+    alice = as_user(dms, "alice")
+    sync(dms)
+    version = lambda: alice.get(f"/api/legal/matters/{dms['mid']}").json()["matter"]["version"]      # noqa: E731
+    r = alice.patch(f"/api/legal/matters/{dms['mid']}", headers=csrf_headers(alice), json={"status": "closed", "version": version()})
+    assert r.status_code == 200, r.text
+    write(dms["folder"], "late.txt", "A file added after the matter closed.", users=["alice"])
+    run = sync(dms)
+    assert run["report"]["matter_closed"] == 1 and run["report"]["imported"] == 0
+    assert "late" not in titles(alice, dms)
+    r = alice.patch(f"/api/legal/matters/{dms['mid']}", headers=csrf_headers(alice), json={"status": "open", "version": version()})
+    assert r.status_code == 200, r.text
+    assert sync(dms)["report"]["imported"] == 1 and "late" in titles(alice, dms)

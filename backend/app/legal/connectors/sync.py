@@ -58,9 +58,9 @@ def instance(c: dict):
 
 def _links(connector_id: str) -> list[dict]:
     with get_conn() as conn:
-        rows = conn.execute("SELECT l.id, l.matter_id, l.remote_path, l.created_by, m.org_id FROM legal_connector_links l "
+        rows = conn.execute("SELECT l.id, l.matter_id, l.remote_path, l.created_by, m.org_id, m.status FROM legal_connector_links l "
                             "JOIN matters m ON m.id = l.matter_id WHERE l.connector_id=? AND l.removed_at IS NULL", (connector_id,)).fetchall()
-    return [dict(zip(("id", "matter_id", "remote_path", "created_by", "org_id"), r)) for r in rows]
+    return [dict(zip(("id", "matter_id", "remote_path", "created_by", "org_id", "matter_status"), r)) for r in rows]
 
 
 def _user_ids(org_id: str, usernames: list[str]) -> set[str]:
@@ -150,7 +150,7 @@ def sync(connector_id: str, by: Optional[str] = None) -> dict:
     c = connector_row(connector_id)
     rid, started = str(uuid.uuid4()), now_iso()
     report = {k: 0 for k in ("links", "imported", "updated", "unchanged", "removed", "held", "acl_missing", "acl_denied",
-                             "acl_changed", "rejected", "skipped_unsafe", "errors")}
+                             "acl_changed", "rejected", "skipped_unsafe", "errors", "matter_closed")}
     status, error = "ok", None
     try:
         if c is None or c["status"] != "active":
@@ -159,6 +159,11 @@ def sync(connector_id: str, by: Optional[str] = None) -> dict:
         impl.check()
         for link in _links(connector_id):
             report["links"] += 1
+            # A closed or archived matter is not changed until it is reopened (2026-11-07 route sweep: a link made while it
+            # was open still imported new files into it)
+            if link["matter_status"] != "open":
+                report["matter_closed"] += 1
+                continue
             _sync_link(c, impl, link, report)
         if report["acl_missing"] or report["acl_denied"] or report["rejected"] or report["skipped_unsafe"] or report["errors"]:
             status = "partial"
