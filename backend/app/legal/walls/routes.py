@@ -225,8 +225,12 @@ def revoke_exception(wall_id: str, exc_id: str, request: Request):
 
 # ── Break-glass ──────────────────────────────────────────────────────────────────
 def _public_request(g: dict) -> dict:
-    """What the requester sees: identical fields whether or not the number exists."""
-    return {"id": g["id"], "matter_number": g["requested_number"], "status": g["status"], "minutes": g["minutes"],
+    """What the requester sees: identical fields whether or not the number exists. A grant past its end is shown as
+    ended, as policy treats it (an active grant gives access only before expires_at)."""
+    status = g["status"]
+    if status == "active" and g["expires_at"] and g["expires_at"] <= policy.now_iso():
+        status = "ended"
+    return {"id": g["id"], "matter_number": g["requested_number"], "status": status, "minutes": g["minutes"],
             "reason": g["reason"], "requested_at": g["requested_at"], "expires_at": g["expires_at"]}
 
 

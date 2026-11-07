@@ -151,6 +151,17 @@ def test_a_second_lawyer_approves_the_note_they_read_and_it_is_filed_with_the_ap
     assert alice.post(f"{rv['base']}/artifacts/{a['id']}/file", headers=csrf_headers(alice)).json()["changed"] is False
 
 
+def test_an_author_s_own_approval_is_recorded_as_a_refusal_not_an_error(rv, fresh_db):
+    """scripts/law/workflow_check.py (2026-11-07): the second-person rule answers 409 here (403 for exports, walls and
+    break-glass), and the trail recorded it as outcome "error" (http_409), so a search for refused approvals missed it."""
+    alice, dave = as_user(rv, "alice"), as_user(rv, "dave")
+    a = note_of(alice, rv)
+    assert review(alice, rv, a).status_code == 409                  # the answer does not change
+    assert review(dave, rv, a, sha="0" * 64).status_code == 409     # a stale version is still a conflict, not a refusal
+    rows = q(fresh_db, "SELECT actor_username, outcome, reason FROM audit_events WHERE action='artifact.review' ORDER BY seq")
+    assert rows == [("alice", "deny", "own_work"), ("dave", "error", "http_409")]
+
+
 def test_a_newer_approved_version_supersedes_the_earlier_approval(rv):
     from app.legal import artifacts
     alice = as_user(rv, "alice")

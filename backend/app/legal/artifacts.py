@@ -30,6 +30,10 @@ class Conflict(Exception):
     pass
 
 
+class OwnWork(Conflict):
+    """The author approving their own version: refused under the second-person rule (answered 409, audited as deny)."""
+
+
 # kind → (subject type, what it is called, the title of the document it is filed as)
 KINDS = {"minutes": ("meeting", "Minutes", "Minutes — {title}"),
          "research_note": ("research_turn", "Research note", "Research note — {title}"),
@@ -144,7 +148,7 @@ def decide(matter_id: str, artifact_id: str, decision: str, by: str, content_sha
             if content_sha256 != sha:
                 raise Conflict("This draft changed since you opened it. Review the current version.")
             if decision == "approved" and by == author:
-                raise Conflict("A draft is approved by someone other than its author.")
+                raise OwnWork("A draft is approved by someone other than its author.")
             if decision == "approved" and kind == "legal_draft":
                 gaps = json.loads(conn.execute("SELECT content_json FROM legal_ai_artifacts WHERE id=?", (artifact_id,)).fetchone()[0]).get("gaps", 0)
                 if gaps:

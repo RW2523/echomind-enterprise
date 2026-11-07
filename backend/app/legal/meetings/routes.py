@@ -497,6 +497,8 @@ def review_minutes(matter_id: str, meeting_id: str, artifact_id: str, inp: Revie
     try:
         out = artifacts.decide(matter_id, artifact_id, inp.decision, p["sub"], inp.content_sha256, (inp.reason or "").strip() or None)
     except artifacts.Conflict as e:
+        if isinstance(e, artifacts.OwnWork):              # a refusal (second-person rule), audited as deny
+            note(outcome="deny", reason="own_work")
         raise HTTPException(status_code=409, detail=str(e))
     note(details={"decision": inp.decision, "version": out["version"]})
     return {"minutes": out}

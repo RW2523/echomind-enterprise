@@ -107,6 +107,8 @@ def decide_review(p: dict, matter_id: str, artifact_id: str, inp: ReviewIn) -> d
     try:
         out = artifacts.decide(matter_id, artifact_id, inp.decision, p["sub"], inp.content_sha256, (inp.reason or "").strip() or None)
     except artifacts.Conflict as e:
+        if isinstance(e, artifacts.OwnWork):              # a refusal, like the 403s of the other second-person rules
+            note(outcome="deny", reason="own_work")
         raise HTTPException(status_code=409, detail=str(e))
     note(details={"decision": inp.decision, "kind": out["kind"], "version": out["version"]})
     return {"artifact": out}
