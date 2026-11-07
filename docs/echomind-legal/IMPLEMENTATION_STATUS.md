@@ -95,6 +95,22 @@ pipeline; then a full end-to-end review of every part with every error fixed. Co
   - The live transcript and partial line work: 5 segments and 54 words from 16 s of speech, and an action alert.
   - CPU speech recognition misheard "five hundred thousand dollars" as "five hundred", so the misstated cap was not
     flagged. Known limit; the demo uses the best measured settings (D-072).
+- **Chat, the 165-question set** (private copy, real model, alice): 126 / 165, against 118 in the last full run.
+  - 16 fixed, 8 lost. By kind: facts 38 → 41 / 45, follow-ups 4 → 7 / 12, not-stated 16 → 18 / 21,
+    cross-document 11 → 13 / 16, calculations 13 → 10 / 16.
+  - Re-asked, 3 of the 5 lost calculation and conflict items pass. The two that fail again give a correct answer short
+    of what the key asks:
+    - the register's class totals without the overall 10,520,000: the planner added each class but not the two
+      together;
+    - USD 55,800 without the May 20 and June 10 dates.
+  - The calculation labels were unchanged in both, so this is run-to-run variance, not the label rule.
+- **Deployed to the public demo 2026-11-07 (d0c7547):**
+  - Migration 0042 applied on start; the case histories loaded; a reset snapshot taken.
+  - Live through the public URL: `demo_health.py` READY.
+  - Voice: a spoken question heard (13 words in 3.5 s), answered with the USD 250,000 cap, and read aloud (48 s).
+  - Every run-sheet step: the case status, the 45-event delivery chronology, the liability cap, the inconsistency scan
+    (15), the letter-before-claim questions, and GBP 19,340 for M-302.
+  - The demo was then restored to the snapshot, so the checks left nothing behind.
 - **New scripts:**
   - `scripts/law/demo_reset.sh snapshot|restore|status` puts the demo back after a rehearsal. Tested on the private copy:
     a row added after the snapshot is gone after a restore, and the API is healthy at the same URL.
