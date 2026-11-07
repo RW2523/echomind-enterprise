@@ -89,7 +89,7 @@ test('alice sees only her matters; a matter she is not on is simply not availabl
   await expect(page.getByText('Legal workspace', { exact: true })).toBeVisible();
   await shot(page, '01-sign-in-light');
   await signIn(page, 'alice');
-  await expect(page.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Good (morning|afternoon|evening), / })).toBeVisible();
   await shot(page, '02-home-light');
 
   await page.getByRole('link', { name: 'Matters', exact: true }).click();
@@ -1410,7 +1410,7 @@ test('panel: four perspectives on a change-of-control question, each citing the 
     await dialog.getByRole('button', { name: /^Import$/ }).click();
     await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
   }
-  await matterTab(alice, 'Review panel');
+  await matterTab(alice, 'Council');
   const form = alice.getByRole('form', { name: 'Ask the panel' });
   await form.getByLabel('Question').fill('If the Reseller undergoes a change of control, can the Supplier terminate the Reseller Agreement, and what is each party\'s liability?');
   await form.getByLabel('Specialist area').selectOption('commercial');
@@ -1458,7 +1458,7 @@ test('panel: four perspectives on a change-of-control question, each citing the 
   await expect(nakamura.getByText('Approved by a partner')).toBeVisible();
 });
 
-test('conversation: a question to the matter is answered from its documents, with what this server cannot do said plainly', async ({ browser }) => {
+test('conversation: Talk by voice opens voice mode in a chat about the matter; a typed question is answered from its documents', async ({ browser }) => {
   // S5.1 (D-062). This test server has no speech model and no voice, so the question is typed and the page says
   // that reading aloud is unavailable; the spoken path is checked on the pilot stack (scripts/law/demo_check.py).
   test.setTimeout(240_000);
@@ -1476,19 +1476,20 @@ test('conversation: a question to the matter is answered from its documents, wit
     await dialog.getByRole('button', { name: /^Import$/ }).click();
     await expect(alice.getByRole('row', { name: new RegExp(title.replace(/[()]/g, '\\$&')) }).getByText('Searchable')).toBeVisible({ timeout: 180_000 });
   }
-  await matterTab(alice, 'Conversation');
-  await expect(alice.getByRole('region', { name: 'Talk to this matter' })).toBeVisible();
-  await expect(alice.getByRole('button', { name: 'Speak a question' })).toBeEnabled();
-  await alice.getByLabel('Or type a question').fill('What is the cap on each party’s aggregate liability?');
-  await alice.getByRole('button', { name: 'Ask', exact: true }).click();
-  const thread = alice.getByRole('list', { name: 'This conversation' });
-  await expect(thread.getByRole('heading', { name: /aggregate liability/ })).toBeVisible();
-  const evidence = thread.getByRole('region', { name: 'Evidence' });
-  await expect(evidence).toBeVisible({ timeout: 180_000 });                  // real model, real retrieval
-  // The figure is in the answer or its evidence: in the full run M-101 also holds filed research notes quoting the MSA,
-  // and the real model may cite one of those (shown as "No quote given") rather than the agreement itself.
-  await expect(thread.getByText(/250,000/).first()).toBeVisible();
-  await expect(alice.getByText('Reading aloud is not available on this server.')).toBeVisible({ timeout: 60_000 });
+  // Since 2026-11-02 "Talk by voice" opens voice mode in a new chat about the matter (the old talk page is gone).
+  await matterTab(alice, 'Talk by voice');
+  await alice.waitForURL('**/chat');
+  const stage = alice.getByRole('region', { name: 'Voice conversation' });
+  await expect(stage).toBeVisible();
+  await expect(stage.getByText(/M-101/).first()).toBeVisible();
+  await stage.getByRole('button', { name: /End voice|Close/ }).click();          // no voice service on this test server
+  await expect(stage).toHaveCount(0);
+  const box = alice.getByRole('textbox', { name: 'Ask EchoMind' });
+  await box.fill('What is the cap on each party’s aggregate liability?');
+  await box.press('Enter');
+  const answer = alice.locator('[data-component="source_answer"]').first();
+  await expect(answer).toBeVisible({ timeout: 180_000 });                       // real model, real retrieval
+  await expect(answer.getByText(/250,000/).first()).toBeVisible();
   await shot(alice, '48-conversation-light');
 });
 
@@ -1558,7 +1559,7 @@ test('EchoMind Legal chat: a potential inconsistency found, inspected and explai
   const LEGAL = path.resolve(HERE, '../../eval/fixtures/legal/MAT-1042');
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
-  await expect(alice.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
+  await expect(alice.getByRole('heading', { name: /^Good (morning|afternoon|evening), / })).toBeVisible();
   // Two fictional witness memos that give different delivery dates, imported into M-101 the usual way.
   await alice.goto('/m/M-101/documents');
   for (const file of ['Witness_A_Interview.txt', 'Witness_B_Interview.txt']) {
@@ -1574,7 +1575,7 @@ test('EchoMind Legal chat: a potential inconsistency found, inspected and explai
   // From the matter to the chat, with the matter as its context.
   await alice.getByRole('navigation', { name: 'Matter' }).getByRole('button', { name: 'Chat about this matter' }).click();
   await expect(alice).toHaveURL(/\/chat$/);
-  await expect(alice.getByRole('button', { name: /Matter: M-101.*Switch matter/ })).toBeVisible();
+  await expect(alice.getByRole('button', { name: /Matter: M-101 .*(Switch matter|Change the matter)/ }).first()).toBeVisible();
   const ask = async (text: string) => {
     const box = alice.getByRole('textbox', { name: 'Ask EchoMind' });
     await box.fill(text);
@@ -1614,7 +1615,7 @@ test('EchoMind Legal chat across two matters: chosen together, compared side by 
   test.setTimeout(300_000);
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
-  await expect(alice.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
+  await expect(alice.getByRole('heading', { name: /^Good (morning|afternoon|evening), / })).toBeVisible();
   const picker = () => alice.getByRole('button', { name: /Pick the matter to ask about|Change the matter/ });
   // A second matter of her own, opened here: earlier journeys wall her off M-114, so the suite's order must not matter.
   const second = 'M-160';
@@ -1628,7 +1629,7 @@ test('EchoMind Legal chat across two matters: chosen together, compared side by 
   await alice.getByRole('button', { name: /Open the case/ }).click();
   await alice.waitForURL(`**/m/${second}/overview`);
   await alice.goto('/chat');
-  await expect(alice.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
+  await expect(alice.getByRole('heading', { name: /^Good (morning|afternoon|evening), / })).toBeVisible();
   for (const m of [/^M-101 /, new RegExp(`^${second} `)]) {
     await picker().click();
     const option = alice.getByRole('option', { name: m });
@@ -1695,7 +1696,7 @@ test('Case management: a new case with its team and the other side, its document
   await alice.getByRole('button', { name: /Add the standard tasks for Case assessment/ }).click();
   const tasks = alice.getByRole('list', { name: 'Case assessment tasks' });
   await expect(tasks.getByText('Review the key documents')).toBeVisible();
-  await tasks.getByRole('checkbox', { name: 'Mark “Review the key documents” done' }).check();
+  await tasks.getByRole('checkbox', { name: 'Mark “Review the key documents” done' }).click();
   await expect(tasks.getByText('Review the key documents')).toHaveCount(0);
   // the pipeline shows it in its column
   await alice.goto('/pipeline');

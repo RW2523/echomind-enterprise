@@ -68,7 +68,7 @@ function Family({ versions, canManage, canApprove, onChange, onNewVersion }: {
       <div className="lw-minutes-h">
         <div>
           <h2 className="lw-h2" style={{ margin: 0 }}>{shown.name}</h2>
-          <p className="lw-meta" style={{ margin: '2px 0 0' }}>{[`Version ${shown.version} by ${shown.created_by ?? 'someone'}`, shown.approved_by && `approved by ${shown.approved_by}, ${day(shown.approved_at)}`,
+          <p className="lw-meta" style={{ margin: '2px 0 0' }}>{[`Version ${shown.version} ${shown.created_by ? `by ${shown.created_by}` : 'from the starter set'}`, shown.approved_by && `approved by ${shown.approved_by}, ${day(shown.approved_at)}`,
             shown.expected_law && `expected law: ${shown.expected_law}`].filter(Boolean).join(' · ')}</p>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>

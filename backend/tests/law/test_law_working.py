@@ -70,6 +70,17 @@ def test_rates_times_counts_and_a_comparison_the_question_asks_for():
         schemas.WorkingStep(label="x", working="1 = 2", result="probably", check=True)
 
 
+def test_a_label_saying_who_stated_a_worked_out_figure_is_kept_only_when_its_own_figures_say_so():
+    policy = P("a. GBP 220 for each night on call.\nb. GBP 90 for each weekend day on call.", 1, "On-call policy")
+    letter = P("I was on call on 83 nights and 12 weekend days. I am claiming GBP 18,400 in unpaid allowance.", 2, "Grievance letter")
+    lines = ("CALC nights = 83 * 220 | GBP | Nights on call\nCALC weekends = 12 * 90 | GBP | Weekend days on call\n"
+             "CALC total = nights + weekends | GBP | Total claimed amount\n"
+             "CALC gap = total - 18400 | GBP | Difference from the amount claimed")
+    w, problem = work(lines, [policy, letter])
+    assert problem == "" and [s.label for s in w.steps] == ["Nights on call", "Weekend days on call", "Step 3", "Difference from the amount claimed"]
+    assert w.steps[2].result == "GBP 19,340"                      # the figure is right; only the label claimed it was the claim
+
+
 def test_a_period_counts_calendar_days_from_the_day_after_and_business_days_are_never_counted():
     letter = P("Date: 1 October 2026\n\nThis request must be fulfilled within 21 days of the date of this letter.", 1, "Letter")
     w, problem = work("CALC last = add_days(2026-10-01, 21) | date | Last day to respond", [letter])

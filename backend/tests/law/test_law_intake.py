@@ -342,6 +342,17 @@ def test_a_cleared_intake_becomes_a_client_and_matter_with_its_parties(ik):
     assert alice.post(f"{ik['base']}/{i['id']}/convert", headers=csrf_headers(alice), json=body).status_code == 409   # once
 
 
+def test_an_intake_is_never_converted_onto_a_client_the_person_cannot_see(ik):
+    alice = as_user(ik, "alice")
+    i = new_intake(ik)
+    submit(ik, i)
+    decide(ik, i)
+    hidden = {"client_id": ik["clients"]["Beta"]["id"], "matter_number": "M-399", "matter_title": "Distribution renewal"}
+    r = alice.post(f"{ik['base']}/{i['id']}/convert", headers=csrf_headers(alice), json=hidden)
+    assert r.status_code == 404                                   # bob's client: alice is on none of its matters
+    assert "M-399" not in {m["number"] for m in alice.get("/api/legal/matters").json()["matters"]}
+
+
 # ── Records and audit ────────────────────────────────────────────────────────────
 def test_a_records_administrator_purges_an_intake_and_the_audit_keeps_no_personal_data(ik):
     from app.core.db import get_conn

@@ -616,6 +616,20 @@ def _operates(step: Step) -> bool:
     return bool(_OPERATES.search(re.sub(r"^\s*[\w.-]+\s*%?\s*$", "", step.formula)))
 
 
+# A label that says who stated or did something ("Total claimed amount", "Difference between the claimed and calculated
+# amounts"): a worked-out figure is stated by no one, so such a label is kept only when a figure the step itself uses comes
+# from a sentence saying it (2026-11-07 live check: GBP 19,340 at the policy rates was labelled "Total claimed amount").
+_ATTRIBUTED = re.compile(r"\b(claim\w*|stated|says|agreed|invoic\w*|billed|paid|demand\w*|sought|counted|reported|according)\b", re.I)
+
+
+def _label_fits(s: Step, figures: list, passages: list[dict]) -> bool:
+    words = {m.group(1).lower()[:5] for m in _ATTRIBUTED.finditer(s.label)}
+    if not words:
+        return True
+    said = " ".join(passages[f.n - 1]["text"][slice(*_sentence(passages[f.n - 1]["text"], (f.start, f.end)))].lower() for f in figures)
+    return all(re.search(rf"\b{re.escape(w)}", said) for w in words)
+
+
 def evaluate(plan: Plan, passages: list[dict], strict: bool = True, prefer: frozenset = frozenset()) -> tuple[Optional[Working], str]:
     """(the working, "") or (None, what to tell the planner). A CHECK that is not a comparison that can be read is left out,
     as if not written. `strict`: every problem is sent back, and so is a CHECK that does not hold. Otherwise (the last plan) a CHECK that does not hold is kept and shown as not holding, and a step that
@@ -713,6 +727,9 @@ def evaluate(plan: Plan, passages: list[dict], strict: bool = True, prefer: froz
         return None, " ".join(problems[:6])
     if not works:
         return None, ""
+    for i, s in enumerate(done, start=1):
+        if not s.check and not _label_fits(s, uses.get(s.name, []), passages):
+            s.label = f"Step {i}"
     worked = Working(done, figures, passages, assumptions, style, uses)
     kept = {id(f) for s in done if _operates(s) for f in _figures_of(worked, s)}
     worked.figures = [f for f in figures if id(f) in kept]

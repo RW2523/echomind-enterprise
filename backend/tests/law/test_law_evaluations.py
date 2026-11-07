@@ -49,6 +49,7 @@ def test_a_research_report_is_imported_with_its_commit_models_and_dataset(world,
     ("20261010-120000-assist-heldout.json", "assist", "heldout", "eval/law/assist/heldout.json"),
     ("20261010-120000-minutes-golden.json", "minutes", "golden", "eval/law/minutes/golden.json"),
     ("20261010-120000-transcription-script.json", "transcription", "script", "eval/law/transcription/scenarios.json"),
+    ("20261105-124955-heldout2.json", "research", "heldout2", "eval/law/heldout2.jsonl"),        # the numbered held-out sets
 ])
 def test_each_suite_is_named_from_its_report_and_hashes_its_dataset(world, tmp_path, name, suite, set_, dataset):
     from app.legal import evaluations

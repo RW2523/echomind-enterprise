@@ -40,7 +40,7 @@ def _named(path: Path, meta: dict) -> tuple[str, str]:
     if not m:
         raise ValueError(f"{path.name} is not named like an evaluation report (<time>-<suite>-<set>.json)")
     rest = m.group(2)
-    if rest in ("golden", "heldout"):
+    if re.fullmatch(r"golden|heldout\d*", rest):        # the research sets: golden, heldout, heldout2 … (eval/law/<set>.jsonl)
         return "research", rest
     suite, _, set_ = rest.partition("-")
     if suite not in _SUITES:

@@ -31,7 +31,8 @@ export default function NewMatter() {
   const qc = useQueryClient();
   const clients = useClients();
   const tracks = useTracks();
-  const colleagues = useColleagues();
+  const opener = hasFirmRole(me, 'attorney', 'managing_partner');
+  const colleagues = useColleagues(opener);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [clientId, setClientId] = useState('');
   const [newClient, setNewClient] = useState({ name: '', code: '' });
@@ -44,9 +45,10 @@ export default function NewMatter() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   useEffect(() => {
+    if (!opener) return;
     api.get<{ number: string }>('/api/legal/matter-numbers/next?prefix=M-').then((r) => setForm((f) => (f.number ? f : { ...f, number: r.number }))).catch(() => undefined);
-  }, []);
-  if (!hasFirmRole(me, 'attorney', 'managing_partner')) {
+  }, [opener]);
+  if (!opener) {
     return <div className="lw-content"><EmptyState title="Opening matters is for attorneys and managing partners">Ask one of them to open the matter and add you to it.</EmptyState></div>;
   }
   const track = (form.track || suggestTrack(form.practice_area)) as TrackKey;

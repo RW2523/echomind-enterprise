@@ -34,8 +34,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "law"))
 from law_client import open_session  # noqa: E402
 
-BASE = "http://localhost:3110"
-CONTAINER = "echomind-law-backend"
+# The pilot by default; LAW_CHECK_BASE / LAW_CHECK_CONTAINER point it at another stack (the demo or a private copy of it).
+BASE = os.getenv("LAW_CHECK_BASE", "http://localhost:3110")
+CONTAINER = os.getenv("LAW_CHECK_CONTAINER", "echomind-law-backend")
 VOICE_IMAGE = os.getenv("LAW_VOICE_IMAGE", "echomind-law-voice:latest")
 
 # A fictional client call. The client misstates the liability cap (the signed MSA, clause 8.1, says USD 250,000).
@@ -171,7 +172,7 @@ def check_meeting(p: Pilot) -> tuple[bool, str]:
     got = {"segment": [], "alert": [], "degraded": [], "other": []}
 
     async def run():
-        url = f"ws://localhost:3110/api{base}/capture?sample_rate={rate}"
+        url = f"{BASE.replace('http', 'ws', 1)}/api{base}/capture?sample_rate={rate}"
         headers = [("Cookie", p.cookie_header("alice")), ("Origin", BASE)]
         async with websockets.connect(url, extra_headers=headers, max_size=2 ** 22, open_timeout=60) as ws:
             first = json.loads(await asyncio.wait_for(ws.recv(), 60))

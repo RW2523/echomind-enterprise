@@ -48,7 +48,7 @@ export default function Pipeline() {
             : rows.length === 0 ? <EmptyState title="No open matters">Matters you work on appear here by stage.</EmptyState>
               : (
                 <>
-                  <div className="lw-seg" role="tablist" aria-label="Track">
+                  <div className="lw-seg lw-board-tabs" role="tablist" aria-label="Track">
                     {tracks.map((t) => (
                       <button key={t.key} type="button" role="tab" aria-selected={t.key === active} className="lw-seg-item"
                         onClick={() => setTrackKey(t.key)}>{t.label} <span className="lw-meta">({counts[t.key] ?? 0})</span></button>

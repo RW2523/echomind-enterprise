@@ -95,7 +95,7 @@ function VersionRow({ t, v, canManage, canApprove, onChange }: { t: FirmTemplate
       <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
         <b className="lw-tnum">{`Version ${v.version}`}</b>
         <StatusPill tone={tone}>{v.status === 'approved' ? 'Approved' : v.status === 'draft' ? 'Waiting for approval' : 'Retired'}</StatusPill>
-        <span className="lw-meta">{`by ${v.created_by ?? 'someone'}, ${day(v.created_at)}`}{v.approved_by ? ` · approved by ${v.approved_by}, ${day(v.approved_at)}` : ''}
+        <span className="lw-meta">{`${v.created_by ? `by ${v.created_by}` : 'From the starter set'}, ${day(v.created_at)}`}{v.approved_by ? ` · approved by ${v.approved_by}, ${day(v.approved_at)}` : ''}
           {v.styles ? ` · firm styles: ${v.styles}` : ''} · <span className="lw-mono">{`${v.content_sha256.slice(0, 12)}…`}</span></span>
       </div>
       <details className="lw-template-body">

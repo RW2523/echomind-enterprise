@@ -37,10 +37,11 @@ export function StageStepper({ matter }: { matter: Matter }) {
   const index = Math.max(0, track.stages.findIndex((s) => s.key === matter.stage));
   const next = track.stages[index + 1];
   const mayMove = can(matter, ['lead', 'attorney']);
-  const move = async (stage: string, note?: string, trackKey?: string) => {
+  const move = async (stage: string, note?: string, trackKey?: string, on?: string) => {
     setError('');
     try {
-      await api.post(path(matter, 'stage'), { stage, version: matter.version, ...(note ? { note } : {}), ...(trackKey ? { track: trackKey } : {}) });
+      await api.post(path(matter, 'stage'), { stage, version: matter.version, ...(note ? { note } : {}), ...(trackKey ? { track: trackKey } : {}),
+                                              ...(on && on !== today() ? { effective_on: on } : {}) });
       await Promise.all([qc.invalidateQueries({ queryKey: keys.matters }), qc.invalidateQueries({ queryKey: keys.matter(matter.id) }),
                          qc.invalidateQueries({ queryKey: keys.pipeline })]);
       setMoving(false);
@@ -75,17 +76,18 @@ export function StageStepper({ matter }: { matter: Matter }) {
 }
 
 function MoveDialog({ matter, tracks, onClose, onMove }: { matter: Matter; tracks: TrackDef[]; onClose: () => void;
-  onMove: (stage: string, note?: string, track?: string) => Promise<void> }) {
+  onMove: (stage: string, note?: string, track?: string, on?: string) => Promise<void> }) {
   const [trackKey, setTrackKey] = useState<string>(matter.track ?? 'advisory');
   const track = tracks.find((t) => t.key === trackKey)!;
   const [stage, setStage] = useState<string>(trackKey === matter.track ? matter.stage ?? track.stages[0].key : track.stages[0].key);
   const [note, setNote] = useState('');
+  const [on, setOn] = useState(today());
   const same = trackKey === matter.track && stage === matter.stage;
   return (
     <Dialog title="Change the stage" onClose={onClose}
       footer={<><button type="button" className="lw-btn lw-btn-ghost" onClick={onClose}>Cancel</button>
         <button type="button" className="lw-btn lw-btn-primary" disabled={same}
-          onClick={() => void onMove(stage, note.trim() || undefined, trackKey !== matter.track ? trackKey : undefined)}>Move</button></>}>
+          onClick={() => void onMove(stage, note.trim() || undefined, trackKey !== matter.track ? trackKey : undefined, on)}>Move</button></>}>
       <div style={{ display: 'grid', gap: 12 }}>
         <Field label="Track">{(id) => (
           <select id={id} className="lw-input" value={trackKey} onChange={(e) => { setTrackKey(e.target.value); setStage(tracks.find((t) => t.key === e.target.value)!.stages[0].key); }}>
@@ -95,6 +97,8 @@ function MoveDialog({ matter, tracks, onClose, onMove }: { matter: Matter; track
           <select id={id} className="lw-input" value={stage} onChange={(e) => setStage(e.target.value)}>
             {track.stages.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
           </select>)}</Field>
+        <Field label="Moved on" hint="Today, or the day it happened, for a case brought in with its history.">{(id) => (
+          <input id={id} type="date" className="lw-input" max={today()} value={on} onChange={(e) => setOn(e.target.value)} />)}</Field>
         <Field label="Note for the updates" hint="Optional. Without one, the update says which stage it moved from and to.">{(id) => (
           <textarea id={id} className="lw-input" rows={3} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />)}</Field>
       </div>
@@ -209,6 +213,7 @@ export function CasePlan({ matter }: { matter: Matter }) {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<CaseTask | null>(null);
   const [showDone, setShowDone] = useState(false);
+  const [ticking, setTicking] = useState<Set<string>>(new Set());      // ticked, waiting for the server
   const [error, setError] = useState('');
   const mayPlan = can(matter, ['lead', 'attorney', 'paralegal']);
   const track = trackOf(tracks.data, matter);
@@ -220,8 +225,10 @@ export function CasePlan({ matter }: { matter: Matter }) {
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: keys.tasks(matter.id) }), qc.invalidateQueries({ queryKey: keys.pipeline })]);
   const change = async (t: CaseTask, body: Record<string, unknown>) => {
     setError('');
+    if (body.status === 'done') setTicking((s) => new Set(s).add(t.id));
     try { await api.patch(path(matter, `tasks/${encodeURIComponent(t.id)}`), { ...body, version: t.version }); await refresh(); }
     catch (e) { setError(e instanceof ApiError ? e.message : 'The task could not be changed.'); }
+    finally { setTicking((s) => { const n = new Set(s); n.delete(t.id); return n; }); }
   };
   const standard = async () => {
     setError('');
@@ -256,7 +263,8 @@ export function CasePlan({ matter }: { matter: Matter }) {
                   {g.items.map((t) => (
                     <li key={t.id} data-overdue={t.overdue ? 'true' : undefined}>
                       {mayPlan
-                        ? <input type="checkbox" aria-label={`Mark “${t.title}” done`} checked={false} onChange={() => void change(t, { status: 'done' })} />
+                        ? <input type="checkbox" aria-label={`Mark “${t.title}” done`} checked={ticking.has(t.id)} disabled={ticking.has(t.id)}
+                            onChange={() => void change(t, { status: 'done' })} />
                         : <span aria-hidden className="lw-task-box" />}
                       <span className="lw-task-title">{t.title}</span>
                       <span className="lw-meta lw-task-meta">

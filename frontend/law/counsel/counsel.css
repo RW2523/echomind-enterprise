@@ -766,3 +766,4 @@
 .qc-case-feed > li, .qc-case-tasks > li { display: grid; gap: 2px; padding-left: 10px; border-left: 2px solid var(--rule, rgba(0,0,0,.12)); }
 .qc-case-tasks > li[data-overdue="true"] { border-left-color: var(--conflict, #b3261e); }
 .qc-case-tasks > li[data-overdue="true"] .qc-meta { color: var(--conflict, #b3261e); }
+.qc-case-tasks .qc-meta svg { display: inline-block; vertical-align: -2px; }

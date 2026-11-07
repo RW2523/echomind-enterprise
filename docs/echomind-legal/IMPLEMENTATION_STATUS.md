@@ -6,7 +6,7 @@ root or a decision). "Tested (Law)" = delivered earlier on `feature/echomind-law
 
 ## What a person can do now
 
-Sign in → **Chat** opens: "How can I help?", the matter in the header, four suggestions. In one conversation a lawyer can
+Sign in → **Chat** opens: a greeting, the matter in the header, four suggestions. In one conversation a lawyer can
 ask what matters today (a briefing from records, at most three items), ask questions answered only from the matter's
 documents with verified, clickable citations, find potential inconsistencies between documents and resolve them with a
 reason, build a chronology of the matter (every date the documents state, in order, each opening its exact words), open any
@@ -14,6 +14,9 @@ cited passage beside the conversation (re-verified against the stored text, high
 past conversations from the rail. Matters, Drafts (what waits for review, your own drafts) and Activity (your own
 actions, documents being read) are the other destinations; every existing Law page still works inside the shell, and
 the firm's pages are in the account menu. Screens: [`screens/`](screens/).
+Since 2026-11-07 a firm also runs its cases here: **New case** (details, team, other side, documents), **Import cases** from
+a spreadsheet, a **Pipeline** of matters by stage, each matter's **stage**, **case updates** and **plan**, and "what's the
+latest on this case" in the chat (section "Case management" below).
 
 ## Baseline on this branch before any change (2026-10-26)
 
@@ -49,6 +52,56 @@ the firm's pages are in the account menu. Screens: [`screens/`](screens/).
 | — | Conflict finder recognises delivery dates | **Tested** | `compare/facts.py` anchor `delivery`; `test_law_compare.py` green |
 | — | Content-Security-Policy | **Tested** (config) | `frontend/nginx.law.conf`: `default-src 'self'` …, validated with `nginx -t`; the built bundle references no CDN |
 | — | Strict TypeScript for new code | **Tested** | `tsconfig.counsel.json` (`strict`), also in CI |
+
+## Case management and the full review before the webinar (2026-11-07)
+
+Owner's request: add a case, upload documents and cases, a place to post what is happening in a case, plan the work in a
+pipeline; then a full end-to-end review of every part with every error fixed. Commits 7306c0f and the review fixes after it.
+
+| Item | What was built | Status | Evidence |
+|---|---|---|---|
+| New case | `/matters/new` in three steps: client (or a new one), the next free number, title, practice area, jurisdiction, track and starting stage, description, sensitivity; the team (colleagues, each checked against ethical walls on the client) and the other side (party register, so conflict checks find it); then documents. Also from the matter picker | **Tested** | `test_a_new_matter_takes_its_team_parties_track_and_stage`, `…walled_from_the_client…`; `casework.test.tsx`; journey "Case management" |
+| Import cases | CSV (Excel saves as CSV; openpyxl is not in the image) of up to 200 rows; every row previewed with its problems (duplicate number, missing title, unknown stage, sensitivity); only good rows opened, the importer as lead, other parties added, one audit event per matter and new client | **Tested** | `test_a_csv_is_previewed_row_by_row…`, `test_only_lawyers_who_open_matters…` |
+| Many documents at once | Several files, a browser folder or a zip (Documents → Upload many, the new case's last step, up to 10 in the chat composer). A zip is unpacked by the server with limits (200 files, 10× the upload size, a per-entry expansion ratio, nested zips and password-protected entries skipped); each file goes through the same checks and is recorded as its own import | **Tested** | `test_a_zip_imports_each_supported_file…`, `test_a_zip_is_refused…` |
+| Case updates | Migration 0042 `legal_matter_updates`: kind, date it happened, text, linked document; append-only by trigger (only the link to a deleted document may be cleared); corrections are new updates naming the original; read by every member, posted by lead/attorney/paralegal; refused on closed matters; audit carries kinds and counts, never the text | **Tested** | `test_updates_are_posted…`, `test_an_update_is_never_changed…`, `test_an_update_records_the_past…` |
+| Plan | `legal_matter_tasks` + append-only events: task, key date, hearing, filing deadline; due date, assignee (a member), stage; version-checked changes; a stage's standard tasks on request. Dates are a person's, never a model's (CLAUDE.md rule 7); shown in "Next deadlines" apart from document deadlines | **Tested** | `test_tasks_are_kept…`, `test_a_stages_standard_tasks_are_added_once` |
+| Pipeline and stages | Three fixed tracks (`matters/pipeline.py`); a stage move (lead/attorney) is also an update and can record the day it happened (`effective_on`); `/pipeline` lists only visible matters, with lead, days in stage, next task, last update; existing matters got a track from their practice area | **Tested** | `test_a_stage_move_is_made_by_the_lawyers…`, `test_the_pipeline_shows_only…`, `test_a_closed_matter_takes_no…` |
+| Chat: where the case stands | Intent `case_status` ("what's the latest on this case", "status update", "what stage…"); card built from the records by rule; "open tasks" shows the plan first | **Tested** | parametrised intent test, `test_the_chat_shows_where_the_case_stands…`; live card on the private copy |
+| Demo data | `scripts/law/demo_casework.py`: stages, 3–7 updates and a plan for nine demo matters, dates counted from the run; idempotent; called by `demo_enrich.py` | **Tested** | private copy: 9 matters filled, a second run changed nothing |
+
+**Review (private copy of the demo with this code, every demo role):**
+- **Every-page crawl:** 8 roles (attorney, paralegal, managing partner, firm admin, records admin, intake, conflicts,
+  reviewer), 506 pages (every firm page, every tab of every visible matter, a document reader each), desktop, phone and dark.
+  - No 5xx, no page errors, no error text, no horizontal overflow at 390 px.
+  - The only console errors were 403s for pages opened by URL that the person is not offered. The new case page made two
+    of these calls itself for people who cannot open matters; fixed.
+- **Playwright (38 journeys + the new one) on spare ports:** 33 of 39 passed first. The six failures were:
+  - five tests out of date with the redesigned shell: the greeting, "Council", "Talk by voice" and the matter button's
+    label. Updated;
+  - one real: a ticked plan task stayed unticked until the server answered. Fixed to tick at once.
+  - On rerun all six pass.
+- **Fixed in the review:**
+  - The e2e backend could not start: the evaluations importer refused the numbered held-out research reports
+    (`heldout2`…`heldout10`). It now treats them as research sets (`test_each_suite_is_named…`).
+  - Converting an enquiry onto an existing client did not check that the person may see that client; a client hidden by
+    a wall now answers 404 (`test_an_intake_is_never_converted_onto_a_client_the_person_cannot_see`).
+  - A worked-out figure's label that says who stated it ("Total claimed amount" for GBP 19,340 at the policy rates) is
+    kept only when the step's own figures come from a sentence saying so; otherwise "Step n"
+    (`test_a_label_saying_who_stated…`).
+  - Seeded templates, playbooks and checklists showed "by someone"; they now say "from the starter set".
+  - Icons in the plan, the pipeline cards and the chat card sat on their own line; the pipeline's track tabs ran off a
+    phone screen.
+- **Meetings (synthetic speech into the capture socket):**
+  - The live transcript and partial line work: 5 segments and 54 words from 16 s of speech, and an action alert.
+  - CPU speech recognition misheard "five hundred thousand dollars" as "five hundred", so the misstated cap was not
+    flagged. Known limit; the demo uses the best measured settings (D-072).
+- **New scripts:**
+  - `scripts/law/demo_reset.sh snapshot|restore|status` puts the demo back after a rehearsal. Tested on the private copy:
+    a row added after the snapshot is gone after a restore, and the API is healthy at the same URL.
+  - `scripts/law/demo_health.py` is a pre-webinar check: containers, model, voice, public page, sign-in, a case status, a
+    chat answer and disk.
+  - `scripts/law/demo_check.py` takes `LAW_CHECK_BASE`/`LAW_CHECK_CONTAINER`.
+  - Playwright takes `E2E_API_PORT`/`E2E_WEB_PORT`.
 
 ## Design refresh "Chambers" (2026-10-27)
 

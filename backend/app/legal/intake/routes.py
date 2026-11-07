@@ -362,6 +362,10 @@ def convert(iid: str, inp: ConvertIn, request: Request):
     p = principal_of(request)
     require(p, "matters.create")
     _intake(p, iid)
+    # An existing client must be one this person may see, as for any new matter (a client hidden by a wall answers 404).
+    from ..matters import repo as matters_repo
+    if inp.client_id and not matters_repo.get_visible_client(p, inp.client_id):
+        raise HTTPException(status_code=404, detail="Not Found")
     m = _run(repo.convert, iid, p["org_id"], p["sub"], inp.client_id, inp.client_name, inp.client_code, inp.matter_number, inp.matter_title)
     note(matter_id=m["id"], details={"new_client": not inp.client_id})
     return {**_view(p, iid), "matter": m}

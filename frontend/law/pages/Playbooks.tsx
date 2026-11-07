@@ -96,7 +96,7 @@ function TopicRow({ pb, versions, canManage, canApprove, onChange, onNewVersion 
         {shown.fallbacks.map((f, i) => <React.Fragment key={i}><dt>{`Fallback ${i + 1}`}</dt><dd className="lw-serif">{f.text}{f.note ? <span className="lw-meta">{` — ${f.note}`}</span> : null}</dd></React.Fragment>)}
         {shown.guidance && <><dt>Guidance</dt><dd>{shown.guidance}</dd></>}
       </dl>
-      <p className="lw-meta" style={{ margin: '4px 0 0' }}>{`Version ${shown.version} by ${shown.created_by ?? 'someone'}${shown.approved_by ? ` · approved by ${shown.approved_by}, ${day(shown.approved_at)}` : ''}`}</p>
+      <p className="lw-meta" style={{ margin: '4px 0 0' }}>{`Version ${shown.version} ${shown.created_by ? `by ${shown.created_by}` : 'from the starter set'}${shown.approved_by ? ` · approved by ${shown.approved_by}, ${day(shown.approved_at)}` : ''}`}</p>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
         {pending && canApprove && pending.created_by !== me.user.username && <button type="button" className="lw-btn lw-btn-sm lw-btn-primary" onClick={() => { setRead(false); setConfirming(pending); }}><Check />{`Approve version ${pending.version}`}</button>}
         {pending && canApprove && pending.created_by === me.user.username && <span className="lw-meta">You wrote this version, so another managing partner approves it.</span>}
