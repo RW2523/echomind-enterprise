@@ -25,11 +25,15 @@ MATTER_SPEC = {
     "parties.manage": {"lead", "attorney"},                       # S4.1 (D-054)
     "regulatory.decide": {"lead", "attorney", "paralegal", "reviewer"},   # S4.4 (D-068)
     "findings.review": {"lead", "attorney", "reviewer"},                  # EchoMind Legal chat: resolve a potential inconsistency
+    # Case management (2026-11-07): post what happened, keep the plan, move the matter between stages
+    "updates.post": {"lead", "attorney", "paralegal"}, "plan.manage": {"lead", "attorney", "paralegal"},
+    "stage.move": {"lead", "attorney"},
 }
 # Changing the content of a closed or archived matter is refused; reading, membership, export and
 # records work (deletion requests) continue.
 BLOCKED_WHEN_CLOSED = {"documents.import", "documents.version", "labels.set", "labels.suggest", "meetings.create",
-                       "consent.capture", "capture.control", "ai.draft", "artifacts.approve", "findings.review"}
+                       "consent.capture", "capture.control", "ai.draft", "artifacts.approve", "findings.review",
+                       "updates.post", "plan.manage", "stage.move"}
 FIRM_ROLES = ["firm_admin", "managing_partner", "attorney", "paralegal", "reviewer", "records_admin", "read_only", "intake", "conflicts"]
 ORG_SPEC = {
     "clients.create": {"managing_partner", "attorney"}, "matters.create": {"managing_partner", "attorney"},

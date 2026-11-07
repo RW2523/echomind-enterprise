@@ -30,7 +30,7 @@ import re
 from typing import Optional
 
 INTENTS = ("ask_fact", "compare", "inspect_case", "chronology", "cases_overview", "other_matters", "documents", "draft", "deliberate",
-           "smalltalk", "approvals", "live", "amounts", "parties", "tasks", "definitions")
+           "smalltalk", "approvals", "live", "amounts", "parties", "tasks", "definitions", "case_status")
 
 _CASES = re.compile(
     r"\b(?:compare|comparison\s+of|overview\s+of|status\s+of|summar(?:y|ise|ize)\s+of|side\s+by\s+side)\b[^.?!]{0,30}?"
@@ -139,6 +139,17 @@ _PARTIES = re.compile(
     r"\b(?:relationships?|connections?|connected|network|graph|map)\b[^.?!]{0,40}\b(?:parties|people|companies|entities|organi[sz]ations)\b"
     r"|\b(?:parties|people|companies|entities|organi[sz]ations)\b[^.?!]{0,40}\b(?:relationships?|connections?|connected|network|graph|map)\b"
     r"|\bwho\s+is\s+connected\s+to\s+whom\b|\bmap\s+(?:out\s+)?the\s+parties\b|\brelationship\s+(?:map|graph)\b", re.I)
+# Where the case stands, from its updates log, stage and plan (case management, 2026-11-07): "What's the latest on this case?",
+# "Where are we with M-101?", "Status update", "What stage is the matter at?". A question about the latest version or date of
+# something in the documents stays a research question.
+_CASE_STATUS = re.compile(
+    r"\bwhat(?:'s|\s+is)\s+the\s+latest\s+(?:on|with|in|for)\b|\blatest\s+(?:news|updates?|developments?)\b"
+    r"|\bwhat(?:'s|\s+is|\s+has\s+been)\s+happening\b|\bwhat\s+happened\s+(?:recently|lately|last\s+week|this\s+week)\b"
+    r"|\b(?:case|matter)\s+(?:status|updates?|progress|plan)\b|\bstatus\s+of\s+(?:the|this|my|our)\s+(?:case|matter)\b"
+    r"|\bstatus\s+update\b|\bwhere\s+are\s+we\s+(?:on|with|in|at)\b|\bwhere\s+(?:is|does)\s+(?:the|this)\s+(?:case|matter)\s+(?:stand|stands|at)\b"
+    r"|\bwhat\s+stage\b|\b(?:show|list|any)\s+(?:me\s+)?(?:the\s+)?(?:recent\s+|latest\s+)?updates\b"
+    r"|\bprogress\s+(?:on|of|in)\s+(?:the|this)\s+(?:case|matter)\b"
+    r"|\bnext\s+steps\s+(?:on|for|in)\s+(?:the|this)\s+(?:case|matter)\b|\bwhat(?:'s|\s+is)\s+the\s+plan\b", re.I)
 # The register's list, not what a document says: "What are the open obligations?" is a list; "What deadlines does the lease
 # set?" is a research question.
 _TASKS = re.compile(r"\b(?:obligations|deadlines|tasks|to-?dos|to-do\s+list|checklist)\b", re.I)
@@ -186,6 +197,8 @@ def classify(text: str) -> str:
         return "parties"
     if _DRAFT.search(t):
         return "draft"
+    if _CASE_STATUS.search(t):
+        return "case_status"
     if _TASKS.search(t) and _TASKS_LIST.search(t) and not _ABOUT_DOCUMENTS.search(t):
         return "tasks"
     if _COMPARE.search(t) or _COMPARE_FACTS.search(t):

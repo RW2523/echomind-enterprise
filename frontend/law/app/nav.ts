@@ -4,7 +4,7 @@
  */
 import type { LucideIcon } from 'lucide-react';
 import {
-  Archive, BookMarked, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, FileOutput, FilePen,
+  Archive, BookMarked, Columns3, BookOpenText, Briefcase, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, FileOutput, FilePen,
   Files, FileText, FolderSync, Gauge, GitCompareArrows, History, Inbox, Landmark, LayoutTemplate, ListCollapse, ListTodo, MessageSquare, Mic, ScrollText,
   ShieldOff, Siren, Timer, UserCog, Users, Users2,
 } from 'lucide-react';
@@ -18,6 +18,7 @@ export function firmEntries(me: Me): NavEntry[] {
   const list: (NavEntry | false)[] = [
     { key: 'chat', to: '/chat', label: 'Chat', icon: MessageSquare },
     { key: 'matters', to: '/matters', label: 'Matters', icon: Briefcase },
+    { key: 'pipeline', to: '/pipeline', label: 'Pipeline', icon: Columns3 },
     { key: 'drafts', to: '/drafts', label: 'Drafts', icon: ClipboardCheck },
     lawyer && { key: 'templates', to: '/templates', label: 'Templates', icon: LayoutTemplate },
     lawyer && { key: 'playbooks', to: '/playbooks', label: 'Playbooks', icon: BookMarked },

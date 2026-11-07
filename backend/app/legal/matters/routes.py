@@ -88,6 +88,16 @@ class ClientRef(BaseModel):
     code: Optional[str] = None
 
 
+class TeamMemberIn(BaseModel):
+    username: str = Field(min_length=1, max_length=120)
+    role: MatterRole
+
+
+class PartyIn(BaseModel):
+    name: str = Field(min_length=1, max_length=160)
+    role: Literal["adverse", "related", "client_group", "other"] = "adverse"
+
+
 class MatterIn(BaseModel):
     client_id: str
     number: str = Field(min_length=1, max_length=64)
@@ -95,12 +105,18 @@ class MatterIn(BaseModel):
     practice_area: Optional[str] = Field(default=None, max_length=120)
     jurisdiction: Optional[str] = Field(default=None, max_length=120)
     sensitivity: Sensitivity = "restricted"
+    description: Optional[str] = Field(default=None, max_length=2000)
+    track: Optional[Literal["disputes", "transactions", "advisory"]] = None
+    stage: Optional[str] = Field(default=None, max_length=40)
+    members: list[TeamMemberIn] = Field(default_factory=list, max_length=20)
+    parties: list[PartyIn] = Field(default_factory=list, max_length=20)
 
 
 class MatterPatch(BaseModel):
     title: Optional[str] = Field(default=None, min_length=1, max_length=300)
     practice_area: Optional[str] = Field(default=None, max_length=120)
     jurisdiction: Optional[str] = Field(default=None, max_length=120)
+    description: Optional[str] = Field(default=None, max_length=2000)
     status: Optional[Literal["open", "closed", "archived"]] = None
     sensitivity: Optional[Sensitivity] = None
     version: int
@@ -120,6 +136,10 @@ class MatterOut(BaseModel):
     client: ClientRef
     my_role: Optional[str] = None
     on_hold: bool = False
+    description: Optional[str] = None
+    track: str = "advisory"
+    stage: Optional[str] = None
+    stage_since: Optional[str] = None
 
 
 class MembershipIn(BaseModel):
@@ -236,12 +256,31 @@ def create_matter(inp: MatterIn, request: Request):
     require(p, "matters.create")
     if not repo.get_visible_client(p, inp.client_id):
         raise _not_found()
+    from . import pipeline
+    track = inp.track or pipeline.suggest_track(inp.practice_area)
+    if inp.stage and not pipeline.stage(track, inp.stage):
+        raise HTTPException(status_code=422, detail="That stage is not part of the track.")
+    # The team: active colleagues, each once, none screened from this client by an ethical wall.
+    members, seen = [], set()
+    for t in inp.members:
+        colleague = repo.active_colleague(p["org_id"], t.username)
+        if not colleague:
+            raise HTTPException(status_code=400, detail=f"No active colleague with the username {t.username[:60]}.")
+        if colleague["id"] in seen or colleague["id"] == p["sub"]:
+            continue
+        if repo.walled_from_client(colleague["id"], inp.client_id):
+            raise HTTPException(status_code=409, detail=f"{t.username[:60]} is screened from this client by an ethical wall.")
+        seen.add(colleague["id"])
+        members.append((colleague["id"], t.role))
     try:
         m = repo.create_matter(p["org_id"], inp.client_id, inp.number, inp.title, p["sub"],
-                               practice_area=inp.practice_area, jurisdiction=inp.jurisdiction, sensitivity=inp.sensitivity)
+                               practice_area=inp.practice_area, jurisdiction=inp.jurisdiction, sensitivity=inp.sensitivity,
+                               description=inp.description, track=track, stage=inp.stage, members=tuple(members),
+                               parties=tuple((x.name, x.role) for x in inp.parties))
     except repo.Conflict as e:
         raise HTTPException(status_code=409, detail=str(e))
-    note(object_id=m["id"], matter_id=m["id"], details={"sensitivity": m["sensitivity"]})
+    note(object_id=m["id"], matter_id=m["id"], details={"sensitivity": m["sensitivity"], "track": m["track"], "stage": m["stage"],
+                                                        "members": len(members), "parties": len(inp.parties)})
     return {"matter": m}
 
 

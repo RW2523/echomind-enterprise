@@ -13,7 +13,8 @@ printed), so permissions, audit and quote checks apply exactly as for a person:
 - a playbook check, a citation check, a definitions check, two summaries, a version comparison, two due-diligence runs,
   a review-panel question;
 - time suggestions from the day's work; two enquiries (one naming an adverse party, so screening flags it);
-- a few chats, so the chat history shows answers with their sources, a comparison card, a chronology and a briefing.
+- a few chats, so the chat history shows answers with their sources, a comparison card, a chronology and a briefing;
+- each matter's stage, updates and plan (demo_casework.py).
 Each step reports what it did and goes on if it fails; re-running adds more of the same work.
 """
 from __future__ import annotations
@@ -272,6 +273,12 @@ def chats(api: Api) -> str:
     return " ".join(out)
 
 
+@step("case management: stages, updates and plans")
+def casework(api: Api) -> str:
+    import demo_casework                                       # noqa: PLC0415 — it imports Api from here
+    return "done" if demo_casework.run(api) == 0 else "some matters failed (see above)"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", required=True)
@@ -281,7 +288,8 @@ def main() -> int:
     creds = json.loads((pathlib.Path(args.data_dir) / "legal" / "demo_credentials.json").read_text())
     api = Api(args.base, creds)
     steps = {"join": join, "obligations": obligations, "scans": scans, "drafts": drafts, "research": research_note,
-             "checks": checks, "compare": compare, "diligence": diligence, "panel": panel, "time": time_entries, "enquiries": enquiries, "chats": chats}
+             "checks": checks, "compare": compare, "diligence": diligence, "panel": panel, "time": time_entries, "enquiries": enquiries, "chats": chats,
+             "casework": casework}
     wanted = [s.strip() for s in args.only.split(",") if s.strip()] or list(steps)
     for name in wanted:
         steps[name](api)

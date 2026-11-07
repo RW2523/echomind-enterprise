@@ -37,7 +37,7 @@ from ..research import routes as research
 from ..retrieval import scope as scopemod
 from ..retrieval import search as searchmod
 from . import (amounts, approvals, briefing, cases, chronology, citations, definitions_check, deliberation, discrepancies, drafting,
-               intent as intents, live,
+               casestatus, intent as intents, live,
                parties, schemas, store, tasks)
 
 logger = logging.getLogger(__name__)
@@ -717,12 +717,25 @@ async def run(principal: dict, conv: dict, text: str, client_request_id: Optiona
             await run_in_threadpool(_draft, principal, matter, built, text, document_ids)
         elif kind == "deliberate":
             await run_in_threadpool(_deliberate, principal, matter, built, text, document_ids)
-        elif kind == "tasks":
+        elif kind == "case_status":
             for m in matters[:schemas.MAX_COMPONENTS]:
+                props = await run_in_threadpool(casestatus.build, principal, m)
+                built.add("case_status", props, [], matter_id=m["id"] if m["id"] != conv["matter_id"] else None)
+            built.summary = props["summary"] if len(matters) == 1 else f"Where {len(matters[:3])} matters stand."
+            built.actions = [{"id": "open_case", "label": "Post an update" if props["can_post"] else "Open the case",
+                              "action_type": "open_page", "path": props["path"]}]
+        elif kind == "tasks":
+            plan = None
+            if not several and await run_in_threadpool(casestatus.has_plan, matter["id"]):
+                plan = await run_in_threadpool(casestatus.build, principal, matter)        # the plan a person keeps, first
+                built.add("case_status", plan, [])
+            for m in matters[:schemas.MAX_COMPONENTS - len(built.components)]:
                 props, named, shown = await run_in_threadpool(tasks.build, principal, m)
                 built.add("checklist", props, named, data_ref=True, stored={"obligation_ids": shown},
                           matter_id=m["id"] if m["id"] != conv["matter_id"] else None)
             built.summary = props["summary"] if len(matters) == 1 else f"Open obligations in {len(matters[:3])} matters."
+            if plan:
+                built.summary = (f"{plan['open_tasks']} open task{'s' if plan['open_tasks'] != 1 else ''} in the plan; " + built.summary)[:400]
         elif kind == "approvals":
             props, refs = await run_in_threadpool(approvals.build, principal, matters)
             built.add("approval_request", props, [], data_ref=True, stored={"items": refs})

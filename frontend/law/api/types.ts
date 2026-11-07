@@ -17,7 +17,37 @@ export interface Matter {
   status: MatterStatus; sensitivity: Sensitivity; version: number; created_at: string; updated_at?: string | null;
   client: { id: string; name: string; code?: string | null }; my_role?: MatterRole | 'break_glass' | null;
   on_hold?: boolean;
+  description?: string | null; track?: TrackKey; stage?: string | null; stage_since?: string | null;
 }
+
+// Case management (2026-11-07): tracks and stages, the updates log, the plan, the pipeline, importing matters.
+export type TrackKey = 'disputes' | 'transactions' | 'advisory';
+export interface StageDef { key: string; label: string; tasks: string[] }
+export interface TrackDef { key: TrackKey; label: string; stages: StageDef[] }
+export type UpdateKind = 'note' | 'call' | 'meeting' | 'filing' | 'hearing' | 'order' | 'instruction' | 'milestone' | 'stage';
+export interface CaseUpdate {
+  id: string; matter_id: string; author_id: string; author: string; kind: UpdateKind; body: string; occurred_on: string;
+  document_id?: string | null; document_title?: string | null; corrects_id?: string | null; corrected_by?: string | null;
+  stage_from?: string | null; stage_to?: string | null; created_at: string;
+}
+export type TaskKind = 'task' | 'key_date' | 'hearing' | 'filing';
+export interface CaseTask {
+  id: string; matter_id: string; title: string; kind: TaskKind; due_on?: string | null; assignee_id?: string | null; assignee?: string | null;
+  stage?: string | null; status: 'open' | 'done' | 'cancelled'; source: 'person' | 'standard'; created_by: string; created_by_name: string;
+  created_at: string; updated_at: string; version: number; overdue: boolean;
+}
+export interface PipelineRow {
+  id: string; number: string; title: string; client: string; status: MatterStatus; practice_area?: string | null; track: TrackKey;
+  stage: string | null; stage_label: string; days_in_stage: number | null; my_role?: string | null; leads: string[];
+  last_update?: { kind: UpdateKind; excerpt: string; occurred_on: string } | null;
+  next_task?: { title: string; kind: TaskKind; due_on?: string | null } | null; open_tasks: number; overdue: number;
+}
+export interface ImportRow {
+  row: number; number: string; title: string; client: string; client_id: string | null; new_client: boolean;
+  practice_area: string | null; jurisdiction: string | null; sensitivity: Sensitivity; track: TrackKey | null; stage: string | null;
+  stage_label: string; description: string | null; other_parties: string[]; errors: string[];
+}
+export interface Colleague { username: string; display_name: string; lawyer: boolean }
 export interface Membership {
   id: string; user_id: string; username: string; display_name: string; role: MatterRole; can_export: boolean;
   valid_from: string; valid_to?: string | null; granted_at: string;

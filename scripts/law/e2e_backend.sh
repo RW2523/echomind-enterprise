@@ -33,5 +33,5 @@ export LEGAL_CONVERSATION=1          # S5.1: the conversation journey (no speech
 export LEGAL_REGULATORY=1            # D-068: the regulatory journey, with real updates from the first daily fetch
 export LAW_IMPORT_REGULATORY="$ROOT/eval/fixtures/law/regulatory/bundle-20261012.json"
 export LEGAL_TRANSLATION=1           # D-070: the translation journey (the host's answer model)
-export LAW_CORS_ORIGINS="http://localhost:5174"
+export LAW_CORS_ORIGINS="http://localhost:${LAW_FRONTEND_PORT:-5174}"
 exec "$ROOT/scripts/law/dev_backend.sh"

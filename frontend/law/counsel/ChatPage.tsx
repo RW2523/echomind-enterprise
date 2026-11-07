@@ -29,7 +29,7 @@ import { useSession } from '../app/session';
 import { whereAnswersComeFrom } from './where';
 import { counselApi, requestId, type StoredTurn } from './api';
 import { ActionButtons, AnswerText, ComponentView, type CardContext } from './cards';
-import { AddDocument, addDocument, Dictate, droppedFile } from './ComposerTools';
+import { AddDocument, addDocument, Dictate, droppedFiles } from './ComposerTools';
 import { plainTurn, spokenTurn, toClipboard } from './copy';
 import VoiceStage from './voice/VoiceStage';
 import ContextColumn from './ContextColumn';
@@ -742,8 +742,8 @@ function DocumentPicker({ matterId, attached, onAttach, adding, onError }: {
           {adding && (
             <>
               <AddDocument matterId={matterId} matterNumber={adding} onError={(m) => { onError(m); setOpen(false); }}
-                onAdded={(d) => { onAttach([...attached.filter((a) => a.id !== d.id), d].slice(0, 10)); setOpen(false); }} />
-              <p className="qc-meta" style={{ margin: '0 8px 6px' }}>PDF, Word, text or Markdown. It is added to the matter's documents as a draft.</p>
+                onAdded={(ds) => { onAttach([...attached.filter((a) => !ds.some((d) => d.id === a.id)), ...ds].slice(0, 10)); setOpen(false); }} />
+              <p className="qc-meta" style={{ margin: '0 8px 6px' }}>PDF, Word, text or Markdown, up to 10 at once. Each is added to the matter's documents as a draft.</p>
               <div className="qc-pop-sep" />
             </>
           )}
@@ -815,13 +815,17 @@ function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached
   const dropped = async (e: React.DragEvent) => {
     e.preventDefault();
     setDrop(false);
-    const file = droppedFile(e);
-    if (!file || !canAdd || !matterId) return;
+    const files = droppedFiles(e);
+    if (!files.length || !canAdd || !matterId) return;
     setToolError(null);
-    const r = await addDocument(matterId, file);
-    if ('error' in r) { setToolError(r.error); return; }
+    let now = attached;
+    for (const file of files) {
+      const r = await addDocument(matterId, file);
+      if ('error' in r) { setToolError(files.length > 1 ? `${file.name}: ${r.error}` : r.error); continue; }
+      now = [...now.filter((a) => a.id !== r.id), r].slice(0, 10);
+      onAttach(now);
+    }
     void qc.invalidateQueries({ queryKey: keys.documents(matterId) });
-    onAttach([...attached.filter((a) => a.id !== r.id), r].slice(0, 10));
   };
   useEffect(() => {
     const el = ref.current;
@@ -833,7 +837,7 @@ function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached
     <div className="qc-composer-wrap" data-hero={hero ? 'true' : undefined} data-drop={drop ? 'true' : undefined}
       onDragOver={(e) => { if (canAdd && e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); setDrop(true); } }}
       onDragLeave={() => setDrop(false)} onDrop={(e) => void dropped(e)}>
-      {drop && matter && <div className="qc-drop" aria-hidden>Drop to add to {matter.number} as a draft</div>}
+      {drop && matter && <div className="qc-drop" aria-hidden>Drop to add to {matter.number} as drafts</div>}
       <form className="qc-composer" onSubmit={(e) => { e.preventDefault(); send(); }}>
         <textarea ref={ref} rows={hero ? 2 : 1} value={value} maxLength={2000} placeholder={placeholder} aria-label="Ask EchoMind"
           onChange={(e) => onChange(e.target.value)}

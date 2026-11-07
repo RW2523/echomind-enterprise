@@ -8,6 +8,8 @@ through an AuthorizedScope. Every route asks the policy engine first and is audi
 from __future__ import annotations
 
 import hashlib
+import os
+import zipfile
 from typing import Literal, Optional
 from urllib.parse import quote
 
@@ -15,7 +17,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
-from ..audit.record import audited, note
+from ..audit.record import audited, note, record
 from ..jobs import worker
 from ..matters.routes import principal_of, require, require_law_edition
 from ..retrieval import scope as scopemod
@@ -63,6 +65,16 @@ def import_document(matter_id: str, request: Request, file: UploadFile = File(..
     except validate.Rejected as e:
         note(reason="rejected_file", details={"status": str(e.status)})
         raise HTTPException(status_code=e.status, detail=e.message)
+    document_id, v, duplicate = _store(p, matter_id, checked, data, title, kind, status, version_of)
+    note(object_id=document_id, details={"kind": kind, "mime": checked.mime, "size_bytes": len(data), "number": v["number"],
+                                         "sha256": v["sha256"]})
+    return {"document": repo.get_document(matter_id, document_id, p["sub"]), "same_content_as": duplicate}
+
+
+def _store(p: dict, matter_id: str, checked: "validate.Checked", data: bytes, title: Optional[str], kind: str, status: str,
+           version_of: Optional[str] = None) -> tuple[str, dict, Optional[dict]]:
+    """Store one checked file as a new document (or a new version of `version_of`) and queue its reading: the document
+    id, the version, and an existing document with the same content, if any. The caller has authorised the import."""
     sha = hashlib.sha256(data).hexdigest()
     if version_of:
         target = repo.get_document(matter_id, version_of, p["sub"])
@@ -84,10 +96,84 @@ def import_document(matter_id: str, request: Request, file: UploadFile = File(..
         blobs.remove(matter_id, version_id)
         raise
     worker.wake()
-    note(object_id=document_id, details={"kind": kind, "mime": checked.mime, "size_bytes": len(data), "number": v["number"],
-                                         "sha256": sha})
     duplicate = None if version_of else repo.same_content_in_matter(matter_id, sha, exclude_document=document_id)
-    return {"document": repo.get_document(matter_id, document_id, p["sub"]), "same_content_as": duplicate}
+    return document_id, {**v, "sha256": sha}, duplicate
+
+
+# A zip of documents (case management, 2026-11-07): each file inside goes through the same checks as a single import.
+ZIP_MAX_FILES = 200
+ZIP_MAX_RATIO = 100                                  # uncompressed ÷ compressed for any one entry: more is a zip bomb
+_ZIP_SKIP = ("__macosx/", ".ds_store", "thumbs.db", "desktop.ini")
+
+
+def _zip_total_limit() -> int:
+    return 10 * validate.max_bytes()
+
+
+@router.post(_BASE + "/import-zip", status_code=202)
+@audited("document.import_zip", object_type="matter", object_param="matter_id")
+def import_zip(matter_id: str, request: Request, file: UploadFile = File(...), kind: Kind = Form("other"),
+               status: DocStatus = Form("received")):
+    """Import every supported file of a zip: each is checked like a single import and recorded as its own import
+    event; unsupported, unsafe or oversized entries are skipped with the reason. Nested zips are not opened."""
+    p = principal_of(request)
+    require(p, "documents.import", matter_id)
+    f = file.file
+    f.seek(0, os.SEEK_END)
+    size = f.tell()
+    f.seek(0)
+    if size > _zip_total_limit():
+        raise HTTPException(status_code=413, detail=f"A zip can be at most {_zip_total_limit() // (1024 * 1024)} MB.")
+    try:
+        zf = zipfile.ZipFile(f)
+        entries = [i for i in zf.infolist() if not i.is_dir()]
+    except (zipfile.BadZipFile, zipfile.LargeZipFile, OSError, ValueError):
+        note(reason="rejected_file", details={"status": "422"})
+        raise HTTPException(status_code=422, detail="This is not a zip file that can be opened.")
+    if len(entries) > ZIP_MAX_FILES:
+        raise HTTPException(status_code=413, detail=f"A zip can hold at most {ZIP_MAX_FILES} files; this one has {len(entries)}.")
+    if sum(i.file_size for i in entries) > _zip_total_limit():
+        raise HTTPException(status_code=413, detail="The files in this zip are too large when unpacked.")
+    imported, skipped = [], []
+    for info in entries:
+        name = info.filename.replace("\\", "/")
+        base = validate.safe_filename(name)
+        low = name.casefold()
+        if any(low.startswith(s) or low.endswith(s) or f"/{s}" in low for s in _ZIP_SKIP) or base.startswith("."):
+            continue                                                           # system files, not documents
+        if os.path.splitext(base)[1].lower() == ".zip":
+            skipped.append({"name": base, "reason": "A zip inside the zip is not opened."})
+            continue
+        if info.flag_bits & 0x1:
+            skipped.append({"name": base, "reason": "The file is password-protected."})
+            continue
+        if info.file_size > validate.max_bytes():
+            skipped.append({"name": base, "reason": f"Larger than {validate.max_bytes() // (1024 * 1024)} MB."})
+            continue
+        if info.compress_size and info.file_size / info.compress_size > ZIP_MAX_RATIO and info.file_size > 1024 * 1024:
+            skipped.append({"name": base, "reason": "The file expands far beyond its packed size."})
+            continue
+        try:
+            with zf.open(info) as src:
+                data = src.read(validate.max_bytes() + 1)
+            if len(data) > validate.max_bytes():
+                raise validate.Rejected(413, f"Larger than {validate.max_bytes() // (1024 * 1024)} MB.")
+            checked = validate.check(base, None, data)
+        except validate.Rejected as e:
+            skipped.append({"name": base, "reason": e.message})
+            continue
+        except (zipfile.BadZipFile, OSError, RuntimeError, ValueError, NotImplementedError):
+            skipped.append({"name": base, "reason": "The file could not be read from the zip."})
+            continue
+        title = os.path.splitext(checked.filename)[0][:300] or checked.filename
+        document_id, v, duplicate = _store(p, matter_id, checked, data, title, kind, status)
+        record("document.import", principal=p, object_type="document", object_id=document_id, matter_id=matter_id,
+               details={"kind": kind, "mime": checked.mime, "size_bytes": len(data), "number": v["number"], "sha256": v["sha256"],
+                        "method": "zip"})
+        imported.append({"document": repo.get_document(matter_id, document_id, p["sub"]), "name": checked.filename,
+                         "same_content_as": duplicate})
+    note(details={"imported": len(imported), "skipped": len(skipped), "size_bytes": size})
+    return {"imported": imported, "skipped": skipped}
 
 
 # ── Reading ──────────────────────────────────────────────────────────────────────

@@ -1,40 +1,49 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Plus } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Columns3, FileSpreadsheet, Plus } from 'lucide-react';
 import { api, ApiError } from '../api/client';
-import { keys, useApiMutation, useClients, useMatters } from '../api/queries';
-import type { Client, Matter, Sensitivity } from '../api/types';
+import { keys, useMatters, useTracks } from '../api/queries';
+import type { ImportRow } from '../api/types';
 import { hasFirmRole, useSession } from '../app/session';
 import Toolbar from '../ui/Toolbar';
-import { Dialog, EmptyState, ErrorNote, Field, MatterStatusPill, roleLabel, SensitivityPill, Skeleton } from '../ui/primitives';
+import { trackOf } from '../ui/casework';
+import { Dialog, EmptyState, ErrorNote, MatterStatusPill, roleLabel, SensitivityPill, Skeleton } from '../ui/primitives';
 
 export default function Matters() {
   const me = useSession();
   const matters = useMatters();
-  const [creating, setCreating] = useState(false);
+  const tracks = useTracks();
+  const navigate = useNavigate();
+  const [importing, setImporting] = useState(false);
   const canCreate = hasFirmRole(me, 'attorney', 'managing_partner');
+  const stageOf = (m: { track?: string | null; stage?: string | null }) =>
+    trackOf(tracks.data, m as never)?.stages.find((s) => s.key === m.stage)?.label ?? '';
   return (
     <>
       <Toolbar title="Matters">
-        {canCreate && <button type="button" className="lw-btn lw-btn-primary" onClick={() => setCreating(true)}><Plus />New matter</button>}
+        <Link to="/pipeline" className="lw-btn lw-btn-ghost"><Columns3 />Pipeline</Link>
+        {canCreate && <button type="button" className="lw-btn" onClick={() => setImporting(true)}><FileSpreadsheet />Import cases</button>}
+        {canCreate && <Link to="/matters/new" className="lw-btn lw-btn-primary"><Plus />New case</Link>}
       </Toolbar>
       <div className="lw-content">
         {matters.isPending ? <div className="lw-paper lw-sheet" style={{ display: 'grid', gap: 10 }}><Skeleton /><Skeleton /><Skeleton /></div>
           : matters.error ? <EmptyState title="Matters could not be loaded">Check the connection and try again.</EmptyState>
             : matters.data.length === 0 ? (
-              <EmptyState title="No matters yet" action={canCreate ? <button type="button" className="lw-btn lw-btn-primary" onClick={() => setCreating(true)}><Plus />New matter</button> : undefined}>
-                {canCreate ? 'Open a matter to start working with its documents, meetings and drafts.' : 'Matters you are a member of will appear here. The lead on a matter can add you.'}
+              <EmptyState title="No matters yet" action={canCreate ? <button type="button" className="lw-btn lw-btn-primary" onClick={() => navigate('/matters/new')}><Plus />New case</button> : undefined}>
+                {canCreate ? 'Open a case to start working with its documents, updates, plan and meetings.' : 'Matters you are a member of will appear here. The lead on a matter can add you.'}
               </EmptyState>
             ) : (
               <div className="lw-paper" style={{ overflowX: 'auto' }}>
                 <table className="lw-table">
-                  <thead><tr><th>Matter</th><th>Client</th><th>Status</th><th>Sensitivity</th><th>Your role</th></tr></thead>
+                  <thead><tr><th>Matter</th><th>Client</th><th>Stage</th><th>Status</th><th>Sensitivity</th><th>Your role</th></tr></thead>
                   <tbody>
                     {matters.data.map((m) => (
                       <tr key={m.id}>
                         <td><Link to={`/m/${encodeURIComponent(m.number)}/overview`} style={{ color: 'inherit', textDecoration: 'none' }}>
                           <div className="lw-tnum" style={{ fontWeight: 600, color: 'var(--accent)' }}>{m.number}</div><div>{m.title}</div></Link></td>
                         <td>{m.client.name}</td>
+                        <td>{stageOf(m)}</td>
                         <td><MatterStatusPill value={m.status} /></td>
                         <td><SensitivityPill value={m.sensitivity} /></td>
                         <td>{roleLabel(m.my_role)}</td>
@@ -45,73 +54,75 @@ export default function Matters() {
               </div>
             )}
       </div>
-      {creating && <NewMatterDialog onClose={() => setCreating(false)} />}
+      {importing && <ImportDialog onClose={() => setImporting(false)} />}
     </>
   );
 }
 
-function NewMatterDialog({ onClose }: { onClose: () => void }) {
-  const clients = useClients();
-  const navigate = useNavigate();
-  const [clientId, setClientId] = useState('');
-  const [newClient, setNewClient] = useState({ name: '', code: '' });
-  const [form, setForm] = useState({ number: '', title: '', practice_area: '', jurisdiction: '', sensitivity: 'restricted' as Sensitivity });
+/** Opening many matters from a spreadsheet saved as CSV: every row is checked and shown first; only rows without a problem
+ *  are opened, each with the importer as its lead. */
+function ImportDialog({ onClose }: { onClose: () => void }) {
+  const qc = useQueryClient();
+  const [file, setFile] = useState<File | null>(null);
+  const [rows, setRows] = useState<ImportRow[] | null>(null);
+  const [created, setCreated] = useState<{ row: number; number: string }[] | null>(null);
   const [error, setError] = useState('');
-  const create = useApiMutation(async () => {
-    let cid = clientId;
-    if (cid === '__new') {
-      cid = (await api.post<{ client: Client }>('/api/legal/clients', { name: newClient.name, code: newClient.code || undefined })).client.id;
-    }
-    return (await api.post<{ matter: Matter }>('/api/legal/matters', {
-      client_id: cid, number: form.number, title: form.title, sensitivity: form.sensitivity,
-      practice_area: form.practice_area || undefined, jurisdiction: form.jurisdiction || undefined,
-    })).matter;
-  }, [keys.matters, keys.clients]);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); setError('');
+  const [busy, setBusy] = useState(false);
+  const send = async (f: File, preview: boolean) => {
+    setError(''); setBusy(true);
     try {
-      const m = await create.mutateAsync(undefined);
-      onClose();
-      navigate(`/m/${encodeURIComponent(m.number)}/overview`);
-    } catch (err) { setError(err instanceof ApiError ? err.message : 'The matter could not be created.'); }
+      const body = new FormData();
+      body.append('file', f);
+      const r = await api.upload<{ rows: ImportRow[]; ready: number; created: { row: number; number: string }[] }>(`/api/legal/matters-import?preview=${preview}`, body);
+      setRows(r.rows);
+      if (!preview) {
+        setCreated(r.created);
+        await Promise.all([qc.invalidateQueries({ queryKey: keys.matters }), qc.invalidateQueries({ queryKey: keys.clients }),
+                           qc.invalidateQueries({ queryKey: keys.pipeline })]);
+      }
+    } catch (e) { setError(e instanceof ApiError ? e.message : 'The file could not be read.'); }
+    finally { setBusy(false); }
   };
-  const ready = form.number && form.title && clientId && (clientId !== '__new' || newClient.name);
+  const ready = rows?.filter((r) => !r.errors.length).length ?? 0;
   return (
-    <Dialog title="New matter" onClose={onClose}>
-      <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
-        <Field label="Client">{(id) => (
-          <select id={id} className="lw-input" value={clientId} onChange={(e) => setClientId(e.target.value)}>
-            <option value="" disabled>Choose a client</option>
-            {(clients.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            <option value="__new">New client…</option>
-          </select>)}
-        </Field>
-        {clientId === '__new' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
-            <Field label="Client name">{(id) => <input id={id} className="lw-input" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} />}</Field>
-            <Field label="Code" hint="Optional">{(id) => <input id={id} className="lw-input" value={newClient.code} onChange={(e) => setNewClient({ ...newClient, code: e.target.value })} />}</Field>
+    <Dialog title="Import cases" onClose={onClose} width={860}
+      footer={<>
+        <button type="button" className="lw-btn lw-btn-ghost" onClick={onClose}>{created ? 'Done' : 'Cancel'}</button>
+        {!created && rows && <button type="button" className="lw-btn lw-btn-primary" disabled={!ready || busy || !file} onClick={() => file && void send(file, false)}>
+          {busy ? 'Opening…' : `Open ${ready} matter${ready === 1 ? '' : 's'}`}</button>}
+      </>}>
+      <div style={{ display: 'grid', gap: 12 }}>
+        <p style={{ margin: 0 }}>Save the spreadsheet as CSV with a header row. Needed: <b>number</b>, <b>title</b>, <b>client</b>. Optional: client_code, practice_area, jurisdiction,
+          sensitivity, track, stage, description, other_parties (separated by “;”). Up to 200 rows. You become the lead of each matter.</p>
+        <p style={{ margin: 0 }}><a className="qc-linkbtn" href="/api/legal/matters-import/template" download>Download the template</a></p>
+        {!created && (
+          <label className="lw-btn" style={{ justifySelf: 'start' }}>
+            <FileSpreadsheet />{file ? `Choose another file (${file.name})` : 'Choose a CSV file'}
+            <input type="file" accept=".csv,text/csv" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) { setFile(f); setCreated(null); void send(f, true); } }} />
+          </label>
+        )}
+        {error && <ErrorNote>{error}</ErrorNote>}
+        {created && <p role="status" style={{ margin: 0 }}><b>{created.length} matter{created.length === 1 ? '' : 's'} opened:</b> {created.map((c) => c.number).join(', ')}.</p>}
+        {rows && (
+          <div style={{ overflowX: 'auto', maxHeight: 360 }}>
+            <table className="lw-table" aria-label="Rows in the file">
+              <thead><tr><th>Row</th><th>Matter</th><th>Client</th><th>Track and stage</th><th>Check</th></tr></thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.row} data-problem={r.errors.length ? 'true' : undefined}>
+                    <td className="lw-tnum">{r.row}</td>
+                    <td><b className="lw-tnum">{r.number || '—'}</b><div>{r.title || '—'}</div></td>
+                    <td>{r.client || '—'}{r.new_client && <div className="lw-meta">New client</div>}</td>
+                    <td>{r.track ? `${r.track[0].toUpperCase()}${r.track.slice(1)} · ${r.stage_label}` : '—'}</td>
+                    <td>{r.errors.length ? <span style={{ color: 'var(--conflict, #b3261e)' }}>{r.errors.join(' ')}</span>
+                      : created?.some((c) => c.row === r.row) ? 'Opened' : 'Ready'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10 }}>
-          <Field label="Matter number">{(id) => <input id={id} className="lw-input lw-tnum" placeholder="M-101" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />}</Field>
-          <Field label="Title">{(id) => <input id={id} className="lw-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />}</Field>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <Field label="Practice area" hint="Optional">{(id) => <input id={id} className="lw-input" value={form.practice_area} onChange={(e) => setForm({ ...form, practice_area: e.target.value })} />}</Field>
-          <Field label="Jurisdiction" hint="Optional">{(id) => <input id={id} className="lw-input" value={form.jurisdiction} onChange={(e) => setForm({ ...form, jurisdiction: e.target.value })} />}</Field>
-        </div>
-        <Field label="Sensitivity" hint="Only members can see a matter, whatever its sensitivity.">{(id) => (
-          <select id={id} className="lw-input" value={form.sensitivity} onChange={(e) => setForm({ ...form, sensitivity: e.target.value as Sensitivity })}>
-            <option value="standard">Standard</option><option value="restricted">Restricted</option><option value="highly_restricted">Highly restricted</option>
-          </select>)}
-        </Field>
-        {error && <ErrorNote>{error}</ErrorNote>}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          <button type="button" className="lw-btn lw-btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="submit" className="lw-btn lw-btn-primary" disabled={!ready || create.isPending}>{create.isPending ? 'Opening…' : 'Open matter'}</button>
-        </div>
-      </form>
+      </div>
     </Dialog>
   );
 }

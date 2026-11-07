@@ -37,27 +37,33 @@ export async function addDocument(matterId: string, file: File): Promise<{ id: s
 }
 
 export function AddDocument({ matterId, matterNumber, onAdded, onError }: {
-  matterId: string; matterNumber: string; onAdded: (d: { id: string; title: string }) => void; onError: (message: string) => void;
+  matterId: string; matterNumber: string; onAdded: (docs: { id: string; title: string }[]) => void; onError: (message: string) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [adding, setAdding] = useState(false);
   const qc = useQueryClient();
   const pick = async (files: FileList | null) => {
-    const file = files?.[0];
+    const list = Array.from(files ?? []).slice(0, MAX_AT_ONCE);
     if (input.current) input.current.value = '';
-    if (!file) return;
+    if (!list.length) return;
     setAdding(true);
-    const r = await addDocument(matterId, file);
+    const added: { id: string; title: string }[] = [];
+    const failed: string[] = [];
+    for (const file of list) {                            // one at a time, each through the same import
+      const r = await addDocument(matterId, file);
+      if ('error' in r) failed.push(list.length > 1 ? `${file.name}: ${r.error}` : r.error);
+      else added.push(r);
+    }
     setAdding(false);
-    if ('error' in r) { onError(r.error); return; }
     void qc.invalidateQueries({ queryKey: keys.documents(matterId) });
-    onAdded(r);
+    if (added.length) onAdded(added);
+    if (failed.length) onError(failed.join(' '));
   };
   return (
     <>
-      <input ref={input} type="file" accept={ACCEPTED} hidden onChange={(e) => void pick(e.target.files)} data-testid="add-document-input" />
+      <input ref={input} type="file" accept={ACCEPTED} multiple hidden onChange={(e) => void pick(e.target.files)} data-testid="add-document-input" />
       <button type="button" className="qc-pop-item" disabled={adding} onClick={() => input.current?.click()}>
-        <FilePlus2 aria-hidden />{adding ? 'Adding…' : `Add a document to ${matterNumber}…`}
+        <FilePlus2 aria-hidden />{adding ? 'Adding…' : `Add documents to ${matterNumber}…`}
       </button>
     </>
   );
@@ -137,4 +143,10 @@ export function Dictate({ matterId, disabled, onText, onError }: {
 /** Files dropped on the question box (one at a time, the first file only). */
 export function droppedFile(e: React.DragEvent): File | null {
   return e.dataTransfer?.files?.[0] ?? null;
+}
+
+/** Every file dropped, at most as many as an answer can be limited to. */
+export const MAX_AT_ONCE = 10;
+export function droppedFiles(e: React.DragEvent): File[] {
+  return Array.from(e.dataTransfer?.files ?? []).slice(0, MAX_AT_ONCE);
 }

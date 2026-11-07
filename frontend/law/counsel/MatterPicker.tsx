@@ -8,11 +8,12 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { createPortal } from 'react-dom';
 import { useMatch, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Briefcase, Check, ChevronsUpDown, Lock } from 'lucide-react';
+import { Briefcase, Check, ChevronsUpDown, Lock, Plus } from 'lucide-react';
 import { keys, useMatters } from '../api/queries';
 import type { Matter } from '../api/types';
 import { useCurrentMatter } from '../app/matter';
 import { getBlockers } from '../app/navigationGuard';
+import { hasFirmRole, useSession } from '../app/session';
 import { Dialog } from '../ui/primitives';
 import { MAX_MATTERS, useChatMatter, withMatter } from './context';
 
@@ -73,6 +74,7 @@ export function usePopover() {
 
 export default function MatterPicker({ variant = 'header' }: { variant?: 'header' | 'composer' | 'rail' }) {
   const matters = useMatters();
+  const me = useSession();
   const routeMatter = useCurrentMatter();
   const { matter: chatMatter, matters: chosen, setMatterId, setMatterIds } = useChatMatter();
   const onChat = !!useMatch('/chat/*');
@@ -111,6 +113,7 @@ export default function MatterPicker({ variant = 'header' }: { variant?: 'header
   };
 
   const composer = variant === 'composer';
+  const canOpen = hasFirmRole(me, 'attorney', 'managing_partner');
   const several = onChat && chosen.length > 1;
   const label = !current ? '' : several
     ? `${chosen.map((m) => m.number).join(', ')}. ${composer ? 'Change the matters' : 'Switch matter'}`
@@ -163,6 +166,11 @@ export default function MatterPicker({ variant = 'header' }: { variant?: 'header
             })}
             {matters.data && list.length === 0 && <p className="qc-meta" style={{ padding: '6px 10px' }}>No matching matters.</p>}
           </div>
+          {canOpen && (
+            <button type="button" className="qc-pop-item" onClick={() => { setOpen(false); navigate('/matters/new'); }}>
+              <Plus aria-hidden /><span style={{ fontWeight: 600 }}>New case…</span>
+            </button>
+          )}
           <p className="qc-meta" style={{ borderTop: '1px solid var(--rule)', margin: '6px 0 0', padding: '8px 10px 2px' }}>
             {composer
               ? 'Only your own matters appear. With several, every answer says which matter each source comes from; a highly restricted matter is discussed on its own.'

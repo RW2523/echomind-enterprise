@@ -9,7 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, AudioLines, Bell, Briefcase, ChevronDown, FilePen, Files, KeyRound, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
+  Activity, AudioLines, Columns3, Bell, Briefcase, ChevronDown, FilePen, Files, KeyRound, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
   Moon, MoreHorizontal, Palette, PanelLeftClose, PanelLeftOpen, Scale, Search, Settings, ShieldCheck, Sun,
 } from 'lucide-react';
 import { api } from '../api/client';
@@ -75,7 +75,7 @@ function ProfileMenu({ variant = 'header' }: { variant?: 'header' | 'rail' }) {
   const { open, setOpen, button, pop, style } = usePopover();
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'dark');
   const [palette, setPaletteState] = useState(getPalette);
-  const firm = firmEntries(me).filter((e) => !['chat', 'matters', 'drafts'].includes(e.key));
+  const firm = firmEntries(me).filter((e) => !['chat', 'matters', 'pipeline', 'drafts'].includes(e.key));
   const signOut = async () => {
     try { await api.post('/api/auth/logout'); } finally { qc.clear(); navigate('/signin', { replace: true }); }
   };
@@ -373,6 +373,7 @@ function ShellBody() {
         <nav aria-label="Workspace">
           <button type="button" className="qc-new-chat" title="New chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-rail-text">New chat</span></button>
           <RailLink to="/chat" icon={<MessageSquare aria-hidden />} title="Chat">Chat</RailLink>
+          <RailLink to="/pipeline" icon={<Columns3 aria-hidden />} title="Pipeline">Pipeline</RailLink>
           <RailLink to="/matters" icon={<Briefcase aria-hidden />} title="Matters" end>Matters</RailLink>
           <MatterRailLinks />
           <DraftsLink />

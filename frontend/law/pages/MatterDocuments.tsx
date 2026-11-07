@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { BookOpen, Download, FileOutput, FileUp, FolderSync, RotateCcw, Search, Trash2, X } from 'lucide-react';
+import { BookOpen, Download, FileOutput, FileUp, FolderSync, FolderUp, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
@@ -10,6 +10,7 @@ import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Field, Skeleton, StatusPill, type Tone } from '../ui/primitives';
 import { DeleteDialog, HoldNotice, LabelControl, LabelPill } from '../ui/records';
 import { ExportDialog } from './MatterExports';
+import BulkUpload from '../ui/bulkUpload';
 
 const KINDS: [DocKind, string][] = [['contract', 'Contract'], ['correspondence', 'Correspondence'], ['pleading', 'Pleading'],
   ['evidence', 'Evidence'], ['memo', 'Memo'], ['note', 'Note'], ['other', 'Other']];
@@ -67,6 +68,7 @@ export default function MatterDocuments() {
   const docs = useDocuments(matter.id);
   const [selected, setSelected] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [bulk, setBulk] = useState(false);
   const role = matter.my_role ?? '';
   const canImport = ['lead', 'attorney', 'paralegal'].includes(role) && matter.status === 'open';
   const mayDelete = ['lead', 'attorney'].includes(role);
@@ -75,6 +77,7 @@ export default function MatterDocuments() {
   return (
     <>
       <Toolbar crumb={matter.number} title="Documents">
+        {canImport && <button type="button" className="lw-btn" onClick={() => setBulk(true)}><FolderUp />Upload many</button>}
         {canImport && <button type="button" className="lw-btn lw-btn-primary" onClick={() => setImporting(true)}><FileUp />Import</button>}
       </Toolbar>
       <div className="lw-content lw-docs" data-inspecting={selected ? 'true' : undefined}>
@@ -121,6 +124,12 @@ export default function MatterDocuments() {
         {selected && <Inspector matterId={matter.id} docId={selected} canEdit={canImport} perms={perms} onClose={() => setSelected(null)} />}
       </div>
       {importing && <ImportDialog matterId={matter.id} documents={docs.data ?? []} onClose={() => setImporting(false)} />}
+      {bulk && (
+        <Dialog title="Upload many documents" onClose={() => setBulk(false)} width={720}
+          footer={<button type="button" className="lw-btn" onClick={() => setBulk(false)}>Close</button>}>
+          <BulkUpload matterId={matter.id} />
+        </Dialog>
+      )}
     </>
   );
 }

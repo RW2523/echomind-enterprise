@@ -376,6 +376,7 @@ def _purge_document(conn, d: dict) -> dict:
     # S3.6: obligations quote the document; they go with their history (each can be read again).
     conn.execute("DELETE FROM legal_obligation_events WHERE obligation_id IN (SELECT id FROM legal_obligations WHERE document_id=?)", (doc,))
     conn.execute("DELETE FROM legal_obligations WHERE document_id=?", (doc,))
+    conn.execute("UPDATE legal_matter_updates SET document_id=NULL WHERE document_id=?", (doc,))     # the update stays; its link goes
     # S3.7: diligence issues quote the document and go with their trail; every run forgets the document's name.
     # A governance finding that quotes it as the second document (S3.8) goes too.
     conn.execute("DELETE FROM legal_dd_issue_events WHERE issue_id IN (SELECT id FROM legal_dd_issues WHERE document_id=? OR related_json LIKE ?)",

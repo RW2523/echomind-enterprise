@@ -8,7 +8,8 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlertTriangle, BarChart3, Building2, CheckCircle2, ClipboardCheck, FilePen, FileSearch, FileText, Info, ListChecks, Mic, Network, Scale, Users,
+  AlertTriangle, BarChart3, Building2, CalendarClock, Check, CheckCircle2, ClipboardCheck, FilePen, FileSearch, FileText, Gauge, Info, ListChecks,
+  MessageSquarePlus, Mic, Network, Scale, Users,
 } from 'lucide-react';
 import { counselApi, requestId } from './api';
 import { parseComponent } from './validate';
@@ -488,6 +489,55 @@ function LiveTranscript({ comp, ctx }: { comp: Of<'live_transcript'>; ctx: CardC
   );
 }
 
+// ── case_status: where the matter stands (its stage, its people's latest updates, its next tasks) ──
+const TASK_KIND: Record<string, string> = { key_date: 'Key date', hearing: 'Hearing', filing: 'Filing deadline' };
+function CaseStatus({ comp, ctx }: { comp: Of<'case_status'>; ctx: CardContext }) {
+  const p = comp.props;
+  return (
+    <section className="qc-card" data-component="case_status" aria-label={`Where ${p.number} stands`}>
+      <h3 className="qc-card-title"><Icon><Gauge aria-hidden /></Icon>{p.number} · {p.title}</h3>
+      <ol className="qc-stages" aria-label={`${p.track_label} stages`}>
+        {p.stages.map((s, i) => (
+          <li key={s} data-state={i < p.stage_index ? 'done' : i === p.stage_index ? 'current' : 'next'} aria-current={i === p.stage_index ? 'step' : undefined}>
+            <span aria-hidden>{i < p.stage_index ? <Check size={12} /> : i + 1}</span>{s}
+          </li>
+        ))}
+      </ol>
+      <p className="qc-meta" style={{ margin: 0 }}>{p.track_label} track · {p.stages[p.stage_index]}{p.days_in_stage != null ? ` for ${p.days_in_stage} day${p.days_in_stage === 1 ? '' : 's'}` : ''}</p>
+      <div className="qc-case-cols">
+        <div>
+          <h4 className="qc-case-head">Latest updates</h4>
+          {p.updates.length === 0 ? <p className="qc-meta" style={{ margin: 0 }}>No updates have been posted yet.</p> : (
+            <ol className="qc-case-feed">
+              {p.updates.map((u, i) => (
+                <li key={i}><span className="qc-meta"><b>{u.kind_label}</b> · {DAY(u.occurred_on)} · {u.author}</span>
+                  <span>{u.text}</span>{u.document_title && <span className="qc-meta">Document: {u.document_title}</span>}</li>
+              ))}
+            </ol>
+          )}
+        </div>
+        <div>
+          <h4 className="qc-case-head">Next in the plan{p.open_tasks ? ` (${p.open_tasks} open${p.overdue ? `, ${p.overdue} overdue` : ''})` : ''}</h4>
+          {p.tasks.length === 0 ? <p className="qc-meta" style={{ margin: 0 }}>Nothing is planned.</p> : (
+            <ul className="qc-case-tasks">
+              {p.tasks.map((t, i) => (
+                <li key={i} data-overdue={t.overdue ? 'true' : undefined}>
+                  <span>{t.title}</span>
+                  <span className="qc-meta">{TASK_KIND[t.kind] ? `${TASK_KIND[t.kind]} · ` : ''}{t.due_on ? <><CalendarClock size={12} aria-hidden /> {t.overdue ? 'Overdue · ' : ''}{DAY(t.due_on)}</> : 'No date'}{t.assignee ? ` · ${t.assignee}` : ''}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+      <div className="qc-actions">
+        <button type="button" className="qc-btn" onClick={() => ctx.go(p.path)}>{p.can_post ? <><MessageSquarePlus aria-hidden />Post an update</> : <><Building2 aria-hidden />Open the case</>}</button>
+      </div>
+      <p className="qc-meta" style={{ margin: 0 }}>From the matter's updates and plan, as its people wrote them · {WHEN(p.as_of)}</p>
+    </section>
+  );
+}
+
 /** The cards of this file, or null for a type cards.tsx shows itself. */
 export function WorkCard({ comp, ctx }: { comp: SafeComponent; ctx: CardContext }): React.ReactElement | null {
   switch (comp.type) {
@@ -499,6 +549,7 @@ export function WorkCard({ comp, ctx }: { comp: SafeComponent; ctx: CardContext 
     case 'numeric_chart': return <NumericChart comp={comp} ctx={ctx} />;
     case 'graph_excerpt': return <GraphExcerpt comp={comp} ctx={ctx} />;
     case 'live_transcript': return <LiveTranscript comp={comp} ctx={ctx} />;
+    case 'case_status': return <CaseStatus comp={comp} ctx={ctx} />;
     default: return null;
   }
 }

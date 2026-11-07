@@ -108,6 +108,9 @@ function plainExtra(c: SafeComponent): string {
     }
     case 'live_transcript':
       return [`${c.props.title} (${c.props.state.replace('_', ' ')})`, ...c.props.segments.map((g) => `${g.speaker ? `${g.speaker}: ` : ''}${g.text}`)].join('\n');
+    case 'case_status':
+      return [c.props.summary, 'Latest updates:', ...c.props.updates.map((u) => `- ${u.occurred_on} ${u.kind_label} (${u.author}): ${u.text}`),
+              'Next in the plan:', ...c.props.tasks.map((t) => `- ${t.title}${t.due_on ? ` (due ${t.due_on}${t.overdue ? ', overdue' : ''})` : ''}${t.assignee ? `, ${t.assignee}` : ''}`)].join('\n');
     default: return '';
   }
 }

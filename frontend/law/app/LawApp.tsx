@@ -15,6 +15,8 @@ import ActivityPage from '../counsel/ActivityPage';
 import SignIn from '../pages/SignIn';
 import Home from '../pages/Home';
 import Matters from '../pages/Matters';
+import NewMatter from '../pages/NewMatter';
+import Pipeline from '../pages/Pipeline';
 import MatterOverview from '../pages/MatterOverview';
 import MatterMembers from '../pages/MatterMembers';
 import Security from '../pages/Security';
@@ -83,6 +85,8 @@ export const lawRoutes = [
           { path: '/activity', element: <ActivityPage /> },
           { path: '/home', element: <Home /> },
           { path: '/matters', element: <Matters /> },
+          { path: '/matters/new', element: <NewMatter /> },
+          { path: '/pipeline', element: <Pipeline /> },
           { path: '/reviews', element: <Reviews /> },
           { path: '/templates', element: <Templates /> },
           { path: '/playbooks', element: <Playbooks /> },

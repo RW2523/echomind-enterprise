@@ -89,7 +89,8 @@ def update_client(client_id: str, fields: dict, expected_version: int) -> dict:
 
 # ── Matters ──────────────────────────────────────────────────────────────────────
 _MATTER_COLS = ("m.id, m.org_id, m.client_id, m.number, m.title, m.practice_area, m.jurisdiction, m.status, "
-                "m.sensitivity, m.created_at, m.created_by, m.updated_at, m.version, c.name, c.code")
+                "m.sensitivity, m.created_at, m.created_by, m.updated_at, m.version, c.name, c.code, "
+                "m.description, m.track, m.stage, m.stage_since")
 _MATTER_KEYS = ("id", "org_id", "client_id", "number", "title", "practice_area", "jurisdiction", "status",
                 "sensitivity", "created_at", "created_by", "updated_at", "version")
 
@@ -99,6 +100,7 @@ def _matter(row, my_role: Optional[str] = None) -> Optional[dict]:
         return None
     d = dict(zip(_MATTER_KEYS, row[:13]))
     d["client"] = {"id": d["client_id"], "name": row[13], "code": row[14]}
+    d.update(zip(("description", "track", "stage", "stage_since"), row[15:19]))
     if my_role is not None:
         d["my_role"] = my_role
     return d
@@ -106,18 +108,34 @@ def _matter(row, my_role: Optional[str] = None) -> Optional[dict]:
 
 def create_matter(org_id: str, client_id: str, number: str, title: str, created_by: str, *,
                   practice_area: Optional[str] = None, jurisdiction: Optional[str] = None,
-                  sensitivity: str = "restricted") -> dict:
-    """Open a matter; its creator becomes the lead, in the same transaction."""
+                  sensitivity: str = "restricted", description: Optional[str] = None, track: Optional[str] = None,
+                  stage: Optional[str] = None, members: tuple = (), parties: tuple = ()) -> dict:
+    """Open a matter; its creator becomes the lead, and the team (user id, role) and other parties (name, role) given
+    are added, all in the same transaction. Routes check the members first (repo never authorises)."""
+    from . import pipeline
     mid, now = _new_id(), now_iso()
+    track = track if track in pipeline.TRACKS else pipeline.suggest_track(practice_area)
+    stage = stage if pipeline.stage(track, stage) else pipeline.first_stage(track)
     try:
         with get_conn() as conn:
             conn.execute(
                 "INSERT INTO matters (id, org_id, client_id, number, title, practice_area, jurisdiction, status, sensitivity, "
-                "acl_epoch, created_at, created_by, updated_at, version) VALUES (?,?,?,?,?,?,?,'open',?,1,?,?,?,1)",
-                (mid, org_id, client_id, number.strip(), title.strip(), practice_area, jurisdiction, sensitivity, now, created_by, now))
+                "acl_epoch, created_at, created_by, updated_at, version, description, track, stage, stage_since) "
+                "VALUES (?,?,?,?,?,?,?,'open',?,1,?,?,?,1,?,?,?,?)",
+                (mid, org_id, client_id, number.strip(), title.strip(), practice_area, jurisdiction, sensitivity, now, created_by,
+                 now, (description or "").strip() or None, track, stage, now))
             conn.execute(
                 "INSERT INTO matter_memberships (id, matter_id, user_id, role, can_export, valid_from, granted_by, granted_at) "
                 "VALUES (?,?,?,?,?,?,?,?)", (_new_id(), mid, created_by, "lead", 1, now, created_by, now))
+            for user_id, role in members:
+                if user_id == created_by:
+                    continue
+                conn.execute(
+                    "INSERT INTO matter_memberships (id, matter_id, user_id, role, can_export, valid_from, granted_by, granted_at) "
+                    "VALUES (?,?,?,?,?,?,?,?)", (_new_id(), mid, user_id, role, 0, now, created_by, now))
+            for name, role in parties:
+                conn.execute("INSERT INTO legal_matter_parties (id, matter_id, name, role, added_by, added_at) VALUES (?,?,?,?,?,?)",
+                             (_new_id(), mid, name.strip(), role, created_by, now))
             conn.commit()
     except sqlite3.IntegrityError:
         raise Conflict("A matter with that number already exists.")
@@ -137,11 +155,11 @@ def list_visible_matters(principal: dict) -> list[dict]:
             f"SELECT {_MATTER_COLS}, {my_role_sql()} FROM matters m JOIN clients c ON c.id = m.client_id "
             f"WHERE {visible_matters_sql()} ORDER BY m.number",
             {"org": principal["org_id"], "uid": principal["sub"], "now": now_iso()}).fetchall()
-    return [_matter(r, r[15]) for r in rows]
+    return [_matter(r, r[19]) for r in rows]
 
 
 def update_matter(matter_id: str, fields: dict, expected_version: int) -> dict:
-    allowed = ("title", "practice_area", "jurisdiction", "status", "sensitivity")
+    allowed = ("title", "practice_area", "jurisdiction", "status", "sensitivity", "description")
     sets = {k: v for k, v in fields.items() if k in allowed and v is not None}
     extra = []
     if sets.get("status") in ("closed", "archived"):
@@ -260,6 +278,13 @@ def active_colleague(org_id: str, username: str) -> Optional[dict]:
         row = conn.execute("SELECT id, username FROM users WHERE username=? AND org_id=? AND COALESCE(status,'active')='active'",
                            ((username or "").strip(), org_id)).fetchone()
     return {"id": row[0], "username": row[1]} if row else None
+
+
+def walled_from_client(user_id: str, client_id: str) -> bool:
+    """`user_id` is screened from every matter of this client by an active ethical wall."""
+    with get_conn() as conn:
+        return bool(conn.execute(f"SELECT 1 FROM clients c WHERE c.id = :cid AND {_CLIENT_WALLED}",
+                                 {"cid": client_id, "uid": user_id}).fetchone())
 
 
 def bump_epochs(matter_ids: list[str] = (), client_ids: list[str] = ()) -> None:

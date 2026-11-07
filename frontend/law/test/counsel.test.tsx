@@ -78,7 +78,7 @@ describe('The chat home', () => {
     const pages = screen.getByRole('navigation', { name: 'This matter' });
     expect(within(pages).getAllByRole('link').map((a) => a.textContent)).toEqual(['Open M-101', 'Documents', 'Meetings', 'Drafting']);
     const rail = screen.getByRole('navigation', { name: 'Workspace' });            // the current matter's pages sit under Matters
-    expect(within(rail).getAllByRole('link').map((a) => a.textContent)).toEqual(['Chat', 'Matters', 'Documents', 'Transcription', 'Drafts', 'Activity']);
+    expect(within(rail).getAllByRole('link').map((a) => a.textContent)).toEqual(['Chat', 'Pipeline', 'Matters', 'Documents', 'Transcription', 'Drafts', 'Activity']);
     expect(within(rail).getByRole('link', { name: 'Documents of M-101' }).getAttribute('href')).toBe('/m/M-101/documents');
     expect(screen.getByRole('button', { name: 'Current matter: M-101 MSA renewal. Switch matter' })).toBeTruthy();
     expect(within(rail).getByRole('button', { name: 'New chat' })).toBeTruthy();

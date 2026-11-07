@@ -1619,12 +1619,13 @@ test('EchoMind Legal chat across two matters: chosen together, compared side by 
   // A second matter of her own, opened here: earlier journeys wall her off M-114, so the suite's order must not matter.
   const second = 'M-160';
   await alice.goto('/matters');
-  await alice.getByRole('button', { name: /New matter/ }).first().click();
-  const form = alice.getByRole('dialog', { name: 'New matter' });
-  await form.getByLabel('Client', { exact: true }).selectOption({ label: 'Voss-Lindqvist AB' });
-  await form.getByLabel('Matter number').fill(second);
-  await form.getByLabel('Title', { exact: true }).fill('Supply chain review');
-  await form.getByRole('button', { name: 'Open matter' }).click();
+  await alice.getByRole('link', { name: /New case/ }).first().click();
+  await alice.getByLabel('Client', { exact: true }).selectOption({ label: 'Voss-Lindqvist AB' });
+  await alice.getByLabel('Matter number').fill(second);
+  await alice.getByLabel('Title', { exact: true }).fill('Supply chain review');
+  await alice.getByRole('button', { name: /Next: people/ }).click();
+  await alice.getByRole('button', { name: /Open the matter/ }).click();
+  await alice.getByRole('button', { name: /Open the case/ }).click();
   await alice.waitForURL(`**/m/${second}/overview`);
   await alice.goto('/chat');
   await expect(alice.getByRole('heading', { name: 'How can I help?' })).toBeVisible();
@@ -1653,4 +1654,61 @@ test('EchoMind Legal chat across two matters: chosen together, compared side by 
   await ask('Build a chronology of events');
   await expect(alice.locator('[data-component="timeline"]').first()).toBeVisible({ timeout: 120_000 });
   await expect(alice.getByRole('navigation', { name: 'Recent conversations' }).getByText(`M-101 + ${second}`).first()).toBeVisible();
+});
+
+test('Case management: a new case with its team and the other side, its documents, an update, a stage move, the plan, the pipeline and the chat', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const alice = await (await browser.newContext()).newPage();
+  await signIn(alice, 'alice');
+  await alice.goto('/matters/new');
+  const number = `M-${400 + Math.floor(Math.random() * 500)}`;
+  await alice.getByLabel('Client', { exact: true }).selectOption({ label: 'Voss-Lindqvist AB' });
+  await alice.getByLabel('Matter number').fill(number);
+  await alice.getByLabel('Title', { exact: true }).fill('Distribution dispute (DEMO)');
+  await alice.getByLabel('Practice area').fill('Commercial litigation');
+  await expect(alice.getByLabel('Track')).toHaveValue('disputes');                         // suggested from the practice area
+  await alice.getByRole('button', { name: /Next: people/ }).click();
+  await alice.getByLabel('Add a colleague').selectOption('carol');
+  await alice.getByLabel('Party name').fill('Example Distributor plc (DEMO)');
+  await alice.getByRole('button', { name: /Add party/ }).click();
+  await alice.getByRole('button', { name: /Open the matter/ }).click();
+  await expect(alice.getByRole('heading', { name: `${number} is open` })).toBeVisible();
+  await alice.locator('input[aria-label="Choose files"]').setInputFiles([
+    { name: 'distribution-agreement.txt', mimeType: 'text/plain', buffer: Buffer.from('Distribution agreement (fictional demo). Term: two years from 1 March 2026.') },
+    { name: 'complaint-letter.txt', mimeType: 'text/plain', buffer: Buffer.from('Letter (fictional demo): the distributor complains of short deliveries in October 2026.') },
+    { name: 'tool.exe', mimeType: 'application/octet-stream', buffer: Buffer.from('MZ') }]);
+  await expect(alice.getByRole('status').filter({ hasText: /2 imported, 1 skipped/ })).toBeVisible({ timeout: 60_000 });
+  await alice.getByRole('button', { name: /Open the case/ }).click();
+  await alice.waitForURL(`**/m/${number}/overview`);
+  // an update, then the stage moved on: both in the updates log
+  await alice.getByRole('button', { name: /Post an update/ }).click();
+  const post = alice.getByRole('dialog', { name: 'Post an update' });
+  await post.getByLabel('What happened').selectOption('call');
+  await post.getByLabel('Update').fill('Client confirmed the short deliveries and wants a letter before claim.');
+  await post.getByRole('button', { name: 'Post', exact: true }).click();
+  const feed = alice.getByRole('list', { name: 'Updates' });
+  await expect(feed.getByText('Client confirmed the short deliveries and wants a letter before claim.')).toBeVisible();
+  await alice.getByRole('button', { name: /Move to Case assessment/ }).click();
+  await expect(alice.getByRole('list', { name: 'Disputes stages' }).locator('[aria-current="step"]')).toContainText('Case assessment');
+  await expect(feed.getByText('Moved from Intake & conflicts to Case assessment.')).toBeVisible();
+  // the stage's standard tasks, one ticked done
+  await alice.getByRole('button', { name: /Add the standard tasks for Case assessment/ }).click();
+  const tasks = alice.getByRole('list', { name: 'Case assessment tasks' });
+  await expect(tasks.getByText('Review the key documents')).toBeVisible();
+  await tasks.getByRole('checkbox', { name: 'Mark “Review the key documents” done' }).check();
+  await expect(tasks.getByText('Review the key documents')).toHaveCount(0);
+  // the pipeline shows it in its column
+  await alice.goto('/pipeline');
+  await alice.getByRole('tab', { name: /Disputes/ }).click();
+  await expect(alice.getByRole('region', { name: /^Case assessment:/ }).getByText('Distribution dispute (DEMO)')).toBeVisible();
+  // the chat says where it stands, from its own records
+  await alice.goto(`/m/${number}/overview`);
+  await alice.getByRole('navigation', { name: 'Matter' }).getByRole('button', { name: 'Chat about this matter' }).click();
+  const box = alice.getByRole('textbox', { name: 'Ask EchoMind' });
+  await box.fill("What's the latest on this case?");
+  await box.press('Enter');
+  const card = alice.locator('[data-component="case_status"]').first();
+  await expect(card).toBeVisible({ timeout: 60_000 });
+  await expect(card).toContainText('Client confirmed the short deliveries');
+  await expect(card).toContainText('Case assessment');
 });

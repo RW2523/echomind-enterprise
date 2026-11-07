@@ -8,7 +8,7 @@ import type {
   ComparisonSide, CouncilSummaryProps, DiscrepancyStatus, DocumentPreviewProps, Envelope, EvidenceComparisonProps, GraphExcerptProps,
   GuidedQuestion, GuidedQuestionsProps, LiveTranscriptProps, MatterRef, NoticeProps, NumericChartProps,
   CalculationProps, PriorityItem, PriorityListProps, ReviewEntry, SafeComponent, SourceAnswerProps, TaskProgressProps, TimelineEvent, TimelineProps, UiAction,
-  WorkingProps,
+  WorkingProps, CaseStatusProps, CaseUpdateItem, CaseTaskItem,
 } from './types';
 
 class Invalid extends Error {}
@@ -76,7 +76,7 @@ const PAGE = new RegExp(
   + '|documents/[A-Za-z0-9_-]{1,64}/read(?:\\?v=[A-Za-z0-9_-]{1,64}(?:&at=\\d{1,9}-\\d{1,9})?)?|documents/[A-Za-z0-9_-]{1,64}/definitions'
   + '|notes/[A-Za-z0-9_-]{1,64}|drafting/[A-Za-z0-9_-]{1,64}|meetings/[A-Za-z0-9_-]{1,64}(?:\\?tab=minutes)?'
   + '|redlines/[A-Za-z0-9_-]{1,64}|summaries/[A-Za-z0-9_-]{1,64}|exports/[A-Za-z0-9_-]{1,64}|panel(?:/[A-Za-z0-9_-]{1,64})?)$'
-  + '|^/(?:reviews|matters|drafts|activity)$');
+  + '|^/(?:reviews|matters|drafts|activity|pipeline)$');
 
 export const isWorkspacePath = (path: string | undefined): path is string => !!path && PAGE.test(path);
 
@@ -310,6 +310,36 @@ function checklist(v: unknown): ChecklistProps {
   };
 }
 
+const UPDATE_KINDS = ['note', 'call', 'meeting', 'filing', 'hearing', 'order', 'instruction', 'milestone', 'stage'] as const;
+const TASK_KINDS = ['task', 'key_date', 'hearing', 'filing'] as const;
+const isoDate = (v: unknown, what: string) => { const d = str(v, 10, what); if (!ISO.test(d)) throw new Invalid(what); return d; };
+
+function caseStatus(v: unknown): CaseStatusProps {
+  const o = obj(v, 'props');
+  const stages = list(o.stages, 8, 'stages', (x, i) => str(x, 60, `stages[${i}]`));
+  if (!stages.length) throw new Invalid('stages');
+  const index = int(o.stage_index, 'stage_index');
+  if (index >= stages.length) throw new Invalid('stage_index');
+  const due = (x: unknown) => (x === undefined || x === null ? undefined : isoDate(x, 'task.due_on'));
+  return {
+    summary: str(o.summary, 400, 'summary'), number: str(o.number, 40, 'number'), title: str(o.title, 200, 'title'),
+    track_label: str(o.track_label, 40, 'track_label'), stages, stage_index: index, days_in_stage: optInt(o.days_in_stage, 'days_in_stage'),
+    open_tasks: int(o.open_tasks, 'open_tasks'), overdue: int(o.overdue, 'overdue'), as_of: str(o.as_of, 40, 'as_of'),
+    can_post: bool(o.can_post, 'can_post'), path: page(o.path, 140, 'path'),
+    updates: list(o.updates, 5, 'updates', (x): CaseUpdateItem => {
+      const u = obj(x, 'update');
+      return { kind: oneOf(u.kind, UPDATE_KINDS, 'update.kind'), kind_label: str(u.kind_label, 30, 'update.kind_label'),
+               occurred_on: isoDate(u.occurred_on, 'update.occurred_on'), author: str(u.author, 80, 'update.author'),
+               text: str(u.text, 600, 'update.text'), document_title: optStr(u.document_title, 300, 'update.document_title') };
+    }),
+    tasks: list(o.tasks, 5, 'tasks', (x): CaseTaskItem => {
+      const t = obj(x, 'task');
+      return { title: str(t.title, 300, 'task.title'), kind: oneOf(t.kind, TASK_KINDS, 'task.kind'), due_on: due(t.due_on),
+               overdue: t.overdue === undefined ? false : bool(t.overdue, 'task.overdue'), assignee: optStr(t.assignee, 80, 'task.assignee') };
+    }),
+  };
+}
+
 function approvalRequest(v: unknown): ApprovalRequestProps {
   const o = obj(v, 'props');
   return {
@@ -469,6 +499,7 @@ export function parseComponent(v: unknown): SafeComponent {
       case 'numeric_chart': return { ...base, type: 'numeric_chart', props: numericChart(o.props) };
       case 'graph_excerpt': return { ...base, type: 'graph_excerpt', props: graphExcerpt(o.props) };
       case 'live_transcript': return { ...base, type: 'live_transcript', data_ref: str(o.data_ref, 40, 'data_ref'), props: liveTranscript(o.props) };
+      case 'case_status': return { ...base, type: 'case_status', props: caseStatus(o.props) };
       default: throw new Invalid(`unknown component type ${String(o.type).slice(0, 40)}`);
     }
   } catch (e) {

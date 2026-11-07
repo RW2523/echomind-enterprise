@@ -42,7 +42,7 @@ _PAGE = re.compile(
     r"|documents/[A-Za-z0-9_-]{1,64}/read(?:\?v=[A-Za-z0-9_-]{1,64}(?:&at=\d{1,9}-\d{1,9})?)?|documents/[A-Za-z0-9_-]{1,64}/definitions"
     r"|notes/[A-Za-z0-9_-]{1,64}|drafting/[A-Za-z0-9_-]{1,64}|meetings/[A-Za-z0-9_-]{1,64}(?:\?tab=minutes)?"
     r"|redlines/[A-Za-z0-9_-]{1,64}|summaries/[A-Za-z0-9_-]{1,64}|exports/[A-Za-z0-9_-]{1,64}|panel(?:/[A-Za-z0-9_-]{1,64})?)$"
-    r"|^/(?:reviews|matters|drafts|activity)$")
+    r"|^/(?:reviews|matters|drafts|activity|pipeline)$")
 
 
 class Strict(BaseModel):
@@ -368,6 +368,48 @@ class ChecklistProps(Strict):
         return self
 
 
+# ── case_status: where a matter stands, what happened lately, what is next (counsel/casestatus.py) ─
+class CaseUpdateItem(Strict):
+    kind: Literal["note", "call", "meeting", "filing", "hearing", "order", "instruction", "milestone", "stage"]
+    kind_label: text(30)
+    occurred_on: IsoDate
+    author: text(80)
+    text: text(600)                                       # what the person wrote (shortened), never model text
+    document_title: Optional[text(300)] = None
+
+
+class CaseTaskItem(Strict):
+    title: text(300)
+    kind: Literal["task", "key_date", "hearing", "filing"]
+    due_on: Optional[IsoDate] = None
+    overdue: bool = False
+    assignee: Optional[text(80)] = None
+
+
+class CaseStatusProps(Strict):
+    summary: text(400)
+    number: MatterNumber
+    title: text(200)
+    track_label: text(40)
+    stages: list[text(60)] = Field(min_length=1, max_length=8)
+    stage_index: int = Field(ge=0, le=7)
+    days_in_stage: Optional[int] = Field(default=None, ge=0)
+    updates: list[CaseUpdateItem] = Field(default_factory=list, max_length=5)
+    tasks: list[CaseTaskItem] = Field(default_factory=list, max_length=5)
+    open_tasks: int = Field(ge=0)
+    overdue: int = Field(ge=0)
+    as_of: text(40)
+    can_post: bool
+    path: text(140)                                       # the matter's overview, where updates and the plan are kept
+
+    @model_validator(mode="after")
+    def _paths(self):
+        _own_page(self.path, "the case link")
+        if self.stage_index >= len(self.stages):
+            raise ValueError("the stage is one of the track's stages")
+        return self
+
+
 # ── approval_request: drafts waiting for this person's decision (counsel/approvals.py) ─
 class ApprovalItem(Strict):
     artifact_id: Ident
@@ -668,13 +710,18 @@ class LiveTranscript(_Base):
     props: LiveTranscriptProps
 
 
+class CaseStatus(_Base):
+    type: Literal["case_status"]
+    props: CaseStatusProps
+
+
 Component = Annotated[Union[SourceAnswer, PriorityList, EvidenceComparison, Timeline, CaseTable, TaskProgress, Notice, Unavailable,
                             Checklist, ApprovalRequest, GuidedQuestions, DocumentPreview, CouncilSummary, NumericChart, GraphExcerpt,
-                            LiveTranscript],
+                            LiveTranscript, CaseStatus],
                       Field(discriminator="type")]
 COMPONENT_TYPES = ("source_answer", "priority_list", "evidence_comparison", "timeline", "case_table", "task_progress", "notice",
                    "unavailable", "checklist", "approval_request", "guided_questions", "document_preview", "council_summary",
-                   "numeric_chart", "graph_excerpt", "live_transcript")
+                   "numeric_chart", "graph_excerpt", "live_transcript", "case_status")
 # Components drawn from records that change (an obligation's state, a draft's newest version, a meeting): only a
 # reference is stored, and they are rebuilt from the records, as the reader may see them, every time they are shown.
 LIVE_TYPES = ("checklist", "approval_request", "document_preview", "council_summary", "live_transcript")

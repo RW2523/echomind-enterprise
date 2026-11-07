@@ -1,0 +1,14 @@
+DROP TRIGGER matter_task_events_no_delete;
+DROP TRIGGER matter_task_events_no_update;
+DROP INDEX ix_matter_task_events;
+DROP TABLE legal_matter_task_events;
+DROP INDEX ix_matter_tasks;
+DROP TABLE legal_matter_tasks;
+DROP TRIGGER matter_updates_no_delete;
+DROP TRIGGER matter_updates_append_only;
+DROP INDEX ix_matter_updates;
+DROP TABLE legal_matter_updates;
+ALTER TABLE matters DROP COLUMN stage_since;
+ALTER TABLE matters DROP COLUMN stage;
+ALTER TABLE matters DROP COLUMN track;
+ALTER TABLE matters DROP COLUMN description;

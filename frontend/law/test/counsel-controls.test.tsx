@@ -222,7 +222,7 @@ describe('The question box', () => {
     });
     renderLaw('/chat');
     fireEvent.click(await screen.findByRole('button', { name: /Choose documents/ }));
-    expect(await screen.findByRole('button', { name: 'Add a document to M-101…' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Add documents to M-101…' })).toBeTruthy();
     const file = new File(['Side letter text'], 'side-letter.txt', { type: 'text/plain' });
     fireEvent.change(screen.getByTestId('add-document-input'), { target: { files: [file] } });
     await waitFor(() => expect(calls.some((c) => c.path === '/api/legal/matters/id-M-101/documents/import')).toBe(true));
@@ -248,7 +248,7 @@ describe('The question box', () => {
     const calls = world({ 'GET /api/legal/matters/id-M-101/documents': () => docsList('indexed') });
     renderLaw('/chat');
     fireEvent.click(await screen.findByRole('button', { name: /Choose documents/ }));
-    await screen.findByRole('button', { name: 'Add a document to M-101…' });
+    await screen.findByRole('button', { name: 'Add documents to M-101…' });
     fireEvent.change(screen.getByTestId('add-document-input'), { target: { files: [new File(['x'], 'macro.xlsm')] } });
     expect(await screen.findByText('Only PDF, Word (.docx), text and Markdown files can be added.')).toBeTruthy();
     expect(calls.some((c) => c.path.endsWith('/documents/import'))).toBe(false);

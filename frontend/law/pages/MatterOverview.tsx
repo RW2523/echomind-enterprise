@@ -11,6 +11,7 @@ import { Dialog, EmptyState, ErrorNote, Field, MatterStatusPill, roleLabel, Sens
 import { useQueryClient } from '@tanstack/react-query';
 import { HoldNotice } from '../ui/records';
 import MatterGlance from '../counsel/MatterGlance';
+import { CasePlan, CaseUpdates, StageStepper } from '../ui/casework';
 
 export default function MatterOverview() {
   const matter = useMatter();
@@ -42,6 +43,7 @@ export default function MatterOverview() {
       <div className="lw-content" style={{ maxWidth: 1120 }}>
         <section className="lw-paper lw-sheet" aria-labelledby="matter-title" style={{ display: 'grid', gap: 18 }}>
           <h2 className="lw-h1" id="matter-title" style={{ margin: 0, fontSize: 22 }}>{matter.title}</h2>
+          {matter.description && <p style={{ margin: 0, whiteSpace: 'pre-line' }}>{matter.description}</p>}
           {matter.status !== 'open' && <p className="lw-meta" style={{ margin: 0 }}>This matter is {matter.status}. Its content can be read but not changed until it is reopened.</p>}
           {matter.on_hold && <HoldNotice />}
           {error && <ErrorNote>{error}</ErrorNote>}
@@ -49,6 +51,11 @@ export default function MatterOverview() {
             {rows.map(([k, v]) => (<React.Fragment key={k}><dt className="lw-meta" style={{ fontSize: 13 }}>{k}</dt><dd style={{ margin: 0 }}>{v}</dd></React.Fragment>))}
           </dl>
         </section>
+        <StageStepper matter={matter} />
+        <div className="lw-case-grid">
+          <CaseUpdates matter={matter} />
+          <CasePlan matter={matter} />
+        </div>
         <MatterGlance matter={matter} />
         <section aria-labelledby="matter-work" style={{ display: 'grid', gap: 10 }}>
           <h2 className="lw-h2" id="matter-work" style={{ padding: '0 4px' }}>Work on this matter</h2>
@@ -79,7 +86,8 @@ export default function MatterOverview() {
 }
 
 function EditMatterDialog({ matter, onClose }: { matter: Matter; onClose: () => void }) {
-  const [form, setForm] = useState({ title: matter.title, practice_area: matter.practice_area ?? '', jurisdiction: matter.jurisdiction ?? '', sensitivity: matter.sensitivity });
+  const [form, setForm] = useState({ title: matter.title, practice_area: matter.practice_area ?? '', jurisdiction: matter.jurisdiction ?? '', sensitivity: matter.sensitivity,
+                                     description: matter.description ?? '' });
   const [error, setError] = useState('');
   const save = useApiMutation(() => api.patch(`/api/legal/matters/${encodeURIComponent(matter.id)}`, { ...form, version: matter.version }), [keys.matters]);
   const submit = async (e: React.FormEvent) => {
@@ -94,6 +102,7 @@ function EditMatterDialog({ matter, onClose }: { matter: Matter; onClose: () => 
           <Field label="Practice area">{(id) => <input id={id} className="lw-input" value={form.practice_area} onChange={(e) => setForm({ ...form, practice_area: e.target.value })} />}</Field>
           <Field label="Jurisdiction">{(id) => <input id={id} className="lw-input" value={form.jurisdiction} onChange={(e) => setForm({ ...form, jurisdiction: e.target.value })} />}</Field>
         </div>
+        <Field label="What the case is about">{(id) => <textarea id={id} className="lw-input" rows={3} maxLength={2000} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />}</Field>
         <Field label="Sensitivity">{(id) => (
           <select id={id} className="lw-input" value={form.sensitivity} onChange={(e) => setForm({ ...form, sensitivity: e.target.value as Sensitivity })}>
             <option value="standard">Standard</option><option value="restricted">Restricted</option><option value="highly_restricted">Highly restricted</option>

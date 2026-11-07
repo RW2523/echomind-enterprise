@@ -190,6 +190,17 @@ export interface LiveTranscriptProps {
   path: string; caution: string;
 }
 
+// Case management (2026-11-07): where a matter stands, from its people's updates and plan; never model text.
+export interface CaseUpdateItem {
+  kind: 'note' | 'call' | 'meeting' | 'filing' | 'hearing' | 'order' | 'instruction' | 'milestone' | 'stage'; kind_label: string;
+  occurred_on: string; author: string; text: string; document_title?: string;
+}
+export interface CaseTaskItem { title: string; kind: 'task' | 'key_date' | 'hearing' | 'filing'; due_on?: string; overdue: boolean; assignee?: string }
+export interface CaseStatusProps {
+  summary: string; number: string; title: string; track_label: string; stages: string[]; stage_index: number; days_in_stage?: number;
+  updates: CaseUpdateItem[]; tasks: CaseTaskItem[]; open_tasks: number; overdue: number; as_of: string; can_post: boolean; path: string;
+}
+
 interface Base { id: string; version: number; matter_id?: string }
 export type SafeComponent =
   | (Base & { type: 'source_answer'; props: SourceAnswerProps })
@@ -208,6 +219,7 @@ export type SafeComponent =
   | (Base & { type: 'numeric_chart'; props: NumericChartProps })
   | (Base & { type: 'graph_excerpt'; props: GraphExcerptProps })
   | (Base & { type: 'live_transcript'; data_ref: string; props: LiveTranscriptProps })
+  | (Base & { type: 'case_status'; props: CaseStatusProps })
   /** Client-side only: a component that was unknown or did not validate. Rendered without any control. */
   | (Base & { type: 'inert'; reason: string });
 

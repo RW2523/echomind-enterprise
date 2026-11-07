@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { CouncilQuestion, AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, PanelReview, PanelView, RegulatoryFirmUpdate, RegulatoryMatch, SummaryVersion, TimeEntry, FirmUser, Matter, Membership, Me, SessionInfo, Wall } from './types';
+import type { CouncilQuestion, AuditPage, AuditVerification, BreakGlassRequest, Client, Connector, ConnectorLink, Deletion, LawExport, DocVersion, Hold, LabelState, LawDocument, MeetingDetail, ReaderData, RetentionPolicy, RetentionRun, MeetingSummary, ResearchTurn, ComparisonSummary, Segment, TranscriptData, AssistAlert, AssistState, AssistTelemetry, MinutesVersion, ArtifactView, ReviewQueue, EvaluationRun, FirmTemplate, DraftSummary, Playbook, PlaybookCheck, CitationCheck, DefinitionCheck, Obligation, DdChecklist, DdRunInfo, DdRunView, DirectoryMatter, IntakeCan, IntakeQuestion, IntakeSummary, IntakeView, MatterParty, PanelReview, PanelView, RegulatoryFirmUpdate, RegulatoryMatch, SummaryVersion, TimeEntry, FirmUser, Matter, Membership, Me, SessionInfo, Wall, CaseTask, CaseUpdate, Colleague, PipelineRow, TrackDef } from './types';
 
 /** Query keys. Everything about one matter lives under ['matter', id] so it can be dropped in one
  *  call when the person leaves that matter or loses access (no stale content in memory). */
@@ -31,11 +31,28 @@ export const keys = {
   export: (id: string, exportId: string) => ['matter', id, 'exports', exportId] as const,
   connectors: ['admin', 'connectors'] as const,
   links: (id: string) => ['matter', id, 'connector-links'] as const,
+  updates: (id: string) => ['matter', id, 'updates'] as const,
+  tasks: (id: string) => ['matter', id, 'tasks'] as const,
+  pipeline: ['pipeline'] as const,
+  tracks: ['pipeline', 'tracks'] as const,
 };
 
 export const useMe = (enabled = true) => useQuery({ queryKey: keys.me, queryFn: () => api.get<Me>('/api/auth/me'), retry: false, enabled });
 export const useMatters = () =>
   useQuery({ queryKey: keys.matters, queryFn: async () => (await api.get<{ matters: Matter[] }>('/api/legal/matters')).matters });
+export const useUpdates = (matterId: string) =>
+  useQuery({ queryKey: keys.updates(matterId),
+    queryFn: async () => (await api.get<{ updates: CaseUpdate[] }>(`/api/legal/matters/${encodeURIComponent(matterId)}/updates`)).updates });
+export const useTasks = (matterId: string) =>
+  useQuery({ queryKey: keys.tasks(matterId),
+    queryFn: async () => (await api.get<{ tasks: CaseTask[] }>(`/api/legal/matters/${encodeURIComponent(matterId)}/tasks`)).tasks });
+export const useTracks = () =>
+  useQuery({ queryKey: keys.tracks, staleTime: Infinity, queryFn: async () => (await api.get<{ tracks: TrackDef[] }>('/api/legal/pipeline/tracks')).tracks });
+export const usePipeline = (closed = false) =>
+  useQuery({ queryKey: [...keys.pipeline, closed], queryFn: () => api.get<{ matters: PipelineRow[]; tracks: TrackDef[] }>(`/api/legal/pipeline${closed ? '?closed=true' : ''}`) });
+export const useColleagues = (enabled = true) =>
+  useQuery({ queryKey: ['colleagues'], enabled, staleTime: 60_000,
+    queryFn: async () => (await api.get<{ colleagues: Colleague[] }>('/api/legal/colleagues')).colleagues });
 export const useClients = () =>
   useQuery({ queryKey: keys.clients, queryFn: async () => (await api.get<{ clients: Client[] }>('/api/legal/clients')).clients });
 export const useMemberships = (matterId: string) =>

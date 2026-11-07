@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarClock, ChevronRight, ClipboardCheck, Files, Scale } from 'lucide-react';
 import { ApiError } from '../api/client';
-import { useDocuments, useObligations, useReviews } from '../api/queries';
+import { useDocuments, useObligations, useReviews, useTasks } from '../api/queries';
 import type { Matter, Obligation } from '../api/types';
 import { counselApi } from './api';
 import { useChatMatter } from './context';
@@ -77,24 +77,31 @@ export function Issues({ matter }: { matter: Matter }) {
 
 export function Deadlines({ matter }: { matter: Matter }) {
   const q = useObligations(matter.id);
+  const plan = useTasks(matter.id);
   const base = `/m/${encodeURIComponent(matter.number)}/obligations`;
-  if (q.isError) return refused(q.error) ? null : <Panel icon={<CalendarClock aria-hidden />} title="Next deadlines" to={base} more="All obligations"><Failed what="The deadlines" /></Panel>;
-  const dated = (q.data?.obligations ?? []).filter((o) => o.due_date && o.status !== 'dismissed' && o.status !== 'done')
-    .sort((a, b) => Number(b.overdue) - Number(a.overdue) || (a.due_date ?? '').localeCompare(b.due_date ?? ''));
+  const overview = `/m/${encodeURIComponent(matter.number)}/overview`;
+  if (q.isError && plan.isError) return refused(q.error) ? null : <Panel icon={<CalendarClock aria-hidden />} title="Next deadlines" to={base} more="All obligations"><Failed what="The deadlines" /></Panel>;
+  // Two kinds of date, kept apart: those read from the documents (until a lawyer confirms them) and those a person entered in the plan.
+  const dated = [
+    ...(q.data?.obligations ?? []).filter((o) => o.due_date && o.status !== 'dismissed' && o.status !== 'done').map((o) => ({
+      id: `o-${o.id}`, due: o.due_date!, overdue: !!o.overdue, text: o.action, to: base,
+      tag: o.overdue ? 'Deadline' : o.status === 'confirmed' ? 'Confirmed by a lawyer' : 'Uncertain', label: o.overdue ? 'Overdue' : DUE_STATE[o.status] })),
+    ...(plan.data ?? []).filter((t) => t.due_on && t.status === 'open').map((t) => ({
+      id: `t-${t.id}`, due: t.due_on!, overdue: t.overdue, text: t.title, to: overview,
+      tag: t.overdue ? 'Deadline' : 'Confirmed by a lawyer', label: t.overdue ? 'Overdue' : `Plan · ${t.created_by_name}` })),
+  ].sort((a, b) => Number(b.overdue) - Number(a.overdue) || a.due.localeCompare(b.due));
   return (
     <Panel icon={<CalendarClock aria-hidden />} title="Next deadlines" to={base} more="All obligations">
-      {q.isPending ? <p className="qc-meta" style={{ margin: 0 }}>Loading…</p> : dated.length === 0 ? (
-        <p className="qc-meta" style={{ margin: 0 }}>No dated deadline is recorded. Obligations are read from the documents on the Obligations page.</p>
+      {q.isPending && plan.isPending ? <p className="qc-meta" style={{ margin: 0 }}>Loading…</p> : dated.length === 0 ? (
+        <p className="qc-meta" style={{ margin: 0 }}>No dated deadline is recorded. Obligations are read from the documents on the Obligations page; add your own dates to the plan.</p>
       ) : (
         <ul className="qc-glance-list">
           {dated.slice(0, 4).map((o) => (
             <li key={o.id}>
-              <Link className="qc-glance-row" to={base}>
-                <span className="qc-glance-date" data-overdue={o.overdue ? 'true' : undefined}>{day(o.due_date!)}</span>
-                <span className="qc-glance-main">{o.action}</span>
-                <span className="qc-tag" data-tag={o.overdue ? 'Deadline' : o.status === 'confirmed' ? 'Confirmed by a lawyer' : 'Uncertain'}>
-                  {o.overdue ? 'Overdue' : DUE_STATE[o.status]}
-                </span>
+              <Link className="qc-glance-row" to={o.to}>
+                <span className="qc-glance-date" data-overdue={o.overdue ? 'true' : undefined}>{day(o.due)}</span>
+                <span className="qc-glance-main">{o.text}</span>
+                <span className="qc-tag" data-tag={o.tag}>{o.label}</span>
               </Link>
             </li>
           ))}
