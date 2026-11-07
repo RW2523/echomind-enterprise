@@ -72,6 +72,7 @@ def test_a_sentence_its_passage_does_not_support_is_flagged_and_its_quote_stays_
     assert all(e["verification"] == "verbatim" for e in done["evidence"])           # the words are in the document
     sent = sp["model"].checks[-1][-1]["content"]
     assert "<passage>" in sent and "Customer may terminate" in sent and "Statement: Either party may terminate" in sent
+    assert sent.startswith("Question: Who may terminate the supply agreement")
 
 
 def test_a_condition_the_answer_leaves_out_is_reported_in_the_documents_own_words(sp):
@@ -97,7 +98,8 @@ def test_a_condition_the_answer_states_is_not_reported(sp):
     assert done["support"]["qualified"] == []
 
 
-def test_a_condition_the_model_made_up_is_no_condition_and_no_reply_changes_nothing(sp):
+def test_a_condition_the_model_names_is_not_taken_and_no_reply_changes_nothing(sp):
+    """Conditions come from the rule only: the model's own pick named a share count as a condition (2026-11-07)."""
     alice = as_user(sp, "alice")
     first = ask(alice, sp["mid"], "What is the liability cap?")
     n = n_of(first, "USD 250,000")
@@ -138,7 +140,7 @@ def test_verdict_lines_are_read_strictly():
     items = [("A.", "the Customer may terminate"), ("B.", "subject to clause 9.4"), ("C.", "x"), ("D.", "y")]
     got = support.read('<think>hmm</think>\n1: **NOT SUPPORTED** - says the Customer\n2: QUALIFIED: "subject to clause 9.4"\n'
                        "3. supported\nnine: SUPPORTED\n7: NOT SUPPORTED: out of range", items)
-    assert got[1]["verdict"] == "not_supported" and got[2] == {"verdict": "qualified", "words": "subject to clause 9.4"}
+    assert got[1]["verdict"] == "not_supported" and 2 not in got                  # a condition is the rule's to find
     assert got[3]["verdict"] == "supported" and 4 not in got and 7 not in got
 
 

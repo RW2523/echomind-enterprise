@@ -16,7 +16,7 @@ VERSION = "research-s2.9"          # S2.3: amending sources marked; S2.4: an acc
                                    # S2.6 (2026-11-03): the parties each source's document defines by a role; S2.7: given as
                                    # the document's own opening passage, not as an attribute; S2.8 (2026-11-04): a note for a
                                    # calculation and for a kind of document several share; S2.9 (2026-11-07): rule 6 asks
-                                   # for each part asked and nothing more, instead of "a few sentences"
+                                   # for each part asked, instead of "a few sentences"
 
 SYSTEM = (
     "You are a careful legal research assistant. You work only from the numbered sources below, which "
@@ -32,7 +32,7 @@ SYSTEM = (
     "5. Report what the documents say (\"Clause 8.1 provides that…\"). Do not call any statement true or "
     "false, and do not give legal conclusions as fact.\n"
     "6. Answer each part of the question: give every figure, date, total and party it asks for, and every item when it asks for "
-    "a list. Add nothing it does not ask for. Short paragraphs separated by a blank line, plain English.\n"
+    "a list. Short paragraphs separated by a blank line, plain English.\n"
     "7. A source with an amends attribute replaces or changes the clause it names in another source. When your answer relies on "
     "that clause, say that it was changed, give the wording now in force and, only if a source states it, from when; cite both "
     "sources. If the amending source is marked unsigned, say the change is not signed."

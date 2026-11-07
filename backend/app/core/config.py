@@ -334,7 +334,9 @@ class Settings(BaseSettings):
     # but acts only on hedged ones, recording the rest (evaluation); "off"
     LEGAL_RESEARCH_STATED_CHECK: str = os.getenv("LEGAL_RESEARCH_STATED_CHECK", "hedged").strip().lower()
     # Context added around what research found (research/routes._context, 2026-11-07): the rest of a clause cut by a passage's
-    # edge, definitions of terms the best passages use, a clause they are "subject to". "on" or "off".
+    # edge, definitions of terms the best passages use, a clause they are "subject to". "on" or "off". Off by default: on the
+    # demo's 165-question chat set it changed nothing beyond run noise (125 with it, 126 without, 127 before) and made answers
+    # slower, so it waits for a set where it helps.
     LEGAL_RESEARCH_CONTEXT: str = os.getenv("LEGAL_RESEARCH_CONTEXT", "off").strip().lower()
     # Whether each cited sentence is supported by the passage it quotes, and conditions it leaves out (research/support.py,
     # 2026-11-07): "on" flags them, "shadow" only reports them in the result, "off" skips the check.

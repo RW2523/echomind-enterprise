@@ -1011,7 +1011,10 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         # a sentence its passage does not support joins the sentences without a verified source; its quote stays verified.
         support = None
         if not abstained and settings.LEGAL_RESEARCH_SUPPORT_CHECK in ("on", "shadow"):
-            support = await supportmod.check([c for c in claims if _stands(c)], sources)
+            cited_docs = dict.fromkeys(sources[c.n - 1]["document_id"] for claim in claims for c in claim.citations if 1 <= c.n <= len(sources))
+            defined = [f'in "{titles.get(did) or did}", ' + ", ".join(f'"the {role}" is {name}' for name, role in roles[did])
+                       for did in cited_docs if roles.get(did)]
+            support = await supportmod.check([c for c in claims if _stands(c)], sources, question, defined)
             if support and settings.LEGAL_RESEARCH_SUPPORT_CHECK == "on":
                 unsupported = list(unsupported) + [x["sentence"] for x in support["not_supported"] if x["sentence"] not in unsupported]
         status, answer = _status(abstained, claims, unsupported, failed), text
