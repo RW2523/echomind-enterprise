@@ -550,17 +550,17 @@ def _draft(principal: dict, matter: dict, built: Built, request: str = "", docum
 def _deliberate(principal: dict, matter: dict, built: Built, request: str = "", document_ids: Optional[list[str]] = None) -> None:
     base = f"/m/{urlquote(matter['number'], safe='')}"
     if settings.LEGAL_PANEL and not policy.authorize(principal, "ai.draft", matter["id"]).allowed:
-        _notice(built, "Asking the review panel is for the matter's lawyers and paralegals. You can read its reviews on the panel page.",
-                actions=[{"id": "open_panel", "label": "Open the review panel", "action_type": "open_page", "path": f"{base}/panel"}],
-                summary="The review panel is for the matter's lawyers.")
+        _notice(built, "Asking the Council is for the matter's lawyers and paralegals. You can read its sessions on the Council page.",
+                actions=[{"id": "open_panel", "label": "Open the Council", "action_type": "open_page", "path": f"{base}/panel"}],
+                summary="The Council is for the matter's lawyers.")
     elif settings.LEGAL_PANEL:
         props, private = deliberation.form(matter, request, list(document_ids or []))
         built.add("guided_questions", props, list(document_ids or []), stored={**props, "_form": private})
-        built.summary = "Two questions before the panel starts."
+        built.summary = "Three questions before the Council starts."
     else:
-        _notice(built, "Testing an argument from several perspectives (the review panel) is not turned on for this firm. You can "
+        _notice(built, "Testing an argument from several perspectives (the Council) is not turned on for this firm. You can "
                        "still ask what the documents say for and against a point.",
-                summary="The review panel is not turned on.")
+                summary="The Council is not turned on.")
 
 
 _SMALLTALK = ("Ask about this matter's documents, for example: what a clause says, which dates or amounts the documents "
@@ -642,7 +642,7 @@ def form_values(props: dict, values: dict) -> dict:
 
 
 async def _answer_form(principal: dict, conv: dict, matter: dict, form: dict, built: Built):
-    """A guided form's answers: write the draft, or queue the review panel."""
+    """A guided form's answers: write the draft, or queue the Council (the review panel)."""
     comp, values = form["component"], form["values"]
     stored = comp["props"]
     private = stored.get("_form") or {}
@@ -665,7 +665,7 @@ async def _answer_form(principal: dict, conv: dict, matter: dict, form: dict, bu
         props = await run_in_threadpool(deliberation.summary, principal, target["id"], rid)
         built.add("council_summary", props, [], data_ref=True, stored={"review_id": rid},
                   matter_id=target["id"] if target["id"] != conv["matter_id"] else None)
-        built.summary = "The review panel is working on it."
+        built.summary = "The Council is working on it."
     else:
         raise TurnFailed(FAILED)
 

@@ -92,6 +92,12 @@ person chooses light or dark in the profile menu.
 - **Chronology**: date column, a rail of dots coloured by kind, filters (kind, matter) and a month chart that filters.
 - **Cases table**: sortable columns, each row opens its matter.
 - **Notes**: a tinted block with an icon; no thick coloured side borders.
+- **Council session** (2026-11-07): the discussion flow as a stepper (Question, Initial views, Challenge, Responses,
+  Synthesis; done in the accent, the current step in tab gold, skipped dashed with its reason), then four views as tabs:
+  Overview (the Council's view first, then the question in the centre with the perspectives around it), Discussion
+  (messages with gold citation chips), Evidence (documents, places, who used each) and Result (view, differences, facts
+  still missing, next steps for the plan, partner review). Perspectives are role icons in walnut discs with their names,
+  never faces; nothing is scored. Styles in `frontend/law/theme/council.css`.
 
 ## Words
 

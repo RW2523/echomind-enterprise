@@ -701,6 +701,11 @@
 .qc-conclusion { padding: 6px 12px; border-left: 3px solid var(--accent); }
 .qc-panel-table tbody th { width: 30%; }
 .qc-positions { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: 13.5px; }
+/* The Council card (2026-11-07): who sits on it, by initials and name (no faces), and the step a running one is on. */
+.qc-council-seats { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--ink-2); }
+.qc-council-seats li { display: inline-flex; align-items: center; gap: 6px; }
+.qc-council-seat { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--avatar-bg); color: var(--avatar-ink);
+  font-size: 10px; font-weight: 700; letter-spacing: .02em; flex: none; }
 .qc-hbars { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .qc-hbar { width: 100%; display: grid; grid-template-columns: minmax(96px, 22%) minmax(0, 1fr) minmax(0, 30%); align-items: center; gap: 10px; border: none;
   background: transparent; padding: 6px 4px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 13.5px; color: var(--ink); text-align: left; }

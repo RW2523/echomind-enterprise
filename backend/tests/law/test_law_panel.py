@@ -413,3 +413,97 @@ def test_the_chat_card_shows_the_conclusion_first(pn):
     assert props["conclusion"] == "The Supplier may terminate on a change of control." and props["outcome"] == "answered"
     assert props["points"] == ["Notice is enough under clause 14.2. (Risk and compliance)"] and props["gaps"] == ["Whether a sale is planned"]
     CouncilSummaryProps(**props)
+
+
+# ── The discussion flow (Council redesign, 2026-11-07) ───────────────────────────────────────────────────────────────────
+def _recording_steps(monkeypatch):
+    """Each step the run records, with what was stored in the review row at that moment."""
+    from app.core.db import get_conn
+    from app.legal.panel import run as runmod
+    seen, real = [], runmod._progress
+
+    def spy(rid, step, done=None):
+        real(rid, step, done)
+        with get_conn() as conn:
+            seen.append(json.loads(conn.execute("SELECT progress_json FROM legal_panel_reviews WHERE id=?", (rid,)).fetchone()[0]))
+    monkeypatch.setattr(runmod, "_progress", spy)
+    return seen
+
+
+def test_the_run_records_each_step_and_the_roles_that_finished_it_never_what_they_wrote(loose, monkeypatch):
+    pn = loose
+    seen = _recording_steps(monkeypatch)
+    pn["model"].objections = {"evidence": 'The answer misses that the Supplier may end the contract [n: "terminate this Agreement on written notice"].'}
+    v = ask(pn, question=ADVERSARIAL, depth="deep").json()
+    assert [(s["step"], s["done"]) for s in seen] == [
+        ("views", ["lead"]), ("views", ["lead", "opposing"]), ("views", ["lead", "opposing", "evidence"]),
+        ("views", ["lead", "opposing", "evidence", "specialist"]),
+        ("challenge", []), ("challenge", ["opposing"]), ("challenge", ["opposing", "evidence"]), ("reply", []), ("chair", [])]
+    assert all(set(s) == {"step", "done", "path", "at"} for s in seen)            # steps and roles only
+    assert seen[-1]["path"] == ["views", "challenge", "reply", "chair"]
+    stored = json.dumps(seen)
+    assert "USD 250,000" not in stored and "Supplier" not in stored and ADVERSARIAL not in stored
+    assert v["review"]["progress"]["step"] == "finished" and v["review"]["progress"]["done"] == []
+    assert v["review"]["progress"]["path"] == ["views", "challenge", "reply", "chair"]
+
+
+def test_a_focused_run_records_no_reply_and_an_inconclusive_one_stops_after_the_answers(loose, monkeypatch):
+    pn = loose
+    seen = _recording_steps(monkeypatch)
+    ask(pn, question=ADVERSARIAL)
+    assert [s["step"] for s in seen].count("reply") == 0 and seen[-1]["step"] == "chair"
+    seen.clear()
+    pn["model"].raw = {r: "The documents do not say.\n\nMISSING FACTS: none" for r in ("deal", "risk", "litigation")}
+    v = ask(pn).json()
+    assert {s["step"] for s in seen} == {"views"} and v["review"]["progress"]["step"] == "finished"
+    assert v["review"]["progress"]["path"] == ["views"]                            # no challenge, no chair: shown as skipped
+
+
+def test_giving_facts_starts_the_flow_again_and_a_failed_run_keeps_the_step_it_failed_at(pn, monkeypatch):
+    from app.legal.panel import run as runmod
+    pn["model"].missing = {"risk": "whether the sale has been announced", "litigation": "the date notice would be served"}
+    v = ask(pn).json()
+    alice = as_user(pn, "alice")
+    r = alice.post(f"{pn['base']}/panel/{v['review']['id']}/facts", headers=csrf_headers(alice),
+                   json={"facts": [{"question": "whether the sale has been announced", "answer": "Not yet."}]})
+    assert r.status_code == 200
+    queued = alice.get(f"{pn['base']}/panel/{v['review']['id']}").json()["review"]
+    assert queued["status"] == "queued" and queued["progress"] == {"step": None, "done": [], "path": [], "at": None}
+
+    async def broken(*a, **k):
+        raise RuntimeError("the chair could not be reached")
+    monkeypatch.setattr(runmod, "moderate", broken)
+    pn["model"].missing = {}
+    index_all()
+    failed = alice.get(f"{pn['base']}/panel/{v['review']['id']}").json()["review"]
+    assert failed["status"] == "failed" and failed["progress"]["step"] == "chair" and failed["progress"]["path"] == ["views", "challenge", "chair"]
+
+
+def test_the_progress_shown_is_a_known_step_and_known_roles_only():
+    from app.legal.panel.run import progress_of
+    roles = ["deal", "risk", "litigation", "specialist"]
+    assert progress_of('{"step": "views", "done": ["deal", "nobody", "deal"], "path": ["views", "lunch"], "at": "t"}', roles) == \
+        {"step": "views", "done": ["deal"], "path": ["views"], "at": "t"}
+    assert progress_of('{"step": "shouting", "done": ["deal"]}', roles) == {"step": None, "done": [], "path": [], "at": None}
+    assert progress_of("not json", roles) == {"step": None, "done": [], "path": [], "at": None}
+    assert progress_of("[1, 2]", roles) == {"step": None, "done": [], "path": [], "at": None}
+    assert progress_of('{"step": "finished", "done": ["deal"], "at": "t"}', roles)["done"] == []
+
+
+def test_the_chat_card_names_the_council_and_the_step_a_running_one_is_on(pn):
+    from app.core.db import get_conn
+    from app.legal.counsel import deliberation
+    from app.legal.counsel.schemas import CouncilSummaryProps
+    from app.legal.panel.run import progress_json
+    v = ask(pn).json()
+    rid, alice = v["review"]["id"], {"sub": pn["users"]["alice"]["id"]}
+    done = deliberation.summary(alice, pn["mid"], rid)
+    assert done["roles"] == ["Deal lawyer", "Risk and compliance", "Litigator", "Specialist (commercial contracts)"] and done["step"] is None
+    assert "Council page" in done["caution"]
+    with get_conn() as conn:
+        conn.execute("UPDATE legal_panel_reviews SET status='running', progress_json=? WHERE id=?", (progress_json("challenge", ["litigation"]), rid))
+        conn.commit()
+    running = deliberation.summary(alice, pn["mid"], rid)
+    assert running["status"] == "running" and running["step"] == "challenge"
+    CouncilSummaryProps(**running)
+    CouncilSummaryProps(**done)

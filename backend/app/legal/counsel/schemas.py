@@ -537,6 +537,9 @@ class CouncilSummaryProps(Strict):
     gaps: list[text(300)] = Field(default_factory=list, max_length=3)
     outcome: Optional[Literal["answered", "inconclusive", "stopped"]] = None
     figures_unsupported: list[text(40)] = Field(default_factory=list, max_length=6)
+    # the discussion flow (2026-11-07): who sits on this Council, and the step a running one is on (the run's own record)
+    roles: list[text(60)] = Field(default_factory=list, max_length=5)
+    step: Optional[Literal["views", "challenge", "reply", "chair"]] = None
 
     @model_validator(mode="after")
     def _paths(self):

@@ -424,6 +424,8 @@ function councilSummary(v: unknown): CouncilSummaryProps {
     gaps: o.gaps === undefined ? [] : list(o.gaps, 3, 'gaps', (x) => str(x, 300, 'gap')),
     outcome: o.outcome === undefined || o.outcome === null ? undefined : oneOf(o.outcome, ['answered', 'inconclusive', 'stopped'] as const, 'outcome'),
     figures_unsupported: o.figures_unsupported === undefined ? [] : list(o.figures_unsupported, 6, 'figures_unsupported', (x) => str(x, 40, 'figure')),
+    roles: o.roles === undefined ? [] : list(o.roles, 5, 'roles', (x) => str(x, 60, 'role')),
+    step: o.step === undefined || o.step === null ? undefined : oneOf(o.step, ['views', 'challenge', 'reply', 'chair'] as const, 'step'),
   };
 }
 

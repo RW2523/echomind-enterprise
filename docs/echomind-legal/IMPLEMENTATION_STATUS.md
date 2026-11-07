@@ -428,6 +428,31 @@ panel) and `LEGAL_DISCOVERY_DEADLINE_DAYS` (30).
 Not yet: model-checked conflict candidates in the background (iteration 4, with budgets and yielding to live work), and the
 chronology detectors (single-source and hedged dates). Backend suite **1688 passed**, 4 skipped; frontend **260 passed**.
 
+**The Council's interface, redesigned (2026-11-07).** The owner sent a reference image with six Council layouts and asked
+for the Council to be "more clear and clean". Built from the ideas the data supports, on its own branch until the owner
+decides. Existing code touched: `panel/run.py`, `panel/routes.py`, `counsel/deliberation.py`, `counsel/schemas.py`,
+`counsel/orchestrator.py` (wording), the two panel pages, the `council_summary` card and its validator; new
+`frontend/law/ui/council.tsx` and `frontend/law/theme/council.css`. Migration 0043 adds `progress_json` to
+`legal_panel_reviews`.
+
+| Built | How | Status | Evidence |
+|---|---|---|---|
+| The run records where it is | `progress_json`: the step (answers, challenge, reply, chair), the roles that have finished it and the steps passed through; never what anyone wrote (the answers stay in the artifact, under its visibility rules). Reset when facts are given; a failed run keeps the step it failed at | **Tested** | `test_the_run_records_each_step_and_the_roles_that_finished_it_never_what_they_wrote`, `test_a_focused_run_records_no_reply_and_an_inconclusive_one_stops_after_the_answers`, `test_giving_facts_starts_the_flow_again_and_a_failed_run_keeps_the_step_it_failed_at`, `test_the_progress_shown_is_a_known_step_and_known_roles_only` |
+| Discussion flow | A stepper on the session page: Question, Initial views ("2 of 4 answered"), Challenge, Responses, Synthesis. While the run works it follows the recorded step; once it ends it reads the stored result. A step the run did not take says why ("Not part of a focused run", "Skipped: fewer than two verified quotes", "Skipped: most perspectives said facts were missing", "Not needed: no objection cited anything new"); a stop or failure is shown at its step. Each step opens its part of the discussion | **Tested** | `panel.test.tsx` (flow cases); real runs on a private stack (screenshots) |
+| Overview | The Council's view first (the chair's sentence, or why there is none), then the question in the centre with the perspectives around it: role icon and name (never a face), what the role looks at (the run's own role description), its opening words (the first verified sentence of its answer, quoted), and facts about it: citations, "Objected to the … answer" / "No objection", "Says facts are missing", sentences without a source. While running, each seat says answered / answering now / waiting, and nothing it wrote is shown before the run ends | **Tested** | `panel.test.tsx` (axe clean) |
+| Discussion | Answers, objections, the reply and the chair in order, as messages. Each citation marker is a gold chip; one chip per source passage under each message; uncited sentences collapsed ("Cites nothing: 2 sentences"), as on answer cards | **Tested** | `panel.test.tsx` |
+| Cited passage | A chip opens the passage, read again from the document version on the server (the reader route, a recorded read), with the quoted words in gold, the verification in words, document, version, clause, page, who cited it, and "Open at the quote"; focus returns to the chip | **Tested** | `panel.test.tsx` |
+| Evidence | Each cited document, its cited places (clause, page, the quote) and which perspective used each (initial view, objection, reply); a quote inside another quote of the same version is one place; quotes not found are counted, never listed | **Tested** | `panel.test.tsx` |
+| Result | The Council's view with what matters most (supporting roles named), where they differ (one card per issue on which they differ, every position named; the whole matrix as a table under it), the facts still missing (the chair's gaps and the facts each perspective asked for), next steps, and the partner review that already existed | **Tested** | `panel.test.tsx` (axe clean) |
+| Next steps into the plan | Suggested by rule from what the run left open (gaps, facts asked for, figures in no answer: "Confirm whether …", "Check the figure … against the documents"). The person edits each and adds it with the case-plan route (`POST /legal/matters/{m}/tasks`), so it is a person's task; "In the plan" once there. Only for the matter's lawyers and paralegals on an open matter; others see the list | **Tested** | `panel.test.tsx` |
+| Council home | Ask form, the usual perspectives, how a session runs, questions found in the records, sessions with who sat on each and the step a running one is on | **Tested** | `panel.test.tsx` |
+| Chat card | "Council · area", who sits on it (initials and name), the step a running one is on ("Step 3 of 5 · Challenge …"); the server schema and the client validator both take `roles` and `step`; "review panel" wording in the chat now says "Council" | **Tested** | `counsel-cards.test.tsx`, `test_the_chat_card_names_the_council_and_the_step_a_running_one_is_on` |
+
+Not built from the reference, on purpose: the boardroom view (it needs people's faces), "Council settings" (there is nothing
+to set beyond the area and depth already asked), a running "2 min ago" feed (the answers are shown only once checked), and
+any confidence or "verified" badge. Keyboard: the views are WAI-ARIA tabs (arrows, Home, End), the steps and chips are
+buttons; at 390 px the stepper becomes a list and the round table a column.
+
 ## The whole RAG system evaluated again, and what it found fixed (2026-11-03)
 
 The owner asked for the RAG system to be evaluated again, end to end ("it should be smart and answer properly"). Two

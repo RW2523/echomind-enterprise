@@ -25,6 +25,10 @@ The Council (EchoMind Counsel Intelligence, iteration 1, owner's request 2026-11
 - the chair (the moderator) reads only verified sentences, and writes a one-sentence conclusion and at most three points
   as well as the matrix; a figure in them that no answer gave is flagged;
 - with fewer than two verified quotes in all, the run ends as inconclusive: no challenge, no chair, no conclusion.
+
+The discussion flow (2026-11-07): the run records where it has got to (`progress_json`: the step, and the roles that have
+finished it), so the Council page's stepper follows the run itself. Only steps and roles are kept there, never what anyone
+wrote; the answers stay in the review's artifact.
 """
 from __future__ import annotations
 
@@ -320,6 +324,43 @@ async def moderate(question: str, views: list[dict], facts: list[dict], challeng
 
 
 _NO_CHAIR = {"matrix": [], "missing_facts": [], "stop": False, "conclusion": None, "points": [], "gaps": [], "figures_unsupported": []}
+STEPS = ("views", "challenge", "reply", "chair")       # where a running Council can be (the page's discussion flow)
+
+
+def progress_json(step: str, done: Optional[list[str]] = None, path: Optional[list[str]] = None) -> str:
+    """step: where the run is; done: the roles that have finished that step; path: the steps it has been through, so a
+    skipped challenge or reply shows as skipped."""
+    return json.dumps({"step": step, "done": list(done or []), "path": list(path if path is not None else [step] if step in STEPS else []),
+                       "at": policy.now_iso()})
+
+
+def _path_to(raw: Optional[str], step: str) -> list[str]:
+    try:
+        path = [x for x in (json.loads(raw or "{}").get("path") or []) if x in STEPS]
+    except (ValueError, AttributeError):
+        path = []
+    return path + [step] if step in STEPS and (not path or path[-1] != step) else path
+
+
+def _progress(rid: str, step: str, done: Optional[list[str]] = None) -> None:
+    """Record the step the run is on and the roles that have finished it: never what they wrote (2026-11-07)."""
+    with get_conn() as conn:
+        row = conn.execute("SELECT progress_json FROM legal_panel_reviews WHERE id=?", (rid,)).fetchone()
+        conn.execute("UPDATE legal_panel_reviews SET progress_json=? WHERE id=?", (progress_json(step, done, _path_to(row[0] if row else None, step)), rid))
+        conn.commit()
+
+
+def progress_of(raw: Optional[str], roles: list[str]) -> dict:
+    """The stored progress as the page may show it: a known step, known roles and known steps only."""
+    try:
+        p = json.loads(raw or "{}")
+    except ValueError:
+        p = {}
+    p = p if isinstance(p, dict) else {}
+    step = p.get("step") if p.get("step") in (*STEPS, "finished") else None
+    done = [r for r in (p.get("done") or []) if r in roles] if step in STEPS else []
+    path = [x for x in (p.get("path") or []) if x in STEPS] if step else []
+    return {"step": step, "done": list(dict.fromkeys(done)), "path": list(dict.fromkeys(path)), "at": p.get("at") if step else None}
 
 
 async def run(job: dict) -> Optional[str]:
@@ -329,7 +370,7 @@ async def run(job: dict) -> Optional[str]:
                          "FROM legal_panel_reviews WHERE id=?", (rid,)).fetchone()
         if not r:
             return "no_review"
-        conn.execute("UPDATE legal_panel_reviews SET status='running' WHERE id=?", (rid,))
+        conn.execute("UPDATE legal_panel_reviews SET status='running', progress_json=? WHERE id=?", (progress_json("views"), rid))
         conn.commit()
     matter_id, question, specialist, facts_json, by, documents_json, roles_json, depth = r
     chosen = json.loads(documents_json or "[]") or None
@@ -349,16 +390,24 @@ async def run(job: dict) -> Optional[str]:
             views = [{"role": role, "label": label_of(role, area), "text": research_prompt.ABSTAIN, "evidence": [], "unsupported": [], "failed": [],
                       "missing_facts": [], "abstained": True} for role in roles]
         else:
-            views = [await perspective(role, LIBRARY[role][0], area, question, passages, sources, facts) for role in roles]
+            views = []
+            for role in roles:
+                views.append(await perspective(role, LIBRARY[role][0], area, question, passages, sources, facts))
+                _progress(rid, "views", [v["role"] for v in views])
             scopemod.recheck(scope)
             lacking = sum(1 for v in views if v["missing_facts"])
             if verified_count(views) >= MIN_VERIFIED:
                 if lacking < 3:                         # most lack facts: the panel will stop and ask, so nothing is challenged
-                    challenges = [await challenge(c, area, question, views[0], passages, sources, facts) for c in challengers(roles)]
+                    _progress(rid, "challenge")
+                    for c in challengers(roles):
+                        challenges.append(await challenge(c, area, question, views[0], passages, sources, facts))
+                        _progress(rid, "challenge", [x["role"] for x in challenges])
                     scopemod.recheck(scope)
                     if depth == "deep" and new_objections(challenges, views[0]):
+                        _progress(rid, "reply")
                         revised = await rebuttal(roles[0], area, question, views[0], challenges, passages, sources, facts)
                         scopemod.recheck(scope)
+                _progress(rid, "chair")
                 mod = await moderate(question, views, facts, challenges, revised)
         missing = unique_facts([m for v in views for m in v["missing_facts"]] + mod["missing_facts"])[:MAX_FACTS]   # what the lawyer can answer
         lacking = sum(1 for v in views if v["missing_facts"])
@@ -386,8 +435,11 @@ async def run(job: dict) -> Optional[str]:
         return "not_allowed"
     finally:
         with get_conn() as conn:
-            conn.execute("UPDATE legal_panel_reviews SET status=?, finished_at=?, artifact_id=COALESCE(?, artifact_id) WHERE id=?",
-                         (status, policy.now_iso(), artifact_id, rid))
+            row = conn.execute("SELECT progress_json FROM legal_panel_reviews WHERE id=?", (rid,)).fetchone()
+            # a finished run keeps the path it took; a failed one keeps the step it failed at
+            finished = progress_json("finished", path=_path_to(row[0] if row else None, "finished")) if status in ("done", "needs_facts") else None
+            conn.execute("UPDATE legal_panel_reviews SET status=?, finished_at=?, artifact_id=COALESCE(?, artifact_id), "
+                         "progress_json=COALESCE(?, progress_json) WHERE id=?", (status, policy.now_iso(), artifact_id, finished, rid))
             conn.commit()
 
 
