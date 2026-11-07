@@ -9,7 +9,7 @@ export interface Me {
   session: { auth: string; mfa_enrolled: boolean; must_change_password: boolean; idle_expires_at: number; abs_expires_at: number };
   features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean; panel?: boolean; conversation?: boolean; regulatory?: boolean; translation?: boolean; demo_signin?: boolean;
     /** Where the answer model runs, from its configured address (review P1): the interface claims no more than this. */
-    model_location?: 'this_server' | 'firm_network' | 'external' };
+    model_location?: 'this_server' | 'firm_network' | 'external'; network_mode?: 'disconnected' | 'restricted' };
 }
 export interface Client { id: string; name: string; code?: string | null; status: string; version: number; }
 export interface Matter {

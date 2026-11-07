@@ -3,6 +3,7 @@
 # backend container with `python -m app.legal.backup`, verified, and kept on the host outside the data volume.
 #   scripts/law/backup_pilot.sh                 # what the daily cron job runs
 #   scripts/law/backup_pilot.sh --restore-test  # also restores the new archive into a scratch folder and checks it
+#                                               # (done by itself every LAW_RESTORE_TEST_EVERY days, default 7)
 # Settings (environment): LAW_BACKUP_KEY_FILE (default ~/.echomind-law/backup.key, made once with
 #   docker exec echomind-law-backend python -m app.legal.backup keygen --out /tmp/k  and copied out, or this
 #   script's --keygen), LAW_BACKUP_DIR (default ~/echomind-law-backups), LAW_BACKUP_KEEP (newest archives kept, 14).
@@ -57,9 +58,18 @@ IN_SUM="$(docker exec "$C" sha256sum "$TMP/pilot.emlb" | cut -d' ' -f1)"
 FILES="$(python3 -c 'import json,sys; m=json.load(sys.stdin); print(m["files"], "files,", m["audit"]["events"], "audit events,", json.dumps(m["counts"]))' <<<"$CHECK")"
 log "backup $OUT ($(du -h "$OUT" | cut -f1), sha256 ${IN_SUM:0:16}…) verified: $FILES"
 
-if [[ "${1:-}" == "--restore-test" ]]; then
+# The restore test also runs by itself every LAW_RESTORE_TEST_EVERY days (default 7; 0 = only with the flag), so the daily
+# cron job proves an archive restores without anyone remembering to (2026-11-07 review point 8).
+EVERY="${LAW_RESTORE_TEST_EVERY:-7}"
+LAST_TEST="$(grep -h ' RESTORE-TEST OK' "$STATUS" 2>/dev/null | tail -1 | cut -d' ' -f1 || true)"
+DUE=0
+if [[ "$EVERY" -gt 0 ]]; then
+  if [[ -z "$LAST_TEST" ]] || (( $(date -u +%s) - $(date -u -d "$LAST_TEST" +%s 2>/dev/null || echo 0) >= EVERY * 86400 )); then DUE=1; fi
+fi
+if [[ "${1:-}" == "--restore-test" || "$DUE" == 1 ]]; then
   RESULT="$(docker exec "$C" python -m app.legal.backup restore --archive "$TMP/pilot.emlb" --key-file "$TMP/key" --target "$TMP/restored")"
   python3 -c 'import json,sys; r=json.load(sys.stdin); print("restore test: the restored database matches the archive:", r["files"], "files,", r["audit"]["events"], "audit events,", json.dumps(r["counts"]))' <<<"$RESULT"
+  echo "$(date -u +%FT%TZ) RESTORE-TEST OK $OUT" >> "$STATUS"
 fi
 
 if [[ -n "${LAW_BACKUP_OFFHOST_DIR:-}" ]]; then

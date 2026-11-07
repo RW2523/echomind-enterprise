@@ -10,7 +10,19 @@ export interface Where { label: string; chip: string; title: string; text: strin
 const RECORDED = 'Every question, source opened and decision is recorded in the audit trail.';
 const SCOPE = 'only from the documents of the matter you chose, and only those you may read.';
 
+// The deployment's network mode (2026-11-07): what the server itself may reach, as configured and checked at start-up.
+function network(me: Me): string {
+  if (me.features?.network_mode === 'disconnected') return ' This server connects to nothing outside your firm\'s network.';
+  if (me.features?.network_mode === 'restricted') return ' Your administrator allows a short list of outside services, such as public regulatory feeds.';
+  return '';
+}
+
 export function whereAnswersComeFrom(me: Me): Where {
+  const w = place(me);
+  return { ...w, text: w.text + network(me) };
+}
+
+function place(me: Me): Where {
   switch (me.features?.model_location) {
     case 'this_server':
       return { label: 'Private', chip: 'On this server', title: 'Answered on this server', external: false,

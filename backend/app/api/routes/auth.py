@@ -377,7 +377,7 @@ def _law_me(payload: dict) -> dict:
                          "panel": bool(settings.LEGAL_PANEL), "conversation": bool(settings.LEGAL_CONVERSATION),
                          "regulatory": bool(settings.LEGAL_REGULATORY), "translation": bool(settings.LEGAL_TRANSLATION),
                          "demo_signin": bool(settings.LEGAL_DEMO_SIGNIN),
-                         "model_location": _model_location()}}
+                         "model_location": _model_location(), "network_mode": settings.LEGAL_NETWORK_MODE}}
 
 
 def _model_location() -> str:

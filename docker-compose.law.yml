@@ -86,6 +86,8 @@ services:
       - LEGAL_CONVERSATION=${LAW_CONVERSATION:-0}
       # S4.4 (D-068): regulatory updates, imported from a bundle the host fetches (this container stays offline).
       - LEGAL_REGULATORY=${LAW_REGULATORY:-0}
+      - LEGAL_NETWORK_MODE=${LAW_NETWORK_MODE:-disconnected}
+      - LEGAL_EGRESS_ALLOWLIST=${LAW_EGRESS_ALLOWLIST:-}
       # OPT-02 (D-070): machine translation by the answer model already used (no new model).
       - LEGAL_TRANSLATION=${LAW_TRANSLATION:-0}
       # D-069: the audit trail to the firm's SIEM as syslog/CEF (udp://host:port or tcp://host:port). Empty = off.

@@ -29,6 +29,7 @@ fi
 "$ROOT/scripts/law/build_images.sh"
 NEW="$(git rev-parse --short HEAD)"
 for s in backend voice frontend; do docker image inspect "echomind-law-$s:$NEW" >/dev/null; done
+"$ROOT/scripts/law/verify_images.sh" "$NEW" || { echo "refusing: the images do not match their build manifest" >&2; exit 6; }
 OLD="$(sed -n 's/^LAW_BACKEND_IMAGE=echomind-law-backend://p' "$ENV_FILE")"
 
 running() { docker inspect --format '{{.State.Running}}' "$C" 2>/dev/null | grep -q true; }

@@ -57,6 +57,14 @@ def posture_inputs(settings=None, env: Optional[Mapping[str, str]] = None) -> di
         "LEGAL_DEMO_SIGNIN": bool(getattr(settings, "LEGAL_DEMO_SIGNIN", False)),
         "LEGAL_PROFILE": e.get("LEGAL_PROFILE", ""),
         "LEGAL_OIDC_ISSUER": getattr(settings, "LEGAL_OIDC_ISSUER", "") or "",
+        "LEGAL_MFA_REQUIRED": bool(getattr(settings, "LEGAL_MFA_REQUIRED", True)),
+        "LEGAL_NETWORK_MODE": getattr(settings, "LEGAL_NETWORK_MODE", "disconnected") or "disconnected",
+        "LEGAL_EGRESS_ALLOWLIST": getattr(settings, "LEGAL_EGRESS_ALLOWLIST", "") or "",
+        # every address the backend itself connects to
+        "ENDPOINTS": {"LLM_BASE_URL": settings.LLM_BASE_URL or "", "OLLAMA_EMBED_URL": settings.OLLAMA_EMBED_URL or "",
+                      "VOICE_TTS_URL": getattr(settings, "VOICE_TTS_URL", "") or "",
+                      "LEGAL_OIDC_ISSUER": getattr(settings, "LEGAL_OIDC_ISSUER", "") or "",
+                      "LEGAL_AUDIT_SYSLOG": getattr(settings, "LEGAL_AUDIT_SYSLOG", "") or ""},
     }
 
 
@@ -104,11 +112,45 @@ def posture_violations(inputs: Mapping) -> list[Violation]:
     if key_problem:
         out.append(Violation(*key_problem))
     out.extend(_demo_violations(inputs))
+    out.extend(network_violations(inputs))
+    # MFA (2026-11-07 review point 8): required for every account outside a demo instance with fictional data
+    if not inputs.get("LEGAL_MFA_REQUIRED", True) and str(inputs.get("LEGAL_PROFILE") or "").strip().lower() != "demo":
+        out.append(Violation("mfa_off", "LEGAL_MFA_REQUIRED must be 1 outside a demo instance"))
     admin_pw = str(inputs.get("AUTH_ADMIN_PASSWORD") or "")
     if admin_pw:
         from ..legal.identity.passwords import problems
         if problems(admin_pw, str(inputs.get("AUTH_ADMIN_USER") or "admin")):
             out.append(Violation("weak_admin_password", "AUTH_ADMIN_PASSWORD does not meet the Law password policy"))
+    return out
+
+
+NETWORK_MODES = ("disconnected", "restricted")
+
+
+def network_violations(inputs: Mapping) -> list[Violation]:
+    """The network mode (2026-11-07 review point 7). Every address the backend connects to must be this server or the firm's
+    private network; in "restricted" mode a host on LEGAL_EGRESS_ALLOWLIST may be outside it too. Regulatory feeds are
+    fetched by the host, never the backend, and only in restricted mode (scripts/law/regulatory_daily.sh)."""
+    from ..legal.model_location import _where
+    from urllib.parse import urlparse
+    mode = str(inputs.get("LEGAL_NETWORK_MODE") or "disconnected").strip().lower()
+    if mode not in NETWORK_MODES:
+        return [Violation("network_mode", f"LEGAL_NETWORK_MODE must be one of {', '.join(NETWORK_MODES)}")]
+    allowed = {h.strip().lower() for h in str(inputs.get("LEGAL_EGRESS_ALLOWLIST") or "").split(",") if h.strip()}
+    out = []
+    for name, url in (inputs.get("ENDPOINTS") or {}).items():
+        if not str(url or "").strip():
+            continue
+        if "://" not in str(url):                       # a syslog target may be host:port
+            url = f"tcp://{url}"
+        if _where(url) != "external":
+            continue
+        host = (urlparse(url).hostname or "").lower()
+        if mode == "restricted" and host in allowed:
+            continue
+        out.append(Violation("network_egress", f"{name} reaches {host or 'an unknown host'} outside this server and the firm's network: "
+                             + ("add it to LEGAL_EGRESS_ALLOWLIST" if mode == "restricted"
+                                else "allowed only with LEGAL_NETWORK_MODE=restricted and LEGAL_EGRESS_ALLOWLIST")))
     return out
 
 

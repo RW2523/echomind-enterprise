@@ -281,3 +281,33 @@ def test_tracebacks_keep_their_frames_but_not_the_message_in_law(monkeypatch):
     ContentRedactingFilter().filter(rec)
     text = logging.Formatter().format(rec)
     assert "Harrowgate" not in text and "ValueError: <" in text and "test_tracebacks_keep_their_frames" in text
+
+
+# ── Network modes and MFA (2026-11-07 review points 7 and 8) ──────────────────────
+def _net(**over):
+    from app.core.edition import posture_violations
+    endpoints = {"LLM_BASE_URL": "http://host.docker.internal:8355/v1", "OLLAMA_EMBED_URL": "http://127.0.0.1:11435/api/embeddings",
+                 "VOICE_TTS_URL": "http://voice:8000/speak", "LEGAL_OIDC_ISSUER": "", "LEGAL_AUDIT_SYSLOG": ""}
+    endpoints.update(over.pop("endpoints", {}))
+    return [v.code for v in posture_violations({**SECURE, "ENDPOINTS": endpoints, **over})]
+
+
+def test_disconnected_is_the_default_and_allows_only_this_server_and_the_firms_network():
+    assert _net() == []
+    assert _net(endpoints={"OLLAMA_EMBED_URL": "http://10.0.4.7:11435/api/embeddings", "LEGAL_AUDIT_SYSLOG": "tcp://192.168.1.20:514"}) == []
+    assert _net(endpoints={"LLM_BASE_URL": "https://api.example-ai.com/v1"}) == ["network_egress"]
+    assert _net(endpoints={"LEGAL_OIDC_ISSUER": "https://login.example.com/tenant"}) == ["network_egress"]
+    assert _net(endpoints={"LEGAL_AUDIT_SYSLOG": "siem.example.com:6514"}) == ["network_egress"]
+
+
+def test_restricted_allows_only_the_listed_hosts():
+    issuer = {"LEGAL_OIDC_ISSUER": "https://login.example.com/tenant"}
+    assert _net(endpoints=issuer, LEGAL_NETWORK_MODE="restricted", LEGAL_EGRESS_ALLOWLIST="login.example.com") == []
+    assert _net(endpoints=issuer, LEGAL_NETWORK_MODE="restricted", LEGAL_EGRESS_ALLOWLIST="other.example.com") == ["network_egress"]
+    assert _net(LEGAL_NETWORK_MODE="open") == ["network_mode"]
+
+
+def test_mfa_cannot_be_turned_off_outside_a_demo_instance():
+    assert _net(LEGAL_MFA_REQUIRED=False) == ["mfa_off"]
+    assert _net(LEGAL_MFA_REQUIRED=False, LEGAL_PROFILE="production") == ["mfa_off"]
+    assert "mfa_off" not in _net(LEGAL_MFA_REQUIRED=False, LEGAL_PROFILE="demo")

@@ -26,6 +26,16 @@ The pilot stack (D-066): `--base http://localhost:3110 --origin http://localhost
 reads the demo sign-ins through `docker exec`, `--users harper:M-301,sofia:M-302,...` gives each researcher their own
 matter, and `--stop-file PATH` ends every virtual user as soon as PATH exists (a watch on production writes it).
 
+The demo, or a private copy of it (2026-11-07 review point 11): `--demo-signin` uses one-click demo sign-in (alice researches
+and chats, carol searches), `--chat-users N` adds people asking the chat (time to the first text and to the checked answer),
+`--ingest` adds a document upload every few seconds (time until it is searchable), `--council` runs Council reviews back to
+back (time until each finishes or asks for facts), and the host is sampled every 2 s: GPU use (nvidia-smi), host CPU,
+available memory, and the CPU and memory of each container in --sample-containers.
+
+    python3 scripts/law/load_test.py --base http://127.0.0.1:8131 --origin http://127.0.0.1:8132 --demo-signin \
+        --container echomind-legal-next-api --research-users 1 --chat-users 2 --ingest --council --seconds 180 \
+        --sample-containers echomind-legal-next-api,echomind-trtllm --window-approved "<who, when>"
+
 The report goes to eval/law/reports/<time>-load-<smoke|t12>.json and .md.
 """
 from __future__ import annotations
@@ -52,6 +62,11 @@ FIXTURE = ROOT / "eval" / "fixtures" / "law" / "Master Services Agreement (DEMO)
 QUESTIONS = ["What is the cap on each party’s aggregate liability?", "When are invoices payable?",
              "How can either party terminate the agreement?", "Which law governs the agreement?"]
 SEARCHES = ["cap on aggregate liability", "termination for convenience", "governing law", "payment terms invoice"]
+CHAT = [("MAT-1042", "What is the overall cap on each party's liability?"), ("M-101", "When are invoices payable?"),
+        ("MAT-1042", "What's the latest on this case?"), ("MAT-1042", "Give me a chronology of the delivery, from dispatch to acceptance"),
+        ("M-101", "What does the agreement say about termination for convenience?"), ("MAT-1042", "Find conflicting dates or amounts")]
+NOTE = ("FILE NOTE (fictional, load test {k})\n\nAttendance note of a call with the client about the renewal timetable. The client "
+        "asked for the draft by Friday and confirmed the notice address. Reference LT-{k}-{tag}.\n")
 _LOOPBACK = {"127.0.0.1", "localhost", "::1"}
 
 
@@ -85,6 +100,11 @@ class Session:
         self._keep(r)
         return r
 
+    async def demo(self, name: str) -> None:
+        r = await self.request("POST", f"/api/auth/demo/{name}")
+        if r.status_code != 200:
+            raise SystemExit(f"one-click sign-in as {name} refused: {r.status_code}")
+
     async def sign_in(self, name: str, creds: dict) -> None:
         r = await self.request("POST", "/api/auth/login", json={"username": name, "password": creds["password"]})
         r.raise_for_status()
@@ -103,6 +123,10 @@ class Stats:
         self.busy = 0
         self.rss_mb: list[float] = []
         self.last_error: dict[str, str] = {}
+        self.samples: dict[str, list[float]] = {}
+
+    def sample(self, name: str, value: float) -> None:
+        self.samples.setdefault(name, []).append(value)
 
     def ok(self, op: str, seconds: float) -> None:
         self.lat.setdefault(op, []).append(seconds)
@@ -192,6 +216,115 @@ async def capture(s: Session, mid: str, meeting: str, stats: Stats, until: float
         stats.bad("capture", repr(e))
 
 
+async def chat(s: Session, ids: dict, stats: Stats, until: float, n: int) -> None:
+    """One question per new conversation (no follow-up rewriting): time to the first streamed text and to the end."""
+    i = n
+    while running(until):
+        number, q = CHAT[i % len(CHAT)]
+        i += 1
+        t0, first = time.monotonic(), None
+        try:
+            conv = (await s.request("POST", "/api/legal/counsel/conversations", json={"matter_id": ids[number]})).json()["conversation"]["id"]
+            t0 = time.monotonic()
+            end = None
+            async with s.http.stream("POST", f"/api/legal/counsel/conversations/{conv}/turns", json={"text": q},
+                                     headers=s._headers(True)) as r:
+                async for line in r.aiter_lines():
+                    if not line.strip():
+                        continue
+                    ev = json.loads(line).get("event")
+                    if first is None and ev in ("answer.delta", "ui.partial", "ui.final"):
+                        first = time.monotonic() - t0
+                    if ev in ("turn.completed", "turn.abstained", "turn.failed", "scope_revoked"):
+                        end = ev
+            if end in ("turn.completed", "turn.abstained"):
+                stats.ok("chat_answer", time.monotonic() - t0)
+                if first is not None:
+                    stats.ok("chat_first_text", first)
+            else:
+                stats.bad("chat_answer", str(end))
+        except Exception as e:                                  # noqa: BLE001
+            stats.bad("chat_answer", repr(e))
+
+
+async def ingest(s: Session, mid: str, stats: Stats, until: float) -> None:
+    """A fictional file note uploaded, then waited for until it is read and searchable."""
+    k = 0
+    while running(until):
+        k += 1
+        t0 = time.monotonic()
+        try:
+            body = NOTE.format(k=k, tag=hashlib.sha256(f"{time.time()}{k}".encode()).hexdigest()[:10]).encode()
+            r = await s.request("POST", f"/api/legal/matters/{mid}/documents/import", data={"kind": "note", "status": "final",
+                                "title": f"Load test file note {k} (fictional)"}, files={"file": (f"load-note-{k}.txt", body, "text/plain")})
+            r.raise_for_status()
+            doc = r.json()["document"]["id"]
+            for _ in range(600):
+                d = (await s.request("GET", f"/api/legal/matters/{mid}/documents/{doc}")).json()["document"]
+                if d["current_version"]["index_status"] in ("indexed", "failed"):
+                    break
+                await asyncio.sleep(0.5)
+            if d["current_version"]["index_status"] == "indexed":
+                stats.ok("document_ready", time.monotonic() - t0)
+            else:
+                stats.bad("document_ready", d["current_version"]["index_status"])
+        except Exception as e:                                  # noqa: BLE001
+            stats.bad("document_ready", repr(e))
+        await asyncio.sleep(5)
+
+
+async def council(s: Session, mid: str, stats: Stats, until: float) -> None:
+    """Council reviews one after another: time until each is done or asks for facts."""
+    while running(until):
+        t0 = time.monotonic()
+        try:
+            r = await s.request("POST", f"/api/legal/matters/{mid}/panel", json={
+                "question": "Is the Supplier exposed to liability beyond the cap for the late delivery?", "specialist": "commercial"})
+            r.raise_for_status()
+            rid = r.json()["review"]["id"]
+            status = "queued"
+            while status in ("queued", "running") and time.monotonic() - t0 < 900:
+                await asyncio.sleep(3)
+                status = (await s.request("GET", f"/api/legal/matters/{mid}/panel/{rid}")).json()["review"]["status"]
+            if status in ("done", "needs_facts"):
+                stats.ok("council_review", time.monotonic() - t0)
+            else:
+                stats.bad("council_review", status)
+        except Exception as e:                                  # noqa: BLE001
+            stats.bad("council_review", repr(e))
+
+
+def _cpu() -> tuple[int, int]:
+    f = [int(x) for x in Path("/proc/stat").read_text().splitlines()[0].split()[1:]]
+    return sum(f), f[3] + f[4]                                 # total, idle + iowait
+
+
+async def sampler(stats: Stats, until: float, containers: list[str]) -> None:
+    """The host every 2 s: GPU use, CPU, available memory; each named container's CPU and memory every third sample."""
+    last, k = _cpu(), 0
+    while running(until):
+        await asyncio.sleep(2)
+        k += 1
+        total, idle = _cpu()
+        if total > last[0]:
+            stats.sample("host_cpu_pct", round(100 * (1 - (idle - last[1]) / (total - last[0])), 1))
+        last = (total, idle)
+        mem = {x.split(":")[0]: int(x.split()[1]) for x in Path("/proc/meminfo").read_text().splitlines() if ":" in x}
+        stats.sample("host_mem_available_gb", round(mem.get("MemAvailable", 0) / 2**20, 1))
+        out = await asyncio.to_thread(subprocess.run, ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
+                                      capture_output=True, text=True)
+        if out.stdout.strip().split("\n")[0].strip().isdigit():
+            stats.sample("gpu_util_pct", float(out.stdout.strip().split("\n")[0]))
+        if containers and k % 3 == 0:
+            out = await asyncio.to_thread(subprocess.run, ["docker", "stats", "--no-stream", "--format", "{{.Name}} {{.CPUPerc}} {{.MemUsage}}",
+                                                           *containers], capture_output=True, text=True)
+            for line in out.stdout.splitlines():
+                m = re.match(r"(\S+) ([\d.]+)% ([\d.]+)(MiB|GiB)", line)
+                if m:
+                    stats.sample(f"{m.group(1)}_cpu_pct", float(m.group(2)))
+                    stats.sample(f"{m.group(1)}_mem_gb", round(float(m.group(3)) / (1024 if m.group(4) == "MiB" else 1), 2))
+
+
 def backend_pid(port: int) -> int | None:
     out = subprocess.run(["ss", "-ltnp"], capture_output=True, text=True).stdout
     m = re.search(rf":{port}\s.*?pid=(\d+)", out)
@@ -249,18 +382,25 @@ async def run(args) -> int:
         raise SystemExit("a measured run shares the host's models with production: pass --window-approved \"<who, when>\" (🔒), or --smoke")
     seconds = min(args.seconds, 30) if args.smoke else args.seconds
     research_users = 1 if args.smoke else args.research_users
-    if args.container:                                      # the pilot: sign-ins read through docker exec, never written out
+    if args.demo_signin:
+        creds = {}
+    elif args.container:                                    # the pilot: sign-ins read through docker exec, never written out
         creds = json.loads(subprocess.run(["docker", "exec", args.container, "cat", "/data/legal/demo_credentials.json"],
                                           check=True, capture_output=True, text=True).stdout)
     else:
         creds = json.loads((Path(args.data) / "legal" / "demo_credentials.json").read_text())
-    pairs = [tuple(x.split(":", 1)) for x in args.users.split(",") if x] if args.users else \
-        [(n, args.matter) for n in ["alice", "nakamura"][:research_users]]   # the M-101 members who research (carol searches)
+    if args.demo_signin:                                    # one-click people: alice researches and chats, carol searches
+        pairs = [(f"alice#{i}", args.matter) for i in range(research_users)]
+    else:
+        pairs = [tuple(x.split(":", 1)) for x in args.users.split(",") if x] if args.users else \
+            [(n, args.matter) for n in ["alice", "nakamura"][:research_users]]   # the M-101 members who research (carol searches)
     research_users = len(pairs)
     sessions = {}
-    for name in dict.fromkeys([n for n, _ in pairs] + ["carol", "alice"]):
+    chatters = [f"alice~{i}" for i in range(args.chat_users)]
+    for name in dict.fromkeys([n for n, _ in pairs] + ["carol", "alice"] + chatters + (["alice!council"] if args.council else [])):
         sessions[name] = Session(args.base, args.origin)
-        await sessions[name].sign_in(name, creds[name])
+        person = re.split(r"[#~!]", name)[0]
+        await (sessions[name].demo(person) if args.demo_signin else sessions[name].sign_in(person, creds[person]))
     mid, meeting = await setup(sessions["alice"], args.matter)
     ids = {m["number"]: m["id"] for n in dict.fromkeys(n for n, _ in pairs)
            for m in (await sessions[n].request("GET", "/api/legal/matters")).json()["matters"]}
@@ -270,6 +410,14 @@ async def run(args) -> int:
         memory(backend_pid(urllib.parse.urlparse(args.base).port or 80), stats, until)
     tasks = [research(sessions[n], ids[num], stats, until, i) for i, (n, num) in enumerate(pairs)]
     tasks += [search(sessions["carol"], mid, stats, until), capture(sessions["alice"], mid, meeting, stats, until), watch]
+    if chatters:
+        every = {m["number"]: m["id"] for m in (await sessions[chatters[0]].request("GET", "/api/legal/matters")).json()["matters"]}
+        tasks += [chat(sessions[c], every, stats, until, i) for i, c in enumerate(chatters)]
+    if args.ingest:
+        tasks.append(ingest(sessions["alice"], mid, stats, until))
+    if args.council:
+        tasks.append(council(sessions["alice!council"], mid, stats, until))
+    tasks.append(sampler(stats, until, [c for c in args.sample_containers.split(",") if c]))
     started = time.strftime("%Y%m%d-%H%M%S")
     await asyncio.gather(*tasks)
     for s in sessions.values():
@@ -280,7 +428,9 @@ async def run(args) -> int:
                "stopped_early": bool(STOP and Path(STOP[0]).exists()), "operations": ops, "failures": stats.fail, "last_error": stats.last_error,
                "database_busy": stats.busy, "capture_frames": int(sum(stats.lat.get("capture_frames", []))),
                "backend_rss_mb_max": max(stats.rss_mb) if stats.rss_mb else None,
-               "backend_rss_mb_start": stats.rss_mb[0] if stats.rss_mb else None}
+               "backend_rss_mb_start": stats.rss_mb[0] if stats.rss_mb else None,
+               "chat_users": args.chat_users, "ingest": args.ingest, "council": args.council,
+               "system": {k: {"n": len(v), "p50": pct(v, .5), "p95": pct(v, .95), "max": max(v)} for k, v in stats.samples.items()}}
     kind = "smoke" if args.smoke else "t12"
     stamp = time.strftime("%Y%m%d-%H%M%S")
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
@@ -294,7 +444,11 @@ async def run(args) -> int:
     md += [f"| {op} | {v['n']} | {v['p50_s']} | {v['p95_s']} | {v['max_s']} |" for op, v in ops.items()]
     md += ["", f"- Failures: {stats.fail or 'none'}", f"- Database busy: {stats.busy}",
            f"- Capture frames streamed: {summary['capture_frames']}",
-           f"- Backend memory (RSS): {summary['backend_rss_mb_start']} → max {summary['backend_rss_mb_max']} MB"]
+           f"- Backend memory (RSS): {summary['backend_rss_mb_start']} → max {summary['backend_rss_mb_max']} MB",
+           f"- Chat users: {args.chat_users}; document uploads: {'yes' if args.ingest else 'no'}; Council: {'yes' if args.council else 'no'}"]
+    if summary["system"]:
+        md += ["", "| Host and containers (sampled) | n | p50 | p95 | max |", "|---|---|---|---|---|"]
+        md += [f"| {k} | {v['n']} | {v['p50']} | {v['p95']} | {v['max']} |" for k, v in summary["system"].items()]
     out.with_suffix(".md").write_text("\n".join(md) + "\n")
     print(json.dumps(summary))
     print(f"report: eval/law/reports/{out.name}")
@@ -314,6 +468,11 @@ def main() -> int:
     ap.add_argument("--container", default="", help="read the demo sign-ins from this backend container (the pilot)")
     ap.add_argument("--users", default="", help="researchers and their matters: name:M-101,name:M-301,...")
     ap.add_argument("--stop-file", default="", help="end the run as soon as this file exists")
+    ap.add_argument("--demo-signin", action="store_true", help="one-click demo sign-in (the demo or a private copy of it)")
+    ap.add_argument("--chat-users", type=int, default=0, help="people asking the chat at once")
+    ap.add_argument("--ingest", action="store_true", help="upload a fictional note every few seconds, timed until searchable")
+    ap.add_argument("--council", action="store_true", help="run Council reviews back to back")
+    ap.add_argument("--sample-containers", default="", help="containers whose CPU and memory are sampled (comma-separated)")
     return asyncio.run(run(ap.parse_args()))
 
 

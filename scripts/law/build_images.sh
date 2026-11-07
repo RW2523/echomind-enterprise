@@ -29,4 +29,17 @@ for svc in backend voice frontend; do
   docker build -f "$ROOT/$svc/Dockerfile.law" "${extra[@]}" --build-arg BUILD_COMMIT="$COMMIT" \
     -t "echomind-law-$svc:$COMMIT" -t "echomind-law-$svc:latest" "$CTX"
 done
-echo "built echomind-law-backend:$COMMIT echomind-law-voice:$COMMIT echomind-law-frontend:$COMMIT"
+# The manifest (2026-11-07 review point 8): each image's id and the base image it was built on, with a SHA-256 of the list,
+# kept outside the repository; scripts/law/verify_images.sh checks running tags against it before a deploy uses them.
+MAN="${LAW_IMAGE_MANIFESTS:-$HOME/.echomind-law-images}"
+mkdir -p -m 700 "$MAN"
+{
+  echo "commit $COMMIT $(git rev-parse HEAD)"
+  for svc in backend voice frontend; do
+    base="$(sed -n 's/^ARG BASE_IMAGE=//p' "$ROOT/$svc/Dockerfile.law" | head -1)"
+    echo "image echomind-law-$svc:$COMMIT $(docker image inspect -f '{{.Id}}' "echomind-law-$svc:$COMMIT")"
+    echo "base $base $(docker image inspect -f '{{.Id}}' "$base")"
+  done
+} > "$MAN/$COMMIT.txt"
+(cd "$MAN" && sha256sum "$COMMIT.txt" > "$COMMIT.txt.sha256")
+echo "built echomind-law-backend:$COMMIT echomind-law-voice:$COMMIT echomind-law-frontend:$COMMIT (manifest $MAN/$COMMIT.txt)"
