@@ -443,10 +443,15 @@ def _located(passages: list[dict], query: str = "") -> list[dict]:
 
 
 async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Iterable[str] = ALL_MODES,
-                 versions: str = "signed", documents: Optional[list[str]] = None, floor: bool = True, wide: bool = False) -> dict:
+                 versions: str = "signed", documents: Optional[list[str]] = None, floor: bool = True, wide: bool = False,
+                 diagnostics: Optional[dict] = None) -> dict:
     """floor=False keeps windows below LEGAL_RERANK_MIN_SCORE: for callers that check every value against its
     quote (drafting, s3.1d) rather than abstain, a short document's one window must not be dropped. wide=True gives each
-    passage whole (up to WIDE_CHARS around its best window) for a model to read."""
+    passage whole (up to WIDE_CHARS around its best window) for a model to read.
+
+    diagnostics (eval/law/run_retrieval_eval.py, 2026-11-07): a dict filled with each stage's ranking of passage ids (each
+    channel, the fusion, the reranked order before and after the floor) so an evaluation can tell where a passage was lost.
+    It changes nothing about the result."""
     recheck(scope)                                    # raises TypeError for anything but a real scope
     query = spelled_out(query)
     modes = [m for m in modes if m in ALL_MODES] or list(ALL_MODES)
@@ -461,7 +466,8 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
         rankings.append(idx.search_sparse(query, n))
     if "keyword" in modes:
         rankings.append(_keyword(scope.matter_id, query, n))
-    hits = _load(scope.matter_id, _fuse(rankings)[:n], scope.principal_id, versions if versions in ("signed", "current") else "signed",
+    fused = _fuse(rankings)[:n]
+    hits = _load(scope.matter_id, fused, scope.principal_id, versions if versions in ("signed", "current") else "signed",
                  documents)
     subs = _windowed(hits)
     scored = await rerank(query, subs, len(subs)) if subs else []
@@ -469,9 +475,25 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
     for h in scored:                                  # best window of each passage, in score order
         best.setdefault(h["chunk_id"], h)
     ranked = list(best.values())
+    if diagnostics is not None:
+        diagnostics.update({mode: [cid for cid, _ in r] for mode, r in zip([m for m in ALL_MODES if m in modes], rankings)})
+        diagnostics.update(fused=fused, loaded=[h["chunk_id"] for h in hits],
+                           reranked=[(h["chunk_id"], float(h["score"])) for h in ranked])
     if floor and ranked and ranked[0].get("score_kind") == "ce_logit":
         ranked = [h for h in ranked if float(h["score"]) >= settings.LEGAL_RERANK_MIN_SCORE]
+    # The order: the cross-encoder's fused with BM25's (2026-11-07, eval/law/run_retrieval_eval.py on the demo's 165 questions:
+    # the cross-encoder alone put the evidence lower than BM25 alone did, Recall@5 0.574 against 0.618, MRR@10 0.457 against
+    # 0.553; fusing the two ranks gave 0.631 and 0.532). Scores stay the cross-encoder's, so the floor and the weak-answer
+    # checks read them as before; only which passages come first changes.
+    if settings.LEGAL_RERANK_FUSION == "sparse" and "sparse" in modes and len(ranked) > 1:
+        sparse = rankings[[m for m in ALL_MODES if m in modes].index("sparse")]
+        place = {cid: i for i, (cid, _) in enumerate(c for c in sparse if c[0] in best)}
+        last = len(place)
+        ce_rank = {h["chunk_id"]: i for i, h in enumerate(ranked)}
+        ranked.sort(key=lambda h: -(1 / (_RRF_K + place.get(h["chunk_id"], last) + 1) + 1 / (_RRF_K + ce_rank[h["chunk_id"]] + 1)))
     top = ranked[:k]
+    if diagnostics is not None:
+        diagnostics["final"] = [h["chunk_id"] for h in top]
     if wide:
         policy = versions if versions in ("signed", "current") else "signed"
         top = [_continued(scope, h, policy, documents) for h in top]
