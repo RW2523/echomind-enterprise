@@ -527,8 +527,45 @@ its document (59 + 34 items), plus the 72 items of the M-301 … M-306 sets.
 72). 12 items fixed, 8 lost; the 8 rerun or read as run-to-run variance of the model (calculations, a signer named from the
 email instead of the amendment), so the overall gain is within it. By kind: facts 38 / 45, not stated 17 / 21, role-party 16
 / 22, conflicts 6 → 9 / 14, calculations 9 / 16, cross-document 9 / 16, follow-ups 7 / 12, lists 4 / 9, amendments 1 / 4,
-definitions 0 / 2, chronology 0 / 2. **After the definitions and fee fixes** (rows above; M-101, M-114, MAT-1042 again, 93 items): 60 → 65 / 93 (M-101 22 / 29, M-114 19 / 30, MAT-1042 24 / 34); the definitions check and the fee question now pass; "Which price applies?" gives both definitions and says the document is ambiguous. **Not done:** the chronology card's ISO dates fail the scorer's spelled dates; calculations and lists still depend on the model. Backend suite 1700 passed, 4 skipped (1696 before the definitions and fee fixes); frontend 262 passed; `tsc` clean. Golden research set on this code: answers 63 / 68, declines 7 / 7, quotes 1.0, citation precision 0.984 (the gate on
+definitions 0 / 2, chronology 0 / 2. **After the definitions and fee fixes** (rows above; M-101, M-114, MAT-1042 again, 93 items): 60 → 65 / 93 (M-101 22 / 29, M-114 19 / 30, MAT-1042 24 / 34); the definitions check and the fee question now pass; "Which price applies?" gives both definitions and says the document is ambiguous. **Not done:** chronology (the card showed the matter's first 60 events, not the ones asked about) and calculations (the model's arithmetic): fixed in the next section; lists still depend on the model. Backend suite 1700 passed, 4 skipped (1696 before the definitions and fee fixes); frontend 262 passed; `tsc` clean. Golden research set on this code: answers 63 / 68, declines 7 / 7, quotes 1.0, citation precision 0.984 (the gate on
 `a578891`: 190 / 204 and 21 / 21 over three runs), report 20261105-155937; the held-out sets were not rerun.
+
+## Chronology and calculations from the end-to-end run (2026-11-05)
+
+The owner asked for the chronology and calculation failures of the end-to-end run to be fixed. Nothing below names a
+document, title, amount or clause of the demo data; verification, authorization and fail-closed behaviour are unchanged.
+
+| Found | Fix | Status | Evidence |
+|---|---|---|---|
+| "Give me a chronology of the delivery, from dispatch to acceptance" showed the matter's first 60 of 174 events and never reached June | A chronology of something is the matter's chronology narrowed to it: the events in the passages a search for it finds, every message date (with its subject) of a thread one of them is in, and, for a range, those from the first event naming its start to the last naming its end; the summary says what it is about and how many the whole chronology has; "Build a chronology" is unchanged (`counsel/chronology.topic`, `_narrow`) | **Tested** | `test_a_chronology_of_something_is_the_matters_events_narrowed_to_it_and_its_range`, `test_a_chronology_of_something_names_it_and_its_range`, `test_a_chronology_of_the_whole_matter_has_no_focus` |
+| "How did the delivery date come to be changed? Give the key dates." was answered from the amendment alone | "key dates", "key events", "dates in order" ask for a chronology, narrowed to the question | **Tested** | `test_a_message_date_reads_with_its_subject_and_a_thread_found_gives_every_message` |
+| A message's date showed as "Date: May 4, 2026, 11:47"; a table row's date showed the whole table from its header | The date line is shown with the subject line that follows it; a dated table row is that row | **Tested** | same test; `test_header_dates_ranges_and_headings_read_as_people_write_them` still passes |
+| Calculations: the model quoted figures and left the arithmetic out (the August service credit, 10% of USD 18,500), did it wrong (21 days after 1 October 2026 given as 21 October) or applied the clause in part (a 25% cap per month left out) | Figures are worked out by rule (`research/working.py`): a planning call writes the arithmetic as formulas over the numbers the sources state, stating no result; every number must be stated by a source (constants aside), its words and unit (currency, %, date, count) read where it is stated; money divided by a count is not a percentage, money is not added to a count or multiplied by money; the formulas are read token by token and worked out with exact decimals and calendar days, never evaluated as code; business days are never counted; a plan with a problem, or a condition that does not hold, is sent back once with what is wrong (a cap's own words quoted); a plan that says something is missing is never used, what it needs is searched for and it is planned again once. The answer model is given the results, labelled as worked out; if it still declines, the working, quoting the words of each number, is the answer. The card shows "Worked out from the documents' figures, not stated in them", each step, and each number's words opening in the reader | **Tested** | `test_law_working.py` (24: the capped rate per full point, rates × counts, calendar days and business days, unstated numbers and money mixed with counts refused, percentages on one scale, injected text gives no figure, the note in the prompt, the declined answer, the card); `counsel.test.tsx` (the card, copy, refused on a decline or off-workspace link) |
+| The rule a calculation applies was often not among the sources: "a credit calculated in accordance with paragraph 3 of Schedule 2" with the schedule unread; letters working out their own figures crowded out the agreement's clause; the register's holdings never read | For a calculation question only: the provisions a source says the figure is worked out under are read (a schedule's paragraph found after the schedule's heading; a clause by number); a short document the question names is read whole; the matter's agreements' two best passages are read too | **Tested** | `test_the_provisions_a_figure_is_worked_out_under_are_found_in_the_sources`; live runs below |
+
+**Live, on a private copy of the demo** (real model, alice, the same answer keys):
+- **The 18 chronology and calculation items:** 9 → 13 / 18. Fixed: the August service credit (USD 1,850, 10% band of USD 18,500),
+  the register's totals by class, both chronology requests, 83 nights and 12 weekend days (GBP 19,340, not the GBP 18,400
+  claimed) and the response deadline (22 October 2026, not 21 October).
+- **Lost there:** the Hollins holding and the liquidated-damages period both came back right when asked again (variance).
+- **Scored as a fail but answered right:** the most Orbis could get (GBP 3,000; the scorer finds "36,000" inside "360,000"
+  once it drops commas).
+- **Still wrong:**
+  - **M-301 service credits (GBP 91,000 with the 25% cap applied to each month):** the planner applies the cap only on its
+    retry; in the run it gave GBP 98,000.
+  - **The Series B change of control:** answered correctly (21.2%, below 50%) without stating the 14,120,000 issued shares
+    the key looks for.
+- **The whole set, 165 questions:** 118 / 165 (111 in the last full run; 116 taking each item's latest earlier result); 15
+  fixed, 13 lost.
+  - By kind: calculations 9 → 13 / 16, chronology 0 → 2 / 2, definitions 2 / 2, follow-ups 8 → 4 / 12.
+  - 12 of the 13 lost questions never reach the new code: they ask nothing the working is for, so their path is unchanged and
+    the loss is run-to-run variance.
+  - The 13th, a follow-up ("What share of the issued shares will that be after completion?"), is worked out right (21.25%)
+    when asked on its own.
+- **Planning call:** 2 to 6 s on the shared GPU; at most three calls when it is sent back or something is searched for.
+
+**Tests:** backend suite 1737 passed, 4 skipped (1736 before the last change to how unreadable checks are handled);
+`test_law_working.py` 26, chronology 22; frontend 264 passed; `tsc` clean. The held-out research sets were not rerun.
 
 ## Commercial-readiness review (2026-10-28)
 

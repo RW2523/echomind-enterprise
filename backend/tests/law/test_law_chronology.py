@@ -229,3 +229,62 @@ def test_header_dates_ranges_and_headings_read_as_people_write_them(ch):
     assert len(transit) == 1 and transit[0]["date_text"] == "May 13, 2026 to May 14, 2026" and transit[0]["date"] == "2026-05-13"
     s = transit[0]["source"]
     assert s["context"][s["value_start"]:s["value_end"]] == "May 13, 2026 to May 14, 2026"
+
+
+@pytest.mark.parametrize("text, about, start, end", [
+    ("Give me a chronology of the delivery, from dispatch to acceptance.", "the delivery", "dispatch", "acceptance"),
+    ("How did the delivery date come to be changed? Give the key dates.", "How did the delivery date come to be changed?", None, None),
+    ("Timeline of the sensor failures between delivery and the claim", "the sensor failures", "delivery", "claim"),
+    ("Chronology of the dispute with Apex", "the dispute with Apex", None, None),
+])
+def test_a_chronology_of_something_names_it_and_its_range(text, about, start, end):
+    from app.legal.counsel import chronology as chron, intent
+    t = chron.topic(text)
+    assert (t["about"], t["from"], t["to"]) == (about, start, end) and intent.classify(text) == "chronology"
+
+
+@pytest.mark.parametrize("text", ["Build a chronology", "Timeline of events", "Build a chronology of the matter", "What happened when?",
+                                  "Show me a chronology of this case"])
+def test_a_chronology_of_the_whole_matter_has_no_focus(text):
+    from app.legal.counsel import chronology as chron
+    assert chron.topic(text) is None
+
+
+LOG = ("SHIPMENT LOG (fictional, DEMO / SYNTHETIC)\n\n"
+       "The units were dispatched from the plant on May 10, 2026.\n\n"
+       "The delivery reached the site on May 15, 2026.\n\n"
+       "Acceptance certificate for the delivery issued on June 12, 2026.\n\n"
+       "Archive copy of the delivery records kept until July 30, 2026.")
+THREAD = ("EMAIL THREAD on the delivery (fictional, DEMO / SYNTHETIC)\n\n"
+          "From: Apex Industries, Inc.\nTo: Morgan Company LLC\nDate: April 24, 2026\nSubject: Compressor supply update\n\n"
+          "Our compressor supplier is a week late.\n\n"
+          "From: Apex Industries, Inc.\nTo: Morgan Company LLC\nDate: May 4, 2026\nSubject: Request to move the delivery date\n\n"
+          "We ask Morgan to agree to move the delivery date to May 20, 2026.")
+
+
+def test_a_chronology_of_something_is_the_matters_events_narrowed_to_it_and_its_range(ch):
+    """2026-11-05 end-to-end run: "Give me a chronology of the delivery, from dispatch to acceptance" showed the matter's first
+    60 of 174 events and never reached June."""
+    alice = as_user(ch, "alice")
+    assert upload(alice, ch["mid"], "shipment-log.txt", LOG, status="received").status_code == 202
+    index_all()
+    _, env, _ = chronology(alice, ch["mid"], "Give me a chronology of the delivery, from dispatch to acceptance.")
+    t = timeline(env)
+    dates = [e.get("date") for e in t["events"]]
+    assert dates[0] == "2026-05-10" and dates[-1] == "2026-06-12" and "2026-05-15" in dates   # dispatch to acceptance
+    assert "2026-04-01" not in dates and "2026-07-30" not in dates                              # outside the range
+    assert "about the delivery, from dispatch (May 10, 2026) to acceptance (June 12, 2026)" in t["summary"]
+    assert "The whole chronology has" in t["summary"]
+    _, env, _ = chronology(alice, ch["mid"])                                                     # the whole matter, as before
+    assert "2026-04-01" in [e.get("date") for e in timeline(env)["events"]] and "about" not in timeline(env)["summary"]
+
+
+def test_a_message_date_reads_with_its_subject_and_a_thread_found_gives_every_message(ch):
+    alice = as_user(ch, "alice")
+    assert upload(alice, ch["mid"], "delivery-thread.txt", THREAD, status="received").status_code == 202
+    index_all()
+    _, env, _ = chronology(alice, ch["mid"], "How did the delivery date come to be changed? Give the key dates.")
+    ev = timeline(env)["events"]
+    first = next(e for e in ev if e["date"] == "2026-04-24")
+    assert first["text"] == "Date: April 24, 2026 Subject: Compressor supply update" and first["kind"] == "document_date"
+    assert any(e["text"].startswith("Date: May 4, 2026 Subject: Request to move the delivery date") for e in ev)

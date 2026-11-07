@@ -15,7 +15,7 @@ import { WorkCard } from './workcards';
 import { isWorkspacePath, parseComponent } from './validate';
 import type {
   CaseRow, CaseTableProps, CitationRef, ComparisonSide, DiscrepancyStatus, EvidenceComparisonProps, NoticeProps, PriorityListProps,
-  CalculationProps, SafeComponent, SourceAnswerProps, TimelineEvent, TimelineProps, UiAction,
+  CalculationProps, SafeComponent, SourceAnswerProps, TimelineEvent, TimelineProps, UiAction, WorkingProps,
 } from './types';
 
 export interface CardContext {
@@ -223,6 +223,7 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
         </div>
       )}
       {p.calculation && <Calculated c={p.calculation} ctx={ctx} />}
+      {p.working && <Worked w={p.working} ctx={ctx} />}
       {p.notes.map((n, i) => <p key={i} className="qc-note" role="note"><AlertTriangle size={15} aria-hidden />{n}</p>)}
       {p.unsupported.length > 0 && (
         <details className="qc-disclosure">
@@ -261,6 +262,45 @@ function Calculated({ c, ctx }: { c: CalculationProps; ctx: CardContext }) {
         <details className="qc-disclosure">
           <summary>Assumptions ({c.assumptions.length})</summary>
           <ul>{c.assumptions.map((a, i) => <li key={i}>{a}</li>)}</ul>
+        </details>
+      )}
+    </section>
+  );
+}
+
+/** Figures worked out by rule from what the documents state: each step with its working, and the words of each figure,
+ *  which open in the reader (research/working.py). Never presented as something a document says. */
+function Worked({ w, ctx }: { w: WorkingProps; ctx: CardContext }) {
+  return (
+    <section className="qc-calc" aria-label="Worked out from the documents' figures">
+      <p className="qc-calc-title"><b>Worked out from the documents' figures, not stated in them</b></p>
+      <dl className="qc-calc-dates qc-work-steps">
+        {w.steps.map((s, i) => (
+          <div key={i}>
+            <dt>{s.label}</dt>
+            <dd>{s.check ? <>{s.working}: <span className="qc-work-holds">holds</span></> : <>{s.working} = <b>{s.result}</b></>}</dd>
+          </div>
+        ))}
+      </dl>
+      {w.figures.length > 0 && (
+        <details className="qc-disclosure">
+          <summary>Figures used ({w.figures.length})</summary>
+          <ul className="qc-calc-facts" aria-label="From the documents' words">
+            {w.figures.map((f, i) => (
+              <li key={i}>
+                <button type="button" className="qc-linkbtn" onClick={() => ctx.go(f.path)}
+                  aria-label={`Open ${f.clause ? `clause ${f.clause} of ` : ''}${f.document_title}: ${f.label}`}>
+                  {f.clause ? `cl. ${f.clause}` : 'Open'}
+                </button>{' '}{f.label}, {f.value}: “{f.quote}” <span className="qc-work-doc">({f.document_title})</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {w.assumptions.length > 0 && (
+        <details className="qc-disclosure">
+          <summary>Assumptions ({w.assumptions.length})</summary>
+          <ul>{w.assumptions.map((a, i) => <li key={i}>{a}</li>)}</ul>
         </details>
       )}
     </section>

@@ -121,7 +121,9 @@ def twice_note(title: str, term: str, wordings: list[str]) -> str:
             "with its source, say that the document is ambiguous on this point, and do not choose between them.)\n")
 
 
-def build(question: str, passages: list[dict], note: str = "") -> list[dict]:
+def build(question: str, passages: list[dict], note: str = "", calculate: bool | None = None) -> list[dict]:
+    """The answer's messages. `calculate`: whether to ask for the working (by default, when the question asks for a
+    calculation); False when the figures were worked out by rule (research/working.py) and `note` gives the results."""
     blocks = []
     for n, p in enumerate(passages, start=1):
         c = p["citation"]
@@ -152,7 +154,7 @@ def build(question: str, passages: list[dict], note: str = "") -> list[dict]:
     defined = ("(Some sources are the opening of their document, where it names its parties and the roles its clauses call them "
                "by, such as \"the Customer\"; a question that names a party is answered by the clauses about its role.)\n") if any(
         p.get("opening") for p in passages) else ""
-    calculate = CALCULATION_NOTE if _CALCULATES.search(question or "") else ""
+    calculate = CALCULATION_NOTE if (bool(_CALCULATES.search(question or "")) if calculate is None else calculate) else ""
     user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + several + defined + calculate + note
             + "\nSources:\n"
             + "\n\n".join(blocks) + "\n\n" + REMINDER)

@@ -123,6 +123,35 @@ class CalculationProps(Strict):
     not_calculated: list[text(300)] = Field(default_factory=list, max_length=3)
 
 
+class WorkingFigure(Strict):
+    label: text(80)
+    value: text(80)
+    quote: text(400)                                      # the document's own words, as stored
+    document_title: text(300)
+    clause: Optional[text(40)] = None
+    path: text(300)                                       # opens those words in the reader
+
+    @model_validator(mode="after")
+    def _own_page(self):
+        if not _PAGE.match(self.path):
+            raise ValueError("a figure opens the workspace's own reader")
+        return self
+
+
+class WorkingStep(Strict):
+    label: text(120)
+    working: text(600)                                    # the formula with its figures: "10% × USD 18,500"
+    result: text(80)
+    check: bool = False                                   # a condition that holds, not a result
+
+
+class WorkingProps(Strict):
+    """Figures worked out by rule from what the documents state, never presented as stated (research/working.py)."""
+    steps: list[WorkingStep] = Field(min_length=1, max_length=10)
+    figures: list[WorkingFigure] = Field(default_factory=list, max_length=16)
+    assumptions: list[text(400)] = Field(default_factory=list, max_length=3)
+
+
 class SourceAnswerProps(Strict):
     answer: text(8000)
     state: AnswerState
@@ -132,6 +161,7 @@ class SourceAnswerProps(Strict):
     understood: Optional[text(400)] = None                # what a follow-up was taken to ask
     absence: Optional[text(400)] = None                   # a decline: what the documents were found not to state (QA UX-001)
     calculation: Optional[CalculationProps] = None        # dates calculated from a document's words (QA RAG-003)
+    working: Optional[WorkingProps] = None                # figures worked out from the documents' figures (research/working.py)
     # The answer opens by saying the documents do not state what was asked, then gives related cited text (EV19's narrower
     # option, 2026-11-03): the card says so instead of "partly supported", which describes neither.
     not_stated: bool = False
@@ -142,7 +172,7 @@ class SourceAnswerProps(Strict):
             raise ValueError("an abstention cites nothing")
         if self.absence is not None and self.state != "abstained":
             raise ValueError("only a decline says what is missing")
-        if self.calculation is not None and self.state == "abstained":
+        if (self.calculation is not None or self.working is not None) and self.state == "abstained":
             raise ValueError("a decline calculates nothing")
         if self.not_stated and self.state == "abstained":
             raise ValueError("a decline is shown as a decline")

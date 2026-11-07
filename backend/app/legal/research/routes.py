@@ -36,6 +36,7 @@ from . import llm as llm_mod
 from . import amendments, attribution, dates, evidence, followup, prompt
 from . import kinds
 from . import stated as statedmod
+from . import working
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition)])
@@ -670,6 +671,37 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                                                                            for d in t["definitions"]], versions)
             passages += [q for q in held if q["chunk_id"] not in {x["chunk_id"] for x in passages}]
             named_note += "".join(prompt.twice_note(t["document_title"], t["term"], [d["text"] for d in t["definitions"]]) for t in twice)
+        # Figures worked out by rule (research/working.py, 2026-11-05 end-to-end run): a planning call writes the arithmetic
+        # over the numbers the sources state, each number is found in a source with its unit, and the arithmetic is done
+        # there; the answer model is given the results. The provisions the sources say the figure is worked out under, a short
+        # document the question names and the agreements' best passages are read first; what the plan says is missing is
+        # searched for in the documents asked about. One matter at a time.
+        worked = None
+        if not several and working.asks(question):
+            inside = documents or named_docs or None
+            # the provisions the sources say the figure is worked out under ("calculated in accordance with paragraph 3 of
+            # Schedule 2"), read too: the rule is often in a schedule no search for the question finds
+            if (refs := working.references(question, passages)):
+                held = await run_in_threadpool(searchmod.provision_passages, scope, refs, versions, documents)
+                passages = passages + [q for q in held if q["chunk_id"] not in {x["chunk_id"] for x in passages}]
+            asked_docs = documents or named_docs or working.named_in(question, titles)
+            for did in asked_docs[:2]:
+                held = await run_in_threadpool(searchmod.document_passages, scope, did, versions)   # a short one read whole
+                passages = passages + [q for q in held if q["chunk_id"] not in {x["chunk_id"] for x in passages}]
+            # the rule a calculation applies is an agreement's: their best passages are read too, so letters working out
+            # their own figures cannot crowd it out (end-to-end run: the service credit clause, never retrieved)
+            contracts = [] if documents else await run_in_threadpool(searchmod.kind_ids, scope)
+            if contracts:
+                got = await searchmod.search(scope, search_q, k=2, versions=versions, documents=contracts, wide=True)
+                passages = passages + [q for q in got["passages"] if q["chunk_id"] not in {x["chunk_id"] for x in passages}]
+
+            async def more(need: str) -> list[dict]:
+                got = await searchmod.search(scope, attribution.with_roles(need, roles), k=2, versions=versions, documents=inside,
+                                             wide=True)
+                return got["passages"]
+            worked, passages = await working.work(question, passages, more, frozenset(asked_docs))
+            if worked:
+                named_note += working.note(worked)
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
         yield _event({"type": "sources", "citations": sources})
         if nothing_found or not passages:
@@ -696,7 +728,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         buf, shown, claims, unsupported, failed, last_check = "", [], [], [], [], time.monotonic()
         several_of = kinds.note(same[0], [titles[d] for d in same[1]]) if same else ""
         several_of += named_note
-        stream = llm_mod.get().chat_stream(prompt.build(question, passages, several_of), temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
+        stream = llm_mod.get().chat_stream(prompt.build(question, passages, several_of, calculate=False if worked else None),
+                                           temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
                                            max_tokens=settings.LEGAL_RESEARCH_MAX_TOKENS)
 
         def finish(raw: str):
@@ -826,7 +859,10 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             if others:
                 elsewhere = attribution.concepts_elsewhere(question, await run_in_threadpool(_version_texts, cited_versions), others)
         declined = False
-        if prompt.opens_not_stated(text) or (not answering and prompt.opens_absent(text)):
+        # The result worked out by rule is in the answer: "the documents do not state the credit; worked out, it is USD 1,850"
+        # says the result is not stated, which is true, and is not a decline.
+        given = bool(worked) and bool(answering) and working.given(worked, text)
+        if not given and (prompt.opens_not_stated(text) or (not answering and prompt.opens_absent(text))):
             cited = {sources[c.n - 1]["version_id"] for claim in claims for c in claim.citations if 1 <= c.n <= len(sources)}
             texts = await run_in_threadpool(_version_texts, cited)
             missing = prompt.missing_terms(question, texts) if texts else []
@@ -846,7 +882,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         stated = shadow = None
         # A term's dates are worked out and labelled by research/dates.py (QA RAG-003), never declined for not being stated.
         if mode in ("hedged", "all", "shadow") and answering and (hedged or mode != "hedged") \
-                and not (off_target or off_party or elsewhere) and not dates.asks_term_dates(question):
+                and not (off_target or off_party or elsewhere) and not dates.asks_term_dates(question) and not given:
             cited_n = dict.fromkeys(c.n for claim in answering for c in claim.citations if 1 <= c.n <= len(passages))
             cited_docs = dict.fromkeys(passages[n - 1]["citation"]["document_id"] for n in cited_n)
             shown = [passages[n - 1] for n in cited_n] + [p for n, p in enumerate(passages, start=1)
@@ -863,13 +899,16 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             else:
                 shadow = verdict
         abstained = (nothing and (prompt.is_abstention(text) or prompt.says_not_stated(text))) or \
-            (prompt.says_not_stated(text) and weak and stated is not True) or declined or off_target or off_party or bool(elsewhere)
+            (prompt.says_not_stated(text) and weak and stated is not True and not given) or declined or off_target or off_party \
+            or bool(elsewhere)
         # The model declined a question about a term the answering document defines twice, with different meanings: the
         # definitions, in the document's own words and verified like any quote, are the answer (2026-11-05 end-to-end run:
         # "Which price applies to Products under the Tidewater supply agreement?" declined with both definitions in its sources).
-        if abstained and twice and not (off_target or off_party or elsewhere):
-            ruled = _twice_answer(twice, sources)
-            para, para_claims = _check(ruled, sources) if ruled else ({}, [])
+        # So with figures worked out by rule: the working, each step quoting the figures it rests on, is the answer.
+        for ruled in ((_twice_answer(twice, sources) if twice else ""), (working.answer(worked) if worked else "")):
+            if not (abstained and ruled) or off_target or off_party or elsewhere:
+                continue
+            para, para_claims = _check(ruled, sources)
             if para_claims and not para["failed"] and all(c.verification in ("verbatim", "normalized")
                                                           for claim in para_claims for c in claim.citations):
                 text, claims, unsupported, failed, abstained = para["text"], para_claims, list(para["unsupported"]), [], False
@@ -892,6 +931,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                       "citations": citations, "evidence": items, "conflicts": found, "unsupported": unsupported, "failed": failed,
                       "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed,
                       "absence": prompt.absence(text) if abstained else None, "calculation": calculation,
+                      "working": working.public(worked) if worked and not abstained else None,
                       "stated": stated, "misquotes": misquoted,
                       "defined_twice": [{"document": t["document_title"], "term": t["term"],
                                          "clauses": [d["clause"] for d in t["definitions"] if d["clause"]]} for t in twice], **({"stated_shadow": shadow} if mode == "shadow" else {})})

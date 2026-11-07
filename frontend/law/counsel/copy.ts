@@ -36,6 +36,13 @@ export function plainAnswer(p: SourceAnswerProps): string {
     out.push([`Calculated, not stated in ${c.document_title}:`, ...c.derived.map((d) => `- ${d.label}: ${d.display}`),
               ...c.assumptions.map((a) => `- Assumption: ${a}`)].join('\n'));
   }
+  if (p.working) {
+    const w = p.working;
+    out.push(["Worked out from the documents' figures, not stated in them:",
+              ...w.steps.map((s) => (s.check ? `- ${s.label}: ${s.working} (holds)` : `- ${s.label}: ${s.working} = ${s.result}`)),
+              ...w.figures.map((f) => `- Figure: ${f.label}, ${f.value}: “${f.quote}” (${f.document_title}${f.clause ? `, cl. ${f.clause}` : ''})`),
+              ...w.assumptions.map((a) => `- Assumption: ${a}`)].join('\n'));
+  }
   p.notes.forEach((n) => out.push(`Note: ${n}`));
   const sources = Array.from(new Map(p.citations.map((c) => [c.n, c])).values())
     .sort((a, b) => (labels.get(a.n) ?? a.n) - (labels.get(b.n) ?? b.n));
@@ -123,6 +130,9 @@ export function spokenTurn(envelope: Envelope | undefined, streamed: string): st
     if (state) out.push(state);
     if (p.calculation?.derived.length) {
       out.push(`Calculated, not stated in ${p.calculation.document_title}: ${p.calculation.derived.map((d) => `${d.label}, ${d.display}`).join('; ')}.`);
+    }
+    if (p.working) {
+      out.push(`Worked out from the documents' figures, not stated in them: ${p.working.steps.filter((s) => !s.check).map((s) => `${s.label}, ${s.result}`).join('; ')}.`);
     }
     return out.join('\n\n');
   }

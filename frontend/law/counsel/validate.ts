@@ -8,6 +8,7 @@ import type {
   ComparisonSide, CouncilSummaryProps, DiscrepancyStatus, DocumentPreviewProps, Envelope, EvidenceComparisonProps, GraphExcerptProps,
   GuidedQuestion, GuidedQuestionsProps, LiveTranscriptProps, MatterRef, NoticeProps, NumericChartProps,
   CalculationProps, PriorityItem, PriorityListProps, ReviewEntry, SafeComponent, SourceAnswerProps, TaskProgressProps, TimelineEvent, TimelineProps, UiAction,
+  WorkingProps,
 } from './types';
 
 class Invalid extends Error {}
@@ -135,17 +136,39 @@ function calculation(v: unknown): CalculationProps | undefined {
   };
 }
 
+function working(v: unknown): WorkingProps | undefined {
+  if (v === undefined || v === null) return undefined;
+  const o = obj(v, 'working');
+  const w: WorkingProps = {
+    steps: list(o.steps, 10, 'working.steps', (x) => {
+      const s = obj(x, 'step');
+      return { label: str(s.label, 120, 'step.label'), working: str(s.working, 600, 'step.working'), result: str(s.result, 80, 'step.result'),
+               check: s.check === undefined ? false : bool(s.check, 'step.check') };
+    }),
+    figures: list(o.figures, 16, 'working.figures', (x) => {
+      const f = obj(x, 'figure');
+      const path = str(f.path, 300, 'figure.path');
+      if (!isWorkspacePath(path)) throw new Invalid('a figure opens the workspace\'s own reader');
+      return { label: str(f.label, 80, 'figure.label'), value: str(f.value, 80, 'figure.value'), quote: str(f.quote, 400, 'figure.quote'),
+               document_title: str(f.document_title, 300, 'figure.document_title'), clause: optStr(f.clause, 40, 'figure.clause'), path };
+    }),
+    assumptions: list(o.assumptions, 3, 'working.assumptions', (x) => str(x, 400, 'assumption')),
+  };
+  if (!w.steps.length) throw new Invalid('a working without steps');
+  return w;
+}
+
 function sourceAnswer(v: unknown): SourceAnswerProps {
   const o = obj(v, 'props');
   const p: SourceAnswerProps = {
     answer: str(o.answer, 8000, 'answer'), state: oneOf(o.state, ANSWER_STATES, 'state'),
     citations: list(o.citations, 30, 'citations', citation), unsupported: list(o.unsupported, 10, 'unsupported', (x) => str(x, 500, 'unsupported')),
     notes: list(o.notes, 3, 'notes', (x) => str(x, 400, 'note')), understood: optStr(o.understood, 400, 'understood'),
-    absence: optStr(o.absence, 400, 'absence'), calculation: calculation(o.calculation),
+    absence: optStr(o.absence, 400, 'absence'), calculation: calculation(o.calculation), working: working(o.working),
     not_stated: o.not_stated === undefined ? undefined : bool(o.not_stated, 'not_stated'),
   };
   if (p.not_stated && p.state === 'abstained') throw new Invalid('a decline is shown as a decline');
-  if (p.calculation && p.state === 'abstained') throw new Invalid('a decline calculates nothing');
+  if ((p.calculation || p.working) && p.state === 'abstained') throw new Invalid('a decline calculates nothing');
   if (p.state === 'abstained' && p.citations.length) throw new Invalid('an abstention cites nothing');
   if (p.absence !== undefined && p.state !== 'abstained') throw new Invalid('only a decline says what is missing');
   return p;

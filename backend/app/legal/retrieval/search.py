@@ -272,6 +272,89 @@ def clause_passages(scope: AuthorizedScope, numbers: list[str], versions: str = 
     return [_located([_passage(_wide(h))], " ".join(numbers))[0] for h in hits[:limit]]
 
 
+_SCHEDULE_HEAD = re.compile(r"^[#>*\s]*(?:schedule|annex|appendix|exhibit)\s+([0-9A-Z]{1,3})\b", re.I | re.M)
+
+
+def provision_passages(scope: AuthorizedScope, refs: list[tuple[Optional[str], str, str]], versions: str = "signed",
+                       documents: Optional[list[str]] = None) -> list[dict]:
+    """The passages holding the provisions a passage says a figure is worked out under (research/working.references):
+    (schedule or None, paragraph or clause number, the document that says so). Looked for in that document first, then in
+    the matter's contracts (or only `documents`), read like a search: this matter, what this person may see, the version
+    policy. A schedule's paragraph is the clause of that number after the schedule's heading and before the next one."""
+    from ..documents.repo import VISIBLE_TO
+    from ..documents.versions import policy_sql
+    recheck(scope)
+    out: list[dict] = []
+    policy = versions if versions in ("signed", "current") else "signed"
+    with get_conn() as conn:
+        for schedule, number, said_in in refs:
+            if schedule is None:
+                got = clause_passages(scope, [number], versions, [said_in] if not documents or said_in in documents else documents, limit=1) \
+                    or clause_passages(scope, [number], versions, documents, limit=1)
+                out += [p for p in got if p["chunk_id"] not in {q["chunk_id"] for q in out}]
+                continue
+            for within in ([[said_in]] if not documents or said_in in documents else []) + [documents]:
+                rows = conn.execute(
+                    "SELECT c.version_id, c.char_start, c.text FROM legal_chunks c JOIN legal_documents d ON d.id = c.document_id "
+                    "JOIN legal_document_versions v ON v.id = c.version_id "
+                    f"WHERE c.matter_id = ? AND c.active = 1 AND {VISIBLE_TO} AND {policy_sql(policy)} "
+                    + (f"AND c.document_id IN ({','.join('?' * len(within))}) " if within else "AND d.kind = 'contract' ")
+                    + "ORDER BY c.version_id, c.char_start", (scope.matter_id, scope.principal_id, *(within or []))).fetchall()
+                heads: dict[str, set] = {}
+                for vid, start, text in rows:
+                    for m in _SCHEDULE_HEAD.finditer(text or ""):
+                        heads.setdefault(vid, set()).add(((start or 0) + m.start(), m.group(1).upper()))
+                places = []
+                for vid, found in heads.items():
+                    found = sorted(found)
+                    for i, (at, which) in enumerate(found):
+                        if which != schedule:
+                            continue
+                        end = next((x for x, w in found[i + 1:] if w != schedule), 1 << 40)
+                        r = conn.execute("SELECT char_start FROM legal_clauses WHERE version_id = ? AND number = ? AND char_start >= ? "
+                                         "AND char_start < ? ORDER BY char_start LIMIT 1", (vid, number, at, end)).fetchone()
+                        if r:
+                            places.append((vid, r[0]))
+                            break
+                if places:
+                    got = passages_at(scope, places[:1], versions)
+                    out += [p for p in got if p["chunk_id"] not in {q["chunk_id"] for q in out}]
+                    break
+    return out
+
+
+def kind_ids(scope: AuthorizedScope, kinds: tuple = ("contract",)) -> list[str]:
+    """The ids of this matter's documents of these kinds that this person may see."""
+    from ..documents.repo import VISIBLE_TO
+    recheck(scope)
+    with get_conn() as conn:
+        return [r[0] for r in conn.execute(
+            f"SELECT d.id FROM legal_documents d WHERE d.matter_id = ? AND d.kind IN ({','.join('?' * len(kinds))}) AND {VISIBLE_TO} "
+            "ORDER BY d.created_at", (scope.matter_id, *kinds, scope.principal_id)).fetchall()]
+
+
+def document_passages(scope: AuthorizedScope, document_id: str, versions: str = "signed", max_chars: int = 4000) -> list[dict]:
+    """Every passage of a short document, in order, read like a search (this matter, what this person may see, the version
+    policy), or [] when its text is longer than `max_chars`: a register or a schedule the question names is read whole."""
+    from ..documents.repo import VISIBLE_TO
+    from ..documents.versions import policy_sql
+    recheck(scope)
+    policy = versions if versions in ("signed", "current") else "signed"
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT c.id, length(c.text) FROM legal_chunks c JOIN legal_documents d ON d.id = c.document_id "
+            "JOIN legal_document_versions v ON v.id = c.version_id "
+            f"WHERE c.matter_id = ? AND c.document_id = ? AND c.active = 1 AND {VISIBLE_TO} AND {policy_sql(policy)} "
+            "ORDER BY c.char_start", (scope.matter_id, document_id, scope.principal_id)).fetchall()
+    if not rows or sum(r[1] for r in rows) > max_chars:
+        return []
+    ids = [r[0] for r in rows]
+    hits = _load(scope.matter_id, ids, scope.principal_id, policy, [document_id])
+    order = {cid: i for i, cid in enumerate(ids)}
+    hits.sort(key=lambda h: order.get(h["chunk_id"], 99))
+    return [_located([_passage(_wide(h))])[0] for h in hits if len((h.get("chunk_text") or h["text"]).strip()) > 40]
+
+
 def passages_at(scope: AuthorizedScope, places: list[tuple[str, int]], versions: str = "signed") -> list[dict]:
     """The passages holding these characters ((version id, offset) each), read like a search: this matter, what this person may
     see, the version policy (2026-11-05: both definitions of a term the document defines twice)."""

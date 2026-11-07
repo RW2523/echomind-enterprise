@@ -714,6 +714,42 @@ describe('the answer card says what the backend verified (QA 2026-10-29)', () =>
     expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'abstained', calculation: calc('/m/M-101/documents/d1/read?v=v1') } }).type).toBe('inert');
     expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'partial', calculation: calc('https://example.com/x') } }).type).toBe('inert');
   });
+
+  // Figures worked out by rule from the documents' figures (research/working.py)
+  const path = '/m/M-305/documents/d1/read?v=v1&at=40-112';
+  const working = {
+    steps: [{ label: 'Monthly subscription fee', working: 'GBP 360,000 ÷ 12', result: 'GBP 30,000', check: false },
+            { label: 'Availability is in the band', working: '98.71% ≥ 98%', result: 'holds', check: true },
+            { label: 'Most service credit for a month', working: '10% × GBP 30,000', result: 'GBP 3,000', check: false }],
+    figures: [{ label: 'GBP 360,000', value: 'GBP 360,000', quote: 'a subscription fee of GBP 360,000 per annum', document_title: 'SaaS Agreement', clause: '2', path }],
+    assumptions: [] };
+
+  it('labels the working as worked out, gives each step and its result, and opens each figure in the reader', async () => {
+    const { render, fireEvent: fire } = await import('@testing-library/react');
+    const { ComponentView } = await import('../counsel/cards');
+    const { ctx, go } = ctxWith();
+    const r = render(<ComponentView comp={comp({ state: 'partial', answer: 'The most is GBP 3,000 [1].', citations: [cite], unsupported: [], working })} ctx={ctx} />);
+    const box = r.getByRole('region', { name: "Worked out from the documents' figures" });
+    expect(box.textContent).toContain("Worked out from the documents' figures, not stated in them");
+    expect(box.textContent).toContain('GBP 360,000 ÷ 12 = GBP 30,000');
+    expect(box.textContent).toContain('98.71% ≥ 98%: holds');
+    expect(box.textContent).toContain('Figures used (1)');
+    fire.click(r.getByRole('button', { name: 'Open clause 2 of SaaS Agreement: GBP 360,000' }));
+    expect(go).toHaveBeenCalledWith(path);
+  });
+
+  it('copies the working with the answer, and refuses it on a decline or with a figure that opens anything but the reader', async () => {
+    const { plainAnswer } = await import('../counsel/copy');
+    const base = { answer: 'The most is GBP 3,000.', citations: [], unsupported: [], notes: [] };
+    const text = plainAnswer({ ...base, state: 'partial', working } as never);
+    expect(text).toContain("Worked out from the documents' figures, not stated in them:");
+    expect(text).toContain('- Most service credit for a month: 10% × GBP 30,000 = GBP 3,000');
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'partial', working } }).type).toBe('source_answer');
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'abstained', working } }).type).toBe('inert');
+    const away = { ...working, figures: [{ ...working.figures[0], path: 'https://example.com/x' }] };
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'partial', working: away } }).type).toBe('inert');
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'partial', working: { ...working, steps: [] } } }).type).toBe('inert');
+  });
 });
 
 describe('source panel errors (review S1)', () => {

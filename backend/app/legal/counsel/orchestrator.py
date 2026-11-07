@@ -35,6 +35,7 @@ from ..compare import scan
 from ..research import followup
 from ..research import routes as research
 from ..retrieval import scope as scopemod
+from ..retrieval import search as searchmod
 from . import (amounts, approvals, briefing, cases, chronology, citations, definitions_check, deliberation, discrepancies, drafting,
                intent as intents, live,
                parties, schemas, store, tasks)
@@ -263,6 +264,8 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
         props["not_stated"] = True
     if state != "abstained" and done.get("calculation"):
         props["calculation"] = _calculation_props(done["calculation"], (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
+    if state != "abstained" and (done.get("working") or {}).get("steps"):
+        props["working"] = _working_props(done["working"], (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
     built.add("source_answer", props, [c["document_id"] for c in cites] + [a["by"]["document_id"] for a in changed])
     built.actions = amend_actions
     if state == "abstained":
@@ -283,6 +286,18 @@ def _calculation_props(calc: dict, matter_number: str) -> dict:
             "derived": [{"label": d["label"][:80], "display": d["display"][:80]} for d in calc["derived"][:4]],
             "assumptions": [a[:400] for a in calc["assumptions"][:4]],
             "not_calculated": [n[:300] for n in calc["not_calculated"][:3]]}
+
+
+def _working_props(w: dict, matter_number: str) -> dict:
+    """Figures worked out by rule (research/working.py) for the card: each step, and each figure's words opening in the reader."""
+    return {"steps": [{"label": s["label"][:120], "working": s["working"][:600], "result": s["result"][:80], "check": bool(s.get("check"))}
+                      for s in w["steps"][:10]],
+            "figures": [{"label": f["label"][:80], "value": f["value"][:80], "quote": f["quote"][:400],
+                         "document_title": f["document_title"][:300], "clause": (f.get("clause") or "")[:40] or None,
+                         "path": citations.reader_path(f.get("matter_number") or matter_number, f["document_id"], f["version_id"],
+                                                       f.get("char_start"), f.get("char_end"))}
+                        for f in w["figures"][:16]],
+            "assumptions": [a[:400] for a in (w.get("assumptions") or [])[:3]]}
 
 
 NOT_IN_CITED = ("The documents that were cited do not deal with what was asked; another document of this matter does, so the "
@@ -672,7 +687,16 @@ async def run(principal: dict, conv: dict, text: str, client_request_id: Optiona
                     parts.append((m, *await run_in_threadpool(chronology.build, principal, m)))
                 props, named = _chronology_several(parts)
             else:
-                props, named = await run_in_threadpool(chronology.build, principal, matter)
+                # a chronology of something: the passages a search for it finds narrow the matter's events to it
+                focus = chronology.topic(text)
+                if focus:
+                    got = await searchmod.search(scope, focus["query"], k=focus["k"], versions="signed", wide=True)
+                    focus["ranges"] = {}
+                    for p in got["passages"]:
+                        c = p["citation"]
+                        if c.get("char_start") is not None:
+                            focus["ranges"].setdefault(c["version_id"], []).append((c["char_start"], c["char_end"]))
+                props, named = await run_in_threadpool(chronology.build, principal, matter, focus)
             built.add("timeline", props, named)
             yield event("ui.partial", schemas.validate_component(built.components[-1]))
             built.summary = props["summary"]

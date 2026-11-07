@@ -6,7 +6,8 @@ the matter's documents (`ask_fact`), which is the safe default: research answers
 verified quotes, or abstains.
 
 - `inspect_case`  "What matters today?", "What changed?", "Brief me" → a briefing from records (briefing.py)
-- `chronology`    "Build a chronology", "Timeline of events" → dated events from the documents (chronology.py)
+- `chronology`    "Build a chronology", "Timeline of events", "… Give the key dates." → dated events from the documents
+                  (chronology.py), narrowed to what the request names ("of the delivery, from dispatch to acceptance")
 - `compare`       "Find conflicting dates", "Are there inconsistencies?" → the conflict scan (discrepancies.py)
 - `cases_overview` "Compare these cases", "Where do my matters stand?" → the conversation's matters side by side (cases.py)
 - `other_matters` "Use the other matters too" → which matters the conversation covers, and how to add one
@@ -121,7 +122,7 @@ def social(text: str) -> Optional[str]:
         kinds.add(kind)
     return next((k for k in _SOCIAL_ORDER if k in kinds), None)
 _CHRONOLOGY = re.compile(r"\b(?:chronology|chronological|timeline|time\s+line|sequence\s+of\s+events|order\s+of\s+events"
-                         r"|what\s+happened\s+when)\b", re.I)
+                         r"|what\s+happened\s+when|key\s+(?:dates|events)|dates\s+in\s+(?:date\s+)?order)\b", re.I)
 _APPROVALS = re.compile(
     r"\b(?:waiting|pending|awaiting)\s+(?:for\s+)?(?:my\s+|a\s+|your\s+)?(?:approval|sign[- ]?off|decision|review)\b"
     r"|\b(?:my|pending|outstanding)\s+(?:approvals|sign[- ]?offs|reviews)\b"

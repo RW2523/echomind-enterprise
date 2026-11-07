@@ -44,6 +44,8 @@ export interface SourceAnswerProps {
   absence?: string;
   /** Dates calculated from one document's stated words, never presented as stated (QA RAG-003). */
   calculation?: CalculationProps;
+  /** Figures worked out by rule from the documents' figures, never presented as stated (research/working.py). */
+  working?: WorkingProps;
   /** The answer opens by saying the documents do not state what was asked, then cites related text. */
   not_stated?: boolean;
 }
@@ -56,6 +58,10 @@ export interface CalculationProps {
   assumptions: string[];
   not_calculated: string[];
 }
+
+export interface WorkingFigure { label: string; value: string; quote: string; document_title: string; clause?: string; path: string }
+export interface WorkingStep { label: string; working: string; result: string; check: boolean }
+export interface WorkingProps { steps: WorkingStep[]; figures: WorkingFigure[]; assumptions: string[] }
 
 export interface PriorityItem {
   id: string;

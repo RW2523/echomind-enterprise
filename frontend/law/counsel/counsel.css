@@ -301,6 +301,10 @@
 .qc-calc-dates dt { color: var(--ink-2); font-size: 14px; }
 .qc-calc-dates dd { margin: 0; font-weight: 600; font-size: 14px; }
 .qc-calc-facts { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; color: var(--ink-2); }
+.qc-work-steps dd { font-weight: 400; overflow-wrap: anywhere; }
+.qc-work-steps dd b { font-weight: 600; }
+.qc-work-holds { font-weight: 600; }
+.qc-work-doc { color: var(--ink-3, var(--ink-2)); }
 .qc-disclosure ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; color: var(--ink-2); }
 .qc-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .qc-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--rule); }
