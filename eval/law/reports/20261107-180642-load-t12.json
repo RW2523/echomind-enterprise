@@ -1,0 +1,113 @@
+{
+ "meta": {
+  "set": "t12",
+  "commit": "4c6d630",
+  "time": "20261107-180642",
+  "started": "20261107-180255",
+  "base": "http://127.0.0.1:8131",
+  "window": "owner (approved plan 2026-11-07): private copy, at most 4 model users, 3 min per level"
+ },
+ "summary": {
+  "seconds": 180,
+  "research_users": 0,
+  "users": [],
+  "stopped_early": false,
+  "operations": {
+   "capture_open": {
+    "n": 1,
+    "p50_s": 0.3,
+    "p95_s": 0.3,
+    "max_s": 0.3
+   },
+   "search": {
+    "n": 2,
+    "p50_s": 1.83,
+    "p95_s": 3.35,
+    "max_s": 3.35
+   },
+   "chat_answer": {
+    "n": 7,
+    "p50_s": 0.32,
+    "p95_s": 3.17,
+    "max_s": 3.17
+   },
+   "chat_first_text": {
+    "n": 7,
+    "p50_s": 0.25,
+    "p95_s": 3.15,
+    "max_s": 3.15
+   },
+   "capture_frame_lag": {
+    "n": 2,
+    "p50_s": 0.01,
+    "p95_s": 0.11,
+    "max_s": 0.11
+   }
+  },
+  "failures": {
+   "capture": 1,
+   "chat_answer": 3,
+   "council_review": 1,
+   "document_ready": 1,
+   "search": 1
+  },
+  "last_error": {
+   "capture": "ConnectionClosedError(None, Close(code=<CloseCode.INTERNAL_ERROR: 1011>, reason='keepalive ping timeout'), None)",
+   "chat_answer": "RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')",
+   "council_review": "RemoteProtocolError('Server disconnected without sending a response.')",
+   "document_ready": "RemoteProtocolError('Server disconnected without sending a response.')",
+   "search": "RemoteProtocolError('Server disconnected without sending a response.')"
+  },
+  "database_busy": 0,
+  "capture_frames": 0,
+  "backend_rss_mb_max": 4601.9,
+  "backend_rss_mb_start": 4301.8,
+  "chat_users": 3,
+  "ingest": true,
+  "council": true,
+  "system": {
+   "host_cpu_pct": {
+    "n": 68,
+    "p50": 67.5,
+    "p95": 99.8,
+    "max": 99.9
+   },
+   "host_mem_available_gb": {
+    "n": 68,
+    "p50": 25.0,
+    "p95": 29.9,
+    "max": 30.5
+   },
+   "gpu_util_pct": {
+    "n": 68,
+    "p50": 0.0,
+    "p95": 93.0,
+    "max": 95.0
+   },
+   "echomind-legal-next-api_cpu_pct": {
+    "n": 22,
+    "p50": 1.15,
+    "p95": 6.14,
+    "max": 6.27
+   },
+   "echomind-legal-next-api_mem_gb": {
+    "n": 22,
+    "p50": 4.11,
+    "p95": 4.49,
+    "max": 4.49
+   },
+   "echomind-trtllm_cpu_pct": {
+    "n": 22,
+    "p50": 0.94,
+    "p95": 12.96,
+    "max": 102.34
+   },
+   "echomind-trtllm_mem_gb": {
+    "n": 22,
+    "p50": 1.75,
+    "p95": 1.75,
+    "max": 1.76
+   }
+  }
+ }
+}

@@ -1,0 +1,101 @@
+{
+ "meta": {
+  "set": "t12",
+  "commit": "4c6d630",
+  "time": "20261107-175433",
+  "started": "20261107-175117",
+  "base": "http://127.0.0.1:8131",
+  "window": "owner (approved plan 2026-11-07): private copy, at most 4 model users, 3 min per level"
+ },
+ "summary": {
+  "seconds": 180,
+  "research_users": 0,
+  "users": [],
+  "stopped_early": false,
+  "operations": {
+   "capture_open": {
+    "n": 1,
+    "p50_s": 0.51,
+    "p95_s": 0.51,
+    "max_s": 0.51
+   },
+   "search": {
+    "n": 123,
+    "p50_s": 0.81,
+    "p95_s": 2.92,
+    "max_s": 6.44
+   },
+   "chat_answer": {
+    "n": 26,
+    "p50_s": 6.08,
+    "p95_s": 16.32,
+    "max_s": 22.32
+   },
+   "chat_first_text": {
+    "n": 26,
+    "p50_s": 3.83,
+    "p95_s": 10.89,
+    "max_s": 11.31
+   },
+   "capture_stop": {
+    "n": 1,
+    "p50_s": 15.89,
+    "p95_s": 15.89,
+    "max_s": 15.89
+   }
+  },
+  "failures": {},
+  "last_error": {},
+  "database_busy": 0,
+  "capture_frames": 1795,
+  "backend_rss_mb_max": 6125.6,
+  "backend_rss_mb_start": 6125.6,
+  "chat_users": 1,
+  "ingest": false,
+  "council": false,
+  "system": {
+   "host_cpu_pct": {
+    "n": 68,
+    "p50": 99.4,
+    "p95": 99.8,
+    "max": 99.9
+   },
+   "host_mem_available_gb": {
+    "n": 68,
+    "p50": 30.1,
+    "p95": 30.8,
+    "max": 31.0
+   },
+   "gpu_util_pct": {
+    "n": 68,
+    "p50": 94.0,
+    "p95": 95.0,
+    "max": 95.0
+   },
+   "echomind-legal-next-api_cpu_pct": {
+    "n": 22,
+    "p50": 325.79,
+    "p95": 903.44,
+    "max": 1166.93
+   },
+   "echomind-legal-next-api_mem_gb": {
+    "n": 22,
+    "p50": 3.66,
+    "p95": 3.75,
+    "max": 3.77
+   },
+   "echomind-trtllm_cpu_pct": {
+    "n": 22,
+    "p50": 102.03,
+    "p95": 108.79,
+    "max": 112.39
+   },
+   "echomind-trtllm_mem_gb": {
+    "n": 22,
+    "p50": 1.75,
+    "p95": 1.75,
+    "max": 1.75
+   }
+  }
+ }
+}

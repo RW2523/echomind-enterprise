@@ -1,0 +1,113 @@
+{
+ "meta": {
+  "set": "t12",
+  "commit": "4c6d630",
+  "time": "20261107-175806",
+  "started": "20261107-175433",
+  "base": "http://127.0.0.1:8131",
+  "window": "owner (approved plan 2026-11-07): private copy, at most 4 model users, 3 min per level"
+ },
+ "summary": {
+  "seconds": 180,
+  "research_users": 0,
+  "users": [],
+  "stopped_early": false,
+  "operations": {
+   "capture_open": {
+    "n": 1,
+    "p50_s": 0.21,
+    "p95_s": 0.21,
+    "max_s": 0.21
+   },
+   "search": {
+    "n": 73,
+    "p50_s": 2.48,
+    "p95_s": 3.15,
+    "max_s": 3.93
+   },
+   "document_ready": {
+    "n": 18,
+    "p50_s": 5.02,
+    "p95_s": 8.02,
+    "max_s": 8.16
+   },
+   "chat_answer": {
+    "n": 51,
+    "p50_s": 9.02,
+    "p95_s": 15.17,
+    "max_s": 16.23
+   },
+   "chat_first_text": {
+    "n": 51,
+    "p50_s": 4.72,
+    "p95_s": 9.96,
+    "max_s": 11.13
+   },
+   "capture_frame_lag": {
+    "n": 1,
+    "p50_s": 0.01,
+    "p95_s": 0.01,
+    "max_s": 0.01
+   },
+   "capture_stop": {
+    "n": 1,
+    "p50_s": 32.27,
+    "p95_s": 32.27,
+    "max_s": 32.27
+   }
+  },
+  "failures": {},
+  "last_error": {},
+  "database_busy": 0,
+  "capture_frames": 1798,
+  "backend_rss_mb_max": 4026.4,
+  "backend_rss_mb_start": 3899.4,
+  "chat_users": 2,
+  "ingest": true,
+  "council": false,
+  "system": {
+   "host_cpu_pct": {
+    "n": 69,
+    "p50": 99.8,
+    "p95": 99.9,
+    "max": 100.0
+   },
+   "host_mem_available_gb": {
+    "n": 69,
+    "p50": 29.9,
+    "p95": 30.9,
+    "max": 31.1
+   },
+   "gpu_util_pct": {
+    "n": 69,
+    "p50": 94.0,
+    "p95": 95.0,
+    "max": 96.0
+   },
+   "echomind-legal-next-api_cpu_pct": {
+    "n": 23,
+    "p50": 370.07,
+    "p95": 418.36,
+    "max": 440.53
+   },
+   "echomind-legal-next-api_mem_gb": {
+    "n": 23,
+    "p50": 3.85,
+    "p95": 3.94,
+    "max": 3.95
+   },
+   "echomind-trtllm_cpu_pct": {
+    "n": 23,
+    "p50": 102.84,
+    "p95": 113.1,
+    "max": 114.35
+   },
+   "echomind-trtllm_mem_gb": {
+    "n": 23,
+    "p50": 1.75,
+    "p95": 1.75,
+    "max": 1.76
+   }
+  }
+ }
+}
