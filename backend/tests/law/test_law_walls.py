@@ -170,6 +170,10 @@ def test_break_glass_expires(world, fresh_db):
     with sqlite3.connect(fresh_db) as c:
         c.execute("UPDATE break_glass_grants SET expires_at=? WHERE id=?", (_ts(-1), g["id"]))
     assert as_user(world, "admin").get(f"/api/legal/matters/{_mid(world, 'M-101')}").status_code == 404
+    # ...and the lists say so (scripts/law/workflow_check.py, 2026-11-07: they still said "active", with "End now").
+    for who in ("admin", "mp"):
+        listed = {r["id"]: r["status"] for r in as_user(world, who).get("/api/legal/break-glass").json()["requests"]}
+        assert listed[g["id"]] == "ended", who
 
 
 def test_break_glass_never_reaches_highly_restricted_matters(world):

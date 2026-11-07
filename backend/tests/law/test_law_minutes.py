@@ -291,6 +291,16 @@ def test_approval_is_by_a_second_lawyer_and_binds_the_content_hash(board):
     assert v2["status"] == "draft" and [v["status"] for v in alice.get(f"{board['base']}/minutes").json()["versions"]] == ["draft", "approved"]
 
 
+def test_an_author_s_own_approval_of_minutes_is_recorded_as_a_refusal(board):
+    hold_meeting(board)
+    alice = as_user(board, "alice")
+    m = draft(alice, board)
+    assert review(alice, board, m).status_code == 409                                  # the answer does not change
+    with sqlite3.connect(_db()) as db:
+        rows = db.execute("SELECT actor_username, outcome, reason FROM audit_events WHERE action='minutes.review'").fetchall()
+    assert rows == [("alice", "deny", "own_work")]
+
+
 def test_only_approved_minutes_are_filed_carrying_the_approval(board):
     hold_meeting(board)
     alice, dave = as_user(board, "alice"), as_user(board, "dave")
