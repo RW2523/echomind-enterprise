@@ -36,6 +36,7 @@ from . import llm as llm_mod
 from . import amendments, attribution, dates, evidence, followup, prompt
 from . import kinds
 from . import stated as statedmod
+from . import support as supportmod
 from . import working
 
 logger = logging.getLogger(__name__)
@@ -232,10 +233,10 @@ def _titles(scopes, uid: str) -> dict[str, str]:
 _HEADS: dict[tuple[str, str], tuple[set, list, list]] = {}       # (version id, title) → (parties, roles); a version's text is fixed
 
 
-def _heads(scopes, uid: str) -> dict[str, tuple[set, list, list]]:
+def _heads(scopes, uid: str) -> dict[str, tuple[set, list, list, set]]:
     """For each document the person may read in the matters asked about (document id →): its parties (the companies of its
     title and preamble, and those it defines by a role), the roles it defines ("Provider", "Client") and the roles whichever
-    party acts takes ("the Recipient", with the sentence defining them). Each version is read once."""
+    party acts takes ("the Recipient", with the sentence defining them), and its parties' full names. Each version is read once."""
     from ..documents import repo as doc_repo
     out = {}
     for sc in scopes:
@@ -249,13 +250,73 @@ def _heads(scopes, uid: str) -> dict[str, tuple[set, list, list]]:
                 if len(_HEADS) > 20000:
                     _HEADS.clear()
                 _HEADS[key] = (attribution.parties_of(key[1], text) | ({attribution.party_key(n) for n, _ in roles} - {""}), roles,
-                               attribution.taken_roles(text))
+                               attribution.taken_roles(text), attribution.party_names(key[1], text))
             out[d["id"]] = _HEADS[key]
     return out
 
 
 MAX_OPENINGS = 2
 MAX_PARTY_DOCUMENTS = 3          # the documents the parties a question names share, each searched for its best passage
+
+# Context around what was found (2026-11-07 review point 3): the passage before or after one whose sentence sits at its edge,
+# in the same clause; the definitions of the defined terms the best passages use; and the clause a passage is "subject to".
+# Each is the document's own passage, numbered and cited like any other source; at most MAX_CONTEXT are added, and none once
+# the sources reach MAX_CONTEXT_CHARS, so what the search found always comes first.
+MAX_CONTEXT = 4
+MAX_CONTEXT_CHARS = 14000
+MAX_DEFINITIONS = 2
+_EDGE = 150
+_SUBJECT = re.compile(r"\b(?:subject\s+to|except\s+as\s+(?:provided|set\s+out|stated)\s+in|notwithstanding|save\s+as\s+(?:provided|set\s+out)"
+                      r"\s+in|in\s+accordance\s+with)\s+(?:clause|section|paragraph)s?\s+(\d{1,2}(?:\.\d{1,2}){0,2})", re.I)
+
+
+def _context(scope, passages: list[dict], versions: str) -> list[dict]:
+    if settings.LEGAL_RESEARCH_CONTEXT != "on" or not passages:
+        return []
+    have = {p["chunk_id"] for p in passages}
+    total = sum(len(p["text"]) for p in passages)
+    out: list[dict] = []
+
+    def add(found: list[dict], why: str) -> None:
+        nonlocal total
+        for q in found:
+            if len(out) >= MAX_CONTEXT or total + len(q["text"]) > MAX_CONTEXT_CHARS or q["chunk_id"] in have:
+                continue
+            have.add(q["chunk_id"])
+            total += len(q["text"])
+            out.append({**q, "context": why})
+    top = passages[:3]
+    for p in top:                                       # a clause the passage's edge cuts
+        c = p["citation"]
+        fs, fe, cs, ce = c.get("focus_start"), c.get("focus_end"), c.get("char_start"), c.get("char_end")
+        head = (c.get("clause") or "").split(".")[0]
+        if None in (fs, fe, cs, ce) or not head:
+            continue
+        places = ([(c["version_id"], cs - 1)] if fs - cs < _EDGE and cs > 0 else []) + ([(c["version_id"], ce + 1)] if ce - fe < _EDGE else [])
+        if places:
+            near = searchmod.passages_at(scope, places, versions)
+            add([q for q in near if (q["citation"].get("clause") or "").split(".")[0] == head], "continues")
+    versions_of = list(dict.fromkeys(p["citation"]["version_id"] for p in top))
+    if versions_of:                                     # the definitions of terms the best passages use
+        with get_conn() as conn:
+            terms = conn.execute(f"SELECT version_id, term, char_start, char_end FROM legal_defined_terms WHERE matter_id=? AND version_id IN "
+                                 f"({','.join('?' * len(versions_of))})", (scope.matter_id, *versions_of)).fetchall()
+        places = []
+        for p in top:
+            c = p["citation"]
+            for vid, term, a, b in terms:
+                if vid != c["version_id"] or len(term) < 3 or not term[:1].isupper() or len(places) >= MAX_DEFINITIONS:
+                    continue
+                inside = c.get("char_start") is not None and c["char_start"] <= a < (c.get("char_end") or 0)
+                if not inside and re.search(rf"\b{re.escape(term)}\b", p["text"]) and (vid, a) not in places:
+                    places.append((vid, a))
+        if places:
+            add(searchmod.passages_at(scope, places, versions), "definition")
+    for p in passages[:6]:                              # the clause a passage is subject to
+        numbers = list(dict.fromkeys(_SUBJECT.findall(p["text"])))[:2]
+        if numbers:
+            add(searchmod.clause_passages(scope, numbers, versions, [p["citation"]["document_id"]], limit=2), "subject to")
+    return out
 
 
 def _openings(scope, question: str, passages: list[dict], roles: dict, versions: str) -> list[dict]:
@@ -524,6 +585,27 @@ def _changed(links: list[dict], sources: list[dict], cited: list[int], evidence:
     return out
 
 
+def _choices(kind: Optional[tuple], unclear: Optional[tuple], passages: list[dict], titles: dict[str, str]) -> Optional[dict]:
+    """What the question could mean (2026-11-07 review point 10): the documents of the kind it names, the most relevant
+    first, and the parties a name it gives could be, in the documents' own spelling."""
+    out = {}
+    if kind:
+        seen = list(dict.fromkeys(p["citation"]["document_id"] for p in passages if p["citation"]["document_id"] in kind[1]))
+        ordered = seen + [d for d in kind[1] if d not in seen]
+        out.update(kind=kind[0], count=len(kind[1]), documents=[{"id": d, "title": titles.get(d) or ""} for d in ordered[:12]])
+    if unclear:
+        texts = list(titles.values()) + [p["text"] for p in passages]
+
+        def spelled(name: str) -> str:
+            for t in texts:
+                m = re.search(rf"\b{re.escape(name)}\b(?:,?[ \t]+(?:{attribution._FORMS})\b\.?)?", t, re.I)
+                if m:
+                    return m.group(0)
+            return name.title()
+        out["parties"] = {"said": unclear[0], "names": [spelled(n) for n in unclear[1][:4]]}
+    return out or None
+
+
 def _status(abstained: bool, claims: list, unsupported: list, failed: list) -> str:
     if abstained:
         return "abstained"
@@ -579,6 +661,11 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         target = [] if documents or not asked_parties else [did for did, h in heads.items() if asked_parties <= h[0]]
         titles = await run_in_threadpool(_titles, scopes, principal["sub"])
         same = None if several or documents else kinds.same_kind(question, titles, target if asked_parties else None)
+        # More of that kind than are answered for each, or a name several parties' names begin with: the person is offered
+        # the choice (2026-11-07 review point 10), never asked to choose before an answer
+        many = None if several or documents or same else kinds.many_of_kind(question, titles)
+        unclear = None if several or documents else attribution.ambiguous_party(question, set().union(*(h[3] for h in heads.values()))
+                                                                                     if heads else set())
         # A document the question names ("the payment terms in the Master Services Agreement"): its own passages are searched
         # as well and come first, so another document that describes it (an advice memo quoting it) cannot take its place;
         # that one stays among the sources, marked secondary (2026-11-05 brief: the memo's misquote answered for the MSA).
@@ -643,6 +730,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 passages = passages + [p for p in got["passages"] if p["chunk_id"] not in have]
                 nothing_found = nothing_found and got["abstained"]
             passages = passages + await run_in_threadpool(_openings, scope, question, passages, roles, versions)
+            passages = passages + await run_in_threadpool(_context, scope, passages, versions)
             links = _amended(passages, await run_in_threadpool(amendments.for_passages, scope.matter_id, principal["sub"], passages, versions))
         # A named document (above): another document's words it puts in quotation marks as the named one's are checked against
         # the named document's own text, by rule; where they are not there, the named document's passage nearest to them is read
@@ -703,6 +791,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             if worked:
                 named_note += working.note(worked)
         sources = [_source(n, p) for n, p in enumerate(passages, start=1)]
+        choices = _choices(same or many, unclear, passages, titles)
         yield _event({"type": "sources", "citations": sources})
         if nothing_found or not passages:
             status, answer, reason = "abstained", prompt.ABSTAIN, "no_passages"
@@ -918,6 +1007,13 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         items = [] if abstained else await run_in_threadpool(_evidence, claims, sources)
         if not abstained:
             unsupported = _pointed(text, unsupported, items)
+        # Each cited sentence against the passage it quotes, and conditions it leaves out (research/support.py, 2026-11-07):
+        # a sentence its passage does not support joins the sentences without a verified source; its quote stays verified.
+        support = None
+        if not abstained and settings.LEGAL_RESEARCH_SUPPORT_CHECK in ("on", "shadow"):
+            support = await supportmod.check([c for c in claims if _stands(c)], sources)
+            if support and settings.LEGAL_RESEARCH_SUPPORT_CHECK == "on":
+                unsupported = list(unsupported) + [x["sentence"] for x in support["not_supported"] if x["sentence"] not in unsupported]
         status, answer = _status(abstained, claims, unsupported, failed), text
         reason = (None if not abstained else "other_documents" if off_target else "other_party" if off_party
                   else "not_in_cited" if elsewhere else "model")
@@ -932,7 +1028,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                       "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed,
                       "absence": prompt.absence(text) if abstained else None, "calculation": calculation,
                       "working": working.public(worked) if worked and not abstained else None,
-                      "stated": stated, "misquotes": misquoted,
+                      "stated": stated, "misquotes": misquoted, "support": support, "choices": choices,
                       "defined_twice": [{"document": t["document_title"], "term": t["term"],
                                          "clauses": [d["clause"] for d in t["definitions"] if d["clause"]]} for t in twice], **({"stated_shadow": shadow} if mode == "shadow" else {})})
     except scopemod.ScopeRevoked:

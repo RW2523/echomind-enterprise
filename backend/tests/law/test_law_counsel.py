@@ -799,3 +799,25 @@ def test_chat001_the_inventory_intent_is_not_a_question_about_what_documents_say
               "List the documents that mention Harrowgate", "What is the liability cap?"):
         assert classify(q) == "ask_fact", q
     assert classify("Which documents are available across all matters?") == "other_matters"
+
+
+# ── Streaming shows only checked text (2026-11-07 review point 6) ─────────────────
+def test_a_paragraph_whose_quote_is_not_in_its_source_is_held_back_while_streaming(cs, fresh_db):
+    alice = as_user(cs, "alice")
+
+    async def two_paragraphs(messages, temperature, max_tokens):
+        user = messages[-1]["content"]
+        n = next(m.group(1) for m in re.finditer(r'<source n="(\d+)"[^>]*>(.*?)</source>', user, re.S)
+                 if "complete delivery by May 15, 2026" in m.group(2))
+        text = (f'The agreement requires delivery by May 15, 2026 [{n}: "complete delivery by May 15, 2026"].\n\n'
+                f'Late delivery doubles the fee [{n}: "the fee is doubled for any late delivery"].')
+        for piece in re.findall(r"\S+\s*|\n+", text):
+            yield piece
+    cs["model"].chat_stream = two_paragraphs
+    conv = new_conversation(alice, cs["mid"])
+    events = turn(alice, conv, "When must Apex complete delivery?")
+    streamed = "".join(e["data"]["text"] for e in events if e["event"] == "answer.delta")
+    assert "May 15, 2026" in streamed and "doubles the fee" not in streamed
+    assert names(events).count("answer.held") == 1
+    ans = component(final(events), "source_answer")["props"]
+    assert "doubles the fee" in ans["answer"] and ans["state"] == "partial"        # shown once checked, flagged

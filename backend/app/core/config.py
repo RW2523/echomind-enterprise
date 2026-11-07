@@ -277,6 +277,11 @@ class Settings(BaseSettings):
     # D-076: single sign-on with the firm's identity provider (OIDC), off unless the issuer is set. It signs in only accounts
     # that exist here, matched on the claim (lower-cased; "@<email domain>" taken off). This server's two-step sign-in is
     # still asked for unless TRUST_MFA and the token's amr say the provider used MFA.
+    # How the deployment may reach the network (2026-11-07 review point 7; core/edition.py checks it at start-up):
+    # "disconnected" (default): every service address is this server or the firm's private network, and regulatory updates
+    # arrive only as a carried-in bundle; "restricted": the hosts in LEGAL_EGRESS_ALLOWLIST (comma-separated) are allowed too.
+    LEGAL_NETWORK_MODE: str = os.getenv("LEGAL_NETWORK_MODE", "disconnected").strip().lower()
+    LEGAL_EGRESS_ALLOWLIST: str = os.getenv("LEGAL_EGRESS_ALLOWLIST", "")
     LEGAL_OIDC_ISSUER: str = os.getenv("LEGAL_OIDC_ISSUER", "")
     LEGAL_OIDC_CLIENT_ID: str = os.getenv("LEGAL_OIDC_CLIENT_ID", "")
     LEGAL_OIDC_CLIENT_SECRET_FILE: str = os.getenv("LEGAL_OIDC_CLIENT_SECRET_FILE", "")
@@ -310,6 +315,9 @@ class Settings(BaseSettings):
     # correct legal clauses as low as -10, so the floor only drops clearly unrelated passages; the model abstains
     # on the rest (D-038).
     LEGAL_RERANK_MIN_SCORE: float = float(os.getenv("LEGAL_RERANK_MIN_SCORE", "-10.5"))
+    # How passages are ordered after reranking (retrieval/search.py, 2026-11-07): "sparse" fuses the cross-encoder's rank with
+    # BM25's, "none" keeps the cross-encoder's order alone.
+    LEGAL_RERANK_FUSION: str = os.getenv("LEGAL_RERANK_FUSION", "sparse").strip().lower()
     LEGAL_ABSTAIN_WEAK_SCORE: float = float(os.getenv("LEGAL_ABSTAIN_WEAK_SCORE", "-6.0"))  # "not stated" + only weak passages cited = abstain
     LEGAL_JOB_POLL_SEC: float = float(os.getenv("LEGAL_JOB_POLL_SEC", "2"))
     LEGAL_JOB_MAX_ATTEMPTS: int = int(os.getenv("LEGAL_JOB_MAX_ATTEMPTS", "3"))
@@ -317,12 +325,20 @@ class Settings(BaseSettings):
     LEGAL_RESEARCH_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_PASSAGES", "6"))          # sources given to the model
     # a document the question names: this many of its own passages are also searched and put first (2026-11-05 brief)
     LEGAL_RESEARCH_NAMED_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_NAMED_PASSAGES", "3"))
-    LEGAL_RESEARCH_MAX_TOKENS: int = int(os.getenv("LEGAL_RESEARCH_MAX_TOKENS", "700"))
+    # 700 cut answers that list every term or figure asked for (2026-11-07 review: totals and dates missing); an answer
+    # still stops when it is done, so this is a ceiling, not a target.
+    LEGAL_RESEARCH_MAX_TOKENS: int = int(os.getenv("LEGAL_RESEARCH_MAX_TOKENS", "1100"))
     LEGAL_RESEARCH_TEMPERATURE: float = float(os.getenv("LEGAL_RESEARCH_TEMPERATURE", "0.1"))  # research answers; EV14: 0.1 swings single runs
     LEGAL_STREAM_RECHECK_SEC: float = float(os.getenv("LEGAL_STREAM_RECHECK_SEC", "2"))    # live scope check while streaming
     # research/stated.py: "hedged" asks of answers that open "not stated"; "all" of every answer; "shadow" asks of every answer
     # but acts only on hedged ones, recording the rest (evaluation); "off"
     LEGAL_RESEARCH_STATED_CHECK: str = os.getenv("LEGAL_RESEARCH_STATED_CHECK", "hedged").strip().lower()
+    # Context added around what research found (research/routes._context, 2026-11-07): the rest of a clause cut by a passage's
+    # edge, definitions of terms the best passages use, a clause they are "subject to". "on" or "off".
+    LEGAL_RESEARCH_CONTEXT: str = os.getenv("LEGAL_RESEARCH_CONTEXT", "off").strip().lower()
+    # Whether each cited sentence is supported by the passage it quotes, and conditions it leaves out (research/support.py,
+    # 2026-11-07): "on" flags them, "shadow" only reports them in the result, "off" skips the check.
+    LEGAL_RESEARCH_SUPPORT_CHECK: str = os.getenv("LEGAL_RESEARCH_SUPPORT_CHECK", "on").strip().lower()
     # Compare and contradictions (S2.3; D-039).
     LEGAL_COMPARE_MATCH_MIN: float = float(os.getenv("LEGAL_COMPARE_MATCH_MIN", "0.5"))       # shared wording to pair clauses in place
     LEGAL_COMPARE_MOVE_MIN: float = float(os.getenv("LEGAL_COMPARE_MOVE_MIN", "0.8"))         # shared wording to call a clause moved

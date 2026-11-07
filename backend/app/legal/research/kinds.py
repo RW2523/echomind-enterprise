@@ -22,8 +22,8 @@ _GENERIC = frozenset("the a an this that their its our your his her each any oth
 MAX_SAME = 4
 
 
-def same_kind(question: str, titles: dict[str, str], among: Optional[list[str]] = None) -> Optional[tuple[str, list[str]]]:
-    """(the kind, the ids of the documents titled with it) when the question names a kind that two to MAX_SAME documents
+def same_kind(question: str, titles: dict[str, str], among: Optional[list[str]] = None, most: int = MAX_SAME) -> Optional[tuple[str, list[str]]]:
+    """(the kind, the ids of the documents titled with it) when the question names a kind that two to `most` documents
     share, of those `among` when a party narrows them, and no words of one of their titles that the others lack; else None."""
     q = (question or "").lower().replace("’", "'")
     pool = {did: (t or "").lower() for did, t in titles.items() if among is None or did in among}
@@ -37,7 +37,7 @@ def same_kind(question: str, titles: dict[str, str], among: Optional[list[str]] 
             if not docs and kind.endswith("s"):       # "the supply agreements"
                 kind = kind[:-1]
                 docs = _titled(pool, kind)
-            if 2 <= len(docs) <= MAX_SAME and (best is None or len(kind) > len(best[0])):
+            if 2 <= len(docs) <= most and (best is None or len(kind) > len(best[0])):
                 best = (kind, docs)
     if best is None:
         return None
@@ -46,6 +46,13 @@ def same_kind(question: str, titles: dict[str, str], among: Optional[list[str]] 
     common = set.intersection(*own.values())
     said = {re.sub(r"'s?$", "", w) for w in re.findall(r"[a-z0-9][a-z0-9'-]*", q)}
     return None if any((words := own[did] - common) and words <= said for did in docs) else best
+
+
+def many_of_kind(question: str, titles: dict[str, str]) -> Optional[tuple[str, list[str]]]:
+    """More documents of the kind named than are answered for each (2026-11-07 review point 10): "the letter" in a matter
+    with seven letters. They are not all searched; the person is offered the most relevant to ask about one alone."""
+    got = same_kind(question, titles, None, most=10_000)
+    return got if got and len(got[1]) > MAX_SAME else None
 
 
 def _titled(pool: dict[str, str], kind: str) -> list[str]:

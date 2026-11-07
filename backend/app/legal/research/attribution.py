@@ -15,6 +15,7 @@ when the reference is clear.
 from __future__ import annotations
 
 import re
+from typing import Optional
 
 # Types that name one document on their own when the matter has one of them ("the lease", "the MSA", "the NDA") …
 _STRONG = frozenset("msa nda lease".split())
@@ -130,6 +131,12 @@ def party_key(name: str) -> str:
 def parties_of(title: str, text: str) -> set[str]:
     """The parties of a document: the companies named in its title and preamble — before its first numbered clause — who
     made, signed or received it. Companies its clauses go on to mention are not its parties."""
+    return {party_key(n) for n in party_names(title, text)} - {""}
+
+
+def party_names(title: str, text: str) -> set[str]:
+    """parties_of in full ("apex industries", "apex holdings"), where parties_of keys each by its first word ("apex"): two
+    companies of one group are told apart only by their full names (2026-11-07, ambiguous_party)."""
     body = text or ""
     first = re.search(r"(?m)^\s*(?:#+\s*)?1[.\s]", body)
     head = "\n".join((title or "", body[:min(first.start() if first else 600, 1200)]))
@@ -139,8 +146,8 @@ def parties_of(title: str, text: str) -> set[str]:
         words = m.group(1).split()
         cut = max((i for i, w in enumerate(words) if w.lower() in _SMALL), default=-1)   # "Board of Directors of Voss-Lindqvist"
         if words[cut + 1:] and not any(w.lower() in _NOT_NAMES for w in words[cut + 1:]):
-            out.add(party_key(" ".join(words[cut + 1:])))
-    return out - {""}
+            out.add(" ".join(words[cut + 1:]).lower())
+    return out
 
 
 def party_records(text: str, parties: set[str]) -> set[str]:
@@ -353,6 +360,24 @@ def with_roles(question: str, roles: dict[str, list[tuple[str, str]]]) -> str:
 # matter's other supply agreement (Northwind and Tidewater): a verified quote from a document Alder Retail is not party to.
 # Titles do not tell the two apart ("Supply Agreement (DEMO)"), their parties do.
 _DOC_NOUN = r"(?:agreement|contract|lease|licen[cs]e|nda|msa|side\s+letter|engagement\s+letter|deed|term\s+sheet)"
+
+
+def ambiguous_party(question: str, known: set[str]) -> Optional[tuple[str, list[str]]]:
+    """A name in the question that starts two or more different parties' names, none of which the question gives in full
+    (2026-11-07 review point 10): "What does Apex owe?" with Apex Industries Ltd and Apex Holdings Ltd in the matter.
+    A shorter name that begins a longer one ("harrowgate", "harrowgate technologies ltd") is the same party."""
+    q = re.sub(r"\[[^\]]*\]", " ", question or "").replace("’", "'")
+    low = q.lower()
+    names = sorted(known, key=len, reverse=True)
+    distinct = [n for n in names if not any(o != n and o.startswith(n + " ") for o in names)]
+    if any(re.search(rf"\b{re.escape(n)}\b", low) for n in distinct):
+        return None                                       # one is named in full
+    for m in re.finditer(r"\b([A-Z][\w&-]{2,})\b", q):
+        word = m.group(1).lower()
+        hits = [n for n in distinct if n.split()[0] == word]
+        if len(hits) >= 2:
+            return m.group(1), sorted(hits)
+    return None
 
 
 def named_parties(text: str, known: set[str]) -> set[str]:

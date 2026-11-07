@@ -8,7 +8,7 @@ and the conflict scan. Their results are turned into components from the trusted
 a whole, stored, and only then sent as `ui.final`. Streamed text (`answer.delta`) is research's own paragraph text,
 released only after each paragraph's quotes were checked.
 
-Events, one JSON object per line: turn.started, turn.understood, task.progress, answer.delta, citation.verified,
+Events, one JSON object per line: turn.started, turn.understood, task.progress, answer.delta, answer.held, citation.verified,
 ui.partial (a validated component shown as soon as it is ready), ui.final, then exactly one of turn.completed /
 turn.abstained / turn.failed / scope_revoked.
 
@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import uuid
 from dataclasses import dataclass, field
 from typing import AsyncIterator, Optional
@@ -196,6 +197,40 @@ def _twice_note(t: dict) -> str:
             "so it is ambiguous on this point. Found by rule.")[:400]
 
 
+def _condition_note(q: dict) -> str:
+    """A cited passage puts a condition on a sentence that the sentence leaves out (research/support.py, 2026-11-07)."""
+    said = q.get("sentence") or ""
+    said = said if len(said) <= 140 else said[:139].rsplit(" ", 1)[0] + "…"
+    how = "Found by rule." if q.get("by") == "rule" else "Found on checking the answer against its sources."
+    return f"The source adds a condition to “{said}”: “{q.get('words', '')}”. {how}"[:400]
+
+
+def _choice_offers(choices: Optional[dict], question: str) -> tuple[list[str], list[dict]]:
+    """What the question could mean, offered as asks narrowed to one document or one party (research/routes._choices,
+    2026-11-07 review point 10). The answer is given either way; these let the person say which they meant."""
+    notes, actions = [], []
+    if not choices:
+        return notes, actions
+    if choices.get("documents"):
+        n, kind = choices.get("count") or len(choices["documents"]), choices.get("kind") or "document"
+        notes.append((f"This matter has {n} documents that are a{'n' if kind[:1] in 'aeiou' else ''} “{kind}”"
+                      + (", and the answer may not cover all of them" if n > 4 else "") + ". To ask about one alone, choose it below.")[:400])
+        for i, d in enumerate(choices["documents"][:4]):
+            label = f"Only {d['title']}"
+            actions.append({"id": f"only_document_{i}", "label": label if len(label) <= 48 else label[:47].rstrip() + "…",
+                            "action_type": "ask", "prompt": question[:300], "document_ids": [d["id"]]})
+    elif (parties := choices.get("parties")) and parties.get("names"):
+        said, names = parties["said"], parties["names"]
+        notes.append((f"“{said}” could be " + (", ".join(names[:-1]) + f" or {names[-1]}") + ". To ask about one of them, choose it below.")[:400])
+        for i, name in enumerate(names[:4]):
+            asked = re.sub(rf"\b{re.escape(said)}\b", name, question, count=1, flags=re.I)
+            label = f"Only {name}"
+            if len(asked) <= 300:
+                actions.append({"id": f"only_party_{i}", "label": label if len(label) <= 48 else label[:47].rstrip() + "…",
+                                "action_type": "ask", "prompt": asked})
+    return notes, actions
+
+
 def _notes(cites: list[dict], conflicts: list[dict]) -> list[str]:
     notes = []
     for c in conflicts[:2]:
@@ -219,16 +254,26 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
              "question": question, "auth": principal.get("auth"), "created_at": policy.now_iso()}
     built.research_turn_id = None if extra_scopes else rturn["id"]          # several matters: kept in the conversation only
     done = None
+    # A paragraph whose quotes were not found in their sources is not streamed (2026-11-07 review point 6): only
+    # `answer.held` says one is being kept back; the checked answer (ui.final) shows it, flagged.
+    held = False
     async for line in research._answer(scope, principal, question, rturn, "signed", document_ids or None, None, extra_scopes):
         e = json.loads(line)
         kind = e.get("type")
-        if kind == "sources":
+        if kind == "paragraph":
+            held = bool(e.get("failed"))
+            if held:
+                yield event("answer.held", {"index": e.get("index")})
+        elif kind == "sources":
             docs = {c["document_id"] for c in e.get("citations") or []}
             n = len(e.get("citations") or [])
             if n:
                 yield event("task.progress", {"label": f"Reading {n} passage{'s' if n != 1 else ''} from {len(docs)} "
                                                        f"document{'s' if len(docs) != 1 else ''}", "done": 0, "total": n, "state": "running"})
         elif kind == "chunk":
+            if held:
+                held = False
+                continue
             yield event("answer.delta", {"text": e.get("text") or ""})
         elif kind == "scope_revoked":
             raise scopemod.ScopeRevoked()
@@ -245,6 +290,7 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
     state = done.get("status") if done.get("status") in ("answered", "partial", "unverified", "abstained") else "unverified"
     changed = done.get("amendments") or []
     amend_notes, amend_actions = await run_in_threadpool(_amendment_notes, changed, (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
+    choice_notes, choice_actions = _choice_offers(done.get("choices"), question)
     props = {"answer": done.get("answer") or "", "state": state,
              "citations": [{k: v for k, v in c.items() if k != "instructions"} for c in cites],
              # a decline supports nothing, so it lists no unsupported sentences; what it says is missing is shown instead (QA UX-001)
@@ -254,7 +300,8 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
                        + ([NOT_IN_CITED] if done.get("abstention_reason") == "not_in_cited" else [])
                        + [_misquote_note(m) for m in (done.get("misquotes") or [])]
                        + ([] if state == "abstained" else [_twice_note(t) for t in (done.get("defined_twice") or [])])
-                       + amend_notes + _notes(cites, done.get("conflicts") or []))[:3]}
+                       + ([] if state == "abstained" else [_condition_note(q) for q in ((done.get("support") or {}).get("qualified") or [])])
+                       + amend_notes + choice_notes + _notes(cites, done.get("conflicts") or []))[:3]}
     if built.understood:
         props["understood"] = built.understood[:400]
     if state == "abstained" and done.get("absence"):
@@ -267,7 +314,7 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
     if state != "abstained" and (done.get("working") or {}).get("steps"):
         props["working"] = _working_props(done["working"], (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
     built.add("source_answer", props, [c["document_id"] for c in cites] + [a["by"]["document_id"] for a in changed])
-    built.actions = amend_actions
+    built.actions = (amend_actions + choice_actions)[:4]
     if state == "abstained":
         built.status = "abstained"
         built.summary = "No source found in these matters' documents." if extra_scopes else "No source found in this matter's documents."

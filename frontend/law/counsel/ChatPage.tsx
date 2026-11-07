@@ -18,7 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { keys } from '../api/queries';
 import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowUp, AudioLines, CalendarRange, Check, ChevronLeft, ChevronRight, Columns3, Copy, ListChecks, Loader2, Lock, Paperclip, Pencil, RefreshCw, Scale,
+  AlertTriangle, ArrowUp, AudioLines, CalendarRange, Check, ChevronLeft, ChevronRight, Columns3, Copy, ListChecks, Loader2, Lock, Paperclip, Pencil, RefreshCw, Scale,
   ScrollText, Square, ThumbsDown, ThumbsUp, Volume2, X,
 } from 'lucide-react';
 import { ApiError, postForBlob } from '../api/client';
@@ -282,6 +282,7 @@ export default function ChatPage() {
           case 'turn.understood': patch(key, { understood: String(e.data?.question ?? '') }); break;
           case 'task.progress': patch(key, { progress: parseTaskProgress(e.data) ?? undefined }); break;
           case 'answer.delta': patch(key, (t) => ({ text: t.text + String(e.data?.text ?? '') })); break;
+          case 'answer.held': patch(key, (t) => ({ held: (t.held ?? 0) + 1 })); break;
           case 'ui.partial': {                                    // a card ready before the whole answer
             const comp = parseComponent(e.data);
             if (comp.type !== 'inert') patch(key, (t) => ({ partial: [...(t.partial ?? []).filter((c) => c.id !== comp.id), comp] }));
@@ -666,6 +667,8 @@ function TurnView({ t, ctx, busy, versions, onChoose, onRetry, onEdit, onRate, o
   const [text, setText] = useState(t.question);
   const comps = t.envelope?.components ?? (t.status === 'streaming' ? t.partial ?? [] : []);
   const done = t.status === 'completed' || t.status === 'abstained';
+  // A draft was streamed, then the checked answer is a decline: say so rather than swap it silently (review point 6).
+  const withdrawn = !!t.text && !!t.envelope && t.envelope.components.some((c) => c.type === 'source_answer' && c.props.state === 'abstained');
   const send = () => { if (text.trim() && !busy) { setEditing(false); onEdit(text); } };
   return (
     <article className="qc-turn" style={{ display: 'grid', gap: 12 }} aria-busy={t.status === 'streaming'}>
@@ -705,7 +708,15 @@ function TurnView({ t, ctx, busy, versions, onChoose, onRetry, onEdit, onRate, o
             <button type="button" className="qc-btn" onClick={onStop}><Square aria-hidden />Stop</button>
           </div>
         )}
-        {t.status === 'streaming' && t.text && !t.envelope && <AnswerText text={t.text} citations={[]} pending />}
+        {t.status === 'streaming' && (t.text || t.held) && !t.envelope && (
+          // Streamed text is a draft until the whole answer is checked (2026-11-07 review point 6): said, and shown muted.
+          <div className="qc-provisional">
+            <p className="qc-provisional-label">Draft: still being checked against the documents</p>
+            {t.text && <AnswerText text={t.text} citations={[]} pending />}
+            {!!t.held && <p className="qc-meta">{t.held === 1 ? 'A paragraph is' : `${t.held} paragraphs are`} held back: its quotes were not found in the sources.</p>}
+          </div>
+        )}
+        {withdrawn && <p className="qc-note" role="note"><AlertTriangle size={15} aria-hidden />On checking against the documents, the draft answer was withdrawn.</p>}
         {comps.map((c) => <ComponentView key={c.id} comp={c} ctx={ctx} />)}
         {t.envelope && <ActionButtons actions={t.envelope.suggested_actions} ctx={ctx} />}
         {done && <TurnTools t={t} busy={busy} onRetry={onRetry} onRate={onRate} matterId={ctx.matterId} />}

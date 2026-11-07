@@ -850,3 +850,28 @@ describe('the glance says more (review M2)', () => {
     expect(await within(glance).findByText(/The deadlines could not be loaded/)).toBeTruthy();       // a failure is said, not hidden
   });
 });
+
+describe('streamed text is a draft until checked (2026-11-07 review point 6)', () => {
+  it('says so when the checked answer withdraws a streamed draft, instead of swapping it silently', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    const declined = { ...answerEnvelope(), summary: 'No source found in this matter\'s documents.',
+      components: [{ id: CMP, version: 1, type: 'source_answer', props: {
+        answer: 'The documents in this matter do not answer that.', state: 'abstained', citations: [], unsupported: [], notes: [] } }] };
+    world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(declined, 'turn.abstained')] });
+    renderLaw('/chat');
+    await ask('When must Apex complete delivery?');
+    expect(await screen.findByText('On checking against the documents, the draft answer was withdrawn.')).toBeTruthy();
+  });
+
+  it('a checked answer that stands shows no withdrawal note, and the network mode is stated', async () => {
+    localStorage.setItem('echomind.counsel.matter', 'id-M-101');
+    world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(answerEnvelope())] });
+    renderLaw('/chat');
+    await ask('When must Apex complete delivery?');
+    expect(await screen.findByText('Supported by 1 verified quote')).toBeTruthy();
+    expect(screen.queryByText(/draft answer was withdrawn/)).toBeNull();
+    const { whereAnswersComeFrom } = await import('../counsel/where');
+    const w = whereAnswersComeFrom({ features: { intake: false, intake_links: false, model_location: 'this_server', network_mode: 'disconnected' } } as never);
+    expect(w.text).toContain("connects to nothing outside your firm's network");
+  });
+});

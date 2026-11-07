@@ -53,7 +53,8 @@ export async function streamAnswer(matterId: string, body: Record<string, unknow
     else if (ev.type === 'sources') update({ sources: ev.citations ?? [] });
     else if (ev.type === 'paragraph') {
       checked = true;
-      const paragraphs = [...(state.paragraphs ?? []), ev as ResearchParagraph];
+      // Index 0 after other paragraphs is the answer worked out by rule replacing the model's (2026-11-07): it starts over.
+      const paragraphs = [...(ev.index === 0 ? [] : state.paragraphs ?? []), ev as ResearchParagraph];
       update({ paragraphs, text: paragraphs.map((p) => p.text).join('\n\n'), phase: 'writing',
         unsupported: paragraphs.flatMap((p) => p.unsupported ?? []), failed: paragraphs.flatMap((p) => p.failed ?? []) });
     } else if (ev.type === 'chunk') { if (!checked) update({ text: state.text + (ev.text ?? ''), phase: 'writing' }); }

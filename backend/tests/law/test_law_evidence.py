@@ -955,7 +955,8 @@ def test_not_stated_then_a_cited_fact_is_a_decline_or_an_answer_as_the_cited_pas
     alice, asked, verdict = as_user(ev, "alice"), [], {"word": "NOT GIVEN"}
 
     async def chat(messages, temperature, max_tokens):
-        asked.append(messages)
+        if "give the answer to a lawyer" in messages[0]["content"]:      # the stated check, not the support check (support.py)
+            asked.append(messages)
         return verdict["word"]
     monkeypatch.setattr(ev["llm"], "chat", chat, raising=False)
     q = "Is interest charged on fees the Customer pays late?"
@@ -1171,7 +1172,8 @@ def test_roles_either_party_takes_reach_the_search_and_the_check(ev, monkeypatch
     asked = []
 
     async def chat(messages, temperature, max_tokens):
-        asked.append(messages)
+        if "give the answer to a lawyer" in messages[0]["content"]:      # the stated check, not the support check (support.py)
+            asked.append(messages)
         return "Asked: whether Fenwick may tell its staff\nWords: shall disclose it only to its employees who need to know it\nVerdict: GIVEN"
     monkeypatch.setattr(ev["llm"], "chat", chat, raising=False)
     q = "May Fenwick pass what Orrin tells it on to its own staff?"

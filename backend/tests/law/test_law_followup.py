@@ -29,6 +29,8 @@ class Model:
         self.rewrite, self.answer, self.rewrites, self.answers, self.fail = STANDALONE, "", [], [], False
 
     async def chat(self, messages, temperature, max_tokens):
+        if messages[0]["content"].startswith("You check statements"):     # the support check (research/support.py), not a rewrite
+            return ""
         self.rewrites.append(messages)
         if self.fail:
             raise RuntimeError("model down")

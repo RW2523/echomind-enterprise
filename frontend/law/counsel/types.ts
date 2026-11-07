@@ -248,6 +248,8 @@ export interface ChatTurn {
   understood?: string;
   status: TurnStatus;
   text: string;
+  /** Paragraphs kept back while streaming because their quotes were not found (answer.held); the checked answer shows them. */
+  held?: number;
   progress?: TaskProgressProps;
   envelope?: Envelope;
   partial?: SafeComponent[];         // components shown as soon as they are ready, before the whole answer (ui.partial)
