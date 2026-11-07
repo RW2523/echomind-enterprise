@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 _MIN_EMBED_CHARS = 500
 
 # Query-embedding cache: single-text embeds (queries) are deterministic for a fixed model,
-# so caching is safe (no staleness). Batch embeds (ingestion) are unique-heavy and skipped.
+# so caching is safe (no staleness). Document embeds (ingestion, kind="document") are never
+# cached, even a one-chunk document: the cache holds questions, never matter content.
 # Keys are the FINAL text sent to the model (i.e. including any task prefix), so the same
 # sentence embedded as a query and as a document never collide.
 _QUERY_EMBED_CACHE: "collections.OrderedDict[str, list]" = collections.OrderedDict()
@@ -59,7 +60,8 @@ class OllamaEmbeddings:
         texts = [prefix + (t or "") for t in texts]
         # Cache single-text (query) embeds; return a fresh array so callers can normalize in place
         # without mutating the cached vector.
-        if len(texts) == 1:
+        cacheable = len(texts) == 1 and kind != "document"     # a one-chunk document is matter content: never kept
+        if cacheable:
             cached = _QUERY_EMBED_CACHE.get(texts[0])
             if cached is not None:
                 _QUERY_EMBED_CACHE.move_to_end(texts[0])
@@ -70,7 +72,7 @@ class OllamaEmbeddings:
                 safe = _truncate_for_embed(t)
                 vec = await self._embed_one(client, safe, len(t))
                 vecs.append(vec)
-        if len(texts) == 1:
+        if cacheable:
             _QUERY_EMBED_CACHE[texts[0]] = vecs[0]
             _QUERY_EMBED_CACHE.move_to_end(texts[0])
             while len(_QUERY_EMBED_CACHE) > _QUERY_EMBED_CACHE_MAX:

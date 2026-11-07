@@ -84,6 +84,9 @@ async def create_redline(matter_id: str, check_id: str, inp: RedlineIn, request:
 def list_redlines(matter_id: str, document_id: str, request: Request):
     p = principal_of(request)
     require(p, "matter.read", matter_id)
+    from ..documents import repo as documents
+    if not documents.visible(matter_id, document_id, p["sub"]):    # another matter's document, or one they may not open
+        raise HTTPException(status_code=404, detail="Not Found")
     with get_conn() as conn:
         rows = conn.execute("SELECT a.id FROM legal_ai_artifacts a WHERE a.matter_id=? AND a.kind='redline' AND a.version = "
                             "(SELECT MAX(b.version) FROM legal_ai_artifacts b WHERE b.subject_id=a.subject_id AND b.kind='redline') "

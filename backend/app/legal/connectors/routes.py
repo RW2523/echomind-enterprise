@@ -147,6 +147,7 @@ def list_links(matter_id: str, request: Request):
 def add_link(matter_id: str, inp: LinkIn, request: Request):
     p = principal_of(request)
     require(p, "matter.update", matter_id)
+    require(p, "documents.import", matter_id)      # the folder's documents come into the matter: refused while it is closed
     folder = clean_folder(inp.remote_path)
     if folder is None:
         raise HTTPException(status_code=422, detail="Give a folder inside the connector, such as Clients/Harrowgate.")
