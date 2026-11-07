@@ -9,8 +9,10 @@
 # people still have it.
 # DEMO_PREFIX / DEMO_API_PORT / DEMO_VOICE_PORT run a private copy beside the demo (another data folder; never the same names).
 # Backend: the Law backend image, its own bridge network (no host network), code read-only, a read-only root with /tmp on its own
-# volume (the speech model unpacks there), no new privileges, every capability dropped, 12 GB memory and 512 processes at most, a health check on its own
-# port. It reaches the host's model servers through the bridge gateway and publishes only 127.0.0.1:8110.
+# volume (the speech model unpacks there), no new privileges, every capability dropped, 12 GB memory and 2048 processes at most, a health check on its own
+# port. Each CPU model call (reranker, speech, embeddings) uses at most DEMO_CPU_THREADS threads (2026-11-07 load test: with
+# four people at once, every call's own thread team took the backend past 512 processes, "libgomp: Thread creation failed",
+# and it restarted). It reaches the host's model servers through the bridge gateway and publishes only 127.0.0.1:8110.
 # Data: DEMO_DATA_DIR (default .law-data, made by seed-demo; the backend refuses demo sign-in without its DEMO_INSTANCE
 # marker) and DEMO_MASTER_KEY (default .law-secrets/master.key, the development key that only protects fictional data).
 # Voice (2026-11-02): the Law voice service (voice/app, image echomind-law-voice) on the CPU, code read-only, on the demo's
@@ -46,7 +48,8 @@ case "${1:-}" in
     docker run -d --name "$API" --restart unless-stopped --user 1000:1000 --network "$NET" \
       --add-host host.docker.internal:host-gateway -p "127.0.0.1:$API_PORT:8110" \
       --read-only -v "$PREFIX-tmp":/tmp --security-opt no-new-privileges:true --cap-drop ALL \
-      --memory 12g --memory-swap 12g --pids-limit 512 \
+      --memory 12g --memory-swap 12g --pids-limit "${DEMO_PIDS_LIMIT:-2048}" \
+      -e OMP_NUM_THREADS="${DEMO_CPU_THREADS:-8}" -e MKL_NUM_THREADS="${DEMO_CPU_THREADS:-8}" \
       -e PUBLIC_URL="$DEMO_PUBLIC_URL" -e DEMO_EXTRA_ORIGINS="${DEMO_EXTRA_ORIGINS:-}" -e DEMO_TRUSTED_PROXY="$GW" -e DEMO_TTS_URL="${DEMO_TTS_URL-http://$VOICE:8000/speak}" \
       -v "$ROOT/backend:/repo/backend:ro" -v "$DATA:/data" -v "$KEY:/run/secrets/master.key:ro" -v "$HF:/hf:ro" \
       -v "$ROOT/scripts/law/demo/launch-api.sh:/run/demo/launch-api.sh:ro" \
@@ -62,7 +65,8 @@ case "${1:-}" in
     docker volume create "$PREFIX-voice-tmp" >/dev/null
     docker run -d --name "$VOICE" --restart unless-stopped --network "$NET" --add-host host.docker.internal:host-gateway \
       -p "127.0.0.1:$VOICE_PORT:8000" --read-only -v "$PREFIX-voice-tmp":/tmp --security-opt no-new-privileges:true --cap-drop ALL \
-      --memory "${DEMO_VOICE_MEM:-10g}" --memory-swap "${DEMO_VOICE_MEM:-10g}" --pids-limit 512 --oom-score-adj 800 \
+      --memory "${DEMO_VOICE_MEM:-10g}" --memory-swap "${DEMO_VOICE_MEM:-10g}" --pids-limit "${DEMO_PIDS_LIMIT:-2048}" --oom-score-adj 800 \
+      -e OMP_NUM_THREADS="${DEMO_CPU_THREADS:-8}" -e MKL_NUM_THREADS="${DEMO_CPU_THREADS:-8}" \
       -v "$ROOT/voice/app:/workspace/app:ro" -v "$ROOT/voice/voices:/voices:ro" \
       -e HF_HOME=/root/.cache/huggingface \
       -e ECHOMIND_EDITION=law -e VOICE_AUTH_ENABLED=1 -e VOICE_OFFLINE=1 -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 \

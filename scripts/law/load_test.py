@@ -64,7 +64,9 @@ QUESTIONS = ["What is the cap on each party’s aggregate liability?", "When are
 SEARCHES = ["cap on aggregate liability", "termination for convenience", "governing law", "payment terms invoice"]
 CHAT = [("MAT-1042", "What is the overall cap on each party's liability?"), ("M-101", "When are invoices payable?"),
         ("MAT-1042", "What's the latest on this case?"), ("MAT-1042", "Give me a chronology of the delivery, from dispatch to acceptance"),
-        ("M-101", "What does the agreement say about termination for convenience?"), ("MAT-1042", "Find conflicting dates or amounts")]
+        ("M-101", "What does the agreement say about termination for convenience?"), ("MAT-1042", "Find conflicting dates or amounts"),
+        ("M-302", "What does the on-call policy pay for a weekend day?"), ("M-305", "What is Lumen's liability capped at under the draft?"),
+        ("M-215", "What notice does the lease require before the tenant can terminate?")]
 NOTE = ("FILE NOTE (fictional, load test {k})\n\nAttendance note of a call with the client about the renewal timetable. The client "
         "asked for the draft by Friday and confirmed the notice address. Reference LT-{k}-{tag}.\n")
 _LOOPBACK = {"127.0.0.1", "localhost", "::1"}
@@ -146,6 +148,7 @@ def pct(values: list[float], q: float) -> float | None:
 
 
 STOP: list = []                                                # a path whose existence ends the run (--stop-file)
+THINK: list = [5.0]                                            # seconds a chat user waits between questions (--think)
 
 
 def running(until: float) -> bool:
@@ -219,8 +222,9 @@ async def capture(s: Session, mid: str, meeting: str, stats: Stats, until: float
 async def chat(s: Session, ids: dict, stats: Stats, until: float, n: int) -> None:
     """One question per new conversation (no follow-up rewriting): time to the first streamed text and to the end."""
     i = n
-    while running(until):
-        number, q = CHAT[i % len(CHAT)]
+    mine = [(num, q) for num, q in CHAT if num in ids]                  # only the matters this person can open
+    while running(until) and mine:
+        number, q = mine[i % len(mine)]
         i += 1
         t0, first = time.monotonic(), None
         try:
@@ -229,6 +233,11 @@ async def chat(s: Session, ids: dict, stats: Stats, until: float, n: int) -> Non
             end = None
             async with s.http.stream("POST", f"/api/legal/counsel/conversations/{conv}/turns", json={"text": q},
                                      headers=s._headers(True)) as r:
+                if r.status_code != 200:
+                    body = (await r.aread()).decode(errors="replace")
+                    stats.bad("chat_answer", f"HTTP {r.status_code}: {body[:200]}")
+                    await asyncio.sleep(2)                      # a refusal is not retried in a tight loop
+                    continue
                 async for line in r.aiter_lines():
                     if not line.strip():
                         continue
@@ -243,6 +252,8 @@ async def chat(s: Session, ids: dict, stats: Stats, until: float, n: int) -> Non
                     stats.ok("chat_first_text", first)
             else:
                 stats.bad("chat_answer", str(end))
+                await asyncio.sleep(2)
+            await asyncio.sleep(THINK[0])                       # a person reads the answer before asking again
         except Exception as e:                                  # noqa: BLE001
             stats.bad("chat_answer", repr(e))
 
@@ -378,6 +389,7 @@ async def run(args) -> int:
         raise SystemExit("the load test runs against a loopback backend only")
     if args.stop_file:
         STOP.append(args.stop_file)
+    THINK[0] = args.think
     if not args.smoke and not args.window_approved:
         raise SystemExit("a measured run shares the host's models with production: pass --window-approved \"<who, when>\" (🔒), or --smoke")
     seconds = min(args.seconds, 30) if args.smoke else args.seconds
@@ -396,8 +408,9 @@ async def run(args) -> int:
             [(n, args.matter) for n in ["alice", "nakamura"][:research_users]]   # the M-101 members who research (carol searches)
     research_users = len(pairs)
     sessions = {}
-    chatters = [f"alice~{i}" for i in range(args.chat_users)]
-    for name in dict.fromkeys([n for n, _ in pairs] + ["carol", "alice"] + chatters + (["alice!council"] if args.council else [])):
+    people = [x for x in args.chat_people.split(",") if x] or ["alice"]
+    chatters = [f"{people[i % len(people)]}~{i}" for i in range(args.chat_users)]   # one person each: the model quota is per person
+    for name in dict.fromkeys([n for n, _ in pairs] + ["carol", "alice"] + chatters + ([f"{args.council_person}!council"] if args.council else [])):
         sessions[name] = Session(args.base, args.origin)
         person = re.split(r"[#~!]", name)[0]
         await (sessions[name].demo(person) if args.demo_signin else sessions[name].sign_in(person, creds[person]))
@@ -410,13 +423,13 @@ async def run(args) -> int:
         memory(backend_pid(urllib.parse.urlparse(args.base).port or 80), stats, until)
     tasks = [research(sessions[n], ids[num], stats, until, i) for i, (n, num) in enumerate(pairs)]
     tasks += [search(sessions["carol"], mid, stats, until), capture(sessions["alice"], mid, meeting, stats, until), watch]
-    if chatters:
-        every = {m["number"]: m["id"] for m in (await sessions[chatters[0]].request("GET", "/api/legal/matters")).json()["matters"]}
-        tasks += [chat(sessions[c], every, stats, until, i) for i, c in enumerate(chatters)]
+    for i, c in enumerate(chatters):
+        seen = {m["number"]: m["id"] for m in (await sessions[c].request("GET", "/api/legal/matters")).json()["matters"]}
+        tasks.append(chat(sessions[c], seen, stats, until, i))
     if args.ingest:
         tasks.append(ingest(sessions["alice"], mid, stats, until))
     if args.council:
-        tasks.append(council(sessions["alice!council"], mid, stats, until))
+        tasks.append(council(sessions[f"{args.council_person}!council"], mid, stats, until))
     tasks.append(sampler(stats, until, [c for c in args.sample_containers.split(",") if c]))
     started = time.strftime("%Y%m%d-%H%M%S")
     await asyncio.gather(*tasks)
@@ -470,6 +483,10 @@ def main() -> int:
     ap.add_argument("--stop-file", default="", help="end the run as soon as this file exists")
     ap.add_argument("--demo-signin", action="store_true", help="one-click demo sign-in (the demo or a private copy of it)")
     ap.add_argument("--chat-users", type=int, default=0, help="people asking the chat at once")
+    ap.add_argument("--chat-people", default="", help="who they are, in turn (one-click demo people; the model quota is per person)")
+    ap.add_argument("--council-person", default="alice", help="who runs the Council reviews (a member of --matter)")
+    ap.add_argument("--think", type=float, default=5.0, help="seconds a chat user waits between questions (people read answers; "
+                    "the model quota is LEGAL_MODEL_REQUESTS_PER_MIN per person)")
     ap.add_argument("--ingest", action="store_true", help="upload a fictional note every few seconds, timed until searchable")
     ap.add_argument("--council", action="store_true", help="run Council reviews back to back")
     ap.add_argument("--sample-containers", default="", help="containers whose CPU and memory are sampled (comma-separated)")
