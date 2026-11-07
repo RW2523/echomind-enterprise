@@ -91,18 +91,19 @@ def _exports(p: dict, matters: dict, waiting: list, mine: list) -> None:
             waiting.append(item)
 
 
-def _firm(p: dict, waiting: list, mine: list) -> None:
+def _firm(p: dict, matters: dict, waiting: list, mine: list) -> None:
     roles = policy.firm_roles_of(p["sub"])
     can = lambda action: bool(roles & policy.ORG_ACTIONS[action])          # noqa: E731
     with get_conn() as conn:
-        for did, label, by, at, number, title in conn.execute(
-                "SELECT d.id, d.object_label, d.requested_by, d.requested_at, m.number, m.title FROM legal_deletions d "
+        for did, label, by, at, number, title, mid in conn.execute(
+                "SELECT d.id, d.object_label, d.requested_by, d.requested_at, m.number, m.title, d.matter_id FROM legal_deletions d "
                 "LEFT JOIN matters m ON m.id = d.matter_id WHERE d.org_id=? AND d.status='requested' ORDER BY d.requested_at",
                 (p["org_id"],)).fetchall():
             item = {"kind": "deletion", "id": did, "title": f"Delete: {label}", "matter": {"number": number, "title": title},
                     "by": _name(conn, by), "at": at, "path": "/admin/records"}
             if by == p["sub"]:
-                mine.append({**item, "state": "waiting"})
+                if mid in matters:                     # a wall or a revoked membership hides their own request too
+                    mine.append({**item, "state": "waiting"})
             elif can("deletion.review"):
                 waiting.append(item)
         if can("holds.approve"):
@@ -135,7 +136,7 @@ def for_principal(p: dict) -> dict:
     matters = _matters(p)
     _drafts(p, matters, waiting, mine)
     _exports(p, matters, waiting, mine)
-    _firm(p, waiting, mine)
+    _firm(p, matters, waiting, mine)
     waiting.sort(key=lambda i: i["at"] or "")
     mine.sort(key=lambda i: i["at"] or "", reverse=True)
     return {"waiting": waiting, "mine": mine, "count": len(waiting)}
