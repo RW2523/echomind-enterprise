@@ -118,6 +118,26 @@ pipeline; then a full end-to-end review of every part with every error fixed. Co
     chat answer and disk.
   - `scripts/law/demo_check.py` takes `LAW_CHECK_BASE`/`LAW_CHECK_CONTAINER`.
   - Playwright takes `E2E_API_PORT`/`E2E_WEB_PORT`.
+- **A stable public address, 2026-11-07: https://legal.echomind-ajace.com** (owner's request).
+  - A named Cloudflare tunnel, `echomind-legal-demo`, on the owner's zone replaces the quick tunnel. The quick tunnel's
+    random trycloudflare.com address changed every time it restarted.
+  - It has one route: `legal.echomind-ajace.com` to the demo's nginx on 127.0.0.1:3125. Anything else answers 404.
+    `law.` was left free for the main product's law edition.
+  - Its credentials and config live in `~/.echomind-legal-demo-tunnel` (mode 700), outside the repository.
+  - Production's tunnel for echomind-ajace.com is a separate tunnel with its own token, and was not touched.
+  - Set up once:
+    - the owner runs `cloudflared tunnel login`, which writes `~/.cloudflared/cert.pem` for the zone;
+    - `scripts/law/demo_tunnel.sh setup legal.echomind-ajace.com` creates the tunnel, its DNS record and its config. It
+      is idempotent and never overwrites an existing DNS record;
+    - `scripts/law/demo_up.sh tunnel` runs it: read-only, every capability dropped, restart unless-stopped.
+  - Restarting the tunnel keeps the address.
+  - The API and voice take `DEMO_EXTRA_ORIGINS`, so they also accept the old quick-tunnel address while people still have
+    it. `demo_reset.sh` keeps that setting when it restarts the API.
+  - The old quick tunnel still runs as `echomind-legal-demo-quicktunnel`, set not to restart, so it ends at the next reboot.
+  - Checked through the new address:
+    - `demo_health.py` READY: sign-in, the case status card, and a cited chat answer;
+    - the voice socket opens for both addresses, and a foreign origin is refused (403);
+    - the API answers 401 without a session.
 
 ## Design refresh "Chambers" (2026-10-27)
 

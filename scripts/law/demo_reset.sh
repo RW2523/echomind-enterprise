@@ -6,7 +6,7 @@
 #   scripts/law/demo_reset.sh status
 #
 # The demo API is stopped for the copy (about 15 s, so the database is consistent) and started again with the same
-# public address; the tunnel, voice and web containers are not touched, so the public URL stays the same. The snapshot
+# public address (and any extra origins); the tunnel, voice and web containers are not touched. The snapshot
 # lives outside the repository (fictional data, but never committed): DEMO_SNAPSHOT_DIR, default ~/.echomind-legal-demo-snapshot.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -14,13 +14,14 @@ DATA="${DEMO_DATA_DIR:-$ROOT/.law-data}"
 SNAP="${DEMO_SNAPSHOT_DIR:-$HOME/.echomind-legal-demo-snapshot}"
 API="${DEMO_PREFIX:-echomind-legal-demo}-api"
 
-public_url() {
-  docker inspect "$API" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | sed -n 's/^PUBLIC_URL=//p' | head -1
+api_env() {
+  docker inspect "$API" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | sed -n "s/^$1=//p" | head -1
 }
+public_url() { api_env PUBLIC_URL; }
 
 restart_api() {
   local url="$1"
-  DEMO_PUBLIC_URL="$url" "$ROOT/scripts/law/demo_up.sh" api >/dev/null
+  DEMO_PUBLIC_URL="$url" DEMO_EXTRA_ORIGINS="$EXTRA" "$ROOT/scripts/law/demo_up.sh" api >/dev/null
   for _ in $(seq 1 60); do
     [[ "$(docker inspect -f '{{.State.Health.Status}}' "$API" 2>/dev/null)" == healthy ]] && { echo "demo API healthy at $url"; return 0; }
     sleep 2
@@ -31,7 +32,7 @@ restart_api() {
 
 case "${1:-}" in
   snapshot|restore)
-    URL="$(public_url)"
+    URL="$(public_url)" EXTRA="$(api_env DEMO_EXTRA_ORIGINS)"
     [[ -n "$URL" ]] || { echo "no running $API to read its public address from" >&2; exit 2; }
     if [[ "$1" == restore && ! -f "$SNAP/echomind.sqlite" ]]; then echo "no snapshot in $SNAP; take one first" >&2; exit 2; fi
     docker stop "$API" >/dev/null

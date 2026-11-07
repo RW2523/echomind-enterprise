@@ -10,7 +10,7 @@ AUTH_SECRET="$(cat /data/dev_auth_secret)"; export AUTH_SECRET
 export AUTH_ADMIN_USER=admin
 AUTH_ADMIN_PASSWORD="$(cat /data/dev_admin_password)"; export AUTH_ADMIN_PASSWORD
 # The host's model servers, reached through the bridge gateway (never production's containers by name).
-export CORS_ALLOW_ORIGINS="$PUBLIC_URL" LLM_BASE_URL=http://host.docker.internal:8355/v1 LLM_MODEL="${DEMO_LLM_MODEL:-nvidia/Qwen3-30B-A3B-FP4}"
+export CORS_ALLOW_ORIGINS="$PUBLIC_URL${DEMO_EXTRA_ORIGINS:+,$DEMO_EXTRA_ORIGINS}" LLM_BASE_URL=http://host.docker.internal:8355/v1 LLM_MODEL="${DEMO_LLM_MODEL:-nvidia/Qwen3-30B-A3B-FP4}"
 export OLLAMA_EMBED_URL=http://host.docker.internal:11435/api/embeddings DOCGEN_IMAGE_BACKEND=none ECHOMIND_EXIT_ON_FATAL_CUDA=0
 # Spoken replies use the demo's own Law voice service on the demo network (scripts/law/demo_up.sh voice), never
 # production's; leave DEMO_TTS_URL empty to turn spoken replies off.
