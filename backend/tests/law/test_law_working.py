@@ -63,6 +63,11 @@ def test_rates_times_counts_and_a_comparison_the_question_asks_for():
     assert {w.shown(f) for f in w.figures} == {"83", "12", "GBP 220", "GBP 90", "GBP 18,400"}   # 12 is the stated count
     from app.legal.research import working
     assert working.given(w, "That comes to GBP 19,340, not GBP 18,400.") and not working.given(w, "It is GBP 18,400.")
+    from app.legal.counsel import schemas                            # the card carries the check's own result
+    steps = [schemas.WorkingStep(**s) for s in working.public(w)["steps"]]
+    assert steps[-1].check and steps[-1].result == "does not hold"
+    with pytest.raises(ValueError):
+        schemas.WorkingStep(label="x", working="1 = 2", result="probably", check=True)
 
 
 def test_a_period_counts_calendar_days_from_the_day_after_and_business_days_are_never_counted():

@@ -142,7 +142,13 @@ class WorkingStep(Strict):
     label: text(120)
     working: text(600)                                    # the formula with its figures: "10% × USD 18,500"
     result: text(80)
-    check: bool = False                                   # a condition that holds, not a result
+    check: bool = False                                   # a condition: its result is "holds" or "does not hold"
+
+    @model_validator(mode="after")
+    def _check_result(self):
+        if self.check and self.result not in ("holds", "does not hold"):
+            raise ValueError("a check holds or does not hold")
+        return self
 
 
 class WorkingProps(Strict):

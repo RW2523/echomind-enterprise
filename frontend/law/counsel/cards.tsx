@@ -278,7 +278,7 @@ function Worked({ w, ctx }: { w: WorkingProps; ctx: CardContext }) {
         {w.steps.map((s, i) => (
           <div key={i}>
             <dt>{s.label}</dt>
-            <dd>{s.check ? <>{s.working}: <span className="qc-work-holds">holds</span></> : <>{s.working} = <b>{s.result}</b></>}</dd>
+            <dd>{s.check ? <>{s.working}: <span className={s.result === 'holds' ? 'qc-work-holds' : 'qc-work-fails'}>{s.result}</span></> : <>{s.working} = <b>{s.result}</b></>}</dd>
           </div>
         ))}
       </dl>

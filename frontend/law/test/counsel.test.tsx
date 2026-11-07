@@ -734,6 +734,13 @@ describe('the answer card says what the backend verified (QA 2026-10-29)', () =>
     expect(box.textContent).toContain('GBP 360,000 ÷ 12 = GBP 30,000');
     expect(box.textContent).toContain('98.71% ≥ 98%: holds');
     expect(box.textContent).toContain('Figures used (1)');
+    r.unmount();
+    // a check the figures fail is shown as failing, never as holding
+    const fails = { ...working, steps: [{ label: 'The total matches the claim', working: 'GBP 19,340 = GBP 18,400', result: 'does not hold', check: true }] };
+    const f = render(<ComponentView comp={comp({ state: 'partial', answer: 'It does not match [1].', citations: [cite], unsupported: [], working: fails })} ctx={ctx} />);
+    const failBox = f.getByRole('region', { name: "Worked out from the documents' figures" });
+    expect(failBox.textContent).toContain('GBP 19,340 = GBP 18,400: does not hold');
+    expect(failBox.textContent).not.toContain(': holds');
     fire.click(r.getByRole('button', { name: 'Open clause 2 of SaaS Agreement: GBP 360,000' }));
     expect(go).toHaveBeenCalledWith(path);
   });
@@ -744,6 +751,11 @@ describe('the answer card says what the backend verified (QA 2026-10-29)', () =>
     const text = plainAnswer({ ...base, state: 'partial', working } as never);
     expect(text).toContain("Worked out from the documents' figures, not stated in them:");
     expect(text).toContain('- Most service credit for a month: 10% × GBP 30,000 = GBP 3,000');
+    expect(text).toContain('- Availability is in the band: 98.71% ≥ 98% (holds)');
+    const failing = { ...working, steps: [{ label: 'The total matches the claim', working: 'GBP 19,340 = GBP 18,400', result: 'does not hold', check: true }] };
+    expect(plainAnswer({ ...base, state: 'partial', working: failing } as never)).toContain('(does not hold)');
+    const vague = { ...working, steps: [{ ...working.steps[1], result: 'probably' }] };
+    expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'partial', working: vague } }).type).toBe('inert');
     expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'partial', working } }).type).toBe('source_answer');
     expect(parseComponent({ id: CMP, type: 'source_answer', props: { ...base, state: 'abstained', working } }).type).toBe('inert');
     const away = { ...working, figures: [{ ...working.figures[0], path: 'https://example.com/x' }] };

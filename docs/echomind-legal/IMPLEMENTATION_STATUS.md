@@ -564,6 +564,15 @@ document, title, amount or clause of the demo data; verification, authorization 
     when asked on its own.
 - **Planning call:** 2 to 6 s on the shared GPU; at most three calls when it is sent back or something is searched for.
 
+**Deployed to the public demo 2026-11-07 (0b8564d).** The live check found that the card showed every condition as
+"holds", even one the figures fail ("the total matches the GBP 18,400 claimed: holds" when it comes to GBP 19,340). Fixed
+the same day: the card and the copied answer show the check's own result, and the server schema and the client both refuse
+a check whose result is anything but "holds" or "does not hold" (`test_rates_times_counts_and_a_comparison_the_question_asks_for`,
+`counsel.test.tsx`). Live through the public URL: the August service credit worked out (3 figures), 83 nights and 12
+weekend days were worked out to GBP 19,340 in two of three askings (in the first the plan gave no working and the answer
+was the model's own, marked partial; the third was marked unverified because the model wrote "Source 1" instead of its
+citation numbers), and the delivery chronology has 45 events from May 4 to June 12.
+
 **Tests:** backend suite 1737 passed, 4 skipped (1736 before the last change to how unreadable checks are handled);
 `test_law_working.py` 26, chronology 22; frontend 264 passed; `tsc` clean. The held-out research sets were not rerun.
 

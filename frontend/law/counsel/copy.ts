@@ -39,7 +39,7 @@ export function plainAnswer(p: SourceAnswerProps): string {
   if (p.working) {
     const w = p.working;
     out.push(["Worked out from the documents' figures, not stated in them:",
-              ...w.steps.map((s) => (s.check ? `- ${s.label}: ${s.working} (holds)` : `- ${s.label}: ${s.working} = ${s.result}`)),
+              ...w.steps.map((s) => (s.check ? `- ${s.label}: ${s.working} (${s.result})` : `- ${s.label}: ${s.working} = ${s.result}`)),
               ...w.figures.map((f) => `- Figure: ${f.label}, ${f.value}: “${f.quote}” (${f.document_title}${f.clause ? `, cl. ${f.clause}` : ''})`),
               ...w.assumptions.map((a) => `- Assumption: ${a}`)].join('\n'));
   }

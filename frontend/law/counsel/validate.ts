@@ -142,8 +142,10 @@ function working(v: unknown): WorkingProps | undefined {
   const w: WorkingProps = {
     steps: list(o.steps, 10, 'working.steps', (x) => {
       const s = obj(x, 'step');
-      return { label: str(s.label, 120, 'step.label'), working: str(s.working, 600, 'step.working'), result: str(s.result, 80, 'step.result'),
-               check: s.check === undefined ? false : bool(s.check, 'step.check') };
+      const step = { label: str(s.label, 120, 'step.label'), working: str(s.working, 600, 'step.working'), result: str(s.result, 80, 'step.result'),
+                     check: s.check === undefined ? false : bool(s.check, 'step.check') };
+      if (step.check && step.result !== 'holds' && step.result !== 'does not hold') throw new Invalid('a check holds or does not hold');
+      return step;
     }),
     figures: list(o.figures, 16, 'working.figures', (x) => {
       const f = obj(x, 'figure');
