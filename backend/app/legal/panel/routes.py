@@ -6,6 +6,8 @@
 - `GET  /api/legal/matters/{id}/panel/{rid}`: one review, its newest version and the earlier ones.
 - `POST /api/legal/matters/{id}/panel/{rid}/facts` (`ai.draft`) {facts}: the lawyer's answers to the missing facts; the
   panel runs again with them, marked as the lawyer's.
+A review carries `progress` (2026-11-07): the step a running Council is on and the roles that have finished it (never what
+they wrote), for the page's discussion flow.
 Approval is the review route's (`/artifacts/{aid}/review`), open to a partner only: the matter's lead or a managing partner.
 """
 from __future__ import annotations
@@ -25,7 +27,7 @@ from ..audit.record import audited, note
 from ..documents import repo as documents
 from ..jobs import worker
 from ..matters.routes import principal_of, require, require_law_edition
-from .run import LIBRARY, SPECIALISMS, assemble, is_partner, label_of
+from .run import LIBRARY, SPECIALISMS, assemble, is_partner, label_of, progress_of
 
 
 def panel_on() -> None:
@@ -35,7 +37,7 @@ def panel_on() -> None:
 
 router = APIRouter(prefix="/legal", tags=["legal"], dependencies=[Depends(require_law_edition), Depends(panel_on)])
 _COLS = ("id", "matter_id", "question", "specialist", "facts_json", "status", "artifact_id", "created_by", "created_at", "finished_at",
-         "documents_json", "roles_json", "depth")
+         "documents_json", "roles_json", "depth", "progress_json")
 
 
 class AskIn(BaseModel):
@@ -124,7 +126,8 @@ def _review(conn, r, p: dict) -> dict:
     area = SPECIALISMS.get(d["specialist"], d["specialist"])
     roles = [r for r in json.loads(d["roles_json"] or "[]") if r in LIBRARY]
     return {"id": d["id"], "question": d["question"], "specialist": d["specialist"], "area": SPECIALISMS.get(d["specialist"]), "documents": docs,
-            "roles": [{"role": r, "label": label_of(r, area)} for r in roles], "depth": d["depth"], "status": d["status"], "facts": json.loads(d["facts_json"]), "created_by": _username(conn, d["created_by"]),
+            "roles": [{"role": r, "label": label_of(r, area)} for r in roles], "depth": d["depth"], "status": d["status"],
+            "progress": progress_of(d["progress_json"], roles), "facts": json.loads(d["facts_json"]), "created_by": _username(conn, d["created_by"]),
             "created_at": d["created_at"], "finished_at": d["finished_at"], "mine": d["created_by"] == p["sub"]}
 
 
@@ -280,7 +283,7 @@ def facts(matter_id: str, review_id: str, inp: FactsIn, request: Request):
         given = {f["question"]: f for f in json.loads(r[1])}
         for f in inp.facts:
             given[" ".join(f.question.split())] = {"question": " ".join(f.question.split()), "answer": " ".join(f.answer.split())}
-        conn.execute("UPDATE legal_panel_reviews SET facts_json=?, status='queued', finished_at=NULL WHERE id=?",
+        conn.execute("UPDATE legal_panel_reviews SET facts_json=?, status='queued', finished_at=NULL, progress_json='{}' WHERE id=?",
                      (json.dumps(list(given.values()), ensure_ascii=False), review_id))
         _enqueue(conn, p["org_id"], matter_id, review_id, p["sub"])
         conn.commit()

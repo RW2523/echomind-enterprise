@@ -204,6 +204,27 @@ describe('Panel, chart, graph, live meeting', () => {
     expect(reads).toBe(n);                                              // done: no more asking
   });
 
+  it('the Council card names who sits on it, by initials and name, and the step a running one is on', async () => {
+    const card = { id: CMP, version: 1, type: 'council_summary', data_ref: CMP, props: { review_id: 'rv1', question: 'Is the fee binding?', area: 'commercial contracts',
+      status: 'running', step: 'challenge', roles: ['Deal lawyer', 'Risk and compliance', 'Litigator', 'Specialist (commercial contracts)'], issues: [], missing_facts: [],
+      path: '/m/M-101/panel/rv1', caution: 'Options, never a decision.' } };
+    world({ 'POST /api/legal/counsel/conversations/conv_1/turns': () => [200, stream(card)], [`GET /api/legal/counsel/components/${CMP}`]: () => [200, { component: card }] });
+    renderLaw('/chat');
+    await ask('Challenge our position on the fee');
+    const section = await screen.findByRole('region', { name: 'Council: Is the fee binding?' });
+    expect(within(section).getByText('Council · commercial contracts')).toBeTruthy();
+    const seats = within(section).getByRole('list', { name: 'On this Council' });
+    expect(within(seats).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['DLDeal lawyer', 'RCRisk and compliance', 'LLitigator', 'SSpecialist (commercial contracts)']);
+    expect(within(section).getByRole('status').textContent).toContain('Step 3 of 5 · Challenge: the first answer is being tested against the sources…');
+    expect(section.querySelector('img')).toBeNull();
+  });
+
+  it('a Council card with a step the client does not know is not shown as a working card', () => {
+    const bad = { id: CMP, version: 1, type: 'council_summary', data_ref: CMP, props: { review_id: 'rv1', question: 'Q?', area: 'a', status: 'running', step: 'lunch',
+      issues: [], missing_facts: [], path: '/m/M-101/panel/rv1', caution: 'c' } };
+    expect(parseComponent(bad).type).toBe('inert');                                  // rendered without any control
+  });
+
   it('the panel card puts the chair\'s conclusion first, then what matters most and the gaps', async () => {
     const card = { id: CMP, version: 1, type: 'council_summary', data_ref: CMP, props: { review_id: 'rv1', question: 'Is the fee binding?', area: 'commercial contracts',
       status: 'done', issues: [], missing_facts: [], path: '/m/M-101/panel/rv1', caution: 'Options, never a decision.', outcome: 'answered',

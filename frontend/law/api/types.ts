@@ -599,9 +599,12 @@ export interface PanelContent {
   conclusion?: string | null; points?: { text: string; roles: PanelRole[] }[]; gaps?: string[]; figures_unsupported?: string[];
   outcome?: 'answered' | 'inconclusive' | 'stopped'; verified_quotes?: number;
 }
+/** Where a running Council has got to (2026-11-07): the step and the roles that have finished it, never what they wrote. */
+export type CouncilStep = 'views' | 'challenge' | 'reply' | 'chair';
+export interface CouncilProgress { step: CouncilStep | 'finished' | null; done: PanelRole[]; path?: CouncilStep[]; at: string | null }
 export interface PanelReview {
   id: string; question: string; specialist: string; area: string | null; status: 'queued' | 'running' | 'done' | 'needs_facts' | 'failed' | 'not_allowed';
-  roles?: { role: PanelRole; label: string }[]; depth?: 'focused' | 'deep';
+  roles?: { role: PanelRole; label: string }[]; depth?: 'focused' | 'deep'; progress?: CouncilProgress;
   facts: { question: string; answer: string }[]; created_by: string | null; created_at: string; finished_at: string | null; mine: boolean;
   version?: number | null; approval?: string | null; documents?: { id: string; title: string | null }[];
 }

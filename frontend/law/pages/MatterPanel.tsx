@@ -4,21 +4,32 @@ import { RefreshCw, Users2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
 import { panelPath, useDocuments, usePanelReviews } from '../api/queries';
-import type { CouncilQuestion, PanelReview } from '../api/types';
+import type { CouncilQuestion, PanelReview, PanelRole } from '../api/types';
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { EmptyState, ErrorNote, Field, Skeleton, StatusPill, type Tone } from '../ui/primitives';
+import { RoleMark, STEP_LABEL } from '../ui/council';
 
 const day = (iso: string) => new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 export const PANEL_STATUS: Record<PanelReview['status'], [string, Tone]> = {
-  queued: ['Waiting to start', 'neutral'], running: ['The panel is working', 'accent'], done: ['Ready for a partner', 'attention'],
+  queued: ['Waiting to start', 'neutral'], running: ['The Council is working', 'accent'], done: ['Ready for a partner', 'attention'],
   needs_facts: ['Stopped: facts needed', 'conflict'], failed: ['Could not finish', 'conflict'], not_allowed: ['No longer allowed', 'neutral'],
 };
+const DEFAULT_SEATS: { role: PanelRole; label: string }[] = [
+  { role: 'deal', label: 'Deal lawyer' }, { role: 'risk', label: 'Risk and compliance' }, { role: 'litigation', label: 'Litigator' },
+  { role: 'specialist', label: 'Specialist in the chosen area' }];
+const HOW: [string, string][] = [
+  ['Question', 'You ask; the perspectives are chosen by rule from your words.'],
+  ['Initial views', 'Each answers alone from the documents, citing them.'],
+  ['Challenge', 'The first answer is tested against the sources.'],
+  ['Responses', 'At "deep", it replies to the objections.'],
+  ['Synthesis', 'A chair sets out the view and where they differ.'],
+];
+const STEP_NO = { views: 2, challenge: 3, reply: 4, chair: 5 } as const;
 
-/** The review panel (S4.5, D-057), grown into the Council (2026-11-05): one question answered from the angles its rules
- *  choose (four by default: deal, risk and compliance, litigation and a specialist area), each citing the matter's
- *  documents; the first answer is challenged, and a chair gives the conclusion and where they differ. Drafted by the same
- *  model; a partner reviews it before anyone relies on it. */
+/** The Council (the S4.5 review panel, grown into the Council 2026-11-05, redesigned 2026-11-07): put one question to
+ *  several perspectives chosen for it, each answering alone from this matter's documents and citing them; the first answer
+ *  is challenged, and a chair gives the conclusion and where they differ. Drafted by the same model; a partner reviews it. */
 export default function MatterPanel() {
   const matter = useMatter();
   const q = usePanelReviews(matter.id);
@@ -32,71 +43,94 @@ export default function MatterPanel() {
   const ready = (docs.data ?? []).filter((d) => d.current_version?.index_status === 'indexed');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const open = (id: string) => navigate(`/m/${encodeURIComponent(matter.number)}/panel/${encodeURIComponent(id)}`);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true); setError('');
     try {
       const r = await api.post<{ review: { id: string } }>(panelPath(matter.id), { question, specialist: area, documents: chosen, depth });
       await qc.invalidateQueries({ queryKey: ['matter', matter.id, 'panel'] });
-      navigate(`/m/${encodeURIComponent(matter.number)}/panel/${encodeURIComponent(r.review.id)}`);
+      open(r.review.id);
     } catch (err) { setError(err instanceof ApiError ? err.message : 'The question could not be sent.'); } finally { setBusy(false); }
   };
   return (
     <>
       <Toolbar crumb={matter.number} title="Council" />
-      <div className="lw-content">
-        <p className="lw-meta" style={{ margin: 0 }}>Several perspectives on one question, chosen for it — for a challenge, lead counsel, an opposing reading and an evidence investigator; otherwise a deal lawyer, risk and compliance, a litigator and a specialist — each answering alone from this matter's documents and citing them. The first answer is then challenged, and a chair gives the conclusion and where they differ. If the answer depends on facts the documents do not give, the panel stops and asks you. These are drafted by the same AI model: they are not independent experts, and a partner reviews them before anyone relies on them.</p>
+      <div className="lw-content cn-home">
+        <section className="lw-paper lw-sheet cn-intro" aria-labelledby="cn-intro-h">
+          <div style={{ display: 'grid', gap: 6 }}>
+            <p className="cn-eyebrow">{`${matter.number} · Council`}</p>
+            <h2 className="cn-intro-h" id="cn-intro-h">Put a question to the Council</h2>
+            <p className="lw-meta" style={{ margin: 0, maxWidth: '80ch' }}>Several perspectives answer one question from this matter's documents, each alone and citing them. For a challenge the Council seats lead counsel, an opposing reading and an evidence investigator; otherwise the four below. If the answer depends on facts the documents do not give, it stops and asks you.</p>
+          </div>
+          <ul className="cn-seats-row" aria-label="The usual perspectives">
+            {DEFAULT_SEATS.map((s) => <li key={s.role}><RoleMark role={s.role} />{s.label}</li>)}
+          </ul>
+          <ol className="cn-howto" aria-label="How a session runs">
+            {HOW.map(([t, d]) => <li key={t}><b>{t}</b>{d}</li>)}
+          </ol>
+          {q.data?.can.ask && (
+            <form className="cn-ask" aria-label="Ask the Council" onSubmit={submit}>
+              <Field label="Question">{(id) => <textarea id={id} className="lw-input" rows={3} maxLength={2000} value={question}
+                placeholder="For example: Can the Supplier terminate if the Customer undergoes a change of control?" onChange={(e) => setQuestion(e.target.value)} />}</Field>
+              {ready.length > 1 && (
+                <fieldset className="lw-panel-docs">
+                  <legend className="lw-meta">Only these documents (optional; all of the matter's otherwise)</legend>
+                  {ready.map((d) => (
+                    <label key={d.id} className="lw-check"><input type="checkbox" checked={chosen.includes(d.id)}
+                      onChange={(e) => setChosen(e.target.checked ? [...chosen, d.id] : chosen.filter((x) => x !== d.id))} />{d.title}</label>
+                  ))}
+                </fieldset>
+              )}
+              <div className="cn-ask-row">
+                <Field label="Specialist area">{(id) => (
+                  <select id={id} className="lw-input" value={area} onChange={(e) => setArea(e.target.value)}>
+                    {Object.entries(q.data.specialisms).map(([k, label]) => <option key={k} value={k}>{label[0].toUpperCase() + label.slice(1)}</option>)}
+                  </select>)}</Field>
+                <Field label="Depth">{(id) => (
+                  <select id={id} className="lw-input" value={depth} onChange={(e) => setDepth(e.target.value === 'deep' ? 'deep' : 'focused')}>
+                    <option value="focused">Focused: answers and one challenge round</option>
+                    <option value="deep">Deep: the first answer also replies to the objections</option>
+                  </select>)}</Field>
+                <button type="submit" className="lw-btn lw-btn-primary" disabled={busy || question.trim().length < 10}><Users2 />Ask the Council</button>
+              </div>
+            </form>
+          )}
+          {error && <ErrorNote>{error}</ErrorNote>}
+          <p className="cn-notice">Drafted by the same AI model: they are not independent experts, and a partner reviews them before anyone relies on them.</p>
+        </section>
         {q.data?.discovery && (
           <SuggestedQuestions questions={q.data.questions ?? []} more={q.data.more_questions ?? 0} canAct={q.data.can.ask} matterId={matter.id}
-            onConvened={(id) => navigate(`/m/${encodeURIComponent(matter.number)}/panel/${encodeURIComponent(id)}`)} area={area} depth={depth}
-            refresh={() => qc.invalidateQueries({ queryKey: ['matter', matter.id, 'panel'] })} />
+            onConvened={open} area={area} depth={depth} refresh={() => qc.invalidateQueries({ queryKey: ['matter', matter.id, 'panel'] })} />
         )}
-        {q.data?.can.ask && (
-          <form className="lw-paper lw-sheet" aria-label="Ask the panel" onSubmit={submit} style={{ display: 'grid', gap: 10 }}>
-            <Field label="Question">{(id) => <textarea id={id} className="lw-input" rows={3} maxLength={2000} value={question} onChange={(e) => setQuestion(e.target.value)} />}</Field>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap' }}>
-              <Field label="Specialist area">{(id) => (
-                <select id={id} className="lw-input" value={area} onChange={(e) => setArea(e.target.value)}>
-                  {Object.entries(q.data.specialisms).map(([k, label]) => <option key={k} value={k}>{label[0].toUpperCase() + label.slice(1)}</option>)}
-                </select>)}</Field>
-              <Field label="Depth">{(id) => (
-                <select id={id} className="lw-input" value={depth} onChange={(e) => setDepth(e.target.value === 'deep' ? 'deep' : 'focused')}>
-                  <option value="focused">Focused: answers and one challenge round</option>
-                  <option value="deep">Deep: the first answer also replies to the objections</option>
-                </select>)}</Field>
-              <button type="submit" className="lw-btn lw-btn-primary" disabled={busy || question.trim().length < 10}><Users2 />Ask the panel</button>
-            </div>
-            {ready.length > 1 && (
-              <fieldset className="lw-panel-docs">
-                <legend className="lw-meta">Only these documents (optional; all of the matter's otherwise)</legend>
-                {ready.map((d) => (
-                  <label key={d.id} className="lw-check"><input type="checkbox" checked={chosen.includes(d.id)}
-                    onChange={(e) => setChosen(e.target.checked ? [...chosen, d.id] : chosen.filter((x) => x !== d.id))} />{d.title}</label>
-                ))}
-              </fieldset>
-            )}
-          </form>
-        )}
-        {error && <ErrorNote>{error}</ErrorNote>}
-        {q.isPending ? <div className="lw-paper lw-sheet"><Skeleton /><Skeleton /></div>
-          : q.isError ? <ErrorNote>The panel reviews could not be loaded.</ErrorNote>
-            : q.data.reviews.length === 0 ? <EmptyState title="No panel reviews yet">{q.data.can.ask ? 'Ask a question above.' : 'A lawyer on the matter asks the panel.'}</EmptyState>
-              : (
-                <ul className="lw-check-lines lw-paper lw-sheet" aria-label="Panel reviews">
-                  {q.data.reviews.map((r) => {
-                    const [label, tone] = r.approval === 'approved' ? ['Approved by a partner', 'verified' as Tone] : PANEL_STATUS[r.status];
-                    return (
-                      <li key={r.id} aria-label={r.question}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                          <Link to={`/m/${encodeURIComponent(matter.number)}/panel/${encodeURIComponent(r.id)}`}><b>{r.question}</b></Link>
+        <section aria-labelledby="cn-sessions-h" style={{ display: 'grid', gap: 10 }}>
+          <h2 className="lw-h2" id="cn-sessions-h" style={{ margin: 0 }}>Sessions</h2>
+          {q.isPending ? <div className="lw-paper lw-sheet"><Skeleton /><Skeleton /></div>
+            : q.isError ? <ErrorNote>The Council's sessions could not be loaded.</ErrorNote>
+              : q.data.reviews.length === 0 ? <EmptyState title="No Council sessions yet">{q.data.can.ask ? 'Ask a question above.' : 'A lawyer on the matter asks the Council.'}</EmptyState>
+                : (
+                  <ul className="cn-sessions" aria-label="Council sessions">
+                    {q.data.reviews.map((r) => {
+                      const [label, tone] = r.approval === 'approved' ? ['Approved by a partner', 'verified' as Tone] : PANEL_STATUS[r.status];
+                      const step = r.status === 'running' && r.progress?.step && r.progress.step !== 'finished' ? r.progress.step : null;
+                      return (
+                        <li key={r.id} className="cn-session" aria-label={r.question}>
+                          <Link className="cn-session-q" to={`/m/${encodeURIComponent(matter.number)}/panel/${encodeURIComponent(r.id)}`}>{r.question}</Link>
                           <StatusPill tone={tone}>{label}</StatusPill>
-                        </div>
-                        <span className="lw-meta">{`${r.area ?? r.specialist} · asked by ${r.created_by ?? 'someone'}, ${day(r.created_at)}${r.version ? ` · version ${r.version}` : ''}`}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+                          <div className="cn-session-meta">
+                            {(r.roles?.length ?? 0) > 0 && (
+                              <span className="cn-session-marks" role="img" aria-label={`Perspectives: ${r.roles!.map((x) => x.label).join(', ')}`}>
+                                {r.roles!.map((x) => <RoleMark key={x.role} role={x.role} size="sm" />)}</span>
+                            )}
+                            {step && <span>{`Step ${STEP_NO[step]} of 5 · ${STEP_LABEL[step]}`}</span>}
+                            <span>{`${r.area ?? r.specialist} · asked by ${r.created_by ?? 'someone'}, ${day(r.created_at)}${r.version ? ` · version ${r.version}` : ''}`}</span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+        </section>
       </div>
     </>
   );
@@ -127,18 +161,18 @@ function SuggestedQuestions({ questions, more, canAct, matterId, onConvened, are
   });
   const look = () => act(async () => { await api.post(`${base}/discover`, {}); await refresh(); });
   return (
-    <section className="lw-paper lw-sheet" aria-label="Suggested questions">
+    <section className="lw-paper lw-sheet" aria-label="Suggested questions" style={{ display: 'grid', gap: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' }}>
         <h2 className="lw-h2" style={{ margin: 0 }}>Questions worth putting to the Council</h2>
         {canAct && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" disabled={busy} onClick={look}><RefreshCw />Look again</button>}
       </div>
-      <p className="lw-meta" style={{ margin: '2px 0 8px' }}>Found by rules in this matter's records: unresolved inconsistencies, amended clauses, deadlines no one has confirmed. Nothing runs until you convene one, with the specialist area and depth chosen below.</p>
+      <p className="lw-meta" style={{ margin: 0 }}>Found by rules in this matter's records: unresolved inconsistencies, amended clauses, deadlines no one has confirmed. Nothing runs until you convene one, with the specialist area and depth chosen above.</p>
       {questions.length === 0 ? <p className="lw-meta" style={{ margin: 0 }}>Nothing found in the records you can see.</p> : (
-        <ul className="lw-check-lines" aria-label="Questions found">
+        <ul className="cn-suggest" aria-label="Questions found">
           {questions.map((x) => (
             <li key={x.id} aria-label={x.title}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                <b>{x.title}</b>
+                <b className="lw-serif" style={{ fontSize: 15.5 }}>{x.title}</b>
                 <StatusPill tone={x.priority === 'high' ? 'attention' : 'neutral'}>{x.priority === 'high' ? 'High priority' : 'Medium priority'}</StatusPill>
               </div>
               <span className="lw-meta">{x.reason}</span>
@@ -163,7 +197,7 @@ function SuggestedQuestions({ questions, more, canAct, matterId, onConvened, are
           ))}
         </ul>
       )}
-      {more > 0 && <p className="lw-meta" style={{ margin: '6px 0 0' }}>{`${more} more, shown when one of these is convened or dismissed.`}</p>}
+      {more > 0 && <p className="lw-meta" style={{ margin: 0 }}>{`${more} more, shown when one of these is convened or dismissed.`}</p>}
       {error && <ErrorNote>{error}</ErrorNote>}
     </section>
   );

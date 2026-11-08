@@ -9,13 +9,14 @@ A partner approves the summary on the panel page; the panel gives options to con
 """
 from __future__ import annotations
 
+import json
 from typing import Optional
 from urllib.parse import quote as urlquote
 
 from ...core.db import get_conn
 from .. import artifacts
 
-CAUTION = "The panel gives options to consider, never a decision. A partner approves its summary on the panel page."
+CAUTION = "The Council gives options to consider, never a decision. A partner approves its summary on the Council page."
 _GUESS = {"employment": ("employ", "dismiss", "worker"), "ip": ("patent", "trademark", "copyright", "licen"), "data": ("data", "privacy", "gdpr"),
           "tax": ("tax", "vat"), "real_estate": ("lease", "landlord", "tenant", "property"), "competition": ("competition", "antitrust", "cartel"),
           "finance": ("loan", "facility", "lender", "bank"), "regulatory": ("regulator", "fca", "sec "), "corporate": ("shareholder", "board", "merger")}
@@ -28,18 +29,18 @@ def form(matter: dict, request: str, document_ids: list[str]) -> tuple[dict, dic
     using = (f"Only the {len(document_ids)} document{'s' if len(document_ids) != 1 else ''} you chose." if document_ids
              else f"All the documents of {matter['number']} you may read.")
     who = ", ".join(label_of(r, "the chosen area") for r in assemble(request))
-    props = {"purpose": "panel", "title": "Ask the review panel",
+    props = {"purpose": "panel", "title": "Ask the Council",
              "intro": f"For this question: {who}. Each answers from the documents, the first answer is challenged, and a chair sets out "
                       f"the conclusion and where they differ. Sources: {using}"[:400],
              "questions": [
-                 {"id": "question", "label": "The question for the panel", "kind": "text", "default": " ".join(request.split())[:1000],
+                 {"id": "question", "label": "The question for the Council", "kind": "text", "default": " ".join(request.split())[:1000],
                   "max_length": 1000},
                  {"id": "specialist", "label": "Specialist area", "kind": "choice", "default": area,
                   "options": [{"value": k, "label": v[:1].upper() + v[1:]} for k, v in SPECIALISMS.items()]},
                  {"id": "depth", "label": "Depth", "kind": "choice", "default": "focused",
                   "options": [{"value": "focused", "label": "Focused", "detail": "Answers, one challenge round and the chair"},
                               {"value": "deep", "label": "Deep", "detail": "Also lets the first answer reply to the objections"}]}],
-             "submit_label": "Ask the panel",
+             "submit_label": "Ask the Council",
              "note": "It runs in the background, about a minute; you can keep asking here meanwhile."}
     return props, {"purpose": "panel", "document_ids": list(document_ids)}
 
@@ -59,18 +60,21 @@ def start(principal: dict, matter: dict, values: dict, stored: dict) -> str:
 
 def summary(principal: dict, matter_id: str, review_id: str) -> Optional[dict]:
     """The council_summary props as the person may see the review now, or None when it is gone or not theirs to see."""
-    from ..panel.run import SPECIALISMS, label_of
+    from ..panel.run import LIBRARY, SPECIALISMS, label_of, progress_of
     with get_conn() as conn:
-        r = conn.execute("SELECT question, specialist, status FROM legal_panel_reviews WHERE id=? AND matter_id=?", (review_id, matter_id)).fetchone()
+        r = conn.execute("SELECT question, specialist, status, roles_json, progress_json FROM legal_panel_reviews WHERE id=? AND matter_id=?",
+                         (review_id, matter_id)).fetchone()
         number = (conn.execute("SELECT number FROM matters WHERE id=?", (matter_id,)).fetchone() or ["?"])[0]
     if not r:
         return None
-    question, specialist, status = r
+    question, specialist, status, roles_json, progress_raw = r
     versions = artifacts.versions(matter_id, "panel_review", review_id, "panel")
     a = versions[0] if versions else None
     if a and not artifacts.visible_to(a, principal["sub"]):
         return None
     area = SPECIALISMS.get(specialist, specialist)
+    roles = [x for x in json.loads(roles_json or "[]") if x in LIBRARY]
+    step = progress_of(progress_raw, roles)["step"] if status == "running" else None      # where a running Council is (2026-11-07)
     issues, missing, approval, points, gaps, conclusion, outcome, check = [], [], None, [], [], None, None, []
     if a:
         c = a["content"]
@@ -92,5 +96,6 @@ def summary(principal: dict, matter_id: str, review_id: str) -> Optional[dict]:
             "status": status if status in ("queued", "running", "done", "needs_facts", "failed", "not_allowed") else "failed",
             "issues": issues, "missing_facts": [m for m in missing if m], "approval": approval,
             "conclusion": conclusion, "points": points, "gaps": gaps, "outcome": outcome, "figures_unsupported": check,
+            "roles": [label_of(x, area)[:60] for x in roles][:5], "step": step if step in ("views", "challenge", "reply", "chair") else None,
             "path": f"/m/{urlquote(number, safe='')}/panel/{review_id}", "caution": CAUTION}
 

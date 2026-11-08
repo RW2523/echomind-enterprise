@@ -294,20 +294,35 @@ function DocumentPreview({ comp, ctx }: { comp: Of<'document_preview'>; ctx: Car
 
 // ── council_summary ────────────────────────────────────────────────────────────
 const PANEL_STATE: Record<string, string> = {
-  queued: 'Waiting to start…', running: 'The perspectives are reading the documents and challenging the first answer…', done: 'Done', failed: 'The panel could not finish.',
-  needs_facts: 'The panel needs facts the documents do not give.', not_allowed: 'The panel did not run for this matter.',
+  queued: 'Waiting to start…', running: 'The perspectives are reading the documents and challenging the first answer…', done: 'Done', failed: 'The Council could not finish.',
+  needs_facts: 'The Council needs facts the documents do not give.', not_allowed: 'The Council did not run for this matter.',
 };
+/** The step a running Council is on, as the run itself records it (2026-11-07). */
+const COUNCIL_STEP: Record<NonNullable<Of<'council_summary'>['props']['step']>, [number, string]> = {
+  views: [2, 'Initial views: each perspective is answering from the documents…'],
+  challenge: [3, 'Challenge: the first answer is being tested against the sources…'],
+  reply: [4, 'Responses: the first answer is replying to the objections…'],
+  chair: [5, 'Synthesis: the chair is comparing the verified answers…'],
+};
+const initials = (label: string) => label.replace(/\(.*\)/, '').split(/\s+/).filter((w) => /^[A-Za-z]/.test(w) && !/^(and|of|the)$/i.test(w))
+  .slice(0, 2).map((w) => w[0].toUpperCase()).join('');
 
 function CouncilSummary({ comp, ctx }: { comp: Of<'council_summary'>; ctx: CardContext }) {
   const p = comp.props;
   const working = p.status === 'queued' || p.status === 'running';
   const { following, follow } = usePolling(working, 3000, 5 * 60_000, ctx, comp.id);
   return (
-    <section className="qc-card" data-component="council_summary" aria-label={`Review panel: ${p.question}`}>
-      <h3 className="qc-card-title"><Icon><Scale aria-hidden /></Icon>Review panel · {p.area}</h3>
+    <section className="qc-card" data-component="council_summary" aria-label={`Council: ${p.question}`}>
+      <h3 className="qc-card-title"><Icon><Scale aria-hidden /></Icon>Council · {p.area}</h3>
       <p style={{ margin: 0 }}>“{p.question}”</p>
+      {p.roles.length > 0 && (
+        <ul className="qc-council-seats" aria-label="On this Council">
+          {p.roles.map((r) => <li key={r}><span className="qc-council-seat" aria-hidden>{initials(r)}</span>{r}</li>)}
+        </ul>
+      )}
       <p className="qc-state" data-tone={p.status === 'done' ? 'verified' : p.status === 'failed' ? 'attention' : 'neutral'} role="status">
-        {PANEL_STATE[p.status]}{working && !following && <> <button type="button" className="qc-linkbtn" onClick={follow}>Check again</button></>}</p>
+        {p.status === 'running' && p.step ? <><span className="qc-meta">{`Step ${COUNCIL_STEP[p.step][0]} of 5 · `}</span>{COUNCIL_STEP[p.step][1]}</> : PANEL_STATE[p.status]}
+        {working && !following && <> <button type="button" className="qc-linkbtn" onClick={follow}>Check again</button></>}</p>
       {p.outcome === 'inconclusive' && <p style={{ margin: 0 }}>No conclusion: fewer than two of the answers' quotes could be verified in the documents.</p>}
       {p.conclusion && (
         <div className="qc-conclusion" aria-label="The chair's conclusion">
@@ -332,10 +347,10 @@ function CouncilSummary({ comp, ctx }: { comp: Of<'council_summary'>; ctx: CardC
         </div>
       )}
       {p.missing_facts.length > 0 && (
-        <div><p className="qc-meta" style={{ margin: 0 }}>Facts the panel asks for:</p><ul className="qc-history-list">{p.missing_facts.map((m, i) => <li key={i}>{m}</li>)}</ul></div>
+        <div><p className="qc-meta" style={{ margin: 0 }}>Facts the Council asks for:</p><ul className="qc-history-list">{p.missing_facts.map((m, i) => <li key={i}>{m}</li>)}</ul></div>
       )}
       {p.approval && <p className="qc-meta" style={{ margin: 0 }}>{p.approval}</p>}
-      <div className="qc-actions"><button type="button" className="qc-btn" onClick={() => ctx.go(p.path)}><FileText aria-hidden />Open the full review</button></div>
+      <div className="qc-actions"><button type="button" className="qc-btn" onClick={() => ctx.go(p.path)}><FileText aria-hidden />Open the Council session</button></div>
       <Caution text={p.caution} />
     </section>
   );

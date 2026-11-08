@@ -1,0 +1,285 @@
+/* The Council (redesign 2026-11-07; docs/echomind-legal/DESIGN.md, "Courthouse"). Tokens only, so the walnut and navy
+ * palettes, light and dark, all apply. Role marks are icons in walnut discs, never faces. Gold keeps its two jobs: evidence
+ * (citation chips, quoted words) and where you are (the current step). No scores, meters or badges the run does not back. */
+
+[data-edition="law"] .cn-page { display: grid; gap: 16px; max-width: 1180px; }
+[data-edition="law"] .cn-page > * { min-width: 0; }
+
+/* ── role marks ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-mark { display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--avatar-bg); color: var(--avatar-ink); box-shadow: 0 0 0 1px color-mix(in srgb, var(--avatar-ink) 22%, transparent) inset; }
+[data-edition="law"] .cn-mark svg { width: 18px; height: 18px; }
+[data-edition="law"] .cn-mark[data-size="sm"] { width: 22px; height: 22px; }
+[data-edition="law"] .cn-mark[data-size="sm"] svg { width: 12px; height: 12px; }
+[data-edition="law"] .cn-mark[data-size="lg"] { width: 46px; height: 46px; }
+[data-edition="law"] .cn-mark[data-size="lg"] svg { width: 22px; height: 22px; }
+[data-edition="law"] .cn-mark[data-role="chair"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+
+/* ── the session's header ───────────────────────────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-head { display: grid; gap: 10px; }
+[data-edition="law"] .cn-head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+[data-edition="law"] .cn-eyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+[data-edition="law"] .cn-question-h { margin: 2px 0 0; font-family: var(--serif, 'Source Serif 4', Georgia, serif); font-size: 22px; line-height: 1.32;
+  font-weight: 600; color: var(--ink); max-width: 62ch; overflow-wrap: anywhere; }
+[data-edition="law"] .cn-meta-line { margin: 0; font-size: 13px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+[data-edition="law"] .cn-notice { margin: 0; font-size: 12.5px; color: var(--ink-3); }
+[data-edition="law"] .cn-alert { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 14px;
+  border-radius: 12px; background: color-mix(in srgb, var(--attention) 10%, transparent); color: var(--ink); font-size: 14px; }
+[data-edition="law"] .cn-alert b { color: var(--attention); }
+
+/* ── the discussion flow ────────────────────────────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-flow ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+[data-edition="law"] .cn-flow li { position: relative; min-width: 0; }
+[data-edition="law"] .cn-step { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; text-align: left;
+  padding: 12px 12px 10px; border: 0; border-top: 3px solid var(--rule); border-radius: 0 0 10px 10px; background: transparent; color: var(--ink-2);
+  font: inherit; cursor: pointer; }
+[data-edition="law"] .cn-step:hover { background: var(--fill-1); }
+[data-edition="law"] .cn-step:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[data-edition="law"] .cn-step-dot { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--fill-2);
+  color: var(--ink-3); font-size: 12px; font-weight: 700; flex: none; }
+[data-edition="law"] .cn-step-dot svg { width: 14px; height: 14px; }
+[data-edition="law"] .cn-step-text { display: grid; gap: 2px; min-width: 0; }
+[data-edition="law"] .cn-step-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+[data-edition="law"] .cn-step-detail { font-size: 12.5px; color: var(--ink-3); line-height: 1.35; overflow-wrap: anywhere; }
+[data-edition="law"] .cn-flow li[data-state="done"] .cn-step { border-top-color: var(--accent); }
+[data-edition="law"] .cn-flow li[data-state="done"] .cn-step-dot { background: var(--accent); color: var(--accent-ink); }
+[data-edition="law"] .cn-flow li[data-state="current"] .cn-step { border-top-color: var(--tab-line); background: var(--accent-soft); }
+[data-edition="law"] .cn-flow li[data-state="current"] .cn-step-dot { background: var(--paper); box-shadow: 0 0 0 2px var(--tab-line) inset; }
+[data-edition="law"] .cn-step-pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--tab-line); }
+@media (prefers-reduced-motion: no-preference) { [data-edition="law"] .cn-step-pulse { animation: cn-pulse 1.6s ease-in-out infinite; } }
+@keyframes cn-pulse { 50% { opacity: .35; } }
+[data-edition="law"] .cn-flow li[data-state="skipped"] .cn-step { border-top-style: dashed; }
+[data-edition="law"] .cn-flow li[data-state="skipped"] .cn-step-label { color: var(--ink-3); font-weight: 550; }
+[data-edition="law"] .cn-flow li[data-state="next"] .cn-step-label { color: var(--ink-2); font-weight: 550; }
+[data-edition="law"] .cn-flow li[data-state="stopped"] .cn-step { border-top-color: var(--attention); }
+[data-edition="law"] .cn-flow li[data-state="stopped"] .cn-step-dot { background: var(--attention); color: var(--paper); }
+[data-edition="law"] .cn-flow li[data-state="failed"] .cn-step { border-top-color: var(--conflict); }
+[data-edition="law"] .cn-flow li[data-state="failed"] .cn-step-dot { background: var(--conflict); color: var(--paper); }
+
+/* ── views (tabs) ───────────────────────────────────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--fill-2); width: max-content; max-width: 100%;
+  overflow-x: auto; scrollbar-width: none; }
+[data-edition="law"] .cn-tab { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 550;
+  color: var(--ink-2); padding: 7px 16px; border-radius: 9px; cursor: pointer; white-space: nowrap; }
+[data-edition="law"] .cn-tab:hover { color: var(--ink); }
+[data-edition="law"] .cn-tab[aria-selected="true"] { background: var(--paper); color: var(--ink); box-shadow: var(--paper-shadow), 0 1px 2px rgba(0, 0, 0, .06); }
+[data-edition="law"] .cn-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+[data-edition="law"] .cn-tab-count { display: inline-grid; place-items: center; min-width: 20px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: var(--fill-2); color: var(--ink-3); font-size: 11.5px; font-weight: 700; }
+[data-edition="law"] .cn-panel { display: grid; gap: 16px; }
+[data-edition="law"] .cn-panel:focus-visible { outline: none; }
+
+/* ── overview: the question with the perspectives around it ─────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-table { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, .95fr) minmax(0, 1fr); gap: 16px 22px;
+  grid-template-areas: "s1 q s2" "s3 q s4"; align-items: stretch; }
+[data-edition="law"] .cn-table[data-seats="2"], [data-edition="law"] .cn-table[data-seats="1"] { grid-template-areas: "s1 q s2"; }
+[data-edition="law"] .cn-table[data-seats="3"] { grid-template-areas: "s1 q s2" "s3 q ."; }
+[data-edition="law"] .cn-question { grid-area: q; align-self: center; display: grid; gap: 10px; justify-items: center; text-align: center;
+  padding: 28px 24px; border-radius: 22px; background: var(--paper); box-shadow: var(--paper-shadow), 0 0 0 6px var(--accent-soft), 0 1px 2px rgba(0, 0, 0, .05); }
+[data-edition="law"] .cn-question-text { margin: 0; font-family: var(--serif, 'Source Serif 4', Georgia, serif); font-size: 20px; line-height: 1.38;
+  font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+[data-edition="law"] .cn-question .cn-seal { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft);
+  color: var(--accent); }
+[data-edition="law"] .cn-question .cn-seal svg { width: 20px; height: 20px; }
+[data-edition="law"] .cn-seat { position: relative; display: grid; gap: 10px; align-content: start; padding: 16px; border-radius: 14px; background: var(--paper);
+  box-shadow: var(--paper-shadow); min-width: 0; }
+[data-edition="law"] .cn-seat:nth-of-type(1) { grid-area: s1; }
+[data-edition="law"] .cn-seat:nth-of-type(2) { grid-area: s2; }
+[data-edition="law"] .cn-seat:nth-of-type(3) { grid-area: s3; }
+[data-edition="law"] .cn-seat:nth-of-type(4) { grid-area: s4; }
+[data-edition="law"] .cn-seat::after { content: ""; position: absolute; top: 50%; width: 22px; border-top: 1px solid var(--rule); }
+[data-edition="law"] .cn-seat:nth-of-type(odd)::after { right: -22px; }
+[data-edition="law"] .cn-seat:nth-of-type(even)::after { left: -22px; }
+[data-edition="law"] .cn-seat-head { display: flex; gap: 12px; align-items: center; min-width: 0; }
+[data-edition="law"] .cn-seat-name { margin: 0; font-size: 15.5px; font-weight: 650; color: var(--ink); line-height: 1.25; }
+[data-edition="law"] .cn-seat-about { margin: 1px 0 0; font-size: 12.5px; color: var(--ink-3); line-height: 1.35; }
+[data-edition="law"] .cn-seat-line { margin: 0; font-family: var(--serif, 'Source Serif 4', Georgia, serif); font-size: 15px; line-height: 1.5; color: var(--ink);
+  overflow-wrap: anywhere; }
+[data-edition="law"] .cn-seat-line[data-quiet] { color: var(--ink-3); font-style: italic; }
+[data-edition="law"] .cn-seat-foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+[data-edition="law"] .cn-chip { display: inline-flex; align-items: center; gap: 5px; min-height: 26px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--rule);
+  background: var(--paper-2); color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 550; white-space: nowrap; }
+[data-edition="law"] .cn-chip svg { width: 13px; height: 13px; }
+[data-edition="law"] button.cn-chip { cursor: pointer; }
+[data-edition="law"] button.cn-chip:hover { border-color: var(--neutral-line); color: var(--ink); }
+[data-edition="law"] .cn-chip[data-tone="gold"] { border-color: color-mix(in srgb, var(--gold) 45%, transparent); background: var(--gold-soft); color: var(--gold-ink); }
+[data-edition="law"] .cn-chip[data-tone="attention"] { border-color: color-mix(in srgb, var(--attention) 40%, transparent); color: var(--attention); background: transparent; }
+[data-edition="law"] .cn-seat-state { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-3); }
+[data-edition="law"] .cn-seat-state[data-state="done"] { color: var(--ink-2); }
+[data-edition="law"] .cn-seat-state[data-state="current"] { color: var(--ink); font-weight: 600; }
+[data-edition="law"] .cn-seat-state svg { width: 14px; height: 14px; }
+
+/* The Council's view, on the overview and at the head of the result. */
+[data-edition="law"] .cn-view { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: start; padding: 18px 20px;
+  border-radius: 14px; background: color-mix(in srgb, var(--accent) 7%, var(--paper)); box-shadow: var(--paper-shadow); }
+[data-edition="law"] .cn-view > .cn-mark { grid-row: span 3; }
+[data-edition="law"] .cn-view-text { margin: 0; font-family: var(--serif, 'Source Serif 4', Georgia, serif); font-size: 18px; line-height: 1.45; color: var(--ink);
+  font-weight: 600; overflow-wrap: anywhere; }
+[data-edition="law"] .cn-view-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+
+/* ── the discussion ─────────────────────────────────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-stage { display: grid; gap: 12px; scroll-margin-top: 80px; }
+[data-edition="law"] .cn-stage:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 8px; }
+[data-edition="law"] .cn-stage-h { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 16px; font-weight: 650; color: var(--ink); }
+[data-edition="law"] .cn-stage-n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--fill-2); color: var(--ink-2);
+  font-size: 12px; font-weight: 700; }
+[data-edition="law"] .cn-stage-sub { margin: -6px 0 0 34px; font-size: 13px; color: var(--ink-3); max-width: 80ch; }
+[data-edition="law"] .cn-feed { list-style: none; margin: 0; padding: 0 0 0 34px; display: grid; gap: 12px; }
+[data-edition="law"] .cn-msg { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+[data-edition="law"] .cn-bubble { display: grid; gap: 8px; padding: 14px 16px; border-radius: 4px 14px 14px 14px; background: var(--paper); box-shadow: var(--paper-shadow);
+  min-width: 0; max-width: 860px; }
+[data-edition="law"] .cn-uncited { font-size: 13px; color: var(--ink-3); }
+[data-edition="law"] .cn-uncited > summary { cursor: pointer; font-weight: 600; color: var(--ink-2); width: max-content; max-width: 100%; }
+[data-edition="law"] .cn-uncited ul { margin: 6px 0 0; padding-left: 1.1em; display: grid; gap: 4px; }
+[data-edition="law"] .cn-msg[data-kind="chair"] .cn-bubble { background: color-mix(in srgb, var(--accent) 7%, var(--paper)); }
+[data-edition="law"] .cn-msg[data-kind="pending"] .cn-bubble { background: transparent; box-shadow: 0 0 0 1px var(--rule) inset; color: var(--ink-3); }
+[data-edition="law"] .cn-msg-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+[data-edition="law"] .cn-msg-head b { font-size: 14.5px; color: var(--ink); }
+[data-edition="law"] .cn-tag { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+[data-edition="law"] .cn-msg-text { margin: 0; font-family: var(--serif, 'Source Serif 4', Georgia, serif); font-size: 16px; line-height: 1.62; color: var(--ink);
+  white-space: pre-wrap; overflow-wrap: anywhere; max-width: 72ch; }
+[data-edition="law"] .cn-note { margin: 0; font-size: 13px; color: var(--ink-3); }
+[data-edition="law"] .cn-note b { color: var(--ink-2); font-weight: 600; }
+[data-edition="law"] .cn-cite { display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 6px; margin: 0 2px; border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); background: var(--gold-soft); color: var(--gold-ink); font: 700 11.5px/1 var(--sans);
+  vertical-align: 2px; cursor: pointer; }
+[data-edition="law"] .cn-cite:hover { border-color: var(--gold); }
+[data-edition="law"] .cn-cite:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+[data-edition="law"] .cn-cite[data-verified="false"] { border-style: dashed; background: var(--fill-1); color: var(--ink-3); }
+[data-edition="law"] .cn-cites { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+[data-edition="law"] .cn-cites .cn-chip { max-width: 100%; }
+[data-edition="law"] .cn-cites .cn-chip span { overflow: hidden; text-overflow: ellipsis; }
+[data-edition="law"] .cn-cites .cn-chip b { font-weight: 700; }
+[data-edition="law"] .cn-points { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+[data-edition="law"] .cn-points li { display: grid; gap: 4px; }
+[data-edition="law"] .cn-by { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--ink-3); }
+[data-edition="law"] .cn-by span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* ── evidence in focus ──────────────────────────────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-docs { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+[data-edition="law"] .cn-doc { display: grid; gap: 10px; padding: 16px; border-radius: 14px; background: var(--paper); box-shadow: var(--paper-shadow); }
+[data-edition="law"] .cn-doc-head { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+[data-edition="law"] .cn-doc-title { display: flex; gap: 10px; align-items: center; margin: 0; font-size: 15.5px; font-weight: 650; color: var(--ink); min-width: 0; }
+[data-edition="law"] .cn-doc-title svg { width: 18px; height: 18px; color: var(--ink-3); flex: none; }
+[data-edition="law"] .cn-doc-roles { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--ink-3); }
+[data-edition="law"] .cn-places { list-style: none; margin: 0; padding: 0; display: grid; }
+[data-edition="law"] .cn-place { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding: 12px 0; border-top: 1px solid var(--rule); }
+[data-edition="law"] .cn-place-where { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--ink-3); letter-spacing: .01em; }
+[data-edition="law"] .cn-place-quote { margin: 0; font-family: var(--serif, 'Source Serif 4', Georgia, serif); font-size: 15px; line-height: 1.55; color: var(--ink);
+  overflow-wrap: anywhere; }
+[data-edition="law"] .cn-place-quote mark { background: var(--gold-soft); color: inherit; border-bottom: 1px solid var(--gold); padding: 0 1px; }
+[data-edition="law"] .cn-place-actions { display: flex; gap: 6px; align-items: start; flex-wrap: wrap; justify-content: flex-end; }
+[data-edition="law"] .cn-usedby { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--ink-2); }
+[data-edition="law"] .cn-usedby li { display: inline-flex; align-items: center; gap: 6px; }
+[data-edition="law"] .cn-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink-2); }
+[data-edition="law"] .cn-legend li { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ── the result ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-section { display: grid; gap: 12px; padding: 18px 20px; border-radius: 14px; background: var(--paper); box-shadow: var(--paper-shadow); }
+[data-edition="law"] .cn-section-h { margin: 0; font-size: 16px; font-weight: 650; color: var(--ink); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+[data-edition="law"] .cn-section-sub { margin: -6px 0 0; font-size: 13px; color: var(--ink-3); }
+[data-edition="law"] .cn-result-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+[data-edition="law"] .cn-result-grid > * { min-width: 0; }
+[data-edition="law"] .cn-differs { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+[data-edition="law"] .cn-differ { display: grid; gap: 8px; padding: 12px 14px; border-radius: 12px; background: var(--paper-2); box-shadow: 0 0 0 1px var(--rule) inset; }
+[data-edition="law"] .cn-differ-h { margin: 0; font-size: 14.5px; font-weight: 650; color: var(--ink); }
+[data-edition="law"] .cn-positions { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+[data-edition="law"] .cn-positions li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; font-size: 13.5px; color: var(--ink-2); }
+[data-edition="law"] .cn-positions li b { color: var(--ink); font-weight: 600; }
+[data-edition="law"] .cn-open-list { margin: 0; padding: 0 0 0 1.1em; display: grid; gap: 6px; font-size: 14px; color: var(--ink-2); }
+[data-edition="law"] .cn-plan { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+[data-edition="law"] .cn-plan-row { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+[data-edition="law"] .cn-plan-row:last-child { border-bottom: 0; padding-bottom: 0; }
+[data-edition="law"] .cn-plan-row .lw-input { width: 100%; resize: vertical; font-size: 14px; line-height: 1.45; field-sizing: content; min-height: 38px; }
+[data-edition="law"] .cn-plan-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+[data-edition="law"] .cn-plan-from { margin: 0; font-size: 12px; color: var(--ink-3); }
+[data-edition="law"] .cn-plan-added { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--verified); white-space: nowrap; }
+[data-edition="law"] .cn-plan-added svg { width: 14px; height: 14px; }
+[data-edition="law"] .cn-details > summary { cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+[data-edition="law"] .cn-details[open] > summary { margin-bottom: 10px; }
+[data-edition="law"] .cn-table-wrap { overflow-x: auto; }
+
+/* ── the cited passage ──────────────────────────────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-passage-wrap { display: grid; gap: 12px; }
+[data-edition="law"] .cn-verif { display: flex; gap: 8px; align-items: center; margin: 0; font-size: 13.5px; font-weight: 600; color: var(--verified); }
+[data-edition="law"] .cn-verif[data-verified="false"] { color: var(--attention); }
+[data-edition="law"] .cn-verif svg { width: 16px; height: 16px; flex: none; }
+[data-edition="law"] .cn-passage { margin: 0; padding: 14px 16px; border-radius: 12px; background: var(--paper-2); box-shadow: 0 0 0 1px var(--rule) inset;
+  font-family: var(--serif, 'Source Serif 4', Georgia, serif); font-size: 15.5px; line-height: 1.65; color: var(--ink-2); white-space: pre-wrap;
+  overflow-wrap: anywhere; max-height: 46vh; overflow-y: auto; }
+[data-edition="law"] .cn-passage mark { background: var(--gold-soft); color: var(--ink); border-bottom: 2px solid var(--gold); padding: 0 1px; }
+[data-edition="law"] .cn-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; font-size: 13.5px; }
+[data-edition="law"] .cn-facts dt { color: var(--ink-3); }
+[data-edition="law"] .cn-facts dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+
+/* ── the Council home ───────────────────────────────────────────────────────────────────────────────────────────── */
+[data-edition="law"] .cn-home { display: grid; gap: 16px; max-width: 1080px; }
+[data-edition="law"] .cn-intro { display: grid; gap: 14px; }
+[data-edition="law"] .cn-intro-h { margin: 0; font-family: var(--serif, 'Source Serif 4', Georgia, serif); font-size: 26px; font-weight: 600; color: var(--ink); line-height: 1.25; }
+[data-edition="law"] .cn-seats-row { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+[data-edition="law"] .cn-seats-row li { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-2); font-weight: 550; }
+[data-edition="law"] .cn-howto { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; counter-reset: cn; }
+[data-edition="law"] .cn-howto li { counter-increment: cn; display: grid; gap: 2px; padding: 10px 12px; border-radius: 10px; background: var(--fill-1); font-size: 12.5px;
+  color: var(--ink-3); line-height: 1.4; }
+[data-edition="law"] .cn-howto li b { font-size: 13.5px; color: var(--ink); font-weight: 650; }
+[data-edition="law"] .cn-howto li b::before { content: counter(cn) "  "; color: var(--ink-3); font-weight: 600; }
+[data-edition="law"] .cn-ask { display: grid; gap: 12px; padding-top: 14px; border-top: 1px solid var(--rule); }
+[data-edition="law"] .cn-ask-row { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+[data-edition="law"] .cn-ask-row > :last-child { margin-left: auto; }
+[data-edition="law"] .cn-sessions { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+[data-edition="law"] .cn-session { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: start; padding: 14px 16px; border-radius: 14px;
+  background: var(--paper); box-shadow: var(--paper-shadow); }
+[data-edition="law"] .cn-session a.cn-session-q { font-family: var(--serif, 'Source Serif 4', Georgia, serif); font-size: 16.5px; font-weight: 600; color: var(--ink);
+  text-decoration: none; line-height: 1.4; overflow-wrap: anywhere; }
+[data-edition="law"] .cn-session a.cn-session-q:hover { text-decoration: underline; text-underline-offset: 3px; }
+[data-edition="law"] .cn-session-marks { display: inline-flex; gap: 4px; }
+[data-edition="law"] .cn-session > .lw-pill { justify-self: start; }
+[data-edition="law"] .cn-session-meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12.5px; color: var(--ink-3); }
+[data-edition="law"] .cn-suggest { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+[data-edition="law"] .cn-suggest > li { display: grid; gap: 6px; padding: 12px 14px; border-radius: 12px; background: var(--paper-2); box-shadow: 0 0 0 1px var(--rule) inset; }
+
+/* ── narrower screens ───────────────────────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  [data-edition="law"] .cn-result-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 980px) {
+  [data-edition="law"] .cn-table, [data-edition="law"] .cn-table[data-seats] { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "q q" "s1 s2" "s3 s4"; }
+  [data-edition="law"] .cn-seat::after { display: none; }
+  [data-edition="law"] .cn-question { padding: 22px 18px; }
+  [data-edition="law"] .cn-howto { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+}
+@media (max-width: 760px) {
+  [data-edition="law"] .cn-flow ol { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  [data-edition="law"] .cn-step { border-top: 0; border-left: 3px solid var(--rule); border-radius: 0 10px 10px 0; padding: 8px 12px; }
+  [data-edition="law"] .cn-flow li[data-state="done"] .cn-step { border-left-color: var(--accent); }
+  [data-edition="law"] .cn-flow li[data-state="current"] .cn-step { border-left-color: var(--tab-line); }
+  [data-edition="law"] .cn-flow li[data-state="skipped"] .cn-step { border-left-style: dashed; }
+  [data-edition="law"] .cn-flow li[data-state="stopped"] .cn-step { border-left-color: var(--attention); }
+  [data-edition="law"] .cn-flow li[data-state="failed"] .cn-step { border-left-color: var(--conflict); }
+  [data-edition="law"] .cn-step-text { grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: baseline; }
+  [data-edition="law"] .cn-step-detail { text-align: right; }
+  [data-edition="law"] .cn-step-dot { width: 22px; height: 22px; font-size: 11px; }
+}
+@media (max-width: 620px) {
+  [data-edition="law"] .cn-table, [data-edition="law"] .cn-table[data-seats] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "q" "s1" "s2" "s3" "s4"; }
+  [data-edition="law"] .cn-question-h { font-size: 20px; }
+  [data-edition="law"] .cn-question-text { font-size: 18px; }
+  [data-edition="law"] .cn-feed, [data-edition="law"] .cn-stage-sub { padding-left: 0; margin-left: 0; }
+  [data-edition="law"] .cn-stage-sub { margin-top: -6px; }
+  [data-edition="law"] .cn-msg { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  [data-edition="law"] .cn-msg > .cn-mark { display: none; }
+  [data-edition="law"] .cn-bubble { border-radius: 14px; }
+  [data-edition="law"] .cn-place { grid-template-columns: minmax(0, 1fr); }
+  [data-edition="law"] .cn-place-actions { justify-content: flex-start; }
+  [data-edition="law"] .cn-session { grid-template-columns: minmax(0, 1fr); }
+  [data-edition="law"] .cn-ask-row > :last-child { margin-left: 0; }
+  [data-edition="law"] .cn-ask-row > * { flex: 1 1 100%; min-width: 0; }
+  [data-edition="law"] .cn-ask-row select { width: 100%; }
+  [data-edition="law"] .cn-howto li { padding: 8px 10px; }
+  [data-edition="law"] .cn-view { grid-template-columns: minmax(0, 1fr); }
+  [data-edition="law"] .cn-view > .cn-mark { display: none; }
+  [data-edition="law"] .cn-intro-h { font-size: 22px; }
+  [data-edition="law"] .cn-tabs { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  [data-edition="law"] .cn-tab { padding: 8px 4px; justify-content: center; font-size: 13.5px; }
+  [data-edition="law"] .cn-tab-count { display: none; }
+}
