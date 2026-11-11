@@ -136,17 +136,8 @@ def run(args, data: Path) -> int:
     from app.legal.matters import repo
     from app.legal.orgs import default_org_id
     from conftest import csrf_headers, make_user, sign_in
-    if args.trace_stated:
-        from app.legal.research import stated as stated_mod
-        checked, trace = stated_mod.answers, open(args.trace_stated, "a", encoding="utf-8")
-
-        async def traced(question, passages, defined=()):
-            verdict = await checked(question, passages, defined)
-            trace.write(json.dumps({"question": question, "defined": list(defined), "verdict": verdict, "passages": [
-                {"document": p["citation"]["document_title"], "text": p["text"]} for p in passages]}) + "\n")
-            trace.flush()
-            return verdict
-        stated_mod.answers = traced
+    if args.trace_stated:              # research/stated.py's own trace (2026-11-12): its inputs, the answer's quotes and the reply
+        settings.LEGAL_STATED_TRACE = str(Path(args.trace_stated).resolve())
 
     org = default_org_id()
     alice = make_user("alice", mfa=True, firm_roles=["attorney"])
