@@ -11,6 +11,7 @@ History is private to its owner within the matter.
 """
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import logging
@@ -660,7 +661,7 @@ async def _search_several(scopes: list, principal: dict, question: str, versions
 
 async def _answer(scope, principal: dict, question: str, turn: dict, versions: str = "signed",
                   documents: Optional[list[str]] = None, understood: Optional[dict] = None,
-                  extra_scopes: tuple = ()) -> AsyncIterator[str]:
+                  extra_scopes: tuple = (), prefer: Optional[list[str]] = None, progress: bool = False) -> AsyncIterator[str]:
     status, answer, citations, items, found, reason, changed = "error", None, [], [], [], None, []
     unsupported_final, stated_detail = None, None      # kept with the answer (migration 0044)
     scopes = [scope, *extra_scopes]
@@ -679,6 +680,9 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         asked_parties = attribution.named_parties(question, known)
         target = [] if documents or not asked_parties else [did for did, h in heads.items() if asked_parties <= h[0]]
         titles = await run_in_threadpool(_titles, scopes, principal["sub"])
+        # where the time goes, said as it goes (2026-11-12, evaluation fix list item 15)
+        if progress:      # the chat asks for these; the research page's stream is unchanged
+            yield _event({"type": "progress", "label": f"Searching {len(titles)} document{'s' if len(titles) != 1 else ''}"})
         same = None if several or documents else kinds.same_kind(question, titles, target if asked_parties else None)
         # More of that kind than are answered for each, or a name several parties' names begin with: the person is offered
         # the choice (2026-11-07 review point 10), never asked to choose before an answer
@@ -725,6 +729,36 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 for did in named_docs[:3]:
                     own = await searchmod.search(scope, inside, k=settings.LEGAL_RESEARCH_NAMED_PASSAGES if len(named_docs) == 1 else 2,
                                                  versions=versions, documents=[did], wide=True)
+                    first += [p for p in own["passages"] if p["chunk_id"] not in {q["chunk_id"] for q in first}]
+                    nothing_found = nothing_found and own["abstained"]
+                have = {p["chunk_id"] for p in first}
+                passages = first + [p for p in passages if p["chunk_id"] not in have]
+            # A list (2026-11-12, evaluation fix list item 6): every item is wanted, and the items sit in several passages of the
+            # document asked about (or the best one's), or in several documents. More of that document's passages, read in its
+            # own order, and the best passage of each of a few other documents, are given, and the model is told it is a list.
+            listing = kinds.asks_list(question)
+            if listing:
+                lead = (named_docs or list(documents or []) or [p["citation"]["document_id"] for p in passages[:1]])[:2]
+                inside_q = attribution.without_titles(search_q, [titles[d] for d in lead if d in titles]) or search_q
+                more = []
+                for did in lead:
+                    own = await searchmod.search(scope, inside_q, k=settings.LEGAL_RESEARCH_LIST_PASSAGES, versions=versions,
+                                                 documents=[did], wide=True)
+                    more += sorted(own["passages"], key=lambda p: p["citation"].get("char_start") or 0)
+                if not documents and not named_docs:
+                    others = [d for d in titles if d not in lead][:max(0, settings.LEGAL_RESEARCH_LIST_DOCUMENTS)]
+                    got = await asyncio.gather(*[searchmod.search(scope, search_q, k=1, versions=versions, documents=[d], wide=True)
+                                                 for d in others])
+                    more += [p for g in got if not g["abstained"] for p in g["passages"]]
+                have = {p["chunk_id"] for p in passages}
+                passages = passages + [p for p in more if p["chunk_id"] not in have and not have.add(p["chunk_id"])]
+            # A follow-up (counsel, 2026-11-12): the documents the last answer cited are searched on their own and come first, so
+            # "And did the amendment change that?" reads the agreement and amendment the conversation is about. A preference only:
+            # the rest of the matter is still searched, and a document the question names comes first instead.
+            if prefer and not named_docs:
+                first = []
+                for did in [d for d in prefer if d in titles][:3]:
+                    own = await searchmod.search(scope, search_q, k=2, versions=versions, documents=[did], wide=True)
                     first += [p for p in own["passages"] if p["chunk_id"] not in {q["chunk_id"] for q in first}]
                     nothing_found = nothing_found and own["abstained"]
                 have = {p["chunk_id"] for p in first}
@@ -785,6 +819,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         # searched for in the documents asked about. One matter at a time.
         worked = None
         if not several and working.asks(question):
+            if progress:
+                yield _event({"type": "progress", "label": "Working out the figures by rule"})
             inside = documents or named_docs or None
             # the provisions the sources say the figure is worked out under ("calculated in accordance with paragraph 3 of
             # Schedule 2"), read too: the rule is often in a schedule no search for the question finds
@@ -833,9 +869,12 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                           "citations": [], "evidence": [], "conflicts": [], "unsupported": [], "failed": [], "uncited": False,
                           "turn_id": turn["id"], "versions": versions, "absence": answer, "stated": None})
             return
+        if progress and (queued := llm_mod.ahead()):
+            yield _event({"type": "progress", "label": f"Waiting for the model: {queued} question{'s' if queued != 1 else ''} ahead",
+                          "busy": True})
         buf, shown, claims, unsupported, failed, last_check = "", [], [], [], [], time.monotonic()
         several_of = kinds.note(same[0], [titles[d] for d in same[1]]) if same else ""
-        several_of += named_note
+        several_of += named_note + (prompt.LIST_NOTE if not several and kinds.asks_list(question) else "")
         stream = llm_mod.get().chat_stream(prompt.build(question, passages, several_of, calculate=False if worked else None),
                                            temperature=settings.LEGAL_RESEARCH_TEMPERATURE,
                                            max_tokens=settings.LEGAL_RESEARCH_MAX_TOKENS)
@@ -867,6 +906,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             yield _event({"type": "paragraph", "index": len(shown) - 1, **para})
             yield _event({"type": "chunk", "text": ("\n\n" if len(shown) > 1 else "") + para["text"]})
         text = "\n\n".join(shown)
+        if progress:
+            yield _event({"type": "progress", "label": "Checking each quote and sentence against the documents"})
         claims, joined = _carried(claims, text, unsupported)
         # Abstention in other words (S2.2, D-038):
         # - nothing is supported, and the text says the documents do not answer; or
@@ -1043,6 +1084,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 held = set(support.get("uncited_supported") or [])
                 unsupported = [x for x in unsupported if x not in held] + \
                     [x["sentence"] for x in support["not_supported"] if x["sentence"] not in unsupported]
+        if not abstained:
+            text = prompt.without_closing_abstention(text)
         status, answer = _status(abstained, claims, unsupported, failed), text
         unsupported_final = list(unsupported)
         reason = (None if not abstained else "other_documents" if off_target else "other_party" if off_party

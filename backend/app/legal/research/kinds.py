@@ -77,3 +77,22 @@ def note(kind: str, titles: list[str]) -> str:
     return (f'(This matter has {len(titles)} documents that are a{"n" if kind[:1] in "aeiou" else ""} "{kind}": {listed}. The '
             "question does not say which; answer for each one that the sources cover and name the document each answer comes "
             "from.)\n")
+
+
+# A question asking for every item of something (2026-11-12, evaluation fix list item 6: lists 3 of 9 on the chat set; search
+# found 44% of their evidence, the items being spread over several passages of a document, or over several documents).
+_PLURALS = (r"(?:clauses|provisions|parties|signatories|fees|charges|costs|conditions|obligations|duties|rights|exceptions|exclusions|"
+            r"documents|dates|deadlines|amounts|payments|items|units|terms|events|people|persons|witnesses|changes|amendments|grounds|"
+            r"reasons|actions|matters|steps|requirements|restrictions|remedies|risks|warranties|representations|services|products|"
+            r"deliverables|properties|assets|lettings|comparables|options|issues|breaches|defects|claims|notices|sums|rates)")
+_LIST = re.compile(r"\b(?:list|enumerate|itemi[sz]e)\b|\b(?:is|are)\s+(?:listed|itemi[sz]ed|scheduled)\b|\b(?:every|each\s+of\s+the|all\s+(?:of\s+)?the|all\s+(?:\w+\s+){0,2}" + _PLURALS + r")\b"
+                   r"|\b(?:which|what)\s+(?:(?!(?:to|the|of|a|an|for|in|on|with|by|at|from|is|are|was|were|happens?|happened|"
+                   r"does|do|did|has|have)\b)\w+\s+){0,2}" + _PLURALS + r"\b"
+                   r"|\bwhat\s+(?:must|should|does|do|did|has|have)\s+(?:[\w'-]+\s+){0,6}?(?:include|contain|cover|list|set\s+out|ask\s+for|require)\b",
+                   re.I)
+
+
+def asks_list(question: str) -> bool:
+    """Whether the question asks for every item of something: "List …", "every signatory", "Which actions need …", "What must
+    a notice contain?"."""
+    return bool(_LIST.search(question or ""))

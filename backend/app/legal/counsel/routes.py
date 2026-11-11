@@ -173,6 +173,7 @@ class TurnIn(BaseModel):
     after_turn_id: Optional[str] = _TurnId                # the turn this question follows (default: the newest)
     retry_of: Optional[str] = _TurnId                     # ask again, or edited: another version of that turn
     form: Optional[FormIn] = None                         # answers to a form the server asked
+    as_written: bool = False                              # the question stands as typed: no follow-up rewrite (an edited "Answering:")
 
     @model_validator(mode="after")
     def _one_place(self):
@@ -233,7 +234,8 @@ async def ask(conversation_id: str, inp: TurnIn, request: Request):
             raise _not_found()
         form = {"component": comp, "values": inp.form.values}
         note(details={"form": (comp["props"].get("_form") or {}).get("purpose")})
-    return _ndjson(orchestrator.run(p, conv, text, inp.client_request_id, inp.document_ids, inp.focus_discrepancy_id, parent, form))
+    return _ndjson(orchestrator.run(p, conv, text, inp.client_request_id, inp.document_ids, inp.focus_discrepancy_id, parent, form,
+                                    as_written=inp.as_written))
 
 
 class FeedbackIn(BaseModel):

@@ -52,20 +52,33 @@ def _usernames(conn, ids) -> dict:
     return dict(conn.execute(f"SELECT id, username FROM users WHERE id IN ({','.join('?' * len(ids))})", ids).fetchall())
 
 
+LATEST = 50
+
+
 @router.get("/regulatory")
 @audited("regulatory.read", object_type="regulatory_updates")
-def list_updates(request: Request, jurisdiction: Optional[Literal["UK", "US"]] = None, mine: bool = False, days: int = 30):
+def list_updates(request: Request, jurisdiction: Optional[Literal["UK", "US"]] = None, mine: bool = False,
+                 days: Optional[int] = None):
+    """The latest LATEST updates whatever their age, or those of the last `days` days (2026-11-12, evaluation fix list item 14:
+    the list was empty once the newest import was more than 30 days old, and so was its test)."""
     p = principal_of(request)
     require(p, "regulatory.read")
-    since = (date.today() - timedelta(days=max(1, min(days, 365)))).isoformat()
-    args: dict = {"org": p["org_id"], "uid": p["sub"], "now": policy.now_iso(), "since": since}
-    where = "u.org_id = :org AND u.published >= :since"
+    args: dict = {"org": p["org_id"], "uid": p["sub"], "now": policy.now_iso()}
+    where = "u.org_id = :org"
     if jurisdiction:
         where += " AND u.jurisdiction = :j"
         args["j"] = jurisdiction
     with get_conn() as conn:
+        if days is None:
+            oldest = conn.execute(f"SELECT MIN(published) FROM (SELECT u.published FROM legal_regulatory_updates u WHERE {where} "
+                                  f"ORDER BY u.published DESC LIMIT {LATEST})", args).fetchone()[0]
+            since = oldest or date.today().isoformat()
+        else:
+            since = (date.today() - timedelta(days=max(1, min(days, 365)))).isoformat()
+        args["since"] = since
+        where += " AND u.published >= :since"
         rows = conn.execute(f"SELECT {', '.join('u.' + c for c in _UPDATE)} FROM legal_regulatory_updates u WHERE {where} "
-                            "ORDER BY u.published DESC, u.title LIMIT 300", args).fetchall()
+                            f"ORDER BY u.published DESC, u.title LIMIT {LATEST if days is None else 300}", args).fetchall()
         seen: dict[str, list] = {}
         for uid, mid, number, title, status in conn.execute(
                 "SELECT r.update_id, m.id, m.number, m.title, r.status FROM legal_regulatory_matches r JOIN matters m ON m.id = r.matter_id "
@@ -76,7 +89,7 @@ def list_updates(request: Request, jurisdiction: Optional[Literal["UK", "US"]] =
     if mine:
         out = [u for u in out if u["matters"]]
     note(details={"updates": len(out), "matched": sum(1 for u in out if u["matters"])})
-    return {"updates": out, "since": since}
+    return {"updates": out, "since": since, "window": "latest" if days is None else f"{days} days"}
 
 
 @router.get("/matters/{matter_id}/regulatory")

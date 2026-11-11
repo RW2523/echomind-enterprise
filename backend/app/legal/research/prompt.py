@@ -107,6 +107,10 @@ def _attr(value) -> str:
     return html.escape(str(value if value is not None else ""), quote=True)
 
 
+LIST_NOTE = ("(The question asks for a list. Give every item the sources state, each with its source, and do not stop at the first "
+             "few; where several documents give items, go document by document.)\n")
+
+
 def named_note(titles: list[str]) -> str:
     """The question names these documents (2026-11-05 brief): their terms come from their own sources; another document that
     describes them is secondary, and where it differs both are given."""
@@ -178,9 +182,24 @@ def cited_numbers(answer: str, count: int) -> list[int]:
     return sorted({int(n) for n in _CITE.findall(answer or "") if 1 <= int(n) <= count})
 
 
+_EMPTY_QUOTE = re.compile(r'\[(\d{1,2}):\s*["\u201c\u201d]\s*["\u201c\u201d]\s*\]')
+
+
 def clean(answer: str) -> str:
-    """The answer without reasoning tags the model sometimes leaks."""
-    return _THINK.sub("", answer or "").strip()
+    """The answer without reasoning tags the model sometimes leaks, and with a citation of empty quotation marks read as the
+    bare marker it is ("[3: \"\"]" was shown as written, 2026-11-11 evaluation)."""
+    return _EMPTY_QUOTE.sub(r"[\1]", _THINK.sub("", answer or "")).strip()
+
+
+def without_closing_abstention(answer: str) -> str:
+    """A cited answer that ends with the abstention sentence, shown without it: "… is USD 620,000 [1]. The documents in this
+    matter do not answer that." read as a decline after the answer (2026-11-11 evaluation). The sentence is dropped only
+    from the end, and only when something else is left."""
+    text = (answer or "").rstrip()
+    if not text.lower().endswith(ABSTAIN.lower()):
+        return answer
+    head = text[: len(text) - len(ABSTAIN)].rstrip()
+    return head if re.search(r"[A-Za-z]{2}", head) else answer
 
 
 def _spans(text: str) -> list[tuple[int, int]]:

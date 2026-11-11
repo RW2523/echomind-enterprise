@@ -21,7 +21,8 @@ verified quotes, or abstains.
                   a question about what a document says about deadlines stays `ask_fact`
 - `draft`         "Draft a client update" → three questions, then a draft from a firm template (drafting.py)
 - `deliberate`    "Challenge our position" → the review panel, when the firm has it on (deliberation.py)
-- `smalltalk`     "Hi", "Thanks" → a one-line reminder of what can be asked (no search, no model)
+- `smalltalk`     "Hi", "Thanks", and the asides of `aside()`: which model, today's date, what was asked before, and requests
+                  outside the matter (code, jokes, the weather) → a short reply of their own (no search, no model)
 - `ask_fact`      everything else
 """
 from __future__ import annotations
@@ -66,8 +67,13 @@ _DOCUMENTS = re.compile(
     r"|(?:list|show)\s+(?:me\s+)?(?:all\s+|the\s+|my\s+|our\s+)?(?:documents|files)\b(?!\s+(?:that|which|about|on|mentioning|saying|where))"
     r"|what(?:'s|\s+is)\s+(?:in|on)\s+(?:this|the)\s+(?:matter|file|case)(?:\s+file)?\s*\??\s*$"
     r"|how\s+many\s+documents\s+(?:are|do|does|have|has)\b(?![^?]*\b(?:mention|say|state|refer)\w*))", re.I)
-_DRAFT = re.compile(r"^\s*(?:please\s+|can\s+you\s+|could\s+you\s+)?(?:draft|write|prepare|compose)\b"
-                    r"|\b(?:draft|write|prepare)\s+(?:a|an|the|me\s+a)\s+(?:\w+\s+){0,3}(?:letter|update|memo|email|reply|notice|agreement|contract)\b", re.I)
+# "Draft" alone asks for a draft; "write", "prepare" and "compose" only with a document to write (2026-11-12, evaluation fix
+# list item 5: "Write a Python script…" opened the template-draft card, "Prepare a summary of the payment terms" too).
+_DRAFTED = (r"(?:letter|update|memo(?:randum)?|e-?mail|reply|response|notice|agreement|contract|clause|note|minutes|demand|claim|"
+            r"statement|submission|report|brief|proposal|offer|amendment|side\s+letter|nda|engagement\s+letter|draft)s?")
+_DRAFT = re.compile(r"^\s*(?:please\s+|can\s+you\s+|could\s+you\s+)?draft\b"
+                    rf"|^\s*(?:please\s+|can\s+you\s+|could\s+you\s+)?(?:write|prepare|compose)(?!\s+(?:down|out)\b)\s+(?:up\s+)?(?:\w+\s+){{0,5}}?{_DRAFTED}\b"
+                    rf"|\b(?:draft|write|prepare)\s+(?:a|an|the|me\s+a)\s+(?:\w+\s+){{0,3}}{_DRAFTED}\b", re.I)
 # Small talk, spoken or typed: every part of what was said is social ("Hello, can you hear me?", "Thanks, that's all for
 # now."); a question in any part ("Hello, when does the term end?") goes to the documents. The kind picks the reply.
 _SOCIAL = (
@@ -87,9 +93,11 @@ _SOCIAL = (
               r"|(?:are\s+you\s+)?still\s+(?:there|here|with\s+me|with\s+us)"
               r"|is\s+(?:this|it)\s+(?:working|on)|testing(?:\s+(?:one\s+two(?:\s+three)?|1\s*2(?:\s*3)?))?"),
     ("greeting", r"hi|hello|hey|hiya|good\s+(?:morning|afternoon|evening|day)|how\s+are\s+you(?:\s+(?:doing|today))?"
-                 r"|how'?s\s+it\s+going"),
+                 r"|how'?s\s+it\s+going|hola|buenos\s+d[ií]as|bonjour|salut|hallo|guten\s+tag|ciao|buongiorno|ol[áa]|hej"),
     ("thanks", r"thanks?(?:\s+(?:you|a\s+lot|again))?(?:\s+(?:so|very)\s+much)?|thank\s+you(?:\s+(?:so|very)\s+much)?(?:\s+again)?"
-               r"|thx|cheers|much\s+appreciated"
+               r"|thx|cheers|much\s+appreciated|ta|gracias|merci(?:\s+beaucoup)?|danke(?:\s+sch(?:ö|oe)n)?|grazie|obrigad[oa]|dank\s+je(?:\s+wel)?|tack"
+               # "Thanks, that helps!" was searched and then withdrawn (2026-11-11 evaluation)
+               r"|(?:that|this|it)\s+(?:really\s+|definitely\s+|certainly\s+)?(?:helps|helped)(?:\s+(?:a\s+lot|loads|a\s+great\s+deal))?"
                r"|(?:that'?s|that\s+is|that\s+was|this\s+is|very|really|so|super)?\s*(?:(?:very|really|so|super|extremely)\s+)?(?:helpful|useful)"
                # praise in other words: "that was really clear and quick", "you've been a great help" (2026-11-04)
                r"|(?:that'?s|that\s+is|that\s+was|this\s+is|this\s+was|it\s+was|you'?re|you\s+are|you'?ve\s+been|you\s+have\s+been)\s+"
@@ -104,6 +112,36 @@ _SOCIAL = (
 _SOCIAL_RE = [(k, re.compile(rf"^(?:(?:oh|well|um+|uh+|yes|yeah|so|and|ok(?:ay)?)\s+)?(?:{p})(?:\s+(?:there|again|echomind|echo\s+mind))?$", re.I))
               for k, p in _SOCIAL]
 _SOCIAL_ORDER = ("closing", "identity", "check", "greeting", "thanks", "ack")
+
+
+# Asides (2026-11-12, evaluation fix list item 10): questions about the assistant or the conversation, and requests outside a
+# matter's documents, each got the decline sentence, and "What is today's date?" a date from a document.
+_ASIDES = (
+    ("model", re.compile(r"^\s*(?:so\s+|and\s+)?(?:which|what)\s+(?:ai\s+|language\s+)?(?:model|llm|ai|engine)\s+(?:are\s+you|is\s+this|do\s+you\s+use"
+                         r"|powers\s+(?:you|this)|runs\s+(?:you|this)|are\s+you\s+(?:running|using|based\s+on))\b"
+                         r"|^\s*are\s+you\s+(?:chat\s*gpt|gpt|claude|gemini|llama|qwen|an?\s+(?:ai|llm|bot|robot|language\s+model)|a\s+(?:real\s+)?(?:person|human|lawyer))\b"
+                         r"|^\s*who\s+(?:made|built|created|trained)\s+you\b", re.I)),
+    ("today", re.compile(r"^\s*(?:so\s+)?(?:what(?:'s|\s+is)\s+(?:today'?s\s+date|the\s+date(?:\s+today)?|today)|what\s+day\s+is\s+(?:it(?:\s+today)?|today)"
+                         r"|what\s+(?:date|time)\s+is\s+it(?:\s+(?:today|now))?)\s*\??\s*$", re.I)),
+    ("memory", re.compile(r"\bwhat\s+(?:did|have)\s+(?:i|we)\s+(?:first\s+|just\s+|last\s+)?(?:ask|asked|say|said|discuss|discussed|cover|covered)"
+                          r"(?:\s+(?:you|about))?(?:\s+(?:first|at\s+the\s+start|earlier|before|so\s+far|last))?\s*\??\s*$"
+                          r"|\b(?:my|our)\s+(?:first|last|previous|earlier)\s+question\b|\bwhat\s+have\s+we\s+(?:discussed|covered|talked\s+about)\b"
+                          r"|\b(?:summari[sz]e|recap)\s+(?:this|our|the)\s+(?:chat|conversation|discussion)\b", re.I)),
+    ("offtopic", re.compile(r"\b(?:write|give\s+me|make|create|generate|code)\s+(?:me\s+)?(?:a\s+|an\s+|some\s+)?(?:\w+\s+){0,2}?"
+                            r"(?:python|javascript|java|sql|bash|excel\s+macro|vba|c\+\+|rust|html|css)?\s*(?:script|code|program|function|macro|"
+                            r"poem|haiku|song|joke|story|limerick|essay|tweet|recipe)\b"
+                            r"|\btell\s+(?:me\s+)?a\s+joke\b|\b(?:what(?:'s|\s+is)\s+the\s+)?weather\b|\b(?:football|soccer|cricket|match)\s+(?:score|result)s?\b"
+                            r"|\bstock\s+price\b|\bwho\s+won\s+the\b|\b(?:latest|today'?s)\s+news\b", re.I)),
+)
+
+
+def aside(text: str) -> Optional[str]:
+    """"model", "today", "memory" or "offtopic" when `text` is one of those asides, else None. Never a question about the
+    documents: one that names a clause, document, party role or figure is left to research."""
+    t = " ".join((text or "").split())
+    if not t or len(t.split()) > 24 or _ABOUT_DOCUMENTS.search(t) and not re.search(r"\b(?:script|code|program|poem|joke)\b", t, re.I):
+        return None
+    return next((k for k, rx in _ASIDES if rx.search(t)), None)
 
 
 def social(text: str) -> Optional[str]:
@@ -153,8 +191,19 @@ _CASE_STATUS = re.compile(
 # The register's list, not what a document says: "What are the open obligations?" is a list; "What deadlines does the lease
 # set?" is a research question.
 _TASKS = re.compile(r"\b(?:obligations|deadlines|tasks|to-?dos|to-do\s+list|checklist)\b", re.I)
-_TASKS_LIST = re.compile(r"^\s*(?:please\s+)?(?:show|list|give\s+me|what\s+are|which\s+are|are\s+there\s+any|any)\b"
-                         r"|\b(?:open|outstanding|upcoming|pending|overdue|my|our|register|next)\b", re.I)
+# The register, asked for as such (2026-11-12, evaluation fix list item 5: "What are the payment obligations of the Customer?"
+# returned the task list in 0.1 s and never read the documents): a register word, or the bare request for the list. A kind of
+# obligation ("payment obligations") or a party or document named ("of the Customer", "Harrowgate's") is a research question.
+_REGISTER = re.compile(r"\b(?:open|outstanding|upcoming|pending|overdue|due|my|our|register|next|coming\s+up|this\s+(?:week|month)"
+                       r"|today|tomorrow|unconfirmed|confirmed|assigned)\b", re.I)
+_TASKS_LIST = re.compile(r"^\s*(?:please\s+)?(?:show|list|give\s+me|what\s+are|which\s+are|are\s+there\s+any|any)\s+(?:me\s+)?(?:all\s+)?"
+                         r"(?:the\s+)?(?:obligations|deadlines|tasks|to-?dos)\s*\??\s*$", re.I)
+_KIND_OF = re.compile(r"\b(?:payment|confidentiality|insurance|reporting|notice|indemnity|indemnification|repair|maintenance|delivery|"
+                      r"data(?:\s+protection)?|audit|exclusivity|non-?compete|warranty|performance|disclosure|tax|security|filing|"
+                      r"regulatory|contractual|legal|statutory|financial|post-termination|termination)\s+(?:obligations?|deadlines?|duties)\b", re.I)
+_NAMED = re.compile(r"\b(?:of|for|on|owed\s+by|by|to|with)\s+(?:the\s+)?(?!(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|"
+                    r"January|February|March|April|May|June|July|August|September|October|November|December|Today|Tomorrow|This|Next|"
+                    r"Me|Us|I)\b)(?![A-Z]{1,4}-\d)[A-Z][\w&'-]+|\b[A-Z][\w&-]+'s\b")
 _ABOUT_DOCUMENTS = re.compile(r"\b(?:clause|section|agreement|contract|lease|letter|documents?|says?|stated?|states|sets?|under|mention\w*"
                               r"|requires?|according)\b", re.I)
 # A document's own drafting, checked by rule (2026-11-05 end-to-end run: "Run a definitions check on the Supply Agreement" was
@@ -173,7 +222,7 @@ def classify(text: str) -> str:
     t = " ".join((text or "").split())
     if not t:
         return "ask_fact"
-    if social(t):
+    if social(t) or aside(t):
         return "smalltalk"
     if _CASES.search(t):
         return "cases_overview"
@@ -199,7 +248,8 @@ def classify(text: str) -> str:
         return "draft"
     if _CASE_STATUS.search(t):
         return "case_status"
-    if _TASKS.search(t) and _TASKS_LIST.search(t) and not _ABOUT_DOCUMENTS.search(t):
+    if _TASKS.search(t) and (_TASKS_LIST.search(t) or _REGISTER.search(t)) and not _ABOUT_DOCUMENTS.search(t) \
+            and not _KIND_OF.search(t) and not _NAMED.search(t):
         return "tasks"
     if _COMPARE.search(t) or _COMPARE_FACTS.search(t):
         return "compare"

@@ -243,13 +243,19 @@ def _notes(cites: list[dict], conflicts: list[dict]) -> list[str]:
 
 
 async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, document_ids: list[str], built: Built,
-               extra_scopes: tuple = ()):
-    hist = await run_in_threadpool(store.history, conv["id"], principal["sub"], turn)
+               extra_scopes: tuple = (), as_written: bool = False):
+    hist = [] if as_written else await run_in_threadpool(store.history, conv["id"], principal["sub"], turn)
+    prefer = None
     if hist:
+        yield event("task.progress", {"label": "Reading your follow-up with the conversation so far", "done": 0, "total": 0,
+                                      "state": "running"})
         rewritten_q, rewritten = await followup.standalone(question, hist)
         if rewritten:
             question, built.understood = rewritten_q, rewritten_q
             yield event("turn.understood", {"question": rewritten_q})
+            # the documents the last answer cited are searched first (2026-11-12, evaluation fix list item 4): "And did the
+            # amendment change that?" is about the cap the last answer quoted, not about any cap in the matter
+            prefer = (hist[-1].get("documents") or [])[:3] or None
     rturn = {"id": str(uuid.uuid4()), "org_id": principal["org_id"], "matter_id": conv["matter_id"], "owner_id": principal["sub"],
              "question": question, "auth": principal.get("auth"), "created_at": policy.now_iso()}
     built.research_turn_id = None if extra_scopes else rturn["id"]          # several matters: kept in the conversation only
@@ -257,10 +263,14 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
     # A paragraph whose quotes were not found in their sources is not streamed (2026-11-07 review point 6): only
     # `answer.held` says one is being kept back; the checked answer (ui.final) shows it, flagged.
     held = False
-    async for line in research._answer(scope, principal, question, rturn, "signed", document_ids or None, None, extra_scopes):
+    async for line in research._answer(scope, principal, question, rturn, "signed", document_ids or None, None, extra_scopes,
+                                       prefer=None if document_ids else prefer, progress=True):
         e = json.loads(line)
         kind = e.get("type")
-        if kind == "paragraph":
+        if kind == "progress":
+            yield event("task.progress", {"label": (e.get("label") or "")[:120], "done": 0, "total": 0, "state": "running",
+                                          **({"busy": True} if e.get("busy") else {})})
+        elif kind == "paragraph":
             held = bool(e.get("failed"))
             if held:
                 yield event("answer.held", {"index": e.get("index")})
@@ -309,7 +319,9 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
     # not when the cited passages were found to state what was asked (research/stated.py)
     if state != "abstained" and done.get("stated") is not True and research.prompt.opens_not_stated(done.get("answer") or ""):
         props["not_stated"] = True
-    if state != "abstained" and done.get("calculation"):
+    # one card for one calculation (2026-11-12, evaluation fix list item 11): the working by rule, when there is one, already
+    # gives the dates the term calculation would show again in another style
+    if state != "abstained" and done.get("calculation") and not (done.get("working") or {}).get("steps"):
         props["calculation"] = _calculation_props(done["calculation"], (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
     if state != "abstained" and (done.get("working") or {}).get("steps"):
         props["working"] = _working_props(done["working"], (await run_in_threadpool(_matter, conv["matter_id"]))["number"])
@@ -579,7 +591,44 @@ def _social_reply(kind: Optional[str], matter: dict) -> str:
         "identity": (f"I'm EchoMind Legal. I answer questions about {matter['number']} only from its own documents, with the exact "
                      "words each answer relies on, and I can list deadlines, compare documents, build a chronology or start a "
                      "draft for a lawyer's review."),
+        # asides (counsel/intent.aside, 2026-11-12): each got the decline sentence before
+        "model": (f"I'm EchoMind Legal's assistant. I answer from {matter['number']}'s documents only, with a language model that "
+                  "runs on this installation's own server, not a public AI service, and every answer is checked against the "
+                  "documents' own words before it is shown."),
+        "today": (f"Today is {_today()}. My answers come from {matter['number']}'s documents; to find a date in them, ask what a "
+                  "document says, for example “When does the term end?”."),
+        "offtopic": (f"That's outside what I do. I work only with {matter['number']}'s documents and records, so I don't write code, "
+                     "tell jokes or look things up on the internet. I can say what a clause says, compare documents, build a "
+                     "chronology or start a draft letter."),
     }.get(kind or "", _SMALLTALK)
+
+
+def _today() -> str:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    try:
+        now = datetime.now(ZoneInfo(settings.LEGAL_TIMEZONE))
+    except Exception:  # noqa: BLE001 — an unknown zone name: UTC
+        now = datetime.now(ZoneInfo("UTC"))
+    return f"{now:%A} {now.day} {now:%B %Y}"
+
+
+def _recall(conv: dict, principal: dict, turn: dict, text: str) -> str:
+    """"What did I ask you first?" answered from this conversation's own questions (2026-11-12), never from the documents."""
+    asked = store.asked(conv["id"], principal["sub"], turn)
+    if not asked:
+        return "This is the first question in this conversation."
+    if re.search(r"\b(?:last|previous|just|before\s+that)\b", text, re.I):
+        return f"Your last question was: “{asked[-1][:300]}”."
+    out = f"Your first question in this conversation was: “{asked[0][:300]}”."
+    if len(asked) > 1:
+        rest = "; ".join(f"“{q[:120]}”" for q in asked[1:6])
+        out += f" Since then you asked: {rest}" + (f", and {len(asked) - 6} more." if len(asked) > 6 else ".")
+    return out
+
+
+_OFFTOPIC_ACTIONS = [{"id": "ask_cap", "label": "What is the liability cap?", "action_type": "ask", "prompt": "What is the liability cap?"},
+                     {"id": "ask_dates", "label": "Build a chronology", "action_type": "ask", "prompt": "Build a chronology of the key dates"}]
 
 
 # ── The turn ─────────────────────────────────────────────────────────────────────
@@ -671,7 +720,8 @@ async def _answer_form(principal: dict, conv: dict, matter: dict, form: dict, bu
 
 
 async def run(principal: dict, conv: dict, text: str, client_request_id: Optional[str], document_ids: list[str],
-              focus: Optional[str], parent=store._FOLLOW_NEWEST, form: Optional[dict] = None) -> AsyncIterator[dict]:
+              focus: Optional[str], parent=store._FOLLOW_NEWEST, form: Optional[dict] = None,
+              as_written: bool = False) -> AsyncIterator[dict]:
     if form:
         kind = "draft_run" if (form["component"]["props"].get("_form") or {}).get("purpose") == "draft" else "panel_run"
     else:
@@ -689,7 +739,7 @@ async def run(principal: dict, conv: dict, text: str, client_request_id: Optiona
         matters = [await run_in_threadpool(_matter, m) for m in ids]
         matter = matters[0]
         if kind == "ask_fact":
-            async for e in _ask(principal, scope, conv, turn, text, document_ids, built, tuple(scopes[1:])):
+            async for e in _ask(principal, scope, conv, turn, text, document_ids, built, tuple(scopes[1:]), as_written):
                 yield e
         elif kind == "compare" and several and focus:
             rows = []
@@ -804,7 +854,11 @@ async def run(principal: dict, conv: dict, text: str, client_request_id: Optiona
             async for e in _answer_form(principal, conv, matter, form, built):
                 yield e
         else:
-            _notice(built, _social_reply(intents.social(text), matter))
+            said = intents.social(text) or intents.aside(text)
+            if said == "memory":
+                _notice(built, await run_in_threadpool(_recall, conv, principal, turn, text))
+            else:
+                _notice(built, _social_reply(said, matter), actions=_OFFTOPIC_ACTIONS if said == "offtopic" else None)
         for sc in scopes:
             await run_in_threadpool(scopemod.recheck, sc)
         envelope = schemas.validate_envelope({"message_id": turn["id"], "matter_id": conv["matter_id"], "summary": built.summary,

@@ -248,14 +248,33 @@ def history(conversation_id: str, owner_id: str, turn: dict, limit: int = 4) -> 
             pid = parent
         out = []
         for q, understood, cj, said in reversed(chain):
-            answer = said or ""
+            answer, documents = said or "", []
             for cid in json.loads(cj or "[]"):
                 r = conn.execute("SELECT type, props_json FROM legal_counsel_components WHERE id=?", (cid,)).fetchone()
                 if r and r[0] == "source_answer":
-                    answer = json.loads(r[1]).get("answer", "")
+                    props = json.loads(r[1])
+                    answer = props.get("answer", "")
+                    # the documents the answer cited (2026-11-12): a follow-up searches them first; never shown to the model
+                    documents = list(dict.fromkeys(c["document_id"] for c in props.get("citations") or [] if c.get("document_id")))
                     break
-            out.append({"question": understood or q, "answer": answer[:2000]})
+            out.append({"question": understood or q, "answer": answer[:2000], "documents": documents})
     return out
+
+
+def asked(conversation_id: str, owner_id: str, turn: dict, limit: int = 50) -> list[str]:
+    """The questions asked before this turn on its own path, oldest first, whatever answered them ("What did I ask you
+    first?", 2026-11-12)."""
+    with get_conn() as conn:
+        rows = {r[0]: r[1:] for r in conn.execute(
+            "SELECT id, parent_turn_id, question FROM legal_conversation_turns WHERE conversation_id=? AND owner_id=?",
+            (conversation_id, owner_id)).fetchall()}
+    chain, seen, pid = [], set(), turn.get("parent_turn_id")
+    while pid and pid in rows and pid not in seen and len(chain) < limit:
+        seen.add(pid)
+        parent, q = rows[pid]
+        chain.append(q)
+        pid = parent
+    return list(reversed(chain))
 
 
 def _compared(conn, component_ids_json: Optional[str], owner_id: str) -> str:

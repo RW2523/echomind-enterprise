@@ -3,7 +3,8 @@
 The answer model left arithmetic out, got it wrong (21 days after 1 October 2026 given as 21 October) or applied a clause in
 part. A planning call now writes the arithmetic as formulas over the numbers the sources state; every number must be one a
 source states (its words found there, its unit read beside it); money is not divided by a count into a percentage, nor
-added to one; the formulas are worked out here, exactly; business days are never counted. The answer model is given the
+added to one; the formulas are worked out here, exactly; business days are counted Monday to Friday, with a note that
+public holidays are not (2026-11-12; before, a working in business days was dropped). The answer model is given the
 results, and the card shows each step and each number's words. Nothing is worked out when a plan fails its checks.
 """
 from __future__ import annotations
@@ -81,13 +82,14 @@ def test_a_label_saying_who_stated_a_worked_out_figure_is_kept_only_when_its_own
     assert w.steps[2].result == "GBP 19,340"                      # the figure is right; only the label claimed it was the claim
 
 
-def test_a_period_counts_calendar_days_from_the_day_after_and_business_days_are_never_counted():
+def test_a_period_counts_calendar_days_from_the_day_after_and_business_days_monday_to_friday():
     letter = P("Date: 1 October 2026\n\nThis request must be fulfilled within 21 days of the date of this letter.", 1, "Letter")
     w, problem = work("CALC last = add_days(2026-10-01, 21) | date | Last day to respond", [letter])
     assert problem == "" and w.steps[0].result == "22 October 2026" and w.steps[0].shown == "1 October 2026 + 21 days"
     assert any("calendar days" in a for a in w.assumptions)
     us = P("Payment is due within ten (10) Business Days after receipt of the invoice dated April 1, 2026.", 1, "Agreement")
-    assert work("CALC due = add_days(2026-04-01, 10) | date | Due date", [us]) == (None, "business")
+    w, problem = work("CALC due = add_days(2026-04-01, 10) | date | Due date", [us])      # 2026-11-12: Monday to Friday
+    assert problem == "" and w.steps[0].result == "April 15, 2026" and w.steps[0].shown == "April 1, 2026 + 10 working days"
     w, _ = work("CALC due = add_months(2026-04-01, 1) | date | One month on", [P("dated April 1, 2026, payable one month after.")])
     assert w.steps[0].result == "May 1, 2026"                        # written as the documents write their dates
     w, _ = work("CALC weeks = 21 / 7 | weeks | Weeks late", [P("Late by 21 days. Liquidated damages under this clause 7 are the sole remedy.")])
@@ -269,3 +271,42 @@ def test_the_chat_card_shows_the_working(wk):
     working = card["props"]["working"]
     assert working["steps"][-1]["result"] == "GBP 3,000" and working["figures"][0]["path"].startswith(f"/m/")
     assert "&at=" in working["figures"][0]["path"]
+
+
+# ── Dates by rule (2026-11-12, evaluation fix list item 7) ────────────────────────────────────────────────────────────────
+def test_a_date_plus_days_is_asked_for_by_rule_and_counted_from_the_day_after():
+    from datetime import date
+    from app.legal.research import working
+    assert working.asks("What is 28 July plus 45 days?") and working.asks("By when must notice be served, 45 days after 28 July 2026?")
+    assert working.asks("What if delivery was 23 days late?") and working.asks("Within 30 days of the invoice, when is it due?")
+    plan = working.parse("CALC due = add_days(2026-07-28, 45) | date | Last day")
+    worked, problem = working.evaluate(plan, [P("Notice was served on 28 July 2026 and the reply is due within forty-five (45) days.")])
+    assert problem == "" and worked.steps[0].value == date(2026, 9, 11) and worked.steps[0].result == "11 September 2026"
+
+
+def test_a_count_back_reads_minus_and_says_so():
+    from app.legal.research import working
+    plan = working.parse("CALC last = add_days(2027-03-01, -90) | date | Last day to give notice")
+    worked, _ = working.evaluate(plan, [P("The term ends on 1 March 2027. Notice must be given at least ninety (90) days before.")])
+    assert worked.steps[0].shown == "1 March 2027 − 90 days" and "+ -" not in worked.steps[0].shown
+    assert working._NOTE_BACK in worked.assumptions
+
+
+def test_working_days_are_counted_monday_to_friday_and_the_result_says_holidays_are_not():
+    from datetime import date
+    from app.legal.research import working
+    plan = working.parse("CALC due = add_days(2026-11-06, 10) | date | Last day to pay")
+    worked, problem = working.evaluate(plan, [P("The invoice dated 6 November 2026 is payable within ten (10) Business Days.")])
+    assert problem == "" and worked.steps[0].value == date(2026, 11, 20)            # a Friday, two weeks on
+    assert "working days" in worked.steps[0].shown and working._NOTE_WORKING in worked.assumptions
+
+
+def test_a_figure_the_question_gives_is_used_and_said_to_be_the_persons():
+    from app.legal.research import working
+    plan = working.parse("CALC ld = 23 * 0.5% * 1240000 | USD | Liquidated damages for 23 days")
+    src = [P("Liquidated damages accrue at 0.5% of the Total Contract Price of USD 1,240,000 for each day of delay.")]
+    worked, problem = working.evaluate(plan, src)
+    assert worked is None and "23" in problem                                        # without the question: no source states 23
+    worked, problem = working.evaluate(plan, src, question="What if delivery was 23 days late?")
+    assert worked and worked.steps[0].result == "USD 142,600"
+    assert any("23 is the figure your question gives" in a for a in worked.assumptions)

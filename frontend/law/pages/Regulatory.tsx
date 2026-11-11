@@ -36,7 +36,8 @@ export function UpdateMeta({ u }: { u: RegulatoryUpdate }) {
 export default function Regulatory() {
   const [jurisdiction, setJurisdiction] = useState<'' | 'UK' | 'US'>('');
   const [mine, setMine] = useState(false);
-  const q = useRegulatory(jurisdiction, mine);
+  const [days, setDays] = useState<'' | '7' | '30'>('');
+  const q = useRegulatory(jurisdiction, mine, days);
   return (
     <>
       <Toolbar title="Regulatory updates" />
@@ -49,16 +50,22 @@ export default function Regulatory() {
                 <button key={v} type="button" aria-pressed={jurisdiction === v} onClick={() => setJurisdiction(v)}>{label}</button>
               ))}
             </div>
+            <div className="lw-segmented" role="group" aria-label="Period">
+              {([['', 'Latest'], ['7', 'Last 7 days'], ['30', 'Last 30 days']] as const).map(([v, label]) => (
+                <button key={v} type="button" aria-pressed={days === v} onClick={() => setDays(v)}>{label}</button>
+              ))}
+            </div>
             <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center', fontSize: 14 }}>
               <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} />Only updates that may concern my matters
             </label>
-            {q.data && <span className="lw-meta lw-tnum">{`${q.data.updates.length} since ${longDate(q.data.since)}`}</span>}
+            {q.data && <span className="lw-meta lw-tnum">{days ? `${q.data.updates.length} since ${longDate(q.data.since)}`
+              : `The latest ${q.data.updates.length}, from ${longDate(q.data.since)}`}</span>}
           </div>
         </section>
         {q.isPending ? <div className="lw-paper lw-sheet"><Skeleton /><Skeleton /><Skeleton /></div>
           : q.isError ? <ErrorNote>{q.error instanceof ApiError ? q.error.message : 'The updates could not be loaded.'}</ErrorNote>
             : q.data.updates.length === 0 ? (
-              <EmptyState title="No updates">{mine ? 'Nothing recent matches your matters.' : 'Nothing has been imported for these dates yet. Updates arrive each morning.'}</EmptyState>
+              <EmptyState title="No updates">{mine ? 'Nothing recent matches your matters.' : (days ? 'Nothing was published in this period. Choose Latest to see the most recent updates.' : 'Nothing has been imported yet. Updates arrive each morning.')}</EmptyState>
             ) : (
               <ul className="lw-reg-list" aria-label="Regulatory updates">
                 {q.data.updates.map((u) => (

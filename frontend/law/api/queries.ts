@@ -277,10 +277,11 @@ export const useTimeEntries = (from: string, to: string) =>
     queryFn: () => api.get<{ entries: TimeEntry[]; timezone: string; unit_minutes: number }>(`/api/legal/time?from=${from}&to=${to}`) });
 
 // Regulatory updates (S4.4, D-068)
-export const useRegulatory = (jurisdiction: '' | 'UK' | 'US', mine: boolean) =>
-  useQuery({ queryKey: ['regulatory', jurisdiction, mine] as const,
-    queryFn: () => api.get<{ updates: RegulatoryFirmUpdate[]; since: string }>(
-      `/api/legal/regulatory?${new URLSearchParams({ ...(jurisdiction ? { jurisdiction } : {}), ...(mine ? { mine: '1' } : {}) })}`) });
+export const useRegulatory = (jurisdiction: '' | 'UK' | 'US', mine: boolean, days: '' | '7' | '30' = '') =>
+  useQuery({ queryKey: ['regulatory', jurisdiction, mine, days] as const,
+    queryFn: () => api.get<{ updates: RegulatoryFirmUpdate[]; since: string; window?: string }>(
+      `/api/legal/regulatory?${new URLSearchParams({ ...(jurisdiction ? { jurisdiction } : {}), ...(mine ? { mine: '1' } : {}),
+                                                    ...(days ? { days } : {}) })}`) });
 export const regulatoryPath = (matterId: string) => `/api/legal/matters/${encodeURIComponent(matterId)}/regulatory`;
 export const useMatterRegulatory = (matterId: string) =>
   useQuery({ queryKey: ['matter', matterId, 'regulatory'] as const, queryFn: () => api.get<{ matches: RegulatoryMatch[] }>(regulatoryPath(matterId)) });

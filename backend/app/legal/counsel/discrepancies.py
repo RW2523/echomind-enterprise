@@ -30,14 +30,25 @@ RESOLVED = ("explained", "confirmed", "dismissed")
 REVIEW_TO = ("in_review",) + RESOLVED
 _STATUS_RANK = {"potential": 0, "in_review": 1, "explained": 2, "confirmed": 2, "dismissed": 3}
 
-_KIND = {"date": "dates", "amount": "amounts", "period": "periods", "percent": "percentages", "law": "governing law",
-         "entity": "party names", "reference": "a referenced agreement's date"}
+# The scan's kind for an amount is "money" (compare/facts.py); "amount" was the only key here, so amount conflicts were titled
+# "Potential inconsistency in the facts" with the general caution (found 2026-11-12). Both are kept.
+_KIND = {"date": "dates", "amount": "amounts", "money": "amounts", "period": "periods", "percent": "percentages",
+         "law": "governing law", "entity": "party names", "reference": "a referenced agreement's date"}
 _CAUTION = {
     "date": "The two dates may describe different events (for example dispatch and arrival), or one document may correct "
             "the other. Read both passages before resolving.",
     "amount": "The amounts may refer to different items, periods or currencies. Read both passages before resolving.",
     "period": "The periods may apply to different obligations. Read both passages before resolving.",
+    "percent": "The percentages may apply to different things (a rate, a cap, a share). Read both passages before resolving.",
 }
+_CAUTION["money"] = _CAUTION["amount"]
+# What a request asks to compare (2026-11-12, evaluation fix list item 11: "Find conflicting dates or amounts" showed 10% against
+# 50%, a late-delivery cap and the liability cap, first): rows of the kinds it names come first.
+_ASKED = (("date", re.compile(r"\b(?:dates?|days?|when|deadlines?)\b", re.I)),
+          ("money", re.compile(r"\b(?:amounts?|sums?|figures?|fees?|prices?|money|payments?|costs?|charges?|totals?)\b", re.I)),
+          ("percent", re.compile(r"\b(?:percent(?:ages?)?|rates?|%)", re.I)),
+          ("period", re.compile(r"\b(?:periods?|notice|terms?|durations?)\b", re.I)))
+_CLAUSE_IN = re.compile(r"\b(?:clause|section|cl\.)\s*(\d{1,2}(?:\.\d{1,2})*)", re.I)
 _DEFAULT_CAUTION = "The documents may describe different things. Read both passages before resolving."
 _AMENDING = ("amendment", "addendum", "side letter", "variation", "novation")
 _AMENDS_CAUTION = ("One of these documents is an amendment or side letter. A later signed amendment may replace the earlier "
@@ -187,9 +198,23 @@ def listed(principal: dict, matter_id: str, statuses=OPEN, query: str = "") -> l
     def overlap(r: dict) -> int:
         text = (r["detail"]["a"].get("context") or "") + " " + (r["detail"]["b"].get("context") or "")
         return len(words & set(_WORD.findall(text.lower())))
-    rows.sort(key=lambda r: (_STATUS_RANK.get(r["status"], 9), r["verdict"] != "conflict", amends(r), duty_vs_event(r), -overlap(r),
-                             -r["score"], r["created_at"]))
+    asked = {k for k, rx in _ASKED if rx.search(query or "")}
+    rows.sort(key=lambda r: (_STATUS_RANK.get(r["status"], 9), r["verdict"] != "conflict",
+                             bool(asked) and r["kind"] not in asked and not (r["kind"] == "amount" and "money" in asked),
+                             amends(r), duty_vs_event(r), different_clauses(r), -overlap(r), -r["score"], r["created_at"]))
     return rows
+
+
+def different_clauses(r: dict) -> bool:
+    """The two sides are about different clauses: each names or sits in a clause, and the two sets do not meet ("the cap in
+    clause 7.2 is ten percent" against clause 10.2's fifty percent). Ranked after the rest, never hidden."""
+    def of(side: dict) -> set:
+        found = set(_CLAUSE_IN.findall(side.get("context") or ""))
+        if side.get("clause"):
+            found.add(str(side["clause"]))
+        return {c.split("(")[0] for c in found}
+    a, b = of(r["detail"]["a"]), of(r["detail"]["b"])
+    return bool(a) and bool(b) and not (a & b)
 
 
 def _username(conn, uid: str) -> str:

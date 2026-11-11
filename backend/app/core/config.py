@@ -325,6 +325,10 @@ class Settings(BaseSettings):
     LEGAL_RESEARCH_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_PASSAGES", "6"))          # sources given to the model
     # a document the question names: this many of its own passages are also searched and put first (2026-11-05 brief)
     LEGAL_RESEARCH_NAMED_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_NAMED_PASSAGES", "3"))
+    # a question asking for a list (research/kinds.asks_list, 2026-11-12): this many passages of the document it is about, and
+    # the best passage of each of up to LEGAL_RESEARCH_LIST_DOCUMENTS other documents
+    LEGAL_RESEARCH_LIST_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_LIST_PASSAGES", "6"))
+    LEGAL_RESEARCH_LIST_DOCUMENTS: int = int(os.getenv("LEGAL_RESEARCH_LIST_DOCUMENTS", "5"))
     # 700 cut answers that list every term or figure asked for (2026-11-07 review: totals and dates missing); an answer
     # still stops when it is done, so this is a ceiling, not a target.
     LEGAL_RESEARCH_MAX_TOKENS: int = int(os.getenv("LEGAL_RESEARCH_MAX_TOKENS", "1100"))
@@ -335,6 +339,8 @@ class Settings(BaseSettings):
     LEGAL_RESEARCH_STATED_CHECK: str = os.getenv("LEGAL_RESEARCH_STATED_CHECK", "hedged").strip().lower()
     # research/stated.py (2026-11-12): give the check the words the answer quoted (1) or not (0, until a replay shows it helps);
     # LEGAL_STATED_TRACE: a file each check's inputs and reply are appended to, for that replay (private evaluation copies only)
+    # model calls in flight at once from this backend (research/llm.py, 2026-11-12); the shared model server is kept at 4
+    LEGAL_MODEL_CONCURRENCY: int = int(os.getenv("LEGAL_MODEL_CONCURRENCY", "4"))
     LEGAL_RESEARCH_STATED_QUOTED: bool = os.getenv("LEGAL_RESEARCH_STATED_QUOTED", "0").strip() == "1"
     LEGAL_STATED_TRACE: str = os.getenv("LEGAL_STATED_TRACE", "").strip()
     # Context added around what research found (research/routes._context, 2026-11-07): the rest of a clause cut by a passage's
