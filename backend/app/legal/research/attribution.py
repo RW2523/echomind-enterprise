@@ -312,7 +312,8 @@ def without_titles(question: str, titles: list[str]) -> str:
         run = [m] if m and w in words else []
     out = question
     for a, b in reversed(drop):
-        out = out[:a] + out[b:]
+        lead = re.search(r"\b(?:the|this|that|our|their|its|your)\s+$", out[:a], re.I)    # not "How can the be terminated?"
+        out = out[:lead.start() if lead else a] + out[b:]
     out = re.sub(r"\s+([,.?;:])", r"\1", re.sub(r"\s{2,}", " ", out)).strip()
     return out if len(_words(out) - _TYPES) >= 2 else ""
 

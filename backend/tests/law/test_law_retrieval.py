@@ -214,3 +214,53 @@ def test_windows_follow_sentences_and_never_split_clause_numbers():
     assert windows("") == [] and windows("short") == [(0, 5)]
     md = "8.3 Clauses 8.1 and 8.2 do not limit liability for fraud. ## 9. Indemnification 9.1 Provider shall indemnify Client."
     assert [md[a:b] for a, b in windows(md)][0] == "8.3 Clauses 8.1 and 8.2 do not limit liability for fraud."
+
+
+# ── Stems, headings and searching inside one document (2026-11-12, evaluation fix list item 1) ───────────────────────────
+def test_index_words_are_stems_and_a_heading_counts_twice():
+    from app.legal.retrieval import terms
+    assert {terms.stem(w) for w in ("terminate", "terminated", "termination", "terminating")} == {"termin"}
+    assert terms.stem("parties") == terms.stem("party") and terms.stem("payments") == terms.stem("payment")
+    got = terms.tokens("Either party may end it on 30 days' notice, see section 9.", heading="12. Termination")
+    assert got.count("termin") == 2 and "section_9" in got and "30" in got
+
+
+def test_each_passage_carries_the_heading_of_its_section(docs):
+    from app.core.db import get_conn
+    from app.legal.retrieval import headings
+    alice = as_user(docs, "alice")
+    mid = docs["matters"]["M-101"]["id"]
+    body = ("# SERVICES AGREEMENT\n\n## 11. Insurance\n\n11.1 Provider shall insure.\n\n## 12. Termination\n\n"
+            + "12.1 Client may end this Agreement on ninety (90) days' written notice. " * 30
+            + "\n\n12.3 Either party may end this Agreement at once if the other becomes insolvent.")
+    upload(alice, mid, "services.md", body, status="executed", title="Services Agreement")
+    index_all()
+    with get_conn() as conn:
+        rows = conn.execute("SELECT version_id, char_start, text FROM legal_chunks WHERE matter_id=? AND active=1 ORDER BY char_start",
+                            (mid,)).fetchall()
+        last = rows[-1]
+        assert "insolvent" in last[2] and "Termination" not in last[2]           # the heading is not in the passage itself
+        assert headings.at(conn, last[0], last[1]) == "12. Termination"
+
+
+def test_a_named_documents_own_passages_are_ranked_among_themselves(docs):
+    """The matter's best passages, filtered afterwards, can hold none of the asked document's: here a long memo says
+    "terminate" in every passage, and the agreement's clause is found only when its passages are ranked on their own."""
+    from app.core.db import get_conn
+    from app.legal.retrieval import registry
+    from app.legal.retrieval.search import _chunks_of
+    alice = as_user(docs, "alice")
+    mid = docs["matters"]["M-101"]["id"]
+    memo = "\n\n".join(f"Note {i}. The parties discussed whether to terminate the arrangement and terminate early. " * 3
+                       for i in range(60))
+    upload(alice, mid, "memo.txt", memo, title="Advice memo")
+    upload(alice, mid, "agreement.md", "## 12. Termination\n\n12.3 Either party may end this Agreement at once on insolvency.",
+           status="executed", title="Supply Agreement")
+    index_all()
+    with get_conn() as conn:
+        did = conn.execute("SELECT id FROM legal_documents WHERE matter_id=? AND title='Supply Agreement'", (mid,)).fetchone()[0]
+    idx = registry.for_matter(mid)
+    own = _chunks_of(mid, [did])
+    assert not any(cid in own for cid, _ in idx.search_sparse("How can it be terminated?", 3))     # the matter's top 3: memo only
+    hits = idx.search_sparse("How can it be terminated?", 3, only=own)
+    assert hits and all(cid in own for cid, _ in hits)                     # stems and the heading: "terminated" meets "Termination"

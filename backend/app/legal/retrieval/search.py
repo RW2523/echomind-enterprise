@@ -25,7 +25,7 @@ import numpy as np
 
 from ...core.config import settings
 from ...core.db import get_conn
-from . import embedder, registry
+from . import embedder, headings, registry
 from .scope import AuthorizedScope, recheck
 
 ALL_MODES = ("dense", "sparse", "keyword")
@@ -60,15 +60,25 @@ def keyword_terms(query: str) -> list[str]:
     return list(dict.fromkeys(t.lower() for t in terms))[:12]
 
 
-def _keyword(matter_id: str, query: str, k: int) -> list[tuple[str, float]]:
+def _keyword(matter_id: str, query: str, k: int, documents: Optional[list[str]] = None) -> list[tuple[str, float]]:
     terms = keyword_terms(query)
     if not terms:
         return []
     score = " + ".join(["(instr(lower(text), ?) > 0)"] * len(terms))
+    within = f"AND document_id IN ({','.join('?' * len(documents))}) " if documents else ""
     with get_conn() as conn:
-        rows = conn.execute(f"SELECT id, {score} AS s FROM legal_chunks WHERE matter_id = ? AND active = 1 "
-                            f"AND ({score}) > 0 ORDER BY s DESC LIMIT ?", (*terms, matter_id, *terms, k)).fetchall()
+        rows = conn.execute(f"SELECT id, {score} AS s FROM legal_chunks WHERE matter_id = ? AND active = 1 {within}"
+                            f"AND ({score}) > 0 ORDER BY s DESC LIMIT ?",
+                            (*terms, matter_id, *(documents or []), *terms, k)).fetchall()
     return [(r[0], float(r[1])) for r in rows]
+
+
+def _chunks_of(matter_id: str, documents: list[str]) -> set:
+    """The searchable passages of these documents (search(documents=...) ranks only them)."""
+    with get_conn() as conn:
+        return {r[0] for r in conn.execute(f"SELECT id FROM legal_chunks WHERE matter_id = ? AND active = 1 "
+                                           f"AND document_id IN ({','.join('?' * len(documents))})",
+                                           (matter_id, *documents))}
 
 
 # An officer the question names by initials, which documents write out (2026-11-05 end-to-end run: "Up to what contract
@@ -128,10 +138,12 @@ def windows(text: str, size: int = WINDOW_CHARS) -> list[tuple[int, int]]:
 
 
 def _windowed(hits: list[dict]) -> list[dict]:
+    """Each passage's windows; the cross-encoder reads each one after the heading of its section (retrieval/headings.py)."""
     out = []
     for h in hits:
+        source = {"doc_title_line": h["heading"]} if h.get("heading") else {}
         for a, b in windows(h["text"]):
-            out.append({**h, "text": h["text"][a:b], "window": (a, b), "chunk_text": h["text"]})
+            out.append({**h, "text": h["text"][a:b], "window": (a, b), "chunk_text": h["text"], **({"source": source} if source else {})})
             if len(out) >= _MAX_WINDOWS:
                 return out
     return out
@@ -163,14 +175,15 @@ def _load(matter_id: str, chunk_ids: list[str], uid: str, versions: str = "signe
             f"WHERE c.matter_id = ? AND c.active = 1 AND c.id IN ({','.join('?' * len(chunk_ids))}) AND {VISIBLE_TO} "
             f"AND {policy_sql(versions)}" + (f" AND c.document_id IN ({','.join('?' * len(documents))})" if documents else ""),
             (matter_id, *chunk_ids, uid, *(documents or []))).fetchall()
-    by_id = {r[0]: r for r in rows}
-    out = []
-    for cid in chunk_ids:
-        r = by_id.get(cid)
-        if r:
-            out.append({"chunk_id": r[0], "text": r[1], "page_start": r[2], "page_end": r[3], "char_start": r[4],
-                        "char_end": r[5], "document_id": r[6], "version_id": r[7], "document_title": r[8],
-                        "version_number": r[9], "filename": r[10], "version_status": r[11], "matter_id": matter_id})
+        by_id = {r[0]: r for r in rows}
+        out = []
+        for cid in chunk_ids:
+            r = by_id.get(cid)
+            if r:
+                out.append({"chunk_id": r[0], "text": r[1], "page_start": r[2], "page_end": r[3], "char_start": r[4],
+                            "char_end": r[5], "document_id": r[6], "version_id": r[7], "document_title": r[8],
+                            "version_number": r[9], "filename": r[10], "version_status": r[11], "matter_id": matter_id,
+                            "heading": headings.at(conn, r[7], r[4])})
     return out
 
 
@@ -379,7 +392,7 @@ def _passage(h: dict) -> dict:
         "chunk_id": h["chunk_id"], "text": h["text"],
         "score": h.get("score"), "score_kind": h.get("score_kind"),
         "citation": {"matter_id": h["matter_id"], "document_id": h["document_id"], "document_title": h["document_title"],
-                     "version_id": h["version_id"], "version_number": h["version_number"],
+                     "heading": h.get("heading"), "version_id": h["version_id"], "version_number": h["version_number"],
                      "version_status": h.get("version_status"), "signed": h.get("version_status") == "executed",
                      "page_start": h["page_start"], "page_end": h["page_end"],
                      "char_start": base + a if base is not None else None,
@@ -456,16 +469,17 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
     query = spelled_out(query)
     modes = [m for m in modes if m in ALL_MODES] or list(ALL_MODES)
     idx = registry.for_matter(scope.matter_id)
-    n = max(k, settings.LEGAL_SEARCH_CANDIDATES) * (5 if documents else 1)    # more candidates when only some documents count
+    n = max(k, settings.LEGAL_SEARCH_CANDIDATES)
+    only = _chunks_of(scope.matter_id, documents) if documents else None     # rank inside these documents only (item 1)
     rankings = []
     if "dense" in modes:
         q = (await embedder.get().embed([query], kind="query")).astype(np.float32)
         norm = np.linalg.norm(q, axis=1, keepdims=True)
-        rankings.append(idx.search_dense(q / np.where(norm == 0, 1, norm), n))
+        rankings.append(idx.search_dense(q / np.where(norm == 0, 1, norm), n, only))
     if "sparse" in modes:
-        rankings.append(idx.search_sparse(query, n))
+        rankings.append(idx.search_sparse(query, n, only))
     if "keyword" in modes:
-        rankings.append(_keyword(scope.matter_id, query, n))
+        rankings.append(_keyword(scope.matter_id, query, n, documents))
     fused = _fuse(rankings)[:n]
     hits = _load(scope.matter_id, fused, scope.principal_id, versions if versions in ("signed", "current") else "signed",
                  documents)

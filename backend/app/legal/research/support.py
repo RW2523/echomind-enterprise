@@ -15,7 +15,13 @@ condition the clause puts on it ("subject to clause 9", "unless the Supplier is 
 
 A sentence found NOT SUPPORTED is listed with the sentences that have no verified source and the answer becomes partly
 supported; its quote stays verified (the words are in the document), it is the sentence that is not. A condition is shown
-as a note. Nothing here loosens a check: a missing or unreadable reply changes nothing. LEGAL_RESEARCH_SUPPORT_CHECK: "on",
+as a note.
+
+Sentences with no marker of their own (2026-11-12, evaluation fix list item 3): 112 of 152 answers of the 11-11 chat set
+were labelled partly supported, 86 of them graded correct, nearly always for one sentence beside a cited one ("The monthly
+storage fee paid to Kestrel is EUR 4,600. This figure applied from 1 June 2026 [2]."). Such a sentence is checked the same
+way, against the passages its paragraph's verified quotes come from, in the same call. SUPPORTED takes it off the list;
+NOT SUPPORTED, no reply, or a paragraph without a verified quote leaves it there. Nothing is taken off by rule. Nothing here loosens a check: a missing or unreadable reply changes nothing. LEGAL_RESEARCH_SUPPORT_CHECK: "on",
 "shadow" (worked out and returned, nothing changed) or "off".
 """
 from __future__ import annotations
@@ -31,7 +37,7 @@ from . import prompt
 
 logger = logging.getLogger(__name__)
 
-MAX_CLAIMS = 8
+MAX_CLAIMS = 12                  # statements in one call; more go in a second
 AROUND = 450                     # characters of the source either side of a quote
 _CONDITION = re.compile(r"\b(subject\s+to|unless|except(?:\s+(?:as|that|where|for))?|provided\s+(?:always\s+)?that|save\s+(?:as|that|where|for)"
                         r"|notwithstanding|conditional\s+(?:up)?on|on\s+condition\s+that)\b", re.I)
@@ -48,7 +54,9 @@ SYSTEM = (
     "Reply with one line per statement and nothing else:\n"
     "1: SUPPORTED\n2: NOT SUPPORTED: <what the passage says instead, in a few words>"
 )
-_LINE = re.compile(r"^\s*(\d{1,2})\s*[:.)\-]\s*\**\s*(not\s+supported|supported)\b\**\s*[:\-–—]?\s*(.*)$", re.I | re.M)
+# Within one line only (2026-11-12): "\s*" after the verdict ran on into the next line, so "1: SUPPORTED\n2: NOT SUPPORTED: …"
+# was read as one SUPPORTED and every verdict after a bare SUPPORTED was lost.
+_LINE = re.compile(r"^[ \t]*(\d{1,2})[ \t]*[:.)\-][ \t]*\**[ \t]*(not[ \t]+supported|supported)\b\**[ \t]*[:\-–—]?[ \t]*(.*)$", re.I | re.M)
 
 
 def _fold(text: str) -> str:
@@ -126,22 +134,49 @@ def read(raw: str, items: list[tuple[str, str]]) -> dict[int, dict]:
     return out
 
 
-async def check(claims: list, sources: list[dict], question: str = "", defined: list[str] = ()) -> Optional[dict]:
-    """{"checked": n, "not_supported": [{"sentence", "why"}], "qualified": [{"sentence", "words", "by"}]} for the cited sentences
-    whose quotes verified, or None when nothing could be checked. `defined`: who each cited document's roles are."""
-    standing = [c for c in claims if any(x.verification in ("verbatim", "normalized") for x in c.citations)][:MAX_CLAIMS]
-    if not standing:
+def _beside(neighbours: list, sources: list[dict]) -> str:
+    """The passage text around the verified quotes of the cited sentences of an uncited sentence's paragraph (at most three)."""
+    parts, seen = [], set()
+    for claim in neighbours:
+        for c in claim.citations:
+            if c.verification not in ("verbatim", "normalized") or not (1 <= c.n <= len(sources)) or (c.n, c.start) in seen:
+                continue
+            seen.add((c.n, c.start))
+            text = sources[c.n - 1]["text"]
+            parts.append(text[:2 * AROUND] if c.start is None else text[max(0, c.start - AROUND):min(len(text), c.end + AROUND)])
+    return "\n…\n".join(parts[:3])
+
+
+async def _verdicts(items: list[tuple[str, str]], question: str, defined: list[str]) -> dict[int, dict]:
+    out: dict[int, dict] = {}
+    for at in range(0, len(items), MAX_CLAIMS):
+        part = items[at:at + MAX_CLAIMS]
+        try:
+            client = llm_mod.get()
+            ask = getattr(client, "chat_raw", None) or client.chat
+            raw = await ask(messages(part, question, defined), temperature=0.0, max_tokens=40 + 45 * len(part))
+        except Exception as e:  # noqa: BLE001 — no verdict leaves the answer as it was
+            logger.warning("Support check: no verdict (%s)", type(e).__name__)
+            raw = ""
+        out.update({at + k: v for k, v in read(raw, part).items()})
+    return out
+
+
+async def check(claims: list, sources: list[dict], question: str = "", defined: list[str] = (),
+                uncited: list[tuple[str, list]] = ()) -> Optional[dict]:
+    """{"checked": n, "not_supported": [{"sentence", "why"}], "qualified": [{"sentence", "words", "by"}], "uncited_supported":
+    [sentence]} for the cited sentences whose quotes verified and the `uncited` sentences (each with the cited claims of its
+    paragraph), or None when nothing could be checked. `defined`: who each cited document's roles are."""
+    standing = [c for c in claims if any(x.verification in ("verbatim", "normalized") for x in c.citations)][:2 * MAX_CLAIMS]
+    beside = [(s, _beside(n, sources)) for s, n in uncited][:2 * MAX_CLAIMS]
+    beside = [(s, b) for s, b in beside if b]
+    if not standing and not beside:
         return None
     qualified = conditions(standing, sources)
     items = [(_plain(c.sentence), _around(c, sources)) for c in standing]
-    try:
-        client = llm_mod.get()
-        ask = getattr(client, "chat_raw", None) or client.chat
-        raw = await ask(messages(items, question, list(defined)), temperature=0.0, max_tokens=40 + 45 * len(items))
-    except Exception as e:  # noqa: BLE001 — no verdict leaves the answer as it was
-        logger.warning("Support check: no verdict (%s)", type(e).__name__)
-        raw = ""
-    verdicts = read(raw, items)
+    verdicts = await _verdicts(items + [(_plain(s), b) for s, b in beside], question, list(defined))
     not_supported = [{"sentence": items[k - 1][0][:300], "why": v["why"]} for k, v in sorted(verdicts.items())
-                     if v["verdict"] == "not_supported"]
-    return {"checked": len(items), "answered": len(verdicts), "not_supported": not_supported, "qualified": qualified[:3]}
+                     if k <= len(items) and v["verdict"] == "not_supported"]
+    held = [beside[k - len(items) - 1][0] for k, v in sorted(verdicts.items()) if k > len(items) and v["verdict"] == "supported"]
+    return {"checked": len(items), "answered": sum(1 for k in verdicts if k <= len(items)), "not_supported": not_supported,
+            "qualified": qualified[:3], "uncited_checked": len(beside), "uncited_supported": held}

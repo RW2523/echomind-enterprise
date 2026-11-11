@@ -74,13 +74,15 @@ def _source(n: int, p: dict) -> dict:
 def _save(turn: dict) -> None:
     with get_conn() as conn:
         conn.execute("INSERT INTO legal_research_turns (id, org_id, matter_id, owner_id, question, answer, citations_json, status, "
-                     "auth, created_at, finished_at, evidence_json, conflicts_json, versions, abstention_reason, amendments_json) "
-                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                     "auth, created_at, finished_at, evidence_json, conflicts_json, versions, abstention_reason, amendments_json, "
+                     "unsupported_json, stated_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                      (turn["id"], turn["org_id"], turn["matter_id"], turn["owner_id"], turn["question"], turn["answer"],
                       json.dumps(turn["citations"], ensure_ascii=False), turn["status"], turn["auth"], turn["created_at"],
                       policy.now_iso(), json.dumps(turn.get("evidence") or [], ensure_ascii=False),
                       json.dumps(turn.get("conflicts") or [], ensure_ascii=False), turn.get("versions"), turn.get("abstention_reason"),
-                      json.dumps(turn.get("amendments") or [], ensure_ascii=False)))
+                      json.dumps(turn.get("amendments") or [], ensure_ascii=False),
+                      json.dumps(turn["unsupported"], ensure_ascii=False) if turn.get("unsupported") is not None else None,
+                      json.dumps(turn["stated"], ensure_ascii=False) if turn.get("stated") else None))
         conn.commit()
 
 
@@ -216,6 +218,22 @@ def _carried(claims: list, text: str, unsupported: list) -> tuple[list, list]:
             joined.append((before, c))
         out.append(c)
     return out, joined
+
+
+def _uncited(text: str, unsupported: list, claims: list) -> list[tuple[str, list]]:
+    """Each sentence without a marker of its own, with the cited claims of its paragraph whose quotes verified (research/
+    support.py checks it against their passages; 2026-11-12, evaluation fix list item 3). A paragraph without one gives none."""
+    paragraphs = text.split("\n\n")
+    out = []
+    for s in unsupported:
+        if _CITED_MARK.search(s):
+            continue
+        para = next((p for p in paragraphs if s in p), None)
+        near = [c for c in claims if para and c.sentence.strip() and c.sentence.strip() in para
+                and any(x.verification in ("verbatim", "normalized") for x in c.citations)] if para else []
+        if near:
+            out.append((s, near))
+    return out
 
 
 def _numbers(scopes) -> list[str]:
@@ -644,6 +662,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                   documents: Optional[list[str]] = None, understood: Optional[dict] = None,
                   extra_scopes: tuple = ()) -> AsyncIterator[str]:
     status, answer, citations, items, found, reason, changed = "error", None, [], [], [], None, []
+    unsupported_final, stated_detail = None, None      # kept with the answer (migration 0044)
     scopes = [scope, *extra_scopes]
     several = len(scopes) > 1
     try:
@@ -980,7 +999,11 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                        for did in cited_docs if roles.get(did)]
             defined += [f'in "{titles.get(did) or did}", either party may be ' + " or ".join(f'"the {r}"' for r in rs)
                         + f', as it defines: "{sentence}"' for did in cited_docs for rs, sentence in taken.get(did, [])]
-            verdict = await statedmod.answers(question, shown, defined)
+            quoted = [c.quote for claim in answering for c in claim.citations
+                      if c.quote and c.verification in ("verbatim", "normalized")]
+            detail: dict = {}
+            verdict = await statedmod.answers(question, shown, defined, quoted, detail)
+            stated_detail = {**detail, "acted": bool(hedged or mode == "all")} if detail else None
             if hedged or mode == "all":
                 stated = verdict
                 if stated is not None:
@@ -1014,10 +1037,14 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             cited_docs = dict.fromkeys(sources[c.n - 1]["document_id"] for claim in claims for c in claim.citations if 1 <= c.n <= len(sources))
             defined = [f'in "{titles.get(did) or did}", ' + ", ".join(f'"the {role}" is {name}' for name, role in roles[did])
                        for did in cited_docs if roles.get(did)]
-            support = await supportmod.check([c for c in claims if _stands(c)], sources, question, defined)
+            support = await supportmod.check([c for c in claims if _stands(c)], sources, question, defined,
+                                             _uncited(text, unsupported, claims))
             if support and settings.LEGAL_RESEARCH_SUPPORT_CHECK == "on":
-                unsupported = list(unsupported) + [x["sentence"] for x in support["not_supported"] if x["sentence"] not in unsupported]
+                held = set(support.get("uncited_supported") or [])
+                unsupported = [x for x in unsupported if x not in held] + \
+                    [x["sentence"] for x in support["not_supported"] if x["sentence"] not in unsupported]
         status, answer = _status(abstained, claims, unsupported, failed), text
+        unsupported_final = list(unsupported)
         reason = (None if not abstained else "other_documents" if off_target else "other_party" if off_party
                   else "not_in_cited" if elsewhere else "model")
         found = [] if abstained else await run_in_threadpool(doc_versions.conflicts, citations or sources, versions)
@@ -1031,7 +1058,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                       "uncited": not abstained and not numbers, "turn_id": turn["id"], "versions": versions, "amendments": changed,
                       "absence": prompt.absence(text) if abstained else None, "calculation": calculation,
                       "working": working.public(worked) if worked and not abstained else None,
-                      "stated": stated, "misquotes": misquoted, "support": support, "choices": choices,
+                      "stated": stated, "stated_detail": stated_detail, "misquotes": misquoted, "support": support, "choices": choices,
                       "defined_twice": [{"document": t["document_title"], "term": t["term"],
                                          "clauses": [d["clause"] for d in t["definitions"] if d["clause"]]} for t in twice], **({"stated_shadow": shadow} if mode == "shadow" else {})})
     except scopemod.ScopeRevoked:
@@ -1044,7 +1071,9 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         try:
             if not several:      # an answer about several matters lives only in its conversation, never in one matter's history
                 _save({**turn, "answer": answer, "citations": citations, "status": status, "evidence": items, "conflicts": found,
-                       "versions": versions, "abstention_reason": reason, "amendments": changed})
+                       "versions": versions, "abstention_reason": reason, "amendments": changed,
+                       "unsupported": None if status in ("error", "scope_revoked") else unsupported_final,
+                       "stated": stated_detail})
             outcome = "deny" if status == "scope_revoked" else "error" if status == "error" else "allow"
             record("research.answer", outcome, principal=principal, object_type="research_turn", object_id=turn["id"],
                    matter_id=turn["matter_id"], reason=status,
@@ -1084,7 +1113,7 @@ def research_history(matter_id: str, request: Request):
     require(p, "research.query", matter_id)
     with get_conn() as conn:
         rows = conn.execute("SELECT id, question, answer, citations_json, status, created_at, evidence_json, conflicts_json, versions, "
-                            "abstention_reason, amendments_json FROM legal_research_turns "
+                            "abstention_reason, amendments_json, unsupported_json, stated_json FROM legal_research_turns "
                             "WHERE matter_id=? AND owner_id=? ORDER BY created_at DESC LIMIT 50", (matter_id, p["sub"])).fetchall()
     from ..documents import repo as doc_repo
     cited = {c.get("document_id") for r in rows for c in json.loads(r[3] or "[]")}
@@ -1102,12 +1131,14 @@ def _turn(r, withheld: frozenset | set = frozenset()) -> dict:
                 "amendments": []}
     # Every valid number the answer cites was saved, so the highest saved one bounds the valid range.
     evidence = json.loads(r[6] or "[]")
-    unsupported = (_pointed(r[2], prompt.unsupported(r[2], max((c["n"] for c in citations), default=0)), evidence)
-                   if r[2] and r[4] in ("answered", "partial", "unverified") else [])
+    saved = json.loads(r[11]) if len(r) > 11 and r[11] else None          # what the answer's checks left (migration 0044)
+    unsupported = ([] if not (r[2] and r[4] in ("answered", "partial", "unverified")) else saved if saved is not None
+                   else _pointed(r[2], prompt.unsupported(r[2], max((c["n"] for c in citations), default=0)), evidence))
     return {"id": r[0], "question": r[1], "answer": r[2], "citations": citations, "status": r[4], "created_at": r[5],
             "unsupported": unsupported, "evidence": evidence, "conflicts": json.loads(r[7] or "[]"),
             "versions": r[8], "abstention_reason": r[9], "amendments": json.loads(r[10] or "[]") if len(r) > 10 else [],
-            "absence": prompt.absence(r[2]) if r[4] == "abstained" and r[2] else None}
+            "absence": prompt.absence(r[2]) if r[4] == "abstained" and r[2] else None,
+            "stated_detail": json.loads(r[12]) if len(r) > 12 and r[12] else None}
 
 
 @router.post("/matters/{matter_id}/research/{turn_id}/review")

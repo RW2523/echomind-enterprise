@@ -8,6 +8,8 @@
 # DEMO_EXTRA_ORIGINS (comma-separated) lets the API and voice also accept another public address, e.g. an old one while
 # people still have it.
 # DEMO_PREFIX / DEMO_API_PORT / DEMO_VOICE_PORT run a private copy beside the demo (another data folder; never the same names).
+# DEMO_ENV_FILE (a private copy only, never the public demo): extra backend settings for an evaluation, one NAME=value per line
+# (2026-11-12: LEGAL_STATED_TRACE, LEGAL_RESEARCH_STATED_CHECK=shadow…).
 # Backend: the Law backend image, its own bridge network (no host network), code read-only, a read-only root with /tmp on its own
 # volume (the speech model unpacks there), no new privileges, every capability dropped, 12 GB memory and 2048 processes at most, a health check on its own
 # port. Each CPU model call (reranker, speech, embeddings) uses at most DEMO_CPU_THREADS threads (2026-11-07 load test: with
@@ -38,6 +40,7 @@ net() { docker network inspect "$NET" >/dev/null 2>&1 || docker network create "
 case "${1:-}" in
   api)
     [[ -f "$DATA/legal/DEMO_INSTANCE" ]] || { echo "refusing: $DATA was not made by the demo seed (no legal/DEMO_INSTANCE)" >&2; exit 2; }
+    [[ -z "${DEMO_ENV_FILE:-}" || "$PREFIX" != echomind-legal-demo ]] || { echo "refusing: DEMO_ENV_FILE is for a private copy only" >&2; exit 2; }
     : "${DEMO_PUBLIC_URL:?set DEMO_PUBLIC_URL to the public address of the demo}"
     net
     GW="$(docker network inspect "$NET" --format '{{(index .IPAM.Config 0).Gateway}}')"
@@ -50,6 +53,7 @@ case "${1:-}" in
       --read-only -v "$PREFIX-tmp":/tmp --security-opt no-new-privileges:true --cap-drop ALL \
       --memory 12g --memory-swap 12g --pids-limit "${DEMO_PIDS_LIMIT:-2048}" \
       -e OMP_NUM_THREADS="${DEMO_CPU_THREADS:-8}" -e MKL_NUM_THREADS="${DEMO_CPU_THREADS:-8}" \
+      ${DEMO_ENV_FILE:+--env-file "$DEMO_ENV_FILE"} \
       -e PUBLIC_URL="$DEMO_PUBLIC_URL" -e DEMO_EXTRA_ORIGINS="${DEMO_EXTRA_ORIGINS:-}" -e DEMO_TRUSTED_PROXY="$GW" -e DEMO_TTS_URL="${DEMO_TTS_URL-http://$VOICE:8000/speak}" \
       -v "$ROOT/backend:/repo/backend:ro" -v "$DATA:/data" -v "$KEY:/run/secrets/master.key:ro" -v "$HF:/hf:ro" \
       -v "$ROOT/scripts/law/demo/launch-api.sh:/run/demo/launch-api.sh:ro" \

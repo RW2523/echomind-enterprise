@@ -17,7 +17,7 @@ import faiss
 import numpy as np
 
 from ...core.db import get_conn
-from ...rag.sparse import _tokenize
+from . import headings, terms
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,9 @@ class PartitionIndex:
             if meta.get("partition") != self.partition:
                 logger.warning("Retrieval: index files in %s belong to another partition; rebuilding", self.dir)
                 return False
+            if meta.get("tokenizer") != terms.VERSION:          # made with other index words (retrieval/terms.py)
+                logger.info("Retrieval: index files in %s use other index words; rebuilding", self.dir)
+                return False
             ids, tokens = list(meta.get("chunk_ids") or []), list(meta.get("tokens") or [])
             dense = faiss.read_index(dense_path) if ids else None
             if len(ids) != len(tokens) or (dense is not None and dense.ntotal != len(ids)):
@@ -86,7 +89,7 @@ class PartitionIndex:
                 os.remove(dense_path)
             tmp = os.path.join(self.dir, _META + ".tmp")
             with open(tmp, "w", encoding="utf-8") as f:
-                json.dump({"partition": self.partition, "chunk_ids": self.chunk_ids, "tokens": self.tokens}, f)
+                json.dump({"partition": self.partition, "tokenizer": terms.VERSION, "chunk_ids": self.chunk_ids, "tokens": self.tokens}, f)
             os.replace(tmp, os.path.join(self.dir, _META))
             self.files_mtime = os.stat(os.path.join(self.dir, _META)).st_mtime_ns
 
@@ -109,7 +112,8 @@ class PartitionIndex:
             self.dense = faiss.IndexFlatIP(vecs.shape[1])
         self.dense.add(vecs)
         self.chunk_ids += [cid for cid, _, _ in items]
-        self.tokens += [_tokenize(text) for _, text, _ in items]
+        heads = _headings([cid for cid, _, _ in items])
+        self.tokens += [terms.tokens(text, heads.get(cid)) for cid, text, _ in items]
         self._bm25 = None
 
     def add(self, items: list[tuple[str, str, np.ndarray]]) -> None:
@@ -134,27 +138,47 @@ class PartitionIndex:
             self.save()
 
     # ── Searching ────────────────────────────────────────────────────────────────
-    def search_dense(self, qvec: np.ndarray, k: int) -> list[tuple[str, float]]:
+    # `only` (2026-11-12, evaluation fix list item 1): rank just these passages, a named document's, against each other. The
+    # matter's top n filtered afterwards held none of the MSA's clause 12 when other documents spoke of termination more.
+    def search_dense(self, qvec: np.ndarray, k: int, only: Optional[set] = None) -> list[tuple[str, float]]:
         with self.lock:
             if self.dense is None or not self.dense.ntotal:
                 return []
             if qvec.shape[-1] != self.dense.d:
                 logger.warning("Retrieval: query embedding size %d does not match the index (%d)", qvec.shape[-1], self.dense.d)
                 return []
-            scores, idx = self.dense.search(qvec.reshape(1, -1).astype(np.float32), min(k, self.dense.ntotal))
-            return [(self.chunk_ids[i], float(s)) for s, i in zip(scores[0], idx[0]) if i >= 0]
+            scores, idx = self.dense.search(qvec.reshape(1, -1).astype(np.float32),
+                                            self.dense.ntotal if only is not None else min(k, self.dense.ntotal))
+            hits = [(self.chunk_ids[i], float(s)) for s, i in zip(scores[0], idx[0]) if i >= 0]
+            return [h for h in hits if h[0] in only][:k] if only is not None else hits
 
-    def search_sparse(self, query: str, k: int) -> list[tuple[str, float]]:
-        terms = _tokenize(query)
+    def search_sparse(self, query: str, k: int, only: Optional[set] = None) -> list[tuple[str, float]]:
+        words = terms.tokens(query)
         with self.lock:
-            if not self.chunk_ids or not terms:
+            if not self.chunk_ids or not words:
                 return []
             if self._bm25 is None:
                 from rank_bm25 import BM25Okapi
                 self._bm25 = BM25Okapi(self.tokens)           # this partition's own statistics only
-            scores = self._bm25.get_scores(terms)
+            scores = self._bm25.get_scores(words)
             # A passage must share at least one term with the query: BM25 can give tiny or negative
             # scores to every passage of a very small corpus, which would make "found" meaningless.
-            qset = set(terms)
-            hits = [(self.chunk_ids[i], float(s)) for i, s in enumerate(scores) if qset & set(self.tokens[i])]
+            qset = set(words)
+            hits = [(self.chunk_ids[i], float(s)) for i, s in enumerate(scores)
+                    if (only is None or self.chunk_ids[i] in only) and qset & set(self.tokens[i])]
             return sorted(hits, key=lambda h: h[1], reverse=True)[:k]
+
+
+def _headings(chunk_ids: list[str]) -> dict[str, str]:
+    """The section heading over each of these passages (retrieval/headings.py); a passage not yet in the database has none."""
+    out: dict[str, str] = {}
+    with get_conn() as conn:
+        for i in range(0, len(chunk_ids), 500):
+            part = chunk_ids[i:i + 500]
+            rows = conn.execute(f"SELECT id, version_id, char_start FROM legal_chunks WHERE id IN ({','.join('?' * len(part))})",
+                                part).fetchall()
+            for cid, vid, start in rows:
+                h = headings.at(conn, vid, start)
+                if h:
+                    out[cid] = h
+    return out

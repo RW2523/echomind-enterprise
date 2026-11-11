@@ -142,6 +142,9 @@ def test_verdict_lines_are_read_strictly():
                        "3. supported\nnine: SUPPORTED\n7: NOT SUPPORTED: out of range", items)
     assert got[1]["verdict"] == "not_supported" and 2 not in got                  # a condition is the rule's to find
     assert got[3]["verdict"] == "supported" and 4 not in got and 7 not in got
+    # a bare SUPPORTED line never runs on into the next one (2026-11-12: every verdict after it was lost)
+    got = support.read("1: SUPPORTED\n2: NOT SUPPORTED: another party\n3: SUPPORTED", items[:3])
+    assert [got[k]["verdict"] for k in (1, 2, 3)] == ["supported", "not_supported", "supported"] and got[2]["why"] == "another party"
 
 
 def test_conditions_by_rule_only_when_the_quote_does_not_carry_them():
@@ -162,3 +165,49 @@ def test_the_chat_card_shows_a_condition_as_a_note():
     note = orchestrator._condition_note({"sentence": "The Customer may terminate on 60 days' written notice.",
                                          "words": "subject to clause 9.4", "by": "rule"})
     assert "subject to clause 9.4" in note and note.endswith("Found by rule.") and len(note) <= 400
+
+
+# ── Sentences without a marker of their own (2026-11-12, evaluation fix list item 3) ─────────────────────────────────────
+def test_a_sentence_without_a_marker_is_checked_against_its_paragraphs_quotes_and_kept_off_the_list_only_when_supported(sp):
+    alice = as_user(sp, "alice")
+    first = ask(alice, sp["mid"], "What is the liability cap?")
+    n = n_of(first, "USD 250,000")
+    sp["model"].answer = (f'Each party\'s total liability is USD 250,000. The cap is set in clause 12.1 '
+                          f'[{n}: "Each party\'s total liability is capped at USD 250,000"].')
+    sp["model"].verdicts = "1: SUPPORTED\n2: SUPPORTED"
+    done = ask(alice, sp["mid"], "What is the liability cap?")[-1]
+    assert done["support"]["uncited_checked"] == 1 and done["support"]["uncited_supported"] == ["Each party's total liability is USD 250,000."]
+    assert done["unsupported"] == [] and done["status"] == "answered"
+    sent = sp["model"].checks[-1][-1]["content"]
+    assert "2. Statement: Each party's total liability is USD 250,000." in sent and "capped at USD 250,000" in sent
+    # the same sentence the check does not support stays on the list, and the label with it
+    sp["model"].verdicts = "1: SUPPORTED\n2: NOT SUPPORTED: the cap is per party"
+    done = ask(alice, sp["mid"], "What is the liability cap?")[-1]
+    assert done["unsupported"] == ["Each party's total liability is USD 250,000."] and done["status"] == "partial"
+    # and so with no reply
+    sp["model"].verdicts = ""
+    done = ask(alice, sp["mid"], "What is the liability cap?")[-1]
+    assert done["unsupported"] == ["Each party's total liability is USD 250,000."] and done["status"] == "partial"
+
+
+def test_a_paragraph_with_no_verified_quote_gives_its_sentences_nothing_to_be_checked_against(sp):
+    alice = as_user(sp, "alice")
+    sp["model"].answer = "The agreement probably renews every year.\n\nEach party's total liability is capped at USD 250,000."
+    sp["model"].verdicts = "1: SUPPORTED\n2: SUPPORTED"
+    done = ask(alice, sp["mid"], "What is the liability cap?")[-1]
+    assert done["support"] is None or done["support"]["uncited_checked"] == 0
+    assert "The agreement probably renews every year." in done["unsupported"]
+
+
+def test_the_list_left_after_the_checks_is_what_the_answer_shows_when_opened_again(sp):
+    alice = as_user(sp, "alice")
+    first = ask(alice, sp["mid"], "What is the liability cap?")
+    n = n_of(first, "USD 250,000")
+    sp["model"].answer = (f'Each party\'s total liability is USD 250,000. The cap is set in clause 12.1 '
+                          f'[{n}: "Each party\'s total liability is capped at USD 250,000"].')
+    sp["model"].verdicts = "1: SUPPORTED\n2: SUPPORTED"
+    done = ask(alice, sp["mid"], "What is the liability cap?")[-1]
+    assert done["unsupported"] == []
+    turns = alice.get(f"/api/legal/matters/{sp['mid']}/research").json()["turns"]
+    mine = next(t for t in turns if t["id"] == done["turn_id"])
+    assert mine["unsupported"] == [] and mine["status"] == "answered"

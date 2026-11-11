@@ -1335,8 +1335,9 @@ def test_a_memo_on_the_named_document_quoting_its_clause_by_number_is_checked_an
 def test_inside_a_named_document_the_words_naming_it_are_not_searched_for():
     from app.legal.research.attribution import parties_of, subject, without_titles
     t = ["Advice memo on the MSA (DEMO)", "Master Services Agreement (DEMO)"]
-    assert without_titles("Does the advice memo state the MSA's payment terms correctly?", t) == "Does the state the payment terms correctly?"
-    assert without_titles("What services does the MSA cover?", t[1:]) == "What services does the cover?"
+    assert without_titles("Does the advice memo state the MSA's payment terms correctly?", t) == "Does state payment terms correctly?"
+    assert without_titles("What services does the MSA cover?", t[1:]) == "What services does cover?"
+    assert without_titles("How can the Master Services Agreement be terminated?", ["Master Services Agreement"]) == "How can be terminated?"
     assert without_titles("What is the Consultancy Agreement?", ["Consultancy Agreement"]) == ""      # nothing left: the question
     assert subject("Advice memo on the MSA (DEMO)", {"m": "Master Services Agreement (DEMO)", "a": "Advice memo on the MSA (DEMO)"}) == {"m"}
     assert subject("Board minutes", {"m": "Master Services Agreement"}) == set()

@@ -333,6 +333,10 @@ class Settings(BaseSettings):
     # research/stated.py: "hedged" asks of answers that open "not stated"; "all" of every answer; "shadow" asks of every answer
     # but acts only on hedged ones, recording the rest (evaluation); "off"
     LEGAL_RESEARCH_STATED_CHECK: str = os.getenv("LEGAL_RESEARCH_STATED_CHECK", "hedged").strip().lower()
+    # research/stated.py (2026-11-12): give the check the words the answer quoted (1) or not (0, until a replay shows it helps);
+    # LEGAL_STATED_TRACE: a file each check's inputs and reply are appended to, for that replay (private evaluation copies only)
+    LEGAL_RESEARCH_STATED_QUOTED: bool = os.getenv("LEGAL_RESEARCH_STATED_QUOTED", "0").strip() == "1"
+    LEGAL_STATED_TRACE: str = os.getenv("LEGAL_STATED_TRACE", "").strip()
     # Context added around what research found (research/routes._context, 2026-11-07): the rest of a clause cut by a passage's
     # edge, definitions of terms the best passages use, a clause they are "subject to". "on" or "off". Off by default: on the
     # demo's 165-question chat set it changed nothing beyond run noise (125 with it, 126 without, 127 before) and made answers
