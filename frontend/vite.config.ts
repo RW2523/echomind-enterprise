@@ -46,6 +46,14 @@ export default defineConfig(() => ({
       '/voice': { target: `http://127.0.0.1:${voiceDevPort}`, changeOrigin: true, ws: true, rewrite: (p) => p.replace(/^\/voice/, '') },
     },
   },
+  // `vite preview` of a production build, for the browser tests (2026-11-12, evaluation fix list item 16: the dev server's
+  // first compile of a page left a sign-in page blank twice in a 35-minute run)
+  preview: {
+    port: devPort,
+    strictPort: !!process.env.ECHOMIND_DEV_PORT,
+    host: devHost,
+    proxy: { '/api': { target: apiTarget, changeOrigin: true, ws: true } },
+  },
   plugins: useHttps ? [react(), basicSsl()] : [react()],
   resolve: { alias: { '@': path.resolve(__dirname, '.') } },
 }));

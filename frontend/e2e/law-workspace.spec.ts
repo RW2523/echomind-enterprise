@@ -46,7 +46,8 @@ async function sendCode(page: Page, code: string): Promise<boolean> {
     page.waitForResponse((r) => r.url().endsWith('/api/auth/mfa/verify') && r.request().method() === 'POST'),
     page.getByRole('button', { name: 'Verify' }).click(),
   ]);
-  if (resp.ok()) await page.waitForURL('**/chat');               // EchoMind Legal: chat is home
+  // each person's own home since 2026-11-12: the chat for lawyers, Enquiries, Records or Users & roles for the others
+  if (resp.ok()) await page.waitForURL((u) => !u.pathname.startsWith('/signin') && u.pathname !== '/');
   return resp.ok();
 }
 
@@ -60,6 +61,11 @@ async function signIn(page: Page, name: string) {
   if (lastStep[name] === step) await page.waitForTimeout(31_000 - (Date.now() % 30_000));
   lastStep[name] = Math.floor(Date.now() / 30_000);
   await page.goto('/signin');
+  // a blank page is reloaded once and said so (2026-11-12: two blank sign-in pages left nothing to go on); a code is never retried
+  if (!(await page.getByLabel('Username').waitFor({ state: 'visible', timeout: 20_000 }).then(() => true, () => false))) {
+    console.log(`sign-in page blank for ${name} after 20 s: ${await page.title()} ${page.url()}; reloading once`);
+    await page.reload();
+  }
   await page.getByLabel('Username').fill(name);
   await page.getByLabel('Password').fill(c.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
@@ -1500,6 +1506,11 @@ test('conversation: Talk by voice opens voice mode in a chat about the matter; a
   // Since 2026-11-02 "Talk by voice" opens voice mode in a new chat about the matter (the old talk page is gone).
   await matterTab(alice, 'Talk by voice');
   await alice.waitForURL('**/chat');
+  // offered, not started (2026-11-12): nothing listens until Start
+  const offer = alice.getByRole('region', { name: 'Start a voice conversation' });
+  await expect(offer).toBeVisible();
+  await expect(alice.getByRole('region', { name: 'Voice conversation' })).toHaveCount(0);
+  await offer.getByRole('button', { name: /Start talking/ }).click();
   const stage = alice.getByRole('region', { name: 'Voice conversation' });
   await expect(stage).toBeVisible();
   await expect(stage.getByText(/M-101/).first()).toBeVisible();

@@ -74,6 +74,7 @@ rag-platform/
 /.law-egress/
 /.law-stability/
 /frontend/test-results/
+/frontend/dist-e2e/
 /frontend/playwright-report/
 .env.law
 *.tar.zst
