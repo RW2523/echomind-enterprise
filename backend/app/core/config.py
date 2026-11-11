@@ -322,6 +322,11 @@ class Settings(BaseSettings):
     LEGAL_JOB_POLL_SEC: float = float(os.getenv("LEGAL_JOB_POLL_SEC", "2"))
     LEGAL_JOB_MAX_ATTEMPTS: int = int(os.getenv("LEGAL_JOB_MAX_ATTEMPTS", "3"))
     # Matter research (S1.7).
+    # The cross-encoder's part in search (2026-11-12, evaluation fix list item 8): "full" scores every window of the candidates
+    # and orders by its rank fused with BM25's; "top" keeps the first-stage fused order and scores only the windows of the best
+    # LEGAL_RERANK_TOP passages, for the floor and the weak-evidence signal; measured before either is the default
+    LEGAL_RERANK_MODE: str = os.getenv("LEGAL_RERANK_MODE", "full").strip().lower()
+    LEGAL_RERANK_TOP: int = int(os.getenv("LEGAL_RERANK_TOP", "12"))
     LEGAL_RESEARCH_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_PASSAGES", "6"))          # sources given to the model
     # a document the question names: this many of its own passages are also searched and put first (2026-11-05 brief)
     LEGAL_RESEARCH_NAMED_PASSAGES: int = int(os.getenv("LEGAL_RESEARCH_NAMED_PASSAGES", "3"))
@@ -337,6 +342,8 @@ class Settings(BaseSettings):
     # research/stated.py: "hedged" asks of answers that open "not stated"; "all" of every answer; "shadow" asks of every answer
     # but acts only on hedged ones, recording the rest (evaluation); "off"
     LEGAL_RESEARCH_STATED_CHECK: str = os.getenv("LEGAL_RESEARCH_STATED_CHECK", "hedged").strip().lower()
+    # 2026-11-12, evaluation fix list item 9: "hedged+figures-shadow" also asks of a confident answer that gives a figure, and
+    # records the verdict without acting on it (to count what it would catch and what it would wrongly decline)
     # research/stated.py (2026-11-12): give the check the words the answer quoted (1) or not (0, until a replay shows it helps);
     # LEGAL_STATED_TRACE: a file each check's inputs and reply are appended to, for that replay (private evaluation copies only)
     # model calls in flight at once from this backend (research/llm.py, 2026-11-12); the shared model server is kept at 4

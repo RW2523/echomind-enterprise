@@ -1053,7 +1053,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
         hedged = prompt.opens_not_stated(text) or prompt.opens_silent(text)
         stated = shadow = None
         # A term's dates are worked out and labelled by research/dates.py (QA RAG-003), never declined for not being stated.
-        if mode in ("hedged", "all", "shadow") and answering and (hedged or mode != "hedged") \
+        figures = mode == "hedged+figures-shadow" and any(_figures(c.sentence) for c in answering)
+        if mode in ("hedged", "all", "shadow", "hedged+figures-shadow") and answering and (hedged or mode in ("all", "shadow") or figures) \
                 and not (off_target or off_party or elsewhere) and not dates.asks_term_dates(question) and not given:
             cited_n = dict.fromkeys(c.n for claim in answering for c in claim.citations if 1 <= c.n <= len(passages))
             cited_docs = dict.fromkeys(passages[n - 1]["citation"]["document_id"] for n in cited_n)
@@ -1066,7 +1067,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
             quoted = [c.quote for claim in answering for c in claim.citations
                       if c.quote and c.verification in ("verbatim", "normalized")]
             detail: dict = {}
-            verdict = await statedmod.answers(question, shown, defined, quoted, detail)
+            verdict = await statedmod.answers(question, shown, defined, quoted, detail, shadow=not (hedged or mode == "all"))
             stated_detail = {**detail, "acted": bool(hedged or mode == "all")} if detail else None
             if hedged or mode == "all":
                 stated = verdict
@@ -1128,7 +1129,7 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                       "working": working.public(worked) if worked and not abstained else None,
                       "stated": stated, "stated_detail": stated_detail, "misquotes": misquoted, "support": support, "choices": choices,
                       "defined_twice": [{"document": t["document_title"], "term": t["term"],
-                                         "clauses": [d["clause"] for d in t["definitions"] if d["clause"]]} for t in twice], **({"stated_shadow": shadow} if mode == "shadow" else {})})
+                                         "clauses": [d["clause"] for d in t["definitions"] if d["clause"]]} for t in twice], **({"stated_shadow": shadow} if mode in ("shadow", "hedged+figures-shadow") else {})})
     except scopemod.ScopeRevoked:
         status, answer, citations, items, found = "scope_revoked", None, [], [], []
         yield _event({"type": "scope_revoked"})

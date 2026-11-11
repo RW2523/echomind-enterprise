@@ -105,7 +105,7 @@ def verdict(raw: str, passages: list[dict]) -> Optional[bool]:
 
 
 async def answers(question: str, passages: list[dict], defined: list[str] = (), quoted: list[str] = (),
-                  detail: Optional[dict] = None) -> Optional[bool]:
+                  detail: Optional[dict] = None, shadow: bool = False) -> Optional[bool]:
     """True when the passages state what was asked, False when they do not, None when it could not be told. `defined`:
     who each cited document's roles are ('in "MSA", "the Client" is Voss-Lindqvist AB'), read from its preamble; the
     model writes no answer here, so it cannot quote them. `detail`, when given, is filled with reading()."""
@@ -122,17 +122,18 @@ async def answers(question: str, passages: list[dict], defined: list[str] = (), 
     got = verdict(raw, passages)
     if detail is not None:
         detail.update(reading(raw))
-    _trace(question, passages, defined, quoted, raw, got)
+    _trace(question, passages, defined, quoted, raw, got, shadow)
     return got
 
 
-def _trace(question: str, passages: list[dict], defined, quoted, raw: str, got: Optional[bool]) -> None:
+def _trace(question: str, passages: list[dict], defined, quoted, raw: str, got: Optional[bool], shadow: bool = False) -> None:
     path = settings.LEGAL_STATED_TRACE
     if not path:
         return
     try:
         with open(path, "a", encoding="utf-8") as f:
             f.write(json.dumps({"question": question, "defined": list(defined), "quoted": list(quoted), "verdict": got, "raw": raw,
+                                "shadow": shadow,
                                 "passages": [{"document": p["citation"]["document_title"], "text": p["text"]}
                                              for p in passages[:MAX_PASSAGES]]}, ensure_ascii=False) + "\n")
     except OSError as e:

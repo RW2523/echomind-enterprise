@@ -483,12 +483,18 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
     fused = _fuse(rankings)[:n]
     hits = _load(scope.matter_id, fused, scope.principal_id, versions if versions in ("signed", "current") else "signed",
                  documents)
+    top_mode = settings.LEGAL_RERANK_MODE == "top"
+    if top_mode:                                      # only the best few, in the first stage's order (item 8)
+        hits = hits[:max(k, settings.LEGAL_RERANK_TOP)]
     subs = _windowed(hits)
     scored = await rerank(query, subs, len(subs)) if subs else []
     best: dict[str, dict] = {}
     for h in scored:                                  # best window of each passage, in score order
         best.setdefault(h["chunk_id"], h)
     ranked = list(best.values())
+    if top_mode:
+        place = {h["chunk_id"]: i for i, h in enumerate(hits)}
+        ranked.sort(key=lambda h: place.get(h["chunk_id"], 1 << 30))
     if diagnostics is not None:
         diagnostics.update({mode: [cid for cid, _ in r] for mode, r in zip([m for m in ALL_MODES if m in modes], rankings)})
         diagnostics.update(fused=fused, loaded=[h["chunk_id"] for h in hits],
@@ -499,7 +505,7 @@ async def search(scope: AuthorizedScope, query: str, *, k: int = 8, modes: Itera
     # the cross-encoder alone put the evidence lower than BM25 alone did, Recall@5 0.574 against 0.618, MRR@10 0.457 against
     # 0.553; fusing the two ranks gave 0.631 and 0.532). Scores stay the cross-encoder's, so the floor and the weak-answer
     # checks read them as before; only which passages come first changes.
-    if settings.LEGAL_RERANK_FUSION == "sparse" and "sparse" in modes and len(ranked) > 1:
+    if not top_mode and settings.LEGAL_RERANK_FUSION == "sparse" and "sparse" in modes and len(ranked) > 1:
         sparse = rankings[[m for m in ALL_MODES if m in modes].index("sparse")]
         place = {cid: i for i, (cid, _) in enumerate(c for c in sparse if c[0] in best)}
         last = len(place)
