@@ -55,9 +55,23 @@ def _plain(text: str, limit: int) -> str:
     return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + " …"
 
 
+# "Going back to the start: what was the notice period again?" pointed to the conversation's first questions, which the last
+# MAX_TURNS no longer held (2026-11-12, a 12-turn conversation): such a follow-up is given the first two turns as well.
+_BACK = re.compile(r"\b(?:back\s+to\s+(?:the\s+)?(?:start|beginning|first)|at\s+the\s+(?:start|beginning)|(?:the|your|my)\s+first\s+"
+                   r"(?:question|answer)|earlier\s+(?:on|you\s+said)|you\s+said\s+(?:at\s+first|earlier)|originally)\b", re.I)
+
+
+def points_back(question: str) -> bool:
+    """The follow-up refers to the conversation's start, not its last turn."""
+    return bool(_BACK.search(question or ""))
+
+
 def messages(question: str, history: list[dict]) -> list[dict]:
     turns = []
-    for t in history[-MAX_TURNS:]:
+    shown = history[-MAX_TURNS:]
+    if _BACK.search(question or "") and len(history) > MAX_TURNS:
+        shown = history[:2] + history[-(MAX_TURNS - 1):]
+    for t in shown:
         turns.append(f"Lawyer: {_plain(t.get('question', ''), MAX_QUESTION)}\nAnswer: {_plain(t.get('answer', ''), MAX_ANSWER)}")
     convo = "\n\n".join(turns)
     return [{"role": "system", "content": SYSTEM},

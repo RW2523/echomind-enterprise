@@ -244,7 +244,7 @@ def _notes(cites: list[dict], conflicts: list[dict]) -> list[str]:
 
 async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, document_ids: list[str], built: Built,
                extra_scopes: tuple = (), as_written: bool = False):
-    hist = [] if as_written else await run_in_threadpool(store.history, conv["id"], principal["sub"], turn)
+    hist = [] if as_written else await run_in_threadpool(store.history, conv["id"], principal["sub"], turn, 12)
     prefer = None
     if hist:
         yield event("task.progress", {"label": "Reading your follow-up with the conversation so far", "done": 0, "total": 0,
@@ -255,7 +255,8 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
             yield event("turn.understood", {"question": rewritten_q})
             # the documents the last answer cited are searched first (2026-11-12, evaluation fix list item 4): "And did the
             # amendment change that?" is about the cap the last answer quoted, not about any cap in the matter
-            prefer = (hist[-1].get("documents") or [])[:3] or None
+            back = followup.points_back(question)                # "going back to the start": the first answer's documents
+            prefer = ((hist[0] if back else hist[-1]).get("documents") or [])[:3] or None
     rturn = {"id": str(uuid.uuid4()), "org_id": principal["org_id"], "matter_id": conv["matter_id"], "owner_id": principal["sub"],
              "question": question, "auth": principal.get("auth"), "created_at": policy.now_iso()}
     built.research_turn_id = None if extra_scopes else rturn["id"]          # several matters: kept in the conversation only

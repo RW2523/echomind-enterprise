@@ -141,3 +141,15 @@ def test_the_conversation_is_bounded_and_the_audit_holds_counts_only(fu, fresh_d
                                         "ORDER BY rowid DESC LIMIT 1").fetchone()[0])
     assert details["history_turns"] == 1 and details["rewritten"] is True
     assert "customer" not in json.dumps(details).lower()
+
+
+def test_a_follow_up_that_goes_back_to_the_start_is_given_the_first_turns_too():
+    """2026-11-12: in a 12-turn conversation, "Going back to the start: what was the notice period again?" was read against
+    the board minutes, the first turns being beyond the last four the rewrite sees."""
+    from app.legal.research import followup
+    history = [{"question": f"Question {i}", "answer": f"Answer {i}"} for i in range(1, 11)]
+    sent = followup.messages("Going back to the start: what was the notice period again?", history)[-1]["content"]
+    assert "Question 1" in sent and "Question 2" in sent and "Question 10" in sent and "Question 5" not in sent
+    plain = followup.messages("And who signed it?", history)[-1]["content"]
+    assert "Question 1\n" not in plain and "Question 7" in plain and "Question 10" in plain
+    assert followup.points_back("Going back to the start: what was it?") and not followup.points_back("And who signed it?")
