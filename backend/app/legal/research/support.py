@@ -100,13 +100,24 @@ def conditions(claims: list, sources: list[dict]) -> list[dict]:
     return out
 
 
-def messages(items: list[tuple[str, str]], question: str = "", defined: list[str] = ()) -> list[dict]:
+def messages(items: list[tuple], question: str = "", defined: list[str] = ()) -> list[dict]:
+    """`items`: (statement, passage text) or (statement, passage text, the passage's document), the document named so that
+    "This is set in Amendment No. 1" can be judged (2026-11-12: such sentences were found NOT SUPPORTED, the check not knowing
+    where its passage came from)."""
     head = (f"Question: {html.escape(question, quote=False)}\n" if question else "") + \
         ("Roles the documents define in their openings: " + "; ".join(defined) + ".\n" if defined else "")
-    blocks = [f"{k}. Statement: {html.escape(s, quote=False)}\n<passage>\n{html.escape(prompt.withhold(p), quote=False)}\n</passage>"
-              for k, (s, p) in enumerate(items, start=1)]
+    def tag(item) -> str:
+        return f' document="{html.escape(item[2], quote=True)}"' if len(item) > 2 and item[2] else ""
+    blocks = [f"{k}. Statement: {html.escape(item[0], quote=False)}\n<passage{tag(item)}>\n{html.escape(prompt.withhold(item[1]), quote=False)}\n</passage>"
+              for k, item in enumerate(items, start=1)]
     return [{"role": "system", "content": SYSTEM},
             {"role": "user", "content": (head + "\n" if head else "") + "\n\n".join(blocks) + "\n\nReply with one line per statement."}]
+
+
+def _titles(claim, sources: list[dict]) -> str:
+    """The documents a claim's first two citations come from."""
+    return "; ".join(dict.fromkeys(sources[c.n - 1].get("document_title") or "" for c in claim.citations[:2]
+                                   if 1 <= c.n <= len(sources)))
 
 
 def _around(claim, sources: list[dict]) -> str:
@@ -147,7 +158,7 @@ def _beside(neighbours: list, sources: list[dict]) -> str:
     return "\n…\n".join(parts[:3])
 
 
-async def _verdicts(items: list[tuple[str, str]], question: str, defined: list[str]) -> dict[int, dict]:
+async def _verdicts(items: list[tuple], question: str, defined: list[str]) -> dict[int, dict]:
     out: dict[int, dict] = {}
     for at in range(0, len(items), MAX_CLAIMS):
         part = items[at:at + MAX_CLAIMS]
@@ -168,13 +179,13 @@ async def check(claims: list, sources: list[dict], question: str = "", defined: 
     [sentence]} for the cited sentences whose quotes verified and the `uncited` sentences (each with the cited claims of its
     paragraph), or None when nothing could be checked. `defined`: who each cited document's roles are."""
     standing = [c for c in claims if any(x.verification in ("verbatim", "normalized") for x in c.citations)][:2 * MAX_CLAIMS]
-    beside = [(s, _beside(n, sources)) for s, n in uncited][:2 * MAX_CLAIMS]
-    beside = [(s, b) for s, b in beside if b]
+    beside = [(s, _beside(n, sources), "; ".join(dict.fromkeys(_titles(c, sources) for c in n[:3]))) for s, n in uncited][:2 * MAX_CLAIMS]
+    beside = [(s, b, t) for s, b, t in beside if b]
     if not standing and not beside:
         return None
     qualified = conditions(standing, sources)
-    items = [(_plain(c.sentence), _around(c, sources)) for c in standing]
-    verdicts = await _verdicts(items + [(_plain(s), b) for s, b in beside], question, list(defined))
+    items = [(_plain(c.sentence), _around(c, sources), _titles(c, sources)) for c in standing]
+    verdicts = await _verdicts(items + [(_plain(s), b, t) for s, b, t in beside], question, list(defined))
     not_supported = [{"sentence": items[k - 1][0][:300], "why": v["why"]} for k, v in sorted(verdicts.items())
                      if k <= len(items) and v["verdict"] == "not_supported"]
     held = [beside[k - len(items) - 1][0] for k, v in sorted(verdicts.items()) if k > len(items) and v["verdict"] == "supported"]

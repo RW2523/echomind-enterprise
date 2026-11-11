@@ -71,7 +71,7 @@ def test_a_sentence_its_passage_does_not_support_is_flagged_and_its_quote_stays_
     assert done["status"] == "partial"
     assert all(e["verification"] == "verbatim" for e in done["evidence"])           # the words are in the document
     sent = sp["model"].checks[-1][-1]["content"]
-    assert "<passage>" in sent and "Customer may terminate" in sent and "Statement: Either party may terminate" in sent
+    assert '<passage document="Supply Agreement">' in sent and "Customer may terminate" in sent and "Statement: Either party may terminate" in sent
     assert sent.startswith("Question: Who may terminate the supply agreement")
 
 
@@ -211,3 +211,26 @@ def test_the_list_left_after_the_checks_is_what_the_answer_shows_when_opened_aga
     turns = alice.get(f"/api/legal/matters/{sp['mid']}/research").json()["turns"]
     mine = next(t for t in turns if t["id"] == done["turn_id"])
     assert mine["unsupported"] == [] and mine["status"] == "answered"
+
+
+def test_a_closing_paragraph_is_checked_against_the_whole_answer_and_an_absence_is_never_taken_off(sp):
+    alice = as_user(sp, "alice")
+    first = ask(alice, sp["mid"], "What is the liability cap?")
+    n = n_of(first, "USD 250,000")
+    sp["model"].answer = (f'Each party\'s total liability is capped at USD 250,000 [{n}: "Each party\'s total liability is capped at USD 250,000"].'
+                          "\n\nSo neither party can be liable for more than USD 250,000. The agreement does not mention any other cap.")
+    sp["model"].verdicts = "1: SUPPORTED\n2: SUPPORTED\n3: SUPPORTED"
+    done = ask(alice, sp["mid"], "What is the liability cap?")[-1]
+    assert done["support"]["uncited_supported"] == ["So neither party can be liable for more than USD 250,000."]
+    assert done["unsupported"] == ["The agreement does not mention any other cap."]      # no passage shows an absence
+    sent = sp["model"].checks[-1][-1]["content"]
+    assert '<passage document="Supply Agreement">' in sent                              # the check knows where a passage is from
+
+
+def test_a_sentence_of_the_workings_own_figures_is_not_listed():
+    from types import SimpleNamespace
+    from app.legal.research.routes import _worked_out
+    worked = SimpleNamespace(steps=[SimpleNamespace(shown="10% × USD 18,500", result="USD 1,850")], figures=[], passages=[])
+    assert _worked_out("The credit is 10% × USD 18,500 = USD 1,850.", worked)
+    assert not _worked_out("The credit is USD 2,000.", worked)
+    assert not _worked_out("The credit is owed.", worked)                               # nothing to check by rule: stays

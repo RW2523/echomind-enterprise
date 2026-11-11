@@ -221,20 +221,43 @@ def _carried(claims: list, text: str, unsupported: list) -> tuple[list, list]:
     return out, joined
 
 
+# A sentence saying what the documents do not say ("There is no mention of any other conditions") is never taken off the list:
+# no passage can show that something is absent, and the model's SUPPORTED for one would be its own guess (2026-11-12).
+_ABSENCE = re.compile(r"\b(?:no\s+(?:mention|other|further|provision|clause|reference|indication|record|information|express)|"
+                      r"(?:does|do|did)\s+not\s+(?:state|mention|provide|specify|contain|include|say|address|set\s+out|refer|give|"
+                      r"identify|indicate|expressly)|not\s+(?:stated|mentioned|specified|provided|addressed)|nothing\s+(?:in|else|further)|"
+                      r"none\s+of\s+the|silent)\b", re.I)
+
+
 def _uncited(text: str, unsupported: list, claims: list) -> list[tuple[str, list]]:
     """Each sentence without a marker of its own, with the cited claims of its paragraph whose quotes verified (research/
     support.py checks it against their passages; 2026-11-12, evaluation fix list item 3). A paragraph without one gives none."""
     paragraphs = text.split("\n\n")
+    verified = [c for c in claims if c.sentence.strip() and any(x.verification in ("verbatim", "normalized") for x in c.citations)]
     out = []
     for s in unsupported:
-        if _CITED_MARK.search(s):
+        if _CITED_MARK.search(s) or _ABSENCE.search(s):
             continue
         para = next((p for p in paragraphs if s in p), None)
-        near = [c for c in claims if para and c.sentence.strip() and c.sentence.strip() in para
-                and any(x.verification in ("verbatim", "normalized") for x in c.citations)] if para else []
+        near = [c for c in verified if para and c.sentence.strip() in para] if para else []
+        # a closing paragraph of its own ("So the fee now paid is EUR 4,600.") is checked against what the whole answer
+        # quotes; it is still the model that has to find it supported
+        if para and not near:
+            near = verified[:3]
         if near:
             out.append((s, near))
     return out
+
+
+def _worked_out(sentence: str, worked) -> bool:
+    """Every figure of the sentence is one the working by rule (research/working.py) used or produced: "10% × USD 18,500 =
+    USD 1,850" is the working's own arithmetic, checked there, not a statement a passage has to make (2026-11-12)."""
+    said = _figures(sentence)
+    if not worked or not said:
+        return False
+    ruled = _figures(" ".join(f"{s.shown} {s.result}" for s in worked.steps) + " "
+                     + " ".join(worked.passages[f.n - 1]["text"][f.start:f.end] for f in worked.figures if 0 < f.n <= len(worked.passages)))
+    return said <= ruled
 
 
 def _numbers(scopes) -> list[str]:
@@ -1084,6 +1107,8 @@ async def _answer(scope, principal: dict, question: str, turn: dict, versions: s
                 held = set(support.get("uncited_supported") or [])
                 unsupported = [x for x in unsupported if x not in held] + \
                     [x["sentence"] for x in support["not_supported"] if x["sentence"] not in unsupported]
+        if worked and not abstained:
+            unsupported = [x for x in unsupported if not _worked_out(x, worked)]
         if not abstained:
             text = prompt.without_closing_abstention(text)
         status, answer = _status(abstained, claims, unsupported, failed), text
