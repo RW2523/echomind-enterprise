@@ -1444,3 +1444,12 @@ def test_a_question_about_documents_someone_asked_for_is_researched_not_listed()
     assert intent.classify("What documents has the Authority asked Meridian for?") == "ask_fact"
     assert intent.classify("Which documents has the client sent us?") == "ask_fact"
     assert intent.classify("Which documents are available?") == "documents"
+
+
+def test_three_shapes_of_question_are_read_with_a_note_and_others_get_none():
+    """2026-11-12, evaluation fix list item 10: a single word, a figure to confirm, whether an amendment changed a term."""
+    from app.legal.research.prompt import reading_notes
+    assert 'single word "cap"' in reading_notes("cap?")
+    assert "states a figure" in reading_notes("The cap is USD 500,000, correct?")
+    assert "amendment changed a term" in reading_notes("Did Amendment No. 1 change the liability cap in clause 10.2?")
+    assert reading_notes("break clause") == "" and reading_notes("What is the liability cap?") == ""

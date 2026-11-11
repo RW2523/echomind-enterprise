@@ -131,6 +131,32 @@ def twice_note(title: str, term: str, wordings: list[str]) -> str:
             "with its source, say that the document is ambiguous on this point, and do not choose between them.)\n")
 
 
+# Three readings of a question, each told to the model in a note only when the question has that shape (2026-11-12,
+# evaluation fix list item 10): a single word ("cap?") was answered with one of several caps; "The cap is USD 500,000,
+# correct?" was withdrawn; "Did Amendment No. 1 change clause 10.2?" was declined although the amendment lists what it changes.
+_WORDS = re.compile(r"[A-Za-z][A-Za-z'-]+")
+_CONFIRMS = re.compile(r"\d[\d,.]*\s*(?:%|per\s*cent|days?|months?|years?)?|\b(?:USD|GBP|EUR)\b", re.I)
+_CHECKS = re.compile(r"(?:\b(?:correct|right|true|accurate)\s*\?|\b(?:is\s+that|isn'?t\s+it|am\s+i|yes|no)\s*\?|,\s*(?:yes|no|right)\s*\?)\s*$", re.I)
+_DID_AMEND = re.compile(r"\b(?:did|does|has)\b[^?]{0,80}\b(?:amendment|variation|side\s+letter|addendum)\b[^?]{0,60}\b(?:change|amend|alter|vary|touch|affect)"
+                        r"|\b(?:was|is|has)\b[^?]{0,60}\b(?:changed|amended|altered|varied)\s+by\b", re.I)
+
+
+def reading_notes(question: str) -> str:
+    q = (question or "").strip()
+    out = ""
+    words = [w for w in _WORDS.findall(q) if w.lower() not in ("the", "a", "an", "of", "for", "what", "is", "s")]
+    if len(words) == 1:
+        out += (f'(The question is the single word "{words[0]}". If the sources state more than one such thing, give each one, '
+                "each with its source, and say which is which.)\n")
+    if _CHECKS.search(q) and _CONFIRMS.search(q):
+        out += ("(The question states a figure and asks whether it is right. Say whether the sources give that figure; where they "
+                "give another, say so and give theirs, with its source.)\n")
+    if _DID_AMEND.search(q):
+        out += ("(The question asks whether an amendment changed a term. Where an amending source lists the clauses it changes and "
+                "the term asked about is not among them, say that it was not changed and cite that list.)\n")
+    return out
+
+
 def build(question: str, passages: list[dict], note: str = "", calculate: bool | None = None) -> list[dict]:
     """The answer's messages. `calculate`: whether to ask for the working (by default, when the question asks for a
     calculation); False when the figures were worked out by rule (research/working.py) and `note` gives the results."""
@@ -167,6 +193,7 @@ def build(question: str, passages: list[dict], note: str = "", calculate: bool |
         p.get("opening") for p in passages) else ""
     calculate = CALCULATION_NOTE if (bool(_CALCULATES.search(question or "")) if calculate is None else calculate) else ""
     user = (f"Question: {question}\n" + (f"(That is: {reading}.)\n" if reading else "") + several + defined + calculate + note
+            + reading_notes(question)
             + "\nSources:\n"
             + "\n\n".join(blocks) + "\n\n" + REMINDER)
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
