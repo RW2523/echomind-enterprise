@@ -40,7 +40,7 @@ export default function Pipeline() {
     <>
       <Toolbar title="Pipeline">
         <Link to="/matters" className="lw-btn lw-btn-ghost">List</Link>
-        {canCreate && <Link to="/matters/new" className="lw-btn lw-btn-primary"><Plus />New case</Link>}
+        {canCreate && <Link to="/matters/new" className="lw-btn lw-btn-primary"><Plus />New matter</Link>}
       </Toolbar>
       <div className="lw-content" style={{ maxWidth: 'none' }}>
         {q.isPending ? <div className="lw-paper lw-sheet" style={{ display: 'grid', gap: 10 }}><Skeleton /><Skeleton /></div>

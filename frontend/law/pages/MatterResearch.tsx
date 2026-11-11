@@ -120,7 +120,8 @@ export default function MatterResearch() {
         <div style={{ display: 'grid', gap: 16, alignContent: 'start', minWidth: 0 }}>
           <form onSubmit={ask} className="lw-paper lw-sheet lw-ask">
             <label htmlFor="research-q" className="lw-h2">Ask about this matter</label>
-            <p className="lw-meta" style={{ margin: '2px 0 10px' }}>Answers come only from this matter’s documents, with the exact words each statement relies on.</p>
+            <p className="lw-meta" style={{ margin: '2px 0 10px' }}>Answers come only from this matter’s documents, with the exact words each statement relies on.
+              Research shows every passage and check in full; for a conversation with follow-ups, use <Link to="/chat">the chat</Link>.</p>
             {pack.length > 0 && (
               <p className="lw-pack" role="status">
                 {`Only the board papers for “${about ?? 'this agenda item'}” (${pack.length} ${pack.length === 1 ? 'document' : 'documents'}). `}

@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from datetime import date, datetime, timezone
 from typing import Literal, Optional
@@ -81,17 +82,21 @@ def _username(conn, uid: Optional[str]) -> Optional[str]:
 
 def _out(conn, row) -> dict:
     d = dict(zip(_COLS, row))
-    due_at, overdue = None, False
+    due_at, overdue, past = None, False, False
     if d["due_date"]:
         z = ZoneInfo(d["timezone"])
         end = datetime.combine(date.fromisoformat(d["due_date"]), datetime.max.time().replace(microsecond=0), tzinfo=z)
         due_at = end.isoformat()
-        overdue = d["status"] in ("proposed", "confirmed") and end < datetime.now(timezone.utc)
+        past = end < datetime.now(timezone.utc)
+        # a date the clause names as an event ("on the Effective Date") is past, not overdue (2026-11-11 evaluation: an
+        # agreement's own start date was listed as overdue); a deadline the document sets still is
+        event = bool(re.match(r"On .+, as the clause says\.$", d["due_note"] or ""))
+        overdue = d["status"] in ("proposed", "confirmed") and past and not event
     title = conn.execute("SELECT title FROM legal_documents WHERE id=?", (d["document_id"],)).fetchone()
     return {"id": d["id"], "document_id": d["document_id"], "document_title": title[0] if title else None, "version_id": d["version_id"],
             "clause": d["clause"], "kind": d["kind"], "party": d["party"], "action": d["action_text"], "when": d["when_text"],
             "rule": json.loads(d["rule_json"]), "due_date": d["due_date"], "due_note": d["due_note"], "timezone": d["timezone"],
-            "due_at": due_at, "overdue": overdue, "status": d["status"], "owner": _username(conn, d["owner_id"]),
+            "due_at": due_at, "overdue": overdue, "past": past and not overdue, "status": d["status"], "owner": _username(conn, d["owner_id"]),
             "evidence": json.loads(d["evidence_json"]), "source": d["source"], "confirmed_by": _username(conn, d["confirmed_by"]),
             "confirmed_at": d["confirmed_at"], "version": d["version"], "created_by": _username(conn, d["created_by"]),
             "created_at": d["created_at"], "updated_at": d["updated_at"]}

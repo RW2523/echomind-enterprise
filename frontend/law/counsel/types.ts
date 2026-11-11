@@ -42,6 +42,8 @@ export interface SourceAnswerProps {
   understood?: string;
   /** A decline: what the documents were found not to state, in the model's words, without a source. */
   absence?: string;
+  /** A withdrawn answer: what the "is it stated?" check took the question to ask (2026-11-12). */
+  checked?: string;
   /** Dates calculated from one document's stated words, never presented as stated (QA RAG-003). */
   calculation?: CalculationProps;
   /** Figures worked out by rule from the documents' figures, never presented as stated (research/working.py). */

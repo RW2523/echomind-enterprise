@@ -94,7 +94,7 @@ describe('Matter documents', () => {
   it('a new version is imported with its own status (S2.2)', async () => {
     const calls = world('lead', [doc()], { [`POST ${BASE}/import`]: () => [202, { document: doc({}, 'queued'), same_content_as: null }] });
     renderLaw('/m/M-101/documents');
-    fireEvent.click(await screen.findByRole('button', { name: /Import a document|Import/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /^(Import a document|Import)$/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Import a document' });
     fireEvent.change(within(dialog).getByLabelText('File'), { target: { files: [new File(['SIGNED'], 'msa-signed.pdf', { type: 'application/pdf' })] } });
     fireEvent.change(within(dialog).getByLabelText('This is'), { target: { value: 'd1' } });

@@ -21,6 +21,7 @@ export interface AskBody {
   after_turn_id?: string;            // the turn this question follows
   retry_of?: string;                 // asked again, or edited: another version of that turn
   form?: { component_id: string; values: Record<string, string> };   // answers to a form the server asked
+  as_written?: boolean;              // the question stands as typed: no follow-up rewrite (an edited "Answering:")
 }
 
 export interface DiscrepancySummary { id: string; title: string; status: DiscrepancyStatus; kind: string; version: number; updated_at: string }

@@ -38,6 +38,28 @@ DEMO_USERS = {  # username: firm roles
 }
 
 
+# The names the demo people are shown by (2026-11-12, evaluation: "sofia", "harper" appeared as names on pipeline cards and in
+# Users & roles). Fictional, like everyone in the demo.
+DEMO_NAMES = {"alice": "Alice Moreno", "bob": "Bob Achebe", "carol": "Carol Whitfield", "morgan": "Morgan Hale",
+              "nakamura": "Ren Nakamura", "fiona": "Fiona Calloway", "rhea": "Rhea Santos", "iris": "Iris Penrose",
+              "conway": "Dana Conway", "harper": "Harper Quinn", "kenji": "Kenji Arai", "lena": "Lena Brandt",
+              "omar": "Omar Haddad", "sofia": "Sofia Marchetti", "theo": "Theo Lindgren", "admin": "Administrator"}
+
+
+def demo_names() -> int:
+    """Give the demo people their display names where they have none (the seed does it for a new demo; this, once, for one
+    seeded before). Only on a demo instance."""
+    from ..core.config import settings
+    from ..core.db import get_conn
+    if not os.path.exists(os.path.join(settings.DATA_DIR, "legal", "DEMO_INSTANCE")):
+        raise SystemExit("refusing: this data folder was not made by the demo seed")
+    with get_conn() as conn:
+        n = sum(conn.execute("UPDATE users SET display_name=? WHERE username=? AND (display_name IS NULL OR display_name='')",
+                             (name, user)).rowcount for user, name in DEMO_NAMES.items())
+        conn.commit()
+    return n
+
+
 def _ts(days: int) -> str:
     return (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
@@ -78,7 +100,7 @@ def seed_demo() -> dict:
             accounts.grant_role(uid, r, granted_by="seed-demo")
         secret = mfa.begin_enrollment(uid)
         with get_conn() as conn:
-            conn.execute("UPDATE users SET mfa_enabled=1 WHERE id=?", (uid,))
+            conn.execute("UPDATE users SET mfa_enabled=1, display_name=? WHERE id=?", (DEMO_NAMES.get(name), uid))
             conn.commit()
         creds[name] = {"password": pw, "totp_secret": secret}
         ids[name] = uid
@@ -236,7 +258,7 @@ def seed_demo_practice(plan: dict) -> dict:
             accounts.grant_role(uid, r, granted_by="seed-demo-practice")
         secret = mfa.begin_enrollment(uid)
         with get_conn() as conn:
-            conn.execute("UPDATE users SET mfa_enabled=1 WHERE id=?", (uid,))
+            conn.execute("UPDATE users SET mfa_enabled=1, display_name=? WHERE id=?", (DEMO_NAMES.get(name), uid))
             conn.commit()
         creds[name] = {"password": pw, "totp_secret": secret}
         added["people"] += 1
@@ -282,6 +304,9 @@ def seed_demo_practice(plan: dict) -> dict:
 
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["demo-names"]:
+        print(f"display names set for {demo_names()} demo people")
+        return 0
     if argv[:1] not in (["seed-demo"], ["seed-demo-practice"]):
         print(__doc__)
         return 2

@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Copy, X } from 'lucide-react';
+import { NOT_YOUR_ROLE } from '../api/client';
 
 export function Skeleton({ height = 16, width = '100%' }: { height?: number; width?: number | string }) {
   return <div className="lw-skeleton" style={{ height, width }} aria-hidden="true" />;
@@ -23,6 +24,8 @@ export function EmptyState({ title, children, action }: { title: string; childre
 }
 
 export function ErrorNote({ children }: { children: React.ReactNode }) {
+  // a refusal for someone's role is information, not an error (2026-11-12): said once, in the page's own colour
+  if (children === NOT_YOUR_ROLE) return <p role="status" className="lw-meta" style={{ margin: 0, fontSize: 13.5 }}>{children}</p>;
   return <p role="alert" style={{ color: 'var(--conflict)', margin: 0, fontSize: 13.5 }}>{children}</p>;
 }
 

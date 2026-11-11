@@ -12,13 +12,18 @@ import { EmptyState, ErrorNote, Field, Skeleton, StatusPill, type Tone } from '.
 const KIND: Record<ObligationKind, string> = {
   renewal: 'Renewal', termination: 'Termination', change_of_control: 'Change of control', consent: 'Consent', payment: 'Payment',
   notification: 'Notification', post_termination: 'After termination', confidentiality: 'Confidentiality', notice: 'Notice',
+  expiry: 'Expiry', survival: 'Survives the end', duty: 'Duty',            // the extractor's other kinds showed an empty pill (2026-11-11)
 };
 const STATUS: Record<Obligation['status'], [string, Tone]> = {
   proposed: ['Proposed — not confirmed', 'attention'], confirmed: ['Confirmed', 'verified'], done: ['Done', 'neutral'], dismissed: ['Dismissed', 'neutral'],
 };
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-/** "1 December 2028": a legal date reads the same in every browser, and as the backend writes it. */
-const day = (iso: string) => { const [y, m, d] = iso.split('-').map(Number); return `${d} ${MONTHS[m - 1]} ${y}`; };
+/** "1 December 2028", or "December 1, 2028" where the document writes its dates that way (2026-11-12: two styles in one item). */
+const day = (iso: string, like = '') => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return /\b[A-Z][a-z]+ \d{1,2}, \d{4}\b/.test(like) ? `${MONTHS[m - 1]} ${d}, ${y}` : `${d} ${MONTHS[m - 1]} ${y}`;
+};
+type Window = '' | 'overdue' | 'soon' | 'later' | 'undated';
 const when = (iso: string) => new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 
 /** A matter's obligations and deadlines (S3.6, D-050). Read from the documents by rules, each with the
@@ -33,6 +38,11 @@ export default function MatterObligations() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
+  // 41 open items in one list (2026-11-11 evaluation): filtered by status, kind, when and words
+  const [fStatus, setFStatus] = useState<'' | 'proposed' | 'confirmed'>('');
+  const [fKind, setFKind] = useState<'' | ObligationKind>('');
+  const [fWhen, setFWhen] = useState<Window>('');
+  const [fText, setFText] = useState('');
   const canRead = ['lead', 'attorney', 'paralegal'].includes(matter.my_role ?? '') && matter.status === 'open';
   const refresh = () => qc.invalidateQueries({ queryKey: ['matter', matter.id, 'obligations'] });
   const read = async () => {
@@ -45,7 +55,15 @@ export default function MatterObligations() {
     } catch (err) { setError(err instanceof ApiError ? err.message : 'The document could not be read.'); }
     finally { setBusy(false); }
   };
-  const list = obs.data?.obligations ?? [];
+  const all = obs.data?.obligations ?? [];
+  const soon = Date.now() + 30 * 864e5;
+  const words = fText.trim().toLowerCase();
+  const list = all.filter((o) => (!fStatus || o.status === fStatus) && (!fKind || o.kind === fKind)
+    && (!fWhen || (fWhen === 'overdue' ? o.overdue : fWhen === 'undated' ? !o.due_date
+      : !!o.due_date && !o.overdue && (fWhen === 'soon' ? Date.parse(o.due_at ?? '') <= soon : Date.parse(o.due_at ?? '') > soon)))
+    && (!words || `${o.action} ${o.party ?? ''} ${o.document_title ?? ''} ${o.evidence.quote}`.toLowerCase().includes(words)));
+  const filtered = !!(fStatus || fKind || fWhen || words);
+  const kinds = Array.from(new Set(all.map((o) => o.kind)));
   const live = list.filter((o) => o.status === 'proposed' || o.status === 'confirmed');
   const overdue = live.filter((o) => o.overdue);
   const dated = live.filter((o) => o.due_date && !o.overdue);
@@ -73,9 +91,26 @@ export default function MatterObligations() {
             {error && <ErrorNote>{error}</ErrorNote>}
           </section>
         )}
+        {all.length > 8 && (
+          <section className="lw-paper lw-sheet" aria-label="Filter the obligations">
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'end' }}>
+              <Field label="Status">{(id) => <select id={id} className="lw-input" value={fStatus} onChange={(e) => setFStatus(e.target.value as typeof fStatus)}>
+                <option value="">Any</option><option value="proposed">Not yet confirmed</option><option value="confirmed">Confirmed</option></select>}</Field>
+              <Field label="Kind">{(id) => <select id={id} className="lw-input" value={fKind} onChange={(e) => setFKind(e.target.value as typeof fKind)}>
+                <option value="">Any</option>{kinds.map((k) => <option key={k} value={k}>{KIND[k] ?? k}</option>)}</select>}</Field>
+              <Field label="When">{(id) => <select id={id} className="lw-input" value={fWhen} onChange={(e) => setFWhen(e.target.value as Window)}>
+                <option value="">Any time</option><option value="overdue">Overdue</option><option value="soon">In the next 30 days</option>
+                <option value="later">Later</option><option value="undated">Running from an event</option></select>}</Field>
+              <Field label="Words">{(id) => <input id={id} className="lw-input" type="search" value={fText} placeholder="Party, document or words"
+                onChange={(e) => setFText(e.target.value)} />}</Field>
+              {filtered && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => { setFStatus(''); setFKind(''); setFWhen(''); setFText(''); }}>Clear</button>}
+            </div>
+          </section>
+        )}
         {obs.isPending ? <div className="lw-paper lw-sheet"><Skeleton /></div>
           : obs.isError ? <ErrorNote>The obligations could not be loaded.</ErrorNote>
-            : !list.length ? <EmptyState title="No obligations yet">Choose a contract and read its obligations: each comes with the words it was read from.</EmptyState>
+            : !all.length ? <EmptyState title="No obligations yet">Choose a contract and read its obligations: each comes with the words it was read from.</EmptyState>
+            : !list.length ? <EmptyState title="Nothing matches">No obligation matches these filters.</EmptyState>
               : (
                 <article className="lw-paper lw-sheet" aria-label="Obligations">
                   <p className="lw-meta" role="status" style={{ margin: '0 0 8px' }}>{[`${live.length} open`, proposed && `${proposed} not yet confirmed`, overdue.length && `${overdue.length} overdue`,
@@ -119,9 +154,10 @@ function Item({ o }: { o: Obligation }) {
     <li aria-label={`${title}: ${label}`} data-class={o.overdue ? 'outside' : o.status}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
         <b className="lw-serif">{title}</b>
-        <StatusPill tone="neutral">{KIND[o.kind]}</StatusPill>
+        {KIND[o.kind] && <StatusPill tone="neutral">{KIND[o.kind]}</StatusPill>}
         <StatusPill tone={tone}>{o.status === 'confirmed' && o.confirmed_by ? `Confirmed by ${o.confirmed_by}` : label}</StatusPill>
         {o.overdue && <StatusPill tone="conflict">Overdue</StatusPill>}
+        {!o.overdue && o.past && <StatusPill tone="neutral">Past date</StatusPill>}
         <span className="lw-cite-actions">
           <button type="button" className="lw-cite-act lw-meta" aria-expanded={mode === 'history'} onClick={() => setMode(mode === 'history' ? '' : 'history')}>History</button>
           <Link className="lw-cite-act lw-meta" to={at}>Open the words</Link>
@@ -131,13 +167,13 @@ function Item({ o }: { o: Obligation }) {
         o.source === 'rules' ? 'read by rules' : o.source === 'model' ? 'proposed by the model, its words checked' : `added by ${o.created_by}`].filter(Boolean).join(' · ')}</p>
       {o.when && <p style={{ margin: '2px 0' }}>{`When: ${o.when}`}</p>}
       {o.due_date
-        ? <p style={{ margin: '2px 0' }}><b>{`Due ${day(o.due_date)}`}</b><span className="lw-meta">{` (end of day, ${o.timezone})`}</span></p>
+        ? <p style={{ margin: '2px 0' }}><b>{`${o.past && !o.overdue ? 'On' : 'Due'} ${day(o.due_date, `${o.when ?? ''} ${o.evidence.quote}`)}`}</b><span className="lw-meta">{` (end of day, ${o.timezone})`}</span></p>
         : null}
       {o.due_note && <p className="lw-meta" style={{ margin: '2px 0' }}>{o.due_note}</p>}
       <blockquote className="lw-serif lw-check-quote">{`“${o.evidence.quote}”`}</blockquote>
       {mode === '' && (o.status === 'proposed' || o.status === 'confirmed') && (lawyer || drafter) && (
         <div className="lw-check-decide" role="group" aria-label={`Decide on ${title}`}>
-          {lawyer && o.status === 'proposed' && <button type="button" className="lw-btn lw-btn-sm" onClick={() => setMode('confirm')}><Check />Confirm</button>}
+          {lawyer && o.status === 'proposed' && <button type="button" className="lw-btn lw-btn-sm lw-btn-primary" onClick={() => setMode('confirm')}><Check />Confirm</button>}
           {drafter && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => setMode('edit')}><PenLine />Edit</button>}
           {drafter && o.status === 'confirmed' && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => send({ action: 'done' })}><CheckCheck />Mark done</button>}
           {lawyer && o.status === 'proposed' && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={() => setMode('dismiss')}><X />Dismiss</button>}

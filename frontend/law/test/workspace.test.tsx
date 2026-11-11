@@ -62,7 +62,7 @@ describe('Law workspace', () => {
     signedIn(['firm_admin', 'attorney']);
     renderLaw('/matters');
     expect(within(await openAccountMenu()).getByRole('menuitem', { name: 'Users & roles' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /New case/ })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /New matter/ })).toBeTruthy();
   });
 
   it('switching matter drops the previous matter\'s cached data', async () => {

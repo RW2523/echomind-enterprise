@@ -365,10 +365,19 @@ def oidc_callback(request: Request, code: str = "", state: str = ""):
 
 
 def _law_me(payload: dict) -> dict:
+    from ...core.db import get_conn
+    from ...legal import policy
     from ...legal.identity import accounts
     acct = accounts.get(payload["sub"])
     s = payload["session"]
-    return {"user": _public_user(acct),
+    user = _public_user(acct)
+    with get_conn() as conn:
+        row = conn.execute("SELECT display_name FROM users WHERE id=?", (acct["id"],)).fetchone()
+    user["display_name"] = (row[0] if row and row[0] else "") or acct["username"]
+    # what the person may do across the firm (2026-11-12, evaluation fix list item 12): the rail, menus and home page are built
+    # from it, so nothing is offered that the server refuses; the server still decides every request
+    firm = frozenset(user["roles"])
+    return {"user": user, "can": sorted(a for a, roles in policy.ORG_ACTIONS.items() if firm & roles),
             "session": {"auth": payload["auth"], "mfa_enrolled": acct["mfa_enabled"],
                         "must_change_password": bool(payload.get("must_change_password")),
                         "idle_expires_at": s["idle_expires_at"], "abs_expires_at": s["abs_expires_at"]},

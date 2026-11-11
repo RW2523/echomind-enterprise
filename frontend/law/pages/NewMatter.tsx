@@ -78,7 +78,7 @@ export default function NewMatter() {
   const people = (colleagues.data ?? []).filter((c) => !team.some((t) => t.username === c.username));
   return (
     <>
-      <Toolbar title="New case" crumb="Matters">
+      <Toolbar title="New matter" crumb="Matters">
         <Link to="/matters" className="lw-btn lw-btn-ghost"><ArrowLeft />All matters</Link>
       </Toolbar>
       <div className="lw-content" style={{ maxWidth: 860 }}>

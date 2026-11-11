@@ -6,7 +6,7 @@
  * Law page keeps working inside this shell; a matter's own pages are reached from the tab strip above them.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity, AudioLines, Columns3, Bell, Briefcase, ChevronDown, FilePen, Files, KeyRound, LogOut, Menu, MessageSquare, MessageSquarePlus, Mic, MicOff,
@@ -18,7 +18,7 @@ import { useCapturing } from '../app/capture';
 import { MatterProvider, useCurrentMatter } from '../app/matter';
 import { firmEntries, initials, matterEntries } from '../app/nav';
 import { getPalette, setPalette, setThemeMode } from '../app/preferences';
-import { hasFirmRole, useSession } from '../app/session';
+import { displayName, hasFirmRole, isLawyer, useSession } from '../app/session';
 import { whereAnswersComeFrom } from './where';
 import { isMac, PaletteProvider, useOpenPalette } from '../ui/Palette';
 import { counselApi } from './api';
@@ -83,16 +83,16 @@ function ProfileMenu({ variant = 'header' }: { variant?: 'header' | 'rail' }) {
   return (
     <>
       <button ref={button} type="button" className={variant === 'rail' ? 'qc-me qc-rail-me' : 'qc-me'} aria-haspopup="menu" aria-expanded={open}
-        onClick={() => setOpen((o) => !o)} aria-label={`Account and settings for ${me.user.username}`}>
-        <span className="qc-avatar" aria-hidden>{initials(me.user.username)}</span>
+        onClick={() => setOpen((o) => !o)} aria-label={`Account and settings for ${displayName(me)}`}>
+        <span className="qc-avatar" aria-hidden>{initials(displayName(me))}</span>
         <span className={`qc-me-text ${variant === 'rail' ? 'qc-hide-collapsed' : 'qc-hide-medium'}`} aria-hidden>
-          <b>{me.user.username}</b><small>{ROLE_LABEL[me.user.roles[0] ?? me.user.role] ?? 'Member'}</small>
+          <b>{displayName(me)}</b><small>{ROLE_LABEL[me.user.roles[0] ?? me.user.role] ?? 'Member'}</small>
         </span>
         {variant === 'rail' && <Settings className="qc-rail-me-gear qc-hide-collapsed" aria-hidden />}
       </button>
       {open && (<Layer>
         <div ref={pop} className="qc-pop" role="menu" aria-label="Account and settings" style={style}>
-          <div className="qc-pop-label">{me.user.username}</div>
+          <div className="qc-pop-label">{displayName(me)}</div>
           <button type="button" role="menuitem" className="qc-pop-item" onClick={() => go('/account/security')}><KeyRound aria-hidden />Security</button>
           <button type="button" role="menuitem" className="qc-pop-item" onClick={() => { setThemeMode(dark ? 'light' : 'dark'); setDark(!dark); }}>
             {dark ? <Sun aria-hidden /> : <Moon aria-hidden />}{dark ? 'Light appearance' : 'Dark appearance'}
@@ -182,7 +182,9 @@ function History() {
   useEffect(() => { const t = window.setTimeout(() => setTerm(q.trim()), 250); return () => window.clearTimeout(t); }, [q]);
   const list = useQuery({ queryKey: ['counsel', 'conversations', term], retry: false, staleTime: 10_000, placeholderData: keepPreviousData,
                           queryFn: () => counselApi.conversations(undefined, term || undefined) });
-  const items = list.data?.conversations ?? [];
+  // a conversation with no question yet is not listed, unless it is the one open (2026-11-11 evaluation: each visit to a
+  // matter's voice page left an empty "New conversation" behind)
+  const items = (list.data?.conversations ?? []).filter((c) => c.turns > 0 || location.pathname === `/chat/${c.id}`);
   if (!items.length && !term && !q) return null;
   const changed = (id: string) => (deleted: boolean) => {
     void qc.invalidateQueries({ queryKey: ['counsel', 'conversations'] });
@@ -206,7 +208,11 @@ function History() {
 
 /** A rail link's name is its text, kept for screen readers when the rail is collapsed (visually hidden, never removed);
  *  `label` only where the name says more than the text (Drafts' count). `title` is the tooltip. */
-function RailLink({ to, icon, children, end, label, title }: { to: string; icon: React.ReactNode; children: React.ReactNode; end?: boolean; label?: string; title?: string }) {
+function RailLink({ to, icon, children, end, label, title, plain }: { to: string; icon: React.ReactNode; children: React.ReactNode; end?: boolean;
+  label?: string; title?: string; plain?: boolean }) {
+  // `plain`: a link that is never shown as the current page (a matter's page with no matter chosen leads to the matters list;
+  // as NavLinks, three of them lit up there beside Matters, 2026-11-11 evaluation)
+  if (plain) return <Link to={to} className="qc-rail-link" aria-label={label} title={title}>{icon}<span className="qc-rail-text">{children}</span></Link>;
   return (
     <NavLink to={to} end={end} className="qc-rail-link" aria-label={label} title={title}>
       {icon}<span className="qc-rail-text">{children}</span>
@@ -236,11 +242,11 @@ function MatterRailLinks() {
   const of = m ? ` of ${m.number}` : '';
   return (
     <>
-      <RailLink to={to('documents')} icon={<Files aria-hidden />} title={`Documents${of}`} label={m ? `Documents of ${m.number}` : 'Documents: choose a matter'}>Documents</RailLink>
+      <RailLink to={to('documents')} plain={!m} icon={<Files aria-hidden />} title={`Documents${of}`} label={m ? `Documents of ${m.number}` : 'Documents: choose a matter'}>Documents</RailLink>
       {me.features?.panel && (
-        <RailLink to={to('panel')} icon={<Scale aria-hidden />} title={`Council${of}`} label={m ? `Council of ${m.number}` : 'Council: choose a matter'}>Council</RailLink>
+        <RailLink to={to('panel')} plain={!m} icon={<Scale aria-hidden />} title={`Council${of}`} label={m ? `Council of ${m.number}` : 'Council: choose a matter'}>Council</RailLink>
       )}
-      <RailLink to={to('meetings')} icon={<AudioLines aria-hidden />} title={`Transcription${of}`}
+      <RailLink to={to('meetings')} plain={!m} icon={<AudioLines aria-hidden />} title={`Transcription${of}`}
         label={capturing ? `Transcription${of}, recording now` : m ? `Transcription of ${m.number}` : 'Transcription: choose a matter'}>
         Transcription{capturing && <span className="qc-rail-live" aria-hidden="true">Live</span>}
       </RailLink>
@@ -266,7 +272,8 @@ function SearchButton() {
   const shortcut = isMac() ? '⌘K' : 'Ctrl K';
   return (
     <>
-      <button type="button" className="qc-search qc-hide-small" onClick={() => open()} aria-label={`Search or jump to (${shortcut})`}>
+      {/* the name holds the words shown (2026-11-11 evaluation: voice control could not find "Search or jump to") */}
+      <button type="button" className="qc-search qc-hide-small" onClick={() => open()} aria-label={`Find a matter, page or action (${shortcut})`}>
         <Search aria-hidden /><span>Find a matter, page or action…</span><kbd className="qc-kbd">{shortcut}</kbd>
       </button>
       <button type="button" className="qc-icon-btn qc-only-small" onClick={() => open()} aria-label="Find a matter, page or action"><Search aria-hidden /></button>
@@ -321,6 +328,7 @@ function ShellBody() {
   const panel = usePanel();
   const location = useLocation();
   const navigate = useNavigate();
+  const lawyer = isLawyer(me);
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(RAIL_KEY) === 'collapsed'; } catch { return false; } });
   const [drawer, setDrawer] = useState(false);
   useEffect(() => { setDrawer(false); }, [location.pathname]);
@@ -352,6 +360,7 @@ function ShellBody() {
   return (
     <div className="qc-shell" data-rail={collapsed ? 'collapsed' : 'open'} data-drawer={drawer ? 'open' : 'closed'}
       data-route={location.pathname.startsWith('/chat') ? 'chat' : 'page'}>
+      <a className="qc-skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to the page</a>
       <header className="qc-header">
         <button ref={menuButton} type="button" className="qc-icon-btn qc-only-narrow" aria-label={drawer ? 'Close menu' : 'Open menu'} aria-expanded={drawer}
           onClick={() => setDrawer((d) => !d)}><Menu aria-hidden /></button>
@@ -366,20 +375,28 @@ function ShellBody() {
         {narrow && <ProfileMenu />}
       </header>
       <aside ref={rail} className="qc-rail" aria-label="Sidebar" inert={narrow && !drawer}>
-        <NavLink to="/chat" className="qc-brand" aria-label="EchoMind Legal by AJACE, new chat">
+        <NavLink to={lawyer ? '/chat' : '/'} className="qc-brand" aria-label={lawyer ? 'EchoMind Legal by AJACE, new chat' : 'EchoMind Legal by AJACE, home'}>
           <span className="qc-brand-mark" aria-hidden><BrandMark size={30} /></span>
           <span className="qc-brand-text qc-hide-collapsed" aria-hidden><small>AJACE</small><b>EchoMind Legal</b></span>
         </NavLink>
-        <nav aria-label="Workspace">
-          <button type="button" className="qc-new-chat" title="New chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-rail-text">New chat</span></button>
-          <RailLink to="/chat" icon={<MessageSquare aria-hidden />} title="Chat">Chat</RailLink>
-          <RailLink to="/pipeline" icon={<Columns3 aria-hidden />} title="Pipeline">Pipeline</RailLink>
-          <RailLink to="/matters" icon={<Briefcase aria-hidden />} title="Matters" end>Matters</RailLink>
-          <MatterRailLinks />
-          <DraftsLink />
-          <RailLink to="/activity" icon={<Activity aria-hidden />} title="Activity">Activity</RailLink>
-        </nav>
-        <History />
+        {lawyer ? (
+          <nav aria-label="Workspace">
+            <button type="button" className="qc-new-chat" title="New chat" onClick={() => navigate('/chat')}><MessageSquarePlus aria-hidden /><span className="qc-rail-text">New chat</span></button>
+            <RailLink to="/chat" icon={<MessageSquare aria-hidden />} title="Chat">Chat</RailLink>
+            <RailLink to="/pipeline" icon={<Columns3 aria-hidden />} title="Pipeline">Pipeline</RailLink>
+            <RailLink to="/matters" icon={<Briefcase aria-hidden />} title="Matters">Matters</RailLink>
+            <MatterRailLinks />
+            <DraftsLink />
+            <RailLink to="/activity" icon={<Activity aria-hidden />} title="Activity">Activity</RailLink>
+          </nav>
+        ) : (
+          // Everyone else gets the pages of their own work (2026-11-12, evaluation fix list item 12): the front desk Enquiries,
+          // records Records, the administrator Users & roles and the audit trail, never a lawyer's chat they cannot use.
+          <nav aria-label="Workspace">
+            {firmEntries(me).map((e) => <RailLink key={e.key} to={e.to} icon={<e.icon aria-hidden />} title={e.label}>{e.label}</RailLink>)}
+          </nav>
+        )}
+        {lawyer && <History />}
         <div className="qc-rail-foot">
           <MatterPicker variant="rail" />
           {!narrow && <ProfileMenu variant="rail" />}
@@ -387,7 +404,7 @@ function ShellBody() {
       </aside>
       {drawer && <button type="button" className="qc-scrim qc-only-narrow" aria-label="Close menu" onClick={() => setDrawer(false)} />}
       <div className="qc-body">
-        <main className="qc-main" id="main">
+        <main className="qc-main" id="main" tabIndex={-1}>
           {me.features?.demo_signin && (
             <div className="lw-demo-banner" role="status" aria-label="Demo sign-in">
               Demo sign-in is on: anyone who can open this page can enter as the demo's fictional people, without a password.

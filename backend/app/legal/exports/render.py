@@ -93,7 +93,7 @@ def to_docx(blocks: list[dict], watermark: str) -> bytes:
         for rid in [rid for rid, rel in rels.items() if rel.reltype in kinds]:
             del rels[rid]
     cp = doc.core_properties
-    cp.author, cp.last_modified_by, cp.title, cp.subject, cp.keywords, cp.comments, cp.category = ("EchoMind Law", "", "", "", "", "", "")
+    cp.author, cp.last_modified_by, cp.title, cp.subject, cp.keywords, cp.comments, cp.category = ("EchoMind Legal", "", "", "", "", "", "")
     doc.sections[0].header.paragraphs[0].text = watermark
     doc.sections[0].footer.paragraphs[0].text = watermark
     for b in blocks:

@@ -112,7 +112,7 @@ export function describe(e: AuditEvent): string {
     case 'research.query': return `${refused ? 'tried to ask' : 'asked'} a research question${m ? ` about ${m}` : ''}`;
     case 'research.answer': return refused ? `did not get a research answer${m ? ` about ${m}` : ''}` : `got a research answer${m ? ` about ${m}` : ''}`;
     case 'research.note.send': return `sent a research note for review${m ? ` on ${m}` : ''}`;
-    default: return plain(e.action, refused, m);
+    default: return plain(e.action, refused, m, e.object_title);
   }
 }
 
@@ -146,11 +146,12 @@ const WHOLE: Record<string, string> = {
 
 /** Any other event in words: "opened a meeting transcript in MAT-1042" rather than "meeting.transcript.read". The raw action
  *  stays in the row's title. */
-function plain(action: string, refused: boolean, m: string): string {
+function plain(action: string, refused: boolean, m: string, title?: string | null): string {
   const parts = action.split('.');
   const verb = parts.length > 1 ? parts[parts.length - 1] : '';
   const [head, ...rest] = parts.length > 1 ? parts.slice(0, -1) : parts;
-  const thing = [NOUN[head] ?? `a ${head.replace(/_/g, ' ')}`, ...rest.map((w) => w.replace(/_/g, ' '))].join(' ');
+  const noun = head === 'document' && title ? `“${title}”` : NOUN[head] ?? `a ${head.replace(/_/g, ' ')}`;
+  const thing = [noun, ...rest.map((w) => w.replace(/_/g, ' '))].join(' ');
   const what = WHOLE[action] ?? (PAST[verb] ? `${PAST[verb]} ${thing}` : `worked on ${thing}`);
   return `${refused ? `was refused (${what})` : what}${m ? ` in ${m}` : ''}`;
 }

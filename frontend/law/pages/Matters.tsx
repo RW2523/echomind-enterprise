@@ -24,13 +24,13 @@ export default function Matters() {
       <Toolbar title="Matters">
         <Link to="/pipeline" className="lw-btn lw-btn-ghost"><Columns3 />Pipeline</Link>
         {canCreate && <button type="button" className="lw-btn" onClick={() => setImporting(true)}><FileSpreadsheet />Import cases</button>}
-        {canCreate && <Link to="/matters/new" className="lw-btn lw-btn-primary"><Plus />New case</Link>}
+        {canCreate && <Link to="/matters/new" className="lw-btn lw-btn-primary"><Plus />New matter</Link>}
       </Toolbar>
       <div className="lw-content">
         {matters.isPending ? <div className="lw-paper lw-sheet" style={{ display: 'grid', gap: 10 }}><Skeleton /><Skeleton /><Skeleton /></div>
           : matters.error ? <EmptyState title="Matters could not be loaded">Check the connection and try again.</EmptyState>
             : matters.data.length === 0 ? (
-              <EmptyState title="No matters yet" action={canCreate ? <button type="button" className="lw-btn lw-btn-primary" onClick={() => navigate('/matters/new')}><Plus />New case</button> : undefined}>
+              <EmptyState title="No matters yet" action={canCreate ? <button type="button" className="lw-btn lw-btn-primary" onClick={() => navigate('/matters/new')}><Plus />New matter</button> : undefined}>
                 {canCreate ? 'Open a case to start working with its documents, updates, plan and meetings.' : 'Matters you are a member of will appear here. The lead on a matter can add you.'}
               </EmptyState>
             ) : (

@@ -19,3 +19,20 @@ export default function NotAvailable() {
     </>
   );
 }
+
+/** An address the application has no page for (2026-11-12, evaluation UI "Fix next": it said "Not available"). Pages are the
+ *  application's own, so saying none exists reveals nothing; a matter's or a record's address keeps NotAvailable. */
+export function PageNotFound() {
+  return (
+    <>
+      <Toolbar title="Page not found" />
+      <div className="lw-content">
+        <div className="lw-paper lw-sheet" style={{ maxWidth: 640 }}>
+          <h2 className="lw-h2">There is no page at this address.</h2>
+          <p style={{ color: 'var(--ink-2)', margin: '8px 0 16px' }}>Check the address, or start again from your home page.</p>
+          <Link to="/" className="lw-btn lw-btn-ghost">Go to your home page</Link>
+        </div>
+      </div>
+    </>
+  );
+}

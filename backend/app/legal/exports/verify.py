@@ -53,7 +53,8 @@ def verify_docx(data: bytes, strings: list[str], watermark: str) -> dict:
     title = re.search(r"<dc:title>(.*?)</dc:title>", core)
     checks = {
         "redactions_absent": _absent("".join(parts.values()), strings, watermark),
-        "metadata_clean": (not creator or creator.group(1) in ("", "EchoMind Law")) and (not title or not title.group(1)),
+        # the product's name as author, now and before its 2026-11-12 rename
+        "metadata_clean": (not creator or creator.group(1) in ("", "EchoMind Legal", "EchoMind Law")) and (not title or not title.group(1)),
         "structure_clean": not any(_FORBIDDEN_PARTS.match(n) for n in names)
         and not any(f"<{t}" in body for t in ("w:ins ", "w:ins>", "w:del ", "w:del>", "w:vanish", "w:commentReference", "w:delText")),
         "watermark": html.escape(watermark) in headers or watermark in headers,

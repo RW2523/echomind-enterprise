@@ -51,7 +51,7 @@ describe('Home, the command palette and the matter tools (D-065)', () => {
     fireEvent.change(input, { target: { value: 'northwind' } });
     expect(within(palette).getAllByRole('option').map((o) => o.textContent)).toEqual([expect.stringContaining('M-301 · Northwind v Calder Freight')]);
     fireEvent.keyDown(input, { key: 'Enter' });
-    expect(await screen.findByRole('region', { name: 'Voice conversation' })).toBeTruthy();       // voice mode in the chat
+    expect(await screen.findByRole('region', { name: 'Start a voice conversation' })).toBeTruthy();            // voice offered in the chat
   });
 
   it('Ctrl+K opens the palette anywhere; a matter searched for brings its tools; Escape closes it', async () => {
@@ -67,7 +67,7 @@ describe('Home, the command palette and the matter tools (D-065)', () => {
     expect(options[0].textContent).toContain('M-301 · Research');
     fireEvent.keyDown(input, { key: 'Escape' });
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search or jump to' })).toBeNull());
-    fireEvent.click(screen.getByRole('button', { name: /Search or jump to/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Find a matter, page or action \(/ }));
     expect(await screen.findByRole('dialog', { name: 'Search or jump to' })).toBeTruthy();
   });
 

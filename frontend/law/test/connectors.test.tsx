@@ -62,7 +62,7 @@ describe('Connectors', () => {
     fireEvent.click(within(panel).getByRole('button', { name: 'Link' }));
     await waitFor(() => expect(calls.find((c) => c.method === 'POST' && c.path === '/api/legal/matters/id-M-101/connector-links')?.body)
       .toEqual({ connector_id: 'k1', remote_path: 'Harrowgate/MSA' }));
-    fireEvent.click(screen.getByRole('button', { name: /Import/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Import$/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Import a document' });
     expect(within(dialog).queryByText(/A new version of “msa”/)).toBeNull();      // kept in the firm's system
   });

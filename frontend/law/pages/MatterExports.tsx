@@ -73,7 +73,7 @@ export default function MatterExports() {
     <>
       <Toolbar crumb={matter.number} title="Exports" />
       <div className="lw-content" style={{ maxWidth: 1000 }}>
-        <p className="lw-meta" style={{ margin: 0 }}>Files leave EchoMind Law only through here: redactions reviewed, approved by a second lawyer, checked, watermarked, and available for 24 hours. Start one from a document or a meeting transcript.</p>
+        <p className="lw-meta" style={{ margin: 0 }}>Files leave EchoMind Legal only through here: redactions reviewed, approved by a second lawyer, checked, watermarked, and available for 24 hours. Start one from a document or a meeting transcript.</p>
         {list.isPending ? <div className="lw-paper lw-sheet"><Skeleton /></div>
           : list.isError ? <ErrorNote>The exports could not be loaded.</ErrorNote>
           : list.data.length === 0 ? <EmptyState title="No exports yet" />

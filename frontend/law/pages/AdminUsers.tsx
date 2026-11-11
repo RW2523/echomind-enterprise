@@ -46,7 +46,8 @@ export default function AdminUsers() {
               <tbody>
                 {(users.data ?? []).map((x) => (
                   <tr key={x.username}>
-                    <td style={{ fontWeight: 600 }}>{x.username}</td>
+                    <td><div style={{ fontWeight: 600 }}>{x.display_name || x.username}</div>
+                      {x.display_name && x.display_name !== x.username && <div className="lw-meta">{`signs in as ${x.username}`}</div>}</td>
                     <td><div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>{x.roles.length ? x.roles.map((r) => <StatusPill key={r} tone="neutral">{roleLabel(r)}</StatusPill>) : <span className="lw-meta">None</span>}</div></td>
                     <td>{x.mfa_enabled ? <StatusPill tone="verified">On</StatusPill> : <StatusPill tone="attention">Not set up</StatusPill>}</td>
                     <td>{x.status === 'active' ? 'Active' : <StatusPill tone="conflict">Disabled</StatusPill>}</td>

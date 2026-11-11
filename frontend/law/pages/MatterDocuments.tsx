@@ -77,7 +77,7 @@ export default function MatterDocuments() {
   return (
     <>
       <Toolbar crumb={matter.number} title="Documents">
-        {canImport && <button type="button" className="lw-btn" onClick={() => setBulk(true)}><FolderUp />Upload many</button>}
+        {canImport && <button type="button" className="lw-btn" onClick={() => setBulk(true)}><FolderUp />Import several</button>}
         {canImport && <button type="button" className="lw-btn lw-btn-primary" onClick={() => setImporting(true)}><FileUp />Import</button>}
       </Toolbar>
       <div className="lw-content lw-docs" data-inspecting={selected ? 'true' : undefined}>
@@ -125,7 +125,7 @@ export default function MatterDocuments() {
       </div>
       {importing && <ImportDialog matterId={matter.id} documents={docs.data ?? []} onClose={() => setImporting(false)} />}
       {bulk && (
-        <Dialog title="Upload many documents" onClose={() => setBulk(false)} width={720}
+        <Dialog title="Import several documents" onClose={() => setBulk(false)} width={720}
           footer={<button type="button" className="lw-btn" onClick={() => setBulk(false)}>Close</button>}>
           <BulkUpload matterId={matter.id} />
         </Dialog>

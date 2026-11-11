@@ -33,7 +33,7 @@ export default function Checklists() {
       <Toolbar title="Checklists">
         {can?.manage && <button type="button" className="lw-btn lw-btn-sm" onClick={() => setEditing({ from: null })}><Plus />New checklist</button>}
       </Toolbar>
-      <div className="lw-content">
+      <div className="lw-content lw-firm-page">
         <p className="lw-meta" style={{ margin: 0 }}>The documents a transaction needs and the questions asked of them. A matter's data room is checked against an approved checklist: what is missing, and what each document says on change of control, assignment, termination, law, liability and renewal. Every finding is preliminary until a reviewer decides.</p>
         {q.isPending ? <div className="lw-paper lw-sheet"><Skeleton /><Skeleton /></div>
           : q.isError ? <ErrorNote>The checklists could not be loaded.</ErrorNote>

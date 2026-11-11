@@ -7,7 +7,7 @@ import '../theme/law.css';
 import '../theme/liquid.css';
 import '../counsel/counsel.css';
 import { applyPreferences } from './preferences';
-import { RequireSession, useSessionExpiry } from './session';
+import { homeFor, RequireSession, useSession, useSessionExpiry } from './session';
 import { MatterLayout } from './matter';
 import CounselShell from '../counsel/CounselShell';
 import ChatPage from '../counsel/ChatPage';
@@ -49,7 +49,7 @@ import Checklists from '../pages/Checklists';
 import RedlinePage from '../pages/RedlinePage';
 import MatterMeeting from '../pages/MatterMeeting';
 import MatterExports, { MatterExport } from '../pages/MatterExports';
-import NotAvailable from '../pages/NotAvailable';
+import NotAvailable, { PageNotFound } from '../pages/NotAvailable';
 import DesignCatalogue from '../pages/DesignCatalogue';
 import Enquiries from '../pages/Enquiries';
 import Enquiry from '../pages/Enquiry';
@@ -68,13 +68,18 @@ function Root() {
   return <Outlet />;
 }
 
+/** "/": the signed-in person's own home (app/session.homeFor). */
+function RoleHome() {
+  return <Navigate to={homeFor(useSession())} replace />;
+}
+
 export const lawRoutes = [
   {
     element: <Root />,
     children: [
       { path: '/signin', element: <SignIn /> },
       { path: '/intake/:token', element: <IntakeLink /> },                // an enquirer's link: no session (S4.1, D-054)
-      { path: '/', element: <Navigate to="/chat" replace /> },
+      { path: '/', element: <RequireSession><RoleHome /></RequireSession> },       // each person's own home (2026-11-12)
       ...(import.meta.env.DEV ? [{ path: '/__design', element: <DesignCatalogue /> }] : []),
       {
         element: <RequireSession><CounselShell /></RequireSession>,
@@ -138,7 +143,7 @@ export const lawRoutes = [
           { path: '/admin/records', element: <Records /> },
           { path: '/admin/connectors', element: <Connectors /> },
           { path: '/admin/evaluations', element: <Evaluations /> },
-          { path: '*', element: <NotAvailable /> },
+          { path: '*', element: <PageNotFound /> },
         ],
       },
     ],

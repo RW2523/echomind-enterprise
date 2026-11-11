@@ -36,7 +36,7 @@ export default function ActivityPage() {
       {first && (
         <section aria-label="What you did">
           <h2 className="qc-card-title" style={{ marginBottom: 8 }}>What you did</h2>
-          {events.length ? <AuditList events={events} /> : <p className="qc-meta">Nothing yet.</p>}
+          {events.length ? <AuditList events={events} group /> : <p className="qc-meta">Nothing yet.</p>}
           {q.hasNextPage && (
             <button type="button" className="qc-btn" disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()}>
               {q.isFetchingNextPage ? 'Loading…' : 'Show earlier'}

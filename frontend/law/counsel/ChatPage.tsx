@@ -12,7 +12,7 @@
  * this conversation; what is said and answered appears in the thread as it happens and is saved as an ordinary turn. Any
  * answer can be read aloud.
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { keys } from '../api/queries';
@@ -148,7 +148,10 @@ export function visiblePath(turns: ChatTurn[], chosen: Record<string, string>): 
   return out;
 }
 
-interface AskOptions { document_ids?: string[]; focus?: string; retryOf?: ChatTurn; form?: { component_id: string; values: Record<string, string> } }
+interface AskOptions { document_ids?: string[]; focus?: string; retryOf?: ChatTurn; form?: { component_id: string; values: Record<string, string> };
+  asWritten?: boolean }
+/** The most a question can be (the server's limit too). */
+const MAX_QUESTION = 2000;
 
 export default function ChatPage() {
   const { conversationId } = useParams();
@@ -208,7 +211,7 @@ export default function ChatPage() {
   const last = path[path.length - 1]?.turn;
   const lastText = last?.text;
   // What the last turn shows: its text, its cards as they arrive, its end (a card can arrive with no text before it).
-  const lastShape = last ? `${last.status}:${last.partial?.length ?? 0}:${last.envelope ? last.envelope.components.length : -1}:${last.progress?.done ?? ''}` : '';
+  const lastShape = last ? `${last.status}:${last.partial?.length ?? 0}:${last.envelope ? last.envelope.components.length : -1}:${last.progress?.done ?? ''}:${last.progress?.label ?? ''}` : '';
   const sent = useRef(false);                                   // the person just sent something: show it
   const atBottom = useRef(true);                                // where the reader was before the content grew
   const watched = useRef<HTMLElement | null>(null);
@@ -232,7 +235,7 @@ export default function ChatPage() {
 
   const ask = useCallback(async (text: string, opts: AskOptions = {}) => {
     const question = text.trim();
-    if (!question || busy) return;
+    if (!question || busy || question.length > MAX_QUESTION) return;
     if (!matterId) { setPendingAsk(question); return; }
     // Where it goes: another version of a turn (asked again or edited), or after the last turn shown that the server knows.
     let parent: string | null;
@@ -271,7 +274,7 @@ export default function ChatPage() {
     try {
       await counselApi.ask(id, { text: question, client_request_id: key, ...(docs.length ? { document_ids: docs } : {}),
                                  ...(opts.focus ? { focus_discrepancy_id: opts.focus } : {}), ...(opts.form ? { form: opts.form } : {}),
-                                 ...place }, (e) => {
+                                 ...(opts.asWritten ? { as_written: true } : {}), ...place }, (e) => {
         switch (e.event) {
           case 'turn.started': {
             patch(key, { id: e.data?.turn_id, ...(e.data && 'parent_turn_id' in e.data ? { parent: e.data.parent_turn_id ?? null } : {}) });
@@ -360,13 +363,16 @@ export default function ChatPage() {
     if (pendingVoice && matterId) { setPendingVoice(false); void startVoice(); }
   }, [pendingVoice, matterId, startVoice]);
   const voiceHanded = useRef(false);
-  useEffect(() => {                                             // "Talk by voice" from another page: voice mode in a new chat
+  const [voiceOffer, setVoiceOffer] = useState(false);
+  useEffect(() => {                                             // "Talk by voice" from another page: offered, not started
+    // (2026-11-11 evaluation: the matter's Conversation page started listening on open, and left an empty conversation
+    // behind; the microphone is asked for only when the person presses Start, and a conversation is made only then)
     const st = location.state as { voice?: unknown } | null;
     if (voiceHanded.current || conversationId || !matterId || st?.voice !== true) return;
     voiceHanded.current = true;
     navigate('/chat', { replace: true, state: null });
-    void startVoice();
-  }, [location.state, conversationId, matterId, navigate, startVoice]);
+    setVoiceOffer(true);
+  }, [location.state, conversationId, matterId, navigate]);
   const onLive = useCallback((next: { question: string; text: string } | null) => {
     if (!next) return;
     setLive((prev) => { if (prev?.question !== next.question) sent.current = true; return next; });   // just spoken: show it
@@ -427,7 +433,8 @@ export default function ChatPage() {
     <Composer value={draft} onChange={setDraft} busy={busy} onSend={() => void ask(draft)} onStop={() => abort.current?.abort()} hero={start}
       matter={several ? null : matter} onVoice={several ? undefined : () => void startVoice()}
       placeholder={several ? `Ask across ${chosen.map((m) => m.number).join(', ')}: every source says which matter it is from…`
-        : matter ? `Ask anything about ${matter.number}: its documents, dates, parties or obligations…` : 'Ask about a matter…'}
+        : matter ? (phone() ? `Ask about ${matter.number}…` : `Ask anything about ${matter.number}: its documents, dates, parties or obligations…`)
+          : 'Ask about a matter…'}
       attached={attached} onAttach={setAttached} matterId={several ? null : matterId} inputRef={input}
       onDetach={(id) => setAttached((a) => a.filter((x) => x.id !== id))} />
   );
@@ -443,7 +450,7 @@ export default function ChatPage() {
       {loadError && <p className="qc-error" role="alert">{loadError}</p>}
       {start && (
         <header className="qc-greeting">
-          <h1>{greeting(me.user.username)}</h1>
+          <h1>{greeting((me.user.display_name || me.user.username).split(' ')[0])}</h1>
           <p>Ask, analyze, draft, or discuss your matter with EchoMind.</p>
         </header>
       )}
@@ -461,6 +468,16 @@ export default function ChatPage() {
                 : 'Choose a matter in the question box, or ask and pick one.'}</p>
             {!several && matter && <NextUp matter={matter} />}
           </div>
+          {voiceOffer && matter && (
+            <section className="qc-voice-offer" aria-label="Start a voice conversation">
+              <p><b>Talk about {matter.number} by voice.</b> EchoMind listens only after you press Start, and answers only from this
+                matter's documents. Your browser will ask to use the microphone.</p>
+              <div className="qc-actions">
+                <button type="button" className="qc-btn qc-btn-primary" onClick={() => { setVoiceOffer(false); void startVoice(); }}><AudioLines aria-hidden />Start talking</button>
+                <button type="button" className="qc-btn" onClick={() => { setVoiceOffer(false); input.current?.focus(); }}>Type instead</button>
+              </div>
+            </section>
+          )}
           {(pendingAsk || pendingVoice) && !matterId && (
             <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId}
               onCancel={() => { setPendingAsk(null); setPendingVoice(false); }} />
@@ -482,11 +499,14 @@ export default function ChatPage() {
         </div>
       ) : (
         <>
+          {/* a page heading for screen readers (2026-11-12, evaluation: the conversation pages had none) */}
+          <h1 className="qc-sr">{`Conversation${chosen.length ? ` about ${chosen.map((m) => m.number).join(', ')}` : ''}`}</h1>
+          <h2 className="qc-sr">Questions and answers</h2>
           <div className="qc-thread" role="group" aria-label="Conversation">
             {path.map(({ turn: t, versions }) => (
               <TurnView key={t.key} t={t} ctx={ctxFor(t)} busy={busy} versions={versions}
                 onChoose={(v) => setPicked((c) => ({ ...c, [v.parent ?? '']: v.key }))}
-                onRetry={() => void ask(t.question, { retryOf: t })} onEdit={(text) => void ask(text, { retryOf: t })}
+                onRetry={() => void ask(t.question, { retryOf: t })} onEdit={(text, asWritten) => void ask(text, { retryOf: t, asWritten })}
                 onRate={(next) => rate(t, next)} onStop={() => abort.current?.abort()} />
             ))}
             {live && voiceConv === convId && (
@@ -503,10 +523,11 @@ export default function ChatPage() {
             <MatterQuestion matters={(matters.data ?? []).slice(0, 5)} onPick={setMatterId}
               onCancel={() => { setPendingAsk(null); setPendingVoice(false); }} />
           )}
-          <div ref={end} />
+          <div ref={end} className="qc-end" />
           {voiceConv && voiceConv === convId && matterId
             ? <VoiceStage matterId={matterId} matterNumber={chosen.map((m) => m.number).join(', ') || 'this matter'} conversationId={voiceConv}
-                onTurnSaved={onVoiceSaved} onLive={onLive} onClose={() => { setVoiceConv(null); setLive(null); void reload(); }} />
+                onTurnSaved={onVoiceSaved} onLive={onLive} onClose={() => { setVoiceConv(null); setLive(null); void reload(); }}
+                onType={() => { setVoiceConv(null); setLive(null); void reload(); setTimeout(() => input.current?.focus(), 0); }} />
             : composer}
         </>
       )}
@@ -661,20 +682,22 @@ function Versions({ t, versions, busy, onChoose }: { t: ChatTurn; versions: Chat
 
 function TurnView({ t, ctx, busy, versions, onChoose, onRetry, onEdit, onRate, onStop }: {
   t: ChatTurn; ctx: CardContext; busy: boolean; versions: ChatTurn[]; onChoose: (v: ChatTurn) => void; onRetry: () => void;
-  onEdit: (text: string) => void; onRate: Rate; onStop: () => void;
+  onEdit: (text: string, asWritten?: boolean) => void; onRate: Rate; onStop: () => void;
 }) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<false | 'question' | 'reading'>(false);
   const [text, setText] = useState(t.question);
   const comps = t.envelope?.components ?? (t.status === 'streaming' ? t.partial ?? [] : []);
   const done = t.status === 'completed' || t.status === 'abstained';
   // A draft was streamed, then the checked answer is a decline: say so rather than swap it silently (review point 6).
   const withdrawn = !!t.text && !!t.envelope && t.envelope.components.some((c) => c.type === 'source_answer' && c.props.state === 'abstained');
-  const send = () => { if (text.trim() && !busy) { setEditing(false); onEdit(text); } };
+  // "Answering: …" corrected in one click (2026-11-12, evaluation fix list item 4): the new wording is asked as written
+  const send = () => { if (text.trim() && !busy && text.length <= MAX_QUESTION) { const how = editing; setEditing(false); onEdit(text, how === 'reading'); } };
   return (
     <article className="qc-turn" style={{ display: 'grid', gap: 12 }} aria-busy={t.status === 'streaming'}>
       {editing ? (
         <form className="qc-q-edit" onSubmit={(e) => { e.preventDefault(); send(); }}>
-          <textarea value={text} maxLength={2000} rows={3} autoFocus aria-label="Edit your question" onChange={(e) => setText(e.target.value)}
+          <textarea value={text} rows={3} autoFocus aria-label={editing === 'reading' ? 'Correct how the question was read' : 'Edit your question'}
+            onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Escape') { setEditing(false); setText(t.question); }
               if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); }
@@ -683,28 +706,39 @@ function TurnView({ t, ctx, busy, versions, onChoose, onRetry, onEdit, onRate, o
             <button type="button" className="qc-btn" onClick={() => { setEditing(false); setText(t.question); }}>Cancel</button>
             <button type="submit" className="qc-btn qc-btn-primary" disabled={busy || !text.trim()} aria-label="Send the edited question">Send</button>
           </div>
-          <p className="qc-meta" style={{ margin: 0, textAlign: 'right' }}>Sending makes a new version of this question. The earlier answer is kept.</p>
+          <Length n={text.length} />
+          <p className="qc-meta" style={{ margin: 0, textAlign: 'right' }}>{editing === 'reading'
+            ? 'This wording is asked exactly as written, as a new version of the question. The earlier answer is kept.'
+            : 'Sending makes a new version of this question. The earlier answer is kept.'}</p>
         </form>
       ) : (
         <div className="qc-q-row">
           <Versions t={t} versions={versions} busy={busy} onChoose={onChoose} />
           {!busy && t.status !== 'streaming' && (
-            <button type="button" className="qc-icon-btn qc-q-edit-btn" onClick={() => { setText(t.question); setEditing(true); }}
+            <button type="button" className="qc-icon-btn qc-q-edit-btn" onClick={() => { setText(t.question); setEditing('question'); }}
               aria-label="Edit question" title="Edit question"><Pencil aria-hidden /></button>
           )}
           <div className="qc-q">{t.question}</div>
         </div>
       )}
       <div className="qc-a">
-        {t.understood && <p className="qc-understood">Answering: {t.understood}</p>}
+        {t.understood && (
+          <p className="qc-understood">Answering: {t.understood}
+            {!busy && t.status !== 'streaming' && !editing && (
+              <button type="button" className="qc-link-btn" onClick={() => { setText(t.understood ?? ''); setEditing('reading'); }}
+                aria-label="Correct how this question was read">Correct</button>
+            )}
+          </p>
+        )}
         {t.status === 'streaming' && (
           <div className="qc-progress" role="status">
             {t.progress ? (
               <>
-                <span>{t.progress.label}{t.progress.total ? `: ${t.progress.done} of ${t.progress.total}` : ''}</span>
+                <span data-busy={t.progress.label.startsWith('Waiting for the model') || undefined}>{t.progress.label}{t.progress.total ? `: ${t.progress.done} of ${t.progress.total}` : ''}</span>
                 {t.progress.total > 0 && <span className="qc-progress-bar" aria-hidden><span style={{ width: `${Math.round((100 * t.progress.done) / t.progress.total)}%` }} /></span>}
               </>
             ) : <span>{t.text ? 'Checking each quote against the documents…' : 'Searching this matter\'s documents…'}</span>}
+            <Waited label={t.progress?.label} />
             <button type="button" className="qc-btn" onClick={onStop}><Square aria-hidden />Stop</button>
           </div>
         )}
@@ -806,6 +840,33 @@ function AttachedChips({ matterId, attached, onDetach, onReading }: {
 
 const CONTRIBUTORS = new Set(['lead', 'attorney', 'paralegal']);
 
+/** A phone-sized screen (the question box's shorter placeholder, 2026-11-12). */
+const phone = () => typeof window !== 'undefined' && !!window.matchMedia?.('(max-width: 560px)').matches;
+
+/** How long a question is, shown near the limit and past it (2026-11-12). */
+function Length({ n, id }: { n: number; id?: string }) {
+  if (n < MAX_QUESTION - 200) return null;
+  const over = n > MAX_QUESTION;
+  return (
+    <p id={id} className={over ? 'qc-error' : 'qc-meta'} role={over ? 'alert' : undefined} style={{ margin: '4px 4px 0', textAlign: 'right' }}>
+      {over ? `${n.toLocaleString()} characters: a question can have at most ${MAX_QUESTION.toLocaleString()}. Shorten it, or add the text as a document and ask about that.`
+        : `${n.toLocaleString()} of ${MAX_QUESTION.toLocaleString()} characters`}
+    </p>
+  );
+}
+
+/** Seconds waited, after the first five, and what is usual for that step (2026-11-12, evaluation fix list item 15: cards take
+ *  a tenth of a second and answers 7 to 30, with one progress line for both). */
+function Waited({ label }: { label?: string }) {
+  const [s, setS] = useState(0);
+  useEffect(() => { const t0 = Date.now(); const i = setInterval(() => setS(Math.floor((Date.now() - t0) / 1000)), 1000); return () => clearInterval(i); }, []);
+  if (s < 5) return null;
+  const usual = /figures/i.test(label ?? '') ? 'calculations usually take 15 to 30 seconds'
+    : /Waiting for the model/i.test(label ?? '') ? 'the model is answering other questions first'
+      : 'answers usually take 5 to 15 seconds';
+  return <span className="qc-meta qc-waited" aria-hidden="true">{s} s · {usual}</span>;
+}
+
 function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached, onAttach, onDetach, matterId, matter, hero, inputRef, onVoice }: {
   value: string; onChange: (v: string) => void; busy: boolean; onSend: () => void; onStop: () => void; placeholder: string;
   attached: Attached[]; onAttach: (a: Attached[]) => void; onDetach: (id: string) => void; matterId: string | null; matter: Matter | null;
@@ -821,8 +882,22 @@ function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached
   // Adding a document is for the matter's contributors while it is open (the server checks again); dictation needs voice on.
   const canAdd = !!matterId && !!matter && matter.status === 'open' && CONTRIBUTORS.has(String(matter.my_role ?? ''));
   const canDictate = !!matterId && !!me.features?.conversation;
-  const blocked = busy || !!reading;
+  // a long paste is not cut silently (2026-11-11 evaluation): the count shows near the limit, and past it the question waits
+  const over = value.length > MAX_QUESTION;
+  const lengthId = useId();
+  const blocked = busy || !!reading || over;
   const send = () => { if (!blocked) { setToolError(null); onSend(); } };
+  useEffect(() => {                       // the question box has the focus on a desktop screen (2026-11-12, keyboard)
+    if (typeof window !== 'undefined' && window.matchMedia?.('(min-width: 861px)').matches) ref.current?.focus({ preventScroll: true });
+  }, [ref]);
+  const wrap = useRef<HTMLDivElement>(null);
+  useEffect(() => {                       // the thread's end stays above the question box, which floats over it
+    const el = wrap.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => document.documentElement.style.setProperty('--qc-composer-h', `${Math.ceil(el.offsetHeight)}px`));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const dropped = async (e: React.DragEvent) => {
     e.preventDefault();
     setDrop(false);
@@ -845,12 +920,12 @@ function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached
     el.style.height = `${Math.min(200, el.scrollHeight)}px`;
   }, [value, ref]);
   return (
-    <div className="qc-composer-wrap" data-hero={hero ? 'true' : undefined} data-drop={drop ? 'true' : undefined}
+    <div ref={wrap} className="qc-composer-wrap" data-hero={hero ? 'true' : undefined} data-drop={drop ? 'true' : undefined}
       onDragOver={(e) => { if (canAdd && e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); setDrop(true); } }}
       onDragLeave={() => setDrop(false)} onDrop={(e) => void dropped(e)}>
       {drop && matter && <div className="qc-drop" aria-hidden>Drop to add to {matter.number} as drafts</div>}
       <form className="qc-composer" onSubmit={(e) => { e.preventDefault(); send(); }}>
-        <textarea ref={ref} rows={hero ? 2 : 1} value={value} maxLength={2000} placeholder={placeholder} aria-label="Ask EchoMind"
+        <textarea ref={ref} rows={hero ? 2 : 1} value={value} placeholder={placeholder} aria-label="Ask EchoMind" aria-describedby={over ? lengthId : undefined}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
         <div className="qc-composer-row" style={{ alignItems: 'center' }}>
@@ -868,9 +943,10 @@ function Composer({ value, onChange, busy, onSend, onStop, placeholder, attached
           )}
           {busy
             ? <button type="button" className="qc-send" onClick={onStop} aria-label="Stop the answer"><Square aria-hidden /></button>
-            : <button type="submit" className="qc-send" disabled={!value.trim() || !!reading} aria-label="Send"><ArrowUp aria-hidden /></button>}
+            : <button type="submit" className="qc-send" disabled={!value.trim() || !!reading || over} aria-label="Send"><ArrowUp aria-hidden /></button>}
         </div>
       </form>
+      <Length n={value.length} id={lengthId} />
       {toolError && <p className="qc-error" role="alert" style={{ margin: '6px 4px 0' }}>{toolError}</p>}
       <div className="qc-composer-meta">
         {matterId ? <AttachedChips matterId={matterId} attached={attached} onDetach={onDetach} onReading={setReading} />

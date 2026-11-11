@@ -402,7 +402,7 @@ test('exports: redactions reviewed, approved by a second lawyer, checked, waterm
   await alice.getByRole('dialog').getByRole('button', { name: 'Add member' }).click();
   await expect(alice.getByRole('dialog')).toHaveCount(0);
   await alice.goto('/m/M-101/documents');
-  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
   const dialog = alice.getByRole('dialog', { name: 'Import a document' });
   await dialog.getByLabel('File').setInputFiles(letter);
   await dialog.getByRole('button', { name: /^Import$/ }).click();
@@ -477,7 +477,7 @@ test('reading: a scan read by text recognition, a Word contract read as Word sho
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
   for (const file of ['termination-notice.pdf', 'harrowgate-msa.docx']) {
-    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
     const dialog = alice.getByRole('dialog', { name: 'Import a document' });
     await dialog.getByLabel('File').setInputFiles(path.join(FILES, file));
     await dialog.getByRole('button', { name: /^Import$/ }).click();
@@ -529,7 +529,7 @@ test('versions: answers come from the signed contract and warn where the draft d
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
-  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
   let dialog = alice.getByRole('dialog', { name: 'Import a document' });
   await dialog.getByLabel('File').setInputFiles(path.join(CORPUS, 'msa-v1-signed.md'));
   await dialog.getByLabel('Title').fill('Harrowgate MSA (signed)');
@@ -538,7 +538,7 @@ test('versions: answers come from the signed contract and warn where the draft d
   await expect(dialog).toHaveCount(0);
   const row = alice.getByRole('row', { name: /Harrowgate MSA \(signed\)/ });
   await expect(row.getByText('Searchable')).toBeVisible({ timeout: 180_000 });
-  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
   dialog = alice.getByRole('dialog', { name: 'Import a document' });
   await dialog.getByLabel('File').setInputFiles(path.join(CORPUS, 'msa-v2-draft.md'));
   await dialog.getByLabel('This is').selectOption({ label: 'A new version of “Harrowgate MSA (signed)”' });
@@ -571,7 +571,7 @@ test('compare: two versions clause by clause, a change explained, and conflicts 
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
   const importFile = async (file: string, opts: { title?: string; versionOf?: string; status: string }) => {
-    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
     const dialog = alice.getByRole('dialog', { name: 'Import a document' });
     await dialog.getByLabel('File').setInputFiles(path.join(EVAL, file));
     if (opts.versionOf) await dialog.getByLabel('This is').selectOption({ label: `A new version of “${opts.versionOf}”` });
@@ -731,7 +731,7 @@ test('reviews: a research answer sent for review, approved by a second lawyer fr
   // The demo contract is imported by the documents journey; when this journey runs alone it imports it itself.
   await alice.goto('/m/M-101/documents');
   const msa = alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true });
-  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  const importButton = alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first();
   await expect(importButton).toBeVisible();
   if (await msa.count() === 0) {
     await importButton.click();
@@ -795,7 +795,7 @@ test('drafting: an engagement letter from the approved firm template, every fact
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
-  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
   const dialog = alice.getByRole('dialog', { name: 'Import a document' });
   await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, '../../eval/fixtures/law/Engagement request (DEMO).md'));
   await dialog.getByLabel('Status').selectOption('final');
@@ -857,7 +857,7 @@ test('playbooks: a contract checked against the firm playbook, each topic with i
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
-  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  const importButton = alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first();
   await expect(importButton).toBeVisible();
   const msa = alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true });
   if (await msa.count() === 0) {
@@ -899,7 +899,7 @@ test('redlines: the clauses outside the playbook revised to the firm\'s wording,
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
-  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  const importButton = alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first();
   await expect(importButton).toBeVisible();
   if (await alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true }).count() === 0) {
     await importButton.click();
@@ -957,7 +957,7 @@ test('citations: a memo\'s references resolved to the agreement, an altered quot
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
-  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  const importButton = alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first();
   await expect(importButton).toBeVisible();
   for (const [file, status] of [['Master Services Agreement (DEMO).md', 'executed'], ['Advice memo on the MSA (DEMO).md', 'draft']]) {
     const title = file.replace(/\.md$/, '');
@@ -1013,7 +1013,7 @@ test('definitions: a supply agreement\'s terms, numbering and references checked
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
-  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  const importButton = alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first();
   await expect(importButton).toBeVisible();
   if (await alice.getByRole('button', { name: 'Supply Agreement (DEMO)', exact: true }).count() === 0) {
     await importButton.click();
@@ -1071,7 +1071,7 @@ test('obligations: the agreement\'s deadlines read with their words, the non-ren
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
-  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  const importButton = alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first();
   await expect(importButton).toBeVisible();
   if (await alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true }).count() === 0) {
     await importButton.click();
@@ -1114,7 +1114,7 @@ test('due diligence: the data room run against the firm checklist, missing docum
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
-  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  const importButton = alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first();
   await expect(importButton).toBeVisible();
   if (await alice.getByRole('button', { name: 'Master Services Agreement (DEMO)', exact: true }).count() === 0) {
     await importButton.click();
@@ -1167,7 +1167,7 @@ test('governance: a company\'s register, approvals, authority, policies and IP r
   const alice = await (await browser.newContext()).newPage();
   await signIn(alice, 'alice');
   await alice.goto('/m/M-101/documents');
-  const importButton = alice.getByRole('button', { name: /Import a document|Import/ }).first();
+  const importButton = alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first();
   await expect(importButton).toBeVisible();
   const dir = path.resolve(HERE, '../../eval/fixtures/law/governance');
   for (const file of fs.readdirSync(dir).sort()) {
@@ -1318,7 +1318,7 @@ test('summaries: a consultancy agreement summarised point by point, each point o
   await alice.goto('/m/M-101/documents');
   const title = 'Consultancy Agreement (DEMO)';
   if (await alice.getByRole('button', { name: title, exact: true }).count() === 0) {
-    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
     const dialog = alice.getByRole('dialog', { name: 'Import a document' });
     await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, `../../eval/fixtures/law/summaries/${title}.txt`));
     await dialog.getByLabel('Status').selectOption('executed');
@@ -1369,7 +1369,7 @@ test('time: a lawyer\'s own work on a matter suggested as a draft entry, edited,
   // Some real work on M-101: import a short note and open it.
   await alice.goto('/m/M-101/documents');
   const title = 'Time journey note (DEMO)';
-  await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+  await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
   const dialog = alice.getByRole('dialog', { name: 'Import a document' });
   await dialog.getByLabel('File').setInputFiles({ name: `${title}.txt`, mimeType: 'text/plain', buffer: Buffer.from('A short fictional note for the time journey.\n') });
   await dialog.getByRole('button', { name: /^Import$/ }).click();
@@ -1403,7 +1403,7 @@ test('panel: four perspectives on a change-of-control question, each citing the 
   await alice.goto('/m/M-101/documents');
   const title = 'Reseller Agreement (DEMO)';
   if (await alice.getByRole('button', { name: title, exact: true }).count() === 0) {
-    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
     const dialog = alice.getByRole('dialog', { name: 'Import a document' });
     await dialog.getByLabel('File').setInputFiles(path.resolve(HERE, `../../eval/fixtures/law/panel/${title}.txt`));
     await dialog.getByLabel('Status').selectOption('executed');
@@ -1584,7 +1584,7 @@ test('EchoMind Legal chat: a potential inconsistency found, inspected and explai
   // Two fictional witness memos that give different delivery dates, imported into M-101 the usual way.
   await alice.goto('/m/M-101/documents');
   for (const file of ['Witness_A_Interview.txt', 'Witness_B_Interview.txt']) {
-    await alice.getByRole('button', { name: /Import a document|Import/ }).first().click();
+    await alice.getByRole('button', { name: /^(Import a document|Import)$/ }).first().click();
     const dialog = alice.getByRole('dialog', { name: 'Import a document' });
     await dialog.getByLabel('File').setInputFiles(path.join(LEGAL, file));
     await dialog.getByRole('button', { name: /^Import$/ }).click();
@@ -1641,7 +1641,7 @@ test('EchoMind Legal chat across two matters: chosen together, compared side by 
   // A second matter of her own, opened here: earlier journeys wall her off M-114, so the suite's order must not matter.
   const second = 'M-160';
   await alice.goto('/matters');
-  await alice.getByRole('link', { name: /New case/ }).first().click();
+  await alice.getByRole('link', { name: /New matter/ }).first().click();
   await alice.getByLabel('Client', { exact: true }).selectOption({ label: 'Voss-Lindqvist AB' });
   await alice.getByLabel('Matter number').fill(second);
   await alice.getByLabel('Title', { exact: true }).fill('Supply chain review');

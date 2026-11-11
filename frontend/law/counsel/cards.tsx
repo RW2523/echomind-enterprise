@@ -207,6 +207,16 @@ function SourceAnswer({ p, ctx }: { p: SourceAnswerProps; ctx: CardContext }) {
             </>
           : <p className="qc-answer" style={{ margin: 0 }}>The documents in this matter do not answer that. Try naming the document, clause or party.</p>)
         : <AnswerText text={p.answer} citations={p.citations} ctx={ctx} labels={labels} />}
+      {p.state === 'abstained' && p.checked && (
+        // why an answer was withdrawn (2026-11-12, evaluation fix list item 2): the check's own reading of the question, so a
+        // wrong reading can be seen and the question asked another way
+        <details className="qc-why">
+          <summary>Why this was withdrawn</summary>
+          <p className="qc-meta" style={{ margin: '6px 0 0' }}>A check read the question as asking for: “{p.checked}”. The passages the answer
+            cited do not give that, so the answer was withdrawn rather than shown. If that is not what you meant, ask again in other words
+            or name the document.</p>
+        </details>
+      )}
       {unique.length > 0 && (
         <div className="qc-sources" role="group" aria-label="Sources">
           {unique.map((c) => (

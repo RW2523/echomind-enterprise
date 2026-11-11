@@ -9,6 +9,29 @@ export class ApiError extends Error {
   }
 }
 
+/** A refusal said once, quietly (2026-11-12, evaluation fix list item 12): the server's 403 text read as an alarm in red. */
+export const NOT_YOUR_ROLE = "This isn't part of your role. Ask a managing partner or your administrator if you need it.";
+
+/** What to tell the person about a failed request: the server's own words, a list of field problems read as one sentence
+ *  (a 422 used to say only "Something went wrong."), a refusal or a busy model in plain words. */
+export function failureText(status: number, data: any, retryAfter?: string | null): string {
+  // the policy's general refusal only; a refusal that says why (read-only access, your own draft) keeps its words
+  if (status === 403 && (typeof data?.detail !== 'string' || /^You don.t have permission to do that\.?$/.test(data.detail))) return NOT_YOUR_ROLE;
+  if (status === 429) {
+    const s = Number(retryAfter);
+    return `Too many questions in the last minute. Try again ${Number.isFinite(s) && s > 0 ? `in ${Math.ceil(s)} seconds` : 'shortly'}.`;
+  }
+  if (typeof data?.detail === 'string') return data.detail;
+  if (status === 422 && Array.isArray(data?.detail)) {
+    const long = data.detail.find((d: any) => d?.type === 'string_too_long');
+    if (long) return `That is too long: at most ${long?.ctx?.max_length ?? 'the allowed number of'} characters.`;
+    const short = data.detail.find((d: any) => d?.type === 'string_too_short');
+    if (short) return 'Type a question first.';
+    return 'Please check what you entered.';
+  }
+  return status === 422 ? 'Please check the highlighted fields.' : 'Something went wrong.';
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const form = typeof FormData !== 'undefined' && body instanceof FormData;
   const r = await fetch(path, {
@@ -20,10 +43,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   });
   let data: any = null;
   try { data = await r.json(); } catch { /* empty body */ }
-  if (!r.ok) {
-    const detail = typeof data?.detail === 'string' ? data.detail : r.status === 422 ? 'Please check the highlighted fields.' : 'Something went wrong.';
-    throw new ApiError(r.status, detail);
-  }
+  if (!r.ok) throw new ApiError(r.status, failureText(r.status, data, r.headers?.get?.('Retry-After')));
   return data as T;
 }
 
@@ -45,7 +65,7 @@ export async function postStream(path: string, body: unknown, onEvent: (e: any) 
   if (!r.ok) {
     let data: any = null;
     try { data = await r.json(); } catch { /* empty */ }
-    throw new ApiError(r.status, typeof data?.detail === 'string' ? data.detail : 'Something went wrong.');
+    throw new ApiError(r.status, failureText(r.status, data, r.headers?.get?.('Retry-After')));
   }
   const emit = (line: string) => { if (line.trim()) onEvent(JSON.parse(line)); };
   if (!r.body) { (await r.text()).split('\n').forEach(emit); return; }

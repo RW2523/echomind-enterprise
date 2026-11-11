@@ -25,7 +25,7 @@ export default function Playbooks() {
       <Toolbar title="Playbooks">
         {can?.manage && <button type="button" className="lw-btn lw-btn-sm" onClick={() => setCreating(true)}><Plus />New playbook</button>}
       </Toolbar>
-      <div className="lw-content">
+      <div className="lw-content lw-firm-page">
         <p className="lw-meta" style={{ margin: 0 }}>The firm's positions for negotiating contracts: for each topic, the standard wording and the fallbacks the firm accepts. A matter document can be checked against an approved playbook; the result is advisory, for a lawyer to confirm.</p>
         {q.isPending ? <div className="lw-paper lw-sheet"><Skeleton /><Skeleton /></div>
           : q.isError ? <ErrorNote>The playbooks could not be loaded.</ErrorNote>

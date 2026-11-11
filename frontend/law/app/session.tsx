@@ -16,6 +16,27 @@ export const useSession = (): Me => {
 };
 export const hasFirmRole = (me: Me, ...roles: string[]) => roles.some((r) => me.user.roles.includes(r as any));
 
+/** Whether the person may take any of these firm-wide actions, from what the server says (`me.can`); `roles` is the older
+ *  rule, for a server that does not say. */
+export const mayDo = (me: Me, actions: string[], roles: string[]) =>
+  me.can ? actions.some((a) => me.can!.includes(a)) : hasFirmRole(me, ...roles);
+
+/** People who work on matters with the chat: the firm's lawyers and those who read or review their work. */
+export const isLawyer = (me: Me) => hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal', 'reviewer', 'read_only');
+
+/** How the person is named on screen: their display name, else their sign-in name. */
+export const displayName = (me: Me) => me.user.display_name || me.user.username;
+
+/** Where a person lands (2026-11-12, evaluation fix list item 12): the front desk and the conflicts team on Enquiries,
+ *  records on Records, the administrator on Users & roles, lawyers on the chat. */
+export function homeFor(me: Me): string {
+  if (isLawyer(me)) return '/chat';
+  if (me.features?.intake && mayDo(me, ['intake.manage', 'conflicts.review'], ['intake', 'conflicts'])) return '/enquiries';
+  if (mayDo(me, ['deletion.review', 'holds.read'], ['records_admin'])) return '/admin/records';
+  if (mayDo(me, ['users.read', 'users.manage'], ['firm_admin'])) return '/admin/users';
+  return '/matters';
+}
+
 /** When the session ends anywhere (idle timeout, revocation, sign-out elsewhere), drop every cached
  *  response — matter content must not linger in memory — and re-check who is signed in. */
 export function useSessionExpiry(): void {

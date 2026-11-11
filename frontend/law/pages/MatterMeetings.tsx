@@ -23,7 +23,7 @@ export default function MatterMeetings() {
   return (
     <>
       <Toolbar crumb={matter.number} title="Meetings">
-        {canPlan && <button type="button" className="lw-btn lw-btn-primary" onClick={() => setCreating(true)}><CalendarPlus />New meeting</button>}
+        {canPlan && <button type="button" className="lw-btn lw-btn-primary" onClick={() => setCreating(true)}><CalendarPlus />Plan a meeting</button>}
       </Toolbar>
       <div className="lw-content" style={{ maxWidth: 1000 }}>
         <p className="lw-meta" style={{ margin: 0 }}>A meeting can be recorded only once every participant has consented. Anyone on the matter can record a withdrawal, which stops recording at once.</p>

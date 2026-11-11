@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Check, FilePlus2, FileUp, Plus, Trash2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
-import { useTemplates } from '../api/queries';
+import { useColleagues, useTemplates } from '../api/queries';
 import type { FirmTemplate, TemplateField, TemplateKind, TemplateVersion } from '../api/types';
-import { useSession } from '../app/session';
+import { displayName, mayDo, useSession } from '../app/session';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Field, Skeleton, StatusPill } from '../ui/primitives';
 
@@ -35,7 +35,7 @@ export default function Templates() {
         {can?.manage && <button type="button" className="lw-btn lw-btn-sm lw-btn-ghost" onClick={presets}><FilePlus2 />Install the standard presets</button>}
         {can?.manage && <button type="button" className="lw-btn lw-btn-sm" onClick={() => setEditing({})}><Plus />New template</button>}
       </Toolbar>
-      <div className="lw-content">
+      <div className="lw-content lw-firm-page">
         <p className="lw-meta" style={{ margin: 0 }}>The firm's precedents for drafting. Each fact in a draft comes from the matter record, from a quote in the matter's documents, or from a lawyer — never from the model alone. A version is used once a managing partner other than its author approves it.</p>
         {error && <ErrorNote>{error}</ErrorNote>}
         {q.isPending ? <div className="lw-paper lw-sheet"><Skeleton /><Skeleton /></div>
@@ -76,6 +76,9 @@ function VersionRow({ t, v, canManage, canApprove, onChange }: { t: FirmTemplate
   const [error, setError] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [read, setRead] = useState(false);
+  // people by name, not sign-in handle (2026-11-12, evaluation: "approved by sofia")
+  const people = useColleagues(mayDo(me, ['matters.create'], ['managing_partner', 'attorney'])).data ?? [];
+  const nameOf = (u?: string | null) => (u === me.user.username ? displayName(me) : people.find((c) => c.username === u)?.display_name) || u || '';
   const base = `/api/legal/templates/${encodeURIComponent(t.id)}/versions/${encodeURIComponent(v.id)}`;
   const run = async (fn: () => Promise<unknown>) => {
     setError('');
@@ -95,8 +98,8 @@ function VersionRow({ t, v, canManage, canApprove, onChange }: { t: FirmTemplate
       <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
         <b className="lw-tnum">{`Version ${v.version}`}</b>
         <StatusPill tone={tone}>{v.status === 'approved' ? 'Approved' : v.status === 'draft' ? 'Waiting for approval' : 'Retired'}</StatusPill>
-        <span className="lw-meta">{`${v.created_by ? `by ${v.created_by}` : 'From the starter set'}, ${day(v.created_at)}`}{v.approved_by ? ` · approved by ${v.approved_by}, ${day(v.approved_at)}` : ''}
-          {v.styles ? ` · firm styles: ${v.styles}` : ''} · <span className="lw-mono">{`${v.content_sha256.slice(0, 12)}…`}</span></span>
+        <span className="lw-meta">{`${v.created_by ? `by ${nameOf(v.created_by)}` : 'From the starter set'}, ${day(v.created_at)}`}{v.approved_by ? ` · approved by ${nameOf(v.approved_by)}, ${day(v.approved_at)}` : ''}
+          {v.styles ? ` · firm styles: ${v.styles}` : ''} · content fingerprint <span className="lw-mono" title={v.content_sha256}>{`${v.content_sha256.slice(0, 12)}…`}</span></span>
       </div>
       <details className="lw-template-body">
         <summary className="lw-meta">Wording and fields</summary>

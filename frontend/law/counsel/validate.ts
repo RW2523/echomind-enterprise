@@ -166,7 +166,7 @@ function sourceAnswer(v: unknown): SourceAnswerProps {
     answer: str(o.answer, 8000, 'answer'), state: oneOf(o.state, ANSWER_STATES, 'state'),
     citations: list(o.citations, 30, 'citations', citation), unsupported: list(o.unsupported, 10, 'unsupported', (x) => str(x, 500, 'unsupported')),
     notes: list(o.notes, 3, 'notes', (x) => str(x, 400, 'note')), understood: optStr(o.understood, 400, 'understood'),
-    absence: optStr(o.absence, 400, 'absence'), calculation: calculation(o.calculation), working: working(o.working),
+    absence: optStr(o.absence, 400, 'absence'), checked: optStr(o.checked, 300, 'checked'), calculation: calculation(o.calculation), working: working(o.working),
     not_stated: o.not_stated === undefined ? undefined : bool(o.not_stated, 'not_stated'),
   };
   if (p.not_stated && p.state === 'abstained') throw new Invalid('a decline is shown as a decline');

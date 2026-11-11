@@ -3,8 +3,8 @@
  * follows who is speaking, the words being heard, mute and end. What was asked and what is being answered appear in the
  * conversation above as it happens (`onLive`), and each answer then stays there as an ordinary turn with its sources.
  */
-import React, { useEffect, useRef } from 'react';
-import { Mic, MicOff, PhoneOff } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Keyboard, Mic, MicOff, PhoneOff, RotateCcw } from 'lucide-react';
 import { useVoice, type VoicePhase } from './useVoice';
 
 const PHASE_TEXT: Record<VoicePhase, string> = {
@@ -34,10 +34,18 @@ function Orb({ phase, mic, speech, muted }: { phase: VoicePhase; mic: AnalyserNo
   return <div ref={ref} className="qc-orb" data-phase={phase} data-muted={muted || undefined} aria-hidden><span /></div>;
 }
 
-export default function VoiceStage({ matterId, matterNumber, conversationId, onTurnSaved, onLive, onClose }: {
+type StageProps = {
   matterId: string; matterNumber: string; conversationId: string; onTurnSaved: (turnId: string) => void;
-  onLive?: (live: { question: string; text: string } | null) => void; onClose: () => void;
-}) {
+  onLive?: (live: { question: string; text: string } | null) => void; onClose: () => void; onType?: () => void;
+};
+
+/** Voice, started again from the beginning on "Try again" (a refused microphone, a dropped connection). */
+export default function VoiceStage(props: StageProps) {
+  const [attempt, setAttempt] = useState(0);
+  return <Stage key={attempt} {...props} onRetry={() => setAttempt((a) => a + 1)} />;
+}
+
+function Stage({ matterId, matterNumber, conversationId, onTurnSaved, onLive, onClose, onType, onRetry }: StageProps & { onRetry: () => void }) {
   const { view, muted, setMuted, stop, micAnalyser, speechAnalyser } = useVoice({ matterId, conversationId, onTurnSaved });
   useEffect(() => { onLive?.(view.heard ? { question: view.heard, text: view.saying } : null); }, [view.heard, view.saying, onLive]);
   const end = () => { stop(); onClose(); };
@@ -51,6 +59,11 @@ export default function VoiceStage({ matterId, matterNumber, conversationId, onT
           {view.partial && <p className="qc-voice-heard" data-live>“{view.partial}”</p>}
           {!view.partial && view.phase === 'thinking' && view.holding && !view.saying && <p className="qc-voice-heard">{view.holding}</p>}
           {view.error && <p className="qc-error" role="alert" style={{ margin: 0 }}>{view.error}</p>}
+          {view.error && /microphone/i.test(view.error) && (
+            // 2026-11-11 evaluation: a refused microphone left only "Close"; say how to allow it, and offer the other ways on
+            <p className="qc-meta" style={{ margin: 0 }}>To allow it, use the microphone or lock icon in the browser's address bar, then
+              press Try again. Or type your question instead.</p>
+          )}
           {view.phase === 'listening' && !view.heard && !muted && (
             <p className="qc-meta" style={{ margin: 0 }}>Ask about {matterNumber}. Speak over the answer to interrupt it.</p>
           )}
@@ -62,6 +75,8 @@ export default function VoiceStage({ matterId, matterNumber, conversationId, onT
             {muted ? <MicOff aria-hidden /> : <Mic aria-hidden />}{muted ? 'Unmute' : 'Mute'}
           </button>
         )}
+        {over && <button type="button" className="qc-btn qc-btn-primary" onClick={onRetry}><RotateCcw aria-hidden />Try again</button>}
+        {over && onType && <button type="button" className="qc-btn" onClick={() => { stop(); onType(); }}><Keyboard aria-hidden />Type instead</button>}
         <button type="button" className="qc-btn qc-voice-end" onClick={end}><PhoneOff aria-hidden />{over ? 'Close' : 'End voice'}</button>
       </div>
       <p className="qc-meta qc-voice-note">Answers come only from {matterNumber}'s documents and are saved in this chat with their sources.

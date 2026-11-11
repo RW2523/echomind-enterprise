@@ -63,12 +63,6 @@ export default function MatterPanel() {
             <h2 className="cn-intro-h" id="cn-intro-h">Put a question to the Council</h2>
             <p className="lw-meta" style={{ margin: 0, maxWidth: '80ch' }}>Several perspectives answer one question from this matter's documents, each alone and citing them. For a challenge the Council seats lead counsel, an opposing reading and an evidence investigator; otherwise the four below. If the answer depends on facts the documents do not give, it stops and asks you.</p>
           </div>
-          <ul className="cn-seats-row" aria-label="The usual perspectives">
-            {DEFAULT_SEATS.map((s) => <li key={s.role}><RoleMark role={s.role} />{s.label}</li>)}
-          </ul>
-          <ol className="cn-howto" aria-label="How a session runs">
-            {HOW.map(([t, d]) => <li key={t}><b>{t}</b>{d}</li>)}
-          </ol>
           {q.data?.can.ask && (
             <form className="cn-ask" aria-label="Ask the Council" onSubmit={submit}>
               <Field label="Question">{(id) => <textarea id={id} className="lw-input" rows={3} maxLength={2000} value={question}
@@ -96,6 +90,15 @@ export default function MatterPanel() {
               </div>
             </form>
           )}
+          <details className="cn-how">
+            <summary>How the Council works</summary>
+          <ul className="cn-seats-row" aria-label="The usual perspectives">
+            {DEFAULT_SEATS.map((s) => <li key={s.role}><RoleMark role={s.role} />{s.label}</li>)}
+          </ul>
+          <ol className="cn-howto" aria-label="How a session runs">
+            {HOW.map(([t, d]) => <li key={t}><b>{t}</b>{d}</li>)}
+          </ol>
+          </details>
           {error && <ErrorNote>{error}</ErrorNote>}
           <p className="cn-notice">Drafted by the same AI model: they are not independent experts, and a partner reviews them before anyone relies on them.</p>
         </section>

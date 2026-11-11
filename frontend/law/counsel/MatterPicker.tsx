@@ -168,7 +168,7 @@ export default function MatterPicker({ variant = 'header' }: { variant?: 'header
           </div>
           {canOpen && (
             <button type="button" className="qc-pop-item" onClick={() => { setOpen(false); navigate('/matters/new'); }}>
-              <Plus aria-hidden /><span style={{ fontWeight: 600 }}>New case…</span>
+              <Plus aria-hidden /><span style={{ fontWeight: 600 }}>New matter…</span>
             </button>
           )}
           <p className="qc-meta" style={{ borderTop: '1px solid var(--rule)', margin: '6px 0 0', padding: '8px 10px 2px' }}>

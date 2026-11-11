@@ -467,11 +467,25 @@ def my_activity(request: Request, before: Optional[int] = None, limit: int = Que
         reading = conn.execute(
             "SELECT v.matter_id, COUNT(*) FROM legal_document_versions v JOIN matters m ON m.id = v.matter_id "
             f"WHERE v.index_status IN ('queued','indexing') AND {policy.visible_matters_sql()} GROUP BY v.matter_id", args).fetchall()
+    from ..documents import repo as doc_repo
+    titles: dict[str, Optional[str]] = {}
     for e in out["events"]:
         e.pop("ip", None)
         e.pop("session_ref", None)
         if e.get("matter"):
             e["matter"] = visible.get(e["matter"]["id"])
+        # the document an event was about, by its title, while the person may still read it (2026-11-12, evaluation:
+        # "alice read the text of a document in R-001", five times, the document never named)
+        did = e.get("object_id") if e.get("object_type") == "document" else None
+        if did and e.get("matter"):
+            if did not in titles:
+                titles[did] = None
+                if doc_repo.visible(e["matter"]["id"], did, p["sub"]):
+                    with get_conn() as conn:
+                        row = conn.execute("SELECT title FROM legal_documents WHERE id=?", (did,)).fetchone()
+                    titles[did] = row[0] if row else None
+            if titles[did]:
+                e["object_title"] = titles[did]
     note(details={"events": len(out["events"])})
     return JSONResponse({**out, "in_progress": [{"matter": visible[mid], "documents": n} for mid, n in reading if mid in visible]},
                         headers=_NO_STORE)

@@ -141,11 +141,16 @@ describe('Voice mode in the chat', () => {
     expect(FakeSocket.all[0].url).toMatch(/\?matter=id-M-101&conversation=conv_1$/);
   });
 
-  it('a matter\'s "Talk by voice" opens voice mode in a new chat about that matter', async () => {
+  it('a matter\'s "Talk by voice" offers voice mode in a new chat about that matter, and listens only after Start', async () => {
     fakeAudio();
     localStorage.removeItem('echomind.counsel.matter');
     world();
     const { router } = renderLaw('/m/M-101/conversation');
+    // 2026-11-12: nothing listens, and no conversation is made, until the person presses Start
+    const offer = await screen.findByRole('region', { name: 'Start a voice conversation' });
+    expect(screen.queryByRole('region', { name: 'Voice conversation' })).toBeNull();
+    expect(FakeSocket.all.length).toBe(0);
+    fireEvent.click(within(offer).getByRole('button', { name: /Start talking/ }));
     expect(await screen.findByRole('region', { name: 'Voice conversation' })).toBeTruthy();
     await waitFor(() => expect(FakeSocket.all.length).toBe(1));
     expect(router.state.location.pathname).toBe('/chat/conv_1');

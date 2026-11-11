@@ -9,32 +9,38 @@ import {
   ShieldOff, Siren, Timer, UserCog, Users, Users2,
 } from 'lucide-react';
 import type { Matter, Me } from '../api/types';
-import { hasFirmRole } from './session';
+import { isLawyer, mayDo } from './session';
 
 export interface NavEntry { key: string; to: string; label: string; icon: LucideIcon; about?: string; hue?: number }
 
 export function firmEntries(me: Me): NavEntry[] {
-  const lawyer = hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal');
+  // From what the server says the person may do (2026-11-12, evaluation fix list item 12): an entry is offered only when the
+  // server would serve it. The chat's own pages are for those who work on matters.
+  const lawyer = isLawyer(me);
+  const drafter = mayDo(me, ['templates.manage', 'templates.approve'], ['managing_partner', 'attorney', 'paralegal']);
   const list: (NavEntry | false)[] = [
-    { key: 'chat', to: '/chat', label: 'Chat', icon: MessageSquare },
+    lawyer && { key: 'chat', to: '/chat', label: 'Chat', icon: MessageSquare },
     { key: 'matters', to: '/matters', label: 'Matters', icon: Briefcase },
-    { key: 'pipeline', to: '/pipeline', label: 'Pipeline', icon: Columns3 },
-    { key: 'drafts', to: '/drafts', label: 'Drafts', icon: ClipboardCheck },
-    lawyer && { key: 'templates', to: '/templates', label: 'Templates', icon: LayoutTemplate },
-    lawyer && { key: 'playbooks', to: '/playbooks', label: 'Playbooks', icon: BookMarked },
-    lawyer && { key: 'checklists', to: '/checklists', label: 'Checklists', icon: ListTodo },
-    !!me.features?.intake && hasFirmRole(me, 'intake', 'conflicts', 'paralegal', 'attorney', 'managing_partner', 'records_admin')
+    lawyer && { key: 'pipeline', to: '/pipeline', label: 'Pipeline', icon: Columns3 },
+    lawyer && { key: 'drafts', to: '/drafts', label: 'Drafts', icon: ClipboardCheck },
+    drafter && { key: 'templates', to: '/templates', label: 'Templates', icon: LayoutTemplate },
+    drafter && { key: 'playbooks', to: '/playbooks', label: 'Playbooks', icon: BookMarked },
+    drafter && { key: 'checklists', to: '/checklists', label: 'Checklists', icon: ListTodo },
+    !!me.features?.intake && mayDo(me, ['intake.manage', 'conflicts.review', 'intake.purge'],
+                                   ['intake', 'conflicts', 'paralegal', 'attorney', 'managing_partner', 'records_admin'])
       && { key: 'enquiries', to: '/enquiries', label: 'Enquiries', icon: Inbox },
-    !!me.features?.time_entries && { key: 'time', to: '/time', label: 'Time', icon: Timer },
-    !!me.features?.regulatory && hasFirmRole(me, 'managing_partner', 'attorney', 'paralegal', 'reviewer')
+    !!me.features?.time_entries && lawyer && { key: 'time', to: '/time', label: 'Time', icon: Timer },
+    !!me.features?.regulatory && mayDo(me, ['regulatory.read'], ['managing_partner', 'attorney', 'paralegal', 'reviewer'])
       && { key: 'regulatory', to: '/regulatory', label: 'Regulatory updates', icon: Landmark },
-    hasFirmRole(me, 'firm_admin', 'managing_partner') && { key: 'users', to: '/admin/users', label: 'Users & roles', icon: UserCog },
-    hasFirmRole(me, 'firm_admin') && { key: 'connectors', to: '/admin/connectors', label: 'Connectors', icon: FolderSync },
-    hasFirmRole(me, 'managing_partner') && { key: 'walls', to: '/admin/walls', label: 'Ethical walls', icon: ShieldOff },
-    hasFirmRole(me, 'firm_admin', 'managing_partner') && { key: 'emergency', to: '/admin/emergency-access', label: 'Emergency access', icon: Siren },
-    hasFirmRole(me, 'records_admin', 'managing_partner') && { key: 'records', to: '/admin/records', label: 'Records', icon: Archive },
-    hasFirmRole(me, 'firm_admin', 'managing_partner', 'records_admin') && { key: 'audit', to: '/admin/audit', label: 'Audit trail', icon: ScrollText },
-    hasFirmRole(me, 'firm_admin', 'managing_partner', 'records_admin') && { key: 'evaluations', to: '/admin/evaluations', label: 'Evaluations', icon: Gauge },
+    mayDo(me, ['users.read'], ['firm_admin', 'managing_partner']) && { key: 'users', to: '/admin/users', label: 'Users & roles', icon: UserCog },
+    mayDo(me, ['connectors.manage'], ['firm_admin']) && { key: 'connectors', to: '/admin/connectors', label: 'Connectors', icon: FolderSync },
+    mayDo(me, ['walls.read'], ['managing_partner']) && { key: 'walls', to: '/admin/walls', label: 'Ethical walls', icon: ShieldOff },
+    mayDo(me, ['breakglass.read', 'breakglass.request'], ['firm_admin', 'managing_partner'])
+      && { key: 'emergency', to: '/admin/emergency-access', label: 'Emergency access', icon: Siren },
+    mayDo(me, ['deletion.review', 'holds.read'], ['records_admin', 'managing_partner']) && { key: 'records', to: '/admin/records', label: 'Records', icon: Archive },
+    mayDo(me, ['audit.read.org'], ['firm_admin', 'managing_partner', 'records_admin']) && { key: 'audit', to: '/admin/audit', label: 'Audit trail', icon: ScrollText },
+    mayDo(me, ['audit.read.org'], ['firm_admin', 'managing_partner', 'records_admin'])
+      && { key: 'evaluations', to: '/admin/evaluations', label: 'Evaluations', icon: Gauge },
   ];
   return list.filter(Boolean) as NavEntry[];
 }

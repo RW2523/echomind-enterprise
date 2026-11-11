@@ -315,7 +315,11 @@ async def _ask(principal: dict, scope, conv: dict, turn: dict, question: str, do
     if built.understood:
         props["understood"] = built.understood[:400]
     if state == "abstained" and done.get("absence"):
-        props["absence"] = done["absence"][:400]
+        # its words, without the source marks it carried ("… not stated [2][3]" showed the marks as text, 2026-11-11)
+        props["absence"] = (re.sub(r"\s*\[\d{1,2}(?::[^\]]*)?\]", "", done["absence"]).strip() or done["absence"])[:400]
+    sd = done.get("stated_detail") or {}
+    if state == "abstained" and sd.get("acted") and sd.get("verdict") == "not_given" and sd.get("asked"):
+        props["checked"] = str(sd["asked"])[:300]
     # not when the cited passages were found to state what was asked (research/stated.py)
     if state != "abstained" and done.get("stated") is not True and research.prompt.opens_not_stated(done.get("answer") or ""):
         props["not_stated"] = True

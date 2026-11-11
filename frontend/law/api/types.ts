@@ -5,7 +5,9 @@ export type Sensitivity = 'standard' | 'restricted' | 'highly_restricted';
 export type MatterStatus = 'open' | 'closed' | 'archived';
 
 export interface Me {
-  user: { id: string; username: string; role: string; roles: FirmRole[] };
+  user: { id: string; username: string; role: string; roles: FirmRole[]; display_name?: string };
+  /** The firm-wide actions the person may take (2026-11-12): what the rail, menus and home page offer. */
+  can?: string[];
   session: { auth: string; mfa_enrolled: boolean; must_change_password: boolean; idle_expires_at: number; abs_expires_at: number };
   features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean; panel?: boolean; conversation?: boolean; regulatory?: boolean; translation?: boolean; demo_signin?: boolean;
     /** Where the answer model runs, from its configured address (review P1): the interface claims no more than this. */
@@ -75,7 +77,7 @@ export interface BreakGlassRequest {
 export interface AuditEvent {
   seq: number; ts: string; action: string; outcome: 'allow' | 'deny' | 'error'; reason?: string | null;
   actor?: { username: string; roles: string[] } | null; auth?: string | null; session_ref?: string | null; ip?: string | null;
-  object_type?: string | null; object_id?: string | null;
+  object_type?: string | null; object_id?: string | null; object_title?: string | null;
   matter?: { id: string; number?: string; title?: string } | null;
   details?: Record<string, unknown> | null;
 }
@@ -487,12 +489,13 @@ export interface DefinitionCheck {
 }
 
 /** Obligations and deadlines (S3.6, D-050): read by rules, proposed until a lawyer confirms. */
-export type ObligationKind = 'renewal' | 'termination' | 'change_of_control' | 'consent' | 'payment' | 'notification' | 'post_termination' | 'confidentiality' | 'notice';
+export type ObligationKind = 'renewal' | 'termination' | 'change_of_control' | 'consent' | 'payment' | 'notification' | 'post_termination' | 'confidentiality' | 'notice'
+  | 'expiry' | 'survival' | 'duty';
 export type ObligationStatus = 'proposed' | 'confirmed' | 'done' | 'dismissed';
 export interface Obligation {
   id: string; document_id: string; document_title: string | null; version_id: string; clause: string | null; kind: ObligationKind;
   party: string | null; action: string; when: string | null; due_date: string | null; due_note: string | null; timezone: string;
-  due_at: string | null; overdue: boolean; status: ObligationStatus; owner: string | null; source: 'rules' | 'model' | 'person';
+  due_at: string | null; overdue: boolean; past?: boolean; status: ObligationStatus; owner: string | null; source: 'rules' | 'model' | 'person';
   evidence: { start: number; end: number; quote: string }; confirmed_by: string | null; confirmed_at: string | null; version: number;
   created_by: string | null; created_at: string; updated_at: string;
 }

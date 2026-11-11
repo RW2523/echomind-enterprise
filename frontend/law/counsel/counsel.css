@@ -775,3 +775,56 @@
 .qc-case-tasks > li[data-overdue="true"] { border-left-color: var(--conflict, #b3261e); }
 .qc-case-tasks > li[data-overdue="true"] .qc-meta { color: var(--conflict, #b3261e); }
 .qc-case-tasks .qc-meta svg { display: inline-block; vertical-align: -2px; }
+
+/* 2026-11-12, evaluation fix list items 13 and 15 */
+.qc-skip { position: absolute; left: 12px; top: -48px; z-index: 100; padding: 8px 14px; border-radius: 8px; background: var(--ink);
+  color: var(--paper); font-weight: 600; text-decoration: none; transition: top .12s ease; }
+.qc-skip:focus { top: 8px; outline: 2px solid var(--accent); outline-offset: 2px; }
+.qc-main:focus { outline: none; }
+.qc-end { scroll-margin-bottom: calc(var(--qc-composer-h, 140px) + 12px); }
+.qc-waited { margin-left: 8px; white-space: nowrap; }
+.qc-progress [data-busy] { font-weight: 600; }
+.qc-link-btn { margin-left: 8px; padding: 0 2px; border: 0; background: none; color: var(--accent-ink); font: inherit;
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.qc-link-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+.qc-voice-offer { margin: 0 0 12px; padding: 14px 16px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper);
+  display: grid; gap: 10px; }
+.qc-voice-offer p { margin: 0; }
+
+/* Phones (2026-11-12, evaluation UI "Fix first"): tap targets of at least 44 px without changing how the controls look; a
+   table that is wider than the screen says so with a shadow at the edge it scrolls to; a matter's tabs in one row that
+   scrolls, under a shorter banner; the question box no taller than it needs. */
+@media (max-width: 560px) {
+  .qc-cite::after { inset: -11px -6px; }
+  .qc-icon-btn { min-width: 44px; min-height: 44px; }
+  .qc-history-more { min-width: 40px; min-height: 40px; }
+  .qc-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .qc-tabs::-webkit-scrollbar { display: none; }
+  .qc-tab { white-space: nowrap; min-height: 44px; }
+  .qc-more { position: static; }
+  .qc-more-pop { position: fixed; left: 12px; right: 12px; bottom: 12px; top: auto; max-height: 60vh; overflow: auto; z-index: 60; }
+  [data-shell="counsel"] .lw-paper:has(> .lw-table), [data-shell="counsel"] section:has(> .lw-table) {
+    background: linear-gradient(to right, var(--paper) 30%, transparent), linear-gradient(to left, var(--paper) 30%, transparent),
+      radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.18), transparent), radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.18), transparent);
+    background-repeat: no-repeat; background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-position: left center, right center, left center, right center; background-attachment: local, local, scroll, scroll; }
+  [data-shell="counsel"] .qc-composer textarea { min-height: 24px; }
+  [data-shell="counsel"] .qc-composer-wrap[data-hero="true"] .qc-composer textarea { min-height: 44px; }
+  [data-shell="counsel"] .qc-composer-meta > span:last-child { display: none; }
+  [data-shell="counsel"] .qc-composer-row { flex-wrap: nowrap; gap: 4px; }
+  [data-shell="counsel"] .qc-composer-tools { flex-wrap: nowrap; overflow-x: auto; min-width: 0; }
+}
+@media (max-width: 860px) {
+  [data-shell="counsel"] .lw-demo-banner { padding: 6px 10px; line-height: 1.35; }
+}
+/* The Council: its question first, how it works on request (2026-11-12, evaluation UI "Fix next": eleven explanatory
+   elements came before the question box and the submit button was below the fold) */
+.cn-how { margin-top: 4px; }
+.cn-how > summary { cursor: pointer; color: var(--ink-2); font-weight: 600; font-size: 14px; }
+.cn-how[open] > summary { margin-bottom: 10px; }
+/* One width for the firm's list pages (2026-11-12, evaluation UI: Activity sat in a narrow centred column, Templates ran the
+   full width); the starter chips in the page's own colours in both themes (they were blue on the walnut dark page) */
+.qc-page { max-width: 1120px; }
+[data-shell="counsel"] .lw-content:has(> .lw-tpl-list), [data-shell="counsel"] .lw-content.lw-firm-page { max-width: 1120px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+[data-shell="counsel"][data-edition="law"] .lw-starter { background: var(--fill-1); border-color: var(--rule); color: var(--ink-2); box-shadow: none; }
+[data-shell="counsel"][data-edition="law"] .lw-starter:hover { background: var(--fill-2); color: var(--ink); }

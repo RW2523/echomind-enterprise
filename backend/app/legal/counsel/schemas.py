@@ -166,6 +166,8 @@ class SourceAnswerProps(Strict):
     notes: list[text(400)] = Field(default_factory=list, max_length=3)
     understood: Optional[text(400)] = None                # what a follow-up was taken to ask
     absence: Optional[text(400)] = None                   # a decline: what the documents were found not to state (QA UX-001)
+    # a withdrawn answer: what the "is it stated?" check took the question to ask (research/stated.py, 2026-11-12)
+    checked: Optional[text(300)] = None
     calculation: Optional[CalculationProps] = None        # dates calculated from a document's words (QA RAG-003)
     working: Optional[WorkingProps] = None                # figures worked out from the documents' figures (research/working.py)
     # The answer opens by saying the documents do not state what was asked, then gives related cited text (EV19's narrower
@@ -178,6 +180,8 @@ class SourceAnswerProps(Strict):
             raise ValueError("an abstention cites nothing")
         if self.absence is not None and self.state != "abstained":
             raise ValueError("only a decline says what is missing")
+        if self.checked is not None and self.state != "abstained":
+            raise ValueError("only a withdrawn answer says what the check read")
         if (self.calculation is not None or self.working is not None) and self.state == "abstained":
             raise ValueError("a decline calculates nothing")
         if self.not_stated and self.state == "abstained":

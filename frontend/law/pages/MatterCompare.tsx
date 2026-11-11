@@ -141,11 +141,15 @@ function VersionsCompare({ initial }: { initial: Comparison | null }) {
   const abort = useRef<AbortController | null>(null);
   useEffect(() => () => abort.current?.abort(), []);
 
-  // Default: the same document on both sides, once one has more than one version.
+  // Default: a document with more than one version, its versions side by side; else two different documents (2026-11-12,
+  // evaluation: the same document and version on both sides, so the first click compared a document with itself).
   useEffect(() => {
     if (left.doc || right.doc || !docs.data) return;
-    const d = docs.data.find((x) => (x.current_version?.number ?? 0) > 1) ?? docs.data.find((x) => x.current_version);
-    if (d) { setLeft({ doc: d.id, version: '' }); setRight({ doc: d.id, version: '' }); }
+    const ready = docs.data.filter((x) => x.current_version);
+    const several = ready.find((x) => (x.current_version?.number ?? 0) > 1);
+    if (several) { setLeft({ doc: several.id, version: '' }); setRight({ doc: several.id, version: '' }); return; }
+    if (ready[0]) setLeft({ doc: ready[0].id, version: '' });
+    if (ready[1]) setRight({ doc: ready[1].id, version: '' });
   }, [docs.data, left.doc, right.doc]);
   const leftVersions = useVersions(matter.id, left.doc || null);
   useEffect(() => {                         // left defaults to the latest signed version, else the first

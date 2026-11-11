@@ -139,12 +139,15 @@ function Text({ data, focus }: { data: ReaderData; focus: [number, number] | nul
           n += 1;
           const part = parts.get(a + line.length - line.trimStart().length);
           const label = p.number ? `${p.number}.${n}` : `${n}`;
+          // a quoted note line ("> FICTIONAL DEMO DOCUMENT …") is shown as a note, without its ">"; every offset is unchanged
+          // (2026-11-12, evaluation: line 1 of the demo documents began with a stray ">")
+          const skip = /^>\s?/.exec(line)?.[0].length ?? 0;
           return (
             <React.Fragment key={a}>
             {part && <div className="lw-reader-part">{part}</div>}
-            <div className="lw-reader-line" data-line={label} data-a={a} data-b={a + line.length}>
+            <div className={`lw-reader-line${skip ? ' lw-reader-note' : ''}`} data-line={label} data-a={a} data-b={a + line.length}>
               <span className="lw-reader-no" aria-hidden="true">{n}</span>
-              <span className="lw-reader-text">{segments(data.text, a, a + line.length, ranges, deletions)}</span>
+              <span className="lw-reader-text">{segments(data.text, a + skip, a + line.length, ranges, deletions)}</span>
             </div>
             </React.Fragment>
           );
