@@ -1509,9 +1509,9 @@ test('conversation: Talk by voice opens voice mode in a chat about the matter; a
   // offered, not started (2026-11-12): nothing listens until Start
   const offer = alice.getByRole('region', { name: 'Start a voice conversation' });
   await expect(offer).toBeVisible();
-  await expect(alice.getByRole('region', { name: 'Voice conversation' })).toHaveCount(0);
+  await expect(alice.getByRole('region', { name: 'Voice conversation', exact: true })).toHaveCount(0);
   await offer.getByRole('button', { name: /Start talking/ }).click();
-  const stage = alice.getByRole('region', { name: 'Voice conversation' });
+  const stage = alice.getByRole('region', { name: 'Voice conversation', exact: true });
   await expect(stage).toBeVisible();
   await expect(stage.getByText(/M-101/).first()).toBeVisible();
   await stage.getByRole('button', { name: /End voice|Close/ }).click();          // no voice service on this test server
